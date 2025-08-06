@@ -1,0 +1,18 @@
+// src/components/CategoryCarousel/CharacterCard.module.css
+.card {
+  flex: 0 0 auto;
+  width: 120px;
+  cursor: pointer;
+  text-align: center;
+}
+
+.thumbnail {
+  width: 100%;
+  height: auto;
+  border-radius: 8px;
+}
+
+.name {
+  margin-top: 0.5rem;
+  font-size: 0.9rem;
+}

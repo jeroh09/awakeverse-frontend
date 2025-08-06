@@ -1,0 +1,388 @@
+/* src/landing/components/EnhancedCharacterPanels.css */
+@import url('https://fonts.googleapis.com/css2?family=Cinzel+Decorative:wght@400;700&family=Crimson+Text:ital,wght@0,400;0,600;1,400;1,600&family=Source+Serif+Pro:ital,wght@0,300;0,400;0,600;1,400&display=swap');
+
+.enhanced-characters-showcase {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 1.5rem;
+  max-width: 1300px;
+  margin: 0 auto;
+  perspective: 1000px;
+}
+
+.character-panel-container {
+  height: 400px;
+  cursor: pointer;
+  /* STABILITY: Prevent size changes */
+  overflow: hidden;
+  position: relative;
+}
+
+.character-panel-flipper {
+  position: relative;
+  width: 100%;
+  height: 100%;
+  transition: transform 0.8s cubic-bezier(0.4, 0, 0.2, 1);
+  transform-style: preserve-3d;
+  /* STABILITY: Prevent hover interference */
+  pointer-events: none;
+}
+
+.character-panel-flipper.flipped {
+  transform: rotateY(180deg);
+}
+
+/* Re-enable pointer events on the actual panels */
+.character-panel {
+  pointer-events: all;
+}
+
+.character-panel {
+  position: absolute;
+  width: 100%;
+  height: 100%;
+  backface-visibility: hidden;
+  background: rgba(255, 255, 255, 0.08);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  border: 1px solid rgba(255, 215, 0, 0.3);
+  border-radius: 20px;
+  padding: 1.5rem;
+  text-align: center;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  box-shadow: 
+    0 8px 32px rgba(0, 0, 0, 0.4),
+    inset 0 1px 0 rgba(255, 255, 255, 0.1),
+    inset 0 -1px 0 rgba(0, 0, 0, 0.2);
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+}
+
+.character-panel.back {
+  transform: rotateY(180deg);
+}
+
+/* FIXED: Remove hover transforms that interfere with 3D flipping */
+.character-panel:hover {
+  border-color: rgba(255, 215, 0, 0.6);
+  box-shadow: 
+    0 15px 40px rgba(0, 0, 0, 0.5),
+    0 0 20px rgba(255, 215, 0, 0.15),
+    inset 0 1px 0 rgba(255, 255, 255, 0.15);
+  /* NO transform on hover - it conflicts with flipper transform */
+}
+
+.category-label {
+  font-family: 'Cinzel Decorative', serif;
+  font-size: 0.9rem;
+  font-weight: 600;
+  color: #ffd700;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  margin-bottom: 1rem;
+  text-shadow: 0 0 8px rgba(255, 215, 0, 0.4);
+}
+
+.character-image {
+  margin: 0 auto 1rem;
+  border-radius: 50%;
+  overflow: hidden;
+  border: 3px solid #ffd700;
+  position: relative;
+  transition: all 0.3s ease;
+}
+
+.character-image.large {
+  width: 80px;
+  height: 80px;
+}
+
+.character-image.small {
+  width: 50px;
+  height: 50px;
+  border-width: 2px;
+}
+
+.character-image img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.image-fallback {
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(135deg, #ffd700, #ffed4a);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: bold;
+  color: #1a1a2e;
+}
+
+.character-image.large .image-fallback {
+  font-size: 2rem;
+}
+
+.character-image.small .image-fallback {
+  font-size: 1.2rem;
+}
+
+.character-name {
+  font-family: 'Cinzel Decorative', serif;
+  font-size: 1.2rem;
+  font-weight: 600;
+  color: #ffd700;
+  margin-bottom: 1rem;
+}
+
+.character-description {
+  font-family: 'Source Serif Pro', serif;
+  font-style: normal;
+  font-size: 0.95rem;
+  color: rgba(255, 255, 255, 0.9);
+  line-height: 1.4;
+  flex-grow: 1;
+  margin-bottom: 1rem;
+  font-weight: 400;
+}
+
+.chat-link {
+  display: inline-block;
+  background: transparent;
+  color: #ffd700;
+  border: 2px solid #ffd700;
+  font-family: 'Source Serif Pro', serif;
+  font-weight: 600;
+  font-size: 0.9rem;
+  padding: 0.6rem 1.5rem;
+  border-radius: 25px;
+  text-decoration: none;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  position: relative;
+  overflow: hidden;
+}
+
+.chat-link::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: -100%;
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(135deg, #ffd700, #ffed4a);
+  transition: left 0.3s ease;
+  z-index: -1;
+}
+
+.chat-link:hover::before {
+  left: 0;
+}
+
+.chat-link:hover {
+  color: #1a1a2e;
+  border-color: #ffd700;
+  transform: translateY(-2px);
+}
+
+.flip-hint {
+  font-family: 'Source Serif Pro', serif;
+  font-size: 0.7rem;
+  color: rgba(255, 255, 255, 0.55);
+  margin-top: 0.5rem;
+  font-style: italic;
+  font-weight: 300;
+}
+
+/* Back side specific styles */
+.category-characters-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 0.8rem;
+  margin: 1rem 0;
+  flex-grow: 1;
+}
+
+.mini-character {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.mini-character-name {
+  font-family: 'Source Serif Pro', serif;
+  font-size: 0.7rem;
+  color: rgba(255, 255, 255, 0.85);
+  text-align: center;
+  line-height: 1.2;
+  font-weight: 400;
+}
+
+.category-description {
+  font-family: 'Crimson Text', serif;
+  font-size: 0.85rem;
+  color: rgba(255, 255, 255, 0.75);
+  line-height: 1.4;
+  margin-bottom: 1rem;
+  font-weight: 400;
+}
+
+.category-link {
+  background: rgba(255, 215, 0, 0.1);
+}
+
+/* =============================================
+   MOBILE STYLES - Add to bottom of EnhancedCharacterPanels.css
+   ============================================= */
+
+@media (max-width: 768px) {
+  .enhanced-characters-showcase {
+    grid-template-columns: repeat(2, 1fr);
+    gap: 1.5rem;
+    width: 100%;
+    margin: 0 auto;
+    padding: 0 1rem;
+    display: grid;
+    transform: none !important;
+  }
+
+  .character-panel-container {
+    height: 320px;
+    min-height: 320px;
+    width: 100%;
+    margin: 0 auto;
+    display: block;
+  }
+
+  .character-panel {
+    padding: 1.2rem;
+    height: 100%;
+  }
+
+  /* Adjust element sizes */
+  .character-image.large {
+    width: 70px;
+    height: 70px;
+  }
+
+  .character-name {
+    font-size: 1.1rem;
+    margin: 0.8rem 0;
+  }
+
+  .character-description {
+    font-size: 0.9rem;
+    margin-bottom: 1.2rem;
+  }
+
+  .chat-link {
+    padding: 0.8rem;
+    font-size: 0.9rem;
+    min-height: 48px;
+  }
+
+  .category-characters-grid {
+    grid-template-columns: repeat(3, 1fr);
+    gap: 0.8rem;
+    margin: 1rem 0;
+  }
+}
+
+@media (max-width: 480px) {
+  .enhanced-characters-showcase {
+    grid-template-columns: 1fr;
+    max-width: 320px;
+  }
+
+  .character-panel-container {
+    height: 300px;
+    max-width: 280px;
+  }
+
+  .category-characters-grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+/* Mobile Panel Structure Fix */
+@media (max-width: 768px) {
+  .character-panel-flipper {
+    height: 100%;
+    width: 100%;
+  }
+
+  .character-panel {
+    position: relative;
+    height: 100%;
+    display: flex;
+    flex-direction: column;
+    padding: 1rem;
+  }
+
+  .character-panel-front,
+  .character-panel-back {
+    height: 100%;
+    display: flex;
+    flex-direction: column;
+  }
+
+  /* Content distribution */
+  .category-label {
+    flex: 0 0 auto;
+  }
+
+  .character-image {
+    flex: 0 0 auto;
+    margin: 0.5rem auto;
+  }
+
+  .character-description {
+    flex: 1;
+    overflow-y: auto;
+    -webkit-overflow-scrolling: touch;
+  }
+
+  .chat-link {
+    flex: 0 0 auto;
+    margin-top: auto;
+  }
+}
+/* Mobile Flip Animation Fix */
+@media (max-width: 768px) {
+  .character-panel-flipper {
+    -webkit-transform-style: preserve-3d;
+    transform-style: preserve-3d;
+    position: relative;
+    transition: transform 0.6s cubic-bezier(0.4, 0, 0.2, 1);
+    transform: translateZ(0);
+    backface-visibility: hidden;
+    perspective: 1000px;
+  }
+
+  .character-panel {
+    -webkit-backface-visibility: hidden;
+    backface-visibility: hidden;
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+  }
+
+  .character-panel.back {
+    transform: rotateY(180deg);
+  }
+
+  .character-panel-flipper.flipped {
+    transform: rotateY(180deg);
+  }
+
+  /* Fix for iOS flickering */
+  .character-panel-container {
+    -webkit-transform: translateZ(0);
+    -webkit-perspective: 1000;
+    -webkit-backface-visibility: hidden;
+  }
+}

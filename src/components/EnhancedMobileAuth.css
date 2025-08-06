@@ -1,0 +1,350 @@
+/* src/components/EnhancedMobileAuth.css */
+
+/* ===== MOBILE USES SAME ORGANIC STARFIELD ===== */
+.unified-mobile-auth {
+  display: none; /* Hidden by default, shown on mobile via media query */
+}
+
+@media (max-width: 768px) {
+  .unified-mobile-auth {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    min-height: 100vh;
+    padding: 1rem;
+    /* NO background - uses the same organic starfield from .auth-page */
+    background: transparent;
+    position: relative;
+    z-index: 1;
+  }
+  
+  /* Hide desktop layout on mobile */
+  .auth-demo-container,
+  .auth-form {
+    display: none !important;
+  }
+}
+
+/* ===== MOBILE DEVICE FRAME ===== */
+.mobile-device-frame {
+  width: 100%;
+  max-width: 350px;
+  height: 600px;
+  background: rgba(17, 17, 17, 0.9); /* More transparent */
+  border-radius: 25px;
+  box-shadow: 
+    0 0 0 6px rgba(10, 10, 10, 0.8),
+    0 0 0 8px gold,
+    0 4px 25px rgba(0, 0, 0, 0.5);
+  padding: 12px;
+  position: relative;
+  overflow: hidden;
+  backdrop-filter: blur(10px); /* Let stars show through slightly */
+}
+
+.mobile-screen {
+  width: 100%;
+  height: 100%;
+  background: rgba(20, 20, 30, 0.75); /* More transparent to show stars */
+  backdrop-filter: blur(8px);
+  border-radius: 18px;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+  position: relative;
+  border: 1px solid rgba(255, 215, 0, 0.1);
+}
+
+/* REMOVE any competing starfield effects */
+.mobile-screen::before {
+  display: none;
+}
+
+/* ===== CHARACTER SELECTION VIEW ===== */
+.character-selection-view {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  padding: 1.5rem 1rem;
+  position: relative;
+  z-index: 2;
+}
+
+.mobile-header {
+  text-align: center;
+  margin-bottom: 2rem;
+}
+
+.mobile-header h2 {
+  color: #ffd700;
+  font-family: 'Cinzel Decorative', serif;
+  font-size: 1.5rem;
+  margin-bottom: 0.5rem;
+  text-shadow: 0 0 15px rgba(255, 215, 0, 0.3);
+}
+
+.mobile-header p {
+  color: rgba(255, 255, 255, 0.7);
+  font-family: 'Inter', sans-serif;
+  font-size: 0.9rem;
+  margin: 0;
+}
+
+.back-btn {
+  background: none;
+  border: none;
+  color: #ffd700;
+  font-size: 1rem;
+  cursor: pointer;
+  padding: 0.5rem;
+  margin-bottom: 1rem;
+  transition: color 0.3s ease;
+}
+
+.back-btn:hover {
+  color: #fff;
+}
+
+/* ===== MOBILE CHARACTERS GRID ===== */
+.mobile-characters-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 1rem;
+  flex: 1;
+  align-content: start;
+}
+
+.mobile-character-card {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 1rem 0.5rem;
+  border-radius: 12px;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  position: relative;
+  background: rgba(255, 255, 255, 0.02);
+  border: 1px solid rgba(255, 215, 0, 0.1);
+}
+
+.mobile-character-card:hover,
+.mobile-character-card.selected {
+  background: rgba(255, 215, 0, 0.05);
+  border-color: rgba(255, 215, 0, 0.3);
+  transform: translateY(-2px);
+}
+
+.mobile-character-avatar {
+  position: relative;
+  width: 60px;
+  height: 60px;
+  margin-bottom: 0.5rem;
+}
+
+.mobile-character-avatar img {
+  width: 100%;
+  height: 100%;
+  border-radius: 50%;
+  object-fit: cover;
+  border: 2px solid rgba(255, 215, 0, 0.3);
+  transition: all 0.3s ease;
+}
+
+.mobile-character-card:hover .mobile-character-avatar img,
+.mobile-character-card.selected .mobile-character-avatar img {
+  border-color: gold;
+  box-shadow: 0 0 15px rgba(255, 215, 0, 0.4);
+}
+
+.character-glow {
+  position: absolute;
+  top: -3px;
+  left: -3px;
+  right: -3px;
+  bottom: -3px;
+  background: radial-gradient(circle, rgba(255, 215, 0, 0.2), transparent 70%);
+  border-radius: 50%;
+  opacity: 0;
+  transition: all 0.3s ease;
+  filter: blur(4px);
+}
+
+.mobile-character-card:hover .character-glow,
+.mobile-character-card.selected .character-glow {
+  opacity: 1;
+}
+
+.mobile-character-name {
+  color: #ffd700;
+  font-family: 'Inter', sans-serif;
+  font-size: 0.8rem;
+  font-weight: 500;
+  text-align: center;
+  line-height: 1.2;
+}
+
+.mobile-continue-hint {
+  text-align: center;
+  margin-top: 1rem;
+  padding: 1rem;
+  background: rgba(255, 215, 0, 0.05);
+  border-radius: 8px;
+  border: 1px solid rgba(255, 215, 0, 0.1);
+}
+
+.mobile-continue-hint p {
+  color: rgba(255, 255, 255, 0.6);
+  font-family: 'Inter', sans-serif;
+  font-size: 0.85rem;
+  margin: 0;
+  font-style: italic;
+}
+
+/* ===== FORM VIEW ===== */
+.form-view {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  padding: 1.5rem 1rem;
+  position: relative;
+  z-index: 2;
+}
+
+.selected-guide {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  margin-bottom: 1.5rem;
+  padding: 1rem;
+  background: rgba(255, 215, 0, 0.05);
+  border-radius: 8px;
+  border: 1px solid rgba(255, 215, 0, 0.2);
+}
+
+.guide-avatar {
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  object-fit: cover;
+  border: 2px solid gold;
+}
+
+.selected-guide p {
+  color: rgba(255, 255, 255, 0.8);
+  font-family: 'Inter', sans-serif;
+  font-size: 0.9rem;
+  margin: 0;
+}
+
+.selected-guide strong {
+  color: #ffd700;
+}
+
+/* ===== MOBILE FORM STYLING ===== */
+.mobile-auth-form {
+  flex: 1;
+}
+
+.form-group {
+  margin-bottom: 1.5rem;
+}
+
+.form-group label {
+  display: block;
+  color: rgba(255, 215, 0, 0.9);
+  font-family: 'Inter', sans-serif;
+  font-size: 0.9rem;
+  font-weight: 500;
+  margin-bottom: 0.5rem;
+}
+
+.form-group input {
+  width: 100%;
+  padding: 1rem;
+  background: rgba(255, 255, 255, 0.03);
+  border: 1px solid rgba(255, 215, 0, 0.2);
+  border-radius: 8px;
+  color: #fff;
+  font-family: 'Inter', sans-serif;
+  font-size: 1rem;
+  transition: all 0.3s ease;
+  box-sizing: border-box;
+}
+
+.form-group input:focus {
+  outline: none;
+  border-color: rgba(255, 215, 0, 0.5);
+  background: rgba(255, 255, 255, 0.05);
+  box-shadow: 0 0 0 2px rgba(255, 215, 0, 0.1);
+}
+
+.form-group input::placeholder {
+  color: rgba(255, 255, 255, 0.4);
+}
+
+.mobile-error {
+  background: rgba(255, 82, 82, 0.1);
+  border: 1px solid rgba(255, 82, 82, 0.3);
+  color: #ff8a8a;
+  padding: 0.75rem;
+  border-radius: 6px;
+  margin-bottom: 1rem;
+  font-family: 'Inter', sans-serif;
+  font-size: 0.85rem;
+  text-align: center;
+}
+
+.mobile-submit-btn {
+  width: 100%;
+  padding: 1rem;
+  background: linear-gradient(135deg, 
+    rgba(255, 215, 0, 0.8) 0%, 
+    rgba(255, 215, 0, 0.9) 100%);
+  border: none;
+  border-radius: 8px;
+  color: #1a1a2e;
+  font-family: 'Inter', sans-serif;
+  font-weight: 600;
+  font-size: 1rem;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  margin-bottom: 1.5rem;
+}
+
+.mobile-submit-btn:hover:not(:disabled) {
+  background: linear-gradient(135deg, 
+    rgba(255, 215, 0, 0.9) 0%, 
+    rgba(255, 215, 0, 1) 100%);
+  transform: translateY(-2px);
+  box-shadow: 0 6px 20px rgba(255, 215, 0, 0.3);
+}
+
+.mobile-submit-btn:disabled {
+  opacity: 0.7;
+  cursor: not-allowed;
+  transform: none;
+}
+
+.mobile-switch-mode {
+  text-align: center;
+  margin-top: auto;
+}
+
+.mobile-switch-mode p {
+  color: rgba(255, 255, 255, 0.6);
+  font-family: 'Inter', sans-serif;
+  font-size: 0.85rem;
+  margin: 0;
+}
+
+.mobile-switch-mode a {
+  color: #ffd700;
+  text-decoration: none;
+  font-weight: 500;
+  transition: all 0.3s ease;
+}
+
+.mobile-switch-mode a:hover {
+  color: #fff;
+  text-shadow: 0 0 8px rgba(255, 215, 0, 0.5);
+}

@@ -1,0 +1,298 @@
+/* src/components/BreathingInterface/BreathingInterface.css */
+
+/* ✅ Base breathing interface container */
+.breathing-interface {
+  position: relative;
+  width: 100%;
+  height: 100%;
+  transition: all 0.6s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+/* ✅ Interface state classes */
+.breathing-interface.state-idle {
+  --ui-opacity: 0.3;
+  --chrome-opacity: 0.2;
+  --interaction-scale: 0.98;
+}
+
+.breathing-interface.state-active {
+  --ui-opacity: 1;
+  --chrome-opacity: 0.8;
+  --interaction-scale: 1;
+}
+
+.breathing-interface.state-scrolling {
+  --ui-opacity: 0.4;
+  --chrome-opacity: 0.15;
+  --interaction-scale: 0.99;
+}
+
+.breathing-interface.state-focused {
+  --ui-opacity: 1;
+  --chrome-opacity: 1;
+  --interaction-scale: 1.01;
+}
+
+/* ✅ Breathing elements - show/hide based on state */
+.breathing-element {
+  transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.breathing-element.fade-transition.visible {
+  opacity: 1;
+  transform: translateY(0) scale(1);
+  pointer-events: all;
+}
+
+.breathing-element.fade-transition.hidden {
+  opacity: 0;
+  transform: translateY(8px) scale(0.95);
+  pointer-events: none;
+}
+
+.breathing-element.instant-transition.visible {
+  display: block;
+  opacity: 1;
+}
+
+.breathing-element.instant-transition.hidden {
+  display: none;
+  opacity: 0;
+}
+
+/* ✅ Breathing chrome - fades during scroll */
+.breathing-chrome {
+  transition: opacity 0.3s ease, transform 0.3s ease;
+}
+
+.breathing-chrome.visible {
+  opacity: var(--chrome-opacity, 0.8);
+  transform: scale(var(--interaction-scale, 1));
+}
+
+.breathing-chrome.faded {
+  opacity: var(--chrome-opacity, 0.15);
+  transform: scale(var(--interaction-scale, 0.99));
+}
+
+/* ✅ Enhanced message interactions */
+.breathing-interface .message-content {
+  transition: all 0.3s ease;
+  position: relative;
+}
+
+/* Edit/retry buttons - only show on hover when active */
+.breathing-interface.state-active .message-content:hover .edit-button,
+.breathing-interface.state-active .message-content:hover .retry-button,
+.breathing-interface.state-focused .message-content:hover .edit-button,
+.breathing-interface.state-focused .message-content:hover .retry-button {
+  opacity: 1;
+  transform: translateY(0) scale(1);
+}
+
+/* Always hide edit buttons in idle/scrolling states */
+.breathing-interface.state-idle .edit-button,
+.breathing-interface.state-idle .retry-button,
+.breathing-interface.state-scrolling .edit-button,
+.breathing-interface.state-scrolling .retry-button {
+  opacity: 0 !important;
+  transform: translateY(4px) scale(0.9) !important;
+  pointer-events: none !important;
+}
+
+/* ✅ Input area breathing */
+.breathing-interface .chat-input {
+  transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+  transform-origin: center bottom;
+}
+
+.breathing-interface.state-idle .chat-input {
+  opacity: 0.7;
+  transform: scale(0.98) translateY(2px);
+}
+
+.breathing-interface.state-focused .chat-input {
+  opacity: 1;
+  transform: scale(1.01) translateY(-2px);
+  box-shadow: 0 0 20px rgba(255, 215, 0, 0.2);
+}
+
+.breathing-interface.state-scrolling .chat-input {
+  opacity: 0.5;
+  transform: scale(0.97) translateY(4px);
+}
+
+/* ✅ Floating avatar breathing enhancements */
+.breathing-interface.state-idle .floating-avatar-container {
+  opacity: 0.8;
+  transform: translateX(-50%) scale(0.95);
+}
+
+.breathing-interface.state-active .floating-avatar-container,
+.breathing-interface.state-focused .floating-avatar-container {
+  opacity: 1;
+  transform: translateX(-50%) scale(1);
+}
+
+.breathing-interface.state-scrolling .floating-avatar-container {
+  opacity: 0.6;
+  transform: translateX(-50%) scale(0.92);
+}
+
+/* ✅ Invite suggestions breathing */
+.breathing-interface .invite-suggestion {
+  transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.breathing-interface.state-idle .invite-suggestion {
+  opacity: 0.6;
+  transform: scale(0.96);
+}
+
+.breathing-interface.state-scrolling .invite-suggestion {
+  opacity: 0.4;
+  transform: scale(0.94);
+}
+
+/* ✅ Pane invite bar breathing */
+.breathing-interface .pane-invite-bar {
+  transition: all 0.3s ease;
+}
+
+.breathing-interface.state-scrolling .pane-invite-bar {
+  opacity: var(--chrome-opacity, 0.15);
+  transform: translateY(-2px);
+}
+
+/* ✅ Footer breathing */
+.breathing-interface .chat-footer-note {
+  transition: opacity 0.4s ease;
+}
+
+.breathing-interface.state-idle .chat-footer-note,
+.breathing-interface.state-scrolling .chat-footer-note {
+  opacity: var(--chrome-opacity, 0.2);
+}
+
+/* ✅ Message icons breathing */
+.breathing-interface .message-icon {
+  transition: all 0.3s ease;
+}
+
+.breathing-interface.state-idle .message-icon {
+  opacity: 0.8;
+  transform: scale(0.95);
+}
+
+.breathing-interface.state-scrolling .message-icon {
+  opacity: 0.7;
+  transform: scale(0.93);
+}
+
+/* ✅ Typing indicator enhancement */
+.breathing-interface.state-active .typing,
+.breathing-interface.state-focused .typing {
+  opacity: 1;
+  transform: scale(1);
+}
+
+/* ✅ Scroll-based message fading */
+.breathing-interface.state-scrolling .chat-history {
+  mask-image: linear-gradient(
+    to bottom,
+    transparent 0%,
+    black 10%,
+    black 90%,
+    transparent 100%
+  );
+  -webkit-mask-image: linear-gradient(
+    to bottom,
+    transparent 0%,
+    black 10%,
+    black 90%,
+    transparent 100%
+  );
+}
+
+/* ✅ Enhanced hover states in active mode */
+.breathing-interface.state-active .message-content:hover,
+.breathing-interface.state-focused .message-content:hover {
+  background: rgba(15, 15, 25, 0.9);
+  border-color: rgba(255, 215, 0, 0.3);
+  transform: translateY(-1px);
+}
+
+/* ✅ Subtle pulsing in idle state */
+.breathing-interface.state-idle .floating-avatar-container {
+  animation: idle-pulse 4s ease-in-out infinite;
+}
+
+@keyframes idle-pulse {
+  0%, 100% {
+    opacity: 0.8;
+    transform: translateX(-50%) scale(0.95);
+  }
+  50% {
+    opacity: 0.9;
+    transform: translateX(-50%) scale(0.96);
+  }
+}
+
+/* ✅ Disable animations during scrolling for performance */
+.breathing-interface.state-scrolling * {
+  animation-play-state: paused;
+}
+
+.breathing-interface.state-scrolling .floating-avatar-container {
+  animation: none;
+}
+
+/* ✅ Mobile adjustments */
+@media (max-width: 600px) {
+  .breathing-interface.state-idle {
+    --ui-opacity: 0.4;
+    --chrome-opacity: 0.3;
+  }
+  
+  .breathing-interface.state-scrolling {
+    --ui-opacity: 0.5;
+    --chrome-opacity: 0.2;
+  }
+  
+  /* More pronounced scaling on mobile for touch feedback */
+  .breathing-interface.state-focused .chat-input {
+    transform: scale(1.02) translateY(-3px);
+  }
+}
+
+/* ✅ Reduced motion accessibility */
+@media (prefers-reduced-motion: reduce) {
+  .breathing-interface,
+  .breathing-element,
+  .breathing-chrome {
+    transition: opacity 0.2s ease;
+  }
+  
+  .breathing-interface.state-idle .floating-avatar-container {
+    animation: none;
+  }
+  
+  .breathing-interface .message-content,
+  .breathing-interface .chat-input,
+  .breathing-interface .message-icon {
+    transform: none !important;
+  }
+}
+
+/* ✅ High contrast mode support */
+@media (prefers-contrast: high) {
+  .breathing-interface.state-idle {
+    --ui-opacity: 0.6;
+    --chrome-opacity: 0.4;
+  }
+  
+  .breathing-interface.state-scrolling {
+    --ui-opacity: 0.7;
+    --chrome-opacity: 0.3;
+  }
+}

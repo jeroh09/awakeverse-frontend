@@ -1,0 +1,294 @@
+/* src/style/AuthPageStyles.css - Updated with Elegant Portrait Integration */
+
+/* ===== MAIN LAYOUT WITH ORGANIC STARFIELD ===== */
+.auth-page {
+  display: flex;
+  min-height: 100vh;
+  position: relative;
+  /* ORGANIC STARFIELD ACROSS ENTIRE PAGE */
+  background: 
+    radial-gradient(ellipse at top, rgba(16, 20, 40, 0.8), rgba(8, 10, 25, 0.95)),
+    linear-gradient(135deg, #0a0a15 0%, #1a1a2e 50%, #16213e 100%);
+  overflow: visible;
+}
+
+/* ===== LEFT SIDE: TRANSPARENT SHOWCASE ===== */
+.auth-demo-container {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0;
+  position: relative;
+  z-index: 1;
+  background: transparent; /* Completely transparent */
+}
+
+/* ===== RIGHT SIDE: EVEN MORE COMPACT FORM (20% SMALLER) ===== */
+.auth-form {
+  flex: 0 0 232px; /* Reduced from 290px (20% smaller) */
+  margin: auto 0;
+  padding: 1.6rem 1.4rem; /* Reduced from 2rem 1.8rem */
+  position: relative;
+  z-index: 1;
+  
+  /* Glassmorphism effect */
+  background: linear-gradient(135deg, 
+    rgba(255, 255, 255, 0.02) 0%,
+    rgba(255, 215, 0, 0.03) 100%);
+  backdrop-filter: blur(25px);
+  -webkit-backdrop-filter: blur(25px);
+  
+  /* Ethereal border */
+  border: 1px solid rgba(255, 215, 0, 0.2);
+  border-radius: 14px; /* Reduced from 16px */
+  
+  /* Floating glow effect */
+  box-shadow: 
+    0 0 40px rgba(255, 215, 0, 0.1),
+    0 12px 28px rgba(0, 0, 0, 0.3),
+    inset 0 1px 0 rgba(255, 255, 255, 0.1);
+    
+  /* Subtle floating animation */
+  animation: float 6s ease-in-out infinite;
+  
+  margin-right: 1.6rem; /* Reduced from 2rem */
+}
+
+@keyframes float {
+  0%, 100% { transform: translateY(0px); }
+  50% { transform: translateY(-8px); }
+}
+
+/* ===== FORM STYLING (ULTRA COMPACT) ===== */
+.auth-form h2 {
+  color: #ffd700;
+  font-family: 'Cinzel Decorative', serif;
+  font-size: 1.3rem; /* Reduced from 1.6rem */
+  text-align: center;
+  margin-bottom: 1.2rem; /* Reduced from 1.5rem */
+  text-shadow: 0 0 20px rgba(255, 215, 0, 0.3);
+  font-weight: 400;
+}
+
+.auth-form label {
+  display: block;
+  color: rgba(255, 255, 255, 0.9);
+  font-family: 'Inter', sans-serif;
+  font-size: 0.75rem; /* Reduced from 0.85rem */
+  margin-bottom: 0.3rem; /* Reduced from 0.4rem */
+  margin-top: 1rem; /* Reduced from 1.2rem */
+  font-weight: 500;
+  letter-spacing: 0.3px;
+}
+
+.auth-form input {
+  width: 100%;
+  padding: 0.7rem; /* Reduced from 0.8rem */
+  background: rgba(255, 255, 255, 0.03);
+  border: 1px solid rgba(255, 215, 0, 0.2);
+  border-radius: 8px; /* Reduced from 10px */
+  color: #fff;
+  font-family: 'Inter', sans-serif;
+  font-size: 0.8rem; /* Reduced from 0.9rem */
+  transition: all 0.3s ease;
+  backdrop-filter: blur(10px);
+  box-sizing: border-box;
+}
+
+.auth-form input:focus {
+  outline: none;
+  border-color: rgba(255, 215, 0, 0.5);
+  box-shadow: 
+    0 0 0 2px rgba(255, 215, 0, 0.1),
+    0 0 12px rgba(255, 215, 0, 0.2); /* Reduced glow */
+  background: rgba(255, 255, 255, 0.05);
+}
+
+.auth-form input::placeholder {
+  color: rgba(255, 255, 255, 0.4);
+  font-size: 0.75rem; /* Reduced from 0.85rem */
+}
+
+.auth-form button {
+  width: 100%;
+  padding: 0.8rem; /* Reduced from 1rem */
+  margin-top: 1.2rem; /* Reduced from 1.5rem */
+  background: linear-gradient(135deg, 
+    rgba(255, 215, 0, 0.8) 0%, 
+    rgba(255, 215, 0, 0.9) 100%);
+  border: none;
+  border-radius: 8px; /* Reduced from 10px */
+  color: #1a1a2e;
+  font-family: 'Inter', sans-serif;
+  font-weight: 600;
+  font-size: 0.8rem; /* Reduced from 0.9rem */
+  cursor: pointer;
+  transition: all 0.3s ease;
+  letter-spacing: 0.5px;
+  text-transform: uppercase;
+}
+
+.auth-form button:hover:not(:disabled) {
+  background: linear-gradient(135deg, 
+    rgba(255, 215, 0, 0.9) 0%, 
+    rgba(255, 215, 0, 1) 100%);
+  transform: translateY(-2px);
+  box-shadow: 0 6px 16px rgba(255, 215, 0, 0.3); /* Reduced shadow */
+}
+
+.auth-form button:disabled {
+  opacity: 0.7;
+  cursor: not-allowed;
+  transform: none;
+}
+
+.auth-form p {
+  text-align: center;
+  margin-top: 1rem; /* Reduced from 1.2rem */
+  color: rgba(255, 255, 255, 0.7);
+  font-family: 'Inter', sans-serif;
+  font-size: 0.7rem; /* Reduced from 0.8rem */
+}
+
+.auth-form p a {
+  color: #ffd700;
+  text-decoration: none;
+  font-weight: 500;
+  transition: all 0.3s ease;
+}
+
+.auth-form p a:hover {
+  color: #fff;
+  text-shadow: 0 0 8px rgba(255, 215, 0, 0.5);
+}
+
+/* ===== ERROR/SUCCESS MESSAGES ===== */
+.error-text, .success-text {
+  padding: 1rem;
+  border-radius: 8px;
+  margin-bottom: 1rem;
+  font-family: 'Inter', sans-serif;
+  font-size: 0.9rem;
+  text-align: center;
+}
+
+.error-text {
+  background: rgba(255, 82, 82, 0.1);
+  border: 1px solid rgba(255, 82, 82, 0.3);
+  color: #ff8a8a;
+}
+
+.success-text {
+  background: rgba(82, 255, 168, 0.1);
+  border: 1px solid rgba(82, 255, 168, 0.3);
+  color: #52ffa8;
+}
+
+/* ===== MOBILE RESPONSIVE WITH ORGANIC STARFIELD ===== */
+@media (max-width: 768px) {
+  .auth-page {
+    flex-direction: column;
+    /* SAME organic starfield continues seamlessly */
+  }
+  
+  .auth-demo-container {
+    display: none; /* Hide elegant portraits on mobile */
+  }
+  
+  .auth-form {
+    flex: none;
+    margin: 1.2rem 0.8rem; /* Reduced margins */
+    padding: 1.2rem 1rem; /* Reduced padding */
+    animation: none; /* Disable float animation on mobile */
+    /* Form floats over the same organic starfield */
+  }
+}
+
+@media (max-width: 1200px) {
+  .auth-form {
+    flex: 0 0 210px; /* Even more compact */
+    margin-right: 1.2rem;
+  }
+}
+
+@media (max-width: 900px) {
+  .auth-form {
+    flex: 0 0 190px; /* Ultra compact */
+    margin-right: 0.8rem;
+    padding: 1.4rem 1.2rem;
+  }
+  
+  .auth-form h2 {
+    font-size: 1.2rem;
+  }
+}
+
+/* ===== FONT IMPORTS ===== */
+@import url('https://fonts.googleapis.com/css2?family=Cinzel+Decorative:wght@400;700&family=Inter:wght@400;500;600&family=Lora:ital,wght@0,400;0,500;1,400&display=swap');
+
+/* LANDING PAGE STYLE STARFIELD */
+.auth-page::before {
+  content: '';
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100vw;
+  height: 100vh;
+  background-image:
+    radial-gradient(3px 3px at 20px 30px, #fff, transparent),
+    radial-gradient(2px 2px at 40px 70px, #fff, transparent),
+    radial-gradient(2px 2px at 90px 40px, #fff, transparent),
+    radial-gradient(3px 3px at 130px 80px, #fff, transparent),
+    radial-gradient(2px 2px at 160px 30px, #fff, transparent),
+    radial-gradient(1px 1px at 200px 120px, #fff, transparent),
+    radial-gradient(3px 3px at 240px 60px, #fff, transparent),
+    radial-gradient(2px 2px at 280px 140px, #fff, transparent),
+    radial-gradient(2px 2px at 320px 90px, #fff, transparent),
+    radial-gradient(1px 1px at 360px 170px, #fff, transparent);
+  background-repeat: repeat;
+  background-size: 400px 200px;
+  animation: starTwinkle 4s ease-in-out infinite alternate;
+  z-index: 10;
+  pointer-events: none;
+}
+
+@keyframes starTwinkle {
+  0% { opacity: 0.8; }
+  100% { opacity: 1; }
+}
+/* FORCE STARS TO SHOW ABOVE EVERYTHING */
+.auth-page {
+  position: relative;
+  z-index: 0;
+}
+
+.auth-page::before {
+  z-index: 1 !important;
+}
+
+.auth-demo-container,
+.auth-form {
+  z-index: 2
+}
+/* FORCE STARS TO SHOW */
+body::before {
+  content: '';
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100vw;
+  height: 100vh;
+  background-image:
+    radial-gradient(3px 3px at 20px 30px, #fff, transparent),
+    radial-gradient(2px 2px at 40px 70px, #fff, transparent),
+    radial-gradient(2px 2px at 90px 40px, #fff, transparent),
+    radial-gradient(3px 3px at 130px 80px, #fff, transparent),
+    radial-gradient(2px 2px at 160px 30px, #fff, transparent),
+    radial-gradient(1px 1px at 200px 120px, #fff, transparent);
+  background-repeat: repeat;
+  background-size: 400px 200px;
+  animation: starTwinkle 4s ease-in-out infinite alternate;
+  z-index: 999;
+  pointer-events: none;
+}

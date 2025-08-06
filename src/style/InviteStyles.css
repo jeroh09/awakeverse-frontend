@@ -1,0 +1,315 @@
+/* ===================================================================
+   INVITE SUGGESTION SYSTEM - CONTAINED STYLING
+   =================================================================== */
+
+/* Invite Container - Positioned within message content */
+.invite-suggestion {
+  background: rgba(30, 60, 120, 0.05);
+  border: 1px solid #d4af37;
+  border-radius: 14px;
+  padding: 12px 14px;
+  margin: 8px 0 4px 0; /* Reduced margins to prevent excessive spacing */
+  box-shadow:
+    0 1px 2px rgba(0, 0, 0, 0.04),
+    inset 0 1px 0 rgba(255, 255, 255, 0.05);
+  position: relative;
+  overflow: hidden;
+  /* Ensure it doesn't break out of message flow */
+  width: 100%;
+  max-width: 100%;
+  box-sizing: border-box;
+}
+
+.invite-suggestion::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 2px;
+  background: linear-gradient(90deg, #d4af37, #facc15, #d97706);
+  border-radius: 14px 14px 0 0;
+}
+
+/* Prompt Text */
+.invite-prompt {
+  font-size: 14px;
+  font-weight: 600;
+  color: #d4af37;
+  margin-bottom: 10px;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-family: 'Cinzel', serif;
+  line-height: 1.4;
+}
+
+.invite-prompt::before {
+  content: '✨';
+  font-size: 16px;
+  filter: drop-shadow(0 0 4px rgba(212, 175, 55, 0.4));
+  flex-shrink: 0;
+}
+
+/* Button Grid Container */
+.invite-buttons {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  align-items: center;
+  justify-content: flex-start;
+}
+
+/* Individual Invite Button */
+.invite-button {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 6px 12px;
+  border: 1px solid #d4af37;
+  background-color: rgba(30, 60, 120, 0.1);
+  border-radius: 999px;
+  font-size: 13px;
+  font-family: 'Cinzel', serif;
+  text-transform: uppercase;
+  font-weight: 500;
+  color: #d4af37;
+  cursor: pointer;
+  transition: all 0.25s ease;
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.08);
+  white-space: nowrap;
+  /* Prevent button from breaking layout */
+  max-width: 100%;
+  box-sizing: border-box;
+}
+
+.invite-button:hover:not(:disabled) {
+  background-color: rgba(30, 60, 120, 0.2);
+  transform: scale(1.05);
+  box-shadow: 0 0 6px rgba(212, 175, 55, 0.4);
+}
+
+.invite-button:disabled {
+  background-color: rgba(120, 120, 120, 0.1);
+  color: #aaa;
+  border-color: #aaa;
+  cursor: not-allowed;
+  opacity: 0.6;
+  transform: none;
+}
+
+/* Avatar within Button */
+.invite-button-avatar {
+  width: 22px;
+  height: 22px;
+  border-radius: 50%;
+  object-fit: cover;
+  border: 1px solid rgba(255, 255, 255, 0.6);
+  box-shadow: 0 1px 1px rgba(0, 0, 0, 0.1);
+  flex-shrink: 0;
+}
+
+/* Button with Avatar Styling */
+.invite-button-with-avatar {
+  padding-left: 10px;
+  padding-right: 14px;
+}
+
+/* New Invite Animation */
+.invite-suggestion.new-invite {
+  animation: invitePulse 1.5s ease-in-out;
+}
+
+@keyframes invitePulse {
+  0% {
+    box-shadow: 0 0 0 0 rgba(212, 175, 55, 0.5);
+  }
+  50% {
+    box-shadow: 0 0 0 8px rgba(212, 175, 55, 0);
+  }
+  100% {
+    box-shadow: 0 0 0 0 rgba(212, 175, 55, 0);
+  }
+}
+
+/* ===================================================================
+   RESPONSIVE DESIGN
+   =================================================================== */
+
+/* Mobile Adjustments */
+@media (max-width: 640px) {
+  .invite-suggestion {
+    padding: 10px;
+    margin: 6px 0 3px 0;
+  }
+
+  .invite-button {
+    padding: 5px 10px;
+    font-size: 12px;
+    gap: 6px;
+  }
+
+  .invite-button-avatar {
+    width: 20px;
+    height: 20px;
+  }
+
+  .invite-prompt {
+    font-size: 13px;
+    margin-bottom: 8px;
+  }
+
+  .invite-buttons {
+    gap: 6px;
+  }
+}
+
+/* Large Screen Adjustments */
+@media (min-width: 1024px) {
+  .invite-suggestion {
+    max-width: 90%; /* Prevent it from being too wide on large screens */
+  }
+  
+  .invite-buttons {
+    gap: 10px;
+  }
+  
+  .invite-button {
+    padding: 8px 14px;
+    font-size: 14px;
+  }
+}
+
+/* ===================================================================
+   INTEGRATION WITH MESSAGE SYSTEM
+   =================================================================== */
+
+/* Ensure invite suggestions don't interfere with message spacing */
+.message-content .invite-suggestion {
+  /* Reset any inherited margin/padding that might interfere */
+  margin-top: 0.75rem;
+  margin-bottom: 0.25rem;
+  margin-left: 0;
+  margin-right: 0;
+}
+
+/* When invite is the last element in a message */
+.message-content .invite-suggestion:last-child {
+  margin-bottom: 0;
+}
+
+/* Ensure proper text flow around invites */
+.message-content > *:not(.invite-suggestion) + .invite-suggestion {
+  margin-top: 0.75rem;
+}
+
+/* ===================================================================
+   ACCESSIBILITY & INTERACTION
+   =================================================================== */
+
+/* Focus states for keyboard navigation */
+.invite-button:focus {
+  outline: 2px solid rgba(212, 175, 55, 0.6);
+  outline-offset: 2px;
+}
+
+/* High contrast mode support */
+@media (prefers-contrast: high) {
+  .invite-suggestion {
+    border-width: 2px;
+    background: rgba(0, 0, 0, 0.8);
+  }
+  
+  .invite-button {
+    border-width: 2px;
+    background: rgba(0, 0, 0, 0.9);
+  }
+}
+
+/* Reduced motion support */
+@media (prefers-reduced-motion: reduce) {
+  .invite-button {
+    transition: none;
+  }
+  
+  .invite-button:hover {
+    transform: none;
+  }
+  
+  .invite-suggestion.new-invite {
+    animation: none;
+  }
+  
+  @keyframes invitePulse {
+    /* Disable animation */
+    0%, 100% {
+      box-shadow: 0 0 0 0 rgba(212, 175, 55, 0.5);
+    }
+  }
+}
+
+/* ===================================================================
+   ERROR PREVENTION
+   =================================================================== */
+
+/* Prevent invite elements from breaking out of containers */
+.invite-suggestion,
+.invite-prompt,
+.invite-buttons,
+.invite-button {
+  word-wrap: break-word;
+  overflow-wrap: break-word;
+  hyphens: auto;
+}
+
+/* Ensure buttons don't cause horizontal scroll */
+.invite-buttons {
+  overflow-x: auto;
+  scrollbar-width: none;
+  -ms-overflow-style: none;
+}
+
+.invite-buttons::-webkit-scrollbar {
+  display: none;
+}
+
+/* Prevent text selection on interactive elements */
+.invite-button,
+.invite-prompt::before {
+  user-select: none;
+  -webkit-user-select: none;
+  -moz-user-select: none;
+  -ms-user-select: none;
+}
+
+/* ===================================================================
+   PANE INVITE BAR (if you have this feature)
+   =================================================================== */
+
+.pane-invite-bar {
+  background: rgba(30, 60, 120, 0.08);
+  border-bottom: 1px solid #d4af37;
+  padding: 8px 16px;
+  text-align: center;
+  flex-shrink: 0;
+}
+
+.pane-invite-button {
+  background: rgba(30, 60, 120, 0.1);
+  border: 1px solid #d4af37;
+  color: #d4af37;
+  padding: 6px 16px;
+  border-radius: 20px;
+  font-family: 'Cinzel', serif;
+  font-size: 13px;
+  font-weight: 500;
+  text-transform: uppercase;
+  cursor: pointer;
+  transition: all 0.25s ease;
+}
+
+.pane-invite-button:hover {
+  background: rgba(30, 60, 120, 0.2);
+  transform: translateY(-1px);
+  box-shadow: 0 2px 8px rgba(212, 175, 55, 0.3);
+}

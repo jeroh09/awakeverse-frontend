@@ -1,0 +1,55 @@
+/* src/pages/UploadAvatar.module.css */
+
+.container {
+  display: flex;
+  justify-content: center;
+  align-items: flex-start;
+  padding: 2rem;
+}
+
+.card {
+  width: 100%;
+  max-width: 28rem;       /* ~448px */
+  background: #fff;
+  border-radius: 0.5rem;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+  padding: 1.5rem;
+}
+
+.title {
+  text-align: center;
+  font-size: 1.5rem;
+  font-weight: 600;
+  margin-bottom: 1rem;
+}
+
+.preview {
+  display: flex;
+  justify-content: center;
+  margin-bottom: 1rem;
+}
+
+.actions {
+  display: flex;
+  justify-content: center;
+  gap: 1rem;
+  margin-top: 1rem;
+}
+
+.button {
+  padding: 0.5rem 1rem;
+  border-radius: 0.375rem;
+  border: none;
+  cursor: pointer;
+  font-weight: 500;
+}
+
+.save {
+  background-color: #3b82f6;   /* blue-500 */
+  color: white;
+}
+
+.cancel {
+  background-color: #e5e7eb;   /* gray-200 */
+  color: #374151;              /* gray-700 */
+}

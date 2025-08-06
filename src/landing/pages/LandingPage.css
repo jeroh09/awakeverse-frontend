@@ -1,0 +1,1480 @@
+/* src/landing/pages/LandingPage.css - Fixed Royal Blue Background + Stable Carousel */
+
+/* Import Premium Fonts */
+@import url('https://fonts.googleapis.com/css2?family=Cinzel+Decorative:wght@400;700&family=Lora:wght@400;500;600;700&family=Inter:wght@300;400;500;600;700&family=Crimson+Text:ital,wght@0,400;0,600;1,400;1,600&family=Source+Serif+Pro:ital,wght@0,300;0,400;0,600;1,400&display=swap');
+
+/* Reset and Base Styles */
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+body, html {
+  overflow-x: hidden;
+  scroll-behavior: smooth;
+}
+
+/* Landing Container with DEEP NAVY MATTE Background */
+.landing-container {
+  position: relative;
+  height: 100vh;
+  overflow: hidden;
+  color: #ffffff;
+  font-family: 'Inter', sans-serif;
+  
+  /* MATTE Deep Navy Blue - No gradients for matte finish */
+  background: #1a1a2e;
+}
+
+/* IMPROVED: Animated Stars with Better Performance */
+.stars {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  pointer-events: none;
+  z-index: 1;
+  overflow: hidden;
+}
+
+.star {
+  position: absolute;
+  width: 2px;
+  height: 2px;
+  background: rgba(255, 255, 255, 0.9);
+  border-radius: 50%;
+  box-shadow: 0 0 6px rgba(255, 255, 255, 0.6);
+  animation: twinkle 4s ease-in-out infinite;
+}
+
+/* Enhanced star sizes for variety */
+.star:nth-child(3n) {
+  width: 3px;
+  height: 3px;
+  box-shadow: 0 0 8px rgba(255, 255, 255, 0.8);
+}
+
+.star:nth-child(7n) {
+  width: 1px;
+  height: 1px;
+  box-shadow: 0 0 4px rgba(255, 255, 255, 0.4);
+}
+
+@keyframes twinkle {
+  0%, 100% { 
+    opacity: 0.3; 
+    transform: scale(1); 
+    box-shadow: 0 0 6px rgba(255, 255, 255, 0.2);
+  }
+  50% { 
+    opacity: 1; 
+    transform: scale(1.2); 
+    box-shadow: 0 0 12px rgba(255, 255, 255, 0.8);
+  }
+}
+
+/* FIXED: Stable Carousel Container */
+.carousel-container {
+  position: relative;
+  width: 100%;
+  height: 100vh;
+  overflow: hidden;
+  z-index: 2;
+}
+
+.carousel-track {
+  display: flex;
+  width: 300%; /* Exactly 3 screens */
+  height: 100%;
+  will-change: transform;
+  backface-visibility: hidden; /* Prevent flickering */
+  transform: translateZ(0); /* Force hardware acceleration */
+}
+
+.carousel-slide {
+  width: 33.333%;
+  height: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 2rem;
+  flex-shrink: 0; /* Prevent shrinking */
+  opacity: 1;
+  visibility: visible;
+}
+
+/* Ensure all slides are always visible during transitions */
+.carousel-slide[data-screen="0"],
+.carousel-slide[data-screen="1"],
+.carousel-slide[data-screen="2"] {
+  opacity: 1;
+  visibility: visible;
+}
+
+.screen-content {
+  width: 100%;
+  max-width: 1200px;
+  text-align: center;
+  opacity: 1;
+  transform: translateY(0);
+  transition: opacity 0.3s ease, transform 0.3s ease;
+}
+
+/* Hero Content */
+.hero-content {
+  margin-bottom: 3rem;
+}
+
+.logo {
+  font-family: 'Cinzel Decorative', serif;
+  font-size: 3.5rem;
+  font-weight: 700;
+  color: #ffd700;
+  margin-bottom: 2rem;
+  text-shadow: 
+    0 0 10px rgba(255, 215, 0, 0.5),
+    0 0 20px rgba(255, 215, 0, 0.3),
+    0 0 30px rgba(255, 215, 0, 0.2);
+  letter-spacing: 0.05em;
+}
+
+.main-tagline {
+  font-family: 'Lora', serif;
+  font-size: 2rem;
+  font-weight: 600;
+  line-height: 1.3;
+  margin-bottom: 1.5rem;
+  color: #ffffff;
+  text-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
+}
+
+.highlight-gold { 
+  color: #ffd700; 
+  text-shadow: 0 0 8px rgba(255, 215, 0, 0.4);
+}
+
+.hero-subtitle {
+  font-family: 'Inter', sans-serif;
+  font-size: 1.2rem;
+  font-weight: 400;
+  line-height: 1.6;
+  color: rgba(255, 255, 255, 0.9);
+  margin-bottom: 2.5rem;
+  max-width: 600px;
+  margin-left: auto;
+  margin-right: auto;
+}
+
+.cta-primary {
+  display: inline-block;
+  background: transparent; /* TRANSPARENT background */
+  color: #ffd700; /* GOLD text */
+  font-family: 'Inter', sans-serif;
+  font-weight: 700;
+  font-size: 1.1rem;
+  padding: 1.2rem 3rem;
+  border: 3px solid #ffd700; /* GOLD border ring */
+  border-radius: 50px;
+  text-decoration: none;
+  cursor: pointer;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  box-shadow: 
+    0 0 20px rgba(255, 215, 0, 0.3), /* Gold glow */
+    inset 0 0 20px rgba(255, 215, 0, 0.05); /* Subtle inner glow */
+  position: relative;
+  overflow: hidden;
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+}
+
+.cta-primary::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: -100%;
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(90deg, transparent, rgba(255, 215, 0, 0.1), transparent);
+  transition: left 0.5s ease;
+}
+
+.cta-primary:hover::before {
+  left: 100%;
+}
+
+.cta-primary:hover {
+  transform: translateY(-2px);
+  background: rgba(255, 215, 0, 0.1); /* Slight gold tint on hover */
+  border-color: #ffed4a;
+  box-shadow: 
+    0 0 30px rgba(255, 215, 0, 0.5),
+    0 8px 32px rgba(255, 215, 0, 0.3),
+    inset 0 0 30px rgba(255, 215, 0, 0.08);
+}
+
+/* Scale ONLY Screen 1 content, not the container */
+.carousel-slide[data-screen="0"] .screen-content {
+  transform: scale(0.7);
+  transform-origin: center;
+}
+
+/* Ensure other screens stay normal size */
+.carousel-slide[data-screen="1"] .screen-content,
+.carousel-slide[data-screen="2"] .screen-content {
+  transform: scale(1);
+  transform-origin: center;
+}
+
+/* Social Proof Header */
+.social-proof-header {
+  margin-bottom: 3rem;
+}
+
+.stars-rating {
+  color: #ffd700;
+  font-size: 2rem;
+  text-shadow: 0 0 10px rgba(255, 215, 0, 0.4);
+  margin-bottom: 1rem;
+  display: block;
+}
+
+.proof-text {
+  font-family: 'Source Serif Pro', serif;
+  font-size: 1.2rem;
+  color: rgba(255, 255, 255, 0.9);
+  font-weight: 400;
+}
+
+.tagline-below-rating {
+  font-family: 'Crimson Text', serif;
+  font-size: 1.1rem;
+  color: rgba(255, 255, 255, 0.85);
+  margin-top: 1rem;
+  font-weight: 400;
+  font-style: italic;
+}
+
+.section-title {
+  font-family: 'Cinzel Decorative', serif;
+  font-size: 2.5rem;
+  color: #ffd700;
+  margin-bottom: 3rem;
+  text-shadow: 0 0 20px rgba(255, 215, 0, 0.3);
+}
+
+.conversation-examples-title {
+  font-family: 'Crimson Text', serif;
+  font-size: 1.6rem;
+  color: #ffd700;
+  margin-bottom: 2.5rem;
+  text-shadow: 0 0 12px rgba(255, 215, 0, 0.4);
+  font-weight: 600;
+  font-style: italic;
+  line-height: 1.3;
+}
+
+.invitation-subtitle {
+  font-family: 'Source Serif Pro', serif;
+  font-size: 1.1rem;
+  color: rgba(255, 255, 255, 0.8);
+  margin-bottom: 3rem;
+  font-weight: 300;
+}
+
+/* Chat Examples */
+.chat-examples {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 2rem;
+  max-width: 1000px;
+  margin: 0 auto;
+}
+
+.chat-example {
+  background: rgba(255, 255, 255, 0.08);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  border: 1px solid rgba(255, 215, 0, 0.3);
+  border-radius: 20px;
+  overflow: hidden;
+  transition: all 0.3s ease;
+  box-shadow: 
+    0 8px 32px rgba(0, 0, 0, 0.4),
+    inset 0 1px 0 rgba(255, 255, 255, 0.1);
+}
+
+.chat-example:hover {
+  transform: translateY(-5px);
+  box-shadow: 
+    0 15px 40px rgba(0, 0, 0, 0.5),
+    0 0 20px rgba(255, 215, 0, 0.12);
+  border-color: rgba(255, 215, 0, 0.5);
+}
+
+.chat-header {
+  background: rgba(255, 215, 0, 0.15);
+  padding: 1rem 1.5rem;
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  border-bottom: 1px solid rgba(255, 215, 0, 0.2);
+}
+
+.chat-avatar {
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  object-fit: cover;
+  border: 2px solid #ffd700;
+}
+
+.chat-avatar-fallback {
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, #ffd700, #ffed4a);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: bold;
+  color: #1a1a2e;
+  font-size: 1.2rem;
+  border: 2px solid #ffd700;
+}
+
+.chat-character-name {
+  font-family: 'Inter', sans-serif;
+  font-weight: 600;
+  color: #ffd700;
+  font-size: 1rem;
+}
+
+.chat-messages {
+  padding: 1.5rem;
+}
+
+.chat-message {
+  margin-bottom: 1rem;
+  display: flex;
+}
+
+.chat-message.user {
+  justify-content: flex-end;
+}
+
+.chat-message.ai {
+  justify-content: flex-start;
+}
+
+.message-bubble {
+  background: rgba(255, 255, 255, 0.1);
+  padding: 0.8rem 1.2rem;
+  border-radius: 15px;
+  max-width: 85%;
+  font-family: 'Source Serif Pro', serif;
+  line-height: 1.5;
+  font-size: 0.9rem;
+  font-weight: 400;
+}
+
+.chat-message.user .message-bubble {
+  background: linear-gradient(135deg, #ffd700, #ffed4a);
+  color: #1a1a2e;
+  border-bottom-right-radius: 5px;
+}
+
+.chat-message.ai .message-bubble {
+  background: rgba(255, 255, 255, 0.2);
+  color: rgba(255, 255, 255, 0.95);
+  border-bottom-left-radius: 5px;
+}
+
+/* Invitation Demo */
+.invitation-demo {
+  display: grid;
+  grid-template-columns: 1.2fr 0.8fr;
+  gap: 3rem;
+  align-items: start;
+  max-width: 1000px;
+  margin: 0 auto;
+}
+
+.demo-chat {
+  background: rgba(255, 255, 255, 0.08);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  border: 1px solid rgba(255, 215, 0, 0.3);
+  border-radius: 24px;
+  overflow: hidden;
+  text-align: left;
+  box-shadow: 
+    0 8px 32px rgba(0, 0, 0, 0.4),
+    inset 0 1px 0 rgba(255, 255, 255, 0.1);
+}
+
+.chat-info {
+  display: flex;
+  flex-direction: column;
+}
+
+.chat-name {
+  font-family: 'Inter', sans-serif;
+  font-weight: 600;
+  color: #ffd700;
+  font-size: 1.1rem;
+}
+
+.chat-status {
+  font-family: 'Inter', sans-serif;
+  font-size: 0.8rem;
+  color: rgba(255, 255, 255, 0.7);
+}
+
+.invite-suggestions {
+  background: rgba(255, 215, 0, 0.1);
+  border: 1px solid rgba(255, 215, 0, 0.3);
+  border-radius: 15px;
+  padding: 1.5rem;
+  margin-top: 1rem;
+  animation: fadeInUp 0.5s ease-out;
+}
+
+.invite-text {
+  font-family: 'Crimson Text', serif;
+  color: rgba(255, 255, 255, 0.9);
+  margin-bottom: 1rem;
+  font-weight: 400;
+  font-size: 0.95rem;
+}
+
+.invite-buttons {
+  display: flex;
+  gap: 1rem;
+  justify-content: center;
+}
+
+.invite-button {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  background: rgba(255, 255, 255, 0.1);
+  border: 2px solid rgba(255, 215, 0, 0.4);
+  color: #ffd700;
+  padding: 0.8rem 1.5rem;
+  border-radius: 25px;
+  text-decoration: none;
+  font-family: 'Inter', sans-serif;
+  font-weight: 600;
+  font-size: 0.9rem;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  position: relative;
+  overflow: hidden;
+}
+
+.invite-button::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: -100%;
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(135deg, rgba(255, 215, 0, 0.2), rgba(255, 215, 0, 0.1));
+  transition: left 0.3s ease;
+  z-index: -1;
+}
+
+.invite-button:hover::before {
+  left: 0;
+}
+
+.invite-button:hover {
+  border-color: #ffd700;
+  transform: translateY(-2px);
+  box-shadow: 0 8px 25px rgba(255, 215, 0, 0.2);
+}
+
+.invite-avatar,
+.invite-avatar-fallback {
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  object-fit: cover;
+  border: 2px solid #ffd700;
+}
+
+.invite-avatar-fallback {
+  background: linear-gradient(135deg, #ffd700, #ffed4a);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: bold;
+  color: #1a1a2e;
+  font-size: 1rem;
+}
+
+/* Demo Explanation */
+.demo-explanation {
+  display: flex;
+  flex-direction: column;
+  text-align: left;
+}
+
+.demo-explanation h3 {
+  font-family: 'Cinzel Decorative', serif;
+  font-size: 1.8rem;
+  color: #ffd700;
+  margin-bottom: 2rem;
+  text-shadow: 0 0 10px rgba(255, 215, 0, 0.3);
+}
+
+.demo-explanation ul {
+  list-style: none;
+  padding: 0;
+  margin: 0 0 2.5rem 0;
+}
+
+.demo-explanation li {
+  font-family: 'Source Serif Pro', serif;
+  font-size: 1rem;
+  color: rgba(255, 255, 255, 0.9);
+  line-height: 1.6;
+  margin-bottom: 1.2rem;
+  padding-left: 2rem;
+  position: relative;
+  font-weight: 400;
+}
+
+.demo-explanation li::before {
+  content: '✨';
+  position: absolute;
+  left: 0;
+  top: 0;
+  color: #ffd700;
+  font-size: 1.2rem;
+}
+
+.start-exploring {
+  display: inline-block;
+  background: transparent; /* TRANSPARENT background */
+  color: #ffd700; /* GOLD text */
+  font-family: 'Inter', sans-serif;
+  font-weight: 700;
+  font-size: 1.1rem;
+  padding: 1rem 2.5rem;
+  border: 3px solid #ffd700; /* GOLD border ring */
+  border-radius: 40px;
+  text-decoration: none;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  position: relative;
+  overflow: hidden;
+  box-shadow: 
+    0 0 20px rgba(255, 215, 0, 0.3), /* Gold glow */
+    inset 0 0 20px rgba(255, 215, 0, 0.05); /* Subtle inner glow */
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+}
+
+.start-exploring::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: -100%;
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(90deg, transparent, rgba(255, 215, 0, 0.1), transparent);
+  transition: left 0.5s ease;
+}
+
+.start-exploring:hover::before {
+  left: 100%;
+}
+
+.start-exploring:hover {
+  transform: translateY(-3px);
+  background: rgba(255, 215, 0, 0.1); /* Slight gold tint on hover */
+  border-color: #ffed4a;
+  box-shadow: 
+    0 0 30px rgba(255, 215, 0, 0.5),
+    0 10px 35px rgba(255, 215, 0, 0.4),
+    inset 0 0 30px rgba(255, 215, 0, 0.08);
+}
+
+/* MINIMALIST Carousel Navigation - Moved to Side */
+.carousel-navigation {
+  position: fixed;
+  right: 2rem; /* Moved to right side */
+  top: 50%;
+  transform: translateY(-50%);
+  display: flex;
+  flex-direction: column; /* Vertical layout */
+  align-items: center;
+  gap: 1.5rem;
+  z-index: 10;
+  opacity: 0; /* Invisible by default */
+  transition: opacity 0.3s ease;
+  pointer-events: none; /* Allow interaction when visible */
+}
+
+/* Show navigation on hover near right edge */
+.landing-container:hover .carousel-navigation,
+.carousel-navigation:hover {
+  opacity: 0.7;
+  pointer-events: all;
+}
+
+.carousel-navigation:hover {
+  opacity: 1;
+}
+
+.nav-arrow {
+  background: rgba(10, 10, 20, 0.6);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+  border: 1px solid rgba(255, 215, 0, 0.3);
+  color: #ffd700;
+  width: 36px; /* Smaller */
+  height: 36px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.2rem;
+  font-weight: bold;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  user-select: none;
+  box-shadow: 
+    inset 0 1px 2px rgba(0, 0, 0, 0.3),
+    0 1px 3px rgba(0, 0, 0, 0.4);
+}
+
+.nav-arrow:disabled {
+  opacity: 0.3;
+  cursor: not-allowed;
+  transform: none;
+}
+
+.nav-arrow:not(:disabled):hover {
+  background: rgba(15, 15, 25, 0.8);
+  border-color: #ffd700;
+  transform: scale(1.1);
+  box-shadow: 
+    inset 0 1px 2px rgba(0, 0, 0, 0.2),
+    0 2px 8px rgba(255, 215, 0, 0.2);
+}
+
+.carousel-dots {
+  display: flex;
+  flex-direction: column; /* Vertical dots */
+  gap: 0.8rem;
+  align-items: center;
+}
+
+.carousel-dot {
+  width: 8px; /* Smaller dots */
+  height: 8px;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.2);
+  border: 1px solid rgba(255, 215, 0, 0.3);
+  cursor: pointer;
+  transition: all 0.3s ease;
+  position: relative;
+  box-shadow: inset 0 1px 1px rgba(0, 0, 0, 0.3);
+}
+
+.carousel-dot:disabled {
+  cursor: not-allowed;
+}
+
+.carousel-dot.active {
+  background: #ffd700;
+  border-color: #ffd700;
+  box-shadow: 
+    0 0 8px rgba(255, 215, 0, 0.4),
+    inset 0 1px 1px rgba(255, 255, 255, 0.2);
+}
+
+.carousel-dot:not(:disabled):not(.active):hover {
+  background: rgba(255, 215, 0, 0.5);
+  border-color: #ffd700;
+  transform: scale(1.3);
+}
+
+/* Auto-scroll indicator */
+.carousel-navigation::before {
+  content: '';
+  position: absolute;
+  top: -0.5rem;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 2px;
+  height: 4px;
+  background: rgba(255, 215, 0, 0.4);
+  border-radius: 1px;
+  animation: pulse 2s ease-in-out infinite;
+}
+
+@keyframes pulse {
+  0%, 100% { opacity: 0.3; transform: translateX(-50%) scale(1); }
+  50% { opacity: 1; transform: translateX(-50%) scale(1.2); }
+}
+
+/* Typing Animation */
+.typing-cursor {
+  animation: blink 1s infinite;
+  color: #ffd700;
+  font-weight: bold;
+}
+
+@keyframes blink {
+  0%, 50% { opacity: 1; }
+  51%, 100% { opacity: 0; }
+}
+
+/* Smooth invite buttons appearance */
+@keyframes fadeInUp {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* Focus states for accessibility */
+.cta-primary:focus,
+.invite-button:focus,
+.nav-arrow:focus,
+.carousel-dot:focus {
+  outline: 3px solid rgba(255, 215, 0, 0.6);
+  outline-offset: 2px;
+}
+
+/* High contrast mode support */
+@media (prefers-contrast: high) {
+  .chat-example,
+  .demo-chat {
+    border-width: 2px;
+  }
+  
+  .nav-arrow,
+  .carousel-dot {
+    border-width: 3px;
+  }
+}
+
+/* Responsive Design */
+@media (max-width: 1200px) {
+  .chat-examples {
+    grid-template-columns: 1fr;
+    gap: 1.5rem;
+  }
+  
+  .invitation-demo {
+    grid-template-columns: 1fr;
+    gap: 2rem;
+  }
+}
+
+/* ================================
+   FIXED MOBILE ENHANCEMENT MODULE
+   Replace previous mobile module in LandingPage.css
+   ================================ */
+
+/* Enable vertical scrolling on mobile while keeping horizontal carousel */
+@media (max-width: 768px) {
+  /* Allow carousel slides to scroll vertically */
+  .carousel-slide {
+    height: 100vh;
+    overflow-y: auto;
+    overflow-x: hidden;
+    -webkit-overflow-scrolling: touch; /* Smooth iOS scrolling */
+    scroll-behavior: smooth;
+  }
+  
+  /* Allow content to expand beyond viewport - FIXED */
+  .screen-content {
+    min-height: auto; /* Let content determine height */
+    padding-bottom: 6rem; /* Extra space at bottom for navigation */
+    display: flex;
+    flex-direction: column;
+    justify-content: flex-start; /* Top align instead of center */
+    padding-top: 1rem; /* Reduce top padding to show headers */
+    padding-left: 1rem;
+    padding-right: 1rem;
+  }
+  
+  /* CRITICAL: Don't scale down Screen 1 content on mobile */
+  .carousel-slide[data-screen="0"] .screen-content {
+    transform: none !important; /* Remove desktop scaling */
+    transform-origin: center;
+  }
+  
+  /* Improve hero content spacing - FIXED */
+  .hero-content {
+    margin-bottom: 2rem;
+    margin-top: 0; /* Don't pull up */
+    flex-shrink: 0; /* Prevent compression */
+  }
+  
+  /* Fix logo and header sizing */
+  .logo {
+    font-size: 2.5rem; /* Slightly smaller but visible */
+    margin-bottom: 1.5rem;
+  }
+  
+  .main-tagline {
+    font-size: 1.4rem; /* Ensure readability */
+    margin-bottom: 1rem;
+  }
+  
+  .hero-subtitle {
+    font-size: 1rem;
+    margin-bottom: 2rem;
+  }
+  
+  /* Better spacing for all screen content */
+  .social-proof-header,
+  .conversations-content,
+  .invitation-demo {
+    margin-bottom: 2rem;
+    flex-shrink: 0;
+  }
+  
+  /* CRITICAL: Show ALL chat examples on mobile */
+  .chat-examples {
+    display: flex;
+    flex-direction: column;
+    gap: 1.5rem;
+    margin-bottom: 2rem;
+  }
+  
+  /* OVERRIDE any hiding rules - show all chat examples */
+  .chat-example:nth-child(1),
+  .chat-example:nth-child(2),
+  .chat-example:nth-child(3) {
+    display: block !important; /* Force show all */
+  }
+  
+  /* Improve touch targets */
+  .cta-primary,
+  .start-exploring,
+  .chat-link,
+  .invite-button {
+    min-height: 44px;
+    min-width: 44px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    touch-action: manipulation;
+    -webkit-tap-highlight-color: transparent;
+  }
+  
+  /* Navigation improvements for mobile */
+  .carousel-navigation {
+    /* Navigation already positioned for mobile in existing CSS */
+    opacity: 0.8; /* Make more visible on mobile */
+    pointer-events: all;
+  }
+  
+  /* Improve invitation demo for mobile */
+  .invitation-demo {
+    grid-template-columns: 1fr; /* Single column */
+    gap: 2rem;
+    text-align: center;
+  }
+  
+  .demo-chat {
+    margin-bottom: 1.5rem;
+  }
+  
+  /* Better invite buttons on mobile */
+  .invite-buttons {
+    flex-direction: row; /* Keep horizontal on mobile */
+    flex-wrap: wrap;
+    gap: 1rem;
+    justify-content: center;
+  }
+  
+  .invite-button {
+    flex: 1;
+    min-width: 140px;
+    max-width: 180px;
+  }
+}
+
+/* Extra small mobile devices */
+@media (max-width: 480px) {
+  .screen-content {
+    padding-left: 0.75rem;
+    padding-right: 0.75rem;
+    padding-top: 0.5rem; /* Even less top padding */
+    padding-bottom: 4rem;
+  }
+  
+  /* FIXED: Ensure headers are visible */
+  .logo {
+    font-size: 2rem; /* Smaller but still prominent */
+    margin-bottom: 1rem;
+  }
+  
+  .main-tagline {
+    font-size: 1.2rem;
+    margin-bottom: 1rem;
+  }
+  
+  .hero-subtitle {
+    font-size: 0.9rem;
+    margin-bottom: 1.5rem;
+  }
+  
+  /* Even better hero spacing */
+  .hero-content {
+    margin-bottom: 1.5rem;
+    margin-top: 0;
+  }
+  
+  /* Larger touch targets for small screens */
+  .cta-primary,
+  .start-exploring {
+    padding: 1.2rem 2rem;
+    font-size: 1rem;
+    min-height: 48px;
+  }
+  
+  /* Stack invite buttons on very small screens */
+  .invite-buttons {
+    flex-direction: column;
+    align-items: center;
+  }
+  
+  .invite-button {
+    width: 100%;
+    max-width: 240px;
+  }
+  
+  /* Improve typing demo layout */
+  .demo-explanation h3 {
+    font-size: 1.4rem;
+    margin-bottom: 1.5rem;
+  }
+  
+  .demo-explanation li {
+    font-size: 0.9rem;
+    margin-bottom: 1rem;
+  }
+  
+  /* ENSURE character panels are visible on very small screens */
+  .enhanced-characters-showcase {
+    margin-top: 1rem; /* Add some top margin */
+  }
+}
+
+/* Touch gesture support preparation */
+@media (max-width: 768px) {
+  .carousel-container {
+    touch-action: pan-y pinch-zoom; /* Allow vertical scroll, prevent horizontal */
+  }
+  
+  .carousel-track {
+    touch-action: none; /* Prevent default touch on track */
+  }
+  
+  /* Improve scrollbar styling for mobile */
+  .carousel-slide::-webkit-scrollbar {
+    width: 3px;
+  }
+  
+  .carousel-slide::-webkit-scrollbar-track {
+    background: transparent;
+  }
+  
+  .carousel-slide::-webkit-scrollbar-thumb {
+    background: rgba(255, 215, 0, 0.3);
+    border-radius: 2px;
+  }
+  
+  .carousel-slide::-webkit-scrollbar-thumb:hover {
+    background: rgba(255, 215, 0, 0.5);
+  }
+  
+  /* Hide scrollbar for Firefox */
+  .carousel-slide {
+    scrollbar-width: thin;
+    scrollbar-color: rgba(255, 215, 0, 0.3) transparent;
+  }
+}
+
+/* Accessibility improvements for mobile */
+@media (max-width: 768px) {
+  /* Larger focus indicators for touch */
+  .cta-primary:focus,
+  .invite-button:focus,
+  .chat-link:focus,
+  .nav-arrow:focus,
+  .carousel-dot:focus {
+    outline: 3px solid rgba(255, 215, 0, 0.8);
+    outline-offset: 3px;
+  }
+  
+  /* Prevent zoom on input focus (if any future inputs) */
+  input, textarea, select {
+    font-size: 16px; /* Prevents iOS zoom */
+  }
+}
+
+/* Performance optimizations for mobile */
+@media (max-width: 768px) {
+  /* Reduce star count for better performance */
+  .star:nth-child(n+100) {
+    display: none;
+  }
+  
+  /* Simplify animations on mobile */
+  .character-panel-flipper {
+    transition: transform 0.6s ease; /* Faster transition */
+  }
+  
+  /* Optimize backdrop blur for mobile */
+  .character-panel,
+  .chat-example,
+  .demo-chat,
+  .invite-suggestions {
+    backdrop-filter: blur(10px); /* Reduce blur for performance */
+    -webkit-backdrop-filter: blur(10px);
+  }
+}
+/* =============================================
+   CRITICAL MOBILE FIXES - Add to LandingPage.css
+   ============================================= */
+
+@media (max-width: 768px) {
+  /* Reset all transforms that might hide content */
+  .carousel-slide[data-screen="0"] .screen-content,
+  .carousel-slide[data-screen="1"] .screen-content,
+  .carousel-slide[data-screen="2"] .screen-content {
+    transform: none !important;
+    opacity: 1 !important;
+    visibility: visible !important;
+    height: auto;
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+  }
+
+  /* Ensure hero content doesn't push panels down */
+  .hero-content {
+    margin-bottom: 1.5rem;
+    flex-shrink: 0;
+  }
+
+  /* Make sure character panels container is visible */
+  .enhanced-characters-showcase {
+    display: grid !important;
+    opacity: 1 !important;
+    visibility: visible !important;
+    transform: none !important;
+    flex-grow: 1;
+    margin-top: 1rem;
+  }
+
+  /* Fix carousel slide height */
+  .carousel-slide {
+    height: auto;
+    overflow: visible;
+  }
+
+  /* Adjust carousel track for mobile */
+  .carousel-track {
+    height: auto;
+    min-height: 100vh;
+  }
+}
+/* Mobile Scrolling Fix */
+@media (max-width: 768px) {
+  .landing-container {
+    overflow-x: hidden;
+    height: 100vh;
+    display: flex;
+    flex-direction: column;
+  }
+
+  .carousel-container {
+    flex: 1;
+    overflow-y: auto;
+    -webkit-overflow-scrolling: touch;
+    touch-action: pan-y;
+  }
+
+  .carousel-track {
+    flex-direction: column;
+    height: auto;
+    width: 100%;
+    transform: none !important;
+  }
+
+  .carousel-slide {
+    width: 100%;
+    height: auto;
+    min-height: 100vh;
+    padding: 1rem;
+    overflow: visible;
+  }
+
+  .screen-content {
+    height: auto;
+    min-height: calc(100vh - 2rem);
+    display: flex;
+    flex-direction: column;
+  }
+
+  .enhanced-characters-showcase {
+    flex: 1;
+    overflow-y: auto;
+    -webkit-overflow-scrolling: touch;
+  }
+}
+/* Prevent Carousel from Interfering */
+@media (max-width: 768px) {
+  .carousel-slide[data-screen="0"] {
+    overflow: visible;
+    touch-action: pan-y;
+  }
+
+  .carousel-track {
+    touch-action: pan-y;
+  }
+
+  .screen-content {
+    pointer-events: auto;
+  }
+}
+/* =============================================
+   TOUCH EVENT ENHANCEMENTS - Add to END of EnhancedCharacterPanels.css
+   ============================================= */
+
+@media (max-width: 768px) {
+  .character-panel-container {
+    -webkit-tap-highlight-color: transparent;
+    touch-action: manipulation;
+  }
+
+  .character-panel-flipper {
+    will-change: transform;
+    backface-visibility: hidden;
+    perspective: 1000px;
+    transform-style: preserve-3d;
+  }
+
+  .character-panel {
+    pointer-events: none;
+  }
+
+  .character-panel > * {
+    pointer-events: auto;
+  }
+
+  /* Fix for iOS flickering */
+  @supports (-webkit-touch-callout: none) {
+    .character-panel-flipper {
+      -webkit-transform-style: preserve-3d;
+      -webkit-backface-visibility: hidden;
+    }
+  }
+
+  /* Prevent text selection during flip */
+  .character-panel-flipper.flipped,
+  .character-panel-flipper:active {
+    user-select: none;
+    -webkit-user-select: none;
+  }
+}
+/* =============================================
+   ADDITIONAL MOBILE IMPROVEMENTS - Append to END of LandingPage.css
+   ============================================= */
+
+/* Fix image loading and prevent reflows */
+@media (max-width: 768px) {
+  /* Prevent image reloading and flickering */
+  .character-image img,
+  .chat-avatar,
+  .invite-avatar {
+    image-rendering: -webkit-optimize-contrast;
+    image-rendering: crisp-edges;
+    backface-visibility: hidden;
+    transform: translateZ(0);
+    will-change: auto; /* Reset will-change after load */
+  }
+  
+  /* Stable image dimensions to prevent layout shift */
+  .character-image img {
+    width: 100% !important;
+    height: 100% !important;
+    object-fit: cover;
+    object-position: center;
+  }
+  
+  /* Prevent image dragging on mobile */
+  .character-image img,
+  .chat-avatar,
+  .invite-avatar {
+    -webkit-user-drag: none;
+    -khtml-user-drag: none;
+    -moz-user-drag: none;
+    -o-user-drag: none;
+    user-drag: none;
+    pointer-events: none; /* Prevent touch interference */
+  }
+  
+  /* Make parent containers handle interactions */
+  .character-image,
+  .character-panel-container {
+    pointer-events: auto;
+  }
+}
+
+/* Improve touch responsiveness */
+@media (max-width: 768px) {
+  /* Faster touch response */
+  .character-panel-container {
+    cursor: pointer;
+    -webkit-tap-highlight-color: rgba(255, 215, 0, 0.1);
+    tap-highlight-color: rgba(255, 215, 0, 0.1);
+  }
+  
+  /* Prevent double-tap zoom on panels */
+  .character-panel-container,
+  .chat-link,
+  .invite-button,
+  .cta-primary {
+    touch-action: manipulation;
+  }
+  
+  /* Improve button press feedback */
+  .chat-link:active,
+  .invite-button:active,
+  .cta-primary:active {
+    transform: scale(0.98);
+    transition: transform 0.1s ease;
+  }
+  
+  /* Better scroll momentum */
+  .carousel-slide {
+    -webkit-overflow-scrolling: touch;
+    scroll-behavior: smooth;
+  }
+}
+
+/* Fix content jumping and layout stability */
+@media (max-width: 768px) {
+  /* Prevent content jumping during interactions */
+  .screen-content {
+    contain: layout style;
+    transform: translateZ(0); /* Force hardware layer */
+  }
+  
+  /* Stable viewport units */
+  .carousel-slide {
+    min-height: 100vh;
+    min-height: 100dvh; /* Dynamic viewport height for newer browsers */
+  }
+  
+  /* Prevent elastic bounce on iOS */
+  body {
+    overscroll-behavior-y: none;
+  }
+  
+  /* Fix safe area on iOS */
+  .screen-content {
+    padding-bottom: max(6rem, env(safe-area-inset-bottom) + 4rem);
+    padding-top: max(1rem, env(safe-area-inset-top) + 0.5rem);
+    padding-left: max(1rem, env(safe-area-inset-left) + 0.5rem);
+    padding-right: max(1rem, env(safe-area-inset-right) + 0.5rem);
+  }
+}
+
+/* Optimize animations for mobile */
+@media (max-width: 768px) {
+  /* Reduce motion for better performance */
+  .character-panel-flipper,
+  .chat-link,
+  .invite-button {
+    transition-duration: 0.3s; /* Shorter transitions */
+  }
+  
+  /* Disable complex animations on very slow devices */
+  @media (update: slow) {
+    .character-panel-flipper {
+      transition: none;
+    }
+    
+    .star {
+      animation: none;
+      opacity: 0.5;
+    }
+  }
+  
+  /* Optimize for reduced motion preference */
+  @media (prefers-reduced-motion: reduce) {
+    .character-panel-flipper,
+    .chat-link::before,
+    .invite-button::before,
+    .cta-primary::before {
+      transition: none;
+      animation: none;
+    }
+    
+    .star {
+      animation: none;
+    }
+  }
+}
+
+/* Better text readability on mobile */
+@media (max-width: 768px) {
+  /* Improve text contrast on mobile screens */
+  .character-description,
+  .hero-subtitle,
+  .proof-text {
+    text-shadow: 0 1px 3px rgba(0, 0, 0, 0.7);
+    color: rgba(255, 255, 255, 0.95);
+  }
+  
+  /* Better line heights for mobile reading */
+  .character-description {
+    line-height: 1.5;
+  }
+  
+  .hero-subtitle {
+    line-height: 1.6;
+  }
+  
+  /* Prevent text selection on interactive elements */
+  .character-panel-container,
+  .chat-link,
+  .invite-button,
+  .nav-arrow {
+    -webkit-user-select: none;
+    -moz-user-select: none;
+    -ms-user-select: none;
+    user-select: none;
+  }
+}
+
+/* Fix specific mobile layout issues */
+@media (max-width: 768px) {
+  /* Ensure navigation doesn't interfere with content */
+  .carousel-navigation {
+    z-index: 1000;
+    pointer-events: none;
+  }
+  
+  .carousel-navigation button {
+    pointer-events: auto;
+  }
+  
+  /* Better spacing for touch targets */
+  .enhanced-characters-showcase {
+    gap: 1rem;
+    padding: 0 0.5rem;
+    margin: 1rem auto 2rem auto;
+  }
+  
+  /* Improve hero section spacing */
+  .hero-content {
+    margin-bottom: 1.5rem;
+    padding: 0 0.5rem;
+  }
+  
+  /* Better invite buttons layout */
+  .invite-buttons {
+    gap: 0.8rem;
+    margin-top: 1rem;
+  }
+  
+  .invite-button {
+    min-height: 48px;
+    padding: 0.8rem 1rem;
+    font-size: 0.85rem;
+  }
+}
+
+/* Fix for very small screens (iPhone SE, etc.) */
+@media (max-width: 375px) {
+  .screen-content {
+    padding-left: 0.5rem;
+    padding-right: 0.5rem;
+  }
+  
+  .enhanced-characters-showcase {
+    gap: 0.8rem;
+    padding: 0;
+  }
+  
+  .character-panel-container {
+    height: 260px; /* Shorter for small screens */
+  }
+  
+  .character-panel {
+    padding: 0.8rem;
+  }
+  
+  .logo {
+    font-size: 1.8rem;
+  }
+  
+  .main-tagline {
+    font-size: 1.1rem;
+  }
+  
+  /* Stack navigation dots differently on tiny screens */
+  .carousel-navigation {
+    bottom: 0.5rem;
+    left: 50%;
+    transform: translateX(-50%);
+    flex-direction: row;
+  }
+  
+  .carousel-dots {
+    flex-direction: row;
+    gap: 0.8rem;
+  }
+}
+
+/* Fix landscape orientation on mobile */
+@media (max-width: 768px) and (orientation: landscape) {
+  .screen-content {
+    padding-top: 0.5rem;
+    padding-bottom: 3rem;
+  }
+  
+  .hero-content {
+    margin-bottom: 1rem;
+  }
+  
+  .logo {
+    font-size: 2rem;
+    margin-bottom: 1rem;
+  }
+  
+  .main-tagline {
+    font-size: 1.2rem;
+    margin-bottom: 0.8rem;
+  }
+  
+  .enhanced-characters-showcase {
+    grid-template-columns: repeat(4, 1fr);
+    gap: 0.8rem;
+    margin: 0.5rem auto 1rem auto;
+  }
+  
+  .character-panel-container {
+    height: 220px;
+  }
+}

@@ -1,0 +1,68 @@
+/* src/components/ChatWindow/InputArea.module.css - FIXED: Remove inner box appearance */
+.wrapper {
+  display: flex;
+  align-items: flex-end;
+  width: 100%;
+  /* Outer golden border and rounded corners */
+  border: 2px solid gold;
+  border-radius: 12px;
+  padding: 1.5rem;
+  background: rgba(10,10,20,0.8);
+  box-sizing: border-box;
+}
+
+.textarea {
+  flex: 1;
+  min-width: 0;
+  border: none; /* ✅ REMOVE: No inner border */
+  outline: none; /* ✅ REMOVE: No outline */
+  resize: none;
+  padding: 0.5rem;
+  font-size: 1rem;
+  background: transparent; /* ✅ KEEP: Transparent background */
+  color: #fff;
+  
+  /* ✅ REMOVE any box-like styling */
+  box-shadow: none;
+  border-radius: 0;
+}
+
+.textarea::placeholder {
+  color: rgba(255,255,255,0.6);
+}
+
+/* ✅ REMOVE focus styling that might create inner box appearance */
+.textarea:focus {
+  border: none;
+  outline: none;
+  box-shadow: none;
+  background: transparent;
+}
+
+.sendButton {
+  margin-left: 0.5rem;
+  background: gold;
+  border: none;
+  border-radius: 8px;
+  padding: 0.5rem;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0; /* ✅ Prevent button from shrinking */
+}
+
+.sendButton:hover {
+  transform: scale(1.05);
+}
+
+.sendButton:active {
+  transform: scale(0.95);
+}
+
+/* ✅ Mobile adjustments - lift input off bottom */
+@media (max-width: 600px) {
+  .wrapper {
+    margin-bottom: 1rem;
+  }
+}

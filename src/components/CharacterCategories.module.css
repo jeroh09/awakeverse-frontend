@@ -1,0 +1,77 @@
+/* src/components/CharacterCategories.module.css */
+
+/* --------------------------------- */
+/* DESKTOP CONTAINER                 */
+/* --------------------------------- */
+.desktopContainer {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 1rem;
+  padding: 1rem;
+  justify-content: center;
+}
+
+/* --------------------------------- */
+/* MOBILE ACCORDION                  */
+/* --------------------------------- */
+.mobileContainer {
+  width: 100%;
+  padding: 0;
+  margin: 0;
+}
+
+.accordionSection {
+  border-bottom: 1px solid gold;
+}
+
+.accordionHeader {
+  width: 100%;
+  background: rgba(10, 10, 30, 0.85);
+  color: gold;
+  font-family: 'Cinzel Decorative', serif;
+  font-size: 1.25rem;
+  padding: 1rem;
+  text-align: left;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  border: none;
+  cursor: pointer;
+}
+.accordionHeader:active {
+  background: rgba(255,255,255,0.1);
+}
+
+.accordionIcon {
+  font-size: 1rem;
+}
+
+/* The list of characters under the header */
+.accordionList {
+  width: 100%;
+  background: rgba(20,20,35,0.9);
+  max-height: 80vh;
+  overflow-y: auto;
+}
+
+.accordionItem {
+  width: 100%;
+  background: transparent;
+  color: gold;
+  font-family: 'Lora', serif;
+  font-size: 1rem;
+  padding: 0.75rem 1rem;
+  text-align: left;
+  border: none;
+  border-top: 1px solid gold;
+  cursor: pointer;
+}
+.accordionItem:hover,
+.accordionItem:focus {
+  background: rgba(255,255,255,0.1);
+}
+
+/* Temporary class applied on touchStart */
+.touchHighlight {
+  background: rgba(255,255,255,0.15) !important;
+}

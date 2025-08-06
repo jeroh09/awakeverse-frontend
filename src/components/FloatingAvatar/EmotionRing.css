@@ -1,0 +1,327 @@
+/* EmotionRing.css - Fixed version for proper button interaction */
+
+.emotion-ring {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: 80px; /* ✅ FIX: Further reduced to not interfere with FloatingCharacterHub */
+  height: 80px; /* ✅ FIX: Further reduced to not interfere with FloatingCharacterHub */
+  transform: translate(-50%, -50%);
+  cursor: pointer;
+  transition: all 0.3s ease;
+  /* ✅ FIX: Much lower z-index to stay below FloatingCharacterHub */
+  z-index: 5;
+}
+
+.emotion-ring.active {
+  transform: translate(-50%, -50%) scale(1.05);
+}
+
+.ring-primary,
+.ring-secondary,
+.ring-prestige {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  border-radius: 50%;
+  /* ✅ FIX: Ensure rings don't block button */
+  pointer-events: none;
+}
+
+.ring-primary {
+  border: 3px solid var(--ring-color, #FFD700);
+  opacity: var(--ring-opacity, 0.6);
+  animation: breathe var(--breathing-speed, 6s) ease-in-out infinite;
+}
+
+.ring-secondary {
+  border: 2px solid var(--ring-color, #FFD700);
+  opacity: calc(var(--ring-opacity, 0.6) * 0.5);
+  animation: breathe var(--breathing-speed, 6s) ease-in-out infinite reverse;
+  transform: scale(1.1);
+}
+
+.ring-prestige {
+  border: 1px solid var(--prestige-color, rgba(255, 215, 0, 0.3));
+  opacity: 0.8;
+  animation: prestigePulse 3s ease-in-out infinite;
+  transform: scale(1.2);
+}
+
+/* ✅ MAJOR FIX: PrestigeHub Toggle Button - PROPERLY HIDDEN */
+.prestige-toggle-ring {
+  /* Positioning */
+  position: absolute;
+  top: 5%;
+  left: -25%;
+  width: 24px;
+  height: 24px;
+  
+  /* Z-index */
+  z-index: 800 !important;
+  
+  /* Styling */
+  background: linear-gradient(
+    135deg,
+    rgba(255, 215, 0, 0.15),
+    rgba(255, 215, 0, 0.08)
+  );
+  border: 2px solid rgba(255, 215, 0, 0.4);
+  border-radius: 50%;
+  color: rgba(255, 215, 0, 0.8);
+  cursor: pointer;
+  
+  /* Layout */
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  
+  /* ✅ FIX: FORCE HIDDEN - Use display none initially */
+  display: none !important;
+  
+  /* Transitions */
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  
+  /* Interaction */
+  user-select: none;
+  -webkit-tap-highlight-color: transparent;
+  pointer-events: all !important;
+}
+
+/* ✅ FIX: Show crown button ONLY when emotion ring is hovered/active */
+.emotion-ring:hover .prestige-toggle-ring,
+.emotion-ring.active .prestige-toggle-ring {
+  display: flex !important;
+  opacity: 1;
+  visibility: visible;
+  transform: scale(1);
+}
+
+/* ✅ FIX: Keep crown button visible when PrestigeHub is open */
+.prestige-toggle-ring.active {
+  display: flex !important;
+  opacity: 1;
+  visibility: visible;
+  transform: scale(1);
+}
+
+/* ✅ FIX: Enhanced hover state */
+.prestige-toggle-ring:hover {
+  background: linear-gradient(
+    135deg,
+    rgba(255, 215, 0, 0.25),
+    rgba(255, 215, 0, 0.15)
+  );
+  border-color: rgba(255, 215, 0, 0.6);
+  color: #FFD700;
+  transform: scale(1.1) translateY(-2px);
+  box-shadow: 
+    0 6px 20px rgba(255, 215, 0, 0.3),
+    0 0 30px rgba(255, 215, 0, 0.2);
+}
+
+/* ✅ FIX: Active state for visual feedback */
+.prestige-toggle-ring:active {
+  transform: scale(0.95) translateY(0);
+  transition: transform 0.1s ease;
+}
+
+/* Active state when PrestigeHub is open */
+.prestige-toggle-ring.active {
+  background: linear-gradient(
+    135deg,
+    rgba(255, 215, 0, 0.3),
+    rgba(255, 215, 0, 0.2)
+  );
+  border-color: rgba(255, 215, 0, 0.8);
+  color: #FFD700;
+  box-shadow: 
+    0 0 25px rgba(255, 215, 0, 0.5),
+    inset 0 2px 10px rgba(255, 255, 255, 0.1);
+}
+
+/* Crown icon styling */
+.prestige-crown-icon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+  height: 100%;
+  /* ✅ FIX: Ensure icon doesn't interfere with clicks */
+  pointer-events: none;
+}
+
+.prestige-crown-icon svg {
+  width: 10px; /* ✅ FIX: Smaller for reduced button size */
+  height: 10px; /* ✅ FIX: Smaller for reduced button size */
+  transition: transform 0.2s ease;
+  /* ✅ FIX: Ensure SVG doesn't block clicks */
+  pointer-events: none;
+}
+
+.prestige-toggle-ring:hover .prestige-crown-icon svg {
+  transform: scale(1.1) rotate(5deg);
+}
+
+/* Tooltip styling */
+.prestige-toggle-tooltip {
+  position: absolute;
+  top: -45px;
+  left: 50%;
+  transform: translateX(-50%);
+  background: rgba(0, 0, 0, 0.9);
+  color: #FFD700;
+  padding: 0.5rem 0.75rem;
+  border-radius: 6px;
+  font-size: 0.75rem;
+  white-space: nowrap;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.2s ease;
+  z-index: 1001;
+  border: 1px solid rgba(255, 215, 0, 0.3);
+}
+
+.prestige-toggle-ring:hover .prestige-toggle-tooltip {
+  opacity: 1;
+}
+
+/* Discovery count badge */
+.discovery-count-badge {
+  position: absolute;
+  top: -8px;
+  right: -8px;
+  background: linear-gradient(135deg, #FFD700, #FFA500);
+  color: #000;
+  font-size: 0.7rem;
+  font-weight: bold;
+  padding: 0.2rem 0.4rem;
+  border-radius: 10px;
+  min-width: 16px;
+  height: 16px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 2px 8px rgba(255, 215, 0, 0.4);
+  /* ✅ FIX: Badge shouldn't interfere with button clicks */
+  pointer-events: none;
+}
+
+/* Breathing animation */
+@keyframes breathe {
+  0%, 100% {
+    transform: scale(1);
+    opacity: var(--ring-opacity, 0.6);
+  }
+  50% {
+    transform: scale(var(--breathing-scale, 1.03));
+    opacity: calc(var(--ring-opacity, 0.6) * 1.2);
+  }
+}
+
+/* Prestige pulse animation */
+@keyframes prestigePulse {
+  0%, 100% {
+    opacity: 0.3;
+    transform: scale(1.2);
+  }
+  50% {
+    opacity: 0.8;
+    transform: scale(1.25);
+  }
+}
+
+/* Particle effects */
+.ring-particles {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  pointer-events: none;
+}
+
+.particle {
+  position: absolute;
+  width: 4px;
+  height: 4px;
+  background: var(--ring-color, #FFD700);
+  border-radius: 50%;
+  opacity: 0.8;
+}
+
+.particle-1 {
+  top: 20%;
+  left: 80%;
+  animation: particleFloat 3s ease-in-out infinite;
+}
+
+.particle-2 {
+  top: 70%;
+  left: 20%;
+  animation: particleFloat 3s ease-in-out infinite 1s;
+}
+
+.particle-3 {
+  top: 40%;
+  left: 90%;
+  animation: particleFloat 3s ease-in-out infinite 2s;
+}
+
+@keyframes particleFloat {
+  0%, 100% {
+    transform: translateY(0) scale(1);
+    opacity: 0.8;
+  }
+  50% {
+    transform: translateY(-10px) scale(1.2);
+    opacity: 1;
+  }
+}
+
+/* ✅ FIX: Mobile responsiveness */
+@media (max-width: 600px) {
+  .emotion-ring {
+    width: 70px; /* ✅ FIX: Even smaller on mobile to avoid conflicts */
+    height: 70px; /* ✅ FIX: Even smaller on mobile to avoid conflicts */
+  }
+  
+  .prestige-toggle-ring {
+    width: 28px; /* ✅ FIX: Larger touch target on mobile */
+    height: 28px; /* ✅ FIX: Larger touch target on mobile */
+    top: 2%;
+    left: -30%; /* ✅ FIX: Moved even further left on mobile */
+  }
+  
+  .prestige-crown-icon svg {
+    width: 12px; /* ✅ FIX: Larger icon on mobile for better visibility */
+    height: 12px; /* ✅ FIX: Larger icon on mobile for better visibility */
+  }
+  
+  .prestige-toggle-tooltip {
+    font-size: 0.7rem;
+    padding: 0.4rem 0.6rem;
+  }
+}
+
+/* ✅ FIX: Focus states for accessibility */
+.prestige-toggle-ring:focus {
+  outline: 2px solid #FFD700;
+  outline-offset: 2px;
+}
+
+/* ✅ FIX: Ensure button works with reduced motion */
+@media (prefers-reduced-motion: reduce) {
+  .prestige-toggle-ring,
+  .prestige-crown-icon svg {
+    transition: none;
+  }
+  
+  .ring-primary,
+  .ring-secondary,
+  .ring-prestige {
+    animation: none;
+  }
+}

@@ -1,0 +1,400 @@
+@import url('https://fonts.googleapis.com/css2?family=Cinzel+Decorative:wght@400;700&family=Lora:ital,wght@0,400;0,500;1,400&display=swap');
+
+.header {
+  position: relative;
+  /* Enhanced cosmic gradient with more depth */
+  background: linear-gradient(
+    135deg,
+    rgba(20, 20, 35, 0.95) 0%,
+    rgba(15, 15, 30, 0.9) 25%,
+    rgba(25, 20, 40, 0.9) 50%,
+    rgba(10, 10, 25, 0.95) 100%
+  );
+  
+  /* Animated golden border with glow */
+  border-bottom: 1px solid gold;
+  box-shadow: 
+    0 1px 4px rgba(0, 0, 0, 0.3),
+    0 0 8px rgba(255, 215, 0, 0.1),
+    inset 0 1px 0 rgba(255, 215, 0, 0.05);
+  
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+  
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0.4rem 0.8rem;  /* Much more compact */
+  min-height: 36px;        /* Significantly reduced */
+  
+  /* Smooth but stable transition - no erratic behavior */
+  transition: transform 1s cubic-bezier(0.19, 1, 0.22, 1);
+  z-index: 1000;
+}
+
+.header::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: 
+    radial-gradient(circle at 20% 50%, rgba(255, 215, 0, 0.02) 0%, transparent 50%),
+    radial-gradient(circle at 80% 20%, rgba(255, 215, 0, 0.015) 0%, transparent 50%);
+  pointer-events: none;
+  z-index: 1;
+}
+
+.header > * {
+  position: relative;
+  z-index: 2;
+}
+
+.title {
+  font-family: 'Cinzel Decorative', serif;
+  font-size: 1.1rem;       /* Much smaller */
+  font-weight: 700;
+  color: gold;
+  text-shadow: 
+    0 0 6px rgba(255, 215, 0, 0.4),
+    0 0 12px rgba(255, 215, 0, 0.2),
+    0 1px 2px rgba(0, 0, 0, 0.5);
+  
+  /* Subtle glow animation */
+  animation: titleGlow 4s ease-in-out infinite alternate;
+  
+  /* Letter spacing for elegance */
+  letter-spacing: 1px;     /* Reduced */
+  margin: 0;
+  
+  /* Responsive scaling */
+  @media (max-width: 768px) {
+    font-size: 1rem;
+    letter-spacing: 0.5px;
+  }
+}
+
+@keyframes titleGlow {
+  0% {
+    text-shadow: 
+      0 0 6px rgba(255, 215, 0, 0.4),
+      0 0 12px rgba(255, 215, 0, 0.2),
+      0 1px 2px rgba(0, 0, 0, 0.5);
+  }
+  100% {
+    text-shadow: 
+      0 0 8px rgba(255, 215, 0, 0.6),
+      0 0 15px rgba(255, 215, 0, 0.3),
+      0 1px 3px rgba(0, 0, 0, 0.6);
+  }
+}
+
+.userSection {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;             /* Reduced gap */
+  
+  /* Elegant container styling */
+  background: rgba(255, 215, 0, 0.04);
+  padding: 0.25rem 0.6rem; /* Much more compact */
+  border-radius: 16px;     /* Smaller radius */
+  border: 1px solid rgba(255, 215, 0, 0.15);
+  backdrop-filter: blur(4px);
+  
+  transition: all 0.3s ease;
+  position: relative;
+  z-index: 1001;           /* Higher than header for dropdown */
+}
+
+.userSection:hover {
+  background: rgba(255, 215, 0, 0.06);
+  border-color: rgba(255, 215, 0, 0.25);
+  box-shadow: 0 0 8px rgba(255, 215, 0, 0.15);
+}
+
+.avatar {
+  width: 22px;             /* Much smaller */
+  height: 22px;            /* Much smaller */
+  border-radius: 50%;
+  object-fit: cover;
+  
+  /* Elegant border with glow */
+  border: 1px solid gold;  /* Thinner border */
+  box-shadow: 
+    0 0 4px rgba(255, 215, 0, 0.3),
+    0 1px 2px rgba(0, 0, 0, 0.3);
+  
+  transition: all 0.3s ease;
+  cursor: pointer;
+}
+
+.avatar:hover {
+  transform: scale(1.05);  /* Smaller scale */
+  box-shadow: 
+    0 0 6px rgba(255, 215, 0, 0.5),
+    0 2px 4px rgba(0, 0, 0, 0.4);
+  border-color: rgba(255, 215, 0, 0.9);
+}
+
+.placeholder {
+  font-family: 'Lora', serif;
+  font-size: 0.75rem;      /* Smaller text */
+  font-weight: 500;
+  color: rgba(255, 215, 0, 0.7);
+  text-shadow: 0 1px 1px rgba(0, 0, 0, 0.5);
+  padding: 0.25rem 0.4rem; /* Much smaller padding */
+  
+  /* Subtle background for better visibility */
+  background: rgba(255, 215, 0, 0.08);
+  border-radius: 8px;      /* Smaller radius */
+  border: 1px solid rgba(255, 215, 0, 0.15);
+  
+  transition: all 0.3s ease;
+}
+
+.placeholder:hover {
+  color: rgba(255, 215, 0, 0.9);
+  background: rgba(255, 215, 0, 0.12);
+}
+
+/* Simplified star field for performance */
+.header::after {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-image: 
+    radial-gradient(0.5px 0.5px at 15px 20px, rgba(255, 215, 0, 0.2), transparent),
+    radial-gradient(0.5px 0.5px at 35px 45px, rgba(255, 215, 0, 0.15), transparent),
+    radial-gradient(0.5px 0.5px at 75px 25px, rgba(255, 215, 0, 0.2), transparent);
+  background-repeat: repeat;
+  background-size: 100px 60px; /* Smaller pattern */
+  animation: starfield 15s linear infinite;
+  opacity: 0.3;            /* Less prominent */
+  pointer-events: none;
+  z-index: 1;
+}
+
+@keyframes starfield {
+  0% { transform: translateX(0); }
+  100% { transform: translateX(-100px); }
+}
+
+/* Enhanced responsive design */
+@media (max-width: 768px) {
+  .header {
+    padding: 0.3rem 0.6rem;
+    min-height: 32px;      /* Even smaller on mobile */
+  }
+  
+  .userSection {
+    gap: 0.4rem;
+    padding: 0.2rem 0.5rem;
+  }
+  
+  .avatar {
+    width: 20px;
+    height: 20px;
+  }
+  
+  .placeholder {
+    font-size: 0.7rem;
+    padding: 0.2rem 0.3rem;
+  }
+}
+
+@media (max-width: 480px) {
+  .header {
+    padding: 0.25rem 0.5rem;
+    min-height: 30px;
+  }
+  
+  .title {
+    font-size: 0.9rem;
+    letter-spacing: 0.3px;
+  }
+  
+  .userSection {
+    gap: 0.3rem;
+    padding: 0.15rem 0.4rem;
+  }
+  
+  .avatar {
+    width: 18px;
+    height: 18px;
+  }
+}
+
+/* Dark mode enhancements */
+@media (prefers-color-scheme: dark) {
+  .header {
+    background: linear-gradient(
+      135deg,
+      rgba(15, 15, 25, 0.95) 0%,
+      rgba(10, 10, 20, 0.9) 25%,
+      rgba(20, 15, 35, 0.9) 50%,
+      rgba(5, 5, 20, 0.95) 100%
+    );
+  }
+}
+
+/* Reduced motion for accessibility */
+@media (prefers-reduced-motion: reduce) {
+  .title {
+    animation: none;
+  }
+  
+  .header::after {
+    animation: none;
+  }
+  
+  .avatar,
+  .userSection,
+  .placeholder {
+    transition: none;
+  }
+}
+
+/* ===== FIXED RETRACTABLE HEADER STYLES ===== */
+
+/* ✅ STABLE RETRACTION - No erratic behavior */
+.header.retracted {
+  transform: translateY(-85%);
+  opacity: 0.3;
+  /* Fixed positioning prevents layout shift */
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  z-index: 1000;
+  /* ✅ NO AUTOMATIC RETURN - Only manual trigger */
+  pointer-events: none; /* Prevents accidental hovers from triggering return */
+}
+
+/* ✅ ONLY show button area remains interactive when retracted */
+.header.retracted .showButton {
+  pointer-events: auto; /* Only the show button is clickable */
+}
+
+/* ✅ NEVER automatically return on hover - STABLE */
+.header.retracted:hover {
+  /* Remove all hover effects that could cause erratic behavior */
+  transform: translateY(-85%);
+  opacity: 0.3;
+}
+
+/* Breathing indicator when retracted - subtle and stable */
+.header.retracted::after {
+  content: '';
+  position: absolute;
+  bottom: 0;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 20px;
+  height: 2px;
+  background: linear-gradient(90deg, transparent, gold, transparent);
+  animation: breathe 3s ease-in-out infinite; /* Slower, more subtle */
+  z-index: 3;
+  pointer-events: none;
+}
+
+@keyframes breathe {
+  0%, 100% {
+    opacity: 0.4; /* More subtle */
+    transform: translateX(-50%) scaleX(1);
+  }
+  50% {
+    opacity: 0.8; /* Less intense */
+    transform: translateX(-50%) scaleX(1.1); /* Less dramatic */
+  }
+}
+
+/* ✅ STABLE SHOW BUTTON - Only way to return header */
+.showButton {
+  position: absolute;
+  bottom: -12px;
+  left: 50%;
+  transform: translateX(-50%);
+  background: rgba(20, 20, 35, 0.95);
+  border: 1px solid gold;
+  border-radius: 0 0 8px 8px;
+  color: gold;
+  font-size: 14px;
+  padding: 4px 12px; /* Slightly larger for easier clicking */
+  cursor: pointer;
+  backdrop-filter: blur(8px);
+  transition: all 0.3s ease;
+  z-index: 1002;
+  
+  /* ✅ Make it more prominent when header is retracted */
+  box-shadow: 0 2px 8px rgba(255, 215, 0, 0.2);
+}
+
+.showButton:hover {
+  background: rgba(30, 30, 45, 0.98);
+  box-shadow: 0 4px 12px rgba(255, 215, 0, 0.4);
+  transform: translateX(-50%) scale(1.05);
+  border-color: rgba(255, 215, 0, 0.8);
+}
+
+/* ✅ Clear visual feedback for show button */
+.showButton:active {
+  transform: translateX(-50%) scale(0.95);
+  background: rgba(40, 40, 55, 1);
+}
+
+/* Mobile adjustments for retraction */
+@media (max-width: 768px) {
+  .header.retracted {
+    transform: translateY(-90%);
+  }
+  
+  .header.retracted::after {
+    width: 16px;
+    height: 1.5px;
+  }
+  
+  .showButton {
+    bottom: -10px;
+    font-size: 12px;
+    padding: 3px 8px;
+  }
+}
+
+@media (max-width: 480px) {
+  .header.retracted {
+    transform: translateY(-92%);
+  }
+  
+  .header.retracted::after {
+    width: 14px;
+  }
+  
+  .showButton {
+    padding: 2px 6px;
+  }
+}
+
+/* Disable retraction animations for reduced motion users */
+@media (prefers-reduced-motion: reduce) {
+  .header {
+    transition: none;
+  }
+  
+  .showButton {
+    transition: none;
+  }
+  
+  .header.retracted::after {
+    animation: none;
+    opacity: 0.6;
+  }
+}
+
+/* ✅ ENSURE MAIN CONTENT ADJUSTS PROPERLY */
+.header:not(.retracted) {
+  position: relative; /* Normal positioning when shown */
+}

@@ -1,0 +1,29 @@
+scp -i "C:\Users\Jeroh\awakeverse\ssh\AwakeVerse.pem" `
+  -r "C:\Users\Jeroh\your\awakeverse\backend\." `
+  ubuntu@13.40.147.5:~/awakeverse-backend
+
+ssh -i "C:\Users\Jeroh\awakeverse\ssh\Awakeverse.pem" ubuntu@13.40.147.5
+if __name__ == '__main__': app.run(host='0.0.0.0', port=5000)
+C:\Users\Jeroh>curl -i -H "Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJmcmVzaCI6ZmFsc2UsImlhdCI6MTc0OTgzNTgxNiwianRpIjoiYzcwOTZmMjctOTBiYS00MTA1LWIxNzktNTE4OTM5YjE4MzlmIiwidHlwZSI6ImFjY2VzcyIsInN1YiI6eyJ1c2VybmFtZSI6Im9vamVyb2hAZ21haWwuY29tIiwiZGlzcGxheV9uYW1lIjoiSmF5In0sIm5iZiI6MTc0OTgzNTgxNiwiY3NyZiI6IjYzNTI3MDhmLTNlNjQtNDM1OC1iZGE4LTBiZDBkNDM1MTY3MCIsImV4cCI6MTc0OTgzNjcxNn0.iBl3L2Palx4RXSQpjWtcxPoT2la1LOg4wYfwrlo8LTs" https://e7d1-2a01-4b00-d331-2300-f59e-9f23-f499-285e.ngrok-free.app/api/users
+HTTP/1.1 401 Unauthorized
+Access-Control-Allow-Credentials: true
+Access-Control-Allow-Origin: http://localhost:3000
+Content-Length: 33
+Content-Type: application/json
+Date: Fri, 13 Jun 2025 17:28:13 GMT
+Ngrok-Agent-Ips: 2a01:4b00:d331:2300:f59e:9f23:f499:285e
+Server: Werkzeug/2.3.7 Python/3.12.4
+
+{cd
+  "msg": "Token has expired"
+}
+
+Appsmith dashboard, crud pages, analytics pages, admin actions
+curl -i -H "Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJmcmVzaCI6ZmFsc2UsImlhdCI6MTc0OTc4Mjg2MSwianRpIjoiN2E5NjFjODgtZThhOS00NDQzLWIxMDItMmMxZTNhNzlhZjA2IiwidHlwZSI6ImFjY2VzcyIsInN1YiI6eyJ1c2VybmFtZSI6ImZveHh5QHlhaG9vLmNvbSIsImRpc3BsYXlfbmFtZSI6IkZveHh4eSJ9LCJuYmYiOjE3NDk3ODI4NjEsImNzcmYiOiI2MmY5NzZmNi1hOTg2LTRlNjMtYjQyZi04Mjg1OTVmODk4Y2EiLCJleHAiOjE3NDk3ODM3NjF9.7kOFyFOSPEMJabUQySD03aA1ccFby5n9ezBNOwt3aWk" https://e7d1-2a01-4b00-d331-2300-f59e-9f23-f499-285e.ngrok-free.app/api/users
+
+C:\Users\Jeroh>curl -i -H "Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJmcmVzaCI6ZmFsc2UsImlhdCI6MTc0OTgzNTgxNiwianRpIjoiYzcwOTZmMjctOTBiYS00MTA1LWIxNzktNTE4OTM5YjE4MzlmIiwidHlwZSI6ImFjY2VzcyIsInN1YiI6eyJ1c2VybmFtZSI6Im9vamVyb2hAZ21haWwuY29tIiwiZGlzcGxheV9uYW1lIjoiSmF5In0sIm5iZiI6MTc0OTgzNTgxNiwiY3NyZiI6IjYzNTI3MDhmLTNlNjQtNDM1OC1iZGE4LTBiZDBkNDM1MTY3MCIsImV4cCI6MTc0OTgzNjcxNn0.iBl3L2Palx4RXSQpjWtcxPoT2la1LOg4wYfwrlo8LTs https://e7d1-2a01-4b00-d331-2300-f59e-9f23-f499-285e.ngrok-free.app/api/users
+
+source venv/bin/activate
+
+ngrok http 5000
+

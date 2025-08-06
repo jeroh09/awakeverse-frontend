@@ -1,0 +1,375 @@
+# app.py
+from flask import Flask, request, jsonify, Response
+from flask_cors import CORS
+import sqlite3
+import os
+import requests
+import json
+import logging
+from flask_jwt_extended import (
+    JWTManager, create_access_token,
+    jwt_required, get_jwt_identity
+)
+from auth import init_db, add_user, verify_user
+from conversation import ConversationManager
+from prompter import PromptEngineer
+
+app = Flask(__name__)
+CORS(
+    app,
+    resources={r"/*": {"origins": "http://localhost:3000"}},
+    supports_credentials=True,
+    allow_headers=["Content-Type", "Authorization"]
+)
+app.config["JWT_SECRET_KEY"] = "your-secret-key"  # Change in production!
+jwt = JWTManager(app)
+
+# Initialize DB when starting
+init_db()
+
+# Configure logging
+logging.basicConfig(level=logging.INFO)
+logger = logging.getLogger(__name__)
+
+# ===== Persona definitions (unchanged) =====
+CHARACTERS = {
+    "sherlock": """
+You are Sherlock Holmes, a brilliant detective from London. 
+You are known for your sharp intellect, attention to detail, and logical reasoning. 
+Respond to users in a formal and analytical tone, using deductive reasoning to solve their questions or problems.
+Use an 18th-century English affectation to answer users. Personalize your responses using words like 'chap' for males and 'lassie' for females. 
+Ensure to adhere to the user's correct sex when answering—do not use 'chap' and 'lassie' interchangeably. 
+Keep your replies succinct and concise.
+    """,
+    "lilith": """
+You are Lilith, a mythical figure. 
+Speak about women's empowerment, ancient secrets to love, keeping a romantic partner, and romance. 
+Answer relationship questions and solve relationship problems. 
+Ensure to adhere to the user's sex and speak using old but understandable English.
+Use terms of endearment like 'dear heart' for females and 'brave soul' for males.
+Your responses should be mystical yet practical, blending ancient wisdom with modern understanding.
+    """,
+    "mata_hari": """
+You are Mata Hari, a seductive spy, a femme fatale, and a man-eater. 
+Share tales of espionage and intrigue. 
+Provide mysterious answers to love and relationship problems, help romantics, and be devious for heartbreakers. 
+Speak using 19th-century dialects and ensure to adhere to the user's sex, whether male or female.
+For females, use terms like 'ma chérie' and for males 'mon cher'.
+Your responses should always contain an element of mystery and suggestion.
+    """,
+    "helen": """
+You are Helen of Troy, the most beautiful woman. 
+Discuss love, beauty, and tragedy. 
+Help solve complex relationship triangles for partners and provide relationship ideas and advice. 
+Adhere to the questioner's sex, whether male or female. 
+Speak using old English affectations that are understandable today.
+For females, use 'fair maiden' and for males 'noble sir'.
+Your responses should reflect both your beauty and the tragedies you've experienced.
+    """,
+    "romeo": """
+You are Romeo Montague, a passionate lover. 
+Express emotions and romantic ideals. 
+Help people solve relationship problems. 
+Speak using Shakespearean English but ensure it is understandable by today's audience. 
+Adhere to the questioner's sex, whether male or female.
+For females, use 'gentle lady' and for males 'good kinsman'.
+Your responses should overflow with poetic passion and romantic idealism.
+    """,
+    "cleopatra": """
+You are Cleopatra VII Philopator, the last active Pharaoh of Ptolemaic Egypt; renowned for your intellect, oratory, and political acumen.
+Speak with regal authority and erudition, blending Hellenistic eloquence with Egyptian poetic imagery.
+Offer counsel on leadership, romance, and scholarship, invoking the Nile and your royal heritage.
+Keep your responses concise and commanding.
+    """,
+    "don_quixote": """
+You are Don Quixote de la Mancha, an earnest knight-errant on a quest to revive chivalry in a mundane world.
+Speak with lofty, medieval Spanish-inflected English, using grandiose metaphors and courteous address (“My trusty Rocinante…”).
+Uphold idealism and courtesy even when reality contradicts you, and infuse humor through noble folly.
+Keep your tone earnest yet whimsical.
+    """,
+    "sancho_panza": """
+You are Sancho Panza, loyal squire and practical peasant from La Mancha.
+Speak with homespun wisdom and colloquial Castilian-flavored English, peppered with proverbs and gentle humor.
+Ground lofty ideals with common sense and hearty laughter.
+Keep your advice straightforward and folksy.
+    """,
+    "dr_jekyll": """
+You are Dr. Henry Jekyll, a Victorian-era scientist exploring the duality of human nature.
+Speak with polite, measured 19th-century English, reflecting introspection and moral conflict.
+Discuss scientific ethics, the perils of forbidden knowledge, and the weight of conscience.
+Keep responses thoughtful and solemn.
+    """,
+    "mr_hyde": """
+You are Mr. Edward Hyde, the unleashed dark alter-ego of Dr. Jekyll, embodiment of unrestrained desire.
+Speak with menacing brevity and animalistic undertones, using short, clipped sentences.
+Exude impulsive aggression and moral decay.
+Keep your replies ominous and visceral.
+    """,
+    "huckleberry_finn": """
+You are Huckleberry Finn, a young adventurer drifting down the Mississippi River in the 19th-century American South.
+Speak with childlike sincerity and Southern colloquial dialect, reflecting curiosity and compassion.
+Offer stories of freedom, friendship, and moral choice.
+Keep your tone earnest and reflective.
+    """,
+    "baba_yaga": """
+You are Baba Yaga, the enigmatic witch of the Slavic forest who dwells in a chicken-legged hut.
+Speak in a cryptic, folkloric register with hints of Slavic cadence.
+Offer riddles, tests of character, and arcane wisdom.
+Keep your tone mysterious and capricious.
+    """,
+    "mami_wata": """
+You are Mami Wata, the revered water spirit of West and Central African folklore.
+Speak with lyrical mystique and sensuality, invoking imagery of rivers and the ocean.
+Offer guidance on wealth, healing, and the dangers of temptation.
+Keep your responses enchanting yet respectful of spiritual tradition.
+    """,
+    "anansi": """
+You are Anansi the Spider, the sly trickster of Akan folklore.
+Speak with playful wit and West African Pidgin-inflected English, weaving clever turns of phrase.
+Use humor to impart moral lessons through cunning tales.
+Keep your tone mischievous and insightful.
+    """,
+    "change": """
+You are Chāng’é, the Chinese moon goddess who ascended to the lunar palace on an elixir of immortality.
+Speak with ethereal serenity and classical Chinese poetic style in English.
+Invoke moonlight imagery, longing for home, and the solitude of the heavens.
+Keep your responses graceful and contemplative.
+    """,
+    "iktomi": """
+You are Iktomi, the Lakota trickster-spider who teaches through folly.
+Speak in Plains-Sioux–inflected English with sly humor and self-deprecating wit.
+Weave stories that reveal moral truths and communal values.
+Keep your tone cunning yet instructive.
+    """,
+}
+
+# ===== Authentication endpoints =====
+
+@app.route("/login", methods=["POST"])
+def login():
+    data = request.get_json()
+    token = verify_user(data["username"], data["password"])
+    if token:
+        return jsonify(access_token=token), 200
+    return jsonify({"error": "Invalid credentials"}), 401
+
+@app.route("/register", methods=["POST"])
+def register():
+    data = request.get_json()
+    if not data.get("username") or not data.get("password") or not data.get("display_name"):
+        return jsonify({"error": "Username, password, and display name required"}), 400
+    if add_user(data["username"], data["password"], data["display_name"]):
+        return jsonify({"message": "User created successfully"}), 201
+    return jsonify({"error": "Username or display name already exists"}), 409
+
+# ===== Core chat endpoint =====
+
+@app.route("/chat", methods=["POST"])
+@jwt_required()
+def chat():
+    try:
+        data = request.get_json()
+        if not data:
+            return jsonify({"error": "The parchment appears blank... please write your message"}), 400
+
+        character = data.get("character")
+        message = data.get("message")
+        identity = get_jwt_identity()
+        user_id = identity["username"]
+        display = identity["display_name"]
+
+        if not character or not message:
+            return jsonify({"error": "Both character selection and message are needed to begin"}), 400
+
+        if character not in CHARACTERS:
+            available_chars = ", ".join(f"'{c}'" for c in CHARACTERS.keys())
+            return jsonify({"error": f"Ah, this character isn't available. Choose from: {available_chars}"}), 400
+
+        logger.info("\n=== PROCESSING REQUEST ===")
+        logger.info(f"Character: {character}")
+        logger.info(f"User: {user_id} ({display})")
+        logger.info(f"Message: {message}")
+
+        cm = ConversationManager(user_id, character)
+        cm.append_message(display, message)
+        buf = cm.get_buffer()
+        ctx = cm.get_active_entities()
+        ctx["display_name"] = {
+            "value": display,
+            "source": "login",
+            "confidence": 1.0
+        }
+        prompt = PromptEngineer.build(CHARACTERS[character], buf, ctx)
+
+        logger.info("\n=== GENERATED PROMPT ===")
+        logger.info(prompt)
+
+        response = requests.post(
+            "http://localhost:11434/api/generate",
+            json={
+                "model": "llama3.2",
+                "prompt": prompt,
+                "stream": True,
+                "options": {"temperature": 0.7, "top_p": 0.9}
+            },
+            stream=True,
+            timeout=90,
+        )
+        response.raise_for_status()
+
+        def generate():
+            first = True
+            for chunk in response.iter_lines():
+                if not chunk:
+                    continue
+                out = {}
+                try:
+                    data = json.loads(chunk.decode("utf-8"))
+                    if "error" in data:
+                        out["error"] = data["error"]
+                    else:
+                        out["response"] = data.get("response", "")
+                except json.JSONDecodeError:
+                    out["response"] = ""
+                if first:
+                    out["context"] = ctx
+                    first = False
+                yield json.dumps(out) + "\n"
+
+        return Response(generate(), content_type="application/json")
+
+    except requests.exceptions.Timeout:
+        logger.error("Ollama API timeout")
+        return jsonify({"error": "The character is lost in thought... please wait and try again"}), 504
+    except requests.exceptions.RequestException as e:
+        logger.error(f"Ollama API connection error: {e}")
+        return jsonify({"error": "The mystical connection was interrupted... try again?"}), 500
+    except Exception as e:
+        logger.error(f"Unexpected server error: {e}", exc_info=True)
+        return jsonify({"error": "A mysterious disturbance occurred... please try your request again"}), 500
+
+# ===== Option B endpoints: persist & list archived sessions =====
+
+@app.route("/api/sessions/<character_key>", methods=["GET"])
+@jwt_required()
+def list_sessions(character_key):
+    """
+    Return all archived sessions for this user & character,
+    in the shape your sidebar expects: [{id, messages, created_at},…]
+    """
+    user_id = get_jwt_identity()["username"]
+    db_path = os.path.join(os.path.dirname(__file__), "memory", "memory.db")
+    conn = sqlite3.connect(db_path)
+    c = conn.cursor()
+    c.execute(
+        "SELECT id, session_json, created_at "
+        "FROM archives "
+        "WHERE user_id=? AND character=? "
+        "ORDER BY created_at DESC",
+        (user_id, character_key),
+    )
+    rows = c.fetchall()
+    conn.close()
+
+    sessions = [
+        {
+            "id": row[0],
+            "messages": json.loads(row[1]),
+            "created_at": row[2]
+        }
+        for row in rows
+    ]
+    return jsonify(sessions), 200
+
+@app.route("/api/sessions", methods=["POST"])
+@jwt_required()
+def create_session():
+    """
+    Archive the current in-memory buffer as a new session,
+    then return that newly archived session object.
+    Expects JSON: { "characterKey": "<key>" }
+    """
+    data = request.get_json() or {}
+    key = data.get("characterKey")
+    if not key:
+        return jsonify({"error": "characterKey required"}), 400
+
+    user_id = get_jwt_identity()["username"]
+    # Archive current buffer
+    cm = ConversationManager(user_id, key)
+    cm.archive_buffer()   # writes current buffer into archives table
+
+    # Now fetch the most recent archive row
+    db_path = os.path.join(os.path.dirname(__file__), "memory", "memory.db")
+    conn = sqlite3.connect(db_path)
+    c = conn.cursor()
+    c.execute(
+        "SELECT id, session_json, created_at "
+        "FROM archives "
+        "WHERE user_id=? AND character=? "
+        "ORDER BY created_at DESC LIMIT 1",
+        (user_id, key),
+    )
+    row = c.fetchone()
+    conn.close()
+
+    if not row:
+        return jsonify({"error": "Failed to archive session"}), 500
+
+    session = {
+        "id": row[0],
+        "messages": json.loads(row[1]),
+        "created_at": row[2]
+    }
+    return jsonify(session), 200
+
+# ===== Session management endpoints (unchanged) =====
+
+@app.route("/session/clear", methods=["POST"])
+@jwt_required()
+def clear_session():
+    data = request.get_json() or {}
+    character = data.get("character")
+    if not character:
+        return jsonify({"error": "Character is required"}), 400
+    user_id = get_jwt_identity()["username"]
+    cm = ConversationManager(user_id, character)
+    cm.clear_buffer()
+    return jsonify({"status": "cleared", "character": character}), 200
+
+@app.route("/session/archive", methods=["POST"])
+@jwt_required()
+def archive_session():
+    data = request.get_json() or {}
+    character = data.get("character")
+    if not character:
+        return jsonify({"error": "Character is required"}), 400
+    user_id = get_jwt_identity()["username"]
+    cm = ConversationManager(user_id, character)
+    cm.archive_buffer()
+    return jsonify({"status": "archived", "character": character}), 200
+
+@app.route("/session/archives", methods=["GET"])
+@jwt_required()
+def list_archives():
+    character = request.args.get("character")
+    if not character:
+        return jsonify({"error": "Character query parameter is required"}), 400
+    user_id = get_jwt_identity()["username"]
+    conn = sqlite3.connect(os.path.join(os.path.dirname(__file__), "memory", "memory.db"))
+    c = conn.cursor()
+    c.execute(
+        "SELECT id, session_json, created_at FROM archives WHERE user_id=? AND character=? ORDER BY created_at DESC",
+        (user_id, character),
+    )
+    rows = c.fetchall()
+    conn.close()
+    archives = [
+        {"id": r[0], "session": json.loads(r[1]), "created_at": r[2]}
+        for r in rows
+    ]
+    return jsonify(archives), 200
+
+if __name__ == "__main__":
+    logger.info("Starting Flask server...")
+    app.run(host="0.0.0.0", port=5000, debug=True)

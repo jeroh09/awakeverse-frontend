@@ -1,0 +1,15 @@
+.carousel {
+  margin-bottom: 1rem;
+}
+
+.title {
+  margin: 0 0 0.5rem;
+  font-size: 1.25rem;
+}
+
+.cardsContainer {
+  display: flex;
+  overflow-x: auto;
+  gap: 1rem;
+  padding-bottom: 0.5rem;
+}

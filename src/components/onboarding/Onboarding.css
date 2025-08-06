@@ -1,0 +1,415 @@
+/* ===== DEVICE FRAME WITH PROPER CONTAINMENT ===== */
+.device-frame {
+  position: relative;
+  width: 323px;           /* Was 380px, now 85% */
+  height: 578px;          /* Was 680px, now 85% */
+  background: #111;
+  border-radius: 31px;    /* Was 36px, now 85% */
+  box-shadow: 
+    0 0 0 7px #0a0a0a,    /* Was 8px, now 85% */
+    0 0 0 9px gold,       /* Was 10px, now 85% */
+    0 3px 26px rgba(0, 0, 0, 0.5); /* Was 4px 30px, now 85% */
+  padding: 14px;          /* Was 16px, now 85% */
+  overflow: hidden;       /* ENSURE NOTHING ESCAPES */
+  border: 1px solid rgba(255, 215, 0, 0.3);
+}
+
+.device-screen {
+  width: 100%;
+  height: 100%;
+  background: rgba(20, 20, 30, 0.95);
+  backdrop-filter: blur(7px);    /* Was 8px, now 85% */
+  border-radius: 20px;           /* Was 24px, now 85% */
+  overflow: hidden;              /* ENSURE PROPER CLIPPING */
+  display: flex;
+  flex-direction: column;
+  border: 1px solid rgba(255, 215, 0, 0.1);
+}
+
+/* ===== AVATAR GRID - 15% REDUCED WITH GOLD RING EFFECTS ===== */
+.avatars-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 1.3rem;           /* Was 1.5rem, now 85% */
+  padding: 1.3rem;       /* Was 1.5rem, now 85% */
+  place-items: center;
+}
+
+.avatar-card {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  cursor: pointer;
+  position: relative;
+  transition: all 0.3s ease;
+  padding-bottom: 21px;  /* Was 25px, now 85% */
+}
+
+.avatar-frame,
+.avatar-img-container {
+  position: relative;
+  width: 68px;           /* Was 80px, now 85% */
+  height: 68px;          /* Was 80px, now 85% */
+  border-radius: 50%;
+  padding: 3px;          /* Was 4px, now 85% */
+  transition: all 0.3s ease;
+  background: transparent;
+}
+
+/* ===== SUBTLE GOLD RING HOVER EFFECTS ===== */
+.avatar-card:hover .avatar-frame,
+.avatar-card:hover .avatar-img-container {
+  border: 1px solid gold;
+  box-shadow: 0 0 8px rgba(255, 215, 0, 0.3);
+  transform: scale(1.02);
+}
+
+/* ===== SUBTLE SELECTED STATE GOLD RING ===== */
+.avatar-card.selected .avatar-frame,
+.avatar-card.selected .avatar-img-container {
+  border: 1px solid gold !important;
+  box-shadow: 0 0 10px rgba(255, 215, 0, 0.4) !important;
+  transform: scale(1.03) !important;
+}
+
+.avatar-image,
+.avatar-img {
+  width: 100%;
+  height: 100%;
+  border-radius: 50%;
+  object-fit: cover;
+  position: relative;
+  z-index: 2;
+  border: 2px solid transparent;
+  transition: all 0.3s ease;
+}
+
+/* ===== SUBTLE GLOW EFFECTS ===== */
+.avatar-glow {
+  position: absolute;
+  top: -3px;
+  left: -3px;
+  width: calc(100% + 6px);
+  height: calc(100% + 6px);
+  border-radius: 50%;
+  background: radial-gradient(circle, rgba(255, 215, 0, 0.15), transparent 70%);
+  opacity: 0;
+  transform: scale(0.9);
+  transition: all 0.3s ease;
+  z-index: 1;
+  filter: blur(4px);
+}
+
+.avatar-card:hover .avatar-glow {
+  opacity: 1;
+  transform: scale(1.1);
+}
+
+.avatar-card.selected .avatar-glow {
+  opacity: 1 !important;
+  transform: scale(1.15) !important;
+  background: radial-gradient(circle, rgba(255, 215, 0, 0.2), transparent 70%) !important;
+}
+
+/* ===== GOLD CHARACTER NAME LABELS ===== */
+.avatar-name,
+.avatar-label {
+  position: absolute;
+  bottom: -5px;
+  left: 50%;
+  transform: translateX(-50%);
+  opacity: 0;
+  font-size: 0.68rem;    /* Was 0.8rem, now 85% */
+  color: gold !important; /* FORCE GOLD COLOR */
+  text-align: center;
+  width: max-content;
+  max-width: 85px;       /* Was 100px, now 85% */
+  transition: all 0.3s ease;
+  pointer-events: none;
+  text-overflow: ellipsis;
+  overflow: hidden;
+  white-space: nowrap;
+  background: rgba(0, 0, 0, 0.8);
+  padding: 3px 8px;
+  border-radius: 6px;
+  border: 1px solid rgba(255, 215, 0, 0.3);
+  backdrop-filter: blur(4px);
+}
+
+.avatar-card:hover .avatar-name,
+.avatar-card:hover .avatar-label,
+.avatar-card.selected .avatar-name,
+.avatar-card.selected .avatar-label {
+  opacity: 1;
+  transform: translateX(-50%) translateY(8px); /* Was 5px, now enhanced */
+  color: gold !important; /* FORCE GOLD COLOR */
+  text-shadow: 0 0 4px rgba(255, 215, 0, 0.8);
+  border-color: gold;
+  background: rgba(0, 0, 0, 0.9);
+}
+
+/* ===== SUBTLE RIPPLE EFFECT ON CLICK ===== */
+.avatar-card:active .avatar-frame::after {
+  content: '';
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: 0;
+  height: 0;
+  border-radius: 50%;
+  background: rgba(255, 215, 0, 0.2); /* More subtle */
+  transform: translate(-50%, -50%);
+  animation: ripple 0.4s ease-out; /* Faster animation */
+  z-index: 0;
+}
+
+@keyframes ripple {
+  to {
+    width: 100px;  /* Smaller ripple */
+    height: 100px;
+    opacity: 0;
+  }
+}
+
+/* ===== CHAT BUBBLES - 15% REDUCED ===== */
+.chat-row {
+  display: flex;
+  margin-bottom: 14px;   /* Was 16px, now 85% */
+  align-items: flex-start;
+}
+
+.user-row {
+  justify-content: flex-end;
+}
+
+.chat-bubble {
+  position: relative;
+  padding: 10px 14px;    /* Was 12px 16px, now 85% */
+  border-radius: 15px;   /* Was 18px, now 85% */
+  max-width: 75%;
+  line-height: 1.4;
+  text-transform: none !important;
+  font-variant: normal !important;
+}
+
+.chat-bubble.ai {
+  background: rgba(255, 255, 255, 0.08);
+  border: 1px solid rgba(255, 215, 0, 0.3);
+  color: #fff;
+}
+
+.chat-bubble.ai::before {
+  content: "";
+  position: absolute;
+  left: -7px;            /* Was -8px, now 85% */
+  top: 10px;             /* Was 12px, now 85% */
+  border: 7px solid transparent; /* Was 8px, now 85% */
+  border-right-color: rgba(255, 255, 255, 0.08);
+  border-left: 0;
+}
+
+.chat-bubble.user {
+  background: rgba(255, 215, 0, 0.15);
+  border: 1px solid rgba(255, 215, 0, 0.5);
+  color: #fff;
+}
+
+.chat-bubble.user::before {
+  content: "";
+  position: absolute;
+  right: -7px;           /* Was -8px, now 85% */
+  top: 10px;             /* Was 12px, now 85% */
+  border: 7px solid transparent; /* Was 8px, now 85% */
+  border-left-color: rgba(255, 215, 0, 0.15);
+  border-right: 0;
+}
+
+/* ===== AVATARS IN CHAT - 15% REDUCED ===== */
+.chat-avatar {
+  width: 37px;           /* Was 44px, now 85% */
+  height: 37px;          /* Was 44px, now 85% */
+  border-radius: 50%;
+  object-fit: cover;
+  border: 1px solid rgba(255, 215, 0, 0.3);
+  margin-right: 10px;    /* Was 12px, now 85% */
+}
+
+.user-avatar {
+  width: 37px;           /* Was 44px, now 85% */
+  height: 37px;          /* Was 44px, now 85% */
+  border-radius: 50%;
+  object-fit: cover;
+  border: 1px solid rgba(0, 150, 255, 0.5);
+  margin-left: 10px;     /* Was 12px, now 85% */
+}
+
+/* ===== HEADER & NAVIGATION - 15% REDUCED ===== */
+.app-header {
+  padding: 14px;         /* Was 16px, now 85% */
+  border-bottom: 1px solid rgba(255, 215, 0, 0.1);
+  text-align: center;
+  font-size: 0.94rem;    /* Was 1.1rem, now 85% */
+  color: gold;
+  position: relative;
+}
+
+.back-button {
+  position: absolute;
+  left: 14px;            /* Was 16px, now 85% */
+  background: transparent;
+  border: none;
+  color: gold;
+  font-size: 1.02rem;    /* Was 1.2rem, now 85% */
+  cursor: pointer;
+}
+
+/* ===== INPUT AREA - 15% REDUCED ===== */
+.chat-input-area {
+  display: flex;
+  gap: 7px;              /* Was 8px, now 85% */
+  padding: 10px;         /* Was 12px, now 85% */
+  background: rgba(10, 10, 20, 0.7);
+  border-top: 1px solid rgba(255, 215, 0, 0.1);
+}
+
+.chat-input-area input {
+  flex: 1;
+  padding: 9px 14px;     /* Was 10px 16px, now 85% */
+  border-radius: 17px;   /* Was 20px, now 85% */
+  border: 1px solid rgba(255, 215, 0, 0.3);
+  background: rgba(0, 0, 0, 0.4);
+  color: white;
+  outline: none;
+  font-size: 0.85rem;    /* Was 1rem, now 85% */
+}
+
+.chat-input-area button {
+  background: rgba(255, 215, 0, 0.2);
+  border: 1px solid gold;
+  color: gold;
+  padding: 0 17px;       /* Was 0 20px, now 85% */
+  border-radius: 17px;   /* Was 20px, now 85% */
+  cursor: pointer;
+  transition: all 0.2s;
+  font-size: 0.85rem;    /* Was 1rem, now 85% */
+}
+
+.chat-input-area button:hover {
+  background: rgba(255, 215, 0, 0.3);
+}
+
+/* ===== INVITE OPTIONS - 15% REDUCED ===== */
+.invite-options {
+  display: flex;
+  gap: 10px;             /* Was 12px, now 85% */
+  justify-content: center;
+  margin: 14px 0;        /* Was 16px, now 85% */
+  animation: fadeIn 0.3s ease;
+}
+
+.invite-options button {
+  background: rgba(255, 215, 0, 0.2);
+  border: 1px solid gold;
+  color: gold;
+  padding: 7px 14px;     /* Was 8px 16px, now 85% */
+  border-radius: 17px;   /* Was 20px, now 85% */
+  cursor: pointer;
+  transition: all 0.2s;
+  font-size: 0.85rem;    /* Was 1rem, now 85% */
+}
+
+.invite-options button:hover {
+  background: rgba(255, 215, 0, 0.3);
+}
+
+/* ===== CONTENT AREA - HIDDEN SCROLLBARS ===== */
+.app-content {
+  flex: 1;
+  overflow-y: auto;
+  overflow-x: hidden;
+  padding: 8px;          /* Was 10px, now 85% */
+  /* HIDE SCROLLBARS WHILE KEEPING FUNCTIONALITY */
+  scrollbar-width: none; /* Firefox */
+  -ms-overflow-style: none; /* IE and Edge */
+}
+
+.app-content::-webkit-scrollbar {
+  display: none; /* Chrome, Safari, Opera */
+}
+
+.chat-view {
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+}
+
+.chat-messages {
+  flex: 1;
+  padding: 14px;         /* Was 16px, now 85% */
+  overflow-y: auto;
+  overflow-x: hidden;
+  /* HIDE SCROLLBARS WHILE KEEPING FUNCTIONALITY */
+  scrollbar-width: none; /* Firefox */
+  -ms-overflow-style: none; /* IE and Edge */
+}
+
+.chat-messages::-webkit-scrollbar {
+  display: none; /* Chrome, Safari, Opera */
+}
+
+/* ===== FORCE TEXT NORMALIZATION ===== */
+.chat-bubble,
+.chat-bubble *,
+.chat-bubble p,
+.chat-bubble span,
+.chat-bubble div,
+div[class*="chat-bubble"],
+div[class*="chat-bubble"] *,
+div[class*="chat-bubble"] p {
+  text-transform: none !important;
+  font-variant: normal !important;
+  font-feature-settings: normal !important;
+  text-decoration: none !important;
+  font-style: normal !important;
+  font-family: 'Lora', serif !important;
+}
+
+/* Override any uppercase from parent fonts */
+.device-frame *,
+.device-screen *,
+.chat-view *,
+.chat-messages * {
+  text-transform: none !important;
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(9px); }  /* Was 10px, now 85% */
+  to { opacity: 1; transform: translateY(0); }
+}
+
+/* ===== RESPONSIVE ADJUSTMENTS - 15% REDUCED ===== */
+@media (max-width: 768px) {
+  .device-frame {
+    width: 274px;         /* Was 323px, further reduced for mobile */
+    height: 491px;        /* Was 578px, further reduced for mobile */
+    padding: 12px;        /* Was 14px, further reduced */
+  }
+  
+  .avatars-grid {
+    gap: 1rem;            /* Was 1.3rem, further reduced */
+    padding: 1rem;        /* Was 1.3rem, further reduced */
+    grid-template-columns: repeat(3, 1fr); /* Keep 3 columns */
+  }
+  
+  .avatar-frame,
+  .avatar-img-container {
+    width: 58px;          /* Was 68px, further reduced */
+    height: 58px;         /* Was 68px, further reduced */
+  }
+  
+  .avatar-name,
+  .avatar-label {
+    font-size: 0.6rem;   /* Smaller text on mobile */
+    max-width: 70px;     /* Smaller max width */
+  }
+}

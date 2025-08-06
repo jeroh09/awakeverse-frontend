@@ -1,0 +1,263 @@
+/* src/components/ElegantCharacterPortraits.css */
+
+.elegant-portrait-container {
+  position: relative;
+  width: 100%;
+  height: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  /* NO BACKGROUND - let the main page starfield show through */
+  background: transparent;
+  overflow: visible;
+}
+
+/* REMOVE the container's background and starfield */
+.elegant-portrait-container::before {
+  display: none;
+}
+
+/* Character showcase container */
+.character-showcase {
+  position: relative;
+  z-index: 2;
+  width: 100%;
+  max-width: 500px;
+  text-align: center;
+  padding: 0 2rem;
+}
+
+/* Portrait frame - NOW CIRCULAR */
+.portrait-frame {
+  position: relative;
+  margin: 0 auto 2rem;
+  width: 280px;
+  height: 280px;
+  border-radius: 50%; /* CIRCULAR! */
+  overflow: hidden;
+  background: rgba(0, 0, 0, 0.3);
+  
+  /* GOLD RING */
+  border: 3px solid #ffd700;
+  box-shadow: 
+    0 0 30px rgba(255, 215, 0, 0.4),
+    0 0 60px rgba(255, 215, 0, 0.2),
+    inset 0 0 20px rgba(255, 215, 0, 0.1);
+  
+  transition: all 1.2s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+/* Enhanced gold ring effect on active */
+.portrait-frame.active {
+  border-color: #ffd700;
+  box-shadow: 
+    0 0 40px rgba(255, 215, 0, 0.6),
+    0 0 80px rgba(255, 215, 0, 0.3),
+    inset 0 0 30px rgba(255, 215, 0, 0.15);
+}
+
+/* Remove the top accent line - not needed with circular design */
+.portrait-frame::before {
+  display: none;
+}
+
+/* Character portrait image - optimized for circular frame */
+.character-portrait {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  object-position: center center; /* Center for circular crop */
+  opacity: 0;
+  transform: scale(1.1);
+  transition: all 1.2s cubic-bezier(0.4, 0, 0.2, 1);
+  filter: grayscale(10%) brightness(1.1) contrast(1.05);
+}
+
+.character-portrait.active {
+  opacity: 1;
+  transform: scale(1);
+}
+
+/* Fallback for missing images - circular design */
+.portrait-fallback {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  display: none;
+  align-items: center;
+  justify-content: center;
+  background: radial-gradient(circle, 
+    rgba(255, 215, 0, 0.1) 0%, 
+    rgba(255, 215, 0, 0.05) 70%,
+    transparent 100%);
+}
+
+.fallback-text {
+  color: rgba(255, 215, 0, 0.7);
+  font-family: 'Cinzel Decorative', serif;
+  font-size: 1rem;
+  text-align: center;
+  padding: 1rem;
+  line-height: 1.3;
+}
+
+/* Character name */
+.character-name {
+  font-family: 'Cinzel Decorative', serif;
+  font-size: 1.8rem;
+  font-weight: 400;
+  color: rgba(255, 215, 0, 0.9);
+  margin-bottom: 0.5rem;
+  opacity: 0;
+  transform: translateY(20px);
+  transition: all 1s ease 0.3s;
+  letter-spacing: 1px;
+}
+
+.character-name.active {
+  opacity: 1;
+  transform: translateY(0);
+}
+
+/* Character title/description */
+.character-title {
+  font-family: 'Inter', sans-serif;
+  font-size: 1rem;
+  font-weight: 400;
+  color: rgba(255, 255, 255, 0.6);
+  line-height: 1.5;
+  opacity: 0;
+  transform: translateY(20px);
+  transition: all 1s ease 0.5s;
+  max-width: 300px;
+  margin: 0 auto;
+}
+
+.character-title.active {
+  opacity: 1;
+  transform: translateY(0);
+}
+
+/* Progress indicators */
+.portrait-indicators {
+  position: absolute;
+  bottom: 3rem;
+  left: 50%;
+  transform: translateX(-50%);
+  display: flex;
+  gap: 8px;
+  z-index: 3;
+}
+
+.indicator {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.2);
+  border: none;
+  padding: 0;
+  transition: all 0.4s ease;
+  cursor: pointer;
+}
+
+.indicator.active {
+  background: rgba(255, 215, 0, 0.8);
+  transform: scale(1.2);
+}
+
+.indicator:hover {
+  background: rgba(255, 215, 0, 0.5);
+}
+
+.indicator:focus {
+  outline: 2px solid rgba(255, 215, 0, 0.4);
+  outline-offset: 2px;
+}
+
+/* Subtle glow animation for circular frames */
+@media (prefers-reduced-motion: no-preference) {
+  .portrait-frame {
+    animation: circularGlow 8s ease-in-out infinite;
+  }
+
+  @keyframes circularGlow {
+    0%, 100% {
+      box-shadow: 
+        0 0 30px rgba(255, 215, 0, 0.4),
+        0 0 60px rgba(255, 215, 0, 0.2),
+        inset 0 0 20px rgba(255, 215, 0, 0.1);
+    }
+    50% {
+      box-shadow: 
+        0 0 40px rgba(255, 215, 0, 0.6),
+        0 0 80px rgba(255, 215, 0, 0.3),
+        inset 0 0 30px rgba(255, 215, 0, 0.15);
+    }
+  }
+}
+
+/* Responsive adjustments for circular design */
+@media (max-width: 1200px) {
+  .portrait-frame {
+    width: 240px;
+    height: 240px;
+  }
+  
+  .character-name {
+    font-size: 1.6rem;
+  }
+  
+  .character-title {
+    font-size: 0.9rem;
+  }
+}
+
+@media (max-width: 900px) {
+  .character-showcase {
+    padding: 0 1rem;
+  }
+  
+  .portrait-frame {
+    width: 200px;
+    height: 200px;
+  }
+  
+  .character-name {
+    font-size: 1.4rem;
+  }
+  
+  .portrait-indicators {
+    bottom: 2rem;
+  }
+}
+
+@media (max-width: 768px) {
+  .elegant-portrait-container {
+    display: none; /* Hidden on mobile - use your enhanced mobile auth */
+  }
+}
+
+/* Loading state */
+.character-showcase.loading .character-name,
+.character-showcase.loading .character-title {
+  opacity: 0.5;
+}
+
+/* Smooth transitions for reduced motion */
+@media (prefers-reduced-motion: reduce) {
+  .character-portrait,
+  .character-name,
+  .character-title,
+  .portrait-frame {
+    transition-duration: 0.3s;
+  }
+  
+  .portrait-frame {
+    animation: none;
+  }
+}

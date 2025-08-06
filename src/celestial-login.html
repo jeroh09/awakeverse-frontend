@@ -1,0 +1,122 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Celestial Login Test</title>
+  <link href="https://fonts.googleapis.com/css2?family=Cinzel+Decorative&display=swap" rel="stylesheet">
+  <style>
+    body, html {
+      margin: 0;
+      padding: 0;
+      height: 100%;
+      background: #000;
+      font-family: 'Cinzel Decorative', serif;
+      color: gold;
+    }
+
+    .auth-page-container {
+      position: relative;
+      height: 100%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      background-image: url('https://upload.wikimedia.org/wikipedia/commons/0/05/Starfield_background.png'); /* placeholder star bg */
+      background-size: cover;
+      background-position: center;
+      overflow: hidden;
+    }
+
+    .auth-page-container::before {
+      content: "";
+      position: absolute;
+      top: 0;
+      bottom: 0;
+      width: 4px;
+      left: 50%;
+      transform: translateX(-50%);
+      background: radial-gradient(ellipse at bottom, rgba(255, 215, 0, 0.3) 0%, transparent 60%),
+                  linear-gradient(to bottom, rgba(255, 215, 0, 0.4), transparent);
+      box-shadow: 0 0 20px gold, 0 80px 160px rgba(255, 215, 0, 0.25);
+      z-index: 1;
+    }
+
+    .auth-form {
+      position: relative;
+      z-index: 2;
+      padding: 2rem;
+      border: 1px solid gold;
+      border-radius: 12px;
+      background: rgba(0, 0, 0, 0.4);
+      backdrop-filter: blur(12px);
+      width: 90%;
+      max-width: 400px;
+    }
+
+    .auth-form h2 {
+      text-align: center;
+      margin-bottom: 1rem;
+    }
+
+    .auth-form input {
+      width: 100%;
+      padding: 0.6rem;
+      margin-top: 1rem;
+      background: rgba(255, 255, 255, 0.05);
+      border: 1px solid gold;
+      border-radius: 6px;
+      color: gold;
+      font-size: 1rem;
+      backdrop-filter: blur(3px);
+    }
+
+    .auth-form input::placeholder {
+      color: rgba(255, 215, 0, 0.7);
+    }
+
+    .auth-form button {
+      margin-top: 1.5rem;
+      width: 100%;
+      padding: 0.75rem;
+      font-weight: bold;
+      font-size: 1rem;
+      color: gold;
+      background: rgba(255, 255, 255, 0.05);
+      border: 2px solid gold;
+      border-radius: 30px;
+      cursor: pointer;
+      transition: background 0.3s ease, transform 0.2s ease;
+      backdrop-filter: blur(4px);
+    }
+
+    .auth-form button:hover {
+      background: rgba(255, 215, 0, 0.1);
+      transform: scale(1.03);
+      box-shadow: 0 0 10px rgba(255, 215, 0, 0.4);
+    }
+
+    .auth-form p {
+      text-align: center;
+      margin-top: 1rem;
+    }
+
+    .auth-form a {
+      color: gold;
+      text-decoration: underline;
+    }
+  </style>
+</head>
+<body>
+  <div class="auth-page-container">
+    <div class="auth-form">
+      <h2>Log In</h2>
+      <form>
+        <input type="email" placeholder="Email" required />
+        <input type="password" placeholder="Password" required />
+        <button type="submit">Log In</button>
+      </form>
+      <p>Don't have an account? <a href="#">Register here</a></p>
+    </div>
+  </div>
+</body>
+</html>
