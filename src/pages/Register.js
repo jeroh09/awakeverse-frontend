@@ -18,7 +18,7 @@ export default function Register() {
 
   // Direct API call instead of using AuthContext to avoid auto-login
   const registerUser = async (userData) => {
-    const API = process.env.REACT_APP_API_URL || "http://localhost:5000";
+    const API = process.env.REACT_APP_API_URL || "https://api.awakeverse.com";
     
     const res = await fetch(`${API}/register`, {
       method: "POST",

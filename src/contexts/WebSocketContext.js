@@ -7,7 +7,7 @@ export const WebSocketProvider = ({ children }) => {
   const [socket, setSocket] = useState(null);
 
   useEffect(() => {
-    const newSocket = io("http://localhost:5000", {
+    const newSocket = io("https://api.awakeverse.com", {
       transports: ["websocket"],
       withCredentials: true,
     });

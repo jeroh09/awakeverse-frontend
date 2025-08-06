@@ -5,7 +5,7 @@ module.exports = function(app) {
   app.use(
     '/api',
     createProxyMiddleware({
-      target: 'http://localhost:5000', // Your Flask backend
+      target: 'https://api.awakeverse.com', // Your Flask backend
       changeOrigin: true,
       secure: false,
       headers: {

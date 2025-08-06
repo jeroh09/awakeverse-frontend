@@ -2,7 +2,7 @@ import { createContext, useContext, useState, useEffect } from "react";
 import jwt_decode from "jwt-decode";
 import { useUser } from "./UserContext";
 
-const API = process.env.REACT_APP_API_URL || "http://localhost:5000";
+const API = process.env.REACT_APP_API_URL || "https://api.awakeverse.com";
 
 export const AuthContext = createContext();
 

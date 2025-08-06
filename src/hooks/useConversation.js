@@ -6,7 +6,7 @@ export function useConversation() {
   async function* sendConversationMessage(character, message, token, signal) {
     let res;
     try {
-      res = await fetch("http://localhost:5000/chat", {
+      res = await fetch("https://api.awakeverse.com/chat", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",

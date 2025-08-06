@@ -26,7 +26,7 @@ export function UserProvider({ children }) {
       if (typeof decoded.sub === 'string') {
         console.log("📡 Fetching current user from API...");
 
-        fetch('http://localhost:5000/api/current_user', {
+        fetch('https://api.awakeverse.com/api/current_user', {
           headers: {
             Authorization: `Bearer ${token}`
           },

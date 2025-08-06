@@ -8,7 +8,7 @@ export default function Header() {
   const { user } = useUser();
   const [isRetracted, setIsRetracted] = useState(false);
   const retractionTimerRef = useRef(null);
-  const API_BASE = process.env.REACT_APP_API_URL || 'http://localhost:5000';
+  const API_BASE = process.env.REACT_APP_API_URL || 'https://api.awakeverse.com';
 
   // Handle automatic retraction
   useEffect(() => {

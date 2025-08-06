@@ -102,7 +102,7 @@ const ChatItem = memo(({ index, style, data }) => {
   }, [isEditing, editText]);
 
   const cls = msg.user ? 'user-message' : 'ai-message';
-  const API_BASE = process.env.REACT_APP_API_URL || 'http://localhost:5000';
+  const API_BASE = process.env.REACT_APP_API_URL || 'https://api.awakeverse.com';
   const avatarSrc = msg.user
     ? userAvatar || `${API_BASE}/avatars/user_${data.userId || 'unknown'}_default.jpg`
     : `/images/${msg.speaker || character}.jpg`;

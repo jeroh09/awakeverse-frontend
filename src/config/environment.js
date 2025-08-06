@@ -1,8 +1,8 @@
 const environment = {
   development: {
-    API_URL: 'http://localhost:5000',
-    API_BASE_URL: 'http://localhost:5000',
-    WS_URL: 'http://localhost:5000',
+    API_URL: 'https://api.awakeverse.com',
+    API_BASE_URL: 'https://api.awakeverse.com',
+    WS_URL: 'https://api.awakeverse.com',
   },
   production: {
     API_URL: 'https://api.awakeverse.com',
