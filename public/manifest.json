@@ -1,6 +1,7 @@
 {
-  "short_name": "React App",
-  "name": "Create React App Sample",
+  "short_name": "AwakeVerse",
+  "name": "AwakeVerse - Conversations Without Limits",
+  "description": "Experience conversations with icons like Sherlock Holmes, Tesla, Shakespeare, and more through AI.",
   "icons": [
     {
       "src": "favicon.ico",
@@ -20,6 +21,8 @@
   ],
   "start_url": ".",
   "display": "standalone",
-  "theme_color": "#000000",
-  "background_color": "#ffffff"
+  "theme_color": "#1a1a2e",
+  "background_color": "#0a0a1a",
+  "categories": ["education", "entertainment", "productivity"],
+  "orientation": "portrait-primary"
 }
