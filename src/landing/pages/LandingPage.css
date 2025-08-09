@@ -1,7 +1,7 @@
-/* src/landing/pages/LandingPage.css - Fixed Royal Blue Background + Stable Carousel */
+/* src/landing/pages/LandingPage.css - Fixed Header Layout + Mobile Vertical Scroll */
 
-/* Import Premium Fonts */
-@import url('https://fonts.googleapis.com/css2?family=Cinzel+Decorative:wght@400;700&family=Lora:wght@400;500;600;700&family=Inter:wght@300;400;500;600;700&family=Crimson+Text:ital,wght@0,400;0,600;1,400;1,600&family=Source+Serif+Pro:ital,wght@0,300;0,400;0,600;1,400&display=swap');
+/* Import Premium Fonts + Playfair Display for Logo */
+@import url('https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;500;600;700;800;900&family=Cinzel+Decorative:wght@400;700&family=Lora:wght@400;500;600;700&family=Inter:wght@300;400;500;600;700&family=Crimson+Text:ital,wght@0,400;0,600;1,400;1,600&family=Source+Serif+Pro:ital,wght@0,300;0,400;0,600;1,400&display=swap');
 
 /* Reset and Base Styles */
 * {
@@ -75,7 +75,34 @@ body, html {
   }
 }
 
-/* FIXED: Stable Carousel Container */
+/* FIXED: Logo only visible on Screen 1 */
+.logo {
+  font-family: 'Cinzel', serif;
+  font-size: 1.75rem;
+  font-weight: 700;
+  color: #ffd700;
+  text-shadow: 
+    0 0 10px rgba(255, 215, 0, 0.5),
+    0 0 20px rgba(255, 215, 0, 0.3),
+    0 0 30px rgba(255, 215, 0, 0.2);
+  letter-spacing: 0.05em;
+  position: absolute;
+  top: 2rem;
+  left: 2rem;
+  z-index: 10;
+  margin: 0;
+  opacity: 1;
+  transition: opacity 0.3s ease;
+}
+
+/* DESKTOP: Hide logo on screens 2 & 3 */
+.carousel-slide[data-screen="1"] ~ * .logo,
+.carousel-slide[data-screen="2"] ~ * .logo {
+  opacity: 0;
+  pointer-events: none;
+}
+
+/* Desktop vs Mobile Carousel Logic */
 .carousel-container {
   position: relative;
   width: 100%;
@@ -84,6 +111,7 @@ body, html {
   z-index: 2;
 }
 
+/* DESKTOP: Horizontal Carousel */
 .carousel-track {
   display: flex;
   width: 300%; /* Exactly 3 screens */
@@ -120,34 +148,54 @@ body, html {
   opacity: 1;
   transform: translateY(0);
   transition: opacity 0.3s ease, transform 0.3s ease;
+  position: relative;
 }
 
-/* Hero Content */
+/* DESKTOP: Different padding and scaling based on screen */
+.carousel-slide[data-screen="0"] .screen-content {
+  padding-top: 6rem; /* Account for absolute logo */
+  transform: scale(0.7); /* Keep original scaling for screen 1 */
+  transform-origin: center;
+}
+
+/* DESKTOP: Screens 2 and 3 - full screen usage, no logo, proper scaling */
+.carousel-slide[data-screen="1"] .screen-content,
+.carousel-slide[data-screen="2"] .screen-content {
+  padding-top: 1rem;
+  padding-bottom: 1rem;
+  transform: scale(0.85); /* Scale down to fit in viewport */
+  transform-origin: center;
+  max-height: 100vh;
+  overflow-y: auto;
+}
+
+/* RESTRUCTURED: Hero Content Hierarchy */
 .hero-content {
   margin-bottom: 3rem;
 }
 
-.logo {
-  font-family: 'Cinzel Decorative', serif;
-  font-size: 3.5rem;
+/* NEW: Main Hero Headline - "Chat with Humanity's Greatest Minds" */
+.main-hero-headline {
+  font-family: 'Lora', serif;
+  font-size: 3rem;
   font-weight: 700;
-  color: #ffd700;
-  margin-bottom: 2rem;
-  text-shadow: 
-    0 0 10px rgba(255, 215, 0, 0.5),
-    0 0 20px rgba(255, 215, 0, 0.3),
-    0 0 30px rgba(255, 215, 0, 0.2);
-  letter-spacing: 0.05em;
+  line-height: 1.2;
+  margin-bottom: 1.5rem;
+  color: #ffffff; /* White, not gold */
+  text-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
+  text-align: center;
 }
 
-.main-tagline {
+/* DEMOTED: Secondary tagline - "Solve mysteries with Sherlock..." */
+.secondary-tagline {
   font-family: 'Lora', serif;
-  font-size: 2rem;
-  font-weight: 600;
+  font-size: 1.6rem;
+  font-weight: 500;
   line-height: 1.3;
   margin-bottom: 1.5rem;
   color: #ffffff;
   text-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
+  text-align: center;
 }
 
 .highlight-gold { 
@@ -218,57 +266,62 @@ body, html {
 .carousel-slide[data-screen="0"] .screen-content {
   transform: scale(0.7);
   transform-origin: center;
+  padding-top: 6rem; /* Account for absolute logo */
 }
 
-/* Ensure other screens stay normal size */
+/* Ensure screens 2 & 3 scale appropriately and fit in viewport */
 .carousel-slide[data-screen="1"] .screen-content,
 .carousel-slide[data-screen="2"] .screen-content {
-  transform: scale(1);
+  transform: scale(0.85);
   transform-origin: center;
+  padding-top: 1rem;
+  padding-bottom: 1rem;
+  max-height: 100vh;
+  overflow-y: auto;
 }
 
 /* Social Proof Header */
 .social-proof-header {
-  margin-bottom: 3rem;
+  margin-bottom: 2rem; /* Reduced from 3rem */
 }
 
 .stars-rating {
   color: #ffd700;
-  font-size: 2rem;
+  font-size: 1.8rem; /* Slightly smaller */
   text-shadow: 0 0 10px rgba(255, 215, 0, 0.4);
-  margin-bottom: 1rem;
+  margin-bottom: 0.8rem; /* Reduced */
   display: block;
 }
 
 .proof-text {
   font-family: 'Source Serif Pro', serif;
-  font-size: 1.2rem;
+  font-size: 1.1rem; /* Slightly smaller */
   color: rgba(255, 255, 255, 0.9);
   font-weight: 400;
 }
 
 .tagline-below-rating {
   font-family: 'Crimson Text', serif;
-  font-size: 1.1rem;
+  font-size: 1rem; /* Slightly smaller */
   color: rgba(255, 255, 255, 0.85);
-  margin-top: 1rem;
+  margin-top: 0.8rem; /* Reduced */
   font-weight: 400;
   font-style: italic;
 }
 
 .section-title {
   font-family: 'Cinzel Decorative', serif;
-  font-size: 2.5rem;
+  font-size: 2.2rem; /* Reduced from 2.5rem */
   color: #ffd700;
-  margin-bottom: 3rem;
+  margin-bottom: 2rem; /* Reduced from 3rem */
   text-shadow: 0 0 20px rgba(255, 215, 0, 0.3);
 }
 
 .conversation-examples-title {
   font-family: 'Crimson Text', serif;
-  font-size: 1.6rem;
+  font-size: 1.4rem; /* Reduced from 1.6rem */
   color: #ffd700;
-  margin-bottom: 2.5rem;
+  margin-bottom: 2rem; /* Reduced from 2.5rem */
   text-shadow: 0 0 12px rgba(255, 215, 0, 0.4);
   font-weight: 600;
   font-style: italic;
@@ -277,19 +330,19 @@ body, html {
 
 .invitation-subtitle {
   font-family: 'Source Serif Pro', serif;
-  font-size: 1.1rem;
+  font-size: 1rem; /* Slightly smaller */
   color: rgba(255, 255, 255, 0.8);
-  margin-bottom: 3rem;
+  margin-bottom: 2rem; /* Reduced from 3rem */
   font-weight: 300;
 }
 
-/* Chat Examples */
+/* Chat Examples - Tighter spacing */
 .chat-examples {
   display: grid;
   grid-template-columns: repeat(3, 1fr);
-  gap: 2rem;
+  gap: 1.5rem; /* Reduced from 2rem */
   max-width: 1000px;
-  margin: 0 auto;
+  margin: 0 auto 1.5rem auto; /* Reduced bottom margin */
 }
 
 .chat-example {
@@ -391,11 +444,11 @@ body, html {
   border-bottom-left-radius: 5px;
 }
 
-/* Invitation Demo */
+/* Invitation Demo - Tighter spacing */
 .invitation-demo {
   display: grid;
   grid-template-columns: 1.2fr 0.8fr;
-  gap: 3rem;
+  gap: 2rem; /* Reduced from 3rem */
   align-items: start;
   max-width: 1000px;
   margin: 0 auto;
@@ -515,7 +568,7 @@ body, html {
   font-size: 1rem;
 }
 
-/* Demo Explanation */
+/* Demo Explanation - Tighter spacing */
 .demo-explanation {
   display: flex;
   flex-direction: column;
@@ -524,24 +577,24 @@ body, html {
 
 .demo-explanation h3 {
   font-family: 'Cinzel Decorative', serif;
-  font-size: 1.8rem;
+  font-size: 1.6rem; /* Reduced from 1.8rem */
   color: #ffd700;
-  margin-bottom: 2rem;
+  margin-bottom: 1.5rem; /* Reduced from 2rem */
   text-shadow: 0 0 10px rgba(255, 215, 0, 0.3);
 }
 
 .demo-explanation ul {
   list-style: none;
   padding: 0;
-  margin: 0 0 2.5rem 0;
+  margin: 0 0 2rem 0; /* Reduced from 2.5rem */
 }
 
 .demo-explanation li {
   font-family: 'Source Serif Pro', serif;
-  font-size: 1rem;
+  font-size: 0.95rem; /* Slightly smaller */
   color: rgba(255, 255, 255, 0.9);
-  line-height: 1.6;
-  margin-bottom: 1.2rem;
+  line-height: 1.5; /* Tighter line height */
+  margin-bottom: 1rem; /* Reduced from 1.2rem */
   padding-left: 2rem;
   position: relative;
   font-weight: 400;
@@ -769,100 +822,130 @@ body, html {
   }
 }
 
-/* Responsive Design */
-@media (max-width: 1200px) {
-  .chat-examples {
-    grid-template-columns: 1fr;
-    gap: 1.5rem;
-  }
-  
-  .invitation-demo {
-    grid-template-columns: 1fr;
-    gap: 2rem;
-  }
-}
-
 /* ================================
-   FIXED MOBILE ENHANCEMENT MODULE
-   Replace previous mobile module in LandingPage.css
+   MOBILE: VERTICAL SCROLL LAYOUT
+   Replace carousel with continuous scroll
    ================================ */
 
-/* Enable vertical scrolling on mobile while keeping horizontal carousel */
 @media (max-width: 768px) {
-  /* Allow carousel slides to scroll vertically */
-  .carousel-slide {
-    height: 100vh;
+  /* MOBILE: Override logo positioning */
+  .logo {
+    font-size: 1.25rem;
+    top: 1rem;
+    left: 1rem;
+    position: fixed; /* Stay visible during scroll */
+    z-index: 1000;
+  }
+
+  /* MOBILE: Switch to vertical scroll layout */
+  .landing-container {
+    height: auto;
+    min-height: 100vh;
     overflow-y: auto;
     overflow-x: hidden;
-    -webkit-overflow-scrolling: touch; /* Smooth iOS scrolling */
-    scroll-behavior: smooth;
+    -webkit-overflow-scrolling: touch;
   }
-  
-  /* Allow content to expand beyond viewport - FIXED */
-  .screen-content {
-    min-height: auto; /* Let content determine height */
-    padding-bottom: 6rem; /* Extra space at bottom for navigation */
-    display: flex;
+
+  .carousel-container {
+    height: auto;
+    overflow: visible;
+  }
+
+  /* MOBILE: Stack screens vertically */
+  .carousel-track {
     flex-direction: column;
-    justify-content: flex-start; /* Top align instead of center */
-    padding-top: 1rem; /* Reduce top padding to show headers */
-    padding-left: 1rem;
-    padding-right: 1rem;
+    width: 100%;
+    height: auto;
+    transform: none !important; /* Remove horizontal transforms */
   }
-  
-  /* CRITICAL: Don't scale down Screen 1 content on mobile */
+
+  .carousel-slide {
+    width: 100%;
+    height: auto;
+    min-height: 100vh;
+    padding: 1rem;
+    display: block; /* Change from flex for better mobile layout */
+  }
+
+  .screen-content {
+    width: 100%;
+    max-width: none;
+    padding-bottom: 2rem;
+    transform: none !important; /* Remove scaling */
+    text-align: center;
+  }
+
+  /* MOBILE: Proper logo positioning and screen padding */
   .carousel-slide[data-screen="0"] .screen-content {
-    transform: none !important; /* Remove desktop scaling */
-    transform-origin: center;
+    padding-top: 5rem; /* Account for fixed logo */
   }
-  
-  /* Improve hero content spacing - FIXED */
-  .hero-content {
-    margin-bottom: 2rem;
-    margin-top: 0; /* Don't pull up */
-    flex-shrink: 0; /* Prevent compression */
+
+  .carousel-slide[data-screen="1"] .screen-content,
+  .carousel-slide[data-screen="2"] .screen-content {
+    padding-top: 1rem; /* Normal padding for screens 2 & 3 */
   }
-  
-  /* Fix logo and header sizing */
-  .logo {
-    font-size: 2.5rem; /* Slightly smaller but visible */
-    margin-bottom: 1.5rem;
+
+  /* MOBILE: Adjust hero text hierarchy */
+  .main-hero-headline {
+    font-size: 2rem;
+    margin-bottom: 1rem;
+    line-height: 1.1;
   }
-  
-  .main-tagline {
-    font-size: 1.4rem; /* Ensure readability */
+
+  .secondary-tagline {
+    font-size: 1.2rem;
     margin-bottom: 1rem;
   }
-  
+
   .hero-subtitle {
     font-size: 1rem;
     margin-bottom: 2rem;
   }
-  
-  /* Better spacing for all screen content */
-  .social-proof-header,
-  .conversations-content,
-  .invitation-demo {
-    margin-bottom: 2rem;
-    flex-shrink: 0;
+
+  /* MOBILE: Character panels in 2x2 grid */
+  .enhanced-characters-showcase {
+    grid-template-columns: repeat(2, 1fr);
+    gap: 1rem;
+    margin: 1.5rem auto 2rem auto;
+    max-width: none;
+    padding: 0 0.5rem;
   }
-  
-  /* CRITICAL: Show ALL chat examples on mobile */
+
+  /* MOBILE: Stack chat examples vertically - show 2 examples */
   .chat-examples {
-    display: flex;
-    flex-direction: column;
+    grid-template-columns: 1fr;
     gap: 1.5rem;
     margin-bottom: 2rem;
   }
-  
-  /* OVERRIDE any hiding rules - show all chat examples */
-  .chat-example:nth-child(1),
-  .chat-example:nth-child(2),
-  .chat-example:nth-child(3) {
-    display: block !important; /* Force show all */
+
+  /* Hide third chat example on mobile ONLY */
+  .chat-examples .chat-example:nth-child(3) {
+    display: none;
   }
-  
-  /* Improve touch targets */
+
+  /* MOBILE: Simplify invitation demo */
+  .invitation-demo {
+    grid-template-columns: 1fr;
+    gap: 1.5rem;
+    text-align: center;
+  }
+
+  .invite-buttons {
+    flex-direction: row;
+    flex-wrap: wrap;
+    gap: 0.8rem;
+    justify-content: center;
+  }
+
+  .invite-button {
+    flex: 1;
+    min-width: 140px;
+    max-width: 180px;
+    padding: 0.8rem 1rem;
+    font-size: 0.85rem;
+  }
+
+  /* MOBILE: Better touch targets */
   .cta-primary,
   .start-exploring,
   .chat-link,
@@ -875,145 +958,174 @@ body, html {
     touch-action: manipulation;
     -webkit-tap-highlight-color: transparent;
   }
-  
-  /* Navigation improvements for mobile */
+
+  /* MOBILE: Minimal navigation - bottom right corner */
   .carousel-navigation {
-    /* Navigation already positioned for mobile in existing CSS */
-    opacity: 0.8; /* Make more visible on mobile */
+    position: fixed;
+    bottom: 1rem;
+    right: 1rem;
+    flex-direction: column;
+    background: none;
+    border: none;
+    padding: 0;
+    opacity: 0.7;
     pointer-events: all;
+    gap: 0.5rem;
+    box-shadow: none;
+    backdrop-filter: none;
+    -webkit-backdrop-filter: none;
   }
-  
-  /* Improve invitation demo for mobile */
-  .invitation-demo {
-    grid-template-columns: 1fr; /* Single column */
-    gap: 2rem;
-    text-align: center;
+
+  .carousel-navigation::before {
+    display: none; /* Hide auto-scroll indicator on mobile */
   }
-  
-  .demo-chat {
-    margin-bottom: 1.5rem;
+
+  .nav-arrow {
+    display: none; /* Hide arrows on mobile - just dots */
   }
-  
-  /* Better invite buttons on mobile */
-  .invite-buttons {
-    flex-direction: row; /* Keep horizontal on mobile */
-    flex-wrap: wrap;
-    gap: 1rem;
-    justify-content: center;
+
+  .carousel-dots {
+    flex-direction: column;
+    gap: 0.6rem;
   }
-  
-  .invite-button {
-    flex: 1;
-    min-width: 140px;
-    max-width: 180px;
+
+  .carousel-dot {
+    width: 8px;
+    height: 8px;
+    background: rgba(255, 255, 255, 0.4);
+    border: none;
+    box-shadow: 0 0 4px rgba(0, 0, 0, 0.3);
+  }
+
+  .carousel-dot.active {
+    background: #ffd700;
+    box-shadow: 0 0 8px rgba(255, 215, 0, 0.6);
+  }
+
+  /* MOBILE: Improve text readability */
+  .character-description,
+  .hero-subtitle,
+  .proof-text {
+    text-shadow: 0 1px 3px rgba(0, 0, 0, 0.7);
+    color: rgba(255, 255, 255, 0.95);
+  }
+
+  /* MOBILE: Better section spacing */
+  .social-proof-header {
+    margin-bottom: 2rem;
+    padding-top: 1rem;
+  }
+
+  .conversation-examples-title {
+    font-size: 1.4rem;
+    margin-bottom: 2rem;
+  }
+
+  /* MOBILE: Reduce star count for performance */
+  .star:nth-child(n+100) {
+    display: none;
+  }
+
+  /* MOBILE: Optimize backdrop blur */
+  .character-panel,
+  .chat-example,
+  .demo-chat,
+  .invite-suggestions {
+    backdrop-filter: blur(10px);
+    -webkit-backdrop-filter: blur(10px);
   }
 }
 
 /* Extra small mobile devices */
 @media (max-width: 480px) {
+  .logo {
+    font-size: 1rem;
+    top: 0.75rem;
+    left: 0.75rem;
+  }
+
   .screen-content {
+    padding-top: 4rem;
     padding-left: 0.75rem;
     padding-right: 0.75rem;
-    padding-top: 0.5rem; /* Even less top padding */
-    padding-bottom: 4rem;
   }
-  
-  /* FIXED: Ensure headers are visible */
-  .logo {
-    font-size: 2rem; /* Smaller but still prominent */
-    margin-bottom: 1rem;
+
+  .main-hero-headline {
+    font-size: 1.6rem;
   }
-  
-  .main-tagline {
-    font-size: 1.2rem;
-    margin-bottom: 1rem;
+
+  .secondary-tagline {
+    font-size: 1.1rem;
   }
-  
-  .hero-subtitle {
-    font-size: 0.9rem;
-    margin-bottom: 1.5rem;
+
+  .enhanced-characters-showcase {
+    grid-template-columns: 1fr;
+    max-width: 300px;
+    gap: 1rem;
   }
-  
-  /* Even better hero spacing */
-  .hero-content {
-    margin-bottom: 1.5rem;
-    margin-top: 0;
-  }
-  
-  /* Larger touch targets for small screens */
-  .cta-primary,
-  .start-exploring {
-    padding: 1.2rem 2rem;
-    font-size: 1rem;
-    min-height: 48px;
-  }
-  
-  /* Stack invite buttons on very small screens */
+
   .invite-buttons {
     flex-direction: column;
     align-items: center;
   }
-  
+
   .invite-button {
     width: 100%;
     max-width: 240px;
   }
-  
-  /* Improve typing demo layout */
-  .demo-explanation h3 {
-    font-size: 1.4rem;
-    margin-bottom: 1.5rem;
+
+  .carousel-navigation {
+    bottom: 0.5rem;
+    right: 0.5rem;
+    gap: 0.4rem;
   }
-  
-  .demo-explanation li {
-    font-size: 0.9rem;
-    margin-bottom: 1rem;
-  }
-  
-  /* ENSURE character panels are visible on very small screens */
-  .enhanced-characters-showcase {
-    margin-top: 1rem; /* Add some top margin */
+
+  .carousel-dot {
+    width: 6px;
+    height: 6px;
   }
 }
 
-/* Touch gesture support preparation */
-@media (max-width: 768px) {
-  .carousel-container {
-    touch-action: pan-y pinch-zoom; /* Allow vertical scroll, prevent horizontal */
+/* Landscape orientation on mobile */
+@media (max-width: 768px) and (orientation: landscape) {
+  .screen-content {
+    padding-top: 4rem;
+    padding-bottom: 1rem;
   }
-  
-  .carousel-track {
-    touch-action: none; /* Prevent default touch on track */
+
+  .main-hero-headline {
+    font-size: 1.8rem;
+    margin-bottom: 0.8rem;
   }
-  
-  /* Improve scrollbar styling for mobile */
-  .carousel-slide::-webkit-scrollbar {
-    width: 3px;
+
+  .secondary-tagline {
+    font-size: 1.1rem;
+    margin-bottom: 0.8rem;
   }
-  
-  .carousel-slide::-webkit-scrollbar-track {
-    background: transparent;
+
+  .enhanced-characters-showcase {
+    grid-template-columns: repeat(4, 1fr);
+    gap: 0.8rem;
+    margin: 1rem auto;
   }
-  
-  .carousel-slide::-webkit-scrollbar-thumb {
-    background: rgba(255, 215, 0, 0.3);
-    border-radius: 2px;
+
+  .carousel-navigation {
+    right: 1rem;
+    bottom: auto;
+    top: 50%;
+    left: auto;
+    transform: translateY(-50%);
+    flex-direction: column;
+    padding: 0.5rem;
   }
-  
-  .carousel-slide::-webkit-scrollbar-thumb:hover {
-    background: rgba(255, 215, 0, 0.5);
-  }
-  
-  /* Hide scrollbar for Firefox */
-  .carousel-slide {
-    scrollbar-width: thin;
-    scrollbar-color: rgba(255, 215, 0, 0.3) transparent;
+
+  .carousel-dots {
+    flex-direction: column;
   }
 }
 
 /* Accessibility improvements for mobile */
 @media (max-width: 768px) {
-  /* Larger focus indicators for touch */
   .cta-primary:focus,
   .invite-button:focus,
   .chat-link:focus,
@@ -1022,186 +1134,16 @@ body, html {
     outline: 3px solid rgba(255, 215, 0, 0.8);
     outline-offset: 3px;
   }
-  
-  /* Prevent zoom on input focus (if any future inputs) */
+
+  /* Prevent zoom on input focus */
   input, textarea, select {
-    font-size: 16px; /* Prevents iOS zoom */
+    font-size: 16px;
   }
 }
 
-/* Performance optimizations for mobile */
+/* Performance optimizations */
 @media (max-width: 768px) {
-  /* Reduce star count for better performance */
-  .star:nth-child(n+100) {
-    display: none;
-  }
-  
-  /* Simplify animations on mobile */
-  .character-panel-flipper {
-    transition: transform 0.6s ease; /* Faster transition */
-  }
-  
-  /* Optimize backdrop blur for mobile */
-  .character-panel,
-  .chat-example,
-  .demo-chat,
-  .invite-suggestions {
-    backdrop-filter: blur(10px); /* Reduce blur for performance */
-    -webkit-backdrop-filter: blur(10px);
-  }
-}
-/* =============================================
-   CRITICAL MOBILE FIXES - Add to LandingPage.css
-   ============================================= */
-
-@media (max-width: 768px) {
-  /* Reset all transforms that might hide content */
-  .carousel-slide[data-screen="0"] .screen-content,
-  .carousel-slide[data-screen="1"] .screen-content,
-  .carousel-slide[data-screen="2"] .screen-content {
-    transform: none !important;
-    opacity: 1 !important;
-    visibility: visible !important;
-    height: auto;
-    min-height: 100vh;
-    display: flex;
-    flex-direction: column;
-  }
-
-  /* Ensure hero content doesn't push panels down */
-  .hero-content {
-    margin-bottom: 1.5rem;
-    flex-shrink: 0;
-  }
-
-  /* Make sure character panels container is visible */
-  .enhanced-characters-showcase {
-    display: grid !important;
-    opacity: 1 !important;
-    visibility: visible !important;
-    transform: none !important;
-    flex-grow: 1;
-    margin-top: 1rem;
-  }
-
-  /* Fix carousel slide height */
-  .carousel-slide {
-    height: auto;
-    overflow: visible;
-  }
-
-  /* Adjust carousel track for mobile */
-  .carousel-track {
-    height: auto;
-    min-height: 100vh;
-  }
-}
-/* Mobile Scrolling Fix */
-@media (max-width: 768px) {
-  .landing-container {
-    overflow-x: hidden;
-    height: 100vh;
-    display: flex;
-    flex-direction: column;
-  }
-
-  .carousel-container {
-    flex: 1;
-    overflow-y: auto;
-    -webkit-overflow-scrolling: touch;
-    touch-action: pan-y;
-  }
-
-  .carousel-track {
-    flex-direction: column;
-    height: auto;
-    width: 100%;
-    transform: none !important;
-  }
-
-  .carousel-slide {
-    width: 100%;
-    height: auto;
-    min-height: 100vh;
-    padding: 1rem;
-    overflow: visible;
-  }
-
-  .screen-content {
-    height: auto;
-    min-height: calc(100vh - 2rem);
-    display: flex;
-    flex-direction: column;
-  }
-
-  .enhanced-characters-showcase {
-    flex: 1;
-    overflow-y: auto;
-    -webkit-overflow-scrolling: touch;
-  }
-}
-/* Prevent Carousel from Interfering */
-@media (max-width: 768px) {
-  .carousel-slide[data-screen="0"] {
-    overflow: visible;
-    touch-action: pan-y;
-  }
-
-  .carousel-track {
-    touch-action: pan-y;
-  }
-
-  .screen-content {
-    pointer-events: auto;
-  }
-}
-/* =============================================
-   TOUCH EVENT ENHANCEMENTS - Add to END of EnhancedCharacterPanels.css
-   ============================================= */
-
-@media (max-width: 768px) {
-  .character-panel-container {
-    -webkit-tap-highlight-color: transparent;
-    touch-action: manipulation;
-  }
-
-  .character-panel-flipper {
-    will-change: transform;
-    backface-visibility: hidden;
-    perspective: 1000px;
-    transform-style: preserve-3d;
-  }
-
-  .character-panel {
-    pointer-events: none;
-  }
-
-  .character-panel > * {
-    pointer-events: auto;
-  }
-
-  /* Fix for iOS flickering */
-  @supports (-webkit-touch-callout: none) {
-    .character-panel-flipper {
-      -webkit-transform-style: preserve-3d;
-      -webkit-backface-visibility: hidden;
-    }
-  }
-
-  /* Prevent text selection during flip */
-  .character-panel-flipper.flipped,
-  .character-panel-flipper:active {
-    user-select: none;
-    -webkit-user-select: none;
-  }
-}
-/* =============================================
-   ADDITIONAL MOBILE IMPROVEMENTS - Append to END of LandingPage.css
-   ============================================= */
-
-/* Fix image loading and prevent reflows */
-@media (max-width: 768px) {
-  /* Prevent image reloading and flickering */
+  /* Optimize images */
   .character-image img,
   .chat-avatar,
   .invite-avatar {
@@ -1209,272 +1151,52 @@ body, html {
     image-rendering: crisp-edges;
     backface-visibility: hidden;
     transform: translateZ(0);
-    will-change: auto; /* Reset will-change after load */
   }
-  
-  /* Stable image dimensions to prevent layout shift */
-  .character-image img {
-    width: 100% !important;
-    height: 100% !important;
-    object-fit: cover;
-    object-position: center;
-  }
-  
-  /* Prevent image dragging on mobile */
+
+  /* Prevent image dragging */
   .character-image img,
   .chat-avatar,
   .invite-avatar {
     -webkit-user-drag: none;
-    -khtml-user-drag: none;
-    -moz-user-drag: none;
-    -o-user-drag: none;
     user-drag: none;
-    pointer-events: none; /* Prevent touch interference */
+    pointer-events: none;
   }
-  
-  /* Make parent containers handle interactions */
-  .character-image,
-  .character-panel-container {
-    pointer-events: auto;
-  }
-}
 
-/* Improve touch responsiveness */
-@media (max-width: 768px) {
-  /* Faster touch response */
-  .character-panel-container {
-    cursor: pointer;
-    -webkit-tap-highlight-color: rgba(255, 215, 0, 0.1);
-    tap-highlight-color: rgba(255, 215, 0, 0.1);
-  }
-  
-  /* Prevent double-tap zoom on panels */
-  .character-panel-container,
-  .chat-link,
-  .invite-button,
-  .cta-primary {
-    touch-action: manipulation;
-  }
-  
-  /* Improve button press feedback */
-  .chat-link:active,
-  .invite-button:active,
-  .cta-primary:active {
-    transform: scale(0.98);
-    transition: transform 0.1s ease;
-  }
-  
-  /* Better scroll momentum */
-  .carousel-slide {
-    -webkit-overflow-scrolling: touch;
-    scroll-behavior: smooth;
-  }
-}
-
-/* Fix content jumping and layout stability */
-@media (max-width: 768px) {
-  /* Prevent content jumping during interactions */
-  .screen-content {
-    contain: layout style;
-    transform: translateZ(0); /* Force hardware layer */
-  }
-  
-  /* Stable viewport units */
-  .carousel-slide {
-    min-height: 100vh;
-    min-height: 100dvh; /* Dynamic viewport height for newer browsers */
-  }
-  
   /* Prevent elastic bounce on iOS */
   body {
     overscroll-behavior-y: none;
   }
-  
+
   /* Fix safe area on iOS */
   .screen-content {
-    padding-bottom: max(6rem, env(safe-area-inset-bottom) + 4rem);
-    padding-top: max(1rem, env(safe-area-inset-top) + 0.5rem);
-    padding-left: max(1rem, env(safe-area-inset-left) + 0.5rem);
-    padding-right: max(1rem, env(safe-area-inset-right) + 0.5rem);
+    padding-bottom: max(2rem, env(safe-area-inset-bottom) + 1rem);
+    padding-left: max(0.75rem, env(safe-area-inset-left) + 0.25rem);
+    padding-right: max(0.75rem, env(safe-area-inset-right) + 0.25rem);
+  }
+
+  .logo {
+    top: max(0.75rem, env(safe-area-inset-top) + 0.25rem);
+    left: max(0.75rem, env(safe-area-inset-left) + 0.25rem);
   }
 }
 
-/* Optimize animations for mobile */
-@media (max-width: 768px) {
-  /* Reduce motion for better performance */
+/* Reduced motion preferences */
+@media (prefers-reduced-motion: reduce) {
   .character-panel-flipper,
-  .chat-link,
-  .invite-button {
-    transition-duration: 0.3s; /* Shorter transitions */
+  .chat-link::before,
+  .invite-button::before,
+  .cta-primary::before,
+  .start-exploring::before {
+    transition: none;
+    animation: none;
   }
-  
-  /* Disable complex animations on very slow devices */
-  @media (update: slow) {
-    .character-panel-flipper {
-      transition: none;
-    }
-    
-    .star {
-      animation: none;
-      opacity: 0.5;
-    }
-  }
-  
-  /* Optimize for reduced motion preference */
-  @media (prefers-reduced-motion: reduce) {
-    .character-panel-flipper,
-    .chat-link::before,
-    .invite-button::before,
-    .cta-primary::before {
-      transition: none;
-      animation: none;
-    }
-    
-    .star {
-      animation: none;
-    }
-  }
-}
 
-/* Better text readability on mobile */
-@media (max-width: 768px) {
-  /* Improve text contrast on mobile screens */
-  .character-description,
-  .hero-subtitle,
-  .proof-text {
-    text-shadow: 0 1px 3px rgba(0, 0, 0, 0.7);
-    color: rgba(255, 255, 255, 0.95);
+  .star {
+    animation: none;
+    opacity: 0.5;
   }
-  
-  /* Better line heights for mobile reading */
-  .character-description {
-    line-height: 1.5;
-  }
-  
-  .hero-subtitle {
-    line-height: 1.6;
-  }
-  
-  /* Prevent text selection on interactive elements */
-  .character-panel-container,
-  .chat-link,
-  .invite-button,
-  .nav-arrow {
-    -webkit-user-select: none;
-    -moz-user-select: none;
-    -ms-user-select: none;
-    user-select: none;
-  }
-}
 
-/* Fix specific mobile layout issues */
-@media (max-width: 768px) {
-  /* Ensure navigation doesn't interfere with content */
-  .carousel-navigation {
-    z-index: 1000;
-    pointer-events: none;
-  }
-  
-  .carousel-navigation button {
-    pointer-events: auto;
-  }
-  
-  /* Better spacing for touch targets */
-  .enhanced-characters-showcase {
-    gap: 1rem;
-    padding: 0 0.5rem;
-    margin: 1rem auto 2rem auto;
-  }
-  
-  /* Improve hero section spacing */
-  .hero-content {
-    margin-bottom: 1.5rem;
-    padding: 0 0.5rem;
-  }
-  
-  /* Better invite buttons layout */
-  .invite-buttons {
-    gap: 0.8rem;
-    margin-top: 1rem;
-  }
-  
-  .invite-button {
-    min-height: 48px;
-    padding: 0.8rem 1rem;
-    font-size: 0.85rem;
-  }
-}
-
-/* Fix for very small screens (iPhone SE, etc.) */
-@media (max-width: 375px) {
-  .screen-content {
-    padding-left: 0.5rem;
-    padding-right: 0.5rem;
-  }
-  
-  .enhanced-characters-showcase {
-    gap: 0.8rem;
-    padding: 0;
-  }
-  
-  .character-panel-container {
-    height: 260px; /* Shorter for small screens */
-  }
-  
-  .character-panel {
-    padding: 0.8rem;
-  }
-  
-  .logo {
-    font-size: 1.8rem;
-  }
-  
-  .main-tagline {
-    font-size: 1.1rem;
-  }
-  
-  /* Stack navigation dots differently on tiny screens */
-  .carousel-navigation {
-    bottom: 0.5rem;
-    left: 50%;
-    transform: translateX(-50%);
-    flex-direction: row;
-  }
-  
-  .carousel-dots {
-    flex-direction: row;
-    gap: 0.8rem;
-  }
-}
-
-/* Fix landscape orientation on mobile */
-@media (max-width: 768px) and (orientation: landscape) {
-  .screen-content {
-    padding-top: 0.5rem;
-    padding-bottom: 3rem;
-  }
-  
-  .hero-content {
-    margin-bottom: 1rem;
-  }
-  
-  .logo {
-    font-size: 2rem;
-    margin-bottom: 1rem;
-  }
-  
-  .main-tagline {
-    font-size: 1.2rem;
-    margin-bottom: 0.8rem;
-  }
-  
-  .enhanced-characters-showcase {
-    grid-template-columns: repeat(4, 1fr);
-    gap: 0.8rem;
-    margin: 0.5rem auto 1rem auto;
-  }
-  
-  .character-panel-container {
-    height: 220px;
+  .carousel-track {
+    transition: none;
   }
 }

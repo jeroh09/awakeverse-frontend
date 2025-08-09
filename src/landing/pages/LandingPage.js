@@ -1,4 +1,4 @@
-// src/landing/pages/LandingPage.js - Complete Optimized Mobile-Enhanced Version
+// src/landing/pages/LandingPage.js - Fixed Header + Mobile Vertical Scroll
 import React, { useEffect, useRef, useState, useCallback, useMemo } from 'react';
 import { Link } from 'react-router-dom';
 import { characterCategories } from '../../data/characterCategories';
@@ -10,32 +10,46 @@ export default function LandingPage() {
   const [currentScreen, setCurrentScreen] = useState(0);
   const [isTransitioning, setIsTransitioning] = useState(false);
   const [isPaused, setIsPaused] = useState(false);
-  
+  const [isMobile, setIsMobile] = useState(false);
+
   // Typing animation state
   const [isTyping, setIsTyping] = useState(false);
   const [typedText, setTypedText] = useState('');
   const [showInviteButtons, setShowInviteButtons] = useState(false);
 
-  // ================================
-  // MOBILE TOUCH GESTURE MODULE
-  // ================================
-
-  // Touch gesture state
+  // Touch gesture state (only for desktop carousel)
   const [touchStart, setTouchStart] = useState(null);
   const [touchEnd, setTouchEnd] = useState(null);
-  const [isSwiping, setIsSwiping] = useState(false);
 
-  // Enhanced mobile navigation visibility
-  const [showMobileNav, setShowMobileNav] = useState(false);
+  // Mobile detection
+  useEffect(() => {
+    const checkMobile = () => {
+      const mobile = window.innerWidth <= 768;
+      setIsMobile(mobile);
+    };
+    
+    checkMobile();
+    window.addEventListener('resize', checkMobile);
+    return () => window.removeEventListener('resize', checkMobile);
+  }, []);
 
-  // Minimum distance for a swipe gesture (in pixels)
-  const minSwipeDistance = 50;
+  // Handle logo visibility based on current screen (desktop only)
+  useEffect(() => {
+    if (isMobile) return; // Logo always visible on mobile
+    
+    const logo = document.querySelector('.logo');
+    if (logo) {
+      if (currentScreen === 0) {
+        logo.style.opacity = '1';
+        logo.style.pointerEvents = 'auto';
+      } else {
+        logo.style.opacity = '0';
+        logo.style.pointerEvents = 'none';
+      }
+    }
+  }, [currentScreen, isMobile]);
 
-  // ================================
-  // PERFORMANCE OPTIMIZATIONS
-  // ================================
-
-  // Memoize getCharacter function
+  // Performance optimizations
   const getCharacter = useCallback((key) => {
     for (const category of characterCategories) {
       const character = category.characters.find(c => c.key === key);
@@ -44,7 +58,7 @@ export default function LandingPage() {
     return null;
   }, []);
 
-  // Memoize chat conversations to prevent re-creation
+  // Memoize chat conversations
   const chatConversations = useMemo(() => [
     {
       character: getCharacter('socrates'),
@@ -67,45 +81,41 @@ export default function LandingPage() {
         { user: false, text: "The present belongs to them, but the future, for which I really worked, is mine. Innovation springs from seeing what others cannot - the invisible forces that shape our world." }
       ]
     }
+    // Third example hidden on mobile via CSS, but available on desktop
   ], [getCharacter]);
-
-  // ================================
-  // EXISTING FUNCTIONALITY
-  // ================================
 
   const fullMessage = "Aww shucks, not much I'm afraid! My village has always been peaceful, and I spent most of my time rafting down the Mississippi. But I reckon I could invite some folks who know a whole lot more about that subject than me!";
 
-  // Auto-advance carousel with longer timing for screen 3
+  // DESKTOP ONLY: Auto-advance carousel
   useEffect(() => {
-    if (isPaused || isTransitioning) return;
-    
-    // Longer delay for screen 3 to show typing animation
-    const delay = currentScreen === 2 ? 18000 : 10000; // 18s for screen 3, 10s for others
-    
+    if (isMobile || isPaused || isTransitioning) return;
+
+    const delay = currentScreen === 2 ? 18000 : 10000;
     const interval = setInterval(() => {
       setCurrentScreen(prev => (prev + 1) % 3);
     }, delay);
-    
+
     return () => clearInterval(interval);
-  }, [isPaused, isTransitioning, currentScreen]);
+  }, [isMobile, isPaused, isTransitioning, currentScreen]);
 
-  // Handle navigation to register
+  // Handle user interaction
   const handleUserInteraction = useCallback(() => {
-    setIsPaused(true);
-    setTimeout(() => setIsPaused(false), 5000); // Resume after 5s
-  }, []);
+    if (!isMobile) {
+      setIsPaused(true);
+      setTimeout(() => setIsPaused(false), 5000);
+    }
+  }, [isMobile]);
 
-  // Typing animation for screen 3 - FIXED
+  // Typing animation for screen 3
   useEffect(() => {
     if (currentScreen === 2 && !isTyping && typedText === '') {
-      // Add small delay to ensure screen is fully loaded
       setTimeout(() => {
         setIsTyping(true);
         setShowInviteButtons(false);
-        
+
         const words = fullMessage.split(' ');
         let currentIndex = 0;
-        
+
         const typeInterval = setInterval(() => {
           if (currentIndex < words.length) {
             const newText = words.slice(0, currentIndex + 1).join(' ');
@@ -116,14 +126,14 @@ export default function LandingPage() {
             setIsTyping(false);
             setTimeout(() => setShowInviteButtons(true), 800);
           }
-        }, 150); // Slightly faster typing
-        
+        }, 150);
+
         return () => clearInterval(typeInterval);
-      }, 500); // 500ms delay after screen loads
+      }, 500);
     }
   }, [currentScreen, typedText, fullMessage]);
 
-  // Reset typing when leaving screen 3 - FIXED
+  // Reset typing when leaving screen 3
   useEffect(() => {
     if (currentScreen !== 2) {
       setTypedText('');
@@ -132,16 +142,14 @@ export default function LandingPage() {
     }
   }, [currentScreen]);
 
-  // Generate stars on mount - OPTIMIZED
+  // Generate stars with mobile optimization
   useEffect(() => {
     if (starsRef.current) {
-      // Reduce star count on mobile for better performance
-      const numberOfStars = window.innerWidth <= 768 ? 100 : 200; // Further reduced
+      const numberOfStars = isMobile ? 80 : 200;
       starsRef.current.innerHTML = '';
-      
-      // Use document fragment for better performance
+
       const fragment = document.createDocumentFragment();
-      
+
       for (let i = 0; i < numberOfStars; i++) {
         const star = document.createElement('div');
         star.className = 'star';
@@ -149,118 +157,93 @@ export default function LandingPage() {
         star.style.top = Math.random() * 100 + '%';
         star.style.animationDelay = Math.random() * 4 + 's';
         star.style.animationDuration = (2 + Math.random() * 3) + 's';
-        
+
         const brightness = 0.4 + Math.random() * 0.6;
         star.style.opacity = brightness;
-        
+
         fragment.appendChild(star);
       }
-      
+
       starsRef.current.appendChild(fragment);
     }
-  }, []);
+  }, [isMobile]);
 
-  // ================================
-  // TOUCH GESTURE HANDLERS
-  // ================================
-
-  // Handle touch start
+  // DESKTOP ONLY: Touch gesture handlers
   const onTouchStart = useCallback((e) => {
-    // Only handle horizontal swipes, allow vertical scrolling
+    if (isMobile) return; // Disable for mobile vertical scroll
     setTouchEnd(null);
     setTouchStart(e.targetTouches[0].clientX);
-    setIsSwiping(false);
-  }, []);
+  }, [isMobile]);
 
-  // Handle touch move
   const onTouchMove = useCallback((e) => {
-    if (!touchStart) return;
-    
-    const currentTouch = e.targetTouches[0].clientX;
-    const currentTouchY = e.targetTouches[0].clientY;
-    const diffX = Math.abs(currentTouch - touchStart);
-    
-    // Get initial Y position for comparison
-    const diffY = Math.abs(currentTouchY - (e.targetTouches[0].clientY || 0));
-    
-    // If horizontal movement is greater than vertical, prevent default to enable swipe
-    if (diffX > diffY && diffX > 10) {
-      setIsSwiping(true);
-      // Only prevent default for horizontal swipes
-      e.preventDefault();
-    }
-    
-    setTouchEnd(currentTouch);
-  }, [touchStart]);
+    if (isMobile) return;
+    setTouchEnd(e.targetTouches[0].clientX);
+  }, [isMobile]);
 
-  // Handle touch end - determine swipe direction
   const onTouchEnd = useCallback(() => {
-    if (!touchStart || !touchEnd || !isSwiping) return;
-    
-    const distance = touchStart - touchEnd;
-    const isLeftSwipe = distance > minSwipeDistance;
-    const isRightSwipe = distance < -minSwipeDistance;
+    if (isMobile || !touchStart || !touchEnd) return;
 
-    if (isLeftSwipe) {
-      // Swipe left = next screen
+    const distance = touchStart - touchEnd;
+    const minSwipeDistance = 50;
+
+    if (distance > minSwipeDistance) {
       nextScreen();
-      handleUserInteraction();
-    } else if (isRightSwipe) {
-      // Swipe right = previous screen  
+    } else if (distance < -minSwipeDistance) {
       prevScreen();
-      handleUserInteraction();
     }
 
-    // Reset touch state
     setTouchStart(null);
     setTouchEnd(null);
-    setIsSwiping(false);
-  }, [touchStart, touchEnd, isSwiping, handleUserInteraction]);
+  }, [isMobile, touchStart, touchEnd]);
 
-  // ================================
-  // NAVIGATION FUNCTIONS
-  // ================================
-
-  // Stable screen navigation with transition protection
+  // Navigation functions (desktop only)
   const navigateToScreen = useCallback((screenIndex) => {
-    if (isTransitioning) return;
-    
+    if (isMobile || isTransitioning) return;
+
     setIsTransitioning(true);
-    
-    // Use requestAnimationFrame for smoother transitions
-    requestAnimationFrame(() => {
-      setCurrentScreen(screenIndex);
-      handleUserInteraction();
-      
-      // Timeout for stability
-      setTimeout(() => {
-        setIsTransitioning(false);
-      }, 1000);
-    });
-  }, [isTransitioning, handleUserInteraction]);
+    setCurrentScreen(screenIndex);
+    handleUserInteraction();
+
+    setTimeout(() => {
+      setIsTransitioning(false);
+    }, 1000);
+  }, [isMobile, isTransitioning, handleUserInteraction]);
 
   const nextScreen = useCallback(() => {
+    if (isMobile) return;
     const next = (currentScreen + 1) % 3;
     navigateToScreen(next);
-  }, [currentScreen, navigateToScreen]);
+  }, [isMobile, currentScreen, navigateToScreen]);
 
   const prevScreen = useCallback(() => {
+    if (isMobile) return;
     const prev = (currentScreen - 1 + 3) % 3;
     navigateToScreen(prev);
-  }, [currentScreen, navigateToScreen]);
+  }, [isMobile, currentScreen, navigateToScreen]);
 
-  // ================================
-  // EVENT LISTENERS
-  // ================================
+  // MOBILE: Scroll to section function
+  const scrollToSection = useCallback((sectionIndex) => {
+    if (!isMobile) return;
+    
+    const sections = document.querySelectorAll('.carousel-slide');
+    if (sections[sectionIndex]) {
+      sections[sectionIndex].scrollIntoView({ 
+        behavior: 'smooth',
+        block: 'start'
+      });
+      setCurrentScreen(sectionIndex);
+    }
+  }, [isMobile]);
 
-  // Add touch event listeners to carousel
+  // Touch event listeners (desktop only)
   useEffect(() => {
+    if (isMobile) return;
+
     const carousel = document.querySelector('.carousel-container');
     if (!carousel) return;
 
-    // Add passive listeners for better performance
     carousel.addEventListener('touchstart', onTouchStart, { passive: true });
-    carousel.addEventListener('touchmove', onTouchMove, { passive: false });
+    carousel.addEventListener('touchmove', onTouchMove, { passive: true });
     carousel.addEventListener('touchend', onTouchEnd, { passive: true });
 
     return () => {
@@ -268,33 +251,12 @@ export default function LandingPage() {
       carousel.removeEventListener('touchmove', onTouchMove);
       carousel.removeEventListener('touchend', onTouchEnd);
     };
-  }, [onTouchStart, onTouchMove, onTouchEnd]);
+  }, [isMobile, onTouchStart, onTouchMove, onTouchEnd]);
 
-  // Show navigation on touch near edges (mobile)
+  // Keyboard navigation (desktop only)
   useEffect(() => {
-    const handleTouchForNav = (e) => {
-      if (window.innerWidth > 768) return; // Only on mobile
-      
-      const touch = e.touches[0];
-      const screenWidth = window.innerWidth;
-      const edgeThreshold = 50; // 50px from edge
-      
-      // Show nav if touching near right edge or bottom
-      if (touch.clientX > screenWidth - edgeThreshold || 
-          touch.clientY > window.innerHeight - 100) {
-        setShowMobileNav(true);
-        
-        // Hide after 3 seconds
-        setTimeout(() => setShowMobileNav(false), 3000);
-      }
-    };
+    if (isMobile) return;
 
-    document.addEventListener('touchstart', handleTouchForNav, { passive: true });
-    return () => document.removeEventListener('touchstart', handleTouchForNav);
-  }, []);
-
-  // Keyboard navigation
-  useEffect(() => {
     const handleKeyPress = (e) => {
       if (e.key === 'ArrowLeft') {
         prevScreen();
@@ -305,19 +267,36 @@ export default function LandingPage() {
 
     window.addEventListener('keydown', handleKeyPress);
     return () => window.removeEventListener('keydown', handleKeyPress);
-  }, [prevScreen, nextScreen]);
+  }, [isMobile, prevScreen, nextScreen]);
 
-  // ================================
-  // OPTIMIZED IMAGE COMPONENT
-  // ================================
+  // MOBILE: Intersection Observer for current screen tracking
+  useEffect(() => {
+    if (!isMobile) return;
 
-  // Track failed images globally to prevent reloading
+    const observer = new IntersectionObserver(
+      (entries) => {
+        entries.forEach(entry => {
+          if (entry.isIntersecting) {
+            const screenIndex = parseInt(entry.target.dataset.screen);
+            setCurrentScreen(screenIndex);
+          }
+        });
+      },
+      { threshold: 0.5 }
+    );
+
+    const sections = document.querySelectorAll('.carousel-slide');
+    sections.forEach(section => observer.observe(section));
+
+    return () => observer.disconnect();
+  }, [isMobile]);
+
+  // Optimized image component
   const [imageErrors, setImageErrors] = useState({});
 
-  // Memoized image component to prevent reloading
   const OptimizedImage = React.memo(({ src, alt, className, fallbackLetter, imageKey }) => {
     const hasError = imageErrors[imageKey || src];
-    
+
     const handleError = useCallback(() => {
       const key = imageKey || src;
       setImageErrors(prev => ({ ...prev, [key]: true }));
@@ -332,82 +311,82 @@ export default function LandingPage() {
     }
 
     return (
-      <img 
+      <img
         src={src}
         alt={alt}
         className={className}
         onError={handleError}
         loading="lazy"
         draggable={false}
-        key={imageKey || src} // Stable key prevents reloading
-        style={{ imageRendering: 'crisp-edges' }} // Prevent browser reprocessing
+        key={imageKey || src}
+        style={{ imageRendering: 'crisp-edges' }}
       />
     );
   });
 
-  // ================================
-  // RENDER
-  // ================================
-
   return (
-    <div 
+    <div
       className="landing-container"
-      onMouseMove={handleUserInteraction}
+      onMouseMove={!isMobile ? handleUserInteraction : undefined}
     >
       {/* Animated Stars */}
       <div className="stars" ref={starsRef}></div>
 
-      {/* Mobile-Enhanced Carousel Container */}
-      <div 
-        className="carousel-container"
-        style={{
-          touchAction: 'pan-y pinch-zoom', // Allow vertical scroll, control horizontal
-        }}
-      >
-        <div 
-          className="carousel-track" 
-          style={{ 
-            transform: `translateX(-${currentScreen * 33.333}%)`,
-            transition: isTransitioning ? 'transform 1s cubic-bezier(0.25, 0.46, 0.45, 0.94)' : 'none',
-            touchAction: 'none', // Prevent default touch behavior on track
+      {/* FIXED: Top-left logo - Always visible */}
+      <h1 className="logo">AwakeVerse</h1>
+
+      {/* Mobile/Desktop Responsive Carousel Container */}
+      <div className="carousel-container">
+        <div
+          className="carousel-track"
+          style={{
+            // Desktop: horizontal carousel, Mobile: vertical stack
+            transform: isMobile ? 'none' : `translateX(-${currentScreen * 33.333}%)`,
+            transition: !isMobile && isTransitioning ? 'transform 1s cubic-bezier(0.25, 0.46, 0.45, 0.94)' : 'none',
           }}
         >
-          {/* Screen 1: Hero + Enhanced Character Panels */}
+          {/* Screen 1: Hero + Character Panels */}
           <div className="carousel-slide" data-screen="0">
             <div className="screen-content">
               <div className="hero-content">
-                <h1 className="logo">AWAKEVERSE</h1>
-                <h2 className="main-tagline">
-                  Solve mysteries with <span className="highlight-gold">Sherlock</span>, 
-                  innovate with <span className="highlight-gold">Da Vinci</span>, 
-                  explore love with <span className="highlight-gold">Helen</span>
+                {/* NEW: Main hero headline */}
+                <h2 className="main-hero-headline">
+                  Chat with Humanity's Greatest Minds {isMobile ? '- AI Powered' : '- Powered by AI'}
                 </h2>
-                <p className="hero-subtitle">Chat with humanity's greatest minds - powwered by AI</p>
                 
+                {/* DEMOTED: Secondary tagline */}
+                <h3 className="secondary-tagline">
+                  Solve mysteries with <span className="highlight-gold">Sherlock</span>,
+                  innovate with <span className="highlight-gold">Da Vinci</span>,
+                  explore love with <span className="highlight-gold">Helen</span>
+                </h3>
+
                 <Link to="/register" className="cta-primary">
                   Start Your First Conversation
                 </Link>
               </div>
 
-              {/* Enhanced Character Panels with Category Flipping */}
+              {/* Enhanced Character Panels */}
               <EnhancedCharacterPanels />
             </div>
           </div>
 
-          {/* Screen 2: Social Proof + Popular Conversations */}
+          {/* Screen 2: Social Proof + Conversations */}
           <div className="carousel-slide" data-screen="1">
             <div className="screen-content">
               <div className="social-proof-header">
                 <div className="stars-rating">★★★★★</div>
                 <p className="proof-text">Trusted by 15,000+ curious minds</p>
-                <p className="tagline-below-rating">Get personalized advice from Sherlock, Sun Tzu, Plato, Tesla ...and 100s of the greatest minds</p>
+                <p className="tagline-below-rating">
+                  Get personalized advice from Sherlock, Sun Tzu, Plato, Tesla ...and 100s of the greatest minds
+                </p>
               </div>
 
               <div className="conversations-content">
                 <h2 className="conversation-examples-title">
                   <em>Chat with Casanova</em>, <em>Debate ethics with Nietzsche</em>, <em>Decide strategy with Zhukov</em>
                 </h2>
-                
+
                 <div className="chat-examples">
                   {chatConversations.map((chat, index) => (
                     <div key={`chat-${chat.character?.key || index}`} className="chat-example">
@@ -423,7 +402,7 @@ export default function LandingPage() {
                       </div>
                       <div className="chat-messages">
                         {chat.messages.map((message, msgIndex) => (
-                          <div 
+                          <div
                             key={`msg-${index}-${msgIndex}`}
                             className={`chat-message ${message.user ? 'user' : 'ai'}`}
                           >
@@ -440,12 +419,12 @@ export default function LandingPage() {
             </div>
           </div>
 
-          {/* Screen 3: Interactive Character Invitation Demo */}
+          {/* Screen 3: Interactive Invitation Demo */}
           <div className="carousel-slide" data-screen="2">
             <div className="screen-content">
               <h2 className="section-title">Invite Experts to Join</h2>
               <p className="invitation-subtitle">Characters can invite others with specialized knowledge</p>
-              
+
               <div className="invitation-demo">
                 <div className="demo-chat">
                   <div className="chat-header">
@@ -461,21 +440,21 @@ export default function LandingPage() {
                       <span className="chat-status">Online</span>
                     </div>
                   </div>
-                  
+
                   <div className="chat-messages">
                     <div className="chat-message user">
                       <div className="message-bubble">
                         What do you know about military strategy and warfare?
                       </div>
                     </div>
-                    
+
                     <div className="chat-message ai">
                       <div className="message-bubble">
                         {typedText}
                         {isTyping && <span className="typing-cursor">|</span>}
                       </div>
                     </div>
-                    
+
                     {showInviteButtons && (
                       <div className="invite-suggestions">
                         <p className="invite-text">Would you like me to invite some military experts?</p>
@@ -505,7 +484,7 @@ export default function LandingPage() {
                     )}
                   </div>
                 </div>
-                
+
                 <div className="demo-explanation">
                   <h3>How It Works</h3>
                   <ul>
@@ -514,7 +493,7 @@ export default function LandingPage() {
                     <li>Multiple historical figures can participate in the same discussion</li>
                     <li>Get diverse perspectives on complex topics</li>
                   </ul>
-                  
+
                   <Link to="/register" className="start-exploring">
                     Start Exploring →
                   </Link>
@@ -525,51 +504,36 @@ export default function LandingPage() {
         </div>
       </div>
 
-      {/* Enhanced Mobile Navigation */}
-      <div 
-        className={`carousel-navigation ${showMobileNav ? 'mobile-visible' : ''}`}
-        style={{
-          opacity: window.innerWidth <= 768 ? (showMobileNav ? 1 : 0.3) : undefined
-        }}
-      >
-        <button 
-          className="nav-arrow nav-prev" 
-          onClick={prevScreen}
-          disabled={isTransitioning}
+      {/* Enhanced Navigation - Desktop carousel / Mobile section jumper */}
+      <div className="carousel-navigation">
+        <button
+          className="nav-arrow nav-prev"
+          onClick={isMobile ? () => scrollToSection(Math.max(0, currentScreen - 1)) : prevScreen}
+          disabled={(!isMobile && isTransitioning) || (isMobile && currentScreen === 0)}
           aria-label="Previous screen"
-          style={{
-            fontSize: window.innerWidth <= 768 ? '1.4rem' : '1.2rem'
-          }}
         >
-          {window.innerWidth <= 768 ? '←' : '↑'}
+          {isMobile ? '↑' : '↑'}
         </button>
-        
+
         <div className="carousel-dots">
           {[0, 1, 2].map((index) => (
             <button
               key={`dot-${index}`}
               className={`carousel-dot ${index === currentScreen ? 'active' : ''}`}
-              onClick={() => navigateToScreen(index)}
-              disabled={isTransitioning}
+              onClick={isMobile ? () => scrollToSection(index) : () => navigateToScreen(index)}
+              disabled={!isMobile && isTransitioning}
               aria-label={`Go to screen ${index + 1}`}
-              style={{
-                width: window.innerWidth <= 768 ? '12px' : '8px',
-                height: window.innerWidth <= 768 ? '12px' : '8px'
-              }}
             />
           ))}
         </div>
-        
-        <button 
-          className="nav-arrow nav-next" 
-          onClick={nextScreen}
-          disabled={isTransitioning}
+
+        <button
+          className="nav-arrow nav-next"
+          onClick={isMobile ? () => scrollToSection(Math.min(2, currentScreen + 1)) : nextScreen}
+          disabled={(!isMobile && isTransitioning) || (isMobile && currentScreen === 2)}
           aria-label="Next screen"
-          style={{
-            fontSize: window.innerWidth <= 768 ? '1.4rem' : '1.2rem'
-          }}
         >
-          {window.innerWidth <= 768 ? '→' : '↓'}
+          {isMobile ? '↓' : '↓'}
         </button>
       </div>
     </div>
