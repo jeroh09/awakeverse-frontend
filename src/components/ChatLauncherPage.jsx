@@ -92,11 +92,11 @@ const ENHANCED_SEMANTIC_MAPPINGS = {
 };
 
 const ORACLE_PROMPTS = [
-  "Who do you want to talk to?",
-  "Seek wisdom from...",
-  "Who would you counsel with?",
+  "What is on your mind??",
+  "I want to solve a problem...",
+  "I want wisdom for life...",
   "what subject do you which to discuss?",
-  "Find your mentor...",
+  "Who would you like to chat with?"
 ];
 
 // Category representatives - most famous face for each category
