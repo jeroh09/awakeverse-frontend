@@ -119,24 +119,24 @@ export default function UnifiedMobileAuth({ mode, onSubmit, error, loading }) {
                 )}
                 
                 <div className="form-group">
-                  <label>Sacred Scroll (Email)</label>
+                  <label>Email</label>
                   <input
                     type="email"
                     value={formData.email}
                     onChange={(e) => handleInputChange('email', e.target.value)}
-                    placeholder="Your mystical address"
+                    placeholder="Email address"
                     disabled={loading}
                     required
                   />
                 </div>
                 
                 <div className="form-group">
-                  <label>Secret Incantation</label>
+                  <label>Password</label>
                   <input
                     type="password"
                     value={formData.password}
                     onChange={(e) => handleInputChange('password', e.target.value)}
-                    placeholder={isLogin ? "Enter your secret key" : "Create your secret key (min 6)"}
+                    placeholder={isLogin ? "Enter your password" : "Create your secret key (min 6)"}
                     disabled={loading}
                     required
                   />
