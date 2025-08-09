@@ -351,7 +351,7 @@ export default function LandingPage() {
               <div className="hero-content">
                 {/* NEW: Main hero headline */}
                 <h2 className="main-hero-headline">
-                  Chat with Humanity's Greatest Minds {isMobile ? '- AI Powered' : '- Powered by AI'}
+                  Conversations without Limits {isMobile ? '- AI Powered' : '- Powered by AI'}
                 </h2>
                 
                 {/* DEMOTED: Secondary tagline */}
