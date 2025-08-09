@@ -61,6 +61,8 @@
 @media (max-width: 600px) {
   .floating-avatar-container {
     top: 1rem;
+    /* ✅ ADD THIS LINE: Increase mobile padding */
+    margin-top: 2rem;
   }
   
   .floating-avatar-wrapper {
