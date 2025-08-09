@@ -1,4 +1,4 @@
-// Updated ChatWindow.js - ChatSidebar COMPLETELY REMOVED
+// Updated ChatWindow.js - ChatSidebar COMPLETELY REMOVED - WITH IMPROVED ERROR HANDLING
 import React, { useState, useEffect, useRef, useCallback, memo, useMemo } from 'react';
 import { useSocket } from '../contexts/WebSocketContext';
 import { ArrowLeft, Pen, RotateCw, Crown, TrendingUp } from 'lucide-react';
@@ -266,6 +266,46 @@ export default function ChatWindow({
   const { sendConversationMessage } = useConversation();
   const userAvatar = avatarUrl || user?.avatarUrl;
   
+  // ✅ USER-FRIENDLY ERROR HANDLING SYSTEM
+  const getUserFriendlyError = (error, context = 'general') => {
+    const errorMessages = {
+      general: "I'm having trouble responding right now. Please try again in a moment.",
+      invite: "Unable to invite this character right now. Please try again.",
+      network: "Connection issue detected. Please check your internet and try again.",
+      timeout: "Request timed out. Please try again.",
+      api_failure: "Service temporarily unavailable. Please try again shortly."
+    };
+    
+    // Detect specific error types for better messaging
+    if (error.message?.includes('timeout') || error.message?.includes('Timeout')) {
+      return errorMessages.timeout;
+    }
+    if (error.message?.includes('Network') || error.message?.includes('502') || error.message?.includes('503') || error.message?.includes('504')) {
+      return errorMessages.network;
+    }
+    if (error.message?.includes('API failed') || error.message?.includes('failed')) {
+      return errorMessages.api_failure;
+    }
+    
+    return errorMessages[context] || errorMessages.general;
+  };
+
+  const reportError = (error, context) => {
+    const errorReport = {
+      message: error.message,
+      stack: error.stack,
+      context: context,
+      timestamp: new Date().toISOString(),
+      userAgent: navigator.userAgent,
+      url: window.location.href,
+      character: character,
+      userId: user?.id
+    };
+    
+    // Log detailed technical information for debugging
+    console.error('ChatWindow Error Report:', errorReport);
+  };
+
   // Emotion state definition
   const [emotionState, setEmotionState] = useState('neutral');
   const [emotionIntensity, setEmotionIntensity] = useState(0.6);
@@ -398,6 +438,15 @@ export default function ChatWindow({
       // For now, just log the selection
     }
   }, [onBack, onPrestigeHubToggle]);
+
+  // Helper function to get character display name (needed for error messages)
+  const getCharacterDisplayName = useCallback((characterKey) => {
+    const char = CHARACTERS[characterKey];
+    if (char) {
+      return char.display_name || char.name || characterKey.replace(/_/g, ' ');
+    }
+    return characterKey.replace(/_/g, ' ');
+  }, []);
 
   // Initialize participants from session history
   useEffect(() => {
@@ -556,13 +605,21 @@ export default function ChatWindow({
       }
 
     } catch (e) {
+      // ✅ UPDATED ERROR HANDLING WITH FRIENDLY MESSAGES + LOGGING
+      reportError(e, {
+        action: 'invite_request',
+        character: character,
+        invitee: invitee,
+        lastUserMessage: lastUserMsg?.substring(0, 50)
+      });
+
       console.error('Invite error:', e);
       setChatHistory(prev => {
         const copy = [...prev];
         if (copy[aiIndex]) {
           copy[aiIndex] = {
             ...copy[aiIndex],
-            error: `Failed to load ${invitee} response: ${e.message}`
+            error: `Unable to invite ${getCharacterDisplayName(invitee)} right now. Please try again.`
           };
         }
         return copy;
@@ -692,11 +749,21 @@ export default function ChatWindow({
       if (err.name === 'AbortError') {
         console.log('Chat request aborted');
       } else {
+        // ✅ UPDATED ERROR HANDLING WITH FRIENDLY MESSAGES + LOGGING
+        reportError(err, {
+          action: 'chat_request',
+          character: character,
+          userMessage: userText?.substring(0, 50)
+        });
+
         console.error('LLM error:', err);
         setChatHistory(prev => {
           const copy = [...prev];
           if (copy[aiIndex]) {
-            copy[aiIndex] = { ...copy[aiIndex], error: `Something went wrong: ${err.message}` };
+            copy[aiIndex] = { 
+              ...copy[aiIndex], 
+              error: getUserFriendlyError(err, 'general')
+            };
           }
           return copy;
         });
