@@ -4,25 +4,38 @@
   "description": "Experience conversations with icons like Sherlock Holmes, Tesla, Shakespeare, and more through AI.",
   "icons": [
     {
-      "src": "favicon.ico",
-      "sizes": "64x64 32x32 24x24 16x16",
-      "type": "image/x-icon"
-    },
-    {
       "src": "logo192.png",
       "type": "image/png",
-      "sizes": "192x192"
+      "sizes": "192x192",
+      "purpose": "any"
     },
     {
       "src": "logo512.png",
       "type": "image/png",
-      "sizes": "512x512"
+      "sizes": "512x512",
+      "purpose": "any"
     }
   ],
-  "start_url": ".",
+  "screenshots": [
+    {
+      "src": "screenshots/screenshot-mobile.png",
+      "sizes": "431x577",
+      "type": "image/png",
+      "form_factor": "narrow"
+    },
+    {
+      "src": "screenshots/screenshot-desktop.png",
+      "sizes": "1281x713",
+      "type": "image/png",
+      "form_factor": "wide"
+    }
+  ],
+  "start_url": "/",
   "display": "standalone",
-  "theme_color": "#1a1a2e",
+  "theme_color": "#FFD700",
   "background_color": "#0a0a1a",
   "categories": ["education", "entertainment", "productivity"],
-  "orientation": "portrait-primary"
+  "orientation": "portrait-primary",
+  "scope": "/",
+  "lang": "en"
 }
