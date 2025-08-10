@@ -359,16 +359,40 @@
 @media (max-width: 768px) {
   .floating-character-hub {
     left: 10px;
-    right: 10px;
-    width: auto;
-    max-width: none;
   }
 
   .hub-expanded {
+    left: 10px;
+    right: 10px;
+    width: auto;
     min-width: auto;
     max-height: 70vh;
-    margin: 0 10px;
+    /* Position relative to break out of parent constraints when expanded */
+    position: fixed;
+    margin: 0;
   }
+
+  .hub-collapsed {
+    /* Ensure collapsed state stays narrow like desktop */
+    width: auto;
+    max-width: 56px; /* 32px dots + 24px padding - perfect for thumbnails */
+    margin: 0;
+  }
+
+  /* Character dots stay the same size */
+  .character-dot {
+    width: 32px;
+    height: 32px;
+    /* No changes needed here */
+  }
+
+  /* More dot stays the same */
+  .more-dot {
+    width: 32px;
+    height: 32px;
+    /* No changes needed here */
+  }
+
 
   .prestige-stats {
     flex-direction: column;
@@ -414,5 +438,16 @@
 
   .character-dot {
     animation: none;
+  }
+}
+/* Additional fix for very small screens */
+@media (max-width: 480px) {
+  .floating-character-hub {
+    left: 5px; /* Even closer to edge on tiny screens */
+  }
+  
+  .hub-expanded {
+    left: 5px;
+    right: 5px;
   }
 }
