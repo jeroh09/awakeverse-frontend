@@ -562,3 +562,22 @@
   border: 6px solid transparent;
   border-top-color: rgba(0, 0, 0, 0.9);
 }
+/* Add this at the end of FloatingAvatar.css */
+
+/* ===== PRESTIGE HUB DISABLE ===== */
+.prestige-hub,
+.prestige-hub-container,
+[class*="prestige-hub"],
+.prestige-toggle-ring,
+.prestige-toggle,
+[class*="prestige"] {
+  display: none !important;
+  visibility: hidden !important;
+  opacity: 0 !important;
+}
+
+/* Also hide any crown icons */
+.prestige-crown-icon,
+[class*="crown"] {
+  display: none !important;
+}
