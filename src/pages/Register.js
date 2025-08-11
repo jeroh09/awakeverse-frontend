@@ -101,7 +101,6 @@ export default function Register() {
             <div className="character-selection-view">
               <div className="mobile-header">
                 <h2>{getFormTitle()}</h2>
-                <p>Enter the realm of legendary conversations</p>
               </div>
 
               {error && <div className="mobile-error">{error}</div>}
@@ -151,7 +150,7 @@ export default function Register() {
               {/* FIXED: Added mobile navigation link */}
               <div className="mobile-switch-mode">
                 <p>
-                  Already awakened? <Link to="/login">Return to your realm</Link>
+                  Registered? <Link to="/login">Return to your realm</Link>
                 </p>
               </div>
             </div>

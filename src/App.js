@@ -1,6 +1,7 @@
 // src/App.js
-import React from 'react';
-import { Routes, Route, Navigate } from 'react-router-dom';
+import React, { useEffect } from 'react';
+import { Routes, Route, Navigate, useLocation, useNavigate } from 'react-router-dom';
+import { useAuth } from './contexts/AuthContext';
 
 // Landing page (new module)
 import LandingPage     from './landing/pages/LandingPage';
@@ -15,6 +16,53 @@ import ProtectedRoute  from './components/ProtectedRoute';
 import './styles.css';
 
 export default function App() {
+  const { token } = useAuth();
+  const location = useLocation();
+  const navigate = useNavigate();
+
+  // 🛡️ NEW: Navigation guard for authenticated users
+  useEffect(() => {
+    // Only apply guard when authenticated and on protected routes
+    if (!token || !location.pathname.startsWith('/app')) {
+      return;
+    }
+
+    const handlePopState = (event) => {
+      // Check if user is trying to navigate back past the app
+      const isAppRoot = event.state?.isAppRoot;
+      
+      // If we're in the app and there's no app root marker,
+      // or if we detect navigation back to auth routes
+      if (location.pathname.startsWith('/app') && 
+          (location.pathname === '/login' || location.pathname === '/register' || location.pathname === '/')) {
+        
+        console.log('🛡️ Navigation guard: Preventing back navigation to auth');
+        
+        // Prevent going back to auth, redirect to app instead
+        event.preventDefault();
+        navigate('/app', { replace: true });
+        
+        // Re-establish the app root marker
+        window.history.pushState({ isAppRoot: true }, '', '/app');
+      }
+    };
+
+    // Listen for back navigation attempts
+    window.addEventListener('popstate', handlePopState);
+
+    return () => {
+      window.removeEventListener('popstate', handlePopState);
+    };
+  }, [token, location.pathname, navigate]);
+
+  // 🔧 NEW: Set up app root marker when entering protected routes
+  useEffect(() => {
+    if (token && location.pathname.startsWith('/app') && !window.history.state?.isAppRoot) {
+      // Mark this as the app root for the navigation guard
+      window.history.replaceState({ isAppRoot: true }, '', location.pathname);
+    }
+  }, [token, location.pathname]);
+
   return (
     <Routes>
       {/* New landing page at root */}

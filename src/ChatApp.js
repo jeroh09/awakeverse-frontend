@@ -1,13 +1,13 @@
-// src/ChatApp.js - ChatSidebar COMPLETELY REMOVED
+// src/ChatApp.js - History-safe internal navigation
 import React, { useState, useEffect, useCallback } from 'react';
 import { useSocket } from './contexts/WebSocketContext';
 import { useCharacter } from './contexts/CharacterContext';
 import { useAuth } from './contexts/AuthContext';
 import { useUser } from './contexts/UserContext';
+import { useNavigate, useLocation } from 'react-router-dom';
 import api from './api';
 import Header from './components/Header/Header';
 import ChatLauncherPage from './components/ChatLauncherPage';
-// ❌ REMOVED: import ChatSidebar from './components/ChatSidebar';
 import ChatWindow from './components/ChatWindow';
 import CharacterDetailPanel from './components/CharacterDetailPanel/CharacterDetailPanel';
 import FloatingCharacterHub from './components/FloatingCharacterHub/FloatingCharacterHub';
@@ -37,20 +37,73 @@ export default function ChatApp() {
   } = useCharacter();
   const { token } = useAuth();
   const { user } = useUser();
+  const navigate = useNavigate();
+  const location = useLocation();
 
   const [sessionsByCharacter, setSessionsByCharacter] = useState({});
   const [currentSessionId, setCurrentSessionId] = useState(null);
   const [targetMessage] = useState(null);
-  // ❌ REMOVED: const [isSidebarOpen, setIsSidebarOpen] = useState(true);
   const [useFloatingHub, setUseFloatingHub] = useState(true);
   const [isHubVisible, setIsHubVisible] = useState(true);
-  
-  // ✅ RESTORED: PrestigeHub state
   const [prestigeHubVisible, setPrestigeHubVisible] = useState(false);
 
-  // ❌ REMOVED: toggleSidebar function since no sidebar
+  // 🔧 NEW: History-safe back navigation
+  const handleBackToLauncher = useCallback(() => {
+    setSelectedCharacterKey(null);
+    setPreviewCharacterKey(null);
+    setPrestigeHubVisible(false);
+    
+    // 🛡️ Don't use navigate() here - just update internal state
+    // This keeps us within the /app route and prevents history pollution
+    
+    // Optional: Update URL fragment for better UX without affecting history
+    if (window.location.hash !== '#launcher') {
+      window.history.replaceState(
+        { isAppRoot: true, view: 'launcher' }, 
+        '', 
+        '/app#launcher'
+      );
+    }
+  }, [setSelectedCharacterKey, setPreviewCharacterKey]);
 
-  // ✅ RESTORED: PrestigeHub toggle function
+  // 🔧 NEW: History-safe character selection
+  const handleCharacterSelection = useCallback((key, source = 'direct') => {
+    console.log(`🎯 Character selected: ${key} (source: ${source})`);
+    
+    setSelectedCharacterKey(key);
+    setPreviewCharacterKey(null);
+    setPrestigeHubVisible(false);
+    
+    // 🛡️ Update URL fragment without affecting browser history
+    window.history.replaceState(
+      { isAppRoot: true, view: 'chat', character: key }, 
+      '', 
+      `/app#chat/${key}`
+    );
+  }, [setSelectedCharacterKey, setPreviewCharacterKey]);
+
+  // 🔧 NEW: Initialize app state from URL on load
+  useEffect(() => {
+    if (!token) return;
+    
+    // Parse initial state from URL hash
+    const hash = window.location.hash.slice(1); // Remove #
+    
+    if (hash.startsWith('chat/')) {
+      const characterKey = hash.replace('chat/', '');
+      if (characterKey && characterCategories.some(cat => 
+        cat.characters.some(char => char.key === characterKey)
+      )) {
+        setSelectedCharacterKey(characterKey);
+      }
+    }
+    
+    // Ensure we have the app root marker
+    if (!window.history.state?.isAppRoot) {
+      window.history.replaceState({ isAppRoot: true }, '', '/app');
+    }
+  }, [token, setSelectedCharacterKey]);
+
   const togglePrestigeHub = useCallback(() => {
     console.log('🎯 ChatApp togglePrestigeHub called, current state:', prestigeHubVisible);
     setPrestigeHubVisible(v => {
@@ -64,17 +117,12 @@ export default function ChatApp() {
       setPreviewCharacterKey(key);
     } else {
       setPreviewCharacterKey(key);
-      // ❌ REMOVED: setIsSidebarOpen(false);
     }
   }, [setPreviewCharacterKey, useFloatingHub]);
 
   const handleDirectCharacterSwitch = useCallback((key) => {
-    console.log('🔄 Switching to character:', key);
-    setSelectedCharacterKey(key);
-    setPreviewCharacterKey(null);
-    // ❌ REMOVED: setIsSidebarOpen(false);
-    setPrestigeHubVisible(false); // ✅ RESTORED: Close PrestigeHub on character switch
-  }, [setSelectedCharacterKey, setPreviewCharacterKey]);
+    handleCharacterSelection(key, 'direct_switch');
+  }, [handleCharacterSelection]);
 
   const isMobile = useMediaQuery(600);
   const socket = useSocket();
@@ -153,8 +201,8 @@ export default function ChatApp() {
   }, [selectedCharacterKey, token, currentSessionId]);
 
   const handleStartChat = useCallback((key) => {
-    handleDirectCharacterSwitch(key);
-  }, [handleDirectCharacterSwitch]);
+    handleCharacterSelection(key, 'start_chat');
+  }, [handleCharacterSelection]);
 
   const handleClearChat = async (charKey) => {
     const sess = sessionsByCharacter[charKey];
@@ -207,7 +255,6 @@ export default function ChatApp() {
     <div className="app-container">
       <Header />
 
-      {/* ✅ RESTORED: FloatingCharacterHub with PrestigeHub integration */}
       {selectedCharacterKey && useFloatingHub && (
         <>
           <FloatingCharacterHub
@@ -226,15 +273,13 @@ export default function ChatApp() {
       
       {selectedCharacterKey && (
         <div className="chat-body">
-          {/* ❌ REMOVED: ChatSidebar component entirely */}
-
           <div className="chat-window">
             <ChatWindow
               key={currentSessionId}
               character={selectedCharacterKey}
               characterName={charactersMap[selectedCharacterKey]}
               threadId={currentSessionId}
-              onBack={() => setSelectedCharacterKey(null)}
+              onBack={handleBackToLauncher} // 🔧 UPDATED: Use history-safe back handler
               session={sessionsByCharacter[selectedCharacterKey]}
               targetMessage={targetMessage}
               onNewMessage={handleNewMessage}
@@ -254,7 +299,7 @@ export default function ChatApp() {
             characterCategories.flatMap(c => c.characters).find(c => c.key === previewCharacterKey)
           }
           onClose={() => setPreviewCharacterKey(null)}
-          onStartChat={() => handleDirectCharacterSwitch(previewCharacterKey)}
+          onStartChat={() => handleCharacterSelection(previewCharacterKey, 'preview_start')}
         />
       )}
     </div>
