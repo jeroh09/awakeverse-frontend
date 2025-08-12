@@ -850,8 +850,8 @@ body, html {
 
 /* Mobile Character Avatar */
 .mobile-character-avatar {
-  width: 288px !important;
-  height: 288px !important;
+  width: 288px;
+  height: 288px;
   border-radius: 50%;
   border: 4px solid #ffd700;
   margin-bottom: 2rem;
@@ -912,8 +912,8 @@ body, html {
 }
 
 .expert-avatar {
-  width: 192px !important;
-  height: 192px !important;
+  width: 192px;
+  height: 192px;
   border-radius: 50%;
   border: 3px solid #ffd700;
   overflow: hidden;
@@ -1140,13 +1140,13 @@ body, html {
   }
 
   .mobile-character-avatar {
-    width: 256px !important;
-    height: 256px !important;
+    width: 256px;
+    height: 256px;
   }
 
   .expert-avatar {
-    width: 112px !important;
-    height: 112px !important;
+    width: 112px;
+    height: 112px;
   }
 
   .mobile-character-name {
@@ -1190,13 +1190,13 @@ body, html {
   }
 
   .mobile-character-avatar {
-    width: 144px !important;
-    height: 144px !important;
+    width: 144px;
+    height: 144px;
   }
 
   .expert-avatar {
-    width: 96px !important;
-    height: 96px !important;
+    width: 96px;
+    height: 96px;
   }
 
   .mobile-character-name {
@@ -1488,4 +1488,53 @@ body, html {
   width: 1px;
   height: 1px;
   box-shadow: 0 0 4px rgba(255, 255, 255, 0.4);
+}
+/* ==============================================
+   LANDING PAGE AVATAR SIZE OVERRIDES (APPEND THIS)
+   ============================================== */
+
+/* Mobile - Single Avatar */
+.mobile-mode .mobile-character-avatar {
+  width: 288px !important; /* 60% larger */
+  height: 288px !important;
+}
+
+/* Mobile - Expert Avatars (Dual) */
+.mobile-mode .expert-avatar {
+  width: 192px !important;
+  height: 192px !important;
+}
+
+/* Responsive Adjustments */
+@media (max-width: 768px) {
+  .mobile-mode .mobile-character-avatar {
+    width: 256px !important;
+    height: 256px !important;
+  }
+  .mobile-mode .expert-avatar {
+    width: 112px !important;
+    height: 112px !important;
+  }
+}
+
+@media (max-width: 480px) {
+  .mobile-mode .mobile-character-avatar {
+    width: 144px !important;
+    height: 144px !important;
+  }
+  .mobile-mode .expert-avatar {
+    width: 96px !important;
+    height: 96px !important;
+  }
+}
+
+@media (max-width: 768px) and (orientation: landscape) {
+  .mobile-mode .mobile-character-avatar {
+    width: 192px !important;
+    height: 192px !important;
+  }
+  .mobile-mode .expert-avatar {
+    width: 144px !important;
+    height: 144px !important;
+  }
 }
