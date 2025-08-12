@@ -130,6 +130,13 @@ export const characterCategories = [
         thumbnailUrl: '/images/dostoevsky.jpg',
         description: 'The Gambler Who Plumbed Human Depths. Survived a firing squad, Siberian labor camps, and his own roulette addiction to ask: If God is dead, why does evil still hurt?'
       },
+
+      {
+        key: 'cleopatra',
+        name: 'Cleopatra VII',
+        thumbnailUrl: '/images/cleopatra.jpg',
+        description: 'Alexandria\'s Last Scholar-Queen. She spoke nine languages, debated philosophers, and read empires like scrolls. Her library was her arsenal; knowledge, her sharpest blade.'
+      },
       { 
         key: 'huckleberry_finn',
         name: 'Huckleberry Finn',
