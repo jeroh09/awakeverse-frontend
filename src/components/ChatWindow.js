@@ -481,6 +481,14 @@ export default function ChatWindow({
   }, [socket, character]);
 
   const listRef = useRef(null);
+  // Add this debug effect to verify the ref is attached:
+  useEffect(() => {
+    console.log('🔗 ListRef status:', {
+      hasRef: !!listRef.current,
+      hasOuterRef: !!listRef.current?._outerRef,
+      refType: listRef.current?.constructor?.name
+    });
+  }, [chatHistory.length]); // Check whenever messages chang
   const {
     isNearBottom,
     shouldAutoScroll,
@@ -782,7 +790,7 @@ export default function ChatWindow({
       { user: true, text: userText, error: null },
       { user: false, text: '', error: null, speaker: character }
     ]);
-    setTimeout(() => smartScrollToBottom(true), 50);
+    //setTimeout(() => smartScrollToBottom(true), 50);
     sendAI(userText, aiIndex);
   };
 
