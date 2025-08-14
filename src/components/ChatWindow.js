@@ -14,6 +14,7 @@ import InputArea from './InputArea';
 import FloatingAvatar from './FloatingAvatar/FloatingAvatar';
 import PrestigeHub from './PrestigeHub/PrestigeHub';
 import { useSmartScroll } from '../hooks/useSmartScroll';
+import FloatingScrollButton from './FloatingScrollButton';
 import '../styles.css';
 import '../style/InviteStyles.css';
 
@@ -266,6 +267,8 @@ export default function ChatWindow({
   const localThreadId = useRef(threadId);
   const { sendConversationMessage } = useConversation();
   const userAvatar = avatarUrl || user?.avatarUrl;
+  const [newMessageCount, setNewMessageCount] = useState(0);
+
   
   // ✅ USER-FRIENDLY ERROR HANDLING SYSTEM
   const getUserFriendlyError = (error, context = 'general') => {
@@ -500,6 +503,7 @@ export default function ChatWindow({
   const controllerRef = useRef(null);
   const sizeMap = useRef({});
   const displayName = characterName || character;
+  const lastMessageCountRef = useRef(0);
   
   // Row height calculation with invite spacing
   const ROW_GAP = 20;
@@ -512,6 +516,33 @@ export default function ChatWindow({
   }, []);
   
   const getSize = useCallback(idx => (sizeMap.current[idx] || 120) + ROW_GAP, []);
+
+  // 5. ADD this handler function (add after other function definitions):
+  const handleScrollToBottomClick = useCallback(() => {
+  // Manual scroll to bottom using direct DOM manipulation
+    if (listRef.current?._outerRef) {
+      const scrollElement = listRef.current._outerRef;
+      const targetScrollTop = scrollElement.scrollHeight - scrollElement.clientHeight;
+    
+    // Force scroll
+      scrollElement.scrollTop = targetScrollTop;
+      scrollElement.scrollTo({
+        top: targetScrollTop,
+        behavior: 'smooth'
+      });
+    
+      console.log('🔽 Manual scroll triggered', {
+        scrollTop: scrollElement.scrollTop,
+        targetScrollTop: targetScrollTop
+      });
+    }
+
+    // Re-enable autoscroll and reset counts
+    enableAutoScroll();
+    setNewMessageCount(0);
+    lastMessageCountRef.current = chatHistory.length;
+  }, [enableAutoScroll, chatHistory.length]);
+
 
   // Auto-scroll when new messages are added
   useEffect(() => {
@@ -684,6 +715,21 @@ export default function ChatWindow({
       }
     }
   }, [targetMessage, chatHistory]);
+
+  useEffect(() => {
+  // Count messages since user scrolled away
+    if (!shouldAutoScroll && !isNearBottom) {
+      const currentCount = chatHistory.length;
+      const lastSeenCount = lastMessageCountRef.current || 0;
+      const unseenCount = Math.max(0, currentCount - lastSeenCount);
+      setNewMessageCount(unseenCount);
+    } else {
+    // Reset count when user is at bottom or autoscroll is enabled
+      setNewMessageCount(0);
+    // Update the last seen count when user is at bottom
+      lastMessageCountRef.current = chatHistory.length;
+    }
+  }, [chatHistory.length, shouldAutoScroll, isNearBottom]);
 
   const sendAI = async (userText, aiIndex) => {
     const controller = new AbortController();
@@ -902,6 +948,7 @@ export default function ChatWindow({
                 </div>
               )}
             </div>
+            
             <div className="header-controls">
               <button onClick={onBack} className="back-button" title="Back">
                 <ArrowLeft size={20} />
@@ -963,9 +1010,16 @@ export default function ChatWindow({
         <div className="chat-footer-note">
           AI-generated characters, for reference only
         </div>
-
         <ContextPanel />
       </div>
+      {/* ✅ ADD: Floating Scroll Button - RIGHT HERE AT THE END */}
+      <FloatingScrollButton
+        visible={!isNearBottom && chatHistory.length > 0}
+        hasNewMessages={hasNewMessages || newMessageCount > 0}
+        messageCount={newMessageCount}
+        onClick={handleScrollToBottomClick}
+        position="bottom-right"
+      />
     </div>
   );
 }
