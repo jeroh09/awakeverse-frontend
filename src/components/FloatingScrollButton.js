@@ -18,14 +18,14 @@ const FloatingScrollButton = ({
   const positionStyles = {
     'bottom-right': {
       position: 'fixed',
-      bottom: isMobile ? '140px' : '120px', // Higher on mobile to avoid input area
+      bottom: isMobile ? '220px' : '200px', // Higher on mobile to avoid input area
       right: isMobile ? '16px' : '20px',
       // Mobile PWA safe area
       paddingBottom: 'env(safe-area-inset-bottom)',
     },
     'bottom-center': {
       position: 'fixed',
-      bottom: isMobile ? '1400px' : '120px',
+      bottom: isMobile ? '220px' : '100px',
       left: '50%',
       transform: 'translateX(-50%)',
       paddingBottom: 'env(safe-area-inset-bottom)',
@@ -114,14 +114,14 @@ const FloatingScrollButton = ({
         /* Mobile PWA specific styles */
         @media (max-width: 768px) {
           .floating-scroll-button {
-            bottom: calc(140px + env(safe-area-inset-bottom)) !important;
+            bottom: calc(220px + env(safe-area-inset-bottom)) !important;
           }
         }
 
         /* iOS PWA specific */
         @supports (-webkit-touch-callout: none) {
           .floating-scroll-button {
-            bottom: calc(150px + env(safe-area-inset-bottom)) !important;
+            bottom: calc(230px + env(safe-area-inset-bottom)) !important;
           }
         }
       `}</style>
