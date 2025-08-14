@@ -13,6 +13,7 @@ import ContextPanel from './ContextPanel';
 import InputArea from './InputArea';
 import FloatingAvatar from './FloatingAvatar/FloatingAvatar';
 import PrestigeHub from './PrestigeHub/PrestigeHub';
+import { useSmartScroll } from '../hooks/useSmartScroll';
 import '../styles.css';
 import '../style/InviteStyles.css';
 
@@ -480,6 +481,14 @@ export default function ChatWindow({
   }, [socket, character]);
 
   const listRef = useRef(null);
+  const {
+    isNearBottom,
+    shouldAutoScroll,
+    hasNewMessages,
+    scrollToBottom: smartScrollToBottom,
+    handleScroll: smartHandleScroll,
+    enableAutoScroll
+  } = useSmartScroll(listRef, chatHistory);
   const controllerRef = useRef(null);
   const sizeMap = useRef({});
   const displayName = characterName || character;
@@ -496,27 +505,15 @@ export default function ChatWindow({
   
   const getSize = useCallback(idx => (sizeMap.current[idx] || 120) + ROW_GAP, []);
 
-  // Auto-scroll function
-  const scrollToBottom = useCallback(() => {
-    if (listRef.current && chatHistory.length > 0) {
-      requestAnimationFrame(() => {
-        listRef.current.resetAfterIndex(0);
-        const lastIndex = chatHistory.length - 1;
-        listRef.current.scrollToItem(lastIndex, 'end');
-        
-        setTimeout(() => {
-          if (listRef.current) {
-            listRef.current.scrollToItem(lastIndex, 'end');
-          }
-        }, 100);
-      });
-    }
-  }, [chatHistory.length]);
-
   // Auto-scroll when new messages are added
   useEffect(() => {
-    scrollToBottom();
-  }, [chatHistory.length, scrollToBottom]);
+    console.log('🔄 ChatWindow scroll state:', {
+      isNearBottom,
+      shouldAutoScroll,
+      hasNewMessages,
+      messageCount: chatHistory.length
+    });
+  }, [isNearBottom, shouldAutoScroll, hasNewMessages, chatHistory.length]);
 
   const onInvite = async (invitee) => {
     if (isSending) return;
@@ -778,12 +775,14 @@ export default function ChatWindow({
     if (!message.trim() || isSending) return;
     const userText = message;
     setMessage('');
+    enableAutoScroll();
     const aiIndex = chatHistory.length + 1;
     setChatHistory(prev => [
       ...prev,
       { user: true, text: userText, error: null },
       { user: false, text: '', error: null, speaker: character }
     ]);
+    setTimeout(() => smartScrollToBottom(true), 50);
     sendAI(userText, aiIndex);
   };
 
@@ -913,6 +912,7 @@ export default function ChatWindow({
                 width={width}
                 itemCount={chatHistory.length}
                 itemSize={getSize}
+                onScroll={smartHandleScroll}
                 itemData={{
                   chatHistory,
                   sizeMap,
