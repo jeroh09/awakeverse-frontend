@@ -519,8 +519,16 @@ export default function ChatWindow({
 
   // 5. ADD this handler function (add after other function definitions):
   const handleScrollToBottomClick = useCallback(() => {
+  // Add mobile logging for debugging
+    console.log('🔽 Mobile scroll triggered', {
+      isMobile,
+      userAgent: navigator.userAgent,
+      innerWidth: window.innerWidth,
+      viewportHeight: window.innerHeight
+    });
+
   // Manual scroll to bottom using direct DOM manipulation
-    if (listRef.current?._outerRef) {
+   if (listRef.current?._outerRef) {
       const scrollElement = listRef.current._outerRef;
       const targetScrollTop = scrollElement.scrollHeight - scrollElement.clientHeight;
     
@@ -537,12 +545,11 @@ export default function ChatWindow({
       });
     }
 
-    // Re-enable autoscroll and reset counts
+  // Re-enable autoscroll and reset counts
     enableAutoScroll();
     setNewMessageCount(0);
     lastMessageCountRef.current = chatHistory.length;
-  }, [enableAutoScroll, chatHistory.length]);
-
+  }, [enableAutoScroll, chatHistory.length, isMobile]);
 
   // Auto-scroll when new messages are added
   useEffect(() => {
@@ -1019,6 +1026,7 @@ export default function ChatWindow({
         messageCount={newMessageCount}
         onClick={handleScrollToBottomClick}
         position="bottom-right"
+        isMobile={isMobile}
       />
     </div>
   );
