@@ -88,41 +88,52 @@ export const useSmartScroll = (listRef, chatHistory) => {
   }, [checkScrollPosition]);
 
   // Smart scroll to bottom function
+  // ALTERNATIVE: Replace the scrollToBottom function with this simpler version:
+
   const scrollToBottom = useCallback((force = false) => {
     if (!listRef.current) {
       log('Cannot scroll - no listRef');
       return;
     }
-    
+  
     if (force || shouldAutoScroll) {
-      log('Scrolling to bottom', { force, shouldAutoScroll });
+      log('Scrolling to bottom (simple method)', { force, shouldAutoScroll });
       isAutoScrollingRef.current = true;
+    
+    // Get the scroll container
+      const scrollElement = listRef.current._outerRef;
+      if (!scrollElement) {
+        log('No scroll element found');
+        return;
+      }
+    
+    // Simple direct scroll to bottom
+      const scrollToMax = () => {
+        scrollElement.scrollTop = scrollElement.scrollHeight;
+        log('Scrolled to', {
+          scrollTop: scrollElement.scrollTop,
+          scrollHeight: scrollElement.scrollHeight,
+          distanceFromBottom: scrollElement.scrollHeight - (scrollElement.scrollTop + scrollElement.clientHeight)
+        });
+      };
+    
+    // Immediate scroll
+      scrollToMax();
+    
+    // Double-check after a brief delay
+      setTimeout(() => {
+        scrollToMax();
+        isAutoScrollingRef.current = false;
       
-      // Use requestAnimationFrame for smooth scrolling
-      requestAnimationFrame(() => {
-        if (listRef.current) {
-          listRef.current.resetAfterIndex(0);
-          const lastIndex = Math.max(0, chatHistory.length - 1);
-          
-          listRef.current.scrollToItem(lastIndex, 'end');
-          
-          // Double-check scroll after a brief delay
-          setTimeout(() => {
-            if (listRef.current) {
-              listRef.current.scrollToItem(lastIndex, 'end');
-              isAutoScrollingRef.current = false;
-              
-              // Update state after autoscroll completes
-              setTimeout(() => {
-                setIsNearBottom(true);
-                if (!force) setShouldAutoScroll(true);
-                setHasNewMessages(false);
-                log('Autoscroll completed');
-              }, 50);
-            }
-          }, 100);
-        }
-      });
+      // Update state
+        setTimeout(() => {
+          setIsNearBottom(true);
+          if (!force) setShouldAutoScroll(true);
+          setHasNewMessages(false);
+          log('Simple autoscroll completed');
+        }, 50);
+      }, 100);
+    
     } else {
       log('Skipping autoscroll - user has scrolled up');
     }
