@@ -407,6 +407,26 @@ const SplitScreenLauncher = ({ onStartChat }) => {
           )}
         </div>
         {/* ADD this block in your mobile return statement */}
+        // In your mobile PersonalizedSection call, add debug styling:
+        {/* 🔍 DEBUG VERSION - Replace your existing PersonalizedSection call */}
+        {shouldShowForYou && (
+          <div style={{ 
+            border: '3px solid red', 
+            padding: '10px', 
+            margin: '10px 0',
+            backgroundColor: 'rgba(255, 0, 0, 0.1)'
+          }}>
+            <p style={{ color: 'red', fontSize: '14px' }}>
+              DEBUG: PersonalizedSection - Count: {recentCharacters.length}
+            </p>
+            <PersonalizedSection 
+              characters={recentCharacters}
+              onCharacterSelect={handleRecentCharacterSelect}
+              hasActiveConversations={hasActiveConversations}
+              isMobile={true}
+            />
+          </div>
+        )}
         {shouldShowForYou && (
           <PersonalizedSection 
             characters={recentCharacters}
@@ -1445,8 +1465,10 @@ const PersonalizedSection = ({ characters, onCharacterSelect, hasActiveConversat
       width: '100%',
       maxWidth: isMobile ? '500px' : '400px',
       margin: '1rem 0',
-      opacity: 0,
-      animation: 'slideInFromLeft 0.8s ease-out 0.3s forwards'
+      opacity: 1,
+      //animation: 'slideInFromLeft 0.8s ease-out 0.3s forwards'
+      border: isMobile ? '1px solid rgba(255, 215, 0, 0.3)' : 'none', // 🔍 Debug border
+      backgroundColor: isMobile ? 'rgba(255, 255, 255, 0.05)' : 'transparent' // 🔍 Debug background
     }}>
       <div style={{
         display: 'flex',
