@@ -1,7 +1,8 @@
 import React, { useState, useEffect, useMemo } from 'react';
 import { useUser } from '../contexts/UserContext';
-import { characterCategories } from '../data/characterCategories';i
+import { characterCategories } from '../data/characterCategories';
 import useInteractedCharacters from '../hooks/useInteractedCharacters';
+
 
 
 // Enhanced semantic mappings for your complete character set
