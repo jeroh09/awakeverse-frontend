@@ -1,6 +1,8 @@
 import React, { useState, useEffect, useMemo } from 'react';
 import { useUser } from '../contexts/UserContext';
-import { characterCategories } from '../data/characterCategories';
+import { characterCategories } from '../data/characterCategories';i
+import useInteractedCharacters from '../hooks/useInteractedCharacters';
+
 
 // Enhanced semantic mappings for your complete character set
 const ENHANCED_SEMANTIC_MAPPINGS = {
@@ -92,11 +94,11 @@ const ENHANCED_SEMANTIC_MAPPINGS = {
 };
 
 const ORACLE_PROMPTS = [
-  "What is on your mind??",
-  "I want to solve a problem...",
-  "I want wisdom for life...",
-  "what subject do you which to discuss?",
-  "Who would you like to chat with?"
+  "Who do you want to talk to?",
+  "Seek wisdom from...",
+  "Which guide calls to you?",
+  "Who would you counsel with?",
+  "Find your mentor...",
 ];
 
 // Category representatives - most famous face for each category
@@ -114,6 +116,12 @@ const categoryRepresentatives = {
 
 const SplitScreenLauncher = ({ onStartChat }) => {
   const { user } = useUser();
+  const { 
+    recentCharacters,
+    shouldShowForYou,
+    trackInteraction,
+    hasActiveConversations 
+  } = useInteractedCharacters();
   const [inputValue, setInputValue] = useState('');
   const [selectedCategory, setSelectedCategory] = useState(null);
   const [selectedChar, setSelectedChar] = useState(null);
@@ -192,6 +200,7 @@ const SplitScreenLauncher = ({ onStartChat }) => {
   };
 
   const handleCharacterSelect = (character) => {
+    trackInteraction(character.key);
     setSelectedChar({
       key: character.key,
       name: character.name,
@@ -200,7 +209,10 @@ const SplitScreenLauncher = ({ onStartChat }) => {
       category: character.category
     });
   };
-
+  const handleRecentCharacterSelect = (recentCharacter) => {
+    trackInteraction(recentCharacter.character);
+    onStartChat(recentCharacter.character);
+  };
   const handleCategorySelect = (category) => {
     setSelectedCategory(category);
     setShowResults(false);
@@ -393,7 +405,15 @@ const SplitScreenLauncher = ({ onStartChat }) => {
             </div>
           )}
         </div>
-
+        {/* ADD this block in your mobile return statement */}
+        {shouldShowForYou && (
+          <PersonalizedSection 
+            characters={recentCharacters}
+            onCharacterSelect={handleRecentCharacterSelect}
+            hasActiveConversations={hasActiveConversations}
+            isMobile={isMobile}
+          />
+        )}
         {/* Categories or Characters View */}
         {!selectedCategory ? (
           <div style={{
@@ -671,7 +691,10 @@ const SplitScreenLauncher = ({ onStartChat }) => {
                 justifyContent: 'center'
               }}>
                 <button
-                  onClick={() => onStartChat(selectedChar.key)}
+                  onClick={() => {
+                    trackInteraction(selectedChar.key);
+                    onStartChat(selectedChar.key);
+                  }}
                   style={{
                     background: 'linear-gradient(135deg, rgba(255, 215, 0, 0.2), rgba(255, 215, 0, 0.1))',
                     border: '2px solid rgba(255, 215, 0, 0.5)',
@@ -909,6 +932,15 @@ const SplitScreenLauncher = ({ onStartChat }) => {
             </div>
           )}
         </div>
+        {/* ADD this block in your desktop left panel */}
+        {shouldShowForYou && (
+          <PersonalizedSection 
+            characters={recentCharacters}
+            onCharacterSelect={handleRecentCharacterSelect}
+            hasActiveConversations={hasActiveConversations}
+            isMobile={false}
+          />
+        )}
       </div>
 
       {/* RIGHT HALF - Categories/Characters */}
@@ -1327,58 +1359,8 @@ const SplitScreenLauncher = ({ onStartChat }) => {
         </div>
       )}
 
-      <style jsx global>{`
+      <style jsx>{`
         @import url('https://fonts.googleapis.com/css2?family=Cinzel:wght@400;600&family=Cinzel+Decorative:wght@400;700&display=swap');
-        
-        /* Global scrollbar theme for ChatLauncher */
-        * {
-          scrollbar-width: thin;
-          scrollbar-color: rgba(255, 215, 0, 0.6) rgba(255, 215, 0, 0.1);
-        }
-
-        /* Webkit scrollbar styling (Chrome, Safari, Edge) */
-        *::-webkit-scrollbar {
-          width: 8px;
-          height: 8px;
-        }
-
-        *::-webkit-scrollbar-track {
-          background: rgba(255, 215, 0, 0.1);
-          border-radius: 4px;
-        }
-
-        *::-webkit-scrollbar-thumb {
-          background: rgba(255, 215, 0, 0.5);
-          border-radius: 4px;
-          border: 1px solid rgba(255, 215, 0, 0.2);
-        }
-
-        *::-webkit-scrollbar-thumb:hover {
-          background: rgba(255, 215, 0, 0.7);
-          box-shadow: 0 0 8px rgba(255, 215, 0, 0.3);
-        }
-
-        *::-webkit-scrollbar-corner {
-          background: rgba(255, 215, 0, 0.1);
-        }
-
-        /* Mobile specific scrollbars - thinner for touch */
-        @media (max-width: 768px) {
-          *::-webkit-scrollbar {
-            width: 4px;
-            height: 4px;
-          }
-          
-          *::-webkit-scrollbar-thumb {
-            background: rgba(255, 215, 0, 0.6);
-            border-radius: 2px;
-          }
-          
-          *::-webkit-scrollbar-track {
-            background: rgba(255, 215, 0, 0.1);
-            border-radius: 2px;
-          }
-        }
         
         @keyframes categorySlideIn {
           from {
@@ -1401,9 +1383,221 @@ const SplitScreenLauncher = ({ onStartChat }) => {
             transform: translateY(0);
           }
         }
+        
+        /* 🆕 ADD THESE NEW ANIMATIONS */
+        @keyframes slideInFromLeft {
+          from {
+            opacity: 0;
+            transform: translateX(-30px);
+          }
+          to {
+            opacity: 1;
+            transform: translateX(0);
+          }
+        }
+
+        @keyframes pulse {
+          0%, 100% { 
+            opacity: 1; 
+            transform: scale(1); 
+          }
+          50% { 
+            opacity: 0.7; 
+            transform: scale(1.1); 
+          }
+        }
+
+        /* Hide scrollbar for PersonalizedSection */
+        .recent-characters::-webkit-scrollbar {
+          display: none;
+        }
+        
+        /* Scrollbar styling for character panel */
+        .character-panel::-webkit-scrollbar {
+          width: 6px;
+        }
+        
+        .character-panel::-webkit-scrollbar-track {
+          background: rgba(255, 215, 0, 0.1);
+          border-radius: 3px;
+        }
+        
+        .character-panel::-webkit-scrollbar-thumb {
+          background: rgba(255, 215, 0, 0.5);
+          border-radius: 3px;
+        }
+        
+        .character-panel::-webkit-scrollbar-thumb:hover {
+          background: rgba(255, 215, 0, 0.7);
+        }
       `}</style>
     </div>
   );
 };
 
+// Add this component RIGHT BEFORE your export statement in ChatLauncherPage.jsx
+// Place it after the closing bracket of SplitScreenLauncher function, before export default
+
+const PersonalizedSection = ({ characters, onCharacterSelect, hasActiveConversations, isMobile }) => {
+  return (
+    <div style={{
+      width: '100%',
+      maxWidth: isMobile ? '500px' : '400px',
+      margin: '1rem 0',
+      opacity: 0,
+      animation: 'slideInFromLeft 0.8s ease-out 0.3s forwards'
+    }}>
+      <div style={{
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'space-between',
+        marginBottom: '1rem',
+        padding: '0 0.5rem'
+      }}>
+        <h3 style={{
+          fontSize: '1rem',
+          color: '#FFD700',
+          fontWeight: 600,
+          letterSpacing: '0.5px',
+          textShadow: '0 2px 4px rgba(0, 0, 0, 0.6)',
+          margin: 0,
+          fontFamily: "'Cinzel', serif"
+        }}>
+          Your Trusted Guides
+        </h3>
+        <span style={{
+          background: 'linear-gradient(135deg, rgba(255, 215, 0, 0.2), rgba(255, 215, 0, 0.1))',
+          border: '1px solid rgba(255, 215, 0, 0.4)',
+          borderRadius: '12px',
+          padding: '0.2rem 0.6rem',
+          fontSize: '0.7rem',
+          color: 'rgba(255, 215, 0, 0.9)',
+          letterSpacing: '0.3px',
+          textTransform: 'uppercase'
+        }}>
+          Recent
+        </span>
+      </div>
+      
+      <div style={{
+        display: 'flex',
+        gap: '0.75rem',
+        overflowX: 'auto',
+        padding: '0.5rem 0',
+        scrollbarWidth: 'none',
+        msOverflowStyle: 'none'
+      }}>
+        {characters.slice(0, 6).map((character) => (
+          <div
+            key={character.character}
+            onClick={() => onCharacterSelect(character)}
+            style={{
+              flexShrink: 0,
+              display: 'flex',
+              flexDirection: 'column',
+              alignItems: 'center',
+              padding: '0.75rem',
+              background: 'rgba(255, 255, 255, 0.05)',
+              border: '1px solid rgba(255, 215, 0, 0.2)',
+              borderRadius: '12px',
+              cursor: 'pointer',
+              transition: 'all 0.3s ease',
+              minWidth: '85px',
+              backdropFilter: 'blur(5px)',
+              position: 'relative'
+            }}
+            onMouseEnter={(e) => {
+              e.currentTarget.style.background = 'rgba(255, 215, 0, 0.1)';
+              e.currentTarget.style.borderColor = 'rgba(255, 215, 0, 0.5)';
+              e.currentTarget.style.transform = 'translateY(-3px)';
+              e.currentTarget.style.boxShadow = '0 8px 20px rgba(255, 215, 0, 0.2)';
+            }}
+            onMouseLeave={(e) => {
+              e.currentTarget.style.background = 'rgba(255, 255, 255, 0.05)';
+              e.currentTarget.style.borderColor = 'rgba(255, 215, 0, 0.2)';
+              e.currentTarget.style.transform = 'translateY(0)';
+              e.currentTarget.style.boxShadow = 'none';
+            }}
+          >
+            <div style={{ position: 'relative' }}>
+              <img
+                src={character.thumbnailUrl}
+                alt={character.name}
+                style={{
+                  width: '45px',
+                  height: '45px',
+                  borderRadius: '50%',
+                  border: '2px solid rgba(255, 215, 0, 0.3)',
+                  objectFit: 'cover',
+                  marginBottom: '0.5rem',
+                  transition: 'all 0.3s ease'
+                }}
+                onError={(e) => {
+                  e.target.src = '/images/default-character.jpg';
+                }}
+              />
+              {character.hasActiveConversation && (
+                <div style={{
+                  position: 'absolute',
+                  top: '-2px',
+                  right: '-2px',
+                  width: '12px',
+                  height: '12px',
+                  background: '#00FF88',
+                  border: '2px solid #0B1426',
+                  borderRadius: '50%',
+                  animation: 'pulse 2s infinite'
+                }} />
+              )}
+            </div>
+            <span style={{
+              fontSize: '0.7rem',
+              color: 'rgba(255, 215, 0, 0.9)',
+              textAlign: 'center',
+              fontWeight: 500,
+              lineHeight: 1.1,
+              letterSpacing: '0.3px'
+            }}>
+              {character.name.split(' ')[0]}
+            </span>
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+};
+
+// Also add these CSS animations to your existing style block
+// Add this to your existing <style jsx> section:
+
+const additionalStyles = `
+  @keyframes slideInFromLeft {
+    from {
+      opacity: 0;
+      transform: translateX(-30px);
+    }
+    to {
+      opacity: 1;
+      transform: translateX(0);
+    }
+  }
+
+  @keyframes pulse {
+    0%, 100% { 
+      opacity: 1; 
+      transform: scale(1); 
+    }
+    50% { 
+      opacity: 0.7; 
+      transform: scale(1.1); 
+    }
+  }
+
+  /* Hide scrollbar for PersonalizedSection */
+  .recent-characters::-webkit-scrollbar {
+    display: none;
+  }
+`;
+
+// Add the additionalStyles to your existing style block
 export default SplitScreenLauncher;
