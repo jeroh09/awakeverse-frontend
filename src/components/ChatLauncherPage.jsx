@@ -1,9 +1,8 @@
+// src/pages/ChatLauncherPage.jsx
 import React, { useState, useEffect, useMemo } from 'react';
 import { useUser } from '../contexts/UserContext';
 import { characterCategories } from '../data/characterCategories';
 import useInteractedCharacters from '../hooks/useInteractedCharacters';
-
-
 
 // Enhanced semantic mappings for your complete character set
 const ENHANCED_SEMANTIC_MAPPINGS = {
@@ -71,7 +70,6 @@ const ENHANCED_SEMANTIC_MAPPINGS = {
   'economics': ['goldhands'],
   'finance': ['goldhands'],
   'industry': ['goldhands', 'makers'],
-  'innovation': ['makers'],
   'discovery': ['makers', 'truthweavers'],
   'genius': ['makers', 'thinkers'],
   'military': ['warlords'],
@@ -81,7 +79,6 @@ const ENHANCED_SEMANTIC_MAPPINGS = {
   'espionage': ['sleuths', 'warlords'],
   'spy': ['sleuths'],
   'crime': ['sleuths'],
-  'mystery': ['sleuths', 'veilwalkers'],
   'puzzle': ['sleuths', 'thinkers'],
   'riddle': ['sleuths', 'veilwalkers'],
   'secret': ['sleuths', 'veilwalkers'],
@@ -123,6 +120,7 @@ const SplitScreenLauncher = ({ onStartChat }) => {
     trackInteraction,
     hasActiveConversations 
   } = useInteractedCharacters();
+
   const [inputValue, setInputValue] = useState('');
   const [selectedCategory, setSelectedCategory] = useState(null);
   const [selectedChar, setSelectedChar] = useState(null);
@@ -133,10 +131,7 @@ const SplitScreenLauncher = ({ onStartChat }) => {
 
   // Check for mobile viewport
   useEffect(() => {
-    const checkMobile = () => {
-      setIsMobile(window.innerWidth <= 768);
-    };
-    
+    const checkMobile = () => setIsMobile(window.innerWidth <= 768);
     checkMobile();
     window.addEventListener('resize', checkMobile);
     return () => window.removeEventListener('resize', checkMobile);
@@ -144,9 +139,10 @@ const SplitScreenLauncher = ({ onStartChat }) => {
 
   // Rotate placeholder text
   useEffect(() => {
-    const interval = setInterval(() => {
-      setPlaceholderIndex(prev => (prev + 1) % ORACLE_PROMPTS.length);
-    }, 4000);
+    const interval = setInterval(
+      () => setPlaceholderIndex(prev => (prev + 1) % ORACLE_PROMPTS.length),
+      4000
+    );
     return () => clearInterval(interval);
   }, []);
 
@@ -154,21 +150,18 @@ const SplitScreenLauncher = ({ onStartChat }) => {
   const performSemanticSearch = useMemo(() => {
     return (query) => {
       if (!query.trim()) return [];
-
       const searchTerm = query.toLowerCase().trim();
       const results = [];
 
-      // Direct character name/description search
       characterCategories.forEach(category => {
         category.characters.forEach(character => {
           const nameMatch = character.name.toLowerCase().includes(searchTerm);
           const descMatch = character.description.toLowerCase().includes(searchTerm);
-          
           const nameParts = character.name.toLowerCase().split(' ');
-          const partialNameMatch = nameParts.some(part => 
+          const partialNameMatch = nameParts.some(part =>
             part.includes(searchTerm) || searchTerm.includes(part)
           );
-          
+
           if (nameMatch || descMatch || partialNameMatch) {
             results.push({
               ...character,
@@ -180,16 +173,13 @@ const SplitScreenLauncher = ({ onStartChat }) => {
         });
       });
 
-      return results
-        .sort((a, b) => b.relevance - a.relevance)
-        .slice(0, 8);
+      return results.sort((a, b) => b.relevance - a.relevance).slice(0, 8);
     };
   }, []);
 
   // Handle search input
   const handleInputChange = (text) => {
     setInputValue(text);
-    
     if (text.length >= 2) {
       const results = performSemanticSearch(text);
       setSearchResults(results);
@@ -210,19 +200,19 @@ const SplitScreenLauncher = ({ onStartChat }) => {
       category: character.category
     });
   };
+
   const handleRecentCharacterSelect = (recentCharacter) => {
     trackInteraction(recentCharacter.character);
     onStartChat(recentCharacter.character);
   };
+
   const handleCategorySelect = (category) => {
     setSelectedCategory(category);
     setShowResults(false);
     setInputValue('');
   };
 
-  const handleBackToCategories = () => {
-    setSelectedCategory(null);
-  };
+  const handleBackToCategories = () => setSelectedCategory(null);
 
   const currentPlaceholder = ORACLE_PROMPTS[placeholderIndex];
 
@@ -348,9 +338,7 @@ const SplitScreenLauncher = ({ onStartChat }) => {
                       objectFit: 'cover',
                       border: '2px solid rgba(255, 215, 0, 0.3)'
                     }}
-                    onError={(e) => {
-                      e.target.src = '/images/default-character.jpg';
-                    }}
+                    onError={(e) => { e.target.src = '/images/default-character.jpg'; }}
                   />
                   <div style={{ flex: 1, minWidth: 0 }}>
                     <div style={{
@@ -406,35 +394,17 @@ const SplitScreenLauncher = ({ onStartChat }) => {
             </div>
           )}
         </div>
-        {/* ADD this block in your mobile return statement */}
-        // In your mobile PersonalizedSection call, add debug styling:
-        {/* 🔍 DEBUG VERSION - Replace your existing PersonalizedSection call */}
-        {shouldShowForYou && (
-          <div style={{ 
-            border: '3px solid red', 
-            padding: '10px', 
-            margin: '10px 0',
-            backgroundColor: 'rgba(255, 0, 0, 0.1)'
-          }}>
-            <p style={{ color: 'red', fontSize: '14px' }}>
-              DEBUG: PersonalizedSection - Count: {recentCharacters.length}
-            </p>
-            <PersonalizedSection 
-              characters={recentCharacters}
-              onCharacterSelect={handleRecentCharacterSelect}
-              hasActiveConversations={hasActiveConversations}
-              isMobile={true}
-            />
-          </div>
-        )}
+
+        {/* Personalized Section (Mobile) */}
         {shouldShowForYou && (
           <PersonalizedSection 
             characters={recentCharacters}
             onCharacterSelect={handleRecentCharacterSelect}
             hasActiveConversations={hasActiveConversations}
-            isMobile={isMobile}
+            isMobile={true}
           />
         )}
+
         {/* Categories or Characters View */}
         {!selectedCategory ? (
           <div style={{
@@ -481,9 +451,7 @@ const SplitScreenLauncher = ({ onStartChat }) => {
                       objectFit: 'cover',
                       filter: 'sepia(20%) contrast(1.1)',
                     }}
-                    onError={(e) => {
-                      e.target.src = '/images/default-character.jpg';
-                    }}
+                    onError={(e) => { e.target.src = '/images/default-character.jpg'; }}
                   />
                 </div>
                 
@@ -591,14 +559,8 @@ const SplitScreenLauncher = ({ onStartChat }) => {
                     <img
                       src={character.thumbnailUrl}
                       alt={character.name}
-                      style={{
-                        width: '100%',
-                        height: '100%',
-                        objectFit: 'cover'
-                      }}
-                      onError={(e) => {
-                        e.target.src = '/images/default-character.jpg';
-                      }}
+                      style={{ width: '100%', height: '100%', objectFit: 'cover' }}
+                      onError={(e) => { e.target.src = '/images/default-character.jpg'; }}
                     />
                   </div>
                   
@@ -633,7 +595,7 @@ const SplitScreenLauncher = ({ onStartChat }) => {
           </>
         )}
 
-        {/* Character Detail Modal */}
+        {/* Character Detail Modal (Mobile) */}
         {selectedChar && (
           <div style={{
             position: 'fixed',
@@ -672,9 +634,7 @@ const SplitScreenLauncher = ({ onStartChat }) => {
                   border: '3px solid rgba(255, 215, 0, 0.4)',
                   marginBottom: '1rem'
                 }}
-                onError={(e) => {
-                  e.target.src = '/images/default-character.jpg';
-                }}
+                onError={(e) => { e.target.src = '/images/default-character.jpg'; }}
               />
               
               <h2 style={{
@@ -706,11 +666,7 @@ const SplitScreenLauncher = ({ onStartChat }) => {
                 {selectedChar.description}
               </p>
               
-              <div style={{
-                display: 'flex',
-                gap: '1rem',
-                justifyContent: 'center'
-              }}>
+              <div style={{ display: 'flex', gap: '1rem', justifyContent: 'center' }}>
                 <button
                   onClick={() => {
                     trackInteraction(selectedChar.key);
@@ -731,7 +687,6 @@ const SplitScreenLauncher = ({ onStartChat }) => {
                 >
                   Start Chat
                 </button>
-                
                 <button
                   onClick={() => setSelectedChar(null)}
                   style={{
@@ -757,7 +712,7 @@ const SplitScreenLauncher = ({ onStartChat }) => {
     );
   }
 
-  // Desktop layout (original code with minor adjustments)
+  // Desktop layout
   return (
     <div style={{
       width: '100%',
@@ -767,7 +722,6 @@ const SplitScreenLauncher = ({ onStartChat }) => {
       background: 'linear-gradient(135deg, #0B1426 0%, #1A2B47 25%, #2C1810 50%, #0F1A2E 75%, #0B1426 100%)',
       overflow: 'hidden'
     }}>
-      
       {/* LEFT HALF - Search Section */}
       <div style={{
         width: '50%',
@@ -781,10 +735,7 @@ const SplitScreenLauncher = ({ onStartChat }) => {
         borderRight: '1px solid rgba(255, 215, 0, 0.2)'
       }}>
         {/* Welcome Section */}
-        <div style={{
-          textAlign: 'center',
-          marginBottom: '1.5rem'
-        }}>
+        <div style={{ textAlign: 'center', marginBottom: '1.5rem' }}>
           <h1 style={{
             fontFamily: "'Cinzel Decorative', serif",
             fontSize: '2.5rem',
@@ -799,7 +750,6 @@ const SplitScreenLauncher = ({ onStartChat }) => {
           }}>
             Welcome, {user?.displayName || 'Seeker'}
           </h1>
-          
           <p style={{
             fontSize: '1.2rem',
             color: 'rgba(255, 215, 0, 0.8)',
@@ -815,12 +765,7 @@ const SplitScreenLauncher = ({ onStartChat }) => {
         </div>
 
         {/* Search Section */}
-        <div style={{
-          width: '100%',
-          maxWidth: '400px',
-          position: 'relative',
-          marginBottom: '1rem'
-        }}>
+        <div style={{ width: '100%', maxWidth: '400px', position: 'relative', marginBottom: '1rem' }}>
           <input
             type="text"
             placeholder="Search characters..."
@@ -877,12 +822,12 @@ const SplitScreenLauncher = ({ onStartChat }) => {
                     marginBottom: index < searchResults.length - 1 ? '0.5rem' : 0
                   }}
                   onMouseEnter={(e) => {
-                    e.target.style.background = 'rgba(255, 215, 0, 0.1)';
-                    e.target.style.borderColor = 'rgba(255, 215, 0, 0.5)';
+                    e.currentTarget.style.background = 'rgba(255, 215, 0, 0.1)';
+                    e.currentTarget.style.borderColor = 'rgba(255, 215, 0, 0.5)';
                   }}
                   onMouseLeave={(e) => {
-                    e.target.style.background = 'rgba(255, 255, 255, 0.05)';
-                    e.target.style.borderColor = 'rgba(255, 215, 0, 0.2)';
+                    e.currentTarget.style.background = 'rgba(255, 255, 255, 0.05)';
+                    e.currentTarget.style.borderColor = 'rgba(255, 215, 0, 0.2)';
                   }}
                 >
                   <img
@@ -895,17 +840,10 @@ const SplitScreenLauncher = ({ onStartChat }) => {
                       objectFit: 'cover',
                       border: '2px solid rgba(255, 215, 0, 0.3)'
                     }}
-                    onError={(e) => {
-                      e.target.src = '/images/default-character.jpg';
-                    }}
+                    onError={(e) => { e.target.src = '/images/default-character.jpg'; }}
                   />
                   <div style={{ flex: 1, minWidth: 0 }}>
-                    <div style={{
-                      fontSize: '0.9rem',
-                      fontWeight: 600,
-                      color: '#FFD700',
-                      marginBottom: '0.25rem'
-                    }}>
+                    <div style={{ fontSize: '0.9rem', fontWeight: 600, color: '#FFD700', marginBottom: '0.25rem' }}>
                       {character.name}
                     </div>
                     <div style={{
@@ -944,16 +882,14 @@ const SplitScreenLauncher = ({ onStartChat }) => {
               }}>
                 No matches for "{inputValue}"
               </p>
-              <small style={{
-                color: 'rgba(255, 255, 255, 0.6)',
-                fontSize: '0.85rem'
-              }}>
+              <small style={{ color: 'rgba(255, 255, 255, 0.6)', fontSize: '0.85rem' }}>
                 Try searching for character names or themes
               </small>
             </div>
           )}
         </div>
-        {/* ADD this block in your desktop left panel */}
+
+        {/* Personalized Section (Desktop) */}
         {shouldShowForYou && (
           <PersonalizedSection 
             characters={recentCharacters}
@@ -965,13 +901,7 @@ const SplitScreenLauncher = ({ onStartChat }) => {
       </div>
 
       {/* RIGHT HALF - Categories/Characters */}
-      <div style={{
-        width: '50%',
-        height: '100%',
-        position: 'relative',
-        perspective: '1000px'
-      }}>
-        
+      <div style={{ width: '50%', height: '100%', position: 'relative', perspective: '1000px' }}>
         {/* Categories Grid */}
         <div style={{
           position: 'absolute',
@@ -1013,7 +943,6 @@ const SplitScreenLauncher = ({ onStartChat }) => {
                 e.currentTarget.style.borderColor = 'rgba(255, 215, 0, 0.6)';
                 e.currentTarget.style.transform = 'translateY(-6px)';
                 e.currentTarget.style.boxShadow = '0 12px 24px rgba(255, 215, 0, 0.2)';
-                
                 const img = e.currentTarget.querySelector('img');
                 if (img) {
                   img.style.filter = 'sepia(0%) contrast(1.2) brightness(1.1)';
@@ -1026,7 +955,6 @@ const SplitScreenLauncher = ({ onStartChat }) => {
                 e.currentTarget.style.borderColor = 'rgba(255, 215, 0, 0.2)';
                 e.currentTarget.style.transform = 'translateY(0)';
                 e.currentTarget.style.boxShadow = 'none';
-                
                 const img = e.currentTarget.querySelector('img');
                 if (img) {
                   img.style.filter = 'sepia(20%) contrast(1.1)';
@@ -1055,9 +983,7 @@ const SplitScreenLauncher = ({ onStartChat }) => {
                     filter: 'sepia(20%) contrast(1.1)',
                     transition: 'filter 0.3s ease'
                   }}
-                  onError={(e) => {
-                    e.target.src = '/images/default-character.jpg';
-                  }}
+                  onError={(e) => { e.target.src = '/images/default-character.jpg'; }}
                 />
               </div>
               
@@ -1099,7 +1025,7 @@ const SplitScreenLauncher = ({ onStartChat }) => {
           transformStyle: 'preserve-3d',
           backfaceVisibility: 'hidden',
           overflowY: 'auto'
-        }}>
+        }} className="character-panel">
           {selectedCategory && (
             <>
               {/* Header */}
@@ -1201,14 +1127,8 @@ const SplitScreenLauncher = ({ onStartChat }) => {
                       <img
                         src={character.thumbnailUrl}
                         alt={character.name}
-                        style={{
-                          width: '100%',
-                          height: '100%',
-                          objectFit: 'cover'
-                        }}
-                        onError={(e) => {
-                          e.target.src = '/images/default-character.jpg';
-                        }}
+                        style={{ width: '100%', height: '100%', objectFit: 'cover' }}
+                        onError={(e) => { e.target.src = '/images/default-character.jpg'; }}
                       />
                     </div>
                     
@@ -1246,7 +1166,7 @@ const SplitScreenLauncher = ({ onStartChat }) => {
         </div>
       </div>
 
-      {/* Character Detail Modal */}
+      {/* Character Detail Modal (Desktop) */}
       {selectedChar && (
         <div style={{
           position: 'fixed',
@@ -1285,9 +1205,7 @@ const SplitScreenLauncher = ({ onStartChat }) => {
                 border: '4px solid rgba(255, 215, 0, 0.4)',
                 marginBottom: '1.5rem'
               }}
-              onError={(e) => {
-                e.target.src = '/images/default-character.jpg';
-              }}
+              onError={(e) => { e.target.src = '/images/default-character.jpg'; }}
             />
             
             <h2 style={{
@@ -1319,11 +1237,7 @@ const SplitScreenLauncher = ({ onStartChat }) => {
               {selectedChar.description}
             </p>
             
-            <div style={{
-              display: 'flex',
-              gap: '1rem',
-              justifyContent: 'center'
-            }}>
+            <div style={{ display: 'flex', gap: '1rem', justifyContent: 'center' }}>
               <button
                 onClick={() => onStartChat(selectedChar.key)}
                 style={{
@@ -1384,70 +1298,39 @@ const SplitScreenLauncher = ({ onStartChat }) => {
         @import url('https://fonts.googleapis.com/css2?family=Cinzel:wght@400;600&family=Cinzel+Decorative:wght@400;700&display=swap');
         
         @keyframes categorySlideIn {
-          from {
-            opacity: 0;
-            transform: translateY(30px) scale(0.7);
-          }
-          to {
-            opacity: 1;
-            transform: translateY(0) scale(1);
-          }
+          from { opacity: 0; transform: translateY(30px) scale(0.7); }
+          to   { opacity: 1; transform: translateY(0) scale(1); }
         }
         
         @keyframes characterSlideIn {
-          from {
-            opacity: 0;
-            transform: translateY(20px);
-          }
-          to {
-            opacity: 1;
-            transform: translateY(0);
-          }
+          from { opacity: 0; transform: translateY(20px); }
+          to   { opacity: 1; transform: translateY(0); }
         }
         
-        /* 🆕 ADD THESE NEW ANIMATIONS */
+        /* NEW Animations for PersonalizedSection */
         @keyframes slideInFromLeft {
-          from {
-            opacity: 0;
-            transform: translateX(-30px);
-          }
-          to {
-            opacity: 1;
-            transform: translateX(0);
-          }
+          from { opacity: 0; transform: translateX(-30px); }
+          to   { opacity: 1; transform: translateX(0); }
         }
 
         @keyframes pulse {
-          0%, 100% { 
-            opacity: 1; 
-            transform: scale(1); 
-          }
-          50% { 
-            opacity: 0.7; 
-            transform: scale(1.1); 
-          }
+          0%, 100% { opacity: 1; transform: scale(1); }
+          50%      { opacity: 0.7; transform: scale(1.1); }
         }
 
         /* Hide scrollbar for PersonalizedSection */
-        .recent-characters::-webkit-scrollbar {
-          display: none;
-        }
+        .recent-characters::-webkit-scrollbar { display: none; }
         
         /* Scrollbar styling for character panel */
-        .character-panel::-webkit-scrollbar {
-          width: 6px;
-        }
-        
+        .character-panel::-webkit-scrollbar { width: 6px; }
         .character-panel::-webkit-scrollbar-track {
           background: rgba(255, 215, 0, 0.1);
           border-radius: 3px;
         }
-        
         .character-panel::-webkit-scrollbar-thumb {
           background: rgba(255, 215, 0, 0.5);
           border-radius: 3px;
         }
-        
         .character-panel::-webkit-scrollbar-thumb:hover {
           background: rgba(255, 215, 0, 0.7);
         }
@@ -1456,20 +1339,43 @@ const SplitScreenLauncher = ({ onStartChat }) => {
   );
 };
 
-// Add this component RIGHT BEFORE your export statement in ChatLauncherPage.jsx
-// Place it after the closing bracket of SplitScreenLauncher function, before export default
-
+/* =======================
+   PersonalizedSection Component
+   ======================= */
 const PersonalizedSection = ({ characters, onCharacterSelect, hasActiveConversations, isMobile }) => {
+  const maxCharacters = isMobile ? 3 : 4;
+
+  const cardBase = {
+    background: 'rgba(255, 255, 255, 0.05)',
+    border: '1px solid rgba(255, 215, 0, 0.2)',
+    borderRadius: '12px',
+    cursor: 'pointer',
+    transition: 'all 0.3s ease',
+    backdropFilter: 'blur(5px)',
+    position: 'relative'
+  };
+
+  const handleEnter = (e) => {
+    e.currentTarget.style.background = 'rgba(255, 215, 0, 0.10)';
+    e.currentTarget.style.borderColor = 'rgba(255, 215, 0, 0.55)';
+    e.currentTarget.style.boxShadow = '0 0 18px 4px rgba(255, 215, 0, 0.35)'; // golden glow
+    e.currentTarget.style.transform = 'translateY(-3px)';
+  };
+  const handleLeave = (e) => {
+    e.currentTarget.style.background = 'rgba(255, 255, 255, 0.05)';
+    e.currentTarget.style.borderColor = 'rgba(255, 215, 0, 0.2)';
+    e.currentTarget.style.boxShadow = 'none';
+    e.currentTarget.style.transform = 'translateY(0)';
+  };
+
   return (
     <div style={{
       width: '100%',
       maxWidth: isMobile ? '500px' : '400px',
       margin: '1rem 0',
-      opacity: 1,
-      //animation: 'slideInFromLeft 0.8s ease-out 0.3s forwards'
-      border: isMobile ? '1px solid rgba(255, 215, 0, 0.3)' : 'none', // 🔍 Debug border
-      backgroundColor: isMobile ? 'rgba(255, 255, 255, 0.05)' : 'transparent' // 🔍 Debug background
+      animation: 'slideInFromLeft 0.6s ease-out'
     }}>
+      {/* Header */}
       <div style={{
         display: 'flex',
         alignItems: 'center',
@@ -1478,7 +1384,7 @@ const PersonalizedSection = ({ characters, onCharacterSelect, hasActiveConversat
         padding: '0 0.5rem'
       }}>
         <h3 style={{
-          fontSize: '1rem',
+          fontSize: isMobile ? '0.9rem' : '1rem',
           color: '#FFD700',
           fontWeight: 600,
           letterSpacing: '0.5px',
@@ -1501,126 +1407,129 @@ const PersonalizedSection = ({ characters, onCharacterSelect, hasActiveConversat
           Recent
         </span>
       </div>
-      
-      <div style={{
-        display: 'flex',
-        gap: '0.75rem',
-        overflowX: 'auto',
-        padding: '0.5rem 0',
-        scrollbarWidth: 'none',
-        msOverflowStyle: 'none'
-      }}>
-        {characters.slice(0, 6).map((character) => (
-          <div
-            key={character.character}
-            onClick={() => onCharacterSelect(character)}
-            style={{
-              flexShrink: 0,
-              display: 'flex',
-              flexDirection: 'column',
-              alignItems: 'center',
-              padding: '0.75rem',
-              background: 'rgba(255, 255, 255, 0.05)',
-              border: '1px solid rgba(255, 215, 0, 0.2)',
-              borderRadius: '12px',
-              cursor: 'pointer',
-              transition: 'all 0.3s ease',
-              minWidth: '85px',
-              backdropFilter: 'blur(5px)',
-              position: 'relative'
-            }}
-            onMouseEnter={(e) => {
-              e.currentTarget.style.background = 'rgba(255, 215, 0, 0.1)';
-              e.currentTarget.style.borderColor = 'rgba(255, 215, 0, 0.5)';
-              e.currentTarget.style.transform = 'translateY(-3px)';
-              e.currentTarget.style.boxShadow = '0 8px 20px rgba(255, 215, 0, 0.2)';
-            }}
-            onMouseLeave={(e) => {
-              e.currentTarget.style.background = 'rgba(255, 255, 255, 0.05)';
-              e.currentTarget.style.borderColor = 'rgba(255, 215, 0, 0.2)';
-              e.currentTarget.style.transform = 'translateY(0)';
-              e.currentTarget.style.boxShadow = 'none';
-            }}
-          >
-            <div style={{ position: 'relative' }}>
-              <img
-                src={character.thumbnailUrl}
-                alt={character.name}
-                style={{
-                  width: '45px',
-                  height: '45px',
-                  borderRadius: '50%',
-                  border: '2px solid rgba(255, 215, 0, 0.3)',
-                  objectFit: 'cover',
-                  marginBottom: '0.5rem',
-                  transition: 'all 0.3s ease'
-                }}
-                onError={(e) => {
-                  e.target.src = '/images/default-character.jpg';
-                }}
-              />
-              {character.hasActiveConversation && (
-                <div style={{
-                  position: 'absolute',
-                  top: '-2px',
-                  right: '-2px',
-                  width: '12px',
-                  height: '12px',
-                  background: '#00FF88',
-                  border: '2px solid #0B1426',
-                  borderRadius: '50%',
-                  animation: 'pulse 2s infinite'
-                }} />
-              )}
+
+      {/* Layout */}
+      {isMobile ? (
+        // Mobile: 3 in a single row, evenly distributed
+        <div style={{
+          display: 'flex',
+          gap: '1rem',
+          padding: '0.5rem 0',
+          justifyContent: 'space-between'
+        }}>
+          {characters.slice(0, maxCharacters).map((character) => (
+            <div
+              key={character.character}
+              onClick={() => onCharacterSelect(character)}
+              style={{ ...cardBase, flex: '1', maxWidth: '100px', padding: '0.75rem 0.5rem' }}
+              onMouseEnter={handleEnter}
+              onMouseLeave={handleLeave}
+            >
+              <div style={{ position: 'relative', display: 'flex', justifyContent: 'center' }}>
+                <img
+                  src={character.thumbnailUrl}
+                  alt={character.name}
+                  style={{
+                    width: '50px', // mobile avatar 50px
+                    height: '50px',
+                    borderRadius: '50%',
+                    border: '2px solid rgba(255, 215, 0, 0.3)',
+                    objectFit: 'cover',
+                    marginBottom: '0.5rem',
+                    transition: 'all 0.3s ease'
+                  }}
+                  onError={(e) => { e.target.src = '/images/default-character.jpg'; }}
+                />
+                {character.hasActiveConversation && (
+                  <div style={{
+                    position: 'absolute',
+                    top: '-2px',
+                    right: 'calc(50% - 25px - 2px)', // align to avatar edge
+                    width: '12px',
+                    height: '12px',
+                    background: '#00FF88',
+                    border: '2px solid #0B1426',
+                    borderRadius: '50%',
+                    animation: 'pulse 2s infinite'
+                  }} />
+                )}
+              </div>
+              <span style={{
+                fontSize: '0.7rem',
+                color: 'rgba(255, 215, 0, 0.9)',
+                textAlign: 'center',
+                fontWeight: 500,
+                lineHeight: 1.1,
+                letterSpacing: '0.3px',
+                display: 'block'
+              }}>
+                {String(character.name || '').split(' ')[0]}
+              </span>
             </div>
-            <span style={{
-              fontSize: '0.7rem',
-              color: 'rgba(255, 215, 0, 0.9)',
-              textAlign: 'center',
-              fontWeight: 500,
-              lineHeight: 1.1,
-              letterSpacing: '0.3px'
-            }}>
-              {character.name.split(' ')[0]}
-            </span>
-          </div>
-        ))}
-      </div>
+          ))}
+        </div>
+      ) : (
+        // Desktop: 2x2 grid for 4 characters
+        <div style={{
+          display: 'grid',
+          gridTemplateColumns: 'repeat(2, 1fr)',
+          gap: '0.75rem',
+          padding: '0.5rem 0'
+        }}>
+          {characters.slice(0, maxCharacters).map((character) => (
+            <div
+              key={character.character}
+              onClick={() => onCharacterSelect(character)}
+              style={{ ...cardBase, padding: '0.75rem', display: 'flex', alignItems: 'center', gap: '0.6rem' }}
+              onMouseEnter={handleEnter}
+              onMouseLeave={handleLeave}
+            >
+              <div style={{ position: 'relative', flexShrink: 0 }}>
+                <img
+                  src={character.thumbnailUrl}
+                  alt={character.name}
+                  style={{
+                    width: '45px', // desktop avatar 45px
+                    height: '45px',
+                    borderRadius: '50%',
+                    border: '2px solid rgba(255, 215, 0, 0.3)',
+                    objectFit: 'cover'
+                  }}
+                  onError={(e) => { e.target.src = '/images/default-character.jpg'; }}
+                />
+                {character.hasActiveConversation && (
+                  <div style={{
+                    position: 'absolute',
+                    top: '-2px',
+                    right: '-2px',
+                    width: '12px',
+                    height: '12px',
+                    background: '#00FF88',
+                    border: '2px solid #0B1426',
+                    borderRadius: '50%',
+                    animation: 'pulse 2s infinite'
+                  }} />
+                )}
+              </div>
+              <div style={{ display: 'flex', flexDirection: 'column' }}>
+                <span style={{ fontSize: '0.85rem', color: '#FFD700', fontWeight: 600 }}>
+                  {String(character.name || '').split(' ')[0]}
+                </span>
+                {hasActiveConversations && character.hasActiveConversation && (
+                  <span style={{
+                    fontSize: '0.65rem',
+                    color: 'rgba(255, 255, 255, 0.7)'
+                  }}>
+                    Active now
+                  </span>
+                )}
+              </div>
+            </div>
+          ))}
+        </div>
+      )}
     </div>
   );
 };
 
-// Also add these CSS animations to your existing style block
-// Add this to your existing <style jsx> section:
-
-const additionalStyles = `
-  @keyframes slideInFromLeft {
-    from {
-      opacity: 0;
-      transform: translateX(-30px);
-    }
-    to {
-      opacity: 1;
-      transform: translateX(0);
-    }
-  }
-
-  @keyframes pulse {
-    0%, 100% { 
-      opacity: 1; 
-      transform: scale(1); 
-    }
-    50% { 
-      opacity: 0.7; 
-      transform: scale(1.1); 
-    }
-  }
-
-  /* Hide scrollbar for PersonalizedSection */
-  .recent-characters::-webkit-scrollbar {
-    display: none;
-  }
-`;
-
-// Add the additionalStyles to your existing style block
 export default SplitScreenLauncher;
