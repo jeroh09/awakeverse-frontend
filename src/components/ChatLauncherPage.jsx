@@ -1392,7 +1392,6 @@ const PersonalizedSection = ({ characters, onCharacterSelect, hasActiveConversat
           margin: 0,
           fontFamily: "'Cinzel', serif"
         }}>
-          Your Trusted Guides
         </h3>
         <span style={{
           background: 'linear-gradient(135deg, rgba(255, 215, 0, 0.2), rgba(255, 215, 0, 0.1))',
