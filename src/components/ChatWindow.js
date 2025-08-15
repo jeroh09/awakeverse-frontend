@@ -738,100 +738,133 @@ export default function ChatWindow({
     }
   }, [chatHistory.length, shouldAutoScroll, isNearBottom]);
 
-  const sendAI = async (userText, aiIndex) => {
-    const controller = new AbortController();
-    controllerRef.current = controller;
-    setIsSending(true);
+  // Replace your sendAI function in ChatWindow.js with this streaming version:
 
-    try {
-      const res = await fetch(`${process.env.REACT_APP_API_BASE_URL}/chat`, {
-        method: 'POST',
-        headers: {
-          'Authorization': `Bearer ${token}`,
-          'Content-Type': 'application/json'
-        },
-        body: JSON.stringify({ 
-          character, 
-          message: userText, 
-          thread_id: localThreadId.current 
-        }),
-        signal: controller.signal
-      });
+const sendAI = async (userText, aiIndex) => {
+  const controller = new AbortController();
+  controllerRef.current = controller;
+  setIsSending(true);
 
-      if (!res.ok || !res.body) {
-        throw new Error(`Chat API failed: ${res.status} ${res.statusText}`);
-      }
+  try {
+    const res = await fetch(`${process.env.REACT_APP_API_BASE_URL}/chat`, {
+      method: 'POST',
+      headers: {
+        'Authorization': `Bearer ${token}`,
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify({ 
+        character, 
+        message: userText, 
+        thread_id: localThreadId.current 
+      }),
+      signal: controller.signal
+    });
 
-      const reader = res.body.getReader();
-      const decoder = new TextDecoder();
-      let fullReply = '';
-      let hasInviteSuggestion = false;
-      let inviteCandidates = [];
+    if (!res.ok || !res.body) {
+      throw new Error(`Chat API failed: ${res.status} ${res.statusText}`);
+    }
 
-      while (true) {
-        const { done, value } = await reader.read();
-        if (done) break;
-        
-        const chunk = decoder.decode(value);
-        const lines = chunk.trim().split('\n').filter(Boolean);
+    const reader = res.body.getReader();
+    const decoder = new TextDecoder();
+    let fullReply = '';
+    let hasInviteSuggestion = false;
+    let inviteCandidates = [];
 
-        for (const line of lines) {
-          try {
-            const data = JSON.parse(line);
-            const token = data.response || '';
+    // ✅ STREAMING: Process each chunk immediately
+    while (true) {
+      const { done, value } = await reader.read();
+      if (done) break;
+      
+      const chunk = decoder.decode(value);
+      const lines = chunk.trim().split('\n').filter(Boolean);
+
+      for (const line of lines) {
+        try {
+          const data = JSON.parse(line);
+          const token = data.response || '';
+          
+          // ✅ STREAMING: Add each token immediately
+          if (token) {
             fullReply += token;
 
-            if (data.has_invite_suggestion) {
-              hasInviteSuggestion = true;
-              inviteCandidates = data.invite_candidates || [];
-            }
-
+            // ✅ STREAMING: Update UI with each token (not just at the end)
             setChatHistory(prev => {
               const copy = [...prev];
-              copy[aiIndex] = {
-                ...copy[aiIndex],
-                speaker: data.speaker || character,
-                text: fullReply,
-                has_invite_suggestion: hasInviteSuggestion,
-                invite_candidates: inviteCandidates
-              };
+              if (copy[aiIndex]) {
+                copy[aiIndex] = {
+                  ...copy[aiIndex],
+                  speaker: data.speaker || character,
+                  text: fullReply, // ← Show accumulated text immediately
+                  has_invite_suggestion: hasInviteSuggestion,
+                  invite_candidates: inviteCandidates
+                };
+              }
               return copy;
             });
 
-          } catch (err) {
-            console.warn('JSON parse error:', err);
+            // ✅ STREAMING: Auto-scroll as content streams in
+            // Small delay to allow DOM to update
+            setTimeout(() => {
+              if (shouldAutoScroll && listRef.current) {
+                smartScrollToBottom();
+              }
+            }, 10);
           }
+
+          // Handle invite suggestions
+          if (data.has_invite_suggestion) {
+            hasInviteSuggestion = true;
+            inviteCandidates = data.invite_candidates || [];
+          }
+
+        } catch (err) {
+          console.warn('JSON parse error:', err);
         }
       }
-    } catch (err) {
-      if (err.name === 'AbortError') {
-        console.log('Chat request aborted');
-      } else {
-        // ✅ UPDATED ERROR HANDLING WITH FRIENDLY MESSAGES + LOGGING
-        reportError(err, {
-          action: 'chat_request',
-          character: character,
-          userMessage: userText?.substring(0, 50)
-        });
-
-        console.error('LLM error:', err);
-        setChatHistory(prev => {
-          const copy = [...prev];
-          if (copy[aiIndex]) {
-            copy[aiIndex] = { 
-              ...copy[aiIndex], 
-              error: getUserFriendlyError(err, 'general')
-            };
-          }
-          return copy;
-        });
-      }
-    } finally {
-      setIsSending(false);
-      controllerRef.current = null;
     }
-  };
 
+    // ✅ STREAMING: Final update to ensure everything is set correctly
+    setChatHistory(prev => {
+      const copy = [...prev];
+      if (copy[aiIndex]) {
+        copy[aiIndex] = {
+          ...copy[aiIndex],
+          speaker: character,
+          text: fullReply,
+          has_invite_suggestion: hasInviteSuggestion,
+          invite_candidates: inviteCandidates
+        };
+      }
+      return copy;
+    });
+
+  } catch (err) {
+    if (err.name === 'AbortError') {
+      console.log('Chat request aborted');
+    } else {
+      reportError(err, {
+        action: 'chat_request',
+        character: character,
+        userMessage: userText?.substring(0, 50)
+      });
+
+      console.error('LLM error:', err);
+      setChatHistory(prev => {
+        const copy = [...prev];
+        if (copy[aiIndex]) {
+          copy[aiIndex] = { 
+            ...copy[aiIndex], 
+            error: getUserFriendlyError(err, 'general')
+          };
+        }
+        return copy;
+      });
+    }
+  } finally {
+    setIsSending(false);
+    controllerRef.current = null;
+  }
+};
   const sendMessage = () => {
     if (!message.trim() || isSending) return;
     const userText = message;
