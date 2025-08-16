@@ -241,4 +241,4 @@ if (window.matchMedia && window.matchMedia('(display-mode: standalone)').matches
     }
   `;
   document.head.appendChild(style);
-}
+}// Another rebuild attempt
