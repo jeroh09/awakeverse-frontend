@@ -1,3 +1,4 @@
+// Force rebuild to clear Vercel cache
 // src/index.js
 import './styles.css';
 import React from 'react';
