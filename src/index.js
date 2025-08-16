@@ -6,13 +6,47 @@ import { BrowserRouter } from 'react-router-dom';
 import { ThemeProvider } from './contexts/ThemeContext';
 import { AuthProvider } from './contexts/AuthContext';
 import { UserProvider } from './contexts/UserContext';
-import { CharacterProvider } from './contexts/CharacterContext';
+import { CharacterProvider } from './contexts/CharacterProvider';
 import { ContextProvider } from './contexts/ContextContext';
 import { WebSocketProvider } from './contexts/WebSocketContext';
 import App from './App';
 
+// ⚡ SECURITY: Disable console logging in production
+// This prevents sensitive data (JWT tokens, API responses) from appearing in browser dev tools
+if (process.env.NODE_ENV === 'production' || process.env.REACT_APP_DISABLE_CONSOLE === 'true') {
+  const originalConsole = {
+    log: console.log,
+    warn: console.warn,
+    info: console.info,
+    debug: console.debug,
+    error: console.error
+  };
+  
+  // Disable most console methods but keep error for critical issues
+  console.log = () => {};
+  console.warn = () => {};
+  console.info = () => {};
+  console.debug = () => {};
+  
+  // Only show critical errors in production
+  console.error = (...args) => {
+    // Filter out non-critical errors, only show genuine application errors
+    const message = args.join(' ');
+    if (message.includes('token') || message.includes('login') || message.includes('API')) {
+      return; // Suppress security-sensitive error logs
+    }
+    originalConsole.error(...args);
+  };
+  
+  // For development, you can re-enable console by setting REACT_APP_ENABLE_DEBUG=true
+  if (process.env.REACT_APP_ENABLE_DEBUG === 'true') {
+    Object.assign(console, originalConsole);
+  }
+}
+
 const root = ReactDOM.createRoot(document.getElementById('root'));
 
+// Rest of your existing code...
 root.render(
   <React.StrictMode>
     <BrowserRouter>
@@ -38,7 +72,10 @@ if ('serviceWorker' in navigator) {
   window.addEventListener('load', () => {
     navigator.serviceWorker.register('/sw.js')
       .then(registration => {
-        console.log('✅ Service Worker registered successfully:', registration.scope);
+        // Note: Service worker logs are suppressed in production
+        if (process.env.NODE_ENV !== 'production') {
+          console.log('✅ Service Worker registered successfully:', registration.scope);
+        }
         
         // Check for updates
         registration.addEventListener('updatefound', () => {
@@ -47,7 +84,9 @@ if ('serviceWorker' in navigator) {
             newWorker.addEventListener('statechange', () => {
               if (newWorker.state === 'installed' && navigator.serviceWorker.controller) {
                 // New content is available, show update notification
-                console.log('🔄 New content is available; please refresh.');
+                if (process.env.NODE_ENV !== 'production') {
+                  console.log('🔄 New content is available; please refresh.');
+                }
                 
                 // Optionally show a notification to the user
                 if (window.confirm('New version available! Refresh to update?')) {
@@ -60,13 +99,18 @@ if ('serviceWorker' in navigator) {
         });
       })
       .catch(registrationError => {
-        console.log('❌ Service Worker registration failed:', registrationError);
+        // Only show in development
+        if (process.env.NODE_ENV !== 'production') {
+          console.log('❌ Service Worker registration failed:', registrationError);
+        }
       });
     
     // Listen for service worker controller changes
     navigator.serviceWorker.addEventListener('controllerchange', () => {
       // Service worker has been updated and is now controlling the page
-      console.log('🔄 Service Worker controller changed - page will reload');
+      if (process.env.NODE_ENV !== 'production') {
+        console.log('🔄 Service Worker controller changed - page will reload');
+      }
       window.location.reload();
     });
   });
@@ -77,7 +121,9 @@ let deferredPrompt;
 let isInstallPromptShown = false;
 
 window.addEventListener('beforeinstallprompt', (e) => {
-  console.log('💾 PWA install prompt available');
+  if (process.env.NODE_ENV !== 'production') {
+    console.log('💾 PWA install prompt available');
+  }
   
   // Prevent the mini-infobar from appearing on mobile
   e.preventDefault();
@@ -155,9 +201,13 @@ function showInstallPrompt() {
       const { outcome } = await deferredPrompt.userChoice;
       
       if (outcome === 'accepted') {
-        console.log('✅ User accepted the install prompt');
+        if (process.env.NODE_ENV !== 'production') {
+          console.log('✅ User accepted the install prompt');
+        }
       } else {
-        console.log('❌ User dismissed the install prompt');
+        if (process.env.NODE_ENV !== 'production') {
+          console.log('❌ User dismissed the install prompt');
+        }
       }
       
       deferredPrompt = null;
@@ -173,7 +223,9 @@ function showInstallPrompt() {
 
 // Handle successful app installation
 window.addEventListener('appinstalled', (evt) => {
-  console.log('✅ AwakeVerse was installed successfully');
+  if (process.env.NODE_ENV !== 'production') {
+    console.log('✅ AwakeVerse was installed successfully');
+  }
   
   // Optional: Track installation analytics
   // analytics.track('pwa_installed');
@@ -181,7 +233,9 @@ window.addEventListener('appinstalled', (evt) => {
 
 // Detect if running as installed PWA
 if (window.matchMedia && window.matchMedia('(display-mode: standalone)').matches) {
-  console.log('🚀 Running as installed PWA');
+  if (process.env.NODE_ENV !== 'production') {
+    console.log('🚀 Running as installed PWA');
+  }
   
   // Add PWA-specific styling or behavior
   document.documentElement.classList.add('pwa-mode');
