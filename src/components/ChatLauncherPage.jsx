@@ -1327,6 +1327,34 @@ const SplitScreenLauncher = ({ onStartChat }) => {
           background: rgba(255, 215, 0, 0.1);
           border-radius: 3px;
         }
+        
+        .scroll-area {
+          background-color: #0a0a0a; /* Match your dark theme background */
+          color: inherit;           /* Keep text in theme color */
+          overflow-y: auto;
+          scrollbar-width: thin;
+          scrollbar-color: #444 #0a0a0a;
+        }
+
+        /* Chrome, Edge, and Safari */
+        .scroll-area::-webkit-scrollbar {
+           width: 8px;
+        }
+
+        .scroll-area::-webkit-scrollbar-track {
+          background: #0a0a0a; /* Dark track */
+        }
+
+        .scroll-area::-webkit-scrollbar-thumb {
+          background-color: #444; /* Dark thumb */
+          border-radius: 4px;
+          border: 2px solid #0a0a0a;
+        }
+
+        .scroll-area::-webkit-scrollbar-thumb:hover {
+          background-color: #666;
+        }
+
         .character-panel::-webkit-scrollbar-thumb {
           background: rgba(255, 215, 0, 0.5);
           border-radius: 3px;
