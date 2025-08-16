@@ -37,16 +37,10 @@ if (process.env.NODE_ENV === 'production' || process.env.REACT_APP_DISABLE_CONSO
     }
     originalConsole.error(...args);
   };
-  
-  // For development, you can re-enable console by setting REACT_APP_ENABLE_DEBUG=true
-  if (process.env.REACT_APP_ENABLE_DEBUG === 'true') {
-    Object.assign(console, originalConsole);
-  }
 }
 
 const root = ReactDOM.createRoot(document.getElementById('root'));
 
-// Rest of your existing code...
 root.render(
   <React.StrictMode>
     <BrowserRouter>
@@ -72,7 +66,6 @@ if ('serviceWorker' in navigator) {
   window.addEventListener('load', () => {
     navigator.serviceWorker.register('/sw.js')
       .then(registration => {
-        // Note: Service worker logs are suppressed in production
         if (process.env.NODE_ENV !== 'production') {
           console.log('✅ Service Worker registered successfully:', registration.scope);
         }
@@ -99,7 +92,6 @@ if ('serviceWorker' in navigator) {
         });
       })
       .catch(registrationError => {
-        // Only show in development
         if (process.env.NODE_ENV !== 'production') {
           console.log('❌ Service Worker registration failed:', registrationError);
         }
