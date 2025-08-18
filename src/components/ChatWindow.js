@@ -615,10 +615,12 @@ export default function ChatWindow({
       }
 
       // Stream tokens into the bubble
+      // Stream tokens into the bubble
       const reader = res.body.getReader();
       const decoder = new TextDecoder();
-      let full = '';
+      let fullResponse = '';  // Buffer the complete response first
 
+// First, collect the entire response quickly
       while (true) {
         const { done, value } = await reader.read();
         if (done) break;
@@ -628,26 +630,35 @@ export default function ChatWindow({
           try {
             const data = JSON.parse(line);
             const token = data.response || '';
-            full += token;
-
-            setChatHistory(prev => {
-              const copy = [...prev];
-              if (copy[aiIndex]) {
-                copy[aiIndex] = {
-                  ...copy[aiIndex],
-                  text: full,
-                  speaker: data.speaker || invitee
-                };
-              }
-              return copy;
-            });
+            fullResponse += token;
           } catch (parseError) {
             console.warn('Failed to parse invite response line:', parseError);
           }
         }
       }
 
-    } catch (e) {
+// Now drip out the buffered response slowly
+      const words = fullResponse.split(' ');
+      let displayedText = '';
+
+      for (const word of words) {
+        displayedText += word + ' ';
+  
+        setChatHistory(prev => {
+          const copy = [...prev];
+          if (copy[aiIndex]) {
+            copy[aiIndex] = {
+              ...copy[aiIndex],
+              text: displayedText,
+              speaker: data.speaker || invitee
+            };
+          }
+          return copy;
+        });
+  
+  // Delay between words for reading pace
+        await new Promise(resolve => setTimeout(resolve, 150));
+      }
       // ✅ UPDATED ERROR HANDLING WITH FRIENDLY MESSAGES + LOGGING
       reportError(e, {
         action: 'invite_request',
