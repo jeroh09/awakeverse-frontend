@@ -24,7 +24,7 @@ export function AuthProvider({ children }) {
 
     try {
       const decoded = jwt_decode(savedToken);
-      console.log("🔐 Token decoded on load:", decoded);
+      console.log("🔍 Token decoded on load:", decoded);
       if (!decoded.sub) throw new Error("Missing subject");
 
       setToken(savedToken);
@@ -44,58 +44,138 @@ export function AuthProvider({ children }) {
     }
   }, [setUser]);
 
-  // 🔧 NEW: History management helper
   const navigateToAppWithHistoryManagement = () => {
-    // Replace current history entry instead of pushing new one
-    // This ensures the auth page isn't in the back navigation stack
     navigate('/app', { replace: true });
-    
-    // 🛡️ Additional safety: Mark the current state as the "app root"
     window.history.pushState({ isAppRoot: true }, '', '/app');
   };
 
-  async function login({ email, password }) {
-    try {
-      const res = await fetch(`${API}/login`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ username: email, password }),
-      });
-
-      const raw = await res.clone().text();
-      console.log("🧠 Raw login response:", raw);
-
-      if (!res.ok) {
-        const errorData = await res.json().catch(() => ({}));
-        throw new Error(errorData.error || errorData.message || "Login failed");
-      }
-
-      const { access_token } = await res.json();
-      console.log("✅ Login token:", access_token);
-
-      localStorage.setItem("token", access_token);
-      setToken(access_token);
-
-      const decoded = jwt_decode(access_token);
-      console.log("🔓 Decoded login token:", decoded);
-
-      setUser({
-        id: decoded.user_id,
-        username: decoded.sub,
-        displayName: decoded.display_name,
-        avatarUrl: decoded.avatar_url,
-      });
-
-      // 🔧 UPDATED: Use history management
-      navigateToAppWithHistoryManagement();
-    } catch (err) {
-      console.error("❌ Login failed:", err.message);
-      throw err;
+  // 🆕 NEW: Enhanced error message formatter
+  const formatErrorMessage = (error, attempt = 1) => {
+    // Handle network errors
+    if (error.name === 'TypeError' || error.message.includes('fetch')) {
+      return "Connection issue. Please check your internet and try again.";
     }
+    
+    // Handle timeout errors
+    if (error.name === 'AbortError' || error.message.includes('timeout')) {
+      return "Request timed out. Please try again.";
+    }
+    
+    // Handle server errors (500, 502, 503, etc)
+    if (error.message.includes('500') || 
+        error.message.includes('502') || 
+        error.message.includes('503') ||
+        error.message.includes('Internal Server Error') ||
+        error.message.includes('internal server error')) {
+      return `Server is temporarily busy${attempt > 1 ? ` (attempt ${attempt})` : ''}. Please try again in a moment.`;
+    }
+    
+    // Handle authentication errors
+    if (error.message.includes('401') || 
+        error.message.includes('Invalid credentials') ||
+        error.message.includes('Unauthorized')) {
+      return "Invalid email or password. Please check your credentials.";
+    }
+    
+    // Handle other HTTP errors
+    if (error.message.includes('400')) {
+      return "Please check your email and password format.";
+    }
+    
+    // Return the original error message for known errors
+    if (error.message && !error.message.includes('Login failed')) {
+      return error.message;
+    }
+    
+    // Generic fallback
+    return "Login failed. Please try again.";
+  };
+
+  // 🆕 NEW: Login with retry logic
+  async function loginWithRetry(credentials, maxAttempts = 2) {
+    let lastError = null;
+    
+    for (let attempt = 1; attempt <= maxAttempts; attempt++) {
+      try {
+        console.log(`🔑 Login attempt ${attempt}/${maxAttempts}`);
+        
+        // Add timeout to prevent hanging requests
+        const controller = new AbortController();
+        const timeoutId = setTimeout(() => controller.abort(), 15000); // 15 second timeout
+        
+        const res = await fetch(`${API}/login`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ 
+            username: credentials.email, 
+            password: credentials.password 
+          }),
+          signal: controller.signal
+        });
+
+        clearTimeout(timeoutId);
+
+        // Log raw response for debugging
+        const raw = await res.clone().text();
+        console.log(`🧠 Raw login response (attempt ${attempt}):`, raw);
+
+        if (!res.ok) {
+          const errorData = await res.json().catch(() => ({}));
+          const errorMessage = errorData.error || errorData.message || `HTTP ${res.status}`;
+          throw new Error(errorMessage);
+        }
+
+        const { access_token } = await res.json();
+        console.log("✅ Login successful on attempt", attempt);
+
+        localStorage.setItem("token", access_token);
+        setToken(access_token);
+
+        const decoded = jwt_decode(access_token);
+        console.log("🔓 Decoded login token:", decoded);
+
+        setUser({
+          id: decoded.user_id,
+          username: decoded.sub,
+          displayName: decoded.display_name,
+          avatarUrl: decoded.avatar_url,
+        });
+
+        navigateToAppWithHistoryManagement();
+        return; // Success - exit the retry loop
+
+      } catch (err) {
+        lastError = err;
+        console.error(`❌ Login attempt ${attempt} failed:`, err.message);
+        
+        // If this is the last attempt, throw the formatted error
+        if (attempt === maxAttempts) {
+          throw new Error(formatErrorMessage(err, attempt));
+        }
+        
+        // Wait before retrying (1 second)
+        if (attempt < maxAttempts) {
+          console.log(`⏳ Waiting 1 second before retry...`);
+          await new Promise(resolve => setTimeout(resolve, 1000));
+        }
+      }
+    }
+    
+    // This shouldn't be reached, but just in case
+    throw new Error(formatErrorMessage(lastError || new Error("Unknown error"), maxAttempts));
   }
 
+  // 🔄 UPDATED: Main login function now uses retry logic
+  async function login(credentials) {
+    return await loginWithRetry(credentials, 2); // Try up to 2 times
+  }
+
+  // 🔄 UPDATED: Register function with similar error handling
   async function register({ email, password, displayName }) {
     try {
+      const controller = new AbortController();
+      const timeoutId = setTimeout(() => controller.abort(), 15000);
+
       const res = await fetch(`${API}/register`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -104,18 +184,22 @@ export function AuthProvider({ children }) {
           password, 
           display_name: displayName 
         }),
+        signal: controller.signal
       });
+
+      clearTimeout(timeoutId);
 
       const raw = await res.clone().text();
       console.log("📦 Raw register response:", raw);
 
       if (!res.ok) {
         const errorData = await res.json().catch(() => ({}));
-        throw new Error(errorData.error || "Registration failed");
+        const errorMessage = errorData.error || `HTTP ${res.status}`;
+        throw new Error(formatErrorMessage(new Error(errorMessage)));
       }
 
       const { access_token } = await res.json();
-      console.log("✅ Registration token:", access_token);
+      console.log("✅ Registration successful");
 
       localStorage.setItem("token", access_token);
       setToken(access_token);
@@ -130,11 +214,10 @@ export function AuthProvider({ children }) {
         avatarUrl: decoded.avatar_url,
       });
 
-      // 🔧 UPDATED: Use history management  
       navigateToAppWithHistoryManagement();
     } catch (err) {
       console.error("❌ Registration failed:", err.message);
-      throw err;
+      throw new Error(formatErrorMessage(err));
     }
   }
 
@@ -142,7 +225,6 @@ export function AuthProvider({ children }) {
     localStorage.removeItem("token");
     setToken(null);
     setUser(null);
-    // Navigate to login and replace history to prevent back-navigation issues
     navigate('/login', { replace: true });
   }
 
