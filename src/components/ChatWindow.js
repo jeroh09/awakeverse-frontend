@@ -370,7 +370,7 @@ export default function ChatWindow({
     if (idleTimerRef.current) clearTimeout(idleTimerRef.current);
     idleTimerRef.current = setTimeout(() => {
       setInterfaceState('idle');
-    }, 30000);
+    }, 300000);
   }, []);
 
   const handleInputFocus = useCallback(() => {
@@ -389,7 +389,7 @@ export default function ChatWindow({
       if (idleTimerRef.current) clearTimeout(idleTimerRef.current);
       idleTimerRef.current = setTimeout(() => {
         setInterfaceState('idle');
-      }, 30000);
+      }, 300000);
     }
   }, [isUserTyping]);
 
@@ -661,7 +661,7 @@ export default function ChatWindow({
         });
   
   // Delay between words for reading pace
-        await new Promise(resolve => setTimeout(resolve, 150));
+        await new Promise(resolve => setTimeout(resolve, 250));
       }
       // ✅ UPDATED ERROR HANDLING WITH FRIENDLY MESSAGES + LOGGING
       reportError(e, {
