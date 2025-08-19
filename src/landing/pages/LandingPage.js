@@ -488,7 +488,7 @@ export default function LandingPage() {
                         Start Chat →
                       </Link>
                       {index === 0 && (
-                        <div className="mobile-swipe-hint">Swipe to explore more minds</div>
+                        <div className="mobile-swipe-hint">Swipe to explore minds</div>
                       )}
                     </>
                   )}

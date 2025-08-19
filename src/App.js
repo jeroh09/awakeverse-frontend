@@ -11,6 +11,13 @@ import ChatApp         from './ChatApp';
 import ProfileSettings from './pages/ProfileSettings';
 import UploadAvatar    from './pages/UploadAvatar';
 import ContactUs       from './pages/ContactUs';
+import TermsOfService  from './pages/TermsOfService';  // 🆕 Added
+import PrivacyPolicy   from './pages/PrivacyPolicy';   // 🆕 Added
+import CommunityGuidelines from './pages/CommunityGuidelines'; // 🆕 Added
+import CopyrightPolicy from './pages/CopyrightPolicy'; // 🆕 Added
+import SecurityPolicy from './pages/SecurityPolicy';   // 🆕 Added
+import AIDisclaimer from './pages/AIDisclaimer';       // 🆕 Added
+import ContractorAgreements from './pages/ContractorAgreements'; // 🆕 Added
 import ProtectedRoute  from './components/ProtectedRoute';
 
 import './styles.css';
@@ -71,6 +78,15 @@ export default function App() {
       {/* Auth routes */}
       <Route path="/login" element={<Login />} />
       <Route path="/register" element={<Register />} />
+
+      {/* Legal pages - 🆕 Added these routes */}
+      <Route path="/terms" element={<TermsOfService />} />
+      <Route path="/privacy" element={<PrivacyPolicy />} />
+      <Route path="/community-guidelines" element={<CommunityGuidelines />} />
+      <Route path="/copyright" element={<CopyrightPolicy />} />
+      <Route path="/security" element={<SecurityPolicy />} />
+      <Route path="/ai-disclaimer" element={<AIDisclaimer />} />
+      <Route path="/contractor-agreements" element={<ContractorAgreements />} />
 
       {/* Main app (protected) */}
       <Route
