@@ -18,6 +18,9 @@ import CopyrightPolicy from './pages/CopyrightPolicy'; // 🆕 Added
 import SecurityPolicy from './pages/SecurityPolicy';   // 🆕 Added
 import AIDisclaimer from './pages/AIDisclaimer';       // 🆕 Added
 import ContractorAgreements from './pages/ContractorAgreements'; // 🆕 Added
+import SourcesLicences from './pages/SourcesLicences';
+import CookiePolicy from './pages/CookiePolicy';
+import Subprocessors from './pages/Subprocessors';
 import ProtectedRoute  from './components/ProtectedRoute';
 
 import './styles.css';
@@ -87,6 +90,9 @@ export default function App() {
       <Route path="/security" element={<SecurityPolicy />} />
       <Route path="/ai-disclaimer" element={<AIDisclaimer />} />
       <Route path="/contractor-agreements" element={<ContractorAgreements />} />
+      <Route path="/sources" element={<SourcesLicences />} />
+      <Route path="/cookie-policy" element={<CookiePolicy />} />
+      <Route path="/subprocessors" element={<Subprocessors />} />
 
       {/* Main app (protected) */}
       <Route
