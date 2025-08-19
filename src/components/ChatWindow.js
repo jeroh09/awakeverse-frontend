@@ -621,6 +621,7 @@ export default function ChatWindow({
       let fullResponse = '';  // Buffer the complete response first
 
 // First, collect the entire response quickly
+      // First, collect the entire response quickly
       while (true) {
         const { done, value } = await reader.read();
         if (done) break;
@@ -637,20 +638,23 @@ export default function ChatWindow({
         }
       }
 
+// ✅ ADD THIS LINE:
+      const finalSpeaker = invitee; // Store speaker outside the loop
+
 // Now drip out the buffered response slowly
       const words = fullResponse.split(' ');
       let displayedText = '';
 
       for (const word of words) {
         displayedText += word + ' ';
-  
+
         setChatHistory(prev => {
           const copy = [...prev];
           if (copy[aiIndex]) {
             copy[aiIndex] = {
               ...copy[aiIndex],
               text: displayedText,
-              speaker: data.speaker || invitee
+              speaker: finalSpeaker  // ✅ Use stored speaker instead of data.speaker
             };
           }
           return copy;
