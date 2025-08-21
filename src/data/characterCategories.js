@@ -598,6 +598,158 @@ export const characterCategories = [
        description: 'The Builder of Walls. She conquered not for blood, but for trade routes—her city’s ramparts rose like a crown. Men spoke of her spear; merchants spoke of her gold. Both were right.'
       } 
     ]
+  },
+
+  {
+    key: 'pathfinders',
+    title: 'Explorers',
+    characters: [
+      { 
+        key: 'christopher_columbus',
+        name: 'Christopher Columbus',
+        thumbnailUrl: '/images/christopher_columbus.jpg',
+        description: 'The Accidental Conqueror. He sought the East Indies but found a New World—unleashing empires, plagues, and revolutions with a single mistaken landing.'
+      },
+
+      { 
+       key: 'vasco_da_gama',
+       name: 'Vasco da Gama',
+       thumbnailUrl: '/images/vasco_da_gama.jpg',
+       description: 'The Sea Wolf of Portugal. He sailed around the Cape of Storms to open the spice routes—and drown the Indian Ocean in blood and cloves.'
+      },
+
+      { 
+        key: 'sacagawea',
+        name: 'Sacagawea',
+        thumbnailUrl: '/images/sacagawea.jpg',
+        description: 'The Silent Guide. At sixteen, she carried her son and the Lewis & Clark Expedition on her back—translating, navigating, and surviving where maps ended.'
+      },
+
+      { 
+        key: 'david_livingstone',
+        name: 'David Livingstone',
+        thumbnailUrl: '/images/david_livingstone.jpg',
+        description: 'The Missionary Who Mapped Darkness. He sought the source of the Nile and found slavery’s heart—preaching mercy while holding a compass and rifle.'
+      },
+
+      { 
+        key: 'james_cook',
+        name: 'James Cook',
+        thumbnailUrl: '/images/james_cook.jpg',
+        description: 'The Navigator’s Navigator. He charted the Pacific with mathematical rage—until Hawaii’s shores turned his precision into sacrifice.'
+      },
+
+      { 
+        key: 'marco_polo',
+        name: 'Marco Polo',
+        thumbnailUrl: '/images/marco_polo.jpg',
+        description: 'The Merchant of Myths. He walked to China and returned with stories so grand they inspired Columbus—and invented the travelogue.'
+      },
+
+      { 
+        key: 'ferdinand_magellan',
+        name: 'Ferdinand Magellan',
+        thumbnailUrl: '/images/ferdinand_magellan.jpg',
+        description: 'The Captain Who Circled Death. He proved the world was round—but died in the Philippines, leaving his crew to finish the first circumnavigation.'
+      },
+
+      { 
+        key: 'zheng_he',
+        name: 'Zheng He',
+        thumbnailUrl: '/images/zheng_he.jpg',
+        description: 'The Admiral of the Treasure Fleet. He commanded 300 ships and 28,000 men—not to conquer, but to awe the world with Ming dynasty splendor.'
+      },
+
+      { 
+        key: 'francis_drake',
+        name: 'Francis Drake',
+        thumbnailUrl: '/images/francis_drake.jpg',
+        description: 'The Queen’s Pirate. He circled the globe plundering Spanish gold, then paused to defeat the Armada—all with Elizabeth’s wink and warrant.'
+      },
+
+      { 
+        key: 'john_franklin',
+        name: 'John Franklin',
+        thumbnailUrl: '/images/john_franklin.jpg',
+        description: 'The Lost Admiral. He sought the Northwest Passage and vanished into ice and rumor—his ships frozen, his crew driven to cannibalism by ambition’s end.'
+      },
+
+      { 
+        key: 'matthew_henson',
+        name: 'Matthew Henson',
+        thumbnailUrl: '/images/matthew_henson.jpg',
+        description: 'The First at the Pole. An African-American man who stood atop the world with Peary—then was erased from history for the color of his skin.'
+      },
+
+      { 
+        key: 'isabella_bird',
+        name: 'Isabella Bird',
+        thumbnailUrl: '/images/isabella_bird.jpg',
+        description: 'The Invalid Who Conquered Continents. She rode horseback through Rocky Mountains and Persia—writing bestsellers between bouts of spinal pain.'
+      }
+    ]
+  },
+
+  {
+    key: 'performers',
+    title: 'Entertainers',
+    characters: [
+      { 
+        key: 'edgar_allan_poe',
+        name: 'Edgar Allan Poe',
+        thumbnailUrl: '/images/edgar_allan_poe.jpg',
+        description: 'The Master of Macabre. He invented the detective story, perfected the horror tale, and met a death as mysterious as his plots. His Raven still whispers: Nevermore.'
+      },
+
+      { 
+        key: 'buffalo_bill',
+        name: 'Buffalo Bill',
+        thumbnailUrl: '/images/buffalo_bill.jpg',
+        description: 'The Inventor of the Wild West. He turned conquest into carnival, hiring defeated Sioux warriors to perform their own defeat for roaring crowds. A legend built on blurring truth and spectacle.'
+      },
+
+      { 
+        key: 'mata_hari',
+        name: 'Mata Hari',
+        thumbnailUrl: '/images/mata_hari.jpg',
+        description: 'The Spy Who Danced. An exotic dancer who wove a web of espionage between silk sheets and champagne toasts. Her execution by firing squad was her final, most dramatic performance.'
+      },
+
+      { 
+        key: 'harry_houdini',
+        name: 'Harry Houdini',
+        thumbnailUrl: '/images/harry_houdini.jpg',
+        description: 'The King of Keys. He escaped from straitjackets, water tanks, and handcuffs across continents, but could not break free from the one mystery that killed him.'
+      },
+
+      { 
+        key: 'mark_twain',
+        name: 'Mark Twain',
+        thumbnailUrl: '/images/mark_twain.jpg',
+        description: 'The American Cynic. A steamboat pilot who navigated the Mississippi and then the human condition, armed with a cigar, a pen, and a relentless wit that stripped hypocrisy bare.'
+      },
+
+      { 
+        key: 'sarah_bernhardt',
+        name: 'Sarah Bernhardt',
+        thumbnailUrl: '/images/sarah_bernhardt.jpg',
+        description: 'The Divine Sarah. The world’s first superstar actress, who played Hamlet, slept in a coffin, and performed for miners with a wooden leg. She didn’t break the fourth wall—she vaporized it.'
+      },
+
+      { 
+        key: 'theda_bara',
+        name: 'Theda Bara',
+        thumbnailUrl: '/images/theda_bara.jpg',
+        description: 'The Original Screen Vamp. Hollywood’s first sex symbol, a studio-invented “Egyptian” siren who seduced and destroyed men on screen, defining scandal for the silent era.'
+      },
+
+      { 
+        key: 'willie_willie',
+        name: 'Willie Willie',
+        thumbnailUrl: '/images/willie_willie.jpg',
+        description: 'The Malevolent Zephyr. A whirlwind spirit born from West African folklore, she doesn’t just steal hats—she steals peace, scattering confusion and sowing discord with every restless gust. To feel her breeze is to feel fate itself unravel.'
+      },
+    ]
   }
 ];
 // NEW: array of topic titles (used for your TopicCloud)

@@ -109,7 +109,9 @@ const categoryRepresentatives = {
   'heartstrings': '/images/shakespeare.jpg',
   'thinkers': '/images/socrates.jpg',
   'makers': '/images/da_vinci.jpg',
-  'warlords': '/images/sun_tzu.jpg'
+  'warlords': '/images/sun_tzu.jpg',
+  'explorers': '/images/christopher_colombus.jpg',
+  'entertainers': '/images/harry_houdini.jpg'
 };
 
 const SplitScreenLauncher = ({ onStartChat }) => {
