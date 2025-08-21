@@ -525,3 +525,30 @@
     text-shadow: none;
   }
 }
+
+/* Add these responsive breakpoints to your CSS or inline styles */
+
+/* For different screen sizes, you can adjust the minmax values: */
+
+/* Large screens (1400px+): 4-5 columns */
+@media (min-width: 1400px) {
+  .categories-grid {
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  }
+}
+
+/* Standard desktop (1024px - 1399px): 3-4 columns */
+@media (min-width: 1024px) and (max-width: 1399px) {
+  .categories-grid {
+    grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+  }
+}
+
+/* Tablet (768px - 1023px): 2-3 columns */
+@media (min-width: 768px) and (max-width: 1023px) {
+  .categories-grid {
+    grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+  }
+}
+
+/* Mobile: Keep your existing 2-column setup */
