@@ -1,7 +1,6 @@
-// src/components/UnifiedMobileAuth.jsx - Enhanced for Celestial theme
+// src/components/UnifiedMobileAuth.jsx - Step 1: Restructured for sticky footer
 import React, { useState } from 'react';
 import './EnhancedMobileAuth.css';
-
 
 // Sample characters for mobile demo
 const MOBILE_CHARACTERS = [
@@ -44,7 +43,7 @@ export default function UnifiedMobileAuth({ mode, onSubmit, error, loading }) {
         <div className="mobile-screen">
           
           {!showForm ? (
-            // Character Selection View
+            // Character Selection View (unchanged)
             <div className="character-selection-view">
               <div className="mobile-header">
                 <h2>{isLogin ? 'Welcome Back' : 'Choose Your Guide'}</h2>
@@ -78,9 +77,10 @@ export default function UnifiedMobileAuth({ mode, onSubmit, error, loading }) {
               </div>
             </div>
           ) : (
-            // Form View
+            // ✅ RESTRUCTURED Form View with sticky footer
             <div className="form-view">
-              <div className="mobile-header">
+              {/* Fixed Header */}
+              <div className="form-header">
                 <button 
                   className="back-btn"
                   onClick={() => setShowForm(false)}
@@ -90,77 +90,83 @@ export default function UnifiedMobileAuth({ mode, onSubmit, error, loading }) {
                 <h2>{isLogin ? 'Welcome Back' : 'Join the Realm'}</h2>
               </div>
               
-              {selectedCharacter && (
-                <div className="selected-guide">
-                  <img
-                    src={`/images/${selectedCharacter.id}.jpg`}
-                    alt={selectedCharacter.name}
-                    className="guide-avatar"
-                  />
-                  <p>Guided by <strong>{selectedCharacter.name}</strong></p>
-                </div>
-              )}
-              
-              <form onSubmit={handleFormSubmit} className="mobile-auth-form">
-                {error && <div className="mobile-error">{error}</div>}
+              {/* Scrollable Content Area */}
+              <div className="form-content">
+                {selectedCharacter && (
+                  <div className="selected-guide">
+                    <img
+                      src={`/images/${selectedCharacter.id}.jpg`}
+                      alt={selectedCharacter.name}
+                      className="guide-avatar"
+                    />
+                    <p>Guided by <strong>{selectedCharacter.name}</strong></p>
+                  </div>
+                )}
                 
-                {!isLogin && (
+                <form onSubmit={handleFormSubmit} className="mobile-auth-form">
+                  {error && <div className="mobile-error">{error}</div>}
+                  
+                  {!isLogin && (
+                    <div className="form-group">
+                      <label>Your Name in the Realm</label>
+                      <input
+                        type="text"
+                        value={formData.displayName}
+                        onChange={(e) => handleInputChange('displayName', e.target.value)}
+                        placeholder="Choose your identity"
+                        disabled={loading}
+                        required
+                      />
+                    </div>
+                  )}
+                  
                   <div className="form-group">
-                    <label>Your Name in the Realm</label>
+                    <label>Email</label>
                     <input
-                      type="text"
-                      value={formData.displayName}
-                      onChange={(e) => handleInputChange('displayName', e.target.value)}
-                      placeholder="Choose your identity"
+                      type="email"
+                      value={formData.email}
+                      onChange={(e) => handleInputChange('email', e.target.value)}
+                      placeholder="Email address"
                       disabled={loading}
                       required
                     />
                   </div>
-                )}
-                
-                <div className="form-group">
-                  <label>Email</label>
-                  <input
-                    type="email"
-                    value={formData.email}
-                    onChange={(e) => handleInputChange('email', e.target.value)}
-                    placeholder="Email address"
+                  
+                  <div className="form-group">
+                    <label>Password</label>
+                    <input
+                      type="password"
+                      value={formData.password}
+                      onChange={(e) => handleInputChange('password', e.target.value)}
+                      placeholder={isLogin ? "Enter your password" : "Create your secret key (min 6)"}
+                      disabled={loading}
+                      required
+                    />
+                  </div>
+                  
+                  <button 
+                    type="submit" 
+                    className="mobile-submit-btn"
                     disabled={loading}
-                    required
-                  />
-                </div>
-                
-                <div className="form-group">
-                  <label>Password</label>
-                  <input
-                    type="password"
-                    value={formData.password}
-                    onChange={(e) => handleInputChange('password', e.target.value)}
-                    placeholder={isLogin ? "Enter your password" : "Create your secret key (min 6)"}
-                    disabled={loading}
-                    required
-                  />
-                </div>
-                
-                <button 
-                  type="submit" 
-                  className="mobile-submit-btn"
-                  disabled={loading}
-                >
-                  {loading 
-                    ? (isLogin ? 'Awakening...' : 'Creating Realm...') 
-                    : (isLogin ? 'Enter the Realm' : 'Begin Journey')
-                  }
-                </button>
-              </form>
+                  >
+                    {loading 
+                      ? (isLogin ? 'Awakening...' : 'Creating Realm...') 
+                      : (isLogin ? 'Enter the Realm' : 'Begin Journey')
+                    }
+                  </button>
+                </form>
+              </div>
               
-              <div className="mobile-switch-mode">
-                <p>
-                  {isLogin ? "New to the realm? " : "Already awakened? "}
-                  <a href={isLogin ? "/register" : "/login"}>
-                    {isLogin ? "Begin your journey" : "Return to your realm"}
-                  </a>
-                </p>
+              {/* ✅ STICKY FOOTER - Moved outside scrollable content */}
+              <div className="form-footer">
+                <div className="mobile-switch-mode">
+                  <p>
+                    {isLogin ? "New to the realm? " : "Already awakened? "}
+                    <a href={isLogin ? "/register" : "/login"}>
+                      {isLogin ? "Begin your journey" : "Return to your realm"}
+                    </a>
+                  </p>
+                </div>
               </div>
             </div>
           )}
