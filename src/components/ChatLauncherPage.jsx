@@ -110,7 +110,7 @@ const categoryRepresentatives = {
   'thinkers': '/images/socrates.jpg',
   'makers': '/images/da_vinci.jpg',
   'warlords': '/images/sun_tzu.jpg',
-  'pathfinders': '/images/christopher_colombus.jpg',
+  'pathfinders': '/images/christopher_columbus.jpg',
   'performers': '/images/harry_houdini.jpg'
 };
 
@@ -904,120 +904,121 @@ const SplitScreenLauncher = ({ onStartChat }) => {
 
       {/* RIGHT HALF - Categories/Characters */}
       <div style={{ width: '50%', height: '100%', position: 'relative', perspective: '1000px' }}>
-        // Find this section in ChatLauncherPage.jsx around line 720
-        // DESKTOP: Categories Grid - UPDATED for 4×3 layout
 
         {/* Categories Grid */}
-                <div style={{
-                  position: 'absolute',
-                  width: '100%',
-                  height: '100%',
-                  padding: '2rem',
-                  display: 'grid',
-                  gridTemplateColumns: 'repeat(4, 1fr)', // ✅ CHANGED: From repeat(3, 1fr) to repeat(4, 1fr)
-                  gap: '1rem',
-                  alignContent: 'center',
-                  transform: selectedCategory ? 'rotateY(-90deg)' : 'rotateY(0deg)',
-                  transition: 'transform 0.6s ease-in-out',
-                  transformStyle: 'preserve-3d',
-                  backfaceVisibility: 'hidden'
-                }}>
-                  {characterCategories.map((category, index) => (
-                    <div
-                      key={category.key}
-                      onClick={() => handleCategorySelect(category)}
-                      style={{
-                        background: 'rgba(255, 255, 255, 0.05)',
-                        border: '1px solid rgba(255, 215, 0, 0.2)',
-                        borderRadius: '16px',
-                        padding: '1.5rem',
-                        backdropFilter: 'blur(10px)',
-                        cursor: 'pointer',
-                        transition: 'all 0.3s ease',
-                        display: 'flex',
-                        flexDirection: 'column',
-                        alignItems: 'center',
-                        justifyContent: 'center',
-                        textAlign: 'center',
-                        aspectRatio: '1',
-                        opacity: 0,
-                        animation: `categorySlideIn 0.6s ease-out ${index * 0.1}s forwards`
-                      }}
-                      onMouseEnter={(e) => {
-                        e.currentTarget.style.background = 'rgba(255, 215, 0, 0.08)';
-                        e.currentTarget.style.borderColor = 'rgba(255, 215, 0, 0.6)';
-                        e.currentTarget.style.transform = 'translateY(-6px)';
-                        e.currentTarget.style.boxShadow = '0 12px 24px rgba(255, 215, 0, 0.2)';
-                        const img = e.currentTarget.querySelector('img');
-                        if (img) {
-                          img.style.filter = 'sepia(0%) contrast(1.2) brightness(1.1)';
-                          img.parentElement.style.borderColor = 'rgba(255, 215, 0, 0.8)';
-                          img.parentElement.style.boxShadow = '0 0 20px rgba(255, 215, 0, 0.4)';
-                        }
-                      }}
-                      onMouseLeave={(e) => {
-                        e.currentTarget.style.background = 'rgba(255, 255, 255, 0.05)';
-                        e.currentTarget.style.borderColor = 'rgba(255, 215, 0, 0.2)';
-                        e.currentTarget.style.transform = 'translateY(0)';
-                        e.currentTarget.style.boxShadow = 'none';
-                        const img = e.currentTarget.querySelector('img');
-                        if (img) {
-                          img.style.filter = 'sepia(20%) contrast(1.1)';
-                          img.parentElement.style.borderColor = 'rgba(255, 215, 0, 0.4)';
-                          img.parentElement.style.boxShadow = 'none';
-                        }
-                      }}
-                    >
-                      <div style={{
-                        width: '56px',
-                        height: '56px',
-                        borderRadius: '50%',
-                        overflow: 'hidden',
-                        marginBottom: '0.7rem',
-                        border: '3px solid rgba(255, 215, 0, 0.4)',
-                        transition: 'all 0.3s ease',
-                        background: 'rgba(0,0,0,0.3)'
-                      }}>
-                        <img
-                          src={categoryRepresentatives[category.key]}
-                          alt={category.title}
-                          style={{
-                            width: '100%',
-                            height: '100%',
-                            objectFit: 'cover',
-                            filter: 'sepia(20%) contrast(1.1)',
-                            transition: 'filter 0.3s ease'
-                          }}
-                          onError={(e) => { e.target.src = '/images/default-character.jpg'; }}
-                        />
-                     </div>
+        <div style={{
+          position: 'absolute',
+          width: '100%',
+          height: '100%',
+          padding: '2rem',
+          display: 'grid',
+          gridTemplateColumns: 'repeat(auto-fit, minmax(180px, 1fr))', // ✅ CHANGED: Auto-fit responsive
+          gap: '1rem',
+          alignContent: 'center',
+          justifyContent: 'center', // ✅ NEW: Center the grid
+          transform: selectedCategory ? 'rotateY(-90deg)' : 'rotateY(0deg)',
+          transition: 'transform 0.6s ease-in-out',
+          transformStyle: 'preserve-3d',
+          backfaceVisibility: 'hidden'
+        }}>
+          {characterCategories.map((category, index) => (
+            <div
+              key={category.key}
+              onClick={() => handleCategorySelect(category)}
+              style={{
+                background: 'rgba(255, 255, 255, 0.05)',
+                border: '1px solid rgba(255, 215, 0, 0.2)',
+                borderRadius: '16px',
+                padding: '1.2rem', // ✅ CHANGED: Slightly reduced padding
+                backdropFilter: 'blur(10px)',
+                cursor: 'pointer',
+                transition: 'all 0.3s ease',
+                display: 'flex',
+                flexDirection: 'column',
+                alignItems: 'center',
+                justifyContent: 'center',
+                textAlign: 'center',
+                aspectRatio: '1', // ✅ KEPT: Square aspect ratio
+                opacity: 0,
+                animation: `categorySlideIn 0.6s ease-out ${index * 0.1}s forwards`,
+                minWidth: '180px', // ✅ NEW: Ensure minimum width
+                maxWidth: '220px'  // ✅ NEW: Prevent cards from getting too large
+              }}
+              onMouseEnter={(e) => {
+                e.currentTarget.style.background = 'rgba(255, 215, 0, 0.08)';
+                e.currentTarget.style.borderColor = 'rgba(255, 215, 0, 0.6)';
+                e.currentTarget.style.transform = 'translateY(-6px)';
+                e.currentTarget.style.boxShadow = '0 12px 24px rgba(255, 215, 0, 0.2)';
+                const img = e.currentTarget.querySelector('img');
+                if (img) {
+                  img.style.filter = 'sepia(0%) contrast(1.2) brightness(1.1)';
+                  img.parentElement.style.borderColor = 'rgba(255, 215, 0, 0.8)';
+                  img.parentElement.style.boxShadow = '0 0 20px rgba(255, 215, 0, 0.4)';
+                }
+              }}
+              onMouseLeave={(e) => {
+                e.currentTarget.style.background = 'rgba(255, 255, 255, 0.05)';
+                e.currentTarget.style.borderColor = 'rgba(255, 215, 0, 0.2)';
+                e.currentTarget.style.transform = 'translateY(0)';
+                e.currentTarget.style.boxShadow = 'none';
+                const img = e.currentTarget.querySelector('img');
+                if (img) {
+                  img.style.filter = 'sepia(20%) contrast(1.1)';
+                  img.parentElement.style.borderColor = 'rgba(255, 215, 0, 0.4)';
+                  img.parentElement.style.boxShadow = 'none';
+                }
+              }}
+            >
+              <div style={{
+                width: '50px', // ✅ CHANGED: Slightly smaller avatar
+                height: '50px',
+                borderRadius: '50%',
+                overflow: 'hidden',
+                marginBottom: '0.6rem', // ✅ CHANGED: Reduced margin
+                border: '3px solid rgba(255, 215, 0, 0.4)',
+                transition: 'all 0.3s ease',
+                background: 'rgba(0,0,0,0.3)'
+              }}>
+                <img
+                  src={categoryRepresentatives[category.key]}
+                  alt={category.title}
+                  style={{
+                    width: '100%',
+                    height: '100%',
+                    objectFit: 'cover',
+                    filter: 'sepia(20%) contrast(1.1)',
+                    transition: 'filter 0.3s ease'
+                  }}
+                  onError={(e) => { e.target.src = '/images/default-character.jpg'; }}
+                />
+              </div>
               
-                      <h3 style={{
-                        color: '#FFD700',
-                        fontSize: '0.9rem',
-                        fontWeight: 600,
-                        margin: '0 0 0.3rem 0',
-                        letterSpacing: '0.5px',
-                        fontFamily: "'Cinzel', serif",
-                        textShadow: '1px 1px 2px rgba(0,0,0,0.8)',
-                        lineHeight: 1.1
-                      }}>
-                        {category.title}
-                      </h3>
+              <h3 style={{
+                color: '#FFD700',
+                fontSize: '0.85rem', // ✅ CHANGED: Slightly smaller font
+                fontWeight: 600,
+                margin: '0 0 0.25rem 0', // ✅ CHANGED: Reduced margin
+                letterSpacing: '0.5px',
+                fontFamily: "'Cinzel', serif",
+                textShadow: '1px 1px 2px rgba(0,0,0,0.8)',
+                lineHeight: 1.1
+              }}>
+                {category.title}
+              </h3>
               
-                      <span style={{
-                        color: 'rgba(255, 215, 0, 0.7)',
-                        fontSize: '0.65rem',
-                        background: 'rgba(255, 215, 0, 0.1)',
-                        padding: '0.15rem 0.4rem',
-                        borderRadius: '8px',
-                        border: '1px solid rgba(255, 215, 0, 0.2)'
-                      }}>
-                        {category.characters.length} guides
-                      </span>
-                    </div>
-                  ))}
-                </div>
+              <span style={{
+                color: 'rgba(255, 215, 0, 0.7)',
+                fontSize: '0.6rem', // ✅ CHANGED: Slightly smaller font
+                background: 'rgba(255, 215, 0, 0.1)',
+                padding: '0.1rem 0.35rem', // ✅ CHANGED: Reduced padding
+                borderRadius: '8px',
+                border: '1px solid rgba(255, 215, 0, 0.2)'
+              }}>
+                {category.characters.length} guides
+              </span>
+            </div>
+          ))}
+        </div>
 
         {/* Characters Panel */}
         <div style={{
