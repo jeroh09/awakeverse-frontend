@@ -906,20 +906,26 @@ const SplitScreenLauncher = ({ onStartChat }) => {
       <div style={{ width: '50%', height: '100%', position: 'relative', perspective: '1000px' }}>
 
         {/* Categories Grid */}
+        // Dynamic viewport-responsive grid that adapts to any number of categories
+
+{/* Categories Grid - Dynamic Viewport Sizing */}
         <div style={{
           position: 'absolute',
           width: '100%',
           height: '100%',
-          padding: '2rem',
+          padding: 'clamp(0.5rem, 2vh, 1.5rem)', // ✅ NEW: Responsive padding
           display: 'grid',
-          gridTemplateColumns: 'repeat(auto-fit, minmax(180px, 1fr))', // ✅ CHANGED: Auto-fit responsive
-          gap: '1rem',
-          alignContent: 'center',
-          justifyContent: 'center', // ✅ NEW: Center the grid
+          gridTemplateColumns: 'repeat(auto-fit, minmax(clamp(120px, 12vw, 180px), 1fr))', // ✅ NEW: Fully responsive column sizing
+          gap: 'clamp(0.5rem, 1vh, 1rem)', // ✅ NEW: Responsive gap
+          alignContent: 'center', // ✅ BACK: Center content in available space
+          justifyContent: 'center',
           transform: selectedCategory ? 'rotateY(-90deg)' : 'rotateY(0deg)',
           transition: 'transform 0.6s ease-in-out',
           transformStyle: 'preserve-3d',
-          backfaceVisibility: 'hidden'
+          backfaceVisibility: 'hidden',
+          maxHeight: '90vh', // ✅ NEW: Ensure it fits in viewport
+          overflowY: 'auto', // ✅ NEW: Scroll if absolutely necessary
+          overflowX: 'hidden' // ✅ NEW: Prevent horizontal scroll
         }}>
           {characterCategories.map((category, index) => (
             <div
@@ -928,8 +934,8 @@ const SplitScreenLauncher = ({ onStartChat }) => {
               style={{
                 background: 'rgba(255, 255, 255, 0.05)',
                 border: '1px solid rgba(255, 215, 0, 0.2)',
-                borderRadius: '16px',
-                padding: '1.2rem', // ✅ CHANGED: Slightly reduced padding
+                borderRadius: 'clamp(8px, 1.5vw, 16px)', // ✅ NEW: Responsive border radius
+                padding: 'clamp(0.5rem, 1.5vh, 1.2rem)', // ✅ NEW: Responsive padding
                 backdropFilter: 'blur(10px)',
                 cursor: 'pointer',
                 transition: 'all 0.3s ease',
@@ -938,11 +944,12 @@ const SplitScreenLauncher = ({ onStartChat }) => {
                 alignItems: 'center',
                 justifyContent: 'center',
                 textAlign: 'center',
-                aspectRatio: '1', // ✅ KEPT: Square aspect ratio
+                aspectRatio: '1',
                 opacity: 0,
                 animation: `categorySlideIn 0.6s ease-out ${index * 0.1}s forwards`,
-                minWidth: '180px', // ✅ NEW: Ensure minimum width
-                maxWidth: '220px'  // ✅ NEW: Prevent cards from getting too large
+                minWidth: 'clamp(120px, 12vw, 180px)', // ✅ NEW: Match grid minmax
+                maxWidth: 'clamp(150px, 15vw, 220px)', // ✅ NEW: Responsive max width
+                minHeight: 'clamp(120px, 12vw, 180px)' // ✅ NEW: Ensure square proportions
               }}
               onMouseEnter={(e) => {
                 e.currentTarget.style.background = 'rgba(255, 215, 0, 0.08)';
@@ -970,11 +977,11 @@ const SplitScreenLauncher = ({ onStartChat }) => {
               }}
             >
               <div style={{
-                width: '50px', // ✅ CHANGED: Slightly smaller avatar
-                height: '50px',
+                width: 'clamp(35px, 4vw, 56px)', // ✅ NEW: Responsive avatar size
+                height: 'clamp(35px, 4vw, 56px)',
                 borderRadius: '50%',
                 overflow: 'hidden',
-                marginBottom: '0.6rem', // ✅ CHANGED: Reduced margin
+                marginBottom: 'clamp(0.3rem, 1vh, 0.7rem)', // ✅ NEW: Responsive margin
                 border: '3px solid rgba(255, 215, 0, 0.4)',
                 transition: 'all 0.3s ease',
                 background: 'rgba(0,0,0,0.3)'
@@ -995,9 +1002,9 @@ const SplitScreenLauncher = ({ onStartChat }) => {
               
               <h3 style={{
                 color: '#FFD700',
-                fontSize: '0.85rem', // ✅ CHANGED: Slightly smaller font
+                fontSize: 'clamp(0.7rem, 1.2vw, 0.9rem)', // ✅ NEW: Responsive font size
                 fontWeight: 600,
-                margin: '0 0 0.25rem 0', // ✅ CHANGED: Reduced margin
+                margin: '0 0 clamp(0.1rem, 0.5vh, 0.3rem) 0', // ✅ NEW: Responsive margin
                 letterSpacing: '0.5px',
                 fontFamily: "'Cinzel', serif",
                 textShadow: '1px 1px 2px rgba(0,0,0,0.8)',
@@ -1008,9 +1015,9 @@ const SplitScreenLauncher = ({ onStartChat }) => {
               
               <span style={{
                 color: 'rgba(255, 215, 0, 0.7)',
-                fontSize: '0.6rem', // ✅ CHANGED: Slightly smaller font
+                fontSize: 'clamp(0.55rem, 0.9vw, 0.65rem)', // ✅ NEW: Responsive font size
                 background: 'rgba(255, 215, 0, 0.1)',
-                padding: '0.1rem 0.35rem', // ✅ CHANGED: Reduced padding
+                padding: 'clamp(0.1rem, 0.3vh, 0.15rem) clamp(0.2rem, 0.5vw, 0.4rem)', // ✅ NEW: Responsive padding
                 borderRadius: '8px',
                 border: '1px solid rgba(255, 215, 0, 0.2)'
               }}>
