@@ -1,4 +1,4 @@
-// src/pages/Register.jsx - Fixed version with proper mobile navigation
+// src/pages/Register.jsx - Step 3: Use UnifiedMobileAuth instead of inline mobile form
 import React, { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import ElegantCharacterPortraits from '../components/ElegantCharacterPortraits';
@@ -94,7 +94,15 @@ export default function Register() {
 
   return (
     <div className="auth-page">
-      {/* MOBILE: Enhanced mobile auth component with navigation link */}
+      {/* ✅ MOBILE: Use UnifiedMobileAuth component we just fixed */}
+      <UnifiedMobileAuth 
+        mode="register"
+        onSubmit={handleSubmit}
+        error={error}
+        loading={loading}
+      />
+
+      {/* ❌ REMOVED: Inline mobile form (commented out for reference)
       <div className="unified-mobile-auth">
         <div className="mobile-device-frame">
           <div className="mobile-screen">
@@ -147,7 +155,6 @@ export default function Register() {
                 </button>
               </form>
 
-              {/* FIXED: Added mobile navigation link */}
               <div className="mobile-switch-mode">
                 <p>
                   Registered? <Link to="/login">Return to your realm</Link>
@@ -157,6 +164,7 @@ export default function Register() {
           </div>
         </div>
       </div>
+      */}
 
       {/* DESKTOP: Side-by-side layout */}
       {/* Left side: Elegant character portraits */}
