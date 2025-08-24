@@ -368,3 +368,38 @@ body::before {
     display: none;
   }
 }
+.showcase-legal-text {
+  position: fixed;
+  bottom: 1rem;
+  left: 1rem;
+  right: 50%;
+  text-align: left;
+  z-index: 3;
+}
+
+.showcase-legal-text p {
+  font-size: 0.7rem;
+  color: rgba(255, 255, 255, 0.5);
+  line-height: 1.4;
+  margin: 0;
+  font-family: 'Inter', sans-serif;
+  /* ✅ REMOVE ALL BOX STYLING */
+  background: none;           /* Remove background */
+  backdrop-filter: none;      /* Remove blur */
+  padding: 0;                 /* Remove padding */
+  border-radius: 0;           /* Remove border radius */
+  border: none;               /* Remove border */
+}
+
+.showcase-legal-text a {
+  color: rgba(255, 215, 0, 0.7);
+  text-decoration: none;
+  transition: all 0.3s ease;
+  border-bottom: 1px solid transparent;
+}
+
+.showcase-legal-text a:hover {
+  color: #FFD700;
+  text-shadow: 0 0 6px rgba(255, 215, 0, 0.4);
+  border-bottom: 1px solid rgba(255, 215, 0, 0.4);
+}
