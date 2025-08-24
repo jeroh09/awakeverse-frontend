@@ -292,3 +292,31 @@ body::before {
   z-index: 999;
   pointer-events: none;
 }
+/* Add this to your AuthPageStyles.css file */
+
+/* Legal text styling for desktop auth forms */
+.auth-legal-text {
+  margin: 1rem 0 0.5rem 0;
+  text-align: center;
+}
+
+.auth-legal-text p {
+  font-size: 0.75rem;
+  color: rgba(255, 255, 255, 0.6);
+  line-height: 1.4;
+  margin: 0;
+  font-family: 'Inter', sans-serif;
+}
+
+.auth-legal-text a {
+  color: rgba(255, 215, 0, 0.8);
+  text-decoration: none;
+  transition: all 0.3s ease;
+  border-bottom: 1px solid transparent;
+}
+
+.auth-legal-text a:hover {
+  color: #FFD700;
+  text-shadow: 0 0 8px rgba(255, 215, 0, 0.4);
+  border-bottom: 1px solid rgba(255, 215, 0, 0.5);
+}

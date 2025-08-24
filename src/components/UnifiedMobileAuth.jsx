@@ -155,6 +155,31 @@ export default function UnifiedMobileAuth({ mode, onSubmit, error, loading }) {
                     }
                   </button>
                 </form>
+                
+                {/* ✅ NEW: Terms and Privacy for mobile - only show on register */}
+                {!isLogin && (
+                  <div className="mobile-legal-text">
+                    <p>
+                      By creating an account, you agree to our{' '}
+                      <a 
+                        href="https://www.awakeverse.com/terms" 
+                        target="_blank" 
+                        rel="noopener noreferrer"
+                      >
+                        Terms of Service
+                      </a>{' '}
+                      and{' '}
+                      <a 
+                        href="https://www.awakeverse.com/privacy" 
+                        target="_blank" 
+                        rel="noopener noreferrer"
+                      >
+                        Privacy Policy
+                      </a>
+                      .
+                    </p>
+                  </div>
+                )}
               </div>
               
               {/* ✅ STICKY FOOTER - Moved outside scrollable content */}

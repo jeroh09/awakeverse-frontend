@@ -1,4 +1,4 @@
-// src/pages/Register.jsx - Step 3: Use UnifiedMobileAuth instead of inline mobile form
+// src/pages/Register.jsx - ACTUALLY adding terms/privacy to desktop form
 import React, { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import ElegantCharacterPortraits from '../components/ElegantCharacterPortraits';
@@ -102,70 +102,6 @@ export default function Register() {
         loading={loading}
       />
 
-      {/* ❌ REMOVED: Inline mobile form (commented out for reference)
-      <div className="unified-mobile-auth">
-        <div className="mobile-device-frame">
-          <div className="mobile-screen">
-            <div className="character-selection-view">
-              <div className="mobile-header">
-                <h2>{getFormTitle()}</h2>
-              </div>
-
-              {error && <div className="mobile-error">{error}</div>}
-              
-              <form className="mobile-auth-form" onSubmit={handleDesktopSubmit}>
-                <div className="form-group">
-                  <label htmlFor="mobile-displayName">Your Name in the Realm</label>
-                  <input
-                    id="mobile-displayName"
-                    type="text"
-                    value={displayName}
-                    onChange={(e) => setDisplayName(e.target.value)}
-                    placeholder="Username"
-                    disabled={loading}
-                  />
-                </div>
-                
-                <div className="form-group">
-                  <label htmlFor="mobile-email">Email</label>
-                  <input
-                    id="mobile-email"
-                    type="email"
-                    value={email}
-                    onChange={(e) => setEmail(e.target.value)}
-                    placeholder="Enter your email"
-                    disabled={loading}
-                  />
-                </div>
-                
-                <div className="form-group">
-                  <label htmlFor="mobile-password">Password</label>
-                  <input
-                    id="mobile-password"
-                    type="password"
-                    value={password}
-                    onChange={(e) => setPassword(e.target.value)}
-                    placeholder="Create a password (min 6 characters)"
-                    disabled={loading}
-                  />
-                </div>
-                
-                <button type="submit" className="mobile-submit-btn" disabled={loading}>
-                  {loading ? 'Creating Realm...' : 'Begin Your Journey'}
-                </button>
-              </form>
-
-              <div className="mobile-switch-mode">
-                <p>
-                  Registered? <Link to="/login">Return to your realm</Link>
-                </p>
-              </div>
-            </div>
-          </div>
-        </div>
-      </div>
-      */}
-
       {/* DESKTOP: Side-by-side layout */}
       {/* Left side: Elegant character portraits */}
       <div className="auth-demo-container">
@@ -214,6 +150,29 @@ export default function Register() {
         <button type="submit" disabled={loading}>
           {loading ? 'Creating Realm...' : 'Begin Your Journey'}
         </button>
+        
+        {/* ✅ NOW ACTUALLY ADDING: Terms and Privacy Policy */}
+        <div className="auth-legal-text">
+          <p>
+            By creating an account, you agree to our{' '}
+            <a 
+              href="https://www.awakeverse.com/terms" 
+              target="_blank" 
+              rel="noopener noreferrer"
+            >
+              Terms of Service
+            </a>{' '}
+            and{' '}
+            <a 
+              href="https://www.awakeverse.com/privacy" 
+              target="_blank" 
+              rel="noopener noreferrer"
+            >
+              Privacy Policy
+            </a>
+            .
+          </p>
+        </div>
         
         <p>
           Already registered? <Link to="/login">Return to your realm</Link>
