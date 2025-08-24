@@ -109,6 +109,28 @@ export default function Register() {
           autoAdvanceInterval={12000}
           onCharacterChange={handleCharacterChange}
         />
+        {/* ✅ MOVED: Terms text to bottom of character showcase */}
+        <div className="showcase-legal-text">
+          <p>
+            By creating an account, you agree to our{' '}
+            <a 
+              href="https://www.awakeverse.com/terms" 
+              target="_blank" 
+              rel="noopener noreferrer"
+            >
+              Terms of Service
+            </a>{' '}
+            and{' '}
+            <a 
+              href="https://www.awakeverse.com/privacy" 
+              target="_blank" 
+              rel="noopener noreferrer"
+            >
+              Privacy Policy
+            </a>
+            .
+          </p>
+        </div>
       </div>
 
       {/* Right side: Floating auth form */}
@@ -150,29 +172,6 @@ export default function Register() {
         <button type="submit" disabled={loading}>
           {loading ? 'Creating Realm...' : 'Begin Your Journey'}
         </button>
-        
-        {/* ✅ NOW ACTUALLY ADDING: Terms and Privacy Policy */}
-        <div className="auth-legal-text">
-          <p>
-            By creating an account, you agree to our{' '}
-            <a 
-              href="https://www.awakeverse.com/terms" 
-              target="_blank" 
-              rel="noopener noreferrer"
-            >
-              Terms of Service
-            </a>{' '}
-            and{' '}
-            <a 
-              href="https://www.awakeverse.com/privacy" 
-              target="_blank" 
-              rel="noopener noreferrer"
-            >
-              Privacy Policy
-            </a>
-            .
-          </p>
-        </div>
         
         <p>
           Already registered? <Link to="/login">Return to your realm</Link>
