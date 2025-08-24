@@ -328,10 +328,10 @@ body::before {
 }
 
 .showcase-legal-text {
-  position: absolute;
-  bottom: 0.10rem; /* ✅ REDUCED: Moved closer to very bottom */
+  position: fixed;
+  bottom: 1.0rem; /* ✅ REDUCED: Moved closer to very bottom */
   left: 1rem;   /* ✅ REDUCED: Moved more to the left */
-  right: 4rem;  /* ✅ INCREASED: Creates more left-side positioning */
+  right: 50%;  /* ✅ INCREASED: Creates more left-side positioning */
   text-align: left; /* ✅ CHANGED: Left-aligned instead of center */
   z-index: 3; /* Above character portraits */
 }
