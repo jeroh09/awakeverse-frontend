@@ -329,7 +329,7 @@ body::before {
 
 .showcase-legal-text {
   position: absolute;
-  bottom: 1rem; /* ✅ REDUCED: Moved closer to very bottom */
+  bottom: 0.10rem; /* ✅ REDUCED: Moved closer to very bottom */
   left: 1rem;   /* ✅ REDUCED: Moved more to the left */
   right: 4rem;  /* ✅ INCREASED: Creates more left-side positioning */
   text-align: left; /* ✅ CHANGED: Left-aligned instead of center */
