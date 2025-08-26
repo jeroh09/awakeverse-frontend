@@ -22,6 +22,9 @@ import SourcesLicences from './pages/SourcesLicences';
 import CookiePolicy from './pages/CookiePolicy';
 import Subprocessors from './pages/Subprocessors';
 import ProtectedRoute  from './components/ProtectedRoute';
+import BlogList from './pages/Blog/BlogList';
+import BlogPost from './pages/Blog/BlogPost';
+import BlogAdmin from './pages/Blog/BlogAdmin';
 
 import './styles.css';
 
@@ -94,6 +97,19 @@ export default function App() {
       <Route path="/cookie-policy" element={<CookiePolicy />} />
       <Route path="/subprocessors" element={<Subprocessors />} />
 
+      {/* Blog routes */}
+      <Route path="/blog" element={<BlogList />} />
+      <Route path="/blog/:slug" element={<BlogPost />} />
+
+      {/* Blog admin (protected) */}
+      <Route
+        path="/admin/blog"
+        element={
+          <ProtectedRoute>
+            <BlogAdmin />
+          </ProtectedRoute>
+        }
+      />
       {/* Main app (protected) */}
       <Route
         path="/app"
