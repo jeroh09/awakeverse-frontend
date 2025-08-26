@@ -46,14 +46,18 @@ export default function App() {
       
       // If we're in the app and there's no app root marker,
       // or if we detect navigation back to auth routes
+      // In your App.js useEffect, update the condition:
       if (location.pathname.startsWith('/app') && 
           (location.pathname === '/login' || location.pathname === '/register' || location.pathname === '/')) {
-        
-        console.log('🛡️ Navigation guard: Preventing back navigation to auth');
-        
-        // Prevent going back to auth, redirect to app instead
-        event.preventDefault();
+  
+  // Allow admin routes to pass through
+        if (location.pathname.startsWith('/admin/')) {
+          return; // Don't redirect admin routes
+        }
+  
+        console.log('Navigation guard: Preventing back navigation to auth');
         navigate('/app', { replace: true });
+      }
         
         // Re-establish the app root marker
         window.history.pushState({ isAppRoot: true }, '', '/app');
