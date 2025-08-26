@@ -36,8 +36,13 @@ export default function App() {
   // 🛡️ NEW: Navigation guard for authenticated users
   // Replace this entire useEffect block in your App.js:
   useEffect(() => {
+  // Skip guard for admin routes entirely
+    if (!token || location.pathname.startsWith('/admin/')) {
+      return;
+    }
+  
   // Only apply guard when authenticated and on protected routes
-    if (!token || !location.pathname.startsWith('/app')) {
+    if (!location.pathname.startsWith('/app')) {
       return;
     }
 
@@ -49,11 +54,6 @@ export default function App() {
     // or if we detect navigation back to auth routes
       if (location.pathname.startsWith('/app') && 
           (location.pathname === '/login' || location.pathname === '/register' || location.pathname === '/')) {
-      
-      // Allow admin routes to pass through
-        if (location.pathname.startsWith('/admin/')) {
-          return; // Don't redirect admin routes
-        }
 
         console.log('Navigation guard: Preventing back navigation to auth');
       
