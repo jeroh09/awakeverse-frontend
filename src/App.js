@@ -35,43 +35,43 @@ export default function App() {
 
   // 🛡️ NEW: Navigation guard for authenticated users
   useEffect(() => {
-    // Only apply guard when authenticated and on protected routes
+  // Only apply guard when authenticated and on protected routes
     if (!token || !location.pathname.startsWith('/app')) {
       return;
     }
 
     const handlePopState = (event) => {
-      // Check if user is trying to navigate back past the app
+    // Check if user is trying to navigate back past the app
       const isAppRoot = event.state?.isAppRoot;
-      
-      // If we're in the app and there's no app root marker,
-      // or if we detect navigation back to auth routes
-      // In your App.js useEffect, update the condition:
+    
+    // If we're in the app and there's no app root marker,
+    // or if we detect navigation back to auth routes
       if (location.pathname.startsWith('/app') && 
           (location.pathname === '/login' || location.pathname === '/register' || location.pathname === '/')) {
-  
-  // Allow admin routes to pass through
+
+      // Allow admin routes to pass through
         if (location.pathname.startsWith('/admin/')) {
           return; // Don't redirect admin routes
         }
-  
+
         console.log('Navigation guard: Preventing back navigation to auth');
+      
+      // Prevent going back to auth, redirect to app instead
+        event.preventDefault();
         navigate('/app', { replace: true });
-      }
-        
-        // Re-establish the app root marker
+      
+      // Re-establish the app root marker
         window.history.pushState({ isAppRoot: true }, '', '/app');
       }
     };
 
-    // Listen for back navigation attempts
+  // Listen for back navigation attempts
     window.addEventListener('popstate', handlePopState);
 
     return () => {
       window.removeEventListener('popstate', handlePopState);
     };
   }, [token, location.pathname, navigate]);
-
   // 🔧 NEW: Set up app root marker when entering protected routes
   useEffect(() => {
     if (token && location.pathname.startsWith('/app') && !window.history.state?.isAppRoot) {
