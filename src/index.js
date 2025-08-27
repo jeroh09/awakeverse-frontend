@@ -62,7 +62,6 @@ root.render(
   </React.StrictMode>
 );
 
-/*
 // Register service worker for PWA functionality
 if ('serviceWorker' in navigator) {
   window.addEventListener('load', () => {
@@ -242,4 +241,4 @@ if (window.matchMedia && window.matchMedia('(display-mode: standalone)').matches
     }
   `;
   document.head.appendChild(style);
-} */ // Another rebuild attempt
+} // Another rebuild attempt
