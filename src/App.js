@@ -4,27 +4,21 @@ import { Routes, Route, Navigate, useLocation, useNavigate } from 'react-router-
 import { useAuth } from './contexts/AuthContext';
 
 // Landing page (new module)
-import LandingPage from './landing/pages/LandingPage';
-import Login from './pages/Login';
-import Register from './pages/Register';
-import ChatApp from './ChatApp';
+import LandingPage     from './landing/pages/LandingPage';
+import Login           from './pages/Login';
+import Register        from './pages/Register';
+import ChatApp         from './ChatApp';
 import ProfileSettings from './pages/ProfileSettings';
-import UploadAvatar from './pages/UploadAvatar';
-import ContactUs from './pages/ContactUs';
-import TermsOfService from './pages/TermsOfService';
-import PrivacyPolicy from './pages/PrivacyPolicy';
-import CommunityGuidelines from './pages/CommunityGuidelines';
-import CopyrightPolicy from './pages/CopyrightPolicy';
-import SecurityPolicy from './pages/SecurityPolicy';
-import AIDisclaimer from './pages/AIDisclaimer';
-import ContractorAgreements from './pages/ContractorAgreements';
-import SourcesLicences from './pages/SourcesLicences';
-import CookiePolicy from './pages/CookiePolicy';
-import Subprocessors from './pages/Subprocessors';
-import ProtectedRoute from './components/ProtectedRoute';
-import BlogList from './pages/Blog/BlogList';
-import BlogPost from './pages/Blog/BlogPost';
-import BlogAdmin from './pages/Blog/BlogAdmin';
+import UploadAvatar    from './pages/UploadAvatar';
+import ContactUs       from './pages/ContactUs';
+import TermsOfService  from './pages/TermsOfService';  // 🆕 Added
+import PrivacyPolicy   from './pages/PrivacyPolicy';   // 🆕 Added
+import CommunityGuidelines from './pages/CommunityGuidelines'; // 🆕 Added
+import CopyrightPolicy from './pages/CopyrightPolicy'; // 🆕 Added
+import SecurityPolicy from './pages/SecurityPolicy';   // 🆕 Added
+import AIDisclaimer from './pages/AIDisclaimer';       // 🆕 Added
+import ContractorAgreements from './pages/ContractorAgreements'; // 🆕 Added
+import ProtectedRoute  from './components/ProtectedRoute';
 
 import './styles.css';
 
@@ -33,20 +27,10 @@ export default function App() {
   const location = useLocation();
   const navigate = useNavigate();
 
-  // 🛡️ Navigation guard for authenticated users
+  // 🛡️ NEW: Navigation guard for authenticated users
   useEffect(() => {
-    // Skip guard entirely for non-authenticated users
-    if (!token) {
-      return;
-    }
-
-    // Skip guard for admin routes entirely
-    if (location.pathname.startsWith('/admin/')) {
-      return;
-    }
-
-    // Only apply guard when on protected app routes
-    if (!location.pathname.startsWith('/app')) {
+    // Only apply guard when authenticated and on protected routes
+    if (!token || !location.pathname.startsWith('/app')) {
       return;
     }
 
@@ -58,8 +42,8 @@ export default function App() {
       // or if we detect navigation back to auth routes
       if (location.pathname.startsWith('/app') && 
           (location.pathname === '/login' || location.pathname === '/register' || location.pathname === '/')) {
-
-        console.log('Navigation guard: Preventing back navigation to auth');
+        
+        console.log('🛡️ Navigation guard: Preventing back navigation to auth');
         
         // Prevent going back to auth, redirect to app instead
         event.preventDefault();
@@ -78,11 +62,9 @@ export default function App() {
     };
   }, [token, location.pathname, navigate]);
 
-  // 🔧 Set up app root marker when entering protected routes
+  // 🔧 NEW: Set up app root marker when entering protected routes
   useEffect(() => {
-    if (token && 
-        (location.pathname.startsWith('/app') || location.pathname.startsWith('/admin')) && 
-        !window.history.state?.isAppRoot) {
+    if (token && location.pathname.startsWith('/app') && !window.history.state?.isAppRoot) {
       // Mark this as the app root for the navigation guard
       window.history.replaceState({ isAppRoot: true }, '', location.pathname);
     }
@@ -97,7 +79,7 @@ export default function App() {
       <Route path="/login" element={<Login />} />
       <Route path="/register" element={<Register />} />
 
-      {/* Legal pages */}
+      {/* Legal pages - 🆕 Added these routes */}
       <Route path="/terms" element={<TermsOfService />} />
       <Route path="/privacy" element={<PrivacyPolicy />} />
       <Route path="/community-guidelines" element={<CommunityGuidelines />} />
@@ -105,23 +87,6 @@ export default function App() {
       <Route path="/security" element={<SecurityPolicy />} />
       <Route path="/ai-disclaimer" element={<AIDisclaimer />} />
       <Route path="/contractor-agreements" element={<ContractorAgreements />} />
-      <Route path="/sources" element={<SourcesLicences />} />
-      <Route path="/cookie-policy" element={<CookiePolicy />} />
-      <Route path="/subprocessors" element={<Subprocessors />} />
-
-      {/* Blog routes */}
-      <Route path="/blog" element={<BlogList />} />
-      <Route path="/blog/:slug" element={<BlogPost />} />
-
-      {/* Blog admin (protected) */}
-      <Route
-        path="/app/admin/blog"
-        element={
-          <ProtectedRoute>
-            <BlogAdmin />
-          </ProtectedRoute>
-        }
-      />
 
       {/* Main app (protected) */}
       <Route
@@ -158,7 +123,7 @@ export default function App() {
 
       {/* Aliases for legacy menu links */}
       <Route path="/settings" element={<Navigate to="/profile-settings" replace />} />
-      <Route path="/contact" element={<Navigate to="/contact-us" replace />} />
+      <Route path="/contact"  element={<Navigate to="/contact-us"      replace />} />
 
       {/* Fallback: redirect everything else back to landing */}
       <Route path="*" element={<Navigate to="/" replace />} />
