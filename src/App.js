@@ -115,7 +115,7 @@ export default function App() {
 
       {/* Blog admin (protected) */}
       <Route
-        path="/admin/blog"
+        path="/app/admin/blog"
         element={
           <ProtectedRoute>
             <BlogAdmin />
