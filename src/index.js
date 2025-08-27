@@ -62,6 +62,7 @@ root.render(
   </React.StrictMode>
 );
 
+/*
 // Register service worker for PWA functionality
 if ('serviceWorker' in navigator) {
   window.addEventListener('load', () => {
@@ -188,7 +189,7 @@ function showInstallPrompt() {
   // Handle install button click
   document.getElementById('install-yes').addEventListener('click', async () => {
     document.body.removeChild(installBanner);
-    
+  
     if (deferredPrompt) {
       deferredPrompt.prompt();
       const { outcome } = await deferredPrompt.userChoice;
@@ -241,4 +242,4 @@ if (window.matchMedia && window.matchMedia('(display-mode: standalone)').matches
     }
   `;
   document.head.appendChild(style);
-}// Another rebuild attempt
+} */ // Another rebuild attempt
