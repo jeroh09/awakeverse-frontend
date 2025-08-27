@@ -153,6 +153,7 @@ export default function Login() {
         <input
           id="email"
           type="email"
+          autoComplete="email"
           value={email}
           onChange={(e) => setEmail(e.target.value)}
           placeholder="Enter your email"
@@ -166,6 +167,7 @@ export default function Login() {
         <input
           id="password"
           type="password"
+          autoComplete="current-password"
           value={password}
           onChange={(e) => setPassword(e.target.value)}
           placeholder="Enter your password"

@@ -153,6 +153,7 @@ export default function Register() {
         <input
           id="email"
           type="email"
+          autoComplete="email"
           value={email}
           onChange={(e) => setEmail(e.target.value)}
           placeholder="Enter your email"
@@ -163,6 +164,7 @@ export default function Register() {
         <input
           id="password"
           type="password"
+          autoComplete="Create your secret key (min 6)​"
           value={password}
           onChange={(e) => setPassword(e.target.value)}
           placeholder="Create a password (min 6 characters)"
