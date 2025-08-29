@@ -1538,3 +1538,142 @@ body, html {
     height: 144px !important;
   }
 }
+
+/* ==============================================
+   CARD GLOW ENHANCEMENTS - APPEND TO LANDINGPAGE.CSS
+   Based on GitHub's bluish-white radial glow pattern
+   ============================================== */
+
+/* Desktop Chat Examples - Slide 2 */
+.chat-example {
+  box-shadow: 
+    0 8px 32px rgba(0, 0, 0, 0.4),                    /* Base shadow */
+    inset 0 1px 0 rgba(255, 255, 255, 0.1),           /* Inner highlight */
+    0 0 40px rgba(138, 180, 248, 0.12),               /* Inner glow - 40px blur */
+    0 0 80px rgba(138, 180, 248, 0.08),               /* Mid glow - 80px blur */
+    0 0 120px rgba(138, 180, 248, 0.04) !important;   /* Outer glow - 120px blur */
+}
+
+.chat-example:hover {
+  box-shadow: 
+    0 15px 40px rgba(0, 0, 0, 0.5),
+    inset 0 1px 0 rgba(255, 255, 255, 0.15),
+    0 0 50px rgba(138, 180, 248, 0.18),               /* Stronger on hover */
+    0 0 100px rgba(138, 180, 248, 0.12),
+    0 0 150px rgba(138, 180, 248, 0.06) !important;
+}
+
+/* Desktop Invitation Demo Chat - Slide 3 */
+.demo-chat {
+  box-shadow: 
+    0 8px 32px rgba(0, 0, 0, 0.4),
+    inset 0 1px 0 rgba(255, 255, 255, 0.1),
+    0 0 60px rgba(138, 180, 248, 0.15),               /* Larger glow for main demo */
+    0 0 100px rgba(138, 180, 248, 0.10),
+    0 0 140px rgba(138, 180, 248, 0.05) !important;
+}
+
+/* Character Panels - Slide 1 (Enhanced but subtle for rotation) */
+.character-panel {
+  box-shadow: 
+    0 8px 32px rgba(0, 0, 0, 0.4),
+    inset 0 1px 0 rgba(255, 255, 255, 0.08),
+    0 0 30px rgba(255, 215, 0, 0.08),                 /* Gold tint for character panels */
+    0 0 60px rgba(255, 215, 0, 0.05),
+    0 0 90px rgba(255, 215, 0, 0.03) !important;
+}
+
+.character-panel:hover {
+  box-shadow: 
+    0 12px 40px rgba(0, 0, 0, 0.5),
+    inset 0 1px 0 rgba(255, 255, 255, 0.12),
+    0 0 40px rgba(255, 215, 0, 0.12),
+    0 0 80px rgba(255, 215, 0, 0.08),
+    0 0 120px rgba(255, 215, 0, 0.04) !important;
+}
+
+/* Mobile Character Panels - Enhanced glow */
+.mobile-panel .mobile-character-avatar,
+.mobile-panel .expert-avatar {
+  box-shadow: 
+    0 0 40px rgba(255, 215, 0, 0.4),                  /* Existing gold glow */
+    0 0 20px rgba(255, 215, 0, 0.6),
+    inset 0 0 20px rgba(0, 0, 0, 0.3),
+    0 0 60px rgba(138, 180, 248, 0.08),               /* Added bluish undertone */
+    0 0 100px rgba(138, 180, 248, 0.04) !important;
+}
+
+/* Invite Suggestion Panels - Strong light source */
+.invite-suggestions {
+  box-shadow:
+    0 8px 25px rgba(0, 0, 0, 0.3),
+    0 0 40px rgba(138, 180, 248, 0.15),
+    0 0 80px rgba(138, 180, 248, 0.10),
+    0 0 120px rgba(138, 180, 248, 0.05) !important;
+}
+
+/* Invite Buttons - Subtle glow */
+.invite-button {
+  box-shadow:
+    0 4px 15px rgba(0, 0, 0, 0.2),
+    0 0 20px rgba(138, 180, 248, 0.08),
+    0 0 40px rgba(138, 180, 248, 0.04) !important;
+}
+
+.invite-button:hover {
+  box-shadow:
+    0 8px 25px rgba(255, 215, 0, 0.2),
+    0 0 30px rgba(138, 180, 248, 0.12),
+    0 0 60px rgba(138, 180, 248, 0.06) !important;
+}
+
+/* CTA Buttons - Enhanced primary light sources */
+.cta-primary,
+.start-exploring,
+.mobile-cta-button {
+  box-shadow: 
+    0 0 20px rgba(255, 215, 0, 0.3),                  /* Existing gold glow */
+    inset 0 0 20px rgba(255, 215, 0, 0.05),
+    0 0 40px rgba(138, 180, 248, 0.08),               /* Added bluish undertone */
+    0 0 80px rgba(138, 180, 248, 0.04) !important;
+}
+
+.cta-primary:hover,
+.start-exploring:hover,
+.mobile-cta-button:hover {
+  box-shadow: 
+    0 0 30px rgba(255, 215, 0, 0.5),
+    0 8px 32px rgba(255, 215, 0, 0.3),
+    inset 0 0 30px rgba(255, 215, 0, 0.08),
+    0 0 50px rgba(138, 180, 248, 0.12),               /* Stronger blue undertone */
+    0 0 100px rgba(138, 180, 248, 0.06) !important;
+}
+
+/* Performance optimization for glow effects */
+.chat-example,
+.demo-chat,
+.character-panel,
+.invite-suggestions,
+.mobile-character-avatar,
+.expert-avatar {
+  will-change: box-shadow;
+  transition: box-shadow 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+/* Reduce glow intensity for reduced motion preferences */
+@media (prefers-reduced-motion: reduce) {
+  .chat-example,
+  .demo-chat,
+  .character-panel,
+  .invite-suggestions,
+  .mobile-character-avatar,
+  .expert-avatar,
+  .invite-button,
+  .cta-primary,
+  .start-exploring,
+  .mobile-cta-button {
+    box-shadow: 
+      0 8px 32px rgba(0, 0, 0, 0.4),
+      inset 0 1px 0 rgba(255, 255, 255, 0.1) !important;
+  }
+}
