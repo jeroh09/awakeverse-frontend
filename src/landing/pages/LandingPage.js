@@ -451,11 +451,25 @@ export default function LandingPage() {
                           <span className="mobile-cursor">●</span>
                         </div>
                       </div>
-                      <Link to="/register" className="mobile-cta-button">
+                      <Link to="/register" 
+                        className="mobile-cta-button"
+                        style={{ marginBottom: '10px' }}> 
                         Start Chat →
                       </Link>
                       {index === 5 && (
-                        <div className="mobile-swipe-hint">Swipe to start your journey</div>
+                        <div 
+                          className="mobile-swipe-hint"
+                          style={{ 
+                            position: 'absolute',
+                            bottom: '7rem',
+                            right: '2rem',
+                            left: 'auto',
+                            transform: 'translateX(-50%)',
+                            textAlign: 'center'
+                          }}
+                        >
+                          Swipe to start your journey
+                        </div>
                       )}
                     </>
                   ) : (
@@ -484,11 +498,26 @@ export default function LandingPage() {
                           ))}
                         </div>
                       </div>
-                      <Link to="/register" className="mobile-cta-button">
+                      <Link to="/register" 
+                        className="mobile-cta-button"
+                        style={{ marginBottom: '10px' }}>
                         Start Chat →
                       </Link>
-                      {index === 0 && (
-                        <div className="mobile-swipe-hint">Swipe to explore minds</div>
+                     {index === 0 && (
+                       <div 
+                         className="mobile-swipe-hint" 
+                         style={{ 
+                           position: 'absolute',
+                           bottom: '7rem',
+                           right: '2rem',
+                           left: 'auto',
+                           transform: 'none',
+                           textAlign: 'right', 
+                           width: 'auto',
+                           
+                       }}>
+                         Swipe to explore more minds
+                       </div>
                       )}
                     </>
                   )}
@@ -711,6 +740,85 @@ export default function LandingPage() {
           </div>
         </>
       )}
+      {/* Legal Links - Seamlessly integrated into page */}
+      <div style={{
+        position: 'fixed',
+        bottom: '20px',
+        left: '50%',
+        transform: 'translateX(-50%)',
+        zIndex: 10,
+        display: 'flex',
+        alignItems: 'center',
+        gap: isMobile ? '16px' : '24px',
+        ...(isMobile && {
+          flexDirection: 'column',
+          gap: '8px'
+        })
+      }}>
+        <div style={{
+          display: 'flex',
+          gap: isMobile ? '12px' : '16px',
+          alignItems: 'center'
+        }}>
+          <Link 
+            to="/terms" 
+            style={{
+              color: 'rgba(255, 255, 255, 0.7)',
+              textDecoration: 'none',
+              fontSize: isMobile ? '12px' : '13px',
+              fontWeight: 300,
+              transition: 'color 0.3s ease'
+            }}
+            onMouseEnter={(e) => e.target.style.color = '#FFD700'}
+            onMouseLeave={(e) => e.target.style.color = 'rgba(255, 255, 255, 0.7)'}
+          >
+            Terms
+          </Link>
+          <span style={{
+            color: 'rgba(255, 255, 255, 0.4)',
+            fontSize: isMobile ? '10px' : '11px'
+          }}>•</span>
+          <Link 
+            to="/privacy" 
+            style={{
+              color: 'rgba(255, 255, 255, 0.7)',
+              textDecoration: 'none',
+              fontSize: isMobile ? '12px' : '13px',
+              fontWeight: 300,
+              transition: 'color 0.3s ease'
+            }}
+            onMouseEnter={(e) => e.target.style.color = '#FFD700'}
+            onMouseLeave={(e) => e.target.style.color = 'rgba(255, 255, 255, 0.7)'}
+          >
+            Privacy
+          </Link>
+          <span style={{
+            color: 'rgba(255, 255, 255, 0.4)',
+            fontSize: isMobile ? '10px' : '11px'
+          }}>•</span>
+          <Link 
+            to="/contact-us" 
+            style={{
+              color: 'rgba(255, 255, 255, 0.7)',
+              textDecoration: 'none',
+              fontSize: isMobile ? '12px' : '13px',
+              fontWeight: 300,
+              transition: 'color 0.3s ease'
+            }}
+            onMouseEnter={(e) => e.target.style.color = '#FFD700'}
+            onMouseLeave={(e) => e.target.style.color = 'rgba(255, 255, 255, 0.7)'}
+          >
+            Contact
+          </Link>
+        </div>
+        <div style={{
+          color: 'rgba(255, 255, 255, 0.5)',
+          fontSize: isMobile ? '10px' : '11px',
+          fontWeight: 300
+        }}>
+          © 2025 Awakeverse Ltd.
+        </div>
+      </div>
     </div>
   );
-}
+} 
