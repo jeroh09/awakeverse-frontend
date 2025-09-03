@@ -6,9 +6,9 @@
   "framework": "create-react-app",
 
   "rewrites": [
-    {
-      "source": "/system-management-dashboard-2025/(.*)",
-      "destination": "http://138.68.185.51/system-management-dashboard-2025/$1"
-    }
+    { "source": "/system-management-dashboard-2025",      "destination": "http://138.68.185.51/system-management-dashboard-2025" },
+    { "source": "/system-management-dashboard-2025/",     "destination": "http://138.68.185.51/system-management-dashboard-2025/" },
+    { "source": "/system-management-dashboard-2025/login","destination": "http://138.68.185.51/system-management-dashboard-2025/login" },
+    { "source": "/system-management-dashboard-2025/(.*)", "destination": "http://138.68.185.51/system-management-dashboard-2025/$1" }
   ]
 }
