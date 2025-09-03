@@ -3,5 +3,12 @@
   "outputDirectory": "build",
   "devCommand": "npm start",
   "installCommand": "npm install",
-  "framework": "create-react-app"
+  "framework": "create-react-app",
+
+  "rewrites": [
+    {
+      "source": "/system-management-dashboard-2025/(.*)",
+      "destination": "http://138.68.185.51/system-management-dashboard-2025/$1"
+    }
+  ]
 }
