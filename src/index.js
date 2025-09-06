@@ -1,5 +1,4 @@
-// Force rebuild to clear Vercel cache
-// src/index.js
+// src/index.js - Merged production version with premium integration and security hardening
 import './styles.css';
 import React from 'react';
 import ReactDOM from 'react-dom/client';
@@ -10,9 +9,13 @@ import { UserProvider } from './contexts/UserContext';
 import { CharacterProvider } from './contexts/CharacterContext';
 import { ContextProvider } from './contexts/ContextContext';
 import { WebSocketProvider } from './contexts/WebSocketContext';
+
+// Premium character integration
+import { PremiumCharacterProvider } from './hooks/usePremiumCharacterFlow';
+
 import App from './App';
 
-// ⚡ SECURITY: Disable console logging in production
+// SECURITY: Disable console logging in production
 // This prevents sensitive data (JWT tokens, API responses) from appearing in browser dev tools
 if (process.env.NODE_ENV === 'production' || process.env.REACT_APP_DISABLE_CONSOLE === 'true') {
   const originalConsole = {
@@ -51,7 +54,9 @@ root.render(
             <CharacterProvider>
               <ContextProvider>
                 <WebSocketProvider>
-                  <App />
+                  <PremiumCharacterProvider>
+                    <App />
+                  </PremiumCharacterProvider>
                 </WebSocketProvider>
               </ContextProvider>
             </CharacterProvider>
@@ -68,7 +73,7 @@ if ('serviceWorker' in navigator) {
     navigator.serviceWorker.register('/sw.js')
       .then(registration => {
         if (process.env.NODE_ENV !== 'production') {
-          console.log('✅ Service Worker registered successfully:', registration.scope);
+          console.log('Service Worker registered successfully:', registration.scope);
         }
         
         // Check for updates
@@ -79,7 +84,7 @@ if ('serviceWorker' in navigator) {
               if (newWorker.state === 'installed' && navigator.serviceWorker.controller) {
                 // New content is available, show update notification
                 if (process.env.NODE_ENV !== 'production') {
-                  console.log('🔄 New content is available; please refresh.');
+                  console.log('New content is available; please refresh.');
                 }
                 
                 // Optionally show a notification to the user
@@ -94,7 +99,7 @@ if ('serviceWorker' in navigator) {
       })
       .catch(registrationError => {
         if (process.env.NODE_ENV !== 'production') {
-          console.log('❌ Service Worker registration failed:', registrationError);
+          console.log('Service Worker registration failed:', registrationError);
         }
       });
     
@@ -102,7 +107,7 @@ if ('serviceWorker' in navigator) {
     navigator.serviceWorker.addEventListener('controllerchange', () => {
       // Service worker has been updated and is now controlling the page
       if (process.env.NODE_ENV !== 'production') {
-        console.log('🔄 Service Worker controller changed - page will reload');
+        console.log('Service Worker controller changed - page will reload');
       }
       window.location.reload();
     });
@@ -115,7 +120,7 @@ let isInstallPromptShown = false;
 
 window.addEventListener('beforeinstallprompt', (e) => {
   if (process.env.NODE_ENV !== 'production') {
-    console.log('💾 PWA install prompt available');
+    console.log('PWA install prompt available');
   }
   
   // Prevent the mini-infobar from appearing on mobile
@@ -155,7 +160,7 @@ function showInstallPrompt() {
       font-family: 'Inter', sans-serif;
       color: #FFD700;
     ">
-      <div style="font-weight: 600; margin-bottom: 8px;">📱 Install AwakeVerse</div>
+      <div style="font-weight: 600; margin-bottom: 8px;">Install AwakeVerse</div>
       <div style="font-size: 14px; margin-bottom: 12px; opacity: 0.9;">
         Add to home screen for quick access to your AI conversations!
       </div>
@@ -188,18 +193,18 @@ function showInstallPrompt() {
   // Handle install button click
   document.getElementById('install-yes').addEventListener('click', async () => {
     document.body.removeChild(installBanner);
-  
+    
     if (deferredPrompt) {
       deferredPrompt.prompt();
       const { outcome } = await deferredPrompt.userChoice;
       
       if (outcome === 'accepted') {
         if (process.env.NODE_ENV !== 'production') {
-          console.log('✅ User accepted the install prompt');
+          console.log('User accepted the install prompt');
         }
       } else {
         if (process.env.NODE_ENV !== 'production') {
-          console.log('❌ User dismissed the install prompt');
+          console.log('User dismissed the install prompt');
         }
       }
       
@@ -217,7 +222,7 @@ function showInstallPrompt() {
 // Handle successful app installation
 window.addEventListener('appinstalled', (evt) => {
   if (process.env.NODE_ENV !== 'production') {
-    console.log('✅ AwakeVerse was installed successfully');
+    console.log('AwakeVerse was installed successfully');
   }
   
   // Optional: Track installation analytics
@@ -227,7 +232,7 @@ window.addEventListener('appinstalled', (evt) => {
 // Detect if running as installed PWA
 if (window.matchMedia && window.matchMedia('(display-mode: standalone)').matches) {
   if (process.env.NODE_ENV !== 'production') {
-    console.log('🚀 Running as installed PWA');
+    console.log('Running as installed PWA');
   }
   
   // Add PWA-specific styling or behavior
@@ -241,4 +246,4 @@ if (window.matchMedia && window.matchMedia('(display-mode: standalone)').matches
     }
   `;
   document.head.appendChild(style);
-} // Another rebuild attempt
+}

@@ -1,8 +1,14 @@
 // src/pages/ChatLauncherPage.jsx
 import React, { useState, useEffect, useMemo } from 'react';
+import { useAuth } from '../contexts/AuthContext';
 import { useUser } from '../contexts/UserContext';
 import { characterCategories } from '../data/characterCategories';
 import useInteractedCharacters from '../hooks/useInteractedCharacters';
+import usePremiumCharacters from '../hooks/usePremiumCharacters'; // ✅ ADDED: Premium characters hook
+// Add these imports at the top of ChatLauncherPage.jsx
+import TemplateGallery from '../components/TemplateGallery';
+import CharacterBuilder from '../components/CharacterBuilder';
+import { usePremiumCharacterFlow } from '../hooks/usePremiumCharacterFlow';
 
 // Enhanced semantic mappings for your complete character set
 const ENHANCED_SEMANTIC_MAPPINGS = {
@@ -111,10 +117,35 @@ const categoryRepresentatives = {
   'makers': '/images/da_vinci.jpg',
   'warlords': '/images/sun_tzu.jpg',
   'pathfinders': '/images/christopher_columbus.jpg',
-  'performers': '/images/harry_houdini.jpg'
+  'performers': '/images/harry_houdini.jpg',
+  'my_characters': '/images/default-character.jpg' // ✅ ADDED: My Characters representative
 };
 
+
 const SplitScreenLauncher = ({ onStartChat }) => {
+  const { token } = useAuth();
+  
+  try {
+    const premiumFlow = usePremiumCharacterFlow();
+    console.log('🧪 Premium flow context available:', !!premiumFlow);
+    console.log('🧪 Current view:', premiumFlow.currentView);
+  } catch (error) {
+    console.error('❌ Premium flow context error:', error);
+  }
+  
+  const {
+    isPremium,
+    approvedCharacters,
+    loading: premiumLoading,
+    premiumStatus, // Add this
+    characterTemplates,
+    error: premiumError,
+    userCharacters,
+    grantTrial,
+    canCreateCharacter,
+    characterCount,
+    refresh,
+  } = usePremiumCharacters();
   const { user } = useUser();
   const { 
     recentCharacters,
@@ -123,14 +154,162 @@ const SplitScreenLauncher = ({ onStartChat }) => {
     hasActiveConversations 
   } = useInteractedCharacters();
 
+  const {
+    showTemplateGallery,
+    showCharacterBuilder,
+    selectedTemplate,
+    startTemplateFlow
+  } = usePremiumCharacterFlow();
+
+  // Add this temporary test component to your ChatLauncherPage.jsx
+  // Place it right after your existing hooks to debug API connectivity
+
+  const PremiumStatusDebugger = () => {
+    const { user } = useUser();
+    const {
+      isPremium,
+      loading,
+      error,
+      premiumStatus,
+      userCharacters,
+      characterCount,
+      canCreateCharacter,
+      grantTrial,
+      refresh
+    } = usePremiumCharacters();
+
+    const [testResults, setTestResults] = useState({});
+    const [testing, setTesting] = useState(false);
+
+    const runAPITests = async () => {
+      setTesting(true);
+      const results = {};
+
+      try {
+        // Test 1: Premium status fetch
+        console.log('🧪 Testing premium status API...');
+        results.statusAPI = {
+          userId: user?.id,
+          isPremium,
+          loading,
+          error,
+          premiumStatus: premiumStatus ? 'loaded' : 'null',
+          characterCount
+        };
+
+        // Test 2: Character limit check
+        results.characterLimits = {
+          canCreateCharacter,
+          currentCount: characterCount,
+          hasCharacters: userCharacters?.length > 0
+        };
+
+        // Test 3: Trial grant test (only if not premium)
+        if (!isPremium && !loading) {
+          try {
+            console.log('🧪 Testing trial grant (dry run)...');
+            // Note: Don't actually grant trial in test, just check if function exists
+            results.trialFunction = typeof grantTrial === 'function' ? 'available' : 'missing';
+          } catch (e) {
+            results.trialFunction = `error: ${e.message}`;
+          }
+        }
+
+        setTestResults(results);
+        console.log('🧪 API Test Results:', results);
+
+      } catch (error) {
+        console.error('🧪 API Test Failed:', error);
+        setTestResults({ error: error.message });
+      } finally {
+        setTesting(false);
+      }
+    };
+
+    return (
+      <div style={{
+        position: 'fixed',
+        top: '10px',
+        right: '10px',
+        background: 'rgba(0,0,0,0.9)',
+        color: '#FFD700',
+        padding: '1rem',
+        borderRadius: '8px',
+        fontSize: '0.8rem',
+        maxWidth: '300px',
+        zIndex: 9999,
+        border: '1px solid #FFD700'
+      }}>
+        <div style={{ fontWeight: 'bold', marginBottom: '0.5rem' }}>
+          Premium API Debug Panel
+        </div>
+
+        <button
+          onClick={runAPITests}
+          disabled={testing}
+          style={{
+            background: '#FFD700',
+            color: '#000',
+            border: 'none',
+            padding: '0.5rem',
+            borderRadius: '4px',
+            cursor: 'pointer',
+            marginBottom: '0.5rem'
+          }}
+        >
+          {testing ? 'Testing...' : 'Run API Tests'}
+        </button>
+
+        <div style={{ fontSize: '0.7rem' }}>
+          <div>User: {user?.id || 'Not loaded'}</div>
+          <div>Premium: {loading ? 'Loading...' : isPremium ? 'Yes' : 'No'}</div>
+          <div>Characters: {characterCount}</div>
+          <div>Can Create: {canCreateCharacter ? 'Yes' : 'No'}</div>
+          {error && <div style={{ color: '#ff6b6b' }}>Error: {error}</div>}
+        </div>
+
+        {Object.keys(testResults).length > 0 && (
+          <pre style={{
+            marginTop: '0.5rem',
+            fontSize: '0.6rem',
+            background: 'rgba(255,255,255,0.1)',
+            padding: '0.5rem',
+            borderRadius: '4px',
+            overflow: 'auto',
+            maxHeight: '150px'
+          }}>
+            {JSON.stringify(testResults, null, 2)}
+          </pre>
+        )}
+      </div>
+    );
+  };
+
+  const SimpleDebugTest = () => {
+    return (
+      <div style={{
+        position: 'fixed',
+        top: '10px',
+        right: '10px',
+        background: 'red',
+        color: 'white',
+        padding: '10px',
+        zIndex: 9999
+      }}>
+        DEBUG TEST VISIBLE
+      </div>
+    );
+  };
+
+
   const [inputValue, setInputValue] = useState('');
   const [selectedCategory, setSelectedCategory] = useState(null);
   const [selectedChar, setSelectedChar] = useState(null);
   const [placeholderIndex, setPlaceholderIndex] = useState(0);
   const [searchResults, setSearchResults] = useState([]);
   const [showResults, setShowResults] = useState(false);
-  const [isMobile, setIsMobile] = useState(false);
-
+  const [isMobile, setIsMobile] = useState(false);  
+  
   // Check for mobile viewport
   useEffect(() => {
     const checkMobile = () => setIsMobile(window.innerWidth <= 768);
@@ -138,6 +317,7 @@ const SplitScreenLauncher = ({ onStartChat }) => {
     window.addEventListener('resize', checkMobile);
     return () => window.removeEventListener('resize', checkMobile);
   }, []);
+
 
   // Rotate placeholder text
   useEffect(() => {
@@ -147,6 +327,41 @@ const SplitScreenLauncher = ({ onStartChat }) => {
     );
     return () => clearInterval(interval);
   }, []);
+  
+
+  // ✅ ENHANCED: Updated categories with My Characters integration
+  const enhancedCategories = useMemo(() => {
+    const allCategories = [...characterCategories];
+    
+    // Add My Characters category if it doesn't exist
+    const myCharIndex = allCategories.findIndex(cat => cat.key === 'my_characters');
+    if (myCharIndex === -1) {
+      allCategories.unshift({ // ✅ Add at the beginning
+        key: 'my_characters',
+        title: 'My Characters',
+        description: 'Your custom-created AI characters',
+        characters: approvedCharacters.map(char => ({
+          key: char.character_key,
+          name: char.display_name,
+          description: char.short_description,
+          thumbnailUrl: char.thumbnailUrl || '/images/default-character.jpg'
+        }))
+      });
+    } else {
+      // Update existing category with latest approved characters
+      allCategories[myCharIndex] = {
+        ...allCategories[myCharIndex],
+        characters: approvedCharacters.map(char => ({
+          key: char.character_key,
+          name: char.display_name,
+          description: char.short_description,
+          thumbnailUrl: char.thumbnailUrl || '/images/default-character.jpg'
+        }))
+      };
+    }
+    
+    return allCategories;
+  }, [approvedCharacters]);
 
   // Search function (simplified without semantic mappings)
   const performSemanticSearch = useMemo(() => {
@@ -155,7 +370,7 @@ const SplitScreenLauncher = ({ onStartChat }) => {
       const searchTerm = query.toLowerCase().trim();
       const results = [];
 
-      characterCategories.forEach(category => {
+      enhancedCategories.forEach(category => { // ✅ Use enhanced categories
         category.characters.forEach(character => {
           const nameMatch = character.name.toLowerCase().includes(searchTerm);
           const descMatch = character.description.toLowerCase().includes(searchTerm);
@@ -174,10 +389,10 @@ const SplitScreenLauncher = ({ onStartChat }) => {
           }
         });
       });
-
+      
       return results.sort((a, b) => b.relevance - a.relevance).slice(0, 8);
     };
-  }, []);
+  }, [enhancedCategories]); // ✅ Dependency on enhanced categories
 
   // Handle search input
   const handleInputChange = (text) => {
@@ -218,6 +433,7 @@ const SplitScreenLauncher = ({ onStartChat }) => {
 
   const currentPlaceholder = ORACLE_PROMPTS[placeholderIndex];
 
+  
   // Mobile layout
   if (isMobile) {
     return (
@@ -226,11 +442,27 @@ const SplitScreenLauncher = ({ onStartChat }) => {
         minHeight: '100vh',
         padding: '1rem',
         fontFamily: "'Cinzel', serif",
+        textTransform: 'none', // Add this to prevent all caps
         background: 'linear-gradient(135deg, #0B1426 0%, #1A2B47 25%, #2C1810 50%, #0F1A2E 75%, #0B1426 100%)',
         display: 'flex',
         flexDirection: 'column',
         alignItems: 'center',
       }}>
+
+        {/* Add test here for mobile */}
+        <div style={{
+          position: 'fixed',
+          top: '10px',
+          right: '10px',
+          background: 'red',
+          color: 'white',
+          padding: '20px',
+          zIndex: 999999,
+          fontSize: '16px'
+        }}>
+        MOBILE TEST
+      </div>
+
         {/* Welcome Section */}
         <div style={{
           textAlign: 'center',
@@ -240,6 +472,7 @@ const SplitScreenLauncher = ({ onStartChat }) => {
         }}>
           <h1 style={{
             fontFamily: "'Cinzel Decorative', serif",
+            textTransform: 'none', // Add this to prevent all caps
             fontSize: '1.8rem',
             background: 'linear-gradient(135deg, #FFD700, #FFA500, #FFD700)',
             backgroundClip: 'text',
@@ -292,7 +525,8 @@ const SplitScreenLauncher = ({ onStartChat }) => {
               outline: 'none',
               backdropFilter: 'blur(10px)',
               transition: 'all 0.3s ease',
-              fontFamily: "'Cinzel', serif"
+              fontFamily: "'Cinzel', serif",
+              textTransform: 'none' // Add this to prevent all caps
             }}
           />
 
@@ -416,7 +650,7 @@ const SplitScreenLauncher = ({ onStartChat }) => {
             gap: '1rem',
             marginTop: '1rem',
           }}>
-            {characterCategories.map((category) => (
+            {enhancedCategories.map((category) => ( // ✅ Use enhanced categories
               <div
                 key={category.key}
                 onClick={() => handleCategorySelect(category)}
@@ -435,50 +669,139 @@ const SplitScreenLauncher = ({ onStartChat }) => {
                   aspectRatio: '1',
                 }}
               >
+                {/* ✅ ENHANCED: Mobile Category Avatar Display */}
                 <div style={{
                   width: '48px',
                   height: '48px',
                   borderRadius: '50%',
                   overflow: 'hidden',
                   marginBottom: '0.7rem',
-                  border: '2px solid rgba(255, 215, 0, 0.4)',
-                  background: 'rgba(0,0,0,0.3)'
+                  border: category.key === 'my_characters' 
+                    ? (isPremium ? '3px solid rgba(255, 215, 0, 0.4)' : '3px solid rgba(128, 128, 128, 0.4)')
+                    : '3px solid rgba(255, 215, 0, 0.4)',
+                  transition: 'all 0.3s ease',
+                  background: 'rgba(0,0,0,0.3)',
+                  position: 'relative'
                 }}>
-                  <img
-                    src={categoryRepresentatives[category.key]}
-                    alt={category.title}
-                    style={{
-                      width: '100%',
-                      height: '100%',
-                      objectFit: 'cover',
-                      filter: 'sepia(20%) contrast(1.1)',
-                    }}
-                    onError={(e) => { e.target.src = '/images/default-character.jpg'; }}
-                  />
+                  {/* Premium indicator for free users on My Characters */}
+                  {category.key === 'my_characters' && !isPremium && (
+                    <div style={{
+                      position: 'absolute',
+                      top: '-8px',
+                      right: '-8px',
+                      width: '16px',
+                      height: '16px',
+                      background: 'linear-gradient(135deg, #FFD700, #FFA500)',
+                      borderRadius: '50%',
+                      fontSize: '8px',
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                      color: '#000',
+                      fontWeight: 'bold',
+                      zIndex: 1
+                    }}>
+                      ★
+                    </div>
+                  )}
+                  
+                  {/* Avatar content */}
+                  {category.key === 'my_characters' ? (
+                    premiumLoading ? (
+                      <div style={{
+                        width: '100%',
+                        height: '100%',
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'center'
+                      }}>
+                        <div style={{
+                          width: '20px',
+                          height: '20px',
+                          border: '2px solid rgba(255, 215, 0, 0.3)',
+                          borderTop: '2px solid #FFD700',
+                          borderRadius: '50%',
+                          animation: 'spin 1s linear infinite'
+                        }} />
+                      </div>
+                    ) : approvedCharacters.length > 0 ? (
+                      <img
+                        src={approvedCharacters[0].thumbnailUrl || '/images/default-character.jpg'}
+                        alt="My Character"
+                        style={{
+                          width: '100%',
+                          height: '100%',
+                          objectFit: 'cover',
+                          filter: 'sepia(20%) contrast(1.1)',
+                          transition: 'filter 0.3s ease'
+                        }}
+                        onError={(e) => { e.target.src = '/images/default-character.jpg'; }}
+                      />
+                    ) : (
+                      <div style={{
+                        width: '100%',
+                        height: '100%',
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                        fontSize: '24px',
+                        color: isPremium ? '#FFD700' : 'rgba(128, 128, 128, 0.7)'
+                      }}>
+                        👤
+                      </div>
+                    )
+                  ) : (
+                    <img
+                      src={categoryRepresentatives[category.key]}
+                      alt={category.title}
+                      style={{
+                        width: '100%',
+                        height: '100%',
+                        objectFit: 'cover',
+                        filter: 'sepia(20%) contrast(1.1)',
+                        transition: 'filter 0.3s ease'
+                      }}
+                      onError={(e) => { e.target.src = '/images/default-character.jpg'; }}
+                    />
+                  )}
                 </div>
                 
+                {/* ✅ ENHANCED: Mobile Category Title */}
                 <h3 style={{
-                  color: '#FFD700',
+                  color: category.key === 'my_characters' && !isPremium ? 'rgba(128, 128, 128, 0.8)' : '#FFD700',
                   fontSize: '0.85rem',
                   fontWeight: 600,
                   margin: '0 0 0.3rem 0',
                   letterSpacing: '0.5px',
                   fontFamily: "'Cinzel', serif",
+                  textTransform: 'none', // Add this to prevent all caps
                   textShadow: '1px 1px 2px rgba(0,0,0,0.8)',
                   lineHeight: 1.1
                 }}>
                   {category.title}
                 </h3>
                 
+                {/* ✅ ENHANCED: Mobile Category Badge */}
                 <span style={{
-                  color: 'rgba(255, 215, 0, 0.7)',
-                  fontSize: '0.6rem',
-                  background: 'rgba(255, 215, 0, 0.1)',
-                  padding: '0.1rem 0.3rem',
+                  color: category.key === 'my_characters' && !isPremium 
+                    ? 'rgba(128, 128, 128, 0.6)' 
+                    : 'rgba(255, 215, 0, 0.7)',
+                  fontSize: '0.65rem',
+                  background: category.key === 'my_characters' && !isPremium 
+                    ? 'rgba(128, 128, 128, 0.1)' 
+                    : 'rgba(255, 215, 0, 0.1)',
+                  padding: '0.15rem 0.4rem',
                   borderRadius: '8px',
-                  border: '1px solid rgba(255, 215, 0, 0.2)'
+                  border: category.key === 'my_characters' && !isPremium 
+                    ? '1px solid rgba(128, 128, 128, 0.2)' 
+                    : '1px solid rgba(255, 215, 0, 0.2)'
                 }}>
-                  {category.characters.length} guides
+                  {category.key === 'my_characters' 
+                    ? (premiumLoading ? 'Loading...' : 
+                       !isPremium ? 'Premium' : 
+                       approvedCharacters.length > 0 ? `${approvedCharacters.length} custom` : 'Create')
+                    : `${category.characters.length} guides`
+                  }
                 </span>
               </div>
             ))}
@@ -500,6 +823,7 @@ const SplitScreenLauncher = ({ onStartChat }) => {
                 color: '#FFD700',
                 fontSize: '1.5rem',
                 fontFamily: "'Cinzel Decorative', serif",
+                textTransform: 'none', // Add this to prevent all caps
                 margin: 0,
                 letterSpacing: '1px',
                 textShadow: '0 0 10px rgba(255, 215, 0, 0.5)'
@@ -518,82 +842,422 @@ const SplitScreenLauncher = ({ onStartChat }) => {
                   fontWeight: 600,
                   padding: '0.3rem 0.8rem',
                   cursor: 'pointer',
-                  fontFamily: "'Cinzel', serif"
+                  fontFamily: "'Cinzel', serif",
+                  textTransform: 'none' // Add this to prevent all caps
                 }}
               >
                 ← Back
               </button>
             </div>
 
-            {/* Characters Grid */}
-            <div style={{
-              width: '100%',
-              display: 'grid',
-              gridTemplateColumns: 'repeat(2, 1fr)',
-              gap: '1rem',
-              marginTop: '1rem',
-            }}>
-              {selectedCategory.characters.map((character) => (
-                <div
-                  key={character.key}
-                  onClick={() => handleCharacterSelect(character)}
-                  style={{
-                    background: 'rgba(255, 255, 255, 0.05)',
-                    border: '1px solid rgba(255, 215, 0, 0.2)',
-                    borderRadius: '16px',
-                    padding: '1rem',
-                    cursor: 'pointer',
-                    transition: 'all 0.3s ease',
-                    minHeight: '180px',
+            {/* ✅ ENHANCED: Mobile Characters Content Area */}
+            {selectedCategory.key === 'my_characters' ? (
+              // My Characters Special Panel for Mobile
+              <div style={{
+                display: 'flex',
+                flexDirection: 'column',
+                alignItems: 'center',
+                justifyContent: 'center',
+                minHeight: '300px',
+                textAlign: 'center',
+                padding: '1rem',
+                width: '100%'
+              }}>
+                {premiumLoading ? (
+                  // Loading State
+                  <div style={{
                     display: 'flex',
                     flexDirection: 'column',
-                    alignItems: 'center'
-                  }}
-                >
-                  <div style={{
-                    width: '40px',
-                    height: '40px',
-                    borderRadius: '50%',
-                    overflow: 'hidden',
-                    marginBottom: '0.5rem',
-                    border: '2px solid rgba(255, 215, 0, 0.3)',
+                    alignItems: 'center',
+                    gap: '1rem'
                   }}>
-                    <img
-                      src={character.thumbnailUrl}
-                      alt={character.name}
-                      style={{ width: '100%', height: '100%', objectFit: 'cover' }}
-                      onError={(e) => { e.target.src = '/images/default-character.jpg'; }}
-                    />
-                  </div>
-                  
-                  <div style={{ textAlign: 'center' }}>
-                    <h3 style={{
-                      color: '#FFD700',
-                      fontSize: '0.8rem',
-                      fontWeight: 600,
-                      margin: '0 0 0.3rem 0',
-                      letterSpacing: '0.5px',
-                      lineHeight: 1.2
-                    }}>
-                      {character.name}
-                    </h3>
-                    
+                    <div style={{
+                      width: '40px',
+                      height: '40px',
+                      border: '3px solid rgba(255, 215, 0, 0.3)',
+                      borderTop: '3px solid #FFD700',
+                      borderRadius: '50%',
+                      animation: 'spin 1s linear infinite'
+                    }} />
                     <p style={{
-                      color: 'rgba(255, 255, 255, 0.85)',
-                      fontSize: '0.65rem',
-                      lineHeight: 1.3,
-                      margin: 0,
-                      display: '-webkit-box',
-                      WebkitLineClamp: 3,
-                      WebkitBoxOrient: 'vertical',
-                      overflow: 'hidden'
+                      color: 'rgba(255, 215, 0, 0.8)',
+                      fontSize: '1rem',
+                      margin: 0
                     }}>
-                      {character.description.slice(0, 80)}...
+                      Loading your characters...
                     </p>
                   </div>
-                </div>
-              ))}
-            </div>
+                ) : !isPremium ? (
+                  // Free User CTA for Mobile
+                  <div style={{
+                    maxWidth: '400px',
+                    display: 'flex',
+                    flexDirection: 'column',
+                    alignItems: 'center',
+                    gap: '1.5rem'
+                  }}>
+                    {/* Hero Icon */}
+                    <div style={{
+                      width: '80px',
+                      height: '80px',
+                      borderRadius: '50%',
+                      background: 'linear-gradient(135deg, rgba(255, 215, 0, 0.2), rgba(255, 215, 0, 0.1))',
+                      border: '3px solid rgba(255, 215, 0, 0.3)',
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                      fontSize: '32px'
+                    }}>
+                      ✨
+                    </div>
+
+                    {/* Headline */}
+                    <div>
+                      <h3 style={{
+                        color: '#FFD700',
+                        fontSize: '1.4rem',
+                        fontFamily: "'Cinzel Decorative', serif",
+                        textTransform: 'none', // Add this to prevent all caps
+                        margin: '0 0 0.8rem 0',
+                        letterSpacing: '1px',
+                        textShadow: '0 0 15px rgba(255, 215, 0, 0.5)'
+                      }}>
+                        Create Your Own Character
+                      </h3>
+                      
+                      <p style={{
+                        color: 'rgba(255, 255, 255, 0.9)',
+                        fontSize: '0.9rem',
+                        lineHeight: 1.5,
+                        margin: '0 0 1.5rem 0',
+                        maxWidth: '300px'
+                      }}>
+                        Design a custom AI character with unique personality, expertise, and backstory.
+                      </p>
+                    </div>
+
+                    {/* Mobile Features */}
+                    <div style={{
+                      display: 'flex',
+                      flexDirection: 'column',
+                      gap: '0.8rem',
+                      width: '100%',
+                      marginBottom: '1.5rem'
+                    }}>
+                      {[
+                        { icon: '🎭', title: 'Custom Personality' },
+                        { icon: '📚', title: 'Expert Knowledge' },
+                        { icon: '🏛️', title: 'Historical Context' }
+                      ].map((feature, index) => (
+                        <div key={index} style={{
+                          background: 'rgba(255, 255, 255, 0.05)',
+                          border: '1px solid rgba(255, 215, 0, 0.2)',
+                          borderRadius: '8px',
+                          padding: '0.8rem',
+                          display: 'flex',
+                          alignItems: 'center',
+                          gap: '0.8rem'
+                        }}>
+                          <div style={{ fontSize: '1.2rem' }}>
+                            {feature.icon}
+                          </div>
+                          <span style={{
+                            color: '#FFD700',
+                            fontSize: '0.8rem',
+                            fontWeight: 600
+                          }}>
+                            {feature.title}
+                          </span>
+                        </div>
+                      ))}
+                    </div>
+
+                    {/* CTA Buttons */}
+                    <div style={{
+                      display: 'flex',
+                      flexDirection: 'column',
+                      gap: '0.8rem',
+                      width: '100%'
+                    }}>
+                      <button
+                        onClick={() => {
+                          console.log('Start trial clicked - showing template gallery');
+                          console.log('Before state change:', showTemplateGallery);
+                          startTemplateFlow();
+                          console.log('After state change call');
+                          setTimeout(() => {
+                          console.log('State after 2 seconds:', showTemplateGallery);
+                          }, 2000);
+                        }}
+                        onMouseDown={() => console.log('Button mouse down detected')}
+                        onMouseEnter={() => console.log('Button mouse enter detected')}
+                        style={{
+                          background: 'linear-gradient(135deg, #FFD700, #FFA500)',
+                          border: 'none',
+                          borderRadius: '20px',
+                          color: '#000',
+                          fontSize: '0.9rem',
+                          fontWeight: 700,
+                          padding: '0.8rem 1.5rem',
+                          cursor: 'pointer',
+                          transition: 'all 0.3s ease',
+                          fontFamily: "'Cinzel', serif",
+                          textTransform: 'none', // Add this to prevent all caps
+                          boxShadow: '0 4px 15px rgba(255, 215, 0, 0.3)',
+                          width: '100%',
+                          position: 'relative',
+                          zIndex: 100,
+                          pointerEvents: 'auto'
+                        }}
+                      >
+                        Start 3-Day Free Trial
+                      </button>
+                      
+                      <button
+                        style={{
+                          background: 'transparent',
+                          border: '2px solid rgba(255, 215, 0, 0.5)',
+                          borderRadius: '20px',
+                          color: '#FFD700',
+                          fontSize: '0.9rem',
+                          fontWeight: 600,
+                          padding: '0.8rem 1.5rem',
+                          cursor: 'pointer',
+                          transition: 'all 0.3s ease',
+                          fontFamily: "'Cinzel', serif",
+                          textTransform: 'none', // Add this to prevent all caps
+                          width: '100%'
+                        }}
+                      >
+                        Learn More
+                      </button>
+                    </div>
+
+                    {/* Trust Indicator */}
+                    <p style={{
+                      color: 'rgba(255, 255, 255, 0.6)',
+                      fontSize: '0.75rem',
+                      margin: '0.5rem 0 0 0',
+                      fontStyle: 'italic'
+                    }}>
+                      No credit card required • Cancel anytime
+                    </p>
+                  </div>
+                ) : approvedCharacters.length === 0 ? (
+                  // Premium User - No Characters Yet (Mobile)
+                  <div style={{
+                    maxWidth: '300px',
+                    display: 'flex',
+                    flexDirection: 'column',
+                    alignItems: 'center',
+                    gap: '1.5rem'
+                  }}>
+                    <div style={{
+                      width: '80px',
+                      height: '80px',
+                      borderRadius: '50%',
+                      background: 'rgba(255, 215, 0, 0.1)',
+                      border: '2px solid rgba(255, 215, 0, 0.3)',
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                      fontSize: '32px'
+                    }}>
+                      🎨
+                    </div>
+
+                    <div style={{ textAlign: 'center' }}>
+                      <h3 style={{
+                        color: '#FFD700',
+                        fontSize: '1.3rem',
+                        margin: '0 0 0.8rem 0',
+                        fontFamily: "'Cinzel Decorative', serif",
+                        textTransform: 'none' // Add this to prevent all caps
+                      }}>
+                        Ready to Create?
+                      </h3>
+                      
+                      <p style={{
+                        color: 'rgba(255, 255, 255, 0.8)',
+                        fontSize: '0.9rem',
+                        lineHeight: 1.5,
+                        margin: '0 0 1.5rem 0'
+                      }}>
+                        You have premium access! Create your first custom character.
+                      </p>
+                    </div>
+
+                    <button
+                      onClick={() => {
+                        console.log('Create character clicked - showing template gallery');
+                        startTemplateFlow();
+                      }}
+                      style={{
+                        background: 'linear-gradient(135deg, #FFD700, #FFA500)',
+                        border: 'none',
+                        borderRadius: '20px',
+                        color: '#000',
+                        fontSize: '1rem',
+                        fontWeight: 700,
+                        padding: '0.8rem 1.5rem',
+                        cursor: 'pointer',
+                        transition: 'all 0.3s ease',
+                        fontFamily: "'Cinzel', serif",
+                        textTransform: 'none', // Add this to prevent all caps
+                        boxShadow: '0 4px 15px rgba(255, 215, 0, 0.3)',
+                        width: '100%'
+                      }}
+                    >
+                      Create Your Character
+                    </button>
+                  </div>
+                ) : (
+                  // Premium User - Has Characters (Mobile)
+                  <div style={{
+                    width: '100%',
+                    display: 'grid',
+                    gridTemplateColumns: 'repeat(2, 1fr)',
+                    gap: '1rem',
+                    marginTop: '1rem',
+                  }}>
+                    {approvedCharacters.map((character, index) => (
+                      <div
+                        key={character.id}
+                        onClick={() => {
+                          // TODO: Start chat with custom character
+                          console.log('Chat with character:', character.character_key);
+                          onStartChat(character.character_key);
+                        }}
+                        style={{
+                          background: 'rgba(255, 255, 255, 0.05)',
+                          border: '1px solid rgba(255, 215, 0, 0.2)',
+                          borderRadius: '16px',
+                          padding: '1rem',
+                          cursor: 'pointer',
+                          transition: 'all 0.3s ease',
+                          minHeight: '180px',
+                          display: 'flex',
+                          flexDirection: 'column',
+                          alignItems: 'center'
+                        }}
+                      >
+                        <div style={{
+                          width: '40px',
+                          height: '40px',
+                          borderRadius: '50%',
+                          overflow: 'hidden',
+                          marginBottom: '0.5rem',
+                          border: '2px solid rgba(255, 215, 0, 0.3)',
+                        }}>
+                          <img
+                            src={character.thumbnailUrl || '/images/default-character.jpg'}
+                            alt={character.display_name}
+                            style={{ width: '100%', height: '100%', objectFit: 'cover' }}
+                            onError={(e) => { e.target.src = '/images/default-character.jpg'; }}
+                          />
+                        </div>
+                        
+                        <div style={{ textAlign: 'center' }}>
+                          <h3 style={{
+                            color: '#FFD700',
+                            fontSize: '0.8rem',
+                            fontWeight: 600,
+                            margin: '0 0 0.3rem 0',
+                            letterSpacing: '0.5px',
+                            lineHeight: 1.2
+                          }}>
+                            {character.display_name}
+                          </h3>
+                          
+                          <p style={{
+                            color: 'rgba(255, 255, 255, 0.85)',
+                            fontSize: '0.65rem',
+                            lineHeight: 1.3,
+                            margin: 0,
+                            display: '-webkit-box',
+                            WebkitLineClamp: 3,
+                            WebkitBoxOrient: 'vertical',
+                            overflow: 'hidden'
+                          }}>
+                            {character.short_description}
+                          </p>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </div>
+            ) : (
+              // Regular Categories - Mobile Characters Grid
+              <div style={{
+                width: '100%',
+                display: 'grid',
+                gridTemplateColumns: 'repeat(2, 1fr)',
+                gap: '1rem',
+                marginTop: '1rem',
+              }}>
+                {selectedCategory.characters.map((character) => (
+                  <div
+                    key={character.key}
+                    onClick={() => handleCharacterSelect(character)}
+                    style={{
+                      background: 'rgba(255, 255, 255, 0.05)',
+                      border: '1px solid rgba(255, 215, 0, 0.2)',
+                      borderRadius: '16px',
+                      padding: '1rem',
+                      cursor: 'pointer',
+                      transition: 'all 0.3s ease',
+                      minHeight: '180px',
+                      display: 'flex',
+                      flexDirection: 'column',
+                      alignItems: 'center'
+                    }}
+                  >
+                    <div style={{
+                      width: '40px',
+                      height: '40px',
+                      borderRadius: '50%',
+                      overflow: 'hidden',
+                      marginBottom: '0.5rem',
+                      border: '2px solid rgba(255, 215, 0, 0.3)',
+                    }}>
+                      <img
+                        src={character.thumbnailUrl}
+                        alt={character.name}
+                        style={{ width: '100%', height: '100%', objectFit: 'cover' }}
+                        onError={(e) => { e.target.src = '/images/default-character.jpg'; }}
+                      />
+                    </div>
+                    
+                    <div style={{ textAlign: 'center' }}>
+                      <h3 style={{
+                        color: '#FFD700',
+                        fontSize: '0.8rem',
+                        fontWeight: 600,
+                        margin: '0 0 0.3rem 0',
+                        letterSpacing: '0.5px',
+                        lineHeight: 1.2
+                      }}>
+                        {character.name}
+                      </h3>
+                      
+                      <p style={{
+                        color: 'rgba(255, 255, 255, 0.85)',
+                        fontSize: '0.65rem',
+                        lineHeight: 1.3,
+                        margin: 0,
+                        display: '-webkit-box',
+                        WebkitLineClamp: 3,
+                        WebkitBoxOrient: 'vertical',
+                        overflow: 'hidden'
+                      }}>
+                        {character.description.slice(0, 80)}...
+                      </p>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )}
           </>
         )}
 
@@ -684,7 +1348,8 @@ const SplitScreenLauncher = ({ onStartChat }) => {
                     padding: '0.6rem 1.2rem',
                     cursor: 'pointer',
                     transition: 'all 0.3s ease',
-                    fontFamily: "'Cinzel', serif"
+                    fontFamily: "'Cinzel', serif",
+                    textTransform: 'none', // Add this to prevent all caps
                   }}
                 >
                   Start Chat
@@ -701,7 +1366,8 @@ const SplitScreenLauncher = ({ onStartChat }) => {
                     padding: '0.6rem 1.2rem',
                     cursor: 'pointer',
                     transition: 'all 0.3s ease',
-                    fontFamily: "'Cinzel', serif"
+                    fontFamily: "'Cinzel', serif",
+                    textTransform: 'none' // Add this to prevent all caps
                   }}
                 >
                   Close
@@ -710,10 +1376,43 @@ const SplitScreenLauncher = ({ onStartChat }) => {
             </div>
           </div>
         )}
+        {/* ✅ ADD THIS: Template Gallery Modal for Mobile */}
+        {showTemplateGallery && (
+          <div style={{
+            position: 'fixed',
+            top: 0,
+            left: 0,
+            width: '100%',
+            height: '100%',
+            zIndex: 3000,
+            background: 'rgba(0, 0, 0, 0.95)',
+            overflowY: 'auto'
+          }}>
+            <TemplateGallery
+            userPremiumStatus={premiumStatus}
+          />
+          </div>
+        )}
+        {/* ✅ ADD THIS: Character Builder Modal for Mobile */}
+        {showCharacterBuilder && selectedTemplate && (
+          <div style={{
+            position: 'fixed',
+            top: 0,
+            left: 0,
+            width: '100%',
+            height: '100%',
+            zIndex: 3000,
+            background: 'rgba(0, 0, 0, 0.95)'
+          }}>
+            <CharacterBuilder
+              userPremiumStatus={premiumStatus}
+            />
+          </div>
+        )}
       </div>
     );
   }
-
+  console.log('Debug state:', { showTemplateGallery, showCharacterBuilder, selectedTemplate });
   // Desktop layout
   return (
     <div style={{
@@ -721,9 +1420,82 @@ const SplitScreenLauncher = ({ onStartChat }) => {
       height: '100vh',
       display: 'flex',
       fontFamily: "'Cinzel', serif",
+      textTransform: 'none', // Add this to prevent all caps
       background: 'linear-gradient(135deg, #0B1426 0%, #1A2B47 25%, #2C1810 50%, #0F1A2E 75%, #0B1426 100%)',
       overflow: 'hidden'
     }}>
+      {/* ✅ ADD DESKTOP TEST COMPONENT RIGHT HERE - AT THE BEGINNING */}
+      <div style={{
+        position: 'fixed',
+        top: '10px',
+        right: '10px',
+        background: 'rgba(0,0,0,0.9)',
+        color: '#FFD700',
+        padding: '1rem',
+        borderRadius: '8px',
+        fontSize: '0.8rem',
+        maxWidth: '300px',
+        zIndex: 9999,
+        border: '1px solid #FFD700'
+      }}>
+        <div style={{ fontWeight: 'bold', marginBottom: '0.5rem' }}>
+          Premium API Debug Panel
+        </div>
+
+        <div style={{ fontSize: '0.7rem' }}>
+          <div>User ID: {user?.id || 'Not loaded'}</div>
+          <div>Premium: {premiumLoading ? 'Loading...' : isPremium ? 'Yes' : 'No'}</div>
+          <div>Characters: {approvedCharacters?.length || 0}</div>
+          <div>Status: {premiumStatus?.subscription_status || 'Unknown'}</div>
+        </div>
+        <button
+        onClick={() => {
+          console.log('Testing premium APIs...');
+          console.log('Premium Status:', premiumStatus);
+          console.log('Is Premium:', isPremium);
+          console.log('Can Create Character:', canCreateCharacter);
+          console.log('Character Count:', characterCount);
+          console.log('Character Templates Count:', characterTemplates?.length);
+          console.log('Character Templates Full Data:', JSON.stringify(characterTemplates, null, 2));
+          console.log('User Characters:', userCharacters);
+          console.log('Premium Error:', premiumError);
+          console.log('Grant Trial Function:', typeof grantTrial === 'function');
+                              // Test different premium route variations
+          const testRouteVariations = async () => {
+            const baseUrl = process.env.REACT_APP_API_URL;
+            const routes = [
+              '/api/premium/health',
+              '/premium/health', 
+              '/api/premium',
+              '/premium'
+            ];
+
+            for (const route of routes) {
+              try {
+                const response = await fetch(`${baseUrl}${route}`);
+                console.log(`Route ${route}: Status ${response.status}`);
+              } catch (error) {
+                console.log(`Route ${route}: Failed to fetch`);
+              }
+            }
+          };
+
+          testRouteVariations();
+        }}
+        style={{
+          background: '#FFD700',
+          color: '#000',
+          border: 'none',
+          padding: '0.5rem',
+          borderRadius: '4px',
+          cursor: 'pointer',
+          marginTop: '0.5rem',
+          fontSize: '0.7rem'
+        }}
+      >
+        Test All APIs
+      </button>
+      </div>
       {/* LEFT HALF - Search Section */}
       <div style={{
         width: '50%',
@@ -740,6 +1512,7 @@ const SplitScreenLauncher = ({ onStartChat }) => {
         <div style={{ textAlign: 'center', marginBottom: '1.5rem' }}>
           <h1 style={{
             fontFamily: "'Cinzel Decorative', serif",
+            textTransform: 'none', // Add this to prevent all caps
             fontSize: '2.5rem',
             background: 'linear-gradient(135deg, #FFD700, #FFA500, #FFD700)',
             backgroundClip: 'text',
@@ -786,7 +1559,8 @@ const SplitScreenLauncher = ({ onStartChat }) => {
               outline: 'none',
               backdropFilter: 'blur(10px)',
               transition: 'all 0.3s ease',
-              fontFamily: "'Cinzel', serif"
+              fontFamily: "'Cinzel', serif",
+              textTransform: 'none' // Add this to prevent all caps
             }}
           />
 
@@ -905,31 +1679,31 @@ const SplitScreenLauncher = ({ onStartChat }) => {
       {/* RIGHT HALF - Categories/Characters */}
       <div style={{ width: '50%', height: '100%', position: 'relative', perspective: '1000px' }}>
 
-{/* Categories Grid - Dynamic Viewport Sizing */}
+        {/* ✅ ENHANCED: Categories Grid - Dynamic Viewport Sizing */}
         <div 
-          className="categories-grid-container" // ✅ NEW: Add className for CSS targeting
+          className="categories-grid-container"
           style={{
             position: 'absolute',
             width: '100%',
             height: '100%',
             padding: '2rem',
             display: 'grid',
-            gridTemplateColumns: 'repeat(3, 1fr)', // ✅ REVERTED: Back to clean 3 columns
-            gridTemplateRows: 'repeat(4, 1fr)', // ✅ NEW: Define 4 rows explicitly
+            gridTemplateColumns: 'repeat(3, 1fr)',
+            gridTemplateRows: 'repeat(4, 1fr)',
             gap: '1rem',
-            alignContent: 'start', // ✅ CHANGED: Start from top
+            alignContent: 'start',
             justifyContent: 'center',
             transform: selectedCategory ? 'rotateY(-90deg)' : 'rotateY(0deg)',
             transition: 'transform 0.6s ease-in-out',
             transformStyle: 'preserve-3d',
             backfaceVisibility: 'hidden',
-            overflowY: 'auto', // ✅ ENABLED: Vertical scrolling
+            overflowY: 'auto',
             overflowX: 'hidden',
-            maxHeight: '100%', // ✅ NEW: Constrain to container height
-            paddingRight: '2.5rem' // ✅ NEW: Extra space for scrollbar
+            maxHeight: '100%',
+            paddingRight: '2.5rem'
           }}
         >
-          {characterCategories.map((category, index) => (
+          {enhancedCategories.map((category, index) => ( // ✅ Use enhanced categories
             <div
               key={category.key}
               onClick={() => handleCategorySelect(category)}
@@ -937,7 +1711,7 @@ const SplitScreenLauncher = ({ onStartChat }) => {
                 background: 'rgba(255, 255, 255, 0.05)',
                 border: '1px solid rgba(255, 215, 0, 0.2)',
                 borderRadius: '16px',
-                padding: '1.5rem', // ✅ REVERTED: Back to original padding
+                padding: '1.5rem',
                 backdropFilter: 'blur(10px)',
                 cursor: 'pointer',
                 transition: 'all 0.3s ease',
@@ -946,11 +1720,11 @@ const SplitScreenLauncher = ({ onStartChat }) => {
                 alignItems: 'center',
                 justifyContent: 'center',
                 textAlign: 'center',
-                aspectRatio: '1', // ✅ KEPT: Square cards
+                aspectRatio: '1',
                 opacity: 0,
                 animation: `categorySlideIn 0.6s ease-out ${index * 0.1}s forwards`,
-                minHeight: '150px', // ✅ NEW: Ensure minimum readable size
-                maxHeight: '200px'  // ✅ NEW: Prevent cards from getting too tall
+                minHeight: '150px',
+                maxHeight: '200px'
               }}
               onMouseEnter={(e) => {
                 e.currentTarget.style.background = 'rgba(255, 215, 0, 0.08)';
@@ -977,58 +1751,145 @@ const SplitScreenLauncher = ({ onStartChat }) => {
                 }
               }}
             >
+              {/* ✅ ENHANCED: Desktop Category Avatar Display */}
               <div style={{
-                width: '56px', // ✅ REVERTED: Back to original size
+                width: '56px',
                 height: '56px',
                 borderRadius: '50%',
                 overflow: 'hidden',
                 marginBottom: '0.7rem',
-                border: '3px solid rgba(255, 215, 0, 0.4)',
+                border: category.key === 'my_characters' 
+                  ? (isPremium ? '3px solid rgba(255, 215, 0, 0.4)' : '3px solid rgba(128, 128, 128, 0.4)')
+                  : '3px solid rgba(255, 215, 0, 0.4)',
                 transition: 'all 0.3s ease',
-                background: 'rgba(0,0,0,0.3)'
+                background: 'rgba(0,0,0,0.3)',
+                position: 'relative'
               }}>
-                <img
-                  src={categoryRepresentatives[category.key]}
-                  alt={category.title}
-                  style={{
-                    width: '100%',
-                    height: '100%',
-                    objectFit: 'cover',
-                    filter: 'sepia(20%) contrast(1.1)',
-                    transition: 'filter 0.3s ease'
-                  }}
-                  onError={(e) => { e.target.src = '/images/default-character.jpg'; }}
-                />
+                {/* Premium indicator for free users on My Characters */}
+                {category.key === 'my_characters' && !isPremium && (
+                  <div style={{
+                    position: 'absolute',
+                    top: '-8px',
+                    right: '-8px',
+                    width: '16px',
+                    height: '16px',
+                    background: 'linear-gradient(135deg, #FFD700, #FFA500)',
+                    borderRadius: '50%',
+                    fontSize: '8px',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    color: '#000',
+                    fontWeight: 'bold',
+                    zIndex: 1
+                  }}>
+                    ★
+                  </div>
+                )}
+                
+                {/* Avatar content */}
+                {category.key === 'my_characters' ? (
+                  premiumLoading ? (
+                    <div style={{
+                      width: '100%',
+                      height: '100%',
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'center'
+                    }}>
+                      <div style={{
+                        width: '20px',
+                        height: '20px',
+                        border: '2px solid rgba(255, 215, 0, 0.3)',
+                        borderTop: '2px solid #FFD700',
+                        borderRadius: '50%',
+                        animation: 'spin 1s linear infinite'
+                      }} />
+                    </div>
+                  ) : approvedCharacters.length > 0 ? (
+                    <img
+                      src={approvedCharacters[0].thumbnailUrl || '/images/default-character.jpg'}
+                      alt="My Character"
+                      style={{
+                        width: '100%',
+                        height: '100%',
+                        objectFit: 'cover',
+                        filter: 'sepia(20%) contrast(1.1)',
+                        transition: 'filter 0.3s ease'
+                      }}
+                      onError={(e) => { e.target.src = '/images/default-character.jpg'; }}
+                    />
+                  ) : (
+                    <div style={{
+                      width: '100%',
+                      height: '100%',
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                      fontSize: '24px',
+                      color: isPremium ? '#FFD700' : 'rgba(128, 128, 128, 0.7)'
+                    }}>
+                      👤
+                    </div>
+                  )
+                ) : (
+                  <img
+                    src={categoryRepresentatives[category.key]}
+                    alt={category.title}
+                    style={{
+                      width: '100%',
+                      height: '100%',
+                      objectFit: 'cover',
+                      filter: 'sepia(20%) contrast(1.1)',
+                      transition: 'filter 0.3s ease'
+                    }}
+                    onError={(e) => { e.target.src = '/images/default-character.jpg'; }}
+                  />
+                )}
               </div>
               
+              {/* ✅ ENHANCED: Desktop Category Title */}
               <h3 style={{
-                color: '#FFD700',
-                fontSize: '0.9rem', // ✅ REVERTED: Back to original size
+                color: category.key === 'my_characters' && !isPremium ? 'rgba(128, 128, 128, 0.8)' : '#FFD700',
+                fontSize: '0.9rem',
                 fontWeight: 600,
                 margin: '0 0 0.3rem 0',
                 letterSpacing: '0.5px',
                 fontFamily: "'Cinzel', serif",
+                textTransform: 'none', // Add this to prevent all caps
                 textShadow: '1px 1px 2px rgba(0,0,0,0.8)',
                 lineHeight: 1.1
               }}>
                 {category.title}
               </h3>
               
+              {/* ✅ ENHANCED: Desktop Category Badge */}
               <span style={{
-                color: 'rgba(255, 215, 0, 0.7)',
-                fontSize: '0.65rem', // ✅ REVERTED: Back to original size
-                background: 'rgba(255, 215, 0, 0.1)',
+                color: category.key === 'my_characters' && !isPremium 
+                  ? 'rgba(128, 128, 128, 0.6)' 
+                  : 'rgba(255, 215, 0, 0.7)',
+                fontSize: '0.65rem',
+                background: category.key === 'my_characters' && !isPremium 
+                  ? 'rgba(128, 128, 128, 0.1)' 
+                  : 'rgba(255, 215, 0, 0.1)',
                 padding: '0.15rem 0.4rem',
                 borderRadius: '8px',
-                border: '1px solid rgba(255, 215, 0, 0.2)'
+                border: category.key === 'my_characters' && !isPremium 
+                  ? '1px solid rgba(128, 128, 128, 0.2)' 
+                  : '1px solid rgba(255, 215, 0, 0.2)'
               }}>
-                {category.characters.length} guides
+                {category.key === 'my_characters' 
+                  ? (premiumLoading ? 'Loading...' : 
+                     !isPremium ? 'Premium' : 
+                     approvedCharacters.length > 0 ? `${approvedCharacters.length} custom` : 'Create')
+                  : `${category.characters.length} guides`
+                }
               </span>
             </div>
           ))}
         </div>
 
-        {/* Characters Panel */}
+        {/* ✅ ENHANCED: Characters Panel */}
         <div style={{
           position: 'absolute',
           width: '100%',
@@ -1055,6 +1916,7 @@ const SplitScreenLauncher = ({ onStartChat }) => {
                   color: '#FFD700',
                   fontSize: '2rem',
                   fontFamily: "'Cinzel Decorative', serif",
+                  textTransform: 'none', // Add this to prevent all caps
                   margin: 0,
                   letterSpacing: '2px',
                   textShadow: '0 0 20px rgba(255, 215, 0, 0.5)'
@@ -1074,7 +1936,8 @@ const SplitScreenLauncher = ({ onStartChat }) => {
                     padding: '0.5rem 1rem',
                     cursor: 'pointer',
                     transition: 'all 0.3s ease',
-                    fontFamily: "'Cinzel', serif"
+                    fontFamily: "'Cinzel', serif",
+                    textTransform: 'none', // Add this to prevent all caps
                   }}
                   onMouseEnter={(e) => {
                     e.currentTarget.style.background = 'rgba(255, 215, 0, 0.2)';
@@ -1089,92 +1952,484 @@ const SplitScreenLauncher = ({ onStartChat }) => {
                 </button>
               </div>
 
-              {/* Characters Grid */}
-              <div style={{
-                display: 'grid',
-                gridTemplateColumns: `repeat(auto-fit, minmax(180px, 1fr))`,
-                gap: '1rem',
-                maxHeight: 'calc(100vh - 200px)',
-                overflowY: 'auto',
-                paddingRight: '0.5rem'
-              }}>
-                {selectedCategory.characters.map((character, index) => (
-                  <div
-                    key={character.key}
-                    onClick={() => handleCharacterSelect(character)}
-                    style={{
-                      background: 'rgba(255, 255, 255, 0.05)',
-                      border: '1px solid rgba(255, 215, 0, 0.2)',
-                      borderRadius: '16px',
-                      padding: '1rem',
-                      cursor: 'pointer',
-                      transition: 'all 0.3s ease',
-                      opacity: 0,
-                      animation: `characterSlideIn 0.6s ease-out ${index * 0.05}s forwards`,
-                      minHeight: '200px',
+              {/* ✅ ENHANCED: Desktop Content Area */}
+              {selectedCategory.key === 'my_characters' ? (
+                // My Characters Special Panel for Desktop
+                <div style={{
+                  display: 'flex',
+                  flexDirection: 'column',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  minHeight: '400px',
+                  textAlign: 'center',
+                  padding: '2rem'
+                }}>
+                  {premiumLoading ? (
+                    // Loading State
+                    <div style={{
                       display: 'flex',
                       flexDirection: 'column',
-                      alignItems: 'center'
-                    }}
-                    onMouseEnter={(e) => {
-                      e.currentTarget.style.background = 'rgba(255, 215, 0, 0.1)';
-                      e.currentTarget.style.borderColor = 'rgba(255, 215, 0, 0.5)';
-                      e.currentTarget.style.transform = 'translateY(-6px)';
-                      e.currentTarget.style.boxShadow = '0 16px 32px rgba(255, 215, 0, 0.2)';
-                    }}
-                    onMouseLeave={(e) => {
-                      e.currentTarget.style.background = 'rgba(255, 255, 255, 0.05)';
-                      e.currentTarget.style.borderColor = 'rgba(255, 215, 0, 0.2)';
-                      e.currentTarget.style.transform = 'translateY(0)';
-                      e.currentTarget.style.boxShadow = 'none';
-                    }}
-                  >
-                    <div style={{
-                      width: '50px',
-                      height: '50px',
-                      borderRadius: '50%',
-                      overflow: 'hidden',
-                      marginBottom: '0.75rem',
-                      border: '3px solid rgba(255, 215, 0, 0.3)',
-                      flexShrink: 0
+                      alignItems: 'center',
+                      gap: '1rem'
                     }}>
-                      <img
-                        src={character.thumbnailUrl}
-                        alt={character.name}
-                        style={{ width: '100%', height: '100%', objectFit: 'cover' }}
-                        onError={(e) => { e.target.src = '/images/default-character.jpg'; }}
-                      />
-                    </div>
-                    
-                    <div style={{ textAlign: 'center', flex: 1, display: 'flex', flexDirection: 'column' }}>
-                      <h3 style={{
-                        color: '#FFD700',
-                        fontSize: '0.85rem',
-                        fontWeight: 600,
-                        margin: '0 0 0.5rem 0',
-                        letterSpacing: '0.5px',
-                        lineHeight: 1.2
-                      }}>
-                        {character.name}
-                      </h3>
-                      
+                      <div style={{
+                        width: '40px',
+                        height: '40px',
+                        border: '3px solid rgba(255, 215, 0, 0.3)',
+                        borderTop: '3px solid #FFD700',
+                        borderRadius: '50%',
+                        animation: 'spin 1s linear infinite'
+                      }} />
                       <p style={{
-                        color: 'rgba(255, 255, 255, 0.85)',
-                        fontSize: '0.7rem',
-                        lineHeight: 1.3,
-                        margin: 0,
-                        flex: 1,
-                        display: '-webkit-box',
-                        WebkitLineClamp: 3,
-                        WebkitBoxOrient: 'vertical',
-                        overflow: 'hidden'
+                        color: 'rgba(255, 215, 0, 0.8)',
+                        fontSize: '1.1rem',
+                        margin: 0
                       }}>
-                        {character.description.slice(0, 100)}...
+                        Loading your characters...
                       </p>
                     </div>
-                  </div>
-                ))}
-              </div>
+                  ) : !isPremium ? (
+                    // Free User CTA for Desktop
+                    <div style={{
+                      maxWidth: '500px',
+                      display: 'flex',
+                      flexDirection: 'column',
+                      alignItems: 'center',
+                      gap: '2rem'
+                    }}>
+                      {/* Hero Icon */}
+                      <div style={{
+                        width: '120px',
+                        height: '120px',
+                        borderRadius: '50%',
+                        background: 'linear-gradient(135deg, rgba(255, 215, 0, 0.2), rgba(255, 215, 0, 0.1))',
+                        border: '3px solid rgba(255, 215, 0, 0.3)',
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                        fontSize: '48px',
+                        marginBottom: '1rem'
+                      }}>
+                        ✨
+                      </div>
+
+                      {/* Headline */}
+                      <div>
+                        <h3 style={{
+                          color: '#FFD700',
+                          fontSize: '1.8rem',
+                          fontFamily: "'Cinzel Decorative', serif",
+                          textTransform: 'none', // Add this to prevent all caps
+                          margin: '0 0 1rem 0',
+                          letterSpacing: '1px',
+                          textShadow: '0 0 15px rgba(255, 215, 0, 0.5)'
+                        }}>
+
+                        </h3>
+                        
+                        <p style={{
+                          color: 'rgba(255, 255, 255, 0.9)',
+                          fontSize: '1.1rem',
+                          lineHeight: 1.6,
+                          margin: '0 0 2rem 0',
+                          maxWidth: '400px'
+                        }}>
+                          Design a custom AI character with unique personality, expertise, and backstory. 
+                          From historical figures to original creations - bring your vision to life.
+                        </p>
+                      </div>
+
+                      {/* Features List */}
+                      <div style={{
+                        display: 'grid',
+                        gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))',
+                        gap: '1rem',
+                        width: '100%',
+                        marginBottom: '2rem'
+                      }}>
+                        {[
+                          { icon: '🎭', title: 'Custom Personality', desc: 'Define unique traits and speaking style' },
+                          { icon: '📚', title: 'Expert Knowledge', desc: 'Specialized in any domain you choose' },
+                          { icon: '🏛️', title: 'Historical Context', desc: 'Set in any time period or culture' }
+                        ].map((feature, index) => (
+                          <div key={index} style={{
+                            background: 'rgba(255, 255, 255, 0.05)',
+                            border: '1px solid rgba(255, 215, 0, 0.2)',
+                            borderRadius: '12px',
+                            padding: '1.5rem',
+                            textAlign: 'center'
+                          }}>
+                            <div style={{ fontSize: '2rem', marginBottom: '0.5rem' }}>
+                              {feature.icon}
+                            </div>
+                            <h4 style={{
+                              color: '#FFD700',
+                              fontSize: '0.9rem',
+                              margin: '0 0 0.5rem 0',
+                              fontWeight: 600
+                            }}>
+                              {feature.title}
+                            </h4>
+                            <p style={{
+                              color: 'rgba(255, 255, 255, 0.7)',
+                              fontSize: '0.8rem',
+                              margin: 0,
+                              lineHeight: 1.4
+                            }}>
+                              {feature.desc}
+                            </p>
+                          </div>
+                        ))}
+                      </div>
+
+                      {/* CTA Buttons */}
+                      <div style={{
+                        display: 'flex',
+                        gap: '1rem',
+                        flexWrap: 'wrap',
+                        justifyContent: 'center'
+                      }}>
+                        <button
+                          // Mobile button onClick - add more debugging
+                          onClick={() => {
+                            console.log('MOBILE: Start trial clicked - showing template gallery');
+                            console.log('MOBILE: Before state change:', showTemplateGallery);
+                            console.log('MOBILE: Current isMobile:', isMobile);
+                            console.log('MOBILE: Current viewport width:', window.innerWidth);
+                            startTemplateFlow();
+                            console.log('MOBILE: After state change call');
+                            setTimeout(() => {
+                              console.log('MOBILE: State after timeout:', showTemplateGallery);
+                            }, 100); // Shorter timeout for faster debugging
+                          }}
+                          style={{
+                            background: 'linear-gradient(135deg, #FFD700, #FFA500)',
+                            border: 'none',
+                            borderRadius: '25px',
+                            color: '#000',
+                            fontSize: '1rem',
+                            fontWeight: 700,
+                            padding: '1rem 2rem',
+                            cursor: 'pointer',
+                            transition: 'all 0.3s ease',
+                            fontFamily: "'Cinzel', serif",
+                            textTransform: 'none', // Add this to prevent all caps
+                            boxShadow: '0 4px 15px rgba(255, 215, 0, 0.3)'
+                          }}
+                          onMouseEnter={(e) => {
+                            e.currentTarget.style.transform = 'translateY(-2px)';
+                            e.currentTarget.style.boxShadow = '0 6px 20px rgba(255, 215, 0, 0.4)';
+                          }}
+                          onMouseLeave={(e) => {
+                            e.currentTarget.style.transform = 'translateY(0)';
+                            e.currentTarget.style.boxShadow = '0 4px 15px rgba(255, 215, 0, 0.3)';
+                          }}
+                        >
+                          Start 3-Day Free Trial
+                        </button>
+                        
+                        <button
+                          style={{
+                            background: 'transparent',
+                            border: '2px solid rgba(255, 215, 0, 0.5)',
+                            borderRadius: '25px',
+                            color: '#FFD700',
+                            fontSize: '1rem',
+                            fontWeight: 600,
+                            padding: '1rem 2rem',
+                            cursor: 'pointer',
+                            transition: 'all 0.3s ease',
+                            fontFamily: "'Cinzel', serif",
+                            textTransform: 'none' // Add this to prevent all caps
+                          }}
+                          onMouseEnter={(e) => {
+                            e.currentTarget.style.background = 'rgba(255, 215, 0, 0.1)';
+                            e.currentTarget.style.borderColor = 'rgba(255, 215, 0, 0.8)';
+                          }}
+                          onMouseLeave={(e) => {
+                            e.currentTarget.style.background = 'transparent';
+                            e.currentTarget.style.borderColor = 'rgba(255, 215, 0, 0.5)';
+                          }}
+                        >
+                          Learn More
+                        </button>
+                      </div>
+
+                      {/* Trust Indicator */}
+                      <p style={{
+                        color: 'rgba(255, 255, 255, 0.6)',
+                        fontSize: '0.85rem',
+                        margin: '1rem 0 0 0',
+                        fontStyle: 'italic'
+                      }}>
+                        No credit card required • Cancel anytime
+                      </p>
+                    </div>
+                  ) : approvedCharacters.length === 0 ? (
+                    // Premium User - No Characters Yet
+                    <div style={{
+                      maxWidth: '400px',
+                      display: 'flex',
+                      flexDirection: 'column',
+                      alignItems: 'center',
+                      gap: '2rem'
+                    }}>
+                      <div style={{
+                        width: '100px',
+                        height: '100px',
+                        borderRadius: '50%',
+                        background: 'rgba(255, 215, 0, 0.1)',
+                        border: '2px solid rgba(255, 215, 0, 0.3)',
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                        fontSize: '40px'
+                      }}>
+                        🎨
+                      </div>
+
+                      <div style={{ textAlign: 'center' }}>
+                        <h3 style={{
+                          color: '#FFD700',
+                          fontSize: '1.5rem',
+                          margin: '0 0 1rem 0',
+                          fontFamily: "'Cinzel Decorative', serif",
+                          textTransform: 'none' // Add this to prevent all caps
+                        }}>
+                          Ready to Create?
+                        </h3>
+                        
+                        <p style={{
+                          color: 'rgba(255, 255, 255, 0.8)',
+                          fontSize: '1rem',
+                          lineHeight: 1.6,
+                          margin: '0 0 2rem 0'
+                        }}>
+                          You have premium access! Create your first custom character using our templates 
+                          and bring your unique vision to life.
+                        </p>
+                      </div>
+
+                      <button
+                        onClick={() => {
+                          // TODO: Navigate to character creation
+                          console.log('Create character clicked');
+                        }}
+                        style={{
+                          background: 'linear-gradient(135deg, #FFD700, #FFA500)',
+                          border: 'none',
+                          borderRadius: '25px',
+                          color: '#000',
+                          fontSize: '1.1rem',
+                          fontWeight: 700,
+                          padding: '1rem 2rem',
+                          cursor: 'pointer',
+                          transition: 'all 0.3s ease',
+                          fontFamily: "'Cinzel', serif",
+                          textTransform: 'none', // Add this to prevent all caps
+                          boxShadow: '0 4px 15px rgba(255, 215, 0, 0.3)'
+                        }}
+                        onMouseEnter={(e) => {
+                          e.currentTarget.style.transform = 'translateY(-2px)';
+                          e.currentTarget.style.boxShadow = '0 6px 20px rgba(255, 215, 0, 0.4)';
+                        }}
+                        onMouseLeave={(e) => {
+                          e.currentTarget.style.transform = 'translateY(0)';
+                          e.currentTarget.style.boxShadow = '0 4px 15px rgba(255, 215, 0, 0.3)';
+                        }}
+                      >
+                        Create Your Character
+                      </button>
+
+                      <p style={{
+                        color: 'rgba(255, 255, 255, 0.6)',
+                        fontSize: '0.8rem',
+                        margin: 0
+                      }}>
+                        1 character included with your premium subscription
+                      </p>
+                    </div>
+                  ) : (
+                    // Premium User - Has Characters
+                    <div style={{
+                      display: 'grid',
+                      gridTemplateColumns: `repeat(auto-fit, minmax(180px, 1fr))`,
+                      gap: '1rem',
+                      maxHeight: 'calc(100vh - 200px)',
+                      overflowY: 'auto',
+                      paddingRight: '0.5rem'
+                    }}>
+                      {approvedCharacters.map((character, index) => (
+                        <div
+                          key={character.id}
+                          onClick={() => {
+                            // TODO: Start chat with custom character
+                            console.log('Chat with character:', character.character_key);
+                            onStartChat(character.character_key);
+                          }}
+                          style={{
+                            background: 'rgba(255, 255, 255, 0.05)',
+                            border: '1px solid rgba(255, 215, 0, 0.2)',
+                            borderRadius: '16px',
+                            padding: '1rem',
+                            cursor: 'pointer',
+                            transition: 'all 0.3s ease',
+                            opacity: 0,
+                            animation: `characterSlideIn 0.6s ease-out ${index * 0.05}s forwards`,
+                            minHeight: '200px',
+                            display: 'flex',
+                            flexDirection: 'column',
+                            alignItems: 'center'
+                          }}
+                          onMouseEnter={(e) => {
+                            e.currentTarget.style.background = 'rgba(255, 215, 0, 0.1)';
+                            e.currentTarget.style.borderColor = 'rgba(255, 215, 0, 0.5)';
+                            e.currentTarget.style.transform = 'translateY(-6px)';
+                            e.currentTarget.style.boxShadow = '0 16px 32px rgba(255, 215, 0, 0.2)';
+                          }}
+                          onMouseLeave={(e) => {
+                            e.currentTarget.style.background = 'rgba(255, 255, 255, 0.05)';
+                            e.currentTarget.style.borderColor = 'rgba(255, 215, 0, 0.2)';
+                            e.currentTarget.style.transform = 'translateY(0)';
+                            e.currentTarget.style.boxShadow = 'none';
+                          }}
+                        >
+                          <div style={{
+                            width: '50px',
+                            height: '50px',
+                            borderRadius: '50%',
+                            overflow: 'hidden',
+                            marginBottom: '0.75rem',
+                            border: '3px solid rgba(255, 215, 0, 0.3)',
+                            flexShrink: 0
+                          }}>
+                            <img
+                              src={character.thumbnailUrl || '/images/default-character.jpg'}
+                              alt={character.display_name}
+                              style={{ width: '100%', height: '100%', objectFit: 'cover' }}
+                              onError={(e) => { e.target.src = '/images/default-character.jpg'; }}
+                            />
+                          </div>
+                          
+                          <div style={{ textAlign: 'center', flex: 1, display: 'flex', flexDirection: 'column' }}>
+                            <h3 style={{
+                              color: '#FFD700',
+                              fontSize: '0.85rem',
+                              fontWeight: 600,
+                              margin: '0 0 0.5rem 0',
+                              letterSpacing: '0.5px',
+                              lineHeight: 1.2
+                            }}>
+                              {character.display_name}
+                            </h3>
+                            
+                            <p style={{
+                              color: 'rgba(255, 255, 255, 0.85)',
+                              fontSize: '0.7rem',
+                              lineHeight: 1.3,
+                              margin: 0,
+                              flex: 1,
+                              display: '-webkit-box',
+                              WebkitLineClamp: 3,
+                              WebkitBoxOrient: 'vertical',
+                              overflow: 'hidden'
+                            }}>
+                              {character.short_description}
+                            </p>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  )}
+                </div>
+              ) : (
+                // Regular Categories - Desktop Characters Grid
+                <div style={{
+                  display: 'grid',
+                  gridTemplateColumns: `repeat(auto-fit, minmax(180px, 1fr))`,
+                  gap: '1rem',
+                  maxHeight: 'calc(100vh - 200px)',
+                  overflowY: 'auto',
+                  paddingRight: '0.5rem'
+                }}>
+                  {selectedCategory.characters.map((character, index) => (
+                    <div
+                      key={character.key}
+                      onClick={() => handleCharacterSelect(character)}
+                      style={{
+                        background: 'rgba(255, 255, 255, 0.05)',
+                        border: '1px solid rgba(255, 215, 0, 0.2)',
+                        borderRadius: '16px',
+                        padding: '1rem',
+                        cursor: 'pointer',
+                        transition: 'all 0.3s ease',
+                        opacity: 0,
+                        animation: `characterSlideIn 0.6s ease-out ${index * 0.05}s forwards`,
+                        minHeight: '200px',
+                        display: 'flex',
+                        flexDirection: 'column',
+                        alignItems: 'center'
+                      }}
+                      onMouseEnter={(e) => {
+                        e.currentTarget.style.background = 'rgba(255, 215, 0, 0.1)';
+                        e.currentTarget.style.borderColor = 'rgba(255, 215, 0, 0.5)';
+                        e.currentTarget.style.transform = 'translateY(-6px)';
+                        e.currentTarget.style.boxShadow = '0 16px 32px rgba(255, 215, 0, 0.2)';
+                      }}
+                      onMouseLeave={(e) => {
+                        e.currentTarget.style.background = 'rgba(255, 255, 255, 0.05)';
+                        e.currentTarget.style.borderColor = 'rgba(255, 215, 0, 0.2)';
+                        e.currentTarget.style.transform = 'translateY(0)';
+                        e.currentTarget.style.boxShadow = 'none';
+                      }}
+                    >
+                      <div style={{
+                        width: '50px',
+                        height: '50px',
+                        borderRadius: '50%',
+                        overflow: 'hidden',
+                        marginBottom: '0.75rem',
+                        border: '3px solid rgba(255, 215, 0, 0.3)',
+                        flexShrink: 0
+                      }}>
+                        <img
+                          src={character.thumbnailUrl}
+                          alt={character.name}
+                          style={{ width: '100%', height: '100%', objectFit: 'cover' }}
+                          onError={(e) => { e.target.src = '/images/default-character.jpg'; }}
+                        />
+                      </div>
+                      
+                      <div style={{ textAlign: 'center', flex: 1, display: 'flex', flexDirection: 'column' }}>
+                        <h3 style={{
+                          color: '#FFD700',
+                          fontSize: '0.85rem',
+                          fontWeight: 600,
+                          margin: '0 0 0.5rem 0',
+                          letterSpacing: '0.5px',
+                          lineHeight: 1.2
+                        }}>
+                          {character.name}
+                        </h3>
+                        
+                        <p style={{
+                          color: 'rgba(255, 255, 255, 0.85)',
+                          fontSize: '0.7rem',
+                          lineHeight: 1.3,
+                          margin: 0,
+                          flex: 1,
+                          display: '-webkit-box',
+                          WebkitLineClamp: 3,
+                          WebkitBoxOrient: 'vertical',
+                          overflow: 'hidden'
+                        }}>
+                          {character.description.slice(0, 100)}...
+                        </p>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              )}
             </>
           )}
         </div>
@@ -1264,7 +2519,8 @@ const SplitScreenLauncher = ({ onStartChat }) => {
                   padding: '0.75rem 1.5rem',
                   cursor: 'pointer',
                   transition: 'all 0.3s ease',
-                  fontFamily: "'Cinzel', serif"
+                  fontFamily: "'Cinzel', serif",
+                  textTransform: 'none' // Add this to prevent all caps
                 }}
                 onMouseEnter={(e) => {
                   e.currentTarget.style.background = 'linear-gradient(135deg, rgba(255, 215, 0, 0.3), rgba(255, 215, 0, 0.2))';
@@ -1290,7 +2546,8 @@ const SplitScreenLauncher = ({ onStartChat }) => {
                   padding: '0.75rem 1.5rem',
                   cursor: 'pointer',
                   transition: 'all 0.3s ease',
-                  fontFamily: "'Cinzel', serif"
+                  fontFamily: "'Cinzel', serif",
+                  textTransform: 'none' // Add this to prevent all caps
                 }}
                 onMouseEnter={(e) => {
                   e.currentTarget.style.background = 'rgba(255, 255, 255, 0.2)';
@@ -1304,6 +2561,21 @@ const SplitScreenLauncher = ({ onStartChat }) => {
                 Close
               </button>
             </div>
+          </div>
+          <SimpleDebugTest />
+          <PremiumStatusDebugger />
+          {/* Add this simple test directly */}
+          <div style={{
+            position: 'fixed',
+            top: '10px',
+            right: '10px',
+            background: 'red',
+            color: 'white',
+            padding: '20px',
+            zIndex: 9999999999,
+            fontSize: '16px'
+          }}>
+            SIMPLE TEST
           </div>
         </div>
       )}
@@ -1319,6 +2591,12 @@ const SplitScreenLauncher = ({ onStartChat }) => {
         @keyframes characterSlideIn {
           from { opacity: 0; transform: translateY(20px); }
           to   { opacity: 1; transform: translateY(0); }
+        }
+        
+        /* ✅ ADDED: Spinner animation */
+        @keyframes spin {
+          0% { transform: rotate(0deg); }
+          100% { transform: rotate(360deg); }
         }
         
         /* NEW Animations for PersonalizedSection */
@@ -1378,95 +2656,131 @@ const SplitScreenLauncher = ({ onStartChat }) => {
         }
         
         .categories-grid-container {
-  /* Firefox */
-  scrollbar-width: thin;
-  scrollbar-color: rgba(255, 215, 0, 0.6) rgba(11, 20, 38, 0.8);
-}
+          /* Firefox */
+          scrollbar-width: thin;
+          scrollbar-color: rgba(255, 215, 0, 0.6) rgba(11, 20, 38, 0.8);
+        }
 
-/* WebKit browsers (Chrome, Safari, Edge) */
-.categories-grid-container::-webkit-scrollbar {
-  width: 8px;
-}
+        /* WebKit browsers (Chrome, Safari, Edge) */
+        .categories-grid-container::-webkit-scrollbar {
+          width: 8px;
+        }
 
-.categories-grid-container::-webkit-scrollbar-track {
-  background: rgba(11, 20, 38, 0.8);
-  border-radius: 4px;
-  border: 1px solid rgba(255, 215, 0, 0.1);
-}
+        .categories-grid-container::-webkit-scrollbar-track {
+          background: rgba(11, 20, 38, 0.8);
+          border-radius: 4px;
+          border: 1px solid rgba(255, 215, 0, 0.1);
+        }
 
-.categories-grid-container::-webkit-scrollbar-thumb {
-  background: linear-gradient(
-    180deg, 
-    rgba(255, 215, 0, 0.8) 0%, 
-    rgba(255, 215, 0, 0.6) 50%,
-    rgba(255, 215, 0, 0.4) 100%
-  );
-  border-radius: 4px;
-  border: 1px solid rgba(255, 215, 0, 0.3);
-  transition: all 0.3s ease;
-}
+        .categories-grid-container::-webkit-scrollbar-thumb {
+          background: linear-gradient(
+            180deg, 
+            rgba(255, 215, 0, 0.8) 0%, 
+            rgba(255, 215, 0, 0.6) 50%,
+            rgba(255, 215, 0, 0.4) 100%
+          );
+          border-radius: 4px;
+          border: 1px solid rgba(255, 215, 0, 0.3);
+          transition: all 0.3s ease;
+        }
 
-.categories-grid-container::-webkit-scrollbar-thumb:hover {
-  background: linear-gradient(
-    180deg, 
-    rgba(255, 215, 0, 1) 0%, 
-    rgba(255, 215, 0, 0.8) 50%,
-    rgba(255, 215, 0, 0.6) 100%
-  );
-  box-shadow: 0 0 8px rgba(255, 215, 0, 0.4);
-}
+        .categories-grid-container::-webkit-scrollbar-thumb:hover {
+          background: linear-gradient(
+            180deg, 
+            rgba(255, 215, 0, 1) 0%, 
+            rgba(255, 215, 0, 0.8) 50%,
+            rgba(255, 215, 0, 0.6) 100%
+          );
+          box-shadow: 0 0 8px rgba(255, 215, 0, 0.4);
+        }
 
-.categories-grid-container::-webkit-scrollbar-thumb:active {
-  background: linear-gradient(
-    180deg, 
-    rgba(255, 215, 0, 0.9) 0%, 
-    rgba(255, 215, 0, 0.7) 50%,
-    rgba(255, 215, 0, 0.5) 100%
-  );
-}
+        .categories-grid-container::-webkit-scrollbar-thumb:active {
+          background: linear-gradient(
+            180deg, 
+            rgba(255, 215, 0, 0.9) 0%, 
+            rgba(255, 215, 0, 0.7) 50%,
+            rgba(255, 215, 0, 0.5) 100%
+          );
+        }
 
-/* Scrollbar corner */
-.categories-grid-container::-webkit-scrollbar-corner {
-  background: rgba(11, 20, 38, 0.8);
-}
+        /* Scrollbar corner */
+        .categories-grid-container::-webkit-scrollbar-corner {
+          background: rgba(11, 20, 38, 0.8);
+        }
 
-/* ✅ OPTIONAL: Add scroll indicators */
-.categories-grid-container::before {
-  content: '';
-  position: absolute;
-  bottom: 0;
-  left: 50%;
-  transform: translateX(-50%);
-  width: 30px;
-  height: 4px;
-  background: linear-gradient(
-    90deg, 
-    transparent 0%, 
-    rgba(255, 215, 0, 0.5) 50%, 
-    transparent 100%
-  );
-  border-radius: 2px;
-  opacity: 0.7;
-  pointer-events: none;
-  z-index: 10;
-}
+        /* ✅ OPTIONAL: Add scroll indicators */
+        .categories-grid-container::before {
+          content: '';
+          position: absolute;
+          bottom: 0;
+          left: 50%;
+          transform: translateX(-50%);
+          width: 30px;
+          height: 4px;
+          background: linear-gradient(
+            90deg, 
+            transparent 0%, 
+            rgba(255, 215, 0, 0.5) 50%, 
+            transparent 100%
+          );
+          border-radius: 2px;
+          opacity: 0.7;
+          pointer-events: none;
+          z-index: 10;
+        }
 
-/* ✅ SMOOTH SCROLLING */
-.categories-grid-container {
-  scroll-behavior: smooth;
-}
+        /* ✅ SMOOTH SCROLLING */
+        .categories-grid-container {
+          scroll-behavior: smooth;
+        }
 
-/* ✅ MOBILE SCROLLBAR (smaller) */
-@media (max-width: 768px) {
-  .categories-grid-container::-webkit-scrollbar {
-    width: 4px;
-  }
-  
-  .categories-grid-container::-webkit-scrollbar-thumb {
-    border-radius: 2px;
-  }
-}
+        /* ✅ MOBILE SCROLLBAR (smaller) */
+        @media (max-width: 768px) {
+          .categories-grid-container::-webkit-scrollbar {
+            width: 4px;
+          }
+          
+          .categories-grid-container::-webkit-scrollbar-thumb {
+            border-radius: 2px;
+          }
+        }
       `}</style>
+       
+      {/* Template Gallery Modal */}
+      {showTemplateGallery && console.log('Modal should render now')}
+      {showTemplateGallery && (
+        <div style={{
+          position: 'fixed',
+          top: 0,
+          left: 0,
+          width: '100%',
+          height: '100%',
+          zIndex: 3000,
+          background: 'rgba(0, 0, 0, 0.95)',
+          overflowY: 'auto' // Add this for mobile scrolling
+        }}>
+          <TemplateGallery
+            userPremiumStatus={premiumStatus}
+          />
+        </div>
+      )}
+
+      {/* Character Builder Modal */}
+      {showCharacterBuilder && selectedTemplate && (
+        <div style={{
+          position: 'fixed',
+          top: 0,
+          left: 0,
+          width: '100%',
+          height: '100%',
+          zIndex: 3000,
+          background: 'rgba(0, 0, 0, 0.95)'
+        }}>
+          <CharacterBuilder
+            userPremiumStatus={premiumStatus}
+          />
+        </div>
+      )}
     </div>
   );
 };
@@ -1522,7 +2836,8 @@ const PersonalizedSection = ({ characters, onCharacterSelect, hasActiveConversat
           letterSpacing: '0.5px',
           textShadow: '0 2px 4px rgba(0, 0, 0, 0.6)',
           margin: 0,
-          fontFamily: "'Cinzel', serif"
+          fontFamily: "'Cinzel', serif",
+          textTransform: 'none' // Add this to prevent all caps
         }}>
         </h3>
         <span style={{
@@ -1662,5 +2977,4 @@ const PersonalizedSection = ({ characters, onCharacterSelect, hasActiveConversat
     </div>
   );
 };
-
 export default SplitScreenLauncher;

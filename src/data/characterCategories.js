@@ -202,6 +202,13 @@ export const characterCategories = [
       }
     ]
   },
+
+  // Add this as the 12th category in the characterCategories array, after 'performers'
+  {
+    key: 'my_characters',
+    title: 'My Characters',
+    characters: [] // Will be populated dynamically
+  },
   {
     key: 'veilwalkers',
     title: 'Mystics',
