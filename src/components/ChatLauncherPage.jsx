@@ -333,28 +333,29 @@ const SplitScreenLauncher = ({ onStartChat }) => {
     const allCategories = [...characterCategories];
     
     // Add My Characters category at position 11 (after Strategists, making it 12th total)
-    const myCharCategory = {
-      key: 'my_characters',
-      title: 'My Characters',
-      description: 'Your custom-created AI characters',
-      characters: approvedCharacters.map(char => ({
-        key: char.character_key,
-        name: char.display_name,
-        description: char.short_description,
-        thumbnailUrl: char.avatar_url || char.thumbnailUrl || '/images/default-character.jpg'
-      }))
-    };
-    
-    // Insert at position 11 (0-indexed, so this becomes the 12th category)
-    allCategories.splice(11, 0, myCharCategory);
-    
-    console.log('🎭 Enhanced categories created:', {
+    // Find and update the existing 'my_characters' category
+    const myCharIndex = allCategories.findIndex(cat => cat.key === 'my_characters');
+
+    if (myCharIndex !== -1) {
+      // Update the existing category with approved characters
+      allCategories[myCharIndex] = {
+        ...allCategories[myCharIndex],
+        characters: approvedCharacters.map(char => ({
+          key: char.character_key,
+          name: char.display_name,
+          description: char.short_description,
+          thumbnailUrl: char.avatar_url || char.thumbnailUrl || '/images/default-character.jpg'
+        }))
+      };
+    }
+
+    console.log('🎭 Enhanced categories updated:', {
       totalCategories: allCategories.length,
-      myCharactersIndex: allCategories.findIndex(cat => cat.key === 'my_characters'),
+      myCharactersIndex: myCharIndex,
       approvedCharactersCount: approvedCharacters.length,
-      myCharactersCharacterCount: myCharCategory.characters.length
+      myCharactersCharacterCount: approvedCharacters.length
     });
-    
+
     return allCategories;
   }, [approvedCharacters]);
 
