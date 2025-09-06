@@ -1311,7 +1311,7 @@ const SplitScreenLauncher = ({ onStartChat }) => {
               <p style={{
                 color: 'rgba(255, 215, 0, 0.7)',
                 fontSize: '0.8rem',
-                textTransform: 'uppercase',
+                textTransform: 'none',
                 letterSpacing: '0.5px',
                 margin: '0 0 1rem 0'
               }}>
@@ -1619,7 +1619,7 @@ const SplitScreenLauncher = ({ onStartChat }) => {
                     <div style={{
                       fontSize: '0.75rem',
                       color: 'rgba(255, 215, 0, 0.7)',
-                      textTransform: 'uppercase',
+                      textTransform: 'none',
                       letterSpacing: '0.5px'
                     }}>
                       {character.category}
@@ -2484,7 +2484,7 @@ const SplitScreenLauncher = ({ onStartChat }) => {
             <p style={{
               color: 'rgba(255, 215, 0, 0.7)',
               fontSize: '0.9rem',
-              textTransform: 'uppercase',
+              textTransform: 'none',
               letterSpacing: '0.5px',
               margin: '0 0 1.5rem 0'
             }}>
@@ -2842,7 +2842,7 @@ const PersonalizedSection = ({ characters, onCharacterSelect, hasActiveConversat
           fontSize: '0.7rem',
           color: 'rgba(255, 215, 0, 0.9)',
           letterSpacing: '0.3px',
-          textTransform: 'uppercase'
+          textTransform: 'none'
         }}>
           Recent
         </span>

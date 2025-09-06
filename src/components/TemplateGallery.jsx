@@ -222,7 +222,7 @@ const TemplateGallery = ({ userPremiumStatus = null }) => {
                   padding: '0.4rem 0.8rem',
                   cursor: 'pointer',
                   transition: 'all 0.3s ease',
-                  textTransform: 'capitalize'
+                  textTransform: 'none'
                 }}
               >
                 {archetype}
@@ -288,7 +288,7 @@ const TemplateGallery = ({ userPremiumStatus = null }) => {
                         color: 'rgba(255, 215, 0, 0.9)',
                         fontSize: '0.7rem',
                         padding: '0.2rem 0.5rem',
-                        textTransform: 'uppercase',
+                        textTransform: 'none',
                         letterSpacing: '0.5px'
                       }}>
                         {template.personality_archetype}
@@ -364,7 +364,7 @@ const TemplateGallery = ({ userPremiumStatus = null }) => {
                     color: 'rgba(255, 255, 255, 0.6)',
                     fontSize: '0.75rem',
                     margin: '0 0 0.5rem 0',
-                    textTransform: 'uppercase',
+                    textTransform: 'none',
                     letterSpacing: '0.5px'
                   }}>
                     Example Characters:
