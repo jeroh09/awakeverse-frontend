@@ -56,6 +56,37 @@ html, body {
   --surface-border: #333333;
 }
 
+/* Remove all uppercase text transforms globally */
+* {
+  text-transform: none !important;
+}
+
+/* Ensure all headings use normal text transform */
+h1, h2, h3, h4, h5, h6 {
+  text-transform: none !important;
+}
+
+/* Remove uppercase from buttons */
+button {
+  text-transform: none !important;
+}
+
+/* Remove uppercase from spans and labels */
+span, label {
+  text-transform: none !important;
+}
+
+/* Remove uppercase from common UI elements */
+.category-title,
+.badge,
+.filter-button,
+.template-badge,
+.archetype-badge,
+.invite-button,
+.character-name,
+.section-title {
+  text-transform: none !important;
+}
 
 /* =======================
    App Layout
