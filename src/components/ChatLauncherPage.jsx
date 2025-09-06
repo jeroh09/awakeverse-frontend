@@ -1460,7 +1460,7 @@ const SplitScreenLauncher = ({ onStartChat }) => {
           console.log('User Characters:', userCharacters);
           console.log('Premium Error:', premiumError);
           console.log('Grant Trial Function:', typeof grantTrial === 'function');
-                              // Test different premium route variations
+          //gi Test different premium route variations
           const testTemplateAPI = async () => {
             try {
               const response = await fetch(`${process.env.REACT_APP_API_URL}/api/premium/test-templates/44`, {
