@@ -436,7 +436,7 @@ const SplitScreenLauncher = ({ onStartChat }) => {
         width: '100%',
         minHeight: '100vh',
         padding: '1rem',
-        fontFamily: "'Cinzel', serif",
+        fontFamily: "'Georgia', serif",
         textTransform: 'none', // Add this to prevent all caps
         background: 'linear-gradient(135deg, #0B1426 0%, #1A2B47 25%, #2C1810 50%, #0F1A2E 75%, #0B1426 100%)',
         display: 'flex',
@@ -466,7 +466,7 @@ const SplitScreenLauncher = ({ onStartChat }) => {
           maxWidth: '500px',
         }}>
           <h1 style={{
-            fontFamily: "'Cinzel Decorative', serif",
+            fontFamily: "'Playfair Display', serif",
             textTransform: 'none', // Add this to prevent all caps
             fontSize: '1.8rem',
             background: 'linear-gradient(135deg, #FFD700, #FFA500, #FFD700)',
@@ -520,7 +520,7 @@ const SplitScreenLauncher = ({ onStartChat }) => {
               outline: 'none',
               backdropFilter: 'blur(10px)',
               transition: 'all 0.3s ease',
-              fontFamily: "'Cinzel', serif",
+              fontFamily: "'Georgia', serif",
               textTransform: 'none' // Add this to prevent all caps
             }}
           />
@@ -768,7 +768,7 @@ const SplitScreenLauncher = ({ onStartChat }) => {
                   fontWeight: 600,
                   margin: '0 0 0.3rem 0',
                   letterSpacing: '0.5px',
-                  fontFamily: "'Cinzel', serif",
+                  fontFamily: "'Georgia', serif",
                   textTransform: 'none', // Add this to prevent all caps
                   textShadow: '1px 1px 2px rgba(0,0,0,0.8)',
                   lineHeight: 1.1
@@ -817,7 +817,7 @@ const SplitScreenLauncher = ({ onStartChat }) => {
               <h2 style={{
                 color: '#FFD700',
                 fontSize: '1.5rem',
-                fontFamily: "'Cinzel Decorative', serif",
+                fontFamily: "'Playfair Display', serif",
                 textTransform: 'none', // Add this to prevent all caps
                 margin: 0,
                 letterSpacing: '1px',
@@ -837,7 +837,7 @@ const SplitScreenLauncher = ({ onStartChat }) => {
                   fontWeight: 600,
                   padding: '0.3rem 0.8rem',
                   cursor: 'pointer',
-                  fontFamily: "'Cinzel', serif",
+                  fontFamily: "'Georgia', serif",
                   textTransform: 'none' // Add this to prevent all caps
                 }}
               >
@@ -911,7 +911,7 @@ const SplitScreenLauncher = ({ onStartChat }) => {
                       <h3 style={{
                         color: '#FFD700',
                         fontSize: '1.4rem',
-                        fontFamily: "'Cinzel Decorative', serif",
+                        fontFamily: "'Playfair Display', serif",
                         textTransform: 'none', // Add this to prevent all caps
                         margin: '0 0 0.8rem 0',
                         letterSpacing: '1px',
@@ -996,7 +996,7 @@ const SplitScreenLauncher = ({ onStartChat }) => {
                           padding: '0.8rem 1.5rem',
                           cursor: 'pointer',
                           transition: 'all 0.3s ease',
-                          fontFamily: "'Cinzel', serif",
+                          fontFamily: "'Georgia', serif",
                           textTransform: 'none', // Add this to prevent all caps
                           boxShadow: '0 4px 15px rgba(255, 215, 0, 0.3)',
                           width: '100%',
@@ -1019,7 +1019,7 @@ const SplitScreenLauncher = ({ onStartChat }) => {
                           padding: '0.8rem 1.5rem',
                           cursor: 'pointer',
                           transition: 'all 0.3s ease',
-                          fontFamily: "'Cinzel', serif",
+                          fontFamily: "'Georgia', serif",
                           textTransform: 'none', // Add this to prevent all caps
                           width: '100%'
                         }}
@@ -1066,7 +1066,7 @@ const SplitScreenLauncher = ({ onStartChat }) => {
                         color: '#FFD700',
                         fontSize: '1.3rem',
                         margin: '0 0 0.8rem 0',
-                        fontFamily: "'Cinzel Decorative', serif",
+                        fontFamily: "'Playfair Display', serif",
                         textTransform: 'none' // Add this to prevent all caps
                       }}>
                         Ready to Create?
@@ -1097,7 +1097,7 @@ const SplitScreenLauncher = ({ onStartChat }) => {
                         padding: '0.8rem 1.5rem',
                         cursor: 'pointer',
                         transition: 'all 0.3s ease',
-                        fontFamily: "'Cinzel', serif",
+                        fontFamily: "'Georgia', serif",
                         textTransform: 'none', // Add this to prevent all caps
                         boxShadow: '0 4px 15px rgba(255, 215, 0, 0.3)',
                         width: '100%'
@@ -1343,7 +1343,7 @@ const SplitScreenLauncher = ({ onStartChat }) => {
                     padding: '0.6rem 1.2rem',
                     cursor: 'pointer',
                     transition: 'all 0.3s ease',
-                    fontFamily: "'Cinzel', serif",
+                    fontFamily: "'Georgia', serif",
                     textTransform: 'none', // Add this to prevent all caps
                   }}
                 >
@@ -1361,7 +1361,7 @@ const SplitScreenLauncher = ({ onStartChat }) => {
                     padding: '0.6rem 1.2rem',
                     cursor: 'pointer',
                     transition: 'all 0.3s ease',
-                    fontFamily: "'Cinzel', serif",
+                    fontFamily: "'Georgia', serif",
                     textTransform: 'none' // Add this to prevent all caps
                   }}
                 >
@@ -1414,7 +1414,7 @@ const SplitScreenLauncher = ({ onStartChat }) => {
       width: '100%',
       height: '100vh',
       display: 'flex',
-      fontFamily: "'Cinzel', serif",
+      fontFamily: "'Georgia', serif",
       textTransform: 'none', // Add this to prevent all caps
       background: 'linear-gradient(135deg, #0B1426 0%, #1A2B47 25%, #2C1810 50%, #0F1A2E 75%, #0B1426 100%)',
       overflow: 'hidden'
@@ -1505,7 +1505,7 @@ const SplitScreenLauncher = ({ onStartChat }) => {
         {/* Welcome Section */}
         <div style={{ textAlign: 'center', marginBottom: '1.5rem' }}>
           <h1 style={{
-            fontFamily: "'Cinzel Decorative', serif",
+            fontFamily: "'Playfair Display', serif",
             textTransform: 'none', // Add this to prevent all caps
             fontSize: '2.5rem',
             background: 'linear-gradient(135deg, #FFD700, #FFA500, #FFD700)',
@@ -1553,7 +1553,7 @@ const SplitScreenLauncher = ({ onStartChat }) => {
               outline: 'none',
               backdropFilter: 'blur(10px)',
               transition: 'all 0.3s ease',
-              fontFamily: "'Cinzel', serif",
+              fontFamily: "'Georgia', serif",
               textTransform: 'none' // Add this to prevent all caps
             }}
           />
@@ -1849,7 +1849,7 @@ const SplitScreenLauncher = ({ onStartChat }) => {
                 fontWeight: 600,
                 margin: '0 0 0.3rem 0',
                 letterSpacing: '0.5px',
-                fontFamily: "'Cinzel', serif",
+                fontFamily: "'Georgia', serif",
                 textTransform: 'none', // Add this to prevent all caps
                 textShadow: '1px 1px 2px rgba(0,0,0,0.8)',
                 lineHeight: 1.1
@@ -1909,7 +1909,7 @@ const SplitScreenLauncher = ({ onStartChat }) => {
                 <h2 style={{
                   color: '#FFD700',
                   fontSize: '2rem',
-                  fontFamily: "'Cinzel Decorative', serif",
+                  fontFamily: "'Playfair Display', serif",
                   textTransform: 'none', // Add this to prevent all caps
                   margin: 0,
                   letterSpacing: '2px',
@@ -1930,7 +1930,7 @@ const SplitScreenLauncher = ({ onStartChat }) => {
                     padding: '0.5rem 1rem',
                     cursor: 'pointer',
                     transition: 'all 0.3s ease',
-                    fontFamily: "'Cinzel', serif",
+                    fontFamily: "'Georgia', serif",
                     textTransform: 'none', // Add this to prevent all caps
                   }}
                   onMouseEnter={(e) => {
@@ -2012,7 +2012,7 @@ const SplitScreenLauncher = ({ onStartChat }) => {
                         <h3 style={{
                           color: '#FFD700',
                           fontSize: '1.8rem',
-                          fontFamily: "'Cinzel Decorative', serif",
+                          fontFamily: "'Playfair Display', serif",
                           textTransform: 'none', // Add this to prevent all caps
                           margin: '0 0 1rem 0',
                           letterSpacing: '1px',
@@ -2106,7 +2106,7 @@ const SplitScreenLauncher = ({ onStartChat }) => {
                             padding: '1rem 2rem',
                             cursor: 'pointer',
                             transition: 'all 0.3s ease',
-                            fontFamily: "'Cinzel', serif",
+                            fontFamily: "'Georgia', serif",
                             textTransform: 'none', // Add this to prevent all caps
                             boxShadow: '0 4px 15px rgba(255, 215, 0, 0.3)'
                           }}
@@ -2133,7 +2133,7 @@ const SplitScreenLauncher = ({ onStartChat }) => {
                             padding: '1rem 2rem',
                             cursor: 'pointer',
                             transition: 'all 0.3s ease',
-                            fontFamily: "'Cinzel', serif",
+                            fontFamily: "'Georgia', serif",
                             textTransform: 'none' // Add this to prevent all caps
                           }}
                           onMouseEnter={(e) => {
@@ -2187,7 +2187,7 @@ const SplitScreenLauncher = ({ onStartChat }) => {
                           color: '#FFD700',
                           fontSize: '1.5rem',
                           margin: '0 0 1rem 0',
-                          fontFamily: "'Cinzel Decorative', serif",
+                          fontFamily: "'Playfair Display', serif",
                           textTransform: 'none' // Add this to prevent all caps
                         }}>
                           Ready to Create?
@@ -2219,7 +2219,7 @@ const SplitScreenLauncher = ({ onStartChat }) => {
                           padding: '1rem 2rem',
                           cursor: 'pointer',
                           transition: 'all 0.3s ease',
-                          fontFamily: "'Cinzel', serif",
+                          fontFamily: "'Georgia', serif",
                           textTransform: 'none', // Add this to prevent all caps
                           boxShadow: '0 4px 15px rgba(255, 215, 0, 0.3)'
                         }}
@@ -2513,7 +2513,7 @@ const SplitScreenLauncher = ({ onStartChat }) => {
                   padding: '0.75rem 1.5rem',
                   cursor: 'pointer',
                   transition: 'all 0.3s ease',
-                  fontFamily: "'Cinzel', serif",
+                  fontFamily: "'Georgia', serif",
                   textTransform: 'none' // Add this to prevent all caps
                 }}
                 onMouseEnter={(e) => {
@@ -2540,7 +2540,7 @@ const SplitScreenLauncher = ({ onStartChat }) => {
                   padding: '0.75rem 1.5rem',
                   cursor: 'pointer',
                   transition: 'all 0.3s ease',
-                  fontFamily: "'Cinzel', serif",
+                  fontFamily: "'Georgia', serif",
                   textTransform: 'none' // Add this to prevent all caps
                 }}
                 onMouseEnter={(e) => {
@@ -2830,7 +2830,7 @@ const PersonalizedSection = ({ characters, onCharacterSelect, hasActiveConversat
           letterSpacing: '0.5px',
           textShadow: '0 2px 4px rgba(0, 0, 0, 0.6)',
           margin: 0,
-          fontFamily: "'Cinzel', serif",
+          fontFamily: "'Georgia', serif",
           textTransform: 'none' // Add this to prevent all caps
         }}>
         </h3>

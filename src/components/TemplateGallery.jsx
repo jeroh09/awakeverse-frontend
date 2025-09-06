@@ -44,7 +44,7 @@ const TemplateGallery = ({ userPremiumStatus = null }) => {
         flexDirection: 'column',
         alignItems: 'center',
         justifyContent: 'center',
-        fontFamily: "'Cinzel', serif",
+        fontFamily: "'Georgia', serif",
         color: '#FFD700'
       }}>
         <div style={{
@@ -77,7 +77,7 @@ const TemplateGallery = ({ userPremiumStatus = null }) => {
         flexDirection: 'column',
         alignItems: 'center',
         justifyContent: 'center',
-        fontFamily: "'Cinzel', serif",
+        fontFamily: "'Georgia', serif",
         padding: '2rem'
       }}>
         <div style={{
@@ -105,7 +105,7 @@ const TemplateGallery = ({ userPremiumStatus = null }) => {
               fontWeight: 600,
               padding: '0.75rem 1.5rem',
               cursor: 'pointer',
-              fontFamily: "'Cinzel', serif"
+              fontFamily: "'Georgia', serif"
             }}
           >
             Back to Characters
@@ -124,7 +124,7 @@ const TemplateGallery = ({ userPremiumStatus = null }) => {
       height: '100%',
       background: 'linear-gradient(135deg, #0B1426 0%, #1A2B47 25%, #2C1810 50%, #0F1A2E 75%, #0B1426 100%)',
       overflowY: 'auto',
-      fontFamily: "'Cinzel', serif"
+      fontFamily: "'Georgia', serif"
     }}>
       {/* Header */}
       <div style={{
@@ -147,7 +147,7 @@ const TemplateGallery = ({ userPremiumStatus = null }) => {
             <h1 style={{
               color: '#FFD700',
               fontSize: '1.8rem',
-              fontFamily: "'Cinzel Decorative', serif",
+              fontFamily: "'Playfair Display', serif",
               margin: '0 0 0.5rem 0',
               letterSpacing: '1px'
             }}>

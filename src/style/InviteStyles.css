@@ -40,7 +40,7 @@
   display: flex;
   align-items: center;
   gap: 6px;
-  font-family: 'Cinzel', serif;
+  font-family: 'Playfair Display', serif;
   line-height: 1.4;
 }
 
@@ -70,7 +70,7 @@
   background-color: rgba(30, 60, 120, 0.1);
   border-radius: 999px;
   font-size: 13px;
-  font-family: 'Cinzel', serif;
+  font-family: 'Playfair Display', serif;
   text-transform: uppercase;
   font-weight: 500;
   color: #d4af37;
@@ -300,7 +300,7 @@
   color: #d4af37;
   padding: 6px 16px;
   border-radius: 20px;
-  font-family: 'Cinzel', serif;
+  font-family: 'Playfair Display', serif;
   font-size: 13px;
   font-weight: 500;
   text-transform: uppercase;

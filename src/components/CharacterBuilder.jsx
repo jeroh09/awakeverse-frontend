@@ -152,7 +152,7 @@ Engage users with the depth and authenticity that comes from your unique histori
       width: '100%',
       height: '100vh',
       background: 'linear-gradient(135deg, #0B1426 0%, #1A2B47 25%, #2C1810 50%, #0F1A2E 75%, #0B1426 100%)',
-      fontFamily: "'Cinzel', serif",
+      fontFamily: "'Playfair Display', serif",
       overflow: 'hidden',
       display: 'flex',
       flexDirection: 'column'
@@ -169,7 +169,7 @@ Engage users with the depth and authenticity that comes from your unique histori
       }}>
         <div>
           <h1 style={{
-            fontFamily: "'Cinzel Decorative', serif",
+            fontFamily: "'Playfair Display', serif",
             fontSize: isMobile ? '1.5rem' : '2rem',
             color: '#FFD700',
             margin: '0 0 0.5rem 0',
@@ -198,7 +198,7 @@ Engage users with the depth and authenticity that comes from your unique histori
             padding: isMobile ? '0.5rem 1rem' : '0.75rem 1.5rem',
             cursor: 'pointer',
             transition: 'all 0.3s ease',
-            fontFamily: "'Cinzel', serif",
+            fontFamily: "'Playfair Display', serif",
             alignSelf: isMobile ? 'flex-start' : 'auto'
           }}
         >
@@ -366,7 +366,7 @@ Engage users with the depth and authenticity that comes from your unique histori
                     background: 'rgba(255, 255, 255, 0.1)',
                     color: '#fff',
                     outline: 'none',
-                    fontFamily: "'Cinzel', serif",
+                    fontFamily: "'Playfair Display', serif",
                     transition: 'border-color 0.3s ease'
                   }}
                   onFocus={(e) => e.target.style.borderColor = 'rgba(255, 215, 0, 0.6)'}
@@ -405,7 +405,7 @@ Engage users with the depth and authenticity that comes from your unique histori
                     background: 'rgba(255, 255, 255, 0.1)',
                     color: '#fff',
                     outline: 'none',
-                    fontFamily: "'Cinzel', serif",
+                    fontFamily: "'Playfair Display', serif",
                     resize: 'vertical',
                     transition: 'border-color 0.3s ease'
                   }}
@@ -472,7 +472,7 @@ Engage users with the depth and authenticity that comes from your unique histori
                     background: 'rgba(255, 255, 255, 0.1)',
                     color: '#fff',
                     outline: 'none',
-                    fontFamily: "'Cinzel', serif",
+                    fontFamily: "'Playfair Display', serif",
                     resize: 'vertical',
                     transition: 'border-color 0.3s ease',
                     lineHeight: 1.5
@@ -518,7 +518,7 @@ Engage users with the depth and authenticity that comes from your unique histori
                     background: 'rgba(255, 255, 255, 0.1)',
                     color: '#fff',
                     outline: 'none',
-                    fontFamily: "'Cinzel', serif",
+                    fontFamily: "'Playfair Display', serif",
                     resize: 'vertical',
                     transition: 'border-color 0.3s ease'
                   }}
@@ -706,7 +706,7 @@ Engage users with the depth and authenticity that comes from your unique histori
             padding: '0.75rem 1.5rem',
             cursor: currentStep === 1 ? 'not-allowed' : 'pointer',
             transition: 'all 0.3s ease',
-            fontFamily: "'Cinzel', serif"
+            fontFamily: "'Playfair Display', serif"
           }}
         >
           Previous
@@ -745,7 +745,7 @@ Engage users with the depth and authenticity that comes from your unique histori
               padding: '0.75rem 1.5rem',
               cursor: 'pointer',
               transition: 'all 0.3s ease',
-              fontFamily: "'Cinzel', serif"
+              fontFamily: "'Playfair Display', serif"
             }}
             onMouseEnter={(e) => {
               e.currentTarget.style.transform = 'translateY(-1px)';
@@ -772,7 +772,7 @@ Engage users with the depth and authenticity that comes from your unique histori
               padding: '0.75rem 2rem',
               cursor: isCreating ? 'not-allowed' : 'pointer',
               transition: 'all 0.3s ease',
-              fontFamily: "'Cinzel', serif",
+              fontFamily: "'Playfair Display', serif",
               display: 'flex',
               alignItems: 'center',
               gap: '0.5rem'
