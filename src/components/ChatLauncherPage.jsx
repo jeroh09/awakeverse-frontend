@@ -1461,26 +1461,24 @@ const SplitScreenLauncher = ({ onStartChat }) => {
           console.log('Premium Error:', premiumError);
           console.log('Grant Trial Function:', typeof grantTrial === 'function');
                               // Test different premium route variations
-          const testRouteVariations = async () => {
-            const baseUrl = process.env.REACT_APP_API_URL;
-            const routes = [
-              '/api/premium/health',
-              '/premium/health', 
-              '/api/premium',
-              '/premium'
-            ];
-
-            for (const route of routes) {
-              try {
-                const response = await fetch(`${baseUrl}${route}`);
-                console.log(`Route ${route}: Status ${response.status}`);
-              } catch (error) {
-                console.log(`Route ${route}: Failed to fetch`);
-              }
+          const testTemplateAPI = async () => {
+            try {
+              const response = await fetch(`${process.env.REACT_APP_API_URL}/api/premium/test-templates/44`, {
+                method: 'GET',
+                headers: { 
+                  'Authorization': `Bearer ${token}`,
+                  'Content-Type': 'application/json'
+                }
+              });
+              const result = await response.text();
+              console.log('Manual template test result:', result);
+            } catch (error) {
+              console.log('Manual template test failed:', error.message);
             }
           };
 
-          testRouteVariations();
+          testTemplateAPI();
+
         }}
         style={{
           background: '#FFD700',
