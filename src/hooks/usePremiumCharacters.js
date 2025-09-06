@@ -128,7 +128,13 @@ export default function usePremiumCharacters() {
       const data = await response.json();
       console.log('✅ Templates response:', data);
       
-      return data.template_groups || data.templates || data || [];
+      // Handle grouped template response from backend
+      if (data.template_groups) {
+  // Flatten grouped templates into single array
+        const flatTemplates = Object.values(data.template_groups).flat();
+        return flatTemplates;
+      }
+      return data.templates || data || [];
       
     } catch (error) {
       console.error('❌ Templates fetch failed:', error);
