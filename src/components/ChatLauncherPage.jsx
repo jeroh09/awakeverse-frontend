@@ -328,37 +328,32 @@ const SplitScreenLauncher = ({ onStartChat }) => {
     return () => clearInterval(interval);
   }, []);
   
-
   // ✅ ENHANCED: Updated categories with My Characters integration
   const enhancedCategories = useMemo(() => {
     const allCategories = [...characterCategories];
     
-    // Add My Characters category if it doesn't exist
-    const myCharIndex = allCategories.findIndex(cat => cat.key === 'my_characters');
-    if (myCharIndex === -1) {
-      allCategories.unshift({ // ✅ Add at the beginning
-        key: 'my_characters',
-        title: 'My Characters',
-        description: 'Your custom-created AI characters',
-        characters: approvedCharacters.map(char => ({
-          key: char.character_key,
-          name: char.display_name,
-          description: char.short_description,
-          thumbnailUrl: char.thumbnailUrl || '/images/default-character.jpg'
-        }))
-      });
-    } else {
-      // Update existing category with latest approved characters
-      allCategories[myCharIndex] = {
-        ...allCategories[myCharIndex],
-        characters: approvedCharacters.map(char => ({
-          key: char.character_key,
-          name: char.display_name,
-          description: char.short_description,
-          thumbnailUrl: char.thumbnailUrl || '/images/default-character.jpg'
-        }))
-      };
-    }
+    // Add My Characters category at position 11 (after Strategists, making it 12th total)
+    const myCharCategory = {
+      key: 'my_characters',
+      title: 'My Characters',
+      description: 'Your custom-created AI characters',
+      characters: approvedCharacters.map(char => ({
+        key: char.character_key,
+        name: char.display_name,
+        description: char.short_description,
+        thumbnailUrl: char.avatar_url || char.thumbnailUrl || '/images/default-character.jpg'
+      }))
+    };
+    
+    // Insert at position 11 (0-indexed, so this becomes the 12th category)
+    allCategories.splice(11, 0, myCharCategory);
+    
+    console.log('🎭 Enhanced categories created:', {
+      totalCategories: allCategories.length,
+      myCharactersIndex: allCategories.findIndex(cat => cat.key === 'my_characters'),
+      approvedCharactersCount: approvedCharacters.length,
+      myCharactersCharacterCount: myCharCategory.characters.length
+    });
     
     return allCategories;
   }, [approvedCharacters]);
@@ -1441,12 +1436,13 @@ const SplitScreenLauncher = ({ onStartChat }) => {
         <div style={{ fontWeight: 'bold', marginBottom: '0.5rem' }}>
           Premium API Debug Panel
         </div>
-
         <div style={{ fontSize: '0.7rem' }}>
           <div>User ID: {user?.id || 'Not loaded'}</div>
           <div>Premium: {premiumLoading ? 'Loading...' : isPremium ? 'Yes' : 'No'}</div>
           <div>Characters: {approvedCharacters?.length || 0}</div>
+          <div>Templates: {characterTemplates?.length || 0}</div>
           <div>Status: {premiumStatus?.subscription_status || 'Unknown'}</div>
+          <div>Error: {premiumError || 'None'}</div>
         </div>
         <button
         onClick={() => {

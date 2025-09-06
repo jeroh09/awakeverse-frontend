@@ -127,28 +127,46 @@ export default function usePremiumCharacters() {
 
       const data = await response.json();
       console.log('✅ Templates response:', data);
+      console.log('🔍 Response structure check:', {
+        hasTemplateGroups: !!data.template_groups,
+        templateGroupsType: typeof data.template_groups,
+        templateGroupsKeys: data.template_groups ? Object.keys(data.template_groups) : 'none',
+        hasTemplatesArray: !!data.templates,
+        dataKeys: Object.keys(data)
+      });
       
       // Handle grouped template response from backend
-      if (data.template_groups) {
-  // Flatten grouped templates into single array
+      if (data.template_groups && typeof data.template_groups === 'object') {
         const flatTemplates = Object.values(data.template_groups).flat();
-        return flatTemplates;
+        console.log('🎯 Flattened templates count:', flatTemplates.length);
+        console.log('🎯 First template sample:', flatTemplates[0]);
+        if (flatTemplates.length > 0) {
+          return flatTemplates;
+        }
       }
-      return data.templates || data || [];
+      
+      // Fallback to direct templates array
+      if (Array.isArray(data.templates)) {
+        console.log('📋 Using direct templates array, count:', data.templates.length);
+        return data.templates;
+      }
+      
+      // Last resort - if data itself is an array
+      if (Array.isArray(data)) {
+        console.log('📋 Using data as array, count:', data.length);
+        return data;
+      }
+      
+      // If we reach here, log the issue and return empty array
+      console.warn('⚠️ No valid template data found in response structure');
+      console.warn('⚠️ Received data:', JSON.stringify(data, null, 2));
+      return [];
       
     } catch (error) {
       console.error('❌ Templates fetch failed:', error);
-      // Return mock templates as fallback
-      return [
-        {
-          id: 1,
-          name: 'Historical Leader',
-          description: 'Military commanders and rulers who shaped history',
-          historical_period: 'Ancient to Medieval',
-          personality_archetype: 'Leader',
-          expertise_domain: 'Military Strategy'
-        }
-      ];
+      // Return empty array instead of mock templates to see the real issue
+      console.warn('⚠️ Returning empty array due to fetch failure');
+      return [];
     }
   }, [token]);
 
