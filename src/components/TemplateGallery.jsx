@@ -1,189 +1,252 @@
 // src/components/TemplateGallery.jsx - Standalone template selection component
 import React, { useState } from 'react';
 import { usePremiumCharacterFlow } from '../hooks/usePremiumCharacterFlow';
-
-
-
-// Mock template data - Phase 1
-const MOCK_TEMPLATES = [
-  {
-    id: 1,
-    name: 'Historical Leader',
-    description: 'Military commanders, rulers, and political figures who shaped history',
-    historical_period: 'Various',
-    personality_archetype: 'Leader',
-    expertise_domain: 'Leadership & Strategy',
-    example_characters: ['Napoleon Bonaparte', 'Alexander the Great', 'Cleopatra'],
-    template_preview: 'A strategic mind forged in the crucible of power...',
-    usage_count: 156
-  },
-  {
-    id: 2,
-    name: 'Renaissance Scientist',
-    description: 'Brilliant minds who advanced human knowledge through observation and experimentation',
-    historical_period: 'Renaissance',
-    personality_archetype: 'Scholar',
-    expertise_domain: 'Science & Innovation',
-    example_characters: ['Leonardo da Vinci', 'Galileo Galilei', 'Isaac Newton'],
-    template_preview: 'Curiosity drives me to question everything the world presents...',
-    usage_count: 89
-  },
-  {
-    id: 3,
-    name: 'Philosophical Sage',
-    description: 'Deep thinkers who contemplated existence, ethics, and the nature of reality',
-    historical_period: 'Ancient to Modern',
-    personality_archetype: 'Sage',
-    expertise_domain: 'Philosophy & Wisdom',
-    example_characters: ['Socrates', 'Confucius', 'Marcus Aurelius'],
-    template_preview: 'The unexamined life is not worth living...',
-    usage_count: 134
-  },
-  {
-    id: 4,
-    name: 'Romantic Poet',
-    description: 'Passionate artists who captured human emotion and beauty in verse',
-    historical_period: 'Romantic Era',
-    personality_archetype: 'Artist',
-    expertise_domain: 'Literature & Arts',
-    example_characters: ['Lord Byron', 'Emily Dickinson', 'Rumi'],
-    template_preview: 'Words are but shadows of the soul\'s deepest longings...',
-    usage_count: 67
-  },
-  {
-    id: 5,
-    name: 'Mystical Oracle',
-    description: 'Spiritual guides with deep connection to unseen realms and ancient wisdom',
-    historical_period: 'Timeless',
-    personality_archetype: 'Mystic',
-    expertise_domain: 'Spirituality & Mysticism',
-    example_characters: ['Oracle of Delphi', 'Nostradamus', 'Rumi'],
-    template_preview: 'The veil between worlds grows thin when wisdom is sought...',
-    usage_count: 92
-  },
-  {
-    id: 6,
-    name: 'Modern Innovator',
-    description: 'Visionary entrepreneurs and inventors who shaped the contemporary world',
-    historical_period: 'Modern Era',
-    personality_archetype: 'Innovator',
-    expertise_domain: 'Technology & Business',
-    example_characters: ['Tesla', 'Jobs', 'Curie'],
-    template_preview: 'The future belongs to those who dare to imagine it differently...',
-    usage_count: 78
-  }
-];
+import usePremiumCharacters from '../hooks/usePremiumCharacters';
 
 const TemplateGallery = ({ userPremiumStatus = null }) => {
   const { selectTemplate, backToLauncher } = usePremiumCharacterFlow();
+  const { characterTemplates, loading: templatesLoading } = usePremiumCharacters();
   const [selectedTemplate, setSelectedTemplate] = useState(null);
-  const [hoveredTemplate, setHoveredTemplate] = useState(null);
-    // Debug logging
-  console.log('TemplateGallery rendered');
-  console.log('Window width:', window.innerWidth);
-  console.log('Context functions available:', { 
-    selectTemplate: typeof selectTemplate, 
-    backToLauncher: typeof backToLauncher 
-  });
+  const [selectedArchetype, setSelectedArchetype] = useState('all');
+  
+  // Use real templates from backend instead of mock data
+  const templates = characterTemplates || [];
+  
+  // Group templates by personality archetype for filtering
+  const archetypes = ['all', ...new Set(templates.map(t => t.personality_archetype).filter(Boolean))];
+  
+  // Filter templates based on selected archetype
+  const filteredTemplates = selectedArchetype === 'all' 
+    ? templates 
+    : templates.filter(t => t.personality_archetype === selectedArchetype);
 
-
-  const handleTemplateClick = (template) => {
+  const handleTemplateSelect = (template) => {
     setSelectedTemplate(template);
   };
 
-  const handleContinueWithTemplate = () => {
-    if (selectedTemplate && selectTemplate) {  // Use selectTemplate from context
+  const handleConfirmSelection = () => {
+    if (selectedTemplate) {
       selectTemplate(selectedTemplate);
     }
   };
-  
+
+  // Loading state
+  if (templatesLoading) {
+    return (
+      <div style={{
+        position: 'fixed',
+        top: 0,
+        left: 0,
+        width: '100%',
+        height: '100%',
+        background: 'linear-gradient(135deg, #0B1426 0%, #1A2B47 25%, #2C1810 50%, #0F1A2E 75%, #0B1426 100%)',
+        display: 'flex',
+        flexDirection: 'column',
+        alignItems: 'center',
+        justifyContent: 'center',
+        fontFamily: "'Cinzel', serif",
+        color: '#FFD700'
+      }}>
+        <div style={{
+          width: '40px',
+          height: '40px',
+          border: '3px solid rgba(255, 215, 0, 0.3)',
+          borderTop: '3px solid #FFD700',
+          borderRadius: '50%',
+          animation: 'spin 1s linear infinite',
+          marginBottom: '1rem'
+        }} />
+        <p style={{ fontSize: '1.1rem', margin: 0 }}>
+          Loading character templates...
+        </p>
+      </div>
+    );
+  }
+
+  // Error state - no templates loaded
+  if (!templates.length) {
+    return (
+      <div style={{
+        position: 'fixed',
+        top: 0,
+        left: 0,
+        width: '100%',
+        height: '100%',
+        background: 'linear-gradient(135deg, #0B1426 0%, #1A2B47 25%, #2C1810 50%, #0F1A2E 75%, #0B1426 100%)',
+        display: 'flex',
+        flexDirection: 'column',
+        alignItems: 'center',
+        justifyContent: 'center',
+        fontFamily: "'Cinzel', serif",
+        padding: '2rem'
+      }}>
+        <div style={{
+          background: 'rgba(255, 255, 255, 0.1)',
+          border: '2px solid rgba(255, 215, 0, 0.3)',
+          borderRadius: '16px',
+          padding: '2rem',
+          textAlign: 'center',
+          maxWidth: '500px'
+        }}>
+          <h2 style={{ color: '#FFD700', margin: '0 0 1rem 0' }}>
+            Templates Unavailable
+          </h2>
+          <p style={{ color: 'rgba(255, 255, 255, 0.8)', margin: '0 0 1.5rem 0' }}>
+            Character templates could not be loaded. Please try again later.
+          </p>
+          <button
+            onClick={backToLauncher}
+            style={{
+              background: 'linear-gradient(135deg, #FFD700, #FFA500)',
+              border: 'none',
+              borderRadius: '8px',
+              color: '#000',
+              fontSize: '1rem',
+              fontWeight: 600,
+              padding: '0.75rem 1.5rem',
+              cursor: 'pointer',
+              fontFamily: "'Cinzel', serif"
+            }}
+          >
+            Back to Characters
+          </button>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div style={{
+      position: 'fixed',
+      top: 0,
+      left: 0,
       width: '100%',
-      height: '100vh',
+      height: '100%',
       background: 'linear-gradient(135deg, #0B1426 0%, #1A2B47 25%, #2C1810 50%, #0F1A2E 75%, #0B1426 100%)',
-      fontFamily: "'Cinzel', serif",
-      overflow: 'hidden',
-      display: 'flex',
-      flexDirection: 'column'
+      overflowY: 'auto',
+      fontFamily: "'Cinzel', serif"
     }}>
       {/* Header */}
       <div style={{
-        padding: '2rem',
-        borderBottom: '1px solid rgba(255, 215, 0, 0.2)',
-        display: 'flex',
-        justifyContent: 'space-between',
-        alignItems: 'center'
+        position: 'sticky',
+        top: 0,
+        background: 'rgba(11, 20, 38, 0.95)',
+        backdropFilter: 'blur(10px)',
+        borderBottom: '1px solid rgba(255, 215, 0, 0.3)',
+        padding: '1rem 2rem',
+        zIndex: 100
       }}>
-        <div>
-          <h1 style={{
-            fontFamily: "'Cinzel Decorative', serif",
-            fontSize: '2rem',
-            color: '#FFD700',
-            margin: '0 0 0.5rem 0',
-            textShadow: '0 0 20px rgba(255, 215, 0, 0.5)'
-          }}>
-            Choose Your Template
-          </h1>
-          <p style={{
-            color: 'rgba(255, 255, 255, 0.8)',
-            margin: 0,
-            fontSize: '1rem'
-          }}>
-            Select a character archetype to begin customization
-          </p>
+        <div style={{
+          display: 'flex',
+          justifyContent: 'space-between',
+          alignItems: 'center',
+          maxWidth: '1200px',
+          margin: '0 auto'
+        }}>
+          <div>
+            <h1 style={{
+              color: '#FFD700',
+              fontSize: '1.8rem',
+              fontFamily: "'Cinzel Decorative', serif",
+              margin: '0 0 0.5rem 0',
+              letterSpacing: '1px'
+            }}>
+              Character Templates
+            </h1>
+            <p style={{
+              color: 'rgba(255, 255, 255, 0.7)',
+              margin: 0,
+              fontSize: '0.9rem'
+            }}>
+              Choose a template to start creating your character ({templates.length} available)
+            </p>
+          </div>
+          
+          <button
+            onClick={backToLauncher}
+            style={{
+              background: 'rgba(255, 255, 255, 0.1)',
+              border: '2px solid rgba(255, 255, 255, 0.3)',
+              borderRadius: '8px',
+              color: 'rgba(255, 255, 255, 0.8)',
+              fontSize: '0.9rem',
+              fontWeight: 600,
+              padding: '0.5rem 1rem',
+              cursor: 'pointer',
+              transition: 'all 0.3s ease'
+            }}
+          >
+            × Close
+          </button>
         </div>
-        
-        <button
-          onClick={backToLauncher}
-          style={{
-            background: 'rgba(255, 215, 0, 0.1)',
-            border: '2px solid rgba(255, 215, 0, 0.4)',
-            borderRadius: '8px',
-            color: '#FFD700',
-            fontSize: '0.9rem',
-            fontWeight: 600,
-            padding: '0.75rem 1.5rem',
-            cursor: 'pointer',
-            transition: 'all 0.3s ease',
-            fontFamily: "'Cinzel', serif"
-          }}
-          onMouseEnter={(e) => {
-            e.currentTarget.style.background = 'rgba(255, 215, 0, 0.2)';
-            e.currentTarget.style.borderColor = 'rgba(255, 215, 0, 0.6)';
-          }}
-          onMouseLeave={(e) => {
-            e.currentTarget.style.background = 'rgba(255, 215, 0, 0.1)';
-            e.currentTarget.style.borderColor = 'rgba(255, 215, 0, 0.4)';
-          }}
-        >
-          ← Back to Characters
-        </button>
       </div>
 
-      {/* Template Grid */}
+      {/* Filter Bar */}
       <div style={{
-        flex: 1,
+        padding: '1rem 2rem',
+        background: 'rgba(255, 255, 255, 0.02)',
+        borderBottom: '1px solid rgba(255, 215, 0, 0.1)'
+      }}>
+        <div style={{
+          maxWidth: '1200px',
+          margin: '0 auto',
+          display: 'flex',
+          alignItems: 'center',
+          gap: '1rem',
+          flexWrap: 'wrap'
+        }}>
+          <span style={{
+            color: 'rgba(255, 215, 0, 0.8)',
+            fontSize: '0.9rem',
+            fontWeight: 600
+          }}>
+            Filter by type:
+          </span>
+          
+          <div style={{ display: 'flex', gap: '0.5rem', flexWrap: 'wrap' }}>
+            {archetypes.map(archetype => (
+              <button
+                key={archetype}
+                onClick={() => setSelectedArchetype(archetype)}
+                style={{
+                  background: selectedArchetype === archetype 
+                    ? 'linear-gradient(135deg, #FFD700, #FFA500)' 
+                    : 'rgba(255, 255, 255, 0.1)',
+                  border: selectedArchetype === archetype 
+                    ? 'none' 
+                    : '1px solid rgba(255, 215, 0, 0.3)',
+                  borderRadius: '20px',
+                  color: selectedArchetype === archetype ? '#000' : '#FFD700',
+                  fontSize: '0.8rem',
+                  fontWeight: 600,
+                  padding: '0.4rem 0.8rem',
+                  cursor: 'pointer',
+                  transition: 'all 0.3s ease',
+                  textTransform: 'capitalize'
+                }}
+              >
+                {archetype}
+              </button>
+            ))}
+          </div>
+        </div>
+      </div>
+
+      {/* Templates Grid */}
+      <div style={{
         padding: '2rem',
-        overflowY: 'auto'
+        maxWidth: '1200px',
+        margin: '0 auto'
       }}>
         <div style={{
           display: 'grid',
-          gridTemplateColumns: window.innerWidth <= 768 
-            ? '1fr' // Mobile: single column
-            : 'repeat(auto-fit, minmax(350px, 1fr))', // Desktop: multiple columns
-          gap: window.innerWidth <= 768 ? '1rem' : '1.5rem',
-          maxWidth: '1200px',
-          margin: '0 auto',
-          padding: window.innerWidth <= 768 ? '0 0.5rem' : '0' // Mobile padding
+          gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))',
+          gap: '1.5rem'
         }}>
-          {MOCK_TEMPLATES.map((template, index) => (
+          {filteredTemplates.map((template) => (
             <div
               key={template.id}
-              onClick={() => handleTemplateClick(template)}
-              onMouseEnter={() => setHoveredTemplate(template.id)}
-              onMouseLeave={() => setHoveredTemplate(null)}
+              onClick={() => handleTemplateSelect(template)}
               style={{
                 background: selectedTemplate?.id === template.id 
                   ? 'rgba(255, 215, 0, 0.1)' 
@@ -195,227 +258,227 @@ const TemplateGallery = ({ userPremiumStatus = null }) => {
                 padding: '1.5rem',
                 cursor: 'pointer',
                 transition: 'all 0.3s ease',
-                position: 'relative',
-                backdropFilter: 'blur(10px)',
-                opacity: 0,
-                animation: `templateSlideIn 0.6s ease-out ${index * 0.1}s forwards`,
-                transform: hoveredTemplate === template.id ? 'translateY(-4px)' : 'translateY(0)',
-                boxShadow: selectedTemplate?.id === template.id 
-                  ? '0 8px 25px rgba(255, 215, 0, 0.3)'
-                  : hoveredTemplate === template.id 
-                    ? '0 6px 20px rgba(255, 215, 0, 0.2)'
-                    : 'none'
+                backdropFilter: 'blur(5px)'
               }}
             >
-              {/* Selection Indicator */}
-              {selectedTemplate?.id === template.id && (
-                <div style={{
-                  position: 'absolute',
-                  top: '1rem',
-                  right: '1rem',
-                  width: '24px',
-                  height: '24px',
-                  background: '#FFD700',
-                  borderRadius: '50%',
-                  display: 'flex',
-                  alignItems: 'center',
-                  justifyContent: 'center',
-                  color: '#000',
-                  fontSize: '14px',
-                  fontWeight: 'bold'
-                }}>
-                  ✓
-                </div>
-              )}
-
               {/* Template Header */}
-              <div style={{ marginBottom: '1rem' }}>
-                <h3 style={{
-                  color: '#FFD700',
-                  fontSize: '1.3rem',
-                  fontWeight: 600,
-                  margin: '0 0 0.5rem 0',
-                  letterSpacing: '0.5px'
-                }}>
-                  {template.name}
-                </h3>
-                
-                <div style={{
-                  display: 'flex',
-                  gap: '0.5rem',
-                  marginBottom: '0.75rem',
-                  flexWrap: 'wrap'
-                }}>
-                  <span style={{
-                    background: 'rgba(255, 215, 0, 0.2)',
-                    color: 'rgba(255, 215, 0, 0.9)',
-                    padding: '0.25rem 0.75rem',
-                    borderRadius: '12px',
-                    fontSize: '0.75rem',
-                    fontWeight: 500
+              <div style={{
+                display: 'flex',
+                justifyContent: 'space-between',
+                alignItems: 'flex-start',
+                marginBottom: '1rem'
+              }}>
+                <div style={{ flex: 1 }}>
+                  <h3 style={{
+                    color: '#FFD700',
+                    fontSize: '1.1rem',
+                    fontWeight: 600,
+                    margin: '0 0 0.5rem 0',
+                    letterSpacing: '0.5px'
                   }}>
-                    {template.personality_archetype}
-                  </span>
-                  <span style={{
-                    background: 'rgba(255, 255, 255, 0.1)',
-                    color: 'rgba(255, 255, 255, 0.8)',
-                    padding: '0.25rem 0.75rem',
-                    borderRadius: '12px',
-                    fontSize: '0.75rem'
-                  }}>
-                    {template.historical_period}
-                  </span>
+                    {template.name}
+                  </h3>
+                  
+                  <div style={{ display: 'flex', gap: '0.5rem', marginBottom: '0.5rem' }}>
+                    {template.personality_archetype && (
+                      <span style={{
+                        background: 'rgba(255, 215, 0, 0.2)',
+                        border: '1px solid rgba(255, 215, 0, 0.3)',
+                        borderRadius: '12px',
+                        color: 'rgba(255, 215, 0, 0.9)',
+                        fontSize: '0.7rem',
+                        padding: '0.2rem 0.5rem',
+                        textTransform: 'uppercase',
+                        letterSpacing: '0.5px'
+                      }}>
+                        {template.personality_archetype}
+                      </span>
+                    )}
+                    
+                    {template.historical_period && (
+                      <span style={{
+                        background: 'rgba(255, 255, 255, 0.1)',
+                        border: '1px solid rgba(255, 255, 255, 0.2)',
+                        borderRadius: '12px',
+                        color: 'rgba(255, 255, 255, 0.7)',
+                        fontSize: '0.7rem',
+                        padding: '0.2rem 0.5rem'
+                      }}>
+                        {template.historical_period}
+                      </span>
+                    )}
+                  </div>
                 </div>
+                
+                {template.usage_count !== undefined && (
+                  <div style={{
+                    background: 'rgba(0, 255, 136, 0.1)',
+                    border: '1px solid rgba(0, 255, 136, 0.3)',
+                    borderRadius: '8px',
+                    color: 'rgba(0, 255, 136, 0.9)',
+                    fontSize: '0.7rem',
+                    padding: '0.3rem 0.5rem',
+                    textAlign: 'center',
+                    minWidth: '60px'
+                  }}>
+                    {template.usage_count} uses
+                  </div>
+                )}
               </div>
 
-              {/* Description */}
+              {/* Template Description */}
               <p style={{
-                color: 'rgba(255, 255, 255, 0.9)',
-                fontSize: '0.95rem',
+                color: 'rgba(255, 255, 255, 0.8)',
+                fontSize: '0.9rem',
                 lineHeight: 1.5,
                 margin: '0 0 1rem 0'
               }}>
                 {template.description}
               </p>
 
-              {/* Preview Quote */}
-              <div style={{
-                background: 'rgba(0, 0, 0, 0.3)',
-                borderLeft: '3px solid rgba(255, 215, 0, 0.5)',
-                padding: '0.75rem',
-                borderRadius: '0 8px 8px 0',
-                marginBottom: '1rem'
-              }}>
-                <p style={{
-                  color: 'rgba(255, 215, 0, 0.9)',
-                  fontSize: '0.9rem',
-                  fontStyle: 'italic',
-                  margin: 0,
-                  lineHeight: 1.4
+              {/* Template Preview */}
+              {template.template_preview && (
+                <div style={{
+                  background: 'rgba(0, 0, 0, 0.3)',
+                  border: '1px solid rgba(255, 215, 0, 0.2)',
+                  borderRadius: '8px',
+                  padding: '0.8rem',
+                  margin: '0 0 1rem 0'
                 }}>
-                  "{template.template_data?.system_instruction_template?.substring(0, 120) || 'A character with unique perspective and expertise...'}..."
-                </p>
-              </div>
+                  <p style={{
+                    color: 'rgba(255, 215, 0, 0.9)',
+                    fontSize: '0.8rem',
+                    fontStyle: 'italic',
+                    margin: 0,
+                    lineHeight: 1.4
+                  }}>
+                    "{template.template_preview}"
+                  </p>
+                </div>
+              )}
 
               {/* Example Characters */}
-              <div style={{ marginBottom: '1rem' }}>
-                <h4 style={{
-                  color: 'rgba(255, 255, 255, 0.8)',
-                  fontSize: '0.85rem',
-                  margin: '0 0 0.5rem 0',
-                  textTransform: 'uppercase',
-                  letterSpacing: '0.5px'
-                }}>
-                  Inspired by:
-                </h4>
-                <div style={{
-                  display: 'flex',
-                  gap: '0.5rem',
-                  flexWrap: 'wrap'
-                }}>
-                  {template.example_characters.map((char, idx) => (
-                    <span
-                      key={idx}
-                      style={{
-                        background: 'rgba(255, 255, 255, 0.1)',
-                        color: 'rgba(255, 255, 255, 0.7)',
-                        padding: '0.25rem 0.5rem',
-                        borderRadius: '6px',
-                        fontSize: '0.8rem'
-                      }}
-                    >
-                      {char}
-                    </span>
-                  ))}
+              {template.example_characters && template.example_characters.length > 0 && (
+                <div>
+                  <p style={{
+                    color: 'rgba(255, 255, 255, 0.6)',
+                    fontSize: '0.75rem',
+                    margin: '0 0 0.5rem 0',
+                    textTransform: 'uppercase',
+                    letterSpacing: '0.5px'
+                  }}>
+                    Example Characters:
+                  </p>
+                  <div style={{
+                    display: 'flex',
+                    flexWrap: 'wrap',
+                    gap: '0.3rem'
+                  }}>
+                    {template.example_characters.slice(0, 3).map((example, index) => (
+                      <span
+                        key={index}
+                        style={{
+                          background: 'rgba(255, 255, 255, 0.05)',
+                          border: '1px solid rgba(255, 255, 255, 0.1)',
+                          borderRadius: '6px',
+                          color: 'rgba(255, 255, 255, 0.7)',
+                          fontSize: '0.7rem',
+                          padding: '0.2rem 0.4rem'
+                        }}
+                      >
+                        {example}
+                      </span>
+                    ))}
+                  </div>
                 </div>
-              </div>
-
-              {/* Stats */}
-              <div style={{
-                display: 'flex',
-                justifyContent: 'space-between',
-                alignItems: 'center',
-                paddingTop: '0.75rem',
-                borderTop: '1px solid rgba(255, 255, 255, 0.1)'
-              }}>
-                <span style={{
-                  color: 'rgba(255, 255, 255, 0.6)',
-                  fontSize: '0.8rem'
-                }}>
-                  {template.expertise_domain}
-                </span>
-                <span style={{
-                  color: 'rgba(255, 215, 0, 0.7)',
-                  fontSize: '0.8rem'
-                }}>
-                  {template.usage_count} created
-                </span>
-              </div>
+              )}
             </div>
           ))}
         </div>
       </div>
 
-      {/* Bottom Action Bar */}
+      {/* Selection Confirmation */}
       {selectedTemplate && (
         <div style={{
-          padding: '1.5rem 2rem',
-          borderTop: '1px solid rgba(255, 215, 0, 0.2)',
-          background: 'rgba(0, 0, 0, 0.3)',
-          display: 'flex',
-          justifyContent: 'space-between',
-          alignItems: 'center'
+          position: 'fixed',
+          bottom: 0,
+          left: 0,
+          right: 0,
+          background: 'rgba(11, 20, 38, 0.95)',
+          backdropFilter: 'blur(10px)',
+          borderTop: '1px solid rgba(255, 215, 0, 0.3)',
+          padding: '1rem 2rem',
+          zIndex: 100
         }}>
-          <div>
-            <h4 style={{
-              color: '#FFD700',
-              margin: '0 0 0.25rem 0',
-              fontSize: '1rem'
-            }}>
-              Selected: {selectedTemplate.name}
-            </h4>
-            <p style={{
-              color: 'rgba(255, 255, 255, 0.7)',
-              margin: 0,
-              fontSize: '0.9rem'
-            }}>
-              Ready to customize your character
-            </p>
+          <div style={{
+            maxWidth: '1200px',
+            margin: '0 auto',
+            display: 'flex',
+            justifyContent: 'space-between',
+            alignItems: 'center'
+          }}>
+            <div>
+              <p style={{
+                color: '#FFD700',
+                fontSize: '0.9rem',
+                fontWeight: 600,
+                margin: '0 0 0.25rem 0'
+              }}>
+                Selected: {selectedTemplate.name}
+              </p>
+              <p style={{
+                color: 'rgba(255, 255, 255, 0.7)',
+                fontSize: '0.8rem',
+                margin: 0
+              }}>
+                Ready to customize this template for your character
+              </p>
+            </div>
+            
+            <div style={{ display: 'flex', gap: '1rem' }}>
+              <button
+                onClick={() => setSelectedTemplate(null)}
+                style={{
+                  background: 'rgba(255, 255, 255, 0.1)',
+                  border: '2px solid rgba(255, 255, 255, 0.3)',
+                  borderRadius: '8px',
+                  color: 'rgba(255, 255, 255, 0.8)',
+                  fontSize: '0.9rem',
+                  fontWeight: 600,
+                  padding: '0.75rem 1.5rem',
+                  cursor: 'pointer',
+                  transition: 'all 0.3s ease'
+                }}
+              >
+                Cancel
+              </button>
+              
+              <button
+                onClick={handleConfirmSelection}
+                style={{
+                  background: 'linear-gradient(135deg, #FFD700, #FFA500)',
+                  border: 'none',
+                  borderRadius: '8px',
+                  color: '#000',
+                  fontSize: '0.9rem',
+                  fontWeight: 700,
+                  padding: '0.75rem 1.5rem',
+                  cursor: 'pointer',
+                  transition: 'all 0.3s ease',
+                  boxShadow: '0 4px 15px rgba(255, 215, 0, 0.3)'
+                }}
+              >
+                Use This Template
+              </button>
+            </div>
           </div>
-          
-          <button
-            onClick={handleContinueWithTemplate}
-            style={{
-              background: 'linear-gradient(135deg, #FFD700, #FFA500)',
-              border: 'none',
-              borderRadius: '25px',
-              color: '#000',
-              fontSize: '1rem',
-              fontWeight: 700,
-              padding: '1rem 2rem',
-              cursor: 'pointer',
-              transition: 'all 0.3s ease',
-              fontFamily: "'Cinzel', serif",
-              boxShadow: '0 4px 15px rgba(255, 215, 0, 0.3)'
-            }}
-            onMouseEnter={(e) => {
-              e.currentTarget.style.transform = 'translateY(-2px)';
-              e.currentTarget.style.boxShadow = '0 6px 20px rgba(255, 215, 0, 0.4)';
-            }}
-            onMouseLeave={(e) => {
-              e.currentTarget.style.transform = 'translateY(0)';
-              e.currentTarget.style.boxShadow = '0 4px 15px rgba(255, 215, 0, 0.3)';
-            }}
-          >
-            Continue with Template
-          </button>
         </div>
       )}
 
       <style jsx>{`
-        @keyframes templateSlideIn {
-          from { opacity: 0; transform: translateY(30px); }
-          to   { opacity: 1; transform: translateY(0); }
+        @keyframes spin {
+          0% { transform: rotate(0deg); }
+          100% { transform: rotate(360deg); }
         }
       `}</style>
     </div>
