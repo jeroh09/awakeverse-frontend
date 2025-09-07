@@ -2,6 +2,8 @@
 import React, { useState, useEffect } from 'react';
 import { usePremiumCharacterFlow } from '../hooks/usePremiumCharacterFlow';
 import { useAuth } from '../contexts/AuthContext'; // Add this import
+import { useUser } from '../contexts/UserContext';
+
 
 const CharacterBuilder = ({ userPremiumStatus = null }) => {
   const { selectedTemplate, createCharacter, backToTemplates } = usePremiumCharacterFlow();
@@ -25,6 +27,7 @@ const CharacterBuilder = ({ userPremiumStatus = null }) => {
   const [currentStep, setCurrentStep] = useState(1);
   // Then in your component:
   const { token } = useAuth(); // Add this line with your other hook calls
+  const { user } = useUser();
 
   // REPLACED (Step 7A #3): Enhanced Success Screen using createdCharacterName + countdown
   if (creationSuccess) {
@@ -259,6 +262,29 @@ Engage users with the depth and authenticity that comes from your unique histori
     setCreationError(null);
 
     try {
+      const API_BASE = process.env.REACT_APP_API_URL || 'http://localhost:5000';
+
+      // STEP 1: Grant trial first (this makes user premium)
+      setCreationError("Step 1: Starting your 3-day trial...");
+
+      const trialResponse = await fetch(`${API_BASE}/api/premium/trial/${user.id}`, {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({ trial_days: 3 })
+      });
+
+      // Don't fail if trial already exists (409 status)
+      if (!trialResponse.ok && trialResponse.status !== 409 && trialResponse.status !== 400) {
+        const trialError = await trialResponse.json().catch(() => ({}));
+        throw new Error(trialError.message || 'Failed to start trial');
+      }
+
+      // STEP 2: Now create character (user is now premium)
+      setCreationError("Step 2: Creating your character...");
+
       const characterData = {
         ...formData,
         template_id: selectedTemplate.id,
@@ -267,12 +293,10 @@ Engage users with the depth and authenticity that comes from your unique histori
         expertise_domain: selectedTemplate.expertise_domain
       };
 
-      // Direct API call instead of using createCharacter hook
-      const API_BASE = process.env.REACT_APP_API_URL || 'http://localhost:5000';
       const response = await fetch(`${API_BASE}/api/premium/characters`, {
         method: 'POST',
         headers: {
-          'Authorization': `Bearer ${token}`, // You'll need to import useAuth
+          'Authorization': `Bearer ${token}`,
           'Content-Type': 'application/json'
         },
         body: JSON.stringify(characterData)
@@ -283,9 +307,8 @@ Engage users with the depth and authenticity that comes from your unique histori
         throw new Error(errorData.error || `Character creation failed: ${response.status}`);
       }
 
-      const data = await response.json();
-
-      // Success! Set our states
+      // Success!
+      setCreationError(null);
       setCreatedCharacterName(formData.display_name);
       setCreationSuccess(true);
 
@@ -307,7 +330,6 @@ Engage users with the depth and authenticity that comes from your unique histori
       setIsCreating(false);
     }
   };
-  
 
   const steps = [
     { number: 1, title: 'Basic Details', description: 'Name and description' },
