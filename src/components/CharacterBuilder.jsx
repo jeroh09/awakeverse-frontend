@@ -8,6 +8,9 @@ const CharacterBuilder = ({ userPremiumStatus = null }) => {
   const [isCreating, setIsCreating] = useState(false);
   const [creationSuccess, setCreationSuccess] = useState(false);
   const [creationError, setCreationError] = useState(null);
+  // NEW (Step 7A #1):
+  const [createdCharacterName, setCreatedCharacterName] = useState('');
+  const [redirectTimer, setRedirectTimer] = useState(3);
   const [formData, setFormData] = useState({
     display_name: '',
     short_description: '',
@@ -27,7 +30,7 @@ const CharacterBuilder = ({ userPremiumStatus = null }) => {
     return () => window.removeEventListener('resize', checkMobile);
   }, []);
 
-   useEffect(() => {
+  useEffect(() => {
     if (selectedTemplate?.template_data) {
       setFormData({
         display_name: '',
@@ -129,6 +132,7 @@ Engage users with the depth and authenticity that comes from your unique histori
     }
   };
 
+  // REPLACED (Step 7A #2): Enhanced creation handler with name capture + countdown
   const handleCreateCharacter = async () => {
     if (!validateStep(3)) return;
     
@@ -146,12 +150,20 @@ Engage users with the depth and authenticity that comes from your unique histori
     
       if (createCharacter) {
         await createCharacter(characterData);
+        setCreatedCharacterName(formData.display_name);
         setCreationSuccess(true);
-      
-      // Auto redirect after 3 seconds
-        setTimeout(() => {
-          backToTemplates();
-        }, 3000);
+
+        // Start countdown timer for auto-redirect
+        const timer = setInterval(() => {
+          setRedirectTimer(prev => {
+            if (prev <= 1) {
+              clearInterval(timer);
+              backToTemplates(); // Auto-redirect
+              return 0;
+            }
+            return prev - 1;
+          });
+        }, 1000);
       }
     } catch (error) {
       console.error('Character creation failed:', error);
@@ -161,7 +173,7 @@ Engage users with the depth and authenticity that comes from your unique histori
     }
   };
 
-  // If creation successful, show success screen
+  // REPLACED (Step 7A #3): Enhanced Success Screen using createdCharacterName + countdown
   if (creationSuccess) {
     return (
       <div style={{
@@ -182,35 +194,42 @@ Engage users with the depth and authenticity that comes from your unique histori
           padding: '3rem',
           textAlign: 'center',
           maxWidth: '500px',
-          backdropFilter: 'blur(10px)'
+          backdropFilter: 'blur(10px)',
+          animation: 'fadeInScale 0.5s ease-out'
         }}>
+          {/* Success Icon */}
           <div style={{
             fontSize: '4rem',
             marginBottom: '1rem',
-            color: '#FFD700'
+            color: '#FFD700',
+            textShadow: '0 0 20px rgba(255, 215, 0, 0.5)'
           }}>
             ✨
           </div>
           
+          {/* Success Message */}
           <h2 style={{
             color: '#FFD700',
             fontSize: '1.8rem',
             margin: '0 0 1rem 0',
-            textShadow: '0 0 20px rgba(255, 215, 0, 0.5)'
+            textShadow: '0 0 20px rgba(255, 215, 0, 0.5)',
+            letterSpacing: '1px'
           }}>
-            Character Submitted!
+            Character Submitted Successfully!
           </h2>
           
+          {/* Character Name */}
           <p style={{
             color: 'rgba(255, 255, 255, 0.9)',
             fontSize: '1.1rem',
             lineHeight: 1.6,
             margin: '0 0 1.5rem 0'
           }}>
-            <strong>{formData.display_name}</strong> has been submitted for approval. 
-            You'll receive an email notification when your character is ready.
+            <strong style={{ color: '#FFD700' }}>{createdCharacterName}</strong> has been submitted for approval. 
+            You'll receive an email notification when your character is ready to chat.
           </p>
           
+          {/* Trial Information */}
           <div style={{
             background: 'rgba(255, 215, 0, 0.1)',
             border: '1px solid rgba(255, 215, 0, 0.3)',
@@ -221,36 +240,63 @@ Engage users with the depth and authenticity that comes from your unique histori
             <p style={{
               color: 'rgba(255, 215, 0, 0.9)',
               fontSize: '0.9rem',
-              margin: 0
+              margin: 0,
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              gap: '0.5rem'
             }}>
-              💡 Your 3-day trial will start automatically when your character is approved
+              <span style={{ fontSize: '1.2rem' }}>🎉</span>
+              Your 3-day trial will start automatically when approved
             </p>
           </div>
           
-          <button
-            onClick={backToTemplates}
-            style={{
-              background: 'linear-gradient(135deg, #FFD700, #FFA500)',
-              border: 'none',
-              borderRadius: '10px',
-              color: '#000',
-              fontSize: '1rem',
-              fontWeight: 600,
-              padding: '0.8rem 2rem',
-              cursor: 'pointer',
-              transition: 'all 0.3s ease'
-            }}
-          >
-            Return to Characters
-          </button>
-          
-          <p style={{
-            color: 'rgba(255, 255, 255, 0.6)',
-            fontSize: '0.8rem',
-            margin: '1rem 0 0 0'
+          {/* Action Buttons */}
+          <div style={{
+            display: 'flex',
+            flexDirection: 'column',
+            gap: '1rem',
+            alignItems: 'center'
           }}>
-            Redirecting automatically in 3 seconds...
-          </p>
+            <button
+              onClick={backToTemplates}
+              style={{
+                background: 'linear-gradient(135deg, #FFD700, #FFA500)',
+                border: 'none',
+                borderRadius: '10px',
+                color: '#000',
+                fontSize: '1rem',
+                fontWeight: 600,
+                padding: '0.8rem 2rem',
+                cursor: 'pointer',
+                transition: 'all 0.3s ease',
+                boxShadow: '0 4px 15px rgba(255, 215, 0, 0.3)'
+              }}
+              onMouseEnter={(e) => {
+                e.currentTarget.style.transform = 'translateY(-2px)';
+                e.currentTarget.style.boxShadow = '0 6px 20px rgba(255, 215, 0, 0.4)';
+              }}
+              onMouseLeave={(e) => {
+                e.currentTarget.style.transform = 'translateY(0)';
+                e.currentTarget.style.boxShadow = '0 4px 15px rgba(255, 215, 0, 0.3)';
+              }}
+            >
+              Return to Characters
+            </button>
+            
+            {/* Auto-redirect countdown */}
+            <p style={{
+              color: 'rgba(255, 255, 255, 0.6)',
+              fontSize: '0.8rem',
+              margin: 0,
+              display: 'flex',
+              alignItems: 'center',
+              gap: '0.5rem'
+            }}>
+              <span>⏱️</span>
+              Redirecting automatically in {redirectTimer} seconds...
+            </p>
+          </div>
         </div>
       </div>
     );
@@ -926,10 +972,15 @@ Engage users with the depth and authenticity that comes from your unique histori
         )}
       </div>
 
+      {/* Step 7A #4: Add animation styles (fadeInScale + spin) */}
       <style jsx>{`
         @keyframes fadeIn {
           from { opacity: 0; transform: translateY(20px); }
           to   { opacity: 1; transform: translateY(0); }
+        }
+        @keyframes fadeInScale {
+          from { opacity: 0; transform: scale(0.9) translateY(20px); }
+          to   { opacity: 1; transform: scale(1) translateY(0); }
         }
         @keyframes spin {
           0% { transform: rotate(0deg); }
