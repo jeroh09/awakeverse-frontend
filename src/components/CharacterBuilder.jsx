@@ -145,36 +145,36 @@ Engage users with the depth and authenticity that comes from your unique histori
       setIsCreating(false);
     }, 2000); // Simulate 2-second API call
   };
-    try {
-      const characterData = {
-        ...formData,
-        template_id: selectedTemplate.id,
-        historical_period: selectedTemplate.historical_period,
-        personality_archetype: selectedTemplate.personality_archetype,
-        expertise_domain: selectedTemplate.expertise_domain,
-      };
-      setCreationError("STEP 1: Calling createCharacter API...");
+    //try {
+      //const characterData = {
+        //...formData,
+        //template_id: selectedTemplate.id,
+        //historical_period: selectedTemplate.historical_period,
+        //personality_archetype: selectedTemplate.personality_archetype,
+        //expertise_domain: selectedTemplate.expertise_domain,
+      //};
+      //setCreationError("STEP 1: Calling createCharacter API...");
 
-      if (createCharacter) {
-        await createCharacter(characterData);
+      //if (createCharacter) {
+        //await createCharacter(characterData);
         // Visual feedback: API succeeded
-        setCreationError("STEP 2: API call succeeded, setting success state...");
+        //setCreationError("STEP 2: API call succeeded, setting success state...");
       
-        setCreatedCharacterName(formData.display_name);
-        setCreationSuccess(true);
+        //setCreatedCharacterName(formData.display_name);
+        //setCreationSuccess(true);
 
         // Do NOT call backToTemplates or auto-redirect here.
         // Let the user click the button on the success screen.
-      }
-    } catch (error) {
-      console.error('Character creation failed:', error);
+      //}
+    //} catch (error) {
+      //console.error('Character creation failed:', error);
       // Roll back success screen and show error so user can correct & retry.
-      setCreationSuccess(false);
-      setCreationError(error.message || 'Failed to create character');
-    } finally {
-      setIsCreating(false);
-    }
-  };
+      //setCreationSuccess(false);
+      //setCreationError(error.message || 'Failed to create character');
+    //} finally {
+      //setIsCreating(false);
+    //}
+  //};
 
   // REPLACED (Step 7A #3): Enhanced Success Screen using createdCharacterName + countdown
   if (creationSuccess) {
