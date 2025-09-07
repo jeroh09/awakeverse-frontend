@@ -7,6 +7,9 @@ import { useUser } from '../contexts/UserContext';
 
 const CharacterBuilder = ({ userPremiumStatus = null }) => {
   const { selectedTemplate, createCharacter, backToTemplates } = usePremiumCharacterFlow();
+   // Then in your component:
+  const { token } = useAuth(); // Add this line with your other hook calls
+  const { user } = useUser();
   const [isMobile, setIsMobile] = useState(false);
   const [isCreating, setIsCreating] = useState(false);
   const [creationSuccess, setCreationSuccess] = useState(false);
@@ -25,10 +28,7 @@ const CharacterBuilder = ({ userPremiumStatus = null }) => {
   });
   const [errors, setErrors] = useState({});
   const [currentStep, setCurrentStep] = useState(1);
-  // Then in your component:
-  const { token } = useAuth(); // Add this line with your other hook calls
-  const { user } = useUser();
-
+ 
   // REPLACED (Step 7A #3): Enhanced Success Screen using createdCharacterName + countdown
   if (creationSuccess) {
     return (
@@ -262,10 +262,15 @@ Engage users with the depth and authenticity that comes from your unique histori
     setCreationError(null);
 
     try {
+      // Now we can safely use token and user since they're from hooks at component top
+      if (!token || !user?.id) {
+        throw new Error('Authentication required');
+      }
+
       const API_BASE = process.env.REACT_APP_API_URL || 'http://localhost:5000';
 
-      // STEP 1: Grant trial first (this makes user premium)
-      setCreationError("Step 1: Starting your 3-day trial...");
+      // STEP 1: Grant trial first
+      setCreationError("Starting your 3-day trial...");
 
       const trialResponse = await fetch(`${API_BASE}/api/premium/trial/${user.id}`, {
         method: 'POST',
@@ -276,21 +281,21 @@ Engage users with the depth and authenticity that comes from your unique histori
         body: JSON.stringify({ trial_days: 3 })
       });
 
-      // Don't fail if trial already exists (409 status)
+      // Don't fail if trial already exists
       if (!trialResponse.ok && trialResponse.status !== 409 && trialResponse.status !== 400) {
         const trialError = await trialResponse.json().catch(() => ({}));
         throw new Error(trialError.message || 'Failed to start trial');
       }
 
-      // STEP 2: Now create character (user is now premium)
-      setCreationError("Step 2: Creating your character...");
+      // STEP 2: Create character
+      setCreationError("Creating your character...");
 
       const characterData = {
         ...formData,
-        template_id: selectedTemplate.id,
-        historical_period: selectedTemplate.historical_period,
-        personality_archetype: selectedTemplate.personality_archetype,
-        expertise_domain: selectedTemplate.expertise_domain
+        template_id: selectedTemplate?.id,
+        historical_period: selectedTemplate?.historical_period,
+        personality_archetype: selectedTemplate?.personality_archetype,
+        expertise_domain: selectedTemplate?.expertise_domain
       };
 
       const response = await fetch(`${API_BASE}/api/premium/characters`, {
@@ -309,19 +314,20 @@ Engage users with the depth and authenticity that comes from your unique histori
 
       // Success!
       setCreationError(null);
-      setCreatedCharacterName(formData.display_name);
+      setCreatedCharacterName(formData.display_name || 'Your Character');
       setCreationSuccess(true);
 
       // Start countdown timer
+      let countdownTimer = 3;
       const timer = setInterval(() => {
-        setRedirectTimer(prev => {
-          if (prev <= 1) {
-            clearInterval(timer);
+        countdownTimer--;
+        setRedirectTimer(countdownTimer);
+        if (countdownTimer <= 0) {
+          clearInterval(timer);
+          if (backToTemplates) {
             backToTemplates();
-            return 0;
           }
-          return prev - 1;
-        });
+        }
       }, 1000);
 
     } catch (error) {
