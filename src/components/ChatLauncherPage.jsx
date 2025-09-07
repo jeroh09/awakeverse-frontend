@@ -137,7 +137,7 @@ const SplitScreenLauncher = ({ onStartChat }) => {
     isPremium,
     approvedCharacters,
     loading: premiumLoading,
-    premiumStatus, // Add this
+    premiumStatus,
     characterTemplates,
     error: premiumError,
     userCharacters,
@@ -160,147 +160,6 @@ const SplitScreenLauncher = ({ onStartChat }) => {
     selectedTemplate,
     startTemplateFlow
   } = usePremiumCharacterFlow();
-
-  // Add this temporary test component to your ChatLauncherPage.jsx
-  // Place it right after your existing hooks to debug API connectivity
-
-  const PremiumStatusDebugger = () => {
-    const { user } = useUser();
-    const {
-      isPremium,
-      loading,
-      error,
-      premiumStatus,
-      userCharacters,
-      characterCount,
-      canCreateCharacter,
-      grantTrial,
-      refresh
-    } = usePremiumCharacters();
-
-    const [testResults, setTestResults] = useState({});
-    const [testing, setTesting] = useState(false);
-
-    const runAPITests = async () => {
-      setTesting(true);
-      const results = {};
-
-      try {
-        // Test 1: Premium status fetch
-        console.log('🧪 Testing premium status API...');
-        results.statusAPI = {
-          userId: user?.id,
-          isPremium,
-          loading,
-          error,
-          premiumStatus: premiumStatus ? 'loaded' : 'null',
-          characterCount
-        };
-
-        // Test 2: Character limit check
-        results.characterLimits = {
-          canCreateCharacter,
-          currentCount: characterCount,
-          hasCharacters: userCharacters?.length > 0
-        };
-
-        // Test 3: Trial grant test (only if not premium)
-        if (!isPremium && !loading) {
-          try {
-            console.log('🧪 Testing trial grant (dry run)...');
-            // Note: Don't actually grant trial in test, just check if function exists
-            results.trialFunction = typeof grantTrial === 'function' ? 'available' : 'missing';
-          } catch (e) {
-            results.trialFunction = `error: ${e.message}`;
-          }
-        }
-
-        setTestResults(results);
-        console.log('🧪 API Test Results:', results);
-
-      } catch (error) {
-        console.error('🧪 API Test Failed:', error);
-        setTestResults({ error: error.message });
-      } finally {
-        setTesting(false);
-      }
-    };
-
-    return (
-      <div style={{
-        position: 'fixed',
-        top: '10px',
-        right: '10px',
-        background: 'rgba(0,0,0,0.9)',
-        color: '#FFD700',
-        padding: '1rem',
-        borderRadius: '8px',
-        fontSize: '0.8rem',
-        maxWidth: '300px',
-        zIndex: 9999,
-        border: '1px solid #FFD700'
-      }}>
-        <div style={{ fontWeight: 'bold', marginBottom: '0.5rem' }}>
-          Premium API Debug Panel
-        </div>
-
-        <button
-          onClick={runAPITests}
-          disabled={testing}
-          style={{
-            background: '#FFD700',
-            color: '#000',
-            border: 'none',
-            padding: '0.5rem',
-            borderRadius: '4px',
-            cursor: 'pointer',
-            marginBottom: '0.5rem'
-          }}
-        >
-          {testing ? 'Testing...' : 'Run API Tests'}
-        </button>
-
-        <div style={{ fontSize: '0.7rem' }}>
-          <div>User: {user?.id || 'Not loaded'}</div>
-          <div>Premium: {loading ? 'Loading...' : isPremium ? 'Yes' : 'No'}</div>
-          <div>Characters: {characterCount}</div>
-          <div>Can Create: {canCreateCharacter ? 'Yes' : 'No'}</div>
-          {error && <div style={{ color: '#ff6b6b' }}>Error: {error}</div>}
-        </div>
-
-        {Object.keys(testResults).length > 0 && (
-          <pre style={{
-            marginTop: '0.5rem',
-            fontSize: '0.6rem',
-            background: 'rgba(255,255,255,0.1)',
-            padding: '0.5rem',
-            borderRadius: '4px',
-            overflow: 'auto',
-            maxHeight: '150px'
-          }}>
-            {JSON.stringify(testResults, null, 2)}
-          </pre>
-        )}
-      </div>
-    );
-  };
-
-  const SimpleDebugTest = () => {
-    return (
-      <div style={{
-        position: 'fixed',
-        top: '10px',
-        right: '10px',
-        background: 'red',
-        color: 'white',
-        padding: '10px',
-        zIndex: 9999
-      }}>
-        DEBUG TEST VISIBLE
-      </div>
-    );
-  };
-
 
   const [inputValue, setInputValue] = useState('');
   const [selectedCategory, setSelectedCategory] = useState(null);
@@ -444,20 +303,6 @@ const SplitScreenLauncher = ({ onStartChat }) => {
         flexDirection: 'column',
         alignItems: 'center',
       }}>
-
-        {/* Add test here for mobile */}
-        <div style={{
-          position: 'fixed',
-          top: '10px',
-          right: '10px',
-          background: 'red',
-          color: 'white',
-          padding: '20px',
-          zIndex: 999999,
-          fontSize: '16px'
-        }}>
-        MOBILE TEST
-      </div>
 
         {/* Welcome Section */}
         <div style={{
@@ -848,7 +693,7 @@ const SplitScreenLauncher = ({ onStartChat }) => {
 
             {/* ✅ ENHANCED: Mobile Characters Content Area */}
             {selectedCategory.key === 'my_characters' ? (
-              // My Characters Special Panel for Mobile
+              // Mobile: My Characters Special Panel for Mobile
               <div style={{
                 display: 'flex',
                 flexDirection: 'column',
@@ -1039,7 +884,7 @@ const SplitScreenLauncher = ({ onStartChat }) => {
                       No credit card required • Cancel anytime
                     </p>
                   </div>
-                ) : approvedCharacters.length === 0 ? (
+                ) : userCharacters.length === 0 ? (
                   // Premium User - No Characters Yet (Mobile)
                   <div style={{
                     maxWidth: '300px',
@@ -1108,7 +953,7 @@ const SplitScreenLauncher = ({ onStartChat }) => {
                     </button>
                   </div>
                 ) : (
-                  // Premium User - Has Characters (Mobile)
+                  // Premium User - Has Characters (Mobile) - Show ALL characters including pending
                   <div style={{
                     width: '100%',
                     display: 'grid',
@@ -1116,46 +961,78 @@ const SplitScreenLauncher = ({ onStartChat }) => {
                     gap: '1rem',
                     marginTop: '1rem',
                   }}>
-                    {approvedCharacters.map((character, index) => (
+                    {userCharacters.map((character, index) => (
                       <div
                         key={character.id}
                         onClick={() => {
-                          // TODO: Start chat with custom character
-                          console.log('Chat with character:', character.character_key);
-                          onStartChat(character.character_key);
+                          if (character.status === 'approved') {
+                            console.log('Chat with character:', character.character_key);
+                            onStartChat(character.character_key);
+                          }
                         }}
                         style={{
-                          background: 'rgba(255, 255, 255, 0.05)',
-                          border: '1px solid rgba(255, 215, 0, 0.2)',
+                          background: character.status === 'approved' 
+                            ? 'rgba(255, 255, 255, 0.05)' 
+                            : 'rgba(255, 165, 0, 0.05)', // Orange tint for pending
+                          border: character.status === 'approved'
+                            ? '1px solid rgba(255, 215, 0, 0.2)'
+                            : '1px solid rgba(255, 165, 0, 0.3)', // Orange border for pending
                           borderRadius: '16px',
                           padding: '1rem',
-                          cursor: 'pointer',
+                          cursor: character.status === 'approved' ? 'pointer' : 'default',
                           transition: 'all 0.3s ease',
+                          opacity: character.status === 'approved' ? 1 : 0.8,
                           minHeight: '180px',
                           display: 'flex',
                           flexDirection: 'column',
-                          alignItems: 'center'
+                          alignItems: 'center',
+                          position: 'relative'
                         }}
                       >
+                        {/* Status indicator */}
+                        <div style={{
+                          position: 'absolute',
+                          top: '0.3rem',
+                          right: '0.3rem',
+                          background: character.status === 'approved' ? '#00FF88' : 
+                                     character.status === 'pending' ? '#FFA500' : '#ff6b6b',
+                          color: '#000',
+                          fontSize: '0.5rem',
+                          fontWeight: 600,
+                          padding: '0.2rem 0.4rem',
+                          borderRadius: '8px',
+                          textTransform: 'uppercase'
+                        }}>
+                          {character.status}
+                        </div>
+                        
                         <div style={{
                           width: '40px',
                           height: '40px',
                           borderRadius: '50%',
                           overflow: 'hidden',
                           marginBottom: '0.5rem',
-                          border: '2px solid rgba(255, 215, 0, 0.3)',
+                          border: character.status === 'approved'
+                            ? '2px solid rgba(255, 215, 0, 0.3)'
+                            : '2px solid rgba(255, 165, 0, 0.3)',
+                          flexShrink: 0
                         }}>
                           <img
                             src={character.thumbnailUrl || '/images/default-character.jpg'}
                             alt={character.display_name}
-                            style={{ width: '100%', height: '100%', objectFit: 'cover' }}
+                            style={{ 
+                              width: '100%', 
+                              height: '100%', 
+                              objectFit: 'cover',
+                              filter: character.status === 'approved' ? 'none' : 'grayscale(30%)'
+                            }}
                             onError={(e) => { e.target.src = '/images/default-character.jpg'; }}
                           />
                         </div>
                         
                         <div style={{ textAlign: 'center' }}>
                           <h3 style={{
-                            color: '#FFD700',
+                            color: character.status === 'approved' ? '#FFD700' : '#FFA500',
                             fontSize: '0.8rem',
                             fontWeight: 600,
                             margin: '0 0 0.3rem 0',
@@ -1177,6 +1054,28 @@ const SplitScreenLauncher = ({ onStartChat }) => {
                           }}>
                             {character.short_description}
                           </p>
+                          
+                          {character.status === 'pending' && (
+                            <p style={{
+                              color: '#FFA500',
+                              fontSize: '0.6rem',
+                              margin: '0.3rem 0 0 0',
+                              fontStyle: 'italic'
+                            }}>
+                              Awaiting approval...
+                            </p>
+                          )}
+                          
+                          {character.status === 'rejected' && (
+                            <p style={{
+                              color: '#ff6b6b',
+                              fontSize: '0.6rem',
+                              margin: '0.3rem 0 0 0',
+                              fontStyle: 'italic'
+                            }}>
+                              Needs revision
+                            </p>
+                          )}
                         </div>
                       </div>
                     ))}
@@ -1408,7 +1307,7 @@ const SplitScreenLauncher = ({ onStartChat }) => {
       </div>
     );
   }
-  console.log('Debug state:', { showTemplateGallery, showCharacterBuilder, selectedTemplate });
+
   // Desktop layout
   return (
     <div style={{
@@ -1420,77 +1319,6 @@ const SplitScreenLauncher = ({ onStartChat }) => {
       background: 'linear-gradient(135deg, #0B1426 0%, #1A2B47 25%, #2C1810 50%, #0F1A2E 75%, #0B1426 100%)',
       overflow: 'hidden'
     }}>
-      {/* ✅ ADD DESKTOP TEST COMPONENT RIGHT HERE - AT THE BEGINNING */}
-      <div style={{
-        position: 'fixed',
-        top: '10px',
-        right: '10px',
-        background: 'rgba(0,0,0,0.9)',
-        color: '#FFD700',
-        padding: '1rem',
-        borderRadius: '8px',
-        fontSize: '0.8rem',
-        maxWidth: '300px',
-        zIndex: 9999,
-        border: '1px solid #FFD700'
-      }}>
-        <div style={{ fontWeight: 'bold', marginBottom: '0.5rem' }}>
-          Premium API Debug Panel
-        </div>
-        <div style={{ fontSize: '0.7rem' }}>
-          <div>User ID: {user?.id || 'Not loaded'}</div>
-          <div>Premium: {premiumLoading ? 'Loading...' : isPremium ? 'Yes' : 'No'}</div>
-          <div>Characters: {approvedCharacters?.length || 0}</div>
-          <div>Templates: {characterTemplates?.length || 0}</div>
-          <div>Status: {premiumStatus?.subscription_status || 'Unknown'}</div>
-          <div>Error: {premiumError || 'None'}</div>
-        </div>
-        <button
-        onClick={() => {
-          console.log('Testing premium APIs...');
-          console.log('Premium Status:', premiumStatus);
-          console.log('Is Premium:', isPremium);
-          console.log('Can Create Character:', canCreateCharacter);
-          console.log('Character Count:', characterCount);
-          console.log('Character Templates Count:', characterTemplates?.length);
-          console.log('Character Templates Full Data:', JSON.stringify(characterTemplates, null, 2));
-          console.log('User Characters:', userCharacters);
-          console.log('Premium Error:', premiumError);
-          console.log('Grant Trial Function:', typeof grantTrial === 'function');
-          //gi Test different premium route variations
-          const testTemplateAPI = async () => {
-            try {
-              const response = await fetch(`${process.env.REACT_APP_API_URL}/api/premium/test-templates/44`, {
-                method: 'GET',
-                headers: { 
-                  'Authorization': `Bearer ${token}`,
-                  'Content-Type': 'application/json'
-                }
-              });
-              const result = await response.text();
-              console.log('Manual template test result:', result);
-            } catch (error) {
-              console.log('Manual template test failed:', error.message);
-            }
-          };
-
-          testTemplateAPI();
-
-        }}
-        style={{
-          background: '#FFD700',
-          color: '#000',
-          border: 'none',
-          padding: '0.5rem',
-          borderRadius: '4px',
-          cursor: 'pointer',
-          marginTop: '0.5rem',
-          fontSize: '0.7rem'
-        }}
-      >
-        Test All APIs
-      </button>
-      </div>
       {/* LEFT HALF - Search Section */}
       <div style={{
         width: '50%',
@@ -1949,7 +1777,7 @@ const SplitScreenLauncher = ({ onStartChat }) => {
 
               {/* ✅ ENHANCED: Desktop Content Area */}
               {selectedCategory.key === 'my_characters' ? (
-                // My Characters Special Panel for Desktop
+                // Desktop: My Characters Special Panel for Desktop
                 <div style={{
                   display: 'flex',
                   flexDirection: 'column',
@@ -2019,7 +1847,7 @@ const SplitScreenLauncher = ({ onStartChat }) => {
                           letterSpacing: '1px',
                           textShadow: '0 0 15px rgba(255, 215, 0, 0.5)'
                         }}>
-
+                          Create Your Own Character
                         </h3>
                         
                         <p style={{
@@ -2085,17 +1913,14 @@ const SplitScreenLauncher = ({ onStartChat }) => {
                         justifyContent: 'center'
                       }}>
                         <button
-                          // Mobile button onClick - add more debugging
                           onClick={() => {
-                            console.log('MOBILE: Start trial clicked - showing template gallery');
-                            console.log('MOBILE: Before state change:', showTemplateGallery);
-                            console.log('MOBILE: Current isMobile:', isMobile);
-                            console.log('MOBILE: Current viewport width:', window.innerWidth);
+                            console.log('DESKTOP: Start trial clicked - showing template gallery');
+                            console.log('DESKTOP: Before state change:', showTemplateGallery);
                             startTemplateFlow();
-                            console.log('MOBILE: After state change call');
+                            console.log('DESKTOP: After state change call');
                             setTimeout(() => {
-                              console.log('MOBILE: State after timeout:', showTemplateGallery);
-                            }, 100); // Shorter timeout for faster debugging
+                              console.log('DESKTOP: State after timeout:', showTemplateGallery);
+                            }, 100);
                           }}
                           style={{
                             background: 'linear-gradient(135deg, #FFD700, #FFA500)',
@@ -2160,7 +1985,7 @@ const SplitScreenLauncher = ({ onStartChat }) => {
                         No credit card required • Cancel anytime
                       </p>
                     </div>
-                  ) : approvedCharacters.length === 0 ? (
+                  ) : userCharacters.length === 0 ? (
                     // Premium User - No Characters Yet
                     <div style={{
                       maxWidth: '400px',
@@ -2207,8 +2032,8 @@ const SplitScreenLauncher = ({ onStartChat }) => {
 
                       <button
                         onClick={() => {
-                          // TODO: Navigate to character creation
-                          console.log('Create character clicked');
+                          console.log('Create character clicked - showing template gallery');
+                          startTemplateFlow();
                         }}
                         style={{
                           background: 'linear-gradient(135deg, #FFD700, #FFA500)',
@@ -2245,7 +2070,7 @@ const SplitScreenLauncher = ({ onStartChat }) => {
                       </p>
                     </div>
                   ) : (
-                    // Premium User - Has Characters
+                    // Premium User - Has Characters (Desktop) - Show ALL characters including pending
                     <div style={{
                       display: 'grid',
                       gridTemplateColumns: `repeat(auto-fit, minmax(180px, 1fr))`,
@@ -2254,61 +2079,97 @@ const SplitScreenLauncher = ({ onStartChat }) => {
                       overflowY: 'auto',
                       paddingRight: '0.5rem'
                     }}>
-                      {approvedCharacters.map((character, index) => (
+                      {userCharacters.map((character, index) => (
                         <div
                           key={character.id}
                           onClick={() => {
-                            // TODO: Start chat with custom character
-                            console.log('Chat with character:', character.character_key);
-                            onStartChat(character.character_key);
+                            if (character.status === 'approved') {
+                              console.log('Chat with character:', character.character_key);
+                              onStartChat(character.character_key);
+                            }
                           }}
                           style={{
-                            background: 'rgba(255, 255, 255, 0.05)',
-                            border: '1px solid rgba(255, 215, 0, 0.2)',
+                            background: character.status === 'approved' 
+                              ? 'rgba(255, 255, 255, 0.05)' 
+                              : 'rgba(255, 165, 0, 0.05)', // Orange tint for pending
+                            border: character.status === 'approved'
+                              ? '1px solid rgba(255, 215, 0, 0.2)'
+                              : '1px solid rgba(255, 165, 0, 0.3)', // Orange border for pending
                             borderRadius: '16px',
                             padding: '1rem',
-                            cursor: 'pointer',
+                            cursor: character.status === 'approved' ? 'pointer' : 'default',
                             transition: 'all 0.3s ease',
-                            opacity: 0,
+                            opacity: character.status === 'approved' ? 1 : 0.8,
                             animation: `characterSlideIn 0.6s ease-out ${index * 0.05}s forwards`,
                             minHeight: '200px',
                             display: 'flex',
                             flexDirection: 'column',
-                            alignItems: 'center'
+                            alignItems: 'center',
+                            position: 'relative'
                           }}
                           onMouseEnter={(e) => {
-                            e.currentTarget.style.background = 'rgba(255, 215, 0, 0.1)';
-                            e.currentTarget.style.borderColor = 'rgba(255, 215, 0, 0.5)';
-                            e.currentTarget.style.transform = 'translateY(-6px)';
-                            e.currentTarget.style.boxShadow = '0 16px 32px rgba(255, 215, 0, 0.2)';
+                            if (character.status === 'approved') {
+                              e.currentTarget.style.background = 'rgba(255, 215, 0, 0.1)';
+                              e.currentTarget.style.borderColor = 'rgba(255, 215, 0, 0.5)';
+                              e.currentTarget.style.transform = 'translateY(-6px)';
+                              e.currentTarget.style.boxShadow = '0 16px 32px rgba(255, 215, 0, 0.2)';
+                            }
                           }}
                           onMouseLeave={(e) => {
-                            e.currentTarget.style.background = 'rgba(255, 255, 255, 0.05)';
-                            e.currentTarget.style.borderColor = 'rgba(255, 215, 0, 0.2)';
+                            e.currentTarget.style.background = character.status === 'approved' 
+                              ? 'rgba(255, 255, 255, 0.05)' 
+                              : 'rgba(255, 165, 0, 0.05)';
+                            e.currentTarget.style.borderColor = character.status === 'approved'
+                              ? 'rgba(255, 215, 0, 0.2)'
+                              : 'rgba(255, 165, 0, 0.3)';
                             e.currentTarget.style.transform = 'translateY(0)';
                             e.currentTarget.style.boxShadow = 'none';
                           }}
                         >
+                          {/* Status indicator */}
+                          <div style={{
+                            position: 'absolute',
+                            top: '0.5rem',
+                            right: '0.5rem',
+                            background: character.status === 'approved' ? '#00FF88' : 
+                                       character.status === 'pending' ? '#FFA500' : '#ff6b6b',
+                            color: '#000',
+                            fontSize: '0.6rem',
+                            fontWeight: 600,
+                            padding: '0.2rem 0.5rem',
+                            borderRadius: '10px',
+                            textTransform: 'uppercase'
+                          }}>
+                            {character.status}
+                          </div>
+                          
                           <div style={{
                             width: '50px',
                             height: '50px',
                             borderRadius: '50%',
                             overflow: 'hidden',
                             marginBottom: '0.75rem',
-                            border: '3px solid rgba(255, 215, 0, 0.3)',
+                            border: character.status === 'approved'
+                              ? '3px solid rgba(255, 215, 0, 0.3)'
+                              : '3px solid rgba(255, 165, 0, 0.3)',
                             flexShrink: 0
                           }}>
                             <img
                               src={character.thumbnailUrl || '/images/default-character.jpg'}
                               alt={character.display_name}
-                              style={{ width: '100%', height: '100%', objectFit: 'cover' }}
+                              style={{ 
+                                width: '100%', 
+                                height: '100%', 
+                                objectFit: 'cover',
+                                filter: character.status === 'approved' ? 'none' : 'grayscale(30%)'
+                              }}
                               onError={(e) => { e.target.src = '/images/default-character.jpg'; }}
                             />
                           </div>
                           
                           <div style={{ textAlign: 'center', flex: 1, display: 'flex', flexDirection: 'column' }}>
                             <h3 style={{
-                              color: '#FFD700',
+                              color: character.status === 'approved' ? '#FFD700' : '#FFA500',
                               fontSize: '0.85rem',
                               fontWeight: 600,
                               margin: '0 0 0.5rem 0',
@@ -2331,6 +2192,28 @@ const SplitScreenLauncher = ({ onStartChat }) => {
                             }}>
                               {character.short_description}
                             </p>
+                            
+                            {character.status === 'pending' && (
+                              <p style={{
+                                color: '#FFA500',
+                                fontSize: '0.6rem',
+                                margin: '0.5rem 0 0 0',
+                                fontStyle: 'italic'
+                              }}>
+                                Awaiting approval...
+                              </p>
+                            )}
+                            
+                            {character.status === 'rejected' && (
+                              <p style={{
+                                color: '#ff6b6b',
+                                fontSize: '0.6rem',
+                                margin: '0.5rem 0 0 0',
+                                fontStyle: 'italic'
+                              }}>
+                                Needs revision
+                              </p>
+                            )}
                           </div>
                         </div>
                       ))}
@@ -2557,21 +2440,6 @@ const SplitScreenLauncher = ({ onStartChat }) => {
               </button>
             </div>
           </div>
-          <SimpleDebugTest />
-          <PremiumStatusDebugger />
-          {/* Add this simple test directly */}
-          <div style={{
-            position: 'fixed',
-            top: '10px',
-            right: '10px',
-            background: 'red',
-            color: 'white',
-            padding: '20px',
-            zIndex: 9999999999,
-            fontSize: '16px'
-          }}>
-            SIMPLE TEST
-          </div>
         </div>
       )}
 
@@ -2742,7 +2610,6 @@ const SplitScreenLauncher = ({ onStartChat }) => {
       `}</style>
        
       {/* Template Gallery Modal */}
-      {showTemplateGallery && console.log('Modal should render now')}
       {showTemplateGallery && (
         <div style={{
           position: 'fixed',
@@ -2834,6 +2701,7 @@ const PersonalizedSection = ({ characters, onCharacterSelect, hasActiveConversat
           fontFamily: "'Georgia', serif",
           textTransform: 'none' // Add this to prevent all caps
         }}>
+          For You
         </h3>
         <span style={{
           background: 'linear-gradient(135deg, rgba(255, 215, 0, 0.2), rgba(255, 215, 0, 0.1))',
@@ -2972,4 +2840,5 @@ const PersonalizedSection = ({ characters, onCharacterSelect, hasActiveConversat
     </div>
   );
 };
+
 export default SplitScreenLauncher;

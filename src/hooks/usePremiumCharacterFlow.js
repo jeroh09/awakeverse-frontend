@@ -1,9 +1,10 @@
 // src/hooks/usePremiumCharacterFlow.js
 import { useState, useCallback, useContext, createContext } from 'react';
+import usePremiumCharacters from './usePremiumCharacters'; // Correct - default import
 
 const FLOW_STATES = {
   LAUNCHER: 'launcher',
-  TEMPLATES: 'templates', 
+  TEMPLATES: 'templates',
   BUILDER: 'builder',
   SUCCESS: 'success'
 };
@@ -11,12 +12,12 @@ const FLOW_STATES = {
 const PremiumCharacterContext = createContext();
 
 export const PremiumCharacterProvider = ({ children }) => {
-  // Core flow state - replaces your existing useState calls in ChatLauncherPage
+  // Core flow state
   const [currentView, setCurrentView] = useState(FLOW_STATES.LAUNCHER);
   const [selectedTemplate, setSelectedTemplate] = useState(null);
   const [createdCharacterName, setCreatedCharacterName] = useState('');
   const [error, setError] = useState(null);
-  
+
   // Debug logging matching your existing console.log patterns
   const logStateChange = useCallback((action, from, to, data = {}) => {
     console.log(`🔄 Premium Flow: ${action}`, {
@@ -27,7 +28,11 @@ export const PremiumCharacterProvider = ({ children }) => {
     });
   }, []);
 
-  // Navigation actions - these replace your handler functions in ChatLauncherPage
+  // NEW: Track if user already has pending/approved character
+  const { userCharacters, isPremium } = usePremiumCharacters();
+  const hasExistingCharacter = Array.isArray(userCharacters) && userCharacters.length > 0;
+
+  // Navigation actions
   const showTemplateGallery = useCallback(() => {
     console.log('🎨 Showing template gallery');
     logStateChange('SHOW_TEMPLATE_GALLERY', currentView, FLOW_STATES.TEMPLATES);
@@ -36,7 +41,7 @@ export const PremiumCharacterProvider = ({ children }) => {
   }, [currentView, logStateChange]);
 
   const selectTemplate = useCallback((template) => {
-    console.log('🎯 Template selected:', template.name);
+    console.log('🎯 Template selected:', template?.name);
     logStateChange('SELECT_TEMPLATE', FLOW_STATES.TEMPLATES, FLOW_STATES.BUILDER, {
       templateId: template?.id,
       templateName: template?.name
@@ -46,7 +51,15 @@ export const PremiumCharacterProvider = ({ children }) => {
     setError(null);
   }, [logStateChange]);
 
-  const createCharacter = useCallback((characterData) => {
+  // UPDATED: Prevent multiple character creation with proper error handling
+  const createCharacter = useCallback(async (characterData) => {
+    // Prevent multiple character creation
+    if (hasExistingCharacter) {
+      const errorMessage = 'You can only have one character. Please wait for approval or contact support.';
+      setError(errorMessage); // Set error state for UI feedback
+      throw new Error(errorMessage); // Throw for programmatic handling
+    }
+
     console.log('🎭 Character created:', characterData.display_name);
     logStateChange('CREATE_CHARACTER', FLOW_STATES.BUILDER, FLOW_STATES.SUCCESS, {
       characterName: characterData?.display_name
@@ -54,7 +67,7 @@ export const PremiumCharacterProvider = ({ children }) => {
     setCreatedCharacterName(characterData.display_name);
     setCurrentView(FLOW_STATES.SUCCESS);
     setError(null);
-  }, [logStateChange]);
+  }, [hasExistingCharacter, logStateChange]);
 
   const backToLauncher = useCallback(() => {
     console.log('🔙 Back to launcher');
@@ -84,20 +97,24 @@ export const PremiumCharacterProvider = ({ children }) => {
     selectedTemplate,
     createdCharacterName,
     error,
-    
-    // Computed flags (backwards compatibility with your existing code)
+
+    // Computed flags (backwards compatibility)
     showTemplateGallery: showTemplateGallery_flag,
     showCharacterBuilder,
     showSuccessModal,
-    
-    // Navigation actions (replaces your existing handlers)
-    startTemplateFlow: showTemplateGallery,  // Matches your existing button click
-    selectTemplate,                         // Replaces handleTemplateSelect
-    createCharacter,                        // Replaces handleCharacterCreate  
-    backToLauncher,                         // Replaces handleBackToLauncher
-    backToTemplates,                        // Replaces handleBackToTemplates
+
+    // Navigation/actions
+    startTemplateFlow: showTemplateGallery, // Matches existing button click
+    selectTemplate,                        // Replaces handleTemplateSelect
+    createCharacter,                       // Replaces handleCharacterCreate
+    backToLauncher,                        // Replaces handleBackToLauncher
+    backToTemplates,                       // Replaces handleBackToTemplates
     setError,
-    
+
+    // NEW: Expose for UI logic & to avoid ESLint unused var
+    hasExistingCharacter,
+    isPremium,
+
     // Debug info
     FLOW_STATES
   };
