@@ -183,7 +183,6 @@ export default function usePremiumCharacters() {
         setLoading(false);
         return;
       }
-
       try {
         setLoading(true);
         setError(null);
@@ -228,13 +227,9 @@ export default function usePremiumCharacters() {
         }
       }
     };
-
     loadData();
-
-    return () => {
-      isMounted = false;
-    };
-  }, [token, user?.id, fetchPremiumStatus, fetchUserCharacters, fetchCharacterTemplates]);
+    return () => { isMounted = false; };
+  }, [token, user?.id]); // ONLY depend on primitive values, not functions
 
   // Real API function: Grant trial (kept for manual testing)
   const grantTrial = useCallback(async () => {
