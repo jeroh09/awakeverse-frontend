@@ -138,35 +138,29 @@ Engage users with the depth and authenticity that comes from your unique histori
     
     setIsCreating(true);
     setCreationError(null);
-    
+
+    // Optimistically show Success screen first so navigation elsewhere can't hide it.
+    setCreatedCharacterName(formData.display_name);
+    setCreationSuccess(true);
+
     try {
       const characterData = {
         ...formData,
         template_id: selectedTemplate.id,
         historical_period: selectedTemplate.historical_period,
         personality_archetype: selectedTemplate.personality_archetype,
-        expertise_domain: selectedTemplate.expertise_domain
+        expertise_domain: selectedTemplate.expertise_domain,
       };
-    
+
       if (createCharacter) {
         await createCharacter(characterData);
-        setCreatedCharacterName(formData.display_name);
-        setCreationSuccess(true);
-
-        // Start countdown timer for auto-redirect
-        const timer = setInterval(() => {
-          setRedirectTimer(prev => {
-            if (prev <= 1) {
-              clearInterval(timer);
-              backToTemplates(); // Auto-redirect
-              return 0;
-            }
-            return prev - 1;
-          });
-        }, 1000);
+        // Do NOT call backToTemplates or auto-redirect here.
+        // Let the user click the button on the success screen.
       }
     } catch (error) {
       console.error('Character creation failed:', error);
+      // Roll back success screen and show error so user can correct & retry.
+      setCreationSuccess(false);
       setCreationError(error.message || 'Failed to create character');
     } finally {
       setIsCreating(false);
@@ -283,19 +277,6 @@ Engage users with the depth and authenticity that comes from your unique histori
             >
               Return to Characters
             </button>
-            
-            {/* Auto-redirect countdown */}
-            <p style={{
-              color: 'rgba(255, 255, 255, 0.6)',
-              fontSize: '0.8rem',
-              margin: 0,
-              display: 'flex',
-              alignItems: 'center',
-              gap: '0.5rem'
-            }}>
-              <span>⏱️</span>
-              Redirecting automatically in {redirectTimer} seconds...
-            </p>
           </div>
         </div>
       </div>
