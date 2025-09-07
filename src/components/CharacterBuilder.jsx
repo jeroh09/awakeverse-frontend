@@ -1,22 +1,18 @@
-// src/components/CharacterBuilder.jsx - Template-driven character creation form
+// src/components/CharacterBuilder.jsx - Simplified with context-managed success state
 import React, { useState, useEffect } from 'react';
 import { usePremiumCharacterFlow } from '../hooks/usePremiumCharacterFlow';
-import { useAuth } from '../contexts/AuthContext'; // Add this import
-import { useUser } from '../contexts/UserContext';
-
 
 const CharacterBuilder = ({ userPremiumStatus = null }) => {
-  const { selectedTemplate, createCharacter, backToTemplates } = usePremiumCharacterFlow();
-   // Then in your component:
-  const { token } = useAuth(); // Add this line with your other hook calls
-  const { user } = useUser();
+  const { 
+    selectedTemplate, 
+    createCharacter, 
+    backToTemplates,
+    isCreatingCharacter,
+    creationError,
+    setCreationError
+  } = usePremiumCharacterFlow();
+  
   const [isMobile, setIsMobile] = useState(false);
-  const [isCreating, setIsCreating] = useState(false);
-  const [creationSuccess, setCreationSuccess] = useState(false);
-  const [creationError, setCreationError] = useState(null);
-  // NEW (Step 7A #1):
-  const [createdCharacterName, setCreatedCharacterName] = useState('');
-  const [redirectTimer, setRedirectTimer] = useState(3);
   const [formData, setFormData] = useState({
     display_name: '',
     short_description: '',
@@ -28,123 +24,8 @@ const CharacterBuilder = ({ userPremiumStatus = null }) => {
   });
   const [errors, setErrors] = useState({});
   const [currentStep, setCurrentStep] = useState(1);
- 
-  // REPLACED (Step 7A #3): Enhanced Success Screen using createdCharacterName + countdown
-  if (creationSuccess) {
-    return (
-      <div style={{
-        width: '100%',
-        height: '100vh',
-        background: 'linear-gradient(135deg, #0B1426 0%, #1A2B47 25%, #2C1810 50%, #0F1A2E 75%, #0B1426 100%)',
-        fontFamily: "'Playfair Display', serif",
-        display: 'flex',
-        flexDirection: 'column',
-        alignItems: 'center',
-        justifyContent: 'center',
-        padding: '2rem'
-      }}>
-        <div style={{
-          background: 'rgba(255, 255, 255, 0.1)',
-          border: '2px solid rgba(255, 215, 0, 0.4)',
-          borderRadius: '20px',
-          padding: '3rem',
-          textAlign: 'center',
-          maxWidth: '500px',
-          backdropFilter: 'blur(10px)',
-          animation: 'fadeInScale 0.5s ease-out'
-        }}>
-          {/* Success Icon */}
-          <div style={{
-            fontSize: '4rem',
-            marginBottom: '1rem',
-            color: '#FFD700',
-            textShadow: '0 0 20px rgba(255, 215, 0, 0.5)'
-          }}>
-            ✨
-          </div>
-          
-          {/* Success Message */}
-          <h2 style={{
-            color: '#FFD700',
-            fontSize: '1.8rem',
-            margin: '0 0 1rem 0',
-            textShadow: '0 0 20px rgba(255, 215, 0, 0.5)',
-            letterSpacing: '1px'
-          }}>
-            Character Submitted Successfully!
-          </h2>
-          
-          {/* Character Name */}
-          <p style={{
-            color: 'rgba(255, 255, 255, 0.9)',
-            fontSize: '1.1rem',
-            lineHeight: 1.6,
-            margin: '0 0 1.5rem 0'
-          }}>
-            <strong style={{ color: '#FFD700' }}>{createdCharacterName}</strong> has been submitted for approval. 
-            You'll receive an email notification when your character is ready to chat.
-          </p>
-          
-          {/* Trial Information */}
-          <div style={{
-            background: 'rgba(255, 215, 0, 0.1)',
-            border: '1px solid rgba(255, 215, 0, 0.3)',
-            borderRadius: '10px',
-            padding: '1rem',
-            margin: '0 0 2rem 0'
-          }}>
-            <p style={{
-              color: 'rgba(255, 215, 0, 0.9)',
-              fontSize: '0.9rem',
-              margin: 0,
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'center',
-              gap: '0.5rem'
-            }}>
-              <span style={{ fontSize: '1.2rem' }}>🎉</span>
-              Your 3-day trial will start automatically when approved
-            </p>
-          </div>
-          
-          {/* Action Buttons */}
-          <div style={{
-            display: 'flex',
-            flexDirection: 'column',
-            gap: '1rem',
-            alignItems: 'center'
-          }}>
-            <button
-              onClick={backToTemplates}
-              style={{
-                background: 'linear-gradient(135deg, #FFD700, #FFA500)',
-                border: 'none',
-                borderRadius: '10px',
-                color: '#000',
-                fontSize: '1rem',
-                fontWeight: 600,
-                padding: '0.8rem 2rem',
-                cursor: 'pointer',
-                transition: 'all 0.3s ease',
-                boxShadow: '0 4px 15px rgba(255, 215, 0, 0.3)'
-              }}
-              onMouseEnter={(e) => {
-                e.currentTarget.style.transform = 'translateY(-2px)';
-                e.currentTarget.style.boxShadow = '0 6px 20px rgba(255, 215, 0, 0.4)';
-              }}
-              onMouseLeave={(e) => {
-                e.currentTarget.style.transform = 'translateY(0)';
-                e.currentTarget.style.boxShadow = '0 4px 15px rgba(255, 215, 0, 0.3)';
-              }}
-            >
-              Return to Characters
-            </button>
-          </div>
-        </div>
-      </div>
-    );
-  }
   
+  // Check for mobile viewport
   useEffect(() => {
     const checkMobile = () => setIsMobile(window.innerWidth <= 768);
     checkMobile();
@@ -254,86 +135,17 @@ Engage users with the depth and authenticity that comes from your unique histori
     }
   };
 
-  // REPLACED (Step 7A #2): Enhanced creation handler with name capture + countdown
+  // SIMPLIFIED: Character creation handler - no state management
   const handleCreateCharacter = async () => {
     if (!validateStep(3)) return;
 
-    setIsCreating(true);
-    setCreationError(null);
-
     try {
-      // Now we can safely use token and user since they're from hooks at component top
-      if (!token || !user?.id) {
-        throw new Error('Authentication required');
-      }
-
-      const API_BASE = process.env.REACT_APP_API_URL || 'http://localhost:5000';
-
-      // STEP 1: Grant trial first
-      setCreationError("Starting your 3-day trial...");
-
-      const trialResponse = await fetch(`${API_BASE}/api/premium/trial/${user.id}`, {
-        method: 'POST',
-        headers: {
-          'Authorization': `Bearer ${token}`,
-          'Content-Type': 'application/json'
-        },
-        body: JSON.stringify({ trial_days: 3 })
-      });
-
-      // Don't fail if trial already exists
-      if (!trialResponse.ok && trialResponse.status !== 409 && trialResponse.status !== 400) {
-        const trialError = await trialResponse.json().catch(() => ({}));
-        throw new Error(trialError.message || 'Failed to start trial');
-      }
-
-      // STEP 2: Create character
-      setCreationError("Creating your character...");
-
-      const characterData = {
-        ...formData,
-        template_id: selectedTemplate?.id,
-        historical_period: selectedTemplate?.historical_period,
-        personality_archetype: selectedTemplate?.personality_archetype,
-        expertise_domain: selectedTemplate?.expertise_domain
-      };
-
-      const response = await fetch(`${API_BASE}/api/premium/characters`, {
-        method: 'POST',
-        headers: {
-          'Authorization': `Bearer ${token}`,
-          'Content-Type': 'application/json'
-        },
-        body: JSON.stringify(characterData)
-      });
-
-      if (!response.ok) {
-        const errorData = await response.json().catch(() => ({}));
-        throw new Error(errorData.error || `Character creation failed: ${response.status}`);
-      }
-
-      // Success!
-      setCreationError(null);
-      setCreatedCharacterName(formData.display_name || 'Your Character');
-      setCreationSuccess(true);
-
-      // Start countdown timer
-      let countdownTimer = 3;
-      const timer = setInterval(() => {
-        countdownTimer--;
-        setRedirectTimer(countdownTimer);
-        if (countdownTimer <= 0) {
-          clearInterval(timer);
-          if (backToTemplates) {
-            backToTemplates();
-          }
-        }
-      }, 1000);
-
+      await createCharacter(formData);
+      // Success state is now managed by the flow context
+      // Component will be unmounted when success view shows
     } catch (error) {
-      setCreationError(error.message || 'Failed to create character');
-    } finally {
-      setIsCreating(false);
+      console.error('Character creation failed:', error.message);
+      // Error state is managed by context
     }
   };
 
@@ -353,7 +165,7 @@ Engage users with the depth and authenticity that comes from your unique histori
       display: 'flex',
       flexDirection: 'column'
     }}>
-      {/* ▼▼▼▼▼ PASTE DEBUG CODE RIGHT HERE ▼▼▼▼▼ */}
+      {/* Debug Info */}
       <div style={{
         position: 'fixed',
         top: '10px',
@@ -366,8 +178,9 @@ Engage users with the depth and authenticity that comes from your unique histori
         zIndex: 9999,
         fontFamily: 'monospace'
       }}>
-        DEBUG: isCreating={isCreating.toString()} | success={creationSuccess.toString()}
+        DEBUG: isCreating={isCreatingCharacter.toString()} | step={currentStep}
       </div>
+
       {/* Header */}
       <div style={{
         padding: isMobile ? '1rem' : '2rem',
@@ -399,6 +212,7 @@ Engage users with the depth and authenticity that comes from your unique histori
 
         <button
           onClick={backToTemplates}
+          disabled={isCreatingCharacter}
           style={{
             background: 'rgba(255, 215, 0, 0.1)',
             border: '2px solid rgba(255, 215, 0, 0.4)',
@@ -407,15 +221,17 @@ Engage users with the depth and authenticity that comes from your unique histori
             fontSize: isMobile ? '0.8rem' : '0.9rem',
             fontWeight: 600,
             padding: isMobile ? '0.5rem 1rem' : '0.75rem 1.5rem',
-            cursor: 'pointer',
+            cursor: isCreatingCharacter ? 'not-allowed' : 'pointer',
             transition: 'all 0.3s ease',
             fontFamily: "'Cinzel', serif",
-            alignSelf: isMobile ? 'flex-start' : 'auto'
+            alignSelf: isMobile ? 'flex-start' : 'auto',
+            opacity: isCreatingCharacter ? 0.5 : 1
           }}
         >
           ← Back to Templates
         </button>
       </div>
+
       {/* Progress Steps */}
       <div style={{
         padding: isMobile ? '1rem' : '1.5rem 2rem',
@@ -566,6 +382,7 @@ Engage users with the depth and authenticity that comes from your unique histori
                   value={formData.display_name}
                   onChange={(e) => handleInputChange('display_name', e.target.value)}
                   placeholder="e.g., Marcus Aurelius, Marie Curie, Leonardo da Vinci"
+                  disabled={isCreatingCharacter}
                   style={{
                     width: '100%',
                     padding: '1rem',
@@ -578,7 +395,8 @@ Engage users with the depth and authenticity that comes from your unique histori
                     color: '#fff',
                     outline: 'none',
                     fontFamily: "'Cinzel', serif",
-                    transition: 'border-color 0.3s ease'
+                    transition: 'border-color 0.3s ease',
+                    opacity: isCreatingCharacter ? 0.5 : 1
                   }}
                   onFocus={(e) => e.target.style.borderColor = 'rgba(255, 215, 0, 0.6)'}
                   onBlur={(e) => e.target.style.borderColor = errors.display_name ? '#ff6b6b' : 'rgba(255, 215, 0, 0.3)'}
@@ -605,6 +423,7 @@ Engage users with the depth and authenticity that comes from your unique histori
                   onChange={(e) => handleInputChange('short_description', e.target.value)}
                   placeholder="Describe your character in 1-2 sentences. What makes them unique? What is their expertise?"
                   rows={4}
+                  disabled={isCreatingCharacter}
                   style={{
                     width: '100%',
                     padding: '1rem',
@@ -618,7 +437,8 @@ Engage users with the depth and authenticity that comes from your unique histori
                     outline: 'none',
                     fontFamily: "'Cinzel', serif",
                     resize: 'vertical',
-                    transition: 'border-color 0.3s ease'
+                    transition: 'border-color 0.3s ease',
+                    opacity: isCreatingCharacter ? 0.5 : 1
                   }}
                   onFocus={(e) => e.target.style.borderColor = 'rgba(255, 215, 0, 0.6)'}
                   onBlur={(e) => e.target.style.borderColor = errors.short_description ? '#ff6b6b' : 'rgba(255, 215, 0, 0.3)'}
@@ -672,6 +492,7 @@ Engage users with the depth and authenticity that comes from your unique histori
                   onChange={(e) => handleInputChange('system_instruction', e.target.value)}
                   placeholder={templateDefaults.system_instruction_template}
                   rows={8}
+                  disabled={isCreatingCharacter}
                   style={{
                     width: '100%',
                     padding: '1rem',
@@ -686,7 +507,8 @@ Engage users with the depth and authenticity that comes from your unique histori
                     fontFamily: "'Cinzel', serif",
                     resize: 'vertical',
                     transition: 'border-color 0.3s ease',
-                    lineHeight: 1.5
+                    lineHeight: 1.5,
+                    opacity: isCreatingCharacter ? 0.5 : 1
                   }}
                   onFocus={(e) => e.target.style.borderColor = 'rgba(255, 215, 0, 0.6)'}
                   onBlur={(e) => e.target.style.borderColor = errors.system_instruction ? '#ff6b6b' : 'rgba(255, 215, 0, 0.3)'}
@@ -720,6 +542,7 @@ Engage users with the depth and authenticity that comes from your unique histori
                   onChange={(e) => handleInputChange('constraints', e.target.value)}
                   placeholder={templateDefaults.suggested_constraints}
                   rows={3}
+                  disabled={isCreatingCharacter}
                   style={{
                     width: '100%',
                     padding: '1rem',
@@ -731,7 +554,8 @@ Engage users with the depth and authenticity that comes from your unique histori
                     outline: 'none',
                     fontFamily: "'Cinzel', serif",
                     resize: 'vertical',
-                    transition: 'border-color 0.3s ease'
+                    transition: 'border-color 0.3s ease',
+                    opacity: isCreatingCharacter ? 0.5 : 1
                   }}
                   onFocus={(e) => e.target.style.borderColor = 'rgba(255, 215, 0, 0.6)'}
                   onBlur={(e) => e.target.style.borderColor = 'rgba(255, 215, 0, 0.3)'}
@@ -902,11 +726,25 @@ Engage users with the depth and authenticity that comes from your unique histori
           border: '1px solid rgba(255, 107, 107, 0.3)',
           borderRadius: '8px',
           padding: '1rem',
-          margin: '1rem 0',
+          margin: '1rem 2rem',
           color: '#ff6b6b',
           fontSize: '0.9rem'
         }}>
           {creationError}
+          <button 
+            onClick={() => setCreationError(null)}
+            style={{
+              background: 'none',
+              border: 'none',
+              color: '#ff6b6b',
+              cursor: 'pointer',
+              float: 'right',
+              fontSize: '1rem',
+              padding: 0
+            }}
+          >
+            ×
+          </button>
         </div>
       )}
 
@@ -921,16 +759,16 @@ Engage users with the depth and authenticity that comes from your unique histori
       }}>
         <button
           onClick={handlePrevStep}
-          disabled={currentStep === 1}
+          disabled={currentStep === 1 || isCreatingCharacter}
           style={{
-            background: currentStep === 1 ? 'rgba(128, 128, 128, 0.2)' : 'rgba(255, 215, 0, 0.1)',
-            border: currentStep === 1 ? '2px solid rgba(128, 128, 128, 0.3)' : '2px solid rgba(255, 215, 0, 0.4)',
+            background: currentStep === 1 || isCreatingCharacter ? 'rgba(128, 128, 128, 0.2)' : 'rgba(255, 215, 0, 0.1)',
+            border: currentStep === 1 || isCreatingCharacter ? '2px solid rgba(128, 128, 128, 0.3)' : '2px solid rgba(255, 215, 0, 0.4)',
             borderRadius: '8px',
-            color: currentStep === 1 ? 'rgba(128, 128, 128, 0.6)' : '#FFD700',
+            color: currentStep === 1 || isCreatingCharacter ? 'rgba(128, 128, 128, 0.6)' : '#FFD700',
             fontSize: '0.9rem',
             fontWeight: 600,
             padding: '0.75rem 1.5rem',
-            cursor: currentStep === 1 ? 'not-allowed' : 'pointer',
+            cursor: currentStep === 1 || isCreatingCharacter ? 'not-allowed' : 'pointer',
             transition: 'all 0.3s ease',
             fontFamily: "'Cinzel', serif"
           }}
@@ -961,20 +799,23 @@ Engage users with the depth and authenticity that comes from your unique histori
         {currentStep < 3 ? (
           <button
             onClick={handleNextStep}
+            disabled={isCreatingCharacter}
             style={{
-              background: 'linear-gradient(135deg, #FFD700, #FFA500)',
+              background: isCreatingCharacter ? 'rgba(128, 128, 128, 0.3)' : 'linear-gradient(135deg, #FFD700, #FFA500)',
               border: 'none',
               borderRadius: '8px',
-              color: '#000',
+              color: isCreatingCharacter ? 'rgba(255, 255, 255, 0.6)' : '#000',
               fontSize: '0.9rem',
               fontWeight: 700,
               padding: '0.75rem 1.5rem',
-              cursor: 'pointer',
+              cursor: isCreatingCharacter ? 'not-allowed' : 'pointer',
               transition: 'all 0.3s ease',
               fontFamily: "'Cinzel', serif"
             }}
             onMouseEnter={(e) => {
-              e.currentTarget.style.transform = 'translateY(-1px)';
+              if (!isCreatingCharacter) {
+                e.currentTarget.style.transform = 'translateY(-1px)';
+              }
             }}
             onMouseLeave={(e) => {
               e.currentTarget.style.transform = 'translateY(0)';
@@ -985,25 +826,25 @@ Engage users with the depth and authenticity that comes from your unique histori
         ) : (
           <button
             onClick={handleCreateCharacter}
-            disabled={isCreating}
+            disabled={isCreatingCharacter}
             style={{
-              background: isCreating 
+              background: isCreatingCharacter 
                 ? 'rgba(128, 128, 128, 0.3)'
                 : 'linear-gradient(135deg, #FFD700, #FFA500)',
               border: 'none',
               borderRadius: '8px',
-              color: isCreating ? 'rgba(255, 255, 255, 0.6)' : '#000',
+              color: isCreatingCharacter ? 'rgba(255, 255, 255, 0.6)' : '#000',
               fontSize: '0.9rem',
               fontWeight: 700,
               padding: '0.75rem 2rem',
-              cursor: isCreating ? 'not-allowed' : 'pointer',
+              cursor: isCreatingCharacter ? 'not-allowed' : 'pointer',
               transition: 'all 0.3s ease',
               display: 'flex',
               alignItems: 'center',
               gap: '0.5rem'
             }}
           >
-            {isCreating ? (
+            {isCreatingCharacter ? (
               <>
                 <div style={{
                   width: '16px',
@@ -1022,15 +863,10 @@ Engage users with the depth and authenticity that comes from your unique histori
         )}
       </div>
 
-      {/* Step 7A #4: Add animation styles (fadeInScale + spin) */}
       <style jsx>{`
         @keyframes fadeIn {
           from { opacity: 0; transform: translateY(20px); }
           to   { opacity: 1; transform: translateY(0); }
-        }
-        @keyframes fadeInScale {
-          from { opacity: 0; transform: scale(0.9) translateY(20px); }
-          to   { opacity: 1; transform: scale(1) translateY(0); }
         }
         @keyframes spin {
           0% { transform: rotate(0deg); }

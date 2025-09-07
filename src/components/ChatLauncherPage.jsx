@@ -1,13 +1,13 @@
-// src/pages/ChatLauncherPage.jsx
+// src/pages/ChatLauncherPage.jsx - Updated with success screen integration
 import React, { useState, useEffect, useMemo } from 'react';
 import { useAuth } from '../contexts/AuthContext';
 import { useUser } from '../contexts/UserContext';
 import { characterCategories } from '../data/characterCategories';
 import useInteractedCharacters from '../hooks/useInteractedCharacters';
-import usePremiumCharacters from '../hooks/usePremiumCharacters'; // ✅ ADDED: Premium characters hook
-// Add these imports at the top of ChatLauncherPage.jsx
+import usePremiumCharacters from '../hooks/usePremiumCharacters';
 import TemplateGallery from '../components/TemplateGallery';
 import CharacterBuilder from '../components/CharacterBuilder';
+import CharacterCreationSuccess from '../components/CharacterCreationSuccess'; // ✅ NEW IMPORT
 import { usePremiumCharacterFlow } from '../hooks/usePremiumCharacterFlow';
 
 // Enhanced semantic mappings for your complete character set
@@ -118,9 +118,8 @@ const categoryRepresentatives = {
   'warlords': '/images/sun_tzu.jpg',
   'pathfinders': '/images/christopher_columbus.jpg',
   'performers': '/images/harry_houdini.jpg',
-  'my_characters': '/images/default-character.jpg' // ✅ ADDED: My Characters representative
+  'my_characters': '/images/default-character.jpg'
 };
-
 
 const SplitScreenLauncher = ({ onStartChat }) => {
   const { token } = useAuth();
@@ -157,6 +156,7 @@ const SplitScreenLauncher = ({ onStartChat }) => {
   const {
     showTemplateGallery,
     showCharacterBuilder,
+    showSuccessModal, // ✅ NEW: Success modal state
     selectedTemplate,
     startTemplateFlow
   } = usePremiumCharacterFlow();
@@ -167,7 +167,24 @@ const SplitScreenLauncher = ({ onStartChat }) => {
   const [placeholderIndex, setPlaceholderIndex] = useState(0);
   const [searchResults, setSearchResults] = useState([]);
   const [showResults, setShowResults] = useState(false);
-  const [isMobile, setIsMobile] = useState(false);  
+  const [isMobile, setIsMobile] = useState(false);
+
+  // ✅ NEW: Early return for success screen
+  if (showSuccessModal) {
+    return (
+      <div style={{
+        position: 'fixed',
+        top: 0,
+        left: 0,
+        width: '100%',
+        height: '100%',
+        zIndex: 4000, // Higher than other modals
+        background: 'rgba(0, 0, 0, 0.95)'
+      }}>
+        <CharacterCreationSuccess />
+      </div>
+    );
+  }
   
   // Check for mobile viewport
   useEffect(() => {
@@ -176,7 +193,6 @@ const SplitScreenLauncher = ({ onStartChat }) => {
     window.addEventListener('resize', checkMobile);
     return () => window.removeEventListener('resize', checkMobile);
   }, []);
-
 
   // Rotate placeholder text
   useEffect(() => {
@@ -187,16 +203,13 @@ const SplitScreenLauncher = ({ onStartChat }) => {
     return () => clearInterval(interval);
   }, []);
   
-  // ✅ ENHANCED: Updated categories with My Characters integration
+  // Enhanced categories with My Characters integration
   const enhancedCategories = useMemo(() => {
     const allCategories = [...characterCategories];
     
-    // Add My Characters category at position 11 (after Strategists, making it 12th total)
-    // Find and update the existing 'my_characters' category
     const myCharIndex = allCategories.findIndex(cat => cat.key === 'my_characters');
 
     if (myCharIndex !== -1) {
-      // Update the existing category with approved characters
       allCategories[myCharIndex] = {
         ...allCategories[myCharIndex],
         characters: approvedCharacters.map(char => ({
@@ -225,7 +238,7 @@ const SplitScreenLauncher = ({ onStartChat }) => {
       const searchTerm = query.toLowerCase().trim();
       const results = [];
 
-      enhancedCategories.forEach(category => { // ✅ Use enhanced categories
+      enhancedCategories.forEach(category => {
         category.characters.forEach(character => {
           const nameMatch = character.name.toLowerCase().includes(searchTerm);
           const descMatch = character.description.toLowerCase().includes(searchTerm);
@@ -247,7 +260,7 @@ const SplitScreenLauncher = ({ onStartChat }) => {
       
       return results.sort((a, b) => b.relevance - a.relevance).slice(0, 8);
     };
-  }, [enhancedCategories]); // ✅ Dependency on enhanced categories
+  }, [enhancedCategories]);
 
   // Handle search input
   const handleInputChange = (text) => {
@@ -288,7 +301,6 @@ const SplitScreenLauncher = ({ onStartChat }) => {
 
   const currentPlaceholder = ORACLE_PROMPTS[placeholderIndex];
 
-  
   // Mobile layout
   if (isMobile) {
     return (
@@ -297,7 +309,7 @@ const SplitScreenLauncher = ({ onStartChat }) => {
         minHeight: '100vh',
         padding: '1rem',
         fontFamily: "'Georgia', serif",
-        textTransform: 'none', // Add this to prevent all caps
+        textTransform: 'none',
         background: 'linear-gradient(135deg, #0B1426 0%, #1A2B47 25%, #2C1810 50%, #0F1A2E 75%, #0B1426 100%)',
         display: 'flex',
         flexDirection: 'column',
@@ -313,7 +325,7 @@ const SplitScreenLauncher = ({ onStartChat }) => {
         }}>
           <h1 style={{
             fontFamily: "'Playfair Display', serif",
-            textTransform: 'none', // Add this to prevent all caps
+            textTransform: 'none',
             fontSize: '1.8rem',
             background: 'linear-gradient(135deg, #FFD700, #FFA500, #FFD700)',
             backgroundClip: 'text',
@@ -367,7 +379,7 @@ const SplitScreenLauncher = ({ onStartChat }) => {
               backdropFilter: 'blur(10px)',
               transition: 'all 0.3s ease',
               fontFamily: "'Georgia', serif",
-              textTransform: 'none' // Add this to prevent all caps
+              textTransform: 'none'
             }}
           />
 
@@ -491,7 +503,7 @@ const SplitScreenLauncher = ({ onStartChat }) => {
             gap: '1rem',
             marginTop: '1rem',
           }}>
-            {enhancedCategories.map((category) => ( // ✅ Use enhanced categories
+            {enhancedCategories.map((category) => (
               <div
                 key={category.key}
                 onClick={() => handleCategorySelect(category)}
@@ -510,7 +522,7 @@ const SplitScreenLauncher = ({ onStartChat }) => {
                   aspectRatio: '1',
                 }}
               >
-                {/* ✅ ENHANCED: Mobile Category Avatar Display */}
+                {/* Mobile Category Avatar Display */}
                 <div style={{
                   width: '48px',
                   height: '48px',
@@ -542,7 +554,7 @@ const SplitScreenLauncher = ({ onStartChat }) => {
                       fontWeight: 'bold',
                       zIndex: 1
                     }}>
-                      ★
+                      ⭐
                     </div>
                   )}
                   
@@ -607,7 +619,7 @@ const SplitScreenLauncher = ({ onStartChat }) => {
                   )}
                 </div>
                 
-                {/* ✅ ENHANCED: Mobile Category Title */}
+                {/* Mobile Category Title */}
                 <h3 style={{
                   color: category.key === 'my_characters' && !isPremium ? 'rgba(128, 128, 128, 0.8)' : '#FFD700',
                   fontSize: '0.85rem',
@@ -615,14 +627,14 @@ const SplitScreenLauncher = ({ onStartChat }) => {
                   margin: '0 0 0.3rem 0',
                   letterSpacing: '0.5px',
                   fontFamily: "'Georgia', serif",
-                  textTransform: 'none', // Add this to prevent all caps
+                  textTransform: 'none',
                   textShadow: '1px 1px 2px rgba(0,0,0,0.8)',
                   lineHeight: 1.1
                 }}>
                   {category.title}
                 </h3>
                 
-                {/* ✅ ENHANCED: Mobile Category Badge */}
+                {/* Mobile Category Badge */}
                 <span style={{
                   color: category.key === 'my_characters' && !isPremium 
                     ? 'rgba(128, 128, 128, 0.6)' 
@@ -664,7 +676,7 @@ const SplitScreenLauncher = ({ onStartChat }) => {
                 color: '#FFD700',
                 fontSize: '1.5rem',
                 fontFamily: "'Playfair Display', serif",
-                textTransform: 'none', // Add this to prevent all caps
+                textTransform: 'none',
                 margin: 0,
                 letterSpacing: '1px',
                 textShadow: '0 0 10px rgba(255, 215, 0, 0.5)'
@@ -684,14 +696,14 @@ const SplitScreenLauncher = ({ onStartChat }) => {
                   padding: '0.3rem 0.8rem',
                   cursor: 'pointer',
                   fontFamily: "'Georgia', serif",
-                  textTransform: 'none' // Add this to prevent all caps
+                  textTransform: 'none'
                 }}
               >
                 ← Back
               </button>
             </div>
 
-            {/* ✅ ENHANCED: Mobile Characters Content Area */}
+            {/* Mobile Characters Content Area */}
             {selectedCategory.key === 'my_characters' ? (
               // Mobile: My Characters Special Panel for Mobile
               <div style={{
@@ -758,7 +770,7 @@ const SplitScreenLauncher = ({ onStartChat }) => {
                         color: '#FFD700',
                         fontSize: '1.4rem',
                         fontFamily: "'Playfair Display', serif",
-                        textTransform: 'none', // Add this to prevent all caps
+                        textTransform: 'none',
                         margin: '0 0 0.8rem 0',
                         letterSpacing: '1px',
                         textShadow: '0 0 15px rgba(255, 215, 0, 0.5)'
@@ -843,7 +855,7 @@ const SplitScreenLauncher = ({ onStartChat }) => {
                           cursor: 'pointer',
                           transition: 'all 0.3s ease',
                           fontFamily: "'Georgia', serif",
-                          textTransform: 'none', // Add this to prevent all caps
+                          textTransform: 'none',
                           boxShadow: '0 4px 15px rgba(255, 215, 0, 0.3)',
                           width: '100%',
                           position: 'relative',
@@ -866,7 +878,7 @@ const SplitScreenLauncher = ({ onStartChat }) => {
                           cursor: 'pointer',
                           transition: 'all 0.3s ease',
                           fontFamily: "'Georgia', serif",
-                          textTransform: 'none', // Add this to prevent all caps
+                          textTransform: 'none',
                           width: '100%'
                         }}
                       >
@@ -913,7 +925,7 @@ const SplitScreenLauncher = ({ onStartChat }) => {
                         fontSize: '1.3rem',
                         margin: '0 0 0.8rem 0',
                         fontFamily: "'Playfair Display', serif",
-                        textTransform: 'none' // Add this to prevent all caps
+                        textTransform: 'none'
                       }}>
                         Ready to Create?
                       </h3>
@@ -944,7 +956,7 @@ const SplitScreenLauncher = ({ onStartChat }) => {
                         cursor: 'pointer',
                         transition: 'all 0.3s ease',
                         fontFamily: "'Georgia', serif",
-                        textTransform: 'none', // Add this to prevent all caps
+                        textTransform: 'none',
                         boxShadow: '0 4px 15px rgba(255, 215, 0, 0.3)',
                         width: '100%'
                       }}
@@ -1244,7 +1256,7 @@ const SplitScreenLauncher = ({ onStartChat }) => {
                     cursor: 'pointer',
                     transition: 'all 0.3s ease',
                     fontFamily: "'Georgia', serif",
-                    textTransform: 'none', // Add this to prevent all caps
+                    textTransform: 'none',
                   }}
                 >
                   Start Chat
@@ -1262,7 +1274,7 @@ const SplitScreenLauncher = ({ onStartChat }) => {
                     cursor: 'pointer',
                     transition: 'all 0.3s ease',
                     fontFamily: "'Georgia', serif",
-                    textTransform: 'none' // Add this to prevent all caps
+                    textTransform: 'none'
                   }}
                 >
                   Close
@@ -1271,7 +1283,7 @@ const SplitScreenLauncher = ({ onStartChat }) => {
             </div>
           </div>
         )}
-        {/* ✅ ADD THIS: Template Gallery Modal for Mobile */}
+        {/* Template Gallery Modal for Mobile */}
         {showTemplateGallery && (
           <div style={{
             position: 'fixed',
@@ -1288,7 +1300,7 @@ const SplitScreenLauncher = ({ onStartChat }) => {
           />
           </div>
         )}
-        {/* ✅ ADD THIS: Character Builder Modal for Mobile */}
+        {/* Character Builder Modal for Mobile */}
         {showCharacterBuilder && selectedTemplate && (
           <div style={{
             position: 'fixed',
@@ -1315,7 +1327,7 @@ const SplitScreenLauncher = ({ onStartChat }) => {
       height: '100vh',
       display: 'flex',
       fontFamily: "'Georgia', serif",
-      textTransform: 'none', // Add this to prevent all caps
+      textTransform: 'none',
       background: 'linear-gradient(135deg, #0B1426 0%, #1A2B47 25%, #2C1810 50%, #0F1A2E 75%, #0B1426 100%)',
       overflow: 'hidden'
     }}>
@@ -1335,7 +1347,7 @@ const SplitScreenLauncher = ({ onStartChat }) => {
         <div style={{ textAlign: 'center', marginBottom: '1.5rem' }}>
           <h1 style={{
             fontFamily: "'Playfair Display', serif",
-            textTransform: 'none', // Add this to prevent all caps
+            textTransform: 'none',
             fontSize: '2.5rem',
             background: 'linear-gradient(135deg, #FFD700, #FFA500, #FFD700)',
             backgroundClip: 'text',
@@ -1383,7 +1395,7 @@ const SplitScreenLauncher = ({ onStartChat }) => {
               backdropFilter: 'blur(10px)',
               transition: 'all 0.3s ease',
               fontFamily: "'Georgia', serif",
-              textTransform: 'none' // Add this to prevent all caps
+              textTransform: 'none'
             }}
           />
 
@@ -1502,7 +1514,7 @@ const SplitScreenLauncher = ({ onStartChat }) => {
       {/* RIGHT HALF - Categories/Characters */}
       <div style={{ width: '50%', height: '100%', position: 'relative', perspective: '1000px' }}>
 
-        {/* ✅ ENHANCED: Categories Grid - Dynamic Viewport Sizing */}
+        {/* Categories Grid - Dynamic Viewport Sizing */}
         <div 
           className="categories-grid-container"
           style={{
@@ -1526,7 +1538,7 @@ const SplitScreenLauncher = ({ onStartChat }) => {
             paddingRight: '2.5rem'
           }}
         >
-          {enhancedCategories.map((category, index) => ( // ✅ Use enhanced categories
+          {enhancedCategories.map((category, index) => (
             <div
               key={category.key}
               onClick={() => handleCategorySelect(category)}
@@ -1574,7 +1586,7 @@ const SplitScreenLauncher = ({ onStartChat }) => {
                 }
               }}
             >
-              {/* ✅ ENHANCED: Desktop Category Avatar Display */}
+              {/* Desktop Category Avatar Display */}
               <div style={{
                 width: '56px',
                 height: '56px',
@@ -1606,7 +1618,7 @@ const SplitScreenLauncher = ({ onStartChat }) => {
                     fontWeight: 'bold',
                     zIndex: 1
                   }}>
-                    ★
+                    ⭐
                   </div>
                 )}
                 
@@ -1671,7 +1683,7 @@ const SplitScreenLauncher = ({ onStartChat }) => {
                 )}
               </div>
               
-              {/* ✅ ENHANCED: Desktop Category Title */}
+              {/* Desktop Category Title */}
               <h3 style={{
                 color: category.key === 'my_characters' && !isPremium ? 'rgba(128, 128, 128, 0.8)' : '#FFD700',
                 fontSize: '0.9rem',
@@ -1679,14 +1691,14 @@ const SplitScreenLauncher = ({ onStartChat }) => {
                 margin: '0 0 0.3rem 0',
                 letterSpacing: '0.5px',
                 fontFamily: "'Georgia', serif",
-                textTransform: 'none', // Add this to prevent all caps
+                textTransform: 'none',
                 textShadow: '1px 1px 2px rgba(0,0,0,0.8)',
                 lineHeight: 1.1
               }}>
                 {category.title}
               </h3>
               
-              {/* ✅ ENHANCED: Desktop Category Badge */}
+              {/* Desktop Category Badge */}
               <span style={{
                 color: category.key === 'my_characters' && !isPremium 
                   ? 'rgba(128, 128, 128, 0.6)' 
@@ -1712,7 +1724,7 @@ const SplitScreenLauncher = ({ onStartChat }) => {
           ))}
         </div>
 
-        {/* ✅ ENHANCED: Characters Panel */}
+        {/* Characters Panel */}
         <div style={{
           position: 'absolute',
           width: '100%',
@@ -1739,7 +1751,7 @@ const SplitScreenLauncher = ({ onStartChat }) => {
                   color: '#FFD700',
                   fontSize: '2rem',
                   fontFamily: "'Playfair Display', serif",
-                  textTransform: 'none', // Add this to prevent all caps
+                  textTransform: 'none',
                   margin: 0,
                   letterSpacing: '2px',
                   textShadow: '0 0 20px rgba(255, 215, 0, 0.5)'
@@ -1760,7 +1772,7 @@ const SplitScreenLauncher = ({ onStartChat }) => {
                     cursor: 'pointer',
                     transition: 'all 0.3s ease',
                     fontFamily: "'Georgia', serif",
-                    textTransform: 'none', // Add this to prevent all caps
+                    textTransform: 'none',
                   }}
                   onMouseEnter={(e) => {
                     e.currentTarget.style.background = 'rgba(255, 215, 0, 0.2)';
@@ -1775,7 +1787,7 @@ const SplitScreenLauncher = ({ onStartChat }) => {
                 </button>
               </div>
 
-              {/* ✅ ENHANCED: Desktop Content Area */}
+              {/* Desktop Content Area */}
               {selectedCategory.key === 'my_characters' ? (
                 // Desktop: My Characters Special Panel for Desktop
                 <div style={{
@@ -1842,7 +1854,7 @@ const SplitScreenLauncher = ({ onStartChat }) => {
                           color: '#FFD700',
                           fontSize: '1.8rem',
                           fontFamily: "'Playfair Display', serif",
-                          textTransform: 'none', // Add this to prevent all caps
+                          textTransform: 'none',
                           margin: '0 0 1rem 0',
                           letterSpacing: '1px',
                           textShadow: '0 0 15px rgba(255, 215, 0, 0.5)'
@@ -1933,7 +1945,7 @@ const SplitScreenLauncher = ({ onStartChat }) => {
                             cursor: 'pointer',
                             transition: 'all 0.3s ease',
                             fontFamily: "'Georgia', serif",
-                            textTransform: 'none', // Add this to prevent all caps
+                            textTransform: 'none',
                             boxShadow: '0 4px 15px rgba(255, 215, 0, 0.3)'
                           }}
                           onMouseEnter={(e) => {
@@ -1960,7 +1972,7 @@ const SplitScreenLauncher = ({ onStartChat }) => {
                             cursor: 'pointer',
                             transition: 'all 0.3s ease',
                             fontFamily: "'Georgia', serif",
-                            textTransform: 'none' // Add this to prevent all caps
+                            textTransform: 'none'
                           }}
                           onMouseEnter={(e) => {
                             e.currentTarget.style.background = 'rgba(255, 215, 0, 0.1)';
@@ -2014,7 +2026,7 @@ const SplitScreenLauncher = ({ onStartChat }) => {
                           fontSize: '1.5rem',
                           margin: '0 0 1rem 0',
                           fontFamily: "'Playfair Display', serif",
-                          textTransform: 'none' // Add this to prevent all caps
+                          textTransform: 'none'
                         }}>
                           Ready to Create?
                         </h3>
@@ -2046,7 +2058,7 @@ const SplitScreenLauncher = ({ onStartChat }) => {
                           cursor: 'pointer',
                           transition: 'all 0.3s ease',
                           fontFamily: "'Georgia', serif",
-                          textTransform: 'none', // Add this to prevent all caps
+                          textTransform: 'none',
                           boxShadow: '0 4px 15px rgba(255, 215, 0, 0.3)'
                         }}
                         onMouseEnter={(e) => {
@@ -2398,7 +2410,7 @@ const SplitScreenLauncher = ({ onStartChat }) => {
                   cursor: 'pointer',
                   transition: 'all 0.3s ease',
                   fontFamily: "'Georgia', serif",
-                  textTransform: 'none' // Add this to prevent all caps
+                  textTransform: 'none'
                 }}
                 onMouseEnter={(e) => {
                   e.currentTarget.style.background = 'linear-gradient(135deg, rgba(255, 215, 0, 0.3), rgba(255, 215, 0, 0.2))';
@@ -2425,7 +2437,7 @@ const SplitScreenLauncher = ({ onStartChat }) => {
                   cursor: 'pointer',
                   transition: 'all 0.3s ease',
                   fontFamily: "'Georgia', serif",
-                  textTransform: 'none' // Add this to prevent all caps
+                  textTransform: 'none'
                 }}
                 onMouseEnter={(e) => {
                   e.currentTarget.style.background = 'rgba(255, 255, 255, 0.2)';
@@ -2456,7 +2468,6 @@ const SplitScreenLauncher = ({ onStartChat }) => {
           to   { opacity: 1; transform: translateY(0); }
         }
         
-        /* ✅ ADDED: Spinner animation */
         @keyframes spin {
           0% { transform: rotate(0deg); }
           100% { transform: rotate(360deg); }
@@ -2484,8 +2495,8 @@ const SplitScreenLauncher = ({ onStartChat }) => {
         }
         
         .scroll-area {
-          background-color: #0a0a0a; /* Match your dark theme background */
-          color: inherit;           /* Keep text in theme color */
+          background-color: #0a0a0a;
+          color: inherit;
           overflow-y: auto;
           scrollbar-width: thin;
           scrollbar-color: #444 #0a0a0a;
@@ -2497,11 +2508,11 @@ const SplitScreenLauncher = ({ onStartChat }) => {
         }
 
         .scroll-area::-webkit-scrollbar-track {
-          background: #0a0a0a; /* Dark track */
+          background: #0a0a0a;
         }
 
         .scroll-area::-webkit-scrollbar-thumb {
-          background-color: #444; /* Dark thumb */
+          background-color: #444;
           border-radius: 4px;
           border: 2px solid #0a0a0a;
         }
@@ -2519,12 +2530,10 @@ const SplitScreenLauncher = ({ onStartChat }) => {
         }
         
         .categories-grid-container {
-          /* Firefox */
           scrollbar-width: thin;
           scrollbar-color: rgba(255, 215, 0, 0.6) rgba(11, 20, 38, 0.8);
         }
 
-        /* WebKit browsers (Chrome, Safari, Edge) */
         .categories-grid-container::-webkit-scrollbar {
           width: 8px;
         }
@@ -2566,12 +2575,10 @@ const SplitScreenLauncher = ({ onStartChat }) => {
           );
         }
 
-        /* Scrollbar corner */
         .categories-grid-container::-webkit-scrollbar-corner {
           background: rgba(11, 20, 38, 0.8);
         }
 
-        /* ✅ OPTIONAL: Add scroll indicators */
         .categories-grid-container::before {
           content: '';
           position: absolute;
@@ -2592,12 +2599,10 @@ const SplitScreenLauncher = ({ onStartChat }) => {
           z-index: 10;
         }
 
-        /* ✅ SMOOTH SCROLLING */
         .categories-grid-container {
           scroll-behavior: smooth;
         }
 
-        /* ✅ MOBILE SCROLLBAR (smaller) */
         @media (max-width: 768px) {
           .categories-grid-container::-webkit-scrollbar {
             width: 4px;
@@ -2619,7 +2624,7 @@ const SplitScreenLauncher = ({ onStartChat }) => {
           height: '100%',
           zIndex: 3000,
           background: 'rgba(0, 0, 0, 0.95)',
-          overflowY: 'auto' // Add this for mobile scrolling
+          overflowY: 'auto'
         }}>
           <TemplateGallery
             userPremiumStatus={premiumStatus}
@@ -2666,7 +2671,7 @@ const PersonalizedSection = ({ characters, onCharacterSelect, hasActiveConversat
   const handleEnter = (e) => {
     e.currentTarget.style.background = 'rgba(255, 215, 0, 0.10)';
     e.currentTarget.style.borderColor = 'rgba(255, 215, 0, 0.55)';
-    e.currentTarget.style.boxShadow = '0 0 18px 4px rgba(255, 215, 0, 0.35)'; // golden glow
+    e.currentTarget.style.boxShadow = '0 0 18px 4px rgba(255, 215, 0, 0.35)';
     e.currentTarget.style.transform = 'translateY(-3px)';
   };
   const handleLeave = (e) => {
@@ -2699,7 +2704,7 @@ const PersonalizedSection = ({ characters, onCharacterSelect, hasActiveConversat
           textShadow: '0 2px 4px rgba(0, 0, 0, 0.6)',
           margin: 0,
           fontFamily: "'Georgia', serif",
-          textTransform: 'none' // Add this to prevent all caps
+          textTransform: 'none'
         }}>
           For You
         </h3>
@@ -2739,7 +2744,7 @@ const PersonalizedSection = ({ characters, onCharacterSelect, hasActiveConversat
                   src={character.thumbnailUrl}
                   alt={character.name}
                   style={{
-                    width: '50px', // mobile avatar 50px
+                    width: '50px',
                     height: '50px',
                     borderRadius: '50%',
                     border: '2px solid rgba(255, 215, 0, 0.3)',
@@ -2753,7 +2758,7 @@ const PersonalizedSection = ({ characters, onCharacterSelect, hasActiveConversat
                   <div style={{
                     position: 'absolute',
                     top: '-2px',
-                    right: 'calc(50% - 25px - 2px)', // align to avatar edge
+                    right: 'calc(50% - 25px - 2px)',
                     width: '12px',
                     height: '12px',
                     background: '#00FF88',
@@ -2798,7 +2803,7 @@ const PersonalizedSection = ({ characters, onCharacterSelect, hasActiveConversat
                   src={character.thumbnailUrl}
                   alt={character.name}
                   style={{
-                    width: '45px', // desktop avatar 45px
+                    width: '45px',
                     height: '45px',
                     borderRadius: '50%',
                     border: '2px solid rgba(255, 215, 0, 0.3)',
