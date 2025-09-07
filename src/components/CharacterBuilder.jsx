@@ -8,13 +8,6 @@ const CharacterBuilder = ({ userPremiumStatus = null }) => {
   const [isCreating, setIsCreating] = useState(false);
   const [creationSuccess, setCreationSuccess] = useState(false);
   const [creationError, setCreationError] = useState(null);
-  
-  useEffect(() => {
-    const checkMobile = () => setIsMobile(window.innerWidth <= 768);
-    checkMobile();
-    window.addEventListener('resize', checkMobile);
-    return () => window.removeEventListener('resize', checkMobile);
-  }, []);
   const [formData, setFormData] = useState({
     display_name: '',
     short_description: '',
@@ -24,6 +17,29 @@ const CharacterBuilder = ({ userPremiumStatus = null }) => {
     constraints: selectedTemplate?.template_data?.suggested_constraints || '',
     keyword_triggers: selectedTemplate?.template_data?.sample_triggers || []
   });
+  const [errors, setErrors] = useState({});
+  const [currentStep, setCurrentStep] = useState(1);
+  
+  useEffect(() => {
+    const checkMobile = () => setIsMobile(window.innerWidth <= 768);
+    checkMobile();
+    window.addEventListener('resize', checkMobile);
+    return () => window.removeEventListener('resize', checkMobile);
+  }, []);
+
+   useEffect(() => {
+    if (selectedTemplate?.template_data) {
+      setFormData({
+        display_name: '',
+        short_description: '',
+        system_instruction: selectedTemplate.template_data.system_instruction_template || '',
+        behavior_goals: selectedTemplate.template_data.suggested_behavior_goals || [],
+        style_tone: selectedTemplate.template_data.suggested_style_tone || [],
+        constraints: selectedTemplate.template_data.suggested_constraints || '',
+        keyword_triggers: selectedTemplate.template_data.sample_triggers || []
+      });
+    }
+  }, [selectedTemplate]);
 
   // Mock template data enhancement
   const templateDefaults = {
