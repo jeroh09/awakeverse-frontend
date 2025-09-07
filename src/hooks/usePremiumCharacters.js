@@ -1,4 +1,5 @@
-// src/hooks/usePremiumCharacters.js - Phase 2: Real API integration
+// Update to usePremiumCharacters.js - Add trial-specific state handling
+
 import { useState, useEffect, useCallback } from 'react';
 import { useAuth } from '../contexts/AuthContext';
 import { useUser } from '../contexts/UserContext';
@@ -16,18 +17,27 @@ export default function usePremiumCharacters() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
 
+  // NEW: Trial-specific states
+  const [trialJustStarted, setTrialJustStarted] = useState(false);
+  const [lastKnownPremiumStatus, setLastKnownPremiumStatus] = useState(null);
+
   // Computed properties
   const isPremium = premiumStatus?.is_premium || false;
   const canCreateCharacter = premiumStatus?.can_create_character || false;
   const characterCount = premiumStatus?.custom_character_count || 0;
   const approvedCharacters = userCharacters.filter(char => char.status === 'approved');
 
-  // Real API function: Get premium status
+  // NEW: Trial-specific computed properties
+  const isOnTrial = premiumStatus?.subscription_status === 'trial';
+  const trialEndsAt = premiumStatus?.trial_ends_at;
+  const daysRemaining = trialEndsAt ? Math.ceil((new Date(trialEndsAt) - new Date()) / (1000 * 60 * 60 * 24)) : null;
+
+  // Real API function: Get premium status (enhanced for trial detection)
   const fetchPremiumStatus = useCallback(async () => {
     if (!user?.id || !token) return null;
     
     try {
-      console.log('🔄 Fetching premium status for user:', user.id);
+      console.log('📊 Fetching premium status for user:', user.id);
       
       const response = await fetch(`${API_BASE}/api/premium/status/${user.id}`, {
         method: 'GET',
@@ -39,7 +49,6 @@ export default function usePremiumCharacters() {
 
       if (!response.ok) {
         if (response.status === 404) {
-          // User not found - return default free status
           return {
             is_premium: false,
             is_trial: false,
@@ -53,14 +62,27 @@ export default function usePremiumCharacters() {
       }
 
       const data = await response.json();
-      console.log('✅ Premium status response:', data);
+      const newStatus = data.premium_status || data;
       
-      return data.premium_status || data; // Handle different response structures
+      // NEW: Detect trial start
+      if (lastKnownPremiumStatus && !lastKnownPremiumStatus.is_premium && newStatus.is_premium && newStatus.subscription_status === 'trial') {
+        console.log('🎉 Trial just started for user!');
+        setTrialJustStarted(true);
+        
+        // Clear the notification after 5 seconds
+        setTimeout(() => {
+          setTrialJustStarted(false);
+        }, 5000);
+      }
+      
+      setLastKnownPremiumStatus(newStatus);
+      console.log('✅ Premium status response:', newStatus);
+      
+      return newStatus;
       
     } catch (error) {
       console.error('❌ Premium status fetch failed:', error);
       
-      // Fallback to free user status on error
       return {
         is_premium: false,
         is_trial: false,
@@ -71,14 +93,14 @@ export default function usePremiumCharacters() {
         error: error.message
       };
     }
-  }, [user?.id, token]);
+  }, [user?.id, token, lastKnownPremiumStatus]);
 
-  // Real API function: Get user's characters
+  // Real API function: Get user's characters (enhanced for trial users)
   const fetchUserCharacters = useCallback(async () => {
     if (!user?.id || !token || !isPremium) return [];
     
     try {
-      console.log('🔄 Fetching user characters for user:', user.id);
+      console.log('📊 Fetching user characters for user:', user.id);
       
       const response = await fetch(`${API_BASE}/api/premium/characters`, {
         method: 'GET',
@@ -90,7 +112,7 @@ export default function usePremiumCharacters() {
 
       if (!response.ok) {
         if (response.status === 404) {
-          return []; // No characters found
+          return [];
         }
         throw new Error(`Characters API failed: ${response.status} ${response.statusText}`);
       }
@@ -111,7 +133,7 @@ export default function usePremiumCharacters() {
     if (!token) return [];
     
     try {
-      console.log('🔄 Fetching character templates');
+      console.log('📊 Fetching character templates');
       
       const response = await fetch(`${API_BASE}/api/premium/templates`, {
         method: 'GET',
@@ -127,50 +149,32 @@ export default function usePremiumCharacters() {
 
       const data = await response.json();
       console.log('✅ Templates response:', data);
-      console.log('🔍 Response structure check:', {
-        hasTemplateGroups: !!data.template_groups,
-        templateGroupsType: typeof data.template_groups,
-        templateGroupsKeys: data.template_groups ? Object.keys(data.template_groups) : 'none',
-        hasTemplatesArray: !!data.templates,
-        dataKeys: Object.keys(data)
-      });
       
-      // Handle grouped template response from backend
       if (data.template_groups && typeof data.template_groups === 'object') {
         const flatTemplates = Object.values(data.template_groups).flat();
-        console.log('🎯 Flattened templates count:', flatTemplates.length);
-        console.log('🎯 First template sample:', flatTemplates[0]);
         if (flatTemplates.length > 0) {
           return flatTemplates;
         }
       }
       
-      // Fallback to direct templates array
       if (Array.isArray(data.templates)) {
-        console.log('📋 Using direct templates array, count:', data.templates.length);
         return data.templates;
       }
       
-      // Last resort - if data itself is an array
       if (Array.isArray(data)) {
-        console.log('📋 Using data as array, count:', data.length);
         return data;
       }
       
-      // If we reach here, log the issue and return empty array
       console.warn('⚠️ No valid template data found in response structure');
-      console.warn('⚠️ Received data:', JSON.stringify(data, null, 2));
       return [];
       
     } catch (error) {
       console.error('❌ Templates fetch failed:', error);
-      // Return empty array instead of mock templates to see the real issue
-      console.warn('⚠️ Returning empty array due to fetch failure');
       return [];
     }
   }, [token]);
 
-  // Main data loading effect
+  // Enhanced data loading effect with trial detection
   useEffect(() => {
     let isMounted = true;
 
@@ -184,7 +188,6 @@ export default function usePremiumCharacters() {
         setLoading(true);
         setError(null);
 
-        // Load premium status first
         console.log('🚀 Starting premium data load sequence');
         const status = await fetchPremiumStatus();
         if (!isMounted) return;
@@ -192,10 +195,8 @@ export default function usePremiumCharacters() {
         setPremiumStatus(status);
         console.log('📊 Premium status loaded:', status?.subscription_status);
 
-        // Load templates in parallel (always available)
         const templatesPromise = fetchCharacterTemplates();
         
-        // Load characters only if premium
         const promises = [templatesPromise];
         if (status?.is_premium) {
           console.log('💎 User has premium - loading characters');
@@ -211,8 +212,10 @@ export default function usePremiumCharacters() {
         
         console.log('🎉 Premium data load complete', {
           premium: status?.is_premium,
+          trial: status?.subscription_status === 'trial',
           templatesCount: templates?.length || 0,
-          charactersCount: characters?.length || 0
+          charactersCount: characters?.length || 0,
+          trialEndsAt: status?.trial_ends_at
         });
 
       } catch (err) {
@@ -233,7 +236,7 @@ export default function usePremiumCharacters() {
     };
   }, [token, user?.id, fetchPremiumStatus, fetchUserCharacters, fetchCharacterTemplates]);
 
-  // Real API function: Grant trial
+  // Real API function: Grant trial (kept for manual testing)
   const grantTrial = useCallback(async () => {
     if (!user?.id || !token) {
       throw new Error('User not authenticated');
@@ -321,7 +324,6 @@ export default function usePremiumCharacters() {
   }, [user?.id, token, canCreateCharacter, fetchUserCharacters, fetchPremiumStatus]);
 
   const refresh = useCallback(() => {
-    // Force refresh of all data
     if (user?.id && token) {
       const loadData = async () => {
         setLoading(true);
@@ -355,6 +357,12 @@ export default function usePremiumCharacters() {
     isPremium,
     canCreateCharacter,
     characterCount,
+    
+    // NEW: Trial-specific properties
+    isOnTrial,
+    trialEndsAt,
+    daysRemaining,
+    trialJustStarted,
     
     // Data
     userCharacters,
