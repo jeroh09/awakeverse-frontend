@@ -1,5 +1,5 @@
 // src/hooks/usePremiumCharacterFlow.js - Robust implementation with proper error handling
-import { useState, useCallback, useContext, createContext, useRef, useEffect } from 'react';
+import React, { useState, useCallback, useContext, createContext, useRef, useEffect } from 'react';
 import { useAuth } from '../contexts/AuthContext';
 import { useUser } from '../contexts/UserContext';
 import usePremiumCharacters from './usePremiumCharacters';
