@@ -1,6 +1,7 @@
 // src/components/CharacterBuilder.jsx - Template-driven character creation form
 import React, { useState, useEffect } from 'react';
 import { usePremiumCharacterFlow } from '../hooks/usePremiumCharacterFlow';
+import { useAuth } from '../contexts/AuthContext'; // Add this import
 
 const CharacterBuilder = ({ userPremiumStatus = null }) => {
   const { selectedTemplate, createCharacter, backToTemplates } = usePremiumCharacterFlow();
@@ -22,6 +23,8 @@ const CharacterBuilder = ({ userPremiumStatus = null }) => {
   });
   const [errors, setErrors] = useState({});
   const [currentStep, setCurrentStep] = useState(1);
+  // Then in your component:
+  const { token } = useAuth(); // Add this line with your other hook calls
 
   // REPLACED (Step 7A #3): Enhanced Success Screen using createdCharacterName + countdown
   if (creationSuccess) {
@@ -264,25 +267,40 @@ Engage users with the depth and authenticity that comes from your unique histori
         expertise_domain: selectedTemplate.expertise_domain
       };
 
-      if (createCharacter) {
-        await createCharacter(characterData);
+      // Direct API call instead of using createCharacter hook
+      const API_BASE = process.env.REACT_APP_API_URL || 'http://localhost:5000';
+      const response = await fetch(`${API_BASE}/api/premium/characters`, {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${token}`, // You'll need to import useAuth
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify(characterData)
+      });
 
-        // IMMEDIATELY set success state before any redirects can happen
-        setCreatedCharacterName(formData.display_name);
-        setCreationSuccess(true);
-
-        // Start countdown timer for manual redirect (overriding any auto-redirect)
-        const timer = setInterval(() => {
-          setRedirectTimer(prev => {
-            if (prev <= 1) {
-              clearInterval(timer);
-              backToTemplates(); // Manual redirect after our success screen
-              return 0;
-            }
-            return prev - 1;
-          });
-        }, 1000);
+      if (!response.ok) {
+        const errorData = await response.json().catch(() => ({}));
+        throw new Error(errorData.error || `Character creation failed: ${response.status}`);
       }
+
+      const data = await response.json();
+
+      // Success! Set our states
+      setCreatedCharacterName(formData.display_name);
+      setCreationSuccess(true);
+
+      // Start countdown timer
+      const timer = setInterval(() => {
+        setRedirectTimer(prev => {
+          if (prev <= 1) {
+            clearInterval(timer);
+            backToTemplates();
+            return 0;
+          }
+          return prev - 1;
+        });
+      }, 1000);
+
     } catch (error) {
       setCreationError(error.message || 'Failed to create character');
     } finally {
