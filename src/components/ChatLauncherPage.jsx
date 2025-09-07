@@ -157,8 +157,11 @@ const SplitScreenLauncher = ({ onStartChat }) => {
   const {
     showTemplateGallery,
     showCharacterBuilder,
+    showSuccessModal, 
     selectedTemplate,
-    startTemplateFlow
+    createdCharacterName,
+    startTemplateFlow,
+    backToTemplates   
   } = usePremiumCharacterFlow();
 
   const [inputValue, setInputValue] = useState('');
@@ -1302,6 +1305,64 @@ const SplitScreenLauncher = ({ onStartChat }) => {
             <CharacterBuilder
               userPremiumStatus={premiumStatus}
             />
+          </div>
+        )}
+
+         {/* ✅ NEW: Success Modal (Mobile) */}
+        {showSuccessModal && (
+          <div style={{
+            position: 'fixed',
+            top: 0, left: 0, width: '100%', height: '100%',
+            zIndex: 4000,
+            background: 'rgba(0,0,0,0.95)',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            padding: '2rem'
+          }}>
+            <div style={{
+              background: 'rgba(255,255,255,0.1)',
+              border: '2px solid rgba(255,215,0,0.4)',
+              borderRadius: 20,
+              padding: '2.5rem 2rem',
+              textAlign: 'center',
+              maxWidth: 520,
+              width: '100%',
+              backdropFilter: 'blur(10px)'
+            }}>
+              <div style={{ fontSize: 48, marginBottom: 12, color: '#FFD700', textShadow: '0 0 20px rgba(255,215,0,0.5)' }}>✨</div>
+              <h2 style={{ color: '#FFD700', margin: '0 0 10px 0', letterSpacing: 1 }}>
+                Character Submitted Successfully!
+              </h2>
+              <p style={{ color: 'rgba(255,255,255,0.9)', margin: '0 0 16px 0' }}>
+                <strong style={{ color: '#FFD700' }}>{createdCharacterName}</strong> has been submitted for approval.
+                You’ll receive an email when it’s ready to chat.
+              </p>
+              <div style={{
+                background: 'rgba(255,215,0,0.1)',
+                border: '1px solid rgba(255,215,0,0.3)',
+                borderRadius: 10,
+                padding: '10px 12px',
+                marginBottom: 18
+              }}>
+                <span style={{ color: 'rgba(255,215,0,0.9)', fontSize: 14 }}>🎉 Your 3-day trial starts on approval</span>
+              </div>
+              <button
+                onClick={backToTemplates}
+                style={{
+                  background: 'linear-gradient(135deg,#FFD700,#FFA500)',
+                  border: 'none',
+                  borderRadius: 10,
+                  color: '#000',
+                  fontWeight: 600,
+                  padding: '12px 22px',
+                  cursor: 'pointer',
+                  boxShadow: '0 4px 15px rgba(255,215,0,0.3)'
+                }}
+              >
+                Return to Characters
+              </button>
+            </div>
           </div>
         )}
       </div>
@@ -2641,6 +2702,63 @@ const SplitScreenLauncher = ({ onStartChat }) => {
           <CharacterBuilder
             userPremiumStatus={premiumStatus}
           />
+        </div>
+      )}
+      {/* ✅ NEW: Success Modal (Desktop) */}
+      {showSuccessModal && (
+        <div style={{
+          position: 'fixed',
+          top: 0, left: 0, width: '100%', height: '100%',
+          zIndex: 4000,
+          background: 'rgba(0,0,0,0.95)',
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+          padding: '2rem'
+        }}>
+          <div style={{
+            background: 'rgba(255,255,255,0.1)',
+            border: '2px solid rgba(255,215,0,0.4)',
+            borderRadius: 20,
+            padding: '3rem 2.5rem',
+            textAlign: 'center',
+            maxWidth: 560,
+            width: '100%',
+            backdropFilter: 'blur(10px)'
+          }}>
+            <div style={{ fontSize: 56, marginBottom: 14, color: '#FFD700', textShadow: '0 0 20px rgba(255,215,0,0.5)' }}>✨</div>
+            <h2 style={{ color: '#FFD700', margin: '0 0 12px 0', letterSpacing: 1 }}>
+              Character Submitted Successfully!
+            </h2>
+            <p style={{ color: 'rgba(255,255,255,0.9)', margin: '0 0 18px 0', fontSize: 18 }}>
+              <strong style={{ color: '#FFD700' }}>{createdCharacterName}</strong> has been submitted for approval.
+              You’ll receive an email when it’s ready to chat.
+            </p>
+            <div style={{
+              background: 'rgba(255,215,0,0.1)',
+              border: '1px solid rgba(255,215,0,0.3)',
+              borderRadius: 10,
+              padding: '12px 14px',
+              marginBottom: 22
+            }}>
+              <span style={{ color: 'rgba(255,215,0,0.9)', fontSize: 14 }}>🎉 Your 3-day trial starts on approval</span>
+            </div>
+            <button
+              onClick={backToTemplates}
+              style={{
+                background: 'linear-gradient(135deg,#FFD700,#FFA500)',
+                border: 'none',
+                borderRadius: 10,
+                color: '#000',
+                fontWeight: 700,
+                padding: '12px 26px',
+                cursor: 'pointer',
+                boxShadow: '0 6px 18px rgba(255,215,0,0.3)'
+              }}
+            >
+              Return to Characters
+            </button>
+          </div>
         </div>
       )}
     </div>
