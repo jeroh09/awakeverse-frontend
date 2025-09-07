@@ -5,6 +5,9 @@ import { usePremiumCharacterFlow } from '../hooks/usePremiumCharacterFlow';
 const CharacterBuilder = ({ userPremiumStatus = null }) => {
   const { selectedTemplate, createCharacter, backToTemplates } = usePremiumCharacterFlow();
   const [isMobile, setIsMobile] = useState(false);
+  const [isCreating, setIsCreating] = useState(false);
+  const [creationSuccess, setCreationSuccess] = useState(false);
+  const [creationError, setCreationError] = useState(null);
   
   useEffect(() => {
     const checkMobile = () => setIsMobile(window.innerWidth <= 768);
@@ -21,10 +24,6 @@ const CharacterBuilder = ({ userPremiumStatus = null }) => {
     constraints: selectedTemplate?.template_data?.suggested_constraints || '',
     keyword_triggers: selectedTemplate?.template_data?.sample_triggers || []
   });
-
-  const [errors, setErrors] = useState({});
-  const [isCreating, setIsCreating] = useState(false);
-  const [currentStep, setCurrentStep] = useState(1);
 
   // Mock template data enhancement
   const templateDefaults = {
@@ -118,11 +117,9 @@ Engage users with the depth and authenticity that comes from your unique histori
     if (!validateStep(3)) return;
     
     setIsCreating(true);
+    setCreationError(null);
     
     try {
-      // Mock creation delay
-      await new Promise(resolve => setTimeout(resolve, 2000));
-      
       const characterData = {
         ...formData,
         template_id: selectedTemplate.id,
@@ -130,16 +127,118 @@ Engage users with the depth and authenticity that comes from your unique histori
         personality_archetype: selectedTemplate.personality_archetype,
         expertise_domain: selectedTemplate.expertise_domain
       };
-      
+    
       if (createCharacter) {
-        createCharacter(characterData);
+        await createCharacter(characterData);
+        setCreationSuccess(true);
+      
+      // Auto redirect after 3 seconds
+        setTimeout(() => {
+          backToTemplates();
+        }, 3000);
       }
     } catch (error) {
       console.error('Character creation failed:', error);
+      setCreationError(error.message || 'Failed to create character');
     } finally {
       setIsCreating(false);
     }
   };
+
+  // If creation successful, show success screen
+  if (creationSuccess) {
+    return (
+      <div style={{
+        width: '100%',
+        height: '100vh',
+        background: 'linear-gradient(135deg, #0B1426 0%, #1A2B47 25%, #2C1810 50%, #0F1A2E 75%, #0B1426 100%)',
+        fontFamily: "'Playfair Display', serif",
+        display: 'flex',
+        flexDirection: 'column',
+        alignItems: 'center',
+        justifyContent: 'center',
+        padding: '2rem'
+      }}>
+        <div style={{
+          background: 'rgba(255, 255, 255, 0.1)',
+          border: '2px solid rgba(255, 215, 0, 0.4)',
+          borderRadius: '20px',
+          padding: '3rem',
+          textAlign: 'center',
+          maxWidth: '500px',
+          backdropFilter: 'blur(10px)'
+        }}>
+          <div style={{
+            fontSize: '4rem',
+            marginBottom: '1rem',
+            color: '#FFD700'
+          }}>
+            ✨
+          </div>
+          
+          <h2 style={{
+            color: '#FFD700',
+            fontSize: '1.8rem',
+            margin: '0 0 1rem 0',
+            textShadow: '0 0 20px rgba(255, 215, 0, 0.5)'
+          }}>
+            Character Submitted!
+          </h2>
+          
+          <p style={{
+            color: 'rgba(255, 255, 255, 0.9)',
+            fontSize: '1.1rem',
+            lineHeight: 1.6,
+            margin: '0 0 1.5rem 0'
+          }}>
+            <strong>{formData.display_name}</strong> has been submitted for approval. 
+            You'll receive an email notification when your character is ready.
+          </p>
+          
+          <div style={{
+            background: 'rgba(255, 215, 0, 0.1)',
+            border: '1px solid rgba(255, 215, 0, 0.3)',
+            borderRadius: '10px',
+            padding: '1rem',
+            margin: '0 0 2rem 0'
+          }}>
+            <p style={{
+              color: 'rgba(255, 215, 0, 0.9)',
+              fontSize: '0.9rem',
+              margin: 0
+            }}>
+              💡 Your 3-day trial will start automatically when your character is approved
+            </p>
+          </div>
+          
+          <button
+            onClick={backToTemplates}
+            style={{
+              background: 'linear-gradient(135deg, #FFD700, #FFA500)',
+              border: 'none',
+              borderRadius: '10px',
+              color: '#000',
+              fontSize: '1rem',
+              fontWeight: 600,
+              padding: '0.8rem 2rem',
+              cursor: 'pointer',
+              transition: 'all 0.3s ease'
+            }}
+          >
+            Return to Characters
+          </button>
+          
+          <p style={{
+            color: 'rgba(255, 255, 255, 0.6)',
+            fontSize: '0.8rem',
+            margin: '1rem 0 0 0'
+          }}>
+            Redirecting automatically in 3 seconds...
+          </p>
+        </div>
+      </div>
+    );
+  }
 
   const steps = [
     { number: 1, title: 'Basic Details', description: 'Name and description' },
@@ -152,7 +251,7 @@ Engage users with the depth and authenticity that comes from your unique histori
       width: '100%',
       height: '100vh',
       background: 'linear-gradient(135deg, #0B1426 0%, #1A2B47 25%, #2C1810 50%, #0F1A2E 75%, #0B1426 100%)',
-      fontFamily: "'Playfair Display', serif",
+      fontFamily: "'Cinzel', serif",
       overflow: 'hidden',
       display: 'flex',
       flexDirection: 'column'
@@ -169,7 +268,7 @@ Engage users with the depth and authenticity that comes from your unique histori
       }}>
         <div>
           <h1 style={{
-            fontFamily: "'Playfair Display', serif",
+            fontFamily: "'Cinzel Decorative', serif",
             fontSize: isMobile ? '1.5rem' : '2rem',
             color: '#FFD700',
             margin: '0 0 0.5rem 0',
@@ -198,7 +297,7 @@ Engage users with the depth and authenticity that comes from your unique histori
             padding: isMobile ? '0.5rem 1rem' : '0.75rem 1.5rem',
             cursor: 'pointer',
             transition: 'all 0.3s ease',
-            fontFamily: "'Playfair Display', serif",
+            fontFamily: "'Cinzel', serif",
             alignSelf: isMobile ? 'flex-start' : 'auto'
           }}
         >
@@ -366,7 +465,7 @@ Engage users with the depth and authenticity that comes from your unique histori
                     background: 'rgba(255, 255, 255, 0.1)',
                     color: '#fff',
                     outline: 'none',
-                    fontFamily: "'Playfair Display', serif",
+                    fontFamily: "'Cinzel', serif",
                     transition: 'border-color 0.3s ease'
                   }}
                   onFocus={(e) => e.target.style.borderColor = 'rgba(255, 215, 0, 0.6)'}
@@ -405,7 +504,7 @@ Engage users with the depth and authenticity that comes from your unique histori
                     background: 'rgba(255, 255, 255, 0.1)',
                     color: '#fff',
                     outline: 'none',
-                    fontFamily: "'Playfair Display', serif",
+                    fontFamily: "'Cinzel', serif",
                     resize: 'vertical',
                     transition: 'border-color 0.3s ease'
                   }}
@@ -472,7 +571,7 @@ Engage users with the depth and authenticity that comes from your unique histori
                     background: 'rgba(255, 255, 255, 0.1)',
                     color: '#fff',
                     outline: 'none',
-                    fontFamily: "'Playfair Display', serif",
+                    fontFamily: "'Cinzel', serif",
                     resize: 'vertical',
                     transition: 'border-color 0.3s ease',
                     lineHeight: 1.5
@@ -518,7 +617,7 @@ Engage users with the depth and authenticity that comes from your unique histori
                     background: 'rgba(255, 255, 255, 0.1)',
                     color: '#fff',
                     outline: 'none',
-                    fontFamily: "'Playfair Display', serif",
+                    fontFamily: "'Cinzel', serif",
                     resize: 'vertical',
                     transition: 'border-color 0.3s ease'
                   }}
@@ -684,6 +783,21 @@ Engage users with the depth and authenticity that comes from your unique histori
         </div>
       </div>
 
+      {/* Error display */}
+      {creationError && (
+        <div style={{
+          background: 'rgba(255, 107, 107, 0.1)',
+          border: '1px solid rgba(255, 107, 107, 0.3)',
+          borderRadius: '8px',
+          padding: '1rem',
+          margin: '1rem 0',
+          color: '#ff6b6b',
+          fontSize: '0.9rem'
+        }}>
+          {creationError}
+        </div>
+      )}
+
       {/* Bottom Navigation */}
       <div style={{
         padding: '1.5rem 2rem',
@@ -706,7 +820,7 @@ Engage users with the depth and authenticity that comes from your unique histori
             padding: '0.75rem 1.5rem',
             cursor: currentStep === 1 ? 'not-allowed' : 'pointer',
             transition: 'all 0.3s ease',
-            fontFamily: "'Playfair Display', serif"
+            fontFamily: "'Cinzel', serif"
           }}
         >
           Previous
@@ -745,7 +859,7 @@ Engage users with the depth and authenticity that comes from your unique histori
               padding: '0.75rem 1.5rem',
               cursor: 'pointer',
               transition: 'all 0.3s ease',
-              fontFamily: "'Playfair Display', serif"
+              fontFamily: "'Cinzel', serif"
             }}
             onMouseEnter={(e) => {
               e.currentTarget.style.transform = 'translateY(-1px)';
@@ -772,7 +886,6 @@ Engage users with the depth and authenticity that comes from your unique histori
               padding: '0.75rem 2rem',
               cursor: isCreating ? 'not-allowed' : 'pointer',
               transition: 'all 0.3s ease',
-              fontFamily: "'Playfair Display', serif",
               display: 'flex',
               alignItems: 'center',
               gap: '0.5rem'
@@ -791,7 +904,7 @@ Engage users with the depth and authenticity that comes from your unique histori
                 Creating...
               </>
             ) : (
-              'Create Character'
+              'Submit for Approval'
             )}
           </button>
         )}
