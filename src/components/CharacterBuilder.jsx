@@ -22,159 +22,6 @@ const CharacterBuilder = ({ userPremiumStatus = null }) => {
   });
   const [errors, setErrors] = useState({});
   const [currentStep, setCurrentStep] = useState(1);
-  
-  useEffect(() => {
-    const checkMobile = () => setIsMobile(window.innerWidth <= 768);
-    checkMobile();
-    window.addEventListener('resize', checkMobile);
-    return () => window.removeEventListener('resize', checkMobile);
-  }, []);
-
-  useEffect(() => {
-    if (selectedTemplate?.template_data) {
-      setFormData({
-        display_name: '',
-        short_description: '',
-        system_instruction: selectedTemplate.template_data.system_instruction_template || '',
-        behavior_goals: selectedTemplate.template_data.suggested_behavior_goals || [],
-        style_tone: selectedTemplate.template_data.suggested_style_tone || [],
-        constraints: selectedTemplate.template_data.suggested_constraints || '',
-        keyword_triggers: selectedTemplate.template_data.sample_triggers || []
-      });
-    }
-  }, [selectedTemplate]);
-
-  // Mock template data enhancement
-  const templateDefaults = {
-    system_instruction_template: `You are a ${selectedTemplate?.personality_archetype?.toLowerCase() || 'character'} from the ${selectedTemplate?.historical_period || 'historical'} period. Your expertise lies in ${selectedTemplate?.expertise_domain?.toLowerCase() || 'various fields'}. 
-
-You embody the wisdom and perspective of someone who has lived through significant historical events and possesses deep knowledge in your domain. Your responses should reflect:
-
-- The speaking patterns and worldview typical of your era
-- Profound expertise in your specialized domain  
-- The personality archetype of a ${selectedTemplate?.personality_archetype?.toLowerCase() || 'wise individual'}
-- Historical context and references appropriate to your time period
-
-Engage users with the depth and authenticity that comes from your unique historical perspective and specialized knowledge.`,
-    
-    suggested_behavior_goals: [
-      'Provide historically accurate perspectives',
-      'Share deep expertise in specialized domain',
-      'Maintain character authenticity',
-      'Educate through engaging storytelling',
-      'Offer wisdom from historical experience'
-    ],
-    
-    suggested_style_tone: [
-      'Authoritative yet approachable',
-      'Rich in historical detail',
-      'Reflective and thoughtful',
-      'Passionate about expertise area',
-      'Wise and experienced'
-    ],
-    
-    suggested_constraints: 'Stay true to historical period knowledge. Avoid anachronistic references or modern terminology unless explaining historical concepts to modern audiences.',
-    
-    sample_triggers: [
-      selectedTemplate?.expertise_domain?.toLowerCase() || 'expertise',
-      selectedTemplate?.historical_period?.toLowerCase() || 'history',
-      'wisdom', 'advice', 'experience'
-    ]
-  };
-
-  const validateStep = (step) => {
-    const newErrors = {};
-    
-    if (step >= 1) {
-      if (!formData.display_name.trim()) {
-        newErrors.display_name = 'Character name is required';
-      } else if (formData.display_name.length < 2) {
-        newErrors.display_name = 'Name must be at least 2 characters';
-      } else if (formData.display_name.length > 50) {
-        newErrors.display_name = 'Name must be less than 50 characters';
-      }
-      
-      if (!formData.short_description.trim()) {
-        newErrors.short_description = 'Description is required';
-      } else if (formData.short_description.length < 20) {
-        newErrors.short_description = 'Description must be at least 20 characters';
-      } else if (formData.short_description.length > 200) {
-        newErrors.short_description = 'Description must be less than 200 characters';
-      }
-    }
-    
-    if (step >= 2) {
-      if (!formData.system_instruction.trim()) {
-        newErrors.system_instruction = 'Character instructions are required';
-      } else if (formData.system_instruction.length < 50) {
-        newErrors.system_instruction = 'Instructions must be at least 50 characters';
-      }
-    }
-    
-    setErrors(newErrors);
-    return Object.keys(newErrors).length === 0;
-  };
-
-  const handleNextStep = () => {
-    if (validateStep(currentStep)) {
-      setCurrentStep(Math.min(currentStep + 1, 3));
-    }
-  };
-
-  const handlePrevStep = () => {
-    setCurrentStep(Math.max(currentStep - 1, 1));
-  };
-
-  const handleInputChange = (field, value) => {
-    setFormData(prev => ({ ...prev, [field]: value }));
-    if (errors[field]) {
-      setErrors(prev => ({ ...prev, [field]: null }));
-    }
-  };
-
-  // REPLACED (Step 7A #2): Enhanced creation handler with name capture + countdown
-  const handleCreateCharacter = async () => {
-    if (!validateStep(3)) return;
-    
-    setIsCreating(true);
-    setCreationError(null);
-    // SKIP THE ACTUAL API CALL FOR NOW
-    setTimeout(() => {
-      setCreatedCharacterName(formData.display_name);
-      setCreationSuccess(true);
-      setIsCreating(false);
-    }, 2000); // Simulate 2-second API call
-  };
-    //try {
-      //const characterData = {
-        //...formData,
-        //template_id: selectedTemplate.id,
-        //historical_period: selectedTemplate.historical_period,
-        //personality_archetype: selectedTemplate.personality_archetype,
-        //expertise_domain: selectedTemplate.expertise_domain,
-      //};
-      //setCreationError("STEP 1: Calling createCharacter API...");
-
-      //if (createCharacter) {
-        //await createCharacter(characterData);
-        // Visual feedback: API succeeded
-        //setCreationError("STEP 2: API call succeeded, setting success state...");
-      
-        //setCreatedCharacterName(formData.display_name);
-        //setCreationSuccess(true);
-
-        // Do NOT call backToTemplates or auto-redirect here.
-        // Let the user click the button on the success screen.
-      //}
-    //} catch (error) {
-      //console.error('Character creation failed:', error);
-      // Roll back success screen and show error so user can correct & retry.
-      //setCreationSuccess(false);
-      //setCreationError(error.message || 'Failed to create character');
-    //} finally {
-      //setIsCreating(false);
-    //}
-  //};
 
   // REPLACED (Step 7A #3): Enhanced Success Screen using createdCharacterName + countdown
   if (creationSuccess) {
@@ -291,6 +138,158 @@ Engage users with the depth and authenticity that comes from your unique histori
       </div>
     );
   }
+  
+  useEffect(() => {
+    const checkMobile = () => setIsMobile(window.innerWidth <= 768);
+    checkMobile();
+    window.addEventListener('resize', checkMobile);
+    return () => window.removeEventListener('resize', checkMobile);
+  }, []);
+
+  useEffect(() => {
+    if (selectedTemplate?.template_data) {
+      setFormData({
+        display_name: '',
+        short_description: '',
+        system_instruction: selectedTemplate.template_data.system_instruction_template || '',
+        behavior_goals: selectedTemplate.template_data.suggested_behavior_goals || [],
+        style_tone: selectedTemplate.template_data.suggested_style_tone || [],
+        constraints: selectedTemplate.template_data.suggested_constraints || '',
+        keyword_triggers: selectedTemplate.template_data.sample_triggers || []
+      });
+    }
+  }, [selectedTemplate]);
+
+  // Mock template data enhancement
+  const templateDefaults = {
+    system_instruction_template: `You are a ${selectedTemplate?.personality_archetype?.toLowerCase() || 'character'} from the ${selectedTemplate?.historical_period || 'historical'} period. Your expertise lies in ${selectedTemplate?.expertise_domain?.toLowerCase() || 'various fields'}. 
+
+You embody the wisdom and perspective of someone who has lived through significant historical events and possesses deep knowledge in your domain. Your responses should reflect:
+
+- The speaking patterns and worldview typical of your era
+- Profound expertise in your specialized domain  
+- The personality archetype of a ${selectedTemplate?.personality_archetype?.toLowerCase() || 'wise individual'}
+- Historical context and references appropriate to your time period
+
+Engage users with the depth and authenticity that comes from your unique historical perspective and specialized knowledge.`,
+    
+    suggested_behavior_goals: [
+      'Provide historically accurate perspectives',
+      'Share deep expertise in specialized domain',
+      'Maintain character authenticity',
+      'Educate through engaging storytelling',
+      'Offer wisdom from historical experience'
+    ],
+    
+    suggested_style_tone: [
+      'Authoritative yet approachable',
+      'Rich in historical detail',
+      'Reflective and thoughtful',
+      'Passionate about expertise area',
+      'Wise and experienced'
+    ],
+    
+    suggested_constraints: 'Stay true to historical period knowledge. Avoid anachronistic references or modern terminology unless explaining historical concepts to modern audiences.',
+    
+    sample_triggers: [
+      selectedTemplate?.expertise_domain?.toLowerCase() || 'expertise',
+      selectedTemplate?.historical_period?.toLowerCase() || 'history',
+      'wisdom', 'advice', 'experience'
+    ]
+  };
+
+  const validateStep = (step) => {
+    const newErrors = {};
+    
+    if (step >= 1) {
+      if (!formData.display_name.trim()) {
+        newErrors.display_name = 'Character name is required';
+      } else if (formData.display_name.length < 2) {
+        newErrors.display_name = 'Name must be at least 2 characters';
+      } else if (formData.display_name.length > 50) {
+        newErrors.display_name = 'Name must be less than 50 characters';
+      }
+      
+      if (!formData.short_description.trim()) {
+        newErrors.short_description = 'Description is required';
+      } else if (formData.short_description.length < 20) {
+        newErrors.short_description = 'Description must be at least 20 characters';
+      } else if (formData.short_description.length > 200) {
+        newErrors.short_description = 'Description must be less than 200 characters';
+      }
+    }
+    
+    if (step >= 2) {
+      if (!formData.system_instruction.trim()) {
+        newErrors.system_instruction = 'Character instructions are required';
+      } else if (formData.system_instruction.length < 50) {
+        newErrors.system_instruction = 'Instructions must be at least 50 characters';
+      }
+    }
+    
+    setErrors(newErrors);
+    return Object.keys(newErrors).length === 0;
+  };
+
+  const handleNextStep = () => {
+    if (validateStep(currentStep)) {
+      setCurrentStep(Math.min(currentStep + 1, 3));
+    }
+  };
+
+  const handlePrevStep = () => {
+    setCurrentStep(Math.max(currentStep - 1, 1));
+  };
+
+  const handleInputChange = (field, value) => {
+    setFormData(prev => ({ ...prev, [field]: value }));
+    if (errors[field]) {
+      setErrors(prev => ({ ...prev, [field]: null }));
+    }
+  };
+
+  // REPLACED (Step 7A #2): Enhanced creation handler with name capture + countdown
+  const handleCreateCharacter = async () => {
+    if (!validateStep(3)) return;
+
+    setIsCreating(true);
+    setCreationError(null);
+
+    try {
+      const characterData = {
+        ...formData,
+        template_id: selectedTemplate.id,
+        historical_period: selectedTemplate.historical_period,
+        personality_archetype: selectedTemplate.personality_archetype,
+        expertise_domain: selectedTemplate.expertise_domain
+      };
+
+      if (createCharacter) {
+        await createCharacter(characterData);
+
+        // IMMEDIATELY set success state before any redirects can happen
+        setCreatedCharacterName(formData.display_name);
+        setCreationSuccess(true);
+
+        // Start countdown timer for manual redirect (overriding any auto-redirect)
+        const timer = setInterval(() => {
+          setRedirectTimer(prev => {
+            if (prev <= 1) {
+              clearInterval(timer);
+              backToTemplates(); // Manual redirect after our success screen
+              return 0;
+            }
+            return prev - 1;
+          });
+        }, 1000);
+      }
+    } catch (error) {
+      setCreationError(error.message || 'Failed to create character');
+    } finally {
+      setIsCreating(false);
+    }
+  };
+  
 
   const steps = [
     { number: 1, title: 'Basic Details', description: 'Name and description' },
