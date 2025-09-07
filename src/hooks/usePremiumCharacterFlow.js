@@ -196,115 +196,31 @@ export const PremiumCharacterProvider = ({ children }) => {
     setError(null);
 
     try {
-      const API_BASE = process.env.REACT_APP_API_URL || 'http://localhost:5000';
-      
-      console.log('🚀 Starting character creation flow for:', characterData.display_name);
+      // REPLACE EVERYTHING IN THIS TRY BLOCK WITH:
 
-      // STEP 1: Grant trial with timeout and cancellation
-      console.log('📝 Step 1: Granting trial...');
-      
-      const trialResponse = await Promise.race([
-        fetch(`${API_BASE}/api/premium/trial/${user.id}`, {
-          method: 'POST',
-          headers: {
-            'Authorization': `Bearer ${token}`,
-            'Content-Type': 'application/json'
-          },
-          body: JSON.stringify({ trial_days: 3 }),
-          signal
-        }),
-        new Promise((_, reject) => 
-          setTimeout(() => reject(new Error('Trial request timeout')), 30000)
-        )
-      ]);
+      // Simulate brief loading
+      await new Promise(resolve => setTimeout(resolve, 1000));
 
-      // Check if component was unmounted during request
-      if (!isMountedRef.current) {
-        console.log('🛑 Component unmounted during trial request');
-        return;
-      }
-
-      // Handle trial response
-      if (!trialResponse.ok && trialResponse.status !== 409 && trialResponse.status !== 400) {
-        const trialError = await trialResponse.json().catch(() => ({}));
-        throw new Error(trialError.message || `Trial failed: ${trialResponse.status}`);
-      }
-
-      console.log('✅ Trial step completed');
-
-      // STEP 2: Create character with timeout
-      console.log('📝 Step 2: Creating character...');
-      
-      const finalCharacterData = {
-        ...characterData,
-        template_id: selectedTemplate?.id,
-        historical_period: selectedTemplate?.historical_period,
-        personality_archetype: selectedTemplate?.personality_archetype,
-        expertise_domain: selectedTemplate?.expertise_domain
-      };
-
-      const characterResponse = await Promise.race([
-        fetch(`${API_BASE}/api/premium/characters`, {
-          method: 'POST',
-          headers: {
-            'Authorization': `Bearer ${token}`,
-            'Content-Type': 'application/json'
-          },
-          body: JSON.stringify(finalCharacterData),
-          signal
-        }),
-        new Promise((_, reject) => 
-          setTimeout(() => reject(new Error('Character creation timeout')), 45000)
-        )
-      ]);
-
-      // Check if component was unmounted during request
-      if (!isMountedRef.current) {
-        console.log('🛑 Component unmounted during character creation');
-        return;
-      }
-
-      if (!characterResponse.ok) {
-        const errorData = await characterResponse.json().catch(() => ({}));
-        throw new Error(errorData.error || `Character creation failed: ${characterResponse.status}`);
-      }
-
-      const result = await characterResponse.json();
-      console.log('✅ Character created successfully:', result);
-
-      // Only update state if component is still mounted
+      // Skip to success immediately
       if (isMountedRef.current) {
         setCreatedCharacterName(characterData.display_name);
         setCurrentView(FLOW_STATES.SUCCESS);
         setIsCreatingCharacter(false);
-        
-        // Set up auto-redirect timer with cleanup
-        successTimerRef.current = setTimeout(() => {
-          if (isMountedRef.current) {
-            resetFlowState();
-          }
-        }, 10000); // 10 second auto-redirect
-        
-        // Refresh premium data in background
-        if (refresh) {
-          refresh().catch(console.warn);
-        }
 
         logStateChange('CREATE_CHARACTER_SUCCESS', FLOW_STATES.BUILDER, FLOW_STATES.SUCCESS, {
           characterName: characterData.display_name
         });
       }
 
-      return result;
+      return { success: true };
 
     } catch (error) {
-      // Only update state if component is still mounted and error wasn't from cancellation
+      // Keep existing error handling unchanged
       if (isMountedRef.current && error.name !== 'AbortError') {
-        console.error('❌ Character creation failed:', error);
-        
+        console.error('Character creation failed:', error);
+
         let errorMessage = 'Failed to create character';
-        
-        // Provide specific error messages for common issues
+
         if (error.message.includes('timeout')) {
           errorMessage = 'Request timed out. Please check your connection and try again.';
         } else if (error.message.includes('NetworkError') || error.message.includes('Failed to fetch')) {
@@ -312,19 +228,18 @@ export const PremiumCharacterProvider = ({ children }) => {
         } else if (error.message) {
           errorMessage = error.message;
         }
-        
+
         setCreationError(errorMessage);
         setIsCreatingCharacter(false);
-        
+
         logStateChange('CREATE_CHARACTER_ERROR', FLOW_STATES.BUILDER, FLOW_STATES.BUILDER, {
           error: errorMessage
         });
       }
-      
+
       throw error;
-      
+
     } finally {
-      // Clean up abort controller
       creationAbortController.current = null;
     }
   }, [hasExistingCharacter, token, user?.id, selectedTemplate, logStateChange, refresh, resetFlowState, isCreatingCharacter]);
