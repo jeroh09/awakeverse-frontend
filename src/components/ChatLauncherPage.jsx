@@ -188,6 +188,7 @@ const SplitScreenLauncher = ({ onStartChat }) => {
   const [searchResults, setSearchResults] = useState([]);
   const [showResults, setShowResults] = useState(false);
   const [isMobile, setIsMobile] = useState(false);
+  const [lastApiResponse, setLastApiResponse] = useState(null);
 
   // âœ… NEW: Early return for success screen
   //if (showSuccessModal) {
@@ -2107,7 +2108,7 @@ const SplitScreenLauncher = ({ onStartChat }) => {
                         }}>
                           Ready to Create?
                         </h3>
-                        {/* DEBUG INFO - Remove after testing */}
+                        {/* Enhanced DEBUG INFO */}
                         <div style={{
                           background: 'rgba(255, 0, 0, 0.8)',
                           color: 'white',
@@ -2120,6 +2121,8 @@ const SplitScreenLauncher = ({ onStartChat }) => {
                         }}>
                           <div>DEBUG: chars={userCharacters?.length || 0} | pending={String(hasPendingCharacter)} | premium={String(isPremium)}</div>
                           <div>loading={String(premiumLoading)} | token={String(!!token)} | user={user?.id || 'none'}</div>
+                          <div>error={error || 'none'} | initialized={String(isInitialized)}</div>
+                          <div>API Response: {lastApiResponse || 'none'}</div>
                           {userCharacters?.map((char, i) => (
                             <div key={i}>char{i}: {char.display_name} - {char.status}</div>
                           ))}

@@ -110,17 +110,21 @@ export default function usePremiumCharacters() {
         }
       });
 
+      console.log('🔍 Characters API response status:', response.status);
+
       if (!response.ok) {
         if (response.status === 404) {
+          console.log('🔍 No characters found (404)');
           return [];
         }
         throw new Error(`Characters API failed: ${response.status} ${response.statusText}`);
       }
 
       const data = await response.json();
-      console.log('âœ… User characters response:', data);
+      console.log('🔍 Characters API response data:', data);
       
       return data.characters || data || [];
+      setLastApiResponse(JSON.stringify(data));
       
     } catch (error) {
       console.error('âŒ User characters fetch failed:', error);
@@ -347,6 +351,7 @@ export default function usePremiumCharacters() {
     premiumStatus,
     loading,
     error,
+    lastApiResponse,
     
     // Computed flags
     isPremium,
