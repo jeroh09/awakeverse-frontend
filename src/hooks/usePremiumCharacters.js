@@ -1,375 +1,421 @@
-// Update to usePremiumCharacters.js - Add trial-specific state handling
-
-import { useState, useEffect, useCallback } from 'react';
+// src/hooks/usePremiumCharacterFlow.js - Robust implementation with proper error handling
+import React, { useState, useCallback, useContext, createContext, useRef, useEffect } from 'react';
 import { useAuth } from '../contexts/AuthContext';
 import { useUser } from '../contexts/UserContext';
+import usePremiumCharacters from './usePremiumCharacters';
 
-const API_BASE = process.env.REACT_APP_API_URL || 'http://localhost:5000';
+const FLOW_STATES = {
+  LAUNCHER: 'launcher',
+  TEMPLATES: 'templates',
+  BUILDER: 'builder',
+  SUCCESS: 'success'
+};
 
-export default function usePremiumCharacters() {
+const PremiumCharacterContext = createContext();
+
+// Error Boundary Component
+class PremiumCharacterErrorBoundary extends React.Component {
+  constructor(props) {
+    super(props);
+    this.state = { hasError: false, error: null };
+  }
+
+  static getDerivedStateFromError(error) {
+    return { hasError: true, error };
+  }
+
+  componentDidCatch(error, errorInfo) {
+    console.error('Premium Character Flow Error:', error, errorInfo);
+  }
+
+  render() {
+    if (this.state.hasError) {
+      return (
+        <div style={{
+          padding: '2rem',
+          textAlign: 'center',
+          color: '#ff6b6b',
+          background: 'rgba(255, 107, 107, 0.1)',
+          border: '1px solid rgba(255, 107, 107, 0.3)',
+          borderRadius: '8px',
+          margin: '1rem'
+        }}>
+          <h3>Character Creation Temporarily Unavailable</h3>
+          <p>Please refresh the page to try again.</p>
+          <button 
+            onClick={() => window.location.reload()}
+            style={{
+              background: '#ff6b6b',
+              color: 'white',
+              border: 'none',
+              padding: '0.5rem 1rem',
+              borderRadius: '4px',
+              cursor: 'pointer'
+            }}
+          >
+            Refresh Page
+          </button>
+        </div>
+      );
+    }
+
+    return this.props.children;
+  }
+}
+
+export const PremiumCharacterProvider = ({ children }) => {
   const { token } = useAuth();
   const { user } = useUser();
   
-  // State management
-  const [premiumStatus, setPremiumStatus] = useState(null);
-  const [userCharacters, setUserCharacters] = useState([]);
-  const [characterTemplates, setCharacterTemplates] = useState([]);
-  const [loading, setLoading] = useState(true);
+  // Core flow state
+  const [currentView, setCurrentView] = useState(FLOW_STATES.LAUNCHER);
+  const [selectedTemplate, setSelectedTemplate] = useState(null);
+  const [createdCharacterName, setCreatedCharacterName] = useState('');
   const [error, setError] = useState(null);
+  
+  // Creation state management
+  const [isCreatingCharacter, setIsCreatingCharacter] = useState(false);
+  const [creationError, setCreationError] = useState(null);
+  
+  // Refs for cleanup and race condition prevention
+  const creationAbortController = useRef(null);
+  const isMountedRef = useRef(true);
+  const successTimerRef = useRef(null);
+  
+  // Track existing characters
+  const { userCharacters, isPremium, refresh } = usePremiumCharacters();
+  const hasExistingCharacter = Array.isArray(userCharacters) && userCharacters.length > 0;
 
-  // NEW: Trial-specific states
-  const [trialJustStarted, setTrialJustStarted] = useState(false);
-  const [lastKnownPremiumStatus, setLastKnownPremiumStatus] = useState(null);
-
-  // Computed properties
-  const isPremium = premiumStatus?.is_premium || false;
-  const canCreateCharacter = premiumStatus?.can_create_character || false;
-  const characterCount = premiumStatus?.custom_character_count || 0;
-  const approvedCharacters = userCharacters.filter(char => char.status === 'approved');
-
-  // NEW: Trial-specific computed properties
-  const isOnTrial = premiumStatus?.subscription_status === 'trial';
-  const trialEndsAt = premiumStatus?.trial_ends_at;
-  const daysRemaining = trialEndsAt ? Math.ceil((new Date(trialEndsAt) - new Date()) / (1000 * 60 * 60 * 24)) : null;
-
-  // Real API function: Get premium status (enhanced for trial detection)
-  const fetchPremiumStatus = useCallback(async () => {
-    if (!user?.id || !token) return null;
-    
-    try {
-      console.log('📊 Fetching premium status for user:', user.id);
-      
-      const response = await fetch(`${API_BASE}/api/premium/status/${user.id}`, {
-        method: 'GET',
-        headers: {
-          'Authorization': `Bearer ${token}`,
-          'Content-Type': 'application/json'
-        }
-      });
-
-      if (!response.ok) {
-        if (response.status === 404) {
-          return {
-            is_premium: false,
-            is_trial: false,
-            subscription_status: 'free',
-            custom_character_count: 0,
-            can_create_character: false,
-            days_remaining: null
-          };
-        }
-        throw new Error(`Premium status API failed: ${response.status} ${response.statusText}`);
-      }
-
-      const data = await response.json();
-      const newStatus = data.premium_status || data;
-      
-      // NEW: Detect trial start
-      if (lastKnownPremiumStatus && !lastKnownPremiumStatus.is_premium && newStatus.is_premium && newStatus.subscription_status === 'trial') {
-        console.log('🎉 Trial just started for user!');
-        setTrialJustStarted(true);
-        
-        // Clear the notification after 5 seconds
-        setTimeout(() => {
-          setTrialJustStarted(false);
-        }, 5000);
-      }
-      
-      setLastKnownPremiumStatus(newStatus);
-      console.log('✅ Premium status response:', newStatus);
-      
-      return newStatus;
-      
-    } catch (error) {
-      console.error('❌ Premium status fetch failed:', error);
-      
-      return {
-        is_premium: false,
-        is_trial: false,
-        subscription_status: 'free',
-        custom_character_count: 0,
-        can_create_character: false,
-        days_remaining: null,
-        error: error.message
-      };
-    }
-  }, [user?.id, token, lastKnownPremiumStatus]);
-
-  // Real API function: Get user's characters (enhanced for trial users)
-  const fetchUserCharacters = useCallback(async () => {
-    if (!user?.id || !token || !isPremium) return [];
-    
-    try {
-      console.log('📊 Fetching user characters for user:', user.id);
-      
-      const response = await fetch(`${API_BASE}/api/premium/characters`, {
-        method: 'GET',
-        headers: {
-          'Authorization': `Bearer ${token}`,
-          'Content-Type': 'application/json'
-        }
-      });
-
-      if (!response.ok) {
-        if (response.status === 404) {
-          return [];
-        }
-        throw new Error(`Characters API failed: ${response.status} ${response.statusText}`);
-      }
-
-      const data = await response.json();
-      console.log('✅ User characters response:', data);
-      
-      return data.characters || data || [];
-      
-    } catch (error) {
-      console.error('❌ User characters fetch failed:', error);
-      return [];
-    }
-  }, [user?.id, token, isPremium]);
-
-  // Real API function: Get character templates
-  const fetchCharacterTemplates = useCallback(async () => {
-    if (!token) return [];
-    
-    try {
-      console.log('📊 Fetching character templates');
-      
-      const response = await fetch(`${API_BASE}/api/premium/templates`, {
-        method: 'GET',
-        headers: {
-          'Authorization': `Bearer ${token}`,
-          'Content-Type': 'application/json'
-        }
-      });
-
-      if (!response.ok) {
-        throw new Error(`Templates API failed: ${response.status} ${response.statusText}`);
-      }
-
-      const data = await response.json();
-      console.log('✅ Templates response:', data);
-      
-      if (data.template_groups && typeof data.template_groups === 'object') {
-        const flatTemplates = Object.values(data.template_groups).flat();
-        if (flatTemplates.length > 0) {
-          return flatTemplates;
-        }
-      }
-      
-      if (Array.isArray(data.templates)) {
-        return data.templates;
-      }
-      
-      if (Array.isArray(data)) {
-        return data;
-      }
-      
-      console.warn('⚠️ No valid template data found in response structure');
-      return [];
-      
-    } catch (error) {
-      console.error('❌ Templates fetch failed:', error);
-      return [];
-    }
-  }, [token]);
-
-  // Enhanced data loading effect with trial detection
+  // Cleanup on unmount
   useEffect(() => {
-    let isMounted = true;
-
-    const loadData = async () => {
-      if (!token || !user?.id) {
-        setLoading(false);
-        return;
+    isMountedRef.current = true;
+    
+    return () => {
+      isMountedRef.current = false;
+      
+      // Cancel any ongoing creation
+      if (creationAbortController.current) {
+        creationAbortController.current.abort();
       }
-      try {
-        setLoading(true);
-        setError(null);
-
-        console.log('🚀 Starting premium data load sequence');
-        const status = await fetchPremiumStatus();
-        if (!isMounted) return;
-        
-        setPremiumStatus(status);
-        console.log('📊 Premium status loaded:', status?.subscription_status);
-
-        const templatesPromise = fetchCharacterTemplates();
-        
-        const promises = [templatesPromise];
-        if (status?.is_premium) {
-          console.log('💎 User has premium - loading characters');
-          promises.push(fetchUserCharacters());
-        }
-
-        const [templates, characters = []] = await Promise.all(promises);
-        
-        if (!isMounted) return;
-
-        setCharacterTemplates(templates);
-        setUserCharacters(characters);
-        
-        console.log('🎉 Premium data load complete', {
-          premium: status?.is_premium,
-          trial: status?.subscription_status === 'trial',
-          templatesCount: templates?.length || 0,
-          charactersCount: characters?.length || 0,
-          trialEndsAt: status?.trial_ends_at
-        });
-
-      } catch (err) {
-        if (!isMounted) return;
-        console.error('💥 Premium data loading failed:', err);
-        setError(err.message || 'Failed to load premium features');
-      } finally {
-        if (isMounted) {
-          setLoading(false);
-        }
+      
+      // Clear timers
+      if (successTimerRef.current) {
+        clearTimeout(successTimerRef.current);
       }
     };
-    loadData();
-    return () => { isMounted = false; };
-  }, [token, user?.id]); // ONLY depend on primitive values, not functions
+  }, []);
 
-  // Real API function: Grant trial (kept for manual testing)
-  const grantTrial = useCallback(async () => {
-    if (!user?.id || !token) {
-      throw new Error('User not authenticated');
+  // State cleanup helper
+  const resetFlowState = useCallback(() => {
+    if (!isMountedRef.current) return;
+    
+    setCurrentView(FLOW_STATES.LAUNCHER);
+    setSelectedTemplate(null);
+    setCreatedCharacterName('');
+    setError(null);
+    setCreationError(null);
+    setIsCreatingCharacter(false);
+    
+    // Cancel ongoing operations
+    if (creationAbortController.current) {
+      creationAbortController.current.abort();
+      creationAbortController.current = null;
     }
     
-    try {
-      console.log('🆓 Granting trial for user:', user.id);
-      
-      const response = await fetch(`${API_BASE}/api/premium/trial/${user.id}`, {
-        method: 'POST',
-        headers: {
-          'Authorization': `Bearer ${token}`,
-          'Content-Type': 'application/json'
-        },
-        body: JSON.stringify({
-          trial_days: 3
-        })
-      });
-
-      if (!response.ok) {
-        const errorData = await response.json().catch(() => ({}));
-        throw new Error(errorData.message || `Trial grant failed: ${response.status}`);
-      }
-
-      const data = await response.json();
-      console.log('✅ Trial granted:', data);
-      
-      // Refresh premium status after granting trial
-      const newStatus = await fetchPremiumStatus();
-      setPremiumStatus(newStatus);
-      
-      return data;
-      
-    } catch (error) {
-      console.error('❌ Trial grant failed:', error);
-      throw error;
+    // Clear timers
+    if (successTimerRef.current) {
+      clearTimeout(successTimerRef.current);
+      successTimerRef.current = null;
     }
-  }, [user?.id, token, fetchPremiumStatus]);
+  }, []);
 
-  // Real API function: Create character
+  // Debug logging with safety checks
+  const logStateChange = useCallback((action, from, to, data = {}) => {
+    if (!isMountedRef.current) return;
+    
+    console.log(`ðŸ”„ Premium Flow: ${action}`, {
+      from,
+      to,
+      timestamp: new Date().toISOString(),
+      ...data
+    });
+  }, []);
+
+  // Navigation actions with state validation
+  const showTemplateGallery = useCallback(() => {
+    if (!isMountedRef.current || isCreatingCharacter) return;
+    
+    console.log('ðŸŽ¨ Showing template gallery');
+    logStateChange('SHOW_TEMPLATE_GALLERY', currentView, FLOW_STATES.TEMPLATES);
+    setCurrentView(FLOW_STATES.TEMPLATES);
+    setError(null);
+    setCreationError(null);
+  }, [currentView, logStateChange, isCreatingCharacter]);
+
+  const selectTemplate = useCallback((template) => {
+    if (!isMountedRef.current || isCreatingCharacter) return;
+    
+    console.log('ðŸŽ¯ Template selected:', template?.name);
+    logStateChange('SELECT_TEMPLATE', FLOW_STATES.TEMPLATES, FLOW_STATES.BUILDER, {
+      templateId: template?.id,
+      templateName: template?.name
+    });
+    setSelectedTemplate(template);
+    setCurrentView(FLOW_STATES.BUILDER);
+    setError(null);
+    setCreationError(null);
+  }, [logStateChange, isCreatingCharacter]);
+
+  // Enhanced character creation with comprehensive error handling
   const createCharacter = useCallback(async (characterData) => {
-    if (!user?.id || !token) {
-      throw new Error('User not authenticated');
+    // Prevent multiple submissions
+    if (isCreatingCharacter || !isMountedRef.current) {
+      console.warn('ðŸš« Character creation already in progress or component unmounted');
+      return;
     }
-    
-    if (!canCreateCharacter) {
-      throw new Error('Cannot create character - check premium status and limits');
+
+    // Validate prerequisites
+    if (hasExistingCharacter) {
+      const errorMessage = 'You can only have one character. Please wait for approval or contact support.';
+      setError(errorMessage);
+      throw new Error(errorMessage);
     }
+
+    if (!token || !user?.id) {
+      const errorMessage = 'Authentication required';
+      setError(errorMessage);
+      throw new Error(errorMessage);
+    }
+
+    // Set up abort controller for cancellation
+    creationAbortController.current = new AbortController();
+    const { signal } = creationAbortController.current;
+
+    setIsCreatingCharacter(true);
+    setCreationError(null);
+    setError(null);
 
     try {
-      console.log('🎭 Creating character:', characterData.display_name);
+      const API_BASE = process.env.REACT_APP_API_URL || 'http://localhost:5000';
       
-      const response = await fetch(`${API_BASE}/api/premium/characters`, {
-        method: 'POST',
-        headers: {
-          'Authorization': `Bearer ${token}`,
-          'Content-Type': 'application/json'
-        },
-        body: JSON.stringify(characterData)
-      });
+      console.log('ðŸš€ Starting character creation flow for:', characterData.display_name);
 
-      if (!response.ok) {
-        const errorData = await response.json().catch(() => ({}));
-        throw new Error(errorData.error || `Character creation failed: ${response.status}`);
+      // STEP 1: Grant trial with timeout and cancellation
+      console.log('ðŸ“ Step 1: Granting trial...');
+      
+      const trialResponse = await Promise.race([
+        fetch(`${API_BASE}/api/premium/trial/${user.id}`, {
+          method: 'POST',
+          headers: {
+            'Authorization': `Bearer ${token}`,
+            'Content-Type': 'application/json'
+          },
+          body: JSON.stringify({ trial_days: 3 }),
+          signal
+        }),
+        new Promise((_, reject) => 
+          setTimeout(() => reject(new Error('Trial request timeout')), 30000)
+        )
+      ]);
+
+      // Check if component was unmounted during request
+      if (!isMountedRef.current) {
+        console.log('ðŸ›‘ Component unmounted during trial request');
+        return;
       }
 
-      const data = await response.json();
-      console.log('✅ Character created:', data);
-      
-      // Refresh both characters and premium status
-      const [newCharacters, newStatus] = await Promise.all([
-        fetchUserCharacters(),
-        fetchPremiumStatus()
-      ]);
-      
-      setUserCharacters(newCharacters);
-      setPremiumStatus(newStatus);
-      
-      return data.character || data;
-      
-    } catch (error) {
-      console.error('❌ Character creation failed:', error);
-      throw error;
-    }
-  }, [user?.id, token, canCreateCharacter, fetchUserCharacters, fetchPremiumStatus]);
+      // Handle trial response
+      if (!trialResponse.ok && trialResponse.status !== 409 && trialResponse.status !== 400) {
+        const trialError = await trialResponse.json().catch(() => ({}));
+        throw new Error(trialError.message || `Trial failed: ${trialResponse.status}`);
+      }
 
-  const refresh = useCallback(() => {
-    if (user?.id && token) {
-      const loadData = async () => {
-        setLoading(true);
-        try {
-          const [status, templates, characters] = await Promise.all([
-            fetchPremiumStatus(),
-            fetchCharacterTemplates(),
-            fetchUserCharacters()
-          ]);
-          
-          setPremiumStatus(status);
-          setCharacterTemplates(templates);
-          setUserCharacters(characters);
-        } catch (err) {
-          setError(err.message);
-        } finally {
-          setLoading(false);
-        }
+      console.log('âœ… Trial step completed');
+
+      // STEP 2: Create character with timeout
+      console.log('ðŸ“ Step 2: Creating character...');
+      
+      const finalCharacterData = {
+        ...characterData,
+        template_id: selectedTemplate?.id,
+        historical_period: selectedTemplate?.historical_period,
+        personality_archetype: selectedTemplate?.personality_archetype,
+        expertise_domain: selectedTemplate?.expertise_domain
       };
-      loadData();
-    }
-  }, [user?.id, token, fetchPremiumStatus, fetchCharacterTemplates, fetchUserCharacters]);
 
-  return {
-    // Status
-    premiumStatus,
-    loading,
+      const characterResponse = await Promise.race([
+        fetch(`${API_BASE}/api/premium/characters`, {
+          method: 'POST',
+          headers: {
+            'Authorization': `Bearer ${token}`,
+            'Content-Type': 'application/json'
+          },
+          body: JSON.stringify(finalCharacterData),
+          signal
+        }),
+        new Promise((_, reject) => 
+          setTimeout(() => reject(new Error('Character creation timeout')), 45000)
+        )
+      ]);
+
+      // Check if component was unmounted during request
+      if (!isMountedRef.current) {
+        console.log('ðŸ›‘ Component unmounted during character creation');
+        return;
+      }
+
+      if (!characterResponse.ok) {
+        const errorData = await characterResponse.json().catch(() => ({}));
+        throw new Error(errorData.error || `Character creation failed: ${characterResponse.status}`);
+      }
+
+      const result = await characterResponse.json();
+      console.log('âœ… Character created successfully:', result);
+
+      // Only update state if component is still mounted
+      if (isMountedRef.current) {
+        setCreatedCharacterName(characterData.display_name);
+        setCurrentView(FLOW_STATES.SUCCESS);
+        setIsCreatingCharacter(false);
+        
+        // Set up auto-redirect timer with cleanup
+        successTimerRef.current = setTimeout(() => {
+          if (isMountedRef.current) {
+            resetFlowState();
+          }
+        }, 10000); // 10 second auto-redirect
+        
+        // Refresh premium data in background
+        if (refresh) {
+          refresh().catch(console.warn);
+        }
+
+        logStateChange('CREATE_CHARACTER_SUCCESS', FLOW_STATES.BUILDER, FLOW_STATES.SUCCESS, {
+          characterName: characterData.display_name
+        });
+      }
+
+      return result;
+
+    } catch (error) {
+      // Only update state if component is still mounted and error wasn't from cancellation
+      if (isMountedRef.current && error.name !== 'AbortError') {
+        console.error('âŒ Character creation failed:', error);
+        
+        let errorMessage = 'Failed to create character';
+        
+        // Provide specific error messages for common issues
+        if (error.message.includes('timeout')) {
+          errorMessage = 'Request timed out. Please check your connection and try again.';
+        } else if (error.message.includes('NetworkError') || error.message.includes('Failed to fetch')) {
+          errorMessage = 'Network error. Please check your connection and try again.';
+        } else if (error.message) {
+          errorMessage = error.message;
+        }
+        
+        setCreationError(errorMessage);
+        setIsCreatingCharacter(false);
+        
+        logStateChange('CREATE_CHARACTER_ERROR', FLOW_STATES.BUILDER, FLOW_STATES.BUILDER, {
+          error: errorMessage
+        });
+      }
+      
+      throw error;
+      
+    } finally {
+      // Clean up abort controller
+      creationAbortController.current = null;
+    }
+  }, [hasExistingCharacter, token, user?.id, selectedTemplate, logStateChange, refresh, resetFlowState, isCreatingCharacter]);
+
+  // Navigation with cleanup
+  const backToLauncher = useCallback(() => {
+    if (!isMountedRef.current) return;
+    
+    console.log('ðŸ”™ Back to launcher');
+    resetFlowState();
+    logStateChange('BACK_TO_LAUNCHER', currentView, FLOW_STATES.LAUNCHER);
+  }, [currentView, logStateChange, resetFlowState]);
+
+  const backToTemplates = useCallback(() => {
+    if (!isMountedRef.current || isCreatingCharacter) return;
+    
+    console.log('ðŸ”™ Back to templates');
+    logStateChange('BACK_TO_TEMPLATES', currentView, FLOW_STATES.TEMPLATES);
+    setCurrentView(FLOW_STATES.TEMPLATES);
+    setError(null);
+    setCreationError(null);
+  }, [currentView, logStateChange, isCreatingCharacter]);
+
+  // Safe error setters
+  const safeSetError = useCallback((error) => {
+    if (isMountedRef.current) {
+      setError(error);
+    }
+  }, []);
+
+  const safeSetCreationError = useCallback((error) => {
+    if (isMountedRef.current) {
+      setCreationError(error);
+    }
+  }, []);
+
+  // Computed state flags
+  const showTemplateGallery_flag = currentView === FLOW_STATES.TEMPLATES;
+  const showCharacterBuilder = currentView === FLOW_STATES.BUILDER;
+  const showSuccessModal = currentView === FLOW_STATES.SUCCESS;
+
+  const contextValue = {
+    // State
+    currentView,
+    selectedTemplate,
+    createdCharacterName,
     error,
     
+    // Creation state
+    isCreatingCharacter,
+    creationError,
+
     // Computed flags
-    isPremium,
-    canCreateCharacter,
-    characterCount,
-    
-    // NEW: Trial-specific properties
-    isOnTrial,
-    trialEndsAt,
-    daysRemaining,
-    trialJustStarted,
-    
-    // Data
-    userCharacters,
-    approvedCharacters,
-    characterTemplates,
-    
-    // Actions
-    grantTrial,
+    showTemplateGallery: showTemplateGallery_flag,
+    showCharacterBuilder,
+    showSuccessModal,
+
+    // Navigation/actions
+    startTemplateFlow: showTemplateGallery,
+    selectTemplate,
     createCharacter,
-    refresh,
-    
-    // Meta
-    isInitialized: !loading && premiumStatus !== null
+    backToLauncher,
+    backToTemplates,
+    setError: safeSetError,
+    setCreationError: safeSetCreationError,
+    resetFlowState,
+
+    // Validation flags
+    hasExistingCharacter,
+    isPremium,
+    canCreate: !isCreatingCharacter && !hasExistingCharacter,
+
+    // Debug info
+    FLOW_STATES
   };
-}
+
+  return (
+    <PremiumCharacterErrorBoundary>
+      <PremiumCharacterContext.Provider value={contextValue}>
+        {children}
+      </PremiumCharacterContext.Provider>
+    </PremiumCharacterErrorBoundary>
+  );
+};
+
+export const usePremiumCharacterFlow = () => {
+  const context = useContext(PremiumCharacterContext);
+  if (!context) {
+    throw new Error('usePremiumCharacterFlow must be used within PremiumCharacterProvider');
+  }
+  return context;
+};
+
+export { FLOW_STATES };

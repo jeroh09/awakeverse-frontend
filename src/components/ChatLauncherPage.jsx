@@ -1,16 +1,14 @@
 // src/pages/ChatLauncherPage.jsx - Updated with success screen integration
 import React, { useState, useEffect, useMemo } from 'react';
-import TemplateGallery from './TemplateGallery';
-import CharacterBuilder from './CharacterBuilder'; 
-//import CharacterCreationSuccess from './CharacterCreationSuccess';
-import { characterCategories } from '../data/characterCategories';
-import useInteractedCharacters from '../hooks/useInteractedCharacters'
-
-// CORRECT imports for files in different directories
 import { useAuth } from '../contexts/AuthContext';
 import { useUser } from '../contexts/UserContext';
-import { usePremiumCharacterFlow } from '../hooks/usePremiumCharacterFlow';
+import { characterCategories } from '../data/characterCategories';
+import useInteractedCharacters from '../hooks/useInteractedCharacters';
 import usePremiumCharacters from '../hooks/usePremiumCharacters';
+import TemplateGallery from '../components/TemplateGallery';
+import CharacterBuilder from '../components/CharacterBuilder';
+import CharacterCreationSuccess from '../components/CharacterCreationSuccess'; // âœ… NEW IMPORT
+import { usePremiumCharacterFlow } from '../hooks/usePremiumCharacterFlow';
 
 // Enhanced semantic mappings for your complete character set
 const ENHANCED_SEMANTIC_MAPPINGS = {
@@ -128,10 +126,10 @@ const SplitScreenLauncher = ({ onStartChat }) => {
   
   try {
     const premiumFlow = usePremiumCharacterFlow();
-    console.log('🧪 Premium flow context available:', !!premiumFlow);
-    console.log('🧪 Current view:', premiumFlow.currentView);
+    console.log('ðŸ§ª Premium flow context available:', !!premiumFlow);
+    console.log('ðŸ§ª Current view:', premiumFlow.currentView);
   } catch (error) {
-    console.error('❌ Premium flow context error:', error);
+    console.error('âŒ Premium flow context error:', error);
   }
   
   const {
@@ -158,7 +156,7 @@ const SplitScreenLauncher = ({ onStartChat }) => {
   const {
     showTemplateGallery,
     showCharacterBuilder,
-    //showSuccessModal, // ✅ NEW: Success modal state
+    showSuccessModal, // âœ… NEW: Success modal state
     selectedTemplate,
     startTemplateFlow
   } = usePremiumCharacterFlow();
@@ -171,22 +169,22 @@ const SplitScreenLauncher = ({ onStartChat }) => {
   const [showResults, setShowResults] = useState(false);
   const [isMobile, setIsMobile] = useState(false);
 
-  // ✅ NEW: Early return for success screen
-  //if (showSuccessModal) {
-    //return (
-      //<div style={{
-        //position: 'fixed',
-        //top: 0,
-        //left: 0,
-      //  width: '100%',
-        //height: '100%',
-       // zIndex: 4000, // Higher than other modals
-        //background: 'rgba(0, 0, 0, 0.95)'
-     // }}>
-       // <CharacterCreationSuccess />
-      //</div>
-   // );
-  //}
+  // âœ… NEW: Early return for success screen
+  if (showSuccessModal) {
+    return (
+      <div style={{
+        position: 'fixed',
+        top: 0,
+        left: 0,
+        width: '100%',
+        height: '100%',
+        zIndex: 4000, // Higher than other modals
+        background: 'rgba(0, 0, 0, 0.95)'
+      }}>
+        <CharacterCreationSuccess />
+      </div>
+    );
+  }
   
   // Check for mobile viewport
   useEffect(() => {
@@ -223,7 +221,7 @@ const SplitScreenLauncher = ({ onStartChat }) => {
       };
     }
 
-    console.log('🎭 Enhanced categories updated:', {
+    console.log('ðŸŽ­ Enhanced categories updated:', {
       totalCategories: allCategories.length,
       myCharactersIndex: myCharIndex,
       approvedCharactersCount: approvedCharacters.length,
@@ -556,7 +554,7 @@ const SplitScreenLauncher = ({ onStartChat }) => {
                       fontWeight: 'bold',
                       zIndex: 1
                     }}>
-                      ⭐
+                      â­
                     </div>
                   )}
                   
@@ -602,7 +600,7 @@ const SplitScreenLauncher = ({ onStartChat }) => {
                         fontSize: '24px',
                         color: isPremium ? '#FFD700' : 'rgba(128, 128, 128, 0.7)'
                       }}>
-                        👤
+                        ðŸ‘¤
                       </div>
                     )
                   ) : (
@@ -701,7 +699,7 @@ const SplitScreenLauncher = ({ onStartChat }) => {
                   textTransform: 'none'
                 }}
               >
-                ← Back
+                â† Back
               </button>
             </div>
 
@@ -763,7 +761,7 @@ const SplitScreenLauncher = ({ onStartChat }) => {
                       justifyContent: 'center',
                       fontSize: '32px'
                     }}>
-                      ✨
+                      âœ¨
                     </div>
 
                     {/* Headline */}
@@ -800,9 +798,9 @@ const SplitScreenLauncher = ({ onStartChat }) => {
                       marginBottom: '1.5rem'
                     }}>
                       {[
-                        { icon: '🎭', title: 'Custom Personality' },
-                        { icon: '📚', title: 'Expert Knowledge' },
-                        { icon: '🏛️', title: 'Historical Context' }
+                        { icon: 'ðŸŽ­', title: 'Custom Personality' },
+                        { icon: 'ðŸ“š', title: 'Expert Knowledge' },
+                        { icon: 'ðŸ›ï¸', title: 'Historical Context' }
                       ].map((feature, index) => (
                         <div key={index} style={{
                           background: 'rgba(255, 255, 255, 0.05)',
@@ -895,7 +893,7 @@ const SplitScreenLauncher = ({ onStartChat }) => {
                       margin: '0.5rem 0 0 0',
                       fontStyle: 'italic'
                     }}>
-                      No credit card required • Cancel anytime
+                      No credit card required â€¢ Cancel anytime
                     </p>
                   </div>
                 ) : userCharacters.length === 0 ? (
@@ -918,7 +916,7 @@ const SplitScreenLauncher = ({ onStartChat }) => {
                       justifyContent: 'center',
                       fontSize: '32px'
                     }}>
-                      🎨
+                      ðŸŽ¨
                     </div>
 
                     <div style={{ textAlign: 'center' }}>
@@ -1620,7 +1618,7 @@ const SplitScreenLauncher = ({ onStartChat }) => {
                     fontWeight: 'bold',
                     zIndex: 1
                   }}>
-                    ⭐
+                    â­
                   </div>
                 )}
                 
@@ -1666,7 +1664,7 @@ const SplitScreenLauncher = ({ onStartChat }) => {
                       fontSize: '24px',
                       color: isPremium ? '#FFD700' : 'rgba(128, 128, 128, 0.7)'
                     }}>
-                      👤
+                      ðŸ‘¤
                     </div>
                   )
                 ) : (
@@ -1785,7 +1783,7 @@ const SplitScreenLauncher = ({ onStartChat }) => {
                     e.currentTarget.style.borderColor = 'rgba(255, 215, 0, 0.4)';
                   }}
                 >
-                  ← Back
+                  â† Back
                 </button>
               </div>
 
@@ -1847,7 +1845,7 @@ const SplitScreenLauncher = ({ onStartChat }) => {
                         fontSize: '48px',
                         marginBottom: '1rem'
                       }}>
-                        ✨
+                        âœ¨
                       </div>
 
                       {/* Headline */}
@@ -1885,9 +1883,9 @@ const SplitScreenLauncher = ({ onStartChat }) => {
                         marginBottom: '2rem'
                       }}>
                         {[
-                          { icon: '🎭', title: 'Custom Personality', desc: 'Define unique traits and speaking style' },
-                          { icon: '📚', title: 'Expert Knowledge', desc: 'Specialized in any domain you choose' },
-                          { icon: '🏛️', title: 'Historical Context', desc: 'Set in any time period or culture' }
+                          { icon: 'ðŸŽ­', title: 'Custom Personality', desc: 'Define unique traits and speaking style' },
+                          { icon: 'ðŸ“š', title: 'Expert Knowledge', desc: 'Specialized in any domain you choose' },
+                          { icon: 'ðŸ›ï¸', title: 'Historical Context', desc: 'Set in any time period or culture' }
                         ].map((feature, index) => (
                           <div key={index} style={{
                             background: 'rgba(255, 255, 255, 0.05)',
@@ -1996,7 +1994,7 @@ const SplitScreenLauncher = ({ onStartChat }) => {
                         margin: '1rem 0 0 0',
                         fontStyle: 'italic'
                       }}>
-                        No credit card required • Cancel anytime
+                        No credit card required â€¢ Cancel anytime
                       </p>
                     </div>
                   ) : userCharacters.length === 0 ? (
@@ -2019,7 +2017,7 @@ const SplitScreenLauncher = ({ onStartChat }) => {
                         justifyContent: 'center',
                         fontSize: '40px'
                       }}>
-                        🎨
+                        ðŸŽ¨
                       </div>
 
                       <div style={{ textAlign: 'center' }}>

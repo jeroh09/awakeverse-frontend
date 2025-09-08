@@ -228,7 +228,7 @@ Engage users with the depth and authenticity that comes from your unique histori
             opacity: isCreatingCharacter ? 0.5 : 1
           }}
         >
-          ← Back to Templates
+          â† Back to Templates
         </button>
       </div>
 
@@ -310,7 +310,7 @@ Engage users with the depth and authenticity that comes from your unique histori
                     fontWeight: 'bold',
                     fontSize: '0.9rem'
                   }}>
-                    {currentStep > step.number ? '✓' : step.number}
+                    {currentStep > step.number ? 'âœ“' : step.number}
                   </div>
                   <div>
                     <div style={{
@@ -743,7 +743,7 @@ Engage users with the depth and authenticity that comes from your unique histori
               padding: 0
             }}
           >
-            ×
+            Ã—
           </button>
         </div>
       )}
