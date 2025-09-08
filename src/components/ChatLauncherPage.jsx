@@ -124,11 +124,7 @@ const categoryRepresentatives = {
 
 const SplitScreenLauncher = ({ onStartChat }) => {
   const { token } = useAuth();
-  const { successData, userCharacters } = useSimplifiedPremiumFlow();
-  // Add these calculations right after:
-  const hasPending = userCharacters?.some(char => char.status === 'pending') || false;
-  const hasRejected = userCharacters?.some(char => char.status === 'rejected') || false;
-  const canCreate = !hasPending && !hasRejected;
+  const { successData } = useSimplifiedPremiumFlow();
   
   try {
     const premiumFlow = useSimplifiedPremiumFlow();
@@ -143,6 +139,13 @@ const SplitScreenLauncher = ({ onStartChat }) => {
     approvedCharacters,
     loading: premiumLoading,
     premiumStatus,
+    characterTemplates,
+    error: premiumError,
+    userCharacters,
+    grantTrial,
+    canCreateCharacter,
+    characterCount,
+    refresh,
   } = usePremiumCharacters();
 
   // ADD THIS CHECK RIGHT HERE, BEFORE ANY OTHER LOGIC:
@@ -247,6 +250,19 @@ const SplitScreenLauncher = ({ onStartChat }) => {
 
     return allCategories;
   }, [approvedCharacters]);
+
+  // Add these new computed properties - safe because they only read existing data
+  const hasPendingCharacter = useMemo(() => {
+    return Array.isArray(userCharacters) && userCharacters.some(char => char.status === 'pending');
+  }, [userCharacters]);
+
+  const hasApprovedCharacter = useMemo(() => {
+    return Array.isArray(userCharacters) && userCharacters.some(char => char.status === 'approved');
+  }, [userCharacters]);
+
+  const pendingCharacterCount = useMemo(() => {
+    return Array.isArray(userCharacters) ? userCharacters.filter(char => char.status === 'pending').length : 0;
+  }, [userCharacters]);
 
   // Search function (simplified without semantic mappings)
   const performSemanticSearch = useMemo(() => {
@@ -851,55 +867,40 @@ const SplitScreenLauncher = ({ onStartChat }) => {
                     }}>
                       <button
                         onClick={() => {
-                          if (!canCreate) {
-                            const message = hasPending 
-                              ? 'You already have a character pending approval. Check your email for updates.'
-                              : hasRejected
-                              ? 'Please revise your rejected character submission or contact support.'
-                              : 'Unable to create character at this time.';
-                            alert(message);
+                          if (hasPendingCharacter) {
+                            console.log('Button disabled - user has pending character');
                             return;
                           }
+                          console.log('Start trial clicked - showing template gallery');
                           startTemplateFlow();
                         }}
-                        disabled={!canCreate}
+                        disabled={hasPendingCharacter}
                         style={{
-                          background: canCreate 
-                            ? 'linear-gradient(135deg, #FFD700, #FFA500)'
-                            : 'rgba(128, 128, 128, 0.3)',
+                          background: hasPendingCharacter 
+                            ? 'rgba(128, 128, 128, 0.3)' 
+                            : 'linear-gradient(135deg, #FFD700, #FFA500)',
                           border: 'none',
                           borderRadius: '20px',
-                          color: canCreate ? '#000' : 'rgba(255, 255, 255, 0.6)',
+                          color: hasPendingCharacter ? 'rgba(255, 255, 255, 0.5)' : '#000',
                           fontSize: '0.9rem',
                           fontWeight: 700,
                           padding: '0.8rem 1.5rem',
-                          cursor: canCreate ? 'pointer' : 'not-allowed',
+                          cursor: hasPendingCharacter ? 'not-allowed' : 'pointer',
                           transition: 'all 0.3s ease',
                           fontFamily: "'Georgia', serif",
                           textTransform: 'none',
-                          boxShadow: canCreate 
-                            ? '0 4px 15px rgba(255, 215, 0, 0.3)'
-                            : 'none',
+                          boxShadow: hasPendingCharacter ? 'none' : '0 4px 15px rgba(255, 215, 0, 0.3)',
                           width: '100%',
-                          opacity: canCreate ? 1 : 0.6,
-                          pointerEvents: 'auto'
-                        }}
-                        onMouseEnter={(e) => {
-                          if (canCreate) {
-                            e.currentTarget.style.transform = 'translateY(-2px)';
-                            e.currentTarget.style.boxShadow = '0 6px 20px rgba(255, 215, 0, 0.4)';
-                          }
-                        }}
-                        onMouseLeave={(e) => {
-                          if (canCreate) {
-                            e.currentTarget.style.transform = 'translateY(0)';
-                            e.currentTarget.style.boxShadow = '0 4px 15px rgba(255, 215, 0, 0.3)';
-                          }
+                          position: 'relative',
+                          zIndex: 100,
+                          pointerEvents: 'auto',
+                          opacity: hasPendingCharacter ? 0.6 : 1
                         }}
                       >
-                        {hasPending ? 'Character Pending Approval' :
-                         hasRejected ? 'Character Needs Revision' :
-                         'Start 3-Day Free Trial'}
+                        {hasPendingCharacter 
+                          ? `Character Pending Approval (${pendingCharacterCount})` 
+                          : 'Start 3-Day Free Trial'
+                        }
                       </button>
                       
                       <button
@@ -978,26 +979,48 @@ const SplitScreenLauncher = ({ onStartChat }) => {
 
                     <button
                       onClick={() => {
+                        if (hasPendingCharacter) {
+                          console.log('DESKTOP: Button disabled - user has pending character');
+                          return;
+                        }
                         console.log('Create character clicked - showing template gallery');
                         startTemplateFlow();
                       }}
+                      disabled={hasPendingCharacter}
                       style={{
-                        background: 'linear-gradient(135deg, #FFD700, #FFA500)',
+                        background: hasPendingCharacter 
+                          ? 'rgba(128, 128, 128, 0.3)' 
+                          : 'linear-gradient(135deg, #FFD700, #FFA500)',
                         border: 'none',
-                        borderRadius: '20px',
-                        color: '#000',
-                        fontSize: '1rem',
+                        borderRadius: '25px',
+                        color: hasPendingCharacter ? 'rgba(255, 255, 255, 0.5)' : '#000',
+                        fontSize: '1.1rem',
                         fontWeight: 700,
-                        padding: '0.8rem 1.5rem',
-                        cursor: 'pointer',
+                        padding: '1rem 2rem',
+                        cursor: hasPendingCharacter ? 'not-allowed' : 'pointer',
                         transition: 'all 0.3s ease',
                         fontFamily: "'Georgia', serif",
                         textTransform: 'none',
-                        boxShadow: '0 4px 15px rgba(255, 215, 0, 0.3)',
-                        width: '100%'
+                        boxShadow: hasPendingCharacter ? 'none' : '0 4px 15px rgba(255, 215, 0, 0.3)',
+                        opacity: hasPendingCharacter ? 0.6 : 1
+                      }}
+                      onMouseEnter={(e) => {
+                        if (!hasPendingCharacter) {
+                          e.currentTarget.style.transform = 'translateY(-2px)';
+                          e.currentTarget.style.boxShadow = '0 6px 20px rgba(255, 215, 0, 0.4)';
+                        }
+                      }}
+                      onMouseLeave={(e) => {
+                        if (!hasPendingCharacter) {
+                          e.currentTarget.style.transform = 'translateY(0)';
+                          e.currentTarget.style.boxShadow = '0 4px 15px rgba(255, 215, 0, 0.3)';
+                        }
                       }}
                     >
-                      Create Your Character
+                      {hasPendingCharacter 
+                        ? `Character Pending Approval (${pendingCharacterCount})` 
+                        : 'Create Your Character'
+                      }
                     </button>
                   </div>
                 ) : (
@@ -1960,57 +1983,51 @@ const SplitScreenLauncher = ({ onStartChat }) => {
                         flexWrap: 'wrap',
                         justifyContent: 'center'
                       }}>
-                        <button
-                          onClick={() => {
-                            if (!canCreate) {
-                              const message = hasPending 
-                                ? 'You already have a character pending approval. Check your email for updates.'
-                                : hasRejected
-                                ? 'Please revise your rejected character submission or contact support.'
-                                : 'Unable to create character at this time.';
-                              alert(message);
-                              return;
-                            }
-                            startTemplateFlow();
-                          }}
-                          disabled={!canCreate}
-                          style={{
-                            background: canCreate 
-                              ? 'linear-gradient(135deg, #FFD700, #FFA500)'
-                              : 'rgba(128, 128, 128, 0.3)',
-                            border: 'none',
-                            borderRadius: '25px',
-                            color: canCreate ? '#000' : 'rgba(255, 255, 255, 0.6)',
-                            fontSize: '1rem',
-                            fontWeight: 700,
-                            padding: '1rem 2rem',
-                            cursor: canCreate ? 'pointer' : 'not-allowed',
-                            transition: 'all 0.3s ease',
-                            fontFamily: "'Georgia', serif",
-                            textTransform: 'none',
-                            boxShadow: canCreate 
-                              ? '0 4px 15px rgba(255, 215, 0, 0.3)'
-                              : 'none',
-                            opacity: canCreate ? 1 : 0.6
-                          }}
-                          onMouseEnter={(e) => {
-                            if (canCreate) {
-                              e.currentTarget.style.transform = 'translateY(-2px)';
-                              e.currentTarget.style.boxShadow = '0 6px 20px rgba(255, 215, 0, 0.4)';
-                            }
-                          }}
-                          onMouseLeave={(e) => {
-                            if (canCreate) {
-                              e.currentTarget.style.transform = 'translateY(0)';
-                              e.currentTarget.style.boxShadow = '0 4px 15px rgba(255, 215, 0, 0.3)';
-                            }
-                          }}
-                        >
-                          {hasPending ? 'Character Pending Approval' :
-                           hasRejected ? 'Character Needs Revision' :
-                           'Start 3-Day Free Trial'}
-                        </button>
-                        
+                      <button
+                        onClick={() => {
+                          if (hasPendingCharacter) {
+                            console.log('DESKTOP: Button disabled - user has pending character');
+                            return;
+                          }
+                          console.log('DESKTOP: Start trial clicked - showing template gallery');
+                          startTemplateFlow();
+                        }}
+                        disabled={hasPendingCharacter}
+                        style={{
+                          background: hasPendingCharacter 
+                            ? 'rgba(128, 128, 128, 0.3)' 
+                            : 'linear-gradient(135deg, #FFD700, #FFA500)',
+                          border: 'none',
+                          borderRadius: '25px',
+                          color: hasPendingCharacter ? 'rgba(255, 255, 255, 0.5)' : '#000',
+                          fontSize: '1rem',
+                          fontWeight: 700,
+                          padding: '1rem 2rem',
+                          cursor: hasPendingCharacter ? 'not-allowed' : 'pointer',
+                          transition: 'all 0.3s ease',
+                          fontFamily: "'Georgia', serif",
+                          textTransform: 'none',
+                          boxShadow: hasPendingCharacter ? 'none' : '0 4px 15px rgba(255, 215, 0, 0.3)',
+                          opacity: hasPendingCharacter ? 0.6 : 1
+                        }}
+                        onMouseEnter={(e) => {
+                          if (!hasPendingCharacter) {
+                            e.currentTarget.style.transform = 'translateY(-2px)';
+                            e.currentTarget.style.boxShadow = '0 6px 20px rgba(255, 215, 0, 0.4)';
+                          }
+                        }}
+                        onMouseLeave={(e) => {
+                          if (!hasPendingCharacter) {
+                            e.currentTarget.style.transform = 'translateY(0)';
+                            e.currentTarget.style.boxShadow = '0 4px 15px rgba(255, 215, 0, 0.3)';
+                          }
+                        }}
+                      >
+                        {hasPendingCharacter 
+                          ? `Character Pending Approval (${pendingCharacterCount})` 
+                          : 'Start 3-Day Free Trial'
+                        }
+                      </button>    
                         <button
                           style={{
                             background: 'transparent',
@@ -2095,33 +2112,37 @@ const SplitScreenLauncher = ({ onStartChat }) => {
 
                       <button
                         onClick={() => {
+                          if (hasPendingCharacter) {
+                            console.log('Button disabled - user has pending character');
+                            return;
+                          }
                           console.log('Create character clicked - showing template gallery');
                           startTemplateFlow();
                         }}
+                        disabled={hasPendingCharacter}
                         style={{
-                          background: 'linear-gradient(135deg, #FFD700, #FFA500)',
+                          background: hasPendingCharacter 
+                            ? 'rgba(128, 128, 128, 0.3)' 
+                            : 'linear-gradient(135deg, #FFD700, #FFA500)',
                           border: 'none',
-                          borderRadius: '25px',
-                          color: '#000',
-                          fontSize: '1.1rem',
+                          borderRadius: '20px',
+                          color: hasPendingCharacter ? 'rgba(255, 255, 255, 0.5)' : '#000',
+                          fontSize: '1rem',
                           fontWeight: 700,
-                          padding: '1rem 2rem',
-                          cursor: 'pointer',
+                          padding: '0.8rem 1.5rem',
+                          cursor: hasPendingCharacter ? 'not-allowed' : 'pointer',
                           transition: 'all 0.3s ease',
                           fontFamily: "'Georgia', serif",
                           textTransform: 'none',
-                          boxShadow: '0 4px 15px rgba(255, 215, 0, 0.3)'
-                        }}
-                        onMouseEnter={(e) => {
-                          e.currentTarget.style.transform = 'translateY(-2px)';
-                          e.currentTarget.style.boxShadow = '0 6px 20px rgba(255, 215, 0, 0.4)';
-                        }}
-                        onMouseLeave={(e) => {
-                          e.currentTarget.style.transform = 'translateY(0)';
-                          e.currentTarget.style.boxShadow = '0 4px 15px rgba(255, 215, 0, 0.3)';
+                          boxShadow: hasPendingCharacter ? 'none' : '0 4px 15px rgba(255, 215, 0, 0.3)',
+                          width: '100%',
+                          opacity: hasPendingCharacter ? 0.6 : 1
                         }}
                       >
-                        Create Your Character
+                        {hasPendingCharacter 
+                          ? `Character Pending Approval (${pendingCharacterCount})` 
+                          : 'Create Your Character'
+                        }
                       </button>
 
                       <p style={{

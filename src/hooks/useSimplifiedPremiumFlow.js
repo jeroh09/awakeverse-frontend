@@ -77,7 +77,6 @@ export const SimplifiedPremiumProvider = ({ children }) => {
   // Get character data without refresh dependencies
   const { userCharacters, isPremium } = usePremiumCharacters();
   const hasExistingCharacter = Array.isArray(userCharacters) && userCharacters.length > 0;
-  
 
   // Cleanup on unmount
   useEffect(() => {
