@@ -8,7 +8,8 @@ import usePremiumCharacters from '../hooks/usePremiumCharacters';
 import TemplateGallery from '../components/TemplateGallery';
 import CharacterBuilder from '../components/CharacterBuilder';
 import CharacterCreationSuccess from '../components/CharacterCreationSuccess'; // âœ… NEW IMPORT
-import { usePremiumCharacterFlow } from '../hooks/usePremiumCharacterFlow';
+import { useSimplifiedPremiumFlow } from '../hooks/useSimplifiedPremiumFlow';
+
 
 // Enhanced semantic mappings for your complete character set
 const ENHANCED_SEMANTIC_MAPPINGS = {
@@ -123,7 +124,7 @@ const categoryRepresentatives = {
 
 const SplitScreenLauncher = ({ onStartChat }) => {
   const { token } = useAuth();
-  const { successData } = usePremiumCharacterFlow();
+  const { successData } = useSimplifiedPremiumFlow();
   
   try {
     const premiumFlow = usePremiumCharacterFlow();

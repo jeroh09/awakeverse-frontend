@@ -1,9 +1,9 @@
 // src/components/CharacterCreationSuccess.jsx - Enhanced with proper cleanup and error handling
 import React, { useState, useEffect, useRef } from 'react';
-import { usePremiumCharacterFlow } from '../hooks/usePremiumCharacterFlow';
+import { useSimplifiedPremiumFlow } from '../hooks/useSimplifiedPremiumFlow';
 
 const CharacterCreationSuccess = () => {
-  const { successData, setSuccessData } = usePremiumCharacterFlow();
+  const { successData, setSuccessData } = useSimplifiedPremiumFlow();
   const [redirectTimer, setRedirectTimer] = useState(10);
   const [isMobile, setIsMobile] = useState(false);
   const [hasUserInteracted, setHasUserInteracted] = useState(false);

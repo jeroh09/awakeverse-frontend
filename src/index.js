@@ -11,7 +11,8 @@ import { ContextProvider } from './contexts/ContextContext';
 import { WebSocketProvider } from './contexts/WebSocketContext';
 
 // Premium character integration
-import { PremiumCharacterProvider } from './hooks/usePremiumCharacterFlow';
+import { SimplifiedPremiumProvider } from './hooks/useSimplifiedPremiumFlow';
+
 
 import App from './App';
 
@@ -54,9 +55,9 @@ root.render(
             <CharacterProvider>
               <ContextProvider>
                 <WebSocketProvider>
-                  <PremiumCharacterProvider>
+                  <SimplifiedPremiumProvider>
                     <App />
-                  </PremiumCharacterProvider>
+                  </SimplifiedPremiumProvider>
                 </WebSocketProvider>
               </ContextProvider>
             </CharacterProvider>
