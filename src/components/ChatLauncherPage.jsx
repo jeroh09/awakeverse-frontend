@@ -1,4 +1,4 @@
-directories// src/pages/ChatLauncherPage.jsx - Updated with success screen integration
+// src/pages/ChatLauncherPage.jsx - Updated with success screen integration
 import React, { useState, useEffect, useMemo } from 'react';
 import TemplateGallery from './TemplateGallery';
 import CharacterBuilder from './CharacterBuilder'; 
