@@ -195,13 +195,8 @@ export const PremiumCharacterProvider = ({ children }) => {
     setCreationError(null);
     setError(null);
 
+        // New code with try-catch wrapper:
     try {
-      // REPLACE EVERYTHING IN THIS TRY BLOCK WITH:
-
-      // Simulate brief loading
-      await new Promise(resolve => setTimeout(resolve, 1000));
-
-      // Skip to success immediately
       if (isMountedRef.current) {
         setCreatedCharacterName(characterData.display_name);
         setCurrentView(FLOW_STATES.SUCCESS);
@@ -211,36 +206,14 @@ export const PremiumCharacterProvider = ({ children }) => {
           characterName: characterData.display_name
         });
       }
-
-      return { success: true };
-
-    } catch (error) {
-      // Keep existing error handling unchanged
-      if (isMountedRef.current && error.name !== 'AbortError') {
-        console.error('Character creation failed:', error);
-
-        let errorMessage = 'Failed to create character';
-
-        if (error.message.includes('timeout')) {
-          errorMessage = 'Request timed out. Please check your connection and try again.';
-        } else if (error.message.includes('NetworkError') || error.message.includes('Failed to fetch')) {
-          errorMessage = 'Network error. Please check your connection and try again.';
-        } else if (error.message) {
-          errorMessage = error.message;
-        }
-
-        setCreationError(errorMessage);
+    } catch (stateError) {
+      // If state updates throw an error, we'll catch it here
+      // This helps us know if the crash happens during state setting
+      if (isMountedRef.current) {
+        setCreationError('State update failed during success transition');
         setIsCreatingCharacter(false);
-
-        logStateChange('CREATE_CHARACTER_ERROR', FLOW_STATES.BUILDER, FLOW_STATES.BUILDER, {
-          error: errorMessage
-        });
       }
-
-      throw error;
-
-    } finally {
-      creationAbortController.current = null;
+      throw stateError; // Re-throw so we can trace it
     }
   }, [hasExistingCharacter, token, user?.id, selectedTemplate, logStateChange, refresh, resetFlowState, isCreatingCharacter]);
 
