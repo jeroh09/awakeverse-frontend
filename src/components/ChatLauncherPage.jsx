@@ -259,6 +259,7 @@ const SplitScreenLauncher = ({ onStartChat }) => {
   const hasPendingCharacter = useMemo(() => {
     const realValue = Array.isArray(userCharacters) && userCharacters.some(char => char.status === 'pending');
     const simulatedValue = DEBUG_MODE && SIMULATE_PENDING;
+    console.log('Button state debug:', { realValue, simulatedValue, userCharacters });
     return simulatedValue || realValue;
   }, [userCharacters]);
 
