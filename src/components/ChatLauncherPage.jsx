@@ -1,8 +1,10 @@
 // src/pages/ChatLauncherPage.jsx - Updated with success screen integration
+import React, { useState, useEffect, useMemo } from 'react';
 import TemplateGallery from './TemplateGallery';
 import CharacterBuilder from './CharacterBuilder'; 
 import CharacterCreationSuccess from './CharacterCreationSuccess';
-
+import { characterCategories } from '../data/characterCategories';
+import useInteractedCharacters from '../hooks/useInteractedCharacters';
 // CORRECT imports for files in different directories
 import { useAuth } from '../contexts/AuthContext';
 import { useUser } from '../contexts/UserContext';
