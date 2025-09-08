@@ -291,9 +291,9 @@ export const PremiumCharacterProvider = ({ children }) => {
         }, 10000); // 10 second auto-redirect
         
         // Refresh premium data in background
-        if (refresh) {
-          refresh().catch(console.warn);
-        }
+        //if (refresh) {
+          //refresh().catch(console.warn);
+        //}
 
         logStateChange('CREATE_CHARACTER_SUCCESS', FLOW_STATES.BUILDER, FLOW_STATES.SUCCESS, {
           characterName: characterData.display_name
