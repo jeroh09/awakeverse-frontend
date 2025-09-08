@@ -254,7 +254,7 @@ const SplitScreenLauncher = ({ onStartChat }) => {
   // Add these new computed properties - safe because they only read existing data
   // Enhanced computed properties with debug mode
   const DEBUG_MODE = true; // Set to false in production
-  const SIMULATE_PENDING = true; // Toggle this to test button states
+  const SIMULATE_PENDING = false; // Toggle this to test button states
 
   const hasPendingCharacter = useMemo(() => {
     const realValue = Array.isArray(userCharacters) && userCharacters.some(char => char.status === 'pending');
@@ -2921,25 +2921,26 @@ const PersonalizedSection = ({ characters, onCharacterSelect, hasActiveConversat
           ))}
         </div>
       )}
-      {/* DEBUG PANEL - Remove after testing */}
+      {/* DEBUG PANEL - Updated positioning */}
       <div style={{
         position: 'fixed',
-        bottom: '10px',
-        right: '10px',
-        background: 'rgba(0, 0, 0, 0.9)',
+        bottom: '20px',
+        right: '20px',
+        background: 'rgba(0, 0, 0, 0.95)',
         color: '#00ff00',
         padding: '1rem',
         borderRadius: '8px',
         fontSize: '12px',
         fontFamily: 'monospace',
-        border: '1px solid #333',
-        zIndex: 9999,
-        maxWidth: '300px',
+        border: '2px solid #00ff00',
+        zIndex: 99999,
+        maxWidth: '350px',
         maxHeight: '400px',
-        overflow: 'auto'
+        overflow: 'auto',
+        boxShadow: '0 4px 20px rgba(0, 255, 0, 0.3)'
       }}>
         <div style={{ marginBottom: '0.5rem', fontWeight: 'bold', color: '#ffff00' }}>
-          DEBUG STATE
+          🐛 DEBUG STATE
         </div>
         <div>isPremium: {String(isPremium)}</div>
         <div>premiumLoading: {String(premiumLoading)}</div>
@@ -2947,16 +2948,12 @@ const PersonalizedSection = ({ characters, onCharacterSelect, hasActiveConversat
         <div>hasPendingCharacter: {String(hasPendingCharacter)}</div>
         <div>hasApprovedCharacter: {String(hasApprovedCharacter)}</div>
         <div>pendingCharacterCount: {pendingCharacterCount}</div>
-        <div style={{ marginTop: '0.5rem', fontWeight: 'bold' }}>Characters:</div>
+        <div style={{ marginTop: '0.5rem', fontWeight: 'bold', color: '#ffff00' }}>Characters:</div>
         {userCharacters?.map((char, i) => (
-          <div key={i} style={{ fontSize: '10px' }}>
+          <div key={i} style={{ fontSize: '10px', color: '#ffffff' }}>
             {i}: {char.display_name} - {char.status}
           </div>
-        )) || <div>No characters</div>}
-        <div style={{ marginTop: '0.5rem', fontWeight: 'bold' }}>Premium Status:</div>
-        <div style={{ fontSize: '10px' }}>
-          {premiumStatus ? JSON.stringify(premiumStatus, null, 1).slice(0, 200) + '...' : 'null'}
-        </div>
+        )) || <div style={{ color: '#ff6666' }}>No characters</div>}
       </div>
     </div>
   );
