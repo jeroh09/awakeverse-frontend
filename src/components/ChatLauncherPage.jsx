@@ -8,7 +8,7 @@ import useInteractedCharacters from '../hooks/useInteractedCharacters';
 // CORRECT imports for files in different directories
 import { useAuth } from '../contexts/AuthContext';
 import { useUser } from '../contexts/UserContext';
-import { usePremiumCharacterFlow } from '../hooks/usePremiumCharacterFlow';
+//import { usePremiumCharacterFlow } from '../hooks/usePremiumCharacterFlow';
 import usePremiumCharacters from '../hooks/usePremiumCharacters';
 
 // Enhanced semantic mappings for your complete character set
@@ -125,13 +125,13 @@ const categoryRepresentatives = {
 const SplitScreenLauncher = ({ onStartChat }) => {
   const { token } = useAuth();
   
-  try {
-    const premiumFlow = usePremiumCharacterFlow();
-    console.log('🧪 Premium flow context available:', !!premiumFlow);
-    console.log('🧪 Current view:', premiumFlow.currentView);
-  } catch (error) {
-    console.error('❌ Premium flow context error:', error);
-  }
+  //try {
+    //const premiumFlow = usePremiumCharacterFlow();
+    //console.log('🧪 Premium flow context available:', !!premiumFlow);
+    //console.log('🧪 Current view:', premiumFlow.currentView);
+  //} catch (error) {
+    //console.error('❌ Premium flow context error:', error);
+  //}
   
   const {
     isPremium,
@@ -154,13 +154,20 @@ const SplitScreenLauncher = ({ onStartChat }) => {
     hasActiveConversations 
   } = useInteractedCharacters();
 
-  const {
-    showTemplateGallery,
-    showCharacterBuilder,
-    showSuccessModal, // ✅ NEW: Success modal state
-    selectedTemplate,
-    startTemplateFlow
-  } = usePremiumCharacterFlow();
+  //const {
+    //showTemplateGallery,
+    //showCharacterBuilder,
+    //showSuccessModal, // ✅ NEW: Success modal state
+    //selectedTemplate,
+    //startTemplateFlow
+  //} = usePremiumCharacterFlow();
+  // Add these temporary variables:
+  const showTemplateGallery = false;
+  const showCharacterBuilder = false;
+  const showSuccessModal = true; // Force this to true to test the success screen
+  const selectedTemplate = null;
+  const startTemplateFlow = () => {};
+
 
   const [inputValue, setInputValue] = useState('');
   const [selectedCategory, setSelectedCategory] = useState(null);
