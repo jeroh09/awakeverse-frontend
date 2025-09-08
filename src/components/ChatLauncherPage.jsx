@@ -2122,7 +2122,7 @@ const SplitScreenLauncher = ({ onStartChat }) => {
                           <div>DEBUG: chars={userCharacters?.length || 0} | pending={String(hasPendingCharacter)} | premium={String(isPremium)}</div>
                           <div>loading={String(premiumLoading)} | token={String(!!token)} | user={user?.id || 'none'}</div>
                           <div>error={error || 'none'} | initialized={String(isInitialized)}</div>
-                          <div>API Response: {lastApiResponse || 'none'}</div>
+                          <div>userChars raw: {JSON.stringify(userCharacters).slice(0, 100)}...</div>
                           {userCharacters?.map((char, i) => (
                             <div key={i}>char{i}: {char.display_name} - {char.status}</div>
                           ))}
