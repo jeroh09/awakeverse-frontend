@@ -175,7 +175,7 @@ const SplitScreenLauncher = ({ onStartChat }) => {
   const {
     showTemplateGallery,
     showCharacterBuilder,
-    showSuccessModal, // âœ… NEW: Success modal state
+    //showSuccessModal, // âœ… NEW: Success modal state
     selectedTemplate,
     startTemplateFlow
   } = usePremiumCharacterFlow();
@@ -189,21 +189,21 @@ const SplitScreenLauncher = ({ onStartChat }) => {
   const [isMobile, setIsMobile] = useState(false);
 
   // âœ… NEW: Early return for success screen
-  if (showSuccessModal) {
-    return (
-      <div style={{
-        position: 'fixed',
-        top: 0,
-        left: 0,
-        width: '100%',
-        height: '100%',
-        zIndex: 4000, // Higher than other modals
-        background: 'rgba(0, 0, 0, 0.95)'
-      }}>
-        <CharacterCreationSuccess />
-      </div>
-    );
-  }
+  //if (showSuccessModal) {
+    //return (
+      //<div style={{
+        //position: 'fixed',
+        //top: 0,
+        //left: 0,
+        //width: '100%',
+        //height: '100%',
+        //zIndex: 4000, // Higher than other modals
+        //background: 'rgba(0, 0, 0, 0.95)'
+      //}}>
+        //<CharacterCreationSuccess />
+      //</div>
+    //);
+ // }
   
   // Check for mobile viewport
   useEffect(() => {
