@@ -125,8 +125,15 @@ export const SimplifiedPremiumProvider = ({ children }) => {
   const createCharacter = async (characterData) => {
     // Basic guards
     if (isCreatingCharacter || !isMountedRef.current) {
+      // Set flag to block further submissions
+      localStorage.setItem(`pending_submission_${user.id}`, 'true');
+      setSuccessData({
+        characterName: characterData.display_name,
+        timestamp: Date.now()
+      });
+      setIsCreatingCharacter(false);
+      setCurrentView(FLOW_STATES.LAUNCHER); 
       console.warn('Character creation already in progress or component unmounted');
-      return;
     }
 
     // Validate prerequisites

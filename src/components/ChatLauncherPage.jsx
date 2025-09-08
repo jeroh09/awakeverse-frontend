@@ -263,15 +263,10 @@ const SplitScreenLauncher = ({ onStartChat }) => {
     return simulatedValue || realValue;
   }, [userCharacters]);
 
-  const hasApprovedCharacter = useMemo(() => {
-    return Array.isArray(userCharacters) && userCharacters.some(char => char.status === 'approved');
-  }, [userCharacters]);
-
-  const pendingCharacterCount = useMemo(() => {
-    const realCount = Array.isArray(userCharacters) ? userCharacters.filter(char => char.status === 'pending').length : 0;
-    const simulatedCount = DEBUG_MODE && SIMULATE_PENDING ? 1 : 0;
-    return simulatedCount || realCount;
-  }, [userCharacters]);
+  const hasSubmittedCharacter = useMemo(() => {
+  if (!user?.id) return false;
+  return localStorage.getItem(`pending_submission_${user.id}`) === 'true';
+}, [user?.id]);
   // Search function (simplified without semantic mappings)
   const performSemanticSearch = useMemo(() => {
     return (query) => {
@@ -875,16 +870,16 @@ const SplitScreenLauncher = ({ onStartChat }) => {
                     }}>
                       <button
                         onClick={() => {
-                          if (hasPendingCharacter) {
+                          if (hasSubmittedCharacter) {
                             console.log('Button disabled - user has pending character');
                             return;
                           }
                           console.log('Start trial clicked - showing template gallery');
                           startTemplateFlow();
                         }}
-                        disabled={hasPendingCharacter}
+                        disabled={hasSubmittedCharacter}
                         style={{
-                          background: hasPendingCharacter 
+                          background: hasSubmittedCharacter 
                             ? 'rgba(128, 128, 128, 0.3)' 
                             : 'linear-gradient(135deg, #FFD700, #FFA500)',
                           border: 'none',
@@ -897,16 +892,16 @@ const SplitScreenLauncher = ({ onStartChat }) => {
                           transition: 'all 0.3s ease',
                           fontFamily: "'Georgia', serif",
                           textTransform: 'none',
-                          boxShadow: hasPendingCharacter ? 'none' : '0 4px 15px rgba(255, 215, 0, 0.3)',
+                          boxShadow: hasSubmittedCharacter ? 'none' : '0 4px 15px rgba(255, 215, 0, 0.3)',
                           width: '100%',
                           position: 'relative',
                           zIndex: 100,
                           pointerEvents: 'auto',
-                          opacity: hasPendingCharacter ? 0.6 : 1
+                          opacity: hasSubmittedCharacter ? 0.6 : 1
                         }}
                       >
-                        {hasPendingCharacter 
-                          ? `Character Pending Approval (${pendingCharacterCount})` 
+                        {hasSubmittedCharacter 
+                          ? 'Character Pending Approval' 
                           : 'Start 3-Day Free Trial'
                         }
                       </button>
