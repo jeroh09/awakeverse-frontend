@@ -7,6 +7,7 @@ import CharacterCreationSuccess from './CharacterCreationSuccess';
 import { useAuth } from '../contexts/AuthContext';
 import { useUser } from '../contexts/UserContext';
 import { usePremiumCharacterFlow } from '../hooks/usePremiumCharacterFlow';
+import usePremiumCharacters from '../hooks/usePremiumCharacters';
 
 // Enhanced semantic mappings for your complete character set
 const ENHANCED_SEMANTIC_MAPPINGS = {
