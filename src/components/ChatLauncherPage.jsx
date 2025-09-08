@@ -7,8 +7,9 @@ import useInteractedCharacters from '../hooks/useInteractedCharacters';
 import usePremiumCharacters from '../hooks/usePremiumCharacters';
 import TemplateGallery from '../components/TemplateGallery';
 import CharacterBuilder from '../components/CharacterBuilder';
-import CharacterCreationSuccess from '../components/CharacterCreationSuccess'; // âœ… NEW IMPORT
+import CharacterCreationSuccess from '../components/CharacterCreationSuccess'; 
 import { usePremiumCharacterFlow } from '../hooks/usePremiumCharacterFlow';
+import StandaloneCharacterSuccess from '../components/StandaloneCharacterSuccess';
 
 // Enhanced semantic mappings for your complete character set
 const ENHANCED_SEMANTIC_MAPPINGS = {
@@ -153,13 +154,13 @@ const SplitScreenLauncher = ({ onStartChat }) => {
     hasActiveConversations 
   } = useInteractedCharacters();
 
-  const {
+  const { 
     showTemplateGallery,
     showCharacterBuilder,
-    showSuccessModal, // âœ… NEW: Success modal state
-    selectedTemplate,
-    startTemplateFlow
-  } = usePremiumCharacterFlow();
+    showSuccessModal,
+    successData,
+    resetFlowState
+} = usePremiumCharacterFlow();
 
   const [inputValue, setInputValue] = useState('');
   const [selectedCategory, setSelectedCategory] = useState(null);
@@ -170,21 +171,15 @@ const SplitScreenLauncher = ({ onStartChat }) => {
   const [isMobile, setIsMobile] = useState(false);
 
   // âœ… NEW: Early return for success screen
-  if (showSuccessModal) {
+  if (showSuccessModal && successData) {
     return (
-      <div style={{
-        position: 'fixed',
-        top: 0,
-        left: 0,
-        width: '100%',
-        height: '100%',
-        zIndex: 4000, // Higher than other modals
-        background: 'rgba(0, 0, 0, 0.95)'
-      }}>
-        <CharacterCreationSuccess />
-      </div>
+      <StandaloneCharacterSuccess 
+        characterName={successData.characterName}
+        onReturn={resetFlowState}
+      />
     );
   }
+
   
   // Check for mobile viewport
   useEffect(() => {
@@ -221,7 +216,7 @@ const SplitScreenLauncher = ({ onStartChat }) => {
       };
     }
 
-    console.log('ðŸŽ­ Enhanced categories updated:', {
+    console.log('🎭­ Enhanced categories updated:', {
       totalCategories: allCategories.length,
       myCharactersIndex: myCharIndex,
       approvedCharactersCount: approvedCharacters.length,
@@ -798,9 +793,9 @@ const SplitScreenLauncher = ({ onStartChat }) => {
                       marginBottom: '1.5rem'
                     }}>
                       {[
-                        { icon: 'ðŸŽ­', title: 'Custom Personality' },
-                        { icon: 'ðŸ“š', title: 'Expert Knowledge' },
-                        { icon: 'ðŸ›ï¸', title: 'Historical Context' }
+                        { icon: '🎭', title: 'Custom Personality' },
+                        { icon: '📚', title: 'Expert Knowledge' },
+                        { icon: '🏛️›ï¸', title: 'Historical Context' }
                       ].map((feature, index) => (
                         <div key={index} style={{
                           background: 'rgba(255, 255, 255, 0.05)',
@@ -916,7 +911,7 @@ const SplitScreenLauncher = ({ onStartChat }) => {
                       justifyContent: 'center',
                       fontSize: '32px'
                     }}>
-                      ðŸŽ¨
+                      🎨
                     </div>
 
                     <div style={{ textAlign: 'center' }}>
@@ -1883,9 +1878,9 @@ const SplitScreenLauncher = ({ onStartChat }) => {
                         marginBottom: '2rem'
                       }}>
                         {[
-                          { icon: 'ðŸŽ­', title: 'Custom Personality', desc: 'Define unique traits and speaking style' },
-                          { icon: 'ðŸ“š', title: 'Expert Knowledge', desc: 'Specialized in any domain you choose' },
-                          { icon: 'ðŸ›ï¸', title: 'Historical Context', desc: 'Set in any time period or culture' }
+                          { icon: '🎭­', title: 'Custom Personality', desc: 'Define unique traits and speaking style' },
+                          { icon: '📚', title: 'Expert Knowledge', desc: 'Specialized in any domain you choose' },
+                          { icon: '🏛️', title: 'Historical Context', desc: 'Set in any time period or culture' }
                         ].map((feature, index) => (
                           <div key={index} style={{
                             background: 'rgba(255, 255, 255, 0.05)',
@@ -2017,7 +2012,7 @@ const SplitScreenLauncher = ({ onStartChat }) => {
                         justifyContent: 'center',
                         fontSize: '40px'
                       }}>
-                        ðŸŽ¨
+                        🎨
                       </div>
 
                       <div style={{ textAlign: 'center' }}>
