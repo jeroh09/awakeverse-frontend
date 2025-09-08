@@ -144,13 +144,7 @@ const SplitScreenLauncher = ({ onStartChat }) => {
     approvedCharacters,
     loading: premiumLoading,
     premiumStatus,
-    characterTemplates,
-    error: premiumError,
     userCharacters,
-    grantTrial,
-    canCreateCharacter,
-    characterCount,
-    refresh,
   } = usePremiumCharacters();
 
   // ADD THIS CHECK RIGHT HERE, BEFORE ANY OTHER LOGIC:
