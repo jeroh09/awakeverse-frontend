@@ -124,7 +124,12 @@ const categoryRepresentatives = {
 
 const SplitScreenLauncher = ({ onStartChat }) => {
   const { token } = useAuth();
-  const { successData } = useSimplifiedPremiumFlow();
+  const { 
+    successData,
+    canCreateCharacter,
+    hasPendingCharacter,
+    hasRejectedCharacter
+  } = useSimplifiedPremiumFlow();
   
   try {
     const premiumFlow = useSimplifiedPremiumFlow();
@@ -820,7 +825,7 @@ const SplitScreenLauncher = ({ onStartChat }) => {
                       {[
                         { icon: '🎭', title: 'Custom Personality' },
                         { icon: '📚', title: 'Expert Knowledge' },
-                        { icon: '🏛️›ï¸', title: 'Historical Context' }
+                        { icon: '🏛️', title: 'Historical Context' }
                       ].map((feature, index) => (
                         <div key={index} style={{
                           background: 'rgba(255, 255, 255, 0.05)',
@@ -854,36 +859,55 @@ const SplitScreenLauncher = ({ onStartChat }) => {
                     }}>
                       <button
                         onClick={() => {
-                          console.log('Start trial clicked - showing template gallery');
-                          console.log('Before state change:', showTemplateGallery);
+                          if (!canCreateCharacter) {
+                            const message = hasPendingCharacter 
+                              ? 'You already have a character pending approval. Check your email for updates.'
+                              : hasRejectedCharacter
+                              ? 'Please revise your rejected character submission or contact support.'
+                              : 'Unable to create character at this time.';
+                            alert(message);
+                            return;
+                          }
                           startTemplateFlow();
-                          console.log('After state change call');
-                          setTimeout(() => {
-                          console.log('State after 2 seconds:', showTemplateGallery);
-                          }, 2000);
                         }}
-                        onMouseDown={() => console.log('Button mouse down detected')}
-                        onMouseEnter={() => console.log('Button mouse enter detected')}
+                        disabled={!canCreateCharacter}
                         style={{
-                          background: 'linear-gradient(135deg, #FFD700, #FFA500)',
+                          background: canCreateCharacter 
+                            ? 'linear-gradient(135deg, #FFD700, #FFA500)'
+                            : 'rgba(128, 128, 128, 0.3)',
                           border: 'none',
                           borderRadius: '20px',
-                          color: '#000',
+                          color: canCreateCharacter ? '#000' : 'rgba(255, 255, 255, 0.6)',
                           fontSize: '0.9rem',
                           fontWeight: 700,
                           padding: '0.8rem 1.5rem',
-                          cursor: 'pointer',
+                          cursor: canCreateCharacter ? 'pointer' : 'not-allowed',
                           transition: 'all 0.3s ease',
                           fontFamily: "'Georgia', serif",
                           textTransform: 'none',
-                          boxShadow: '0 4px 15px rgba(255, 215, 0, 0.3)',
+                          boxShadow: canCreateCharacter 
+                            ? '0 4px 15px rgba(255, 215, 0, 0.3)'
+                            : 'none',
                           width: '100%',
-                          position: 'relative',
-                          zIndex: 100,
+                          opacity: canCreateCharacter ? 1 : 0.6,
                           pointerEvents: 'auto'
                         }}
+                        onMouseEnter={(e) => {
+                          if (canCreateCharacter) {
+                            e.currentTarget.style.transform = 'translateY(-2px)';
+                            e.currentTarget.style.boxShadow = '0 6px 20px rgba(255, 215, 0, 0.4)';
+                          }
+                        }}
+                        onMouseLeave={(e) => {
+                          if (canCreateCharacter) {
+                            e.currentTarget.style.transform = 'translateY(0)';
+                            e.currentTarget.style.boxShadow = '0 4px 15px rgba(255, 215, 0, 0.3)';
+                          }
+                        }}
                       >
-                        Start 3-Day Free Trial
+                        {hasPendingCharacter ? 'Character Pending Approval' :
+                         hasRejectedCharacter ? 'Character Needs Revision' :
+                         'Start 3-Day Free Trial'}
                       </button>
                       
                       <button
@@ -1946,38 +1970,53 @@ const SplitScreenLauncher = ({ onStartChat }) => {
                       }}>
                         <button
                           onClick={() => {
-                            console.log('DESKTOP: Start trial clicked - showing template gallery');
-                            console.log('DESKTOP: Before state change:', showTemplateGallery);
+                            if (!canCreateCharacter) {
+                              const message = hasPendingCharacter 
+                                ? 'You already have a character pending approval. Check your email for updates.'
+                                : hasRejectedCharacter
+                                ? 'Please revise your rejected character submission or contact support.'
+                                : 'Unable to create character at this time.';
+                              alert(message);
+                              return;
+                            }
                             startTemplateFlow();
-                            console.log('DESKTOP: After state change call');
-                            setTimeout(() => {
-                              console.log('DESKTOP: State after timeout:', showTemplateGallery);
-                            }, 100);
                           }}
+                          disabled={!canCreateCharacter}
                           style={{
-                            background: 'linear-gradient(135deg, #FFD700, #FFA500)',
+                            background: canCreateCharacter 
+                              ? 'linear-gradient(135deg, #FFD700, #FFA500)'
+                              : 'rgba(128, 128, 128, 0.3)',
                             border: 'none',
                             borderRadius: '25px',
-                            color: '#000',
+                            color: canCreateCharacter ? '#000' : 'rgba(255, 255, 255, 0.6)',
                             fontSize: '1rem',
                             fontWeight: 700,
                             padding: '1rem 2rem',
-                            cursor: 'pointer',
+                            cursor: canCreateCharacter ? 'pointer' : 'not-allowed',
                             transition: 'all 0.3s ease',
                             fontFamily: "'Georgia', serif",
                             textTransform: 'none',
-                            boxShadow: '0 4px 15px rgba(255, 215, 0, 0.3)'
+                            boxShadow: canCreateCharacter 
+                              ? '0 4px 15px rgba(255, 215, 0, 0.3)'
+                              : 'none',
+                            opacity: canCreateCharacter ? 1 : 0.6
                           }}
                           onMouseEnter={(e) => {
-                            e.currentTarget.style.transform = 'translateY(-2px)';
-                            e.currentTarget.style.boxShadow = '0 6px 20px rgba(255, 215, 0, 0.4)';
+                            if (canCreateCharacter) {
+                              e.currentTarget.style.transform = 'translateY(-2px)';
+                              e.currentTarget.style.boxShadow = '0 6px 20px rgba(255, 215, 0, 0.4)';
+                            }
                           }}
                           onMouseLeave={(e) => {
-                            e.currentTarget.style.transform = 'translateY(0)';
-                            e.currentTarget.style.boxShadow = '0 4px 15px rgba(255, 215, 0, 0.3)';
+                            if (canCreateCharacter) {
+                              e.currentTarget.style.transform = 'translateY(0)';
+                              e.currentTarget.style.boxShadow = '0 4px 15px rgba(255, 215, 0, 0.3)';
+                            }
                           }}
                         >
-                          Start 3-Day Free Trial
+                          {hasPendingCharacter ? 'Character Pending Approval' :
+                           hasRejectedCharacter ? 'Character Needs Revision' :
+                           'Start 3-Day Free Trial'}
                         </button>
                         
                         <button

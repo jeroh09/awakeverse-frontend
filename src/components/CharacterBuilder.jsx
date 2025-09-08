@@ -230,7 +230,7 @@ Engage users with the depth and authenticity that comes from your unique histori
             opacity: isCreatingCharacter ? 0.5 : 1
           }}
         >
-          â† Back to Templates
+          ← Back to Templates
         </button>
       </div>
 
