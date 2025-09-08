@@ -13,17 +13,17 @@ const CharacterCreationSuccess = () => {
   const isMountedRef = useRef(true);
 
   // Add this new function after your useState declarations
-  const handleSafeNavigation = () => {
-    if (resetFlowState) {
-      resetFlowState();
-    } else if (backToLauncher) {
-      backToLauncher();
-    } else {
+  //const handleSafeNavigation = () => {
+    //if (resetFlowState) {
+      //resetFlowState();
+    //} else if (backToLauncher) {
+      //backToLauncher();
+    //} else {
     // Emergency fallback - navigate directly
-      window.location.hash = '#launcher';
-      window.location.reload();
-    }
-  };
+      //window.location.hash = '#launcher';
+      //window.location.reload();
+    //}
+  //};
 
   // Check for mobile viewport
   useEffect(() => {
@@ -63,7 +63,7 @@ const CharacterCreationSuccess = () => {
         clearInterval(timerRef.current);
       }
     };
-  }, [hasUserInteracted, resetFlowState, backToLauncher]);
+  }, [hasUserInteracted]);
 
   // Handle manual navigation
   const handleManualReturn = () => {
@@ -200,7 +200,7 @@ const CharacterCreationSuccess = () => {
         }}>
           <button
             onClick={handleManualReturn}
-            disabled={!backToLauncher && !resetFlowState}
+            disabled={!setSuccessData}
             style={{
               background: 'linear-gradient(135deg, #FFD700, #FFA500)',
               border: 'none',
@@ -214,10 +214,10 @@ const CharacterCreationSuccess = () => {
               boxShadow: '0 4px 15px rgba(255, 215, 0, 0.3)',
               width: isMobile ? '100%' : 'auto',
               minWidth: '150px',
-              opacity: (!backToLauncher && !resetFlowState) ? 0.5 : 1
+              opacity: (!setSuccessData) ? 0.5 : 1
             }}
             onMouseEnter={(e) => {
-              if (backToLauncher || resetFlowState) {
+              if (!setSuccessData) {
                 e.currentTarget.style.transform = 'translateY(-2px)';
                 e.currentTarget.style.boxShadow = '0 6px 20px rgba(255, 215, 0, 0.4)';
               }

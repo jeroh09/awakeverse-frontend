@@ -1,4 +1,4 @@
-// src/hooks/usePremiumCharacterFlow.js - Fixed with standalone success handling
+// src/hooks/usePremiumCharacterFlow.js - Robust implementation with proper error handling
 import React, { useState, useCallback, useContext, createContext, useRef, useEffect } from 'react';
 import { useAuth } from '../contexts/AuthContext';
 import { useUser } from '../contexts/UserContext';
@@ -66,6 +66,7 @@ class PremiumCharacterErrorBoundary extends React.Component {
 export const PremiumCharacterProvider = ({ children }) => {
   const { token } = useAuth();
   const { user } = useUser();
+  const [successData, setSuccessData] = useState(null);
   
   // Core flow state
   const [currentView, setCurrentView] = useState(FLOW_STATES.LAUNCHER);
@@ -73,13 +74,10 @@ export const PremiumCharacterProvider = ({ children }) => {
   const [createdCharacterName, setCreatedCharacterName] = useState('');
   const [error, setError] = useState(null);
   
+  
   // Creation state management
   const [isCreatingCharacter, setIsCreatingCharacter] = useState(false);
   const [creationError, setCreationError] = useState(null);
-  
-  // ✅ NEW: Success display state - independent of React context
-  const [successData, setSuccessData] = useState(null);
-  
   
   // Refs for cleanup and race condition prevention
   const creationAbortController = useRef(null);
@@ -87,7 +85,7 @@ export const PremiumCharacterProvider = ({ children }) => {
   const successTimerRef = useRef(null);
   
   // Track existing characters
-  const { userCharacters, isPremium } = usePremiumCharacters();
+  const { userCharacters, isPremium, refresh } = usePremiumCharacters();
   const hasExistingCharacter = Array.isArray(userCharacters) && userCharacters.length > 0;
 
   // Cleanup on unmount
@@ -119,7 +117,6 @@ export const PremiumCharacterProvider = ({ children }) => {
     setError(null);
     setCreationError(null);
     setIsCreatingCharacter(false);
-    setSuccessData(null); // ✅ Clear success data
     
     // Cancel ongoing operations
     if (creationAbortController.current) {
@@ -138,7 +135,7 @@ export const PremiumCharacterProvider = ({ children }) => {
   const logStateChange = useCallback((action, from, to, data = {}) => {
     if (!isMountedRef.current) return;
     
-    console.log(`🔄 Premium Flow: ${action}`, {
+    console.log(`ðŸ”„ Premium Flow: ${action}`, {
       from,
       to,
       timestamp: new Date().toISOString(),
@@ -150,18 +147,17 @@ export const PremiumCharacterProvider = ({ children }) => {
   const showTemplateGallery = useCallback(() => {
     if (!isMountedRef.current || isCreatingCharacter) return;
     
-    console.log('🎨 Showing template gallery');
+    console.log('ðŸŽ¨ Showing template gallery');
     logStateChange('SHOW_TEMPLATE_GALLERY', currentView, FLOW_STATES.TEMPLATES);
     setCurrentView(FLOW_STATES.TEMPLATES);
     setError(null);
     setCreationError(null);
-    setSuccessData(null); // Clear any existing success data
   }, [currentView, logStateChange, isCreatingCharacter]);
 
   const selectTemplate = useCallback((template) => {
     if (!isMountedRef.current || isCreatingCharacter) return;
     
-    console.log('🎯 Template selected:', template?.name);
+    console.log('ðŸŽ¯ Template selected:', template?.name);
     logStateChange('SELECT_TEMPLATE', FLOW_STATES.TEMPLATES, FLOW_STATES.BUILDER, {
       templateId: template?.id,
       templateName: template?.name
@@ -172,11 +168,11 @@ export const PremiumCharacterProvider = ({ children }) => {
     setCreationError(null);
   }, [logStateChange, isCreatingCharacter]);
 
-  // ✅ FIXED: Enhanced character creation WITHOUT refresh() call
-  const createCharacter = useCallback(async (characterData) => {
+  // Enhanced character creation with comprehensive error handling
+  const createCharacter = async (characterData) => {
     // Prevent multiple submissions
     if (isCreatingCharacter || !isMountedRef.current) {
-      console.warn('🚫 Character creation already in progress or component unmounted');
+      console.warn('ðŸš« Character creation already in progress or component unmounted');
       return;
     }
 
@@ -204,10 +200,10 @@ export const PremiumCharacterProvider = ({ children }) => {
     try {
       const API_BASE = process.env.REACT_APP_API_URL || 'http://localhost:5000';
       
-      console.log('🚀 Starting character creation flow for:', characterData.display_name);
+      console.log('ðŸš€ Starting character creation flow for:', characterData.display_name);
 
       // STEP 1: Grant trial with timeout and cancellation
-      console.log('🔑 Step 1: Granting trial...');
+      console.log('ðŸ“ Step 1: Granting trial...');
       
       const trialResponse = await Promise.race([
         fetch(`${API_BASE}/api/premium/trial/${user.id}`, {
@@ -226,7 +222,7 @@ export const PremiumCharacterProvider = ({ children }) => {
 
       // Check if component was unmounted during request
       if (!isMountedRef.current) {
-        console.log('🛑 Component unmounted during trial request');
+        console.log('ðŸ›‘ Component unmounted during trial request');
         return;
       }
 
@@ -236,10 +232,10 @@ export const PremiumCharacterProvider = ({ children }) => {
         throw new Error(trialError.message || `Trial failed: ${trialResponse.status}`);
       }
 
-      console.log('✅ Trial step completed');
+      console.log('âœ… Trial step completed');
 
       // STEP 2: Create character with timeout
-      console.log('🔑 Step 2: Creating character...');
+      console.log('ðŸ“ Step 2: Creating character...');
       
       const finalCharacterData = {
         ...characterData,
@@ -266,7 +262,7 @@ export const PremiumCharacterProvider = ({ children }) => {
 
       // Check if component was unmounted during request
       if (!isMountedRef.current) {
-        console.log('🛑 Component unmounted during character creation');
+        console.log('ðŸ›‘ Component unmounted during character creation');
         return;
       }
 
@@ -276,56 +272,40 @@ export const PremiumCharacterProvider = ({ children }) => {
       }
 
       const result = await characterResponse.json();
-      console.log('✅ Character created successfully:', result);
-      // ✅ SIMPLIFIED: Just set success data and stop
+      console.log('âœ… Character created successfully:', result);
+
+      // Only update state if component is still mounted
       if (isMountedRef.current) {
         setSuccessData({
           characterName: characterData.display_name,
           timestamp: Date.now()
         });
+
         setIsCreatingCharacter(false);
-  
-        logStateChange('CREATE_CHARACTER_SUCCESS', FLOW_STATES.BUILDER, 'success_overlay', {
+        
+        // Set up auto-redirect timer with cleanup
+        successTimerRef.current = setTimeout(() => {
+          if (isMountedRef.current) {
+            resetFlowState();
+          }
+        }, 10000); // 10 second auto-redirect
+        
+        // Refresh premium data in background
+        if (refresh) {
+          refresh().catch(console.warn);
+        }
+
+        logStateChange('CREATE_CHARACTER_SUCCESS', FLOW_STATES.BUILDER, FLOW_STATES.SUCCESS, {
           characterName: characterData.display_name
         });
       }
 
-      // ✅ CRITICAL FIX: Set success data without triggering refresh
-      //if (isMountedRef.current) {
-        //setCreatedCharacterName(characterData.display_name);
-    
-        
-        // Store success data for standalone component
-        //setSuccessData({
-          //characterName: characterData.display_name,
-          //timestamp: new Date().toISOString()
-        //});
-        
-        //setCurrentView(FLOW_STATES.SUCCESS);
-        //setIsCreatingCharacter(false);
-        
-        // ✅ REMOVED: No refresh() call to prevent race conditions
-        // if (refresh) {
-        //   refresh().catch(console.warn);
-        // }
-        
-        // Set up auto-redirect timer with cleanup
-       // successTimerRef.current = setTimeout(() => {
-         // if (isMountedRef.current) {
-           // resetFlowState();
-          //}
-        //}, 15000); // 15 second auto-redirect for safety
-        
-        //logStateChange('CREATE_CHARACTER_SUCCESS', FLOW_STATES.BUILDER, FLOW_STATES.SUCCESS, {
-          //characterName: characterData.display_name
-        //});
-      //}
       return result;
 
     } catch (error) {
       // Only update state if component is still mounted and error wasn't from cancellation
       if (isMountedRef.current && error.name !== 'AbortError') {
-        console.error('❌ Character creation failed:', error);
+        console.error('âŒ Character creation failed:', error);
         
         let errorMessage = 'Failed to create character';
         
@@ -352,13 +332,13 @@ export const PremiumCharacterProvider = ({ children }) => {
       // Clean up abort controller
       creationAbortController.current = null;
     }
-  }, [hasExistingCharacter, token, user?.id, selectedTemplate, logStateChange, resetFlowState, isCreatingCharacter]);
+  };
 
   // Navigation with cleanup
   const backToLauncher = useCallback(() => {
     if (!isMountedRef.current) return;
     
-    console.log('🔙 Back to launcher');
+    console.log('ðŸ”™ Back to launcher');
     resetFlowState();
     logStateChange('BACK_TO_LAUNCHER', currentView, FLOW_STATES.LAUNCHER);
   }, [currentView, logStateChange, resetFlowState]);
@@ -366,7 +346,7 @@ export const PremiumCharacterProvider = ({ children }) => {
   const backToTemplates = useCallback(() => {
     if (!isMountedRef.current || isCreatingCharacter) return;
     
-    console.log('🔙 Back to templates');
+    console.log('ðŸ”™ Back to templates');
     logStateChange('BACK_TO_TEMPLATES', currentView, FLOW_STATES.TEMPLATES);
     setCurrentView(FLOW_STATES.TEMPLATES);
     setError(null);
@@ -396,15 +376,12 @@ export const PremiumCharacterProvider = ({ children }) => {
     currentView,
     selectedTemplate,
     createdCharacterName,
-    error,
     successData,
+    error,
     
     // Creation state
     isCreatingCharacter,
     creationError,
-
-    // ✅ NEW: Success data for standalone component
-    successData,
 
     // Computed flags
     showTemplateGallery: showTemplateGallery_flag,
@@ -417,9 +394,9 @@ export const PremiumCharacterProvider = ({ children }) => {
     createCharacter,
     backToLauncher,
     backToTemplates,
+    setSuccessData,
     setError: safeSetError,
     setCreationError: safeSetCreationError,
-    setSuccessData,
     resetFlowState,
 
     // Validation flags
