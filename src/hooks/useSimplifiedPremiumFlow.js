@@ -77,13 +77,7 @@ export const SimplifiedPremiumProvider = ({ children }) => {
   // Get character data without refresh dependencies
   const { userCharacters, isPremium } = usePremiumCharacters();
   const hasExistingCharacter = Array.isArray(userCharacters) && userCharacters.length > 0;
-  const hasPendingCharacter = Array.isArray(userCharacters) && 
-    userCharacters.some(char => char.status === 'pending');
-  const hasRejectedCharacter = Array.isArray(userCharacters) && 
-    userCharacters.some(char => char.status === 'rejected');
-  const hasApprovedCharacter = Array.isArray(userCharacters) && 
-    userCharacters.some(char => char.status === 'approved');
-  const canCreateCharacter = !hasPendingCharacter && !hasRejectedCharacter && !isCreatingCharacter;
+  
 
   // Cleanup on unmount
   useEffect(() => {
@@ -294,11 +288,6 @@ export const SimplifiedPremiumProvider = ({ children }) => {
     backToTemplates,
     setError: safeSetError,
     setCreationError: safeSetCreationError,
-    // Add these new exports:
-    hasPendingCharacter,
-    hasRejectedCharacter,
-    hasApprovedCharacter,
-    canCreateCharacter,
 
     // Validation flags
     hasExistingCharacter,
