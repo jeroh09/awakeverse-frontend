@@ -1,8 +1,8 @@
-// src/pages/ChatLauncherPage.jsx - Updated with success screen integration
+directories// src/pages/ChatLauncherPage.jsx - Updated with success screen integration
 import React, { useState, useEffect, useMemo } from 'react';
 import TemplateGallery from './TemplateGallery';
 import CharacterBuilder from './CharacterBuilder'; 
-import CharacterCreationSuccess from './CharacterCreationSuccess';
+//import CharacterCreationSuccess from './CharacterCreationSuccess';
 import { characterCategories } from '../data/characterCategories';
 import useInteractedCharacters from '../hooks/useInteractedCharacters';
 // CORRECT imports for files in different directories
@@ -171,6 +171,7 @@ const SplitScreenLauncher = ({ onStartChat }) => {
   const [isMobile, setIsMobile] = useState(false);
 
   // ✅ NEW: Early return for success screen
+    // Early return for success screen - INLINE TEST
   if (showSuccessModal) {
     return (
       <div style={{
@@ -179,10 +180,24 @@ const SplitScreenLauncher = ({ onStartChat }) => {
         left: 0,
         width: '100%',
         height: '100%',
-        zIndex: 4000, // Higher than other modals
+        zIndex: 4000,
         background: 'rgba(0, 0, 0, 0.95)'
       }}>
-        <CharacterCreationSuccess />
+        <div style={{
+          position: 'absolute',
+          top: '50%',
+          left: '50%',
+          transform: 'translate(-50%, -50%)',
+          background: '#00FF00',
+          padding: '2rem',
+          borderRadius: '8px',
+          color: '#000',
+          textAlign: 'center'
+        }}>
+          <h1>INLINE SUCCESS TEST</h1>
+          <p>This bypasses the import completely</p>
+          <button onClick={() => window.location.reload()}>Reload</button>
+        </div>
       </div>
     );
   }
