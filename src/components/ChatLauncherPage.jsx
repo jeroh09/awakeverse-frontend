@@ -974,6 +974,7 @@ const SplitScreenLauncher = ({ onStartChat }) => {
                       }}>
                         Ready to Create?
                       </h3>
+
                       
                       <p style={{
                         color: 'rgba(255, 255, 255, 0.8)',
@@ -2106,6 +2107,23 @@ const SplitScreenLauncher = ({ onStartChat }) => {
                         }}>
                           Ready to Create?
                         </h3>
+                        {/* DEBUG INFO - Remove after testing */}
+                        <div style={{
+                          background: 'rgba(255, 0, 0, 0.8)',
+                          color: 'white',
+                          padding: '0.5rem',
+                          borderRadius: '4px',
+                          fontSize: '12px',
+                          fontFamily: 'monospace',
+                          margin: '0 0 1rem 0',
+                          border: '2px solid yellow'
+                        }}>
+                          <div>DEBUG: chars={userCharacters?.length || 0} | pending={String(hasPendingCharacter)} | premium={String(isPremium)}</div>
+                          <div>loading={String(premiumLoading)} | token={String(!!token)} | user={user?.id || 'none'}</div>
+                          {userCharacters?.map((char, i) => (
+                            <div key={i}>char{i}: {char.display_name} - {char.status}</div>
+                          ))}
+                        </div>
                         
                         <p style={{
                           color: 'rgba(255, 255, 255, 0.8)',
