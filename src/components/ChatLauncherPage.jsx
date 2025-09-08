@@ -7,9 +7,8 @@ import useInteractedCharacters from '../hooks/useInteractedCharacters';
 import usePremiumCharacters from '../hooks/usePremiumCharacters';
 import TemplateGallery from '../components/TemplateGallery';
 import CharacterBuilder from '../components/CharacterBuilder';
-//import CharacterCreationSuccess from '../components/CharacterCreationSuccess'; 
+import CharacterCreationSuccess from '../components/CharacterCreationSuccess'; // âœ… NEW IMPORT
 import { usePremiumCharacterFlow } from '../hooks/usePremiumCharacterFlow';
-import StandaloneCharacterSuccess from '../components/StandaloneCharacterSuccess';
 
 // Enhanced semantic mappings for your complete character set
 const ENHANCED_SEMANTIC_MAPPINGS = {
@@ -154,15 +153,13 @@ const SplitScreenLauncher = ({ onStartChat }) => {
     hasActiveConversations 
   } = useInteractedCharacters();
 
-  const { 
+  const {
     showTemplateGallery,
     showCharacterBuilder,
-    showSuccessModal,
-    successData,
-    resetFlowState
-} = usePremiumCharacterFlow();
-
-
+    showSuccessModal, // âœ… NEW: Success modal state
+    selectedTemplate,
+    startTemplateFlow
+  } = usePremiumCharacterFlow();
 
   const [inputValue, setInputValue] = useState('');
   const [selectedCategory, setSelectedCategory] = useState(null);
@@ -173,15 +170,21 @@ const SplitScreenLauncher = ({ onStartChat }) => {
   const [isMobile, setIsMobile] = useState(false);
 
   // âœ… NEW: Early return for success screen
-  if (showSuccessModal && successData) {
+  if (showSuccessModal) {
     return (
-      <StandaloneCharacterSuccess 
-        characterName={successData.characterName}
-        onReturn={resetFlowState}
-      />
+      <div style={{
+        position: 'fixed',
+        top: 0,
+        left: 0,
+        width: '100%',
+        height: '100%',
+        zIndex: 4000, // Higher than other modals
+        background: 'rgba(0, 0, 0, 0.95)'
+      }}>
+        <CharacterCreationSuccess />
+      </div>
     );
   }
-
   
   // Check for mobile viewport
   useEffect(() => {
@@ -828,16 +831,16 @@ const SplitScreenLauncher = ({ onStartChat }) => {
                       flexDirection: 'column',
                       gap: '0.8rem',
                       width: '100%'
-                    }}>console.log('Trial button clicked');
+                    }}>
                       <button
                         onClick={() => {
-                          
-                          const context = usePremiumCharacterFlow();
-                          if (context && typeof context.showTemplateGallery === 'function') {
-                            context.showTemplateGallery();
-                          } else {
-                            console.error('showTemplateGallery function not available');
-                          }
+                          console.log('Start trial clicked - showing template gallery');
+                          console.log('Before state change:', showTemplateGallery);
+                          startTemplateFlow();
+                          console.log('After state change call');
+                          setTimeout(() => {
+                          console.log('State after 2 seconds:', showTemplateGallery);
+                          }, 2000);
                         }}
                         onMouseDown={() => console.log('Button mouse down detected')}
                         onMouseEnter={() => console.log('Button mouse enter detected')}
@@ -938,14 +941,10 @@ const SplitScreenLauncher = ({ onStartChat }) => {
                     </div>
 
                     <button
-                        onClick={() => {
-                          const context = usePremiumCharacterFlow();
-                          if (context && typeof context.showTemplateGallery === 'function') {
-                            context.showTemplateGallery();
-                          } else {
-                            console.error('showTemplateGallery function not available');
-                          }
-                        }}
+                      onClick={() => {
+                        console.log('Create character clicked - showing template gallery');
+                        startTemplateFlow();
+                      }}
                       style={{
                         background: 'linear-gradient(135deg, #FFD700, #FFA500)',
                         border: 'none',
@@ -1927,20 +1926,13 @@ const SplitScreenLauncher = ({ onStartChat }) => {
                       }}>
                         <button
                           onClick={() => {
-                            try {
-                              console.log('Trial button clicked');
-                              const context = usePremiumCharacterFlow();
-
-                              if (context && typeof context.showTemplateGallery === 'function') {
-                                context.showTemplateGallery();
-                              } else {
-                                console.error('showTemplateGallery function not available');
-                                // No fallback - just log the error
-                              }
-                            } catch (error) {
-                              console.error('Button click failed:', error);
-                              // No navigation fallback - stay in the app
-                            }
+                            console.log('DESKTOP: Start trial clicked - showing template gallery');
+                            console.log('DESKTOP: Before state change:', showTemplateGallery);
+                            startTemplateFlow();
+                            console.log('DESKTOP: After state change call');
+                            setTimeout(() => {
+                              console.log('DESKTOP: State after timeout:', showTemplateGallery);
+                            }, 100);
                           }}
                           style={{
                             background: 'linear-gradient(135deg, #FFD700, #FFA500)',
@@ -2051,15 +2043,10 @@ const SplitScreenLauncher = ({ onStartChat }) => {
                       </div>
 
                       <button
-                          onClick={() => {
-                            console.log('Trial button clicked');
-                            const context = usePremiumCharacterFlow();
-                            if (context && typeof context.showTemplateGallery === 'function') {
-                              context.showTemplateGallery();
-                            } else {
-                              console.error('showTemplateGallery function not available');
-                            }
-                          }}
+                        onClick={() => {
+                          console.log('Create character clicked - showing template gallery');
+                          startTemplateFlow();
+                        }}
                         style={{
                           background: 'linear-gradient(135deg, #FFD700, #FFA500)',
                           border: 'none',
