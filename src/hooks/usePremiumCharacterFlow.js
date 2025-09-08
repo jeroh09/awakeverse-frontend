@@ -14,10 +14,11 @@ const FLOW_STATES = {
 const PremiumCharacterContext = createContext();
 
 // Error Boundary Component
+// Enhanced Error Boundary - Replace the existing one in usePremiumCharacterFlow.js
 class PremiumCharacterErrorBoundary extends React.Component {
   constructor(props) {
     super(props);
-    this.state = { hasError: false, error: null };
+    this.state = { hasError: false, error: null, errorInfo: null };
   }
 
   static getDerivedStateFromError(error) {
@@ -25,35 +26,89 @@ class PremiumCharacterErrorBoundary extends React.Component {
   }
 
   componentDidCatch(error, errorInfo) {
-    console.error('Premium Character Flow Error:', error, errorInfo);
+    // Store error details for display
+    this.setState({
+      error: error,
+      errorInfo: errorInfo
+    });
   }
 
   render() {
     if (this.state.hasError) {
       return (
         <div style={{
+          position: 'fixed',
+          top: 0,
+          left: 0,
+          width: '100%',
+          height: '100%',
+          background: 'rgba(0, 0, 0, 0.95)',
+          color: '#fff',
           padding: '2rem',
-          textAlign: 'center',
-          color: '#ff6b6b',
-          background: 'rgba(255, 107, 107, 0.1)',
-          border: '1px solid rgba(255, 107, 107, 0.3)',
-          borderRadius: '8px',
-          margin: '1rem'
+          fontFamily: 'monospace',
+          fontSize: '14px',
+          zIndex: 9999,
+          overflow: 'auto'
         }}>
-          <h3>Character Creation Temporarily Unavailable</h3>
-          <p>Please refresh the page to try again.</p>
+          <div style={{
+            background: '#ff1744',
+            color: 'white',
+            padding: '1rem',
+            borderRadius: '8px',
+            marginBottom: '1rem'
+          }}>
+            <h2>Premium Character Flow Error Details</h2>
+          </div>
+          
+          <div style={{
+            background: '#333',
+            padding: '1rem',
+            borderRadius: '8px',
+            marginBottom: '1rem'
+          }}>
+            <h3>Error Message:</h3>
+            <pre style={{ color: '#ff6b6b', whiteSpace: 'pre-wrap' }}>
+              {this.state.error?.toString()}
+            </pre>
+          </div>
+
+          <div style={{
+            background: '#333',
+            padding: '1rem',
+            borderRadius: '8px',
+            marginBottom: '1rem'
+          }}>
+            <h3>Error Stack:</h3>
+            <pre style={{ color: '#ffa726', whiteSpace: 'pre-wrap', fontSize: '12px' }}>
+              {this.state.error?.stack}
+            </pre>
+          </div>
+
+          <div style={{
+            background: '#333',
+            padding: '1rem',
+            borderRadius: '8px',
+            marginBottom: '1rem'
+          }}>
+            <h3>Component Stack:</h3>
+            <pre style={{ color: '#66bb6a', whiteSpace: 'pre-wrap', fontSize: '12px' }}>
+              {this.state.errorInfo?.componentStack}
+            </pre>
+          </div>
+
           <button 
             onClick={() => window.location.reload()}
             style={{
-              background: '#ff6b6b',
+              background: '#2196f3',
               color: 'white',
               border: 'none',
-              padding: '0.5rem 1rem',
+              padding: '1rem 2rem',
               borderRadius: '4px',
-              cursor: 'pointer'
+              cursor: 'pointer',
+              fontSize: '16px'
             }}
           >
-            Refresh Page
+            Reload Page
           </button>
         </div>
       );
