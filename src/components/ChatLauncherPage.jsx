@@ -127,7 +127,7 @@ const SplitScreenLauncher = ({ onStartChat }) => {
   const { successData } = useSimplifiedPremiumFlow();
   
   try {
-    const premiumFlow = usePremiumCharacterFlow();
+    const premiumFlow = useSimplifiedPremiumFlow();
     console.log('ðŸ§ª Premium flow context available:', !!premiumFlow);
     console.log('ðŸ§ª Current view:', premiumFlow.currentView);
   } catch (error) {
@@ -179,7 +179,7 @@ const SplitScreenLauncher = ({ onStartChat }) => {
     //showSuccessModal, // âœ… NEW: Success modal state
     selectedTemplate,
     startTemplateFlow
-  } = usePremiumCharacterFlow();
+  } = useSimplifiedPremiumFlow();
 
   const [inputValue, setInputValue] = useState('');
   const [selectedCategory, setSelectedCategory] = useState(null);

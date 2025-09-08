@@ -1,10 +1,10 @@
 // src/components/TemplateGallery.jsx - Standalone template selection component
 import React, { useState } from 'react';
-import { usePremiumCharacterFlow } from '../hooks/usePremiumCharacterFlow';
+import { useSimplifiedPremiumFlow } from '../hooks/useSimplifiedPremiumFlow';
 import usePremiumCharacters from '../hooks/usePremiumCharacters';
 
 const TemplateGallery = ({ userPremiumStatus = null }) => {
-  const { selectTemplate, backToLauncher } = usePremiumCharacterFlow();
+  const { selectTemplate, backToLauncher } = useSimplifiedPremiumFlow();
   const { characterTemplates, loading: templatesLoading } = usePremiumCharacters();
   const [selectedTemplate, setSelectedTemplate] = useState(null);
   const [selectedArchetype, setSelectedArchetype] = useState('all');
