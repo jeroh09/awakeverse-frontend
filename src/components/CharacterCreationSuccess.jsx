@@ -3,7 +3,10 @@ import React, { useState, useEffect, useRef } from 'react';
 import { usePremiumCharacterFlow } from '../hooks/usePremiumCharacterFlow';
 
 const CharacterCreationSuccess = () => {
-  const { createdCharacterName, backToLauncher, resetFlowState } = usePremiumCharacterFlow();
+  const context = usePremiumCharacterFlow();
+  const createdCharacterName = context?.createdCharacterName || 'Your Character';
+  const backToLauncher = context?.backToLauncher;
+  const resetFlowState = context?.resetFlowState;
   const [redirectTimer, setRedirectTimer] = useState(10);
   const [isMobile, setIsMobile] = useState(false);
   const [hasUserInteracted, setHasUserInteracted] = useState(false);
@@ -11,6 +14,19 @@ const CharacterCreationSuccess = () => {
   // Refs for cleanup
   const timerRef = useRef(null);
   const isMountedRef = useRef(true);
+
+  // Add this new function after your useState declarations
+  const handleSafeNavigation = () => {
+    if (resetFlowState) {
+      resetFlowState();
+    } else if (backToLauncher) {
+      backToLauncher();
+    } else {
+    // Emergency fallback - navigate directly
+      window.location.hash = '#launcher';
+      window.location.reload();
+    }
+  };
 
   // Check for mobile viewport
   useEffect(() => {
@@ -61,11 +77,7 @@ const CharacterCreationSuccess = () => {
     }
     
     // Navigate back
-    if (resetFlowState) {
-      resetFlowState();
-    } else if (backToLauncher) {
-      backToLauncher();
-    }
+    handleSafeNavigation();
   };
 
   // Safety check for missing character name

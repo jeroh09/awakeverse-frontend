@@ -7,7 +7,7 @@ import useInteractedCharacters from '../hooks/useInteractedCharacters';
 import usePremiumCharacters from '../hooks/usePremiumCharacters';
 import TemplateGallery from '../components/TemplateGallery';
 import CharacterBuilder from '../components/CharacterBuilder';
-import CharacterCreationSuccess from './components/CharacterCreationSuccess'; // âœ… NEW IMPORT
+import CharacterCreationSuccess from '../components/CharacterCreationSuccess'; // âœ… NEW IMPORT
 import { usePremiumCharacterFlow } from '../hooks/usePremiumCharacterFlow';
 
 // Enhanced semantic mappings for your complete character set
