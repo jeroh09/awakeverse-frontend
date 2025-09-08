@@ -3,10 +3,7 @@ import React, { useState, useEffect, useRef } from 'react';
 import { usePremiumCharacterFlow } from '../hooks/usePremiumCharacterFlow';
 
 const CharacterCreationSuccess = () => {
-  const context = usePremiumCharacterFlow();
-  const createdCharacterName = context?.createdCharacterName || 'Your Character';
-  const backToLauncher = context?.backToLauncher;
-  const resetFlowState = context?.resetFlowState;
+  const { successData, setSuccessData } = usePremiumCharacterFlow();
   const [redirectTimer, setRedirectTimer] = useState(10);
   const [isMobile, setIsMobile] = useState(false);
   const [hasUserInteracted, setHasUserInteracted] = useState(false);
@@ -47,11 +44,12 @@ const CharacterCreationSuccess = () => {
         const newValue = prev - 1;
         if (newValue <= 0 && !hasUserInteracted) {
           // Use resetFlowState for cleaner navigation
-          if (resetFlowState) {
-            resetFlowState();
-          } else if (backToLauncher) {
-            backToLauncher();
-          }
+          //if (resetFlowState) {
+            //resetFlowState();
+          //} else if (backToLauncher) {
+            //backToLauncher();
+          //}
+        setSuccessData(null);
         }
         return Math.max(0, newValue);
       });
@@ -77,11 +75,13 @@ const CharacterCreationSuccess = () => {
     }
     
     // Navigate back
-    handleSafeNavigation();
+   // handleSafeNavigation();
+   setSuccessData(null);
   };
 
   // Safety check for missing character name
-  const displayName = createdCharacterName || 'Your Character';
+  // Safety check for missing character name
+  const displayName = successData?.characterName || 'Your Character';
 
   return (
     <div style={{

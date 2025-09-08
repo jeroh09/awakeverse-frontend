@@ -80,6 +80,7 @@ export const PremiumCharacterProvider = ({ children }) => {
   // ✅ NEW: Success display state - independent of React context
   const [successData, setSuccessData] = useState(null);
   
+  
   // Refs for cleanup and race condition prevention
   const creationAbortController = useRef(null);
   const isMountedRef = useRef(true);
@@ -276,19 +277,32 @@ export const PremiumCharacterProvider = ({ children }) => {
 
       const result = await characterResponse.json();
       console.log('✅ Character created successfully:', result);
-
-      // ✅ CRITICAL FIX: Set success data without triggering refresh
+      // ✅ SIMPLIFIED: Just set success data and stop
       if (isMountedRef.current) {
-        setCreatedCharacterName(characterData.display_name);
-        
-        // Store success data for standalone component
         setSuccessData({
           characterName: characterData.display_name,
-          timestamp: new Date().toISOString()
+          timestamp: Date.now()
         });
-        
-        setCurrentView(FLOW_STATES.SUCCESS);
         setIsCreatingCharacter(false);
+  
+        logStateChange('CREATE_CHARACTER_SUCCESS', FLOW_STATES.BUILDER, 'success_overlay', {
+          characterName: characterData.display_name
+        });
+      }
+
+      // ✅ CRITICAL FIX: Set success data without triggering refresh
+      //if (isMountedRef.current) {
+        //setCreatedCharacterName(characterData.display_name);
+    
+        
+        // Store success data for standalone component
+        //setSuccessData({
+          //characterName: characterData.display_name,
+          //timestamp: new Date().toISOString()
+        //});
+        
+        //setCurrentView(FLOW_STATES.SUCCESS);
+        //setIsCreatingCharacter(false);
         
         // ✅ REMOVED: No refresh() call to prevent race conditions
         // if (refresh) {
@@ -296,17 +310,16 @@ export const PremiumCharacterProvider = ({ children }) => {
         // }
         
         // Set up auto-redirect timer with cleanup
-        successTimerRef.current = setTimeout(() => {
-          if (isMountedRef.current) {
-            resetFlowState();
-          }
-        }, 15000); // 15 second auto-redirect for safety
+       // successTimerRef.current = setTimeout(() => {
+         // if (isMountedRef.current) {
+           // resetFlowState();
+          //}
+        //}, 15000); // 15 second auto-redirect for safety
         
-        logStateChange('CREATE_CHARACTER_SUCCESS', FLOW_STATES.BUILDER, FLOW_STATES.SUCCESS, {
-          characterName: characterData.display_name
-        });
-      }
-
+        //logStateChange('CREATE_CHARACTER_SUCCESS', FLOW_STATES.BUILDER, FLOW_STATES.SUCCESS, {
+          //characterName: characterData.display_name
+        //});
+      //}
       return result;
 
     } catch (error) {
@@ -384,6 +397,7 @@ export const PremiumCharacterProvider = ({ children }) => {
     selectedTemplate,
     createdCharacterName,
     error,
+    successData,
     
     // Creation state
     isCreatingCharacter,
@@ -405,6 +419,7 @@ export const PremiumCharacterProvider = ({ children }) => {
     backToTemplates,
     setError: safeSetError,
     setCreationError: safeSetCreationError,
+    setSuccessData,
     resetFlowState,
 
     // Validation flags

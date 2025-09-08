@@ -123,6 +123,7 @@ const categoryRepresentatives = {
 
 const SplitScreenLauncher = ({ onStartChat }) => {
   const { token } = useAuth();
+  const { successData } = usePremiumCharacterFlow();
   
   try {
     const premiumFlow = usePremiumCharacterFlow();
@@ -145,6 +146,24 @@ const SplitScreenLauncher = ({ onStartChat }) => {
     characterCount,
     refresh,
   } = usePremiumCharacters();
+
+  // ADD THIS CHECK RIGHT HERE, BEFORE ANY OTHER LOGIC:
+  if (successData) {
+    return (
+      <div style={{
+        position: 'fixed',
+        top: 0,
+        left: 0,
+        width: '100%',
+        height: '100%',
+        zIndex: 4000,
+        background: 'rgba(0, 0, 0, 0.95)'
+      }}>
+        <CharacterCreationSuccess />
+      </div>
+    );
+  }
+
   const { user } = useUser();
   const { 
     recentCharacters,
