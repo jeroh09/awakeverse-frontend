@@ -2921,39 +2921,18 @@ const PersonalizedSection = ({ characters, onCharacterSelect, hasActiveConversat
           ))}
         </div>
       )}
-      {/* DEBUG PANEL - Updated positioning */}
+      {/* SIMPLE DEBUG - Should definitely show */}
       <div style={{
         position: 'fixed',
-        bottom: '20px',
-        right: '20px',
-        background: 'rgba(0, 0, 0, 0.95)',
-        color: '#00ff00',
-        padding: '1rem',
-        borderRadius: '8px',
-        fontSize: '12px',
-        fontFamily: 'monospace',
-        border: '2px solid #00ff00',
-        zIndex: 99999,
-        maxWidth: '350px',
-        maxHeight: '400px',
-        overflow: 'auto',
-        boxShadow: '0 4px 20px rgba(0, 255, 0, 0.3)'
+        top: '10px',
+        right: '10px',
+        background: 'red',
+        color: 'white',
+        padding: '10px',
+        zIndex: 999999,
+        fontSize: '14px'
       }}>
-        <div style={{ marginBottom: '0.5rem', fontWeight: 'bold', color: '#ffff00' }}>
-          🐛 DEBUG STATE
-        </div>
-        <div>isPremium: {String(isPremium)}</div>
-        <div>premiumLoading: {String(premiumLoading)}</div>
-        <div>userCharacters.length: {userCharacters?.length || 0}</div>
-        <div>hasPendingCharacter: {String(hasPendingCharacter)}</div>
-        <div>hasApprovedCharacter: {String(hasApprovedCharacter)}</div>
-        <div>pendingCharacterCount: {pendingCharacterCount}</div>
-        <div style={{ marginTop: '0.5rem', fontWeight: 'bold', color: '#ffff00' }}>Characters:</div>
-        {userCharacters?.map((char, i) => (
-          <div key={i} style={{ fontSize: '10px', color: '#ffffff' }}>
-            {i}: {char.display_name} - {char.status}
-          </div>
-        )) || <div style={{ color: '#ff6666' }}>No characters</div>}
+        Characters: {userCharacters?.length || 0} | Pending: {String(hasPendingCharacter)}
       </div>
     </div>
   );
