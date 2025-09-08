@@ -828,10 +828,10 @@ const SplitScreenLauncher = ({ onStartChat }) => {
                       flexDirection: 'column',
                       gap: '0.8rem',
                       width: '100%'
-                    }}>
+                    }}>console.log('Trial button clicked');
                       <button
                         onClick={() => {
-                          console.log('Trial button clicked');
+                          
                           const context = usePremiumCharacterFlow();
                           if (context && typeof context.showTemplateGallery === 'function') {
                             context.showTemplateGallery();
@@ -1934,15 +1934,12 @@ const SplitScreenLauncher = ({ onStartChat }) => {
                               if (context && typeof context.showTemplateGallery === 'function') {
                                 context.showTemplateGallery();
                               } else {
-                                console.error('showTemplateGallery function not available in context');
-                                // Fallback navigation
-                                window.location.hash = '#templates';
+                                console.error('showTemplateGallery function not available');
+                                // No fallback - just log the error
                               }
                             } catch (error) {
                               console.error('Button click failed:', error);
-                              // Emergency fallback - direct navigation
-                              window.location.href = '/app#templates';
-                              window.location.reload();
+                              // No navigation fallback - stay in the app
                             }
                           }}
                           style={{
