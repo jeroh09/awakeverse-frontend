@@ -4,7 +4,8 @@ import TemplateGallery from './TemplateGallery';
 import CharacterBuilder from './CharacterBuilder'; 
 //import CharacterCreationSuccess from './CharacterCreationSuccess';
 import { characterCategories } from '../data/characterCategories';
-import useInteractedCharacters from '../hooks/useInteractedCharacters';
+import useInteractedCharacters from '../hooks/useInteractedCharacters'
+
 // CORRECT imports for files in different directories
 import { useAuth } from '../contexts/AuthContext';
 import { useUser } from '../contexts/UserContext';
@@ -157,7 +158,7 @@ const SplitScreenLauncher = ({ onStartChat }) => {
   const {
     showTemplateGallery,
     showCharacterBuilder,
-    showSuccessModal, // ✅ NEW: Success modal state
+    //showSuccessModal, // ✅ NEW: Success modal state
     selectedTemplate,
     startTemplateFlow
   } = usePremiumCharacterFlow();
@@ -171,36 +172,21 @@ const SplitScreenLauncher = ({ onStartChat }) => {
   const [isMobile, setIsMobile] = useState(false);
 
   // ✅ NEW: Early return for success screen
-    // Early return for success screen - INLINE TEST
-  if (showSuccessModal) {
-    return (
-      <div style={{
-        position: 'fixed',
-        top: 0,
-        left: 0,
-        width: '100%',
-        height: '100%',
-        zIndex: 4000,
-        background: 'rgba(0, 0, 0, 0.95)'
-      }}>
-        <div style={{
-          position: 'absolute',
-          top: '50%',
-          left: '50%',
-          transform: 'translate(-50%, -50%)',
-          background: '#00FF00',
-          padding: '2rem',
-          borderRadius: '8px',
-          color: '#000',
-          textAlign: 'center'
-        }}>
-          <h1>INLINE SUCCESS TEST</h1>
-          <p>This bypasses the import completely</p>
-          <button onClick={() => window.location.reload()}>Reload</button>
-        </div>
-      </div>
-    );
-  }
+  //if (showSuccessModal) {
+    //return (
+      //<div style={{
+        //position: 'fixed',
+        //top: 0,
+        //left: 0,
+      //  width: '100%',
+        //height: '100%',
+       // zIndex: 4000, // Higher than other modals
+        //background: 'rgba(0, 0, 0, 0.95)'
+     // }}>
+       // <CharacterCreationSuccess />
+      //</div>
+   // );
+  //}
   
   // Check for mobile viewport
   useEffect(() => {
