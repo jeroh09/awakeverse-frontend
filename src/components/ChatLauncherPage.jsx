@@ -7,7 +7,7 @@ import useInteractedCharacters from '../hooks/useInteractedCharacters';
 import usePremiumCharacters from '../hooks/usePremiumCharacters';
 import TemplateGallery from '../components/TemplateGallery';
 import CharacterBuilder from '../components/CharacterBuilder';
-import CharacterCreationSuccess from '../components/CharacterCreationSuccess'; 
+//import CharacterCreationSuccess from '../components/CharacterCreationSuccess'; 
 import { usePremiumCharacterFlow } from '../hooks/usePremiumCharacterFlow';
 import StandaloneCharacterSuccess from '../components/StandaloneCharacterSuccess';
 
@@ -831,13 +831,13 @@ const SplitScreenLauncher = ({ onStartChat }) => {
                     }}>
                       <button
                         onClick={() => {
-                          console.log('Start trial clicked - showing template gallery');
-                          console.log('Before state change:', showTemplateGallery);
-                          startTemplateFlow();
-                          console.log('After state change call');
-                          setTimeout(() => {
-                          console.log('State after 2 seconds:', showTemplateGallery);
-                          }, 2000);
+                          console.log('Trial button clicked');
+                          const context = usePremiumCharacterFlow();
+                          if (context && typeof context.showTemplateGallery === 'function') {
+                            context.showTemplateGallery();
+                          } else {
+                            console.error('showTemplateGallery function not available');
+                          }
                         }}
                         onMouseDown={() => console.log('Button mouse down detected')}
                         onMouseEnter={() => console.log('Button mouse enter detected')}
@@ -939,12 +939,11 @@ const SplitScreenLauncher = ({ onStartChat }) => {
 
                     <button
                         onClick={() => {
-                          console.log('Create character clicked - showing template gallery');
                           const context = usePremiumCharacterFlow();
-                          if (context && context.startTemplateFlow) {
-                            context.startTemplateFlow();
+                          if (context && typeof context.showTemplateGallery === 'function') {
+                            context.showTemplateGallery();
                           } else {
-                            console.error('startTemplateFlow not available in context:', context);
+                            console.error('showTemplateGallery function not available');
                           }
                         }}
                       style={{
@@ -1929,15 +1928,21 @@ const SplitScreenLauncher = ({ onStartChat }) => {
                         <button
                           onClick={() => {
                             try {
-                              console.log('Start trial clicked');
+                              console.log('Trial button clicked');
                               const context = usePremiumCharacterFlow();
-                              if (context && context.startTemplateFlow) {
-                                context.startTemplateFlow();
+
+                              if (context && typeof context.showTemplateGallery === 'function') {
+                                context.showTemplateGallery();
                               } else {
-                                console.error('startTemplateFlow not available in context');
+                                console.error('showTemplateGallery function not available in context');
+                                // Fallback navigation
+                                window.location.hash = '#templates';
                               }
                             } catch (error) {
-                              console.error('Button click error:', error);
+                              console.error('Button click failed:', error);
+                              // Emergency fallback - direct navigation
+                              window.location.href = '/app#templates';
+                              window.location.reload();
                             }
                           }}
                           style={{
@@ -2049,15 +2054,15 @@ const SplitScreenLauncher = ({ onStartChat }) => {
                       </div>
 
                       <button
-                        onClick={() => {
-                          console.log('Create character clicked - showing template gallery');
-                          const context = usePremiumCharacterFlow();
-                          if (context && context.startTemplateFlow) {
-                            context.startTemplateFlow();
-                          } else {
-                            console.error('startTemplateFlow not available in context:', context);
-                          }
-                        }}
+                          onClick={() => {
+                            console.log('Trial button clicked');
+                            const context = usePremiumCharacterFlow();
+                            if (context && typeof context.showTemplateGallery === 'function') {
+                              context.showTemplateGallery();
+                            } else {
+                              console.error('showTemplateGallery function not available');
+                            }
+                          }}
                         style={{
                           background: 'linear-gradient(135deg, #FFD700, #FFA500)',
                           border: 'none',
