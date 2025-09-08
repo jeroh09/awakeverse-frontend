@@ -2,7 +2,7 @@
 import React, { useState, useCallback, useContext, createContext, useRef, useEffect } from 'react';
 import { useAuth } from '../contexts/AuthContext';
 import { useUser } from '../contexts/UserContext';
-//import usePremiumCharacters from './usePremiumCharacters';
+import usePremiumCharacters from './usePremiumCharacters';
 
 const FLOW_STATES = {
   LAUNCHER: 'launcher',
@@ -14,11 +14,10 @@ const FLOW_STATES = {
 const PremiumCharacterContext = createContext();
 
 // Error Boundary Component
-// Enhanced Error Boundary - Replace the existing one in usePremiumCharacterFlow.js
 class PremiumCharacterErrorBoundary extends React.Component {
   constructor(props) {
     super(props);
-    this.state = { hasError: false, error: null, errorInfo: null };
+    this.state = { hasError: false, error: null };
   }
 
   static getDerivedStateFromError(error) {
@@ -26,89 +25,35 @@ class PremiumCharacterErrorBoundary extends React.Component {
   }
 
   componentDidCatch(error, errorInfo) {
-    // Store error details for display
-    this.setState({
-      error: error,
-      errorInfo: errorInfo
-    });
+    console.error('Premium Character Flow Error:', error, errorInfo);
   }
 
   render() {
     if (this.state.hasError) {
       return (
         <div style={{
-          position: 'fixed',
-          top: 0,
-          left: 0,
-          width: '100%',
-          height: '100%',
-          background: 'rgba(0, 0, 0, 0.95)',
-          color: '#fff',
           padding: '2rem',
-          fontFamily: 'monospace',
-          fontSize: '14px',
-          zIndex: 9999,
-          overflow: 'auto'
+          textAlign: 'center',
+          color: '#ff6b6b',
+          background: 'rgba(255, 107, 107, 0.1)',
+          border: '1px solid rgba(255, 107, 107, 0.3)',
+          borderRadius: '8px',
+          margin: '1rem'
         }}>
-          <div style={{
-            background: '#ff1744',
-            color: 'white',
-            padding: '1rem',
-            borderRadius: '8px',
-            marginBottom: '1rem'
-          }}>
-            <h2>Premium Character Flow Error Details</h2>
-          </div>
-          
-          <div style={{
-            background: '#333',
-            padding: '1rem',
-            borderRadius: '8px',
-            marginBottom: '1rem'
-          }}>
-            <h3>Error Message:</h3>
-            <pre style={{ color: '#ff6b6b', whiteSpace: 'pre-wrap' }}>
-              {this.state.error?.toString()}
-            </pre>
-          </div>
-
-          <div style={{
-            background: '#333',
-            padding: '1rem',
-            borderRadius: '8px',
-            marginBottom: '1rem'
-          }}>
-            <h3>Error Stack:</h3>
-            <pre style={{ color: '#ffa726', whiteSpace: 'pre-wrap', fontSize: '12px' }}>
-              {this.state.error?.stack}
-            </pre>
-          </div>
-
-          <div style={{
-            background: '#333',
-            padding: '1rem',
-            borderRadius: '8px',
-            marginBottom: '1rem'
-          }}>
-            <h3>Component Stack:</h3>
-            <pre style={{ color: '#66bb6a', whiteSpace: 'pre-wrap', fontSize: '12px' }}>
-              {this.state.errorInfo?.componentStack}
-            </pre>
-          </div>
-
+          <h3>Character Creation Temporarily Unavailable</h3>
+          <p>Please refresh the page to try again.</p>
           <button 
             onClick={() => window.location.reload()}
             style={{
-              background: '#2196f3',
+              background: '#ff6b6b',
               color: 'white',
               border: 'none',
-              padding: '1rem 2rem',
+              padding: '0.5rem 1rem',
               borderRadius: '4px',
-              cursor: 'pointer',
-              fontSize: '16px'
+              cursor: 'pointer'
             }}
           >
-            Reload Page
+            Refresh Page
           </button>
         </div>
       );
@@ -138,7 +83,7 @@ export const PremiumCharacterProvider = ({ children }) => {
   const successTimerRef = useRef(null);
   
   // Track existing characters
-  //const { userCharacters, isPremium, refresh } = usePremiumCharacters();
+  const { userCharacters, isPremium, refresh } = usePremiumCharacters();
   const hasExistingCharacter = Array.isArray(userCharacters) && userCharacters.length > 0;
 
   // Cleanup on unmount
@@ -188,7 +133,7 @@ export const PremiumCharacterProvider = ({ children }) => {
   const logStateChange = useCallback((action, from, to, data = {}) => {
     if (!isMountedRef.current) return;
     
-    console.log(`🔄 Premium Flow: ${action}`, {
+    console.log(`ðŸ”„ Premium Flow: ${action}`, {
       from,
       to,
       timestamp: new Date().toISOString(),
@@ -200,7 +145,7 @@ export const PremiumCharacterProvider = ({ children }) => {
   const showTemplateGallery = useCallback(() => {
     if (!isMountedRef.current || isCreatingCharacter) return;
     
-    console.log('🎨 Showing template gallery');
+    console.log('ðŸŽ¨ Showing template gallery');
     logStateChange('SHOW_TEMPLATE_GALLERY', currentView, FLOW_STATES.TEMPLATES);
     setCurrentView(FLOW_STATES.TEMPLATES);
     setError(null);
@@ -210,7 +155,7 @@ export const PremiumCharacterProvider = ({ children }) => {
   const selectTemplate = useCallback((template) => {
     if (!isMountedRef.current || isCreatingCharacter) return;
     
-    console.log('🎯 Template selected:', template?.name);
+    console.log('ðŸŽ¯ Template selected:', template?.name);
     logStateChange('SELECT_TEMPLATE', FLOW_STATES.TEMPLATES, FLOW_STATES.BUILDER, {
       templateId: template?.id,
       templateName: template?.name
@@ -225,7 +170,7 @@ export const PremiumCharacterProvider = ({ children }) => {
   const createCharacter = useCallback(async (characterData) => {
     // Prevent multiple submissions
     if (isCreatingCharacter || !isMountedRef.current) {
-      console.warn('🚫 Character creation already in progress or component unmounted');
+      console.warn('ðŸš« Character creation already in progress or component unmounted');
       return;
     }
 
@@ -250,25 +195,137 @@ export const PremiumCharacterProvider = ({ children }) => {
     setCreationError(null);
     setError(null);
 
-        // New code with try-catch wrapper:
     try {
+      const API_BASE = process.env.REACT_APP_API_URL || 'http://localhost:5000';
+      
+      console.log('ðŸš€ Starting character creation flow for:', characterData.display_name);
+
+      // STEP 1: Grant trial with timeout and cancellation
+      console.log('ðŸ“ Step 1: Granting trial...');
+      
+      const trialResponse = await Promise.race([
+        fetch(`${API_BASE}/api/premium/trial/${user.id}`, {
+          method: 'POST',
+          headers: {
+            'Authorization': `Bearer ${token}`,
+            'Content-Type': 'application/json'
+          },
+          body: JSON.stringify({ trial_days: 3 }),
+          signal
+        }),
+        new Promise((_, reject) => 
+          setTimeout(() => reject(new Error('Trial request timeout')), 30000)
+        )
+      ]);
+
+      // Check if component was unmounted during request
+      if (!isMountedRef.current) {
+        console.log('ðŸ›‘ Component unmounted during trial request');
+        return;
+      }
+
+      // Handle trial response
+      if (!trialResponse.ok && trialResponse.status !== 409 && trialResponse.status !== 400) {
+        const trialError = await trialResponse.json().catch(() => ({}));
+        throw new Error(trialError.message || `Trial failed: ${trialResponse.status}`);
+      }
+
+      console.log('âœ… Trial step completed');
+
+      // STEP 2: Create character with timeout
+      console.log('ðŸ“ Step 2: Creating character...');
+      
+      const finalCharacterData = {
+        ...characterData,
+        template_id: selectedTemplate?.id,
+        historical_period: selectedTemplate?.historical_period,
+        personality_archetype: selectedTemplate?.personality_archetype,
+        expertise_domain: selectedTemplate?.expertise_domain
+      };
+
+      const characterResponse = await Promise.race([
+        fetch(`${API_BASE}/api/premium/characters`, {
+          method: 'POST',
+          headers: {
+            'Authorization': `Bearer ${token}`,
+            'Content-Type': 'application/json'
+          },
+          body: JSON.stringify(finalCharacterData),
+          signal
+        }),
+        new Promise((_, reject) => 
+          setTimeout(() => reject(new Error('Character creation timeout')), 45000)
+        )
+      ]);
+
+      // Check if component was unmounted during request
+      if (!isMountedRef.current) {
+        console.log('ðŸ›‘ Component unmounted during character creation');
+        return;
+      }
+
+      if (!characterResponse.ok) {
+        const errorData = await characterResponse.json().catch(() => ({}));
+        throw new Error(errorData.error || `Character creation failed: ${characterResponse.status}`);
+      }
+
+      const result = await characterResponse.json();
+      console.log('âœ… Character created successfully:', result);
+
+      // Only update state if component is still mounted
       if (isMountedRef.current) {
         setCreatedCharacterName(characterData.display_name);
         setCurrentView(FLOW_STATES.SUCCESS);
         setIsCreatingCharacter(false);
+        
+        // Set up auto-redirect timer with cleanup
+        successTimerRef.current = setTimeout(() => {
+          if (isMountedRef.current) {
+            resetFlowState();
+          }
+        }, 10000); // 10 second auto-redirect
+        
+        // Refresh premium data in background
+        if (refresh) {
+          refresh().catch(console.warn);
+        }
 
         logStateChange('CREATE_CHARACTER_SUCCESS', FLOW_STATES.BUILDER, FLOW_STATES.SUCCESS, {
           characterName: characterData.display_name
         });
       }
-    } catch (stateError) {
-      // If state updates throw an error, we'll catch it here
-      // This helps us know if the crash happens during state setting
-      if (isMountedRef.current) {
-        setCreationError('State update failed during success transition');
+
+      return result;
+
+    } catch (error) {
+      // Only update state if component is still mounted and error wasn't from cancellation
+      if (isMountedRef.current && error.name !== 'AbortError') {
+        console.error('âŒ Character creation failed:', error);
+        
+        let errorMessage = 'Failed to create character';
+        
+        // Provide specific error messages for common issues
+        if (error.message.includes('timeout')) {
+          errorMessage = 'Request timed out. Please check your connection and try again.';
+        } else if (error.message.includes('NetworkError') || error.message.includes('Failed to fetch')) {
+          errorMessage = 'Network error. Please check your connection and try again.';
+        } else if (error.message) {
+          errorMessage = error.message;
+        }
+        
+        setCreationError(errorMessage);
         setIsCreatingCharacter(false);
+        
+        logStateChange('CREATE_CHARACTER_ERROR', FLOW_STATES.BUILDER, FLOW_STATES.BUILDER, {
+          error: errorMessage
+        });
       }
-      throw stateError; // Re-throw so we can trace it
+      
+      throw error;
+      
+    } finally {
+      // Clean up abort controller
+      creationAbortController.current = null;
     }
   }, [hasExistingCharacter, token, user?.id, selectedTemplate, logStateChange, refresh, resetFlowState, isCreatingCharacter]);
 
@@ -276,7 +333,7 @@ export const PremiumCharacterProvider = ({ children }) => {
   const backToLauncher = useCallback(() => {
     if (!isMountedRef.current) return;
     
-    console.log('🔙 Back to launcher');
+    console.log('ðŸ”™ Back to launcher');
     resetFlowState();
     logStateChange('BACK_TO_LAUNCHER', currentView, FLOW_STATES.LAUNCHER);
   }, [currentView, logStateChange, resetFlowState]);
@@ -284,7 +341,7 @@ export const PremiumCharacterProvider = ({ children }) => {
   const backToTemplates = useCallback(() => {
     if (!isMountedRef.current || isCreatingCharacter) return;
     
-    console.log('🔙 Back to templates');
+    console.log('ðŸ”™ Back to templates');
     logStateChange('BACK_TO_TEMPLATES', currentView, FLOW_STATES.TEMPLATES);
     setCurrentView(FLOW_STATES.TEMPLATES);
     setError(null);
