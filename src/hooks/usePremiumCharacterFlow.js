@@ -2,7 +2,7 @@
 import React, { useState, useCallback, useContext, createContext, useRef, useEffect } from 'react';
 import { useAuth } from '../contexts/AuthContext';
 import { useUser } from '../contexts/UserContext';
-import usePremiumCharacters from './usePremiumCharacters';
+//import usePremiumCharacters from './usePremiumCharacters';
 
 const FLOW_STATES = {
   LAUNCHER: 'launcher',
@@ -138,7 +138,7 @@ export const PremiumCharacterProvider = ({ children }) => {
   const successTimerRef = useRef(null);
   
   // Track existing characters
-  const { userCharacters, isPremium, refresh } = usePremiumCharacters();
+  //const { userCharacters, isPremium, refresh } = usePremiumCharacters();
   const hasExistingCharacter = Array.isArray(userCharacters) && userCharacters.length > 0;
 
   // Cleanup on unmount
