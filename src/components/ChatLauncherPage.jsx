@@ -252,8 +252,14 @@ const SplitScreenLauncher = ({ onStartChat }) => {
   }, [approvedCharacters]);
 
   // Add these new computed properties - safe because they only read existing data
+  // Enhanced computed properties with debug mode
+  const DEBUG_MODE = true; // Set to false in production
+  const SIMULATE_PENDING = true; // Toggle this to test button states
+
   const hasPendingCharacter = useMemo(() => {
-    return Array.isArray(userCharacters) && userCharacters.some(char => char.status === 'pending');
+    const realValue = Array.isArray(userCharacters) && userCharacters.some(char => char.status === 'pending');
+    const simulatedValue = DEBUG_MODE && SIMULATE_PENDING;
+    return simulatedValue || realValue;
   }, [userCharacters]);
 
   const hasApprovedCharacter = useMemo(() => {
@@ -261,9 +267,10 @@ const SplitScreenLauncher = ({ onStartChat }) => {
   }, [userCharacters]);
 
   const pendingCharacterCount = useMemo(() => {
-    return Array.isArray(userCharacters) ? userCharacters.filter(char => char.status === 'pending').length : 0;
+    const realCount = Array.isArray(userCharacters) ? userCharacters.filter(char => char.status === 'pending').length : 0;
+    const simulatedCount = DEBUG_MODE && SIMULATE_PENDING ? 1 : 0;
+    return simulatedCount || realCount;
   }, [userCharacters]);
-
   // Search function (simplified without semantic mappings)
   const performSemanticSearch = useMemo(() => {
     return (query) => {
@@ -2914,6 +2921,43 @@ const PersonalizedSection = ({ characters, onCharacterSelect, hasActiveConversat
           ))}
         </div>
       )}
+      {/* DEBUG PANEL - Remove after testing */}
+      <div style={{
+        position: 'fixed',
+        bottom: '10px',
+        right: '10px',
+        background: 'rgba(0, 0, 0, 0.9)',
+        color: '#00ff00',
+        padding: '1rem',
+        borderRadius: '8px',
+        fontSize: '12px',
+        fontFamily: 'monospace',
+        border: '1px solid #333',
+        zIndex: 9999,
+        maxWidth: '300px',
+        maxHeight: '400px',
+        overflow: 'auto'
+      }}>
+        <div style={{ marginBottom: '0.5rem', fontWeight: 'bold', color: '#ffff00' }}>
+          DEBUG STATE
+        </div>
+        <div>isPremium: {String(isPremium)}</div>
+        <div>premiumLoading: {String(premiumLoading)}</div>
+        <div>userCharacters.length: {userCharacters?.length || 0}</div>
+        <div>hasPendingCharacter: {String(hasPendingCharacter)}</div>
+        <div>hasApprovedCharacter: {String(hasApprovedCharacter)}</div>
+        <div>pendingCharacterCount: {pendingCharacterCount}</div>
+        <div style={{ marginTop: '0.5rem', fontWeight: 'bold' }}>Characters:</div>
+        {userCharacters?.map((char, i) => (
+          <div key={i} style={{ fontSize: '10px' }}>
+            {i}: {char.display_name} - {char.status}
+          </div>
+        )) || <div>No characters</div>}
+        <div style={{ marginTop: '0.5rem', fontWeight: 'bold' }}>Premium Status:</div>
+        <div style={{ fontSize: '10px' }}>
+          {premiumStatus ? JSON.stringify(premiumStatus, null, 1).slice(0, 200) + '...' : 'null'}
+        </div>
+      </div>
     </div>
   );
 };
