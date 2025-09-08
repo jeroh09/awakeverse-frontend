@@ -216,6 +216,7 @@ export const SimplifiedPremiumProvider = ({ children }) => {
           timestamp: Date.now()
         });
         setIsCreatingCharacter(false);
+        setCurrentView(FLOW_STATES.LAUNCHER); 
       }
 
       return result;

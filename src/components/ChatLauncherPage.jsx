@@ -620,7 +620,7 @@ const SplitScreenLauncher = ({ onStartChat }) => {
                         fontSize: '24px',
                         color: isPremium ? '#FFD700' : 'rgba(128, 128, 128, 0.7)'
                       }}>
-                        ðŸ‘¤
+                        👤
                       </div>
                     )
                   ) : (
@@ -719,7 +719,7 @@ const SplitScreenLauncher = ({ onStartChat }) => {
                   textTransform: 'none'
                 }}
               >
-                â† Back
+                ← Back
               </button>
             </div>
 
@@ -781,7 +781,7 @@ const SplitScreenLauncher = ({ onStartChat }) => {
                       justifyContent: 'center',
                       fontSize: '32px'
                     }}>
-                      âœ¨
+                      ✨
                     </div>
 
                     {/* Headline */}
@@ -1684,7 +1684,7 @@ const SplitScreenLauncher = ({ onStartChat }) => {
                       fontSize: '24px',
                       color: isPremium ? '#FFD700' : 'rgba(128, 128, 128, 0.7)'
                     }}>
-                      ðŸ‘¤
+                      👤
                     </div>
                   )
                 ) : (
@@ -1803,7 +1803,7 @@ const SplitScreenLauncher = ({ onStartChat }) => {
                     e.currentTarget.style.borderColor = 'rgba(255, 215, 0, 0.4)';
                   }}
                 >
-                  â† Back
+                  ← Back
                 </button>
               </div>
 
@@ -1865,7 +1865,7 @@ const SplitScreenLauncher = ({ onStartChat }) => {
                         fontSize: '48px',
                         marginBottom: '1rem'
                       }}>
-                        âœ¨
+                        ✨
                       </div>
 
                       {/* Headline */}
