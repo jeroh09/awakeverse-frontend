@@ -14,7 +14,7 @@ import { PremiumStateRenderer, CapabilityGate } from '../components/PremiumCompo
 import TemplateGallery from '../components/TemplateGallery';
 import CharacterBuilder from '../components/CharacterBuilder';
 import CharacterCreationSuccess from '../components/CharacterCreationSuccess';
-import { useSimplifiedPremiumFlow } from '../hooks/useSimplifiedPremiumFlow';
+//import { useSimplifiedPremiumFlow } from '../hooks/useSimplifiedPremiumFlow';
 
 // Subscription state constants
 const SUBSCRIPTION_STATES = {
@@ -599,9 +599,8 @@ const SplitScreenLauncher = ({ onStartChat }) => {
   const {
     subscriptionState,
     canCreateCharacter,
-    shouldShowTrial,
-    shouldShowUpgrade,
-    primaryAction,
+    should_show_trial_prompt: shouldShowTrial,
+    should_show_upgrade: shouldShowUpgrade,
     daysRemaining,
     isInitialized,
     loading: capabilitiesLoading,
@@ -627,13 +626,14 @@ const SplitScreenLauncher = ({ onStartChat }) => {
   } = useInteractedCharacters();
 
   // Legacy flow for modals (transition period)
-  const {
-    showTemplateGallery,
-    showCharacterBuilder,
-    selectedTemplate,
-    startTemplateFlow,
-    successData
-  } = useSimplifiedPremiumFlow();
+  //const {
+    //showTemplateGallery,
+    //showCharacterBuilder,
+    //selectedTemplate,
+    //startTemplateFlow,
+    //successData
+  //} = useSimplifiedPremiumFlow();
+
 
   // Local state
   const [inputValue, setInputValue] = useState('');
