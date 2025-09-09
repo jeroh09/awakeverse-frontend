@@ -162,7 +162,7 @@ export const SimplifiedPremiumProvider = ({ children }) => {
 
       // STEP 1: Grant trial
       const trialResponse = await Promise.race([
-        fetch(`${API_BASE}/api/premium/trial/${user.id}`, {
+        fetch(`${API_BASE}/api/premium/trial/${user_id}`, {
           method: 'POST',
           headers: {
             'Authorization': `Bearer ${token}`,

@@ -111,7 +111,9 @@ export default function useCharacterCreationFlow() {
     setIsGrantingTrial(true);
     
     try {
-      const response = await fetch(`${API_BASE}/api/premium/trial/${user.id}`, {
+      // In useCharacterCreationFlow.js
+      const response = await fetch(`${API_BASE}/api/premium/trial/${user.user.id}`, {
+  // Change from user.id to user.user_id
         method: 'POST',
         headers: {
           'Authorization': `Bearer ${token}`,

@@ -76,7 +76,7 @@ export default function usePremiumCapabilities() {
         headers['If-None-Match'] = cacheRef.current.get(cacheKey);
       }
 
-      const response = await fetch(`${API_BASE}/api/premium/capabilities/${user.id}`, {
+      const response = await fetch(`${API_BASE}/api/premium/capabilities/${user.user.id}`, {
         method: 'GET',
         headers,
         signal: abortControllerRef.current.signal
