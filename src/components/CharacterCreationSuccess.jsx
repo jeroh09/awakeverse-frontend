@@ -1,10 +1,9 @@
 // src/components/CharacterCreationSuccess.jsx - Enhanced with proper cleanup and error handling
 import React, { useState, useEffect, useRef } from 'react';
-import { useSimplifiedPremiumFlow } from '../hooks/useSimplifiedPremiumFlow';
 
-const CharacterCreationSuccess = () => {
+const CharacterCreationSuccess = ({ onClose, characterData }) => {
   const { successData, setSuccessData } = useSimplifiedPremiumFlow();
-  const [redirectTimer, setRedirectTimer] = useState(10);
+  const [redirectTimer, setRedirectTimer] = useState(5);
   const [isMobile, setIsMobile] = useState(false);
   const [hasUserInteracted, setHasUserInteracted] = useState(false);
   
@@ -76,12 +75,13 @@ const CharacterCreationSuccess = () => {
     
     // Navigate back
    // handleSafeNavigation();
-   setSuccessData(null);
+   onClose();
   };
 
   // Safety check for missing character name
   // Safety check for missing character name
-  const displayName = successData?.characterName || 'Your Character';
+  const displayName = characterData?.display_name || 'Your Character';
+
 
   return (
     <div style={{

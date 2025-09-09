@@ -1,18 +1,15 @@
 // src/components/CharacterBuilder.jsx - Simplified with context-managed success state
 import React, { useState, useEffect } from 'react';
-import { useSimplifiedPremiumFlow } from '../hooks/useSimplifiedPremiumFlow';
+import useCharacterCreationFlow from '../hooks/useCharacterCreationFlow';
 
 
-
-const CharacterBuilder = ({ userPremiumStatus = null }) => {
+const CharacterBuilder = ({ template, onClose }) => {
   const { 
-    selectedTemplate, 
-    createCharacter, 
-    backToTemplates,
-    isCreatingCharacter,
-    creationError,
-    setCreationError
-  } = useSimplifiedPremiumFlow();
+    createCharacter,
+    isCreating,
+    error,
+    setError
+  } = useCharacterCreationFlow();
   
   const [isMobile, setIsMobile] = useState(false);
   const [formData, setFormData] = useState({

@@ -1,10 +1,8 @@
 // src/components/TemplateGallery.jsx - Standalone template selection component
 import React, { useState } from 'react';
-import { useSimplifiedPremiumFlow } from '../hooks/useSimplifiedPremiumFlow';
 import usePremiumCharacters from '../hooks/usePremiumCharacters';
 
-const TemplateGallery = ({ userPremiumStatus = null }) => {
-  const { selectTemplate, backToLauncher } = useSimplifiedPremiumFlow();
+const TemplateGallery = ({ onSelectTemplate, onClose }) => {
   const { characterTemplates, loading: templatesLoading } = usePremiumCharacters();
   const [selectedTemplate, setSelectedTemplate] = useState(null);
   const [selectedArchetype, setSelectedArchetype] = useState('all');
@@ -26,7 +24,7 @@ const TemplateGallery = ({ userPremiumStatus = null }) => {
 
   const handleConfirmSelection = () => {
     if (selectedTemplate) {
-      selectTemplate(selectedTemplate);
+      onSelectTemplate(selectedTemplate);
     }
   };
 
@@ -163,7 +161,7 @@ const TemplateGallery = ({ userPremiumStatus = null }) => {
           </div>
           
           <button
-            onClick={backToLauncher}
+            onClick={onClose}
             style={{
               background: 'rgba(255, 255, 255, 0.1)',
               border: '2px solid rgba(255, 255, 255, 0.3)',
