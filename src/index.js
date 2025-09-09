@@ -9,16 +9,14 @@ import { UserProvider } from './contexts/UserContext';
 import { CharacterProvider } from './contexts/CharacterContext';
 import { ContextProvider } from './contexts/ContextContext';
 import { WebSocketProvider } from './contexts/WebSocketContext';
-
-// Premium character integration
-import { SimplifiedPremiumProvider } from './hooks/useSimplifiedPremiumFlow';
+import { PremiumCapabilitiesProvider } from './contexts/PremiumCapabilitiesContext';
 
 
 import App from './App';
 
 // SECURITY: Disable console logging in production
-// This prevents sensitive data (JWT tokens, API responses) from appearing in browser dev tools
-if (process.env.NODE_ENV === 'production' || process.env.REACT_APP_DISABLE_CONSOLE === 'true') {
+// SECURITY: Disable console logging in production only (allow in preview for debugging)
+if (process.env.NODE_ENV === 'production' && process.env.VERCEL_ENV !== 'preview') {
   const originalConsole = {
     log: console.log,
     warn: console.warn,
@@ -26,6 +24,23 @@ if (process.env.NODE_ENV === 'production' || process.env.REACT_APP_DISABLE_CONSO
     debug: console.debug,
     error: console.error
   };
+  
+  // Disable most console methods but keep error for critical issues
+  console.log = () => {};
+  console.warn = () => {};
+  console.info = () => {};
+  console.debug = () => {};
+  
+  // Only show critical errors in production
+  console.error = (...args) => {
+    // Filter out non-critical errors, only show genuine application errors
+    const message = args.join(' ');
+    if (message.includes('token') || message.includes('login') || message.includes('API')) {
+      return; // Suppress security-sensitive error logs
+    }
+    originalConsole.error(...args);
+  };
+}
   
   // Disable most console methods but keep error for critical issues
   console.log = () => {};
@@ -55,9 +70,9 @@ root.render(
             <CharacterProvider>
               <ContextProvider>
                 <WebSocketProvider>
-                  <SimplifiedPremiumProvider>
+                  <PremiumCapabilitiesProvider>
                     <App />
-                  </SimplifiedPremiumProvider>
+                  </PremiumCapabilitiesProvider>
                 </WebSocketProvider>
               </ContextProvider>
             </CharacterProvider>
