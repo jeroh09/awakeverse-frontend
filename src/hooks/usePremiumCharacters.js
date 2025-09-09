@@ -1,13 +1,13 @@
 // Update to usePremiumCharacters.js - Add trial-specific state handling
 
 import { useState, useEffect, useCallback } from 'react';
-//import { useAuth } from '../contexts/AuthContext';
+import { useAuth } from '../contexts/AuthContext';
 import { useUser } from '../contexts/UserContext';
 
 const API_BASE = process.env.REACT_APP_API_URL || 'http://localhost:5000';
 
 export default function usePremiumCharacters() {
-  //const { token } = useAuth();
+  const { token } = useAuth();
   const { user } = useUser();
   
   // State management
@@ -97,7 +97,7 @@ export default function usePremiumCharacters() {
 
   // Real API function: Get user's characters (enhanced for trial users)
   const fetchUserCharacters = useCallback(async () => {
-    if (!user?.id || !token) return [];
+    if (!user?.id || !token || !isPremium) return [];
     
     try {
       console.log('ðŸ“Š Fetching user characters for user:', user.id);
