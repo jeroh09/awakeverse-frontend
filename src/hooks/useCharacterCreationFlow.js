@@ -104,6 +104,9 @@ export default function useCharacterCreationFlow() {
 
   // Trial granting function
   const grantTrial = useCallback(async () => {
+    console.log('Debug grantTrial - user:', user);
+    console.log('Debug grantTrial - token:', token ? 'exists' : 'missing');
+    console.log('Debug grantTrial - user.id:', user?.id);
     if (!user?.id || !token) {
       throw new Error('User not authenticated');
     }
@@ -147,7 +150,7 @@ export default function useCharacterCreationFlow() {
     } finally {
       setIsGrantingTrial(false);
     }
-  }, [user?.id, token, invalidateAndRefresh]);
+  }, [user, token, invalidateAndRefresh]);
 
   // Flow control functions
   const startFlow = useCallback(async () => {
