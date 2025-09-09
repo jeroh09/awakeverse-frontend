@@ -10,11 +10,10 @@ import { CharacterProvider } from './contexts/CharacterContext';
 import { ContextProvider } from './contexts/ContextContext';
 import { WebSocketProvider } from './contexts/WebSocketContext';
 import { PremiumCapabilitiesProvider } from './contexts/PremiumCapabilitiesContext';
-
-
 import App from './App';
 
 // SECURITY: Disable console logging in production
+// SECURITY: Disable console logging in production only (allow in preview for debugging)
 // SECURITY: Disable console logging in production only (allow in preview for debugging)
 if (process.env.NODE_ENV === 'production' && process.env.VERCEL_ENV !== 'preview') {
   const originalConsole = {
@@ -24,23 +23,6 @@ if (process.env.NODE_ENV === 'production' && process.env.VERCEL_ENV !== 'preview
     debug: console.debug,
     error: console.error
   };
-  
-  // Disable most console methods but keep error for critical issues
-  console.log = () => {};
-  console.warn = () => {};
-  console.info = () => {};
-  console.debug = () => {};
-  
-  // Only show critical errors in production
-  console.error = (...args) => {
-    // Filter out non-critical errors, only show genuine application errors
-    const message = args.join(' ');
-    if (message.includes('token') || message.includes('login') || message.includes('API')) {
-      return; // Suppress security-sensitive error logs
-    }
-    originalConsole.error(...args);
-  };
-}
   
   // Disable most console methods but keep error for critical issues
   console.log = () => {};
