@@ -127,6 +127,7 @@ const categoryRepresentatives = {
 
 const ChatLauncherPage = ({ onStartChat }) => {
   const { user } = useUser();
+  const { token } = useAuth();
   
   // Premium capabilities integration
   const {
@@ -140,6 +141,41 @@ const ChatLauncherPage = ({ onStartChat }) => {
     isInitialized: capabilitiesInitialized,
     loading: capabilitiesLoading
   } = usePremiumCapabilitiesContext();
+ useEffect(() => {
+    console.log('Auth Debug:', {
+      user: !!user,
+      userId: user?.id,
+      token: !!token
+    });
+  }, [user, token]);
+
+  // ADD THIS: Don't render until authentication is ready
+  if (!user || !token) {
+    return (
+      <div style={{
+        width: '100%',
+        height: '100vh',
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'center',
+        background: 'linear-gradient(135deg, #0B1426 0%, #2C1810 100%)',
+        color: '#FFD700'
+      }}>
+        <div style={{ textAlign: 'center' }}>
+          <div style={{
+            width: '40px',
+            height: '40px',
+            border: '3px solid rgba(255, 215, 0, 0.3)',
+            borderTop: '3px solid #FFD700',
+            borderRadius: '50%',
+            animation: 'spin 1s linear infinite',
+            margin: '0 auto 1rem'
+          }} />
+          <p>Loading...</p>
+        </div>
+      </div>
+    );
+  }
 
   // Character creation flow integration
   const {
