@@ -645,21 +645,21 @@ const SplitScreenLauncher = ({ onStartChat }) => {
   const [isMobile, setIsMobile] = useState(false);
 
   // Success modal check
-  if (successData) {
-    return (
-      <div style={{
-        position: 'fixed',
-        top: 0,
-        left: 0,
-        width: '100%',
-        height: '100%',
-        zIndex: 4000,
-        background: 'rgba(0, 0, 0, 0.95)'
-      }}>
-        <CharacterCreationSuccess />
-      </div>
-    );
-  }
+  //if (successData) {
+    //return (
+      //<div style={{
+        //position: 'fixed',
+        //top: 0,
+        //left: 0,
+        //width: '100%',
+        //height: '100%',
+        //zIndex: 4000,
+        //background: 'rgba(0, 0, 0, 0.95)'
+      //}}>
+      //  <CharacterCreationSuccess />
+    //  </div>
+  //  );
+//  }
 
   // Check for mobile viewport
   useEffect(() => {
