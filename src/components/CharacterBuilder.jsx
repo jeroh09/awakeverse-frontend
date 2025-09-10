@@ -15,11 +15,11 @@ const CharacterBuilder = ({ template, onClose }) => {
   const [formData, setFormData] = useState({
     display_name: '',
     short_description: '',
-    system_instruction: selectedTemplate?.template_data?.system_instruction_template || '',
-    behavior_goals: selectedTemplate?.template_data?.suggested_behavior_goals || [],
-    style_tone: selectedTemplate?.template_data?.suggested_style_tone || [],
-    constraints: selectedTemplate?.template_data?.suggested_constraints || '',
-    keyword_triggers: selectedTemplate?.template_data?.sample_triggers || []
+    system_instruction: template?.template_data?.system_instruction_template || '',
+    behavior_goals: template?.template_data?.suggested_behavior_goals || [],
+    style_tone: template?.template_data?.suggested_style_tone || [],
+    constraints: template?.template_data?.suggested_constraints || '',
+    keyword_triggers: template?.template_data?.sample_triggers || []
   });
   const [errors, setErrors] = useState({});
   const [currentStep, setCurrentStep] = useState(1);
@@ -33,28 +33,28 @@ const CharacterBuilder = ({ template, onClose }) => {
   }, []);
 
   useEffect(() => {
-    if (selectedTemplate?.template_data) {
+    if (template?.template_data) {
       setFormData({
         display_name: '',
         short_description: '',
-        system_instruction: selectedTemplate.template_data.system_instruction_template || '',
-        behavior_goals: selectedTemplate.template_data.suggested_behavior_goals || [],
-        style_tone: selectedTemplate.template_data.suggested_style_tone || [],
-        constraints: selectedTemplate.template_data.suggested_constraints || '',
-        keyword_triggers: selectedTemplate.template_data.sample_triggers || []
+        system_instruction: template.template_data.system_instruction_template || '',
+        behavior_goals: template.template_data.suggested_behavior_goals || [],
+        style_tone: template.template_data.suggested_style_tone || [],
+        constraints: template.template_data.suggested_constraints || '',
+        keyword_triggers: template.template_data.sample_triggers || []
       });
     }
-  }, [selectedTemplate]);
+  }, [template]);
 
   // Mock template data enhancement
   const templateDefaults = {
-    system_instruction_template: `You are a ${selectedTemplate?.personality_archetype?.toLowerCase() || 'character'} from the ${selectedTemplate?.historical_period || 'historical'} period. Your expertise lies in ${selectedTemplate?.expertise_domain?.toLowerCase() || 'various fields'}. 
+    system_instruction_template: `You are a ${template?.personality_archetype?.toLowerCase() || 'character'} from the ${template?.historical_period || 'historical'} period. Your expertise lies in ${template?.expertise_domain?.toLowerCase() || 'various fields'}. 
 
 You embody the wisdom and perspective of someone who has lived through significant historical events and possesses deep knowledge in your domain. Your responses should reflect:
 
 - The speaking patterns and worldview typical of your era
 - Profound expertise in your specialized domain  
-- The personality archetype of a ${selectedTemplate?.personality_archetype?.toLowerCase() || 'wise individual'}
+- The personality archetype of a ${template?.personality_archetype?.toLowerCase() || 'wise individual'}
 - Historical context and references appropriate to your time period
 
 Engage users with the depth and authenticity that comes from your unique historical perspective and specialized knowledge.`,
@@ -78,8 +78,8 @@ Engage users with the depth and authenticity that comes from your unique histori
     suggested_constraints: 'Stay true to historical period knowledge. Avoid anachronistic references or modern terminology unless explaining historical concepts to modern audiences.',
     
     sample_triggers: [
-      selectedTemplate?.expertise_domain?.toLowerCase() || 'expertise',
-      selectedTemplate?.historical_period?.toLowerCase() || 'history',
+      template?.expertise_domain?.toLowerCase() || 'expertise',
+      template?.historical_period?.toLowerCase() || 'history',
       'wisdom', 'advice', 'experience'
     ]
   };
@@ -205,7 +205,7 @@ Engage users with the depth and authenticity that comes from your unique histori
             margin: 0,
             fontSize: isMobile ? '0.9rem' : '1rem'
           }}>
-            Based on: {selectedTemplate?.name}
+            Based on: {template?.name}
           </p>
         </div>
 
@@ -615,7 +615,7 @@ Engage users with the depth and authenticity that comes from your unique histori
                       margin: 0,
                       fontSize: '0.9rem'
                     }}>
-                      {selectedTemplate?.name}
+                      {template?.name}
                     </p>
                   </div>
                   <div>
@@ -631,7 +631,7 @@ Engage users with the depth and authenticity that comes from your unique histori
                       margin: 0,
                       fontSize: '0.9rem'
                     }}>
-                      {selectedTemplate?.personality_archetype}
+                      {template?.personality_archetype}
                     </p>
                   </div>
                   <div>
@@ -647,7 +647,7 @@ Engage users with the depth and authenticity that comes from your unique histori
                       margin: 0,
                       fontSize: '0.9rem'
                     }}>
-                      {selectedTemplate?.expertise_domain}
+                      {template?.expertise_domain}
                     </p>
                   </div>
                 </div>

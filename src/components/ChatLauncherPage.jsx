@@ -1,6 +1,6 @@
 // src/pages/ChatLauncherPage.jsx - Complete refactor with new premium architecture
 import React, { useState, useEffect, useMemo, useCallback } from 'react';
-import { useAuth } from '../contexts/AuthContext';
+//import { useAuth } from '../contexts/AuthContext';
 import { useUser } from '../contexts/UserContext';
 import { usePremiumCapabilitiesContext } from '../contexts/PremiumCapabilitiesContext';
 import useCharacterCreationFlow from '../hooks/useCharacterCreationFlow';
@@ -127,7 +127,6 @@ const categoryRepresentatives = {
 
 const ChatLauncherPage = ({ onStartChat }) => {
   const { user } = useUser();
-  const { token } = useAuth();
   
   // Premium capabilities integration
   const {
@@ -141,41 +140,6 @@ const ChatLauncherPage = ({ onStartChat }) => {
     isInitialized: capabilitiesInitialized,
     loading: capabilitiesLoading
   } = usePremiumCapabilitiesContext();
- useEffect(() => {
-    console.log('Auth Debug:', {
-      user: !!user,
-      userId: user?.id,
-      token: !!token
-    });
-  }, [user, token]);
-
-  // ADD THIS: Don't render until authentication is ready
-  if (!user || !token) {
-    return (
-      <div style={{
-        width: '100%',
-        height: '100vh',
-        display: 'flex',
-        alignItems: 'center',
-        justifyContent: 'center',
-        background: 'linear-gradient(135deg, #0B1426 0%, #2C1810 100%)',
-        color: '#FFD700'
-      }}>
-        <div style={{ textAlign: 'center' }}>
-          <div style={{
-            width: '40px',
-            height: '40px',
-            border: '3px solid rgba(255, 215, 0, 0.3)',
-            borderTop: '3px solid #FFD700',
-            borderRadius: '50%',
-            animation: 'spin 1s linear infinite',
-            margin: '0 auto 1rem'
-          }} />
-          <p>Loading...</p>
-        </div>
-      </div>
-    );
-  }
 
   // Character creation flow integration
   const {
@@ -330,13 +294,23 @@ const ChatLauncherPage = ({ onStartChat }) => {
 
   // Character creation handlers
   const handleCreateCharacterClick = useCallback(() => {
-    console.log('Create character clicked - checking capabilities...');
-    if (canStartFlow) {
-      startFlow();
-    } else {
-      console.log('Cannot start flow - missing capabilities');
+    console.log('Create character clicked - action:', primaryAction);
+  
+    switch (primaryAction) {
+      case 'start_trial':
+        startFlow(); // Start trial + character creation
+        break;
+      case 'create_character':
+        startFlow(); // Direct to character creation
+        break;
+      case 'upgrade':
+      // Show upgrade modal instead of character creation
+        console.log('Show upgrade modal');
+        break;
+      default:
+        startFlow();
     }
-  }, [canStartFlow, startFlow]);
+  }, [primaryAction, startFlow]);
 
   const currentPlaceholder = ORACLE_PROMPTS[placeholderIndex];
 
@@ -1256,9 +1230,17 @@ const CategoryCard = ({
   const hasApprovedCharacters = approvedCharacters.length > 0;
 
   const handleClick = () => {
-    if (isMyCharacters && !isPremiumUser && !hasApprovedCharacters) {
-      // Free user clicking my characters - start character creation flow
-      onCreateCharacter();
+    if (isMyCharacters) {
+      if (canCreateCharacter) {
+      // User can create - start character creation flow
+        onCreateCharacter();
+      } else if (shouldShowTrial) {
+      // Free user - start trial flow
+        onCreateCharacter(); // This should trigger trial + creation
+      } else {
+      // Show existing characters or upgrade prompt
+        onClick();
+      }
     } else {
       onClick();
     }
@@ -1430,10 +1412,11 @@ const CategoryCard = ({
           ? '1px solid rgba(255, 215, 0, 0.4)' 
           : '1px solid rgba(255, 215, 0, 0.2)'
       }}>
+
         {isMyCharacters 
           ? (charactersLoading ? 'Loading...' : 
-             !isPremiumUser ? 'Create Character' : 
-             hasApprovedCharacters ? `${approvedCharacters.length} custom` : 'Create')
+             canCreateCharacter ? 'Create Character' :
+             `${characterCount}/${characterLimit} characters`)
           : `${category.characters.length} guides`
         }
       </span>
@@ -2109,7 +2092,7 @@ const FreeDesktopMyCharacters = ({ onStartFlow }) => (
             e.currentTarget.style.boxShadow = '0 4px 15px rgba(255, 215, 0, 0.3)';
           }}
         >
-          Start 3-Day Free Trial
+          {shouldShowTrial ? 'Start 3-Day Free Trial' : shouldShowUpgrade ? 'Upgrade to Premium' : 'Create Character'}
         </button>
         
         <button

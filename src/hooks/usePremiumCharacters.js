@@ -4,6 +4,8 @@ import { useAuth } from '../contexts/AuthContext';
 import { useUser } from '../contexts/UserContext';
 import usePremiumCapabilities from './usePremiumCapabilities';
 
+
+const API_BASE = process.env.REACT_APP_API_URL || 'http://localhost:5000';
 export default function usePremiumCharacters() {
   const { token } = useAuth();
   const { user } = useUser();

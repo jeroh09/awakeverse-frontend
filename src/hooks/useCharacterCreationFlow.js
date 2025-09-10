@@ -1,4 +1,4 @@
-// src/hooks/useCharacterCreationFlow.js - Optimized for your business model
+// src/hooks/useCharacterCreationFlow.js - Complete character creation flow orchestrator
 import { useState, useCallback, useRef, useEffect } from 'react';
 import { useAuth } from '../contexts/AuthContext';
 import { useUser } from '../contexts/UserContext';
@@ -7,6 +7,7 @@ import usePremiumCharacters from './usePremiumCharacters';
 
 const API_BASE = process.env.REACT_APP_API_URL || 'http://localhost:5000';
 
+// Flow step constants
 const FLOW_STEPS = {
   CLOSED: 'closed',
   TEMPLATES: 'templates', 
@@ -15,9 +16,11 @@ const FLOW_STEPS = {
   ERROR: 'error'
 };
 
+// Error types for better error handling
 const ERROR_TYPES = {
   NETWORK: 'network',
   VALIDATION: 'validation',
+  TRIAL_FAILED: 'trial_failed',
   LIMIT_REACHED: 'limit_reached',
   SERVER_ERROR: 'server_error',
   TIMEOUT: 'timeout'
@@ -31,13 +34,14 @@ export default function useCharacterCreationFlow() {
   const {
     subscriptionState,
     canCreateCharacter,
+    shouldShowTrial,
     characterCount,
     characterLimit,
     invalidateAndRefresh
   } = usePremiumCapabilitiesContext();
   
   // Character data integration
-  const { createCharacter: createCharacterAPI } = usePremiumCharacters();
+  const { createCharacter: createCharacterAPI, fetchUserCharacters } = usePremiumCharacters();
   
   // Flow state management
   const [flowStep, setFlowStep] = useState(FLOW_STEPS.CLOSED);
@@ -50,11 +54,15 @@ export default function useCharacterCreationFlow() {
   const [error, setError] = useState(null);
   const [errorType, setErrorType] = useState(null);
   
+  // Trial management state
+  const [isGrantingTrial, setIsGrantingTrial] = useState(false);
+  const [trialGranted, setTrialGranted] = useState(false);
+  
   // Performance and cleanup
   const abortControllerRef = useRef(null);
   const flowStartTime = useRef(null);
   
-  // Analytics tracking
+  // Analytics and business logic hooks
   const analyticsRef = useRef({
     flowStarted: false,
     templateSelected: false,
@@ -81,6 +89,9 @@ export default function useCharacterCreationFlow() {
     if (errorMessage.includes('validation') || errorMessage.includes('required')) {
       return ERROR_TYPES.VALIDATION;
     }
+    if (errorMessage.includes('trial')) {
+      return ERROR_TYPES.TRIAL_FAILED;
+    }
     if (errorMessage.includes('limit') || errorMessage.includes('maximum')) {
       return ERROR_TYPES.LIMIT_REACHED;
     }
@@ -91,7 +102,52 @@ export default function useCharacterCreationFlow() {
     return ERROR_TYPES.SERVER_ERROR;
   }, []);
 
-  // OPTIMIZED: Simple flow start without trial granting
+  // Trial granting function
+  const grantTrial = useCallback(async () => {
+    if (!user?.id || !token) {
+      throw new Error('User not authenticated');
+    }
+
+    setIsGrantingTrial(true);
+    
+    try {
+      const response = await fetch(`${API_BASE}/api/premium/trial/${user.id}`, {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({ trial_days: 3 })
+      });
+
+      if (!response.ok) {
+        // 409 or 400 might mean trial already granted - that's ok
+        if (response.status === 409 || response.status === 400) {
+          console.log('Trial already granted or user already has premium');
+          setTrialGranted(true);
+          return true;
+        }
+        throw new Error(`Trial grant failed: ${response.status}`);
+      }
+
+      const data = await response.json();
+      setTrialGranted(true);
+      
+      // Refresh capabilities to reflect new trial status
+      await invalidateAndRefresh();
+      
+      console.log('Trial granted successfully:', data);
+      return true;
+      
+    } catch (error) {
+      console.error('Trial grant failed:', error);
+      throw error;
+    } finally {
+      setIsGrantingTrial(false);
+    }
+  }, [user?.id, token, invalidateAndRefresh]);
+
+  // Flow control functions
   const startFlow = useCallback(async () => {
     try {
       setError(null);
@@ -99,14 +155,23 @@ export default function useCharacterCreationFlow() {
       flowStartTime.current = Date.now();
       analyticsRef.current.flowStarted = true;
 
-      // Check if user can create character (should be true for free users in your model)
+      // Check if user can create character
       if (!canCreateCharacter) {
-        if (characterCount >= characterLimit) {
+        // If free user, try to grant trial first
+        if (subscriptionState === 'free' && shouldShowTrial) {
+          console.log('Free user starting flow - granting trial');
+          await grantTrial();
+          
+          // Recheck capabilities after trial grant
+          if (!canCreateCharacter) {
+            throw new Error('Unable to grant trial access');
+          }
+        } else if (characterCount >= characterLimit) {
           setErrorType(ERROR_TYPES.LIMIT_REACHED);
-          setError(`Character limit reached (${characterCount}/${characterLimit}). You can only create one character.`);
+          setError(`Character limit reached (${characterCount}/${characterLimit}). Upgrade to create more characters.`);
           return;
         } else {
-          throw new Error('Unable to access character creation');
+          throw new Error('Cannot create character - premium access required');
         }
       }
 
@@ -125,7 +190,15 @@ export default function useCharacterCreationFlow() {
       setError(error.message);
       setFlowStep(FLOW_STEPS.ERROR);
     }
-  }, [canCreateCharacter, characterCount, characterLimit, classifyError]);
+  }, [
+    canCreateCharacter, 
+    subscriptionState, 
+    shouldShowTrial, 
+    characterCount, 
+    characterLimit, 
+    grantTrial, 
+    classifyError
+  ]);
 
   const selectTemplate = useCallback((template) => {
     if (!template || !template.id) {
@@ -141,7 +214,6 @@ export default function useCharacterCreationFlow() {
     console.log('Template selected:', template.name);
   }, []);
 
-  // OPTIMIZED: Character creation with success handling
   const createCharacter = useCallback(async (formData) => {
     if (!selectedTemplate) {
       setError('No template selected');
@@ -164,7 +236,7 @@ export default function useCharacterCreationFlow() {
     analyticsRef.current.creationAttempted = true;
 
     try {
-      // Prepare character data
+      // Prepare character data with template integration
       const characterPayload = {
         template_id: selectedTemplate.id,
         display_name: formData.display_name,
@@ -181,7 +253,7 @@ export default function useCharacterCreationFlow() {
         expertise_domain: selectedTemplate.expertise_domain
       };
 
-      // Create character via API
+      // Create character using the API hook
       const result = await createCharacterAPI(characterPayload);
       
       if (!result || !result.character) {
@@ -211,6 +283,9 @@ export default function useCharacterCreationFlow() {
       const type = classifyError(error);
       setErrorType(type);
       setError(error.message);
+      
+      // Don't close the flow on error - let user retry or fix issues
+      // setFlowStep(FLOW_STEPS.ERROR);
       
       throw error;
       
@@ -246,6 +321,8 @@ export default function useCharacterCreationFlow() {
     setError(null);
     setErrorType(null);
     setIsCreating(false);
+    setIsGrantingTrial(false);
+    setTrialGranted(false);
 
     // Log flow completion metrics
     if (flowStartTime.current) {
@@ -272,8 +349,8 @@ export default function useCharacterCreationFlow() {
     setFlowStep(FLOW_STEPS.TEMPLATES);
   }, []);
 
-  // Navigation helpers - SIMPLIFIED
-  const canStartFlow = canCreateCharacter; // Free users can create characters
+  // Navigation helpers
+  const canStartFlow = canCreateCharacter || (subscriptionState === 'free' && shouldShowTrial);
   const isFlowOpen = flowStep !== FLOW_STEPS.CLOSED;
   const showTemplates = flowStep === FLOW_STEPS.TEMPLATES;
   const showBuilder = flowStep === FLOW_STEPS.BUILDER;
@@ -289,6 +366,8 @@ export default function useCharacterCreationFlow() {
         return 'Network error. Please check your connection and try again.';
       case ERROR_TYPES.VALIDATION:
         return error; // Use the specific validation message
+      case ERROR_TYPES.TRIAL_FAILED:
+        return 'Unable to activate trial. Please contact support.';
       case ERROR_TYPES.LIMIT_REACHED:
         return error; // Use the specific limit message
       case ERROR_TYPES.TIMEOUT:
@@ -317,12 +396,16 @@ export default function useCharacterCreationFlow() {
     
     // Loading states
     isCreating,
+    isGrantingTrial,
     
     // Error handling
     error,
     errorType,
     errorMessage: getErrorMessage(),
     canRetry,
+    
+    // Trial state
+    trialGranted,
     
     // Navigation actions
     startFlow,
