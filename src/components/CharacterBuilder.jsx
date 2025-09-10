@@ -781,33 +781,50 @@ Engage users with the depth and authenticity that comes from your unique histori
         </div>
 
         {currentStep < 3 ? (
+        <button
+          onClick={handleNextStep}
+          disabled={isCreating}
+          style={{
+            background: isCreating ? 'rgba(128, 128, 128, 0.3)' : 'linear-gradient(135deg, #FFD700, #FFA500)',
+            border: 'none',
+            borderRadius: '8px',
+            color: isCreating ? 'rgba(255, 255, 255, 0.6)' : '#000',
+            fontSize: '0.9rem',
+            fontWeight: 700,
+            padding: '0.75rem 1.5rem',
+            cursor: isCreating ? 'not-allowed' : 'pointer',
+            transition: 'all 0.3s ease',
+            fontFamily: "'Cinzel', serif"
+          }}
+          onMouseEnter={(e) => {
+            if (!isCreating) {
+              e.currentTarget.style.transform = 'translateY(-1px)';
+            }
+          }}
+          onMouseLeave={(e) => {
+            e.currentTarget.style.transform = 'translateY(0)';
+          }}
+        >
+          Next
+        </button>
+      ) : (
+        <div>
           <button
-            onClick={handleNextStep}
-            disabled={isCreating}
+            onClick={() => {
+              alert('Debug clicked - checking data...');
+            }}
             style={{
-              background: isCreating ? 'rgba(128, 128, 128, 0.3)' : 'linear-gradient(135deg, #FFD700, #FFA500)',
-              border: 'none',
-              borderRadius: '8px',
-              color: isCreating ? 'rgba(255, 255, 255, 0.6)' : '#000',
-              fontSize: '0.9rem',
-              fontWeight: 700,
-              padding: '0.75rem 1.5rem',
-              cursor: isCreating ? 'not-allowed' : 'pointer',
-              transition: 'all 0.3s ease',
-              fontFamily: "'Cinzel', serif"
-            }}
-            onMouseEnter={(e) => {
-              if (!isCreating) {
-                e.currentTarget.style.transform = 'translateY(-1px)';
-              }
-            }}
-            onMouseLeave={(e) => {
-              e.currentTarget.style.transform = 'translateY(0)';
+              background: 'red',
+              color: 'white',
+              padding: '0.5rem 1rem',
+              margin: '0.5rem',
+              borderRadius: '4px',
+              border: 'none'
             }}
           >
-            Next
+            DEBUG CLICK
           </button>
-        ) : (
+
           <button
             onClick={handleCreateCharacter}
             disabled={isCreating}
@@ -844,6 +861,7 @@ Engage users with the depth and authenticity that comes from your unique histori
               'Submit for Approval'
             )}
           </button>
+        </div>
         )}
       </div>
 
