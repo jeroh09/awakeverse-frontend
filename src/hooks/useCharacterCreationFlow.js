@@ -1,4 +1,4 @@
-// src/hooks/useCharacterCreationFlow.js - Complete character creation flow orchestrator
+// src/hooks/useCharacterCreationFlow.js - Complete character creation flow orchestrer
 import { useState, useCallback, useRef, useEffect } from 'react';
 import { useAuth } from '../contexts/AuthContext';
 import { useUser } from '../contexts/UserContext';
