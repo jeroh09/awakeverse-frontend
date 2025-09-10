@@ -8,15 +8,16 @@ const TemplateGallery = ({ onSelectTemplate, onClose }) => {
   const [selectedArchetype, setSelectedArchetype] = useState('all');
   
   // Use real templates from backend instead of mock data
-  const templates = characterTemplates || [];
+  const templates = Object.values(characterTemplates || {}).flat();
+
   
   // Group templates by personality archetype for filtering
-  const archetypes = ['all', ...new Set(templates.map(t => t.personality_archetype).filter(Boolean))];
-  
+  const archetypes = ['all', ...Object.keys(characterTemplates || {})];
+
   // Filter templates based on selected archetype
   const filteredTemplates = selectedArchetype === 'all' 
     ? templates 
-    : templates.filter(t => t.personality_archetype === selectedArchetype);
+    : (characterTemplates?.[selectedArchetype] || []);
 
   const handleTemplateSelect = (template) => {
     setSelectedTemplate(template);
