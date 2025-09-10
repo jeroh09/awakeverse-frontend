@@ -50,14 +50,12 @@ export default function usePremiumCharacters() {
   }, [user?.id, token]);
 
   // Fetch character templates with pagination
-  const fetchCharacterTemplates = useCallback(async (page = 1, category = null) => {
+  const fetchCharacterTemplates = useCallback(async () => {
     if (!token) return [];
-    
+
     try {
-      const params = new URLSearchParams({ page, per_page: 20 });
-      if (category) params.append('category', category);
-      
-      const response = await fetch(`${API_BASE}/api/premium/templates?${params}`, {
+      // Load all templates in one request
+      const response = await fetch(`${API_BASE}/api/premium/templates?per_page=100`, {
         method: 'GET',
         headers: {
           'Authorization': `Bearer ${token}`,
@@ -70,19 +68,12 @@ export default function usePremiumCharacters() {
       }
 
       const data = await response.json();
-      
-      if (page === 1) {
-        setCharacterTemplates(data.template_groups || {});
-      } else {
-        // Append for pagination
-        setCharacterTemplates(prev => ({
-          ...prev,
-          ...data.template_groups
-        }));
-      }
-      
+      setCharacterTemplates(data.template_groups || {});
+
+      alert(`Loaded ${Object.keys(data.template_groups || {}).length} template categories`);
+
       return data;
-      
+
     } catch (error) {
       console.error('Failed to fetch templates:', error);
       setError(error.message);
@@ -95,6 +86,10 @@ export default function usePremiumCharacters() {
     if (!user?.id || !token) {
       throw new Error('User not authenticated');
     }
+    alert(`DEBUG 1: About to create character
+      URL: ${API_BASE}/api/premium/characters
+      User: ${user.id}
+      Token: ${token ? 'Present' : 'Missing'}`);
 
     try {
       const response = await fetch(`${API_BASE}/api/premium/characters`, {
@@ -105,14 +100,19 @@ export default function usePremiumCharacters() {
         },
         body: JSON.stringify(characterData)
       });
+      alert(`DEBUG 2: Response received
+        Status: ${response.status}
+        OK: ${response.ok}`);
 
       if (!response.ok) {
         const errorData = await response.json().catch(() => ({}));
+        alert(`DEBUG 3: Error response: ${JSON.stringify(errorData)}`);
+
         throw new Error(errorData.error || `Character creation failed: ${response.status}`);
       }
 
       const data = await response.json();
-      
+      alert(`DEBUG 4: Success response: ${JSON.stringify(data)}`);
       // Optimistically add to local state
       const newCharacter = {
         ...data.character,
@@ -131,10 +131,11 @@ export default function usePremiumCharacters() {
       return data;
       
     } catch (error) {
+      alert(`DEBUG 5: Exception caught: ${error.message}`);
       console.error('Character creation failed:', error);
       throw error;
     }
-  }, [user?.id, token, invalidateAndRefresh]);
+  }, [user?.id, token]);
 
   // Load data on mount
   useEffect(() => {
