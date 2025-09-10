@@ -136,15 +136,20 @@ Engage users with the depth and authenticity that comes from your unique histori
 
   // SIMPLIFIED: Character creation handler - no state management
   const handleCreateCharacter = async () => {
-    if (!validateStep(3)) return;
-
+    alert('Submit clicked - starting validation');
+  
+    if (!validateStep(3)) {
+      alert('Validation failed');
+      return;
+    }
+  
+    alert('Validation passed - calling createCharacter');
+  
     try {
       await createCharacter(formData);
-      // Success state is now managed by the flow context
-      // Component will be unmounted when success view shows
+      alert('Character created successfully');
     } catch (error) {
-      console.error('Character creation failed:', error.message);
-      // Error state is managed by context
+      alert(`Character creation failed: ${error.message}`);
     }
   };
 
