@@ -968,6 +968,10 @@ const ChatLauncherPage = ({ onStartChat }) => {
               approvedCharacters={approvedCharacters}
               charactersLoading={charactersLoading}
               onCreateCharacter={handleCreateCharacterClick}
+              canCreateCharacter={canCreateCharacter}
+              shouldShowTrial={shouldShowTrial}
+              characterCount={characterCount}
+              characterLimit={characterLimit}
               canStartFlow={canStartFlow}
             />
           ))}
@@ -1222,7 +1226,11 @@ const CategoryCard = ({
   subscriptionState, 
   approvedCharacters, 
   charactersLoading, 
-  onCreateCharacter, 
+  onCreateCharacter,
+  canCreateCharacter,
+  shouldShowTrial, 
+  characterCount,
+  characterLimit, 
   canStartFlow 
 }) => {
   const isMyCharacters = category.key === 'my_characters';

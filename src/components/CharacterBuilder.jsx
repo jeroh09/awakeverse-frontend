@@ -8,7 +8,7 @@ const CharacterBuilder = ({ template, onClose }) => {
     createCharacter,
     isCreating,
     error,
-    setError
+    //setError
   } = useCharacterCreationFlow();
   
   const [isMobile, setIsMobile] = useState(false);
@@ -177,7 +177,7 @@ Engage users with the depth and authenticity that comes from your unique histori
         zIndex: 9999,
         fontFamily: 'monospace'
       }}>
-        DEBUG: isCreating={isCreatingCharacter.toString()} | step={currentStep}
+        DEBUG: isCreating={isCreating.toString()} | step={currentStep}
       </div>
 
       {/* Header */}
@@ -210,8 +210,8 @@ Engage users with the depth and authenticity that comes from your unique histori
         </div>
 
         <button
-          onClick={backToTemplates}
-          disabled={isCreatingCharacter}
+          onClick={onClose}
+          disabled={isCreating}
           style={{
             background: 'rgba(255, 215, 0, 0.1)',
             border: '2px solid rgba(255, 215, 0, 0.4)',
@@ -220,11 +220,11 @@ Engage users with the depth and authenticity that comes from your unique histori
             fontSize: isMobile ? '0.8rem' : '0.9rem',
             fontWeight: 600,
             padding: isMobile ? '0.5rem 1rem' : '0.75rem 1.5rem',
-            cursor: isCreatingCharacter ? 'not-allowed' : 'pointer',
+            cursor: isCreating ? 'not-allowed' : 'pointer',
             transition: 'all 0.3s ease',
             fontFamily: "'Cinzel', serif",
             alignSelf: isMobile ? 'flex-start' : 'auto',
-            opacity: isCreatingCharacter ? 0.5 : 1
+            opacity: isCreating ? 0.5 : 1
           }}
         >
           ← Back to Templates
@@ -381,7 +381,7 @@ Engage users with the depth and authenticity that comes from your unique histori
                   value={formData.display_name}
                   onChange={(e) => handleInputChange('display_name', e.target.value)}
                   placeholder="e.g., Marcus Aurelius, Marie Curie, Leonardo da Vinci"
-                  disabled={isCreatingCharacter}
+                  disabled={isCreating}
                   style={{
                     width: '100%',
                     padding: '1rem',
@@ -395,7 +395,7 @@ Engage users with the depth and authenticity that comes from your unique histori
                     outline: 'none',
                     fontFamily: "'Cinzel', serif",
                     transition: 'border-color 0.3s ease',
-                    opacity: isCreatingCharacter ? 0.5 : 1
+                    opacity: isCreating ? 0.5 : 1
                   }}
                   onFocus={(e) => e.target.style.borderColor = 'rgba(255, 215, 0, 0.6)'}
                   onBlur={(e) => e.target.style.borderColor = errors.display_name ? '#ff6b6b' : 'rgba(255, 215, 0, 0.3)'}
@@ -422,7 +422,7 @@ Engage users with the depth and authenticity that comes from your unique histori
                   onChange={(e) => handleInputChange('short_description', e.target.value)}
                   placeholder="Describe your character in 1-2 sentences. What makes them unique? What is their expertise?"
                   rows={4}
-                  disabled={isCreatingCharacter}
+                  disabled={isCreating}
                   style={{
                     width: '100%',
                     padding: '1rem',
@@ -437,7 +437,7 @@ Engage users with the depth and authenticity that comes from your unique histori
                     fontFamily: "'Cinzel', serif",
                     resize: 'vertical',
                     transition: 'border-color 0.3s ease',
-                    opacity: isCreatingCharacter ? 0.5 : 1
+                    opacity: isCreating ? 0.5 : 1
                   }}
                   onFocus={(e) => e.target.style.borderColor = 'rgba(255, 215, 0, 0.6)'}
                   onBlur={(e) => e.target.style.borderColor = errors.short_description ? '#ff6b6b' : 'rgba(255, 215, 0, 0.3)'}
@@ -491,7 +491,7 @@ Engage users with the depth and authenticity that comes from your unique histori
                   onChange={(e) => handleInputChange('system_instruction', e.target.value)}
                   placeholder={templateDefaults.system_instruction_template}
                   rows={8}
-                  disabled={isCreatingCharacter}
+                  disabled={isCreating}
                   style={{
                     width: '100%',
                     padding: '1rem',
@@ -507,7 +507,7 @@ Engage users with the depth and authenticity that comes from your unique histori
                     resize: 'vertical',
                     transition: 'border-color 0.3s ease',
                     lineHeight: 1.5,
-                    opacity: isCreatingCharacter ? 0.5 : 1
+                    opacity: isCreating ? 0.5 : 1
                   }}
                   onFocus={(e) => e.target.style.borderColor = 'rgba(255, 215, 0, 0.6)'}
                   onBlur={(e) => e.target.style.borderColor = errors.system_instruction ? '#ff6b6b' : 'rgba(255, 215, 0, 0.3)'}
@@ -541,7 +541,7 @@ Engage users with the depth and authenticity that comes from your unique histori
                   onChange={(e) => handleInputChange('constraints', e.target.value)}
                   placeholder={templateDefaults.suggested_constraints}
                   rows={3}
-                  disabled={isCreatingCharacter}
+                  disabled={isCreating}
                   style={{
                     width: '100%',
                     padding: '1rem',
@@ -554,7 +554,7 @@ Engage users with the depth and authenticity that comes from your unique histori
                     fontFamily: "'Cinzel', serif",
                     resize: 'vertical',
                     transition: 'border-color 0.3s ease',
-                    opacity: isCreatingCharacter ? 0.5 : 1
+                    opacity: isCreating ? 0.5 : 1
                   }}
                   onFocus={(e) => e.target.style.borderColor = 'rgba(255, 215, 0, 0.6)'}
                   onBlur={(e) => e.target.style.borderColor = 'rgba(255, 215, 0, 0.3)'}
@@ -719,7 +719,7 @@ Engage users with the depth and authenticity that comes from your unique histori
       </div>
 
       {/* Error display */}
-      {creationError && (
+      {error && (
         <div style={{
           background: 'rgba(255, 107, 107, 0.1)',
           border: '1px solid rgba(255, 107, 107, 0.3)',
@@ -758,16 +758,16 @@ Engage users with the depth and authenticity that comes from your unique histori
       }}>
         <button
           onClick={handlePrevStep}
-          disabled={currentStep === 1 || isCreatingCharacter}
+          disabled={currentStep === 1 || isCreating}
           style={{
-            background: currentStep === 1 || isCreatingCharacter ? 'rgba(128, 128, 128, 0.2)' : 'rgba(255, 215, 0, 0.1)',
-            border: currentStep === 1 || isCreatingCharacter ? '2px solid rgba(128, 128, 128, 0.3)' : '2px solid rgba(255, 215, 0, 0.4)',
+            background: currentStep === 1 || isCreating ? 'rgba(128, 128, 128, 0.2)' : 'rgba(255, 215, 0, 0.1)',
+            border: currentStep === 1 || isCreating ? '2px solid rgba(128, 128, 128, 0.3)' : '2px solid rgba(255, 215, 0, 0.4)',
             borderRadius: '8px',
-            color: currentStep === 1 || isCreatingCharacter ? 'rgba(128, 128, 128, 0.6)' : '#FFD700',
+            color: currentStep === 1 || isCreating ? 'rgba(128, 128, 128, 0.6)' : '#FFD700',
             fontSize: '0.9rem',
             fontWeight: 600,
             padding: '0.75rem 1.5rem',
-            cursor: currentStep === 1 || isCreatingCharacter ? 'not-allowed' : 'pointer',
+            cursor: currentStep === 1 || isCreating ? 'not-allowed' : 'pointer',
             transition: 'all 0.3s ease',
             fontFamily: "'Cinzel', serif"
           }}
@@ -798,21 +798,21 @@ Engage users with the depth and authenticity that comes from your unique histori
         {currentStep < 3 ? (
           <button
             onClick={handleNextStep}
-            disabled={isCreatingCharacter}
+            disabled={isCreating}
             style={{
-              background: isCreatingCharacter ? 'rgba(128, 128, 128, 0.3)' : 'linear-gradient(135deg, #FFD700, #FFA500)',
+              background: isCreating ? 'rgba(128, 128, 128, 0.3)' : 'linear-gradient(135deg, #FFD700, #FFA500)',
               border: 'none',
               borderRadius: '8px',
-              color: isCreatingCharacter ? 'rgba(255, 255, 255, 0.6)' : '#000',
+              color: isCreating ? 'rgba(255, 255, 255, 0.6)' : '#000',
               fontSize: '0.9rem',
               fontWeight: 700,
               padding: '0.75rem 1.5rem',
-              cursor: isCreatingCharacter ? 'not-allowed' : 'pointer',
+              cursor: isCreating ? 'not-allowed' : 'pointer',
               transition: 'all 0.3s ease',
               fontFamily: "'Cinzel', serif"
             }}
             onMouseEnter={(e) => {
-              if (!isCreatingCharacter) {
+              if (!isCreating) {
                 e.currentTarget.style.transform = 'translateY(-1px)';
               }
             }}
@@ -825,25 +825,25 @@ Engage users with the depth and authenticity that comes from your unique histori
         ) : (
           <button
             onClick={handleCreateCharacter}
-            disabled={isCreatingCharacter}
+            disabled={isCreating}
             style={{
-              background: isCreatingCharacter 
+              background: isCreating 
                 ? 'rgba(128, 128, 128, 0.3)'
                 : 'linear-gradient(135deg, #FFD700, #FFA500)',
               border: 'none',
               borderRadius: '8px',
-              color: isCreatingCharacter ? 'rgba(255, 255, 255, 0.6)' : '#000',
+              color: isCreating ? 'rgba(255, 255, 255, 0.6)' : '#000',
               fontSize: '0.9rem',
               fontWeight: 700,
               padding: '0.75rem 2rem',
-              cursor: isCreatingCharacter ? 'not-allowed' : 'pointer',
+              cursor: isCreating ? 'not-allowed' : 'pointer',
               transition: 'all 0.3s ease',
               display: 'flex',
               alignItems: 'center',
               gap: '0.5rem'
             }}
           >
-            {isCreatingCharacter ? (
+            {isCreating ? (
               <>
                 <div style={{
                   width: '16px',
