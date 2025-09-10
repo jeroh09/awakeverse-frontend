@@ -811,7 +811,7 @@ Engage users with the depth and authenticity that comes from your unique histori
         <div>
           <button
             onClick={() => {
-              alert('Debug clicked - checking data...');
+              alert(`Debug: Template=${template?.name || 'undefined'}, FormData=${JSON.stringify(formData)}`);
             }}
             style={{
               background: 'red',
