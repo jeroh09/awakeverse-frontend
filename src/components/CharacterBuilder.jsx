@@ -177,7 +177,7 @@ Engage users with the depth and authenticity that comes from your unique histori
 
       console.log('Submitting character payload:', characterPayload);
 
-      const response = await fetch(`${API_BASE}/api/characters`, {
+      const response = await fetch(`${API_BASE}/api/premium/characters`, {
         method: 'POST',
         headers: {
           'Authorization': `Bearer ${token}`,
