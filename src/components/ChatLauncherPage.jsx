@@ -684,6 +684,128 @@ const ChatLauncherPage = ({ onStartChat }) => {
 
         {/* Search Section - rest of desktop implementation unchanged */}
         {/* ... search input, results, personalized section ... */}
+        <div style={{ width: '100%', maxWidth: '400px', position: 'relative', marginBottom: '1rem' }}>
+          <input
+            type="text"
+            placeholder="Search characters..."
+            value={inputValue}
+            onChange={(e) => handleInputChange(e.target.value)}
+            onFocus={() => inputValue.length >= 2 && setShowResults(true)}
+            onBlur={() => setTimeout(() => setShowResults(false), 200)}
+            style={{
+              width: '100%',
+              padding: '1rem 1.5rem',
+              fontSize: '1.1rem',
+              border: '2px solid rgba(255, 215, 0, 0.3)',
+              borderRadius: '25px',
+              background: 'rgba(255, 255, 255, 0.1)',
+              color: '#FFD700',
+              outline: 'none',
+              backdropFilter: 'blur(10px)',
+              transition: 'all 0.3s ease',
+              fontFamily: "'Georgia', serif"
+            }}
+          />
+
+          {/* Search Results */}
+          {showResults && searchResults.length > 0 && (
+            <div style={{
+              position: 'absolute',
+              top: '100%',
+              left: 0,
+              right: 0,
+              maxHeight: '300px',
+              overflowY: 'auto',
+              background: 'rgba(11, 20, 38, 0.95)',
+              border: '1px solid rgba(255, 215, 0, 0.3)',
+              borderRadius: '15px',
+              backdropFilter: 'blur(20px)',
+              padding: '1rem',
+              marginTop: '0.5rem',
+              zIndex: 1000
+            }}>
+              {searchResults.map((character, index) => (
+                <div
+                  key={character.key}
+                  onClick={() => handleCharacterSelect(character)}
+                  style={{
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: '1rem',
+                    padding: '0.75rem',
+                    background: 'rgba(255, 255, 255, 0.05)',
+                    border: '1px solid rgba(255, 215, 0, 0.2)',
+                    borderRadius: '10px',
+                    cursor: 'pointer',
+                    transition: 'all 0.3s ease',
+                    marginBottom: index < searchResults.length - 1 ? '0.5rem' : 0
+                  }}
+                  onMouseEnter={(e) => {
+                    e.currentTarget.style.background = 'rgba(255, 215, 0, 0.1)';
+                    e.currentTarget.style.borderColor = 'rgba(255, 215, 0, 0.5)';
+                  }}
+                  onMouseLeave={(e) => {
+                    e.currentTarget.style.background = 'rgba(255, 255, 255, 0.05)';
+                    e.currentTarget.style.borderColor = 'rgba(255, 215, 0, 0.2)';
+                  }}
+                >
+                  <img
+                    src={character.thumbnailUrl}
+                    alt={character.name}
+                    style={{
+                      width: '40px',
+                      height: '40px',
+                      borderRadius: '50%',
+                      objectFit: 'cover',
+                      border: '2px solid rgba(255, 215, 0, 0.3)'
+                    }}
+                    onError={(e) => { e.target.src = '/images/default-character.jpg'; }}
+                  />
+                  <div style={{ flex: 1, minWidth: 0 }}>
+                    <div style={{ fontSize: '0.9rem', fontWeight: 600, color: '#FFD700', marginBottom: '0.25rem' }}>
+                      {character.name}
+                    </div>
+                    <div style={{
+                      fontSize: '0.75rem',
+                      color: 'rgba(255, 215, 0, 0.7)',
+                      letterSpacing: '0.5px'
+                    }}>
+                      {character.category}
+                    </div>
+                  </div>
+                </div>
+              ))}
+            </div>
+          )}
+
+          {showResults && searchResults.length === 0 && inputValue.length >= 2 && (
+            <div style={{
+              position: 'absolute',
+              top: '100%',
+              left: 0,
+              right: 0,
+              background: 'rgba(11, 20, 38, 0.95)',
+              border: '1px solid rgba(255, 215, 0, 0.3)',
+              borderRadius: '15px',
+              backdropFilter: 'blur(20px)',
+              padding: '1rem',
+              marginTop: '0.5rem',
+              textAlign: 'center',
+              zIndex: 1000
+            }}>
+              <p style={{
+                color: 'rgba(255, 215, 0, 0.8)',
+                margin: '0 0 0.5rem 0',
+                fontSize: '1rem'
+              }}>
+                No matches for "{inputValue}"
+              </p>
+              <small style={{ color: 'rgba(255, 255, 255, 0.6)', fontSize: '0.85rem' }}>
+                Try searching for character names or themes
+              </small>
+            </div>
+          )}
+        </div>
 
         {/* Personalized Section (Desktop) */}
         {shouldShowForYou && (
@@ -706,6 +828,7 @@ const ChatLauncherPage = ({ onStartChat }) => {
             position: 'absolute',
             width: '100%',
             height: '100%',
+            zIndex: 3,
             padding: '2rem',
             display: 'grid',
             gridTemplateColumns: 'repeat(3, 1fr)',

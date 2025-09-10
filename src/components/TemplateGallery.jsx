@@ -56,7 +56,7 @@ const TemplateGallery = ({ onSelectTemplate, onClose }) => {
         // Primary API attempt
         if (token) {
           try {
-            const response = await fetch(`${API_BASE}/api/templates?per_page=100`, {
+            const response = await fetch(`${API_BASE}/api/premium/templates?per_page=100`, {
               method: 'GET',
               headers: {
                 'Authorization': `Bearer ${token}`,
@@ -106,7 +106,7 @@ const TemplateGallery = ({ onSelectTemplate, onClose }) => {
 
         // Fallback 1: Try public template endpoint (no auth)
         try {
-          const publicResponse = await fetch(`${API_BASE}/api/public/templates`, {
+          const publicResponse = await fetch(`${API_BASE}/api/premium/templates`, {
             method: 'GET',
             headers: { 'Content-Type': 'application/json' },
             signal: AbortSignal.timeout(5000)
