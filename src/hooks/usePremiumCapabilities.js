@@ -15,7 +15,7 @@ const SUBSCRIPTION_STATES = {
   PENDING_APPROVAL: 'pending_approval'
 };
 
-// Primary CTA actions for UI
+// Primary CTA action for UI
 const CTA_ACTIONS = {
   EXPLORE: 'explore',
   START_TRIAL: 'start_trial',

@@ -1,4 +1,4 @@
-// src/components/CharacterBuilder.jsx - Defensive character creation with backend validation
+// src/components/CharacterBuilder.jsx - Defensive character creation backend validation
 import React, { useState, useEffect } from 'react';
 import { useAuth } from '../contexts/AuthContext';
 import { useUser } from '../contexts/UserContext';
