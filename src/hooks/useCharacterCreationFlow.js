@@ -215,6 +215,7 @@ export default function useCharacterCreationFlow() {
   }, []);
 
   const createCharacter = useCallback(async (formData) => {
+    alert(`FLOW DEBUG: createCharacter called with template ID: ${selectedTemplate?.id}`);
     if (!selectedTemplate) {
       setError('No template selected');
       return;
@@ -254,6 +255,7 @@ export default function useCharacterCreationFlow() {
       };
 
       // Create character using the API hook
+      alert(`FLOW DEBUG: About to call createCharacterAPI with payload: ${JSON.stringify(characterPayload)}`);
       const result = await createCharacterAPI(characterPayload);
       
       if (!result || !result.character) {
