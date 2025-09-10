@@ -729,24 +729,9 @@ Engage users with the depth and authenticity that comes from your unique histori
           color: '#ff6b6b',
           fontSize: '0.9rem'
         }}>
-          {creationError}
-          <button 
-            onClick={() => setCreationError(null)}
-            style={{
-              background: 'none',
-              border: 'none',
-              color: '#ff6b6b',
-              cursor: 'pointer',
-              float: 'right',
-              fontSize: '1rem',
-              padding: 0
-            }}
-          >
-            Ã—
-          </button>
+          {error}
         </div>
       )}
-
       {/* Bottom Navigation */}
       <div style={{
         padding: '1.5rem 2rem',
