@@ -1,17 +1,15 @@
-// src/components/CharacterBuilder.jsx - Simplified with context-managed success state
+// src/components/CharacterBuilder.jsx - Defensive character creation with backend validation
 import React, { useState, useEffect } from 'react';
-import useCharacterCreationFlow from '../hooks/useCharacterCreationFlow';
+import { useAuth } from '../contexts/AuthContext';
+import { useUser } from '../contexts/UserContext';
 
+const API_BASE = process.env.REACT_APP_API_URL || 'http://localhost:5000';
 
-const CharacterBuilder = ({ template, onClose }) => {
-  const { 
-    createCharacter,
-    isCreating,
-    error,
-    //setError
-  } = useCharacterCreationFlow();
-  
+const CharacterBuilder = ({ template, onClose, onSuccess }) => {
+  const { token } = useAuth();
+  const { user } = useUser();
   const [isMobile, setIsMobile] = useState(false);
+  
   const [formData, setFormData] = useState({
     display_name: '',
     short_description: '',
@@ -21,9 +19,13 @@ const CharacterBuilder = ({ template, onClose }) => {
     constraints: template?.template_data?.suggested_constraints || '',
     keyword_triggers: template?.template_data?.sample_triggers || []
   });
+  
   const [errors, setErrors] = useState({});
   const [currentStep, setCurrentStep] = useState(1);
-  
+  const [isCreating, setIsCreating] = useState(false);
+  const [submitError, setSubmitError] = useState(null);
+  const [submitSuccess, setSubmitSuccess] = useState(false);
+
   // Check for mobile viewport
   useEffect(() => {
     const checkMobile = () => setIsMobile(window.innerWidth <= 768);
@@ -32,6 +34,7 @@ const CharacterBuilder = ({ template, onClose }) => {
     return () => window.removeEventListener('resize', checkMobile);
   }, []);
 
+  // Initialize form data from template
   useEffect(() => {
     if (template?.template_data) {
       setFormData({
@@ -46,7 +49,7 @@ const CharacterBuilder = ({ template, onClose }) => {
     }
   }, [template]);
 
-  // Mock template data enhancement
+  // Mock template data enhancement (fallback if template lacks data)
   const templateDefaults = {
     system_instruction_template: `You are a ${template?.personality_archetype?.toLowerCase() || 'character'} from the ${template?.historical_period || 'historical'} period. Your expertise lies in ${template?.expertise_domain?.toLowerCase() || 'various fields'}. 
 
@@ -100,8 +103,8 @@ Engage users with the depth and authenticity that comes from your unique histori
         newErrors.short_description = 'Description is required';
       } else if (formData.short_description.length < 20) {
         newErrors.short_description = 'Description must be at least 20 characters';
-      } else if (formData.short_description.length > 200) {
-        newErrors.short_description = 'Description must be less than 200 characters';
+      } else if (formData.short_description.length > 500) {
+        newErrors.short_description = 'Description must be less than 500 characters';
       }
     }
     
@@ -134,22 +137,114 @@ Engage users with the depth and authenticity that comes from your unique histori
     }
   };
 
-  // SIMPLIFIED: Character creation handler - no state management
+  // Character creation with backend premium validation
   const handleCreateCharacter = async () => {
-    alert('Submit clicked - starting validation');
-  
+    console.log('Submit clicked - starting validation');
+    
     if (!validateStep(3)) {
-      alert('Validation failed');
+      console.log('Frontend validation failed');
       return;
     }
-  
-    alert('Validation passed - calling createCharacter');
-  
+
+    // Ensure template has ID
+    if (!template?.id) {
+      console.error('Template missing ID:', template);
+      setSubmitError('Invalid template selected. Please go back and select a template.');
+      return;
+    }
+
+    console.log('Frontend validation passed - submitting to backend');
+    setIsCreating(true);
+    setSubmitError(null);
+
     try {
-      await createCharacter(formData);
-      alert('Character created successfully');
+      // Submit to backend - let backend handle premium validation
+      const characterPayload = {
+        template_id: template.id,
+        display_name: formData.display_name,
+        short_description: formData.short_description,
+        system_instruction: formData.system_instruction,
+        behavior_goals: formData.behavior_goals || [],
+        style_tone: formData.style_tone || [],
+        constraints: formData.constraints || '',
+        keyword_triggers: formData.keyword_triggers || [],
+        relationships: {},
+        // Template metadata
+        historical_period: template.historical_period,
+        personality_archetype: template.personality_archetype,
+        expertise_domain: template.expertise_domain
+      };
+
+      console.log('Submitting character payload:', characterPayload);
+
+      const response = await fetch(`${API_BASE}/api/characters`, {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify(characterPayload)
+      });
+
+      const result = await response.json();
+      console.log('Backend response:', result);
+
+      if (!response.ok) {
+        // Handle different error types from backend
+        if (response.status === 403) {
+          // Permission denied - might trigger trial or upgrade flow
+          setSubmitError(result.error || 'Character creation requires premium access. Starting trial...');
+          
+          // Try to auto-grant trial if backend supports it
+          if (result.can_grant_trial) {
+            try {
+              const trialResponse = await fetch(`${API_BASE}/api/premium/trial/${user?.id}`, {
+                method: 'POST',
+                headers: {
+                  'Authorization': `Bearer ${token}`,
+                  'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({ trial_days: 3 })
+              });
+
+              if (trialResponse.ok) {
+                setSubmitError('Trial activated! Please try creating your character again.');
+                return;
+              }
+            } catch (trialError) {
+              console.error('Trial activation failed:', trialError);
+            }
+          }
+          
+          return;
+        } else if (response.status === 400) {
+          setSubmitError(result.error || 'Invalid character data. Please check your inputs.');
+          return;
+        } else if (response.status >= 500) {
+          setSubmitError('Server error. Please try again later.');
+          return;
+        } else {
+          setSubmitError(result.error || 'Character creation failed. Please try again.');
+          return;
+        }
+      }
+
+      // Success - character created
+      console.log('Character created successfully:', result);
+      setSubmitSuccess(true);
+      
+      // Call success callback after a brief delay to show success state
+      setTimeout(() => {
+        if (onSuccess) {
+          onSuccess(result);
+        }
+      }, 2000);
+
     } catch (error) {
-      alert(`Character creation failed: ${error.message}`);
+      console.error('Character creation error:', error);
+      setSubmitError('Network error. Please check your connection and try again.');
+    } finally {
+      setIsCreating(false);
     }
   };
 
@@ -158,6 +253,81 @@ Engage users with the depth and authenticity that comes from your unique histori
     { number: 2, title: 'Personality', description: 'Instructions and traits' },
     { number: 3, title: 'Review', description: 'Final confirmation' }
   ];
+
+  // Success state
+  if (submitSuccess) {
+    return (
+      <div style={{
+        width: '100%',
+        height: '100vh',
+        background: 'linear-gradient(135deg, #0B1426 0%, #1A2B47 25%, #2C1810 50%, #0F1A2E 75%, #0B1426 100%)',
+        fontFamily: "'Cinzel', serif",
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'center'
+      }}>
+        <div style={{
+          background: 'rgba(255, 255, 255, 0.1)',
+          border: '2px solid rgba(255, 215, 0, 0.3)',
+          borderRadius: '20px',
+          padding: '3rem',
+          textAlign: 'center',
+          maxWidth: '500px',
+          backdropFilter: 'blur(10px)'
+        }}>
+          <div style={{
+            width: '80px',
+            height: '80px',
+            background: 'linear-gradient(135deg, #00FF88, #00CC6A)',
+            borderRadius: '50%',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            margin: '0 auto 2rem',
+            fontSize: '2rem'
+          }}>
+            ✓
+          </div>
+          
+          <h2 style={{
+            color: '#FFD700',
+            fontSize: '1.8rem',
+            margin: '0 0 1rem 0',
+            fontFamily: "'Playfair Display', serif"
+          }}>
+            Character Created!
+          </h2>
+          
+          <p style={{
+            color: 'rgba(255, 255, 255, 0.9)',
+            fontSize: '1rem',
+            lineHeight: 1.6,
+            margin: '0 0 2rem 0'
+          }}>
+            <strong>{formData.display_name}</strong> has been submitted for approval. 
+            You'll receive an email notification when your character is ready, usually within 24-48 hours.
+          </p>
+          
+          <button
+            onClick={onClose}
+            style={{
+              background: 'linear-gradient(135deg, #FFD700, #FFA500)',
+              border: 'none',
+              borderRadius: '25px',
+              color: '#000',
+              fontSize: '1rem',
+              fontWeight: 700,
+              padding: '1rem 2rem',
+              cursor: 'pointer',
+              transition: 'all 0.3s ease'
+            }}
+          >
+            Continue Exploring
+          </button>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div style={{
@@ -170,20 +340,22 @@ Engage users with the depth and authenticity that comes from your unique histori
       flexDirection: 'column'
     }}>
       {/* Debug Info */}
-      <div style={{
-        position: 'fixed',
-        top: '10px',
-        right: '10px',
-        padding: '0.5rem',
-        background: 'rgba(255, 215, 0, 0.9)',
-        color: '#000',
-        fontSize: '0.7rem',
-        borderRadius: '4px',
-        zIndex: 9999,
-        fontFamily: 'monospace'
-      }}>
-        DEBUG: isCreating={isCreating.toString()} | step={currentStep}
-      </div>
+      {process.env.NODE_ENV === 'development' && (
+        <div style={{
+          position: 'fixed',
+          top: '10px',
+          right: '10px',
+          padding: '0.5rem',
+          background: 'rgba(255, 215, 0, 0.9)',
+          color: '#000',
+          fontSize: '0.7rem',
+          borderRadius: '4px',
+          zIndex: 9999,
+          fontFamily: 'monospace'
+        }}>
+          Template ID: {template?.id || 'MISSING'} | Step: {currentStep} | Creating: {isCreating.toString()}
+        </div>
+      )}
 
       {/* Header */}
       <div style={{
@@ -210,7 +382,7 @@ Engage users with the depth and authenticity that comes from your unique histori
             margin: 0,
             fontSize: isMobile ? '0.9rem' : '1rem'
           }}>
-            Based on: {template?.name}
+            Based on: {template?.name || 'Custom Template'}
           </p>
         </div>
 
@@ -314,7 +486,7 @@ Engage users with the depth and authenticity that comes from your unique histori
                     fontWeight: 'bold',
                     fontSize: '0.9rem'
                   }}>
-                    {currentStep > step.number ? 'âœ“' : step.number}
+                    {currentStep > step.number ? '✓' : step.number}
                   </div>
                   <div>
                     <div style={{
@@ -724,7 +896,7 @@ Engage users with the depth and authenticity that comes from your unique histori
       </div>
 
       {/* Error display */}
-      {error && (
+      {submitError && (
         <div style={{
           background: 'rgba(255, 107, 107, 0.1)',
           border: '1px solid rgba(255, 107, 107, 0.3)',
@@ -732,11 +904,13 @@ Engage users with the depth and authenticity that comes from your unique histori
           padding: '1rem',
           margin: '1rem 2rem',
           color: '#ff6b6b',
-          fontSize: '0.9rem'
+          fontSize: '0.9rem',
+          textAlign: 'center'
         }}>
-          {error}
+          {submitError}
         </div>
       )}
+
       {/* Bottom Navigation */}
       <div style={{
         padding: '1.5rem 2rem',
@@ -786,68 +960,60 @@ Engage users with the depth and authenticity that comes from your unique histori
         </div>
 
         {currentStep < 3 ? (
-        <button
-          onClick={handleNextStep}
-          disabled={isCreating}
-          style={{
-            background: isCreating ? 'rgba(128, 128, 128, 0.3)' : 'linear-gradient(135deg, #FFD700, #FFA500)',
-            border: 'none',
-            borderRadius: '8px',
-            color: isCreating ? 'rgba(255, 255, 255, 0.6)' : '#000',
-            fontSize: '0.9rem',
-            fontWeight: 700,
-            padding: '0.75rem 1.5rem',
-            cursor: isCreating ? 'not-allowed' : 'pointer',
-            transition: 'all 0.3s ease',
-            fontFamily: "'Cinzel', serif"
-          }}
-          onMouseEnter={(e) => {
-            if (!isCreating) {
-              e.currentTarget.style.transform = 'translateY(-1px)';
-            }
-          }}
-          onMouseLeave={(e) => {
-            e.currentTarget.style.transform = 'translateY(0)';
-          }}
-        >
-          Next
-        </button>
-      ) : (
-        <div>
           <button
-            onClick={() => {
-              alert(`Debug: Template=${template?.name || 'undefined'}, FormData=${JSON.stringify(formData)}`);
-            }}
-            style={{
-              background: 'red',
-              color: 'white',
-              padding: '0.5rem 1rem',
-              margin: '0.5rem',
-              borderRadius: '4px',
-              border: 'none'
-            }}
-          >
-            DEBUG CLICK
-          </button>
-
-          <button
-            onClick={handleCreateCharacter}
+            onClick={handleNextStep}
             disabled={isCreating}
             style={{
-              background: isCreating 
-                ? 'rgba(128, 128, 128, 0.3)'
-                : 'linear-gradient(135deg, #FFD700, #FFA500)',
+              background: isCreating ? 'rgba(128, 128, 128, 0.3)' : 'linear-gradient(135deg, #FFD700, #FFA500)',
               border: 'none',
               borderRadius: '8px',
               color: isCreating ? 'rgba(255, 255, 255, 0.6)' : '#000',
               fontSize: '0.9rem',
               fontWeight: 700,
-              padding: '0.75rem 2rem',
+              padding: '0.75rem 1.5rem',
               cursor: isCreating ? 'not-allowed' : 'pointer',
+              transition: 'all 0.3s ease',
+              fontFamily: "'Cinzel', serif"
+            }}
+            onMouseEnter={(e) => {
+              if (!isCreating) {
+                e.currentTarget.style.transform = 'translateY(-1px)';
+              }
+            }}
+            onMouseLeave={(e) => {
+              e.currentTarget.style.transform = 'translateY(0)';
+            }}
+          >
+            Next
+          </button>
+        ) : (
+          <button
+            onClick={handleCreateCharacter}
+            disabled={isCreating || !template?.id}
+            style={{
+              background: isCreating || !template?.id
+                ? 'rgba(128, 128, 128, 0.3)'
+                : 'linear-gradient(135deg, #FFD700, #FFA500)',
+              border: 'none',
+              borderRadius: '8px',
+              color: isCreating || !template?.id ? 'rgba(255, 255, 255, 0.6)' : '#000',
+              fontSize: '0.9rem',
+              fontWeight: 700,
+              padding: '0.75rem 2rem',
+              cursor: isCreating || !template?.id ? 'not-allowed' : 'pointer',
               transition: 'all 0.3s ease',
               display: 'flex',
               alignItems: 'center',
-              gap: '0.5rem'
+              gap: '0.5rem',
+              opacity: isCreating || !template?.id ? 0.6 : 1
+            }}
+            onMouseEnter={(e) => {
+              if (!isCreating && template?.id) {
+                e.currentTarget.style.transform = 'translateY(-1px)';
+              }
+            }}
+            onMouseLeave={(e) => {
+              e.currentTarget.style.transform = 'translateY(0)';
             }}
           >
             {isCreating ? (
@@ -862,11 +1028,12 @@ Engage users with the depth and authenticity that comes from your unique histori
                 }} />
                 Creating...
               </>
+            ) : !template?.id ? (
+              'Template Required'
             ) : (
               'Submit for Approval'
             )}
           </button>
-        </div>
         )}
       </div>
 
