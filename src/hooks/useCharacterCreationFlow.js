@@ -156,25 +156,25 @@ export default function useCharacterCreationFlow() {
       analyticsRef.current.flowStarted = true;
 
       // Check if user can create character
-      if (!canCreateCharacter) {
-        // If free user, try to grant trial first
-        if (subscriptionState === 'free' && shouldShowTrial) {
-          console.log('Free user starting flow - granting trial');
-          await grantTrial();
-          
-          // Recheck capabilities after trial grant
-          if (!canCreateCharacter) {
-            throw new Error('Unable to grant trial access');
-          }
-        } else if (characterCount >= characterLimit) {
-          setErrorType(ERROR_TYPES.LIMIT_REACHED);
-          setError(`Character limit reached (${characterCount}/${characterLimit}). Upgrade to create more characters.`);
-          return;
-        } else {
-          throw new Error('Cannot create character - premium access required');
-        }
-      }
+            // If free user, try to grant trial first
+      if (subscriptionState === 'free' && shouldShowTrial) {
+        console.log('Free user starting flow - granting trial');
+        await grantTrial();
 
+        // Wait for capabilities to refresh after trial grant
+        await new Promise(resolve => setTimeout(resolve, 200));
+
+        // Force a fresh capabilities check instead of using stale state
+        try {
+          await invalidateAndRefresh();
+          console.log('Capabilities refreshed after trial grant');
+        } catch (refreshError) {
+          console.warn('Capabilities refresh failed, continuing anyway:', refreshError);
+        }
+
+        // Don't recheck canCreateCharacter here - let the flow continue
+        // The templates step will handle any remaining permission issues
+      }
       // Clear previous flow state
       setSelectedTemplate(null);
       setCharacterData(null);

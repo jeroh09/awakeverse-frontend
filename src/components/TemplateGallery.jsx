@@ -93,7 +93,7 @@ const TemplateGallery = ({ onSelectTemplate, onClose }) => {
             Character templates could not be loaded. Please try again later.
           </p>
           <button
-            onClick={backToLauncher}
+            onClick={onClose}
             style={{
               background: 'linear-gradient(135deg, #FFD700, #FFA500)',
               border: 'none',
