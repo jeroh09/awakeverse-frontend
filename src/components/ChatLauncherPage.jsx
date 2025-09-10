@@ -683,7 +683,6 @@ const ChatLauncherPage = ({ onStartChat }) => {
         </div>
 
         {/* Search Section - rest of desktop implementation unchanged */}
-        {/* ... search input, results, personalized section ... */}
         <div style={{ width: '100%', maxWidth: '400px', position: 'relative', marginBottom: '1rem' }}>
           <input
             type="text"
