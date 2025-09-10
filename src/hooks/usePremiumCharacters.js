@@ -70,8 +70,6 @@ export default function usePremiumCharacters() {
       const data = await response.json();
       setCharacterTemplates(data.template_groups || {});
 
-      alert(`Loaded ${Object.keys(data.template_groups || {}).length} template categories`);
-
       return data;
 
     } catch (error) {
