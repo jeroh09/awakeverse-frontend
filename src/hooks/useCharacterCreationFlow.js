@@ -216,8 +216,9 @@ export default function useCharacterCreationFlow() {
 
   const createCharacter = useCallback(async (formData) => {
     alert(`FLOW DEBUG: createCharacter called with template ID: ${selectedTemplate?.id}`);
+    alert(`TEMPLATE DEBUG: ${JSON.stringify(selectedTemplate, null, 2)}`);
     if (!selectedTemplate) {
-      setError('No template selected');
+      setError('No template selected or template missing ID');
       return;
     }
 
