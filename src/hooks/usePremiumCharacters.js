@@ -68,6 +68,7 @@ export default function usePremiumCharacters() {
       }
 
       const data = await response.json();
+      alert(`RAW API RESPONSE: ${JSON.stringify(data, null, 2)}`);
       setCharacterTemplates(data.template_groups || {});
 
       return data;
