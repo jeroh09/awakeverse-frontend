@@ -6,7 +6,7 @@ import useInteractedCharacters from '../hooks/useInteractedCharacters';
 import CharacterDetailPanel from '../components/CharacterDetailPanel/CharacterDetailPanel';
 import TemplateGallery from '../components/TemplateGallery';
 import CharacterBuilder from '../components/CharacterBuilder';
-import CharacterBuilder from '../components/CharacterStatusModal';
+import CharacterStatusModal from '../components/CharacterStatusModal';
 import CharacterCreationSuccess from '../components/CharacterCreationSuccess';
 
 
