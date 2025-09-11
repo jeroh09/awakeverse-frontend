@@ -1,10 +1,11 @@
-// src/components/TemplateGallery.jsx - Defensive template loading with fallbacks
+// Fixed TemplateGallery.jsx - Complete version with proper backend structure usage
+
 import React, { useState, useEffect } from 'react';
 import { useAuth } from '../contexts/AuthContext';
 
 const API_BASE = process.env.REACT_APP_API_URL || 'http://localhost:5000';
 
-// Fallback templates if API fails
+// Enhanced fallback templates with all archetypes
 const FALLBACK_TEMPLATES = {
   'Scholar': [
     {
@@ -13,27 +14,47 @@ const FALLBACK_TEMPLATES = {
       description: 'Wise thinker from classical antiquity seeking truth through dialogue',
       historical_period: 'Ancient',
       personality_archetype: 'Scholar',
-      expertise_domain: 'Philosophy',
-      template_data: {
-        system_instruction_template: "You are an ancient philosopher seeking truth through dialogue.",
-        suggested_constraints: "Speak in thoughtful, measured tones. Reference classical concepts.",
-        sample_triggers: ["wisdom", "truth", "virtue", "knowledge"]
-      }
+      expertise_domain: 'Philosophy'
     }
   ],
   'Artist': [
     {
       id: 2,
-      name: 'Renaissance Artist',
+      name: 'Renaissance Artist', 
       description: 'Creative genius from the Renaissance period fascinated by beauty and science',
       historical_period: 'Renaissance',
       personality_archetype: 'Artist',
-      expertise_domain: 'Art',
-      template_data: {
-        system_instruction_template: "You are a Renaissance artist fascinated by both beauty and science.",
-        suggested_constraints: "Discuss art techniques and humanist ideals.",
-        sample_triggers: ["art", "beauty", "innovation", "patronage"]
-      }
+      expertise_domain: 'Art'
+    }
+  ],
+  'Leader': [
+    {
+      id: 3,
+      name: 'Industrial Innovator',
+      description: 'Inventor or entrepreneur from the Industrial Revolution',
+      historical_period: 'Industrial',
+      personality_archetype: 'Leader',
+      expertise_domain: 'Science'
+    }
+  ],
+  'Warrior': [
+    {
+      id: 4,
+      name: 'Champion Athlete',
+      description: 'Legendary competitor who dominated their sport',
+      historical_period: 'Sports',
+      personality_archetype: 'Warrior',
+      expertise_domain: 'Athletics'
+    }
+  ],
+  'Explorer': [
+    {
+      id: 5,
+      name: 'Sci-Fi Explorer',
+      description: 'Space traveler or futuristic scientist',
+      historical_period: 'Science Fiction',
+      personality_archetype: 'Explorer',
+      expertise_domain: 'Science'
     }
   ]
 };
@@ -41,12 +62,15 @@ const FALLBACK_TEMPLATES = {
 const TemplateGallery = ({ onSelectTemplate, onClose }) => {
   const { token } = useAuth();
   const [templates, setTemplates] = useState([]);
+  const [templateGroups, setTemplateGroups] = useState({});
+  const [availableCategories, setAvailableCategories] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [selectedTemplate, setSelectedTemplate] = useState(null);
   const [selectedArchetype, setSelectedArchetype] = useState('all');
+  const [debugInfo, setDebugInfo] = useState(null);
 
-  // Defensive template loading with multiple fallback layers
+  // Load templates with proper error handling and structure
   useEffect(() => {
     const loadTemplates = async () => {
       try {
@@ -62,40 +86,28 @@ const TemplateGallery = ({ onSelectTemplate, onClose }) => {
                 'Authorization': `Bearer ${token}`,
                 'Content-Type': 'application/json'
               },
-              // Add timeout to prevent hanging
-              signal: AbortSignal.timeout(10000) // 10 second timeout
+              signal: AbortSignal.timeout(10000)
             });
 
             if (response.ok) {
               const data = await response.json();
               console.log('Templates API response:', data);
 
-              // Handle both grouped and flat template responses
-              let templateList = [];
-              if (data.template_groups) {
-                // Grouped response - flatten all groups
-                templateList = Object.values(data.template_groups).flat();
-              } else if (data.templates) {
-                // Direct template array
-                templateList = data.templates;
-              } else {
-                // Fallback to any array in response
-                templateList = Array.isArray(data) ? data : [];
-              }
-
-              // Ensure all templates have required fields
-              const validTemplates = templateList.filter(template => 
-                template && 
-                template.id && 
-                template.name && 
-                template.description &&
-                 typeof template.id === 'number' // Ensure ID is numeric
-              );
-
-              if (validTemplates.length > 0) {
-                alert(`Loaded ${validTemplates.length} templates. First template archetype: ${validTemplates[0]?.personality_archetype || 'MISSING'}`);
-                console.log(`Loaded ${validTemplates.length} valid templates from API`);
-                setTemplates(validTemplates);
+              // FIXED: Use the proper backend structure
+              if (data.status === 'success') {
+                // Use template_groups for categories (complete data)
+                const groups = data.template_groups || {};
+                const categories = data.available_categories || [];
+                const templateList = data.templates || [];
+                
+                console.log(`Loaded ${templateList.length} templates in ${Object.keys(groups).length} groups`);
+                console.log('Available categories:', categories);
+                console.log('Debug info:', data.debug_info);
+                
+                setTemplates(templateList);
+                setTemplateGroups(groups);
+                setAvailableCategories(categories);
+                setDebugInfo(data.debug_info);
                 setLoading(false);
                 return;
               }
@@ -106,40 +118,22 @@ const TemplateGallery = ({ onSelectTemplate, onClose }) => {
           }
         }
 
-        // Fallback 1: Try public template endpoint (no auth)
-        try {
-          const publicResponse = await fetch(`${API_BASE}/api/premium/templates`, {
-            method: 'GET',
-            headers: { 'Content-Type': 'application/json' },
-            signal: AbortSignal.timeout(5000)
-          });
-
-          if (publicResponse.ok) {
-            const publicData = await publicResponse.json();
-            const publicTemplates = Array.isArray(publicData) ? publicData : 
-                                   publicData.templates || [];
-            
-            if (publicTemplates.length > 0) {
-              console.log('Loaded templates from public API');
-              setTemplates(publicTemplates);
-              setLoading(false);
-              return;
-            }
-          }
-        } catch (publicError) {
-          console.warn('Public template API failed:', publicError);
-          // Continue to hardcoded fallback
-        }
-
-        // Fallback 2: Use hardcoded templates
+        // Fallback: Use hardcoded templates
         console.log('Using fallback templates');
         const fallbackTemplateList = Object.values(FALLBACK_TEMPLATES).flat();
+        const fallbackCategories = Object.keys(FALLBACK_TEMPLATES);
+        
         setTemplates(fallbackTemplateList);
+        setTemplateGroups(FALLBACK_TEMPLATES);
+        setAvailableCategories(fallbackCategories);
+        setDebugInfo({ fallback: true, count: fallbackTemplateList.length });
 
       } catch (error) {
         console.error('All template loading methods failed:', error);
         setError('Unable to load templates. Using basic templates.');
         setTemplates(Object.values(FALLBACK_TEMPLATES).flat());
+        setTemplateGroups(FALLBACK_TEMPLATES);
+        setAvailableCategories(Object.keys(FALLBACK_TEMPLATES));
       } finally {
         setLoading(false);
       }
@@ -148,36 +142,27 @@ const TemplateGallery = ({ onSelectTemplate, onClose }) => {
     loadTemplates();
   }, [token]);
 
-  // Group templates by archetype for filtering
-  const templateGroups = templates.reduce((groups, template) => {
-    const archetype = template.personality_archetype || 'Other';
-    if (!groups[archetype]) {
-      groups[archetype] = [];
-    }
-    groups[archetype].push(template);
-    return groups;
-  }, {});
+  // FIXED: Build archetypes list from availableCategories instead of templateGroups
+  const archetypes = ['all', ...availableCategories];
 
-  const archetypes = ['all', ...Object.keys(templateGroups)];
-  alert(`Archetypes found: ${archetypes.join(', ')}`);
-
-  // Filter templates based on selected archetype
+  // FIXED: Filter templates properly using template_groups
   const filteredTemplates = selectedArchetype === 'all' 
     ? templates 
     : (templateGroups[selectedArchetype] || []);
 
   const handleTemplateSelect = (template) => {
-    // Ensure template has ID before selection
     if (!template.id) {
       console.error('Template missing ID:', template);
       setError('Invalid template selected. Please try another.');
       return;
     }
     setSelectedTemplate(template);
+    console.log('Template selected:', template.name, 'ID:', template.id);
   };
 
   const handleConfirmSelection = () => {
     if (selectedTemplate && selectedTemplate.id) {
+      console.log('Confirming template selection:', selectedTemplate);
       onSelectTemplate(selectedTemplate);
     } else {
       setError('Please select a valid template.');
@@ -217,7 +202,7 @@ const TemplateGallery = ({ onSelectTemplate, onClose }) => {
     );
   }
 
-    // Service down state - when no templates loaded successfully
+  // Service down state - when no templates loaded successfully
   if (!loading && templates.length === 0) {
     return (
       <div style={{
@@ -311,6 +296,21 @@ const TemplateGallery = ({ onSelectTemplate, onClose }) => {
             }}>
               Choose a template to start creating your character ({templates.length} available)
             </p>
+            
+            {/* Debug Info */}
+            {debugInfo && process.env.NODE_ENV === 'development' && (
+              <div style={{
+                background: 'rgba(255, 215, 0, 0.1)',
+                border: '1px solid rgba(255, 215, 0, 0.3)',
+                borderRadius: '6px',
+                padding: '0.5rem',
+                marginTop: '0.5rem',
+                fontSize: '0.8rem',
+                color: 'rgba(255, 215, 0, 0.8)'
+              }}>
+                Debug: {JSON.stringify(debugInfo)}
+              </div>
+            )}
           </div>
           
           <button
@@ -367,7 +367,7 @@ const TemplateGallery = ({ onSelectTemplate, onClose }) => {
             fontSize: '0.9rem',
             fontWeight: 600
           }}>
-            Filter by type:
+            Filter by type ({archetypes.length - 1} categories):
           </span>
           
           <div style={{ display: 'flex', gap: '0.5rem', flexWrap: 'wrap' }}>
@@ -392,7 +392,7 @@ const TemplateGallery = ({ onSelectTemplate, onClose }) => {
                   textTransform: 'capitalize'
                 }}
               >
-                {archetype}
+                {archetype} {archetype !== 'all' && templateGroups[archetype] ? `(${templateGroups[archetype].length})` : ''}
               </button>
             ))}
           </div>
@@ -540,63 +540,6 @@ const TemplateGallery = ({ onSelectTemplate, onClose }) => {
                   {template.description}
                 </p>
 
-                {/* Template Preview */}
-                {template.template_preview && (
-                  <div style={{
-                    background: 'rgba(0, 0, 0, 0.3)',
-                    border: '1px solid rgba(255, 215, 0, 0.2)',
-                    borderRadius: '8px',
-                    padding: '0.8rem',
-                    margin: '0 0 1rem 0'
-                  }}>
-                    <p style={{
-                      color: 'rgba(255, 215, 0, 0.9)',
-                      fontSize: '0.8rem',
-                      fontStyle: 'italic',
-                      margin: 0,
-                      lineHeight: 1.4
-                    }}>
-                      "{template.template_preview}"
-                    </p>
-                  </div>
-                )}
-
-                {/* Example Characters */}
-                {template.example_characters && template.example_characters.length > 0 && (
-                  <div>
-                    <p style={{
-                      color: 'rgba(255, 255, 255, 0.6)',
-                      fontSize: '0.75rem',
-                      margin: '0 0 0.5rem 0',
-                      textTransform: 'uppercase',
-                      letterSpacing: '0.5px'
-                    }}>
-                      Example Characters:
-                    </p>
-                    <div style={{
-                      display: 'flex',
-                      flexWrap: 'wrap',
-                      gap: '0.3rem'
-                    }}>
-                      {template.example_characters.slice(0, 3).map((example, index) => (
-                        <span
-                          key={index}
-                          style={{
-                            background: 'rgba(255, 255, 255, 0.05)',
-                            border: '1px solid rgba(255, 255, 255, 0.1)',
-                            borderRadius: '6px',
-                            color: 'rgba(255, 255, 255, 0.7)',
-                            fontSize: '0.7rem',
-                            padding: '0.2rem 0.4rem'
-                          }}
-                        >
-                          {example}
-                        </span>
-                      ))}
-                    </div>
-                  </div>
-                )}
-
                 {/* Template ID Debug Info (only in development) */}
                 {process.env.NODE_ENV === 'development' && (
                   <div style={{
@@ -607,7 +550,7 @@ const TemplateGallery = ({ onSelectTemplate, onClose }) => {
                     color: 'rgba(255, 215, 0, 0.7)',
                     borderRadius: '4px'
                   }}>
-                    ID: {template.id} | Valid: {template.id ? 'Yes' : 'No'}
+                    ID: {template.id} | Archetype: {template.personality_archetype}
                   </div>
                 )}
               </div>
