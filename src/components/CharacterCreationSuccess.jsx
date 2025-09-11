@@ -2,7 +2,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 
 const CharacterCreationSuccess = ({ onClose, characterData }) => {
-  const { successData, setSuccessData } = useSimplifiedPremiumFlow();
+  //const { successData, setSuccessData } = useSimplifiedPremiumFlow();
   const [redirectTimer, setRedirectTimer] = useState(5);
   const [isMobile, setIsMobile] = useState(false);
   const [hasUserInteracted, setHasUserInteracted] = useState(false);

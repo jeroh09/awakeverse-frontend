@@ -88,10 +88,12 @@ const TemplateGallery = ({ onSelectTemplate, onClose }) => {
                 template && 
                 template.id && 
                 template.name && 
-                template.description
+                template.description &&
+                 typeof template.id === 'number' // Ensure ID is numeric
               );
 
               if (validTemplates.length > 0) {
+                alert(`Loaded ${validTemplates.length} templates. First template archetype: ${validTemplates[0]?.personality_archetype || 'MISSING'}`);
                 console.log(`Loaded ${validTemplates.length} valid templates from API`);
                 setTemplates(validTemplates);
                 setLoading(false);
@@ -157,6 +159,7 @@ const TemplateGallery = ({ onSelectTemplate, onClose }) => {
   }, {});
 
   const archetypes = ['all', ...Object.keys(templateGroups)];
+  alert(`Archetypes found: ${archetypes.join(', ')}`);
 
   // Filter templates based on selected archetype
   const filteredTemplates = selectedArchetype === 'all' 
