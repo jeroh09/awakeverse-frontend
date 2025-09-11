@@ -730,7 +730,7 @@ export const MyCharactersPanel = ({
             padding: isMobile ? '0.8rem 1.2rem' : '1rem 1.5rem',
             cursor: 'pointer',
             transition: 'all 0.3s ease',
-            fontFamily: "'Georgia', serif'
+            fontFamily: "'Georgia', serif"
           }}
           onMouseEnter={(e) => {
             if (!isMobile) {
