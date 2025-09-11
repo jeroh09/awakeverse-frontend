@@ -13,7 +13,7 @@ import {
   CategoryCard,
   CharacterCard,
   MyCharactersPanel,
-  CharacterDetailModal,
+  CharacterDetailPanel,
   PersonalizedSection,
   CharacterStatusModal,
   categoryRepresentatives
@@ -727,7 +727,7 @@ const ChatLauncherPage = ({ onStartChat }) => {
 
         {/* Character Detail Modal (Mobile) */}
         {selectedChar && (
-          <CharacterDetailModal
+          <CharacterDetailPanel
             character={selectedChar}
             onStartChat={handleStartChatFromSelection}
             onClose={() => setSelectedChar(null)}
@@ -1081,7 +1081,7 @@ const ChatLauncherPage = ({ onStartChat }) => {
 
       {/* Character Detail Modal (Desktop) */}
       {selectedChar && (
-        <CharacterDetailModal
+        <CharacterDetailPanel
           character={selectedChar}
           onStartChat={handleStartChatFromSelection}
           onClose={() => setSelectedChar(null)}
