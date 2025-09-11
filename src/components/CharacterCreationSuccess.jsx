@@ -1,8 +1,9 @@
-// src/components/CharacterCreationSuccess.jsx - Enhanced with proper cleanup and error handling
+// src/components/CharacterCreationSuccess.jsx - Fixed for decentralized flow
 import React, { useState, useEffect, useRef } from 'react';
+import useCharacterCreationFlow from '../hooks/useCharacterCreationFlow';
 
 const CharacterCreationSuccess = ({ onClose, characterData }) => {
-  //const { successData, setSuccessData } = useSimplifiedPremiumFlow();
+  const { createdCharacter, closeFlow } = useCharacterCreationFlow();
   const [redirectTimer, setRedirectTimer] = useState(5);
   const [isMobile, setIsMobile] = useState(false);
   const [hasUserInteracted, setHasUserInteracted] = useState(false);
@@ -11,18 +12,8 @@ const CharacterCreationSuccess = ({ onClose, characterData }) => {
   const timerRef = useRef(null);
   const isMountedRef = useRef(true);
 
-  // Add this new function after your useState declarations
-  //const handleSafeNavigation = () => {
-    //if (resetFlowState) {
-      //resetFlowState();
-    //} else if (backToLauncher) {
-      //backToLauncher();
-    //} else {
-    // Emergency fallback - navigate directly
-      //window.location.hash = '#launcher';
-      //window.location.reload();
-    //}
-  //};
+  // Use createdCharacter from flow or fallback to prop
+  const characterInfo = createdCharacter || characterData;
 
   // Check for mobile viewport
   useEffect(() => {
@@ -42,13 +33,8 @@ const CharacterCreationSuccess = ({ onClose, characterData }) => {
       setRedirectTimer(prev => {
         const newValue = prev - 1;
         if (newValue <= 0 && !hasUserInteracted) {
-          // Use resetFlowState for cleaner navigation
-          //if (resetFlowState) {
-            //resetFlowState();
-          //} else if (backToLauncher) {
-            //backToLauncher();
-          //}
-        setSuccessData(null);
+          // Auto-close and return to launcher
+          handleManualReturn();
         }
         return Math.max(0, newValue);
       });
@@ -73,15 +59,13 @@ const CharacterCreationSuccess = ({ onClose, characterData }) => {
       clearInterval(timerRef.current);
     }
     
-    // Navigate back
-   // handleSafeNavigation();
-   onClose();
+    // Close the flow and return to launcher
+    closeFlow();
+    if (onClose) onClose();
   };
 
   // Safety check for missing character name
-  // Safety check for missing character name
-  const displayName = characterData?.display_name || 'Your Character';
-
+  const displayName = characterInfo?.display_name || characterData?.display_name || 'Your Character';
 
   return (
     <div style={{
@@ -166,7 +150,7 @@ const CharacterCreationSuccess = ({ onClose, characterData }) => {
           You'll receive an email notification when your character is ready to chat.
         </p>
         
-        {/* Trial Information */}
+        {/* Message Limit Information - Updated for decentralized approach */}
         <div style={{
           background: 'rgba(255, 215, 0, 0.1)',
           border: '1px solid rgba(255, 215, 0, 0.3)',
@@ -185,7 +169,7 @@ const CharacterCreationSuccess = ({ onClose, characterData }) => {
             flexWrap: 'wrap'
           }}>
             <span style={{ fontSize: '1.2rem' }}>🎉</span>
-            Your 3-day trial will start automatically when approved
+            Your character comes with 150 free messages per month
           </p>
         </div>
         
@@ -200,7 +184,6 @@ const CharacterCreationSuccess = ({ onClose, characterData }) => {
         }}>
           <button
             onClick={handleManualReturn}
-            disabled={!setSuccessData}
             style={{
               background: 'linear-gradient(135deg, #FFD700, #FFA500)',
               border: 'none',
@@ -213,14 +196,11 @@ const CharacterCreationSuccess = ({ onClose, characterData }) => {
               transition: 'all 0.3s ease',
               boxShadow: '0 4px 15px rgba(255, 215, 0, 0.3)',
               width: isMobile ? '100%' : 'auto',
-              minWidth: '150px',
-              opacity: (!setSuccessData) ? 0.5 : 1
+              minWidth: '150px'
             }}
             onMouseEnter={(e) => {
-              if (!setSuccessData) {
-                e.currentTarget.style.transform = 'translateY(-2px)';
-                e.currentTarget.style.boxShadow = '0 6px 20px rgba(255, 215, 0, 0.4)';
-              }
+              e.currentTarget.style.transform = 'translateY(-2px)';
+              e.currentTarget.style.boxShadow = '0 6px 20px rgba(255, 215, 0, 0.4)';
             }}
             onMouseLeave={(e) => {
               e.currentTarget.style.transform = 'translateY(0)';
