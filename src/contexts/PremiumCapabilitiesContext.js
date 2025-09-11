@@ -1,42 +1,46 @@
-// src/contexts/PremiumCapabilitiesContext.js - Global state management
-import React, { createContext, useContext, useEffect, useState } from 'react';
-import usePremiumCapabilities from '../hooks/usePremiumCapabilities';
+// src/contexts/PremiumCapabilitiesContext.js - Decentralized: Remove all blocking logic
+import React, { createContext, useContext } from 'react';
 
 const PremiumCapabilitiesContext = createContext();
 
 export const PremiumCapabilitiesProvider = ({ children }) => {
-  const capabilities = usePremiumCapabilities();
-  const [globalError, setGlobalError] = useState(null);
-
-  // Global error handling
-  useEffect(() => {
-    if (capabilities.error) {
-      setGlobalError(capabilities.error);
-      
-      // Clear error after 10 seconds
-      const timer = setTimeout(() => {
-        setGlobalError(null);
-      }, 10000);
-      
-      return () => clearTimeout(timer);
-    }
-  }, [capabilities.error]);
-
-  // Performance monitoring
-  useEffect(() => {
-    if (capabilities.isInitialized) {
-      console.log('🎯 Premium capabilities initialized:', {
-        state: capabilities.subscriptionState,
-        canCreate: capabilities.canCreateCharacter,
-        characters: capabilities.characterCount
-      });
-    }
-  }, [capabilities.isInitialized, capabilities.subscriptionState, capabilities.canCreateCharacter, capabilities.characterCount]);
-
+  // DECENTRALIZED APPROACH: Everyone can use core features
+  // Usage limits are discovered through usage, not blocked upfront
   const contextValue = {
-    ...capabilities,
-    globalError,
-    clearGlobalError: () => setGlobalError(null)
+    // Core permissions - Always allow
+    canCreateCharacter: true,        // Character creation always works
+    canChatWithCharacter: true,      // Chat always works
+    
+    // Subscription state - Honest but non-blocking
+    subscriptionState: 'free',       // Most users start free
+    isPremium: false,               // Honest about status
+    isTrialActive: false,           // No trial complexity
+    isTrialExpired: false,          // No trial complexity
+    hasPendingCharacter: false,     // Handled separately
+    
+    // UI flags - Non-blocking educational approach
+    shouldShowUpgrade: false,       // No preemptive blocking
+    shouldShowTrial: false,         // No trial prompts
+    primaryAction: 'create',        // Default to creation
+    
+    // Character info - Display only
+    characterCount: 0,              // Will be tracked separately
+    characterLimit: 1,              // For educational display
+    daysRemaining: null,           // No countdown pressure
+    
+    // System state - Always ready
+    loading: false,                 // No loading gates
+    error: null,                   // No error blocking
+    isInitialized: true,           // Always ready
+    lastFetch: Date.now(),
+    
+    // Actions - Simplified
+    refresh: () => Promise.resolve(),
+    invalidateAndRefresh: () => Promise.resolve(),
+    
+    // Global error handling - Simplified
+    globalError: null,
+    clearGlobalError: () => {}
   };
 
   return (

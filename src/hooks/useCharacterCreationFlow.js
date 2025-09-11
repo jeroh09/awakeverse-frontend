@@ -1,8 +1,7 @@
-// src/hooks/useCharacterCreationFlow.js - Complete character creation flow orchestrer
+// src/hooks/useCharacterCreationFlow.js - Decentralized: Remove premium blocking
 import { useState, useCallback, useRef, useEffect } from 'react';
 import { useAuth } from '../contexts/AuthContext';
 import { useUser } from '../contexts/UserContext';
-import { usePremiumCapabilitiesContext } from '../contexts/PremiumCapabilitiesContext';
 import usePremiumCharacters from './usePremiumCharacters';
 
 const API_BASE = process.env.REACT_APP_API_URL || 'http://localhost:5000';
@@ -16,29 +15,9 @@ const FLOW_STEPS = {
   ERROR: 'error'
 };
 
-// Error types for better error handling
-const ERROR_TYPES = {
-  NETWORK: 'network',
-  VALIDATION: 'validation',
-  TRIAL_FAILED: 'trial_failed',
-  LIMIT_REACHED: 'limit_reached',
-  SERVER_ERROR: 'server_error',
-  TIMEOUT: 'timeout'
-};
-
 export default function useCharacterCreationFlow() {
   const { token } = useAuth();
   const { user } = useUser();
-  
-  // Premium capabilities integration
-  const {
-    subscriptionState,
-    canCreateCharacter,
-    shouldShowTrial,
-    characterCount,
-    characterLimit,
-    invalidateAndRefresh
-  } = usePremiumCapabilitiesContext();
   
   // Character data integration
   const { createCharacter: createCharacterAPI, fetchUserCharacters } = usePremiumCharacters();
@@ -52,23 +31,10 @@ export default function useCharacterCreationFlow() {
   // Error and loading states
   const [isCreating, setIsCreating] = useState(false);
   const [error, setError] = useState(null);
-  const [errorType, setErrorType] = useState(null);
-  
-  // Trial management state
-  const [isGrantingTrial, setIsGrantingTrial] = useState(false);
-  const [trialGranted, setTrialGranted] = useState(false);
   
   // Performance and cleanup
   const abortControllerRef = useRef(null);
   const flowStartTime = useRef(null);
-  
-  // Analytics and business logic hooks
-  const analyticsRef = useRef({
-    flowStarted: false,
-    templateSelected: false,
-    creationAttempted: false,
-    flowCompleted: false
-  });
 
   // Cleanup on unmount
   useEffect(() => {
@@ -79,126 +45,26 @@ export default function useCharacterCreationFlow() {
     };
   }, []);
 
-  // Error classification helper
-  const classifyError = useCallback((error) => {
-    const errorMessage = error.message?.toLowerCase() || '';
-    
-    if (errorMessage.includes('network') || errorMessage.includes('fetch')) {
-      return ERROR_TYPES.NETWORK;
-    }
-    if (errorMessage.includes('validation') || errorMessage.includes('required')) {
-      return ERROR_TYPES.VALIDATION;
-    }
-    if (errorMessage.includes('trial')) {
-      return ERROR_TYPES.TRIAL_FAILED;
-    }
-    if (errorMessage.includes('limit') || errorMessage.includes('maximum')) {
-      return ERROR_TYPES.LIMIT_REACHED;
-    }
-    if (errorMessage.includes('timeout')) {
-      return ERROR_TYPES.TIMEOUT;
-    }
-    
-    return ERROR_TYPES.SERVER_ERROR;
-  }, []);
-
-  // Trial granting function
-  const grantTrial = useCallback(async () => {
-    if (!user?.id || !token) {
-      throw new Error('User not authenticated');
-    }
-
-    setIsGrantingTrial(true);
-    
-    try {
-      const response = await fetch(`${API_BASE}/api/premium/trial/${user.id}`, {
-        method: 'POST',
-        headers: {
-          'Authorization': `Bearer ${token}`,
-          'Content-Type': 'application/json'
-        },
-        body: JSON.stringify({ trial_days: 3 })
-      });
-
-      if (!response.ok) {
-        // 409 or 400 might mean trial already granted - that's ok
-        if (response.status === 409 || response.status === 400) {
-          console.log('Trial already granted or user already has premium');
-          setTrialGranted(true);
-          return true;
-        }
-        throw new Error(`Trial grant failed: ${response.status}`);
-      }
-
-      const data = await response.json();
-      setTrialGranted(true);
-      
-      // Refresh capabilities to reflect new trial status
-      await invalidateAndRefresh();
-      
-      console.log('Trial granted successfully:', data);
-      return true;
-      
-    } catch (error) {
-      console.error('Trial grant failed:', error);
-      throw error;
-    } finally {
-      setIsGrantingTrial(false);
-    }
-  }, [user?.id, token, invalidateAndRefresh]);
-
-  // Flow control functions
+  // DECENTRALIZED: Always allow flow to start
   const startFlow = useCallback(async () => {
     try {
       setError(null);
-      setErrorType(null);
       flowStartTime.current = Date.now();
-      analyticsRef.current.flowStarted = true;
 
-      // Check if user can create character
-            // If free user, try to grant trial first
-      if (subscriptionState === 'free' && shouldShowTrial) {
-        console.log('Free user starting flow - granting trial');
-        await grantTrial();
-
-        // Wait for capabilities to refresh after trial grant
-        await new Promise(resolve => setTimeout(resolve, 200));
-
-        // Force a fresh capabilities check instead of using stale state
-        try {
-          await invalidateAndRefresh();
-          console.log('Capabilities refreshed after trial grant');
-        } catch (refreshError) {
-          console.warn('Capabilities refresh failed, continuing anyway:', refreshError);
-        }
-
-        // Don't recheck canCreateCharacter here - let the flow continue
-        // The templates step will handle any remaining permission issues
-      }
       // Clear previous flow state
       setSelectedTemplate(null);
       setCharacterData(null);
       setCreatedCharacter(null);
       
-      // Open templates modal
+      // Open templates modal - no premium checks
       setFlowStep(FLOW_STEPS.TEMPLATES);
       
     } catch (error) {
       console.error('Failed to start character creation flow:', error);
-      const type = classifyError(error);
-      setErrorType(type);
       setError(error.message);
       setFlowStep(FLOW_STEPS.ERROR);
     }
-  }, [
-    canCreateCharacter, 
-    subscriptionState, 
-    shouldShowTrial, 
-    characterCount, 
-    characterLimit, 
-    grantTrial, 
-    classifyError
-  ]);
+  }, []);
 
   const selectTemplate = useCallback((template) => {
     if (!template || !template.id) {
@@ -209,16 +75,14 @@ export default function useCharacterCreationFlow() {
     setSelectedTemplate(template);
     setError(null);
     setFlowStep(FLOW_STEPS.BUILDER);
-    analyticsRef.current.templateSelected = true;
     
     console.log('Template selected:', template.name);
   }, []);
 
+  // DECENTRALIZED: Character creation always works, limits discovered later
   const createCharacter = useCallback(async (formData) => {
-    alert(`FLOW DEBUG: createCharacter called with template ID: ${selectedTemplate?.id}`);
-    alert(`TEMPLATE DEBUG: ${JSON.stringify(selectedTemplate, null, 2)}`);
     if (!selectedTemplate) {
-      setError('No template selected or template missing ID');
+      setError('No template selected');
       return;
     }
 
@@ -235,7 +99,6 @@ export default function useCharacterCreationFlow() {
 
     setIsCreating(true);
     setError(null);
-    analyticsRef.current.creationAttempted = true;
 
     try {
       // Prepare character data with template integration
@@ -255,8 +118,7 @@ export default function useCharacterCreationFlow() {
         expertise_domain: selectedTemplate.expertise_domain
       };
 
-      // Create character using the API hook
-      alert(`FLOW DEBUG: About to call createCharacterAPI with payload: ${JSON.stringify(characterPayload)}`);
+      // Create character using the API hook - NO PREMIUM CHECKS
       const result = await createCharacterAPI(characterPayload);
       
       if (!result || !result.character) {
@@ -267,12 +129,6 @@ export default function useCharacterCreationFlow() {
       setCreatedCharacter(result.character);
       setCharacterData(characterPayload);
       
-      // Refresh capabilities to show new pending state
-      await invalidateAndRefresh();
-      
-      // Track successful creation
-      analyticsRef.current.flowCompleted = true;
-      
       // Move to success step
       setFlowStep(FLOW_STEPS.SUCCESS);
       
@@ -282,25 +138,19 @@ export default function useCharacterCreationFlow() {
       
     } catch (error) {
       console.error('Character creation failed:', error);
-      
-      const type = classifyError(error);
-      setErrorType(type);
       setError(error.message);
       
       // Don't close the flow on error - let user retry or fix issues
-      // setFlowStep(FLOW_STEPS.ERROR);
-      
       throw error;
       
     } finally {
       setIsCreating(false);
       abortControllerRef.current = null;
     }
-  }, [selectedTemplate, createCharacterAPI, invalidateAndRefresh, classifyError]);
+  }, [selectedTemplate, createCharacterAPI]);
 
   const retryFlow = useCallback(() => {
     setError(null);
-    setErrorType(null);
     
     // Return to appropriate step based on current state
     if (selectedTemplate) {
@@ -322,28 +172,15 @@ export default function useCharacterCreationFlow() {
     setCharacterData(null);
     setCreatedCharacter(null);
     setError(null);
-    setErrorType(null);
     setIsCreating(false);
-    setIsGrantingTrial(false);
-    setTrialGranted(false);
 
     // Log flow completion metrics
     if (flowStartTime.current) {
       const duration = Date.now() - flowStartTime.current;
       console.log('Character creation flow closed:', {
-        duration: duration / 1000,
-        completed: analyticsRef.current.flowCompleted,
-        analytics: analyticsRef.current
+        duration: duration / 1000
       });
     }
-
-    // Reset analytics
-    analyticsRef.current = {
-      flowStarted: false,
-      templateSelected: false,
-      creationAttempted: false,
-      flowCompleted: false
-    };
   }, []);
 
   const goBackToTemplates = useCallback(() => {
@@ -353,35 +190,12 @@ export default function useCharacterCreationFlow() {
   }, []);
 
   // Navigation helpers
-  const canStartFlow = canCreateCharacter || (subscriptionState === 'free' && shouldShowTrial);
+  const canStartFlow = true; // DECENTRALIZED: Always true
   const isFlowOpen = flowStep !== FLOW_STEPS.CLOSED;
   const showTemplates = flowStep === FLOW_STEPS.TEMPLATES;
   const showBuilder = flowStep === FLOW_STEPS.BUILDER;
   const showSuccess = flowStep === FLOW_STEPS.SUCCESS;
   const showError = flowStep === FLOW_STEPS.ERROR;
-
-  // Error recovery helpers
-  const getErrorMessage = useCallback(() => {
-    if (!error) return null;
-    
-    switch (errorType) {
-      case ERROR_TYPES.NETWORK:
-        return 'Network error. Please check your connection and try again.';
-      case ERROR_TYPES.VALIDATION:
-        return error; // Use the specific validation message
-      case ERROR_TYPES.TRIAL_FAILED:
-        return 'Unable to activate trial. Please contact support.';
-      case ERROR_TYPES.LIMIT_REACHED:
-        return error; // Use the specific limit message
-      case ERROR_TYPES.TIMEOUT:
-        return 'Request timed out. Please try again.';
-      case ERROR_TYPES.SERVER_ERROR:
-      default:
-        return 'Something went wrong. Please try again or contact support.';
-    }
-  }, [error, errorType]);
-
-  const canRetry = errorType !== ERROR_TYPES.LIMIT_REACHED;
 
   return {
     // Flow state
@@ -399,16 +213,9 @@ export default function useCharacterCreationFlow() {
     
     // Loading states
     isCreating,
-    isGrantingTrial,
     
     // Error handling
     error,
-    errorType,
-    errorMessage: getErrorMessage(),
-    canRetry,
-    
-    // Trial state
-    trialGranted,
     
     // Navigation actions
     startFlow,
@@ -419,13 +226,12 @@ export default function useCharacterCreationFlow() {
     retryFlow,
     
     // Capability flags
-    canStartFlow,
+    canStartFlow: true, // DECENTRALIZED: Always true
     
-    // Analytics data
+    // Flow metrics
     flowMetrics: {
       isActive: flowStartTime.current !== null,
-      duration: flowStartTime.current ? Date.now() - flowStartTime.current : 0,
-      analytics: analyticsRef.current
+      duration: flowStartTime.current ? Date.now() - flowStartTime.current : 0
     }
   };
 }
