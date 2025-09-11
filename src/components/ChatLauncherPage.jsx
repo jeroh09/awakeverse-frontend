@@ -13,7 +13,6 @@ import {
   CategoryCard,
   CharacterCard,
   MyCharactersPanel,
-  CharacterDetailPanel,
   PersonalizedSection,
   CharacterStatusModal,
   categoryRepresentatives
