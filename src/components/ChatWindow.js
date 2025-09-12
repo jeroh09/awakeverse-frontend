@@ -315,9 +315,7 @@ export default function ChatWindow({
   const [emotionIntensity, setEmotionIntensity] = useState(0.6);
 
   // FloatingAvatar feature flag
-  const [useFloatingAvatar, setUseFloatingAvatar] = useState(
-    process.env.REACT_APP_FLOATING_AVATAR !== 'false'
-  );
+  const [useFloatingAvatar, setUseFloatingAvatar] = useState(false);
 
   const [chatHistory, setChatHistory] = useState(
     (session?.messages || []).map(m => ({ 
