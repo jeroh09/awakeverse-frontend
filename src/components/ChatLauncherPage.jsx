@@ -21,7 +21,7 @@ import {
   SectionHeader
 } from '../components/ChatLauncherHelpers';
 
-import characterCategories from '../data/characterCategories';
+import { characterCategories } from '../data/characterCategories';
 
 const ORACLE_PROMPTS = [
   "Who do you want to talk to?",
