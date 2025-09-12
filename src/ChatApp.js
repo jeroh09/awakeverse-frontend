@@ -293,26 +293,46 @@ export default function ChatApp() {
         </>
       )}
 
-      {/* DEBUG BUTTON - Only shows in development or when needed */}
+      {/* DEBUG BUTTONS - Only shows when character is selected */}
       {selectedCharacterKey && (
-        <button 
-          onClick={debugCharacterMapping}
-          style={{
-            position: 'fixed',
-            top: '10px',
-            right: '10px',
-            zIndex: 9999,
-            background: 'red',
-            color: 'white',
-            padding: '8px 12px',
-            border: 'none',
-            borderRadius: '5px',
-            fontSize: '12px',
-            cursor: 'pointer'
-          }}
-        >
-          DEBUG MAPPING
-        </button>
+        <>
+          <button 
+            onClick={debugCharacterMapping}
+            style={{
+              position: 'fixed',
+              top: '10px',
+              right: '10px',
+              zIndex: 9999,
+              background: 'red',
+              color: 'white',
+              padding: '8px 12px',
+              border: 'none',
+              borderRadius: '5px',
+              fontSize: '12px',
+              cursor: 'pointer'
+            }}
+          >
+            DEBUG DATA
+          </button>
+          <button 
+            onClick={debugMappingResult}
+            style={{
+              position: 'fixed',
+              top: '50px',
+              right: '10px',
+              zIndex: 9999,
+              background: 'blue',
+              color: 'white',
+              padding: '8px 12px',
+              border: 'none',
+              borderRadius: '5px',
+              fontSize: '12px',
+              cursor: 'pointer'
+            }}
+          >
+            DEBUG MAPPING
+          </button>
+        </>
       )}
 
       {!selectedCharacterKey && (
