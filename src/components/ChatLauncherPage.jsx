@@ -8,7 +8,7 @@ import TemplateGallery from '../components/TemplateGallery';
 import CharacterBuilder from '../components/CharacterBuilder';
 import CharacterStatusModal from '../components/CharacterStatusModal';
 import CharacterCreationSuccess from '../components/CharacterCreationSuccess';
-
+import '../style/launcher-skin.css';
 
 // Import helper components
 import {
