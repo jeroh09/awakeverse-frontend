@@ -502,7 +502,7 @@ export default function ChatWindow({
   } = useSmartScroll(listRef, chatHistory);
   const controllerRef = useRef(null);
   const sizeMap = useRef({});
-  const displayName = characterName || character.replace(/^user_\d+_/, '').replace(/_/g, ' ').replace(/\b\w/g, l => l.toUpperCase());
+  const displayName = characterName || "TEST NAME FALLBACK";
 
   const lastMessageCountRef = useRef(0);
   
