@@ -1,4 +1,3 @@
-// src/pages/ChatLauncherPage.jsx
 // src/pages/ChatLauncherPage.jsx - Complete implementation with character status handling
 import React, { useState, useEffect, useMemo, useCallback } from 'react';
 import { useAuth } from '../contexts/AuthContext';
@@ -639,6 +638,9 @@ const ChatLauncherPage = ({ onStartChat }) => {
             width: '100%',
             display: 'grid',
             gridTemplateColumns: 'repeat(2, 1fr)',
+              gridAutoRows: 'auto',
+              alignItems: 'start',
+              alignContent: 'start',
             gap: '1rem',
             marginTop: '1rem',
           }}>
@@ -709,6 +711,9 @@ const ChatLauncherPage = ({ onStartChat }) => {
                 width: '100%',
                 display: 'grid',
                 gridTemplateColumns: 'repeat(2, 1fr)',
+              gridAutoRows: 'auto',
+              alignItems: 'start',
+              alignContent: 'start',
                 gap: '1rem',
                 marginTop: '1rem',
               }}>
@@ -957,6 +962,9 @@ const ChatLauncherPage = ({ onStartChat }) => {
             padding: '2rem',
             display: 'grid',
             gridTemplateColumns: 'repeat(3, 1fr)',
+              gridAutoRows: 'auto',
+              alignItems: 'start',
+              alignContent: 'start',
             gridTemplateRows: 'repeat(4, 1fr)',
             gap: '1rem',
             alignContent: 'start',
@@ -1058,6 +1066,9 @@ const ChatLauncherPage = ({ onStartChat }) => {
                 <div style={{
                   display: 'grid',
                   gridTemplateColumns: 'repeat(auto-fit, minmax(180px, 1fr))',
+              gridAutoRows: 'auto',
+              alignItems: 'start',
+              alignContent: 'start',
                   gap: '1rem',
                   maxHeight: 'calc(100vh - 200px)',
                   overflowY: 'auto',

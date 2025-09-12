@@ -1,5 +1,4 @@
 // src/components/ChatLauncherHelpers.jsx
-// src/components/ChatLauncherHelpers.jsx
 // Helper components for ChatLauncherPage (decentralized: NO status modal here)
 import React from 'react';
 
@@ -114,7 +113,11 @@ export const CategoryCard = ({
   return (
     <div
       onClick={handleClick}
-      style={{
+      style={{        position: 'relative',
+        height: 'auto',
+        overflow: 'hidden',
+        alignSelf: 'stretch',
+
         background: 'rgba(255, 255, 255, 0.05)',
         border: isMyCharacters
           ? '1px solid rgba(255, 215, 0, 0.4)'
