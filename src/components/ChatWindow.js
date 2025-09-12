@@ -17,7 +17,8 @@ import { useSmartScroll } from '../hooks/useSmartScroll';
 import FloatingScrollButton from './FloatingScrollButton';
 import usePremiumCharacters from '../hooks/usePremiumCharacters';
 import '../styles.css';
-import '../style/InviteStyles.css';
+import { useUsageHandler } from '../hooks/useUsageHandler';
+import { UsageWarningBanner, BlockedInputOverlay } from '../components/UsageComponents';
 
 function useMediaQuery(maxWidth) {
   const query = `(max-width: ${maxWidth}px)`;
@@ -282,6 +283,15 @@ export default function ChatWindow({
   const socket = useSocket();
   const isMobile = useMediaQuery(600);
   const { userCharacters } = usePremiumCharacters();
+
+  const {
+    sendMessageWithUsageHandling,
+    isBlocked,
+    usageWarning,
+    resetUsageState,
+    isCustomCharacter,
+    usageState
+  } = useUsageHandler(character);
 
   const localThreadId = useRef(threadId);
   const { sendConversationMessage } = useConversation();
@@ -911,9 +921,13 @@ const sendAI = async (userText, aiIndex) => {
       { user: false, text: '', error: null, speaker: character }
     ]);
     //setTimeout(() => smartScrollToBottom(true), 50);
-    sendAI(userText, aiIndex);
+    // ✅ USE ENHANCED HANDLER FOR CUSTOM CHARACTERS, REGULAR sendAI FOR STATIC
+    if (isCustomCharacter) {
+      sendMessageWithUsageHandling(userText, aiIndex, setChatHistory);
+    } else {
+      sendAI(userText, aiIndex); // Your existing function
+    }
   };
-
   const stopStream = () => {
     controllerRef.current?.abort();
     controllerRef.current = null;
@@ -961,6 +975,15 @@ const sendAI = async (userText, aiIndex) => {
       className={`chat-panel-container ${breathingClasses} ${prestigeHubVisible ? 'with-prestige-hub' : ''}`}
       style={breathingStyles}
     >
+      {/* ✅ ADD USAGE WARNING BANNER (custom characters only) */}
+      {usageWarning && isCustomCharacter && (
+        <UsageWarningBanner 
+          warning={usageWarning}
+          onUpgrade={() => window.location.href = '/subscribe'}
+          onDismiss={() => resetUsageState()}
+        />
+      )}
+
       {/* ✅ INTEGRATED PRESTIGE HUB */}
         <PrestigeHub 
           current={character}
@@ -1079,7 +1102,16 @@ const sendAI = async (userText, aiIndex) => {
             isSending={isSending}
             onFocus={handleInputFocus}
             onBlur={handleInputBlur}
+            disabled={isBlocked}
           />
+          {/* ✅ BLOCKING OVERLAY FOR CUSTOM CHARACTERS */}
+          {isBlocked && isCustomCharacter && (
+            <BlockedInputOverlay
+              upgradeInfo={usageState?.upgradeInfo}
+              onUpgrade={() => window.location.href = '/subscribe'}
+              onBackToCharacters={() => window.location.href = '/'}
+            />
+          )}
         </footer>
 
         <div className="chat-footer-note">
