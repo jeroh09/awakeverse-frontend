@@ -1,5 +1,5 @@
-// src/ChatApp.js - History-safe internal navigation
-import React, { useState, useEffect, useCallback } from 'react';
+// src/ChatApp.js - Enhanced with Custom Character Display Names
+import React, { useState, useEffect, useCallback, useMemo } from 'react';
 import { useSocket } from './contexts/WebSocketContext';
 import { useCharacter } from './contexts/CharacterContext';
 import { useAuth } from './contexts/AuthContext';
@@ -12,6 +12,7 @@ import ChatWindow from './components/ChatWindow';
 import CharacterDetailPanel from './components/CharacterDetailPanel/CharacterDetailPanel';
 import FloatingCharacterHub from './components/FloatingCharacterHub/FloatingCharacterHub';
 import { characterCategories } from './data/characterCategories';
+import usePremiumCharacters from './hooks/usePremiumCharacters'; // NEW: Import custom character hook
 import './styles.css';
 
 function useMediaQuery(maxWidth) {
@@ -40,6 +41,9 @@ export default function ChatApp() {
   const navigate = useNavigate();
   const location = useLocation();
 
+  // NEW: Get custom character data for display names
+  const { userCharacters, loading: customCharactersLoading } = usePremiumCharacters();
+
   const [sessionsByCharacter, setSessionsByCharacter] = useState({});
   const [currentSessionId, setCurrentSessionId] = useState(null);
   const [targetMessage] = useState(null);
@@ -47,13 +51,13 @@ export default function ChatApp() {
   const [isHubVisible, setIsHubVisible] = useState(true);
   const [prestigeHubVisible, setPrestigeHubVisible] = useState(false);
 
-  // 🔧 NEW: History-safe back navigation
+  // History-safe back navigation
   const handleBackToLauncher = useCallback(() => {
     setSelectedCharacterKey(null);
     setPreviewCharacterKey(null);
     setPrestigeHubVisible(false);
     
-    // 🛡️ Don't use navigate() here - just update internal state
+    // Don't use navigate() here - just update internal state
     // This keeps us within the /app route and prevents history pollution
     
     // Optional: Update URL fragment for better UX without affecting history
@@ -66,15 +70,15 @@ export default function ChatApp() {
     }
   }, [setSelectedCharacterKey, setPreviewCharacterKey]);
 
-  // 🔧 NEW: History-safe character selection
+  // History-safe character selection
   const handleCharacterSelection = useCallback((key, source = 'direct') => {
-    console.log(`🎯 Character selected: ${key} (source: ${source})`);
+    console.log(`Character selected: ${key} (source: ${source})`);
     
     setSelectedCharacterKey(key);
     setPreviewCharacterKey(null);
     setPrestigeHubVisible(false);
     
-    // 🛡️ Update URL fragment without affecting browser history
+    // Update URL fragment without affecting browser history
     window.history.replaceState(
       { isAppRoot: true, view: 'chat', character: key }, 
       '', 
@@ -82,7 +86,7 @@ export default function ChatApp() {
     );
   }, [setSelectedCharacterKey, setPreviewCharacterKey]);
 
-  // 🔧 NEW: Initialize app state from URL on load
+  // Initialize app state from URL on load
   useEffect(() => {
     if (!token) return;
     
@@ -105,9 +109,9 @@ export default function ChatApp() {
   }, [token, setSelectedCharacterKey]);
 
   const togglePrestigeHub = useCallback(() => {
-    console.log('🎯 ChatApp togglePrestigeHub called, current state:', prestigeHubVisible);
+    console.log('ChatApp togglePrestigeHub called, current state:', prestigeHubVisible);
     setPrestigeHubVisible(v => {
-      console.log('🔄 PrestigeHub state changing from', v, 'to', !v);
+      console.log('PrestigeHub state changing from', v, 'to', !v);
       return !v;
     });
   }, [prestigeHubVisible]);
@@ -131,11 +135,11 @@ export default function ChatApp() {
     if (!socket) return;
 
     const handleConnect = () => {
-      console.log("🔗 [ChatApp] WebSocket connected:", socket.id);
+      console.log("[ChatApp] WebSocket connected:", socket.id);
     };
 
     const handleMessage = (msg) => {
-      console.log("📨 [ChatApp] Message:", msg);
+      console.log("[ChatApp] Message:", msg);
     };
 
     socket.on("connect", handleConnect);
@@ -161,7 +165,7 @@ export default function ChatApp() {
       if (!sess || !sess.messages || !sess.messages.length) {
         const res2 = await api.post('/sessions', { characterKey: key });
         sess = res2.data;
-        console.log("🆕 Created session:", sess);
+        console.log("Created session:", sess);
         setCurrentSessionId(sess.id);
       }
 
@@ -246,10 +250,32 @@ export default function ChatApp() {
     }));
   };
 
-  const charactersMap = characterCategories.reduce((map, cat) => {
-    cat.characters.forEach(c => (map[c.key] = c.name));
+  // ENHANCED: Character display name mapping including custom characters
+  const charactersMap = useMemo(() => {
+    // Start with static characters from characterCategories
+    const map = characterCategories.reduce((acc, cat) => {
+      cat.characters.forEach(c => (acc[c.key] = c.name));
+      return acc;
+    }, {});
+    
+    // Add custom characters with proper field names and defensive error handling
+    try {
+      if (userCharacters && Array.isArray(userCharacters)) {
+        userCharacters
+          .filter(char => char && char.status === 'approved')
+          .forEach(char => {
+            if (char.character_key && char.display_name) {
+              map[char.character_key] = char.display_name;
+            }
+          });
+      }
+    } catch (error) {
+      console.warn('Failed to load custom character names:', error);
+      // Static characters still work, app continues functioning
+    }
+    
     return map;
-  }, {});
+  }, [userCharacters]);
 
   return (
     <div className="app-container">
@@ -277,9 +303,9 @@ export default function ChatApp() {
             <ChatWindow
               key={currentSessionId}
               character={selectedCharacterKey}
-              characterName={charactersMap[selectedCharacterKey]}
+              characterName={charactersMap[selectedCharacterKey]} // Now includes custom characters
               threadId={currentSessionId}
-              onBack={handleBackToLauncher} // 🔧 UPDATED: Use history-safe back handler
+              onBack={handleBackToLauncher}
               session={sessionsByCharacter[selectedCharacterKey]}
               targetMessage={targetMessage}
               onNewMessage={handleNewMessage}
