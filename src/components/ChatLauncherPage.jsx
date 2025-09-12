@@ -8,145 +8,151 @@ import TemplateGallery from '../components/TemplateGallery';
 import CharacterBuilder from '../components/CharacterBuilder';
 import CharacterStatusModal from '../components/CharacterStatusModal';
 import CharacterCreationSuccess from '../components/CharacterCreationSuccess';
-import '../style/launcher-skin.css';
+
 
 // Import helper components
 import {
   CategoryCard,
   CharacterCard,
-  MyCharactersPanel,
   PersonalizedSection,
-  categoryRepresentatives
+  MyCharactersPanel,
+  CategoryHeader,
+  CategoryListHeader,
+  SectionHeader
 } from '../components/ChatLauncherHelpers';
 
-import { characterCategories } from '../data/characterCategories';
-
-// Enhanced semantic mappings for character search
-const ENHANCED_SEMANTIC_MAPPINGS = {
-  'truth': ['truthweavers', 'thinkers'],
-  'meaning': ['thinkers', 'veilwalkers'],
-  'power': ['warlords', 'goldhands'],
-  'war': ['warlords'],
-  'strategy': ['warlords', 'goldhands'],
-  'battle': ['warlords'],
-  'leadership': ['warlords', 'goldhands'],
-  'create': ['makers', 'heartstrings'],
-  'invent': ['makers'],
-  'art': ['makers', 'heartstrings'],
-  'innovation': ['makers'],
-  'technology': ['makers'],
-  'money': ['goldhands'],
-  'business': ['goldhands'],
-  'success': ['goldhands', 'warlords'],
-  'wealth': ['goldhands'],
-  'entrepreneur': ['goldhands'],
-  'spiritual': ['veilwalkers', 'stargazers'],
-  'magic': ['veilwalkers'],
-  'destiny': ['stargazers', 'veilwalkers'],
-  'future': ['stargazers', 'veilwalkers'],
-  'stars': ['stargazers'],
-  'astrology': ['stargazers'],
-  'detective': ['sleuths'],
-  'mystery': ['sleuths'],
-  'investigation': ['sleuths'],
-  'love': ['heartstrings'],
-  'romance': ['heartstrings'],
-  'passion': ['heartstrings'],
-  'philosophy': ['thinkers'],
-  'wisdom': ['thinkers', 'veilwalkers'],
-  'science': ['makers', 'thinkers'],
-  'invention': ['makers'],
-  'engineering': ['makers'],
-  'enlightenment': ['thinkers', 'truthweavers'],
-  'revolution': ['truthweavers', 'warlords'],
-  'mysticism': ['veilwalkers'],
-  'prophecy': ['stargazers', 'veilwalkers'],
-  'trade': ['goldhands'],
-  'empire': ['warlords', 'goldhands'],
-  'poetry': ['heartstrings', 'truthweavers'],
-  'literature': ['heartstrings', 'truthweavers'],
-  'justice': ['truthweavers', 'sleuths'],
-  'deduction': ['sleuths'],
-  'logic': ['thinkers', 'sleuths'],
-  'mathematics': ['makers', 'thinkers'],
-  'alchemy': ['veilwalkers', 'makers'],
-  'medicine': ['veilwalkers', 'makers'],
-  'astronomy': ['stargazers', 'makers'],
-  'exploration': ['truthweavers', 'makers'],
-  'adventure': ['truthweavers', 'warlords'],
-  'rebellion': ['truthweavers', 'warlords'],
-  'freedom': ['truthweavers', 'warlords'],
-  'honor': ['warlords', 'truthweavers'],
-  'courage': ['warlords', 'truthweavers'],
-  'beauty': ['heartstrings'],
-  'seduction': ['heartstrings'],
-  'desire': ['heartstrings'],
-  'mythology': ['veilwalkers', 'stargazers'],
-  'legend': ['veilwalkers', 'warlords'],
-  'folklore': ['veilwalkers', 'truthweavers'],
-  'economics': ['goldhands'],
-  'finance': ['goldhands'],
-  'industry': ['goldhands', 'makers'],
-  'discovery': ['makers', 'truthweavers'],
-  'genius': ['makers', 'thinkers'],
-  'military': ['warlords'],
-  'tactics': ['warlords'],
-  'conquest': ['warlords'],
-  'diplomacy': ['warlords', 'goldhands'],
-  'espionage': ['sleuths', 'warlords'],
-  'spy': ['sleuths'],
-  'crime': ['sleuths'],
-  'puzzle': ['sleuths', 'thinkers'],
-  'riddle': ['sleuths', 'veilwalkers'],
-  'secret': ['sleuths', 'veilwalkers'],
-  'hidden': ['sleuths', 'veilwalkers'],
-  'ancient': ['veilwalkers', 'stargazers', 'thinkers'],
-  'classical': ['thinkers', 'heartstrings'],
-  'renaissance': ['makers', 'heartstrings'],
-  'medieval': ['veilwalkers', 'warlords'],
-  'modern': ['makers', 'goldhands'],
-  'contemporary': ['makers', 'goldhands']
-};
+import characterCategories from '../data/characterCategories';
 
 const ORACLE_PROMPTS = [
   "Who do you want to talk to?",
-  "Seek wisdom from...",
+  "Seek wisdom from…",
   "Which guide calls to you?",
   "Who would you counsel with?",
-  "Find your mentor...",
+  "Find your mentor…"
 ];
 
-const ChatLauncherPage = ({ onStartChat }) => {
-  const { user } = useUser();
-  const { token } = useAuth();
+// --- injected visual skin (CSS-only) ---
+const LAUNCHER_SKIN_CSS = `
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;600;800&family=Playfair+Display:wght@600;700&display=swap');
+:root {
+  --av-bg: #0b1426;
+  --av-bg-2: #0f1a2e;
+  --av-card: #101a30;
+  --av-ink: #e9eefb;
+  --av-ink-dim: rgba(233,238,251,.78);
+  --av-gold: #ffd700;
+  --av-gold-2: #ffb800;
+  --av-line: rgba(255,255,255,.12);
+  --av-line-strong: rgba(255,215,0,.32);
+  --av-glass: rgba(255,255,255,.06);
+  --av-radius: 16px;
+  --av-shadow: 0 16px 40px rgba(0,0,0,.45);
+  --av-focus: 0 0 0 3px rgba(255,215,0,.35);
+}
+.awv-skin, .awv-skin * { box-sizing: border-box; }
+.awv-skin {
+  color: var(--av-ink);
+  background:
+    radial-gradient(1200px 600px at 80% -10%, rgba(255,215,0,.06), transparent 60%),
+    radial-gradient(800px 400px at -10% 20%, rgba(88,101,242,.09), transparent 60%),
+    linear-gradient(180deg, var(--av-bg) 0%, var(--av-bg-2) 100%);
+}
+.awv-title {
+  font-family: "Playfair Display", serif;
+  font-weight: 700;
+  letter-spacing: .3px;
+  background: linear-gradient(135deg,var(--av-gold),var(--av-gold-2),var(--av-gold));
+  -webkit-background-clip: text; background-clip: text; color: transparent;
+  text-shadow: 0 0 18px rgba(255,215,0,.30);
+}
+.awv-search-input {
+  border-radius: 999px !important;
+  border: 2px solid rgba(255,215,0,.28) !important;
+  background: rgba(255,255,255,.08) !important;
+  color: var(--av-gold) !important;
+  outline: none !important;
+  padding-right: 40px !important;
+}
+.awv-card {
+  background: linear-gradient(180deg, color-mix(in hsl, var(--av-card) 94%, transparent), transparent 140%);
+  border: 1px solid var(--av-line);
+  border-radius: var(--av-radius);
+  transition: transform .18s ease, border-color .18s ease, background .18s ease;
+}
+.awv-card:hover {
+  transform: translateY(-4px);
+  border-color: var(--av-line-strong);
+  box-shadow: 0 18px 36px rgba(255,215,0,.18);
+}
+.awv-chip {
+  appearance: none;
+  border: 1px solid var(--av-line);
+  background: #0f1a2e;
+  color: var(--av-ink);
+  padding: 8px 12px;
+  border-radius: 999px;
+  font-size: 13px;
+  font-weight: 700;
+}
+.awv-chip.is-active {
+  border-color: var(--av-line-strong);
+  background: linear-gradient(180deg, #1f2c4a, transparent 120%);
+  color: var(--av-gold);
+  box-shadow: 0 6px 18px rgba(255,215,0,.08) inset;
+}
+.awv-btn {
+  appearance: none;
+  border: none;
+  border-radius: 12px;
+  padding: 12px 16px;
+  font-weight: 800;
+  letter-spacing: .2px;
+  cursor: pointer;
+}
+.awv-btn.primary {
+  background: linear-gradient(180deg, var(--av-gold), var(--av-gold-2));
+  color: #000;
+  box-shadow: 0 6px 24px rgba(255,215,0,.25);
+}
+`;
 
-  // Character creation flow state
+const FALLBACK_TEMPLATES = {
+  core: [
+    { id: 1, name: 'Ancient Philosopher', description: 'Wise thinker seeking truth through dialogue.', personality_archetype: 'Scholar', historical_period: 'Ancient', usage_count: 128 },
+    { id: 2, name: 'Renaissance Artist', description: 'Creative mind fascinated by beauty and science.', personality_archetype: 'Artist', historical_period: 'Renaissance', usage_count: 76 },
+  ],
+  custom: [
+    { id: 100, name: 'Your Detective', description: 'A private eye based on your preferences.', personality_archetype: 'Leader', historical_period: 'Modern', usage_count: 3 },
+  ]
+};
+
+const ChatLauncherPage = ({ onStartChat }) => {
+  const { token } = useAuth();
+  const { user } = useUser();
+  const { interactedCharacters } = useInteractedCharacters();
+
+  // Core local state
+  const [selectedCategory, setSelectedCategory] = useState(null);
+  const [selectedCharacter, setSelectedCharacter] = useState(null);
+  const [showDetail, setShowDetail] = useState(false);
+  const [showStatusModal, setShowStatusModal] = useState(false);
+  const [statusInfo, setStatusInfo] = useState({ status: 'pending', message: '' });
+
+  // Premium character flow
   const [showTemplates, setShowTemplates] = useState(false);
   const [showBuilder, setShowBuilder] = useState(false);
   const [showSuccess, setShowSuccess] = useState(false);
   const [selectedTemplate, setSelectedTemplate] = useState(null);
 
-  // NEW: Premium character state management
-  const [userCharacters, setUserCharacters] = useState([]);
-  const [charactersLoading, setCharactersLoading] = useState(false);
-  const [charactersError, setCharactersError] = useState(null);
+  // Templates state
+  const [templates, setTemplates] = useState([]);
+  const [templateGroups, setTemplateGroups] = useState({});
+  const [availableCategories, setAvailableCategories] = useState([]);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState(null);
 
-  // NEW: Character status modal state
-  const [showStatusModal, setShowStatusModal] = useState(false);
-  const [selectedStatusCharacter, setSelectedStatusCharacter] = useState(null);
-
-  // User interaction tracking
-  const {
-    recentCharacters,
-    shouldShowForYou,
-    trackInteraction,
-    hasActiveConversations
-  } = useInteractedCharacters();
-
-  // UI state management
+  // Search & layout
   const [inputValue, setInputValue] = useState('');
-  const [selectedCategory, setSelectedCategory] = useState(null);
-  const [selectedChar, setSelectedChar] = useState(null);
   const [placeholderIndex, setPlaceholderIndex] = useState(0);
   const [searchResults, setSearchResults] = useState([]);
   const [showResults, setShowResults] = useState(false);
@@ -191,45 +197,49 @@ const ChatLauncherPage = ({ onStartChat }) => {
         console.log('User characters loaded:', data);
         setUserCharacters(data.characters || []);
       } else {
-        console.warn('Failed to load user characters:', response.status);
-        setUserCharacters([]);
+        const errText = await response.text();
+        throw new Error(errText || 'Failed to load user characters');
       }
-    } catch (error) {
-      console.error('Error loading user characters:', error);
-      setCharactersError('Failed to load your characters');
-      setUserCharacters([]);
+    } catch (err) {
+      console.error(err);
+      setCharactersError('Could not load your custom characters.');
     } finally {
       setCharactersLoading(false);
     }
   }, [token]);
 
-  // Load user characters on mount and token change
+  const [userCharacters, setUserCharacters] = useState([]);
+  const [charactersLoading, setCharactersLoading] = useState(false);
+  const [charactersError, setCharactersError] = useState(null);
+
   useEffect(() => {
     loadUserCharacters();
   }, [loadUserCharacters]);
 
-  // Enhanced categories with user characters
   const enhancedCategories = useMemo(() => {
-    const baseCategories = [...characterCategories];
-    
-    // Find and update my_characters category
-    const myCharactersIndex = baseCategories.findIndex(cat => cat.key === 'my_characters');
-    if (myCharactersIndex !== -1) {
-      baseCategories[myCharactersIndex] = {
-        ...baseCategories[myCharactersIndex],
-        characters: userCharacters.map(char => ({
-          key: char.character_key,
-          name: char.display_name,
-          description: char.short_description,
-          thumbnailUrl: char.avatar_url || '/images/default-character.jpg',
-          status: char.status,
-          rejection_reason: char.rejection_reason
-        })),
-        characterCount: userCharacters.length,
-        pendingCount: userCharacters.filter(c => c.status === 'pending').length,
-        rejectedCount: userCharacters.filter(c => c.status === 'rejected').length,
-        approvedCount: userCharacters.filter(c => c.status === 'approved').length
-      };
+    // Map base categories and enrich with user-specific counts
+    const baseCategories = characterCategories.map(cat => {
+      if (cat.key === 'my_characters') {
+        const pendingCount = userCharacters.filter(c => c.status === 'pending').length;
+        const rejectedCount = userCharacters.filter(c => c.status === 'rejected').length;
+        const approvedCount = userCharacters.filter(c => c.status === 'approved').length;
+        return {
+          ...cat,
+          characterCount: userCharacters.length,
+          pendingCount,
+          rejectedCount,
+          approvedCount
+        };
+      }
+      return cat;
+    });
+
+    // Example of additional derived counts (if needed)
+    if (userCharacters && userCharacters.length > 0) {
+      baseCategories.find(c => c.key === 'my_characters').characterCount = userCharacters.length;
+      baseCategories.find(c => c.key === 'my_characters').pendingCount = userCharacters.filter(c => c.status === 'pending').length;
+      baseCategories.find(c => c.key === 'my_characters').rejectedCount = userCharacters.filter(c => c.status === 'rejected').length;
+      baseCategories.find(c => c.key === 'my_characters').approvedCount = userCharacters.filter(c => c.status === 'approved').length;
     }
     
     return baseCategories;
@@ -261,132 +271,111 @@ const ChatLauncherPage = ({ onStartChat }) => {
           }
         });
       });
-      
+
       return results.sort((a, b) => b.relevance - a.relevance).slice(0, 8);
     };
   }, [enhancedCategories]);
 
-  // Event handlers
-  const handleInputChange = useCallback((text) => {
-    setInputValue(text);
-    if (text.length >= 2) {
-      const results = performSemanticSearch(text);
-      setSearchResults(results);
+  useEffect(() => {
+    if (inputValue.trim().length >= 2) {
+      setSearchResults(performSemanticSearch(inputValue));
       setShowResults(true);
     } else {
-      setShowResults(false);
       setSearchResults([]);
+      setShowResults(false);
     }
-  }, [performSemanticSearch]);
+  }, [inputValue, performSemanticSearch]);
 
-  // ENHANCED: Character selection with status checking
-  const handleCharacterSelect = useCallback((character) => {
-    // Check if this is a custom character (user_xxx format)
-    const isCustomCharacter = character.key?.startsWith('user_');
-    
-    if (isCustomCharacter) {
-      // For custom characters, check status before allowing chat
-      const characterStatus = character.status || 'approved';
-      
-      if (characterStatus === 'pending' || characterStatus === 'rejected') {
-        // Block chat access and show status modal
-        setSelectedStatusCharacter({
-          ...character,
-          status: characterStatus,
-          rejection_reason: character.rejection_reason
+  // Templates loading
+  useEffect(() => {
+    const loadTemplates = async () => {
+      setLoading(true);
+      setError(null);
+      try {
+        const API_BASE = process.env.REACT_APP_API_URL || 'http://localhost:5000';
+        const res = await fetch(`${API_BASE}/api/templates`, {
+          headers: { 'Authorization': `Bearer ${token}` }
+        });
+
+        if (!res.ok) throw new Error('Failed to fetch templates');
+        const data = await res.json();
+        setTemplates(data.templates || []);
+        setTemplateGroups(data.groups || {});
+        setAvailableCategories(Object.keys(data.groups || {}));
+      } catch (error) {
+        console.error('All template loading methods failed:', error);
+        setError('Unable to load templates. Using basic templates.');
+        setTemplates(Object.values(FALLBACK_TEMPLATES).flat());
+        setTemplateGroups(FALLBACK_TEMPLATES);
+        setAvailableCategories(Object.keys(FALLBACK_TEMPLATES));
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    loadTemplates();
+  }, [token]);
+
+  // FIXED: Build archetypes list from availableCa
+  const handleCategoryClick = (cat) => {
+    setSelectedCategory(cat);
+    setShowResults(false);
+  };
+
+  const handleBackToCategories = () => {
+    setSelectedCategory(null);
+    setSearchResults([]);
+    setShowResults(false);
+  };
+
+  const onCharacterSelect = (character) => {
+    if (String(character.key).startsWith('user_')) {
+      if (!character.status || character.status === 'approved') {
+        setSelectedCharacter(character);
+        setShowDetail(true);
+      } else {
+        setStatusInfo({
+          status: character.status,
+          message: character.status === 'pending'
+            ? 'Your custom character is awaiting approval.'
+            : 'This character was rejected. Please edit and resubmit.'
         });
         setShowStatusModal(true);
-        return;
       }
+    } else {
+      setSelectedCharacter(character);
+      setShowDetail(true);
     }
-    
-    // Allow chat for approved custom characters and all existing characters
-    trackInteraction(character.key);
-    setSelectedChar({
-      key: character.key,
-      name: character.name,
-      thumbnailUrl: character.thumbnailUrl,
-      description: character.description,
-      category: character.category,
-      status: character.status
-    });
-  }, [trackInteraction]);
+  };
 
-  const handleRecentCharacterSelect = useCallback((recentCharacter) => {
-    trackInteraction(recentCharacter.character);
-    onStartChat(recentCharacter.character);
-  }, [trackInteraction, onStartChat]);
+  const onCloseDetail = () => {
+    setShowDetail(false);
+    setSelectedCharacter(null);
+  };
 
-  const handleCategorySelect = useCallback((category) => {
-    setSelectedCategory(category);
-    setShowResults(false);
-    setInputValue('');
-  }, []);
-
-  const handleBackToCategories = useCallback(() => {
-    setSelectedCategory(null);
-  }, []);
-
-  const handleStartChatFromSelection = useCallback(() => {
-    if (selectedChar) {
-      trackInteraction(selectedChar.key);
-      onStartChat(selectedChar.key);
+  const onStart = () => {
+    if (selectedCharacter) {
+      onStartChat?.(selectedCharacter.key || selectedCharacter.name);
+      setShowDetail(false);
     }
-  }, [selectedChar, trackInteraction, onStartChat]);
+  };
 
-  // NEW: Status modal handlers
-  const handleStatusModalClose = useCallback(() => {
-    setShowStatusModal(false);
-    setSelectedStatusCharacter(null);
-  }, []);
-
-  const handleCreateNewCharacter = useCallback(() => {
-    setShowStatusModal(false);
-    setSelectedStatusCharacter(null);
-    setShowTemplates(true);
-  }, []);
-
-  const handleUpgradeFlow = useCallback(() => {
-    setShowStatusModal(false);
-    setSelectedStatusCharacter(null);
-    window.location.href = '/subscribe';
-  }, []);
-
-  // Character creation handlers
-  const handleCreateCharacterClick = useCallback(() => {
-    console.log('Create character clicked - starting template selection');
-    setShowTemplates(true);
-  }, []);
-
-  const handleTemplateSelect = useCallback((template) => {
-    console.log('Template selected:', template.name);
-    setSelectedTemplate(template);
-    setShowTemplates(false);
-    setShowBuilder(true);
-  }, []);
-
-  const handleCharacterCreationComplete = useCallback(() => {
-    console.log('Character creation completed');
-    setShowBuilder(false);
-    setShowSuccess(true);
-    // Reload user characters to show the new one
-    loadUserCharacters();
-  }, [loadUserCharacters]);
-
-  const handleCloseCreationFlow = useCallback(() => {
-    console.log('Closing character creation flow');
+  const startCreateCharacter = () => setShowTemplates(true);
+  const handleTemplateSelect = (tpl) => { setSelectedTemplate(tpl); setShowTemplates(false); setShowBuilder(true); };
+  const handleCharacterCreationComplete = () => { setShowBuilder(false); setShowSuccess(true); };
+  const handleCloseCreationFlow = () => {
     setShowTemplates(false);
     setShowBuilder(false);
     setShowSuccess(false);
     setSelectedTemplate(null);
-  }, []);
+  };
 
   const currentPlaceholder = ORACLE_PROMPTS[placeholderIndex];
 
   // Character Creation Flow Modals
   if (showSuccess) {
     return (
-      <div style={{
+      <div className="awv-skin" style={{
         position: 'fixed',
         top: 0,
         left: 0,
@@ -395,6 +384,7 @@ const ChatLauncherPage = ({ onStartChat }) => {
         zIndex: 4000,
         background: 'rgba(0, 0, 0, 0.95)'
       }}>
+        <style>{LAUNCHER_SKIN_CSS}</style>
         <CharacterCreationSuccess onClose={handleCloseCreationFlow} />
       </div>
     );
@@ -402,7 +392,7 @@ const ChatLauncherPage = ({ onStartChat }) => {
 
   if (showTemplates) {
     return (
-      <div style={{
+      <div className="awv-skin" style={{
         position: 'fixed',
         top: 0,
         left: 0,
@@ -412,6 +402,7 @@ const ChatLauncherPage = ({ onStartChat }) => {
         background: 'rgba(0, 0, 0, 0.95)',
         overflowY: 'auto'
       }}>
+        <style>{LAUNCHER_SKIN_CSS}</style>
         <TemplateGallery 
           onSelectTemplate={handleTemplateSelect}
           onClose={handleCloseCreationFlow}
@@ -422,7 +413,7 @@ const ChatLauncherPage = ({ onStartChat }) => {
 
   if (showBuilder && selectedTemplate) {
     return (
-      <div style={{
+      <div className="awv-skin" style={{
         position: 'fixed',
         top: 0,
         left: 0,
@@ -431,6 +422,7 @@ const ChatLauncherPage = ({ onStartChat }) => {
         zIndex: 3000,
         background: 'rgba(0, 0, 0, 0.95)'
       }}>
+        <style>{LAUNCHER_SKIN_CSS}</style>
         <CharacterBuilder 
           template={selectedTemplate}
           onClose={handleCloseCreationFlow}
@@ -443,7 +435,7 @@ const ChatLauncherPage = ({ onStartChat }) => {
   // Mobile layout
   if (isMobile) {
     return (
-      <div style={{
+      <div className="awv-skin" style={{
         width: '100%',
         minHeight: '100vh',
         padding: '1rem',
@@ -451,17 +443,12 @@ const ChatLauncherPage = ({ onStartChat }) => {
         background: 'linear-gradient(135deg, #0B1426 0%, #1A2B47 25%, #2C1810 50%, #0F1A2E 75%, #0B1426 100%)',
         display: 'flex',
         flexDirection: 'column',
-        alignItems: 'center',
+        alignItems: 'center'
       }}>
-
-        {/* Welcome Section */}
-        <div style={{
-          textAlign: 'center',
-          marginBottom: '1.5rem',
-          width: '100%',
-          maxWidth: '500px',
-        }}>
-          <h1 style={{
+        <style>{LAUNCHER_SKIN_CSS}</style>
+        {/* Header */}
+        <div style={{ width: '100%', maxWidth: 520, borderBottom: '1px solid rgba(255, 215, 0, 0.3)', paddingBottom: '1rem', marginBottom: '1rem' }}>
+          <h1 className="awv-title" style={{
             fontFamily: "'Playfair Display', serif",
             fontSize: '1.8rem',
             background: 'linear-gradient(135deg, #FFD700, #FFA500, #FFD700)',
@@ -477,271 +464,146 @@ const ChatLauncherPage = ({ onStartChat }) => {
           </h1>
           
           <p style={{
-            fontSize: '1rem',
-            color: 'rgba(255, 215, 0, 0.8)',
-            fontStyle: 'italic',
-            letterSpacing: '0.5px',
-            textShadow: '0 2px 4px rgba(0, 0, 0, 0.8)',
             margin: 0,
-            transition: 'opacity 0.5s ease',
-            opacity: showResults ? 0.5 : 1
+            color: 'rgba(233, 238, 251, 0.85)',
+            fontSize: '.9rem'
           }}>
-            {currentPlaceholder}
+            {ORACLE_PROMPTS[placeholderIndex]}
           </p>
         </div>
 
-        {/* Search Section */}
-        <div style={{
-          width: '100%',
-          maxWidth: '500px',
-          position: 'relative',
-          marginBottom: '1rem'
-        }}>
+        {/* Search */}
+        <div style={{ width: '100%', maxWidth: 520, position: 'relative', marginBottom: '1rem' }}>
           <input
+            className="awv-search-input"
             type="text"
             placeholder="Search characters..."
             value={inputValue}
-            onChange={(e) => handleInputChange(e.target.value)}
-            onFocus={() => inputValue.length >= 2 && setShowResults(true)}
-            onBlur={() => setTimeout(() => setShowResults(false), 200)}
+            onChange={(e) =>
+              setInputValue(e.target.value)
+            }
             style={{
               width: '100%',
-              padding: '1rem',
-              fontSize: '1rem',
-              border: '2px solid rgba(255, 215, 0, 0.3)',
-              borderRadius: '25px',
-              background: 'rgba(255, 255, 255, 0.1)',
+              padding: '0.8rem 1rem',
+              borderRadius: '12px',
+              border: '1px solid rgba(255, 215, 0, 0.35)',
+              background: 'rgba(255, 255, 255, 0.08)',
               color: '#FFD700',
-              outline: 'none',
-              backdropFilter: 'blur(10px)',
-              transition: 'all 0.3s ease',
-              fontFamily: "'Georgia', serif"
+              outline: 'none'
             }}
           />
-
-          {/* Search Results */}
           {showResults && searchResults.length > 0 && (
             <div style={{
               position: 'absolute',
-              top: '100%',
               left: 0,
               right: 0,
-              maxHeight: '300px',
-              overflowY: 'auto',
-              background: 'rgba(11, 20, 38, 0.95)',
-              border: '1px solid rgba(255, 215, 0, 0.3)',
-              borderRadius: '15px',
-              backdropFilter: 'blur(20px)',
-              padding: '1rem',
-              marginTop: '0.5rem',
-              zIndex: 1000
+              top: 'calc(100% + 6px)',
+              maxHeight: 320,
+              overflow: 'auto',
+              borderRadius: 12,
+              border: '1px solid rgba(255, 215, 0, 0.28)',
+              background: 'rgba(11,20,38,0.94)',
+              backdropFilter: 'blur(16px)',
+              padding: '.7rem',
+              zIndex: 10
             }}>
-              {searchResults.map((character, index) => (
-                <div
-                  key={character.key}
-                  onClick={() => handleCharacterSelect(character)}
-                  style={{
-                    display: 'flex',
-                    alignItems: 'center',
-                    gap: '1rem',
-                    padding: '0.75rem',
-                    background: 'rgba(255, 255, 255, 0.05)',
-                    border: '1px solid rgba(255, 215, 0, 0.2)',
-                    borderRadius: '10px',
-                    cursor: 'pointer',
-                    transition: 'all 0.3s ease',
-                    marginBottom: index < searchResults.length - 1 ? '0.5rem' : 0,
-                    position: 'relative'
-                  }}
-                >
-                  <img
-                    src={character.thumbnailUrl}
-                    alt={character.name}
-                    style={{
-                      width: '40px',
-                      height: '40px',
-                      borderRadius: '50%',
-                      objectFit: 'cover',
-                      border: '2px solid rgba(255, 215, 0, 0.3)',
-                      opacity: character.status === 'rejected' ? 0.6 : 1
-                    }}
-                    onError={(e) => { e.target.src = '/images/default-character.jpg'; }}
-                  />
-                  <div style={{ flex: 1, minWidth: 0 }}>
+              {searchResults.map((item, idx) => (
+                <div key={idx} onClick={() => onCharacterSelect(item)} style={{
+                  display: 'flex',
+                  gap: '.8rem',
+                  padding: '.6rem .7rem',
+                  borderRadius: 12,
+                  background: 'rgba(255,255,255,.05)',
+                  border: '1px solid rgba(255,215,0,.18)',
+                  cursor: 'pointer',
+                  alignItems: 'center'
+                }}>
+                  <div style={{
+                    width: 42, height: 42, borderRadius: '50%',
+                    border: '2px solid rgba(255,215,0,.35)',
+                    display: 'grid', placeItems: 'center',
+                    fontWeight: 900, backgroundImage: 'linear-gradient(145deg,#1f2a4a,#0e1832)',
+                    color: '#fff'
+                  }}>
+                    {item.name.split(' ').slice(0,2).map(s=>s[0]).join('')}
+                  </div>
+                  <div style={{ minWidth: 0 }}>
+                    <div style={{ fontWeight: 800, color: '#FFD700' }}>{item.name}</div>
                     <div style={{
-                      fontSize: '0.9rem',
-                      fontWeight: 600,
-                      color: character.status === 'approved' ? '#FFD700' : '#FFA500',
-                      marginBottom: '0.25rem'
-                    }}>
-                      {character.name}
-                    </div>
-                    <div style={{
-                      fontSize: '0.75rem',
-                      color: 'rgba(255, 215, 0, 0.7)',
-                      textTransform: 'uppercase',
-                      letterSpacing: '0.5px'
-                    }}>
-                      {character.category}
-                    </div>
+                      fontSize: 11, letterSpacing: '.3px', color: 'rgba(255,215,0,.8)', textTransform: 'uppercase'
+                    }}>{item.category}</div>
                   </div>
                 </div>
               ))}
             </div>
           )}
-
-          {showResults && searchResults.length === 0 && inputValue.length >= 2 && (
-            <div style={{
-              position: 'absolute',
-              top: '100%',
-              left: 0,
-              right: 0,
-              background: 'rgba(11, 20, 38, 0.95)',
-              border: '1px solid rgba(255, 215, 0, 0.3)',
-              borderRadius: '15px',
-              backdropFilter: 'blur(20px)',
-              padding: '1rem',
-              marginTop: '0.5rem',
-              textAlign: 'center',
-              zIndex: 1000
-            }}>
-              <p style={{
-                color: 'rgba(255, 215, 0, 0.8)',
-                margin: '0 0 0.5rem 0',
-                fontSize: '1rem'
-              }}>
-                No matches for "{inputValue}"
-              </p>
-              <small style={{
-                color: 'rgba(255, 255, 255, 0.6)',
-                fontSize: '0.85rem'
-              }}>
-                Try searching for character names or themes
-              </small>
-            </div>
-          )}
         </div>
 
-        {/* Personalized Section (Mobile) */}
-        {shouldShowForYou && (
-          <PersonalizedSection 
-            characters={recentCharacters}
-            onCharacterSelect={handleRecentCharacterSelect}
-            hasActiveConversations={hasActiveConversations}
-            isMobile={true}
-          />
-        )}
+        {/* Personalized / Recents */}
+        <PersonalizedSection
+          interactedCharacters={interactedCharacters}
+          startCreateCharacter={startCreateCharacter}
+          onStartChat={onStartChat}
+        />
 
-        {/* Categories or Characters View */}
-        {!selectedCategory ? (
-          <div style={{
-            width: '100%',
-            display: 'grid',
-            gridTemplateColumns: 'repeat(2, 1fr)',
-            gap: '1rem',
-            marginTop: '1rem',
-          }}>
-            {enhancedCategories.map((category) => (
-              <CategoryCard
-                key={category.key}
-                category={category}
-                onClick={() => handleCategorySelect(category)}
-                isMobile={true}
-                onCreateCharacter={handleCreateCharacterClick}
-              />
-            ))}
-          </div>
-        ) : (
-          <>
-            {/* Category Header */}
+        {/* Categories */}
+        <SectionHeader title="Categories" />
+        <div style={{
+          width: '100%', maxWidth: 520,
+          display: 'grid',
+          gridTemplateColumns: 'repeat(2, 1fr)',
+          gap: '0.8rem'
+        }}>
+          {enhancedCategories.map((cat, idx) => (
+            <CategoryCard
+              key={cat.key}
+              category={cat}
+              index={idx}
+              isMobile
+              onCreateCharacter={startCreateCharacter}
+              onClick={() => handleCategoryClick(cat)}
+            />
+          ))}
+        </div>
+
+        {/* Characters for selected category (mobile) */}
+        {selectedCategory && (
+          <div style={{ width: '100%', maxWidth: 520, marginTop: '1rem' }}>
+            <CategoryHeader
+              category={selectedCategory}
+              onBack={handleBackToCategories}
+            />
             <div style={{
-              display: 'flex',
-              justifyContent: 'space-between',
-              alignItems: 'center',
-              width: '100%',
-              maxWidth: '500px',
-              marginBottom: '1rem',
-              paddingBottom: '0.5rem',
-              borderBottom: '1px solid rgba(255, 215, 0, 0.3)'
+              display: 'grid',
+              gridTemplateColumns: 'repeat(2, 1fr)',
+              gap: '0.8rem'
             }}>
-              <h2 style={{
-                color: '#FFD700',
-                fontSize: '1.5rem',
-                fontFamily: "'Playfair Display', serif",
-                margin: 0,
-                letterSpacing: '1px',
-                textShadow: '0 0 10px rgba(255, 215, 0, 0.5)'
-              }}>
-                {selectedCategory.title}
-              </h2>
-              
-              <button
-                onClick={handleBackToCategories}
-                style={{
-                  background: 'rgba(255, 215, 0, 0.1)',
-                  border: '1px solid rgba(255, 215, 0, 0.4)',
-                  borderRadius: '6px',
-                  color: '#FFD700',
-                  fontSize: '0.8rem',
-                  fontWeight: 600,
-                  padding: '0.3rem 0.8rem',
-                  cursor: 'pointer',
-                  fontFamily: "'Georgia', serif"
-                }}
-              >
-                ← Back
-              </button>
+              {selectedCategory.characters.map((ch, i) => (
+                <CharacterCard
+                  key={ch.key || ch.name}
+                  character={ch}
+                  onClick={onCharacterSelect}
+                />
+              ))}
             </div>
-
-            {/* Mobile Characters Content Area */}
-            {selectedCategory.key === 'my_characters' ? (
-              <MyCharactersPanel 
-                userCharacters={userCharacters}
-                charactersLoading={charactersLoading}
-                charactersError={charactersError}
-                onCreateCharacter={handleCreateCharacterClick}
-                onCharacterSelect={handleCharacterSelect}
-                isMobile={true}
-              />
-            ) : (
-              <div style={{
-                width: '100%',
-                display: 'grid',
-                gridTemplateColumns: 'repeat(2, 1fr)',
-                gap: '1rem',
-                marginTop: '1rem',
-              }}>
-                {selectedCategory.characters.map((character) => (
-                  <CharacterCard
-                    key={character.key}
-                    character={character}
-                    onClick={() => handleCharacterSelect(character)}
-                    isMobile={true}
-                    showStatusIndicator={character.key?.startsWith('user_')}
-                  />
-                ))}
-              </div>
-            )}
-          </>
+          </div>
         )}
 
-        {/* Character Detail Modal (Mobile) */}
-        {selectedChar && (
+        {/* Detail Panel */}
+        {showDetail && selectedCharacter && (
           <CharacterDetailPanel
-            character={selectedChar}
-            onStartChat={handleStartChatFromSelection}
-            onClose={() => setSelectedChar(null)}
-            isMobile={true}
+            character={selectedCharacter}
+            onClose={onCloseDetail}
+            onStart={onStart}
           />
         )}
 
-        {/* Character Status Modal */}
-        {showStatusModal && selectedStatusCharacter && (
+        {/* Status Modal */}
+        {showStatusModal && (
           <CharacterStatusModal
-            character={selectedStatusCharacter}
-            onClose={handleStatusModalClose}
-            onCreateNew={handleCreateNewCharacter}
-            onUpgrade={handleUpgradeFlow}
+            status={statusInfo.status}
+            message={statusInfo.message}
+            onClose={() => setShowStatusModal(false)}
           />
         )}
       </div>
@@ -750,436 +612,166 @@ const ChatLauncherPage = ({ onStartChat }) => {
 
   // Desktop layout
   return (
-    <div style={{
-      width: '100%',
-      height: '100vh',
-      display: 'flex',
-      fontFamily: "'Georgia', serif",
-      background: 'linear-gradient(135deg, #0B1426 0%, #1A2B47 25%, #2C1810 50%, #0F1A2E 75%, #0B1426 100%)',
-      overflow: 'hidden'
-    }}>
-      {/* LEFT HALF - Search Section */}
+    <div className="awv-skin" style={{ width:'100%', height:'100vh', display:'flex' }}>
+      <style>{LAUNCHER_SKIN_CSS}</style>
+      {/* Left Pane */}
       <div style={{
-        width: '50%',
-        height: '100%',
+        width: '45%',
+        minWidth: 420,
+        maxWidth: 700,
+        borderRight: '1px solid rgba(255, 215, 0, 0.25)',
+        padding: '2rem 1.4rem',
         display: 'flex',
         flexDirection: 'column',
-        justifyContent: 'flex-start',
-        alignItems: 'center',
-        padding: '4rem 2rem 2rem 2rem',
-        position: 'relative',
-        borderRight: '1px solid rgba(255, 215, 0, 0.2)'
+        gap: '1rem',
+        alignItems: 'center'
       }}>
-        {/* Welcome Section */}
-        <div style={{ textAlign: 'center', marginBottom: '1.5rem' }}>
-          <h1 style={{
-            fontFamily: "'Playfair Display', serif",
-            fontSize: '2.5rem',
-            background: 'linear-gradient(135deg, #FFD700, #FFA500, #FFD700)',
-            backgroundClip: 'text',
-            WebkitBackgroundClip: 'text',
-            color: 'transparent',
-            margin: '0 0 1rem 0',
-            textShadow: '0 0 30px rgba(255, 215, 0, 0.5)',
-            letterSpacing: '2px',
-            fontWeight: 700
+        {/* Brand / Oracle */}
+        <div style={{ width: '100%', maxWidth: 560 }}>
+          <h1 className="awv-title" style={{
+            margin: 0, fontSize: '2.2rem', letterSpacing: '1px', fontWeight: 700
           }}>
-            Welcome, {user?.displayName || 'Seeker'}
+            AwakeVerse Launcher
           </h1>
-          <p style={{
-            fontSize: '1.2rem',
-            color: 'rgba(255, 215, 0, 0.8)',
-            fontStyle: 'italic',
-            letterSpacing: '1px',
-            textShadow: '0 2px 4px rgba(0, 0, 0, 0.8)',
-            margin: 0,
-            transition: 'opacity 0.5s ease',
-            opacity: showResults ? 0.5 : 1
-          }}>
-            {currentPlaceholder}
+          <p style={{ margin: 0, color: 'rgba(233,238,251,.78)' }}>
+            {ORACLE_PROMPTS[placeholderIndex]}
           </p>
         </div>
 
-        {/* Search Section */}
-        <div style={{ width: '100%', maxWidth: '400px', position: 'relative', marginBottom: '1rem' }}>
+        {/* Search */}
+        <div style={{ width: '100%', maxWidth: 560, position: 'relative' }}>
           <input
+            className="awv-search-input"
             type="text"
             placeholder="Search characters..."
             value={inputValue}
-            onChange={(e) => handleInputChange(e.target.value)}
-            onFocus={() => inputValue.length >= 2 && setShowResults(true)}
-            onBlur={() => setTimeout(() => setShowResults(false), 200)}
+            onChange={(e) =>
+              setInputValue(e.target.value)
+            }
             style={{
               width: '100%',
-              padding: '1rem 1.5rem',
-              fontSize: '1.1rem',
-              border: '2px solid rgba(255, 215, 0, 0.3)',
-              borderRadius: '25px',
-              background: 'rgba(255, 255, 255, 0.1)',
+              padding: '0.9rem 1.2rem',
+              borderRadius: 12,
+              border: '1px solid rgba(255,215,0,.35)',
+              background: 'rgba(255,255,255,.08)',
               color: '#FFD700',
-              outline: 'none',
-              backdropFilter: 'blur(10px)',
-              transition: 'all 0.3s ease',
-              fontFamily: "'Georgia', serif"
+              outline: 'none'
             }}
           />
-
-          {/* Search Results (Desktop) */}
           {showResults && searchResults.length > 0 && (
             <div style={{
               position: 'absolute',
-              top: '100%',
               left: 0,
               right: 0,
-              maxHeight: '300px',
-              overflowY: 'auto',
-              background: 'rgba(11, 20, 38, 0.95)',
-              border: '1px solid rgba(255, 215, 0, 0.3)',
-              borderRadius: '15px',
-              backdropFilter: 'blur(20px)',
-              padding: '1rem',
-              marginTop: '0.5rem',
-              zIndex: 1000
+              top: 'calc(100% + 10px)',
+              maxHeight: 320,
+              overflow: 'auto',
+              borderRadius: 16,
+              border: '1px solid rgba(255, 215, 0, 0.28)',
+              background: 'rgba(11,20,38,0.94)',
+              backdropFilter: 'blur(16px)',
+              padding: '.7rem',
+              zIndex: 10
             }}>
-              {searchResults.map((character, index) => (
-                <div
-                  key={character.key}
-                  onClick={() => handleCharacterSelect(character)}
-                  style={{
-                    display: 'flex',
-                    alignItems: 'center',
-                    gap: '1rem',
-                    padding: '0.75rem',
-                    background: 'rgba(255, 255, 255, 0.05)',
-                    border: '1px solid rgba(255, 215, 0, 0.2)',
-                    borderRadius: '10px',
-                    cursor: 'pointer',
-                    transition: 'all 0.3s ease',
-                    marginBottom: index < searchResults.length - 1 ? '0.5rem' : 0,
-                    position: 'relative'
-                  }}
-                  onMouseEnter={(e) => {
-                    e.currentTarget.style.background = 'rgba(255, 215, 0, 0.1)';
-                    e.currentTarget.style.borderColor = 'rgba(255, 215, 0, 0.5)';
-                  }}
-                  onMouseLeave={(e) => {
-                    e.currentTarget.style.background = 'rgba(255, 255, 255, 0.05)';
-                    e.currentTarget.style.borderColor = 'rgba(255, 215, 0, 0.2)';
-                  }}
-                >
-                  <img
-                    src={character.thumbnailUrl}
-                    alt={character.name}
-                    style={{
-                      width: '40px',
-                      height: '40px',
-                      borderRadius: '50%',
-                      objectFit: 'cover',
-                      border: '2px solid rgba(255, 215, 0, 0.3)',
-                      opacity: character.status === 'rejected' ? 0.6 : 1
-                    }}
-                    onError={(e) => { e.target.src = '/images/default-character.jpg'; }}
-                  />
-                  <div style={{ flex: 1, minWidth: 0 }}>
-                    <div style={{ 
-                      fontSize: '0.9rem', 
-                      fontWeight: 600, 
-                      color: character.status === 'approved' ? '#FFD700' : '#FFA500', 
-                      marginBottom: '0.25rem' 
-                    }}>
-                      {character.name}
-                    </div>
+              {searchResults.map((item, idx) => (
+                <div key={idx} onClick={() => onCharacterSelect(item)} style={{
+                  display: 'flex',
+                  gap: '.8rem',
+                  padding: '.6rem .7rem',
+                  borderRadius: 12,
+                  background: 'rgba(255,255,255,.05)',
+                  border: '1px solid rgba(255,215,0,.18)',
+                  cursor: 'pointer',
+                  alignItems: 'center'
+                }}>
+                  <div style={{
+                    width: 42, height: 42, borderRadius: '50%',
+                    border: '2px solid rgba(255,215,0,.35)',
+                    display: 'grid', placeItems: 'center',
+                    fontWeight: 900, backgroundImage: 'linear-gradient(145deg,#1f2a4a,#0e1832)',
+                    color: '#fff'
+                  }}>
+                    {item.name.split(' ').slice(0,2).map(s=>s[0]).join('')}
+                  </div>
+                  <div style={{ minWidth: 0 }}>
+                    <div style={{ fontWeight: 800, color: '#FFD700' }}>{item.name}</div>
                     <div style={{
-                      fontSize: '0.75rem',
-                      color: 'rgba(255, 215, 0, 0.7)',
-                      letterSpacing: '0.5px'
-                    }}>
-                      {character.category}
-                    </div>
+                      fontSize: 11, letterSpacing: '.3px', color: 'rgba(255,215,0,.8)', textTransform: 'uppercase'
+                    }}>{item.category}</div>
                   </div>
                 </div>
               ))}
             </div>
           )}
-
-          {showResults && searchResults.length === 0 && inputValue.length >= 2 && (
-            <div style={{
-              position: 'absolute',
-              top: '100%',
-              left: 0,
-              right: 0,
-              background: 'rgba(11, 20, 38, 0.95)',
-              border: '1px solid rgba(255, 215, 0, 0.3)',
-              borderRadius: '15px',
-              backdropFilter: 'blur(20px)',
-              padding: '1rem',
-              marginTop: '0.5rem',
-              textAlign: 'center',
-              zIndex: 1000
-            }}>
-              <p style={{
-                color: 'rgba(255, 215, 0, 0.8)',
-                margin: '0 0 0.5rem 0',
-                fontSize: '1rem'
-              }}>
-                No matches for "{inputValue}"
-              </p>
-              <small style={{ color: 'rgba(255, 255, 255, 0.6)', fontSize: '0.85rem' }}>
-                Try searching for character names or themes
-              </small>
-            </div>
-          )}
         </div>
 
-        {/* Personalized Section (Desktop) */}
-        {shouldShowForYou && (
-          <PersonalizedSection 
-            characters={recentCharacters}
-            onCharacterSelect={handleRecentCharacterSelect}
-            hasActiveConversations={hasActiveConversations}
-            isMobile={false}
+        {/* Personalized */}
+        <PersonalizedSection
+          interactedCharacters={interactedCharacters}
+          startCreateCharacter={startCreateCharacter}
+          onStartChat={onStartChat}
+        />
+      </div>
+
+      {/* Right Pane */}
+      <div style={{ flex: 1, position: 'relative', padding: '1.4rem' }}>
+        {!selectedCategory ? (
+          <>
+            <CategoryListHeader />
+            <div style={{
+              display: 'grid',
+              gridTemplateColumns: 'repeat(3, 1fr)',
+              gridAutoRows: 'minmax(140px,1fr)',
+              gap: '1rem'
+            }}>
+              {enhancedCategories.map((cat, idx) => (
+                <CategoryCard
+                  key={cat.key}
+                  category={cat}
+                  index={idx}
+                  onCreateCharacter={startCreateCharacter}
+                  onClick={() => handleCategoryClick(cat)}
+                />
+              ))}
+            </div>
+          </>
+        ) : (
+          <>
+            <CategoryHeader category={selectedCategory} onBack={handleBackToCategories} />
+            <div style={{
+              display: 'grid',
+              gridTemplateColumns: 'repeat(auto-fit,minmax(180px,1fr))',
+              gap: '1rem'
+            }}>
+              {selectedCategory.characters.map((ch) => (
+                <CharacterCard
+                  key={ch.key || ch.name}
+                  character={ch}
+                  onClick={onCharacterSelect}
+                />
+              ))}
+            </div>
+          </>
+        )}
+
+        {/* Detail Panel */}
+        {showDetail && selectedCharacter && (
+          <CharacterDetailPanel
+            character={selectedCharacter}
+            onClose={onCloseDetail}
+            onStart={onStart}
+          />
+        )}
+
+        {/* Status Modal */}
+        {showStatusModal && (
+          <CharacterStatusModal
+            status={statusInfo.status}
+            message={statusInfo.message}
+            onClose={() => setShowStatusModal(false)}
           />
         )}
       </div>
-
-      {/* RIGHT HALF - Categories/Characters */}
-      <div style={{ width: '50%', height: '100%', position: 'relative', perspective: '1000px' }}>
-
-        {/* Categories Grid */}
-        <div 
-          className="categories-grid-container"
-          style={{
-            position: 'absolute',
-            width: '100%',
-            height: '100%',
-            zIndex: 3,
-            padding: '2rem',
-            display: 'grid',
-            gridTemplateColumns: 'repeat(3, 1fr)',
-            gridTemplateRows: 'repeat(4, 1fr)',
-            gap: '1rem',
-            alignContent: 'start',
-            justifyContent: 'center',
-            transform: selectedCategory ? 'rotateY(-90deg)' : 'rotateY(0deg)',
-            transition: 'transform 0.6s ease-in-out',
-            transformStyle: 'preserve-3d',
-            backfaceVisibility: 'hidden',
-            overflowY: 'auto',
-            overflowX: 'hidden',
-            maxHeight: '100%',
-            paddingRight: '2.5rem'
-          }}
-        >
-          {enhancedCategories.map((category, index) => (
-            <CategoryCard
-              key={category.key}
-              category={category}
-              onClick={() => handleCategorySelect(category)}
-              index={index}
-              isMobile={false}
-              onCreateCharacter={handleCreateCharacterClick}
-            />
-          ))}
-        </div>
-
-        {/* Characters Panel */}
-        <div style={{
-          position: 'absolute',
-          width: '100%',
-          height: '100%',
-          padding: '2rem',
-          transform: selectedCategory ? 'rotateY(0deg)' : 'rotateY(90deg)',
-          transition: 'transform 0.6s ease-in-out',
-          transformStyle: 'preserve-3d',
-          backfaceVisibility: 'hidden',
-          overflowY: 'auto'
-        }} className="character-panel">
-          {selectedCategory && (
-            <>
-              {/* Header */}
-              <div style={{
-                display: 'flex',
-                justifyContent: 'space-between',
-                alignItems: 'center',
-                marginBottom: '2rem',
-                paddingBottom: '1rem',
-                borderBottom: '2px solid rgba(255, 215, 0, 0.3)'
-              }}>
-                <h2 style={{
-                  color: '#FFD700',
-                  fontSize: '2rem',
-                  fontFamily: "'Playfair Display', serif",
-                  margin: 0,
-                  letterSpacing: '2px',
-                  textShadow: '0 0 20px rgba(255, 215, 0, 0.5)'
-                }}>
-                  {selectedCategory.title}
-                </h2>
-                
-                <button
-                  onClick={handleBackToCategories}
-                  style={{
-                    background: 'rgba(255, 215, 0, 0.1)',
-                    border: '2px solid rgba(255, 215, 0, 0.4)',
-                    borderRadius: '8px',
-                    color: '#FFD700',
-                    fontSize: '0.9rem',
-                    fontWeight: 600,
-                    padding: '0.5rem 1rem',
-                    cursor: 'pointer',
-                    transition: 'all 0.3s ease',
-                    fontFamily: "'Georgia', serif"
-                  }}
-                  onMouseEnter={(e) => {
-                    e.currentTarget.style.background = 'rgba(255, 215, 0, 0.2)';
-                    e.currentTarget.style.borderColor = 'rgba(255, 215, 0, 0.6)';
-                  }}
-                  onMouseLeave={(e) => {
-                    e.currentTarget.style.background = 'rgba(255, 215, 0, 0.1)';
-                    e.currentTarget.style.borderColor = 'rgba(255, 215, 0, 0.4)';
-                  }}
-                >
-                  ← Back
-                </button>
-              </div>
-
-              {/* Desktop Content Area */}
-              {selectedCategory.key === 'my_characters' ? (
-                <MyCharactersPanel 
-                  userCharacters={userCharacters}
-                  charactersLoading={charactersLoading}
-                  charactersError={charactersError}
-                  onCreateCharacter={handleCreateCharacterClick}
-                  onCharacterSelect={handleCharacterSelect}
-                  isMobile={false}
-                />
-              ) : (
-                <div style={{
-                  display: 'grid',
-                  gridTemplateColumns: 'repeat(auto-fit, minmax(180px, 1fr))',
-                  gap: '1rem',
-                  maxHeight: 'calc(100vh - 200px)',
-                  overflowY: 'auto',
-                  paddingRight: '0.5rem'
-                }}>
-                  {selectedCategory.characters.map((character, index) => (
-                    <CharacterCard
-                      key={character.key}
-                      character={character}
-                      onClick={() => handleCharacterSelect(character)}
-                      index={index}
-                      isMobile={false}
-                      showStatusIndicator={character.key?.startsWith('user_')}
-                    />
-                  ))}
-                </div>
-              )}
-            </>
-          )}
-        </div>
-      </div>
-
-      {/* Character Detail Modal (Desktop) */}
-      {selectedChar && (
-        <CharacterDetailPanel
-          character={selectedChar}
-          onStartChat={handleStartChatFromSelection}
-          onClose={() => setSelectedChar(null)}
-          isMobile={false}
-        />
-      )}
-
-      {/* Character Status Modal */}
-      {showStatusModal && selectedStatusCharacter && (
-        <CharacterStatusModal
-          character={selectedStatusCharacter}
-          onClose={handleStatusModalClose}
-          onCreateNew={handleCreateNewCharacter}
-          onUpgrade={handleUpgradeFlow}
-        />
-      )}
-
-      <style jsx>{`
-        @import url('https://fonts.googleapis.com/css2?family=Cinzel:wght@400;600&family=Cinzel+Decorative:wght@400;700&display=swap');
-        
-        @keyframes categorySlideIn {
-          from { opacity: 0; transform: translateY(30px) scale(0.7); }
-          to   { opacity: 1; transform: translateY(0) scale(1); }
-        }
-        
-        @keyframes characterSlideIn {
-          from { opacity: 0; transform: translateY(20px); }
-          to   { opacity: 1; transform: translateY(0); }
-        }
-        
-        @keyframes spin {
-          0% { transform: rotate(0deg); }
-          100% { transform: rotate(360deg); }
-        }
-        
-        @keyframes slideInFromLeft {
-          from { opacity: 0; transform: translateX(-30px); }
-          to   { opacity: 1; transform: translateX(0); }
-        }
-
-        @keyframes pulse {
-          0%, 100% { opacity: 1; transform: scale(1); }
-          50%      { opacity: 0.7; transform: scale(1.1); }
-        }
-
-        .recent-characters::-webkit-scrollbar { display: none; }
-        
-        .character-panel::-webkit-scrollbar { width: 6px; }
-        .character-panel::-webkit-scrollbar-track {
-          background: rgba(255, 215, 0, 0.1);
-          border-radius: 3px;
-        }
-        
-        .character-panel::-webkit-scrollbar-thumb {
-          background: rgba(255, 215, 0, 0.5);
-          border-radius: 3px;
-        }
-        .character-panel::-webkit-scrollbar-thumb:hover {
-          background: rgba(255, 215, 0, 0.7);
-        }
-        
-        .categories-grid-container {
-          scrollbar-width: thin;
-          scrollbar-color: rgba(255, 215, 0, 0.6) rgba(11, 20, 38, 0.8);
-        }
-
-        .categories-grid-container::-webkit-scrollbar {
-          width: 8px;
-        }
-
-        .categories-grid-container::-webkit-scrollbar-track {
-          background: rgba(11, 20, 38, 0.8);
-          border-radius: 4px;
-          border: 1px solid rgba(255, 215, 0, 0.1);
-        }
-
-        .categories-grid-container::-webkit-scrollbar-thumb {
-          background: linear-gradient(
-            180deg, 
-            rgba(255, 215, 0, 0.8) 0%, 
-            rgba(255, 215, 0, 0.6) 50%,
-            rgba(255, 215, 0, 0.4) 100%
-          );
-          border-radius: 4px;
-          border: 1px solid rgba(255, 215, 0, 0.3);
-          transition: all 0.3s ease;
-        }
-
-        .categories-grid-container::-webkit-scrollbar-thumb:hover {
-          background: linear-gradient(
-            180deg, 
-            rgba(255, 215, 0, 1) 0%, 
-            rgba(255, 215, 0, 0.8) 50%,
-            rgba(255, 215, 0, 0.6) 100%
-          );
-          box-shadow: 0 0 8px rgba(255, 215, 0, 0.4);
-        }
-      `}</style>
     </div>
   );
 };
