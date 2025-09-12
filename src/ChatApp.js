@@ -43,6 +43,7 @@ export default function ChatApp() {
 
   // NEW: Get custom character data for display names
   const { userCharacters, loading: customCharactersLoading } = usePremiumCharacters();
+  window.debugUserChars = userCharacters;
 
   const [sessionsByCharacter, setSessionsByCharacter] = useState({});
   const [currentSessionId, setCurrentSessionId] = useState(null);
