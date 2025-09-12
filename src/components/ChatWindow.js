@@ -15,6 +15,7 @@ import FloatingAvatar from './FloatingAvatar/FloatingAvatar';
 import PrestigeHub from './PrestigeHub/PrestigeHub';
 import { useSmartScroll } from '../hooks/useSmartScroll';
 import FloatingScrollButton from './FloatingScrollButton';
+import usePremiumCharacters from '../hooks/usePremiumCharacters';
 import '../styles.css';
 import '../style/InviteStyles.css';
 
@@ -109,16 +110,33 @@ const ChatItem = memo(({ index, style, data }) => {
     ? userAvatar || `${API_BASE}/avatars/user_${data.userId || 'unknown'}_default.jpg`
     : `/images/${msg.speaker || character}.jpg`;
 
-  // Character label fallback
+
+    // Character label fallback - UPDATED to handle custom characters
   const getCharacterInfo = (characterKey) => {
-    const char = CHARACTERS[characterKey];
-    if (!char) {
-      console.warn(`Character "${characterKey}" not found in CHARACTERS`);
-      return {
-        display_name: characterKey?.replace(/_/g, ' ') || 'Unknown'
-      };
+    // First, check static characters
+    const staticChar = CHARACTERS[characterKey];
+    if (staticChar) {
+      return staticChar;
     }
-    return char;
+
+    // Then check custom characters from userCharacters
+    if (data.userCharacters && Array.isArray(data.userCharacters)) {
+      const customChar = data.userCharacters.find(char => 
+        char && char.character_key === characterKey && char.status === 'approved'
+      );
+      if (customChar) {
+        return {
+          display_name: customChar.display_name,
+          thumbnailUrl: `/images/${customChar.character_key}.jpg`
+        };
+      }
+    }
+
+    // Fallback for unknown characters
+    console.warn(`Character "${characterKey}" not found in static or custom characters`);
+    return {
+      display_name: characterKey?.replace(/_/g, ' ') || 'Unknown'
+    };
   };
 
   const characterInfo = msg.user 
@@ -263,6 +281,7 @@ export default function ChatWindow({
   const { user } = useUser();
   const socket = useSocket();
   const isMobile = useMediaQuery(600);
+  const { userCharacters } = usePremiumCharacters();
 
   const localThreadId = useRef(threadId);
   const { sendConversationMessage } = useConversation();
@@ -315,7 +334,9 @@ export default function ChatWindow({
   const [emotionIntensity, setEmotionIntensity] = useState(0.6);
 
   // FloatingAvatar feature flag
-  const [useFloatingAvatar, setUseFloatingAvatar] = useState(false);
+  const [useFloatingAvatar, setUseFloatingAvatar] = useState(
+    process.env.REACT_APP_FLOATING_AVATAR !== 'false'
+  );
 
   const [chatHistory, setChatHistory] = useState(
     (session?.messages || []).map(m => ({ 
@@ -500,8 +521,7 @@ export default function ChatWindow({
   } = useSmartScroll(listRef, chatHistory);
   const controllerRef = useRef(null);
   const sizeMap = useRef({});
-  const displayName = characterName || "TEST NAME FALLBACK";
-
+  const displayName = characterName || character;
   const lastMessageCountRef = useRef(0);
   
   // Row height calculation with invite spacing
@@ -1035,6 +1055,7 @@ const sendAI = async (userText, aiIndex) => {
                   retry,
                   character,
                   displayName,
+                  userCharacters,
                   userAvatar,
                   onInvite,
                   isSending,
