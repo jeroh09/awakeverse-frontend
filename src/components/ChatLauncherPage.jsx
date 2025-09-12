@@ -1,3 +1,4 @@
+// src/pages/ChatLauncherPage.jsx
 // src/pages/ChatLauncherPage.jsx - Complete implementation with character status handling
 import React, { useState, useEffect, useMemo, useCallback } from 'react';
 import { useAuth } from '../contexts/AuthContext';
@@ -8,6 +9,7 @@ import TemplateGallery from '../components/TemplateGallery';
 import CharacterBuilder from '../components/CharacterBuilder';
 import CharacterStatusModal from '../components/CharacterStatusModal';
 import CharacterCreationSuccess from '../components/CharacterCreationSuccess';
+
 
 // Import helper components
 import {
