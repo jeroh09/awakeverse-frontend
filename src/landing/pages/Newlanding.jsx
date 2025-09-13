@@ -2,13 +2,15 @@ import React, { useEffect, useMemo, useRef, useState } from "react";
 import { Link } from "react-router-dom";
 
 /**
- * Newlanding.jsx
- * — Localhost test for Scroll 1 (3‑slide carousel) + Scroll 2 (feature preview)
- * — Uses only image paths that already exist in /public/images (no new deps)
- * — Doesn’t touch your existing LandingPage.js/CSS
+ * Newlanding.jsx — localhost test (Scroll 1 & 2)
+ * ✔ Midnight‑blue gradient background (no stars)
+ * ✔ Blue · White · Gold theme
+ * ✔ "AwakeVerse" capitalization
+ * ✔ Lightsource panels (glowing cards)
+ * ✔ No dependency on old landing files; uses only image paths
  *
- * Drop this file at: src/landing/pages/Newlanding.jsx
- * Add a route like: <Route path="/new" element={<Newlanding/>} />
+ * Place at: src/landing/pages/Newlanding.jsx
+ * Route: <Route path="/new" element={<Newlanding/>} />
  */
 export default function Newlanding() {
   return (
@@ -24,7 +26,7 @@ export default function Newlanding() {
         </Carousel>
       </section>
 
-      {/* ===== Scroll 2: Feature preview (lightweight) ===== */}
+      {/* ===== Scroll 2: Deep‑dive preview ===== */}
       <section className="snap-section alt">
         <FeaturePreview />
       </section>
@@ -37,11 +39,11 @@ function HeroSlide() {
   return (
     <div className="slide hero">
       <div className="hero-inner">
-        <h1 className="headline">Awakeverse</h1>
-        <p className="subcopy">Create, chat, and collaborate with legendary minds—real‑time.</p>
+        <h1 className="headline">AwakeVerse</h1>
+        <p className="subcopy">Create, chat, and collaborate with legendary minds — in real time.</p>
         <div className="cta-row">
-          <Link to="/register" className="cta">Get started — it’s free</Link>
-          <Link to="/register" className="ghost">Try a live demo →</Link>
+          <Link to="/register" className="btn btn-gold">Get started — it’s free</Link>
+          <Link to="/register" className="btn btn-ghost">Browse characters</Link>
         </div>
       </div>
     </div>
@@ -50,7 +52,7 @@ function HeroSlide() {
 
 /* --------------- Slide 2: 3–6 feature categories grid --------------- */
 function CategoriesSlide() {
-  // Only use existing image paths (no imports from your data files)
+  // Uses only existing image paths in /public/images
   const categories = [
     { key: "sleuths",      title: "Detectives",    image: "/images/sherlock.jpg" },
     { key: "stargazers",   title: "Astrologers",   image: "/images/ptolemy.jpg" },
@@ -63,19 +65,21 @@ function CategoriesSlide() {
   return (
     <div className="slide cats">
       <header className="slide-hdr">
-        <h2>Explore by craft</h2>
-        <p>Pick a path—each category unlocks unique characters and tools.</p>
+        <h2 className="h2">Explore by craft</h2>
+        <p className="muted">Pick a path — each category unlocks unique characters and tools.</p>
       </header>
+
       <div className="grid">
         {categories.slice(0, 6).map((c) => (
-          <Link key={c.key} to="/register" className="card" aria-label={`${c.title} — open register`}>
+          <Link key={c.key} to="/register" className="card av-panel" aria-label={`${c.title} — open register`}>
             <img src={c.image} alt={c.title} loading="lazy" />
             <div className="card-title">{c.title}</div>
           </Link>
         ))}
-        {/* Last summary tile: Invite Experts */}
-        <Link to="/register" className="card invite" aria-label="Invite experts — open register">
-          <div className="invite-badge">NEW</div>
+
+        {/* Invite Experts special tile */}
+        <Link to="/register" className="card av-panel invite" aria-label="Invite experts — open register">
+          <div className="spark" aria-hidden="true" />
           <div className="card-title">Invite Experts</div>
           <p className="card-copy">Bring specialist characters into the same chat to co‑solve problems.</p>
         </Link>
@@ -87,17 +91,20 @@ function CategoriesSlide() {
 /* ---------------- Slide 3: Create‑your‑own character ---------------- */
 function CreateYourOwnSlide() {
   return (
-    <div className="slide create">
+    <div className="slide create av-panel">
       <header className="slide-hdr">
-        <h2>Create your own character</h2>
-        <p>Design persona, goals, style, and boundaries—then talk to it like a teammate.</p>
+        <h2 className="h2">Create your own character</h2>
+        <p className="muted">Design persona, goals, style, and boundaries — then talk to it like a teammate.</p>
       </header>
       <ul className="bullets">
         <li>Pick a template (advisor, detective, coder, muse)</li>
         <li>Fill in traits & guardrails</li>
-        <li>Chat instantly—iterate as you go</li>
+        <li>Chat instantly — iterate as you go</li>
       </ul>
-      <Link to="/register" className="cta">Start building</Link>
+      <div className="cta-row">
+        <Link to="/register" className="btn btn-gold">Start building</Link>
+        <Link to="/register" className="btn btn-ghost">See examples</Link>
+      </div>
     </div>
   );
 }
@@ -107,31 +114,31 @@ function FeaturePreview() {
   const features = [
     {
       title: "Zero‑jitter scrolling",
-      copy: "Native CSS scroll‑snap + passive listeners for buttery performance (desktop & mobile).",
+      copy: "Native scroll + CSS snap; GPU‑friendly transforms/opacity only.",
     },
     {
       title: "Invite in‑chat experts",
       copy: "Context‑aware suggestions add the right specialists to your current thread.",
     },
     {
-      title: "One‑click start",
-      copy: "All CTAs route to /register for a focused funnel while we iterate the UI.",
+      title: "Focused funnel",
+      copy: "All CTAs route to /register while we refine the rest of the UI.",
     },
   ];
 
   return (
     <div className="feature-preview">
-      <h2>Under the hood</h2>
+      <h2 className="h2">Under the hood</h2>
       <div className="f-grid">
         {features.map((f, i) => (
-          <div className="f-card" key={i}>
-            <h3>{f.title}</h3>
-            <p>{f.copy}</p>
+          <div className="f-card av-panel" key={i}>
+            <h3 className="h3">{f.title}</h3>
+            <p className="muted">{f.copy}</p>
           </div>
         ))}
       </div>
       <div className="cta-row center">
-        <Link to="/register" className="cta">Create an account</Link>
+        <Link to="/register" className="btn btn-gold">Create an account</Link>
       </div>
     </div>
   );
@@ -143,7 +150,6 @@ function Carousel({ children }) {
   const [index, setIndex] = useState(0);
   const slides = useMemo(() => React.Children.toArray(children), [children]);
 
-  // Snap to selected index
   const goTo = (i) => {
     const clamped = Math.max(0, Math.min(i, slides.length - 1));
     setIndex(clamped);
@@ -151,17 +157,14 @@ function Carousel({ children }) {
     el?.scrollIntoView({ behavior: "smooth", inline: "start" });
   };
 
-  // Update index on manual swipe/scroll
   useEffect(() => {
     const node = scrollerRef.current;
     if (!node) return;
-
     const onScroll = () => {
       const { scrollLeft, clientWidth } = node;
       const i = Math.round(scrollLeft / clientWidth);
       if (i !== index) setIndex(i);
     };
-
     node.addEventListener("scroll", onScroll, { passive: true });
     return () => node.removeEventListener("scroll", onScroll);
   }, [index]);
@@ -192,73 +195,84 @@ function Carousel({ children }) {
 const styles = {
   page: {
     minHeight: "100vh",
-    background: "#0b0f14",
-    color: "#eef2f6",
+    background: "linear-gradient(180deg, #0B0F22 0%, #0E142B 50%, #0B0F22 100%)",
+    color: "#F5F7FA",
   },
 };
 
 const css = `
 :root {
-  --bg: #0b0f14;
-  --bg2: #0e1218;
-  --card: #141a22;
-  --ink: #eef2f6;
-  --muted: #b6c0cc;
-  --brand: #64d98a; /* matches your greenlit tone */
-  --brand-ink: #0a1a10;
-  --ring: 0 0 0 3px rgba(100, 217, 138, 0.35);
+  /* Midnight blue base + accents */
+  --mid-950: #0B0F22;
+  --mid-900: #0E142B;
+  --mid-800: #111A33;
+  --gold: #FFD700;
+  --ink:  #F5F7FA;
+  --muted:#C8D1E0;
+  --rim-blue: rgba(120,155,255,.18);
+  --ring: 0 0 0 3px rgba(255, 215, 0, 0.35);
 }
 
-main { overflow-y: auto; height: 100vh; scroll-behavior: smooth; scroll-snap-type: y mandatory; }
-.snap-section { scroll-snap-align: start; min-height: 100vh; display:flex; align-items:center; justify-content:center; padding: clamp(16px, 4vw, 48px); background: var(--bg); }
-.snap-section.alt { background: var(--bg2); }
+main { overflow-y: auto; height: 100vh; scroll-behavior: smooth; scroll-snap-type: y proximity; }
+.snap-section { scroll-snap-align: start; min-height: 100vh; display:flex; align-items:center; justify-content:center; padding: clamp(16px, 4vw, 48px); background: transparent; }
+.snap-section.alt { background: linear-gradient(180deg, var(--mid-900), var(--mid-950)); }
+
+/* Typography */
+.h2 { font-size: clamp(28px, 4vw, 40px); margin: 0 0 8px; letter-spacing: .1px; }
+.h3 { font-size: 18px; margin: 0 0 6px; }
+.muted { color: var(--muted); }
+
+/* Buttons */
+.btn { display:inline-flex; align-items:center; justify-content:center; min-height:44px; padding:10px 18px; border-radius:12px; font-weight:700; text-decoration:none; transition: transform .18s ease, box-shadow .18s ease, background .18s ease, border-color .18s ease; }
+.btn:focus-visible, .card:focus-visible, .dot:focus-visible { outline:none; box-shadow: var(--ring); }
+.btn-gold { color: var(--mid-950); background: linear-gradient(135deg, var(--gold), #FFF3A0); box-shadow: 0 10px 30px rgba(255,215,0,.25); }
+.btn-gold:hover { transform: translateY(-1px); box-shadow: 0 16px 40px rgba(255,215,0,.38); }
+.btn-ghost { border: 2px solid rgba(255,215,0,.45); color: var(--gold); background: rgba(255,255,255,.06); }
+.btn-ghost:hover { border-color: var(--gold); background: rgba(255,215,0,.10); }
 
 /* Carousel */
 .carousel { width: min(1200px, 100%); margin: 0 auto; position: relative; }
-.track { display: grid; grid-auto-flow: column; grid-auto-columns: 100%; overflow-x: auto; scroll-snap-type: x mandatory; scroll-behavior: smooth; border-radius: 20px; }
+.track { display: grid; grid-auto-flow: column; grid-auto-columns: 100%; overflow-x: auto; scroll-snap-type: x mandatory; scroll-behavior: smooth; border-radius: 22px; }
 .track::-webkit-scrollbar { height: 8px; }
-.track::-webkit-scrollbar-thumb { background: #1f2732; border-radius: 999px; }
-.pane { scroll-snap-align: start; min-height: 72vh; display:flex; align-items:center; justify-content:center; background: linear-gradient(180deg, #0f1620, #0b0f14); border: 1px solid #1a2430; border-radius: 20px; padding: clamp(16px, 4vw, 48px); }
+.track::-webkit-scrollbar-thumb { background: #1b2330; border-radius: 999px; }
+.pane { scroll-snap-align: start; min-height: 72vh; display:flex; align-items:center; justify-content:center; background: linear-gradient(180deg, var(--mid-800), var(--mid-950)); border: 1px solid rgba(255,255,255,.06); border-radius: 22px; padding: clamp(16px, 4vw, 48px); }
 .dots { display:flex; gap:10px; justify-content:center; margin-top: 14px; }
 .dot { width:10px; height:10px; border-radius:50%; background:#2a3442; border:none; cursor:pointer; }
-.dot.active { background: var(--brand); box-shadow: var(--ring); }
+.dot.active { background: var(--gold); box-shadow: var(--ring); }
+
+/* Lightsource panels */
+.av-panel { position: relative; background: linear-gradient(180deg, rgba(255,255,255,.06), rgba(255,255,255,.03)); border-radius: 18px; border: 1px solid rgba(255,215,0,.25); box-shadow: 0 12px 40px rgba(0,0,0,.35), 0 0 0 1px rgba(255,215,0,.10) inset, 0 0 28px rgba(255,215,0,.18); overflow: clip; }
+.av-panel::before { content: ""; position: absolute; inset: -1px; pointer-events: none; background: radial-gradient(600px 220px at 20% -10%, rgba(255,215,0,.18), transparent 60%), radial-gradient(500px 240px at 110% 10%, var(--rim-blue), transparent 60%); mix-blend-mode: screen; }
+.av-panel::after { content: ""; position: absolute; inset: 8px; border-radius: 14px; border: 1px solid rgba(255,255,255,.08); box-shadow: inset 0 0 0 1px rgba(255,255,255,.06); pointer-events: none; }
 
 /* Slide 1 */
 .hero-inner { text-align:center; max-width: 860px; }
-.headline { font-size: clamp(40px, 7vw, 72px); letter-spacing: -0.02em; margin: 0 0 10px; }
+.headline { font-size: clamp(40px, 7vw, 72px); letter-spacing: -0.02em; margin: 0 0 10px; text-shadow: 0 0 24px rgba(255,215,0,.18); }
 .subcopy { color: var(--muted); font-size: clamp(16px, 2.2vw, 20px); margin: 0 0 26px; }
 .cta-row { display:flex; gap:12px; justify-content:center; flex-wrap: wrap; }
-.cta { background: var(--brand); color: var(--brand-ink); padding: 12px 18px; border-radius: 12px; text-decoration: none; font-weight: 700; }
-.ghost { background: transparent; border: 1px solid #2a3442; color: var(--ink); padding: 12px 18px; border-radius: 12px; text-decoration: none; }
-.cta:focus-visible, .ghost:focus-visible, .card:focus-visible, .dot:focus-visible { outline: none; box-shadow: var(--ring); }
 
 /* Slide 2 */
 .slide-hdr { text-align:center; margin-bottom: 18px; }
-.slide-hdr h2 { font-size: clamp(28px, 4vw, 40px); margin: 0 0 6px; }
-.slide-hdr p { color: var(--muted); margin: 0; }
-.grid { display:grid; gap: 14px; grid-template-columns: repeat( auto-fit, minmax(200px, 1fr) ); width: 100%; max-width: 1100px; }
-.card { position: relative; background: var(--card); border: 1px solid #1a2430; border-radius: 16px; overflow: hidden; text-decoration: none; color: var(--ink); min-height: 180px; display:flex; align-items:flex-end; }
-.card img { position:absolute; inset:0; width:100%; height:100%; object-fit: cover; filter: saturate(0.9) brightness(0.85); transition: transform .5s ease; }
-.card:hover img { transform: scale(1.04); }
-.card-title { position: relative; z-index:1; padding: 12px 14px; font-weight: 700; text-shadow: 0 1px 10px rgba(0,0,0,.35); }
-.card.invite { display:block; padding: 16px; }
-.card.invite .card-title { padding: 0; margin-bottom: 4px; }
-.card-copy { color: var(--muted); margin: 0; }
-.invite-badge { display:inline-block; font-size: 12px; background: #1f2732; color: var(--ink); padding: 2px 8px; border-radius: 999px; margin-bottom: 8px; border: 1px solid #2a3442; }
+.grid { display:grid; gap: 14px; grid-template-columns: repeat( auto-fit, minmax(220px, 1fr) ); width: 100%; max-width: 1100px; }
+.card { position: relative; border-radius: 16px; text-decoration: none; color: var(--ink); min-height: 200px; display:flex; align-items:flex-end; }
+.card img { position:absolute; inset:0; width:100%; height:100%; object-fit: cover; filter: saturate(0.9) brightness(0.86); transition: transform .5s ease, filter .4s ease; }
+.card:hover img { transform: scale(1.04); filter: saturate(1) brightness(0.95); }
+.card-title { position: relative; z-index:1; padding: 12px 14px; font-weight: 800; text-shadow: 0 1px 10px rgba(0,0,0,.35); }
+.card.invite { display:block; padding: 18px; min-height: 200px; }
+.card.invite .card-title { padding: 0; margin-bottom: 6px; color: var(--gold); }
+.card-copy { color: var(--muted); margin: 0; max-width: 32ch; }
+.spark { position:absolute; inset: -20%; pointer-events:none; background: radial-gradient(240px 120px at 10% -10%, rgba(255,215,0,.28), transparent 60%), radial-gradient(220px 120px at 120% 10%, rgba(120,155,255,.22), transparent 60%); mix-blend-mode: screen; filter: blur(6px); }
 
 /* Slide 3 */
-.create { text-align:center; max-width: 900px; }
-.bullets { list-style: none; padding: 0; margin: 14px auto 22px; display: grid; gap: 8px; color: var(--muted); max-width: 620px; }
-.bullets li::before { content: "• "; color: var(--brand); }
+.create { text-align:center; max-width: 900px; padding: clamp(16px, 3vw, 24px); }
+.bullets { list-style: none; padding: 0; margin: 14px auto 22px; display: grid; gap: 8px; color: var(--muted); max-width: 620px; text-align:left; }
+.bullets li::marker { content: none; }
+.bullets li::before { content: "★ "; color: var(--gold); margin-right: 6px; }
 
 /* Scroll 2 */
 .feature-preview { width: min(1100px, 100%); margin: 0 auto; text-align:center; }
-.feature-preview h2 { font-size: clamp(28px, 4vw, 40px); margin-bottom: 16px; }
 .f-grid { display:grid; gap: 14px; grid-template-columns: repeat( auto-fit, minmax(260px, 1fr) ); }
-.f-card { background: var(--card); border: 1px solid #1a2430; border-radius: 16px; padding: 18px; text-align:left; }
-.f-card h3 { margin: 0 0 8px; font-size: 18px; }
-.f-card p { margin: 0; color: var(--muted); }
-.cta-row.center { justify-content: center; margin-top: 16px; }
+.f-card { padding: 18px; text-align:left; }
 
 /* Accessibility */
 @media (prefers-reduced-motion: reduce) {
