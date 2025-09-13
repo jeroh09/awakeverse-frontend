@@ -4,7 +4,7 @@ import { Routes, Route, Navigate, useLocation, useNavigate } from 'react-router-
 import { useAuth } from './contexts/AuthContext';
 
 // Landing page (new module)
-import LandingPage     from './landing/pages/LandingPage';
+import Newlanding     from './landing/pages/Newlanding';
 import Login           from './pages/Login';
 import Register        from './pages/Register';
 import ChatApp         from './ChatApp';
@@ -73,7 +73,7 @@ export default function App() {
   return (
     <Routes>
       {/* New landing page at root */}
-      <Route path="/" element={<LandingPage />} />
+      <Route path="/" element={<Newlanding />} />
 
       {/* Auth routes */}
       <Route path="/login" element={<Login />} />
