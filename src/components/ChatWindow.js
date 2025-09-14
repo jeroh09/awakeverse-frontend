@@ -15,11 +15,10 @@ import FloatingAvatar from './FloatingAvatar/FloatingAvatar';
 import PrestigeHub from './PrestigeHub/PrestigeHub';
 import { useSmartScroll } from '../hooks/useSmartScroll';
 import FloatingScrollButton from './FloatingScrollButton';
-import usePremiumCharacters from '../hooks/usePremiumCharacters';
-import '../styles.css';
 import useUsageTracking from '../hooks/useUsageTracking';
-import { HeaderUsageIndicator } from './UsageIndicator';
-
+import { HeaderUsageIndicator, ChatUsageIndicator } from '../components/UsageIndicator';
+import '../styles.css';
+import '../style/InviteStyles.css';
 
 function useMediaQuery(maxWidth) {
   const query = `(max-width: ${maxWidth}px)`;
@@ -72,10 +71,6 @@ const ChatItem = memo(({ index, style, data }) => {
   const isEditing = index === editingIndex;
   const rowRef = useRef(null);
   const editRef = useRef(null);
-  const testUsage = useUsageTracking(character);
-  console.log('Usage test:', testUsage); // This will show in Vercel function logs
-  
-
 
   // Track disabled invite buttons
   const [usedInvitees, setUsedInvitees] = useState(() => {
@@ -116,33 +111,16 @@ const ChatItem = memo(({ index, style, data }) => {
     ? userAvatar || `${API_BASE}/avatars/user_${data.userId || 'unknown'}_default.jpg`
     : `/images/${msg.speaker || character}.jpg`;
 
-
-    // Character label fallback - UPDATED to handle custom characters
+  // Character label fallback
   const getCharacterInfo = (characterKey) => {
-    // First, check static characters
-    const staticChar = CHARACTERS[characterKey];
-    if (staticChar) {
-      return staticChar;
+    const char = CHARACTERS[characterKey];
+    if (!char) {
+      console.warn(`Character "${characterKey}" not found in CHARACTERS`);
+      return {
+        display_name: characterKey?.replace(/_/g, ' ') || 'Unknown'
+      };
     }
-
-    // Then check custom characters from userCharacters
-    if (data.userCharacters && Array.isArray(data.userCharacters)) {
-      const customChar = data.userCharacters.find(char => 
-        char && char.character_key === characterKey && char.status === 'approved'
-      );
-      if (customChar) {
-        return {
-          display_name: customChar.display_name,
-          thumbnailUrl: `/images/${customChar.character_key}.jpg`
-        };
-      }
-    }
-
-    // Fallback for unknown characters
-    console.warn(`Character "${characterKey}" not found in static or custom characters`);
-    return {
-      display_name: characterKey?.replace(/_/g, ' ') || 'Unknown'
-    };
+    return char;
   };
 
   const characterInfo = msg.user 
@@ -287,21 +265,12 @@ export default function ChatWindow({
   const { user } = useUser();
   const socket = useSocket();
   const isMobile = useMediaQuery(600);
-  const { userCharacters } = usePremiumCharacters();
-
-  const {
-    sendMessageWithUsageHandling,
-    isBlocked,
-    usageWarning,
-    resetUsageState,
-    isCustomCharacter,
-    usageState
-  } = useUsageTracking(character);
 
   const localThreadId = useRef(threadId);
   const { sendConversationMessage } = useConversation();
   const userAvatar = avatarUrl || user?.avatarUrl;
   const [newMessageCount, setNewMessageCount] = useState(0);
+  const usageTracking = useUsageTracking(character);
 
   
   // ✅ USER-FRIENDLY ERROR HANDLING SYSTEM
@@ -787,133 +756,154 @@ export default function ChatWindow({
     }
   }, [chatHistory.length, shouldAutoScroll, isNearBottom]);
 
-  // Replace your sendAI function in ChatWindow.js with this streaming version:
+  // Replace your sendAI function in ChatWindow.js with this streaming version
+  const sendAI = async (userText, aiIndex) => {
+    const controller = new AbortController();
+    controllerRef.current = controller;
+    setIsSending(true);
 
-const sendAI = async (userText, aiIndex) => {
-  const controller = new AbortController();
-  controllerRef.current = controller;
-  setIsSending(true);
-
-  try {
-    const res = await fetch(`${process.env.REACT_APP_API_BASE_URL}/chat`, {
-      method: 'POST',
-      headers: {
-        'Authorization': `Bearer ${token}`,
-        'Content-Type': 'application/json'
-      },
-      body: JSON.stringify({ 
-        character, 
-        message: userText, 
-        thread_id: localThreadId.current 
-      }),
-      signal: controller.signal
-    });
-
-    if (!res.ok || !res.body) {
-      throw new Error(`Chat API failed: ${res.status} ${res.statusText}`);
-    }
-
-    const reader = res.body.getReader();
-    const decoder = new TextDecoder();
-    let fullReply = '';
-    let hasInviteSuggestion = false;
-    let inviteCandidates = [];
-
-    // ✅ STREAMING: Process each chunk immediately
-    while (true) {
-      const { done, value } = await reader.read();
-      if (done) break;
-      
-      const chunk = decoder.decode(value);
-      const lines = chunk.trim().split('\n').filter(Boolean);
-
-      for (const line of lines) {
-        try {
-          const data = JSON.parse(line);
-          const token = data.response || '';
-          
-          // ✅ STREAMING: Add each token immediately
-          if (token) {
-            fullReply += token;
-
-            // ✅ STREAMING: Update UI with each token (not just at the end)
-            setChatHistory(prev => {
-              const copy = [...prev];
-              if (copy[aiIndex]) {
-                copy[aiIndex] = {
-                  ...copy[aiIndex],
-                  speaker: data.speaker || character,
-                  text: fullReply, // ← Show accumulated text immediately
-                  has_invite_suggestion: hasInviteSuggestion,
-                  invite_candidates: inviteCandidates
-                };
-              }
-              return copy;
-            });
-
-            // ✅ STREAMING: Auto-scroll as content streams in
-            // Small delay to allow DOM to update
-            setTimeout(() => {
-              if (shouldAutoScroll && listRef.current) {
-                smartScrollToBottom();
-              }
-            }, 10);
-          }
-
-          // Handle invite suggestions
-          if (data.has_invite_suggestion) {
-            hasInviteSuggestion = true;
-            inviteCandidates = data.invite_candidates || [];
-          }
-
-        } catch (err) {
-          console.warn('JSON parse error:', err);
-        }
-      }
-    }
-
-    // ✅ STREAMING: Final update to ensure everything is set correctly
-    setChatHistory(prev => {
-      const copy = [...prev];
-      if (copy[aiIndex]) {
-        copy[aiIndex] = {
-          ...copy[aiIndex],
-          speaker: character,
-          text: fullReply,
-          has_invite_suggestion: hasInviteSuggestion,
-          invite_candidates: inviteCandidates
-        };
-      }
-      return copy;
-    });
-
-  } catch (err) {
-    if (err.name === 'AbortError') {
-      console.log('Chat request aborted');
-    } else {
-      reportError(err, {
-        action: 'chat_request',
-        character: character,
-        userMessage: userText?.substring(0, 50)
+    try {
+      const res = await fetch(`${process.env.REACT_APP_API_BASE_URL}/chat`, {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({ 
+          character, 
+          message: userText, 
+          thread_id: localThreadId.current 
+        }),
+        signal: controller.signal
       });
 
-      console.error('LLM error:', err);
+      if (!res.ok || !res.body) {
+        throw new Error(`Chat API failed: ${res.status} ${res.statusText}`);
+      }
+
+      const reader = res.body.getReader();
+      const decoder = new TextDecoder();
+      let fullReply = '';
+      let hasInviteSuggestion = false;
+      let inviteCandidates = [];
+
+      // ✅ STREAMING: Process each chunk immediately
+      while (true) {
+        const { done, value } = await reader.read();
+        if (done) break;
+
+        const chunk = decoder.decode(value);
+        const lines = chunk.trim().split('\n').filter(Boolean);
+
+        for (const line of lines) {
+          try {
+            const data = JSON.parse(line);
+            const token = data.response || '';
+
+            // ✅ STREAMING: Add each token immediately
+            if (token) {
+              fullReply += token;
+
+              // ✅ STREAMING: Update UI with each token (not just at the end)
+              setChatHistory(prev => {
+                const copy = [...prev];
+                if (copy[aiIndex]) {
+                  copy[aiIndex] = {
+                    ...copy[aiIndex],
+                    speaker: data.speaker || character,
+                    text: fullReply,
+                    has_invite_suggestion: hasInviteSuggestion,
+                    invite_candidates: inviteCandidates
+                  };
+                }
+                return copy;
+              });
+
+              // ✅ STREAMING: Auto-scroll as content streams in
+              setTimeout(() => {
+                if (shouldAutoScroll && listRef.current) {
+                  smartScrollToBottom();
+                }
+              }, 10);
+            }
+
+            // Handle invite suggestions
+            if (data.has_invite_suggestion) {
+              hasInviteSuggestion = true;
+              inviteCandidates = data.invite_candidates || [];
+            }
+
+          } catch (err) {
+            console.warn('JSON parse error:', err);
+          }
+        }
+      }
+
+      // ✅ STREAMING: Final update to ensure everything is set correctly
       setChatHistory(prev => {
         const copy = [...prev];
         if (copy[aiIndex]) {
-          copy[aiIndex] = { 
-            ...copy[aiIndex], 
-            error: getUserFriendlyError(err, 'general')
+          copy[aiIndex] = {
+            ...copy[aiIndex],
+            speaker: character,
+            text: fullReply,
+            has_invite_suggestion: hasInviteSuggestion,
+            invite_candidates: inviteCandidates
           };
         }
         return copy;
       });
+
+      // ✅ CRITICAL: REFRESH USAGE AFTER SUCCESSFUL MESSAGE COMPLETION
+      if (usageTracking.isCustomCharacter) {
+        console.log('🔄 Refreshing usage data after successful message to custom character:', character);
+        setTimeout(() => {
+          usageTracking.refreshUsage().then(success => {
+            if (success) {
+              console.log('✅ Usage data refreshed successfully');
+            } else {
+              console.warn('⚠️ Usage refresh failed or user reached limit');
+            }
+          });
+        }, 500);
+      }
+
+    } catch (err) {
+      if (err.name === 'AbortError') {
+        console.log('Chat request aborted');
+
+        // ✅ EVEN IF ABORTED, CHECK IF WE NEED TO REFRESH USAGE
+        if (usageTracking.isCustomCharacter) {
+          usageTracking.refreshUsage().then(success => {
+            if (success) {
+              console.log('✅ Usage data refreshed after abort');
+            }
+          });
+        }
+      } else {
+        reportError(err, {
+          action: 'chat_request',
+          character: character,
+          userMessage: userText?.substring(0, 50)
+        });
+
+        console.error('LLM error:', err);
+        setChatHistory(prev => {
+          const copy = [...prev];
+          if (copy[aiIndex]) {
+            copy[aiIndex] = { 
+              ...copy[aiIndex], 
+              error: getUserFriendlyError(err, 'general')
+            };
+          }
+          return copy;
+        });
+      }
+    } finally {
+      setIsSending(false);
+      controllerRef.current = null;
     }
-  } finally {
-    setIsSending(false);
-    controllerRef.current = null;
-  }
-};
+  };
   const sendMessage = () => {
     if (!message.trim() || isSending) return;
     const userText = message;
@@ -926,13 +916,9 @@ const sendAI = async (userText, aiIndex) => {
       { user: false, text: '', error: null, speaker: character }
     ]);
     //setTimeout(() => smartScrollToBottom(true), 50);
-    // ✅ USE ENHANCED HANDLER FOR CUSTOM CHARACTERS, REGULAR sendAI FOR STATIC
-    if (isCustomCharacter) {
-      sendMessageWithUsageHandling(userText, aiIndex, setChatHistory);
-    } else {
-      sendAI(userText, aiIndex); // Your existing function
-    }
+    sendAI(userText, aiIndex);
   };
+
   const stopStream = () => {
     controllerRef.current?.abort();
     controllerRef.current = null;
@@ -980,15 +966,6 @@ const sendAI = async (userText, aiIndex) => {
       className={`chat-panel-container ${breathingClasses} ${prestigeHubVisible ? 'with-prestige-hub' : ''}`}
       style={breathingStyles}
     >
-      {/* ✅ ADD USAGE WARNING BANNER (custom characters only) */}
-      {usageWarning && isCustomCharacter && (
-        <UsageWarningBanner 
-          warning={usageWarning}
-          onUpgrade={() => window.location.href = '/subscribe'}
-          onDismiss={() => resetUsageState()}
-        />
-      )}
-
       {/* ✅ INTEGRATED PRESTIGE HUB */}
         <PrestigeHub 
           current={character}
@@ -1050,6 +1027,20 @@ const sendAI = async (userText, aiIndex) => {
                 </div>
               )}
             </div>
+
+            {/* ✅ ADD HEADER USAGE INDICATOR */}
+            {usageTracking.isCustomCharacter && (
+              <div className="usage-header-container">
+                <HeaderUsageIndicator 
+                  usage={usageTracking.usage}
+                  isCustomCharacter={usageTracking.isCustomCharacter}
+                  onUpgradeClick={() => {
+                    // TODO: Open upgrade modal
+                    console.log('Upgrade clicked for:', character);
+                  }}
+                />
+              </div>
+            )}
             
             <div className="header-controls">
               <button onClick={onBack} className="back-button" title="Back">
@@ -1083,7 +1074,6 @@ const sendAI = async (userText, aiIndex) => {
                   retry,
                   character,
                   displayName,
-                  userCharacters,
                   userAvatar,
                   onInvite,
                   isSending,
@@ -1099,6 +1089,21 @@ const sendAI = async (userText, aiIndex) => {
         </div>
 
         <footer className="chat-input">
+          {/* ✅ ADD USAGE WARNING ABOVE INPUT */}
+          {usageTracking.showWarning && usageTracking.isCustomCharacter && (
+            <div className="usage-warning-container">
+              <ChatUsageIndicator 
+                usage={usageTracking.usage}
+                isCustomCharacter={usageTracking.isCustomCharacter}
+                showWarning={usageTracking.showWarning}
+                warningMessage={usageTracking.warningMessage}
+                onUpgradeClick={() => {
+                  // TODO: Open upgrade modal
+                  console.log('Upgrade from warning clicked for:', character);
+                }}
+              />
+            </div>
+          )}
           <InputArea
             value={message}
             onChange={e => setMessage(e.target.value)}
@@ -1107,16 +1112,7 @@ const sendAI = async (userText, aiIndex) => {
             isSending={isSending}
             onFocus={handleInputFocus}
             onBlur={handleInputBlur}
-            disabled={isBlocked}
           />
-          {/* ✅ BLOCKING OVERLAY FOR CUSTOM CHARACTERS */}
-          {isBlocked && isCustomCharacter && (
-            <BlockedInputOverlay
-              upgradeInfo={usageState?.upgradeInfo}
-              onUpgrade={() => window.location.href = '/subscribe'}
-              onBackToCharacters={() => window.location.href = '/'}
-            />
-          )}
         </footer>
 
         <div className="chat-footer-note">

@@ -1697,3 +1697,15 @@ body::before {
 .chat-panel-container.with-prestige-hub {
   margin-left: 280px;
 }
+.usage-header-container {
+  margin-left: auto;
+  margin-right: 15px;
+}
+
+.usage-warning-container {
+  margin-bottom: 10px;
+  padding: 10px;
+  border-radius: 8px;
+  background-color: #fff3cd;
+  border: 1px solid #ffeaa7;
+}
