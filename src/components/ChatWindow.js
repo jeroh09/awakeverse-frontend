@@ -476,94 +476,6 @@ export default function ChatWindow({
     return characterKey.replace(/_/g, ' ');
   }, []);
 
-  // ✅ ADD USAGE TEST STATES COMPONENT (after helper functions)
-  const UsageTestStates = () => {
-    const [testState, setTestState] = useState('unlimited');
-    
-    const mockUsage = {
-      unlimited: {
-        tier: 'unlimited', tier_display: 'Unlimited', 
-        message_limit: -1, messages_used: 0, unlimited: true
-      },
-      approaching: {
-        tier: 'free', tier_display: 'Free',
-        message_limit: 150, messages_used: 120, unlimited: false
-      },
-      warning: {
-        tier: 'free', tier_display: 'Free', 
-        message_limit: 150, messages_used: 140, unlimited: false
-      },
-      limit: {
-        tier: 'free', tier_display: 'Free',
-        message_limit: 150, messages_used: 150, unlimited: false
-      }
-    };
-
-    return (
-      <div style={{
-        position: 'fixed', top: '50px', right: '10px', 
-        background: '#000', color: 'white', padding: '1rem',
-        border: '1px solid #FFD700', borderRadius: '4px', zIndex: 9999,
-        fontSize: '0.8rem'
-      }}>
-        <h4 style={{ color: '#FFD700', margin: '0 0 0.5rem 0' }}>Usage Test States</h4>
-        <select 
-          onChange={(e) => setTestState(e.target.value)} 
-          value={testState}
-          style={{ 
-            background: '#333', color: 'white', 
-            border: '1px solid #FFD700', padding: '0.25rem'
-          }}
-        >
-          <option value="unlimited">Unlimited (Your Current)</option>
-          <option value="approaching">Approaching Limit (120/150)</option>
-          <option value="warning">At Warning (140/150)</option>
-          <option value="limit">At Limit (150/150)</option>
-        </select>
-        
-        <div style={{ marginTop: '0.5rem' }}>
-          <div style={{ fontSize: '0.7rem', color: '#FFD700' }}>Header Indicator:</div>
-          <HeaderUsageIndicator 
-            usage={mockUsage[testState]}
-            isCustomCharacter={true}
-            onUpgradeClick={() => alert('Header Upgrade!')}
-          />
-        </div>
-        
-        {(testState === 'warning' || testState === 'limit') && (
-          <div style={{ marginTop: '0.5rem' }}>
-            <div style={{ fontSize: '0.7rem', color: '#FFD700' }}>Warning Indicator:</div>
-            <ChatUsageIndicator 
-              usage={mockUsage[testState]}
-              isCustomCharacter={true}
-              showWarning={true}
-              warningMessage={
-                testState === 'limit' ? 'Monthly limit reached - upgrade to continue chatting' :
-                'Almost at your monthly limit - consider upgrading'
-              }
-              onUpgradeClick={() => alert('Warning Upgrade!')}
-            />
-          </div>
-        )}
-
-        {testState === 'limit' && (
-          <div style={{ marginTop: '0.5rem' }}>
-            <button 
-              onClick={() => setShowUpgradeFlow(true)}
-              style={{
-                background: '#ff6b6b', color: 'white',
-                border: 'none', padding: '0.5rem',
-                borderRadius: '4px', cursor: 'pointer'
-              }}
-            >
-              Test Upgrade Modal
-            </button>
-          </div>
-        )}
-      </div>
-    );
-  };
-
   // Initialize participants from session history
   useEffect(() => {
     if (session?.messages) {
@@ -1291,8 +1203,6 @@ export default function ChatWindow({
           </div>
         </div>
       )}
-       {/* ✅ USAGE TEST COMPONENT (added here) */}
-       {usageTracking.isCustomCharacter && <UsageTestStates />}
     </div>
   );
 }
