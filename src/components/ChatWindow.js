@@ -17,6 +17,7 @@ import { useSmartScroll } from '../hooks/useSmartScroll';
 import FloatingScrollButton from './FloatingScrollButton';
 import useUsageTracking from '../hooks/useUsageTracking';
 import { HeaderUsageIndicator, ChatUsageIndicator } from '../components/UsageIndicator';
+import usePremiumCharacters from '../hooks/usePremiumCharacters';
 import '../styles.css';
 import '../style/InviteStyles.css';
 
@@ -51,6 +52,7 @@ const ChatItem = memo(({ index, style, data }) => {
   } = data;
 
   const msg = chatHistory[index];
+  
 
   // Invite Suggestion Candidates
   const inviteCandidates = (!msg.user && msg.has_invite_suggestion)
@@ -282,6 +284,7 @@ export default function ChatWindow({
   const { user } = useUser();
   const socket = useSocket();
   const isMobile = useMediaQuery(600);
+  const { userCharacters } = usePremiumCharacters();
 
   const localThreadId = useRef(threadId);
   const { sendConversationMessage } = useConversation();
