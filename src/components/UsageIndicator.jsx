@@ -195,8 +195,6 @@ const ChatUsageIndicator = ({
   );
 };
 
-// Single export statement
-export { HeaderUsageIndicator, ChatUsageIndicator };
 
 // Named exports for better import clarity
 export { HeaderUsageIndicator, ChatUsageIndicator };

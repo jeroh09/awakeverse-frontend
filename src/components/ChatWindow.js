@@ -18,7 +18,7 @@ import FloatingScrollButton from './FloatingScrollButton';
 import usePremiumCharacters from '../hooks/usePremiumCharacters';
 import '../styles.css';
 import useUsageTracking from '../hooks/useUsageTracking';
-import UsageIndicator, { HeaderUsageIndicator } from './UsageIndicator';
+import { HeaderUsageIndicator } from './UsageIndicator';
 
 
 function useMediaQuery(maxWidth) {
