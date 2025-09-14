@@ -17,8 +17,9 @@ import { useSmartScroll } from '../hooks/useSmartScroll';
 import FloatingScrollButton from './FloatingScrollButton';
 import usePremiumCharacters from '../hooks/usePremiumCharacters';
 import '../styles.css';
-import { useUsageHandler } from '../hooks/useUsageHandler';
-import { UsageWarningBanner, BlockedInputOverlay } from '../components/UsageComponents';
+import useUsageTracking from '../hooks/useUsageTracking';
+import UsageIndicator, { HeaderUsageIndicator } from './components/UsageIndicator';
+
 
 function useMediaQuery(maxWidth) {
   const query = `(max-width: ${maxWidth}px)`;
@@ -71,6 +72,10 @@ const ChatItem = memo(({ index, style, data }) => {
   const isEditing = index === editingIndex;
   const rowRef = useRef(null);
   const editRef = useRef(null);
+  const testUsage = useUsageTracking(character);
+  console.log('Usage test:', testUsage); // This will show in Vercel function logs
+  
+
 
   // Track disabled invite buttons
   const [usedInvitees, setUsedInvitees] = useState(() => {

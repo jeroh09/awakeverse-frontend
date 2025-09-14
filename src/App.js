@@ -20,6 +20,7 @@ import AIDisclaimer from './pages/AIDisclaimer';       // 🆕 Added
 import ContractorAgreements from './pages/ContractorAgreements'; // 🆕 Added
 import ProtectedRoute  from './components/ProtectedRoute';
 import MinimalUsageTest from './components/MinimalUsageTest';
+import TestUsageComponents from './components/TestUsageComponents';
 
 
 
@@ -91,6 +92,8 @@ export default function App() {
       <Route path="/ai-disclaimer" element={<AIDisclaimer />} />
       <Route path="/contractor-agreements" element={<ContractorAgreements />} />
       <Route path="/minimal-test" element={<MinimalUsageTest />} />
+      <Route path="/test-usage" element={<TestUsageComponents />} />
+
       
 
       {/* Main app (protected) */}

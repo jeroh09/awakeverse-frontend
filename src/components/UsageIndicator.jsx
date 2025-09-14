@@ -195,4 +195,6 @@ export const ChatUsageIndicator = ({
   );
 };
 
+// Named exports for better import clarity
+export { HeaderUsageIndicator, ChatUsageIndicator };
 export default UsageIndicator;
