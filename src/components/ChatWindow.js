@@ -296,7 +296,7 @@ export default function ChatWindow({
     resetUsageState,
     isCustomCharacter,
     usageState
-  } = useUsageHandler(character);
+  } = useUsageTracking(character);
 
   const localThreadId = useRef(threadId);
   const { sendConversationMessage } = useConversation();
