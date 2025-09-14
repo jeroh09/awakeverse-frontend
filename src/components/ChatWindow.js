@@ -1193,6 +1193,7 @@ export default function ChatWindow({
                   onInvite,
                   isSending,
                   participants,
+                  userCharacters,
                   userId: user?.id
                 }}
                 overscanCount={3}
