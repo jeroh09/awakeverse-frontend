@@ -112,15 +112,32 @@ const ChatItem = memo(({ index, style, data }) => {
     : `/images/${msg.speaker || character}.jpg`;
 
   // Character label fallback
+    // Character label fallback - FIXED to handle custom characters
   const getCharacterInfo = (characterKey) => {
-    const char = CHARACTERS[characterKey];
-    if (!char) {
-      console.warn(`Character "${characterKey}" not found in CHARACTERS`);
-      return {
-        display_name: characterKey?.replace(/_/g, ' ') || 'Unknown'
-      };
+    // First, check static characters
+    const staticChar = CHARACTERS[characterKey];
+    if (staticChar) {
+      return staticChar;
     }
-    return char;
+
+    // Then check custom characters from userCharacters
+    if (data.userCharacters && Array.isArray(data.userCharacters)) {
+      const customChar = data.userCharacters.find(char => 
+        char && char.character_key === characterKey && char.status === 'approved'
+      );
+      if (customChar) {
+        return {
+          display_name: customChar.display_name,
+          thumbnailUrl: `/images/${customChar.character_key}.jpg`
+        };
+      }
+    }
+
+    // Fallback for unknown characters
+    console.warn(`Character "${characterKey}" not found in static or custom characters`);
+    return {
+      display_name: characterKey?.replace(/_/g, ' ') || 'Unknown'
+    };
   };
 
   const characterInfo = msg.user 
