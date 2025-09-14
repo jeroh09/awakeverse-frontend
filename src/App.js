@@ -19,7 +19,7 @@ import SecurityPolicy from './pages/SecurityPolicy';   // 🆕 Added
 import AIDisclaimer from './pages/AIDisclaimer';       // 🆕 Added
 import ContractorAgreements from './pages/ContractorAgreements'; // 🆕 Added
 import ProtectedRoute  from './components/ProtectedRoute';
-import DiagnosticComponent from './components/DiagnosticComponent';
+import MinimalUsageTest from './components/MinimalUsageTest';
 
 
 
@@ -90,7 +90,7 @@ export default function App() {
       <Route path="/security" element={<SecurityPolicy />} />
       <Route path="/ai-disclaimer" element={<AIDisclaimer />} />
       <Route path="/contractor-agreements" element={<ContractorAgreements />} />
-      <Route path="/diagnostic" element={<DiagnosticComponent />} />
+      <Route path="/minimal-test" element={<MinimalUsageTest />} />
       
 
       {/* Main app (protected) */}
