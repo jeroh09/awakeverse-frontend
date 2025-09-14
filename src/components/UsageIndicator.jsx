@@ -163,7 +163,7 @@ const UsageIndicator = ({
 };
 
 // Compact version for header use
-export const HeaderUsageIndicator = ({ usage, isCustomCharacter, onUpgradeClick }) => {
+const HeaderUsageIndicator = ({ usage, isCustomCharacter, onUpgradeClick }) => {
   return (
     <UsageIndicator 
       usage={usage}
@@ -176,7 +176,7 @@ export const HeaderUsageIndicator = ({ usage, isCustomCharacter, onUpgradeClick 
 };
 
 // Full version for chat input area
-export const ChatUsageIndicator = ({ 
+const ChatUsageIndicator = ({ 
   usage, 
   isCustomCharacter, 
   showWarning, 
@@ -194,6 +194,9 @@ export const ChatUsageIndicator = ({
     />
   );
 };
+
+// Single export statement
+export { HeaderUsageIndicator, ChatUsageIndicator };
 
 // Named exports for better import clarity
 export { HeaderUsageIndicator, ChatUsageIndicator };
