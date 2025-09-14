@@ -271,6 +271,7 @@ export default function ChatWindow({
   const userAvatar = avatarUrl || user?.avatarUrl;
   const [newMessageCount, setNewMessageCount] = useState(0);
   const usageTracking = useUsageTracking(character);
+  const [showUpgradeFlow, setShowUpgradeFlow] = useState(false);
 
   
   // ✅ USER-FRIENDLY ERROR HANDLING SYSTEM
@@ -905,6 +906,13 @@ export default function ChatWindow({
     }
   };
   const sendMessage = () => {
+    // ✅ CRITICAL: Check usage limits for custom characters
+    if (usageTracking.isCustomCharacter && !usageTracking.canSendMessage) {
+      // Block the message and show upgrade flow
+      setShowUpgradeFlow(true);
+      return;
+    }
+    
     if (!message.trim() || isSending) return;
     const userText = message;
     setMessage('');
@@ -915,7 +923,6 @@ export default function ChatWindow({
       { user: true, text: userText, error: null },
       { user: false, text: '', error: null, speaker: character }
     ]);
-    //setTimeout(() => smartScrollToBottom(true), 50);
     sendAI(userText, aiIndex);
   };
 
@@ -1129,6 +1136,52 @@ export default function ChatWindow({
         position="bottom-right"
         isMobile={isMobile}
       />
+      {/* ✅ ADD UPGRADE FLOW MODAL - PLACE RIGHT BEFORE THE CLOSING DIV */}
+      {showUpgradeFlow && (
+        <div className="upgrade-flow-overlay">
+          <div className="upgrade-flow-modal">
+            <h3>You've reached your message limit</h3>
+            <p>You've used all {usageTracking.usage.message_limit} messages for this month with custom characters.</p>
+            
+            <div className="upgrade-options">
+              <div className="current-plan">
+                <h4>Current: {usageTracking.usage.tier_display}</h4>
+                <p>{usageTracking.usage.message_limit} messages/month</p>
+              </div>
+              
+              <div className="suggested-plan">
+                {usageTracking.getUpgradeSuggestion() && (
+                  <>
+                    <h4>Upgrade to {usageTracking.getUpgradeSuggestion().suggestedTier}</h4>
+                    <p>{usageTracking.getUpgradeSuggestion().suggestedLimit}</p>
+                    <p className="price">{usageTracking.getUpgradeSuggestion().suggestedPrice}/month</p>
+                  </>
+                )}
+              </div>
+            </div>
+            
+            <div className="upgrade-actions">
+              <button 
+                className="upgrade-button primary"
+                onClick={() => {
+                  // TODO: Open subscription modal/redirect to billing
+                  console.log('Redirect to upgrade flow');
+                  setShowUpgradeFlow(false);
+                }}
+              >
+                Upgrade Now
+              </button>
+              
+              <button 
+                className="upgrade-button secondary"
+                onClick={() => setShowUpgradeFlow(false)}
+              >
+                Continue with Existing Characters
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
