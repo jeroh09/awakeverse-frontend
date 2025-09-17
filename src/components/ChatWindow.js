@@ -16,9 +16,9 @@ import PrestigeHub from './PrestigeHub/PrestigeHub';
 import { useSmartScroll } from '../hooks/useSmartScroll';
 import FloatingScrollButton from './FloatingScrollButton';
 import useUsageTracking from '../hooks/useUsageTracking';
-import SoftUsageReminder from '../components/SoftUsageReminder';
 import { HeaderUsageIndicator, ChatUsageIndicator } from '../components/UsageIndicator';
 import usePremiumCharacters from '../hooks/usePremiumCharacters';
+import MinimalUsageTest from './MinimalUsageTest';
 import '../styles.css';
 import '../style/InviteStyles.css';
 
@@ -990,7 +990,6 @@ export default function ChatWindow({
             }
           });
         }
-        
       } else {
         reportError(err, {
           action: 'chat_request',
@@ -1015,10 +1014,6 @@ export default function ChatWindow({
       controllerRef.current = null;
     }
   };
-  // Upgrade click handler      
-  const handleUpgradeClick = (reminderData) => {
-  console.log('Upgrade clicked:', reminderData);
-
   const sendMessage = () => {
     // ✅ CRITICAL: Check usage limits for custom characters
     if (usageTracking.isCustomCharacter && !usageTracking.canSendMessage) {
@@ -1038,7 +1033,6 @@ export default function ChatWindow({
       { user: false, text: '', error: null, speaker: character }
     ]);
     sendAI(userText, aiIndex);
-    };
   };
 
   const stopStream = () => {
@@ -1212,18 +1206,6 @@ export default function ChatWindow({
         </div>
 
         <footer className="chat-input">
-          {/* Add soft reminder above input for custom characters */}
-          {usageTracking.showSoftReminder && (
-            <SoftUsageReminder
-              softReminder={usageTracking.softReminder}
-              onUpgradeClick={handleUpgradeClick}
-              style={{
-              // Ensure it connects seamlessly with input area
-                marginBottom: 0,
-                borderRadius: '8px 8px 0 0'
-              }}
-            />
-          )}
           {/* ✅ ADD USAGE WARNING ABOVE INPUT */}
           {usageTracking.showWarning && usageTracking.isCustomCharacter && (
             <div className="usage-warning-container">
@@ -1247,13 +1229,6 @@ export default function ChatWindow({
             isSending={isSending}
             onFocus={handleInputFocus}
             onBlur={handleInputBlur}
-            style={{
-            // If soft reminder is showing, remove top border radius
-            ...(usageTracking.showSoftReminder && {
-              borderTopLeftRadius: 0,
-              borderTopRightRadius: 0
-            })
-          }}
           />
         </footer>
 
@@ -1271,6 +1246,7 @@ export default function ChatWindow({
         position="bottom-right"
         isMobile={isMobile}
       />
+      <MinimalUsageTest character={character} />
       {/* ✅ ADD UPGRADE FLOW MODAL - PLACE RIGHT BEFORE THE CLOSING DIV */}
       {showUpgradeFlow && (
         <div className="upgrade-flow-overlay">
