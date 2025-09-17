@@ -1,217 +1,266 @@
-// hooks/useUsageTracking.js - Track usage for custom characters only
-import { useState, useEffect, useCallback } from 'react';
+// src/hooks/useUsageTracking.js - Enhanced with defensive patterns and soft messaging
+import { useState, useEffect, useCallback, useRef } from 'react';
 import { useAuth } from '../contexts/AuthContext';
 import { useUser } from '../contexts/UserContext';
 
-const useUsageTracking = (characterKey) => {
+const API_BASE = process.env.REACT_APP_API_URL || 'http://localhost:5000';
+
+/**
+ * Enhanced usage tracking hook following PDF defensive-first patterns
+ * - Backend counting, frontend soft reminders only
+ * - Character-scoped isolation 
+ * - Defensive fallbacks always
+ * - Never blocks chat experience
+ */
+const useUsageTracking = (character) => {
   const { token } = useAuth();
   const { user } = useUser();
   
-  // State for usage tracking
-  const [usage, setUsage] = useState({
-    messages_used: 0,
-    message_limit: 150,
-    tier: 'free',
-    tier_display: 'Free',
-    subscription_active: false,
-    unlimited: false,
-    loading: true,
-    error: null
-  });
-
-  // Friendly enforcement states
-  const [showWarning, setShowWarning] = useState(false);
-  const [warningMessage, setWarningMessage] = useState('');
-
-  // Only track custom characters (user_xxx format)
-  const isCustomCharacter = characterKey?.startsWith('user_');
-
-  // Fetch usage data from backend
+  // Core usage state
+  const [usage, setUsage] = useState(null);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState(null);
+  
+  // Cache and performance
+  const cacheRef = useRef(new Map());
+  const lastFetchRef = useRef(0);
+  const CACHE_DURATION = 30000; // 30 seconds
+  
+  // Character classification following your patterns
+  const isCustomCharacter = character && character.startsWith('user_');
+  
+  // Defensive data fetching with caching
   const fetchUsageData = useCallback(async () => {
-    // Skip tracking for static characters
-    if (!isCustomCharacter || !user?.id || !token) {
-      setUsage(prev => ({
-        ...prev,
-        loading: false,
-        unlimited: true, // Static characters are unlimited
-        error: null
-      }));
+    if (!isCustomCharacter || !token || !user?.id) {
       return;
     }
-
+    
+    // Check cache first
+    const cacheKey = `${user.id}_${character}`;
+    const cached = cacheRef.current.get(cacheKey);
+    const now = Date.now();
+    
+    if (cached && (now - cached.timestamp) < CACHE_DURATION) {
+      setUsage(cached.data);
+      return;
+    }
+    
+    // Rate limiting - don't fetch too frequently
+    if (now - lastFetchRef.current < 5000) {
+      return;
+    }
+    
+    setLoading(true);
+    setError(null);
+    lastFetchRef.current = now;
+    
     try {
-      setUsage(prev => ({ ...prev, loading: true, error: null }));
-
-      const API_BASE = process.env.REACT_APP_API_URL || 'http://localhost:5000';
-      const response = await fetch(`${API_BASE}/api/premium/subscription/${user.id}/status`, {
+      // Fetch from your existing subscription endpoint
+      const response = await fetch(`${API_BASE}/api/premium/user_subscription/${user.id}`, {
         method: 'GET',
         headers: {
           'Authorization': `Bearer ${token}`,
           'Content-Type': 'application/json'
-        }
+        },
+        signal: AbortSignal.timeout(10000) // 10s timeout
       });
-
-      if (response.ok) {
-        const data = await response.json();
-        const subscription = data.subscription;
-
-        const newUsage = {
-          messages_used: subscription.total_usage_this_month || 0,
-          message_limit: subscription.message_limit,
-          tier: subscription.tier,
-          tier_display: subscription.tier_display,
-          subscription_active: subscription.subscription_active,
-          unlimited: subscription.message_limit === -1,
-          loading: false,
-          error: null
-        };
-
-        setUsage(newUsage);
-
-        // Calculate friendly enforcement messages
-        calculateWarningState(newUsage);
-
-      } else {
-        // Defensive fallback
-        setUsage({
-          messages_used: 0,
-          message_limit: 150,
-          tier: 'free',
-          tier_display: 'Free',
-          subscription_active: false,
-          unlimited: false,
-          loading: false,
-          error: 'usage_fetch_failed'
-        });
+      
+      if (!response.ok) {
+        throw new Error(`HTTP ${response.status}: ${response.statusText}`);
       }
-
+      
+      const result = await response.json();
+      
+      if (result.status === 'success' && result.subscription) {
+        const subscriptionData = result.subscription;
+        
+        // Cache the result
+        cacheRef.current.set(cacheKey, {
+          data: subscriptionData,
+          timestamp: now
+        });
+        
+        setUsage(subscriptionData);
+        
+        console.log('Usage data refreshed for', character, subscriptionData);
+      } else {
+        throw new Error(result.error || 'Invalid subscription data');
+      }
+      
     } catch (error) {
-      console.warn('Usage tracking failed (non-critical):', error);
-      // Defensive fallback - never block functionality
-      setUsage({
-        messages_used: 0,
-        message_limit: 150,
-        tier: 'free',
-        tier_display: 'Free',
-        subscription_active: false,
-        unlimited: false,
-        loading: false,
-        error: 'usage_service_unavailable'
-      });
+      console.warn('Usage fetch failed (using fallback):', error);
+      setError(error.message);
+      
+      // Defensive fallback - always works
+      const fallbackUsage = getFallbackUsageData();
+      setUsage(fallbackUsage);
+    } finally {
+      setLoading(false);
     }
-  }, [isCustomCharacter, user?.id, token]);
-
-  // Calculate friendly warning states (no countdown, just friendly messages)
-  const calculateWarningState = useCallback((usageData) => {
-    if (usageData.unlimited || !isCustomCharacter) {
-      setShowWarning(false);
-      setWarningMessage('');
-      return;
-    }
-
-    const { messages_used, message_limit } = usageData;
-    const percentage = (messages_used / message_limit) * 100;
-
-    if (percentage >= 100) {
-      setShowWarning(true);
-      setWarningMessage('Monthly limit reached - upgrade to continue chatting');
-    } else if (percentage >= 90) {
-      setShowWarning(true);
-      setWarningMessage('Almost at your monthly limit - consider upgrading');
-    } else if (percentage >= 75) {
-      setShowWarning(true);
-      setWarningMessage('You\'re using most of your monthly messages');
-    } else {
-      setShowWarning(false);
-      setWarningMessage('');
-    }
-  }, [isCustomCharacter]);
-
-  // Load usage data on mount and character change
+  }, [isCustomCharacter, character, token, user?.id]);
+  
+  // Defensive fallback data matching your backend patterns
+  const getFallbackUsageData = useCallback(() => {
+    return {
+      tier: 'free',
+      tier_display: 'Free',
+      message_limit: 150,
+      messages_used: 0,
+      messages_remaining: 150,
+      unlimited: false,
+      can_send_message: true,
+      data_source: 'fallback'
+    };
+  }, []);
+  
+  // Auto-refresh usage data when character changes
   useEffect(() => {
-    fetchUsageData();
-  }, [fetchUsageData]);
-
-  // Refresh usage data (call after sending messages)
-  const refreshUsage = useCallback(() => {
     if (isCustomCharacter) {
       fetchUsageData();
+    } else {
+      // Clear usage data for non-custom characters
+      setUsage(null);
+      setError(null);
     }
-  }, [fetchUsageData, isCustomCharacter]);
-
-  // Get display text for usage indicator
-  const getUsageDisplayText = useCallback(() => {
-    if (!isCustomCharacter) {
-      return null; // No display for static characters
-    }
-
-    if (usage.loading) {
-      return 'Loading...';
-    }
-
-    if (usage.unlimited) {
-      return 'Unlimited';
-    }
-
-    return `${usage.messages_used}/${usage.message_limit} messages`;
-  }, [isCustomCharacter, usage]);
-
-  // Check if user can send messages
-  const canSendMessage = !isCustomCharacter || usage.unlimited || usage.messages_used < usage.message_limit;
-
-  // Get upgrade suggestion based on current tier
-  const getUpgradeSuggestion = useCallback(() => {
-    if (!isCustomCharacter || usage.unlimited) {
+  }, [isCustomCharacter, fetchUsageData]);
+  
+  // Soft reminder logic - contextual messaging
+  const getSoftReminder = useCallback(() => {
+    if (!isCustomCharacter || !usage) {
       return null;
     }
-
-    switch (usage.tier) {
-      case 'free':
-        return {
-          suggestedTier: 'starter',
-          suggestedPrice: '$9.99',
-          suggestedLimit: '500 messages/month'
-        };
-      case 'starter':
-        return {
-          suggestedTier: 'pro',
-          suggestedPrice: '$19.99',
-          suggestedLimit: '2000 messages/month'
-        };
-      case 'pro':
-        return {
-          suggestedTier: 'unlimited',
-          suggestedPrice: '$49.99',
-          suggestedLimit: 'unlimited messages'
-        };
-      default:
-        return null;
+    
+    if (usage.unlimited) {
+      return null; // No reminders for unlimited users
     }
-  }, [isCustomCharacter, usage.tier, usage.unlimited]);
-
+    
+    const { messages_used, message_limit, can_send_message } = usage;
+    const usagePercent = message_limit > 0 ? (messages_used / message_limit) * 100 : 0;
+    
+    // Limit reached
+    if (!can_send_message || messages_used >= message_limit) {
+      return {
+        type: 'limit_reached',
+        message: 'Message limit reached',
+        actionText: 'See upgrade plans',
+        severity: 'high'
+      };
+    }
+    
+    // Close to limit (90%+)
+    if (usagePercent >= 90) {
+      return {
+        type: 'very_close',
+        message: 'Almost at your limit',
+        actionText: 'Upgrade to Pro',
+        severity: 'medium'
+      };
+    }
+    
+    // Approaching limit (80%+)
+    if (usagePercent >= 80) {
+      return {
+        type: 'approaching',
+        message: 'Close to your limit',
+        actionText: 'Upgrade to continue',
+        severity: 'low'
+      };
+    }
+    
+    return null;
+  }, [isCustomCharacter, usage]);
+  
+  // Manual refresh function for post-message updates
+  const refreshUsage = useCallback(async () => {
+    if (!isCustomCharacter) {
+      return true;
+    }
+    
+    // Clear cache to force fresh fetch
+    const cacheKey = `${user?.id}_${character}`;
+    cacheRef.current.delete(cacheKey);
+    
+    try {
+      await fetchUsageData();
+      return true;
+    } catch (error) {
+      console.error('Manual usage refresh failed:', error);
+      return false;
+    }
+  }, [isCustomCharacter, character, user?.id, fetchUsageData]);
+  
+  // Upgrade suggestion logic
+  const getUpgradeSuggestion = useCallback(() => {
+    if (!usage || usage.unlimited) {
+      return null;
+    }
+    
+    const currentTier = usage.tier;
+    
+    // Upgrade path suggestions
+    const upgradePaths = {
+      'free': {
+        suggestedTier: 'Starter',
+        suggestedLimit: '500 messages/month',
+        suggestedPrice: '$9.99'
+      },
+      'starter': {
+        suggestedTier: 'Pro', 
+        suggestedLimit: '2,000 messages/month',
+        suggestedPrice: '$19.99'
+      },
+      'pro': {
+        suggestedTier: 'Unlimited',
+        suggestedLimit: 'Unlimited messages',
+        suggestedPrice: '$29.99'
+      }
+    };
+    
+    return upgradePaths[currentTier] || null;
+  }, [usage]);
+  
+  // Check if user can send messages (for chat input state)
+  const canSendMessage = usage?.can_send_message ?? true;
+  
+  // Show warning state for UI components
+  const showWarning = !canSendMessage || getSoftReminder()?.severity === 'high';
+  
+  // Warning message for UI display
+  const warningMessage = getSoftReminder()?.message || null;
+  
   return {
-    // Usage data
+    // Core usage data
     usage,
     isCustomCharacter,
     canSendMessage,
     
-    // Display helpers
-    getUsageDisplayText,
-    getUpgradeSuggestion,
-    
-    // Warning states (friendly, non-blocking)
+    // UI state helpers
+    showSoftReminder: getSoftReminder() !== null,
+    softReminder: getSoftReminder(),
     showWarning,
     warningMessage,
     
+    // Loading states
+    loading,
+    error,
+    
     // Actions
     refreshUsage,
+    getUpgradeSuggestion,
     
-    // States for UI
-    isLoading: usage.loading,
-    hasError: !!usage.error,
-    isUnlimited: usage.unlimited,
-    isAtLimit: usage.messages_used >= usage.message_limit && !usage.unlimited,
-    needsUpgrade: (usage.messages_used / usage.message_limit) >= 0.9 && !usage.unlimited
+    // Compatibility with existing components (if needed)
+    messages_used: usage?.messages_used || 0,
+    message_limit: usage?.message_limit || 150,
+    unlimited: usage?.unlimited || false,
+    
+    // Debug info (development only)
+    ...(process.env.NODE_ENV === 'development' && {
+      debug: {
+        cacheSize: cacheRef.current.size,
+        lastFetch: lastFetchRef.current,
+        fallbackActive: usage?.data_source === 'fallback'
+      }
+    })
   };
 };
 
