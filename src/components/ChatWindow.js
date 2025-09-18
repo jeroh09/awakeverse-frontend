@@ -1289,6 +1289,12 @@ export default function ChatWindow({
               >
                 Continue with Existing Characters
               </button>
+                            // In ChatWindow.js, add this button temporarily:
+              <button onClick={async () => {
+                const service = await import('../services/SubscriptionService');
+                const tests = await service.default.runIntegrationTests(user.id);
+                console.table(tests);
+              }}>Test Subscription Integration</button>
             </div>
           </div>
         </div>
