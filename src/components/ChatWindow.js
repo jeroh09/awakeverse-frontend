@@ -19,6 +19,7 @@ import useUsageTracking from '../hooks/useUsageTracking';
 import { HeaderUsageIndicator, ChatUsageIndicator } from '../components/UsageIndicator';
 import usePremiumCharacters from '../hooks/usePremiumCharacters';
 import MinimalUsageTest from './MinimalUsageTest';
+import DefensiveChatInputWrapper from './DefensiveChatInputWrapper';
 import '../styles.css';
 import '../style/InviteStyles.css';
 
@@ -1221,17 +1222,26 @@ export default function ChatWindow({
               />
             </div>
           )}
-          <InputArea
-            value={message}
-            onChange={e => setMessage(e.target.value)}
-            onSend={isSending ? stopStream : sendMessage}
-            onStop={stopStream}
-            isSending={isSending}
-            onFocus={handleInputFocus}
-            onBlur={handleInputBlur}
-          />
+                  {/* WRAP InputArea with defensive wrapper */}
+          <DefensiveChatInputWrapper
+            character={character}
+            user_id={user?.id}
+            onUpgradePrompt={() => {
+              // Handle upgrade prompt - you can use existing upgrade flow
+              setShowUpgradeFlow(true);
+            }}
+          >
+            <InputArea
+              value={message}
+              onChange={e => setMessage(e.target.value)}
+              onSend={isSending ? stopStream : sendMessage}
+              onStop={stopStream}
+              isSending={isSending}
+              onFocus={handleInputFocus}
+              onBlur={handleInputBlur}
+            />
+          </DefensiveChatInputWrapper>
         </footer>
-
         <div className="chat-footer-note">
           AI-generated characters, for reference only
         </div>

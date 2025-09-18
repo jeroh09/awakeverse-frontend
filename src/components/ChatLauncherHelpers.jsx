@@ -1,7 +1,7 @@
 // src/components/ChatLauncherHelpers.jsx
 // Helper components for ChatLauncherPage (decentralized: NO status modal here)
 import React from 'react';
-
+import DefensiveCharacterCreationWrapper from './DefensiveCharacterCreationWrapper';
 /* ------------------------------ Assets Map ------------------------------ */
 export const categoryRepresentatives = {
   sleuths: '/images/sherlock.jpg',
@@ -496,7 +496,8 @@ export const MyCharactersPanel = ({
   charactersError,
   onCreateCharacter,
   onCharacterSelect,       // (characterLite) => void
-  isMobile
+  isMobile,
+  user_id
 }) => {
   const approvedCharacters = userCharacters.filter(c => c.status === 'approved');
   const pendingCharacters  = userCharacters.filter(c => c.status === 'pending');
@@ -602,6 +603,12 @@ export const MyCharactersPanel = ({
             </p>
           </div>
 
+          <DefensiveCharacterCreationWrapper 
+          user_id={user_id}
+          onUpgradePrompt={() => {
+            window.location.href = '/subscribe';
+          }}
+        >
           <button
             onClick={onCreateCharacter}
             style={{
@@ -632,6 +639,7 @@ export const MyCharactersPanel = ({
           >
             Start Creating
           </button>
+        </DefensiveCharacterCreationWrapper>
         </div>
       </div>
     );
@@ -722,6 +730,12 @@ export const MyCharactersPanel = ({
       </div>
 
       <div style={{ textAlign: 'center' }}>
+        <DefensiveCharacterCreationWrapper 
+          user_id={user_id}
+          onUpgradePrompt={() => {
+            window.location.href = '/subscribe';
+          }}
+        >
         <button
           onClick={onCreateCharacter}
           style={{
@@ -751,6 +765,7 @@ export const MyCharactersPanel = ({
         >
           Create New Character
         </button>
+      </DefensiveCharacterCreationWrapper>
       </div>
     </div>
   );

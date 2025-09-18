@@ -701,6 +701,7 @@ const ChatLauncherPage = ({ onStartChat }) => {
                 onCreateCharacter={handleCreateCharacterClick}
                 onCharacterSelect={handleCharacterSelect}
                 isMobile={true}
+                user_id={user?.id} // ADD THIS LINE
               />
             ) : (
               <div style={{
@@ -1051,6 +1052,7 @@ const ChatLauncherPage = ({ onStartChat }) => {
                   onCreateCharacter={handleCreateCharacterClick}
                   onCharacterSelect={handleCharacterSelect}
                   isMobile={false}
+                  user_id={user?.id}
                 />
               ) : (
                 <div style={{
