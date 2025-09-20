@@ -24,7 +24,7 @@ const SUBSCRIPTION_TIERS = {
   unlimited: {
     name: 'unlimited',
     display_name: 'Unlimited', 
-    price: 29.99,
+    price: 49.99,
     character_limit: -1,
     message_limit: -1,
     features: ['Unlimited Characters', 'Unlimited Messages', 'All Features', 'VIP Support']

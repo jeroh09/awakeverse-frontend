@@ -4,9 +4,9 @@ import { useAuth } from '../contexts/AuthContext';
 import { useUser } from '../contexts/UserContext';
 
 // Shared payment processor for both paths
-import PaymentProcessor from '../componenets/PaymentProcessor';
+import PaymentProcessor from '../components/PaymentProcessor';
 
-// Educational Character Creation Flow
+// Educational Character Creaion modal Flow
 const EducationalUpgradeModal = ({ 
   isOpen, 
   onClose, 
