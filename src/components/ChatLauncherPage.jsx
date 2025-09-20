@@ -154,6 +154,16 @@ const ChatLauncherPage = ({ onStartChat }) => {
   const [upgradeModalOpen, setUpgradeModalOpen] = useState(false);
   const [upgradeReason, setUpgradeReason] = useState('general');
 
+  const handleShowUpgradeModal = useCallback((reason = 'general') => {
+    setUpgradeReason(reason);
+    setUpgradeModalOpen(true);
+  }, []);
+
+  const handleCloseUpgradeModal = useCallback(() => {
+    setUpgradeModalOpen(false);
+    setUpgradeReason('general');
+  }, []);
+
   // Mobile detection
   useEffect(() => {
     const checkMobile = () => setIsMobile(window.innerWidth <= 768);
@@ -301,16 +311,6 @@ const ChatLauncherPage = ({ onStartChat }) => {
         return;
       }
     }
-
-  const handleShowUpgradeModal = useCallback((reason = 'general') => {
-    setUpgradeReason(reason);
-    setUpgradeModalOpen(true);
-  }, []);
-
-  const handleCloseUpgradeModal = useCallback(() => {
-    setUpgradeModalOpen(false);
-    setUpgradeReason('general');
-  }, []);
     
     // Allow chat for approved custom characters and all existing characters
     trackInteraction(character.key);
