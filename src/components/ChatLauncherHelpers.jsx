@@ -2,6 +2,7 @@
 // Helper components for ChatLauncherPage (decentralized: NO status modal here)
 import React from 'react';
 import DefensiveCharacterCreationWrapper from './DefensiveCharacterCreationWrapper';
+
 /* ------------------------------ Assets Map ------------------------------ */
 export const categoryRepresentatives = {
   sleuths: '/images/sherlock.jpg',
@@ -497,7 +498,8 @@ export const MyCharactersPanel = ({
   onCreateCharacter,
   onCharacterSelect,       // (characterLite) => void
   isMobile,
-  user_id
+  user_id,
+  onShowUpgradeModal
 }) => {
   const approvedCharacters = userCharacters.filter(c => c.status === 'approved');
   const pendingCharacters  = userCharacters.filter(c => c.status === 'pending');
@@ -604,11 +606,12 @@ export const MyCharactersPanel = ({
           </div>
 
           <DefensiveCharacterCreationWrapper 
-          user_id={user_id}
-          onUpgradePrompt={() => {
-            window.location.href = '/subscribe';
-          }}
-        >
+            user_id={user_id}
+            onUpgradePrompt={() => {
+              onShowUpgradeModal('character_limit');
+            }}
+            
+          >
           <button
             onClick={onCreateCharacter}
             style={{
@@ -733,7 +736,7 @@ export const MyCharactersPanel = ({
         <DefensiveCharacterCreationWrapper 
           user_id={user_id}
           onUpgradePrompt={() => {
-            window.location.href = '/subscribe';
+            onShowUpgradeModal('character_limit');
           }}
         >
         <button

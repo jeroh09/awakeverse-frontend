@@ -20,6 +20,7 @@ import { HeaderUsageIndicator, ChatUsageIndicator } from '../components/UsageInd
 import usePremiumCharacters from '../hooks/usePremiumCharacters';
 import MinimalUsageTest from './MinimalUsageTest';
 import DefensiveChatInputWrapper from './DefensiveChatInputWrapper';
+import UpgradeModal from '../components/UpgradeModal';
 import '../styles.css';
 import '../style/InviteStyles.css';
 
@@ -293,7 +294,12 @@ export default function ChatWindow({
   const userAvatar = avatarUrl || user?.avatarUrl;
   const [newMessageCount, setNewMessageCount] = useState(0);
   const usageTracking = useUsageTracking(character);
-  const [showUpgradeFlow, setShowUpgradeFlow] = useState(false);
+  const [upgradeModalOpen, setUpgradeModalOpen] = useState(false);
+  const [upgradeReason, setUpgradeReason] = useState('general');
+  const showUpgradeFlow = (reason = 'general') => {
+    setUpgradeReason(reason);
+    setUpgradeModalOpen(true);
+  };
 
   
   // ✅ USER-FRIENDLY ERROR HANDLING SYSTEM
@@ -1019,7 +1025,7 @@ export default function ChatWindow({
     // ✅ CRITICAL: Check usage limits for custom characters
     if (usageTracking.isCustomCharacter && !usageTracking.canSendMessage) {
       // Block the message and show upgrade flow
-      setShowUpgradeFlow(true);
+      setShowUpgradeFlow(message_limit);
       return;
     }
     
@@ -1222,13 +1228,13 @@ export default function ChatWindow({
               />
             </div>
           )}
-                  {/* WRAP InputArea with defensive wrapper */}
+          {/* WRAP InputArea with defensive wrapper */}
           <DefensiveChatInputWrapper
             character={character}
             user_id={user?.id}
             onUpgradePrompt={() => {
               // Handle upgrade prompt - you can use existing upgrade flow
-              setShowUpgradeFlow(true);
+              setShowUpgradeFlow(message_limit);
             }}
           >
             <InputArea
@@ -1257,60 +1263,15 @@ export default function ChatWindow({
         isMobile={isMobile}
       />
       <MinimalUsageTest character={character} />
-      {/* ✅ ADD UPGRADE FLOW MODAL - PLACE RIGHT BEFORE THE CLOSING DIV */}
-      {showUpgradeFlow && (
-        <div className="upgrade-flow-overlay">
-          <div className="upgrade-flow-modal">
-            <h3>You've reached your message limit</h3>
-            <p>You've used all {usageTracking.usage.message_limit} messages for this month with custom characters.</p>
-            
-            <div className="upgrade-options">
-              <div className="current-plan">
-                <h4>Current: {usageTracking.usage.tier_display}</h4>
-                <p>{usageTracking.usage.message_limit} messages/month</p>
-              </div>
-              
-              <div className="suggested-plan">
-                {usageTracking.getUpgradeSuggestion() && (
-                  <>
-                    <h4>Upgrade to {usageTracking.getUpgradeSuggestion().suggestedTier}</h4>
-                    <p>{usageTracking.getUpgradeSuggestion().suggestedLimit}</p>
-                    <p className="price">{usageTracking.getUpgradeSuggestion().suggestedPrice}/month</p>
-                  </>
-                )}
-              </div>
-            </div>
-            
-            <div className="upgrade-actions">
-              <button 
-                className="upgrade-button primary"
-                onClick={() => {
-                  // TODO: Open subscription modal/redirect to billing
-                  console.log('Redirect to upgrade flow');
-                  setShowUpgradeFlow(false);
-                }}
-              >
-                Upgrade Now
-              </button>
-              
-              <button 
-                className="upgrade-button secondary"
-                onClick={() => setShowUpgradeFlow(false)}
-              >
-                Continue with Existing Characters
-              </button>
-                            // In ChatWindow.js, add this button temporarily:
-              <button onClick={async () => {
-                const service = await import('../services/SubscriptionService');
-                const tests = await service.default.runIntegrationTests(user.id);
-                console.table(tests);
-              }}>Test Subscription Integration</button>
-            </div>
-          </div>
-        </div>
-      )}
-       {/* ✅ USAGE TEST COMPONENT (added here) */}
-       {usageTracking.isCustomCharacter && <UsageTestStates />}
+      {/* ✅ USAGE TEST COMPONENT (added here) */}
+      {usageTracking.isCustomCharacter && <UsageTestStates />}
+      {/* Add this near the end of your component, before closing div */}
+      <UpgradeModal
+        isOpen={upgradeModalOpen}
+        onClose={() => setUpgradeModalOpen(false)}
+        triggerReason={upgradeReason}
+        currentUsage={usageTracking.usage}
+    />
     </div>
   );
 }

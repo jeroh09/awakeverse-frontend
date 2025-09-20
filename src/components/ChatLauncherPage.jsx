@@ -8,6 +8,7 @@ import TemplateGallery from '../components/TemplateGallery';
 import CharacterBuilder from '../components/CharacterBuilder';
 import CharacterStatusModal from '../components/CharacterStatusModal';
 import CharacterCreationSuccess from '../components/CharacterCreationSuccess';
+import UpgradeModal from '../components/UpgradeModal';
 
 // Import helper components
 import {
@@ -702,6 +703,7 @@ const ChatLauncherPage = ({ onStartChat }) => {
                 onCharacterSelect={handleCharacterSelect}
                 isMobile={true}
                 user_id={user?.id} // ADD THIS LINE
+                onShowUpgradeModal={handleShowUpgradeModal} // ADD this if needed
               />
             ) : (
               <div style={{
@@ -1053,6 +1055,7 @@ const ChatLauncherPage = ({ onStartChat }) => {
                   onCharacterSelect={handleCharacterSelect}
                   isMobile={false}
                   user_id={user?.id}
+                  onShowUpgradeModal={handleShowUpgradeModal} // ADD this if needed
                 />
               ) : (
                 <div style={{
@@ -1181,6 +1184,13 @@ const ChatLauncherPage = ({ onStartChat }) => {
           box-shadow: 0 0 8px rgba(255, 215, 0, 0.4);
         }
       `}</style>
+      {/* Upgrade Modal */}
+      <UpgradeModal
+        isOpen={upgradeModalOpen}
+        onClose={handleCloseUpgradeModal}
+        triggerReason={upgradeReason}
+        currentUsage={null} // Could pass usage data if needed
+      />
     </div>
   );
 };
