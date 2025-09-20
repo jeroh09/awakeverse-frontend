@@ -163,7 +163,7 @@ export const useSubscriptionAwareUsage = (character, user_id) => {
       'pro': { 
         suggestedTier: 'Unlimited', 
         suggestedLimit: 'Unlimited messages', 
-        suggestedPrice: '$29.99' 
+        suggestedPrice: '$49.99' 
       }
     };
 

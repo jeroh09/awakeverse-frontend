@@ -8,7 +8,7 @@ import TemplateGallery from '../components/TemplateGallery';
 import CharacterBuilder from '../components/CharacterBuilder';
 import CharacterStatusModal from '../components/CharacterStatusModal';
 import CharacterCreationSuccess from '../components/CharacterCreationSuccess';
-import UpgradeModal from '../components/UpgradeModal';
+import DualPathUpgradeSystem from '../components/DualPathUpgradeSystem';
 
 // Import helper components
 import {
@@ -1197,7 +1197,7 @@ const ChatLauncherPage = ({ onStartChat }) => {
         }
       `}</style>
       {/* Upgrade Modal */}
-      <UpgradeModal
+      <DualPathUpgradeSystem
         isOpen={upgradeModalOpen}
         onClose={handleCloseUpgradeModal}
         triggerReason={upgradeReason}

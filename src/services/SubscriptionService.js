@@ -100,7 +100,7 @@ class SubscriptionService {
           { name: 'free', display_name: 'Free', message_limit: 150, monthly_price: 'Free' },
           { name: 'starter', display_name: 'Starter', message_limit: 500, monthly_price: '$9.99' },
           { name: 'pro', display_name: 'Pro', message_limit: 2000, monthly_price: '$19.99' },
-          { name: 'unlimited', display_name: 'Unlimited', message_limit: -1, monthly_price: '$29.99' }
+          { name: 'unlimited', display_name: 'Unlimited', message_limit: -1, monthly_price: '$49.99' }
         ],
         fallback_mode: true
       };

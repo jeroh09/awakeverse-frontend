@@ -20,7 +20,7 @@ import { HeaderUsageIndicator, ChatUsageIndicator } from '../components/UsageInd
 import usePremiumCharacters from '../hooks/usePremiumCharacters';
 import MinimalUsageTest from './MinimalUsageTest';
 import DefensiveChatInputWrapper from './DefensiveChatInputWrapper';
-import UpgradeModal from '../components/UpgradeModal';
+import DualPathUpgradeSystem from '../components/DualPathUpgradeSystem';
 import '../styles.css';
 import '../style/InviteStyles.css';
 
@@ -1266,12 +1266,12 @@ export default function ChatWindow({
       {/* ✅ USAGE TEST COMPONENT (added here) */}
       {usageTracking.isCustomCharacter && <UsageTestStates />}
       {/* Add this near the end of your component, before closing div */}
-      <UpgradeModal
+      <DualPathUpgradeSystem
         isOpen={upgradeModalOpen}
         onClose={() => setUpgradeModalOpen(false)}
         triggerReason={upgradeReason}
         currentUsage={usageTracking.usage}
-    />
+      />
     </div>
   );
 }
