@@ -1,63 +1,33 @@
-// src/landing/pages/LandingPage.js - Desktop + Mobile Streaming Design
+// src/landing/pages/LandingPage.js - Complete Fixed Version
 import React, { useEffect, useRef, useState, useCallback, useMemo } from 'react';
 import { Link } from 'react-router-dom';
 import { characterCategories } from '../../data/characterCategories';
 import EnhancedCharacterPanels from '../components/EnhancedCharacterPanels';
-import DemoCharacterBuilder from './DemoCharacterBuilder';
-import SubscriptionPlansCards from './SubscriptionPlansCards'; // Adjust path as needed
-import CreatorHubTeaser from './CreatorHubTeaser'; // Adjust path as needed
+import DemoCharacterBuilder from '../components/DemoCharacterBuilder';
+import SubscriptionPlansCards from '../components/SubscriptionPlansCards';
+import CreatorHubTeaser from '../components/CreatorHubTeaser';
 import './LandingPage.css';
 
 export default function LandingPage() {
-  //const starsRef = useRef(null);
+  // All state declarations
   const [currentScreen, setCurrentScreen] = useState(0);
   const [isTransitioning, setIsTransitioning] = useState(false);
   const [isPaused, setIsPaused] = useState(false);
   const [isMobile, setIsMobile] = useState(false);
   const [isResizing, setIsResizing] = useState(false);
   const [currentSection, setCurrentSection] = useState(0);
-
-  // Mobile-specific state
   const [currentPanel, setCurrentPanel] = useState(0);
-
-  // Typing animation state (mobile)
   const [isTyping, setIsTyping] = useState(false);
   const [typedText, setTypedText] = useState('');
   const [showInviteButtons, setShowInviteButtons] = useState(false);
-
-  // Touch gesture state
   const [touchStart, setTouchStart] = useState(null);
   const [touchEnd, setTouchEnd] = useState(null);
-  // Scroll to specific section function
-  const scrollToSection = useCallback((sectionIndex) => {
-    if (!isMobile) { // Desktop only
-      const targetY = sectionIndex * window.innerHeight;
-      window.scrollTo({
-        top: targetY,
-        behavior: 'smooth'
-      });
-    }
-  }, [isMobile]);
+  const [imageErrors, setImageErrors] = useState({});
 
-  // Mobile detection with smooth transition
-  useEffect(() => {
-    const checkMobile = () => {
-      const mobile = window.innerWidth <= 768;
-      if (mobile !== isMobile) {
-        setIsResizing(true);
-        setTimeout(() => {
-          setIsMobile(mobile);
-          setIsResizing(false);
-        }, 150);
-      }
-    };
-    
-    checkMobile();
-    window.addEventListener('resize', checkMobile);
-    return () => window.removeEventListener('resize', checkMobile);
-  }, [isMobile]);
+  // Constants
+  const fullMessage = "Aww shucks, not much I'm afraid! My village has always been peaceful, and I spent most of my time rafting down the Mississippi. But I reckon I could invite some folks who know a whole lot more about that subject than me!";
 
-  // Get character by key
+  // Get character by key function
   const getCharacter = useCallback((key) => {
     for (const category of characterCategories) {
       const character = category.characters.find(c => c.key === key);
@@ -107,7 +77,7 @@ export default function LandingPage() {
     }
   ], [getCharacter]);
 
-  // Desktop chat conversations (existing)
+  // Desktop chat conversations
   const chatConversations = useMemo(() => [
     {
       character: getCharacter('socrates'),
@@ -132,119 +102,72 @@ export default function LandingPage() {
     }
   ], [getCharacter]);
 
-  const fullMessage = "Aww shucks, not much I'm afraid! My village has always been peaceful, and I spent most of my time rafting down the Mississippi. But I reckon I could invite some folks who know a whole lot more about that subject than me!";
-
-  // Handle logo visibility (desktop only)
-  useEffect(() => {
-    if (isMobile) return;
-    
-    const logo = document.querySelector('.logo');
-    if (logo) {
-      if (currentScreen === 0) {
-        logo.style.opacity = '1';
-        logo.style.pointerEvents = 'auto';
-      } else {
-        logo.style.opacity = '0';
-        logo.style.pointerEvents = 'none';
-      }
-    }
-  }, [currentScreen, isMobile]);
-
-  // DESKTOP: Auto-advance carousel
-  useEffect(() => {
-    if (isMobile || isPaused || isTransitioning) return;
-
-    const delay = currentScreen === 2 ? 18000 : 10000;
-    const interval = setInterval(() => {
-      setCurrentScreen(prev => (prev + 1) % 3);
-    }, delay);
-
-    return () => clearInterval(interval);
-  }, [isMobile, isPaused, isTransitioning, currentScreen]);
-
-  // Detect current section based on scroll position
-  useEffect(() => {
-    if (isMobile) return; // Desktop only
-
-    const handleScroll = () => {
-      const scrollY = window.scrollY;
-      const viewportHeight = window.innerHeight;
-      const section = Math.round(scrollY / viewportHeight);
-      setCurrentSection(Math.max(0, Math.min(section, 2))); // Clamp between 0-2
-    };
-
-    window.addEventListener('scroll', handleScroll, { passive: true });
-    return () => window.removeEventListener('scroll', handleScroll);
-  }, [isMobile]);
-
-    // Optional: Keyboard navigation for sections
-  useEffect(() => {
-    if (isMobile) return;
-
-    const handleKeyPress = (e) => {
-      if (e.key === 'ArrowDown' && currentSection < 2) {
-        scrollToSection(currentSection + 1);
-      } else if (e.key === 'ArrowUp' && currentSection > 0) {
-        scrollToSection(currentSection - 1);
-      }
-    };
-
-    window.addEventListener('keydown', handleKeyPress);
-    return () => window.removeEventListener('keydown', handleKeyPress);
-  }, [currentSection, scrollToSection, isMobile]);
-
-  // MOBILE: Auto-advance panels
-  useEffect(() => {
-    if (!isMobile || isPaused || isTransitioning) return;
-
-    const interval = setInterval(() => {
-      setCurrentPanel(prev => (prev + 1) % 6);
-    }, 4000);
-
-    return () => clearInterval(interval);
-  }, [isMobile, isPaused, isTransitioning, currentPanel]);
-
-  // Handle user interaction
+  // User interaction handler
   const handleUserInteraction = useCallback(() => {
     setIsPaused(true);
     setTimeout(() => setIsPaused(false), isMobile ? 8000 : 5000);
   }, [isMobile]);
 
-  // Desktop typing animation for screen 3
-  useEffect(() => {
-    if (isMobile || currentScreen !== 2 || isTyping || typedText !== '') return;
+  // Scroll to section function
+  const scrollToSection = useCallback((sectionIndex) => {
+    if (!isMobile) {
+      const targetY = sectionIndex * window.innerHeight;
+      window.scrollTo({
+        top: targetY,
+        behavior: 'smooth'
+      });
+    }
+  }, [isMobile]);
+
+  // Desktop navigation functions
+  const navigateToScreen = useCallback((screenIndex) => {
+    if (isMobile || isTransitioning) return;
+
+    setIsTransitioning(true);
+    setCurrentScreen(screenIndex);
+    handleUserInteraction();
 
     setTimeout(() => {
-      setIsTyping(true);
-      setShowInviteButtons(false);
+      setIsTransitioning(false);
+    }, 1000);
+  }, [isMobile, isTransitioning, handleUserInteraction]);
 
-      const words = fullMessage.split(' ');
-      let currentIndex = 0;
+  const nextScreen = useCallback(() => {
+    if (isMobile) return;
+    const next = (currentScreen + 1) % 3;
+    navigateToScreen(next);
+  }, [isMobile, currentScreen, navigateToScreen]);
 
-      const typeInterval = setInterval(() => {
-        if (currentIndex < words.length) {
-          const newText = words.slice(0, currentIndex + 1).join(' ');
-          setTypedText(newText);
-          currentIndex++;
-        } else {
-          clearInterval(typeInterval);
-          setIsTyping(false);
-          setTimeout(() => setShowInviteButtons(true), 800);
-        }
-      }, 150);
+  const prevScreen = useCallback(() => {
+    if (isMobile) return;
+    const prev = (currentScreen - 1 + 3) % 3;
+    navigateToScreen(prev);
+  }, [isMobile, currentScreen, navigateToScreen]);
 
-      return () => clearInterval(typeInterval);
-    }, 500);
-  }, [currentScreen, typedText, fullMessage, isMobile]);
+  // Mobile navigation functions
+  const navigateToPanel = useCallback((panelIndex) => {
+    if (!isMobile || isTransitioning) return;
 
-  // Reset typing when leaving desktop screen 3
-  useEffect(() => {
-    if (isMobile || currentScreen !== 2) {
-      setTypedText('');
-      setIsTyping(false);
-      setShowInviteButtons(false);
-    }
-  }, [currentScreen, isMobile]);
+    setIsTransitioning(true);
+    setCurrentPanel(panelIndex);
+    handleUserInteraction();
+
+    setTimeout(() => {
+      setIsTransitioning(false);
+    }, 800);
+  }, [isMobile, isTransitioning, handleUserInteraction]);
+
+  const mobileNextPanel = useCallback(() => {
+    if (!isMobile) return;
+    const next = (currentPanel + 1) % 6;
+    navigateToPanel(next);
+  }, [isMobile, currentPanel, navigateToPanel]);
+
+  const mobilePrevPanel = useCallback(() => {
+    if (!isMobile) return;
+    const prev = (currentPanel - 1 + 6) % 6;
+    navigateToPanel(prev);
+  }, [isMobile, currentPanel, navigateToPanel]);
 
   // Touch gesture handlers
   const onTouchStart = useCallback((e) => {
@@ -278,102 +201,9 @@ export default function LandingPage() {
 
     setTouchStart(null);
     setTouchEnd(null);
-  }, [touchStart, touchEnd, isMobile]);
-
-  const nextScreen = useCallback(() => {
-    if (isMobile) return;
-    const next = (currentScreen + 1) % 3;
-    navigateToScreen(next);
-  }, [isMobile, currentScreen, navigateToScreen]);
-
-  const prevScreen = useCallback(() => {
-    if (isMobile) return;
-    const prev = (currentScreen - 1 + 3) % 3;
-    navigateToScreen(prev);
-  }, [isMobile, currentScreen, navigateToScreen]);
-
-
-
-  // Mobile navigation functions
-  const navigateToPanel = useCallback((panelIndex) => {
-    if (!isMobile || isTransitioning) return;
-
-    setIsTransitioning(true);
-    setCurrentPanel(panelIndex);
-    handleUserInteraction();
-
-    setTimeout(() => {
-      setIsTransitioning(false);
-    }, 800);
-  }, [isMobile, isTransitioning, handleUserInteraction]);
-
-  const mobileNextPanel = useCallback(() => {
-    if (!isMobile) return;
-    const next = (currentPanel + 1) % 6;
-    navigateToPanel(next);
-  }, [isMobile, currentPanel, navigateToPanel]);
-
-  const mobilePrevPanel = useCallback(() => {
-    if (!isMobile) return;
-    const prev = (currentPanel - 1 + 6) % 6;
-    navigateToPanel(prev);
-  }, [isMobile, currentPanel, navigateToPanel]);
-
-  // Add these desktop navigation functions after your mobile ones:
-
-const navigateToScreen = useCallback((screenIndex) => {
-  if (isMobile || isTransitioning) return;
-
-  setIsTransitioning(true);
-  setCurrentScreen(screenIndex);
-  handleUserInteraction();
-
-  setTimeout(() => {
-    setIsTransitioning(false);
-  }, 1000);
-}, [isMobile, isTransitioning, handleUserInteraction]);
-
-  // Touch event listeners
-  useEffect(() => {
-    const container = document.querySelector('.landing-container');
-    if (!container) return;
-
-    container.addEventListener('touchstart', onTouchStart, { passive: true });
-    container.addEventListener('touchmove', onTouchMove, { passive: true });
-    container.addEventListener('touchend', onTouchEnd, { passive: true });
-
-    return () => {
-      container.removeEventListener('touchstart', onTouchStart);
-      container.removeEventListener('touchmove', onTouchMove);
-      container.removeEventListener('touchend', onTouchEnd);
-    };
-  }, [onTouchStart, onTouchMove, onTouchEnd]);
-
-  // Keyboard navigation
-  useEffect(() => {
-    const handleKeyPress = (e) => {
-      if (e.key === 'ArrowLeft') {
-        if (isMobile) {
-          mobilePrevPanel();
-        } else {
-          prevScreen();
-        }
-      } else if (e.key === 'ArrowRight') {
-        if (isMobile) {
-          mobileNextPanel();
-        } else {
-          nextScreen();
-        }
-      }
-    };
-
-    window.addEventListener('keydown', handleKeyPress);
-    return () => window.removeEventListener('keydown', handleKeyPress);
-  }, [isMobile, prevScreen, nextScreen, mobilePrevPanel, mobileNextPanel]);
+  }, [touchStart, touchEnd, isMobile, mobileNextPanel, mobilePrevPanel, nextScreen, prevScreen]);
 
   // Optimized image component
-  const [imageErrors, setImageErrors] = useState({});
-
   const OptimizedImage = React.memo(({ src, alt, className, fallbackLetter, imageKey }) => {
     const hasError = imageErrors[imageKey || src];
 
@@ -404,6 +234,165 @@ const navigateToScreen = useCallback((screenIndex) => {
     );
   });
 
+  // Mobile detection with smooth transition
+  useEffect(() => {
+    const checkMobile = () => {
+      const mobile = window.innerWidth <= 768;
+      if (mobile !== isMobile) {
+        setIsResizing(true);
+        setTimeout(() => {
+          setIsMobile(mobile);
+          setIsResizing(false);
+        }, 150);
+      }
+    };
+    
+    checkMobile();
+    window.addEventListener('resize', checkMobile);
+    return () => window.removeEventListener('resize', checkMobile);
+  }, [isMobile]);
+
+  // Handle logo visibility (desktop only)
+  useEffect(() => {
+    if (isMobile) return;
+    
+    const logo = document.querySelector('.logo');
+    if (logo) {
+      if (currentScreen === 0) {
+        logo.style.opacity = '1';
+        logo.style.pointerEvents = 'auto';
+      } else {
+        logo.style.opacity = '0';
+        logo.style.pointerEvents = 'none';
+      }
+    }
+  }, [currentScreen, isMobile]);
+
+  // DESKTOP: Auto-advance carousel
+  useEffect(() => {
+    if (isMobile || isPaused || isTransitioning) return;
+
+    const delay = currentScreen === 2 ? 18000 : 10000;
+    const interval = setInterval(() => {
+      setCurrentScreen(prev => (prev + 1) % 3);
+    }, delay);
+
+    return () => clearInterval(interval);
+  }, [isMobile, isPaused, isTransitioning, currentScreen]);
+
+  // MOBILE: Auto-advance panels
+  useEffect(() => {
+    if (!isMobile || isPaused || isTransitioning) return;
+
+    const interval = setInterval(() => {
+      setCurrentPanel(prev => (prev + 1) % 6);
+    }, 4000);
+
+    return () => clearInterval(interval);
+  }, [isMobile, isPaused, isTransitioning, currentPanel]);
+
+  // Detect current section based on scroll position
+  useEffect(() => {
+    if (isMobile) return;
+
+    const handleScroll = () => {
+      const scrollY = window.scrollY;
+      const viewportHeight = window.innerHeight;
+      const section = Math.round(scrollY / viewportHeight);
+      setCurrentSection(Math.max(0, Math.min(section, 2)));
+    };
+
+    window.addEventListener('scroll', handleScroll, { passive: true });
+    return () => window.removeEventListener('scroll', handleScroll);
+  }, [isMobile]);
+
+  // Desktop typing animation for screen 3
+  useEffect(() => {
+    if (isMobile || currentScreen !== 2 || isTyping || typedText !== '') return;
+
+    setTimeout(() => {
+      setIsTyping(true);
+      setShowInviteButtons(false);
+
+      const words = fullMessage.split(' ');
+      let currentIndex = 0;
+
+      const typeInterval = setInterval(() => {
+        if (currentIndex < words.length) {
+          const newText = words.slice(0, currentIndex + 1).join(' ');
+          setTypedText(newText);
+          currentIndex++;
+        } else {
+          clearInterval(typeInterval);
+          setIsTyping(false);
+          setTimeout(() => setShowInviteButtons(true), 800);
+        }
+      }, 150);
+
+      return () => clearInterval(typeInterval);
+    }, 500);
+  }, [currentScreen, typedText, fullMessage, isMobile, isTyping]);
+
+  // Reset typing when leaving desktop screen 3
+  useEffect(() => {
+    if (isMobile || currentScreen !== 2) {
+      setTypedText('');
+      setIsTyping(false);
+      setShowInviteButtons(false);
+    }
+  }, [currentScreen, isMobile]);
+
+  // Touch event listeners
+  useEffect(() => {
+    const container = document.querySelector('.landing-container');
+    if (!container) return;
+
+    container.addEventListener('touchstart', onTouchStart, { passive: true });
+    container.addEventListener('touchmove', onTouchMove, { passive: true });
+    container.addEventListener('touchend', onTouchEnd, { passive: true });
+
+    return () => {
+      container.removeEventListener('touchstart', onTouchStart);
+      container.removeEventListener('touchmove', onTouchMove);
+      container.removeEventListener('touchend', onTouchEnd);
+    };
+  }, [onTouchStart, onTouchMove, onTouchEnd]);
+
+  // Keyboard navigation for sections
+  useEffect(() => {
+    if (isMobile) return;
+
+    const handleKeyPress = (e) => {
+      if (e.key === 'ArrowDown' && currentSection < 2) {
+        scrollToSection(currentSection + 1);
+      } else if (e.key === 'ArrowUp' && currentSection > 0) {
+        scrollToSection(currentSection - 1);
+      } else if (e.key === 'ArrowLeft') {
+        prevScreen();
+      } else if (e.key === 'ArrowRight') {
+        nextScreen();
+      }
+    };
+
+    window.addEventListener('keydown', handleKeyPress);
+    return () => window.removeEventListener('keydown', handleKeyPress);
+  }, [currentSection, scrollToSection, isMobile, prevScreen, nextScreen]);
+
+  // Mobile keyboard navigation
+  useEffect(() => {
+    if (!isMobile) return;
+
+    const handleKeyPress = (e) => {
+      if (e.key === 'ArrowLeft') {
+        mobilePrevPanel();
+      } else if (e.key === 'ArrowRight') {
+        mobileNextPanel();
+      }
+    };
+
+    window.addEventListener('keydown', handleKeyPress);
+    return () => window.removeEventListener('keydown', handleKeyPress);
+  }, [isMobile, mobilePrevPanel, mobileNextPanel]);
 
   // Show loading transition during resize
   if (isResizing) {
@@ -557,7 +546,6 @@ const navigateToScreen = useCallback((screenIndex) => {
                            transform: 'none',
                            textAlign: 'right', 
                            width: 'auto',
-                           
                        }}>
                          Swipe to explore more minds
                        </div>
@@ -586,7 +574,7 @@ const navigateToScreen = useCallback((screenIndex) => {
         /* DESKTOP: 3-Section Vertical Layout */
         <>
           <div className="desktop-main-wrapper">
-            {/* Section 1: Existing Carousel (unchanged) */}
+            {/* Section 1: Existing Carousel */}
             <section className="desktop-section-1">
               <div className="carousel-container">
                 <div
@@ -752,7 +740,7 @@ const navigateToScreen = useCallback((screenIndex) => {
                 </div>
               </div>
 
-              {/* Keep existing carousel navigation */}
+              {/* Carousel navigation */}
               <div className="carousel-navigation">
                 <button
                   className="nav-arrow nav-prev"
@@ -798,15 +786,7 @@ const navigateToScreen = useCallback((screenIndex) => {
                   maxWidth: '1200px'
                 }}>
                   {/* Left: Explanation */}
-                  <div style={{ 
-                    textAlign: 'left',
-                    background: 'rgba(255, 255, 255, 0.06)',
-                    backdropFilter: 'blur(15px)',
-                    border: '1px solid rgba(255, 215, 0, 0.2)',
-                    borderRadius: '20px',
-                    padding: '2rem',
-                    boxShadow: '0 0 40px rgba(255, 255, 255, 0.67)'
-                  }}>
+                  <div style={{ textAlign: 'left' }}>
                     <h2 style={{
                       fontFamily: "'Playfair Display', serif",
                       fontSize: '2.2rem',
@@ -817,7 +797,7 @@ const navigateToScreen = useCallback((screenIndex) => {
                     }}>
                       Create Your Own Characters
                     </h2>
-
+                    
                     <p style={{
                       fontFamily: "'Inter', sans-serif",
                       fontSize: '1.1rem',
@@ -825,17 +805,17 @@ const navigateToScreen = useCallback((screenIndex) => {
                       lineHeight: 1.6,
                       marginBottom: '2rem'
                     }}>
-                      Build custom AI characters using our template system. Choose from historical 
-                      archetypes, then customize their personality and expertise.
+                      Build custom AI characters using our template system. Choose from hundreds of 
+                      historical archetypes, then customize their personality, expertise, and behavior 
+                      to create your perfect conversation partner.
                     </p>
 
                     <div style={{
-                      background: 'rgba(255, 215, 0, 0.12)',
+                      background: 'rgba(255, 215, 0, 0.1)',
                       border: '1px solid rgba(255, 215, 0, 0.3)',
                       borderRadius: '12px',
                       padding: '1.5rem',
-                      marginBottom: '2rem',
-                      boxShadow: '0 0 25px rgba(255, 215, 0, 0.1)'
+                      marginBottom: '2rem'
                     }}>
                       <h3 style={{
                         color: '#FFD700',
@@ -863,7 +843,7 @@ const navigateToScreen = useCallback((screenIndex) => {
                             color: '#FFD700',
                             fontWeight: 'bold'
                           }}>1.</span>
-                          Choose a template from our library
+                          Choose a template from our extensive library
                         </li>
                         <li style={{
                           color: 'rgba(255, 255, 255, 0.9)',
@@ -878,7 +858,7 @@ const navigateToScreen = useCallback((screenIndex) => {
                             color: '#FFD700',
                             fontWeight: 'bold'
                           }}>2.</span>
-                          Customize personality and expertise
+                          Customize name, personality, and expertise
                         </li>
                         <li style={{
                           color: 'rgba(255, 255, 255, 0.9)',
@@ -893,7 +873,7 @@ const navigateToScreen = useCallback((screenIndex) => {
                             color: '#FFD700',
                             fontWeight: 'bold'
                           }}>3.</span>
-                          Submit for approval (24 hours)
+                          Submit for approval (usually within 24 hours)
                         </li>
                         <li style={{
                           color: 'rgba(255, 255, 255, 0.9)',
@@ -907,7 +887,7 @@ const navigateToScreen = useCallback((screenIndex) => {
                             color: '#FFD700',
                             fontWeight: 'bold'
                           }}>4.</span>
-                          Start conversations
+                          Start conversations with your custom character
                         </li>
                       </ul>
                     </div>
@@ -936,12 +916,12 @@ const navigateToScreen = useCallback((screenIndex) => {
                       >
                         Start Creating
                       </Link>
-
+                      
                       <div style={{
                         color: 'rgba(255, 255, 255, 0.7)',
                         fontSize: '0.9rem'
                       }}>
-                        Try the demo first →
+                        ← Try the demo first
                       </div>
                     </div>
                   </div>
@@ -953,9 +933,8 @@ const navigateToScreen = useCallback((screenIndex) => {
                 </div>
               </div>
             </section>
-            {/* Section 3: Community Content */}
-            
-                      {/* Section 3: Subscription Plans + Creator Hub */}
+
+            {/* Section 3: Subscription Plans + Creator Hub */}
             <section className="desktop-section-3">
               <div className="desktop-section-content" style={{ paddingTop: '120px' }}>
                 <div style={{
@@ -983,7 +962,7 @@ const navigateToScreen = useCallback((screenIndex) => {
                       }}>
                         Choose Your Plan
                       </h2>
-
+                      
                       <p style={{
                         fontFamily: "'Inter', sans-serif",
                         fontSize: '1.2rem',
@@ -1304,22 +1283,20 @@ const navigateToScreen = useCallback((screenIndex) => {
           </div>
 
           {/* Desktop Scroll Indicator */}
-          {!isMobile && (
-            <div className="desktop-scroll-indicator">
-              <div 
-                className={`scroll-dot ${currentSection === 0 ? 'active' : ''}`} 
-                onClick={() => scrollToSection(0)}
-              ></div>
-              <div 
-                className={`scroll-dot ${currentSection === 1 ? 'active' : ''}`} 
-                onClick={() => scrollToSection(1)}
-              ></div>
-              <div 
-                className={`scroll-dot ${currentSection === 2 ? 'active' : ''}`} 
-                onClick={() => scrollToSection(2)}
-              ></div>
-            </div>
-          )}
+          <div className="desktop-scroll-indicator">
+            <div 
+              className={`scroll-dot ${currentSection === 0 ? 'active' : ''}`} 
+              onClick={() => scrollToSection(0)}
+            ></div>
+            <div 
+              className={`scroll-dot ${currentSection === 1 ? 'active' : ''}`} 
+              onClick={() => scrollToSection(1)}
+            ></div>
+            <div 
+              className={`scroll-dot ${currentSection === 2 ? 'active' : ''}`} 
+              onClick={() => scrollToSection(2)}
+            ></div>
+          </div>
         </>
       )}
     </div>
