@@ -2486,3 +2486,43 @@ body, html {
 .panel-glow-strong {
   box-shadow: 0 0 40px rgba(255, 215, 0, 0.12);
 }
+/* Desktop Section Height and Boundary Fixes */
+.desktop-section-2,
+.desktop-section-3 {
+  min-height: 100vh;
+  height: auto; /* Allow content to expand */
+  overflow: visible; /* Prevent content clipping */
+  position: relative;
+  z-index: 1;
+}
+
+/* Ensure sections don't overlap */
+.desktop-section-2 {
+  margin-bottom: 0;
+  padding-bottom: 2rem; /* Add bottom padding */
+}
+
+.desktop-section-3 {
+  margin-top: 0;
+  padding-top: 2rem; /* Reduce top padding from 120px */
+}
+
+/* Fix content container heights */
+.desktop-section-content {
+  width: 100%;
+  max-width: 1200px;
+  text-align: center;
+  margin: 0 auto;
+  position: relative;
+  z-index: 2;
+}
+
+/* Ensure grid layouts don't overflow */
+.desktop-section-2 .desktop-section-content > div[style*="grid"] {
+  min-height: auto;
+  align-items: start; /* Change from center to start */
+}
+
+.desktop-section-3 .desktop-section-content > div[style*="grid"] {
+  min-height: auto;
+}

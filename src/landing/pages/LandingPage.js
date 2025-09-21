@@ -910,7 +910,7 @@ export default function LandingPage() {
                         textDecoration: 'none',
                         display: 'inline-block',
                         transition: 'all 0.3s ease',
-                        boxShadow: '0 4px 15px rgba(255, 215, 0, 0.3)'
+                        boxShadow: '0 4px 15px rgba(255, 255, 255, 0.87)'
                       }}
                     >
                       Start Creating
@@ -920,7 +920,7 @@ export default function LandingPage() {
                       color: 'rgba(255, 255, 255, 0.7)',
                       fontSize: '0.9rem'
                     }}>
-                      ← Try the demo first
+                      Try the demo first →
                     </div>
                   </div>
                 </div>
@@ -935,7 +935,7 @@ export default function LandingPage() {
 
           {/* Section 3: Subscription Plans + Creator Hub */}
           <section className="desktop-section-3">
-            <div className="desktop-section-content" style={{ paddingTop: '120px' }}>
+            <div className="desktop-section-content" style={{ paddingTop: '40px' }}>
               <div style={{
                 display: 'grid',
                 gridTemplateColumns: '2fr 1fr',
