@@ -1,11 +1,11 @@
-// src/landing/pages/LandingPage.js - Complete Fixed Version
+// src/landing/pages/LandingPage.js - Desktop + Mobile Streaming Design
 import React, { useEffect, useRef, useState, useCallback, useMemo } from 'react';
 import { Link } from 'react-router-dom';
 import { characterCategories } from '../../data/characterCategories';
 import EnhancedCharacterPanels from '../components/EnhancedCharacterPanels';
 import DemoCharacterBuilder from './DemoCharacterBuilder';
-import SubscriptionPlansCards from './SubscriptionPlansCards';
-import CreatorHubTeaser from './CreatorHubTeaser';
+import SubscriptionPlansCards from './SubscriptionPlansCards'; 
+import CreatorHubTeaser from './CreatorHubTeaser'; 
 import './LandingPage.css';
 
 export default function LandingPage() {
@@ -36,81 +36,15 @@ export default function LandingPage() {
     return null;
   }, []);
 
-  // Mobile panel configuration
-  const mobilePanels = useMemo(() => [
-    {
-      character: getCharacter('sherlock'),
-      theme: 'night-sky',
-      tagline: 'Master observation, deduction & justice',
-      icons: ['🔍', '⚖️', '🕵️', '🔬']
-    },
-    {
-      character: getCharacter('shakespeare'),
-      theme: 'crimson-mystery',
-      tagline: 'Explore drama, poetry & human nature',
-      icons: ['🎭', '📜', '👑', '✒️']
-    },
-    {
-      character: getCharacter('cleopatra'),
-      theme: 'emerald-depths',
-      tagline: 'Discover power, strategy & leadership',
-      icons: ['👑', '🐍', '💎', '🏛️']
-    },
-    {
-      character: getCharacter('da_vinci'),
-      theme: 'royal-purple',
-      tagline: 'Unlock creativity, innovation & genius',
-      icons: ['🎨', '⚙️', '🔬', '✈️']
-    },
-    {
-      character: getCharacter('sappho'),
-      theme: 'golden-wisdom',
-      tagline: 'Explore love, poetry & passion',
-      icons: ['💕', '🌹', '🎵', '📖']
-    },
-    {
-      type: 'experts',
-      theme: 'midnight-experts',
-      title: 'Expert Invitations',
-      tagline: 'Invite experts to join your conversations',
-      characters: [getCharacter('sherlock'), getCharacter('sun_tzu')]
-    }
-  ], [getCharacter]);
-
-  // Desktop chat conversations
-  const chatConversations = useMemo(() => [
-    {
-      character: getCharacter('socrates'),
-      messages: [
-        { user: true, text: "What is the meaning of life?" },
-        { user: false, text: "My dear friend, the unexamined life is not worth living. True wisdom begins when we admit how little we know. Perhaps the meaning lies not in answers, but in the quality of our questions." }
-      ]
-    },
-    {
-      character: getCharacter('shakespeare'),
-      messages: [
-        { user: true, text: "How do I write better?" },
-        { user: false, text: "All the world's a stage, good sir! Write from the heart's deepest chambers. Observe humanity in all its folly and glory - therein lies your material. A well-turned phrase can outlive kingdoms." }
-      ]
-    },
-    {
-      character: getCharacter('tesla'),
-      messages: [
-        { user: true, text: "What drives innovation?" },
-        { user: false, text: "The present belongs to them, but the future, for which I really worked, is mine. Innovation springs from seeing what others cannot - the invisible forces that shape our world." }
-      ]
-    }
-  ], [getCharacter]);
-
-  // User interaction handler
+  // Handle user interaction
   const handleUserInteraction = useCallback(() => {
     setIsPaused(true);
     setTimeout(() => setIsPaused(false), isMobile ? 8000 : 5000);
   }, [isMobile]);
 
-  // Scroll to section function
+  // Scroll to specific section function
   const scrollToSection = useCallback((sectionIndex) => {
-    if (!isMobile) {
+    if (!isMobile) { 
       const targetY = sectionIndex * window.innerHeight;
       window.scrollTo({
         top: targetY,
@@ -234,6 +168,72 @@ export default function LandingPage() {
     );
   });
 
+  // Mobile panel configuration
+  const mobilePanels = useMemo(() => [
+    {
+      character: getCharacter('sherlock'),
+      theme: 'night-sky',
+      tagline: 'Master observation, deduction & justice',
+      icons: ['🔍', '⚖️', '🕵️', '🔬']
+    },
+    {
+      character: getCharacter('shakespeare'),
+      theme: 'crimson-mystery',
+      tagline: 'Explore drama, poetry & human nature',
+      icons: ['🎭', '📜', '👑', '✒️']
+    },
+    {
+      character: getCharacter('cleopatra'),
+      theme: 'emerald-depths',
+      tagline: 'Discover power, strategy & leadership',
+      icons: ['👑', '🐍', '💎', '🏛️']
+    },
+    {
+      character: getCharacter('da_vinci'),
+      theme: 'royal-purple',
+      tagline: 'Unlock creativity, innovation & genius',
+      icons: ['🎨', '⚙️', '🔬', '✈️']
+    },
+    {
+      character: getCharacter('sappho'),
+      theme: 'golden-wisdom',
+      tagline: 'Explore love, poetry & passion',
+      icons: ['💕', '🌹', '🎵', '📖']
+    },
+    {
+      type: 'experts',
+      theme: 'midnight-experts',
+      title: 'Expert Invitations',
+      tagline: 'Invite experts to join your conversations',
+      characters: [getCharacter('sherlock'), getCharacter('sun_tzu')]
+    }
+  ], [getCharacter]);
+
+  // Desktop chat conversations
+  const chatConversations = useMemo(() => [
+    {
+      character: getCharacter('socrates'),
+      messages: [
+        { user: true, text: "What is the meaning of life?" },
+        { user: false, text: "My dear friend, the unexamined life is not worth living. True wisdom begins when we admit how little we know. Perhaps the meaning lies not in answers, but in the quality of our questions." }
+      ]
+    },
+    {
+      character: getCharacter('shakespeare'),
+      messages: [
+        { user: true, text: "How do I write better?" },
+        { user: false, text: "All the world's a stage, good sir! Write from the heart's deepest chambers. Observe humanity in all its folly and glory - therein lies your material. A well-turned phrase can outlive kingdoms." }
+      ]
+    },
+    {
+      character: getCharacter('tesla'),
+      messages: [
+        { user: true, text: "What drives innovation?" },
+        { user: false, text: "The present belongs to them, but the future, for which I really worked, is mine. Innovation springs from seeing what others cannot - the invisible forces that shape our world." }
+      ]
+    }
+  ], [getCharacter]);
+
   // Mobile detection with smooth transition
   useEffect(() => {
     const checkMobile = () => {
@@ -280,17 +280,6 @@ export default function LandingPage() {
     return () => clearInterval(interval);
   }, [isMobile, isPaused, isTransitioning, currentScreen]);
 
-  // MOBILE: Auto-advance panels
-  useEffect(() => {
-    if (!isMobile || isPaused || isTransitioning) return;
-
-    const interval = setInterval(() => {
-      setCurrentPanel(prev => (prev + 1) % 6);
-    }, 4000);
-
-    return () => clearInterval(interval);
-  }, [isMobile, isPaused, isTransitioning, currentPanel]);
-
   // Detect current section based on scroll position
   useEffect(() => {
     if (isMobile) return;
@@ -305,6 +294,37 @@ export default function LandingPage() {
     window.addEventListener('scroll', handleScroll, { passive: true });
     return () => window.removeEventListener('scroll', handleScroll);
   }, [isMobile]);
+
+  // Keyboard navigation for sections
+  useEffect(() => {
+    if (isMobile) return;
+
+    const handleKeyPress = (e) => {
+      if (e.key === 'ArrowDown' && currentSection < 2) {
+        scrollToSection(currentSection + 1);
+      } else if (e.key === 'ArrowUp' && currentSection > 0) {
+        scrollToSection(currentSection - 1);
+      } else if (e.key === 'ArrowLeft') {
+        prevScreen();
+      } else if (e.key === 'ArrowRight') {
+        nextScreen();
+      }
+    };
+
+    window.addEventListener('keydown', handleKeyPress);
+    return () => window.removeEventListener('keydown', handleKeyPress);
+  }, [currentSection, scrollToSection, isMobile, prevScreen, nextScreen]);
+
+  // MOBILE: Auto-advance panels
+  useEffect(() => {
+    if (!isMobile || isPaused || isTransitioning) return;
+
+    const interval = setInterval(() => {
+      setCurrentPanel(prev => (prev + 1) % 6);
+    }, 4000);
+
+    return () => clearInterval(interval);
+  }, [isMobile, isPaused, isTransitioning, currentPanel]);
 
   // Desktop typing animation for screen 3
   useEffect(() => {
@@ -357,26 +377,6 @@ export default function LandingPage() {
       container.removeEventListener('touchend', onTouchEnd);
     };
   }, [onTouchStart, onTouchMove, onTouchEnd]);
-
-  // Keyboard navigation for sections
-  useEffect(() => {
-    if (isMobile) return;
-
-    const handleKeyPress = (e) => {
-      if (e.key === 'ArrowDown' && currentSection < 2) {
-        scrollToSection(currentSection + 1);
-      } else if (e.key === 'ArrowUp' && currentSection > 0) {
-        scrollToSection(currentSection - 1);
-      } else if (e.key === 'ArrowLeft') {
-        prevScreen();
-      } else if (e.key === 'ArrowRight') {
-        nextScreen();
-      }
-    };
-
-    window.addEventListener('keydown', handleKeyPress);
-    return () => window.removeEventListener('keydown', handleKeyPress);
-  }, [currentSection, scrollToSection, isMobile, prevScreen, nextScreen]);
 
   // Mobile keyboard navigation
   useEffect(() => {
@@ -573,730 +573,730 @@ export default function LandingPage() {
       ) : (
         /* DESKTOP: 3-Section Vertical Layout */
         <>
-          <div className="desktop-main-wrapper">
-            {/* Section 1: Existing Carousel */}
-            <section className="desktop-section-1">
-              <div className="carousel-container">
-                <div
-                  className="carousel-track"
-                  style={{
-                    transform: `translateX(-${currentScreen * 33.333}%)`,
-                    transition: isTransitioning ? 'transform 1s cubic-bezier(0.25, 0.46, 0.45, 0.94)' : 'none',
-                  }}
-                >
-                  {/* Screen 1: Hero + Character Panels */}
-                  <div className="carousel-slide" data-screen="0">
-                    <div className="screen-content">
-                      <div className="hero-content">
-                        <h2 className="main-hero-headline">
-                          Conversations without Limits - Powered by AI
-                        </h2>
-                        
-                        <h3 className="secondary-tagline">
-                          Solve mysteries with <span className="highlight-gold">Sherlock</span>,
-                          innovate with <span className="highlight-gold">Da Vinci</span>,
-                          explore love with <span className="highlight-gold">Helen</span>
-                        </h3>
+          {/* Section 1: Existing Carousel */}
+          <section className="desktop-section-1">
+            <div className="carousel-container">
+              <div
+                className="carousel-track"
+                style={{
+                  transform: `translateX(-${currentScreen * 33.333}%)`,
+                  transition: isTransitioning ? 'transform 1s cubic-bezier(0.25, 0.46, 0.45, 0.94)' : 'none',
+                }}
+              >
+                {/* Screen 1: Hero + Character Panels */}
+                <div className="carousel-slide" data-screen="0">
+                  <div className="screen-content">
+                    <div className="hero-content">
+                      <h2 className="main-hero-headline">
+                        Conversations without Limits - Powered by AI
+                      </h2>
+                      
+                      <h3 className="secondary-tagline">
+                        Solve mysteries with <span className="highlight-gold">Sherlock</span>,
+                        innovate with <span className="highlight-gold">Da Vinci</span>,
+                        explore love with <span className="highlight-gold">Helen</span>
+                      </h3>
 
-                        <Link to="/register" className="cta-primary">
-                          Start Your First Conversation
+                      <Link to="/register" className="cta-primary">
+                        Start Your First Conversation
+                      </Link>
+                    </div>
+
+                    <EnhancedCharacterPanels />
+                  </div>
+                </div>
+
+                {/* Screen 2: Social Proof + Conversations */}
+                <div className="carousel-slide" data-screen="1">
+                  <div className="screen-content">
+                    <div className="social-proof-header">
+                      <div className="stars-rating">★★★★★</div>
+                      <p className="proof-text">Trusted by 15,000+ curious minds</p>
+                      <p className="tagline-below-rating">
+                        Get personalized advice from Sherlock, Sun Tzu, Plato, Tesla ...and 100s of the greatest minds
+                      </p>
+                    </div>
+
+                    <div className="conversations-content">
+                      <h2 className="conversation-examples-title">
+                        <em>Chat with Casanova</em>, <em>Debate ethics with Nietzsche</em>, <em>Decide strategy with Zhukov</em>
+                      </h2>
+
+                      <div className="chat-examples">
+                        {chatConversations.map((chat, index) => (
+                          <div key={`chat-${chat.character?.key || index}`} className="chat-example">
+                            <div className="chat-header">
+                              <OptimizedImage
+                                src={chat.character?.thumbnailUrl}
+                                alt={chat.character?.name || 'Character'}
+                                className="chat-avatar"
+                                fallbackLetter={chat.character?.name?.charAt(0) || 'C'}
+                                imageKey={`chat-avatar-${chat.character?.key || index}`}
+                              />
+                              <span className="chat-character-name">{chat.character?.name || 'Character'}</span>
+                            </div>
+                            <div className="chat-messages">
+                              {chat.messages.map((message, msgIndex) => (
+                                <div
+                                  key={`msg-${index}-${msgIndex}`}
+                                  className={`chat-message ${message.user ? 'user' : 'ai'}`}
+                                >
+                                  <div className="message-bubble">
+                                    {message.text}
+                                  </div>
+                                </div>
+                              ))}
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Screen 3: Interactive Invitation Demo */}
+                <div className="carousel-slide" data-screen="2">
+                  <div className="screen-content">
+                    <h2 className="section-title">Invite Experts to Join</h2>
+                    <p className="invitation-subtitle">Characters can invite others with specialized knowledge</p>
+
+                    <div className="invitation-demo">
+                      <div className="demo-chat">
+                        <div className="chat-header">
+                          <OptimizedImage
+                            src={getCharacter('huckleberry_finn')?.thumbnailUrl || '/images/huckleberry_finn.jpg'}
+                            alt="Huckleberry Finn"
+                            className="chat-avatar"
+                            fallbackLetter="H"
+                            imageKey="huckleberry-finn-avatar"
+                          />
+                          <div className="chat-info">
+                            <span className="chat-name">Huckleberry Finn</span>
+                            <span className="chat-status">Online</span>
+                          </div>
+                        </div>
+
+                        <div className="chat-messages">
+                          <div className="chat-message user">
+                            <div className="message-bubble">
+                              What do you know about military strategy and warfare?
+                            </div>
+                          </div>
+
+                          <div className="chat-message ai">
+                            <div className="message-bubble">
+                              {typedText}
+                              {isTyping && <span className="typing-cursor">|</span>}
+                            </div>
+                          </div>
+
+                          {showInviteButtons && (
+                            <div className="invite-suggestions">
+                              <p className="invite-text">Would you like me to invite some military experts?</p>
+                              <div className="invite-buttons">
+                                <Link to="/register" className="invite-button">
+                                  <OptimizedImage
+                                    src={getCharacter('sun_tzu')?.thumbnailUrl || '/images/sun_tzu.jpg'}
+                                    alt="Sun Tzu"
+                                    className="invite-avatar"
+                                    fallbackLetter="S"
+                                    imageKey="sun-tzu-invite"
+                                  />
+                                  Invite Sun Tzu
+                                </Link>
+                                <Link to="/register" className="invite-button">
+                                  <OptimizedImage
+                                    src={getCharacter('georgy_zhukov')?.thumbnailUrl || '/images/georgy_zhukov.jpg'}
+                                    alt="Georgy Zhukov"
+                                    className="invite-avatar"
+                                    fallbackLetter="Z"
+                                    imageKey="georgy-zhukov-invite"
+                                  />
+                                  Invite Zhukov
+                                </Link>
+                              </div>
+                            </div>
+                          )}
+                        </div>
+                      </div>
+
+                      <div className="demo-explanation">
+                        <h3>How It Works</h3>
+                        <ul>
+                          <li>Characters recognize when topics are outside their expertise</li>
+                          <li>They can suggest and invite relevant experts to join the conversation</li>
+                          <li>Multiple historical figures can participate in the same discussion</li>
+                          <li>Get diverse perspectives on complex topics</li>
+                        </ul>
+
+                        <Link to="/register" className="start-exploring">
+                          Start Exploring →
                         </Link>
                       </div>
-
-                      <EnhancedCharacterPanels />
-                    </div>
-                  </div>
-
-                  {/* Screen 2: Social Proof + Conversations */}
-                  <div className="carousel-slide" data-screen="1">
-                    <div className="screen-content">
-                      <div className="social-proof-header">
-                        <div className="stars-rating">★★★★★</div>
-                        <p className="proof-text">Trusted by 15,000+ curious minds</p>
-                        <p className="tagline-below-rating">
-                          Get personalized advice from Sherlock, Sun Tzu, Plato, Tesla ...and 100s of the greatest minds
-                        </p>
-                      </div>
-
-                      <div className="conversations-content">
-                        <h2 className="conversation-examples-title">
-                          <em>Chat with Casanova</em>, <em>Debate ethics with Nietzsche</em>, <em>Decide strategy with Zhukov</em>
-                        </h2>
-
-                        <div className="chat-examples">
-                          {chatConversations.map((chat, index) => (
-                            <div key={`chat-${chat.character?.key || index}`} className="chat-example">
-                              <div className="chat-header">
-                                <OptimizedImage
-                                  src={chat.character?.thumbnailUrl}
-                                  alt={chat.character?.name || 'Character'}
-                                  className="chat-avatar"
-                                  fallbackLetter={chat.character?.name?.charAt(0) || 'C'}
-                                  imageKey={`chat-avatar-${chat.character?.key || index}`}
-                                />
-                                <span className="chat-character-name">{chat.character?.name || 'Character'}</span>
-                              </div>
-                              <div className="chat-messages">
-                                {chat.messages.map((message, msgIndex) => (
-                                  <div
-                                    key={`msg-${index}-${msgIndex}`}
-                                    className={`chat-message ${message.user ? 'user' : 'ai'}`}
-                                  >
-                                    <div className="message-bubble">
-                                      {message.text}
-                                    </div>
-                                  </div>
-                                ))}
-                              </div>
-                            </div>
-                          ))}
-                        </div>
-                      </div>
-                    </div>
-                  </div>
-
-                  {/* Screen 3: Interactive Invitation Demo */}
-                  <div className="carousel-slide" data-screen="2">
-                    <div className="screen-content">
-                      <h2 className="section-title">Invite Experts to Join</h2>
-                      <p className="invitation-subtitle">Characters can invite others with specialized knowledge</p>
-
-                      <div className="invitation-demo">
-                        <div className="demo-chat">
-                          <div className="chat-header">
-                            <OptimizedImage
-                              src={getCharacter('huckleberry_finn')?.thumbnailUrl || '/images/huckleberry_finn.jpg'}
-                              alt="Huckleberry Finn"
-                              className="chat-avatar"
-                              fallbackLetter="H"
-                              imageKey="huckleberry-finn-avatar"
-                            />
-                            <div className="chat-info">
-                              <span className="chat-name">Huckleberry Finn</span>
-                              <span className="chat-status">Online</span>
-                            </div>
-                          </div>
-
-                          <div className="chat-messages">
-                            <div className="chat-message user">
-                              <div className="message-bubble">
-                                What do you know about military strategy and warfare?
-                              </div>
-                            </div>
-
-                            <div className="chat-message ai">
-                              <div className="message-bubble">
-                                {typedText}
-                                {isTyping && <span className="typing-cursor">|</span>}
-                              </div>
-                            </div>
-
-                            {showInviteButtons && (
-                              <div className="invite-suggestions">
-                                <p className="invite-text">Would you like me to invite some military experts?</p>
-                                <div className="invite-buttons">
-                                  <Link to="/register" className="invite-button">
-                                    <OptimizedImage
-                                      src={getCharacter('sun_tzu')?.thumbnailUrl || '/images/sun_tzu.jpg'}
-                                      alt="Sun Tzu"
-                                      className="invite-avatar"
-                                      fallbackLetter="S"
-                                      imageKey="sun-tzu-invite"
-                                    />
-                                    Invite Sun Tzu
-                                  </Link>
-                                  <Link to="/register" className="invite-button">
-                                    <OptimizedImage
-                                      src={getCharacter('georgy_zhukov')?.thumbnailUrl || '/images/georgy_zhukov.jpg'}
-                                      alt="Georgy Zhukov"
-                                      className="invite-avatar"
-                                      fallbackLetter="Z"
-                                      imageKey="georgy-zhukov-invite"
-                                    />
-                                    Invite Zhukov
-                                  </Link>
-                                </div>
-                              </div>
-                            )}
-                          </div>
-                        </div>
-
-                        <div className="demo-explanation">
-                          <h3>How It Works</h3>
-                          <ul>
-                            <li>Characters recognize when topics are outside their expertise</li>
-                            <li>They can suggest and invite relevant experts to join the conversation</li>
-                            <li>Multiple historical figures can participate in the same discussion</li>
-                            <li>Get diverse perspectives on complex topics</li>
-                          </ul>
-
-                          <Link to="/register" className="start-exploring">
-                            Start Exploring →
-                          </Link>
-                        </div>
-                      </div>
                     </div>
                   </div>
                 </div>
               </div>
+            </div>
 
-              {/* Carousel navigation */}
-              <div className="carousel-navigation">
-                <button
-                  className="nav-arrow nav-prev"
-                  onClick={prevScreen}
-                  disabled={isTransitioning}
-                  aria-label="Previous screen"
-                >
-                  ↑
-                </button>
+            {/* Keep existing carousel navigation */}
+            <div className="carousel-navigation">
+              <button
+                className="nav-arrow nav-prev"
+                onClick={prevScreen}
+                disabled={isTransitioning}
+                aria-label="Previous screen"
+              >
+                ↑
+              </button>
 
-                <div className="carousel-dots">
-                  {[0, 1, 2].map((index) => (
-                    <button
-                      key={`dot-${index}`}
-                      className={`carousel-dot ${index === currentScreen ? 'active' : ''}`}
-                      onClick={() => navigateToScreen(index)}
-                      disabled={isTransitioning}
-                      aria-label={`Go to screen ${index + 1}`}
-                    />
-                  ))}
+              <div className="carousel-dots">
+                {[0, 1, 2].map((index) => (
+                  <button
+                    key={`dot-${index}`}
+                    className={`carousel-dot ${index === currentScreen ? 'active' : ''}`}
+                    onClick={() => navigateToScreen(index)}
+                    disabled={isTransitioning}
+                    aria-label={`Go to screen ${index + 1}`}
+                  />
+                ))}
+              </div>
+
+              <button
+                className="nav-arrow nav-next"
+                onClick={nextScreen}
+                disabled={isTransitioning}
+                aria-label="Next screen"
+              >
+                ↓
+              </button>
+            </div>
+          </section>
+
+          {/* Section 2: Character Creation Demo */}
+          <section className="desktop-section-2">
+            <div className="desktop-section-content">
+              <div style={{
+                display: 'grid',
+                gridTemplateColumns: '1fr 2fr',
+                gap: '3rem',
+                alignItems: 'center',
+                width: '100%',
+                maxWidth: '1200px'
+              }}>
+                {/* Left: Explanation */}
+                <div style={{ textAlign: 'left' }}>
+                  <h2 style={{
+                    fontFamily: "'Playfair Display', serif",
+                    fontSize: '2.2rem',
+                    color: '#ffd700',
+                    marginBottom: '1.5rem',
+                    textShadow: '0 0 20px rgba(255, 215, 0, 0.3)',
+                    lineHeight: 1.2
+                  }}>
+                    Create Your Own Characters
+                  </h2>
+                  
+                  <p style={{
+                    fontFamily: "'Inter', sans-serif",
+                    fontSize: '1.1rem',
+                    color: 'rgba(255, 255, 255, 0.9)',
+                    lineHeight: 1.6,
+                    marginBottom: '2rem'
+                  }}>
+                    Build custom AI characters using our template system. Choose from hundreds of 
+                    historical archetypes, then customize their personality, expertise, and behavior 
+                    to create your perfect conversation partner.
+                  </p>
+
+                  <div style={{
+                    background: 'rgba(255, 215, 0, 0.1)',
+                    border: '1px solid rgba(255, 215, 0, 0.3)',
+                    borderRadius: '12px',
+                    padding: '1.5rem',
+                    marginBottom: '2rem'
+                  }}>
+                    <h3 style={{
+                      color: '#FFD700',
+                      fontSize: '1.1rem',
+                      margin: '0 0 1rem 0',
+                      fontFamily: "'Playfair Display', serif"
+                    }}>
+                      How It Works
+                    </h3>
+                    <ul style={{
+                      listStyle: 'none',
+                      padding: 0,
+                      margin: 0
+                    }}>
+                      <li style={{
+                        color: 'rgba(255, 255, 255, 0.9)',
+                        fontSize: '0.95rem',
+                        marginBottom: '0.8rem',
+                        paddingLeft: '1.5rem',
+                        position: 'relative'
+                      }}>
+                        <span style={{
+                          position: 'absolute',
+                          left: 0,
+                          color: '#FFD700',
+                          fontWeight: 'bold'
+                        }}>1.</span>
+                        Choose a template from our extensive library
+                      </li>
+                      <li style={{
+                        color: 'rgba(255, 255, 255, 0.9)',
+                        fontSize: '0.95rem',
+                        marginBottom: '0.8rem',
+                        paddingLeft: '1.5rem',
+                        position: 'relative'
+                      }}>
+                        <span style={{
+                          position: 'absolute',
+                          left: 0,
+                          color: '#FFD700',
+                          fontWeight: 'bold'
+                        }}>2.</span>
+                        Customize name, personality, and expertise
+                      </li>
+                      <li style={{
+                        color: 'rgba(255, 255, 255, 0.9)',
+                        fontSize: '0.95rem',
+                        marginBottom: '0.8rem',
+                        paddingLeft: '1.5rem',
+                        position: 'relative'
+                      }}>
+                        <span style={{
+                          position: 'absolute',
+                          left: 0,
+                          color: '#FFD700',
+                          fontWeight: 'bold'
+                        }}>3.</span>
+                        Submit for approval (usually within 24 hours)
+                      </li>
+                      <li style={{
+                        color: 'rgba(255, 255, 255, 0.9)',
+                        fontSize: '0.95rem',
+                        paddingLeft: '1.5rem',
+                        position: 'relative'
+                      }}>
+                        <span style={{
+                          position: 'absolute',
+                          left: 0,
+                          color: '#FFD700',
+                          fontWeight: 'bold'
+                        }}>4.</span>
+                        Start conversations with your custom character
+                      </li>
+                    </ul>
+                  </div>
+
+                  <div style={{
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: '1rem',
+                    flexWrap: 'wrap'
+                  }}>
+                    <Link 
+                      to="/register" 
+                      style={{
+                        background: 'linear-gradient(135deg, #FFD700, #FFA500)',
+                        border: 'none',
+                        borderRadius: '25px',
+                        color: '#000',
+                        fontSize: '1rem',
+                        fontWeight: 700,
+                        padding: '0.8rem 2rem',
+                        textDecoration: 'none',
+                        display: 'inline-block',
+                        transition: 'all 0.3s ease',
+                        boxShadow: '0 4px 15px rgba(255, 215, 0, 0.3)'
+                      }}
+                    >
+                      Start Creating
+                    </Link>
+                    
+                    <div style={{
+                      color: 'rgba(255, 255, 255, 0.7)',
+                      fontSize: '0.9rem'
+                    }}>
+                      ← Try the demo first
+                    </div>
+                  </div>
                 </div>
 
-                <button
-                  className="nav-arrow nav-next"
-                  onClick={nextScreen}
-                  disabled={isTransitioning}
-                  aria-label="Next screen"
-                >
-                  ↓
-                </button>
+                {/* Right: Interactive Demo */}
+                <div>
+                  <DemoCharacterBuilder />
+                </div>
               </div>
-            </section>
+            </div>
+          </section>
 
-            {/* Section 2: Character Creation Demo */}
-            <section className="desktop-section-2">
-              <div className="desktop-section-content">
-                <div style={{
-                  display: 'grid',
-                  gridTemplateColumns: '1fr 2fr',
-                  gap: '3rem',
-                  alignItems: 'center',
-                  width: '100%',
-                  maxWidth: '1200px'
-                }}>
-                  {/* Left: Explanation */}
-                  <div style={{ textAlign: 'left' }}>
+          {/* Section 3: Subscription Plans + Creator Hub */}
+          <section className="desktop-section-3">
+            <div className="desktop-section-content" style={{ paddingTop: '120px' }}>
+              <div style={{
+                display: 'grid',
+                gridTemplateColumns: '2fr 1fr',
+                gap: '3rem',
+                alignItems: 'start',
+                width: '100%',
+                maxWidth: '1400px',
+                marginBottom: '4rem'
+              }}>
+                {/* Left: Subscription Plans */}
+                <div>
+                  <div style={{
+                    textAlign: 'center',
+                    marginBottom: '3rem'
+                  }}>
                     <h2 style={{
                       fontFamily: "'Playfair Display', serif",
-                      fontSize: '2.2rem',
+                      fontSize: '2.5rem',
                       color: '#ffd700',
-                      marginBottom: '1.5rem',
+                      marginBottom: '1rem',
                       textShadow: '0 0 20px rgba(255, 215, 0, 0.3)',
                       lineHeight: 1.2
                     }}>
-                      Create Your Own Characters
+                      Choose Your Plan
                     </h2>
                     
                     <p style={{
                       fontFamily: "'Inter', sans-serif",
-                      fontSize: '1.1rem',
+                      fontSize: '1.2rem',
                       color: 'rgba(255, 255, 255, 0.9)',
                       lineHeight: 1.6,
-                      marginBottom: '2rem'
+                      maxWidth: '600px',
+                      margin: '0 auto'
                     }}>
-                      Build custom AI characters using our template system. Choose from hundreds of 
-                      historical archetypes, then customize their personality, expertise, and behavior 
-                      to create your perfect conversation partner.
+                      Unlock the full potential of AI conversations with unlimited access 
+                      to characters, advanced features, and creator opportunities.
                     </p>
+                  </div>
 
-                    <div style={{
-                      background: 'rgba(255, 215, 0, 0.1)',
-                      border: '1px solid rgba(255, 215, 0, 0.3)',
-                      borderRadius: '12px',
-                      padding: '1.5rem',
-                      marginBottom: '2rem'
-                    }}>
-                      <h3 style={{
-                        color: '#FFD700',
-                        fontSize: '1.1rem',
-                        margin: '0 0 1rem 0',
-                        fontFamily: "'Playfair Display', serif"
-                      }}>
-                        How It Works
-                      </h3>
-                      <ul style={{
-                        listStyle: 'none',
-                        padding: 0,
-                        margin: 0
-                      }}>
-                        <li style={{
-                          color: 'rgba(255, 255, 255, 0.9)',
-                          fontSize: '0.95rem',
-                          marginBottom: '0.8rem',
-                          paddingLeft: '1.5rem',
-                          position: 'relative'
-                        }}>
-                          <span style={{
-                            position: 'absolute',
-                            left: 0,
-                            color: '#FFD700',
-                            fontWeight: 'bold'
-                          }}>1.</span>
-                          Choose a template from our extensive library
-                        </li>
-                        <li style={{
-                          color: 'rgba(255, 255, 255, 0.9)',
-                          fontSize: '0.95rem',
-                          marginBottom: '0.8rem',
-                          paddingLeft: '1.5rem',
-                          position: 'relative'
-                        }}>
-                          <span style={{
-                            position: 'absolute',
-                            left: 0,
-                            color: '#FFD700',
-                            fontWeight: 'bold'
-                          }}>2.</span>
-                          Customize name, personality, and expertise
-                        </li>
-                        <li style={{
-                          color: 'rgba(255, 255, 255, 0.9)',
-                          fontSize: '0.95rem',
-                          marginBottom: '0.8rem',
-                          paddingLeft: '1.5rem',
-                          position: 'relative'
-                        }}>
-                          <span style={{
-                            position: 'absolute',
-                            left: 0,
-                            color: '#FFD700',
-                            fontWeight: 'bold'
-                          }}>3.</span>
-                          Submit for approval (usually within 24 hours)
-                        </li>
-                        <li style={{
-                          color: 'rgba(255, 255, 255, 0.9)',
-                          fontSize: '0.95rem',
-                          paddingLeft: '1.5rem',
-                          position: 'relative'
-                        }}>
-                          <span style={{
-                            position: 'absolute',
-                            left: 0,
-                            color: '#FFD700',
-                            fontWeight: 'bold'
-                          }}>4.</span>
-                          Start conversations with your custom character
-                        </li>
-                      </ul>
-                    </div>
+                  <SubscriptionPlansCards />
 
+                  {/* Trust Signals */}
+                  <div style={{
+                    display: 'flex',
+                    justifyContent: 'center',
+                    alignItems: 'center',
+                    gap: '2rem',
+                    marginTop: '2rem',
+                    flexWrap: 'wrap'
+                  }}>
                     <div style={{
                       display: 'flex',
                       alignItems: 'center',
-                      gap: '1rem',
-                      flexWrap: 'wrap'
+                      gap: '0.5rem',
+                      color: 'rgba(255, 255, 255, 0.7)',
+                      fontSize: '0.9rem'
                     }}>
-                      <Link 
-                        to="/register" 
-                        style={{
-                          background: 'linear-gradient(135deg, #FFD700, #FFA500)',
-                          border: 'none',
-                          borderRadius: '25px',
-                          color: '#000',
-                          fontSize: '1rem',
-                          fontWeight: 700,
-                          padding: '0.8rem 2rem',
-                          textDecoration: 'none',
-                          display: 'inline-block',
-                          transition: 'all 0.3s ease',
-                          boxShadow: '0 4px 15px rgba(255, 215, 0, 0.3)'
-                        }}
-                      >
-                        Start Creating
-                      </Link>
-                      
                       <div style={{
-                        color: 'rgba(255, 255, 255, 0.7)',
-                        fontSize: '0.9rem'
+                        width: '16px',
+                        height: '16px',
+                        background: 'linear-gradient(135deg, #00FF88, #00CC6A)',
+                        borderRadius: '50%',
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                        fontSize: '0.7rem',
+                        color: '#000',
+                        fontWeight: 'bold'
                       }}>
-                        ← Try the demo first
+                        ✓
                       </div>
+                      Cancel anytime
+                    </div>
+                    <div style={{
+                      display: 'flex',
+                      alignItems: 'center',
+                      gap: '0.5rem',
+                      color: 'rgba(255, 255, 255, 0.7)',
+                      fontSize: '0.9rem'
+                    }}>
+                      <div style={{
+                        width: '16px',
+                        height: '16px',
+                        background: 'linear-gradient(135deg, #00FF88, #00CC6A)',
+                        borderRadius: '50%',
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                        fontSize: '0.7rem',
+                        color: '#000',
+                        fontWeight: 'bold'
+                      }}>
+                        ✓
+                      </div>
+                      Secure payment
                     </div>
                   </div>
+                </div>
 
-                  {/* Right: Interactive Demo */}
-                  <div>
-                    <DemoCharacterBuilder />
-                  </div>
+                {/* Right: Creator Hub Teaser */}
+                <div style={{
+                  position: 'sticky',
+                  top: '100px'
+                }}>
+                  <CreatorHubTeaser />
                 </div>
               </div>
-            </section>
 
-            {/* Section 3: Subscription Plans + Creator Hub */}
-            <section className="desktop-section-3">
-              <div className="desktop-section-content" style={{ paddingTop: '120px' }}>
+              {/* Footer Links Section */}
+              <div style={{
+                borderTop: '1px solid rgba(255, 255, 255, 0.1)',
+                paddingTop: '3rem',
+                marginTop: '3rem'
+              }}>
                 <div style={{
                   display: 'grid',
-                  gridTemplateColumns: '2fr 1fr',
-                  gap: '3rem',
-                  alignItems: 'start',
-                  width: '100%',
-                  maxWidth: '1400px',
-                  marginBottom: '4rem'
+                  gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))',
+                  gap: '2rem',
+                  maxWidth: '1200px',
+                  margin: '0 auto 3rem auto'
                 }}>
-                  {/* Left: Subscription Plans */}
+                  {/* Company */}
                   <div>
-                    <div style={{
-                      textAlign: 'center',
-                      marginBottom: '3rem'
+                    <h4 style={{
+                      color: '#FFD700',
+                      fontSize: '1.1rem',
+                      fontWeight: 600,
+                      margin: '0 0 1rem 0',
+                      fontFamily: "'Playfair Display', serif"
                     }}>
-                      <h2 style={{
-                        fontFamily: "'Playfair Display', serif",
-                        fontSize: '2.5rem',
-                        color: '#ffd700',
-                        marginBottom: '1rem',
-                        textShadow: '0 0 20px rgba(255, 215, 0, 0.3)',
-                        lineHeight: 1.2
-                      }}>
-                        Choose Your Plan
-                      </h2>
-                      
-                      <p style={{
-                        fontFamily: "'Inter', sans-serif",
-                        fontSize: '1.2rem',
-                        color: 'rgba(255, 255, 255, 0.9)',
-                        lineHeight: 1.6,
-                        maxWidth: '600px',
-                        margin: '0 auto'
-                      }}>
-                        Unlock the full potential of AI conversations with unlimited access 
-                        to characters, advanced features, and creator opportunities.
-                      </p>
-                    </div>
-
-                    <SubscriptionPlansCards />
-
-                    {/* Trust Signals */}
+                      Company
+                    </h4>
                     <div style={{
                       display: 'flex',
-                      justifyContent: 'center',
-                      alignItems: 'center',
-                      gap: '2rem',
-                      marginTop: '2rem',
-                      flexWrap: 'wrap'
+                      flexDirection: 'column',
+                      gap: '0.75rem'
                     }}>
-                      <div style={{
-                        display: 'flex',
-                        alignItems: 'center',
-                        gap: '0.5rem',
+                      <Link to="/about" style={{
                         color: 'rgba(255, 255, 255, 0.7)',
-                        fontSize: '0.9rem'
-                      }}>
-                        <div style={{
-                          width: '16px',
-                          height: '16px',
-                          background: 'linear-gradient(135deg, #00FF88, #00CC6A)',
-                          borderRadius: '50%',
-                          display: 'flex',
-                          alignItems: 'center',
-                          justifyContent: 'center',
-                          fontSize: '0.7rem',
-                          color: '#000',
-                          fontWeight: 'bold'
-                        }}>
-                          ✓
-                        </div>
-                        Cancel anytime
-                      </div>
-                      <div style={{
-                        display: 'flex',
-                        alignItems: 'center',
-                        gap: '0.5rem',
+                        textDecoration: 'none',
+                        fontSize: '0.9rem',
+                        transition: 'color 0.3s ease'
+                      }}
+                      onMouseEnter={(e) => e.target.style.color = '#FFD700'}
+                      onMouseLeave={(e) => e.target.style.color = 'rgba(255, 255, 255, 0.7)'}
+                      >
+                        About Us
+                      </Link>
+                      <Link to="/contact-us" style={{
                         color: 'rgba(255, 255, 255, 0.7)',
-                        fontSize: '0.9rem'
-                      }}>
-                        <div style={{
-                          width: '16px',
-                          height: '16px',
-                          background: 'linear-gradient(135deg, #00FF88, #00CC6A)',
-                          borderRadius: '50%',
-                          display: 'flex',
-                          alignItems: 'center',
-                          justifyContent: 'center',
-                          fontSize: '0.7rem',
-                          color: '#000',
-                          fontWeight: 'bold'
-                        }}>
-                          ✓
-                        </div>
-                        Secure payment
-                      </div>
+                        textDecoration: 'none',
+                        fontSize: '0.9rem',
+                        transition: 'color 0.3s ease'
+                      }}
+                      onMouseEnter={(e) => e.target.style.color = '#FFD700'}
+                      onMouseLeave={(e) => e.target.style.color = 'rgba(255, 255, 255, 0.7)'}
+                      >
+                        Contact Us
+                      </Link>
+                      <Link to="/careers" style={{
+                        color: 'rgba(255, 255, 255, 0.7)',
+                        textDecoration: 'none',
+                        fontSize: '0.9rem',
+                        transition: 'color 0.3s ease'
+                      }}
+                      onMouseEnter={(e) => e.target.style.color = '#FFD700'}
+                      onMouseLeave={(e) => e.target.style.color = 'rgba(255, 255, 255, 0.7)'}
+                      >
+                        Careers
+                      </Link>
                     </div>
                   </div>
 
-                  {/* Right: Creator Hub Teaser */}
-                  <div style={{
-                    position: 'sticky',
-                    top: '100px'
-                  }}>
-                    <CreatorHubTeaser />
+                  {/* Product */}
+                  <div>
+                    <h4 style={{
+                      color: '#FFD700',
+                      fontSize: '1.1rem',
+                      fontWeight: 600,
+                      margin: '0 0 1rem 0',
+                      fontFamily: "'Playfair Display', serif"
+                    }}>
+                      Product
+                    </h4>
+                    <div style={{
+                      display: 'flex',
+                      flexDirection: 'column',
+                      gap: '0.75rem'
+                    }}>
+                      <Link to="/pricing" style={{
+                        color: 'rgba(255, 255, 255, 0.7)',
+                        textDecoration: 'none',
+                        fontSize: '0.9rem',
+                        transition: 'color 0.3s ease'
+                      }}
+                      onMouseEnter={(e) => e.target.style.color = '#FFD700'}
+                      onMouseLeave={(e) => e.target.style.color = 'rgba(255, 255, 255, 0.7)'}
+                      >
+                        Pricing
+                      </Link>
+                      <Link to="/features" style={{
+                        color: 'rgba(255, 255, 255, 0.7)',
+                        textDecoration: 'none',
+                        fontSize: '0.9rem',
+                        transition: 'color 0.3s ease'
+                      }}
+                      onMouseEnter={(e) => e.target.style.color = '#FFD700'}
+                      onMouseLeave={(e) => e.target.style.color = 'rgba(255, 255, 255, 0.7)'}
+                      >
+                        Features
+                      </Link>
+                      <Link to="/creator-hub" style={{
+                        color: 'rgba(255, 255, 255, 0.7)',
+                        textDecoration: 'none',
+                        fontSize: '0.9rem',
+                        transition: 'color 0.3s ease'
+                      }}
+                      onMouseEnter={(e) => e.target.style.color = '#FFD700'}
+                      onMouseLeave={(e) => e.target.style.color = 'rgba(255, 255, 255, 0.7)'}
+                      >
+                        Creator Hub
+                      </Link>
+                    </div>
+                  </div>
+
+                  {/* Legal */}
+                  <div>
+                    <h4 style={{
+                      color: '#FFD700',
+                      fontSize: '1.1rem',
+                      fontWeight: 600,
+                      margin: '0 0 1rem 0',
+                      fontFamily: "'Playfair Display', serif"
+                    }}>
+                      Legal
+                    </h4>
+                    <div style={{
+                      display: 'flex',
+                      flexDirection: 'column',
+                      gap: '0.75rem'
+                    }}>
+                      <Link to="/terms" style={{
+                        color: 'rgba(255, 255, 255, 0.7)',
+                        textDecoration: 'none',
+                        fontSize: '0.9rem',
+                        transition: 'color 0.3s ease'
+                      }}
+                      onMouseEnter={(e) => e.target.style.color = '#FFD700'}
+                      onMouseLeave={(e) => e.target.style.color = 'rgba(255, 255, 255, 0.7)'}
+                      >
+                        Terms of Service
+                      </Link>
+                      <Link to="/privacy" style={{
+                        color: 'rgba(255, 255, 255, 0.7)',
+                        textDecoration: 'none',
+                        fontSize: '0.9rem',
+                        transition: 'color 0.3s ease'
+                      }}
+                      onMouseEnter={(e) => e.target.style.color = '#FFD700'}
+                      onMouseLeave={(e) => e.target.style.color = 'rgba(255, 255, 255, 0.7)'}
+                      >
+                        Privacy Policy
+                      </Link>
+                      <Link to="/community-guidelines" style={{
+                        color: 'rgba(255, 255, 255, 0.7)',
+                        textDecoration: 'none',
+                        fontSize: '0.9rem',
+                        transition: 'color 0.3s ease'
+                      }}
+                      onMouseEnter={(e) => e.target.style.color = '#FFD700'}
+                      onMouseLeave={(e) => e.target.style.color = 'rgba(255, 255, 255, 0.7)'}
+                      >
+                        Community Guidelines
+                      </Link>
+                    </div>
+                  </div>
+
+                  {/* Support */}
+                  <div>
+                    <h4 style={{
+                      color: '#FFD700',
+                      fontSize: '1.1rem',
+                      fontWeight: 600,
+                      margin: '0 0 1rem 0',
+                      fontFamily: "'Playfair Display', serif"
+                    }}>
+                      Support
+                    </h4>
+                    <div style={{
+                      display: 'flex',
+                      flexDirection: 'column',
+                      gap: '0.75rem'
+                    }}>
+                      <Link to="/help" style={{
+                        color: 'rgba(255, 255, 255, 0.7)',
+                        textDecoration: 'none',
+                        fontSize: '0.9rem',
+                        transition: 'color 0.3s ease'
+                      }}
+                      onMouseEnter={(e) => e.target.style.color = '#FFD700'}
+                      onMouseLeave={(e) => e.target.style.color = 'rgba(255, 255, 255, 0.7)'}
+                      >
+                        Help Center
+                      </Link>
+                      <Link to="/support" style={{
+                        color: 'rgba(255, 255, 255, 0.7)',
+                        textDecoration: 'none',
+                        fontSize: '0.9rem',
+                        transition: 'color 0.3s ease'
+                      }}
+                      onMouseEnter={(e) => e.target.style.color = '#FFD700'}
+                      onMouseLeave={(e) => e.target.style.color = 'rgba(255, 255, 255, 0.7)'}
+                      >
+                        Contact Support
+                      </Link>
+                      <a href="mailto:hello@awakeverse.com" style={{
+                        color: 'rgba(255, 255, 255, 0.7)',
+                        textDecoration: 'none',
+                        fontSize: '0.9rem',
+                        transition: 'color 0.3s ease'
+                      }}
+                      onMouseEnter={(e) => e.target.style.color = '#FFD700'}
+                      onMouseLeave={(e) => e.target.style.color = 'rgba(255, 255, 255, 0.7)'}
+                      >
+                        hello@awakeverse.com
+                      </a>
+                    </div>
                   </div>
                 </div>
 
-                {/* Footer Links Section */}
+                {/* Copyright */}
                 <div style={{
+                  textAlign: 'center',
+                  paddingTop: '2rem',
                   borderTop: '1px solid rgba(255, 255, 255, 0.1)',
-                  paddingTop: '3rem',
-                  marginTop: '3rem'
+                  color: 'rgba(255, 255, 255, 0.5)',
+                  fontSize: '0.9rem'
                 }}>
-                  <div style={{
-                    display: 'grid',
-                    gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))',
-                    gap: '2rem',
-                    maxWidth: '1200px',
-                    margin: '0 auto 3rem auto'
-                  }}>
-                    {/* Company */}
-                    <div>
-                      <h4 style={{
-                        color: '#FFD700',
-                        fontSize: '1.1rem',
-                        fontWeight: 600,
-                        margin: '0 0 1rem 0',
-                        fontFamily: "'Playfair Display', serif"
-                      }}>
-                        Company
-                      </h4>
-                      <div style={{
-                        display: 'flex',
-                        flexDirection: 'column',
-                        gap: '0.75rem'
-                      }}>
-                        <Link to="/about" style={{
-                          color: 'rgba(255, 255, 255, 0.7)',
-                          textDecoration: 'none',
-                          fontSize: '0.9rem',
-                          transition: 'color 0.3s ease'
-                        }}
-                        onMouseEnter={(e) => e.target.style.color = '#FFD700'}
-                        onMouseLeave={(e) => e.target.style.color = 'rgba(255, 255, 255, 0.7)'}
-                        >
-                          About Us
-                        </Link>
-                        <Link to="/contact-us" style={{
-                          color: 'rgba(255, 255, 255, 0.7)',
-                          textDecoration: 'none',
-                          fontSize: '0.9rem',
-                          transition: 'color 0.3s ease'
-                        }}
-                        onMouseEnter={(e) => e.target.style.color = '#FFD700'}
-                        onMouseLeave={(e) => e.target.style.color = 'rgba(255, 255, 255, 0.7)'}
-                        >
-                          Contact Us
-                        </Link>
-                        <Link to="/careers" style={{
-                          color: 'rgba(255, 255, 255, 0.7)',
-                          textDecoration: 'none',
-                          fontSize: '0.9rem',
-                          transition: 'color 0.3s ease'
-                        }}
-                        onMouseEnter={(e) => e.target.style.color = '#FFD700'}
-                        onMouseLeave={(e) => e.target.style.color = 'rgba(255, 255, 255, 0.7)'}
-                        >
-                          Careers
-                        </Link>
-                      </div>
-                    </div>
-
-                    {/* Product */}
-                    <div>
-                      <h4 style={{
-                        color: '#FFD700',
-                        fontSize: '1.1rem',
-                        fontWeight: 600,
-                        margin: '0 0 1rem 0',
-                        fontFamily: "'Playfair Display', serif"
-                      }}>
-                        Product
-                      </h4>
-                      <div style={{
-                        display: 'flex',
-                        flexDirection: 'column',
-                        gap: '0.75rem'
-                      }}>
-                        <Link to="/pricing" style={{
-                          color: 'rgba(255, 255, 255, 0.7)',
-                          textDecoration: 'none',
-                          fontSize: '0.9rem',
-                          transition: 'color 0.3s ease'
-                        }}
-                        onMouseEnter={(e) => e.target.style.color = '#FFD700'}
-                        onMouseLeave={(e) => e.target.style.color = 'rgba(255, 255, 255, 0.7)'}
-                        >
-                          Pricing
-                        </Link>
-                        <Link to="/features" style={{
-                          color: 'rgba(255, 255, 255, 0.7)',
-                          textDecoration: 'none',
-                          fontSize: '0.9rem',
-                          transition: 'color 0.3s ease'
-                        }}
-                        onMouseEnter={(e) => e.target.style.color = '#FFD700'}
-                        onMouseLeave={(e) => e.target.style.color = 'rgba(255, 255, 255, 0.7)'}
-                        >
-                          Features
-                        </Link>
-                        <Link to="/creator-hub" style={{
-                          color: 'rgba(255, 255, 255, 0.7)',
-                          textDecoration: 'none',
-                          fontSize: '0.9rem',
-                          transition: 'color 0.3s ease'
-                        }}
-                        onMouseEnter={(e) => e.target.style.color = '#FFD700'}
-                        onMouseLeave={(e) => e.target.style.color = 'rgba(255, 255, 255, 0.7)'}
-                        >
-                          Creator Hub
-                        </Link>
-                      </div>
-                    </div>
-
-                    {/* Legal */}
-                    <div>
-                      <h4 style={{
-                        color: '#FFD700',
-                        fontSize: '1.1rem',
-                        fontWeight: 600,
-                        margin: '0 0 1rem 0',
-                        fontFamily: "'Playfair Display', serif"
-                      }}>
-                        Legal
-                      </h4>
-                      <div style={{
-                        display: 'flex',
-                        flexDirection: 'column',
-                        gap: '0.75rem'
-                      }}>
-                        <Link to="/terms" style={{
-                          color: 'rgba(255, 255, 255, 0.7)',
-                          textDecoration: 'none',
-                          fontSize: '0.9rem',
-                          transition: 'color 0.3s ease'
-                        }}
-                        onMouseEnter={(e) => e.target.style.color = '#FFD700'}
-                        onMouseLeave={(e) => e.target.style.color = 'rgba(255, 255, 255, 0.7)'}
-                        >
-                          Terms of Service
-                        </Link>
-                        <Link to="/privacy" style={{
-                          color: 'rgba(255, 255, 255, 0.7)',
-                          textDecoration: 'none',
-                          fontSize: '0.9rem',
-                          transition: 'color 0.3s ease'
-                        }}
-                        onMouseEnter={(e) => e.target.style.color = '#FFD700'}
-                        onMouseLeave={(e) => e.target.style.color = 'rgba(255, 255, 255, 0.7)'}
-                        >
-                          Privacy Policy
-                        </Link>
-                        <Link to="/community-guidelines" style={{
-                          color: 'rgba(255, 255, 255, 0.7)',
-                          textDecoration: 'none',
-                          fontSize: '0.9rem',
-                          transition: 'color 0.3s ease'
-                        }}
-                        onMouseEnter={(e) => e.target.style.color = '#FFD700'}
-                        onMouseLeave={(e) => e.target.style.color = 'rgba(255, 255, 255, 0.7)'}
-                        >
-                          Community Guidelines
-                        </Link>
-                      </div>
-                    </div>
-
-                    {/* Support */}
-                    <div>
-                      <h4 style={{
-                        color: '#FFD700',
-                        fontSize: '1.1rem',
-                        fontWeight: 600,
-                        margin: '0 0 1rem 0',
-                        fontFamily: "'Playfair Display', serif"
-                      }}>
-                        Support
-                      </h4>
-                      <div style={{
-                        display: 'flex',
-                        flexDirection: 'column',
-                        gap: '0.75rem'
-                      }}>
-                        <Link to="/help" style={{
-                          color: 'rgba(255, 255, 255, 0.7)',
-                          textDecoration: 'none',
-                          fontSize: '0.9rem',
-                          transition: 'color 0.3s ease'
-                        }}
-                        onMouseEnter={(e) => e.target.style.color = '#FFD700'}
-                        onMouseLeave={(e) => e.target.style.color = 'rgba(255, 255, 255, 0.7)'}
-                        >
-                          Help Center
-                        </Link>
-                        <Link to="/support" style={{
-                          color: 'rgba(255, 255, 255, 0.7)',
-                          textDecoration: 'none',
-                          fontSize: '0.9rem',
-                          transition: 'color 0.3s ease'
-                        }}
-                        onMouseEnter={(e) => e.target.style.color = '#FFD700'}
-                        onMouseLeave={(e) => e.target.style.color = 'rgba(255, 255, 255, 0.7)'}
-                        >
-                          Contact Support
-                        </Link>
-                        <a href="mailto:hello@awakeverse.com" style={{
-                          color: 'rgba(255, 255, 255, 0.7)',
-                          textDecoration: 'none',
-                          fontSize: '0.9rem',
-                          transition: 'color 0.3s ease'
-                        }}
-                        onMouseEnter={(e) => e.target.style.color = '#FFD700'}
-                        onMouseLeave={(e) => e.target.style.color = 'rgba(255, 255, 255, 0.7)'}
-                        >
-                          hello@awakeverse.com
-                        </a>
-                      </div>
-                    </div>
-                  </div>
-
-                  {/* Copyright */}
-                  <div style={{
-                    textAlign: 'center',
-                    paddingTop: '2rem',
-                    borderTop: '1px solid rgba(255, 255, 255, 0.1)',
-                    color: 'rgba(255, 255, 255, 0.5)',
-                    fontSize: '0.9rem'
-                  }}>
-                    © 2025 Awakeverse Ltd. All rights reserved.
-                  </div>
+                  © 2025 Awakeverse Ltd. All rights reserved.
                 </div>
               </div>
-            </section>
-          </div>
+            </div>
+          </section>
 
           {/* Desktop Scroll Indicator */}
-          <div className="desktop-scroll-indicator">
-            <div 
-              className={`scroll-dot ${currentSection === 0 ? 'active' : ''}`} 
-              onClick={() => scrollToSection(0)}
-            ></div>
-            <div 
-              className={`scroll-dot ${currentSection === 1 ? 'active' : ''}`} 
-              onClick={() => scrollToSection(1)}
-            ></div>
-            <div 
-              className={`scroll-dot ${currentSection === 2 ? 'active' : ''}`} 
-              onClick={() => scrollToSection(2)}
-            ></div>
-          </div>
+          {!isMobile && (
+            <div className="desktop-scroll-indicator">
+              <div 
+                className={`scroll-dot ${currentSection === 0 ? 'active' : ''}`} 
+                onClick={() => scrollToSection(0)}
+              ></div>
+              <div 
+                className={`scroll-dot ${currentSection === 1 ? 'active' : ''}`} 
+                onClick={() => scrollToSection(1)}
+              ></div>
+              <div 
+                className={`scroll-dot ${currentSection === 2 ? 'active' : ''}`} 
+                onClick={() => scrollToSection(2)}
+              ></div>
+            </div>
+          )}
         </>
       )}
     </div>
