@@ -2098,57 +2098,56 @@ body, html {
   width: 100%;
 }
 
-/* Auth Buttons Section - GitHub-inspired compact design */
+/* Auth Buttons Section */
 .desktop-header-auth {
   display: flex;
   align-items: center;
-  gap: 0.75rem;
-  margin-left: 1.5rem;
-  padding-left: 1.5rem;
-  border-left: 1px solid rgba(255, 255, 255, 0.15);
+  gap: 1rem;
+  margin-left: 1rem;
+  padding-left: 1rem;
+  border-left: 1px solid rgba(255, 255, 255, 0.2);
 }
 
 .desktop-auth-button {
   font-family: 'Inter', sans-serif;
-  font-size: 0.875rem;
-  font-weight: 500;
-  padding: 0.375rem 0.875rem;
-  border-radius: 6px;
+  font-size: 0.9rem;
+  font-weight: 600;
+  padding: 0.5rem 1.2rem;
+  border-radius: 25px;
   text-decoration: none;
-  transition: all 0.2s ease;
+  transition: all 0.3s ease;
   cursor: pointer;
-  border: 1px solid transparent;
+  border: none;
   outline: none;
-  line-height: 1.5;
-  white-space: nowrap;
 }
 
-/* Sign In Button - Minimal ghost style like GitHub */
+/* Sign In Button - Ghost style */
 .desktop-auth-button.sign-in {
   background: transparent;
-  color: rgba(255, 255, 255, 0.85);
-  border: 1px solid rgba(255, 255, 255, 0.25);
+  color: rgba(255, 255, 255, 0.9);
+  border: 1px solid rgba(255, 255, 255, 0.3);
 }
 
 .desktop-auth-button.sign-in:hover {
-  background: rgba(255, 255, 255, 0.08);
+  background: rgba(255, 255, 255, 0.1);
   color: #ffffff;
-  border-color: rgba(255, 255, 255, 0.4);
+  border-color: rgba(255, 255, 255, 0.5);
+  transform: translateY(-1px);
 }
 
-/* Sign Up Button - Subtle primary style */
+/* Sign Up Button - Primary style */
 .desktop-auth-button.sign-up {
-  background: #ffd700;
+  background: linear-gradient(135deg, #ffd700, #ffed4a);
   color: #1a1a2e;
   border: 1px solid #ffd700;
-  font-weight: 600;
+  font-weight: 700;
 }
 
 .desktop-auth-button.sign-up:hover {
-  background: #ffed4a;
+  background: linear-gradient(135deg, #ffed4a, #fff176);
   border-color: #ffed4a;
-  transform: translateY(-1px);
-  box-shadow: 0 2px 8px rgba(255, 215, 0, 0.25);
+  transform: translateY(-2px);
+  box-shadow: 0 4px 15px rgba(255, 215, 0, 0.3);
 }
 
 /* Hide original logo when header is active */
@@ -2175,23 +2174,17 @@ body, html {
     font-size: 1.6rem;
   }
   
-  .desktop-header-links {
-    gap: 1.2rem;
+  .desktop-header-nav {
+    gap: 1.5rem;
   }
   
-  .desktop-header-links a {
+  .desktop-header-nav a {
     font-size: 0.9rem;
   }
   
-  .desktop-header-auth {
-    gap: 0.8rem;
-    margin-left: 0.8rem;
-    padding-left: 0.8rem;
-  }
-  
-  .desktop-auth-button {
-    font-size: 0.85rem;
-    padding: 0.4rem 1rem;
+  .desktop-header-copyright {
+    font-size: 0.8rem;
+    margin-left: 1rem;
   }
 }
 
@@ -2305,57 +2298,56 @@ body, html {
   width: 100%;
 }
 
-/* Auth Buttons Section - GitHub-inspired compact design */
+/* Auth Buttons Section */
 .desktop-header-auth {
   display: flex;
   align-items: center;
-  gap: 0.75rem;
-  margin-left: 1.5rem;
-  padding-left: 1.5rem;
-  border-left: 1px solid rgba(255, 255, 255, 0.15);
+  gap: 1rem;
+  margin-left: 1rem;
+  padding-left: 1rem;
+  border-left: 1px solid rgba(255, 255, 255, 0.2);
 }
 
 .desktop-auth-button {
   font-family: 'Inter', sans-serif;
-  font-size: 0.875rem;
-  font-weight: 500;
-  padding: 0.375rem 0.875rem;
-  border-radius: 6px;
+  font-size: 0.9rem;
+  font-weight: 600;
+  padding: 0.5rem 1.2rem;
+  border-radius: 25px;
   text-decoration: none;
-  transition: all 0.2s ease;
+  transition: all 0.3s ease;
   cursor: pointer;
-  border: 1px solid transparent;
+  border: none;
   outline: none;
-  line-height: 1.5;
-  white-space: nowrap;
 }
 
-/* Sign In Button - Minimal ghost style like GitHub */
+/* Sign In Button - Ghost style */
 .desktop-auth-button.sign-in {
   background: transparent;
-  color: rgba(255, 255, 255, 0.85);
-  border: 1px solid rgba(255, 255, 255, 0.25);
+  color: rgba(255, 255, 255, 0.9);
+  border: 1px solid rgba(255, 255, 255, 0.3);
 }
 
 .desktop-auth-button.sign-in:hover {
-  background: rgba(255, 255, 255, 0.08);
+  background: rgba(255, 255, 255, 0.1);
   color: #ffffff;
-  border-color: rgba(255, 255, 255, 0.4);
+  border-color: rgba(255, 255, 255, 0.5);
+  transform: translateY(-1px);
 }
 
-/* Sign Up Button - Subtle primary style */
+/* Sign Up Button - Primary style */
 .desktop-auth-button.sign-up {
-  background: #ffd700;
+  background: linear-gradient(135deg, #ffd700, #ffed4a);
   color: #1a1a2e;
   border: 1px solid #ffd700;
-  font-weight: 600;
+  font-weight: 700;
 }
 
 .desktop-auth-button.sign-up:hover {
-  background: #ffed4a;
+  background: linear-gradient(135deg, #ffed4a, #fff176);
   border-color: #ffed4a;
-  transform: translateY(-1px);
-  box-shadow: 0 2px 8px rgba(255, 215, 0, 0.25);
+  transform: translateY(-2px);
+  box-shadow: 0 4px 15px rgba(255, 215, 0, 0.3);
 }
 
 /* Hide original logo when header is active */
@@ -2391,14 +2383,14 @@ body, html {
   }
   
   .desktop-header-auth {
-    gap: 0.6rem;
-    margin-left: 1.2rem;
-    padding-left: 1.2rem;
+    gap: 0.8rem;
+    margin-left: 0.8rem;
+    padding-left: 0.8rem;
   }
   
   .desktop-auth-button {
-    font-size: 0.8rem;
-    padding: 0.3rem 0.75rem;
+    font-size: 0.85rem;
+    padding: 0.4rem 1rem;
   }
 }
 
