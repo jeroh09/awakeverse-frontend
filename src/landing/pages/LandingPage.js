@@ -571,9 +571,9 @@ export default function LandingPage() {
           </div>
         </>
       ) : (
-        /* DESKTOP: 3-Section Vertical Layout */
-        <>
-          {/* Section 1: Existing Carousel */}
+        /* DESKTOP: Hybrid Layout - Carousel + Scrollable Sections */
+        <div className="desktop-main-wrapper">
+          {/* Section 1: Fixed Height Carousel */}
           <section className="desktop-section-1">
             <div className="carousel-container">
               <div
@@ -747,7 +747,7 @@ export default function LandingPage() {
                 disabled={isTransitioning}
                 aria-label="Previous screen"
               >
-                ↑
+                ←
               </button>
 
               <div className="carousel-dots">
@@ -768,7 +768,7 @@ export default function LandingPage() {
                 disabled={isTransitioning}
                 aria-label="Next screen"
               >
-                ↓
+                →
               </button>
             </div>
           </section>
@@ -1297,7 +1297,7 @@ export default function LandingPage() {
               ></div>
             </div>
           )}
-        </>
+        </div>
       )}
     </div>
   );

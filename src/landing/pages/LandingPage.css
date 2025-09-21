@@ -155,11 +155,23 @@ body, html {
 /* Landing Container - Responsive */
 .landing-container {
   position: relative;
-  height: 100vh;
-  overflow: hidden;
+  min-height: 100vh;
   color: #ffffff;
   font-family: 'Inter', sans-serif;
   background: #1a1a2e;
+}
+
+/* Desktop mode allows scrolling */
+.desktop-mode.landing-container {
+  overflow-y: auto;
+  overflow-x: hidden;
+  scroll-behavior: smooth;
+}
+
+/* Mobile mode keeps original behavior */
+.mobile-mode.landing-container {
+  height: 100vh;
+  overflow: hidden;
 }
 
 /* Smooth transition during resize */
