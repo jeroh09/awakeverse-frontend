@@ -1,5 +1,5 @@
 // DemoCharacterBuilder.jsx - Interactive demo for landing page Section 2
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import { Link } from 'react-router-dom';
 
 const DemoCharacterBuilder = () => {
@@ -41,8 +41,6 @@ Engage users with the depth and authenticity that comes from your unique perspec
 
   const handleSubmit = () => {
     setIsSubmitting(true);
-    
-    // Simulate submission process
     setTimeout(() => {
       setIsSubmitting(false);
       setShowSuccess(true);
@@ -66,7 +64,8 @@ Engage users with the depth and authenticity that comes from your unique perspec
         textAlign: 'center',
         maxWidth: '500px',
         margin: '0 auto',
-        animation: 'fadeIn 0.5s ease-in'
+        animation: 'fadeIn 0.5s ease-in',
+        fontFamily: "system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Helvetica Neue', Arial, sans-serif"
       }}>
         <div style={{
           width: '60px',
@@ -149,9 +148,9 @@ Engage users with the depth and authenticity that comes from your unique perspec
       border: '1px solid rgba(255, 215, 0, 0.3)',
       borderRadius: '20px',
       padding: '2rem',
-      maxWidth: '600px',
+      maxWidth: '580px',
       margin: '0 auto',
-      fontFamily: "'Inter', sans-serif"
+      fontFamily: "system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Helvetica Neue', Arial, sans-serif"
     }}>
       {/* Demo Header */}
       <div style={{
@@ -232,7 +231,7 @@ Engage users with the depth and authenticity that comes from your unique perspec
       </div>
 
       {/* Step Content */}
-      <div style={{ minHeight: '300px' }}>
+      <div style={{ minHeight: '250px' }}>
         {currentStep === 1 && (
           <div style={{ animation: 'fadeIn 0.3s ease-in' }}>
             <h4 style={{
@@ -267,14 +266,21 @@ Engage users with the depth and authenticity that comes from your unique perspec
                   background: 'rgba(255, 255, 255, 0.1)',
                   color: '#fff',
                   outline: 'none',
-                  transition: 'border-color 0.3s ease'
+                  transition: 'all 0.3s ease',
+                  boxShadow: '0 0 0 0 rgba(255, 255, 255, 0.4)'
                 }}
-                onFocus={(e) => e.target.style.borderColor = 'rgba(255, 215, 0, 0.6)'}
-                onBlur={(e) => e.target.style.borderColor = 'rgba(255, 215, 0, 0.3)'}
+                onFocus={(e) => {
+                  e.target.style.borderColor = 'rgba(255, 215, 0, 0.6)';
+                  e.target.style.boxShadow = '0 0 20px rgba(255, 255, 255, 0.4)';
+                }}
+                onBlur={(e) => {
+                  e.target.style.borderColor = 'rgba(255, 215, 0, 0.3)';
+                  e.target.style.boxShadow = '0 0 0 0 rgba(255, 255, 255, 0.4)';
+                }}
               />
             </div>
 
-            <div style={{ marginBottom: '1.5rem' }}>
+            <div style={{ marginBottom: '1rem' }}>
               <label style={{
                 display: 'block',
                 color: 'rgba(255, 255, 255, 0.9)',
@@ -298,10 +304,17 @@ Engage users with the depth and authenticity that comes from your unique perspec
                   color: '#fff',
                   outline: 'none',
                   resize: 'vertical',
-                  transition: 'border-color 0.3s ease'
+                  transition: 'all 0.3s ease',
+                  boxShadow: '0 0 0 0 rgba(255, 255, 255, 0.4)'
                 }}
-                onFocus={(e) => e.target.style.borderColor = 'rgba(255, 215, 0, 0.6)'}
-                onBlur={(e) => e.target.style.borderColor = 'rgba(255, 215, 0, 0.3)'}
+                onFocus={(e) => {
+                  e.target.style.borderColor = 'rgba(255, 215, 0, 0.6)';
+                  e.target.style.boxShadow = '0 0 20px rgba(255, 255, 255, 0.4)';
+                }}
+                onBlur={(e) => {
+                  e.target.style.borderColor = 'rgba(255, 215, 0, 0.3)';
+                  e.target.style.boxShadow = '0 0 0 0 rgba(255, 255, 255, 0.4)';
+                }}
               />
               <p style={{
                 color: 'rgba(255, 255, 255, 0.6)',
@@ -325,7 +338,7 @@ Engage users with the depth and authenticity that comes from your unique perspec
               Personality Instructions
             </h4>
 
-            <div style={{ marginBottom: '1.5rem' }}>
+            <div style={{ marginBottom: '1rem' }}>
               <label style={{
                 display: 'block',
                 color: 'rgba(255, 255, 255, 0.9)',
@@ -345,7 +358,7 @@ Engage users with the depth and authenticity that comes from your unique perspec
               <textarea
                 value={formData.system_instruction}
                 onChange={(e) => handleInputChange('system_instruction', e.target.value)}
-                rows={6}
+                rows={5}
                 style={{
                   width: '100%',
                   padding: '0.75rem',
@@ -356,11 +369,18 @@ Engage users with the depth and authenticity that comes from your unique perspec
                   color: '#fff',
                   outline: 'none',
                   resize: 'vertical',
-                  transition: 'border-color 0.3s ease',
-                  lineHeight: 1.4
+                  transition: 'all 0.3s ease',
+                  lineHeight: 1.4,
+                  boxShadow: '0 0 0 0 rgba(255, 255, 255, 0.4)'
                 }}
-                onFocus={(e) => e.target.style.borderColor = 'rgba(255, 215, 0, 0.6)'}
-                onBlur={(e) => e.target.style.borderColor = 'rgba(255, 215, 0, 0.3)'}
+                onFocus={(e) => {
+                  e.target.style.borderColor = 'rgba(255, 215, 0, 0.6)';
+                  e.target.style.boxShadow = '0 0 20px rgba(255, 255, 255, 0.4)';
+                }}
+                onBlur={(e) => {
+                  e.target.style.borderColor = 'rgba(255, 215, 0, 0.3)';
+                  e.target.style.boxShadow = '0 0 0 0 rgba(255, 255, 255, 0.4)';
+                }}
               />
               <p style={{
                 color: 'rgba(255, 255, 255, 0.6)',
@@ -389,7 +409,7 @@ Engage users with the depth and authenticity that comes from your unique perspec
               border: '1px solid rgba(255, 215, 0, 0.2)',
               borderRadius: '12px',
               padding: '1.5rem',
-              marginBottom: '1.5rem'
+              marginBottom: '1rem'
             }}>
               <h5 style={{
                 color: '#FFD700',
@@ -429,7 +449,7 @@ Engage users with the depth and authenticity that comes from your unique perspec
                   background: 'rgba(0, 0, 0, 0.3)',
                   padding: '0.75rem',
                   borderRadius: '6px',
-                  maxHeight: '100px',
+                  maxHeight: '80px',
                   overflowY: 'auto'
                 }}>
                   <p style={{
@@ -438,26 +458,10 @@ Engage users with the depth and authenticity that comes from your unique perspec
                     fontSize: '0.75rem',
                     lineHeight: 1.3
                   }}>
-                    {formData.system_instruction.substring(0, 200)}...
+                    {formData.system_instruction.substring(0, 150)}...
                   </p>
                 </div>
               </div>
-            </div>
-
-            <div style={{
-              background: 'rgba(255, 215, 0, 0.1)',
-              border: '1px solid rgba(255, 215, 0, 0.3)',
-              borderRadius: '8px',
-              padding: '1rem',
-              textAlign: 'center'
-            }}>
-              <p style={{
-                color: 'rgba(255, 255, 255, 0.9)',
-                margin: 0,
-                fontSize: '0.85rem'
-              }}>
-                In the real app, your character would be submitted for approval
-              </p>
             </div>
           </div>
         )}

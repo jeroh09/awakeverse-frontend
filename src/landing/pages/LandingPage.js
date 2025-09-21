@@ -747,7 +747,6 @@ export default function LandingPage() {
                 </button>
               </div>
             </section>
-
             {/* Section 2: Character Creation Demo */}
             <section className="desktop-section-2">
               <div className="desktop-section-content">
@@ -764,16 +763,15 @@ export default function LandingPage() {
                     <h2 style={{
                       fontFamily: "'Playfair Display', serif",
                       fontSize: '2.2rem',
-                      color: '#ffd700',
+                      color: '#ffffff',
                       marginBottom: '1.5rem',
-                      textShadow: '0 0 20px rgba(255, 215, 0, 0.3)',
                       lineHeight: 1.2
                     }}>
                       Create Your Own Characters
                     </h2>
-                    
+
                     <p style={{
-                      fontFamily: "'Inter', sans-serif",
+                      fontFamily: "system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Helvetica Neue', Arial, sans-serif",
                       fontSize: '1.1rem',
                       color: 'rgba(255, 255, 255, 0.9)',
                       lineHeight: 1.6,
@@ -802,7 +800,8 @@ export default function LandingPage() {
                       <ul style={{
                         listStyle: 'none',
                         padding: 0,
-                        margin: 0
+                        margin: 0,
+                        fontFamily: "system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Helvetica Neue', Arial, sans-serif"
                       }}>
                         <li style={{
                           color: 'rgba(255, 255, 255, 0.9)',
@@ -885,14 +884,17 @@ export default function LandingPage() {
                           textDecoration: 'none',
                           display: 'inline-block',
                           transition: 'all 0.3s ease',
-                          boxShadow: '0 4px 15px rgba(255, 215, 0, 0.3)'
+                          boxShadow: '0 4px 15px rgba(255, 215, 0, 0.3)',
+                          fontFamily: "system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Helvetica Neue', Arial, sans-serif"
                         }}
                       >
                         Start Creating
                       </Link>
+
                       <div style={{
                         color: 'rgba(255, 255, 255, 0.7)',
-                        fontSize: '0.9rem'
+                        fontSize: '0.9rem',
+                        fontFamily: "system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Helvetica Neue', Arial, sans-serif"
                       }}>
                         ← Try the demo first
                       </div>
@@ -907,6 +909,28 @@ export default function LandingPage() {
               </div>
             </section>
 
+            {/* Section 3: Additional Content */}
+            <section className="desktop-section-3">
+              <div className="desktop-section-content">
+                <h2>Join the Community</h2>
+                <p>
+                  Connect with thousands of curious minds exploring history, philosophy, science, and art. 
+                  Share your conversations, discover new perspectives, and learn from characters 
+                  across all eras of human knowledge.
+                </p>
+                <Link to="/register" className="cta-primary">
+                  Join Now →
+                </Link>
+              </div>
+            </section>
+          </div>
+
+          {/* Desktop Scroll Indicator */}
+          <div className="desktop-scroll-indicator">
+            <div className="scroll-dot active" onClick={() => scrollToSection(0)}></div>
+            <div className="scroll-dot" onClick={() => scrollToSection(1)}></div>
+            <div className="scroll-dot" onClick={() => scrollToSection(2)}></div>
+          </div>
             {/* Section 3: Additional Content */}
             <section className="desktop-section-3">
               <div className="desktop-section-content">
