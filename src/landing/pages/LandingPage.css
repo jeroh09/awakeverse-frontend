@@ -1689,4 +1689,7 @@ body, html {
     height: 144px !important;
   }
 }
-
+/* Add this to your CSS to hide stars */
+.stars {
+  display: none !important;
+}
