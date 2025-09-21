@@ -785,7 +785,15 @@ export default function LandingPage() {
                 maxWidth: '1200px'
               }}>
                 {/* Left: Explanation */}
-                <div style={{ textAlign: 'left' }}>
+                <div style={{ 
+                  textAlign: 'left',
+                  background: 'rgba(255, 255, 255, 0.08)',
+                  backdropFilter: 'blur(20px)',
+                  border: '1px solid rgba(255, 215, 0, 0.3)',
+                  borderRadius: '20px',
+                  padding: '2rem',
+                  boxShadow: '0 8px 32px rgba(0, 0, 0, 0.4)'
+                }}>
                   <h2 style={{
                     fontFamily: "'Playfair Display', serif",
                     fontSize: '2.2rem',
