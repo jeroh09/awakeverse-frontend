@@ -1709,20 +1709,18 @@ body::before {
   background-color: #fff3cd;
   border: 1px solid #ffeaa7;
 }
-/* Add this to your CSS to hide stars */
-.stars {
-  display: none !important;
-}
-/* NUCLEAR STAR REMOVAL - Add this at the very end of styles.css */
-/* This will override any stars regardless of where they come from */
+/* SURGICAL STAR REMOVAL - Replace the nuclear CSS with this */
+/* This only targets stars, not all backgrounds */
 
-/* Hide all star-related elements */
+/* Hide star elements specifically */
 .stars,
 .star,
-[class*="star"],
-[class*="Star"],
-div[class*="star"],
-div[class*="Star"] {
+.landing-container .stars,
+.landing-container .star,
+.mobile-mode .stars,
+.mobile-mode .star,
+.desktop-mode .stars,
+.desktop-mode .star {
   display: none !important;
   visibility: hidden !important;
   opacity: 0 !important;
@@ -1733,75 +1731,27 @@ div[class*="Star"] {
   height: 0 !important;
 }
 
-/* Kill any star animations */
-@keyframes twinkle,
-@keyframes star-twinkle,
-@keyframes starTwinkle,
-@keyframes pulse,
-@keyframes star-pulse {
+/* Kill star animations only */
+@keyframes twinkle {
   0%, 100% { display: none !important; opacity: 0 !important; }
 }
 
-/* Remove star pseudo-elements */
-*::before,
-*::after {
+/* Remove star pseudo-elements (only from star classes) */
+.stars::before,
+.stars::after,
+.star::before,
+.star::after {
   content: none !important;
+  display: none !important;
 }
 
-/* Override any star background images */
+/* REMOVE THESE LINES - they were too aggressive:
 * {
   background-image: none !important;
 }
 
-/* Force remove stars with JavaScript selector override */
-.landing-container .stars,
-.landing-container .star,
-.mobile-mode .stars,
-.mobile-mode .star,
-.desktop-mode .stars,
-.desktop-mode .star {
-  display: none !important;
-  visibility: hidden !important;
-  opacity: 0 !important;
-  transform: scale(0) !important;
-  z-index: -9999 !important;
+*::before,
+*::after {
+  content: none !important;
 }
-
-/* Remove any gradient or image that might look like stars */
-.landing-container,
-.landing-container *,
-.mobile-mode,
-.mobile-mode *,
-.desktop-mode,
-.desktop-mode * {
-  background-image: none !important;
-}
-
-/* Restore only the necessary background for landing */
-.landing-container {
-  background: #1a1a2e !important;
-}
-
-.mobile-panel.night-sky {
-  background: linear-gradient(135deg, #1a1a2e 0%, #0f0f1e 100%) !important;
-}
-
-.mobile-panel.crimson-mystery {
-  background: linear-gradient(135deg, #2d1b1b 0%, #4a1a1a 100%) !important;
-}
-
-.mobile-panel.emerald-depths {
-  background: linear-gradient(135deg, #1a2d1b 0%, #1a4a1a 100%) !important;
-}
-
-.mobile-panel.royal-purple {
-  background: linear-gradient(135deg, #2d1b2d 0%, #4a1a4a 100%) !important;
-}
-
-.mobile-panel.golden-wisdom {
-  background: linear-gradient(135deg, #2d2a1b 0%, #4a3f1a 100%) !important;
-}
-
-.mobile-panel.midnight-experts {
-  background: linear-gradient(135deg, #0f0f2e 0%, #1a1a3e 100%) !important;
-}
+*/
