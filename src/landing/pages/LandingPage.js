@@ -748,7 +748,7 @@ export default function LandingPage() {
               </div>
             </section>
 
-                      {/* Section 2: Character Creation Demo */}
+            {/* Section 2: Character Creation Demo */}
             <section className="desktop-section-2">
               <div className="desktop-section-content">
                 <div style={{
@@ -893,7 +893,7 @@ export default function LandingPage() {
                           textDecoration: 'none',
                           display: 'inline-block',
                           transition: 'all 0.3s ease',
-                          boxShadow: '0 4px 15px rgba(255, 215, 0, 0.3)'
+                          boxShadow: '0 0 40px rgba(255, 255, 255, 0.67)'
                         }}
                       >
                         Start Creating
