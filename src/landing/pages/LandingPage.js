@@ -3,9 +3,9 @@ import React, { useEffect, useRef, useState, useCallback, useMemo } from 'react'
 import { Link } from 'react-router-dom';
 import { characterCategories } from '../../data/characterCategories';
 import EnhancedCharacterPanels from '../components/EnhancedCharacterPanels';
-import DemoCharacterBuilder from '../components/DemoCharacterBuilder';
-import SubscriptionPlansCards from '../components/SubscriptionPlansCards';
-import CreatorHubTeaser from '../components/CreatorHubTeaser';
+import DemoCharacterBuilder from './DemoCharacterBuilder';
+import SubscriptionPlansCards from './SubscriptionPlansCards';
+import CreatorHubTeaser from './CreatorHubTeaser';
 import './LandingPage.css';
 
 export default function LandingPage() {
