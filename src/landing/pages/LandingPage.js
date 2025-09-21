@@ -4,6 +4,8 @@ import { Link } from 'react-router-dom';
 import { characterCategories } from '../../data/characterCategories';
 import EnhancedCharacterPanels from '../components/EnhancedCharacterPanels';
 import DemoCharacterBuilder from './DemoCharacterBuilder';
+import SubscriptionPlansCards from './SubscriptionPlansCards'; // Adjust path as needed
+import CreatorHubTeaser from './CreatorHubTeaser'; // Adjust path as needed
 import './LandingPage.css';
 
 export default function LandingPage() {
@@ -893,7 +895,7 @@ export default function LandingPage() {
                           textDecoration: 'none',
                           display: 'inline-block',
                           transition: 'all 0.3s ease',
-                          boxShadow: '0 0 40px rgba(255, 255, 255, 0.67)'
+                          boxShadow: '0 4px 15px rgba(255, 215, 0, 0.3)'
                         }}
                       >
                         Start Creating
@@ -916,56 +918,124 @@ export default function LandingPage() {
               </div>
             </section>
             {/* Section 3: Community Content */}
+
+            {/* Section 3: Subscription Plans + Creator Hub */}
             <section className="desktop-section-3">
               <div className="desktop-section-content">
-                <h2 style={{
-                  fontFamily: "'Playfair Display', serif",
-                  fontSize: '2.2rem',
-                  color: '#ffd700',
-                  marginBottom: '1.5rem',
-                  textShadow: '0 0 20px rgba(255, 215, 0, 0.3)',
-                  textAlign: 'center'
+                <div style={{
+                  display: 'grid',
+                  gridTemplateColumns: '2fr 1fr',
+                  gap: '3rem',
+                  alignItems: 'start',
+                  width: '100%',
+                  maxWidth: '1400px'
                 }}>
-                  Join the Community
-                </h2>
-                <p style={{
-                  fontFamily: "system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Helvetica Neue', Arial, sans-serif",
-                  fontSize: '1.2rem',
-                  color: 'rgba(255, 255, 255, 0.9)',
-                  lineHeight: 1.6,
-                  marginBottom: '2.5rem',
-                  maxWidth: '800px',
-                  marginLeft: 'auto',
-                  marginRight: 'auto',
-                  textAlign: 'center'
-                }}>
-                  Connect with thousands of curious minds exploring history, philosophy, science, and art. 
-                  Share your conversations, discover new perspectives, and learn from characters 
-                  across all eras of human knowledge.
-                </p>
-                <div style={{ textAlign: 'center' }}>
-                  <Link 
-                    to="/register" 
-                    style={{
-                      background: 'linear-gradient(135deg, #FFD700, #FFA500)',
-                      border: 'none',
-                      borderRadius: '25px',
-                      color: '#000',
-                      fontSize: '1.1rem',
-                      fontWeight: 700,
-                      padding: '1rem 2.5rem',
-                      textDecoration: 'none',
-                      display: 'inline-block',
-                      transition: 'all 0.3s ease',
-                      boxShadow: '0 4px 15px rgba(255, 215, 0, 0.3)',
-                      fontFamily: "system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Helvetica Neue', Arial, sans-serif"
-                    }}
-                  >
-                    Join Now →
-                  </Link>
+                  {/* Left: Subscription Plans */}
+                  <div>
+                    <div style={{
+                      textAlign: 'center',
+                      marginBottom: '3rem'
+                    }}>
+                      <h2 style={{
+                        fontFamily: "'Playfair Display', serif",
+                        fontSize: '2.5rem',
+                        color: '#ffd700',
+                        marginBottom: '1rem',
+                        textShadow: '0 0 20px rgba(255, 215, 0, 0.3)',
+                        lineHeight: 1.2
+                      }}>
+                        Choose Your Plan
+                      </h2>
+
+                      <p style={{
+                        fontFamily: "'Inter', sans-serif",
+                        fontSize: '1.2rem',
+                        color: 'rgba(255, 255, 255, 0.9)',
+                        lineHeight: 1.6,
+                        maxWidth: '600px',
+                        margin: '0 auto'
+                      }}>
+                        Unlock the full potential of AI conversations with unlimited access 
+                        to characters, advanced features, and creator opportunities.
+                      </p>
+                    </div>
+
+                    <SubscriptionPlansCards />
+
+                    {/* Trust Signals */}
+                    <div style={{
+                      display: 'flex',
+                      justifyContent: 'center',
+                      alignItems: 'center',
+                      gap: '2rem',
+                      marginTop: '2rem',
+                      flexWrap: 'wrap'
+                    }}>
+                      <div style={{
+                        display: 'flex',
+                        alignItems: 'center',
+                        gap: '0.5rem',
+                        color: 'rgba(255, 255, 255, 0.7)',
+                        fontSize: '0.9rem'
+                      }}>
+                        <div style={{
+                          width: '16px',
+                          height: '16px',
+                          background: 'linear-gradient(135deg, #00FF88, #00CC6A)',
+                          borderRadius: '50%',
+                          display: 'flex',
+                          alignItems: 'center',
+                          justifyContent: 'center',
+                          fontSize: '0.7rem',
+                          color: '#000',
+                          fontWeight: 'bold'
+                        }}>
+                          ✓
+                        </div>
+                        Cancel anytime
+                      </div>
+                      <div style={{
+                        display: 'flex',
+                        alignItems: 'center',
+                        gap: '0.5rem',
+                        color: 'rgba(255, 255, 255, 0.7)',
+                        fontSize: '0.9rem'
+                      }}>
+                        <div style={{
+                          width: '16px',
+                          height: '16px',
+                          background: 'linear-gradient(135deg, #00FF88, #00CC6A)',
+                          borderRadius: '50%',
+                          display: 'flex',
+                          alignItems: 'center',
+                          justifyContent: 'center',
+                          fontSize: '0.7rem',
+                          color: '#000',
+                          fontWeight: 'bold'
+                        }}>
+                          ✓
+                        </div>
+                        Secure payment
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Right: Creator Hub Teaser */}
+                  <div style={{
+                    position: 'sticky',
+                    top: '100px'
+                  }}>
+                    <CreatorHubTeaser />
+                  </div>
                 </div>
               </div>
             </section>
+          </div>
+          {/* Desktop Scroll Indicator */}
+          <div className="desktop-scroll-indicator">
+            <div className="scroll-dot active" onClick={() => scrollToSection(0)}></div>
+            <div className="scroll-dot" onClick={() => scrollToSection(1)}></div>
+            <div className="scroll-dot" onClick={() => scrollToSection(2)}></div>
           </div>
 
           {/* Desktop Scroll Indicator */}
