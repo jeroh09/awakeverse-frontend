@@ -28,6 +28,16 @@ export default function LandingPage() {
   // Touch gesture state
   const [touchStart, setTouchStart] = useState(null);
   const [touchEnd, setTouchEnd] = useState(null);
+  // Scroll to specific section function
+  const scrollToSection = useCallback((sectionIndex) => {
+    if (!isMobile) { // Desktop only
+      const targetY = sectionIndex * window.innerHeight;
+      window.scrollTo({
+        top: targetY,
+        behavior: 'smooth'
+      });
+    }
+  }, [isMobile]);
 
   // Mobile detection with smooth transition
   useEffect(() => {
@@ -270,19 +280,6 @@ export default function LandingPage() {
     setTouchEnd(null);
   }, [touchStart, touchEnd, isMobile]);
 
-  // Desktop navigation functions
-  const navigateToScreen = useCallback((screenIndex) => {
-    if (isMobile || isTransitioning) return;
-
-    setIsTransitioning(true);
-    setCurrentScreen(screenIndex);
-    handleUserInteraction();
-
-    setTimeout(() => {
-      setIsTransitioning(false);
-    }, 1000);
-  }, [isMobile, isTransitioning, handleUserInteraction]);
-
   const nextScreen = useCallback(() => {
     if (isMobile) return;
     const next = (currentScreen + 1) % 3;
@@ -392,17 +389,6 @@ export default function LandingPage() {
     );
   });
 
-  // Scroll to section function
-  // Scroll to specific section function
-  const scrollToSection = useCallback((sectionIndex) => {
-    if (!isMobile) { // Desktop only
-      const targetY = sectionIndex * window.innerHeight;
-      window.scrollTo({
-        top: targetY,
-        behavior: 'smooth'
-      });
-    }
-  }, [isMobile]);
 
   // Show loading transition during resize
   if (isResizing) {
