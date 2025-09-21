@@ -1755,3 +1755,20 @@ body::before {
   content: none !important;
 }
 */
+/* REMOVE BODY STARS - Add this to the end of your styles.css */
+
+/* Kill the body::before stars */
+body::before {
+  display: none !important;
+  content: none !important;
+  background-image: none !important;
+  opacity: 0 !important;
+}
+
+/* Also kill any html::before that might exist */
+html::before {
+  display: none !important;
+  content: none !important;
+  background-image: none !important;
+  opacity: 0 !important;
+}
