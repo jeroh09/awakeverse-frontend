@@ -1722,3 +1722,84 @@ body, html {
   display: none !important;
   content: none !important;
 }
+/* Glowing Hero Headline Effects - Add to LandingPage.css */
+
+/* Enhanced Main Hero Headline with Glow */
+.main-hero-headline {
+  font-family: 'Lora', serif;
+  font-size: 3rem;
+  font-weight: 700;
+  line-height: 1.2;
+  margin-bottom: 1.5rem;
+  color: #ffffff;
+  text-align: center;
+  
+  /* Multi-layer glow effect */
+  text-shadow: 
+    0 0 10px rgba(255, 255, 255, 0.8),     /* Inner white glow */
+    0 0 20px rgba(255, 255, 255, 0.6),     /* Medium white glow */
+    0 0 30px rgba(255, 255, 255, 0.4),     /* Outer white glow */
+    0 0 40px rgba(255, 215, 0, 0.3),       /* Golden aura */
+    0 0 60px rgba(255, 215, 0, 0.2),       /* Extended golden glow */
+    0 2px 4px rgba(0, 0, 0, 0.3);          /* Subtle depth shadow */
+  
+  /* Subtle animation for breathing effect */
+  animation: heroGlow 4s ease-in-out infinite;
+}
+
+/* Breathing glow animation */
+@keyframes heroGlow {
+  0%, 100% { 
+    text-shadow: 
+      0 0 10px rgba(255, 255, 255, 0.8),
+      0 0 20px rgba(255, 255, 255, 0.6),
+      0 0 30px rgba(255, 255, 255, 0.4),
+      0 0 40px rgba(255, 215, 0, 0.3),
+      0 0 60px rgba(255, 215, 0, 0.2),
+      0 2px 4px rgba(0, 0, 0, 0.3);
+  }
+  50% { 
+    text-shadow: 
+      0 0 15px rgba(255, 255, 255, 1),       /* Brighter inner glow */
+      0 0 25px rgba(255, 255, 255, 0.8),     /* Brighter medium glow */
+      0 0 35px rgba(255, 255, 255, 0.6),     /* Brighter outer glow */
+      0 0 50px rgba(255, 215, 0, 0.4),       /* Stronger golden aura */
+      0 0 80px rgba(255, 215, 0, 0.3),       /* Extended golden glow */
+      0 2px 6px rgba(0, 0, 0, 0.4);          /* Slightly deeper shadow */
+  }
+}
+
+/* Enhanced glow on hover */
+.main-hero-headline:hover {
+  text-shadow: 
+    0 0 20px rgba(255, 255, 255, 1),
+    0 0 30px rgba(255, 255, 255, 0.8),
+    0 0 40px rgba(255, 255, 255, 0.6),
+    0 0 60px rgba(255, 215, 0, 0.5),
+    0 0 100px rgba(255, 215, 0, 0.3),
+    0 3px 8px rgba(0, 0, 0, 0.4);
+  
+  transform: translateY(-2px);
+  transition: all 0.3s ease;
+}
+
+/* Responsive adjustments for the glow effect */
+@media (max-width: 1024px) and (min-width: 769px) {
+  .main-hero-headline {
+    font-size: 2.5rem;
+    text-shadow: 
+      0 0 8px rgba(255, 255, 255, 0.8),
+      0 0 16px rgba(255, 255, 255, 0.6),
+      0 0 24px rgba(255, 255, 255, 0.4),
+      0 0 32px rgba(255, 215, 0, 0.3),
+      0 0 48px rgba(255, 215, 0, 0.2),
+      0 2px 4px rgba(0, 0, 0, 0.3);
+  }
+}
+
+/* Disable animation on reduced motion preference */
+@media (prefers-reduced-motion: reduce) {
+  .main-hero-headline {
+    animation: none;
+  }
+}
