@@ -71,24 +71,10 @@
   padding: 0.5rem 0;
 }
 
-.desktop-header-nav a::before {
-  content: '';
-  position: absolute;
-  bottom: 0;
-  left: 0;
-  width: 0;
-  height: 2px;
-  background: linear-gradient(90deg, #ffd700, #ffed4a);
-  transition: width 0.3s ease;
-}
 
 .desktop-header-nav a:hover {
   color: #ffd700;
   transform: translateY(-1px);
-}
-
-.desktop-header-nav a:hover::before {
-  width: 100%;
 }
 
 /* Copyright in header */
