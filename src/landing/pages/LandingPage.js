@@ -747,7 +747,6 @@ export default function LandingPage() {
                 </button>
               </div>
             </section>
-
             {/* Section 2: Character Creation Demo */}
             <section className="desktop-section-2">
               <div className="desktop-section-content">
@@ -760,19 +759,28 @@ export default function LandingPage() {
                   maxWidth: '1200px'
                 }}>
                   {/* Left: Explanation */}
-                  <div style={{ textAlign: 'left' }}>
+                  <div style={{ 
+                    textAlign: 'left',
+                    background: 'rgba(255, 255, 255, 0.06)',
+                    backdropFilter: 'blur(15px)',
+                    border: '1px solid rgba(255, 215, 0, 0.2)',
+                    borderRadius: '20px',
+                    padding: '2rem',
+                    boxShadow: '0 0 40px rgba(255, 215, 0, 0.08)'
+                  }}>
                     <h2 style={{
                       fontFamily: "'Playfair Display', serif",
                       fontSize: '2.2rem',
-                      color: '#ffffff',
+                      color: '#ffd700',
                       marginBottom: '1.5rem',
+                      textShadow: '0 0 20px rgba(255, 215, 0, 0.3)',
                       lineHeight: 1.2
                     }}>
                       Create Your Own Characters
                     </h2>
-                    
+
                     <p style={{
-                      fontFamily: "system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Helvetica Neue', Arial, sans-serif",
+                      fontFamily: "'Inter', sans-serif",
                       fontSize: '1.1rem',
                       color: 'rgba(255, 255, 255, 0.9)',
                       lineHeight: 1.6,
@@ -784,11 +792,12 @@ export default function LandingPage() {
                     </p>
 
                     <div style={{
-                      background: 'rgba(255, 215, 0, 0.1)',
+                      background: 'rgba(255, 215, 0, 0.12)',
                       border: '1px solid rgba(255, 215, 0, 0.3)',
                       borderRadius: '12px',
                       padding: '1.5rem',
-                      marginBottom: '2rem'
+                      marginBottom: '2rem',
+                      boxShadow: '0 0 25px rgba(255, 215, 0, 0.1)'
                     }}>
                       <h3 style={{
                         color: '#FFD700',
@@ -801,8 +810,7 @@ export default function LandingPage() {
                       <ul style={{
                         listStyle: 'none',
                         padding: 0,
-                        margin: 0,
-                        fontFamily: "system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Helvetica Neue', Arial, sans-serif"
+                        margin: 0
                       }}>
                         <li style={{
                           color: 'rgba(255, 255, 255, 0.9)',
@@ -885,17 +893,15 @@ export default function LandingPage() {
                           textDecoration: 'none',
                           display: 'inline-block',
                           transition: 'all 0.3s ease',
-                          boxShadow: '0 4px 15px rgba(255, 215, 0, 0.3)',
-                          fontFamily: "system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Helvetica Neue', Arial, sans-serif"
+                          boxShadow: '0 4px 15px rgba(255, 215, 0, 0.3)'
                         }}
                       >
                         Start Creating
                       </Link>
-                      
+
                       <div style={{
                         color: 'rgba(255, 255, 255, 0.7)',
-                        fontSize: '0.9rem',
-                        fontFamily: "system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Helvetica Neue', Arial, sans-serif"
+                        fontSize: '0.9rem'
                       }}>
                         ← Try the demo first
                       </div>

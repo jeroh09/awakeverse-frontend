@@ -148,30 +148,25 @@ Engage users with the depth and authenticity that comes from your unique perspec
       backdropFilter: 'blur(20px)',
       border: '1px solid rgba(255, 215, 0, 0.3)',
       borderRadius: '20px',
-      padding: '2rem',
+      padding: '1.5rem',
       maxWidth: '600px',
       margin: '0 auto',
       fontFamily: "'Inter', sans-serif",
-      boxShadow: `
-        0 0 20px rgba(255, 255, 255, 0.2),
-        0 0 40px rgba(255, 255, 255, 0.1),
-        0 0 60px rgba(255, 255, 255, 0.05),
-        inset 0 1px 1px rgba(255, 255, 255, 0.1)
-      `,
-      animation: 'containerGlow 3s ease-in-out infinite'
+      boxShadow: '0 0 30px rgba(255, 215, 0, 0.1)'
     }}>
       {/* Demo Header */}
       <div style={{
         textAlign: 'center',
-        marginBottom: '2rem',
+        marginBottom: '1.5rem',
         padding: '1rem',
         background: 'rgba(255, 215, 0, 0.1)',
         border: '1px solid rgba(255, 215, 0, 0.2)',
-        borderRadius: '12px'
+        borderRadius: '12px',
+        boxShadow: '0 0 20px rgba(255, 215, 0, 0.08)'
       }}>
         <h3 style={{
           color: '#FFD700',
-          fontSize: '1.2rem',
+          fontSize: '1.1rem',
           margin: '0 0 0.5rem 0',
           fontFamily: "'Playfair Display', serif"
         }}>
@@ -179,324 +174,270 @@ Engage users with the depth and authenticity that comes from your unique perspec
         </h3>
         <p style={{
           color: 'rgba(255, 255, 255, 0.8)',
-          fontSize: '0.9rem',
+          fontSize: '0.85rem',
           margin: 0
         }}>
-          Try our character creation process with this example
+          Try our character creation process
         </p>
       </div>
 
-      {/* Progress Steps */}
+      {/* Horizontal Tab Navigation */}
       <div style={{
         display: 'flex',
-        justifyContent: 'center',
-        alignItems: 'center',
-        gap: '1rem',
-        marginBottom: '2rem'
+        marginBottom: '1.5rem',
+        background: 'rgba(255, 255, 255, 0.05)',
+        borderRadius: '12px',
+        padding: '0.25rem',
+        boxShadow: 'inset 0 0 15px rgba(255, 215, 0, 0.05)'
       }}>
-        {steps.map((step, index) => (
-          <div key={step.number} style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+        {steps.map((step) => (
+          <button
+            key={step.number}
+            onClick={() => setCurrentStep(step.number)}
+            style={{
+              flex: 1,
+              padding: '0.75rem 1rem',
+              background: currentStep === step.number 
+                ? 'linear-gradient(135deg, #FFD700, #FFA500)' 
+                : 'transparent',
+              color: currentStep === step.number ? '#000' : 'rgba(255, 255, 255, 0.7)',
+              border: 'none',
+              borderRadius: '8px',
+              fontSize: '0.85rem',
+              fontWeight: 600,
+              cursor: 'pointer',
+              transition: 'all 0.3s ease',
+              textAlign: 'center'
+            }}
+          >
             <div style={{
               display: 'flex',
               alignItems: 'center',
+              justifyContent: 'center',
               gap: '0.5rem'
             }}>
               <div style={{
-                width: '24px',
-                height: '24px',
+                width: '18px',
+                height: '18px',
                 borderRadius: '50%',
-                background: currentStep >= step.number 
-                  ? 'linear-gradient(135deg, #FFD700, #FFA500)'
-                  : 'rgba(255, 255, 255, 0.2)',
-                color: currentStep >= step.number ? '#000' : 'rgba(255, 255, 255, 0.6)',
+                background: currentStep === step.number 
+                  ? 'rgba(0, 0, 0, 0.2)'
+                  : currentStep > step.number 
+                    ? 'rgba(255, 215, 0, 0.3)'
+                    : 'rgba(255, 255, 255, 0.2)',
+                color: currentStep === step.number 
+                  ? '#000' 
+                  : currentStep > step.number 
+                    ? '#FFD700' 
+                    : 'rgba(255, 255, 255, 0.6)',
                 display: 'flex',
                 alignItems: 'center',
                 justifyContent: 'center',
-                fontWeight: 'bold',
-                fontSize: '0.7rem'
+                fontSize: '0.7rem',
+                fontWeight: 'bold'
               }}>
                 {currentStep > step.number ? '✓' : step.number}
               </div>
-              <div style={{
-                color: currentStep >= step.number ? '#FFD700' : 'rgba(255, 255, 255, 0.6)',
-                fontSize: '0.8rem',
-                fontWeight: 600
-              }}>
-                {step.title}
-              </div>
+              <span>{step.title}</span>
             </div>
-            {index < steps.length - 1 && (
-              <div style={{
-                width: '20px',
-                height: '1px',
-                background: currentStep > step.number 
-                  ? 'linear-gradient(90deg, #FFD700, #FFA500)'
-                  : 'rgba(255, 255, 255, 0.2)'
-              }} />
-            )}
-          </div>
+          </button>
         ))}
       </div>
 
-      {/* Step Content */}
-      <div style={{ minHeight: '300px' }}>
+      {/* Compact Step Content */}
+      <div style={{ minHeight: '200px' }}>
         {currentStep === 1 && (
           <div style={{ animation: 'fadeIn 0.3s ease-in' }}>
-            <h4 style={{
-              color: '#FFD700',
-              fontSize: '1.1rem',
-              margin: '0 0 1.5rem 0',
-              textAlign: 'center'
-            }}>
-              Character Details
-            </h4>
-
-            <div style={{ marginBottom: '1.5rem' }}>
-              <label style={{
-                display: 'block',
-                color: 'rgba(255, 255, 255, 0.9)',
-                fontSize: '0.9rem',
-                fontWeight: 600,
-                marginBottom: '0.5rem'
-              }}>
-                Character Name
-              </label>
-              <input
-                type="text"
-                value={formData.display_name}
-                onChange={(e) => handleInputChange('display_name', e.target.value)}
-                style={{
-                  width: '100%',
-                  padding: '0.75rem',
-                  fontSize: '0.9rem',
-                  border: '2px solid rgba(255, 215, 0, 0.3)',
-                  borderRadius: '8px',
-                  background: 'rgba(255, 255, 255, 0.1)',
-                  color: '#fff',
-                  outline: 'none',
-                  transition: 'border-color 0.3s ease'
-                }}
-                onFocus={(e) => e.target.style.borderColor = 'rgba(255, 215, 0, 0.6)'}
-                onBlur={(e) => e.target.style.borderColor = 'rgba(255, 215, 0, 0.3)'}
-              />
+            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem' }}>
+              <div>
+                <label style={{
+                  display: 'block',
+                  color: 'rgba(255, 255, 255, 0.9)',
+                  fontSize: '0.8rem',
+                  fontWeight: 600,
+                  marginBottom: '0.4rem'
+                }}>
+                  Character Name
+                </label>
+                <input
+                  type="text"
+                  value={formData.display_name}
+                  onChange={(e) => handleInputChange('display_name', e.target.value)}
+                  style={{
+                    width: '100%',
+                    padding: '0.5rem',
+                    fontSize: '0.85rem',
+                    border: '2px solid rgba(255, 215, 0, 0.3)',
+                    borderRadius: '6px',
+                    background: 'rgba(255, 255, 255, 0.1)',
+                    color: '#fff',
+                    outline: 'none'
+                  }}
+                />
+              </div>
+              <div>
+                <label style={{
+                  display: 'block',
+                  color: 'rgba(255, 255, 255, 0.9)',
+                  fontSize: '0.8rem',
+                  fontWeight: 600,
+                  marginBottom: '0.4rem'
+                }}>
+                  Template
+                </label>
+                <div style={{
+                  padding: '0.5rem',
+                  fontSize: '0.85rem',
+                  border: '2px solid rgba(255, 215, 0, 0.2)',
+                  borderRadius: '6px',
+                  background: 'rgba(255, 215, 0, 0.1)',
+                  color: '#FFD700'
+                }}>
+                  Ancient Philosopher
+                </div>
+              </div>
             </div>
-
-            <div style={{ marginBottom: '1.5rem' }}>
+            
+            <div style={{ marginTop: '1rem' }}>
               <label style={{
                 display: 'block',
                 color: 'rgba(255, 255, 255, 0.9)',
-                fontSize: '0.9rem',
+                fontSize: '0.8rem',
                 fontWeight: 600,
-                marginBottom: '0.5rem'
+                marginBottom: '0.4rem'
               }}>
-                Character Description
+                Description
               </label>
               <textarea
                 value={formData.short_description}
                 onChange={(e) => handleInputChange('short_description', e.target.value)}
-                rows={3}
+                rows={2}
                 style={{
                   width: '100%',
-                  padding: '0.75rem',
-                  fontSize: '0.9rem',
+                  padding: '0.5rem',
+                  fontSize: '0.85rem',
                   border: '2px solid rgba(255, 215, 0, 0.3)',
-                  borderRadius: '8px',
+                  borderRadius: '6px',
                   background: 'rgba(255, 255, 255, 0.1)',
                   color: '#fff',
                   outline: 'none',
-                  resize: 'vertical',
-                  transition: 'border-color 0.3s ease'
+                  resize: 'none'
                 }}
-                onFocus={(e) => e.target.style.borderColor = 'rgba(255, 215, 0, 0.6)'}
-                onBlur={(e) => e.target.style.borderColor = 'rgba(255, 215, 0, 0.3)'}
               />
-              <p style={{
-                color: 'rgba(255, 255, 255, 0.6)',
-                fontSize: '0.8rem',
-                margin: '0.5rem 0 0 0'
-              }}>
-                {formData.short_description.length}/500 characters
-              </p>
             </div>
           </div>
         )}
 
         {currentStep === 2 && (
           <div style={{ animation: 'fadeIn 0.3s ease-in' }}>
-            <h4 style={{
-              color: '#FFD700',
-              fontSize: '1.1rem',
-              margin: '0 0 1.5rem 0',
-              textAlign: 'center'
+            <label style={{
+              display: 'block',
+              color: 'rgba(255, 255, 255, 0.9)',
+              fontSize: '0.8rem',
+              fontWeight: 600,
+              marginBottom: '0.4rem'
             }}>
-              Personality Instructions
-            </h4>
-
-            <div style={{ marginBottom: '1.5rem' }}>
-              <label style={{
-                display: 'block',
-                color: 'rgba(255, 255, 255, 0.9)',
-                fontSize: '0.9rem',
-                fontWeight: 600,
-                marginBottom: '0.5rem'
-              }}>
-                Character Instructions
-              </label>
-              <p style={{
-                color: 'rgba(255, 255, 255, 0.7)',
+              Character Instructions
+            </label>
+            <textarea
+              value={formData.system_instruction}
+              onChange={(e) => handleInputChange('system_instruction', e.target.value)}
+              rows={4}
+              style={{
+                width: '100%',
+                padding: '0.5rem',
                 fontSize: '0.8rem',
-                margin: '0 0 1rem 0'
-              }}>
-                Define how your character thinks, speaks, and behaves
-              </p>
-              <textarea
-                value={formData.system_instruction}
-                onChange={(e) => handleInputChange('system_instruction', e.target.value)}
-                rows={6}
-                style={{
-                  width: '100%',
-                  padding: '0.75rem',
-                  fontSize: '0.85rem',
-                  border: '2px solid rgba(255, 215, 0, 0.3)',
-                  borderRadius: '8px',
-                  background: 'rgba(255, 255, 255, 0.1)',
-                  color: '#fff',
-                  outline: 'none',
-                  resize: 'vertical',
-                  transition: 'border-color 0.3s ease',
-                  lineHeight: 1.4
-                }}
-                onFocus={(e) => e.target.style.borderColor = 'rgba(255, 215, 0, 0.6)'}
-                onBlur={(e) => e.target.style.borderColor = 'rgba(255, 215, 0, 0.3)'}
-              />
-              <p style={{
-                color: 'rgba(255, 255, 255, 0.6)',
-                fontSize: '0.8rem',
-                margin: '0.5rem 0 0 0'
-              }}>
-                {formData.system_instruction.length} characters
-              </p>
-            </div>
+                border: '2px solid rgba(255, 215, 0, 0.3)',
+                borderRadius: '6px',
+                background: 'rgba(255, 255, 255, 0.1)',
+                color: '#fff',
+                outline: 'none',
+                resize: 'none',
+                lineHeight: 1.3
+              }}
+            />
+            <p style={{
+              color: 'rgba(255, 255, 255, 0.6)',
+              fontSize: '0.75rem',
+              margin: '0.5rem 0 0 0'
+            }}>
+              Define how your character thinks and behaves
+            </p>
           </div>
         )}
 
         {currentStep === 3 && (
           <div style={{ animation: 'fadeIn 0.3s ease-in' }}>
-            <h4 style={{
-              color: '#FFD700',
-              fontSize: '1.1rem',
-              margin: '0 0 1.5rem 0',
-              textAlign: 'center'
-            }}>
-              Review Your Character
-            </h4>
-
             <div style={{
               background: 'rgba(255, 255, 255, 0.05)',
               border: '1px solid rgba(255, 215, 0, 0.2)',
-              borderRadius: '12px',
-              padding: '1.5rem',
-              marginBottom: '1.5rem'
+              borderRadius: '8px',
+              padding: '1rem'
             }}>
               <h5 style={{
                 color: '#FFD700',
-                fontSize: '1rem',
-                margin: '0 0 1rem 0'
+                fontSize: '0.9rem',
+                margin: '0 0 0.8rem 0'
               }}>
                 {formData.display_name}
               </h5>
 
-              <div style={{ marginBottom: '1rem' }}>
-                <h6 style={{
-                  color: 'rgba(255, 255, 255, 0.8)',
-                  fontSize: '0.8rem',
-                  margin: '0 0 0.5rem 0'
-                }}>
-                  Description
-                </h6>
-                <p style={{
-                  color: 'rgba(255, 255, 255, 0.9)',
-                  margin: 0,
-                  fontSize: '0.85rem',
-                  lineHeight: 1.4
-                }}>
-                  {formData.short_description}
-                </p>
-              </div>
+              <p style={{
+                color: 'rgba(255, 255, 255, 0.9)',
+                margin: '0 0 0.8rem 0',
+                fontSize: '0.8rem',
+                lineHeight: 1.3
+              }}>
+                {formData.short_description}
+              </p>
 
-              <div>
-                <h6 style={{
+              <div style={{
+                background: 'rgba(0, 0, 0, 0.3)',
+                padding: '0.5rem',
+                borderRadius: '4px',
+                maxHeight: '60px',
+                overflowY: 'auto'
+              }}>
+                <p style={{
                   color: 'rgba(255, 255, 255, 0.8)',
-                  fontSize: '0.8rem',
-                  margin: '0 0 0.5rem 0'
+                  margin: 0,
+                  fontSize: '0.7rem',
+                  lineHeight: 1.2
                 }}>
-                  Personality Preview
-                </h6>
-                <div style={{
-                  background: 'rgba(0, 0, 0, 0.3)',
-                  padding: '0.75rem',
-                  borderRadius: '6px',
-                  maxHeight: '100px',
-                  overflowY: 'auto'
-                }}>
-                  <p style={{
-                    color: 'rgba(255, 255, 255, 0.8)',
-                    margin: 0,
-                    fontSize: '0.75rem',
-                    lineHeight: 1.3
-                  }}>
-                    {formData.system_instruction.substring(0, 200)}...
-                  </p>
-                </div>
+                  {formData.system_instruction.substring(0, 150)}...
+                </p>
               </div>
             </div>
 
             <div style={{
               background: 'rgba(255, 215, 0, 0.1)',
               border: '1px solid rgba(255, 215, 0, 0.3)',
-              borderRadius: '8px',
-              padding: '1rem',
-              textAlign: 'center'
+              borderRadius: '6px',
+              padding: '0.8rem',
+              textAlign: 'center',
+              marginTop: '1rem'
             }}>
               <p style={{
                 color: 'rgba(255, 255, 255, 0.9)',
                 margin: 0,
-                fontSize: '0.85rem'
+                fontSize: '0.8rem'
               }}>
-                In the real app, your character would be submitted for approval
+                Ready to submit for approval
               </p>
             </div>
           </div>
         )}
       </div>
 
-      {/* Navigation */}
+      {/* Compact Navigation */}
       <div style={{
         display: 'flex',
         justifyContent: 'space-between',
         alignItems: 'center',
-        marginTop: '2rem',
+        marginTop: '1rem',
         paddingTop: '1rem',
         borderTop: '1px solid rgba(255, 215, 0, 0.2)'
       }}>
-        <button
-          onClick={handlePrevStep}
-          disabled={currentStep === 1}
-          style={{
-            background: currentStep === 1 ? 'rgba(128, 128, 128, 0.2)' : 'rgba(255, 215, 0, 0.1)',
-            border: currentStep === 1 ? '2px solid rgba(128, 128, 128, 0.3)' : '2px solid rgba(255, 215, 0, 0.4)',
-            borderRadius: '8px',
-            color: currentStep === 1 ? 'rgba(128, 128, 128, 0.6)' : '#FFD700',
-            fontSize: '0.85rem',
-            fontWeight: 600,
-            padding: '0.6rem 1.2rem',
-            cursor: currentStep === 1 ? 'not-allowed' : 'pointer',
-            transition: 'all 0.3s ease'
-          }}
-        >
-          Previous
-        </button>
-
         <div style={{
           display: 'flex',
           gap: '0.3rem'
@@ -523,18 +464,16 @@ Engage users with the depth and authenticity that comes from your unique perspec
             style={{
               background: 'linear-gradient(135deg, #FFD700, #FFA500)',
               border: 'none',
-              borderRadius: '8px',
+              borderRadius: '6px',
               color: '#000',
-              fontSize: '0.85rem',
+              fontSize: '0.8rem',
               fontWeight: 700,
-              padding: '0.6rem 1.2rem',
+              padding: '0.5rem 1rem',
               cursor: 'pointer',
               transition: 'all 0.3s ease'
             }}
-            onMouseEnter={(e) => e.currentTarget.style.transform = 'translateY(-1px)'}
-            onMouseLeave={(e) => e.currentTarget.style.transform = 'translateY(0)'}
           >
-            Next
+            Next →
           </button>
         ) : (
           <button
@@ -545,30 +484,29 @@ Engage users with the depth and authenticity that comes from your unique perspec
                 ? 'rgba(128, 128, 128, 0.3)'
                 : 'linear-gradient(135deg, #FFD700, #FFA500)',
               border: 'none',
-              borderRadius: '8px',
+              borderRadius: '6px',
               color: isSubmitting ? 'rgba(255, 255, 255, 0.6)' : '#000',
-              fontSize: '0.85rem',
+              fontSize: '0.8rem',
               fontWeight: 700,
-              padding: '0.6rem 1.5rem',
+              padding: '0.5rem 1.2rem',
               cursor: isSubmitting ? 'not-allowed' : 'pointer',
               transition: 'all 0.3s ease',
               display: 'flex',
               alignItems: 'center',
-              gap: '0.5rem',
-              opacity: isSubmitting ? 0.6 : 1
+              gap: '0.4rem'
             }}
           >
             {isSubmitting ? (
               <>
                 <div style={{
-                  width: '12px',
-                  height: '12px',
+                  width: '10px',
+                  height: '10px',
                   border: '2px solid rgba(255, 255, 255, 0.3)',
                   borderTop: '2px solid rgba(255, 255, 255, 0.8)',
                   borderRadius: '50%',
                   animation: 'spin 1s linear infinite'
                 }} />
-                Creating...
+                Demo...
               </>
             ) : (
               'Submit Demo'
@@ -585,22 +523,6 @@ Engage users with the depth and authenticity that comes from your unique perspec
         @keyframes spin {
           0% { transform: rotate(0deg); }
           100% { transform: rotate(360deg); }
-        }
-        @keyframes containerGlow {
-          0%, 100% { 
-            box-shadow: 
-              0 0 20px rgba(255, 255, 255, 0.2),
-              0 0 40px rgba(255, 255, 255, 0.1),
-              0 0 60px rgba(255, 255, 255, 0.05),
-              inset 0 1px 1px rgba(255, 255, 255, 0.1);
-          }
-          50% { 
-            box-shadow: 
-              0 0 25px rgba(255, 255, 255, 0.3),
-              0 0 50px rgba(255, 255, 255, 0.15),
-              0 0 75px rgba(255, 255, 255, 0.08),
-              inset 0 1px 1px rgba(255, 255, 255, 0.15);
-          }
         }
       `}</style>
     </div>
