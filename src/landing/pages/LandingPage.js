@@ -400,18 +400,27 @@ export default function LandingPage() {
       onMouseMove={!isMobile ? handleUserInteraction : undefined}
     >
       {/* Desktop Header - Only visible on desktop */}
+      {/* Desktop Header - Only visible on desktop */}
       <header className="desktop-header">
         <Link to="/" className="header-logo">
           AwakeVerse
         </Link>
-        
+
         <nav className="desktop-header-nav">
-          <Link to="/terms">Terms</Link>
-          <Link to="/privacy">Privacy</Link>
-          <Link to="/contact-us">Contact</Link>
-          <span className="desktop-header-copyright">
-            © 2025 Awakeverse Ltd.
-          </span>
+          <div className="desktop-header-links">
+            <Link to="/terms">Terms</Link>
+            <Link to="/privacy">Privacy</Link>
+            <Link to="/contact-us">Contact</Link>
+          </div>
+
+          <div className="desktop-header-auth">
+            <Link to="/login" className="desktop-auth-button sign-in">
+              Sign In
+            </Link>
+            <Link to="/register" className="desktop-auth-button sign-up">
+              Sign Up
+            </Link>
+          </div>
         </nav>
       </header>
 
@@ -752,20 +761,22 @@ export default function LandingPage() {
           </div>
         </>
       )}
-      {/* Legal Links - Mobile Only Footer */}
-      {isMobile && (
-        <div style={{
-          position: 'fixed',
-          bottom: '20px',
-          left: '50%',
-          transform: 'translateX(-50%)',
-          zIndex: 10,
-          display: 'flex',
-          alignItems: 'center',
-          gap: '16px',
+      {/* Legal Links Footer - Copyright for both desktop and mobile */}
+      <div style={{
+        position: 'fixed',
+        bottom: '20px',
+        left: '50%',
+        transform: 'translateX(-50%)',
+        zIndex: 10,
+        display: 'flex',
+        alignItems: 'center',
+        gap: isMobile ? '16px' : '24px',
+        ...(isMobile && {
           flexDirection: 'column',
           gap: '8px'
-        }}>
+        })
+      }}>
+        {isMobile && (
           <div style={{
             display: 'flex',
             gap: '12px',
@@ -822,15 +833,15 @@ export default function LandingPage() {
               Contact
             </Link>
           </div>
-          <div style={{
-            color: 'rgba(255, 255, 255, 0.5)',
-            fontSize: '10px',
-            fontWeight: 300
-          }}>
-            © 2025 Awakeverse Ltd.
-          </div>
+        )}
+        <div style={{
+          color: 'rgba(255, 255, 255, 0.5)',
+          fontSize: isMobile ? '10px' : '11px',
+          fontWeight: 300
+        }}>
+          © 2025 Awakeverse Ltd.
         </div>
-      )}
+      </div>
     </div>
   );
 } 
