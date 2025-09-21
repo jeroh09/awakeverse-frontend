@@ -747,7 +747,8 @@ export default function LandingPage() {
                 </button>
               </div>
             </section>
-            {/* Section 2: Character Creation Demo */}
+
+                      {/* Section 2: Character Creation Demo */}
             <section className="desktop-section-2">
               <div className="desktop-section-content">
                 <div style={{
@@ -786,9 +787,8 @@ export default function LandingPage() {
                       lineHeight: 1.6,
                       marginBottom: '2rem'
                     }}>
-                      Build custom AI characters using our template system. Choose from hundreds of 
-                      historical archetypes, then customize their personality, expertise, and behavior 
-                      to create your perfect conversation partner.
+                      Build custom AI characters using our template system. Choose from historical 
+                      archetypes, then customize their personality and expertise.
                     </p>
 
                     <div style={{
@@ -825,7 +825,7 @@ export default function LandingPage() {
                             color: '#FFD700',
                             fontWeight: 'bold'
                           }}>1.</span>
-                          Choose a template from our extensive library
+                          Choose a template from our library
                         </li>
                         <li style={{
                           color: 'rgba(255, 255, 255, 0.9)',
@@ -840,7 +840,7 @@ export default function LandingPage() {
                             color: '#FFD700',
                             fontWeight: 'bold'
                           }}>2.</span>
-                          Customize name, personality, and expertise
+                          Customize personality and expertise
                         </li>
                         <li style={{
                           color: 'rgba(255, 255, 255, 0.9)',
@@ -855,7 +855,7 @@ export default function LandingPage() {
                             color: '#FFD700',
                             fontWeight: 'bold'
                           }}>3.</span>
-                          Submit for approval (usually within 24 hours)
+                          Submit for approval (24 hours)
                         </li>
                         <li style={{
                           color: 'rgba(255, 255, 255, 0.9)',
@@ -869,7 +869,7 @@ export default function LandingPage() {
                             color: '#FFD700',
                             fontWeight: 'bold'
                           }}>4.</span>
-                          Start conversations with your custom character
+                          Start conversations
                         </li>
                       </ul>
                     </div>
@@ -915,7 +915,6 @@ export default function LandingPage() {
                 </div>
               </div>
             </section>
-
             {/* Section 3: Community Content */}
             <section className="desktop-section-3">
               <div className="desktop-section-content">
