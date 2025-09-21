@@ -3,6 +3,157 @@
 /* Import Premium Fonts + Playfair Display for Logo */
 @import url('https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;500;600;700;800;900&family=Cinzel+Decorative:wght@400;700&family=Lora:wght@400;500;600;700&family=Inter:wght@300;400;500;600;700&family=Crimson+Text:ital,wght@0,400;0,600;1,400;1,600&family=Source+Serif+Pro:ital,wght@0,300;0,400;0,600;1,400&display=swap');
 
+/* Desktop Header Bar - Add this to LandingPage.css */
+
+/* Desktop Header - Only visible on desktop */
+.desktop-header {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 80px;
+  background: rgba(26, 26, 46, 0.95);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  border-bottom: 1px solid rgba(255, 215, 0, 0.2);
+  z-index: 100;
+  display: none; /* Hidden by default */
+  align-items: center;
+  padding: 0 2rem;
+  box-shadow: 0 2px 20px rgba(0, 0, 0, 0.3);
+}
+
+/* Show header only on desktop mode */
+.desktop-mode .desktop-header {
+  display: flex;
+}
+
+/* Header Logo */
+.desktop-header .header-logo {
+  font-family: 'Playfair Display', serif;
+  font-size: 1.75rem;
+  font-weight: 700;
+  color: #ffd700;
+  text-shadow: 
+    0 0 10px rgba(255, 215, 0, 0.5),
+    0 0 20px rgba(255, 215, 0, 0.3),
+    0 0 30px rgba(255, 215, 0, 0.2);
+  letter-spacing: 0.05em;
+  margin: 0;
+  text-decoration: none;
+  transition: all 0.3s ease;
+}
+
+.desktop-header .header-logo:hover {
+  color: #ffed4a;
+  text-shadow: 
+    0 0 15px rgba(255, 215, 0, 0.7),
+    0 0 25px rgba(255, 215, 0, 0.4),
+    0 0 35px rgba(255, 215, 0, 0.3);
+}
+
+/* Header Navigation */
+.desktop-header-nav {
+  margin-left: auto;
+  display: flex;
+  align-items: center;
+  gap: 2rem;
+}
+
+.desktop-header-nav a {
+  color: rgba(255, 255, 255, 0.8);
+  text-decoration: none;
+  font-family: 'Inter', sans-serif;
+  font-size: 0.95rem;
+  font-weight: 500;
+  transition: all 0.3s ease;
+  position: relative;
+  padding: 0.5rem 0;
+}
+
+.desktop-header-nav a::before {
+  content: '';
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  width: 0;
+  height: 2px;
+  background: linear-gradient(90deg, #ffd700, #ffed4a);
+  transition: width 0.3s ease;
+}
+
+.desktop-header-nav a:hover {
+  color: #ffd700;
+  transform: translateY(-1px);
+}
+
+.desktop-header-nav a:hover::before {
+  width: 100%;
+}
+
+/* Copyright in header */
+.desktop-header-copyright {
+  color: rgba(255, 255, 255, 0.5);
+  font-size: 0.85rem;
+  font-weight: 300;
+  margin-left: 1.5rem;
+  font-family: 'Inter', sans-serif;
+}
+
+/* Hide original logo when header is active */
+.desktop-mode .logo {
+  display: none;
+}
+
+/* Adjust main content to account for header */
+.desktop-mode .landing-container {
+  padding-top: 80px;
+}
+
+.desktop-mode .carousel-container {
+  height: calc(100vh - 80px);
+}
+
+/* Responsive adjustments for smaller desktop screens */
+@media (max-width: 1200px) and (min-width: 769px) {
+  .desktop-header {
+    padding: 0 1.5rem;
+  }
+  
+  .desktop-header .header-logo {
+    font-size: 1.6rem;
+  }
+  
+  .desktop-header-nav {
+    gap: 1.5rem;
+  }
+  
+  .desktop-header-nav a {
+    font-size: 0.9rem;
+  }
+  
+  .desktop-header-copyright {
+    font-size: 0.8rem;
+    margin-left: 1rem;
+  }
+}
+
+/* Hide header completely on mobile */
+@media (max-width: 768px) {
+  .desktop-header {
+    display: none !important;
+  }
+  
+  /* Restore original mobile layout */
+  .mobile-mode .landing-container {
+    padding-top: 0;
+  }
+  
+  .mobile-mode .logo {
+    display: block !important;
+  }
+}
+
 /* Reset and Base Styles */
 * {
   margin: 0;
@@ -48,7 +199,7 @@ body, html {
   100% { transform: rotate(360deg); }
 }
 
-/* Animated Stars */
+/* Animated Stars
 .stars {
   position: absolute;
   top: 0;
@@ -93,7 +244,7 @@ body, html {
     transform: scale(1.2); 
     box-shadow: 0 0 12px rgba(255, 255, 255, 0.8);
   }
-}
+}*/
 
 /* Logo - Responsive */
 .logo {

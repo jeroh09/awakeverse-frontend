@@ -6,7 +6,7 @@ import EnhancedCharacterPanels from '../components/EnhancedCharacterPanels';
 import './LandingPage.css';
 
 export default function LandingPage() {
-  const starsRef = useRef(null);
+  //const starsRef = useRef(null);
   const [currentScreen, setCurrentScreen] = useState(0);
   const [isTransitioning, setIsTransitioning] = useState(false);
   const [isPaused, setIsPaused] = useState(false);
@@ -202,30 +202,30 @@ export default function LandingPage() {
   }, [currentScreen, isMobile]);
 
   // Generate stars with device optimization
-  useEffect(() => {
-    if (starsRef.current) {
-      const numberOfStars = isMobile ? 80 : 200;
-      starsRef.current.innerHTML = '';
+  //useEffect(() => {
+    //if (starsRef.current) {
+      //const numberOfStars = isMobile ? 80 : 200;
+      //starsRef.current.innerHTML = '';
 
-      const fragment = document.createDocumentFragment();
+//      const fragment = document.createDocumentFragment();
 
-      for (let i = 0; i < numberOfStars; i++) {
-        const star = document.createElement('div');
-        star.className = 'star';
-        star.style.left = Math.random() * 100 + '%';
-        star.style.top = Math.random() * 100 + '%';
-        star.style.animationDelay = Math.random() * 4 + 's';
-        star.style.animationDuration = (2 + Math.random() * 3) + 's';
+  //    for (let i = 0; i < numberOfStars; i++) {
+    //    const star = document.createElement('div');
+     //   star.className = 'star';
+      //  star.style.left = Math.random() * 100 + '%';
+      //  star.style.top = Math.random() * 100 + '%';
+      //  star.style.animationDelay = Math.random() * 4 + 's';
+        //star.style.animationDuration = (2 + Math.random() * 3) + 's';
 
-        const brightness = 0.4 + Math.random() * 0.6;
-        star.style.opacity = brightness;
+    //    const brightness = 0.4 + Math.random() * 0.6;
+      //  star.style.opacity = brightness;
 
-        fragment.appendChild(star);
-      }
+     //   fragment.appendChild(star);
+    //  }
 
-      starsRef.current.appendChild(fragment);
-    }
-  }, [isMobile]);
+      //starsRef.current.appendChild(fragment);
+  //  }
+  //}, [isMobile]);
 
   // Touch gesture handlers
   const onTouchStart = useCallback((e) => {
@@ -386,7 +386,6 @@ export default function LandingPage() {
   if (isResizing) {
     return (
       <div className="landing-container">
-        <div className="stars" ref={starsRef}></div>
         <h1 className="logo">AwakeVerse</h1>
         <div className="resize-transition">
           <div className="loading-indicator"></div>
@@ -400,8 +399,21 @@ export default function LandingPage() {
       className={`landing-container ${isMobile ? 'mobile-mode' : 'desktop-mode'}`}
       onMouseMove={!isMobile ? handleUserInteraction : undefined}
     >
-      {/* Animated Stars */}
-      <div className="stars" ref={starsRef}></div>
+      {/* Desktop Header - Only visible on desktop */}
+      <header className="desktop-header">
+        <Link to="/" className="header-logo">
+          AwakeVerse
+        </Link>
+        
+        <nav className="desktop-header-nav">
+          <Link to="/terms">Terms</Link>
+          <Link to="/privacy">Privacy</Link>
+          <Link to="/contact-us">Contact</Link>
+          <span className="desktop-header-copyright">
+            © 2025 Awakeverse Ltd.
+          </span>
+        </nav>
+      </header>
 
       {/* Logo - Always visible on mobile, conditional on desktop */}
       <h1 className="logo">AwakeVerse</h1>
@@ -740,85 +752,85 @@ export default function LandingPage() {
           </div>
         </>
       )}
-      {/* Legal Links - Seamlessly integrated into page */}
-      <div style={{
-        position: 'fixed',
-        bottom: '20px',
-        left: '50%',
-        transform: 'translateX(-50%)',
-        zIndex: 10,
-        display: 'flex',
-        alignItems: 'center',
-        gap: isMobile ? '16px' : '24px',
-        ...(isMobile && {
+      {/* Legal Links - Mobile Only Footer */}
+      {isMobile && (
+        <div style={{
+          position: 'fixed',
+          bottom: '20px',
+          left: '50%',
+          transform: 'translateX(-50%)',
+          zIndex: 10,
+          display: 'flex',
+          alignItems: 'center',
+          gap: '16px',
           flexDirection: 'column',
           gap: '8px'
-        })
-      }}>
-        <div style={{
-          display: 'flex',
-          gap: isMobile ? '12px' : '16px',
-          alignItems: 'center'
         }}>
-          <Link 
-            to="/terms" 
-            style={{
-              color: 'rgba(255, 255, 255, 0.7)',
-              textDecoration: 'none',
-              fontSize: isMobile ? '12px' : '13px',
-              fontWeight: 300,
-              transition: 'color 0.3s ease'
-            }}
-            onMouseEnter={(e) => e.target.style.color = '#FFD700'}
-            onMouseLeave={(e) => e.target.style.color = 'rgba(255, 255, 255, 0.7)'}
-          >
-            Terms
-          </Link>
-          <span style={{
-            color: 'rgba(255, 255, 255, 0.4)',
-            fontSize: isMobile ? '10px' : '11px'
-          }}>•</span>
-          <Link 
-            to="/privacy" 
-            style={{
-              color: 'rgba(255, 255, 255, 0.7)',
-              textDecoration: 'none',
-              fontSize: isMobile ? '12px' : '13px',
-              fontWeight: 300,
-              transition: 'color 0.3s ease'
-            }}
-            onMouseEnter={(e) => e.target.style.color = '#FFD700'}
-            onMouseLeave={(e) => e.target.style.color = 'rgba(255, 255, 255, 0.7)'}
-          >
-            Privacy
-          </Link>
-          <span style={{
-            color: 'rgba(255, 255, 255, 0.4)',
-            fontSize: isMobile ? '10px' : '11px'
-          }}>•</span>
-          <Link 
-            to="/contact-us" 
-            style={{
-              color: 'rgba(255, 255, 255, 0.7)',
-              textDecoration: 'none',
-              fontSize: isMobile ? '12px' : '13px',
-              fontWeight: 300,
-              transition: 'color 0.3s ease'
-            }}
-            onMouseEnter={(e) => e.target.style.color = '#FFD700'}
-            onMouseLeave={(e) => e.target.style.color = 'rgba(255, 255, 255, 0.7)'}
-          >
-            Contact
-          </Link>
+          <div style={{
+            display: 'flex',
+            gap: '12px',
+            alignItems: 'center'
+          }}>
+            <Link 
+              to="/terms" 
+              style={{
+                color: 'rgba(255, 255, 255, 0.7)',
+                textDecoration: 'none',
+                fontSize: '12px',
+                fontWeight: 300,
+                transition: 'color 0.3s ease'
+              }}
+              onMouseEnter={(e) => e.target.style.color = '#FFD700'}
+              onMouseLeave={(e) => e.target.style.color = 'rgba(255, 255, 255, 0.7)'}
+            >
+              Terms
+            </Link>
+            <span style={{
+              color: 'rgba(255, 255, 255, 0.4)',
+              fontSize: '10px'
+            }}>•</span>
+            <Link 
+              to="/privacy" 
+              style={{
+                color: 'rgba(255, 255, 255, 0.7)',
+                textDecoration: 'none',
+                fontSize: '12px',
+                fontWeight: 300,
+                transition: 'color 0.3s ease'
+              }}
+              onMouseEnter={(e) => e.target.style.color = '#FFD700'}
+              onMouseLeave={(e) => e.target.style.color = 'rgba(255, 255, 255, 0.7)'}
+            >
+              Privacy
+            </Link>
+            <span style={{
+              color: 'rgba(255, 255, 255, 0.4)',
+              fontSize: '10px'
+            }}>•</span>
+            <Link 
+              to="/contact-us" 
+              style={{
+                color: 'rgba(255, 255, 255, 0.7)',
+                textDecoration: 'none',
+                fontSize: '12px',
+                fontWeight: 300,
+                transition: 'color 0.3s ease'
+              }}
+              onMouseEnter={(e) => e.target.style.color = '#FFD700'}
+              onMouseLeave={(e) => e.target.style.color = 'rgba(255, 255, 255, 0.7)'}
+            >
+              Contact
+            </Link>
+          </div>
+          <div style={{
+            color: 'rgba(255, 255, 255, 0.5)',
+            fontSize: '10px',
+            fontWeight: 300
+          }}>
+            © 2025 Awakeverse Ltd.
+          </div>
         </div>
-        <div style={{
-          color: 'rgba(255, 255, 255, 0.5)',
-          fontSize: isMobile ? '10px' : '11px',
-          fontWeight: 300
-        }}>
-          © 2025 Awakeverse Ltd.
-        </div>
-      </div>
+      )}
     </div>
   );
 } 
