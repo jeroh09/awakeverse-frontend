@@ -3,6 +3,7 @@ import React, { useEffect, useRef, useState, useCallback, useMemo } from 'react'
 import { Link } from 'react-router-dom';
 import { characterCategories } from '../../data/characterCategories';
 import EnhancedCharacterPanels from '../components/EnhancedCharacterPanels';
+import DemoCharacterBuilder from './DemoCharacterBuilder';
 import './LandingPage.css';
 
 export default function LandingPage() {
@@ -12,6 +13,7 @@ export default function LandingPage() {
   const [isPaused, setIsPaused] = useState(false);
   const [isMobile, setIsMobile] = useState(false);
   const [isResizing, setIsResizing] = useState(false);
+  const [currentSection, setCurrentSection] = useState(0);
 
   // Mobile-specific state
   const [currentPanel, setCurrentPanel] = useState(0);
@@ -201,31 +203,14 @@ export default function LandingPage() {
     }
   }, [currentScreen, isMobile]);
 
-  // Generate stars with device optimization
-  //useEffect(() => {
-    //if (starsRef.current) {
-      //const numberOfStars = isMobile ? 80 : 200;
-      //starsRef.current.innerHTML = '';
-
-//      const fragment = document.createDocumentFragment();
-
-  //    for (let i = 0; i < numberOfStars; i++) {
-    //    const star = document.createElement('div');
-     //   star.className = 'star';
-      //  star.style.left = Math.random() * 100 + '%';
-      //  star.style.top = Math.random() * 100 + '%';
-      //  star.style.animationDelay = Math.random() * 4 + 's';
-        //star.style.animationDuration = (2 + Math.random() * 3) + 's';
-
-    //    const brightness = 0.4 + Math.random() * 0.6;
-      //  star.style.opacity = brightness;
-
-     //   fragment.appendChild(star);
-    //  }
-
-      //starsRef.current.appendChild(fragment);
-  //  }
-  //}, [isMobile]);
+  // Scroll to section function
+  const scrollToSection = useCallback((sectionIndex) => {
+    const sectionElement = document.querySelector(`.desktop-section-${sectionIndex + 1}`);
+    if (sectionElement) {
+      sectionElement.scrollIntoView({ behavior: 'smooth' });
+      setCurrentSection(sectionIndex);
+    }
+  }, []);
 
   // Touch gesture handlers
   const onTouchStart = useCallback((e) => {
@@ -400,7 +385,6 @@ export default function LandingPage() {
       onMouseMove={!isMobile ? handleUserInteraction : undefined}
     >
       {/* Desktop Header - Only visible on desktop */}
-      {/* Desktop Header - Only visible on desktop */}
       <header className="desktop-header">
         <Link to="/" className="header-logo">
           AwakeVerse
@@ -561,203 +545,426 @@ export default function LandingPage() {
           </div>
         </>
       ) : (
-        /* DESKTOP: Original 3-Screen Carousel Design */
+        /* DESKTOP: 3-Section Vertical Layout */
         <>
-          <div className="carousel-container">
-            <div
-              className="carousel-track"
-              style={{
-                transform: `translateX(-${currentScreen * 33.333}%)`,
-                transition: isTransitioning ? 'transform 1s cubic-bezier(0.25, 0.46, 0.45, 0.94)' : 'none',
-              }}
-            >
-              {/* Screen 1: Hero + Character Panels */}
-              <div className="carousel-slide" data-screen="0">
-                <div className="screen-content">
-                  <div className="hero-content">
-                    <h2 className="main-hero-headline">
-                      Conversations without Limits - Powered by AI
-                    </h2>
-                    
-                    <h3 className="secondary-tagline">
-                      Solve mysteries with <span className="highlight-gold">Sherlock</span>,
-                      innovate with <span className="highlight-gold">Da Vinci</span>,
-                      explore love with <span className="highlight-gold">Helen</span>
-                    </h3>
+          <div className="desktop-main-wrapper">
+            {/* Section 1: Existing Carousel */}
+            <section className="desktop-section-1">
+              <div className="carousel-container">
+                <div
+                  className="carousel-track"
+                  style={{
+                    transform: `translateX(-${currentScreen * 33.333}%)`,
+                    transition: isTransitioning ? 'transform 1s cubic-bezier(0.25, 0.46, 0.45, 0.94)' : 'none',
+                  }}
+                >
+                  {/* Screen 1: Hero + Character Panels */}
+                  <div className="carousel-slide" data-screen="0">
+                    <div className="screen-content">
+                      <div className="hero-content">
+                        <h2 className="main-hero-headline">
+                          Conversations without Limits - Powered by AI
+                        </h2>
+                        
+                        <h3 className="secondary-tagline">
+                          Solve mysteries with <span className="highlight-gold">Sherlock</span>,
+                          innovate with <span className="highlight-gold">Da Vinci</span>,
+                          explore love with <span className="highlight-gold">Helen</span>
+                        </h3>
 
-                    <Link to="/register" className="cta-primary">
-                      Start Your First Conversation
-                    </Link>
+                        <Link to="/register" className="cta-primary">
+                          Start Your First Conversation
+                        </Link>
+                      </div>
+
+                      <EnhancedCharacterPanels />
+                    </div>
                   </div>
 
-                  <EnhancedCharacterPanels />
-                </div>
-              </div>
+                  {/* Screen 2: Social Proof + Conversations */}
+                  <div className="carousel-slide" data-screen="1">
+                    <div className="screen-content">
+                      <div className="social-proof-header">
+                        <div className="stars-rating">★★★★★</div>
+                        <p className="proof-text">Trusted by 15,000+ curious minds</p>
+                        <p className="tagline-below-rating">
+                          Get personalized advice from Sherlock, Sun Tzu, Plato, Tesla ...and 100s of the greatest minds
+                        </p>
+                      </div>
 
-              {/* Screen 2: Social Proof + Conversations */}
-              <div className="carousel-slide" data-screen="1">
-                <div className="screen-content">
-                  <div className="social-proof-header">
-                    <div className="stars-rating">★★★★★</div>
-                    <p className="proof-text">Trusted by 15,000+ curious minds</p>
-                    <p className="tagline-below-rating">
-                      Get personalized advice from Sherlock, Sun Tzu, Plato, Tesla ...and 100s of the greatest minds
-                    </p>
+                      <div className="conversations-content">
+                        <h2 className="conversation-examples-title">
+                          <em>Chat with Casanova</em>, <em>Debate ethics with Nietzsche</em>, <em>Decide strategy with Zhukov</em>
+                        </h2>
+
+                        <div className="chat-examples">
+                          {chatConversations.map((chat, index) => (
+                            <div key={`chat-${chat.character?.key || index}`} className="chat-example">
+                              <div className="chat-header">
+                                <OptimizedImage
+                                  src={chat.character?.thumbnailUrl}
+                                  alt={chat.character?.name || 'Character'}
+                                  className="chat-avatar"
+                                  fallbackLetter={chat.character?.name?.charAt(0) || 'C'}
+                                  imageKey={`chat-avatar-${chat.character?.key || index}`}
+                                />
+                                <span className="chat-character-name">{chat.character?.name || 'Character'}</span>
+                              </div>
+                              <div className="chat-messages">
+                                {chat.messages.map((message, msgIndex) => (
+                                  <div
+                                    key={`msg-${index}-${msgIndex}`}
+                                    className={`chat-message ${message.user ? 'user' : 'ai'}`}
+                                  >
+                                    <div className="message-bubble">
+                                      {message.text}
+                                    </div>
+                                  </div>
+                                ))}
+                              </div>
+                            </div>
+                          ))}
+                        </div>
+                      </div>
+                    </div>
                   </div>
 
-                  <div className="conversations-content">
-                    <h2 className="conversation-examples-title">
-                      <em>Chat with Casanova</em>, <em>Debate ethics with Nietzsche</em>, <em>Decide strategy with Zhukov</em>
-                    </h2>
+                  {/* Screen 3: Interactive Invitation Demo */}
+                  <div className="carousel-slide" data-screen="2">
+                    <div className="screen-content">
+                      <h2 className="section-title">Invite Experts to Join</h2>
+                      <p className="invitation-subtitle">Characters can invite others with specialized knowledge</p>
 
-                    <div className="chat-examples">
-                      {chatConversations.map((chat, index) => (
-                        <div key={`chat-${chat.character?.key || index}`} className="chat-example">
+                      <div className="invitation-demo">
+                        <div className="demo-chat">
                           <div className="chat-header">
                             <OptimizedImage
-                              src={chat.character?.thumbnailUrl}
-                              alt={chat.character?.name || 'Character'}
+                              src={getCharacter('huckleberry_finn')?.thumbnailUrl || '/images/huckleberry_finn.jpg'}
+                              alt="Huckleberry Finn"
                               className="chat-avatar"
-                              fallbackLetter={chat.character?.name?.charAt(0) || 'C'}
-                              imageKey={`chat-avatar-${chat.character?.key || index}`}
+                              fallbackLetter="H"
+                              imageKey="huckleberry-finn-avatar"
                             />
-                            <span className="chat-character-name">{chat.character?.name || 'Character'}</span>
-                          </div>
-                          <div className="chat-messages">
-                            {chat.messages.map((message, msgIndex) => (
-                              <div
-                                key={`msg-${index}-${msgIndex}`}
-                                className={`chat-message ${message.user ? 'user' : 'ai'}`}
-                              >
-                                <div className="message-bubble">
-                                  {message.text}
-                                </div>
-                              </div>
-                            ))}
-                          </div>
-                        </div>
-                      ))}
-                    </div>
-                  </div>
-                </div>
-              </div>
-
-              {/* Screen 3: Interactive Invitation Demo */}
-              <div className="carousel-slide" data-screen="2">
-                <div className="screen-content">
-                  <h2 className="section-title">Invite Experts to Join</h2>
-                  <p className="invitation-subtitle">Characters can invite others with specialized knowledge</p>
-
-                  <div className="invitation-demo">
-                    <div className="demo-chat">
-                      <div className="chat-header">
-                        <OptimizedImage
-                          src={getCharacter('huckleberry_finn')?.thumbnailUrl || '/images/huckleberry_finn.jpg'}
-                          alt="Huckleberry Finn"
-                          className="chat-avatar"
-                          fallbackLetter="H"
-                          imageKey="huckleberry-finn-avatar"
-                        />
-                        <div className="chat-info">
-                          <span className="chat-name">Huckleberry Finn</span>
-                          <span className="chat-status">Online</span>
-                        </div>
-                      </div>
-
-                      <div className="chat-messages">
-                        <div className="chat-message user">
-                          <div className="message-bubble">
-                            What do you know about military strategy and warfare?
-                          </div>
-                        </div>
-
-                        <div className="chat-message ai">
-                          <div className="message-bubble">
-                            {typedText}
-                            {isTyping && <span className="typing-cursor">|</span>}
-                          </div>
-                        </div>
-
-                        {showInviteButtons && (
-                          <div className="invite-suggestions">
-                            <p className="invite-text">Would you like me to invite some military experts?</p>
-                            <div className="invite-buttons">
-                              <Link to="/register" className="invite-button">
-                                <OptimizedImage
-                                  src={getCharacter('sun_tzu')?.thumbnailUrl || '/images/sun_tzu.jpg'}
-                                  alt="Sun Tzu"
-                                  className="invite-avatar"
-                                  fallbackLetter="S"
-                                  imageKey="sun-tzu-invite"
-                                />
-                                Invite Sun Tzu
-                              </Link>
-                              <Link to="/register" className="invite-button">
-                                <OptimizedImage
-                                  src={getCharacter('georgy_zhukov')?.thumbnailUrl || '/images/georgy_zhukov.jpg'}
-                                  alt="Georgy Zhukov"
-                                  className="invite-avatar"
-                                  fallbackLetter="Z"
-                                  imageKey="georgy-zhukov-invite"
-                                />
-                                Invite Zhukov
-                              </Link>
+                            <div className="chat-info">
+                              <span className="chat-name">Huckleberry Finn</span>
+                              <span className="chat-status">Online</span>
                             </div>
                           </div>
-                        )}
+
+                          <div className="chat-messages">
+                            <div className="chat-message user">
+                              <div className="message-bubble">
+                                What do you know about military strategy and warfare?
+                              </div>
+                            </div>
+
+                            <div className="chat-message ai">
+                              <div className="message-bubble">
+                                {typedText}
+                                {isTyping && <span className="typing-cursor">|</span>}
+                              </div>
+                            </div>
+
+                            {showInviteButtons && (
+                              <div className="invite-suggestions">
+                                <p className="invite-text">Would you like me to invite some military experts?</p>
+                                <div className="invite-buttons">
+                                  <Link to="/register" className="invite-button">
+                                    <OptimizedImage
+                                      src={getCharacter('sun_tzu')?.thumbnailUrl || '/images/sun_tzu.jpg'}
+                                      alt="Sun Tzu"
+                                      className="invite-avatar"
+                                      fallbackLetter="S"
+                                      imageKey="sun-tzu-invite"
+                                    />
+                                    Invite Sun Tzu
+                                  </Link>
+                                  <Link to="/register" className="invite-button">
+                                    <OptimizedImage
+                                      src={getCharacter('georgy_zhukov')?.thumbnailUrl || '/images/georgy_zhukov.jpg'}
+                                      alt="Georgy Zhukov"
+                                      className="invite-avatar"
+                                      fallbackLetter="Z"
+                                      imageKey="georgy-zhukov-invite"
+                                    />
+                                    Invite Zhukov
+                                  </Link>
+                                </div>
+                              </div>
+                            )}
+                          </div>
+                        </div>
+
+                        <div className="demo-explanation">
+                          <h3>How It Works</h3>
+                          <ul>
+                            <li>Characters recognize when topics are outside their expertise</li>
+                            <li>They can suggest and invite relevant experts to join the conversation</li>
+                            <li>Multiple historical figures can participate in the same discussion</li>
+                            <li>Get diverse perspectives on complex topics</li>
+                          </ul>
+
+                          <Link to="/register" className="start-exploring">
+                            Start Exploring →
+                          </Link>
+                        </div>
                       </div>
-                    </div>
-
-                    <div className="demo-explanation">
-                      <h3>How It Works</h3>
-                      <ul>
-                        <li>Characters recognize when topics are outside their expertise</li>
-                        <li>They can suggest and invite relevant experts to join the conversation</li>
-                        <li>Multiple historical figures can participate in the same discussion</li>
-                        <li>Get diverse perspectives on complex topics</li>
-                      </ul>
-
-                      <Link to="/register" className="start-exploring">
-                        Start Exploring →
-                      </Link>
                     </div>
                   </div>
                 </div>
               </div>
-            </div>
+
+              {/* Keep existing carousel navigation */}
+              <div className="carousel-navigation">
+                <button
+                  className="nav-arrow nav-prev"
+                  onClick={prevScreen}
+                  disabled={isTransitioning}
+                  aria-label="Previous screen"
+                >
+                  ↑
+                </button>
+
+                <div className="carousel-dots">
+                  {[0, 1, 2].map((index) => (
+                    <button
+                      key={`dot-${index}`}
+                      className={`carousel-dot ${index === currentScreen ? 'active' : ''}`}
+                      onClick={() => navigateToScreen(index)}
+                      disabled={isTransitioning}
+                      aria-label={`Go to screen ${index + 1}`}
+                    />
+                  ))}
+                </div>
+
+                <button
+                  className="nav-arrow nav-next"
+                  onClick={nextScreen}
+                  disabled={isTransitioning}
+                  aria-label="Next screen"
+                >
+                  ↓
+                </button>
+              </div>
+            </section>
+
+            {/* Section 2: Character Creation Demo */}
+            <section className="desktop-section-2">
+              <div className="desktop-section-content">
+                <div style={{
+                  display: 'grid',
+                  gridTemplateColumns: '1fr 2fr',
+                  gap: '3rem',
+                  alignItems: 'center',
+                  width: '100%',
+                  maxWidth: '1200px'
+                }}>
+                  {/* Left: Explanation */}
+                  <div style={{ textAlign: 'left' }}>
+                    <h2 style={{
+                      fontFamily: "'Playfair Display', serif",
+                      fontSize: '2.2rem',
+                      color: '#ffd700',
+                      marginBottom: '1.5rem',
+                      textShadow: '0 0 20px rgba(255, 215, 0, 0.3)',
+                      lineHeight: 1.2
+                    }}>
+                      Create Your Own Characters
+                    </h2>
+                    
+                    <p style={{
+                      fontFamily: "'Inter', sans-serif",
+                      fontSize: '1.1rem',
+                      color: 'rgba(255, 255, 255, 0.9)',
+                      lineHeight: 1.6,
+                      marginBottom: '2rem'
+                    }}>
+                      Build custom AI characters using our template system. Choose from hundreds of 
+                      historical archetypes, then customize their personality, expertise, and behavior 
+                      to create your perfect conversation partner.
+                    </p>
+
+                    <div style={{
+                      background: 'rgba(255, 215, 0, 0.1)',
+                      border: '1px solid rgba(255, 215, 0, 0.3)',
+                      borderRadius: '12px',
+                      padding: '1.5rem',
+                      marginBottom: '2rem'
+                    }}>
+                      <h3 style={{
+                        color: '#FFD700',
+                        fontSize: '1.1rem',
+                        margin: '0 0 1rem 0',
+                        fontFamily: "'Playfair Display', serif"
+                      }}>
+                        How It Works
+                      </h3>
+                      <ul style={{
+                        listStyle: 'none',
+                        padding: 0,
+                        margin: 0
+                      }}>
+                        <li style={{
+                          color: 'rgba(255, 255, 255, 0.9)',
+                          fontSize: '0.95rem',
+                          marginBottom: '0.8rem',
+                          paddingLeft: '1.5rem',
+                          position: 'relative'
+                        }}>
+                          <span style={{
+                            position: 'absolute',
+                            left: 0,
+                            color: '#FFD700',
+                            fontWeight: 'bold'
+                          }}>1.</span>
+                          Choose a template from our extensive library
+                        </li>
+                        <li style={{
+                          color: 'rgba(255, 255, 255, 0.9)',
+                          fontSize: '0.95rem',
+                          marginBottom: '0.8rem',
+                          paddingLeft: '1.5rem',
+                          position: 'relative'
+                        }}>
+                          <span style={{
+                            position: 'absolute',
+                            left: 0,
+                            color: '#FFD700',
+                            fontWeight: 'bold'
+                          }}>2.</span>
+                          Customize name, personality, and expertise
+                        </li>
+                        <li style={{
+                          color: 'rgba(255, 255, 255, 0.9)',
+                          fontSize: '0.95rem',
+                          marginBottom: '0.8rem',
+                          paddingLeft: '1.5rem',
+                          position: 'relative'
+                        }}>
+                          <span style={{
+                            position: 'absolute',
+                            left: 0,
+                            color: '#FFD700',
+                            fontWeight: 'bold'
+                          }}>3.</span>
+                          Submit for approval (usually within 24 hours)
+                        </li>
+                        <li style={{
+                          color: 'rgba(255, 255, 255, 0.9)',
+                          fontSize: '0.95rem',
+                          paddingLeft: '1.5rem',
+                          position: 'relative'
+                        }}>
+                          <span style={{
+                            position: 'absolute',
+                            left: 0,
+                            color: '#FFD700',
+                            fontWeight: 'bold'
+                          }}>4.</span>
+                          Start conversations with your custom character
+                        </li>
+                      </ul>
+                    </div>
+
+                    <div style={{
+                      display: 'flex',
+                      alignItems: 'center',
+                      gap: '1rem',
+                      flexWrap: 'wrap'
+                    }}>
+                      <Link 
+                        to="/register" 
+                        style={{
+                          background: 'linear-gradient(135deg, #FFD700, #FFA500)',
+                          border: 'none',
+                          borderRadius: '25px',
+                          color: '#000',
+                          fontSize: '1rem',
+                          fontWeight: 700,
+                          padding: '0.8rem 2rem',
+                          textDecoration: 'none',
+                          display: 'inline-block',
+                          transition: 'all 0.3s ease',
+                          boxShadow: '0 4px 15px rgba(255, 215, 0, 0.3)'
+                        }}
+                      >
+                        Start Creating
+                      </Link>
+                      <div style={{
+                        color: 'rgba(255, 255, 255, 0.7)',
+                        fontSize: '0.9rem'
+                      }}>
+                        ← Try the demo first
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Right: Interactive Demo */}
+                  <div>
+                    <DemoCharacterBuilder />
+                  </div>
+                </div>
+              </div>
+            </section>
+
+            {/* Section 3: Additional Content */}
+            <section className="desktop-section-3">
+              <div className="desktop-section-content">
+                <h2 style={{
+                  fontFamily: "'Playfair Display', serif",
+                  fontSize: '2.5rem',
+                  color: '#ffd700',
+                  marginBottom: '1.5rem',
+                  textAlign: 'center',
+                  textShadow: '0 0 20px rgba(255, 215, 0, 0.3)'
+                }}>
+                  Join the Community
+                </h2>
+                
+                <p style={{
+                  fontFamily: "'Inter', sans-serif",
+                  fontSize: '1.1rem',
+                  color: 'rgba(255, 255, 255, 0.9)',
+                  lineHeight: 1.6,
+                  marginBottom: '2.5rem',
+                  textAlign: 'center',
+                  maxWidth: '800px',
+                  marginLeft: 'auto',
+                  marginRight: 'auto'
+                }}>
+                  Connect with thousands of curious minds exploring history, philosophy, science, and art. 
+                  Share your conversations, discover new perspectives, and learn from characters 
+                  across all eras of human knowledge.
+                </p>
+
+                <div style={{
+                  textAlign: 'center'
+                }}>
+                  <Link to="/register" style={{
+                    background: 'linear-gradient(135deg, #FFD700, #FFA500)',
+                    border: 'none',
+                    borderRadius: '25px',
+                    color: '#000',
+                    fontSize: '1.1rem',
+                    fontWeight: 700,
+                    padding: '1rem 2.5rem',
+                    textDecoration: 'none',
+                    display: 'inline-block',
+                    transition: 'all 0.3s ease',
+                    boxShadow: '0 4px 15px rgba(255, 215, 0, 0.3)'
+                  }}>
+                    Join Now →
+                  </Link>
+                </div>
+              </div>
+            </section>
           </div>
 
-          {/* Desktop Navigation */}
-          <div className="carousel-navigation">
-            <button
-              className="nav-arrow nav-prev"
-              onClick={prevScreen}
-              disabled={isTransitioning}
-              aria-label="Previous screen"
-            >
-              ↑
-            </button>
-
-            <div className="carousel-dots">
-              {[0, 1, 2].map((index) => (
-                <button
-                  key={`dot-${index}`}
-                  className={`carousel-dot ${index === currentScreen ? 'active' : ''}`}
-                  onClick={() => navigateToScreen(index)}
-                  disabled={isTransitioning}
-                  aria-label={`Go to screen ${index + 1}`}
-                />
-              ))}
-            </div>
-
-            <button
-              className="nav-arrow nav-next"
-              onClick={nextScreen}
-              disabled={isTransitioning}
-              aria-label="Next screen"
-            >
-              ↓
-            </button>
+          {/* Desktop Scroll Indicator */}
+          <div className="desktop-scroll-indicator">
+            <div className={`scroll-dot ${currentSection === 0 ? 'active' : ''}`} onClick={() => scrollToSection(0)}></div>
+            <div className={`scroll-dot ${currentSection === 1 ? 'active' : ''}`} onClick={() => scrollToSection(1)}></div>
+            <div className={`scroll-dot ${currentSection === 2 ? 'active' : ''}`} onClick={() => scrollToSection(2)}></div>
           </div>
         </>
       )}
@@ -844,4 +1051,4 @@ export default function LandingPage() {
       </div>
     </div>
   );
-} 
+}
