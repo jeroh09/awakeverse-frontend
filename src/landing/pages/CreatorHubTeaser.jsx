@@ -17,25 +17,11 @@ const CreatorHubTeaser = () => {
       <div style={{
         marginBottom: '1.5rem'
       }}>
-        <div style={{
-          width: '50px',
-          height: '50px',
-          background: 'linear-gradient(135deg, #FFD700, #FFA500)',
-          borderRadius: '50%',
-          display: 'flex',
-          alignItems: 'center',
-          justifyContent: 'center',
-          margin: '0 auto 1rem',
-          fontSize: '1.2rem'
-        }}>
-          ⭐
-        </div>
-        
         <h3 style={{
           color: '#FFD700',
           fontSize: '1.5rem',
           fontWeight: 700,
-          margin: '0 0 0.75rem 0',
+          margin: '0 0 1rem 0',
           fontFamily: "'Playfair Display', serif"
         }}>
           Creator Hub
@@ -44,26 +30,12 @@ const CreatorHubTeaser = () => {
         <p style={{
           color: 'rgba(255, 255, 255, 0.8)',
           fontSize: '1rem',
-          margin: '0 0 1rem 0',
+          margin: '0 0 1.5rem 0',
           lineHeight: 1.5
         }}>
-          Turn your character creations into monthly income. Submit quality characters 
-          for our curated hub and earn based on user interactions.
+          Turn character creations into monthly income. Submit quality characters 
+          and earn based on user interactions.
         </p>
-
-        <div style={{
-          background: 'rgba(255, 215, 0, 0.1)',
-          border: '1px solid rgba(255, 215, 0, 0.3)',
-          borderRadius: '20px',
-          padding: '0.4rem 1rem',
-          display: 'inline-block',
-          fontSize: '0.85rem',
-          color: '#FFD700',
-          fontWeight: 600,
-          marginBottom: '1.5rem'
-        }}>
-          Coming Q2 2025
-        </div>
       </div>
 
       {/* Quick Benefits */}

@@ -15,6 +15,7 @@ export default function LandingPage() {
   const [isPaused, setIsPaused] = useState(false);
   const [isMobile, setIsMobile] = useState(false);
   const [isResizing, setIsResizing] = useState(false);
+  const [currentSection, setCurrentSection] = useState(0);
 
   // Mobile-specific state
   const [currentPanel, setCurrentPanel] = useState(0);
@@ -151,6 +152,37 @@ export default function LandingPage() {
     return () => clearInterval(interval);
   }, [isMobile, isPaused, isTransitioning, currentScreen]);
 
+  // Detect current section based on scroll position
+  useEffect(() => {
+    if (isMobile) return; // Desktop only
+
+    const handleScroll = () => {
+      const scrollY = window.scrollY;
+      const viewportHeight = window.innerHeight;
+      const section = Math.round(scrollY / viewportHeight);
+      setCurrentSection(Math.max(0, Math.min(section, 2))); // Clamp between 0-2
+    };
+
+    window.addEventListener('scroll', handleScroll, { passive: true });
+    return () => window.removeEventListener('scroll', handleScroll);
+  }, [isMobile]);
+
+    // Optional: Keyboard navigation for sections
+  useEffect(() => {
+    if (isMobile) return;
+
+    const handleKeyPress = (e) => {
+      if (e.key === 'ArrowDown' && currentSection < 2) {
+        scrollToSection(currentSection + 1);
+      } else if (e.key === 'ArrowUp' && currentSection > 0) {
+        scrollToSection(currentSection - 1);
+      }
+    };
+
+    window.addEventListener('keydown', handleKeyPress);
+    return () => window.removeEventListener('keydown', handleKeyPress);
+  }, [currentSection, scrollToSection, isMobile]);
+
   // MOBILE: Auto-advance panels
   useEffect(() => {
     if (!isMobile || isPaused || isTransitioning) return;
@@ -263,6 +295,7 @@ export default function LandingPage() {
     navigateToScreen(prev);
   }, [isMobile, currentScreen, navigateToScreen]);
 
+
   // Mobile navigation functions
   const navigateToPanel = useCallback((panelIndex) => {
     if (!isMobile || isTransitioning) return;
@@ -360,12 +393,14 @@ export default function LandingPage() {
   });
 
   // Scroll to section function
+  // Scroll to specific section function
   const scrollToSection = useCallback((sectionIndex) => {
-    if (isMobile) return;
-    
-    const sectionElements = document.querySelectorAll('.desktop-section-1, .desktop-section-2, .desktop-section-3');
-    if (sectionElements[sectionIndex]) {
-      sectionElements[sectionIndex].scrollIntoView({ behavior: 'smooth' });
+    if (!isMobile) { // Desktop only
+      const targetY = sectionIndex * window.innerHeight;
+      window.scrollTo({
+        top: targetY,
+        behavior: 'smooth'
+      });
     }
   }, [isMobile]);
 
@@ -918,17 +953,18 @@ export default function LandingPage() {
               </div>
             </section>
             {/* Section 3: Community Content */}
-
-            {/* Section 3: Subscription Plans + Creator Hub */}
+            
+                      {/* Section 3: Subscription Plans + Creator Hub */}
             <section className="desktop-section-3">
-              <div className="desktop-section-content">
+              <div className="desktop-section-content" style={{ paddingTop: '120px' }}>
                 <div style={{
                   display: 'grid',
                   gridTemplateColumns: '2fr 1fr',
                   gap: '3rem',
                   alignItems: 'start',
                   width: '100%',
-                  maxWidth: '1400px'
+                  maxWidth: '1400px',
+                  marginBottom: '4rem'
                 }}>
                   {/* Left: Subscription Plans */}
                   <div>
@@ -1028,106 +1064,263 @@ export default function LandingPage() {
                     <CreatorHubTeaser />
                   </div>
                 </div>
+
+                {/* Footer Links Section */}
+                <div style={{
+                  borderTop: '1px solid rgba(255, 255, 255, 0.1)',
+                  paddingTop: '3rem',
+                  marginTop: '3rem'
+                }}>
+                  <div style={{
+                    display: 'grid',
+                    gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))',
+                    gap: '2rem',
+                    maxWidth: '1200px',
+                    margin: '0 auto 3rem auto'
+                  }}>
+                    {/* Company */}
+                    <div>
+                      <h4 style={{
+                        color: '#FFD700',
+                        fontSize: '1.1rem',
+                        fontWeight: 600,
+                        margin: '0 0 1rem 0',
+                        fontFamily: "'Playfair Display', serif"
+                      }}>
+                        Company
+                      </h4>
+                      <div style={{
+                        display: 'flex',
+                        flexDirection: 'column',
+                        gap: '0.75rem'
+                      }}>
+                        <Link to="/about" style={{
+                          color: 'rgba(255, 255, 255, 0.7)',
+                          textDecoration: 'none',
+                          fontSize: '0.9rem',
+                          transition: 'color 0.3s ease'
+                        }}
+                        onMouseEnter={(e) => e.target.style.color = '#FFD700'}
+                        onMouseLeave={(e) => e.target.style.color = 'rgba(255, 255, 255, 0.7)'}
+                        >
+                          About Us
+                        </Link>
+                        <Link to="/contact-us" style={{
+                          color: 'rgba(255, 255, 255, 0.7)',
+                          textDecoration: 'none',
+                          fontSize: '0.9rem',
+                          transition: 'color 0.3s ease'
+                        }}
+                        onMouseEnter={(e) => e.target.style.color = '#FFD700'}
+                        onMouseLeave={(e) => e.target.style.color = 'rgba(255, 255, 255, 0.7)'}
+                        >
+                          Contact Us
+                        </Link>
+                        <Link to="/careers" style={{
+                          color: 'rgba(255, 255, 255, 0.7)',
+                          textDecoration: 'none',
+                          fontSize: '0.9rem',
+                          transition: 'color 0.3s ease'
+                        }}
+                        onMouseEnter={(e) => e.target.style.color = '#FFD700'}
+                        onMouseLeave={(e) => e.target.style.color = 'rgba(255, 255, 255, 0.7)'}
+                        >
+                          Careers
+                        </Link>
+                      </div>
+                    </div>
+
+                    {/* Product */}
+                    <div>
+                      <h4 style={{
+                        color: '#FFD700',
+                        fontSize: '1.1rem',
+                        fontWeight: 600,
+                        margin: '0 0 1rem 0',
+                        fontFamily: "'Playfair Display', serif"
+                      }}>
+                        Product
+                      </h4>
+                      <div style={{
+                        display: 'flex',
+                        flexDirection: 'column',
+                        gap: '0.75rem'
+                      }}>
+                        <Link to="/pricing" style={{
+                          color: 'rgba(255, 255, 255, 0.7)',
+                          textDecoration: 'none',
+                          fontSize: '0.9rem',
+                          transition: 'color 0.3s ease'
+                        }}
+                        onMouseEnter={(e) => e.target.style.color = '#FFD700'}
+                        onMouseLeave={(e) => e.target.style.color = 'rgba(255, 255, 255, 0.7)'}
+                        >
+                          Pricing
+                        </Link>
+                        <Link to="/features" style={{
+                          color: 'rgba(255, 255, 255, 0.7)',
+                          textDecoration: 'none',
+                          fontSize: '0.9rem',
+                          transition: 'color 0.3s ease'
+                        }}
+                        onMouseEnter={(e) => e.target.style.color = '#FFD700'}
+                        onMouseLeave={(e) => e.target.style.color = 'rgba(255, 255, 255, 0.7)'}
+                        >
+                          Features
+                        </Link>
+                        <Link to="/creator-hub" style={{
+                          color: 'rgba(255, 255, 255, 0.7)',
+                          textDecoration: 'none',
+                          fontSize: '0.9rem',
+                          transition: 'color 0.3s ease'
+                        }}
+                        onMouseEnter={(e) => e.target.style.color = '#FFD700'}
+                        onMouseLeave={(e) => e.target.style.color = 'rgba(255, 255, 255, 0.7)'}
+                        >
+                          Creator Hub
+                        </Link>
+                      </div>
+                    </div>
+
+                    {/* Legal */}
+                    <div>
+                      <h4 style={{
+                        color: '#FFD700',
+                        fontSize: '1.1rem',
+                        fontWeight: 600,
+                        margin: '0 0 1rem 0',
+                        fontFamily: "'Playfair Display', serif"
+                      }}>
+                        Legal
+                      </h4>
+                      <div style={{
+                        display: 'flex',
+                        flexDirection: 'column',
+                        gap: '0.75rem'
+                      }}>
+                        <Link to="/terms" style={{
+                          color: 'rgba(255, 255, 255, 0.7)',
+                          textDecoration: 'none',
+                          fontSize: '0.9rem',
+                          transition: 'color 0.3s ease'
+                        }}
+                        onMouseEnter={(e) => e.target.style.color = '#FFD700'}
+                        onMouseLeave={(e) => e.target.style.color = 'rgba(255, 255, 255, 0.7)'}
+                        >
+                          Terms of Service
+                        </Link>
+                        <Link to="/privacy" style={{
+                          color: 'rgba(255, 255, 255, 0.7)',
+                          textDecoration: 'none',
+                          fontSize: '0.9rem',
+                          transition: 'color 0.3s ease'
+                        }}
+                        onMouseEnter={(e) => e.target.style.color = '#FFD700'}
+                        onMouseLeave={(e) => e.target.style.color = 'rgba(255, 255, 255, 0.7)'}
+                        >
+                          Privacy Policy
+                        </Link>
+                        <Link to="/community-guidelines" style={{
+                          color: 'rgba(255, 255, 255, 0.7)',
+                          textDecoration: 'none',
+                          fontSize: '0.9rem',
+                          transition: 'color 0.3s ease'
+                        }}
+                        onMouseEnter={(e) => e.target.style.color = '#FFD700'}
+                        onMouseLeave={(e) => e.target.style.color = 'rgba(255, 255, 255, 0.7)'}
+                        >
+                          Community Guidelines
+                        </Link>
+                      </div>
+                    </div>
+
+                    {/* Support */}
+                    <div>
+                      <h4 style={{
+                        color: '#FFD700',
+                        fontSize: '1.1rem',
+                        fontWeight: 600,
+                        margin: '0 0 1rem 0',
+                        fontFamily: "'Playfair Display', serif"
+                      }}>
+                        Support
+                      </h4>
+                      <div style={{
+                        display: 'flex',
+                        flexDirection: 'column',
+                        gap: '0.75rem'
+                      }}>
+                        <Link to="/help" style={{
+                          color: 'rgba(255, 255, 255, 0.7)',
+                          textDecoration: 'none',
+                          fontSize: '0.9rem',
+                          transition: 'color 0.3s ease'
+                        }}
+                        onMouseEnter={(e) => e.target.style.color = '#FFD700'}
+                        onMouseLeave={(e) => e.target.style.color = 'rgba(255, 255, 255, 0.7)'}
+                        >
+                          Help Center
+                        </Link>
+                        <Link to="/support" style={{
+                          color: 'rgba(255, 255, 255, 0.7)',
+                          textDecoration: 'none',
+                          fontSize: '0.9rem',
+                          transition: 'color 0.3s ease'
+                        }}
+                        onMouseEnter={(e) => e.target.style.color = '#FFD700'}
+                        onMouseLeave={(e) => e.target.style.color = 'rgba(255, 255, 255, 0.7)'}
+                        >
+                          Contact Support
+                        </Link>
+                        <a href="mailto:hello@awakeverse.com" style={{
+                          color: 'rgba(255, 255, 255, 0.7)',
+                          textDecoration: 'none',
+                          fontSize: '0.9rem',
+                          transition: 'color 0.3s ease'
+                        }}
+                        onMouseEnter={(e) => e.target.style.color = '#FFD700'}
+                        onMouseLeave={(e) => e.target.style.color = 'rgba(255, 255, 255, 0.7)'}
+                        >
+                          hello@awakeverse.com
+                        </a>
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Copyright */}
+                  <div style={{
+                    textAlign: 'center',
+                    paddingTop: '2rem',
+                    borderTop: '1px solid rgba(255, 255, 255, 0.1)',
+                    color: 'rgba(255, 255, 255, 0.5)',
+                    fontSize: '0.9rem'
+                  }}>
+                    © 2025 Awakeverse Ltd. All rights reserved.
+                  </div>
+                </div>
               </div>
             </section>
           </div>
-          {/* Desktop Scroll Indicator */}
-          <div className="desktop-scroll-indicator">
-            <div className="scroll-dot active" onClick={() => scrollToSection(0)}></div>
-            <div className="scroll-dot" onClick={() => scrollToSection(1)}></div>
-            <div className="scroll-dot" onClick={() => scrollToSection(2)}></div>
-          </div>
 
           {/* Desktop Scroll Indicator */}
-          <div className="desktop-scroll-indicator">
-            <div className="scroll-dot active" onClick={() => scrollToSection(0)}></div>
-            <div className="scroll-dot" onClick={() => scrollToSection(1)}></div>
-            <div className="scroll-dot" onClick={() => scrollToSection(2)}></div>
-          </div>
+          {!isMobile && (
+            <div className="desktop-scroll-indicator">
+              <div 
+                className={`scroll-dot ${currentSection === 0 ? 'active' : ''}`} 
+                onClick={() => scrollToSection(0)}
+              ></div>
+              <div 
+                className={`scroll-dot ${currentSection === 1 ? 'active' : ''}`} 
+                onClick={() => scrollToSection(1)}
+              ></div>
+              <div 
+                className={`scroll-dot ${currentSection === 2 ? 'active' : ''}`} 
+                onClick={() => scrollToSection(2)}
+              ></div>
+            </div>
+          )}
         </>
       )}
-      {/* Legal Links Footer - Copyright for both desktop and mobile */}
-      <div style={{
-        position: 'fixed',
-        bottom: '20px',
-        left: '50%',
-        transform: 'translateX(-50%)',
-        zIndex: 10,
-        display: 'flex',
-        alignItems: 'center',
-        gap: isMobile ? '16px' : '24px',
-        ...(isMobile && {
-          flexDirection: 'column',
-          gap: '8px'
-        })
-      }}>
-        {isMobile && (
-          <div style={{
-            display: 'flex',
-            gap: '12px',
-            alignItems: 'center'
-          }}>
-            <Link 
-              to="/terms" 
-              style={{
-                color: 'rgba(255, 255, 255, 0.7)',
-                textDecoration: 'none',
-                fontSize: '12px',
-                fontWeight: 300,
-                transition: 'color 0.3s ease'
-              }}
-              onMouseEnter={(e) => e.target.style.color = '#FFD700'}
-              onMouseLeave={(e) => e.target.style.color = 'rgba(255, 255, 255, 0.7)'}
-            >
-              Terms
-            </Link>
-            <span style={{
-              color: 'rgba(255, 255, 255, 0.4)',
-              fontSize: '12px'
-            }}>•</span>
-            <Link 
-              to="/privacy" 
-              style={{
-                color: 'rgba(255, 255, 255, 0.7)',
-                textDecoration: 'none',
-                fontSize: '12px',
-                fontWeight: 300,
-                transition: 'color 0.3s ease'
-              }}
-              onMouseEnter={(e) => e.target.style.color = '#FFD700'}
-              onMouseLeave={(e) => e.target.style.color = 'rgba(255, 255, 255, 0.7)'}
-            >
-              Privacy
-            </Link>
-            <span style={{
-              color: 'rgba(255, 255, 255, 0.4)',
-              fontSize: '12px'
-            }}>•</span>
-            <Link 
-              to="/contact-us" 
-              style={{
-                color: 'rgba(255, 255, 255, 0.7)',
-                textDecoration: 'none',
-                fontSize: '12px',
-                fontWeight: 300,
-                transition: 'color 0.3s ease'
-              }}
-              onMouseEnter={(e) => e.target.style.color = '#FFD700'}
-              onMouseLeave={(e) => e.target.style.color = 'rgba(255, 255, 255, 0.7)'}
-            >
-              Contact
-            </Link>
-          </div>
-        )}
-        <div style={{
-          color: 'rgba(255, 255, 255, 0.5)',
-          fontSize: '12px',
-          fontFamily: "system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Helvetica Neue', Arial, sans-serif",
-          fontWeight: 300
-        }}>
-          © {new Date().getFullYear()} AwakeVerse. All rights reserved.
-        </div>
-      </div>
     </div>
   );
 }
