@@ -293,6 +293,7 @@ export default function LandingPage() {
   }, [isMobile, currentScreen, navigateToScreen]);
 
 
+
   // Mobile navigation functions
   const navigateToPanel = useCallback((panelIndex) => {
     if (!isMobile || isTransitioning) return;
@@ -317,6 +318,20 @@ export default function LandingPage() {
     const prev = (currentPanel - 1 + 6) % 6;
     navigateToPanel(prev);
   }, [isMobile, currentPanel, navigateToPanel]);
+
+  // Add these desktop navigation functions after your mobile ones:
+
+const navigateToScreen = useCallback((screenIndex) => {
+  if (isMobile || isTransitioning) return;
+
+  setIsTransitioning(true);
+  setCurrentScreen(screenIndex);
+  handleUserInteraction();
+
+  setTimeout(() => {
+    setIsTransitioning(false);
+  }, 1000);
+}, [isMobile, isTransitioning, handleUserInteraction]);
 
   // Touch event listeners
   useEffect(() => {
