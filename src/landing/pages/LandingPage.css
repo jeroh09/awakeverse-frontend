@@ -2274,20 +2274,22 @@ body, html {
 }
 /* Desktop Vertical Sections - Add to LandingPage.css */
 
-/* Modify main container for desktop vertical scrolling */
+/* Modify container for desktop vertical scrolling */
 .desktop-mode .landing-container {
   height: auto;
-  min-height: 100vh;
+  min-height: 300vh; /* 3 sections × 100vh each */
   overflow-x: hidden;
   overflow-y: auto;
   scroll-behavior: smooth;
   scroll-snap-type: y mandatory;
+  padding-top: 80px; /* Account for header */
 }
 
 /* Desktop Main Content Wrapper */
 .desktop-main-wrapper {
   position: relative;
   width: 100%;
+  min-height: 300vh;
 }
 
 /* Section 1: Existing Carousel (unchanged) */
