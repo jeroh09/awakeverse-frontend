@@ -1,11 +1,11 @@
-// src/landing/pages/LandingPage.js - Complete Fixed Version
+// src/landing/pages/LandingPage.js - Desktop + Mobile Streaming Design
 import React, { useEffect, useRef, useState, useCallback, useMemo } from 'react';
 import { Link } from 'react-router-dom';
 import { characterCategories } from '../../data/characterCategories';
 import EnhancedCharacterPanels from '../components/EnhancedCharacterPanels';
 import DemoCharacterBuilder from './DemoCharacterBuilder';
-import SubscriptionPlansCards from './SubscriptionPlansCards';
-import CreatorHubTeaser from './CreatorHubTeaser';
+import SubscriptionPlansCards from './SubscriptionPlansCards'; 
+import CreatorHubTeaser from './CreatorHubTeaser'; 
 import './LandingPage.css';
 
 export default function LandingPage() {
@@ -36,81 +36,15 @@ export default function LandingPage() {
     return null;
   }, []);
 
-  // Mobile panel configuration
-  const mobilePanels = useMemo(() => [
-    {
-      character: getCharacter('sherlock'),
-      theme: 'night-sky',
-      tagline: 'Master observation, deduction & justice',
-      icons: ['🔍', '⚖️', '🕵️', '🔬']
-    },
-    {
-      character: getCharacter('shakespeare'),
-      theme: 'crimson-mystery',
-      tagline: 'Explore drama, poetry & human nature',
-      icons: ['🎭', '📜', '👑', '✒️']
-    },
-    {
-      character: getCharacter('cleopatra'),
-      theme: 'emerald-depths',
-      tagline: 'Discover power, strategy & leadership',
-      icons: ['👑', '🐍', '💎', '🏛️']
-    },
-    {
-      character: getCharacter('da_vinci'),
-      theme: 'royal-purple',
-      tagline: 'Unlock creativity, innovation & genius',
-      icons: ['🎨', '⚙️', '🔬', '✈️']
-    },
-    {
-      character: getCharacter('sappho'),
-      theme: 'golden-wisdom',
-      tagline: 'Explore love, poetry & passion',
-      icons: ['💕', '🌹', '🎵', '📖']
-    },
-    {
-      type: 'experts',
-      theme: 'midnight-experts',
-      title: 'Expert Invitations',
-      tagline: 'Invite experts to join your conversations',
-      characters: [getCharacter('sherlock'), getCharacter('sun_tzu')]
-    }
-  ], [getCharacter]);
-
-  // Desktop chat conversations
-  const chatConversations = useMemo(() => [
-    {
-      character: getCharacter('socrates'),
-      messages: [
-        { user: true, text: "What is the meaning of life?" },
-        { user: false, text: "My dear friend, the unexamined life is not worth living. True wisdom begins when we admit how little we know. Perhaps the meaning lies not in answers, but in the quality of our questions." }
-      ]
-    },
-    {
-      character: getCharacter('shakespeare'),
-      messages: [
-        { user: true, text: "How do I write better?" },
-        { user: false, text: "All the world's a stage, good sir! Write from the heart's deepest chambers. Observe humanity in all its folly and glory - therein lies your material. A well-turned phrase can outlive kingdoms." }
-      ]
-    },
-    {
-      character: getCharacter('tesla'),
-      messages: [
-        { user: true, text: "What drives innovation?" },
-        { user: false, text: "The present belongs to them, but the future, for which I really worked, is mine. Innovation springs from seeing what others cannot - the invisible forces that shape our world." }
-      ]
-    }
-  ], [getCharacter]);
-
-  // User interaction handler
+  // Handle user interaction
   const handleUserInteraction = useCallback(() => {
     setIsPaused(true);
     setTimeout(() => setIsPaused(false), isMobile ? 8000 : 5000);
   }, [isMobile]);
 
-  // Scroll to section function
+  // Scroll to specific section function
   const scrollToSection = useCallback((sectionIndex) => {
-    if (!isMobile) {
+    if (!isMobile) { 
       const targetY = sectionIndex * window.innerHeight;
       window.scrollTo({
         top: targetY,
@@ -234,6 +168,72 @@ export default function LandingPage() {
     );
   });
 
+  // Mobile panel configuration
+  const mobilePanels = useMemo(() => [
+    {
+      character: getCharacter('sherlock'),
+      theme: 'night-sky',
+      tagline: 'Master observation, deduction & justice',
+      icons: ['🔍', '⚖️', '🕵️', '🔬']
+    },
+    {
+      character: getCharacter('shakespeare'),
+      theme: 'crimson-mystery',
+      tagline: 'Explore drama, poetry & human nature',
+      icons: ['🎭', '📜', '👑', '✒️']
+    },
+    {
+      character: getCharacter('cleopatra'),
+      theme: 'emerald-depths',
+      tagline: 'Discover power, strategy & leadership',
+      icons: ['👑', '🐍', '💎', '🏛️']
+    },
+    {
+      character: getCharacter('da_vinci'),
+      theme: 'royal-purple',
+      tagline: 'Unlock creativity, innovation & genius',
+      icons: ['🎨', '⚙️', '🔬', '✈️']
+    },
+    {
+      character: getCharacter('sappho'),
+      theme: 'golden-wisdom',
+      tagline: 'Explore love, poetry & passion',
+      icons: ['💕', '🌹', '🎵', '📖']
+    },
+    {
+      type: 'experts',
+      theme: 'midnight-experts',
+      title: 'Expert Invitations',
+      tagline: 'Invite experts to join your conversations',
+      characters: [getCharacter('sherlock'), getCharacter('sun_tzu')]
+    }
+  ], [getCharacter]);
+
+  // Desktop chat conversations
+  const chatConversations = useMemo(() => [
+    {
+      character: getCharacter('socrates'),
+      messages: [
+        { user: true, text: "What is the meaning of life?" },
+        { user: false, text: "My dear friend, the unexamined life is not worth living. True wisdom begins when we admit how little we know. Perhaps the meaning lies not in answers, but in the quality of our questions." }
+      ]
+    },
+    {
+      character: getCharacter('shakespeare'),
+      messages: [
+        { user: true, text: "How do I write better?" },
+        { user: false, text: "All the world's a stage, good sir! Write from the heart's deepest chambers. Observe humanity in all its folly and glory - therein lies your material. A well-turned phrase can outlive kingdoms." }
+      ]
+    },
+    {
+      character: getCharacter('tesla'),
+      messages: [
+        { user: true, text: "What drives innovation?" },
+        { user: false, text: "The present belongs to them, but the future, for which I really worked, is mine. Innovation springs from seeing what others cannot - the invisible forces that shape our world." }
+      ]
+    }
+  ], [getCharacter]);
+
   // Mobile detection with smooth transition
   useEffect(() => {
     const checkMobile = () => {
@@ -280,17 +280,6 @@ export default function LandingPage() {
     return () => clearInterval(interval);
   }, [isMobile, isPaused, isTransitioning, currentScreen]);
 
-  // MOBILE: Auto-advance panels
-  useEffect(() => {
-    if (!isMobile || isPaused || isTransitioning) return;
-
-    const interval = setInterval(() => {
-      setCurrentPanel(prev => (prev + 1) % 6);
-    }, 4000);
-
-    return () => clearInterval(interval);
-  }, [isMobile, isPaused, isTransitioning, currentPanel]);
-
   // Detect current section based on scroll position
   useEffect(() => {
     if (isMobile) return;
@@ -305,6 +294,37 @@ export default function LandingPage() {
     window.addEventListener('scroll', handleScroll, { passive: true });
     return () => window.removeEventListener('scroll', handleScroll);
   }, [isMobile]);
+
+  // Keyboard navigation for sections
+  useEffect(() => {
+    if (isMobile) return;
+
+    const handleKeyPress = (e) => {
+      if (e.key === 'ArrowDown' && currentSection < 2) {
+        scrollToSection(currentSection + 1);
+      } else if (e.key === 'ArrowUp' && currentSection > 0) {
+        scrollToSection(currentSection - 1);
+      } else if (e.key === 'ArrowLeft') {
+        prevScreen();
+      } else if (e.key === 'ArrowRight') {
+        nextScreen();
+      }
+    };
+
+    window.addEventListener('keydown', handleKeyPress);
+    return () => window.removeEventListener('keydown', handleKeyPress);
+  }, [currentSection, scrollToSection, isMobile, prevScreen, nextScreen]);
+
+  // MOBILE: Auto-advance panels
+  useEffect(() => {
+    if (!isMobile || isPaused || isTransitioning) return;
+
+    const interval = setInterval(() => {
+      setCurrentPanel(prev => (prev + 1) % 6);
+    }, 4000);
+
+    return () => clearInterval(interval);
+  }, [isMobile, isPaused, isTransitioning, currentPanel]);
 
   // Desktop typing animation for screen 3
   useEffect(() => {
@@ -357,26 +377,6 @@ export default function LandingPage() {
       container.removeEventListener('touchend', onTouchEnd);
     };
   }, [onTouchStart, onTouchMove, onTouchEnd]);
-
-  // Keyboard navigation for sections
-  useEffect(() => {
-    if (isMobile) return;
-
-    const handleKeyPress = (e) => {
-      if (e.key === 'ArrowDown' && currentSection < 2) {
-        scrollToSection(currentSection + 1);
-      } else if (e.key === 'ArrowUp' && currentSection > 0) {
-        scrollToSection(currentSection - 1);
-      } else if (e.key === 'ArrowLeft') {
-        prevScreen();
-      } else if (e.key === 'ArrowRight') {
-        nextScreen();
-      }
-    };
-
-    window.addEventListener('keydown', handleKeyPress);
-    return () => window.removeEventListener('keydown', handleKeyPress);
-  }, [currentSection, scrollToSection, isMobile, prevScreen, nextScreen]);
 
   // Mobile keyboard navigation
   useEffect(() => {
@@ -740,7 +740,7 @@ export default function LandingPage() {
                 </div>
               </div>
 
-              {/* Carousel navigation */}
+              {/* Keep existing carousel navigation */}
               <div className="carousel-navigation">
                 <button
                   className="nav-arrow nav-prev"
@@ -1283,20 +1283,22 @@ export default function LandingPage() {
           </div>
 
           {/* Desktop Scroll Indicator */}
-          <div className="desktop-scroll-indicator">
-            <div 
-              className={`scroll-dot ${currentSection === 0 ? 'active' : ''}`} 
-              onClick={() => scrollToSection(0)}
-            ></div>
-            <div 
-              className={`scroll-dot ${currentSection === 1 ? 'active' : ''}`} 
-              onClick={() => scrollToSection(1)}
-            ></div>
-            <div 
-              className={`scroll-dot ${currentSection === 2 ? 'active' : ''}`} 
-              onClick={() => scrollToSection(2)}
-            ></div>
-          </div>
+          {!isMobile && (
+            <div className="desktop-scroll-indicator">
+              <div 
+                className={`scroll-dot ${currentSection === 0 ? 'active' : ''}`} 
+                onClick={() => scrollToSection(0)}
+              ></div>
+              <div 
+                className={`scroll-dot ${currentSection === 1 ? 'active' : ''}`} 
+                onClick={() => scrollToSection(1)}
+              ></div>
+              <div 
+                className={`scroll-dot ${currentSection === 2 ? 'active' : ''}`} 
+                onClick={() => scrollToSection(2)}
+              ></div>
+            </div>
+          )}
         </>
       )}
     </div>
