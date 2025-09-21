@@ -767,7 +767,7 @@ export default function LandingPage() {
                     border: '1px solid rgba(255, 215, 0, 0.2)',
                     borderRadius: '20px',
                     padding: '2rem',
-                    boxShadow: '0 0 40px rgba(255, 215, 0, 0.08)'
+                    boxShadow: '0 0 40px rgba(255, 255, 255, 0.67)'
                   }}>
                     <h2 style={{
                       fontFamily: "'Playfair Display', serif",
@@ -903,7 +903,7 @@ export default function LandingPage() {
                         color: 'rgba(255, 255, 255, 0.7)',
                         fontSize: '0.9rem'
                       }}>
-                        ← Try the demo first
+                        Try the demo first →
                       </div>
                     </div>
                   </div>
