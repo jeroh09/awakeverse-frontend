@@ -1693,3 +1693,32 @@ body, html {
 .stars {
   display: none !important;
 }
+/* Add this CSS override at the very end of your LandingPage.css file */
+/* This will forcefully hide any remaining stars */
+
+.stars {
+  display: none !important;
+  visibility: hidden !important;
+  opacity: 0 !important;
+  pointer-events: none !important;
+}
+
+.star {
+  display: none !important;
+  visibility: hidden !important;
+  opacity: 0 !important;
+}
+
+/* Remove star animations to prevent any performance impact */
+@keyframes twinkle {
+  0%, 100% { display: none; }
+}
+
+/* Remove any star-related pseudo-elements */
+.stars::before,
+.stars::after,
+.star::before,
+.star::after {
+  display: none !important;
+  content: none !important;
+}
