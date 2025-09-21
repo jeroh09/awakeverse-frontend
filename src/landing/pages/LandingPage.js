@@ -739,6 +739,40 @@ export default function LandingPage() {
               </div>
             </div>
 
+            {/* Keep existing carousel navigation */}
+            <div className="carousel-navigation">
+              <button
+                className="nav-arrow nav-prev"
+                onClick={prevScreen}
+                disabled={isTransitioning}
+                aria-label="Previous screen"
+              >
+                ←
+              </button>
+
+              <div className="carousel-dots">
+                {[0, 1, 2].map((index) => (
+                  <button
+                    key={`dot-${index}`}
+                    className={`carousel-dot ${index === currentScreen ? 'active' : ''}`}
+                    onClick={() => navigateToScreen(index)}
+                    disabled={isTransitioning}
+                    aria-label={`Go to screen ${index + 1}`}
+                  />
+                ))}
+              </div>
+
+              <button
+                className="nav-arrow nav-next"
+                onClick={nextScreen}
+                disabled={isTransitioning}
+                aria-label="Next screen"
+              >
+                →
+              </button>
+            </div>
+          </section>
+
           {/* Section 2: Character Creation Demo */}
           <section className="desktop-section-2">
             <div className="desktop-section-content">
@@ -750,17 +784,8 @@ export default function LandingPage() {
                 width: '100%',
                 maxWidth: '1200px'
               }}>
-
-                {/* Left: Explanation Panel */}
-                <div style={{
-                  background: 'rgba(255, 255, 255, 0.08)',
-                  backdropFilter: 'blur(20px)',
-                  border: '1px solid rgba(255, 215, 0, 0.3)',
-                  borderRadius: '20px',
-                  padding: '2rem',
-                  textAlign: 'left',
-                  boxShadow: '0 8px 32px rgba(0, 0, 0, 0.4)'
-                }}>
+                {/* Left: Explanation */}
+                <div style={{ textAlign: 'left' }}>
                   <h2 style={{
                     fontFamily: "'Playfair Display', serif",
                     fontSize: '2.2rem',
@@ -771,7 +796,7 @@ export default function LandingPage() {
                   }}>
                     Create Your Own Characters
                   </h2>
-
+                  
                   <p style={{
                     fontFamily: "'Inter', sans-serif",
                     fontSize: '1.1rem',
@@ -785,15 +810,85 @@ export default function LandingPage() {
                   </p>
 
                   <div style={{
-                    background: 'rgba(255, 215, 0, 0.12)',
+                    background: 'rgba(255, 215, 0, 0.1)',
                     border: '1px solid rgba(255, 215, 0, 0.3)',
                     borderRadius: '12px',
                     padding: '1.5rem',
-                    marginBottom: '2rem',
-                    boxShadow: '0 0 25px rgba(255, 215, 0, 0.1)'
+                    marginBottom: '2rem'
                   }}>
-                    {/* Your existing "How It Works" content */}
-                    {/* ... keep all the existing numbered steps ... */}
+                    <h3 style={{
+                      color: '#FFD700',
+                      fontSize: '1.1rem',
+                      margin: '0 0 1rem 0',
+                      fontFamily: "'Playfair Display', serif"
+                    }}>
+                      How It Works
+                    </h3>
+                    <ul style={{
+                      listStyle: 'none',
+                      padding: 0,
+                      margin: 0
+                    }}>
+                      <li style={{
+                        color: 'rgba(255, 255, 255, 0.9)',
+                        fontSize: '0.95rem',
+                        marginBottom: '0.8rem',
+                        paddingLeft: '1.5rem',
+                        position: 'relative'
+                      }}>
+                        <span style={{
+                          position: 'absolute',
+                          left: 0,
+                          color: '#FFD700',
+                          fontWeight: 'bold'
+                        }}>1.</span>
+                        Choose a template from our extensive library
+                      </li>
+                      <li style={{
+                        color: 'rgba(255, 255, 255, 0.9)',
+                        fontSize: '0.95rem',
+                        marginBottom: '0.8rem',
+                        paddingLeft: '1.5rem',
+                        position: 'relative'
+                      }}>
+                        <span style={{
+                          position: 'absolute',
+                          left: 0,
+                          color: '#FFD700',
+                          fontWeight: 'bold'
+                        }}>2.</span>
+                        Customize name, personality, and expertise
+                      </li>
+                      <li style={{
+                        color: 'rgba(255, 255, 255, 0.9)',
+                        fontSize: '0.95rem',
+                        marginBottom: '0.8rem',
+                        paddingLeft: '1.5rem',
+                        position: 'relative'
+                      }}>
+                        <span style={{
+                          position: 'absolute',
+                          left: 0,
+                          color: '#FFD700',
+                          fontWeight: 'bold'
+                        }}>3.</span>
+                        Submit for approval (usually within 24 hours)
+                      </li>
+                      <li style={{
+                        color: 'rgba(255, 255, 255, 0.9)',
+                        fontSize: '0.95rem',
+                        paddingLeft: '1.5rem',
+                        position: 'relative'
+                      }}>
+                        <span style={{
+                          position: 'absolute',
+                          left: 0,
+                          color: '#FFD700',
+                          fontWeight: 'bold'
+                        }}>4.</span>
+                        Start conversations with your custom character
+                      </li>
+                    </ul>
                   </div>
 
                   <div style={{
@@ -815,17 +910,17 @@ export default function LandingPage() {
                         textDecoration: 'none',
                         display: 'inline-block',
                         transition: 'all 0.3s ease',
-                        boxShadow: '0 4px 15px rgba(255, 215, 0, 0.3)'
+                        boxShadow: '0 4px 15px rgba(255, 255, 255, 0.87)'
                       }}
                     >
                       Start Creating
                     </Link>
-
+                    
                     <div style={{
                       color: 'rgba(255, 255, 255, 0.7)',
                       fontSize: '0.9rem'
                     }}>
-                      Try the demo first → 
+                      Try the demo first →
                     </div>
                   </div>
                 </div>
