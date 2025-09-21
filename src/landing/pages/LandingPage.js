@@ -752,7 +752,7 @@ export default function LandingPage() {
                 maxWidth: '1200px'
               }}>
                 {/* Left: Explanation */}
-                <div style={{ 
+                <div className="panel-double-border" style={{ 
                   textAlign: 'left',
                   background: 'rgba(255, 255, 255, 0.08)',
                   backdropFilter: 'blur(20px)',
@@ -901,8 +901,17 @@ export default function LandingPage() {
                 </div>
 
                 {/* Right: Interactive Demo */}
-                <div>
+                <div style={{
+                  background: 'rgba(26, 26, 46, 0.95)',
+                  backdropFilter: 'blur(20px)',
+                  border: '1px solid rgba(255, 215, 0, 0.3)',
+                  borderRadius: '20px',
+                  padding: '2rem',
+                  boxShadow: '0 8px 32px rgba(0, 0, 0, 0.4)'
+                }}>
+                <div className="panel-double-border">
                   <DemoCharacterBuilder />
+                  </div>
                 </div>
               </div>
             </div>

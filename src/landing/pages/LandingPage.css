@@ -2586,3 +2586,26 @@ body, html {
   scrollbar-width: thin;
   scrollbar-color: #FFD700 rgba(26, 26, 46, 0.8);
 }
+/* Double Border Effect for Panels */
+.desktop-section-2 .panel-double-border {
+  position: relative;
+  background: rgba(26, 26, 46, 0.95);
+  backdrop-filter: blur(20px);
+  border: 2px solid rgba(255, 215, 0, 0.6) !important;
+  border-radius: 20px !important;
+  padding: 2rem;
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.4);
+}
+
+.desktop-section-2 .panel-double-border::before {
+  content: '';
+  position: absolute;
+  top: -6px;
+  left: -6px;
+  right: -6px;
+  bottom: -6px;
+  border: 2px solid rgba(255, 215, 0, 0.3);
+  border-radius: 24px;
+  pointer-events: none;
+  z-index: -1;
+}
