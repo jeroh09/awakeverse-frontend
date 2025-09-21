@@ -1724,7 +1724,7 @@ body, html {
 }
 /* Glowing Hero Headline Effects - Add to LandingPage.css */
 
-/* Enhanced Main Hero Headline with Glow */
+/* Enhanced Main Hero Headline with Subtle Glow */
 .main-hero-headline {
   font-family: 'Lora', serif;
   font-size: 3rem;
@@ -1734,50 +1734,50 @@ body, html {
   color: #ffffff;
   text-align: center;
   
-  /* Multi-layer glow effect */
+  /* Subtle multi-layer glow effect - 50% intensity */
   text-shadow: 
-    0 0 10px rgba(255, 255, 255, 0.8),     /* Inner white glow */
-    0 0 20px rgba(255, 255, 255, 0.6),     /* Medium white glow */
-    0 0 30px rgba(255, 255, 255, 0.4),     /* Outer white glow */
-    0 0 40px rgba(255, 215, 0, 0.3),       /* Golden aura */
-    0 0 60px rgba(255, 215, 0, 0.2),       /* Extended golden glow */
+    0 0 5px rgba(255, 255, 255, 0.4),      /* Inner white glow */
+    0 0 10px rgba(255, 255, 255, 0.3),     /* Medium white glow */
+    0 0 15px rgba(255, 255, 255, 0.2),     /* Outer white glow */
+    0 0 20px rgba(255, 215, 0, 0.15),      /* Golden aura */
+    0 0 30px rgba(255, 215, 0, 0.1),       /* Extended golden glow */
     0 2px 4px rgba(0, 0, 0, 0.3);          /* Subtle depth shadow */
   
   /* Subtle animation for breathing effect */
   animation: heroGlow 4s ease-in-out infinite;
 }
 
-/* Breathing glow animation */
+/* Breathing glow animation - toned down */
 @keyframes heroGlow {
   0%, 100% { 
     text-shadow: 
-      0 0 10px rgba(255, 255, 255, 0.8),
-      0 0 20px rgba(255, 255, 255, 0.6),
-      0 0 30px rgba(255, 255, 255, 0.4),
-      0 0 40px rgba(255, 215, 0, 0.3),
-      0 0 60px rgba(255, 215, 0, 0.2),
+      0 0 5px rgba(255, 255, 255, 0.4),
+      0 0 10px rgba(255, 255, 255, 0.3),
+      0 0 15px rgba(255, 255, 255, 0.2),
+      0 0 20px rgba(255, 215, 0, 0.15),
+      0 0 30px rgba(255, 215, 0, 0.1),
       0 2px 4px rgba(0, 0, 0, 0.3);
   }
   50% { 
     text-shadow: 
-      0 0 15px rgba(255, 255, 255, 1),       /* Brighter inner glow */
-      0 0 25px rgba(255, 255, 255, 0.8),     /* Brighter medium glow */
-      0 0 35px rgba(255, 255, 255, 0.6),     /* Brighter outer glow */
-      0 0 50px rgba(255, 215, 0, 0.4),       /* Stronger golden aura */
-      0 0 80px rgba(255, 215, 0, 0.3),       /* Extended golden glow */
-      0 2px 6px rgba(0, 0, 0, 0.4);          /* Slightly deeper shadow */
+      0 0 8px rgba(255, 255, 255, 0.5),      /* Slightly brighter inner glow */
+      0 0 12px rgba(255, 255, 255, 0.4),     /* Slightly brighter medium glow */
+      0 0 18px rgba(255, 255, 255, 0.3),     /* Slightly brighter outer glow */
+      0 0 25px rgba(255, 215, 0, 0.2),       /* Slightly stronger golden aura */
+      0 0 40px rgba(255, 215, 0, 0.15),      /* Extended golden glow */
+      0 2px 5px rgba(0, 0, 0, 0.35);         /* Slightly deeper shadow */
   }
 }
 
-/* Enhanced glow on hover */
+/* Enhanced glow on hover - toned down */
 .main-hero-headline:hover {
   text-shadow: 
-    0 0 20px rgba(255, 255, 255, 1),
-    0 0 30px rgba(255, 255, 255, 0.8),
-    0 0 40px rgba(255, 255, 255, 0.6),
-    0 0 60px rgba(255, 215, 0, 0.5),
-    0 0 100px rgba(255, 215, 0, 0.3),
-    0 3px 8px rgba(0, 0, 0, 0.4);
+    0 0 10px rgba(255, 255, 255, 0.5),
+    0 0 15px rgba(255, 255, 255, 0.4),
+    0 0 20px rgba(255, 255, 255, 0.3),
+    0 0 30px rgba(255, 215, 0, 0.25),
+    0 0 50px rgba(255, 215, 0, 0.15),
+    0 3px 6px rgba(0, 0, 0, 0.4);
   
   transform: translateY(-2px);
   transition: all 0.3s ease;
