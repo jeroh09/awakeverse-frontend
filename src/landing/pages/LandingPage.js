@@ -738,39 +738,6 @@ export default function LandingPage() {
                 </div>
               </div>
             </div>
-
-            {/* Keep existing carousel navigation */}
-            <div className="carousel-navigation">
-              <button
-                className="nav-arrow nav-prev"
-                onClick={prevScreen}
-                disabled={isTransitioning}
-                aria-label="Previous screen"
-              >
-                ←
-              </button>
-
-              <div className="carousel-dots">
-                {[0, 1, 2].map((index) => (
-                  <button
-                    key={`dot-${index}`}
-                    className={`carousel-dot ${index === currentScreen ? 'active' : ''}`}
-                    onClick={() => navigateToScreen(index)}
-                    disabled={isTransitioning}
-                    aria-label={`Go to screen ${index + 1}`}
-                  />
-                ))}
-              </div>
-
-              <button
-                className="nav-arrow nav-next"
-                onClick={nextScreen}
-                disabled={isTransitioning}
-                aria-label="Next screen"
-              >
-                →
-              </button>
-            </div>
           </section>
 
           {/* Section 2: Character Creation Demo */}
