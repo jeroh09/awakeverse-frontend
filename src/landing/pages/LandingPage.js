@@ -13,7 +13,6 @@ export default function LandingPage() {
   const [isPaused, setIsPaused] = useState(false);
   const [isMobile, setIsMobile] = useState(false);
   const [isResizing, setIsResizing] = useState(false);
-  const [currentSection, setCurrentSection] = useState(0);
 
   // Mobile-specific state
   const [currentPanel, setCurrentPanel] = useState(0);
@@ -203,15 +202,6 @@ export default function LandingPage() {
     }
   }, [currentScreen, isMobile]);
 
-  // Scroll to section function
-  const scrollToSection = useCallback((sectionIndex) => {
-    const sectionElement = document.querySelector(`.desktop-section-${sectionIndex + 1}`);
-    if (sectionElement) {
-      sectionElement.scrollIntoView({ behavior: 'smooth' });
-      setCurrentSection(sectionIndex);
-    }
-  }, []);
-
   // Touch gesture handlers
   const onTouchStart = useCallback((e) => {
     setTouchEnd(null);
@@ -366,6 +356,16 @@ export default function LandingPage() {
       />
     );
   });
+
+  // Scroll to section function
+  const scrollToSection = useCallback((sectionIndex) => {
+    if (isMobile) return;
+    
+    const sectionElements = document.querySelectorAll('.desktop-section-1, .desktop-section-2, .desktop-section-3');
+    if (sectionElements[sectionIndex]) {
+      sectionElements[sectionIndex].scrollIntoView({ behavior: 'smooth' });
+    }
+  }, [isMobile]);
 
   // Show loading transition during resize
   if (isResizing) {
@@ -548,7 +548,7 @@ export default function LandingPage() {
         /* DESKTOP: 3-Section Vertical Layout */
         <>
           <div className="desktop-main-wrapper">
-            {/* Section 1: Existing Carousel */}
+            {/* Section 1: Existing Carousel (unchanged) */}
             <section className="desktop-section-1">
               <div className="carousel-container">
                 <div
@@ -747,6 +747,7 @@ export default function LandingPage() {
                 </button>
               </div>
             </section>
+
             {/* Section 2: Character Creation Demo */}
             <section className="desktop-section-2">
               <div className="desktop-section-content">
@@ -769,7 +770,7 @@ export default function LandingPage() {
                     }}>
                       Create Your Own Characters
                     </h2>
-
+                    
                     <p style={{
                       fontFamily: "system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Helvetica Neue', Arial, sans-serif",
                       fontSize: '1.1rem',
@@ -890,7 +891,7 @@ export default function LandingPage() {
                       >
                         Start Creating
                       </Link>
-
+                      
                       <div style={{
                         color: 'rgba(255, 255, 255, 0.7)',
                         fontSize: '0.9rem',
@@ -909,74 +910,52 @@ export default function LandingPage() {
               </div>
             </section>
 
-            {/* Section 3: Additional Content */}
-            <section className="desktop-section-3">
-              <div className="desktop-section-content">
-                <h2>Join the Community</h2>
-                <p>
-                  Connect with thousands of curious minds exploring history, philosophy, science, and art. 
-                  Share your conversations, discover new perspectives, and learn from characters 
-                  across all eras of human knowledge.
-                </p>
-                <Link to="/register" className="cta-primary">
-                  Join Now →
-                </Link>
-              </div>
-            </section>
-          </div>
-
-          {/* Desktop Scroll Indicator */}
-          <div className="desktop-scroll-indicator">
-            <div className="scroll-dot active" onClick={() => scrollToSection(0)}></div>
-            <div className="scroll-dot" onClick={() => scrollToSection(1)}></div>
-            <div className="scroll-dot" onClick={() => scrollToSection(2)}></div>
-          </div>
-            {/* Section 3: Additional Content */}
+            {/* Section 3: Community Content */}
             <section className="desktop-section-3">
               <div className="desktop-section-content">
                 <h2 style={{
                   fontFamily: "'Playfair Display', serif",
-                  fontSize: '2.5rem',
+                  fontSize: '2.2rem',
                   color: '#ffd700',
                   marginBottom: '1.5rem',
-                  textAlign: 'center',
-                  textShadow: '0 0 20px rgba(255, 215, 0, 0.3)'
+                  textShadow: '0 0 20px rgba(255, 215, 0, 0.3)',
+                  textAlign: 'center'
                 }}>
                   Join the Community
                 </h2>
-                
                 <p style={{
-                  fontFamily: "'Inter', sans-serif",
-                  fontSize: '1.1rem',
+                  fontFamily: "system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Helvetica Neue', Arial, sans-serif",
+                  fontSize: '1.2rem',
                   color: 'rgba(255, 255, 255, 0.9)',
                   lineHeight: 1.6,
                   marginBottom: '2.5rem',
-                  textAlign: 'center',
                   maxWidth: '800px',
                   marginLeft: 'auto',
-                  marginRight: 'auto'
+                  marginRight: 'auto',
+                  textAlign: 'center'
                 }}>
                   Connect with thousands of curious minds exploring history, philosophy, science, and art. 
                   Share your conversations, discover new perspectives, and learn from characters 
                   across all eras of human knowledge.
                 </p>
-
-                <div style={{
-                  textAlign: 'center'
-                }}>
-                  <Link to="/register" style={{
-                    background: 'linear-gradient(135deg, #FFD700, #FFA500)',
-                    border: 'none',
-                    borderRadius: '25px',
-                    color: '#000',
-                    fontSize: '1.1rem',
-                    fontWeight: 700,
-                    padding: '1rem 2.5rem',
-                    textDecoration: 'none',
-                    display: 'inline-block',
-                    transition: 'all 0.3s ease',
-                    boxShadow: '0 4px 15px rgba(255, 215, 0, 0.3)'
-                  }}>
+                <div style={{ textAlign: 'center' }}>
+                  <Link 
+                    to="/register" 
+                    style={{
+                      background: 'linear-gradient(135deg, #FFD700, #FFA500)',
+                      border: 'none',
+                      borderRadius: '25px',
+                      color: '#000',
+                      fontSize: '1.1rem',
+                      fontWeight: 700,
+                      padding: '1rem 2.5rem',
+                      textDecoration: 'none',
+                      display: 'inline-block',
+                      transition: 'all 0.3s ease',
+                      boxShadow: '0 4px 15px rgba(255, 215, 0, 0.3)',
+                      fontFamily: "system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Helvetica Neue', Arial, sans-serif"
+                    }}
+                  >
                     Join Now →
                   </Link>
                 </div>
@@ -986,9 +965,9 @@ export default function LandingPage() {
 
           {/* Desktop Scroll Indicator */}
           <div className="desktop-scroll-indicator">
-            <div className={`scroll-dot ${currentSection === 0 ? 'active' : ''}`} onClick={() => scrollToSection(0)}></div>
-            <div className={`scroll-dot ${currentSection === 1 ? 'active' : ''}`} onClick={() => scrollToSection(1)}></div>
-            <div className={`scroll-dot ${currentSection === 2 ? 'active' : ''}`} onClick={() => scrollToSection(2)}></div>
+            <div className="scroll-dot active" onClick={() => scrollToSection(0)}></div>
+            <div className="scroll-dot" onClick={() => scrollToSection(1)}></div>
+            <div className="scroll-dot" onClick={() => scrollToSection(2)}></div>
           </div>
         </>
       )}
@@ -1029,7 +1008,7 @@ export default function LandingPage() {
             </Link>
             <span style={{
               color: 'rgba(255, 255, 255, 0.4)',
-              fontSize: '10px'
+              fontSize: '12px'
             }}>•</span>
             <Link 
               to="/privacy" 
@@ -1047,7 +1026,7 @@ export default function LandingPage() {
             </Link>
             <span style={{
               color: 'rgba(255, 255, 255, 0.4)',
-              fontSize: '10px'
+              fontSize: '12px'
             }}>•</span>
             <Link 
               to="/contact-us" 
@@ -1067,10 +1046,11 @@ export default function LandingPage() {
         )}
         <div style={{
           color: 'rgba(255, 255, 255, 0.5)',
-          fontSize: isMobile ? '10px' : '11px',
+          fontSize: '12px',
+          fontFamily: "system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Helvetica Neue', Arial, sans-serif",
           fontWeight: 300
         }}>
-          © 2025 Awakeverse Ltd.
+          © {new Date().getFullYear()} AwakeVerse. All rights reserved.
         </div>
       </div>
     </div>
