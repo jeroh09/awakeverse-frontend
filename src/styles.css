@@ -1709,3 +1709,7 @@ body::before {
   background-color: #fff3cd;
   border: 1px solid #ffeaa7;
 }
+/* Add this to your CSS to hide stars */
+.stars {
+  display: none !important;
+}
