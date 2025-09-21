@@ -1,33 +1,52 @@
-// src/landing/pages/LandingPage.js - Desktop + Mobile Streaming Design
+/ src/landing/pages/LandingPage.js - Desktop + Mobile Streaming Design
 import React, { useEffect, useRef, useState, useCallback, useMemo } from 'react';
 import { Link } from 'react-router-dom';
 import { characterCategories } from '../../data/characterCategories';
 import EnhancedCharacterPanels from '../components/EnhancedCharacterPanels';
 import DemoCharacterBuilder from './DemoCharacterBuilder';
-import SubscriptionPlansCards from './SubscriptionPlansCards'; 
-import CreatorHubTeaser from './CreatorHubTeaser'; 
+import SubscriptionPlansCards from './SubscriptionPlansCards'; // Adjust path as needed
+import CreatorHubTeaser from './CreatorHubTeaser'; // Adjust path as needed
 import './LandingPage.css';
 
 export default function LandingPage() {
-  // All state declarations
+  //const starsRef = useRef(null);
   const [currentScreen, setCurrentScreen] = useState(0);
   const [isTransitioning, setIsTransitioning] = useState(false);
   const [isPaused, setIsPaused] = useState(false);
   const [isMobile, setIsMobile] = useState(false);
   const [isResizing, setIsResizing] = useState(false);
-  const [currentSection, setCurrentSection] = useState(0);
+
+  // Mobile-specific state
   const [currentPanel, setCurrentPanel] = useState(0);
+
+  // Typing animation state (mobile)
   const [isTyping, setIsTyping] = useState(false);
   const [typedText, setTypedText] = useState('');
   const [showInviteButtons, setShowInviteButtons] = useState(false);
+
+  // Touch gesture state
   const [touchStart, setTouchStart] = useState(null);
   const [touchEnd, setTouchEnd] = useState(null);
-  const [imageErrors, setImageErrors] = useState({});
 
-  // Constants
-  const fullMessage = "Aww shucks, not much I'm afraid! My village has always been peaceful, and I spent most of my time rafting down the Mississippi. But I reckon I could invite some folks who know a whole lot more about that subject than me!";
+  // Mobile detection with smooth transition
+  useEffect(() => {
+    const checkMobile = () => {
+      const mobile = window.innerWidth <= 768;
+      if (mobile !== isMobile) {
+        setIsResizing(true);
+        setTimeout(() => {
+          setIsMobile(mobile);
+          setIsResizing(false);
+        }, 150);
+      }
+    };
+    
+    checkMobile();
+    window.addEventListener('resize', checkMobile);
+    return () => window.removeEventListener('resize', checkMobile);
+  }, [isMobile]);
 
-  // Get character by key function
+  // Get character by key
   const getCharacter = useCallback((key) => {
     for (const category of characterCategories) {
       const character = category.characters.find(c => c.key === key);
@@ -36,22 +55,188 @@ export default function LandingPage() {
     return null;
   }, []);
 
+  // Mobile panel configuration
+  const mobilePanels = useMemo(() => [
+    {
+      character: getCharacter('sherlock'),
+      theme: 'night-sky',
+      tagline: 'Master observation, deduction & justice',
+      icons: ['🔍', '⚖️', '🕵️', '🔬']
+    },
+    {
+      character: getCharacter('shakespeare'),
+      theme: 'crimson-mystery',
+      tagline: 'Explore drama, poetry & human nature',
+      icons: ['🎭', '📜', '👑', '✒️']
+    },
+    {
+      character: getCharacter('cleopatra'),
+      theme: 'emerald-depths',
+      tagline: 'Discover power, strategy & leadership',
+      icons: ['👑', '🐍', '💎', '🏛️']
+    },
+    {
+      character: getCharacter('da_vinci'),
+      theme: 'royal-purple',
+      tagline: 'Unlock creativity, innovation & genius',
+      icons: ['🎨', '⚙️', '🔬', '✈️']
+    },
+    {
+      character: getCharacter('sappho'),
+      theme: 'golden-wisdom',
+      tagline: 'Explore love, poetry & passion',
+      icons: ['💕', '🌹', '🎵', '📖']
+    },
+    {
+      type: 'experts',
+      theme: 'midnight-experts',
+      title: 'Expert Invitations',
+      tagline: 'Invite experts to join your conversations',
+      characters: [getCharacter('sherlock'), getCharacter('sun_tzu')]
+    }
+  ], [getCharacter]);
+
+  // Desktop chat conversations (existing)
+  const chatConversations = useMemo(() => [
+    {
+      character: getCharacter('socrates'),
+      messages: [
+        { user: true, text: "What is the meaning of life?" },
+        { user: false, text: "My dear friend, the unexamined life is not worth living. True wisdom begins when we admit how little we know. Perhaps the meaning lies not in answers, but in the quality of our questions." }
+      ]
+    },
+    {
+      character: getCharacter('shakespeare'),
+      messages: [
+        { user: true, text: "How do I write better?" },
+        { user: false, text: "All the world's a stage, good sir! Write from the heart's deepest chambers. Observe humanity in all its folly and glory - therein lies your material. A well-turned phrase can outlive kingdoms." }
+      ]
+    },
+    {
+      character: getCharacter('tesla'),
+      messages: [
+        { user: true, text: "What drives innovation?" },
+        { user: false, text: "The present belongs to them, but the future, for which I really worked, is mine. Innovation springs from seeing what others cannot - the invisible forces that shape our world." }
+      ]
+    }
+  ], [getCharacter]);
+
+  const fullMessage = "Aww shucks, not much I'm afraid! My village has always been peaceful, and I spent most of my time rafting down the Mississippi. But I reckon I could invite some folks who know a whole lot more about that subject than me!";
+
+  // Handle logo visibility (desktop only)
+  useEffect(() => {
+    if (isMobile) return;
+    
+    const logo = document.querySelector('.logo');
+    if (logo) {
+      if (currentScreen === 0) {
+        logo.style.opacity = '1';
+        logo.style.pointerEvents = 'auto';
+      } else {
+        logo.style.opacity = '0';
+        logo.style.pointerEvents = 'none';
+      }
+    }
+  }, [currentScreen, isMobile]);
+
+  // DESKTOP: Auto-advance carousel
+  useEffect(() => {
+    if (isMobile || isPaused || isTransitioning) return;
+
+    const delay = currentScreen === 2 ? 18000 : 10000;
+    const interval = setInterval(() => {
+      setCurrentScreen(prev => (prev + 1) % 3);
+    }, delay);
+
+    return () => clearInterval(interval);
+  }, [isMobile, isPaused, isTransitioning, currentScreen]);
+
+  // MOBILE: Auto-advance panels
+  useEffect(() => {
+    if (!isMobile || isPaused || isTransitioning) return;
+
+    const interval = setInterval(() => {
+      setCurrentPanel(prev => (prev + 1) % 6);
+    }, 4000);
+
+    return () => clearInterval(interval);
+  }, [isMobile, isPaused, isTransitioning, currentPanel]);
+
   // Handle user interaction
   const handleUserInteraction = useCallback(() => {
     setIsPaused(true);
     setTimeout(() => setIsPaused(false), isMobile ? 8000 : 5000);
   }, [isMobile]);
 
-  // Scroll to specific section function
-  const scrollToSection = useCallback((sectionIndex) => {
-    if (!isMobile) { 
-      const targetY = sectionIndex * window.innerHeight;
-      window.scrollTo({
-        top: targetY,
-        behavior: 'smooth'
-      });
+  // Desktop typing animation for screen 3
+  useEffect(() => {
+    if (isMobile || currentScreen !== 2 || isTyping || typedText !== '') return;
+
+    setTimeout(() => {
+      setIsTyping(true);
+      setShowInviteButtons(false);
+
+      const words = fullMessage.split(' ');
+      let currentIndex = 0;
+
+      const typeInterval = setInterval(() => {
+        if (currentIndex < words.length) {
+          const newText = words.slice(0, currentIndex + 1).join(' ');
+          setTypedText(newText);
+          currentIndex++;
+        } else {
+          clearInterval(typeInterval);
+          setIsTyping(false);
+          setTimeout(() => setShowInviteButtons(true), 800);
+        }
+      }, 150);
+
+      return () => clearInterval(typeInterval);
+    }, 500);
+  }, [currentScreen, typedText, fullMessage, isMobile]);
+
+  // Reset typing when leaving desktop screen 3
+  useEffect(() => {
+    if (isMobile || currentScreen !== 2) {
+      setTypedText('');
+      setIsTyping(false);
+      setShowInviteButtons(false);
     }
-  }, [isMobile]);
+  }, [currentScreen, isMobile]);
+
+  // Touch gesture handlers
+  const onTouchStart = useCallback((e) => {
+    setTouchEnd(null);
+    setTouchStart(e.targetTouches[0].clientX);
+  }, []);
+
+  const onTouchMove = useCallback((e) => {
+    setTouchEnd(e.targetTouches[0].clientX);
+  }, []);
+
+  const onTouchEnd = useCallback(() => {
+    if (!touchStart || !touchEnd) return;
+
+    const distance = touchStart - touchEnd;
+    const minSwipeDistance = 50;
+
+    if (distance > minSwipeDistance) {
+      if (isMobile) {
+        mobileNextPanel();
+      } else {
+        nextScreen();
+      }
+    } else if (distance < -minSwipeDistance) {
+      if (isMobile) {
+        mobilePrevPanel();
+      } else {
+        prevScreen();
+      }
+    }
+
+    setTouchStart(null);
+    setTouchEnd(null);
+  }, [touchStart, touchEnd, isMobile]);
 
   // Desktop navigation functions
   const navigateToScreen = useCallback((screenIndex) => {
@@ -103,41 +288,47 @@ export default function LandingPage() {
     navigateToPanel(prev);
   }, [isMobile, currentPanel, navigateToPanel]);
 
-  // Touch gesture handlers
-  const onTouchStart = useCallback((e) => {
-    setTouchEnd(null);
-    setTouchStart(e.targetTouches[0].clientX);
-  }, []);
+  // Touch event listeners
+  useEffect(() => {
+    const container = document.querySelector('.landing-container');
+    if (!container) return;
 
-  const onTouchMove = useCallback((e) => {
-    setTouchEnd(e.targetTouches[0].clientX);
-  }, []);
+    container.addEventListener('touchstart', onTouchStart, { passive: true });
+    container.addEventListener('touchmove', onTouchMove, { passive: true });
+    container.addEventListener('touchend', onTouchEnd, { passive: true });
 
-  const onTouchEnd = useCallback(() => {
-    if (!touchStart || !touchEnd) return;
+    return () => {
+      container.removeEventListener('touchstart', onTouchStart);
+      container.removeEventListener('touchmove', onTouchMove);
+      container.removeEventListener('touchend', onTouchEnd);
+    };
+  }, [onTouchStart, onTouchMove, onTouchEnd]);
 
-    const distance = touchStart - touchEnd;
-    const minSwipeDistance = 50;
-
-    if (distance > minSwipeDistance) {
-      if (isMobile) {
-        mobileNextPanel();
-      } else {
-        nextScreen();
+  // Keyboard navigation
+  useEffect(() => {
+    const handleKeyPress = (e) => {
+      if (e.key === 'ArrowLeft') {
+        if (isMobile) {
+          mobilePrevPanel();
+        } else {
+          prevScreen();
+        }
+      } else if (e.key === 'ArrowRight') {
+        if (isMobile) {
+          mobileNextPanel();
+        } else {
+          nextScreen();
+        }
       }
-    } else if (distance < -minSwipeDistance) {
-      if (isMobile) {
-        mobilePrevPanel();
-      } else {
-        prevScreen();
-      }
-    }
+    };
 
-    setTouchStart(null);
-    setTouchEnd(null);
-  }, [touchStart, touchEnd, isMobile, mobileNextPanel, mobilePrevPanel, nextScreen, prevScreen]);
+    window.addEventListener('keydown', handleKeyPress);
+    return () => window.removeEventListener('keydown', handleKeyPress);
+  }, [isMobile, prevScreen, nextScreen, mobilePrevPanel, mobileNextPanel]);
 
   // Optimized image component
+  const [imageErrors, setImageErrors] = useState({});
+
   const OptimizedImage = React.memo(({ src, alt, className, fallbackLetter, imageKey }) => {
     const hasError = imageErrors[imageKey || src];
 
@@ -168,231 +359,15 @@ export default function LandingPage() {
     );
   });
 
-  // Mobile panel configuration
-  const mobilePanels = useMemo(() => [
-    {
-      character: getCharacter('sherlock'),
-      theme: 'night-sky',
-      tagline: 'Master observation, deduction & justice',
-      icons: ['🔍', '⚖️', '🕵️', '🔬']
-    },
-    {
-      character: getCharacter('shakespeare'),
-      theme: 'crimson-mystery',
-      tagline: 'Explore drama, poetry & human nature',
-      icons: ['🎭', '📜', '👑', '✒️']
-    },
-    {
-      character: getCharacter('cleopatra'),
-      theme: 'emerald-depths',
-      tagline: 'Discover power, strategy & leadership',
-      icons: ['👑', '🐍', '💎', '🏛️']
-    },
-    {
-      character: getCharacter('da_vinci'),
-      theme: 'royal-purple',
-      tagline: 'Unlock creativity, innovation & genius',
-      icons: ['🎨', '⚙️', '🔬', '✈️']
-    },
-    {
-      character: getCharacter('sappho'),
-      theme: 'golden-wisdom',
-      tagline: 'Explore love, poetry & passion',
-      icons: ['💕', '🌹', '🎵', '📖']
-    },
-    {
-      type: 'experts',
-      theme: 'midnight-experts',
-      title: 'Expert Invitations',
-      tagline: 'Invite experts to join your conversations',
-      characters: [getCharacter('sherlock'), getCharacter('sun_tzu')]
-    }
-  ], [getCharacter]);
-
-  // Desktop chat conversations
-  const chatConversations = useMemo(() => [
-    {
-      character: getCharacter('socrates'),
-      messages: [
-        { user: true, text: "What is the meaning of life?" },
-        { user: false, text: "My dear friend, the unexamined life is not worth living. True wisdom begins when we admit how little we know. Perhaps the meaning lies not in answers, but in the quality of our questions." }
-      ]
-    },
-    {
-      character: getCharacter('shakespeare'),
-      messages: [
-        { user: true, text: "How do I write better?" },
-        { user: false, text: "All the world's a stage, good sir! Write from the heart's deepest chambers. Observe humanity in all its folly and glory - therein lies your material. A well-turned phrase can outlive kingdoms." }
-      ]
-    },
-    {
-      character: getCharacter('tesla'),
-      messages: [
-        { user: true, text: "What drives innovation?" },
-        { user: false, text: "The present belongs to them, but the future, for which I really worked, is mine. Innovation springs from seeing what others cannot - the invisible forces that shape our world." }
-      ]
-    }
-  ], [getCharacter]);
-
-  // Mobile detection with smooth transition
-  useEffect(() => {
-    const checkMobile = () => {
-      const mobile = window.innerWidth <= 768;
-      if (mobile !== isMobile) {
-        setIsResizing(true);
-        setTimeout(() => {
-          setIsMobile(mobile);
-          setIsResizing(false);
-        }, 150);
-      }
-    };
-    
-    checkMobile();
-    window.addEventListener('resize', checkMobile);
-    return () => window.removeEventListener('resize', checkMobile);
-  }, [isMobile]);
-
-  // Handle logo visibility (desktop only)
-  useEffect(() => {
+  // Scroll to section function
+  const scrollToSection = useCallback((sectionIndex) => {
     if (isMobile) return;
     
-    const logo = document.querySelector('.logo');
-    if (logo) {
-      if (currentScreen === 0) {
-        logo.style.opacity = '1';
-        logo.style.pointerEvents = 'auto';
-      } else {
-        logo.style.opacity = '0';
-        logo.style.pointerEvents = 'none';
-      }
+    const sectionElements = document.querySelectorAll('.desktop-section-1, .desktop-section-2, .desktop-section-3');
+    if (sectionElements[sectionIndex]) {
+      sectionElements[sectionIndex].scrollIntoView({ behavior: 'smooth' });
     }
-  }, [currentScreen, isMobile]);
-
-  // DESKTOP: Auto-advance carousel
-  useEffect(() => {
-    if (isMobile || isPaused || isTransitioning) return;
-
-    const delay = currentScreen === 2 ? 18000 : 10000;
-    const interval = setInterval(() => {
-      setCurrentScreen(prev => (prev + 1) % 3);
-    }, delay);
-
-    return () => clearInterval(interval);
-  }, [isMobile, isPaused, isTransitioning, currentScreen]);
-
-  // Detect current section based on scroll position
-  useEffect(() => {
-    if (isMobile) return;
-
-    const handleScroll = () => {
-      const scrollY = window.scrollY;
-      const viewportHeight = window.innerHeight;
-      const section = Math.round(scrollY / viewportHeight);
-      setCurrentSection(Math.max(0, Math.min(section, 2)));
-    };
-
-    window.addEventListener('scroll', handleScroll, { passive: true });
-    return () => window.removeEventListener('scroll', handleScroll);
   }, [isMobile]);
-
-  // Keyboard navigation for sections
-  useEffect(() => {
-    if (isMobile) return;
-
-    const handleKeyPress = (e) => {
-      if (e.key === 'ArrowDown' && currentSection < 2) {
-        scrollToSection(currentSection + 1);
-      } else if (e.key === 'ArrowUp' && currentSection > 0) {
-        scrollToSection(currentSection - 1);
-      } else if (e.key === 'ArrowLeft') {
-        prevScreen();
-      } else if (e.key === 'ArrowRight') {
-        nextScreen();
-      }
-    };
-
-    window.addEventListener('keydown', handleKeyPress);
-    return () => window.removeEventListener('keydown', handleKeyPress);
-  }, [currentSection, scrollToSection, isMobile, prevScreen, nextScreen]);
-
-  // MOBILE: Auto-advance panels
-  useEffect(() => {
-    if (!isMobile || isPaused || isTransitioning) return;
-
-    const interval = setInterval(() => {
-      setCurrentPanel(prev => (prev + 1) % 6);
-    }, 4000);
-
-    return () => clearInterval(interval);
-  }, [isMobile, isPaused, isTransitioning, currentPanel]);
-
-  // Desktop typing animation for screen 3
-  useEffect(() => {
-    if (isMobile || currentScreen !== 2 || isTyping || typedText !== '') return;
-
-    setTimeout(() => {
-      setIsTyping(true);
-      setShowInviteButtons(false);
-
-      const words = fullMessage.split(' ');
-      let currentIndex = 0;
-
-      const typeInterval = setInterval(() => {
-        if (currentIndex < words.length) {
-          const newText = words.slice(0, currentIndex + 1).join(' ');
-          setTypedText(newText);
-          currentIndex++;
-        } else {
-          clearInterval(typeInterval);
-          setIsTyping(false);
-          setTimeout(() => setShowInviteButtons(true), 800);
-        }
-      }, 150);
-
-      return () => clearInterval(typeInterval);
-    }, 500);
-  }, [currentScreen, typedText, fullMessage, isMobile, isTyping]);
-
-  // Reset typing when leaving desktop screen 3
-  useEffect(() => {
-    if (isMobile || currentScreen !== 2) {
-      setTypedText('');
-      setIsTyping(false);
-      setShowInviteButtons(false);
-    }
-  }, [currentScreen, isMobile]);
-
-  // Touch event listeners
-  useEffect(() => {
-    const container = document.querySelector('.landing-container');
-    if (!container) return;
-
-    container.addEventListener('touchstart', onTouchStart, { passive: true });
-    container.addEventListener('touchmove', onTouchMove, { passive: true });
-    container.addEventListener('touchend', onTouchEnd, { passive: true });
-
-    return () => {
-      container.removeEventListener('touchstart', onTouchStart);
-      container.removeEventListener('touchmove', onTouchMove);
-      container.removeEventListener('touchend', onTouchEnd);
-    };
-  }, [onTouchStart, onTouchMove, onTouchEnd]);
-
-  // Mobile keyboard navigation
-  useEffect(() => {
-    if (!isMobile) return;
-
-    const handleKeyPress = (e) => {
-      if (e.key === 'ArrowLeft') {
-        mobilePrevPanel();
-      } else if (e.key === 'ArrowRight') {
-        mobileNextPanel();
-      }
-    };
-
-    window.addEventListener('keydown', handleKeyPress);
-    return () => window.removeEventListener('keydown', handleKeyPress);
-  }, [isMobile, mobilePrevPanel, mobileNextPanel]);
 
   // Show loading transition during resize
   if (isResizing) {
@@ -546,6 +521,7 @@ export default function LandingPage() {
                            transform: 'none',
                            textAlign: 'right', 
                            width: 'auto',
+                           
                        }}>
                          Swipe to explore more minds
                        </div>
@@ -574,7 +550,7 @@ export default function LandingPage() {
         /* DESKTOP: 3-Section Vertical Layout */
         <>
           <div className="desktop-main-wrapper">
-            {/* Section 1: Existing Carousel */}
+            {/* Section 1: Existing Carousel (unchanged) */}
             <section className="desktop-section-1">
               <div className="carousel-container">
                 <div
@@ -786,7 +762,15 @@ export default function LandingPage() {
                   maxWidth: '1200px'
                 }}>
                   {/* Left: Explanation */}
-                  <div style={{ textAlign: 'left' }}>
+                  <div style={{ 
+                    textAlign: 'left',
+                    background: 'rgba(255, 255, 255, 0.06)',
+                    backdropFilter: 'blur(15px)',
+                    border: '1px solid rgba(255, 215, 0, 0.2)',
+                    borderRadius: '20px',
+                    padding: '2rem',
+                    boxShadow: '0 0 40px rgba(255, 255, 255, 0.67)'
+                  }}>
                     <h2 style={{
                       fontFamily: "'Playfair Display', serif",
                       fontSize: '2.2rem',
@@ -797,7 +781,7 @@ export default function LandingPage() {
                     }}>
                       Create Your Own Characters
                     </h2>
-                    
+
                     <p style={{
                       fontFamily: "'Inter', sans-serif",
                       fontSize: '1.1rem',
@@ -805,17 +789,17 @@ export default function LandingPage() {
                       lineHeight: 1.6,
                       marginBottom: '2rem'
                     }}>
-                      Build custom AI characters using our template system. Choose from hundreds of 
-                      historical archetypes, then customize their personality, expertise, and behavior 
-                      to create your perfect conversation partner.
+                      Build custom AI characters using our template system. Choose from historical 
+                      archetypes, then customize their personality and expertise.
                     </p>
 
                     <div style={{
-                      background: 'rgba(255, 215, 0, 0.1)',
+                      background: 'rgba(255, 215, 0, 0.12)',
                       border: '1px solid rgba(255, 215, 0, 0.3)',
                       borderRadius: '12px',
                       padding: '1.5rem',
-                      marginBottom: '2rem'
+                      marginBottom: '2rem',
+                      boxShadow: '0 0 25px rgba(255, 215, 0, 0.1)'
                     }}>
                       <h3 style={{
                         color: '#FFD700',
@@ -843,7 +827,7 @@ export default function LandingPage() {
                             color: '#FFD700',
                             fontWeight: 'bold'
                           }}>1.</span>
-                          Choose a template from our extensive library
+                          Choose a template from our library
                         </li>
                         <li style={{
                           color: 'rgba(255, 255, 255, 0.9)',
@@ -858,7 +842,7 @@ export default function LandingPage() {
                             color: '#FFD700',
                             fontWeight: 'bold'
                           }}>2.</span>
-                          Customize name, personality, and expertise
+                          Customize personality and expertise
                         </li>
                         <li style={{
                           color: 'rgba(255, 255, 255, 0.9)',
@@ -873,7 +857,7 @@ export default function LandingPage() {
                             color: '#FFD700',
                             fontWeight: 'bold'
                           }}>3.</span>
-                          Submit for approval (usually within 24 hours)
+                          Submit for approval (24 hours)
                         </li>
                         <li style={{
                           color: 'rgba(255, 255, 255, 0.9)',
@@ -887,7 +871,7 @@ export default function LandingPage() {
                             color: '#FFD700',
                             fontWeight: 'bold'
                           }}>4.</span>
-                          Start conversations with your custom character
+                          Start conversations
                         </li>
                       </ul>
                     </div>
@@ -916,12 +900,12 @@ export default function LandingPage() {
                       >
                         Start Creating
                       </Link>
-                      
+
                       <div style={{
                         color: 'rgba(255, 255, 255, 0.7)',
                         fontSize: '0.9rem'
                       }}>
-                        ← Try the demo first
+                        Try the demo first →
                       </div>
                     </div>
                   </div>
@@ -933,8 +917,9 @@ export default function LandingPage() {
                 </div>
               </div>
             </section>
-
-            {/* Section 3: Subscription Plans + Creator Hub */}
+            {/* Section 3: Community Content */}
+            
+                      {/* Section 3: Subscription Plans + Creator Hub */}
             <section className="desktop-section-3">
               <div className="desktop-section-content" style={{ paddingTop: '120px' }}>
                 <div style={{
@@ -962,7 +947,7 @@ export default function LandingPage() {
                       }}>
                         Choose Your Plan
                       </h2>
-                      
+
                       <p style={{
                         fontFamily: "'Inter', sans-serif",
                         fontSize: '1.2rem',
@@ -1283,24 +1268,95 @@ export default function LandingPage() {
           </div>
 
           {/* Desktop Scroll Indicator */}
-          {!isMobile && (
-            <div className="desktop-scroll-indicator">
-              <div 
-                className={`scroll-dot ${currentSection === 0 ? 'active' : ''}`} 
-                onClick={() => scrollToSection(0)}
-              ></div>
-              <div 
-                className={`scroll-dot ${currentSection === 1 ? 'active' : ''}`} 
-                onClick={() => scrollToSection(1)}
-              ></div>
-              <div 
-                className={`scroll-dot ${currentSection === 2 ? 'active' : ''}`} 
-                onClick={() => scrollToSection(2)}
-              ></div>
-            </div>
-          )}
+          <div className="desktop-scroll-indicator">
+            <div className="scroll-dot active" onClick={() => scrollToSection(0)}></div>
+            <div className="scroll-dot" onClick={() => scrollToSection(1)}></div>
+            <div className="scroll-dot" onClick={() => scrollToSection(2)}></div>
+          </div>
         </>
       )}
+      {/* Legal Links Footer - Copyright for both desktop and mobile */}
+      <div style={{
+        position: 'fixed',
+        bottom: '20px',
+        left: '50%',
+        transform: 'translateX(-50%)',
+        zIndex: 10,
+        display: 'flex',
+        alignItems: 'center',
+        gap: isMobile ? '16px' : '24px',
+        ...(isMobile && {
+          flexDirection: 'column',
+          gap: '8px'
+        })
+      }}>
+        {isMobile && (
+          <div style={{
+            display: 'flex',
+            gap: '12px',
+            alignItems: 'center'
+          }}>
+            <Link 
+              to="/terms" 
+              style={{
+                color: 'rgba(255, 255, 255, 0.7)',
+                textDecoration: 'none',
+                fontSize: '12px',
+                fontWeight: 300,
+                transition: 'color 0.3s ease'
+              }}
+              onMouseEnter={(e) => e.target.style.color = '#FFD700'}
+              onMouseLeave={(e) => e.target.style.color = 'rgba(255, 255, 255, 0.7)'}
+            >
+              Terms
+            </Link>
+            <span style={{
+              color: 'rgba(255, 255, 255, 0.4)',
+              fontSize: '12px'
+            }}>•</span>
+            <Link 
+              to="/privacy" 
+              style={{
+                color: 'rgba(255, 255, 255, 0.7)',
+                textDecoration: 'none',
+                fontSize: '12px',
+                fontWeight: 300,
+                transition: 'color 0.3s ease'
+              }}
+              onMouseEnter={(e) => e.target.style.color = '#FFD700'}
+              onMouseLeave={(e) => e.target.style.color = 'rgba(255, 255, 255, 0.7)'}
+            >
+              Privacy
+            </Link>
+            <span style={{
+              color: 'rgba(255, 255, 255, 0.4)',
+              fontSize: '12px'
+            }}>•</span>
+            <Link 
+              to="/contact-us" 
+              style={{
+                color: 'rgba(255, 255, 255, 0.7)',
+                textDecoration: 'none',
+                fontSize: '12px',
+                fontWeight: 300,
+                transition: 'color 0.3s ease'
+              }}
+              onMouseEnter={(e) => e.target.style.color = '#FFD700'}
+              onMouseLeave={(e) => e.target.style.color = 'rgba(255, 255, 255, 0.7)'}
+            >
+              Contact
+            </Link>
+          </div>
+        )}
+        <div style={{
+          color: 'rgba(255, 255, 255, 0.5)',
+          fontSize: '12px',
+          fontFamily: "system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Helvetica Neue', Arial, sans-serif",
+          fontWeight: 300
+        }}>
+          © {new Date().getFullYear()} AwakeVerse. All rights reserved.
+        </div>
+      </div>
     </div>
   );
 }
