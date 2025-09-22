@@ -138,6 +138,7 @@ export const CategoryCard = ({
         animation: `categorySlideIn 0.6s ease-out ${index * 0.1}s forwards`,
         minHeight: isMobile ? '120px' : '150px',
         maxHeight: isMobile ? '160px' : '200px',
+        position: 'relative'
       }}
       onMouseEnter={(e) => {
         if (!isMobile) {

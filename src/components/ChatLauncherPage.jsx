@@ -452,7 +452,7 @@ const ChatLauncherPage = ({ onStartChat }) => {
     );
   }
 
-  // Mobile layout - FIXED VERSION
+  // Mobile layout - CORRECTED VERSION
   if (isMobile) {
     return (
       <div style={{
@@ -644,8 +644,9 @@ const ChatLauncherPage = ({ onStartChat }) => {
           />
         )}
 
-        {/* Categories or Characters View */}
+        {/* SIMPLIFIED Categories/Characters View - NO NESTED TERNARY */}
         {!selectedCategory ? (
+          // CATEGORIES VIEW
           <div style={{
             width: '100%',
             display: 'grid',
@@ -664,14 +665,13 @@ const ChatLauncherPage = ({ onStartChat }) => {
             ))}
           </div>
         ) : (
-          <>
+          // CHARACTERS VIEW  
+          <div style={{ width: '100%', maxWidth: '500px' }}>
             {/* Category Header */}
             <div style={{
               display: 'flex',
               justifyContent: 'space-between',
               alignItems: 'center',
-              width: '100%',
-              maxWidth: '500px',
               marginBottom: '1rem',
               paddingBottom: '0.5rem',
               borderBottom: '1px solid rgba(255, 215, 0, 0.3)'
@@ -705,7 +705,7 @@ const ChatLauncherPage = ({ onStartChat }) => {
               </button>
             </div>
 
-            {/* Mobile Characters Content Area */}
+            {/* Characters Content */}
             {selectedCategory.key === 'my_characters' ? (
               <MyCharactersPanel 
                 userCharacters={userCharacters}
@@ -723,7 +723,6 @@ const ChatLauncherPage = ({ onStartChat }) => {
                 display: 'grid',
                 gridTemplateColumns: 'repeat(2, 1fr)',
                 gap: '1rem',
-                marginTop: '1rem',
               }}>
                 {selectedCategory.characters.map((character) => (
                   <CharacterCard
@@ -736,7 +735,7 @@ const ChatLauncherPage = ({ onStartChat }) => {
                 ))}
               </div>
             )}
-          </>
+          </div>
         )}
 
         {/* Character Detail Modal (Mobile) */}
