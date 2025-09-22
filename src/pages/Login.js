@@ -4,6 +4,7 @@ import { Link, useNavigate, useLocation, useSearchParams } from 'react-router-do
 import { useAuth } from '../contexts/AuthContext';
 import ElegantCharacterPortraits from '../components/ElegantCharacterPortraits';
 import UnifiedMobileAuth from '../components/UnifiedMobileAuth';
+import { sanitizeError } from '../utils/errorUtils';
 import '../components/ElegantCharacterPortraits.css';
 import '../style/AuthPageStyles.css';
 
@@ -100,6 +101,7 @@ export default function Login() {
         setShowResendVerification(false);
       }
       
+      setError(sanitizeError(err));
       setTimeout(() => {
         setError('');
         setShowResendVerification(false);

@@ -1,4 +1,4 @@
-// src/index.js - Merged production version with premium integration and security hardening
+// src/index.js - Production version with enhanced security hardening
 import './styles.css';
 import React from 'react';
 import ReactDOM from 'react-dom/client';
@@ -6,15 +6,13 @@ import { BrowserRouter } from 'react-router-dom';
 import { ThemeProvider } from './contexts/ThemeContext';
 import { AuthProvider } from './contexts/AuthContext';
 import { UserProvider } from './contexts/UserContext';
-import { CharacterProvider } from './contexts/CharacterContext';
-import { ContextProvider } from './contexts/ContextContext';
+import { CharacterProvider } from './contexts/CharacterProvider';
+import { ContextProvider } from './contexts/ContextProvider';
 import { WebSocketProvider } from './contexts/WebSocketContext';
 import { PremiumCapabilitiesProvider } from './contexts/PremiumCapabilitiesContext';
 import App from './App';
 
-// SECURITY: Disable console logging in production
-// SECURITY: Disable console logging in production only (allow in preview for debugging)
-// SECURITY: Disable console logging in production only (allow in preview for debugging)
+// SECURITY: Enhanced console logging protection for production
 if (process.env.NODE_ENV === 'production' && process.env.VERCEL_ENV !== 'preview') {
   const originalConsole = {
     log: console.log,
@@ -24,22 +22,74 @@ if (process.env.NODE_ENV === 'production' && process.env.VERCEL_ENV !== 'preview
     error: console.error
   };
   
-  // Disable most console methods but keep error for critical issues
+  // Disable all development console methods
   console.log = () => {};
   console.warn = () => {};
   console.info = () => {};
   console.debug = () => {};
   
-  // Only show critical errors in production
+  // Enhanced error filtering for production
   console.error = (...args) => {
-    // Filter out non-critical errors, only show genuine application errors
-    const message = args.join(' ');
-    if (message.includes('token') || message.includes('login') || message.includes('API')) {
-      return; // Suppress security-sensitive error logs
+    const message = args.join(' ').toLowerCase();
+    
+    // Block security-sensitive errors
+    if (message.includes('token') || 
+        message.includes('login') || 
+        message.includes('api') ||
+        message.includes('password') ||
+        message.includes('authorization') ||
+        message.includes('bearer') ||
+        message.includes('jwt') ||
+        message.includes('credential')) {
+      return; // Suppress completely
     }
-    originalConsole.error(...args);
+    
+    // Only allow critical application errors through
+    if (message.includes('chunk') || 
+        message.includes('script') || 
+        message.includes('network')) {
+      originalConsole.error('Application error occurred');
+      return;
+    }
+    
+    // All other errors are suppressed in production
   };
+  
+  // Basic devtools detection
+  let devtools = { open: false };
+  const element = new Image();
+  Object.defineProperty(element, 'id', {
+    get: function() {
+      devtools.open = true;
+      return 'devtools-detector';
+    }
+  });
+  
+  setInterval(() => {
+    devtools.open = false;
+    console.dir(element);
+    if (devtools.open) {
+      console.clear();
+    }
+  }, 1000);
 }
+
+// SECURITY: Production-safe error boundary
+window.addEventListener('error', (event) => {
+  if (process.env.NODE_ENV === 'production') {
+    event.preventDefault();
+    // Log generic error instead of exposing details
+    console.log('Application error');
+  }
+});
+
+window.addEventListener('unhandledrejection', (event) => {
+  if (process.env.NODE_ENV === 'production') {
+    event.preventDefault();
+    // Log generic error instead of exposing details
+    console.log('Request failed');
+  }
+});
 
 const root = ReactDOM.createRoot(document.getElementById('root'));
 
@@ -65,7 +115,7 @@ root.render(
   </React.StrictMode>
 );
 
-// Register service worker for PWA functionality
+// SECURITY: Production-safe service worker registration
 if ('serviceWorker' in navigator) {
   window.addEventListener('load', () => {
     navigator.serviceWorker.register('/sw.js')
@@ -80,12 +130,7 @@ if ('serviceWorker' in navigator) {
           if (newWorker) {
             newWorker.addEventListener('statechange', () => {
               if (newWorker.state === 'installed' && navigator.serviceWorker.controller) {
-                // New content is available, show update notification
-                if (process.env.NODE_ENV !== 'production') {
-                  console.log('New content is available; please refresh.');
-                }
-                
-                // Optionally show a notification to the user
+                // Show update notification (no console logging in production)
                 if (window.confirm('New version available! Refresh to update?')) {
                   newWorker.postMessage({ type: 'SKIP_WAITING' });
                   window.location.reload();
@@ -95,53 +140,41 @@ if ('serviceWorker' in navigator) {
           }
         });
       })
-      .catch(registrationError => {
+      .catch(() => {
+        // Silent fail in production - service worker is optional
         if (process.env.NODE_ENV !== 'production') {
-          console.log('Service Worker registration failed:', registrationError);
+          console.log('Service Worker registration failed');
         }
       });
     
     // Listen for service worker controller changes
     navigator.serviceWorker.addEventListener('controllerchange', () => {
-      // Service worker has been updated and is now controlling the page
-      if (process.env.NODE_ENV !== 'production') {
-        console.log('Service Worker controller changed - page will reload');
-      }
       window.location.reload();
     });
   });
 }
 
-// Handle app installation prompt
+// SECURITY: Production-safe PWA installation
 let deferredPrompt;
 let isInstallPromptShown = false;
 
 window.addEventListener('beforeinstallprompt', (e) => {
-  if (process.env.NODE_ENV !== 'production') {
-    console.log('PWA install prompt available');
-  }
-  
-  // Prevent the mini-infobar from appearing on mobile
   e.preventDefault();
-  
-  // Save the event so it can be triggered later
   deferredPrompt = e;
   
-  // Show custom install prompt after a delay (optional)
+  // Show custom install prompt after delay
   setTimeout(() => {
     if (!isInstallPromptShown && deferredPrompt) {
       showInstallPrompt();
     }
-  }, 10000); // Show after 10 seconds
+  }, 10000);
 });
 
-// Function to show custom install prompt
 function showInstallPrompt() {
   if (!deferredPrompt || isInstallPromptShown) return;
   
   isInstallPromptShown = true;
   
-  // Create custom install notification
   const installBanner = document.createElement('div');
   installBanner.innerHTML = `
     <div style="
@@ -193,20 +226,14 @@ function showInstallPrompt() {
     document.body.removeChild(installBanner);
     
     if (deferredPrompt) {
-      deferredPrompt.prompt();
-      const { outcome } = await deferredPrompt.userChoice;
-      
-      if (outcome === 'accepted') {
-        if (process.env.NODE_ENV !== 'production') {
-          console.log('User accepted the install prompt');
-        }
-      } else {
-        if (process.env.NODE_ENV !== 'production') {
-          console.log('User dismissed the install prompt');
-        }
+      try {
+        deferredPrompt.prompt();
+        const { outcome } = await deferredPrompt.userChoice;
+        // No logging in production
+        deferredPrompt = null;
+      } catch (error) {
+        // Silent error handling in production
       }
-      
-      deferredPrompt = null;
     }
   });
   
@@ -218,25 +245,23 @@ function showInstallPrompt() {
 }
 
 // Handle successful app installation
-window.addEventListener('appinstalled', (evt) => {
-  if (process.env.NODE_ENV !== 'production') {
-    console.log('AwakeVerse was installed successfully');
-  }
+window.addEventListener('appinstalled', () => {
+  // Add PWA-specific styling without logging
+  document.documentElement.classList.add('pwa-mode');
   
-  // Optional: Track installation analytics
-  // analytics.track('pwa_installed');
+  const style = document.createElement('style');
+  style.textContent = `
+    .pwa-mode .browser-only {
+      display: none !important;
+    }
+  `;
+  document.head.appendChild(style);
 });
 
 // Detect if running as installed PWA
 if (window.matchMedia && window.matchMedia('(display-mode: standalone)').matches) {
-  if (process.env.NODE_ENV !== 'production') {
-    console.log('Running as installed PWA');
-  }
-  
-  // Add PWA-specific styling or behavior
   document.documentElement.classList.add('pwa-mode');
   
-  // Hide browser UI elements that don't make sense in PWA mode
   const style = document.createElement('style');
   style.textContent = `
     .pwa-mode .browser-only {
