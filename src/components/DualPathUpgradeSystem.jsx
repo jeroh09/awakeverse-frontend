@@ -378,7 +378,9 @@ const EducationalUpgradeModal = ({
       display: 'flex',
       alignItems: 'center',
       justifyContent: 'center',
-      zIndex: 9999,
+      zIndex: 999999,
+      overflow: 'auto',
+      WebkitOverflowScrolling: 'touch',
       padding: '1rem'
     }}>
       {currentStep === 1 ? renderEducationStep() : renderBenefitsStep()}
