@@ -148,11 +148,21 @@ export default function FloatingAvatar({
             alt={characterName || character}
             className="floating-avatar-image"
             onError={(e) => {
-              e.target.src = '/images/default-character.jpg';
+              e.target.onError = null;
+              e.target.style.display = 'none';
+
+              const parent = e.target.parentElement;
+              if (!parent.querySelector('.text-fallback')) {
+                const fallback = document.createElement('div');
+                fallback.className = 'text-fallback floating-avatar-image';
+                fallback.style.cssText = 'width:100%;height:100%;display:flex;align-items:center;justify-content:center;background:rgba(255,215,0,0.2);color:#FFD700;font-size:1.5rem;font-weight:bold;border-radius:50%;';
+                fallback.textContent = (characterName || character).charAt(0).toUpperCase();
+                parent.appendChild(fallback);
+              }
             }}
           />
         </div>
-
+        
         <RadialMenu
           isOpen={isMenuOpen}
           participants={participants}

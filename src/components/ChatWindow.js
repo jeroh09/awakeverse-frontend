@@ -1140,9 +1140,19 @@ export default function ChatWindow({
                 alt={displayName}
                 className={`header-avatar ${emotionState ? `emotion-${emotionState} emotion-animate` : ''}`}
                 onError={(e) => {
-                  e.target.src = '/images/default-character.jpg';
+                  e.target.onError = null;
+                  e.target.style.display = 'none';
+
+                  const parent = e.target.parentElement;
+                  if (!parent.querySelector('.text-fallback')) {
+                    const fallback = document.createElement('div');
+                    fallback.className = 'text-fallback header-avatar';
+                    fallback.style.cssText = 'width:40px;height:40px;display:flex;align-items:center;justify-content:center;background:rgba(255,215,0,0.2);color:#FFD700;font-size:1rem;font-weight:bold;border-radius:50%;';
+                    fallback.textContent = displayName.charAt(0).toUpperCase();
+                    parent.appendChild(fallback);
+                  }
                 }}
-             />
+              />
               <h2 className="chat-title">{displayName}</h2>
               {participants.length > 1 && (
                 <div className="participants-badge">

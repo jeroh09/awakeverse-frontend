@@ -16,7 +16,7 @@ export const categoryRepresentatives = {
   warlords: '/images/sun_tzu.jpg',
   pathfinders: '/images/christopher_columbus.jpg',
   performers: '/images/harry_houdini.jpg',
-  my_characters: '/images/user-icon.jpg'
+  my_characters: '/images/default-character.jpg'
 };
 
 /* ------------------------------ StatusBadge ----------------------------- */
@@ -199,27 +199,24 @@ export const CategoryCard = ({
             ⭐
           </div>
         )}
-        <img
-          src={categoryRepresentatives[category.key] || '/images/user-icon.jpg'}
+                <img
+          src={categoryRepresentatives[category.key]}
           alt={category.title}
           style={{
             width: '100%', height: '100%', objectFit: 'cover',
             filter: 'sepia(20%) contrast(1.1)', transition: 'filter 0.3s ease'
           }}
           onError={(e) => { 
-            if (e.target.src.includes('user-icon.jpg')) {
-              // Prevent infinite loop - hide image and show text fallback
-              e.target.style.display = 'none';
-              const parent = e.target.parentElement;
-              if (!parent.querySelector('.fallback-text')) {
-                const fallback = document.createElement('div');
-                fallback.className = 'fallback-text';
-                fallback.style.cssText = 'width:100%;height:100%;display:flex;align-items:center;justify-content:center;background:rgba(255,215,0,0.2);color:#FFD700;font-size:1.2rem;font-weight:bold;';
-                fallback.textContent = category.title.charAt(0);
-                parent.appendChild(fallback);
-              }
-            } else {
-              e.target.src = '/images/user-icon.jpg';
+            e.currentTarget.onError = null;
+            e.currentTarget.style.display = 'none';
+
+            const parent = e.currentTarget.parentElement;
+            if (!parent.querySelector('.text-fallback')) {
+              const fallback = document.createElement('div');
+              fallback.className = 'text-fallback';
+              fallback.style.cssText = 'width:100%;height:100%;display:flex;align-items:center;justify-content:center;background:rgba(255,215,0,0.2);color:#FFD700;font-size:1.2rem;font-weight:bold;border-radius:50%;';
+              fallback.textContent = category.title.charAt(0).toUpperCase();
+              parent.appendChild(fallback);
             }
           }}
         />
@@ -359,11 +356,18 @@ export const CharacterCard = ({
           alt={character.name}
           style={{ width: '100%', height: '100%', objectFit: 'cover' }}
           onError={(e) => { 
-            // STOP THE LOOP: Disable this error handler immediately
+            // Stop error loop and show text fallback
             e.currentTarget.onError = null;
+            e.currentTarget.style.display = 'none';
 
-            // Try one different image
-            e.currentTarget.src = '/images/user-icon.jpg';
+            const parent = e.currentTarget.parentElement;
+            if (!parent.querySelector('.text-fallback')) {
+              const fallback = document.createElement('div');
+              fallback.className = 'text-fallback';
+              fallback.style.cssText = 'width:100%;height:100%;display:flex;align-items:center;justify-content:center;background:rgba(255,215,0,0.2);color:#FFD700;font-size:1.2rem;font-weight:bold;border-radius:50%;';
+              fallback.textContent = (character.name || category?.title || 'C').charAt(0).toUpperCase();
+              parent.appendChild(fallback);
+            }
           }}
         />
       </div>
@@ -483,7 +487,19 @@ export const PersonalizedSection = ({
                   border: '2px solid rgba(255, 215, 0, 0.3)',
                   objectFit: 'cover'
                 }}
-                onError={(e) => { e.currentTarget.src = '/images/default-character.jpg'; }}
+                onError={(e) => { 
+                  e.currentTarget.onError = null;
+                  e.currentTarget.style.display = 'none';
+
+                  const parent = e.currentTarget.parentElement;
+                  if (!parent.querySelector('.text-fallback')) {
+                    const fallback = document.createElement('div');
+                    fallback.className = 'text-fallback';
+                    fallback.style.cssText = 'width:100%;height:100%;display:flex;align-items:center;justify-content:center;background:rgba(255,215,0,0.2);color:#FFD700;font-size:0.9rem;font-weight:bold;border-radius:50%;';
+                    fallback.textContent = (c.name || 'C').charAt(0).toUpperCase();
+                    parent.appendChild(fallback);
+                  }
+                }}
               />
               {c.hasActiveConversation && (
                 <div style={{

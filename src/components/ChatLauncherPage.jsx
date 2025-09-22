@@ -574,10 +574,21 @@ const ChatLauncherPage = ({ onStartChat }) => {
                       height: '40px',
                       borderRadius: '50%',
                       objectFit: 'cover',
-                      border: '2px solid rgba(255, 215, 0, 0.3)',
-                      opacity: character.status === 'rejected' ? 0.6 : 1
+                      border: '2px solid rgba(255, 215, 0, 0.3)'
                     }}
-                    onError={(e) => { e.target.src = '/images/default-character.jpg'; }}
+                    onError={(e) => { 
+                      e.currentTarget.onError = null;
+                      e.currentTarget.style.display = 'none';
+
+                      const parent = e.currentTarget.parentElement;
+                      if (!parent.querySelector('.text-fallback')) {
+                        const fallback = document.createElement('div');
+                        fallback.className = 'text-fallback';
+                        fallback.style.cssText = 'width:40px;height:40px;display:flex;align-items:center;justify-content:center;background:rgba(255,215,0,0.2);color:#FFD700;font-size:1rem;font-weight:bold;border-radius:50%;border:2px solid rgba(255,215,0,0.3);';
+                        fallback.textContent = character.name.charAt(0).toUpperCase();
+                        parent.appendChild(fallback);
+                      }
+                    }}
                   />
                   <div style={{ flex: 1, minWidth: 0 }}>
                     <div style={{
