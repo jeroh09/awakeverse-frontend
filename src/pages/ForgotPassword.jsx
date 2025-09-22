@@ -1,4 +1,4 @@
-// src/pages/ForgotPassword.jsx - Password reset request page
+// src/pages/ForgotPassword.jsx - Mobile-friendly version
 import React, { useState } from 'react';
 import { Link } from 'react-router-dom';
 import ElegantCharacterPortraits from '../components/ElegantCharacterPortraits';
@@ -65,31 +65,47 @@ export default function ForgotPassword() {
     return 'Reset Your Password';
   };
 
-  // Show success view after email sent
+  // Success view - works on both mobile and desktop
   if (emailSent) {
     return (
       <div className="auth-page">
-        <div className="auth-demo-container">
+        {/* MOBILE: Simple mobile layout */}
+        <div className="mobile-forgot-success">
+          <div className="mobile-success-content">
+            <h2>Reset Email Sent</h2>
+            <div className="success-icon">📧</div>
+            <p>If an account exists for <strong>{email}</strong>, we've sent reset instructions.</p>
+            
+            <div className="mobile-success-actions">
+              <button 
+                onClick={() => setEmailSent(false)}
+                className="mobile-secondary-btn"
+              >
+                Try Different Email
+              </button>
+              <Link to="/login" className="mobile-primary-btn">
+                Back to Login
+              </Link>
+            </div>
+            
+            <div className="mobile-help-text">
+              <small>Check spam folder • Link expires in 24 hours</small>
+            </div>
+          </div>
+        </div>
+
+        {/* DESKTOP: Character portraits */}
+        <div className="auth-demo-container desktop-only">
           <ElegantCharacterPortraits 
             autoAdvanceInterval={15000}
             onCharacterChange={handleCharacterChange}
           />
         </div>
 
-        <div className="auth-form verification-pending">
+        <div className="auth-form desktop-only compact-verification">
           <h2>Reset Email Sent</h2>
-          
-          <div className="verification-icon">
-            🔐
-          </div>
-          
-          <p>
-            If an account with email <strong>{email}</strong> exists, we've sent password reset instructions.
-          </p>
-          
-          <p>
-            Check your email and click the reset link to create a new password.
-          </p>
+          <div className="verification-icon">🔐</div>
+          <p>If an account exists for <strong>{email}</strong>, we've sent reset instructions.</p>
           
           <div className="verification-actions">
             <button 
@@ -98,19 +114,13 @@ export default function ForgotPassword() {
             >
               Try Different Email
             </button>
-            
             <Link to="/login" className="primary-button">
               Back to Login
             </Link>
           </div>
           
-          <div className="verification-help">
-            <p>Don't see the email?</p>
-            <ul>
-              <li>Check your spam/junk folder</li>
-              <li>Make sure you entered the correct email address</li>
-              <li>The reset link expires in 24 hours</li>
-            </ul>
+          <div className="compact-help">
+            <small>Check spam folder • Link expires in 24 hours</small>
           </div>
         </div>
       </div>
@@ -119,21 +129,55 @@ export default function ForgotPassword() {
 
   return (
     <div className="auth-page">
-      {/* Character portraits for desktop */}
-      <div className="auth-demo-container">
+      {/* MOBILE: Simple mobile form */}
+      <div className="mobile-forgot-form">
+        <div className="mobile-form-content">
+          <h2>Reset Password</h2>
+          <p>Enter your email to receive reset instructions.</p>
+          
+          {error && <div className="mobile-error">{error}</div>}
+          
+          <form onSubmit={handleSubmit} className="mobile-simple-form">
+            <div className="form-group">
+              <label>Email Address</label>
+              <input
+                type="email"
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+                placeholder="Enter your email"
+                disabled={loading}
+                required
+                autoFocus
+              />
+            </div>
+            
+            <button 
+              type="submit" 
+              disabled={loading || !email}
+              className="mobile-submit-btn"
+            >
+              {loading ? 'Sending...' : 'Send Reset Instructions'}
+            </button>
+          </form>
+          
+          <div className="mobile-auth-links">
+            <Link to="/login">← Back to Login</Link>
+            <Link to="/register">Create Account</Link>
+          </div>
+        </div>
+      </div>
+
+      {/* DESKTOP: Character portraits and form */}
+      <div className="auth-demo-container desktop-only">
         <ElegantCharacterPortraits 
           autoAdvanceInterval={12000}
           onCharacterChange={handleCharacterChange}
         />
       </div>
 
-      {/* Reset form */}
-      <form className="auth-form" onSubmit={handleSubmit}>
+      <form className="auth-form desktop-only compact-form" onSubmit={handleSubmit}>
         <h2>{getFormTitle()}</h2>
-        
-        <p style={{ marginBottom: '2rem', color: '#666', lineHeight: 1.6 }}>
-          Enter your email address and we'll send you instructions to reset your password.
-        </p>
+        <p className="form-description">Enter your email to receive reset instructions.</p>
         
         {error && <div className="error-text">{error}</div>}
         
@@ -151,12 +195,12 @@ export default function ForgotPassword() {
         />
         
         <button type="submit" disabled={loading || !email}>
-          {loading ? 'Sending Reset Email...' : 'Send Reset Instructions'}
+          {loading ? 'Sending...' : 'Send Reset Instructions'}
         </button>
         
         <div className="auth-links">
           <Link to="/login">← Back to Login</Link>
-          <Link to="/register">Create New Account</Link>
+          <Link to="/register">Create Account</Link>
         </div>
       </form>
     </div>

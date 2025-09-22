@@ -810,3 +810,658 @@ body::before {
 .mobile-forgot-password a:hover {
   text-decoration: underline;
 }
+/* Add this CSS to your AuthPageStyles.css or create a separate mobile CSS file */
+
+/* Hide desktop elements on mobile, show mobile elements on desktop */
+@media (max-width: 768px) {
+  .desktop-only {
+    display: none !important;
+  }
+  
+  .mobile-forgot-form,
+  .mobile-forgot-success {
+    display: block;
+  }
+}
+
+@media (min-width: 769px) {
+  .mobile-forgot-form,
+  .mobile-forgot-success {
+    display: none;
+  }
+  
+  .desktop-only {
+    display: block;
+  }
+}
+
+/* Mobile forgot password form styles */
+.mobile-forgot-form {
+  display: none; /* Hidden by default, shown on mobile */
+  width: 100%;
+  min-height: 100vh;
+  background: linear-gradient(135deg, #0B1426 0%, #1A2B47 25%, #2C1810 50%, #0F1A2E 75%, #0B1426 100%);
+  padding: 2rem 1rem;
+  box-sizing: border-box;
+}
+
+.mobile-form-content {
+  max-width: 400px;
+  margin: 0 auto;
+  padding-top: 10vh;
+}
+
+.mobile-form-content h2 {
+  color: #FFD700;
+  text-align: center;
+  margin-bottom: 1rem;
+  font-size: 2rem;
+  font-family: 'Playfair Display', serif;
+}
+
+.mobile-form-content p {
+  color: rgba(255, 255, 255, 0.8);
+  text-align: center;
+  margin-bottom: 2rem;
+  line-height: 1.5;
+}
+
+.mobile-simple-form .form-group {
+  margin-bottom: 1.5rem;
+}
+
+.mobile-simple-form label {
+  display: block;
+  color: rgba(255, 255, 255, 0.9);
+  margin-bottom: 0.5rem;
+  font-weight: 600;
+}
+
+.mobile-simple-form input {
+  width: 100%;
+  padding: 1rem;
+  border: 2px solid rgba(255, 255, 255, 0.3);
+  border-radius: 8px;
+  background: rgba(255, 255, 255, 0.1);
+  color: #fff;
+  font-size: 1rem;
+  box-sizing: border-box;
+}
+
+.mobile-simple-form input:focus {
+  border-color: #FFD700;
+  outline: none;
+}
+
+.mobile-submit-btn {
+  width: 100%;
+  padding: 1rem;
+  background: linear-gradient(135deg, #FFD700, #FFA500);
+  border: none;
+  border-radius: 8px;
+  color: #000;
+  font-size: 1rem;
+  font-weight: 700;
+  cursor: pointer;
+  margin-bottom: 2rem;
+}
+
+.mobile-submit-btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.mobile-auth-links {
+  display: flex;
+  justify-content: space-between;
+  gap: 1rem;
+  flex-wrap: wrap;
+}
+
+.mobile-auth-links a {
+  color: #FFD700;
+  text-decoration: none;
+  font-size: 0.9rem;
+}
+
+.mobile-auth-links a:hover {
+  text-decoration: underline;
+}
+
+/* Mobile success page styles */
+.mobile-forgot-success {
+  display: none; /* Hidden by default, shown on mobile */
+  width: 100%;
+  min-height: 100vh;
+  background: linear-gradient(135deg, #0B1426 0%, #1A2B47 25%, #2C1810 50%, #0F1A2E 75%, #0B1426 100%);
+  padding: 2rem 1rem;
+  box-sizing: border-box;
+}
+
+.mobile-success-content {
+  max-width: 400px;
+  margin: 0 auto;
+  padding-top: 15vh;
+  text-align: center;
+}
+
+.mobile-success-content h2 {
+  color: #FFD700;
+  margin-bottom: 1rem;
+  font-size: 2rem;
+  font-family: 'Playfair Display', serif;
+}
+
+.success-icon {
+  font-size: 4rem;
+  margin: 2rem 0;
+}
+
+.mobile-success-content p {
+  color: rgba(255, 255, 255, 0.9);
+  margin-bottom: 2rem;
+  line-height: 1.6;
+}
+
+.mobile-success-actions {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+  margin-bottom: 2rem;
+}
+
+.mobile-primary-btn {
+  background: linear-gradient(135deg, #FFD700, #FFA500);
+  border: none;
+  color: #000;
+  padding: 1rem 2rem;
+  border-radius: 8px;
+  text-decoration: none;
+  font-weight: 700;
+  display: block;
+  text-align: center;
+}
+
+.mobile-secondary-btn {
+  background: rgba(255, 255, 255, 0.1);
+  border: 2px solid rgba(255, 255, 255, 0.3);
+  color: rgba(255, 255, 255, 0.9);
+  padding: 1rem 2rem;
+  border-radius: 8px;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.mobile-help-text {
+  color: rgba(255, 255, 255, 0.6);
+  font-size: 0.8rem;
+}
+
+/* Error styling for mobile */
+.mobile-error {
+  background: rgba(255, 107, 107, 0.1);
+  border: 2px solid rgba(255, 107, 107, 0.3);
+  color: #ff6b6b;
+  padding: 1rem;
+  border-radius: 8px;
+  margin-bottom: 1rem;
+  text-align: center;
+  font-weight: 600;
+}
+/* Add this CSS to your AuthPageStyles.css for EmailVerification mobile support */
+
+/* Mobile/Desktop display logic */
+@media (max-width: 768px) {
+  .desktop-only {
+    display: none !important;
+  }
+  
+  .mobile-verification {
+    display: block;
+  }
+}
+
+@media (min-width: 769px) {
+  .mobile-verification {
+    display: none;
+  }
+  
+  .desktop-only {
+    display: block;
+  }
+}
+
+/* Mobile verification styles */
+.mobile-verification {
+  display: none; /* Hidden by default, shown on mobile */
+  width: 100%;
+  min-height: 100vh;
+  background: linear-gradient(135deg, #0B1426 0%, #1A2B47 25%, #2C1810 50%, #0F1A2E 75%, #0B1426 100%);
+  padding: 2rem 1rem;
+  box-sizing: border-box;
+}
+
+.mobile-verification-content {
+  max-width: 400px;
+  margin: 0 auto;
+  padding-top: 10vh;
+  text-align: center;
+}
+
+.mobile-verification-content h2 {
+  color: #FFD700;
+  margin-bottom: 1rem;
+  font-size: 1.8rem;
+  font-family: 'Playfair Display', serif;
+}
+
+.mobile-verification-icon {
+  font-size: 3.5rem;
+  margin: 1.5rem 0;
+  display: inline-block;
+}
+
+.mobile-verification-content p {
+  color: rgba(255, 255, 255, 0.9);
+  margin-bottom: 1.5rem;
+  line-height: 1.6;
+  font-size: 0.95rem;
+}
+
+/* Mobile spinner */
+.mobile-spinner-container {
+  margin: 2rem 0;
+}
+
+.mobile-spinner {
+  width: 30px;
+  height: 30px;
+  border: 3px solid rgba(255, 255, 255, 0.2);
+  border-top: 3px solid #FFD700;
+  border-radius: 50%;
+  animation: spin 1s linear infinite;
+  margin: 0 auto 1rem auto;
+}
+
+@keyframes spin {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
+}
+
+/* Mobile verification actions */
+.mobile-verification-actions {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+  margin: 2rem 0;
+}
+
+.mobile-primary-btn {
+  background: linear-gradient(135deg, #FFD700, #FFA500);
+  border: none;
+  color: #000;
+  padding: 1rem 2rem;
+  border-radius: 8px;
+  text-decoration: none;
+  font-weight: 700;
+  display: block;
+  text-align: center;
+  cursor: pointer;
+  font-size: 1rem;
+}
+
+.mobile-primary-btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.mobile-secondary-btn {
+  background: rgba(255, 255, 255, 0.1);
+  border: 2px solid rgba(255, 255, 255, 0.3);
+  color: rgba(255, 255, 255, 0.9);
+  padding: 1rem 2rem;
+  border-radius: 8px;
+  font-weight: 600;
+  cursor: pointer;
+  text-decoration: none;
+  display: block;
+  text-align: center;
+  font-size: 1rem;
+}
+
+.mobile-secondary-btn:hover {
+  background: rgba(255, 255, 255, 0.2);
+}
+
+/* Mobile resend section */
+.mobile-resend-section {
+  margin: 2rem 0;
+}
+
+.mobile-resend-section label {
+  display: block;
+  color: rgba(255, 255, 255, 0.9);
+  margin-bottom: 1rem;
+  font-weight: 600;
+  font-size: 0.9rem;
+}
+
+.mobile-email-input {
+  width: 100%;
+  padding: 1rem;
+  border: 2px solid rgba(255, 255, 255, 0.3);
+  border-radius: 8px;
+  background: rgba(255, 255, 255, 0.1);
+  color: #fff;
+  font-size: 1rem;
+  margin-bottom: 1rem;
+  box-sizing: border-box;
+}
+
+.mobile-email-input:focus {
+  border-color: #FFD700;
+  outline: none;
+}
+
+.mobile-email-input::placeholder {
+  color: rgba(255, 255, 255, 0.5);
+}
+
+/* Mobile help text */
+.mobile-help-compact {
+  margin-top: 2rem;
+  color: rgba(255, 255, 255, 0.6);
+  font-size: 0.8rem;
+  line-height: 1.4;
+}
+
+/* Mobile error styling */
+.mobile-error {
+  background: rgba(255, 107, 107, 0.1);
+  border: 2px solid rgba(255, 107, 107, 0.3);
+  color: #ff6b6b;
+  padding: 1rem;
+  border-radius: 8px;
+  margin: 1rem 0;
+  text-align: center;
+  font-weight: 600;
+  font-size: 0.9rem;
+}
+
+/* Responsive adjustments for very small screens */
+@media (max-width: 480px) {
+  .mobile-verification {
+    padding: 1rem 0.5rem;
+  }
+  
+  .mobile-verification-content {
+    padding-top: 5vh;
+  }
+  
+  .mobile-verification-content h2 {
+    font-size: 1.5rem;
+  }
+  
+  .mobile-verification-icon {
+    font-size: 3rem;
+    margin: 1rem 0;
+  }
+  
+  .mobile-primary-btn,
+  .mobile-secondary-btn {
+    padding: 0.75rem 1.5rem;
+    font-size: 0.9rem;
+  }
+}
+/* Add this CSS to your AuthPageStyles.css for ResetPassword mobile support */
+
+/* Mobile/Desktop display logic for ResetPassword */
+@media (max-width: 768px) {
+  .desktop-only {
+    display: none !important;
+  }
+  
+  .mobile-reset-form,
+  .mobile-reset-success {
+    display: block;
+  }
+}
+
+@media (min-width: 769px) {
+  .mobile-reset-form,
+  .mobile-reset-success {
+    display: none;
+  }
+  
+  .desktop-only {
+    display: block;
+  }
+}
+
+/* Mobile reset form styles */
+.mobile-reset-form {
+  display: none; /* Hidden by default, shown on mobile */
+  width: 100%;
+  min-height: 100vh;
+  background: linear-gradient(135deg, #0B1426 0%, #1A2B47 25%, #2C1810 50%, #0F1A2E 75%, #0B1426 100%);
+  padding: 2rem 1rem;
+  box-sizing: border-box;
+}
+
+.mobile-reset-success {
+  display: none; /* Hidden by default, shown on mobile */
+  width: 100%;
+  min-height: 100vh;
+  background: linear-gradient(135deg, #0B1426 0%, #1A2B47 25%, #2C1810 50%, #0F1A2E 75%, #0B1426 100%);
+  padding: 2rem 1rem;
+  box-sizing: border-box;
+}
+
+.mobile-form-content {
+  max-width: 400px;
+  margin: 0 auto;
+  padding-top: 8vh;
+}
+
+.mobile-success-content {
+  max-width: 400px;
+  margin: 0 auto;
+  padding-top: 15vh;
+  text-align: center;
+}
+
+.mobile-form-content h2,
+.mobile-success-content h2 {
+  color: #FFD700;
+  text-align: center;
+  margin-bottom: 1rem;
+  font-size: 1.8rem;
+  font-family: 'Playfair Display', serif;
+}
+
+.mobile-form-content p,
+.mobile-success-content p {
+  color: rgba(255, 255, 255, 0.8);
+  text-align: center;
+  margin-bottom: 1.5rem;
+  line-height: 1.5;
+  font-size: 0.95rem;
+}
+
+/* Mobile password strength indicator */
+.mobile-password-strength {
+  margin: 0.5rem 0;
+}
+
+.mobile-strength-bar {
+  width: 100%;
+  height: 4px;
+  background: rgba(255, 255, 255, 0.2);
+  border-radius: 2px;
+  overflow: hidden;
+  margin-bottom: 0.25rem;
+}
+
+.mobile-strength-fill {
+  height: 100%;
+  transition: all 0.3s ease;
+  border-radius: 2px;
+}
+
+.mobile-password-match {
+  margin: 0.5rem 0;
+  font-size: 0.9rem;
+}
+
+.mobile-password-req {
+  margin: 1rem 0;
+  padding: 0.75rem;
+  background: rgba(255, 255, 255, 0.05);
+  border-radius: 6px;
+  border-left: 3px solid #FFD700;
+}
+
+.mobile-password-req small {
+  color: rgba(255, 255, 255, 0.7);
+  line-height: 1.4;
+  font-size: 0.8rem;
+}
+
+/* Form group spacing for mobile */
+.mobile-simple-form .form-group {
+  margin-bottom: 1.5rem;
+}
+
+.mobile-simple-form label {
+  display: block;
+  color: rgba(255, 255, 255, 0.9);
+  margin-bottom: 0.5rem;
+  font-weight: 600;
+  font-size: 0.95rem;
+}
+
+.mobile-simple-form input {
+  width: 100%;
+  padding: 1rem;
+  border: 2px solid rgba(255, 255, 255, 0.3);
+  border-radius: 8px;
+  background: rgba(255, 255, 255, 0.1);
+  color: #fff;
+  font-size: 1rem;
+  box-sizing: border-box;
+}
+
+.mobile-simple-form input:focus {
+  border-color: #FFD700;
+  outline: none;
+}
+
+.mobile-simple-form input::placeholder {
+  color: rgba(255, 255, 255, 0.5);
+}
+
+/* Mobile submit button for reset */
+.mobile-submit-btn {
+  width: 100%;
+  padding: 1rem;
+  background: linear-gradient(135deg, #FFD700, #FFA500);
+  border: none;
+  border-radius: 8px;
+  color: #000;
+  font-size: 1rem;
+  font-weight: 700;
+  cursor: pointer;
+  margin: 1rem 0 2rem 0;
+}
+
+.mobile-submit-btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+  background: rgba(255, 215, 0, 0.3);
+}
+
+/* Success icon for mobile reset complete */
+.success-icon {
+  font-size: 4rem;
+  margin: 2rem 0;
+  color: #44bb00;
+}
+
+/* Mobile auth links for reset page */
+.mobile-auth-links {
+  display: flex;
+  justify-content: space-between;
+  gap: 1rem;
+  flex-wrap: wrap;
+  margin-top: 1rem;
+}
+
+.mobile-auth-links a {
+  color: #FFD700;
+  text-decoration: none;
+  font-size: 0.9rem;
+}
+
+.mobile-auth-links a:hover {
+  text-decoration: underline;
+}
+
+/* Error handling for mobile reset */
+.mobile-error {
+  background: rgba(255, 107, 107, 0.1);
+  border: 2px solid rgba(255, 107, 107, 0.3);
+  color: #ff6b6b;
+  padding: 1rem;
+  border-radius: 8px;
+  margin: 1rem 0;
+  text-align: center;
+  font-weight: 600;
+  font-size: 0.9rem;
+}
+
+.mobile-error a {
+  color: #FFD700;
+  text-decoration: underline;
+}
+
+/* Responsive adjustments for very small screens */
+@media (max-width: 480px) {
+  .mobile-reset-form,
+  .mobile-reset-success {
+    padding: 1rem 0.5rem;
+  }
+  
+  .mobile-form-content {
+    padding-top: 5vh;
+  }
+  
+  .mobile-success-content {
+    padding-top: 10vh;
+  }
+  
+  .mobile-form-content h2,
+  .mobile-success-content h2 {
+    font-size: 1.5rem;
+  }
+  
+  .success-icon {
+    font-size: 3rem;
+    margin: 1.5rem 0;
+  }
+  
+  .mobile-simple-form input {
+    padding: 0.875rem;
+    font-size: 0.95rem;
+  }
+  
+  .mobile-submit-btn {
+    padding: 0.875rem;
+    font-size: 0.95rem;
+  }
+  
+  .mobile-auth-links {
+    flex-direction: column;
+    text-align: center;
+    gap: 0.75rem;
+  }
+}

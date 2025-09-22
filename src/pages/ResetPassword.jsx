@@ -1,4 +1,4 @@
-// src/pages/ResetPassword.jsx - Password reset confirmation page
+// src/pages/ResetPassword.jsx - Mobile-friendly version
 import React, { useState, useEffect } from 'react';
 import { Link, useNavigate, useSearchParams } from 'react-router-dom';
 import ElegantCharacterPortraits from '../components/ElegantCharacterPortraits';
@@ -82,7 +82,6 @@ export default function ResetPassword() {
 
       if (res.ok) {
         setSuccess(true);
-        // Redirect to login after 3 seconds
         setTimeout(() => {
           navigate('/login', { 
             state: { message: 'Password reset successful! Please sign in with your new password.' }
@@ -100,16 +99,6 @@ export default function ResetPassword() {
 
   const handleCharacterChange = (character) => {
     setCurrentCharacter(character);
-  };
-
-  const getFormTitle = () => {
-    if (success) {
-      return 'Password Reset Complete';
-    }
-    if (currentCharacter) {
-      return `${currentCharacter.name} Secures Your Path`;
-    }
-    return 'Create New Password';
   };
 
   const getPasswordStrength = () => {
@@ -132,31 +121,43 @@ export default function ResetPassword() {
     };
   };
 
-  // Show success view
+  // Success view - mobile and desktop
   if (success) {
     return (
       <div className="auth-page">
-        <div className="auth-demo-container">
+        {/* MOBILE SUCCESS */}
+        <div className="mobile-reset-success">
+          <div className="mobile-success-content">
+            <h2>Password Reset Complete!</h2>
+            <div className="success-icon">✅</div>
+            <p>Your password has been successfully reset.</p>
+            <p>You can now sign in with your new password.</p>
+            
+            <div className="mobile-verification-actions">
+              <Link to="/login" className="mobile-primary-btn">
+                Go to Login
+              </Link>
+            </div>
+            
+            <div className="mobile-help-compact">
+              <small>Redirecting to login in 3 seconds...</small>
+            </div>
+          </div>
+        </div>
+
+        {/* DESKTOP SUCCESS */}
+        <div className="auth-demo-container desktop-only">
           <ElegantCharacterPortraits 
             autoAdvanceInterval={15000}
             onCharacterChange={handleCharacterChange}
           />
         </div>
 
-        <div className="auth-form verification-pending">
+        <div className="auth-form verification-pending desktop-only">
           <h2>Password Reset Complete!</h2>
-          
-          <div className="verification-icon">
-            ✅
-          </div>
-          
-          <p>
-            Your password has been successfully reset.
-          </p>
-          
-          <p>
-            You can now sign in with your new password.
-          </p>
+          <div className="verification-icon">✅</div>
+          <p>Your password has been successfully reset.</p>
+          <p>You can now sign in with your new password.</p>
           
           <div className="verification-actions">
             <Link to="/login" className="primary-button">
@@ -174,17 +175,113 @@ export default function ResetPassword() {
 
   return (
     <div className="auth-page">
-      {/* Character portraits for desktop */}
-      <div className="auth-demo-container">
+      {/* MOBILE FORM */}
+      <div className="mobile-reset-form">
+        <div className="mobile-form-content">
+          <h2>Create New Password</h2>
+          <p>Enter your new password below.</p>
+          
+          {!token ? (
+            <div className="mobile-error">
+              Invalid reset link. <Link to="/forgot-password">Request a new reset</Link>.
+            </div>
+          ) : (
+            <>
+              {error && <div className="mobile-error">{error}</div>}
+              
+              <form onSubmit={handleSubmit} className="mobile-simple-form">
+                <div className="form-group">
+                  <label>New Password</label>
+                  <input
+                    type="password"
+                    value={password}
+                    onChange={(e) => setPassword(e.target.value)}
+                    placeholder="Enter new password"
+                    disabled={loading}
+                    required
+                  />
+                  
+                  {/* Mobile password strength */}
+                  {password && (
+                    <div className="mobile-password-strength">
+                      {(() => {
+                        const strength = getPasswordStrength();
+                        return (
+                          <div>
+                            <div className="mobile-strength-bar">
+                              <div 
+                                className="mobile-strength-fill"
+                                style={{ 
+                                  width: `${(strength.score / 5) * 100}%`,
+                                  backgroundColor: strength.color
+                                }}
+                              ></div>
+                            </div>
+                            <small style={{ color: strength.color }}>
+                              {strength.level}
+                            </small>
+                          </div>
+                        );
+                      })()}
+                    </div>
+                  )}
+                </div>
+                
+                <div className="form-group">
+                  <label>Confirm Password</label>
+                  <input
+                    type="password"
+                    value={confirmPassword}
+                    onChange={(e) => setConfirmPassword(e.target.value)}
+                    placeholder="Confirm new password"
+                    disabled={loading}
+                    required
+                  />
+                  
+                  {/* Mobile password match */}
+                  {confirmPassword && (
+                    <div className="mobile-password-match">
+                      {password === confirmPassword ? (
+                        <small style={{ color: '#44bb00' }}>✓ Passwords match</small>
+                      ) : (
+                        <small style={{ color: '#ff4444' }}>✗ Passwords do not match</small>
+                      )}
+                    </div>
+                  )}
+                </div>
+                
+                <div className="mobile-password-req">
+                  <small>Must contain: uppercase, lowercase, number, 8+ characters</small>
+                </div>
+                
+                <button 
+                  type="submit" 
+                  disabled={loading || !password || !confirmPassword || password !== confirmPassword}
+                  className="mobile-submit-btn"
+                >
+                  {loading ? 'Resetting...' : 'Reset Password'}
+                </button>
+              </form>
+            </>
+          )}
+          
+          <div className="mobile-auth-links">
+            <Link to="/login">← Back to Login</Link>
+            <Link to="/forgot-password">Request New Reset</Link>
+          </div>
+        </div>
+      </div>
+
+      {/* DESKTOP FORM */}
+      <div className="auth-demo-container desktop-only">
         <ElegantCharacterPortraits 
           autoAdvanceInterval={12000}
           onCharacterChange={handleCharacterChange}
         />
       </div>
 
-      {/* Reset form */}
-      <form className="auth-form" onSubmit={handleSubmit}>
-        <h2>{getFormTitle()}</h2>
+      <form className="auth-form desktop-only compact-form" onSubmit={handleSubmit}>
+        <h2>Create New Password</h2>
         
         {!token ? (
           <div className="error-text">
@@ -192,9 +289,7 @@ export default function ResetPassword() {
           </div>
         ) : (
           <>
-            <p style={{ marginBottom: '2rem', color: '#666', lineHeight: 1.6 }}>
-              Enter your new password below. Make sure it's strong and secure.
-            </p>
+            <p className="form-description">Enter your new password below. Make sure it's strong and secure.</p>
             
             {error && <div className="error-text">{error}</div>}
             
@@ -211,7 +306,6 @@ export default function ResetPassword() {
               autoFocus
             />
             
-            {/* Password strength indicator */}
             {password && (
               <div className="password-strength">
                 {(() => {
@@ -248,7 +342,6 @@ export default function ResetPassword() {
               required
             />
             
-            {/* Password match indicator */}
             {confirmPassword && (
               <div className="password-match">
                 {password === confirmPassword ? (
