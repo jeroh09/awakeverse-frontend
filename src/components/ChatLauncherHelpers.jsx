@@ -199,7 +199,7 @@ export const CategoryCard = ({
             ⭐
           </div>
         )}
-                <img
+        <img
           src={categoryRepresentatives[category.key]}
           alt={category.title}
           style={{
