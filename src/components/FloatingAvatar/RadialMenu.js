@@ -57,10 +57,19 @@ export default function RadialMenu({
                 alt={getCharacterDisplayName(participant)}
                 className="participant-avatar"
                 onError={(e) => {
-                  e.target.src = '/images/default-character.jpg';
+                  e.target.onError = null;
+                  e.target.style.display = 'none';
+
+                  const parent = e.target.parentElement;
+                  if (!parent.querySelector('.text-fallback')) {
+                    const fallback = document.createElement('div');
+                    fallback.className = 'text-fallback participant-avatar';
+                    fallback.style.cssText = 'width:100%;height:100%;display:flex;align-items:center;justify-content:center;background:rgba(255,215,0,0.2);color:#FFD700;font-size:0.9rem;font-weight:bold;border-radius:50%;';
+                    fallback.textContent = getCharacterDisplayName(participant).charAt(0).toUpperCase();
+                    parent.appendChild(fallback);
+                  }
                 }}
               />
-              {isHighlighted && <div className="suggestion-glow"></div>}
             </div>
             <span className="radial-label">
               {getCharacterDisplayName(participant)}

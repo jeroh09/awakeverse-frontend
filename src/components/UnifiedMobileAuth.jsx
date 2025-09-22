@@ -77,7 +77,17 @@ export default function UnifiedMobileAuth({
                         src={`/images/${character.id}.jpg`}
                         alt={character.name}
                         onError={(e) => {
-                          e.target.src = '/images/default-character.jpg';
+                          e.target.onError = null;
+                          e.target.style.display = 'none';
+
+                          const parent = e.target.parentElement;
+                          if (!parent.querySelector('.text-fallback')) {
+                            const fallback = document.createElement('div');
+                            fallback.className = 'text-fallback';
+                            fallback.style.cssText = 'width:100%;height:100%;display:flex;align-items:center;justify-content:center;background:rgba(255,215,0,0.2);color:#FFD700;font-size:1rem;font-weight:bold;border-radius:50%;';
+                            fallback.textContent = character.name.charAt(0).toUpperCase();
+                            parent.appendChild(fallback);
+                          }
                         }}
                       />
                       <div className="character-glow"></div>
