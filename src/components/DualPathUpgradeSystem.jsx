@@ -1,12 +1,12 @@
-// src/components/DualPathUpgradeSystem.jsx - EXACT ORIGINAL with ONLY z-index changes
-import React, { useState } from 'react';
+// src/components/DualPathUpgradeSystem.jsx - MINIMAL MOBILE FIX
+import React, { useState, useEffect } from 'react';
 import { useAuth } from '../contexts/AuthContext';
 import { useUser } from '../contexts/UserContext';
 
 // Shared payment processor for both paths
 import PaymentProcessor from '../components/PaymentProcessor';
 
-// Educational Character Creaion modal Flow
+// Educational Character Creation modal Flow - KEEP ORIGINAL STRUCTURE
 const EducationalUpgradeModal = ({ 
   isOpen, 
   onClose, 
@@ -367,6 +367,7 @@ const EducationalUpgradeModal = ({
     </div>
   );
 
+  // KEEP ORIGINAL STRUCTURE - just add the modal overlay here
   return (
     <div style={{
       position: 'fixed',
@@ -378,7 +379,7 @@ const EducationalUpgradeModal = ({
       display: 'flex',
       alignItems: 'center',
       justifyContent: 'center',
-      // ONLY CHANGE: z-index from 999999 to 999999999999
+      // ONLY CHANGE: Higher z-index for mobile
       zIndex: 999999999999,
       overflow: 'auto',
       WebkitOverflowScrolling: 'touch',
@@ -389,7 +390,7 @@ const EducationalUpgradeModal = ({
   );
 };
 
-// Main Upgrade System Controller
+// Main Upgrade System Controller - MINIMAL CHANGES
 const DualPathUpgradeSystem = ({
   isOpen,
   onClose,
