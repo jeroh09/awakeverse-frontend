@@ -1805,3 +1805,25 @@ html::before {
     animation-delay: 0s !important;
   }
 }
+
+/* UPGRADE MODAL MOBILE FIX */
+@media (max-width: 768px) {
+  /* Force upgrade modal above everything */
+  div[style*="zIndex: 99999"] {
+    z-index: 999999 !important;
+    position: fixed !important;
+    top: 0 !important;
+    left: 0 !important;
+    width: 100vw !important;
+    height: 100vh !important;
+    overflow-y: auto !important;
+    -webkit-overflow-scrolling: touch !important;
+  }
+  
+  /* Make modal content scrollable on mobile */
+  div[style*="zIndex: 99999"] > div {
+    max-height: 90vh !important;
+    overflow-y: auto !important;
+    margin: 5vh auto !important;
+  }
+}
