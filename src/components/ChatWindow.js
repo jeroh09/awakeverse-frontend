@@ -1,1285 +1,443 @@
-// Updated ChatWindow.js - ChatSidebar COMPLETELY REMOVED - WITH IMPROVED ERROR HANDLING
-import React, { useState, useEffect, useRef, useCallback, memo, useMemo } from 'react';
-import { useSocket } from '../contexts/WebSocketContext';
-import { ArrowLeft, Pen, RotateCw, Crown, TrendingUp } from 'lucide-react';
-import ReactMarkdown from 'react-markdown';
-import { VariableSizeList as List } from 'react-window';
-import AutoSizer from 'react-virtualized-auto-sizer';
+// src/components/DualPathUpgradeSystem.jsx
+import React, { useState } from 'react';
 import { useAuth } from '../contexts/AuthContext';
 import { useUser } from '../contexts/UserContext';
-import { useConversation } from '../hooks/useConversation';
-import { CHARACTERS } from '../data/characters';
-import ContextPanel from './ContextPanel';
-import InputArea from './InputArea';
-import FloatingAvatar from './FloatingAvatar/FloatingAvatar';
-import PrestigeHub from './PrestigeHub/PrestigeHub';
-import { useSmartScroll } from '../hooks/useSmartScroll';
-import FloatingScrollButton from './FloatingScrollButton';
-import useUsageTracking from '../hooks/useUsageTracking';
-import { HeaderUsageIndicator, ChatUsageIndicator } from '../components/UsageIndicator';
-import usePremiumCharacters from '../hooks/usePremiumCharacters';
-import MinimalUsageTest from './MinimalUsageTest';
-import DefensiveChatInputWrapper from './DefensiveChatInputWrapper';
-import DualPathUpgradeSystem from '../components/DualPathUpgradeSystem';
-import '../styles.css';
-import '../style/InviteStyles.css';
 
-function useMediaQuery(maxWidth) {
-  const query = `(max-width: ${maxWidth}px)`;
-  const [matches, setMatches] = useState(() => window.matchMedia(query).matches);
+// Shared payment processor for both paths
+import PaymentProcessor from '../components/PaymentProcessor';
 
-  useEffect(() => {
-    const mql = window.matchMedia(query);
-    const onChange = e => setMatches(e.matches);
-    mql.addEventListener('change', onChange);
-    return () => mql.removeEventListener('change', onChange);
-  }, [query]);
+// Educational Character Creaion modal Flow
+const EducationalUpgradeModal = ({ 
+  isOpen, 
+  onClose, 
+  onProceedToPayment 
+}) => {
+  const [currentStep, setCurrentStep] = useState(1); // 1: Education, 2: Benefits, 3: Ready to Pay
 
-  return matches;
-}
+  if (!isOpen) return null;
 
-const Thinking = () => (
-  <span className="typing">
-    <span className="dot" />
-    <span className="dot" />
-    <span className="dot" />
-  </span>
-);
+  const renderEducationStep = () => (
+    <div style={{
+      background: 'linear-gradient(135deg, #0B1426 0%, #1A2B47 25%, #2C1810 50%, #0F1A2E 75%, #0B1426 100%)',
+      border: '2px solid rgba(255, 215, 0, 0.3)',
+      borderRadius: '20px',
+      padding: '2rem',
+      width: '90vw',
+      maxWidth: '800px',
+      maxHeight: '90vh',
+      overflowY: 'auto'
+    }}>
+      {/* Educational Header */}
+      <div style={{ textAlign: 'center', marginBottom: '2rem' }}>
+        <h2 style={{
+          color: '#FFD700',
+          fontSize: '2rem',
+          margin: '0 0 1rem 0',
+          fontFamily: "'Playfair Display', serif"
+        }}>
+          Unlock Your Creative Potential
+        </h2>
+        <p style={{
+          color: 'rgba(255, 255, 255, 0.8)',
+          fontSize: '1.1rem',
+          maxWidth: '600px',
+          margin: '0 auto',
+          lineHeight: 1.6
+        }}>
+          You've reached your character creation limit. See what premium users are creating 
+          and discover the advanced features that bring characters to life.
+        </p>
+      </div>
 
-const ChatItem = memo(({ index, style, data }) => {
-  const {
-    chatHistory, sizeMap, setSize,
-    startEditing, editingIndex, editText,
-    onEditChange, cancelInlineEdit, sendEdited,
-    retry, character, userAvatar, participants
-  } = data;
+      {/* Premium Character Showcase */}
+      <div style={{
+        display: 'grid',
+        gridTemplateColumns: 'repeat(auto-fit, minmax(250px, 1fr))',
+        gap: '1.5rem',
+        marginBottom: '2rem'
+      }}>
+        {[
+          {
+            name: "Victorian Detective",
+            description: "Advanced personality with 500+ conversation memories",
+            features: ["Complex backstory", "Evolving personality", "Memory system"]
+          },
+          {
+            name: "Renaissance Artist", 
+            description: "Multi-layered character with artistic expertise",
+            features: ["Detailed knowledge base", "Creative responses", "Historical accuracy"]
+          },
+          {
+            name: "Sci-Fi Explorer",
+            description: "Futuristic character with advanced AI integration",
+            features: ["Technical expertise", "Future scenarios", "Problem-solving"]
+          }
+        ].map((character, index) => (
+          <div key={index} style={{
+            background: 'rgba(255, 255, 255, 0.05)',
+            border: '1px solid rgba(255, 215, 0, 0.2)',
+            borderRadius: '12px',
+            padding: '1.5rem',
+            textAlign: 'center'
+          }}>
+            <div style={{
+              width: '60px',
+              height: '60px',
+              background: 'linear-gradient(135deg, #FFD700, #FFA500)',
+              borderRadius: '50%',
+              margin: '0 auto 1rem',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              fontSize: '1.5rem'
+            }}>
+              ðŸŽ­
+            </div>
+            <h3 style={{
+              color: '#FFD700',
+              margin: '0 0 0.5rem 0',
+              fontSize: '1.1rem'
+            }}>
+              {character.name}
+            </h3>
+            <p style={{
+              color: 'rgba(255, 255, 255, 0.8)',
+              fontSize: '0.9rem',
+              margin: '0 0 1rem 0',
+              lineHeight: 1.4
+            }}>
+              {character.description}
+            </p>
+            <ul style={{
+              listStyle: 'none',
+              padding: 0,
+              margin: 0,
+              fontSize: '0.8rem',
+              color: 'rgba(255, 255, 255, 0.7)'
+            }}>
+              {character.features.map((feature, i) => (
+                <li key={i} style={{
+                  marginBottom: '0.25rem',
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: '0.5rem'
+                }}>
+                  <span style={{ color: '#00FF88' }}>âœ“</span>
+                  {feature}
+                </li>
+              ))}
+            </ul>
+          </div>
+        ))}
+      </div>
 
-  const msg = chatHistory[index];
-  
+      {/* Feature Comparison */}
+      <div style={{
+        background: 'rgba(255, 215, 0, 0.1)',
+        border: '1px solid rgba(255, 215, 0, 0.3)',
+        borderRadius: '12px',
+        padding: '2rem',
+        marginBottom: '2rem'
+      }}>
+        <h3 style={{
+          color: '#FFD700',
+          textAlign: 'center',
+          margin: '0 0 1.5rem 0',
+          fontSize: '1.3rem'
+        }}>
+          What You're Missing
+        </h3>
+        
+        <div style={{
+          display: 'grid',
+          gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))',
+          gap: '1rem'
+        }}>
+          <div style={{ textAlign: 'center' }}>
+            <div style={{
+              fontSize: '2rem',
+              marginBottom: '0.5rem'
+            }}>ðŸš«</div>
+            <h4 style={{
+              color: '#ff6b6b',
+              margin: '0 0 0.5rem 0'
+            }}>
+              Free Tier
+            </h4>
+            <ul style={{
+              listStyle: 'none',
+              padding: 0,
+              margin: 0,
+              color: 'rgba(255, 255, 255, 0.7)',
+              fontSize: '0.9rem'
+            }}>
+              <li>1 Character Only</li>
+              <li>Basic Personality</li>
+              <li>150 Messages/Month</li>
+              <li>Standard Support</li>
+            </ul>
+          </div>
+          
+          <div style={{ textAlign: 'center' }}>
+            <div style={{
+              fontSize: '2rem',
+              marginBottom: '0.5rem'
+            }}>ðŸŽ¯</div>
+            <h4 style={{
+              color: '#FFD700',
+              margin: '0 0 0.5rem 0'
+            }}>
+              Premium Access
+            </h4>
+            <ul style={{
+              listStyle: 'none',
+              padding: 0,
+              margin: 0,
+              color: 'rgba(255, 255, 255, 0.9)',
+              fontSize: '0.9rem'
+            }}>
+              <li>Up to 15 Characters</li>
+              <li>Advanced AI Features</li>
+              <li>2,000+ Messages/Month</li>
+              <li>Priority Support</li>
+              <li>Memory Systems</li>
+              <li>Custom Personalities</li>
+            </ul>
+          </div>
+        </div>
+      </div>
 
-  // Invite Suggestion Candidates
-  const inviteCandidates = (!msg.user && msg.has_invite_suggestion)
-    ? msg.invite_candidates
-    : null;
+      {/* Trust Building */}
+      <div style={{
+        textAlign: 'center',
+        marginBottom: '2rem'
+      }}>
+        <div style={{
+          display: 'flex',
+          justifyContent: 'center',
+          gap: '2rem',
+          marginBottom: '1rem',
+          flexWrap: 'wrap'
+        }}>
+          <div style={{
+            display: 'flex',
+            alignItems: 'center',
+            gap: '0.5rem',
+            color: 'rgba(255, 255, 255, 0.8)'
+          }}>
+            <span style={{ color: '#00FF88' }}>ðŸ”’</span>
+            <span>Secure Payment</span>
+          </div>
+          <div style={{
+            display: 'flex',
+            alignItems: 'center',
+            gap: '0.5rem',
+            color: 'rgba(255, 255, 255, 0.8)'
+          }}>
+            <span style={{ color: '#00FF88' }}>ðŸ’°</span>
+            <span>Earn with Your Characters</span>
+          </div>
+          <div style={{
+            display: 'flex',
+            alignItems: 'center',
+            gap: '0.5rem',
+            color: 'rgba(255, 255, 255, 0.8)'
+          }}>
+            <span style={{ color: '#00FF88' }}>âš¡</span>
+            <span>Instant Activation</span>
+          </div>
+        </div>
+      </div>
 
-  const availableCandidates = inviteCandidates?.filter(candidate =>
-    !participants.includes(candidate)
-  ) || [];
-
-  // Display Text (cleaned of invite tag markup)
-  const displayText = msg.text
-    ?.replace(/<!--\s*INVITE(?:_SUGGESTION|_CANDIDATES)?\s*:[\w,]+\s*-->/g, '')
-    ?.replace(/<!-- INVITE(?:_CANDIDATES)?:[\w,]+ -->/g, '')
-    ?.replace(/INVITE(?:_CANDIDATES)?:[\w,]+/g, '')
-    ?.trim();
-
-  const isEditing = index === editingIndex;
-  const rowRef = useRef(null);
-  const editRef = useRef(null);
-
-  // Track disabled invite buttons
-  const [usedInvitees, setUsedInvitees] = useState(() => {
-    return new Set(msg.invite_candidates || []);
-  });
-
-  // Helper function to get character display name
-  const getCharacterDisplayName = (characterKey) => {
-    const char = CHARACTERS[characterKey];
-    if (char) {
-      return char.display_name || char.name || characterKey.replace(/_/g, ' ');
-    }
-    return characterKey.replace(/_/g, ' ');
-  };
-
-  // Resize tracking for smooth auto-layout
-  useEffect(() => {
-    if (rowRef.current) {
-      const h = rowRef.current.clientHeight;
-      if (sizeMap.current[index] !== h) {
-        setSize(index, h);
-      }
-    }
-  }, [index, msg.text, msg.error, isEditing, editText, setSize, sizeMap, availableCandidates.length]);
-
-  // Auto-grow edit textarea
-  useEffect(() => {
-    if (isEditing && editRef.current) {
-      const ta = editRef.current;
-      ta.style.height = 'auto';
-      ta.style.height = `${ta.scrollHeight}px`;
-    }
-  }, [isEditing, editText]);
-
-  const cls = msg.user ? 'user-message' : 'ai-message';
-  const API_BASE = process.env.REACT_APP_API_URL || 'https://api.awakeverse.com';
-  const avatarSrc = msg.user
-    ? userAvatar || `${API_BASE}/avatars/user_${data.userId || 'unknown'}_default.jpg`
-    : `/images/${msg.speaker || character}.jpg`;
-
-  // Character label fallback
-    // Character label fallback - FIXED to handle custom characters
-  const getCharacterInfo = (characterKey) => {
-    // First, check static characters
-    const staticChar = CHARACTERS[characterKey];
-    if (staticChar) {
-      return staticChar;
-    }
-
-    // Then check custom characters from userCharacters
-    if (data.userCharacters && Array.isArray(data.userCharacters)) {
-      const customChar = data.userCharacters.find(char => 
-        char && char.character_key === characterKey && char.status === 'approved'
-      );
-      if (customChar) {
-        return {
-          display_name: customChar.display_name,
-          thumbnailUrl: `/images/${customChar.character_key}.jpg`
-        };
-      }
-    }
-
-    // Fallback for unknown characters
-    console.warn(`Character "${characterKey}" not found in static or custom characters`);
-    return {
-      display_name: characterKey?.replace(/_/g, ' ') || 'Unknown'
-    };
-  };
-
-  const characterInfo = msg.user 
-    ? null 
-    : getCharacterInfo(msg.speaker || character);
-
-  const shouldShowInvite = (
-    !msg.user &&
-    availableCandidates.length > 0 &&
-    !data.isSending &&
-    !msg.error
-  );
-
-  return (
-    <div style={style}>
-      <div ref={rowRef} className={cls}>
-        <img
-          src={avatarSrc}
-          alt={msg.user
-            ? 'You'
-            : characterInfo?.display_name || 'AI'}
-          className="message-icon"
-          onError={(e) => {
-            e.target.src = msg.user 
-              ? '/images/user-icon.jpg' 
-              : '/images/default-character.jpg';
+      {/* Action Buttons */}
+      <div style={{
+        display: 'flex',
+        gap: '1rem',
+        justifyContent: 'center',
+        flexWrap: 'wrap'
+      }}>
+        <button
+          onClick={onClose}
+          style={{
+            background: 'rgba(255, 255, 255, 0.1)',
+            border: '2px solid rgba(255, 255, 255, 0.3)',
+            borderRadius: '8px',
+            color: 'rgba(255, 255, 255, 0.8)',
+            fontSize: '1rem',
+            fontWeight: 600,
+            padding: '0.75rem 1.5rem',
+            cursor: 'pointer'
           }}
-        />
-        <div className="message-content">
-          <strong>
-            {msg.user
-              ? 'You:'
-              : `${characterInfo?.display_name || 'AI'}:`}
-          </strong>
-
-          {msg.error ? (
-            <>
-              <div className="error-text">{msg.error}</div>
-              <button
-                onClick={() => retry(index)}
-                className="retry-button"
-                title="Retry"
-              >
-                <RotateCw size={16} />
-              </button>
-            </>
-          ) : !msg.text ? (
-            <Thinking />
-          ) : isEditing && msg.user ? (
-            <>
-              <textarea
-                ref={editRef}
-                className="edit-textarea"
-                value={editText}
-                onChange={(e) => onEditChange(e.target.value)}
-                placeholder="Edit message…"
-                style={{ width: '100%', overflow: 'hidden', resize: 'none' }}
-              />
-              <div className="edit-buttons">
-                <button
-                  onClick={() => sendEdited(editText, index)}
-                  className="send-button"
-                  disabled={!editText.trim()}
-                >
-                  Send
-                </button>
-                <button onClick={cancelInlineEdit} className="cancel-button">
-                  Cancel
-                </button>
-              </div>
-            </>
-          ) : (
-            <>
-              <ReactMarkdown>{displayText}</ReactMarkdown>
-
-              {/* Invite Suggestion UI */}
-              {shouldShowInvite && (
-                <div className="invite-suggestion new-invite">
-                  <div className="invite-prompt">
-                    {availableCandidates.length === 1
-                      ? `Would you like me to invite ${getCharacterDisplayName(availableCandidates[0])}?`
-                      : 'Who would you like me to invite:'}
-                  </div>
-                  <div className="invite-buttons">
-                    {availableCandidates.map((invitee) => (
-                      <button
-                        key={invitee}
-                        className="invite-button invite-button-with-avatar"
-                        disabled={usedInvitees.has(invitee) || data.isSending}
-                        onClick={() => {
-                          setUsedInvitees(prev => new Set([...prev, invitee]));
-                          setTimeout(() => data.onInvite(invitee), 100);
-                        }}
-                      >
-                        <img
-                          src={`/images/${invitee}.jpg`}
-                          alt={getCharacterDisplayName(invitee)}
-                          className="invite-button-avatar"
-                          onError={(e) => {
-                            e.target.src = '/images/default-character.jpg';
-                          }}
-                        />
-                        {getCharacterDisplayName(invitee)}
-                      </button>
-                    ))}
-                  </div>
-                </div>
-              )}
-
-              {/* Edit option for user messages */}
-              {msg.user && !data.isSending && (
-                <button
-                  onClick={() => startEditing(index)}
-                  className="edit-button"
-                  title="Edit message"
-                >
-                  <Pen size={16} />
-                </button>
-              )}
-            </>
-          )}
-        </div>
+        >
+          Maybe Later
+        </button>
+        
+        <button
+          onClick={() => setCurrentStep(2)}
+          style={{
+            background: 'linear-gradient(135deg, #FFD700, #FFA500)',
+            border: 'none',
+            borderRadius: '8px',
+            color: '#000',
+            fontSize: '1rem',
+            fontWeight: 700,
+            padding: '0.75rem 2rem',
+            cursor: 'pointer'
+          }}
+        >
+          See Pricing Plans
+        </button>
       </div>
     </div>
   );
-});
 
-export default function ChatWindow({
-  character,
-  characterName,
-  threadId,
-  onBack,
-  session,
-  targetMessage,
-  avatarUrl,
-  isHubVisible,
-  onToggleVisibility,
-  prestigeHubVisible,
-  onPrestigeHubToggle
-}) {
-  const { token } = useAuth();
-  const { user } = useUser();
-  const socket = useSocket();
-  const isMobile = useMediaQuery(600);
-  const { userCharacters } = usePremiumCharacters();
+  const renderBenefitsStep = () => (
+    <div style={{
+      background: 'linear-gradient(135deg, #0B1426 0%, #1A2B47 25%, #2C1810 50%, #0F1A2E 75%, #0B1426 100%)',
+      border: '2px solid rgba(255, 215, 0, 0.3)',
+      borderRadius: '20px',
+      padding: '2rem',
+      width: '90vw',
+      maxWidth: '900px',
+      maxHeight: '90vh',
+      overflowY: 'auto'
+    }}>
+      <div style={{ textAlign: 'center', marginBottom: '2rem' }}>
+        <h2 style={{
+          color: '#FFD700',
+          fontSize: '1.8rem',
+          margin: '0 0 0.5rem 0'
+        }}>
+          Choose Your Creative Journey
+        </h2>
+        <p style={{
+          color: 'rgba(255, 255, 255, 0.8)',
+          margin: 0
+        }}>
+          Select the plan that matches your creative ambitions
+        </p>
+      </div>
 
-  const localThreadId = useRef(threadId);
-  const { sendConversationMessage } = useConversation();
-  const userAvatar = avatarUrl || user?.avatarUrl;
-  const [newMessageCount, setNewMessageCount] = useState(0);
-  const usageTracking = useUsageTracking(character);
-  const [upgradeModalOpen, setUpgradeModalOpen] = useState(false);
-  const [upgradeReason, setUpgradeReason] = useState('general');
-  const showUpgradeFlow = (reason = 'general') => {
-    setUpgradeReason(reason);
-    setUpgradeModalOpen(true);
-  };
+      {/* Plan Comparison - same as your UpgradeModal but with more space */}
+      <div style={{
+        display: 'grid',
+        gridTemplateColumns: 'repeat(auto-fit, minmax(250px, 1fr))',
+        gap: '1.5rem',
+        marginBottom: '2rem'
+      }}>
+        {/* Plan cards would go here - same as UpgradeModal */}
+      </div>
 
-  
-  // ✅ USER-FRIENDLY ERROR HANDLING SYSTEM
-  const getUserFriendlyError = (error, context = 'general') => {
-    const errorMessages = {
-      general: "I'm having trouble responding right now. Please try again in a moment.",
-      invite: "Unable to invite this character right now. Please try again.",
-      network: "Connection issue detected. Please check your internet and try again.",
-      timeout: "Request timed out. Please try again.",
-      api_failure: "Service temporarily unavailable. Please try again shortly."
-    };
-    
-    // Detect specific error types for better messaging
-    if (error.message?.includes('timeout') || error.message?.includes('Timeout')) {
-      return errorMessages.timeout;
-    }
-    if (error.message?.includes('Network') || error.message?.includes('502') || error.message?.includes('503') || error.message?.includes('504')) {
-      return errorMessages.network;
-    }
-    if (error.message?.includes('API failed') || error.message?.includes('failed')) {
-      return errorMessages.api_failure;
-    }
-    
-    return errorMessages[context] || errorMessages.general;
-  };
-
-  const reportError = (error, context) => {
-    const errorReport = {
-      message: error.message,
-      stack: error.stack,
-      context: context,
-      timestamp: new Date().toISOString(),
-      userAgent: navigator.userAgent,
-      url: window.location.href,
-      character: character,
-      userId: user?.id
-    };
-    
-    // Log detailed technical information for debugging
-    console.error('ChatWindow Error Report:', errorReport);
-  };
-
-  // Emotion state definition
-  const [emotionState, setEmotionState] = useState('neutral');
-  const [emotionIntensity, setEmotionIntensity] = useState(0.6);
-
-  // FloatingAvatar feature flag
-  const [useFloatingAvatar, setUseFloatingAvatar] = useState(
-    process.env.REACT_APP_FLOATING_AVATAR !== 'false'
-  );
-
-  const [chatHistory, setChatHistory] = useState(
-    (session?.messages || []).map(m => ({ 
-      user: m.user, 
-      text: m.text, 
-      error: null,
-      speaker: m.speaker || character,
-      thread_id: m.thread_id || 'main',
-      has_invite_suggestion: m.has_invite_suggestion || false,
-      invite_candidates: m.invite_candidates || []
-    }))
-  );
-  const [message, setMessage] = useState('');
-  const [isSending, setIsSending] = useState(false);
-  const [editingIndex, setEditingIndex] = useState(null);
-  const [editText, setEditText] = useState('');
-  const [participants, setParticipants] = useState([character]);
-
-  // ✅ BREATHING INTERFACE STATE
-  const [interfaceState, setInterfaceState] = useState('active');
-  const [useBreathingInterface, setUseBreathingInterface] = useState(true);
-  const [isUserTyping, setIsUserTyping] = useState(false);
-  
-  // Timers for breathing interface
-  const typingTimerRef = useRef(null);
-  const scrollTimerRef = useRef(null);
-  const idleTimerRef = useRef(null);
-
-  // Breathing CSS classes
-  const breathingClasses = [
-    'breathing-interface',
-    `state-${interfaceState}`,
-    useBreathingInterface ? 'breathing-enabled' : 'breathing-disabled'
-  ].join(' ');
-
-  // ✅ BREATHING HANDLERS
-  const handleTypingStart = useCallback(() => {
-    setIsUserTyping(true);
-    setInterfaceState('active');
-    
-    // Clear existing timers
-    if (typingTimerRef.current) clearTimeout(typingTimerRef.current);
-    if (idleTimerRef.current) clearTimeout(idleTimerRef.current);
-  }, []);
-
-  const handleTypingEnd = useCallback(() => {
-    setIsUserTyping(false);
-    
-    // Set idle timer
-    if (idleTimerRef.current) clearTimeout(idleTimerRef.current);
-    idleTimerRef.current = setTimeout(() => {
-      setInterfaceState('idle');
-    }, 300000);
-  }, []);
-
-  const handleInputFocus = useCallback(() => {
-    setInterfaceState('focused');
-    
-    // Clear timers when focused
-    if (idleTimerRef.current) clearTimeout(idleTimerRef.current);
-    if (typingTimerRef.current) clearTimeout(typingTimerRef.current);
-  }, []);
-
-  const handleInputBlur = useCallback(() => {
-    if (isUserTyping) {
-      setInterfaceState('active');
-    } else {
-      // Set idle timer when blur and not typing
-      if (idleTimerRef.current) clearTimeout(idleTimerRef.current);
-      idleTimerRef.current = setTimeout(() => {
-        setInterfaceState('idle');
-      }, 300000);
-    }
-  }, [isUserTyping]);
-
-  // Typing detection based on message content
-  useEffect(() => {
-    if (!message.trim()) {
-      handleTypingEnd();
-      return;
-    }
-
-    handleTypingStart();
-    
-    // Set typing end timer
-    if (typingTimerRef.current) clearTimeout(typingTimerRef.current);
-    typingTimerRef.current = setTimeout(() => {
-      handleTypingEnd();
-    }, 1000); // 1 second after last keystroke
-
-    return () => {
-      if (typingTimerRef.current) clearTimeout(typingTimerRef.current);
-    };
-  }, [message, handleTypingStart, handleTypingEnd]);
-
-  // Find the last user-sent message
-  const lastUserMsg = React.useMemo(
-    () => [...chatHistory].reverse().find(m => m.user),
-    [chatHistory]
-  );
-  const showPaneInvite = !!lastUserMsg?.has_invite_suggestion;
-
-  // Get invite suggestions for FloatingAvatar
-  const getInviteSuggestions = useCallback(() => {
-    const lastUserMsg = [...chatHistory].reverse().find(m => m.user);
-    if (lastUserMsg?.has_invite_suggestion) {
-      return lastUserMsg.invite_candidates || [];
-    }
-    return [];
-  }, [chatHistory]);
-
-  // ✅ NEW: Character selection handler for PrestigeHub
-  const handleCharacterSelect = useCallback((characterKey) => {
-    console.log('🎯 Character selected from PrestigeHub:', characterKey);
-    // You can add navigation logic here or pass it up to parent
-    if (onBack) {
-      // Close PrestigeHub first
-      if (onPrestigeHubToggle) {
-        onPrestigeHubToggle();
-      }
-      // Then navigate - you might want to add character switching logic
-      // For now, just log the selection
-    }
-  }, [onBack, onPrestigeHubToggle]);
-
-  // Helper function to get character display name (needed for error messages)
-  const getCharacterDisplayName = useCallback((characterKey) => {
-    const char = CHARACTERS[characterKey];
-    if (char) {
-      return char.display_name || char.name || characterKey.replace(/_/g, ' ');
-    }
-    return characterKey.replace(/_/g, ' ');
-  }, []);
-
-  // ✅ ADD USAGE TEST STATES COMPONENT (after helper functions)
-  //const UsageTestStates = () => {
-    //const [testState, setTestState] = useState('unlimited');
-    
-    //const mockUsage = {
-      //unlimited: {
-        //tier: 'unlimited', tier_display: 'Unlimited', 
-        //message_limit: -1, messages_used: 0, unlimited: true
-      //},
-      //approaching: {
-        //tier: 'free', tier_display: 'Free',
-        //message_limit: 150, messages_used: 120, unlimited: false
-      //},
-      //warning: {
-        //tier: 'free', tier_display: 'Free', 
-        //message_limit: 150, messages_used: 140, unlimited: false
-      //},
-      //limit: {
-        //tier: 'free', tier_display: 'Free',
-        //message_limit: 150, messages_used: 150, unlimited: false
-      //}
-   // };
-
-    //return (
-      //<div style={{
-        //position: 'fixed', top: '50px', right: '10px', 
-        //background: '#000', color: 'white', padding: '1rem',
-        //border: '1px solid #FFD700', borderRadius: '4px', zIndex: 9999,
-        //fontSize: '0.8rem'
-      //}}>
-       // <h4 style={{ color: '#FFD700', margin: '0 0 0.5rem 0' }}>Usage Test States</h4>
-        //<select 
-         // onChange={(e) => setTestState(e.target.value)} 
-          //value={testState}
-          //style={{ 
-            //background: '#333', color: 'white', 
-            //border: '1px solid #FFD700', padding: '0.25rem'
-          //}}
-       // >
-         // <option value="unlimited">Unlimited (Your Current)</option>
-          //<option value="approaching">Approaching Limit (120/150)</option>
-          //<option value="warning">At Warning (140/150)</option>
-          //<option value="limit">At Limit (150/150)</option>
-        //</select>
+      <div style={{
+        display: 'flex',
+        gap: '1rem',
+        justifyContent: 'center'
+      }}>
+        <button
+          onClick={() => setCurrentStep(1)}
+          style={{
+            background: 'rgba(255, 255, 255, 0.1)',
+            border: '2px solid rgba(255, 255, 255, 0.3)',
+            borderRadius: '8px',
+            color: 'rgba(255, 255, 255, 0.8)',
+            fontSize: '1rem',
+            padding: '0.75rem 1.5rem',
+            cursor: 'pointer'
+          }}
+        >
+          Back
+        </button>
         
-        //<div style={{ marginTop: '0.5rem' }}>
-         // <div style={{ fontSize: '0.7rem', color: '#FFD700' }}>Header Indicator:</div>
-          //<HeaderUsageIndicator 
-            //usage={mockUsage[testState]}
-            //isCustomCharacter={true}
-            //onUpgradeClick={() => alert('Header Upgrade!')}
-          ///>
-        //</div>
-        
-       // {(testState === 'warning' || testState === 'limit') && (
-         // <div style={{ marginTop: '0.5rem' }}>
-           // <div style={{ fontSize: '0.7rem', color: '#FFD700' }}>Warning Indicator:</div>
-            //<ChatUsageIndicator 
-             // usage={mockUsage[testState]}
-             // isCustomCharacter={true}
-              //showWarning={true}
-              //warningMessage={
-               // testState === 'limit' ? 'Monthly limit reached - upgrade to continue chatting' :
-                //'Almost at your monthly limit - consider upgrading'
-             // }
-             // onUpgradeClick={() => alert('Warning Upgrade!')}
-           // />
-         // </div>
-       // )}
-
-        //{testState === 'limit' && (
-         // <div style={{ marginTop: '0.5rem' }}>
-           // <button 
-             // onClick={() => setShowUpgradeFlow(true)}
-              //style={{
-               // background: '#ff6b6b', color: 'white',
-                //border: 'none', padding: '0.5rem',
-                //borderRadius: '4px', cursor: 'pointer'
-              //}}
-           // >
-             // Test Upgrade Modal
-            //</button>
-         // </div>
-       // )}
-     // </div>
-    //);
-  //};
-
-  // Initialize participants from session history
-  useEffect(() => {
-    if (session?.messages) {
-      const allParticipants = new Set([character]);
-      session.messages.forEach(msg => {
-        if (msg.speaker && !msg.user) {
-          allParticipants.add(msg.speaker);
-        }
-      });
-      setParticipants(Array.from(allParticipants));
-    }
-  }, [session, character]);
-
-  // WebSocket emotion handling
-  useEffect(() => {
-    if (!socket) return;
-
-    const handleEmotion = (data) => {
-      if (data.character === character) {
-        setEmotionState(data.emotion || 'neutral');
-        setEmotionIntensity(data.intensity || 0.8);
-      }
-    };
-
-    socket.on("emotion", handleEmotion);
-
-    return () => {
-      socket.off("emotion", handleEmotion);
-    };
-  }, [socket, character]);
-
-  const listRef = useRef(null);
-  // Add this debug effect to verify the ref is attached:
-  useEffect(() => {
-    console.log('🔗 ListRef status:', {
-      hasRef: !!listRef.current,
-      hasOuterRef: !!listRef.current?._outerRef,
-      refType: listRef.current?.constructor?.name
-    });
-  }, [chatHistory.length]); // Check whenever messages chang
-  const {
-    isNearBottom,
-    shouldAutoScroll,
-    hasNewMessages,
-    scrollToBottom: smartScrollToBottom,
-    handleScroll: smartHandleScroll,
-    enableAutoScroll
-  } = useSmartScroll(listRef, chatHistory);
-  const controllerRef = useRef(null);
-  const sizeMap = useRef({});
-  const displayName = characterName || character;
-  const lastMessageCountRef = useRef(0);
-  
-  // Row height calculation with invite spacing
-  const ROW_GAP = 20;
-
-  const setSize = useCallback((idx, h) => {
-    sizeMap.current[idx] = h;
-    if (listRef.current) {
-      listRef.current.resetAfterIndex(idx);
-    }
-  }, []);
-  
-  const getSize = useCallback(idx => (sizeMap.current[idx] || 120) + ROW_GAP, []);
-
-  // 5. ADD this handler function (add after other function definitions):
-  const handleScrollToBottomClick = useCallback(() => {
-  // Add mobile logging for debugging
-    console.log('🔽 Mobile scroll triggered', {
-      isMobile,
-      userAgent: navigator.userAgent,
-      innerWidth: window.innerWidth,
-      viewportHeight: window.innerHeight
-    });
-
-  // Manual scroll to bottom using direct DOM manipulation
-   if (listRef.current?._outerRef) {
-      const scrollElement = listRef.current._outerRef;
-      const targetScrollTop = scrollElement.scrollHeight - scrollElement.clientHeight;
-    
-    // Force scroll
-      scrollElement.scrollTop = targetScrollTop;
-      scrollElement.scrollTo({
-        top: targetScrollTop,
-        behavior: 'smooth'
-      });
-    
-      console.log('🔽 Manual scroll triggered', {
-        scrollTop: scrollElement.scrollTop,
-        targetScrollTop: targetScrollTop
-      });
-    }
-
-  // Re-enable autoscroll and reset counts
-    enableAutoScroll();
-    setNewMessageCount(0);
-    lastMessageCountRef.current = chatHistory.length;
-  }, [enableAutoScroll, chatHistory.length, isMobile]);
-
-  // Auto-scroll when new messages are added
-  useEffect(() => {
-    console.log('🔄 ChatWindow scroll state:', {
-      isNearBottom,
-      shouldAutoScroll,
-      hasNewMessages,
-      messageCount: chatHistory.length
-    });
-  }, [isNearBottom, shouldAutoScroll, hasNewMessages, chatHistory.length]);
-
-  const onInvite = async (invitee) => {
-    if (isSending) return;
-
-    const aiIndex = chatHistory.length;
-
-    try {
-      // Add invitee to participants immediately
-      setParticipants(prev => {
-        const newParticipants = prev.includes(invitee) ? prev : [...prev, invitee];
-        return newParticipants;
-      });
-
-      // Get last user message
-      const lastUserMsg = [...chatHistory].reverse().find(m => m.user)?.text;
-      if (!lastUserMsg) {
-        console.warn('No user message found for invite');
-        return;
-      }
-
-      setIsSending(true);
-      
-      // Reserve placeholder bubble
-      setChatHistory(prev => [
-        ...prev,
-        { 
-          user: false, 
-          speaker: invitee, 
-          text: '', 
-          error: null, 
-          has_invite_suggestion: false 
-        }
-      ]);
-
-      // Make invite request
-      const API = process.env.REACT_APP_API_BASE_URL || '';
-      const res = await fetch(`${API}/invite`, {
-        method: 'POST',
-        headers: {
-          'Authorization': `Bearer ${token}`,
-          'Content-Type': 'application/json'
-        },
-        body: JSON.stringify({
-          from: character,
-          to: invitee,
-          message: lastUserMsg,
-          thread_id: localThreadId.current
-        })
-      });
-      
-      if (!res.ok) {
-        throw new Error(`Invite failed (${res.status}): ${res.statusText}`);
-      }
-
-      // Stream tokens into the bubble
-      // Stream tokens into the bubble
-      const reader = res.body.getReader();
-      const decoder = new TextDecoder();
-      let fullResponse = '';  // Buffer the complete response first
-
-// First, collect the entire response quickly
-      // First, collect the entire response quickly
-      while (true) {
-        const { done, value } = await reader.read();
-        if (done) break;
-
-        const chunk = decoder.decode(value);
-        for (const line of chunk.split('\n').filter(Boolean)) {
-          try {
-            const data = JSON.parse(line);
-            const token = data.response || '';
-            fullResponse += token;
-          } catch (parseError) {
-            console.warn('Failed to parse invite response line:', parseError);
-          }
-        }
-      }
-
-// ✅ ADD THIS LINE:
-      const finalSpeaker = invitee; // Store speaker outside the loop
-
-// Now drip out the buffered response slowly
-      const words = fullResponse.split(' ');
-      let displayedText = '';
-
-      for (const word of words) {
-        displayedText += word + ' ';
-
-        setChatHistory(prev => {
-          const copy = [...prev];
-          if (copy[aiIndex]) {
-            copy[aiIndex] = {
-              ...copy[aiIndex],
-              text: displayedText,
-              speaker: finalSpeaker  // ✅ Use stored speaker instead of data.speaker
-            };
-          }
-          return copy;
-        });
-  
-  // Delay between words for reading pace
-        await new Promise(resolve => setTimeout(resolve, 250));
-      }
-      // ✅ UPDATED ERROR HANDLING WITH FRIENDLY MESSAGES + LOGGING
-      reportError(e, {
-        action: 'invite_request',
-        character: character,
-        invitee: invitee,
-        lastUserMessage: lastUserMsg?.substring(0, 50)
-      });
-
-      console.error('Invite error:', e);
-      setChatHistory(prev => {
-        const copy = [...prev];
-        if (copy[aiIndex]) {
-          copy[aiIndex] = {
-            ...copy[aiIndex],
-            error: `Unable to invite ${getCharacterDisplayName(invitee)} right now. Please try again.`
-          };
-        }
-        return copy;
-      });
-    } finally {
-      setIsSending(false);
-    }
-  };
-
-  // Initialize chat history from session
-  useEffect(() => {
-    const sorted = [...(session?.messages || [])].sort((a, b) => a.ts - b.ts);
-    const initial = sorted.map(m => ({ 
-      user: m.user, 
-      text: m.text, 
-      error: null,
-      speaker: m.speaker || character,
-      has_invite_suggestion: m.has_invite_suggestion || false,
-      invite_candidates: m.invite_candidates || []
-    }));
-    setChatHistory(initial);
-    setEditingIndex(null);
-    setEditText('');
-  }, [session, character]);
-
-  // Handle viewport adjustments for mobile
-  useEffect(() => {
-    const input = document.querySelector('.chat-input');
-    const updatePadding = () => {
-      const viewport = window.visualViewport;
-      if (!viewport || !input) return;
-
-      const bottomOffset = viewport.height + viewport.offsetTop - window.innerHeight;
-      input.style.paddingBottom = `${Math.max(bottomOffset, 8)}px`;
-    };
-
-    if (window.visualViewport) {
-      window.visualViewport.addEventListener('resize', updatePadding);
-      updatePadding();
-    }
-
-    return () => {
-      if (window.visualViewspot) {
-        window.visualViewport.removeEventListener('resize', updatePadding);
-      }
-    };
-  }, []);
-
-  // Scroll to target message if specified
-  useEffect(() => {
-    if (targetMessage && listRef.current) {
-      const idx = chatHistory.findIndex(m => m.text === targetMessage);
-      if (idx >= 0) {
-        requestAnimationFrame(() => {
-          listRef.current.scrollToItem(idx, 'center');
-        });
-      }
-    }
-  }, [targetMessage, chatHistory]);
-
-  useEffect(() => {
-  // Count messages since user scrolled away
-    if (!shouldAutoScroll && !isNearBottom) {
-      const currentCount = chatHistory.length;
-      const lastSeenCount = lastMessageCountRef.current || 0;
-      const unseenCount = Math.max(0, currentCount - lastSeenCount);
-      setNewMessageCount(unseenCount);
-    } else {
-    // Reset count when user is at bottom or autoscroll is enabled
-      setNewMessageCount(0);
-    // Update the last seen count when user is at bottom
-      lastMessageCountRef.current = chatHistory.length;
-    }
-  }, [chatHistory.length, shouldAutoScroll, isNearBottom]);
-
-  // Replace your sendAI function in ChatWindow.js with this streaming version
-  const sendAI = async (userText, aiIndex) => {
-    const controller = new AbortController();
-    controllerRef.current = controller;
-    setIsSending(true);
-
-    try {
-      const res = await fetch(`${process.env.REACT_APP_API_BASE_URL}/chat`, {
-        method: 'POST',
-        headers: {
-          'Authorization': `Bearer ${token}`,
-          'Content-Type': 'application/json'
-        },
-        body: JSON.stringify({ 
-          character, 
-          message: userText, 
-          thread_id: localThreadId.current 
-        }),
-        signal: controller.signal
-      });
-
-      if (!res.ok || !res.body) {
-        throw new Error(`Chat API failed: ${res.status} ${res.statusText}`);
-      }
-
-      const reader = res.body.getReader();
-      const decoder = new TextDecoder();
-      let fullReply = '';
-      let hasInviteSuggestion = false;
-      let inviteCandidates = [];
-
-      // ✅ STREAMING: Process each chunk immediately
-      while (true) {
-        const { done, value } = await reader.read();
-        if (done) break;
-
-        const chunk = decoder.decode(value);
-        const lines = chunk.trim().split('\n').filter(Boolean);
-
-        for (const line of lines) {
-          try {
-            const data = JSON.parse(line);
-            const token = data.response || '';
-
-            // ✅ STREAMING: Add each token immediately
-            if (token) {
-              fullReply += token;
-
-              // ✅ STREAMING: Update UI with each token (not just at the end)
-              setChatHistory(prev => {
-                const copy = [...prev];
-                if (copy[aiIndex]) {
-                  copy[aiIndex] = {
-                    ...copy[aiIndex],
-                    speaker: data.speaker || character,
-                    text: fullReply,
-                    has_invite_suggestion: hasInviteSuggestion,
-                    invite_candidates: inviteCandidates
-                  };
-                }
-                return copy;
-              });
-
-              // ✅ STREAMING: Auto-scroll as content streams in
-              setTimeout(() => {
-                if (shouldAutoScroll && listRef.current) {
-                  smartScrollToBottom();
-                }
-              }, 10);
-            }
-
-            // Handle invite suggestions
-            if (data.has_invite_suggestion) {
-              hasInviteSuggestion = true;
-              inviteCandidates = data.invite_candidates || [];
-            }
-
-          } catch (err) {
-            console.warn('JSON parse error:', err);
-          }
-        }
-      }
-
-      // ✅ STREAMING: Final update to ensure everything is set correctly
-      setChatHistory(prev => {
-        const copy = [...prev];
-        if (copy[aiIndex]) {
-          copy[aiIndex] = {
-            ...copy[aiIndex],
-            speaker: character,
-            text: fullReply,
-            has_invite_suggestion: hasInviteSuggestion,
-            invite_candidates: inviteCandidates
-          };
-        }
-        return copy;
-      });
-
-      // ✅ CRITICAL: REFRESH USAGE AFTER SUCCESSFUL MESSAGE COMPLETION
-      if (usageTracking.isCustomCharacter) {
-        console.log('🔄 Refreshing usage data after successful message to custom character:', character);
-        setTimeout(() => {
-          usageTracking.refreshUsage().then(success => {
-            if (success) {
-              console.log('✅ Usage data refreshed successfully');
-            } else {
-              console.warn('⚠️ Usage refresh failed or user reached limit');
-            }
-          });
-        }, 500);
-      }
-
-    } catch (err) {
-      if (err.name === 'AbortError') {
-        console.log('Chat request aborted');
-
-        // ✅ EVEN IF ABORTED, CHECK IF WE NEED TO REFRESH USAGE
-        if (usageTracking.isCustomCharacter) {
-          usageTracking.refreshUsage().then(success => {
-            if (success) {
-              console.log('✅ Usage data refreshed after abort');
-            }
-          });
-        }
-      } else {
-        reportError(err, {
-          action: 'chat_request',
-          character: character,
-          userMessage: userText?.substring(0, 50)
-        });
-
-        console.error('LLM error:', err);
-        setChatHistory(prev => {
-          const copy = [...prev];
-          if (copy[aiIndex]) {
-            copy[aiIndex] = { 
-              ...copy[aiIndex], 
-              error: getUserFriendlyError(err, 'general')
-            };
-          }
-          return copy;
-        });
-      }
-    } finally {
-      setIsSending(false);
-      controllerRef.current = null;
-    }
-  };
-  const sendMessage = () => {
-    // ✅ CRITICAL: Check usage limits for custom characters
-    if (usageTracking.isCustomCharacter && !usageTracking.canSendMessage) {
-      // Block the message and show upgrade flow
-      setShowUpgradeFlow(message_limit);
-      return;
-    }
-    
-    if (!message.trim() || isSending) return;
-    const userText = message;
-    setMessage('');
-    enableAutoScroll();
-    const aiIndex = chatHistory.length + 1;
-    setChatHistory(prev => [
-      ...prev,
-      { user: true, text: userText, error: null },
-      { user: false, text: '', error: null, speaker: character }
-    ]);
-    sendAI(userText, aiIndex);
-  };
-
-  const stopStream = () => {
-    controllerRef.current?.abort();
-    controllerRef.current = null;
-    setIsSending(false);
-  };
-
-  const startEditing = idx => { setEditingIndex(idx); setEditText(chatHistory[idx].text); };
-  const cancelInlineEdit = () => { setEditingIndex(null); setEditText(''); };
-  const sendEdited = (newText, idx) => {
-    setEditingIndex(null);
-    setChatHistory(prev => {
-      const upTo = prev.slice(0, idx).concat({ user: true, text: newText, error: null });
-      return [...upTo, { user: false, text: '', error: null, speaker: character }];
-    });
-    sendAI(newText, idx + 1);
-  };
-  const retry = async idx => {
-    const userText = chatHistory[idx - 1]?.text || '';
-    setChatHistory(prev => {
-      const copy = [...prev];
-      copy[idx] = { user: false, text: '', error: null, speaker: character };
-      return copy;
-    });
-    await sendAI(userText, idx);
-  };
-
-  // ✅ BREATHING INTERFACE STYLES
-  const breathingStyles = {
-    opacity: 
-      interfaceState === 'idle' ? 0.6 : 
-      interfaceState === 'scrolling' ? 0.8 : 
-      interfaceState === 'focused' ? 1 : 0.9,
-    transform: 
-      interfaceState === 'idle' ? 'scale(0.97)' : 
-      interfaceState === 'scrolling' ? 'scale(0.99)' : 
-      interfaceState === 'focused' ? 'scale(1.01)' : 'scale(1)',
-    transition: 'all 0.6s cubic-bezier(0.4, 0, 0.2, 1)',
-    filter: 
-      interfaceState === 'idle' ? 'blur(0.5px)' : 
-      interfaceState === 'scrolling' ? 'blur(0.2px)' : 'blur(0px)'
-  };
+        <button
+          onClick={() => onProceedToPayment('character_limit')}
+          style={{
+            background: 'linear-gradient(135deg, #FFD700, #FFA500)',
+            border: 'none',
+            borderRadius: '8px',
+            color: '#000',
+            fontSize: '1rem',
+            fontWeight: 700,
+            padding: '0.75rem 2rem',
+            cursor: 'pointer'
+          }}
+        >
+          Continue to Payment
+        </button>
+      </div>
+    </div>
+  );
 
   return (
-    <div 
-      className={`chat-panel-container ${breathingClasses} ${prestigeHubVisible ? 'with-prestige-hub' : ''}`}
-      style={breathingStyles}
-    >
-      {/* ✅ INTEGRATED PRESTIGE HUB */}
-        <PrestigeHub 
-          current={character}
-          onSelect={handleCharacterSelect}
-          isVisible={prestigeHubVisible}
-          position={isMobile ? 'sidebar' : 'sidebar'}
-        />
-
-      {/* FloatingAvatar Integration */}
-      {useFloatingAvatar && (
-        <FloatingAvatar
-          character={character}
-          characterName={displayName}
-          emotionState={emotionState}
-          emotionIntensity={emotionIntensity}
-          participants={participants}
-          onBack={onBack}
-          onCharacterSelect={handleCharacterSelect}
-          inviteSuggestions={getInviteSuggestions()}
-          isMobile={isMobile}
-          enabled={true}
-          isHubVisible={isHubVisible}
-          onToggleVisibility={onToggleVisibility}
-          onToggleHubVisibility={onPrestigeHubToggle}
-          prestigeHubVisible={prestigeHubVisible}
-          onPrestigeHubToggle={onPrestigeHubToggle}
-          discoveryCount={0}
-        />
-      )}
-
-      {showPaneInvite && (
-        <div className="pane-invite-bar">
-          <button
-            className="pane-invite-button"
-            onClick={() => onInvite(character, lastUserMsg.thread_id)}
-          >
-            Invite Expert
-          </button>
-        </div>
-      )}
-      
-      <div className="chat-window">
-        {/* Conditional Header - Only show if FloatingAvatar is disabled */}
-        {!useFloatingAvatar && (
-          <header className="chat-header">
-            <div className="header-title-group">
-              <img
-                src={`/images/${character}.jpg`}
-                alt={displayName}
-                className={`header-avatar ${emotionState ? `emotion-${emotionState} emotion-animate` : ''}`}
-                onError={(e) => {
-                  e.target.onError = null;
-                  e.target.style.display = 'none';
-
-                  const parent = e.target.parentElement;
-                  if (!parent.querySelector('.text-fallback')) {
-                    const fallback = document.createElement('div');
-                    fallback.className = 'text-fallback header-avatar';
-                    fallback.style.cssText = 'width:40px;height:40px;display:flex;align-items:center;justify-content:center;background:rgba(255,215,0,0.2);color:#FFD700;font-size:1rem;font-weight:bold;border-radius:50%;';
-                    fallback.textContent = displayName.charAt(0).toUpperCase();
-                    parent.appendChild(fallback);
-                  }
-                }}
-              />
-              <h2 className="chat-title">{displayName}</h2>
-              {participants.length > 1 && (
-                <div className="participants-badge">
-                  +{participants.length - 1}
-                </div>
-              )}
-            </div>
-
-            {/* ✅ ADD HEADER USAGE INDICATOR */}
-            {usageTracking.isCustomCharacter && (
-              <div className="usage-header-container">
-                <HeaderUsageIndicator 
-                  usage={usageTracking.usage}
-                  isCustomCharacter={usageTracking.isCustomCharacter}
-                  onUpgradeClick={() => {
-                    // TODO: Open upgrade modal
-                    console.log('Upgrade clicked for:', character);
-                  }}
-                />
-              </div>
-            )}
-            
-            <div className="header-controls">
-              <button onClick={onBack} className="back-button" title="Back">
-                <ArrowLeft size={20} />
-              </button>
-            </div>
-          </header>
-        )}
-
-        {/* Chat History - Adjust top padding when FloatingAvatar is active */}
-        <div className={`chat-history ${useFloatingAvatar ? 'with-floating-avatar' : ''} ${prestigeHubVisible ? 'with-prestige-overlay' : ''}`}>
-          <AutoSizer>
-            {({ height, width }) => (
-              <List
-                ref={listRef}
-                height={height}
-                width={width}
-                itemCount={chatHistory.length}
-                itemSize={getSize}
-                onScroll={smartHandleScroll}
-                itemData={{
-                  chatHistory,
-                  sizeMap,
-                  setSize,
-                  startEditing,
-                  editingIndex,
-                  editText,
-                  onEditChange: setEditText,
-                  cancelInlineEdit,
-                  sendEdited,
-                  retry,
-                  character,
-                  displayName,
-                  userAvatar,
-                  onInvite,
-                  isSending,
-                  participants,
-                  userCharacters,
-                  userId: user?.id
-                }}
-                overscanCount={3}
-              >
-                {ChatItem}
-              </List>
-            )}
-          </AutoSizer>
-        </div>
-
-        <footer className="chat-input">
-          {/* ✅ ADD USAGE WARNING ABOVE INPUT */}
-          {usageTracking.showWarning && usageTracking.isCustomCharacter && (
-            <div className="usage-warning-container">
-              <ChatUsageIndicator 
-                usage={usageTracking.usage}
-                isCustomCharacter={usageTracking.isCustomCharacter}
-                showWarning={usageTracking.showWarning}
-                warningMessage={usageTracking.warningMessage}
-                onUpgradeClick={() => {
-                  // TODO: Open upgrade modal
-                  console.log('Upgrade from warning clicked for:', character);
-                }}
-              />
-            </div>
-          )}
-          {/* WRAP InputArea with defensive wrapper */}
-          <DefensiveChatInputWrapper
-            character={character}
-            user_id={user?.id}
-            onUpgradePrompt={() => {
-              // Handle upgrade prompt - you can use existing upgrade flow
-              setShowUpgradeFlow(message_limit);
-            }}
-          >
-            <InputArea
-              value={message}
-              onChange={e => setMessage(e.target.value)}
-              onSend={isSending ? stopStream : sendMessage}
-              onStop={stopStream}
-              isSending={isSending}
-              onFocus={handleInputFocus}
-              onBlur={handleInputBlur}
-            />
-          </DefensiveChatInputWrapper>
-        </footer>
-        <div className="chat-footer-note">
-          AI-generated characters, for reference only
-        </div>
-        <ContextPanel />
-      </div>
-      {/* ✅ ADD: Floating Scroll Button - RIGHT HERE AT THE END */}
-      <FloatingScrollButton
-        visible={!isNearBottom && chatHistory.length > 0}
-        hasNewMessages={hasNewMessages || newMessageCount > 0}
-        messageCount={newMessageCount}
-        onClick={handleScrollToBottomClick}
-        position="bottom-right"
-        isMobile={isMobile}
-      />
-      <MinimalUsageTest character={character} />
-      {/* Add this near the end of your component, before closing div */}
-      <DualPathUpgradeSystem
-        isOpen={upgradeModalOpen}
-        onClose={() => setUpgradeModalOpen(false)}
-        triggerReason={upgradeReason}
-        currentUsage={usageTracking.usage}
-      />
+    <div style={{
+      position: 'fixed',
+      top: 0,
+      left: 0,
+      width: '100%',
+      height: '100%',
+      background: 'rgba(0, 0, 0, 0.9)',
+      display: 'flex',
+      alignItems: 'center',
+      justifyContent: 'center',
+      zIndex: 999999,
+      overflow: 'auto',
+      WebkitOverflowScrolling: 'touch',
+      padding: '1rem'
+    }}>
+      {currentStep === 1 ? renderEducationStep() : renderBenefitsStep()}
     </div>
   );
-}
+};
+
+// Main Upgrade System Controller
+const DualPathUpgradeSystem = ({
+  isOpen,
+  onClose,
+  triggerReason = 'general', // 'message_limit', 'character_limit', 'general'
+  currentUsage = null
+}) => {
+  const [showPayment, setShowPayment] = useState(false);
+  const [paymentContext, setPaymentContext] = useState('general');
+
+  const handleProceedToPayment = (context) => {
+    setPaymentContext(context);
+    setShowPayment(true);
+  };
+
+  if (!isOpen) return null;
+
+  // Show payment processor (shared between both paths)
+  if (showPayment) {
+    return (
+      <PaymentProcessor
+        isOpen={true}
+        onClose={onClose}
+        triggerReason={paymentContext}
+        currentUsage={currentUsage}
+        onBack={() => setShowPayment(false)}
+      />
+    );
+  }
+
+  // Character creation path - educational flow
+  if (triggerReason === 'character_limit') {
+    return (
+      <EducationalUpgradeModal
+        isOpen={true}
+        onClose={onClose}
+        onProceedToPayment={handleProceedToPayment}
+      />
+    );
+  }
+
+  // Message limit path - quick upgrade (your existing modal)
+  return (
+    <PaymentProcessor
+      isOpen={true}
+      onClose={onClose}
+      triggerReason={triggerReason}
+      currentUsage={currentUsage}
+    />
+  );
+};
+
+export default DualPathUpgradeSystem;
