@@ -359,22 +359,11 @@ export const CharacterCard = ({
           alt={character.name}
           style={{ width: '100%', height: '100%', objectFit: 'cover' }}
           onError={(e) => { 
-            // CHECK IF ALREADY TRIED DEFAULT TO PREVENT LOOP
-            if (e.currentTarget.src.includes('default-character.jpg')) {
-              // FINAL FALLBACK: Show character initial
-              e.currentTarget.style.display = 'none';
-              const parent = e.currentTarget.parentElement;
-              if (!parent.querySelector('.char-fallback')) {
-                const fallback = document.createElement('div');
-                fallback.className = 'char-fallback';
-                fallback.style.cssText = 'width:100%;height:100%;display:flex;align-items:center;justify-content:center;background:rgba(255,215,0,0.2);color:#FFD700;font-size:1rem;font-weight:bold;border-radius:50%;';
-                fallback.textContent = (character.name || 'C').charAt(0).toUpperCase();
-                parent.appendChild(fallback);
-              }
-            } else {
-              // FIRST TRY: Use default image
-              e.currentTarget.src = '/images/default-character.jpg';
-            }
+            // STOP THE LOOP: Disable this error handler immediately
+            e.currentTarget.onError = null;
+
+            // Try one different image
+            e.currentTarget.src = '/images/user-icon.jpg';
           }}
         />
       </div>
