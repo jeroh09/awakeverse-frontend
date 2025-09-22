@@ -1205,6 +1205,32 @@ const ChatLauncherPage = ({ onStartChat }) => {
           );
           box-shadow: 0 0 8px rgba(255, 215, 0, 0.4);
         }
+        /* MOBILE BUTTON CLICK FIX */
+        @media (max-width: 768px) {
+          button {
+            pointer-events: auto !important;
+            z-index: 999999999999 !important;
+            position: relative !important;
+            touch-action: manipulation !important;
+            min-height: 44px !important;
+            cursor: pointer !important;
+            user-select: none !important;
+            -webkit-user-select: none !important;
+          }
+
+          /* TEST: Make upgrade button obvious */
+          button[style*="Create New Character"] {
+            padding: 2rem 3rem !important;
+            font-size: 1.5rem !important;
+            background: red !important;
+            border: 5px solid yellow !important;
+            position: fixed !important;
+            bottom: 20px !important;
+            left: 50% !important;
+            transform: translateX(-50%) !important;
+            z-index: 9999999999 !important;
+          }
+        }
       `}</style>
       {/* Upgrade Modal */}
       <DualPathUpgradeSystem
