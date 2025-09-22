@@ -16,7 +16,7 @@ export const categoryRepresentatives = {
   warlords: '/images/sun_tzu.jpg',
   pathfinders: '/images/christopher_columbus.jpg',
   performers: '/images/harry_houdini.jpg',
-  my_characters: '/images/default-character.jpg'
+  my_characters: '/images/user-icon.jpg'
 };
 
 /* ------------------------------ StatusBadge ----------------------------- */
@@ -135,10 +135,22 @@ export const CategoryCard = ({
         textAlign: 'center',
         aspectRatio: '1',
         opacity: 0,
-        animation: `categorySlideIn 0.6s ease-out ${index * 0.1}s forwards`,
+        opacity: isMobile ? 1 : 0,
+        visibility: isMobile ? 'visible' : undefined,
+        transform: isMobile ? 'translateZ(0)' : undefined,
+        animation: isMobile ? 'none' : `characterSlideIn 0.6s ease-out ${index * 0.05}s forwards`,
         minHeight: isMobile ? '120px' : '150px',
         maxHeight: isMobile ? '160px' : '200px',
-        position: 'relative'
+        // ... keep all existing styles, but change these specific lines:
+        opacity: isMobile ? 1 : 0,  // FORCE VISIBLE ON MOBILE
+        animation: isMobile ? 'none' : `categorySlideIn 0.6s ease-out ${index * 0.1}s forwards`,
+        minHeight: isMobile ? '120px' : '150px',
+        maxHeight: isMobile ? '160px' : '200px',
+        position: 'relative',
+        // ADD THESE NEW LINES:
+        visibility: isMobile ? 'visible' : undefined,
+        transform: isMobile ? 'translateZ(0)' : undefined,
+        willChange: isMobile ? 'auto' : 'opacity, transform'
       }}
       onMouseEnter={(e) => {
         if (!isMobile) {
@@ -188,13 +200,28 @@ export const CategoryCard = ({
           </div>
         )}
         <img
-          src={categoryRepresentatives[category.key]}
+          src={categoryRepresentatives[category.key] || '/images/user-icon.jpg'}
           alt={category.title}
           style={{
             width: '100%', height: '100%', objectFit: 'cover',
             filter: 'sepia(20%) contrast(1.1)', transition: 'filter 0.3s ease'
           }}
-          onError={(e) => { e.currentTarget.src = '/images/default-character.jpg'; }}
+          onError={(e) => { 
+            if (e.target.src.includes('user-icon.jpg')) {
+              // Prevent infinite loop - hide image and show text fallback
+              e.target.style.display = 'none';
+              const parent = e.target.parentElement;
+              if (!parent.querySelector('.fallback-text')) {
+                const fallback = document.createElement('div');
+                fallback.className = 'fallback-text';
+                fallback.style.cssText = 'width:100%;height:100%;display:flex;align-items:center;justify-content:center;background:rgba(255,215,0,0.2);color:#FFD700;font-size:1.2rem;font-weight:bold;';
+                fallback.textContent = category.title.charAt(0);
+                parent.appendChild(fallback);
+              }
+            } else {
+              e.target.src = '/images/user-icon.jpg';
+            }
+          }}
         />
       </div>
 

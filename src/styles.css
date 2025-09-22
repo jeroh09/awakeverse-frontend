@@ -1772,3 +1772,42 @@ html::before {
   background-image: none !important;
   opacity: 0 !important;
 }
+/* MOBILE CARD VISIBILITY FIX */
+@media (max-width: 768px) {
+  /* Force mobile category cards visible */
+  div[style*="repeat(2, 1fr)"] > div {
+    opacity: 1 !important;
+    visibility: visible !important;
+    display: flex !important;
+    animation: none !important;
+    transform: none !important;
+    background: rgba(255, 255, 255, 0.1) !important;
+    border: 2px solid rgba(255, 215, 0, 0.4) !important;
+    min-height: 120px !important;
+    /* DEBUG - REMOVE AFTER TESTING */
+    border: 3px solid red !important;
+  }
+  
+  /* Force text visible */
+  div[style*="repeat(2, 1fr)"] > div h3 {
+    color: yellow !important;
+    opacity: 1 !important;
+    visibility: visible !important;
+    display: block !important;
+    background: rgba(0, 0, 0, 0.5) !important;
+  }
+  
+  div[style*="repeat(2, 1fr)"] > div span {
+    color: cyan !important;
+    opacity: 1 !important;
+    visibility: visible !important;
+    display: block !important;
+    background: rgba(0, 0, 0, 0.5) !important;
+  }
+  
+  /* Disable animations */
+  * {
+    animation-duration: 0s !important;
+    animation-delay: 0s !important;
+  }
+}
