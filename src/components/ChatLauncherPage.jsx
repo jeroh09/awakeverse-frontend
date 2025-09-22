@@ -652,6 +652,9 @@ const ChatLauncherPage = ({ onStartChat }) => {
             gridTemplateColumns: 'repeat(2, 1fr)',
             gap: '1rem',
             marginTop: '1rem',
+            zIndex: 5,                              // ADD THIS
+            opacity: 1,                             // ADD THIS  
+            pointerEvents: 'auto',                  // ADD THIS
           }}>
             {enhancedCategories.map((category) => (
               <CategoryCard
