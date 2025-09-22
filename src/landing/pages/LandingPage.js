@@ -592,10 +592,7 @@ export default function LandingPage() {
                       </h2>
                       
                       <h3 className="secondary-tagline">
-                        <span className="highlight-gold">Create</span>, 
-                        <span className="highlight-gold">chat</span>, 
-                        <span className="highlight-gold">collaborate</span>, and 
-                        <span className="highlight-gold">earn</span> with iconic minds — in real time
+                        <span className="highlight-gold">Create</span>, chat, collaborate, and <span className="highlight-gold">earn</span> with iconic minds — in real time
                       </h3>
 
                       <Link to="/register" className="cta-primary">
@@ -780,8 +777,8 @@ export default function LandingPage() {
                     lineHeight: 1.6,
                     marginBottom: '2rem'
                   }}>
-                    Build custom AI characters. Choose from hundreds of 
-                    historical archetypes. Customize personalities, expertise, and behavior 
+                    Build custom AI characters. Try templates. 
+                    Customize personalities, expertise, and behavior 
                     to create your perfect conversation partner.
                   </p>
 
