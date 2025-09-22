@@ -826,8 +826,11 @@ body::before {
 
 @media (min-width: 769px) {
   .mobile-forgot-form,
-  .mobile-forgot-success {
-    display: none;
+  .mobile-forgot-success 
+  .mobile-reset-form,
+  .mobile-reset-success,
+  .mobile-verification {
+    display: none !important;
   }
   
   .desktop-only {
@@ -837,7 +840,7 @@ body::before {
 
 /* Mobile forgot password form styles */
 .mobile-forgot-form {
-  display: none; /* Hidden by default, shown on mobile */
+  display: block; /* Hidden by default, shown on mobile */
   width: 100%;
   min-height: 100vh;
   background: linear-gradient(135deg, #0B1426 0%, #1A2B47 25%, #2C1810 50%, #0F1A2E 75%, #0B1426 100%);
@@ -1033,7 +1036,7 @@ body::before {
 
 /* Mobile verification styles */
 .mobile-verification {
-  display: none; /* Hidden by default, shown on mobile */
+  display: block; /* Hidden by default, shown on mobile */
   width: 100%;
   min-height: 100vh;
   background: linear-gradient(135deg, #0B1426 0%, #1A2B47 25%, #2C1810 50%, #0F1A2E 75%, #0B1426 100%);
@@ -1240,7 +1243,7 @@ body::before {
 
 /* Mobile reset form styles */
 .mobile-reset-form {
-  display: none; /* Hidden by default, shown on mobile */
+  display: block; /* Hidden by default, shown on mobile */
   width: 100%;
   min-height: 100vh;
   background: linear-gradient(135deg, #0B1426 0%, #1A2B47 25%, #2C1810 50%, #0F1A2E 75%, #0B1426 100%);
