@@ -6,10 +6,10 @@ import { BrowserRouter } from 'react-router-dom';
 import { ThemeProvider } from './contexts/ThemeContext';
 import { AuthProvider } from './contexts/AuthContext';
 import { UserProvider } from './contexts/UserContext';
-import { CharacterProvider } from './contexts/CharacterProvider';
-import { ContextProvider } from './contexts/ContextProvider';
 import { WebSocketProvider } from './contexts/WebSocketContext';
 import { PremiumCapabilitiesProvider } from './contexts/PremiumCapabilitiesContext';
+import { CharacterProvider } from './contexts/CharacterContext';
+import { ContextProvider } from './contexts/ContextContext';
 import App from './App';
 
 // SECURITY: Enhanced console logging protection for production
