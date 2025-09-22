@@ -452,7 +452,7 @@ const ChatLauncherPage = ({ onStartChat }) => {
     );
   }
 
-  // Mobile layout
+  // Mobile layout - FIXED VERSION
   if (isMobile) {
     return (
       <div style={{
@@ -487,7 +487,7 @@ const ChatLauncherPage = ({ onStartChat }) => {
           }}>
             Welcome, {user?.displayName || 'Seeker'}
           </h1>
-          
+
           <p style={{
             fontSize: '1rem',
             color: 'rgba(255, 215, 0, 0.8)',
@@ -654,73 +654,16 @@ const ChatLauncherPage = ({ onStartChat }) => {
             marginTop: '1rem',
           }}>
             {enhancedCategories.map((category) => (
-              <div
+              <CategoryCard
                 key={category.key}
+                category={category}
                 onClick={() => handleCategorySelect(category)}
-                style={{
-                  background: 'rgba(255, 255, 255, 0.05)',
-                  border: '1px solid rgba(255, 215, 0, 0.2)',
-                  borderRadius: '16px',
-                  padding: '1rem',
-                  cursor: 'pointer',
-                  transition: 'all 0.3s ease',
-                  display: 'flex',
-                  flexDirection: 'column',
-                  alignItems: 'center',
-                  justifyContent: 'center',
-                  textAlign: 'center',
-                  aspectRatio: '1',
-                }}
-              >
-                <div style={{
-                  width: '48px',
-                  height: '48px',
-                  borderRadius: '50%',
-                  overflow: 'hidden',
-                  marginBottom: '0.7rem',
-                  border: '2px solid rgba(255, 215, 0, 0.4)',
-                  background: 'rgba(0,0,0,0.3)'
-                }}>
-                  <img
-                    src={categoryRepresentatives[category.key]}
-                    alt={category.title}
-                    style={{
-                      width: '100%',
-                      height: '100%',
-                      objectFit: 'cover',
-                      filter: 'sepia(20%) contrast(1.1)',
-                    }}
-                    onError={(e) => { e.target.src = '/images/default-character.jpg'; }}
-                  />
-                </div>
-
-                <h3 style={{
-                  color: '#FFD700',
-                  fontSize: '0.85rem',
-                  fontWeight: 600,
-                  margin: '0 0 0.3rem 0',
-                  letterSpacing: '0.5px',
-                  fontFamily: "'Georgia', serif",
-                  textShadow: '1px 1px 2px rgba(0,0,0,0.8)',
-                  lineHeight: 1.1
-                }}>
-                  {category.title}
-                </h3>
-
-                <span style={{
-                  color: 'rgba(255, 215, 0, 0.7)',
-                  fontSize: '0.6rem',
-                  background: 'rgba(255, 215, 0, 0.1)',
-                  padding: '0.1rem 0.3rem',
-                  borderRadius: '8px',
-                  border: '1px solid rgba(255, 215, 0, 0.2)'
-                }}>
-                  {(category.characters || []).length} guides
-                </span>
-              </div>
+                isMobile={true}
+                onCreateCharacter={handleCreateCharacterClick}
+              />
             ))}
           </div>
-        ) : (  // ← This line was missing the closing structure
+        ) : (
           <>
             {/* Category Header */}
             <div style={{
@@ -743,7 +686,7 @@ const ChatLauncherPage = ({ onStartChat }) => {
               }}>
                 {selectedCategory.title}
               </h2>
-              
+
               <button
                 onClick={handleBackToCategories}
                 style={{
@@ -771,8 +714,8 @@ const ChatLauncherPage = ({ onStartChat }) => {
                 onCreateCharacter={handleCreateCharacterClick}
                 onCharacterSelect={handleCharacterSelect}
                 isMobile={true}
-                user_id={user?.id} // ADD THIS LINE
-                onShowUpgradeModal={handleShowUpgradeModal} // ADD this if needed
+                user_id={user?.id}
+                onShowUpgradeModal={handleShowUpgradeModal}
               />
             ) : (
               <div style={{
