@@ -1,4 +1,4 @@
-// src/pages/ForgotPassword.jsx - Mobile-friendly version
+// src/pages/ForgotPassword.jsx - Mobile-friendly 
 import React, { useState } from 'react';
 import { Link } from 'react-router-dom';
 import ElegantCharacterPortraits from '../components/ElegantCharacterPortraits';

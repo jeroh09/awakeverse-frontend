@@ -1,4 +1,4 @@
-// src/components/UnifiedMobileAuth.jsx - Enhanced with email verification support
+// src/components/UnifiedMobileAuth.jsx - Enhanced with email verification 
 import React, { useState } from 'react';
 import './EnhancedMobileAuth.css';
 
