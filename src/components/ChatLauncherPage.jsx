@@ -6,7 +6,6 @@ import useInteractedCharacters from '../hooks/useInteractedCharacters';
 import CharacterDetailPanel from '../components/CharacterDetailPanel/CharacterDetailPanel';
 import TemplateGallery from '../components/TemplateGallery';
 import CharacterBuilder from '../components/CharacterBuilder';
-import { categoryRepresentatives } from '../components/ChatLauncherHelpers';
 import CharacterStatusModal from '../components/CharacterStatusModal';
 import CharacterCreationSuccess from '../components/CharacterCreationSuccess';
 import DualPathUpgradeSystem from '../components/DualPathUpgradeSystem';
