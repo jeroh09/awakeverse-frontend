@@ -1,11 +1,13 @@
-// src/pages/Login.jsx - Enhanced with retry logic and better error handling
+// src/pages/Login.jsx - Enhanced with mobile email verification support
 import React, { useState, useEffect } from 'react';
-import { Link, useNavigate, useLocation } from 'react-router-dom';
+import { Link, useNavigate, useLocation, useSearchParams } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
 import ElegantCharacterPortraits from '../components/ElegantCharacterPortraits';
 import UnifiedMobileAuth from '../components/UnifiedMobileAuth';
 import '../components/ElegantCharacterPortraits.css';
 import '../style/AuthPageStyles.css';
+
+const API = process.env.REACT_APP_API_URL || "https://api.awakeverse.com";
 
 export default function Login() {
   const [email, setEmail] = useState('');
@@ -15,24 +17,67 @@ export default function Login() {
   const [successMessage, setSuccessMessage] = useState('');
   const [currentCharacter, setCurrentCharacter] = useState(null);
   const [retryCount, setRetryCount] = useState(0);
+  const [verificationStatus, setVerificationStatus] = useState(null);
+  const [showResendVerification, setShowResendVerification] = useState(false);
   
   const { login } = useAuth();
   const navigate = useNavigate();
   const location = useLocation();
+  const [searchParams] = useSearchParams();
 
-  // Check for success message from registration
+  // Check for email verification token in URL
+  useEffect(() => {
+    const token = searchParams.get('token');
+    if (token) {
+      handleEmailVerification(token);
+    }
+  }, [searchParams]);
+
+  // Check for success message from registration or password reset
   useEffect(() => {
     if (location.state?.message) {
       setSuccessMessage(location.state.message);
-      // Clear the message after showing it
       navigate(location.pathname, { replace: true });
     }
   }, [location, navigate]);
 
-  // 🔧 NEW: Enhanced submit handler with better error management
+  // Handle email verification from URL token
+  const handleEmailVerification = async (token) => {
+    setVerificationStatus('processing');
+    
+    try {
+      const res = await fetch(`${API}/api/auth/verify-email`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ token }),
+      });
+
+      const data = await res.json();
+
+      if (res.ok) {
+        setVerificationStatus('success');
+        setSuccessMessage('Email verified successfully! You can now sign in.');
+        
+        if (data.access_token) {
+          localStorage.setItem("token", data.access_token);
+          navigate('/app');
+          return;
+        }
+      } else {
+        setVerificationStatus('error');
+        setError(data.error || 'Email verification failed');
+      }
+    } catch (err) {
+      setVerificationStatus('error');
+      setError('Verification failed. Please try again.');
+    }
+  };
+
+  // Enhanced submit handler with email verification support
   const handleSubmit = async (formData) => {
     setLoading(true);
     setError('');
+    setShowResendVerification(false);
 
     try {
       await login({ 
@@ -40,22 +85,25 @@ export default function Login() {
         password: formData.password || password 
       });
       
-      // Reset retry count on successful login
       setRetryCount(0);
       navigate('/app');
     } catch (err) {
       console.error('Login error caught in component:', err);
-      
-      // Increment retry count
       setRetryCount(prev => prev + 1);
       
-      // Show user-friendly error message (no more "internal server error")
-      setError(err.message || 'Login failed. Please try again.');
+      // Handle specific email verification error
+      if (err.message.includes('verify your email') || err.message.includes('requires_verification')) {
+        setError('Please verify your email address before signing in.');
+        setShowResendVerification(true);
+      } else {
+        setError(err.message || 'Login failed. Please try again.');
+        setShowResendVerification(false);
+      }
       
-      // 🔧 NEW: Auto-clear error after 5 seconds to improve UX
       setTimeout(() => {
         setError('');
-      }, 5000);
+        setShowResendVerification(false);
+      }, 7000);
       
     } finally {
       setLoading(false);
@@ -70,7 +118,6 @@ export default function Login() {
       return;
     }
 
-    // Basic email validation
     if (!email.includes('@')) {
       setError('Please enter a valid email address');
       return;
@@ -79,20 +126,56 @@ export default function Login() {
     await handleSubmit({ email, password });
   };
 
-  // Handle character changes from the portrait component
+  const handleResendVerification = async (emailAddress) => {
+    const targetEmail = emailAddress || email;
+    
+    if (!targetEmail) {
+      setError('Please enter your email address first');
+      return;
+    }
+
+    setLoading(true);
+    setError('');
+
+    try {
+      const res = await fetch(`${API}/api/auth/resend-verification`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ email: targetEmail }),
+      });
+
+      const data = await res.json();
+
+      if (res.ok) {
+        setSuccessMessage('Verification email sent! Please check your inbox.');
+        setShowResendVerification(false);
+      } else {
+        setError(data.error || 'Failed to resend verification');
+      }
+    } catch (err) {
+      setError('Failed to resend verification email');
+    } finally {
+      setLoading(false);
+    }
+  };
+
   const handleCharacterChange = (character) => {
     setCurrentCharacter(character);
   };
 
-  // Dynamic form title based on current character
   const getFormTitle = () => {
+    if (verificationStatus === 'processing') {
+      return 'Verifying Email...';
+    }
+    if (verificationStatus === 'success') {
+      return 'Email Verified!';
+    }
     if (currentCharacter) {
       return `Welcome, ${currentCharacter.name} awaits`;
     }
     return 'Welcome Back';
   };
 
-  // 🔧 NEW: Get dynamic loading message
   const getLoadingMessage = () => {
     if (retryCount > 0) {
       return 'Retrying connection...';
@@ -100,7 +183,6 @@ export default function Login() {
     return 'Awakening...';
   };
 
-  // 🔧 NEW: Show retry info if there have been retries
   const showRetryInfo = retryCount > 0 && !loading && !error;
 
   return (
@@ -111,10 +193,13 @@ export default function Login() {
         onSubmit={handleSubmit}
         error={error}
         loading={loading}
+        showResendVerification={showResendVerification}
+        onResendVerification={handleResendVerification}
+        email={email}
+        successMessage={successMessage}
       />
 
       {/* DESKTOP: Side-by-side layout */}
-      {/* Left side: Elegant character portraits */}
       <div className="auth-demo-container">
         <ElegantCharacterPortraits 
           autoAdvanceInterval={12000}
@@ -122,15 +207,19 @@ export default function Login() {
         />
       </div>
 
-      {/* Right side: Floating auth form */}
       <form className="auth-form" onSubmit={handleDesktopSubmit}>
         <h2>{getFormTitle()}</h2>
+        
+        {verificationStatus === 'processing' && (
+          <div className="info-text">
+            Verifying your email address...
+          </div>
+        )}
         
         {successMessage && (
           <div className="success-text">{successMessage}</div>
         )}
         
-        {/* 🔧 ENHANCED: Better error display with retry info */}
         {error && (
           <div className="error-text">
             {error}
@@ -142,7 +231,20 @@ export default function Login() {
           </div>
         )}
         
-        {/* 🔧 NEW: Show retry success message */}
+        {showResendVerification && (
+          <div className="verification-help-box">
+            <p>Need to verify your email?</p>
+            <button 
+              type="button"
+              onClick={() => handleResendVerification(email)}
+              disabled={loading}
+              className="link-button"
+            >
+              Resend verification email
+            </button>
+          </div>
+        )}
+        
         {showRetryInfo && (
           <div className="info-text" style={{ color: '#666', fontSize: '0.9em', marginBottom: '10px' }}>
             Connection restored. You can try logging in again.
@@ -188,7 +290,6 @@ export default function Login() {
           {loading ? getLoadingMessage() : 'Enter the Realm'}
         </button>
         
-        {/* 🔧 NEW: Connection status hint */}
         {loading && (
           <div style={{ 
             marginTop: '10px', 
@@ -200,9 +301,10 @@ export default function Login() {
           </div>
         )}
         
-        <p>
-          New to Awakeverse? <Link to="/register">Begin your journey</Link>
-        </p>
+        <div className="auth-links">
+          <Link to="/forgot-password">Forgot your password?</Link>
+          <Link to="/register">New to Awakeverse? Begin your journey</Link>
+        </div>
       </form>
     </div>
   );

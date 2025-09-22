@@ -1,12 +1,12 @@
+// src/contexts/AuthContext.js - Enhanced with email verification support
 import { createContext, useContext, useState, useEffect } from "react";
 import jwt_decode from "jwt-decode";
 import { useUser } from "./UserContext";
 import { useNavigate } from "react-router-dom";
 
-const API = process.env.REACT_APP_API_URL || "http://localhost:5000";
+const API = process.env.REACT_APP_API_URL || "https://api.awakeverse.com";
 
 export const AuthContext = createContext();
-
 export const useAuth = () => useContext(AuthContext);
 
 export function AuthProvider({ children }) {
@@ -24,7 +24,7 @@ export function AuthProvider({ children }) {
 
     try {
       const decoded = jwt_decode(savedToken);
-      console.log("🔍 Token decoded on load:", decoded);
+      console.log("Token decoded on load:", decoded);
       if (!decoded.sub) throw new Error("Missing subject");
 
       setToken(savedToken);
@@ -33,9 +33,10 @@ export function AuthProvider({ children }) {
         username: decoded.sub,
         displayName: decoded.display_name,
         avatarUrl: decoded.avatar_url,
+        emailVerified: decoded.email_verified
       });
     } catch (err) {
-      console.error("❌ Invalid token on load:", err);
+      console.error("Invalid token on load:", err);
       localStorage.removeItem("token");
       setToken(null);
       setUser(null);
@@ -49,7 +50,7 @@ export function AuthProvider({ children }) {
     window.history.pushState({ isAppRoot: true }, '', '/app');
   };
 
-  // 🆕 NEW: Enhanced error message formatter
+  // Enhanced error message formatter
   const formatErrorMessage = (error, attempt = 1) => {
     // Handle network errors
     if (error.name === 'TypeError' || error.message.includes('fetch')) {
@@ -61,7 +62,7 @@ export function AuthProvider({ children }) {
       return "Request timed out. Please try again.";
     }
     
-    // Handle server errors (500, 502, 503, etc)
+    // Handle server errors
     if (error.message.includes('500') || 
         error.message.includes('502') || 
         error.message.includes('503') ||
@@ -70,16 +71,31 @@ export function AuthProvider({ children }) {
       return `Server is temporarily busy${attempt > 1 ? ` (attempt ${attempt})` : ''}. Please try again in a moment.`;
     }
     
+    // Handle email verification errors
+    if (error.message.includes('verify your email') || 
+        error.message.includes('email address before') ||
+        error.message.includes('requires_verification')) {
+      return "Please verify your email address before logging in. Check your inbox for the verification email.";
+    }
+    
     // Handle authentication errors
     if (error.message.includes('401') || 
         error.message.includes('Invalid credentials') ||
+        error.message.includes('Invalid email or password') ||
         error.message.includes('Unauthorized')) {
       return "Invalid email or password. Please check your credentials.";
     }
     
-    // Handle other HTTP errors
+    // Handle account locked errors
+    if (error.message.includes('423') || 
+        error.message.includes('temporarily locked') ||
+        error.message.includes('too many attempts')) {
+      return "Account temporarily locked due to failed login attempts. Please try again later.";
+    }
+    
+    // Handle validation errors
     if (error.message.includes('400')) {
-      return "Please check your email and password format.";
+      return error.message; // Usually contains specific validation message
     }
     
     // Return the original error message for known errors
@@ -91,19 +107,19 @@ export function AuthProvider({ children }) {
     return "Login failed. Please try again.";
   };
 
-  // 🆕 NEW: Login with retry logic
+  // Enhanced login with retry logic
   async function loginWithRetry(credentials, maxAttempts = 2) {
     let lastError = null;
     
     for (let attempt = 1; attempt <= maxAttempts; attempt++) {
       try {
-        console.log(`🔑 Login attempt ${attempt}/${maxAttempts}`);
+        console.log(`Login attempt ${attempt}/${maxAttempts}`);
         
-        // Add timeout to prevent hanging requests
         const controller = new AbortController();
-        const timeoutId = setTimeout(() => controller.abort(), 15000); // 15 second timeout
+        const timeoutId = setTimeout(() => controller.abort(), 15000);
         
-        const res = await fetch(`${API}/login`, {
+        // Use new auth endpoint
+        const res = await fetch(`${API}/api/auth/login`, {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({ 
@@ -115,9 +131,8 @@ export function AuthProvider({ children }) {
 
         clearTimeout(timeoutId);
 
-        // Log raw response for debugging
         const raw = await res.clone().text();
-        console.log(`🧠 Raw login response (attempt ${attempt}):`, raw);
+        console.log(`Raw login response (attempt ${attempt}):`, raw);
 
         if (!res.ok) {
           const errorData = await res.json().catch(() => ({}));
@@ -125,58 +140,58 @@ export function AuthProvider({ children }) {
           throw new Error(errorMessage);
         }
 
-        const { access_token } = await res.json();
-        console.log("✅ Login successful on attempt", attempt);
+        const data = await res.json();
+        const { access_token } = data;
+        console.log("Login successful on attempt", attempt);
 
         localStorage.setItem("token", access_token);
         setToken(access_token);
 
         const decoded = jwt_decode(access_token);
-        console.log("🔓 Decoded login token:", decoded);
+        console.log("Decoded login token:", decoded);
 
         setUser({
           id: decoded.user_id,
           username: decoded.sub,
           displayName: decoded.display_name,
           avatarUrl: decoded.avatar_url,
+          emailVerified: decoded.email_verified
         });
 
         navigateToAppWithHistoryManagement();
-        return; // Success - exit the retry loop
+        return;
 
       } catch (err) {
         lastError = err;
-        console.error(`❌ Login attempt ${attempt} failed:`, err.message);
+        console.error(`Login attempt ${attempt} failed:`, err.message);
         
-        // If this is the last attempt, throw the formatted error
         if (attempt === maxAttempts) {
           throw new Error(formatErrorMessage(err, attempt));
         }
         
-        // Wait before retrying (1 second)
         if (attempt < maxAttempts) {
-          console.log(`⏳ Waiting 1 second before retry...`);
+          console.log(`Waiting 1 second before retry...`);
           await new Promise(resolve => setTimeout(resolve, 1000));
         }
       }
     }
     
-    // This shouldn't be reached, but just in case
     throw new Error(formatErrorMessage(lastError || new Error("Unknown error"), maxAttempts));
   }
 
-  // 🔄 UPDATED: Main login function now uses retry logic
+  // Main login function
   async function login(credentials) {
-    return await loginWithRetry(credentials, 2); // Try up to 2 times
+    return await loginWithRetry(credentials, 2);
   }
 
-  // 🔄 UPDATED: Register function with similar error handling
+  // Enhanced register function
   async function register({ email, password, displayName }) {
     try {
       const controller = new AbortController();
       const timeoutId = setTimeout(() => controller.abort(), 15000);
 
-      const res = await fetch(`${API}/register`, {
+      // Use new auth endpoint
+      const res = await fetch(`${API}/api/auth/register`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ 
@@ -190,7 +205,7 @@ export function AuthProvider({ children }) {
       clearTimeout(timeoutId);
 
       const raw = await res.clone().text();
-      console.log("📦 Raw register response:", raw);
+      console.log("Raw register response:", raw);
 
       if (!res.ok) {
         const errorData = await res.json().catch(() => ({}));
@@ -198,25 +213,176 @@ export function AuthProvider({ children }) {
         throw new Error(formatErrorMessage(new Error(errorMessage)));
       }
 
-      const { access_token } = await res.json();
-      console.log("✅ Registration successful");
+      const data = await res.json();
+      console.log("Registration response:", data);
 
-      localStorage.setItem("token", access_token);
-      setToken(access_token);
+      // Check if email verification is required
+      if (data.requires_verification) {
+        // Don't auto-login, return success but require verification
+        return {
+          success: true,
+          requiresVerification: true,
+          message: data.message || 'Please check your email for verification instructions.'
+        };
+      }
 
-      const decoded = jwt_decode(access_token);
-      console.log("🔓 Decoded register token:", decoded);
+      // Legacy behavior: auto-login if token provided
+      if (data.access_token) {
+        const { access_token } = data;
+        console.log("Registration successful with auto-login");
 
-      setUser({
-        id: decoded.user_id,
-        username: decoded.sub,
-        displayName: decoded.display_name,
-        avatarUrl: decoded.avatar_url,
+        localStorage.setItem("token", access_token);
+        setToken(access_token);
+
+        const decoded = jwt_decode(access_token);
+        console.log("Decoded register token:", decoded);
+
+        setUser({
+          id: decoded.user_id,
+          username: decoded.sub,
+          displayName: decoded.display_name,
+          avatarUrl: decoded.avatar_url,
+          emailVerified: decoded.email_verified
+        });
+
+        navigateToAppWithHistoryManagement();
+      }
+
+      return { success: true };
+
+    } catch (err) {
+      console.error("Registration failed:", err.message);
+      throw new Error(formatErrorMessage(err));
+    }
+  }
+
+  // Email verification function
+  async function verifyEmail(token) {
+    try {
+      const controller = new AbortController();
+      const timeoutId = setTimeout(() => controller.abort(), 10000);
+
+      const res = await fetch(`${API}/api/auth/verify-email`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ token }),
+        signal: controller.signal
       });
 
-      navigateToAppWithHistoryManagement();
+      clearTimeout(timeoutId);
+
+      if (!res.ok) {
+        const errorData = await res.json().catch(() => ({}));
+        throw new Error(errorData.error || 'Email verification failed');
+      }
+
+      const data = await res.json();
+      
+      // If verification includes auto-login
+      if (data.access_token) {
+        localStorage.setItem("token", data.access_token);
+        setToken(data.access_token);
+
+        const decoded = jwt_decode(data.access_token);
+        setUser({
+          id: decoded.user_id,
+          username: decoded.sub,
+          displayName: decoded.display_name,
+          avatarUrl: decoded.avatar_url,
+          emailVerified: true
+        });
+
+        navigateToAppWithHistoryManagement();
+      }
+
+      return data;
+
     } catch (err) {
-      console.error("❌ Registration failed:", err.message);
+      console.error("Email verification failed:", err.message);
+      throw new Error(formatErrorMessage(err));
+    }
+  }
+
+  // Password reset request function
+  async function requestPasswordReset(email) {
+    try {
+      const controller = new AbortController();
+      const timeoutId = setTimeout(() => controller.abort(), 10000);
+
+      const res = await fetch(`${API}/api/auth/forgot-password`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ email }),
+        signal: controller.signal
+      });
+
+      clearTimeout(timeoutId);
+
+      if (!res.ok) {
+        const errorData = await res.json().catch(() => ({}));
+        throw new Error(errorData.error || 'Failed to send reset email');
+      }
+
+      return await res.json();
+
+    } catch (err) {
+      console.error("Password reset request failed:", err.message);
+      throw new Error(formatErrorMessage(err));
+    }
+  }
+
+  // Password reset confirmation function
+  async function resetPassword(token, newPassword) {
+    try {
+      const controller = new AbortController();
+      const timeoutId = setTimeout(() => controller.abort(), 10000);
+
+      const res = await fetch(`${API}/api/auth/reset-password`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ token, password: newPassword }),
+        signal: controller.signal
+      });
+
+      clearTimeout(timeoutId);
+
+      if (!res.ok) {
+        const errorData = await res.json().catch(() => ({}));
+        throw new Error(errorData.error || 'Failed to reset password');
+      }
+
+      return await res.json();
+
+    } catch (err) {
+      console.error("Password reset failed:", err.message);
+      throw new Error(formatErrorMessage(err));
+    }
+  }
+
+  // Resend verification email
+  async function resendVerification(email) {
+    try {
+      const controller = new AbortController();
+      const timeoutId = setTimeout(() => controller.abort(), 10000);
+
+      const res = await fetch(`${API}/api/auth/resend-verification`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ email }),
+        signal: controller.signal
+      });
+
+      clearTimeout(timeoutId);
+
+      if (!res.ok) {
+        const errorData = await res.json().catch(() => ({}));
+        throw new Error(errorData.error || 'Failed to resend verification');
+      }
+
+      return await res.json();
+
+    } catch (err) {
+      console.error("Resend verification failed:", err.message);
       throw new Error(formatErrorMessage(err));
     }
   }
@@ -230,7 +396,17 @@ export function AuthProvider({ children }) {
 
   return (
     <AuthContext.Provider
-      value={{ token, authChecked, login, register, logout }}
+      value={{ 
+        token, 
+        authChecked, 
+        login, 
+        register, 
+        logout,
+        verifyEmail,
+        requestPasswordReset,
+        resetPassword,
+        resendVerification
+      }}
     >
       {children}
     </AuthContext.Provider>

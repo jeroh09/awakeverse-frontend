@@ -21,6 +21,10 @@ import ContractorAgreements from './pages/ContractorAgreements'; // 🆕 Added
 import ProtectedRoute  from './components/ProtectedRoute';
 import MinimalUsageTest from './components/MinimalUsageTest';
 import TestUsageComponents from './components/TestUsageComponents';
+// Add these imports to your existing App.js
+import ForgotPassword from './pages/ForgotPassword';
+import ResetPassword from './pages/ResetPassword';
+import EmailVerification from './pages/EmailVerification';
 
 
 
@@ -82,6 +86,12 @@ export default function App() {
       {/* Auth routes */}
       <Route path="/login" element={<Login />} />
       <Route path="/register" element={<Register />} />
+
+      {/* NEW: Email authentication routes */}
+      <Route path="/forgot-password" element={<ForgotPassword />} />
+      <Route path="/reset-password" element={<ResetPassword />} />
+      <Route path="/verify-email" element={<EmailVerification />} />
+      <Route path="/verify-email" element={<Login />} /> {/* Login handles verification */}
 
       {/* Legal pages - 🆕 Added these routes */}
       <Route path="/terms" element={<TermsOfService />} />

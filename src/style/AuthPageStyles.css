@@ -403,3 +403,410 @@ body::before {
   text-shadow: 0 0 6px rgba(255, 215, 0, 0.4);
   border-bottom: 1px solid rgba(255, 215, 0, 0.4);
 }
+/* Add these styles to your existing AuthPageStyles.css */
+
+/* Email verification and password reset styles */
+.verification-pending {
+  text-align: center;
+  max-width: 500px;
+}
+
+.verification-icon {
+  font-size: 4rem;
+  margin: 2rem 0;
+  animation: pulse 2s infinite;
+}
+
+@keyframes pulse {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.7; }
+}
+
+.verification-actions {
+  display: flex;
+  gap: 1rem;
+  justify-content: center;
+  margin: 2rem 0;
+  flex-wrap: wrap;
+}
+
+.verification-actions .secondary-button {
+  background: rgba(255, 255, 255, 0.1);
+  border: 2px solid rgba(255, 255, 255, 0.3);
+  color: rgba(255, 255, 255, 0.9);
+  padding: 0.75rem 1.5rem;
+  border-radius: 8px;
+  text-decoration: none;
+  font-weight: 600;
+  transition: all 0.3s ease;
+  cursor: pointer;
+  font-size: 1rem;
+}
+
+.verification-actions .primary-button {
+  background: linear-gradient(135deg, #FFD700, #FFA500);
+  border: none;
+  color: #000;
+  padding: 0.75rem 1.5rem;
+  border-radius: 8px;
+  text-decoration: none;
+  font-weight: 700;
+  transition: all 0.3s ease;
+  cursor: pointer;
+  font-size: 1rem;
+}
+
+.verification-actions .secondary-button:hover {
+  background: rgba(255, 255, 255, 0.2);
+  border-color: rgba(255, 255, 255, 0.5);
+}
+
+.verification-actions .primary-button:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 10px 20px rgba(255, 215, 0, 0.3);
+}
+
+.verification-help {
+  margin-top: 2rem;
+  padding: 1.5rem;
+  background: rgba(255, 255, 255, 0.05);
+  border-radius: 12px;
+  text-align: left;
+}
+
+.verification-help p {
+  margin-bottom: 1rem;
+  font-weight: 600;
+  color: rgba(255, 255, 255, 0.9);
+}
+
+.verification-help ul {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+}
+
+.verification-help li {
+  padding: 0.5rem 0;
+  color: rgba(255, 255, 255, 0.7);
+  display: flex;
+  align-items: center;
+}
+
+.verification-help li:before {
+  content: "•";
+  color: #FFD700;
+  margin-right: 0.75rem;
+  font-size: 1.2rem;
+}
+
+/* Email verification help box */
+.verification-help-box {
+  background: rgba(255, 215, 0, 0.1);
+  border: 2px solid rgba(255, 215, 0, 0.3);
+  border-radius: 8px;
+  padding: 1rem;
+  margin: 1rem 0;
+  text-align: center;
+}
+
+.verification-help-box p {
+  margin: 0 0 0.5rem 0;
+  color: rgba(255, 255, 255, 0.9);
+  font-size: 0.9rem;
+}
+
+.link-button {
+  background: none;
+  border: none;
+  color: #FFD700;
+  text-decoration: underline;
+  cursor: pointer;
+  font-size: 0.9rem;
+  padding: 0;
+}
+
+.link-button:hover {
+  color: #FFA500;
+}
+
+/* Password strength indicator */
+.password-strength {
+  margin: 0.5rem 0;
+}
+
+.strength-bar {
+  width: 100%;
+  height: 4px;
+  background: rgba(255, 255, 255, 0.2);
+  border-radius: 2px;
+  overflow: hidden;
+  margin-bottom: 0.25rem;
+}
+
+.strength-fill {
+  height: 100%;
+  transition: all 0.3s ease;
+  border-radius: 2px;
+}
+
+.password-match {
+  margin: 0.5rem 0;
+}
+
+.password-requirements {
+  margin: 1rem 0;
+  padding: 0.75rem;
+  background: rgba(255, 255, 255, 0.05);
+  border-radius: 6px;
+  border-left: 3px solid #FFD700;
+}
+
+.password-requirements small {
+  color: rgba(255, 255, 255, 0.7);
+  line-height: 1.4;
+}
+
+/* Auth links styling */
+.auth-links {
+  display: flex;
+  justify-content: space-between;
+  margin-top: 1.5rem;
+  gap: 1rem;
+  flex-wrap: wrap;
+}
+
+.auth-links a {
+  color: #FFD700;
+  text-decoration: none;
+  font-size: 0.9rem;
+  transition: color 0.3s ease;
+}
+
+.auth-links a:hover {
+  color: #FFA500;
+  text-decoration: underline;
+}
+
+/* Success/info text styling */
+.success-text {
+  background: rgba(68, 187, 0, 0.1);
+  border: 2px solid rgba(68, 187, 0, 0.3);
+  color: #44bb00;
+  padding: 1rem;
+  border-radius: 8px;
+  margin: 1rem 0;
+  text-align: center;
+  font-weight: 600;
+}
+
+.info-text {
+  background: rgba(0, 123, 255, 0.1);
+  border: 2px solid rgba(0, 123, 255, 0.3);
+  color: #007bff;
+  padding: 1rem;
+  border-radius: 8px;
+  margin: 1rem 0;
+  text-align: center;
+  font-weight: 600;
+}
+
+.error-text {
+  background: rgba(255, 107, 107, 0.1);
+  border: 2px solid rgba(255, 107, 107, 0.3);
+  color: #ff6b6b;
+  padding: 1rem;
+  border-radius: 8px;
+  margin: 1rem 0;
+  text-align: center;
+  font-weight: 600;
+}
+
+/* Redirect notice */
+.redirect-notice {
+  margin-top: 1rem;
+  opacity: 0.7;
+  font-style: italic;
+}
+
+/* Mobile responsive adjustments */
+@media (max-width: 768px) {
+  .verification-actions {
+    flex-direction: column;
+    align-items: center;
+  }
+  
+  .verification-actions .secondary-button,
+  .verification-actions .primary-button {
+    width: 100%;
+    max-width: 280px;
+  }
+  
+  .auth-links {
+    flex-direction: column;
+    text-align: center;
+    gap: 0.75rem;
+  }
+  
+  .verification-help {
+    padding: 1rem;
+    margin-top: 1.5rem;
+  }
+}
+
+/* Add these styles to your AuthPageStyles.css for EmailVerification page */
+
+/* Verification progress spinner */
+.verification-progress {
+  margin: 2rem 0;
+  text-align: center;
+}
+
+.spinner {
+  width: 40px;
+  height: 40px;
+  border: 4px solid rgba(255, 255, 255, 0.2);
+  border-top: 4px solid #FFD700;
+  border-radius: 50%;
+  animation: spin 1s linear infinite;
+  margin: 0 auto 1rem auto;
+}
+
+@keyframes spin {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
+}
+
+/* Verification recovery section */
+.verification-recovery {
+  margin: 2rem 0;
+  width: 100%;
+}
+
+.resend-section {
+  background: rgba(255, 255, 255, 0.05);
+  border-radius: 12px;
+  padding: 1.5rem;
+  margin-bottom: 2rem;
+}
+
+.resend-section label {
+  display: block;
+  margin-bottom: 1rem;
+  color: rgba(255, 255, 255, 0.9);
+  font-weight: 600;
+}
+
+.resend-form {
+  width: 100%;
+}
+
+/* Enhanced verification icon animation */
+.verification-icon {
+  font-size: 4rem;
+  margin: 2rem 0;
+  display: inline-block;
+}
+
+/* Success state special animation */
+.verification-pending h2:has(+ .verification-icon:contains('✅')) + .verification-icon {
+  animation: success-bounce 0.6s ease-in-out;
+}
+
+@keyframes success-bounce {
+  0%, 20%, 60%, 100% {
+    transform: translateY(0);
+  }
+  40% {
+    transform: translateY(-20px);
+  }
+  80% {
+    transform: translateY(-10px);
+  }
+}
+
+/* Error state styling */
+.verification-pending:has(.verification-icon:contains('❌')) {
+  border-left: 4px solid #ff6b6b;
+}
+
+/* Success state styling */
+.verification-pending:has(.verification-icon:contains('✅')) {
+  border-left: 4px solid #44bb00;
+}
+
+/* Expired state styling */
+.verification-pending:has(.verification-icon:contains('⏰')) {
+  border-left: 4px solid #ffa500;
+}
+
+/* Enhanced responsive design for verification page */
+@media (max-width: 768px) {
+  .verification-pending {
+    padding: 1.5rem;
+    margin: 1rem;
+  }
+  
+  .verification-icon {
+    font-size: 3rem;
+    margin: 1.5rem 0;
+  }
+  
+  .resend-section {
+    padding: 1rem;
+  }
+  
+  .verification-recovery {
+    margin: 1.5rem 0;
+  }
+}
+/* Email verification help for mobile */
+.mobile-verification-help {
+  background: rgba(255, 215, 0, 0.1);
+  border: 2px solid rgba(255, 215, 0, 0.3);
+  border-radius: 8px;
+  padding: 1rem;
+  margin: 1rem 0;
+  text-align: center;
+}
+
+.mobile-verification-help p {
+  margin: 0 0 0.5rem 0;
+  color: rgba(255, 255, 255, 0.9);
+  font-size: 0.9rem;
+}
+
+.mobile-resend-btn {
+  background: none;
+  border: none;
+  color: #FFD700;
+  text-decoration: underline;
+  cursor: pointer;
+  font-size: 0.9rem;
+  padding: 0;
+}
+
+.mobile-resend-btn:hover {
+  color: #FFA500;
+}
+
+.mobile-resend-btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+/* Forgot password link */
+.mobile-forgot-password {
+  text-align: center;
+  margin: 1rem 0;
+}
+
+.mobile-forgot-password a {
+  color: #FFD700;
+  text-decoration: none;
+  font-size: 0.9rem;
+}
+
+.mobile-forgot-password a:hover {
+  text-decoration: underline;
+}

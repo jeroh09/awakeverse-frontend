@@ -1,4 +1,4 @@
-// src/components/UnifiedMobileAuth.jsx - Step 1: Restructured for sticky footer
+// src/components/UnifiedMobileAuth.jsx - Enhanced with email verification support
 import React, { useState } from 'react';
 import './EnhancedMobileAuth.css';
 
@@ -12,9 +12,18 @@ const MOBILE_CHARACTERS = [
   { id: 'boudica', name: 'Boudica' }
 ];
 
-export default function UnifiedMobileAuth({ mode, onSubmit, error, loading }) {
+export default function UnifiedMobileAuth({ 
+  mode, 
+  onSubmit, 
+  error, 
+  loading,
+  showResendVerification = false,
+  onResendVerification,
+  email = '',
+  successMessage = ''
+}) {
   const [formData, setFormData] = useState({
-    email: '',
+    email: email || '',
     password: '',
     displayName: ''
   });
@@ -35,6 +44,12 @@ export default function UnifiedMobileAuth({ mode, onSubmit, error, loading }) {
     setTimeout(() => setShowForm(true), 300);
   };
 
+  const handleResendVerification = () => {
+    if (onResendVerification) {
+      onResendVerification(formData.email);
+    }
+  };
+
   const isLogin = mode === 'login';
 
   return (
@@ -43,7 +58,7 @@ export default function UnifiedMobileAuth({ mode, onSubmit, error, loading }) {
         <div className="mobile-screen">
           
           {!showForm ? (
-            // Character Selection View (unchanged)
+            // Character Selection View
             <div className="character-selection-view">
               <div className="mobile-header">
                 <h2>{isLogin ? 'Welcome Back' : 'Choose Your Guide'}</h2>
@@ -77,7 +92,7 @@ export default function UnifiedMobileAuth({ mode, onSubmit, error, loading }) {
               </div>
             </div>
           ) : (
-            // ✅ RESTRUCTURED Form View with sticky footer
+            // Form View with enhanced email verification support
             <div className="form-view">
               {/* Fixed Header */}
               <div className="form-header">
@@ -103,8 +118,28 @@ export default function UnifiedMobileAuth({ mode, onSubmit, error, loading }) {
                   </div>
                 )}
                 
+                {/* Success message display */}
+                {successMessage && (
+                  <div className="mobile-success">{successMessage}</div>
+                )}
+                
                 <form onSubmit={handleFormSubmit} className="mobile-auth-form">
                   {error && <div className="mobile-error">{error}</div>}
+                  
+                  {/* Email verification help for mobile */}
+                  {showResendVerification && (
+                    <div className="mobile-verification-help">
+                      <p>Need to verify your email?</p>
+                      <button 
+                        type="button"
+                        onClick={handleResendVerification}
+                        disabled={loading}
+                        className="mobile-resend-btn"
+                      >
+                        {loading ? 'Sending...' : 'Resend verification email'}
+                      </button>
+                    </div>
+                  )}
                   
                   {!isLogin && (
                     <div className="form-group">
@@ -138,11 +173,18 @@ export default function UnifiedMobileAuth({ mode, onSubmit, error, loading }) {
                       type="password"
                       value={formData.password}
                       onChange={(e) => handleInputChange('password', e.target.value)}
-                      placeholder={isLogin ? "Enter your password" : "Create your secret key (min 6)"}
+                      placeholder={isLogin ? "Enter your password" : "Create your secret key (8+ chars)"}
                       disabled={loading}
                       required
                     />
                   </div>
+                  
+                  {/* Forgot password link for login mode */}
+                  {isLogin && (
+                    <div className="mobile-forgot-password">
+                      <a href="/forgot-password">Forgot your password?</a>
+                    </div>
+                  )}
                   
                   <button 
                     type="submit" 
@@ -150,13 +192,13 @@ export default function UnifiedMobileAuth({ mode, onSubmit, error, loading }) {
                     disabled={loading}
                   >
                     {loading 
-                      ? (isLogin ? 'Awakening...' : 'Creating Realm...') 
+                      ? (isLogin ? 'Awakening...' : 'Creating Account...') 
                       : (isLogin ? 'Enter the Realm' : 'Begin Journey')
                     }
                   </button>
                 </form>
                 
-                {/* ✅ NEW: Terms and Privacy for mobile - only show on register */}
+                {/* Terms and Privacy for mobile - only show on register */}
                 {!isLogin && (
                   <div className="mobile-legal-text">
                     <p>
@@ -182,7 +224,7 @@ export default function UnifiedMobileAuth({ mode, onSubmit, error, loading }) {
                 )}
               </div>
               
-              {/* ✅ STICKY FOOTER - Moved outside scrollable content */}
+              {/* Sticky Footer */}
               <div className="form-footer">
                 <div className="mobile-switch-mode">
                   <p>
