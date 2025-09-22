@@ -235,7 +235,7 @@ const EducationalUpgradeModal = ({
             color: 'rgba(255, 255, 255, 0.8)'
           }}>
             <span style={{ color: '#00FF88' }}>💰</span>
-            <span>30-Day Money Back</span>
+            <span>Earn with Your Characters</span>
           </div>
           <div style={{
             display: 'flex',

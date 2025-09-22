@@ -30,7 +30,7 @@ const SubscriptionPlansCards = () => {
         '2,000 Messages/Month',
         'All Templates',
         'Priority Support',
-        'Character Analytics'
+        'Creator Hub Access'
       ],
       cta: 'Go Pro',
       popular: true
@@ -47,7 +47,7 @@ const SubscriptionPlansCards = () => {
         'All Features',
         'VIP Support',
         'Early Access',
-        'Creator Hub Eligibility'
+        'Creator Hub Access'
       ],
       cta: 'Get Unlimited',
       popular: false
@@ -249,7 +249,7 @@ const SubscriptionPlansCards = () => {
               fontSize: '0.8rem',
               margin: 0
             }}>
-              Cancel anytime • 30-day money back
+              Cancel anytime • Earn with Characters
             </p>
           </div>
         </div>

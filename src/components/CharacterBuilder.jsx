@@ -339,23 +339,6 @@ Engage users with the depth and authenticity that comes from your unique histori
       display: 'flex',
       flexDirection: 'column'
     }}>
-      {/* Debug Info */}
-      {process.env.NODE_ENV === 'development' && (
-        <div style={{
-          position: 'fixed',
-          top: '10px',
-          right: '10px',
-          padding: '0.5rem',
-          background: 'rgba(255, 215, 0, 0.9)',
-          color: '#000',
-          fontSize: '0.7rem',
-          borderRadius: '4px',
-          zIndex: 9999,
-          fontFamily: 'monospace'
-        }}>
-          Template ID: {template?.id || 'MISSING'} | Step: {currentStep} | Creating: {isCreating.toString()}
-        </div>
-      )}
 
       {/* Header */}
       <div style={{

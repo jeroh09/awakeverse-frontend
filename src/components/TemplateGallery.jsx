@@ -296,23 +296,7 @@ const TemplateGallery = ({ onSelectTemplate, onClose }) => {
             }}>
               Choose a template to start creating your character ({templates.length} available)
             </p>
-            
-            {/* Debug Info */}
-            {debugInfo && process.env.NODE_ENV === 'development' && (
-              <div style={{
-                background: 'rgba(255, 215, 0, 0.1)',
-                border: '1px solid rgba(255, 215, 0, 0.3)',
-                borderRadius: '6px',
-                padding: '0.5rem',
-                marginTop: '0.5rem',
-                fontSize: '0.8rem',
-                color: 'rgba(255, 215, 0, 0.8)'
-              }}>
-                Debug: {JSON.stringify(debugInfo)}
-              </div>
-            )}
-          </div>
-          
+          </div>        
           <button
             onClick={onClose}
             style={{
@@ -529,7 +513,6 @@ const TemplateGallery = ({ onSelectTemplate, onClose }) => {
                     </div>
                   )}
                 </div>
-
                 {/* Template Description */}
                 <p style={{
                   color: 'rgba(255, 255, 255, 0.8)',
@@ -539,20 +522,6 @@ const TemplateGallery = ({ onSelectTemplate, onClose }) => {
                 }}>
                   {template.description}
                 </p>
-
-                {/* Template ID Debug Info (only in development) */}
-                {process.env.NODE_ENV === 'development' && (
-                  <div style={{
-                    marginTop: '0.5rem',
-                    padding: '0.25rem',
-                    background: 'rgba(255, 215, 0, 0.1)',
-                    fontSize: '0.7rem',
-                    color: 'rgba(255, 215, 0, 0.7)',
-                    borderRadius: '4px'
-                  }}>
-                    ID: {template.id} | Archetype: {template.personality_archetype}
-                  </div>
-                )}
               </div>
             ))}
           </div>
