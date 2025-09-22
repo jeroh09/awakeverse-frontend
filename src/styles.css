@@ -1861,3 +1861,16 @@ html::before {
     pointer-events: auto !important;
   }
 }
+@media (max-width: 768px) {
+  button[style*="Create New Character"] {
+    padding: 2rem 3rem !important;
+    font-size: 1.5rem !important;
+    background: red !important;
+    border: 5px solid yellow !important;
+    position: fixed !important;
+    bottom: 20px !important;
+    left: 50% !important;
+    transform: translateX(-50%) !important;
+    z-index: 999999 !important;
+  }
+}
