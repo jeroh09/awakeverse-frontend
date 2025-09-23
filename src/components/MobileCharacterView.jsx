@@ -202,7 +202,7 @@ const MobileCharacterView = ({
     );
   }
 
-  // Status summary for My Characters - MOVED TO TOP RIGHT
+  // Status summary for My Characters
   const renderStatusSummary = () => {
     if (selectedCategory.key !== 'my_characters') return null;
     
@@ -214,67 +214,60 @@ const MobileCharacterView = ({
 
     return (
       <div style={{
-        position: 'absolute',
-        top: '10px',
-        right: '10px',
-        background: 'rgba(11, 20, 38, 0.9)',
-        border: '1px solid rgba(255, 215, 0, 0.3)',
+        marginBottom: '1.5rem',
+        padding: '0.8rem',
+        background: 'rgba(255, 255, 255, 0.05)',
         borderRadius: '8px',
-        padding: '0.5rem',
-        zIndex: 10,
-        backdropFilter: 'blur(10px)'
+        border: '1px solid rgba(255, 215, 0, 0.2)'
       }}>
+        <h4 style={{
+          color: '#FFD700', 
+          margin: '0 0 0.5rem 0',
+          fontSize: '0.8rem', 
+          textAlign: 'center'
+        }}>
+          Character Status Summary
+        </h4>
         <div style={{ 
           display: 'flex', 
-          gap: '0.25rem', 
-          flexDirection: 'column'
+          justifyContent: 'center', 
+          gap: '0.5rem', 
+          flexWrap: 'wrap' 
         }}>
           {approvedCharacters.length > 0 && (
             <span style={{
               background: '#28a745', 
               color: '#fff',
-              fontSize: '0.6rem',
-              padding: '0.15rem 0.4rem',
-              borderRadius: '4px',
-              display: 'flex',
-              alignItems: 'center',
-              gap: '0.25rem',
-              whiteSpace: 'nowrap'
+              fontSize: '0.7rem',
+              padding: '0.2rem 0.5rem',
+              borderRadius: '6px', 
+              border: '1px solid #0B1426'
             }}>
-              <span>✓</span>
-              {approvedCharacters.length} Ready
+              {approvedCharacters.length} Ready ✓
             </span>
           )}
           {pendingCharacters.length > 0 && (
             <span style={{
               background: '#FFA500', 
               color: '#fff',
-              fontSize: '0.6rem',
-              padding: '0.15rem 0.4rem',
-              borderRadius: '4px',
-              display: 'flex',
-              alignItems: 'center',
-              gap: '0.25rem',
-              whiteSpace: 'nowrap'
+              fontSize: '0.7rem',
+              padding: '0.2rem 0.5rem',
+              borderRadius: '6px', 
+              border: '1px solid #0B1426'
             }}>
-              <span>⏳</span>
-              {pendingCharacters.length} Pending
+              {pendingCharacters.length} Pending ⏳
             </span>
           )}
           {rejectedCharacters.length > 0 && (
             <span style={{
               background: '#ff6b6b', 
               color: '#fff',
-              fontSize: '0.6rem',
-              padding: '0.15rem 0.4rem',
-              borderRadius: '4px',
-              display: 'flex',
-              alignItems: 'center',
-              gap: '0.25rem',
-              whiteSpace: 'nowrap'
+              fontSize: '0.7rem',
+              padding: '0.2rem 0.5rem',
+              borderRadius: '6px', 
+              border: '1px solid #0B1426'
             }}>
-              <span>❌</span>
-              {rejectedCharacters.length} Fix
+              {rejectedCharacters.length} Need Revision ❌
             </span>
           )}
         </div>
@@ -327,7 +320,7 @@ const MobileCharacterView = ({
 
   return (
     <>
-      <div style={{ width: '100%', position: 'relative' }}>
+      <div style={{ width: '100%' }}>
         {renderStatusSummary()}
         <MobileCharacterGrid
           characters={characters}

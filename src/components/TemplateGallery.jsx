@@ -68,7 +68,7 @@ const TemplateGallery = ({ onSelectTemplate, onClose }) => {
   const [error, setError] = useState(null);
   const [selectedTemplate, setSelectedTemplate] = useState(null);
   const [selectedArchetype, setSelectedArchetype] = useState('all');
-  const [debugInfo, setDebugInfo] = useState(null);
+  
 
   // Load templates with proper error handling and structure
   useEffect(() => {
@@ -91,7 +91,6 @@ const TemplateGallery = ({ onSelectTemplate, onClose }) => {
 
             if (response.ok) {
               const data = await response.json();
-              console.log('Templates API response:', data);
 
               // FIXED: Use the proper backend structure
               if (data.status === 'success') {
@@ -100,14 +99,9 @@ const TemplateGallery = ({ onSelectTemplate, onClose }) => {
                 const categories = data.available_categories || [];
                 const templateList = data.templates || [];
                 
-                console.log(`Loaded ${templateList.length} templates in ${Object.keys(groups).length} groups`);
-                console.log('Available categories:', categories);
-                console.log('Debug info:', data.debug_info);
-                
                 setTemplates(templateList);
                 setTemplateGroups(groups);
                 setAvailableCategories(categories);
-                setDebugInfo(data.debug_info);
                 setLoading(false);
                 return;
               }
@@ -119,7 +113,6 @@ const TemplateGallery = ({ onSelectTemplate, onClose }) => {
         }
 
         // Fallback: Use hardcoded templates
-        console.log('Using fallback templates');
         const fallbackTemplateList = Object.values(FALLBACK_TEMPLATES).flat();
         const fallbackCategories = Object.keys(FALLBACK_TEMPLATES);
         
@@ -157,12 +150,10 @@ const TemplateGallery = ({ onSelectTemplate, onClose }) => {
       return;
     }
     setSelectedTemplate(template);
-    console.log('Template selected:', template.name, 'ID:', template.id);
   };
 
   const handleConfirmSelection = () => {
     if (selectedTemplate && selectedTemplate.id) {
-      console.log('Confirming template selection:', selectedTemplate);
       onSelectTemplate(selectedTemplate);
     } else {
       setError('Please select a valid template.');

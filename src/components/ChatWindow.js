@@ -18,7 +18,6 @@ import FloatingScrollButton from './FloatingScrollButton';
 import useUsageTracking from '../hooks/useUsageTracking';
 import { HeaderUsageIndicator, ChatUsageIndicator } from '../components/UsageIndicator';
 import usePremiumCharacters from '../hooks/usePremiumCharacters';
-import MinimalUsageTest from './MinimalUsageTest';
 import DefensiveChatInputWrapper from './DefensiveChatInputWrapper';
 import DualPathUpgradeSystem from '../components/DualPathUpgradeSystem';
 import '../styles.css';
@@ -463,7 +462,6 @@ export default function ChatWindow({
 
   // ✅ NEW: Character selection handler for PrestigeHub
   const handleCharacterSelect = useCallback((characterKey) => {
-    console.log('🎯 Character selected from PrestigeHub:', characterKey);
     // You can add navigation logic here or pass it up to parent
     if (onBack) {
       // Close PrestigeHub first
@@ -483,95 +481,7 @@ export default function ChatWindow({
     }
     return characterKey.replace(/_/g, ' ');
   }, []);
-
-  // ✅ ADD USAGE TEST STATES COMPONENT (after helper functions)
-  //const UsageTestStates = () => {
-    //const [testState, setTestState] = useState('unlimited');
-    
-    //const mockUsage = {
-      //unlimited: {
-        //tier: 'unlimited', tier_display: 'Unlimited', 
-        //message_limit: -1, messages_used: 0, unlimited: true
-      //},
-      //approaching: {
-        //tier: 'free', tier_display: 'Free',
-        //message_limit: 150, messages_used: 120, unlimited: false
-      //},
-      //warning: {
-        //tier: 'free', tier_display: 'Free', 
-        //message_limit: 150, messages_used: 140, unlimited: false
-      //},
-      //limit: {
-        //tier: 'free', tier_display: 'Free',
-        //message_limit: 150, messages_used: 150, unlimited: false
-      //}
-   // };
-
-    //return (
-      //<div style={{
-        //position: 'fixed', top: '50px', right: '10px', 
-        //background: '#000', color: 'white', padding: '1rem',
-        //border: '1px solid #FFD700', borderRadius: '4px', zIndex: 9999,
-        //fontSize: '0.8rem'
-      //}}>
-       // <h4 style={{ color: '#FFD700', margin: '0 0 0.5rem 0' }}>Usage Test States</h4>
-        //<select 
-         // onChange={(e) => setTestState(e.target.value)} 
-          //value={testState}
-          //style={{ 
-            //background: '#333', color: 'white', 
-            //border: '1px solid #FFD700', padding: '0.25rem'
-          //}}
-       // >
-         // <option value="unlimited">Unlimited (Your Current)</option>
-          //<option value="approaching">Approaching Limit (120/150)</option>
-          //<option value="warning">At Warning (140/150)</option>
-          //<option value="limit">At Limit (150/150)</option>
-        //</select>
-        
-        //<div style={{ marginTop: '0.5rem' }}>
-         // <div style={{ fontSize: '0.7rem', color: '#FFD700' }}>Header Indicator:</div>
-          //<HeaderUsageIndicator 
-            //usage={mockUsage[testState]}
-            //isCustomCharacter={true}
-            //onUpgradeClick={() => alert('Header Upgrade!')}
-          ///>
-        //</div>
-        
-       // {(testState === 'warning' || testState === 'limit') && (
-         // <div style={{ marginTop: '0.5rem' }}>
-           // <div style={{ fontSize: '0.7rem', color: '#FFD700' }}>Warning Indicator:</div>
-            //<ChatUsageIndicator 
-             // usage={mockUsage[testState]}
-             // isCustomCharacter={true}
-              //showWarning={true}
-              //warningMessage={
-               // testState === 'limit' ? 'Monthly limit reached - upgrade to continue chatting' :
-                //'Almost at your monthly limit - consider upgrading'
-             // }
-             // onUpgradeClick={() => alert('Warning Upgrade!')}
-           // />
-         // </div>
-       // )}
-
-        //{testState === 'limit' && (
-         // <div style={{ marginTop: '0.5rem' }}>
-           // <button 
-             // onClick={() => setShowUpgradeFlow(true)}
-              //style={{
-               // background: '#ff6b6b', color: 'white',
-                //border: 'none', padding: '0.5rem',
-                //borderRadius: '4px', cursor: 'pointer'
-              //}}
-           // >
-             // Test Upgrade Modal
-            //</button>
-         // </div>
-       // )}
-     // </div>
-    //);
-  //};
-
+ 
   // Initialize participants from session history
   useEffect(() => {
     if (session?.messages) {
@@ -604,14 +514,6 @@ export default function ChatWindow({
   }, [socket, character]);
 
   const listRef = useRef(null);
-  // Add this debug effect to verify the ref is attached:
-  useEffect(() => {
-    console.log('🔗 ListRef status:', {
-      hasRef: !!listRef.current,
-      hasOuterRef: !!listRef.current?._outerRef,
-      refType: listRef.current?.constructor?.name
-    });
-  }, [chatHistory.length]); // Check whenever messages chang
   const {
     isNearBottom,
     shouldAutoScroll,
@@ -973,13 +875,10 @@ export default function ChatWindow({
 
       // ✅ CRITICAL: REFRESH USAGE AFTER SUCCESSFUL MESSAGE COMPLETION
       if (usageTracking.isCustomCharacter) {
-        console.log('🔄 Refreshing usage data after successful message to custom character:', character);
         setTimeout(() => {
           usageTracking.refreshUsage().then(success => {
             if (success) {
-              console.log('✅ Usage data refreshed successfully');
             } else {
-              console.warn('⚠️ Usage refresh failed or user reached limit');
             }
           });
         }, 500);
@@ -987,13 +886,10 @@ export default function ChatWindow({
 
     } catch (err) {
       if (err.name === 'AbortError') {
-        console.log('Chat request aborted');
-
         // ✅ EVEN IF ABORTED, CHECK IF WE NEED TO REFRESH USAGE
         if (usageTracking.isCustomCharacter) {
           usageTracking.refreshUsage().then(success => {
             if (success) {
-              console.log('✅ Usage data refreshed after abort');
             }
           });
         }
@@ -1159,7 +1055,6 @@ export default function ChatWindow({
                   isCustomCharacter={usageTracking.isCustomCharacter}
                   onUpgradeClick={() => {
                     // TODO: Open upgrade modal
-                    console.log('Upgrade clicked for:', character);
                   }}
                 />
               </div>
@@ -1223,7 +1118,6 @@ export default function ChatWindow({
                 warningMessage={usageTracking.warningMessage}
                 onUpgradeClick={() => {
                   // TODO: Open upgrade modal
-                  console.log('Upgrade from warning clicked for:', character);
                 }}
               />
             </div>
@@ -1262,7 +1156,6 @@ export default function ChatWindow({
         position="bottom-right"
         isMobile={isMobile}
       />
-      <MinimalUsageTest character={character} />
       {/* Add this near the end of your component, before closing div */}
       <DualPathUpgradeSystem
         isOpen={upgradeModalOpen}
