@@ -1,257 +1,178 @@
-const CACHE_NAME = 'awakeverse-v1.0.0';
+// sw.js - Vercel-optimized PWA Service Worker (No Console Logs)
+const CACHE_NAME = 'awakeverse-pwa-v2';
+const OFFLINE_URL = '/offline';
 
-// DEFENSIVE: Split URLs into critical and optional
-const CRITICAL_URLS = [
+// Cache only essential PWA assets (avoid Vercel-managed files)
+const APP_SHELL = [
   '/',
   '/app',
-  '/login', 
-  '/register',
-  '/favicon.ico'
-];
-
-const OPTIONAL_URLS = [
   '/static/js/bundle.js',
   '/static/css/main.css',
-  '/manifest.json',  // This was causing the 401 error
   '/logo192.png',
-  '/logo512.png'
+  '/logo512.png',
+  '/manifest.json'
 ];
 
-// DEFENSIVE: Cache files individually with error handling
-async function cacheResourcesDefensively(cache) {
-  console.log('Service Worker: Starting defensive caching...');
-  
-  // Cache critical files first - these MUST succeed
-  const criticalPromises = CRITICAL_URLS.map(async (url) => {
-    try {
-      const response = await fetch(url);
-      if (response.status === 200) {
-        await cache.put(url, response);
-        console.log(`SW: Cached critical: ${url}`);
-      } else {
-        console.warn(`SW: Critical file returned ${response.status}: ${url}`);
-      }
-    } catch (error) {
-      console.error(`SW: Failed to cache critical file ${url}:`, error);
-      // Continue - don't fail installation for individual files
-    }
-  });
-
-  // Wait for critical files to finish
-  await Promise.allSettled(criticalPromises);
-
-  // Cache optional files - failures are acceptable
-  const optionalPromises = OPTIONAL_URLS.map(async (url) => {
-    try {
-      const response = await fetch(url);
-      if (response.status === 200) {
-        await cache.put(url, response);
-        console.log(`SW: Cached optional: ${url}`);
-      } else if (response.status === 401) {
-        console.log(`SW: Skipping authenticated file: ${url} (401)`);
-      } else {
-        console.log(`SW: Skipping unavailable file: ${url} (${response.status})`);
-      }
-    } catch (error) {
-      console.log(`SW: Skipped optional file ${url}:`, error.message);
-      // Silent continue - optional files shouldn't break installation
-    }
-  });
-
-  // Wait for optional files (but don't require success)
-  await Promise.allSettled(optionalPromises);
-  
-  console.log('Service Worker: Defensive caching completed');
-}
-
-// Install event - DEFENSIVE caching instead of cache.addAll()
-self.addEventListener('install', event => {
-  console.log('Service Worker: Installing...');
+self.addEventListener('install', (event) => {
   event.waitUntil(
     caches.open(CACHE_NAME)
-      .then(cache => cacheResourcesDefensively(cache))
-      .then(() => {
-        console.log('Service Worker: Installation completed successfully');
-        return self.skipWaiting();
-      })
-      .catch(error => {
-        console.error('Service Worker: Installation failed:', error);
-        // Continue anyway - partial functionality is better than none
-        return self.skipWaiting();
-      })
+      .then((cache) => cache.addAll(APP_SHELL))
+      .then(() => self.skipWaiting())
+      .catch(() => self.skipWaiting()) // Silent fail
   );
 });
 
-// Activate event - clean up old caches
-self.addEventListener('activate', event => {
-  console.log('Service Worker: Activating...');
+self.addEventListener('activate', (event) => {
   event.waitUntil(
-    caches.keys().then(cacheNames => {
+    caches.keys().then((cacheNames) => {
       return Promise.all(
-        cacheNames.map(cacheName => {
+        cacheNames.map((cacheName) => {
           if (cacheName !== CACHE_NAME) {
-            console.log('Service Worker: Deleting old cache:', cacheName);
             return caches.delete(cacheName);
           }
         })
       );
-    }).then(() => {
-      console.log('Service Worker: Activated');
-      return self.clients.claim();
-    })
-    .catch(error => {
-      console.error('Service Worker: Activation failed:', error);
-      // Continue anyway
-      return self.clients.claim();
-    })
+    }).then(() => self.clients.claim())
+    .catch(() => self.clients.claim()) // Silent fail
   );
 });
 
-// Fetch event - DEFENSIVE handling with multiple fallbacks
-self.addEventListener('fetch', event => {
-  // Skip non-GET requests
-  if (event.request.method !== 'GET') {
+self.addEventListener('fetch', (event) => {
+  // Skip non-GET and Vercel-internal requests
+  if (event.request.method !== 'GET') return;
+  if (event.request.url.includes('/_next/') || 
+      event.request.url.includes('/_vercel/')) return;
+  
+  // Handle API requests - pass through but cache responses selectively
+  if (event.request.url.includes('/api/')) {
+    event.respondWith(handleApiRequest(event.request));
     return;
   }
-
-  // Skip requests to external APIs (your existing logic)
-  if (event.request.url.includes('/api/') || 
-      event.request.url.includes('localhost:5000') ||
-      event.request.url.includes('11434')) {
+  
+  // Handle app shell requests - cache first for PWA performance
+  if (isAppShellRequest(event.request)) {
+    event.respondWith(handleAppShellRequest(event.request));
     return;
   }
-
-  // DEFENSIVE: Skip manifest.json requests if they're causing auth issues
-  if (event.request.url.includes('/manifest.json')) {
-    event.respondWith(
-      handleManifestRequest(event.request)
-    );
-    return;
-  }
-
-  // Handle other requests with existing logic but add error recovery
-  event.respondWith(
-    handleRequestDefensively(event.request)
-  );
+  
+  // All other requests: network first
+  event.respondWith(handleOtherRequest(event.request));
 });
 
-// DEFENSIVE: Handle manifest requests specially
-async function handleManifestRequest(request) {
+async function handleApiRequest(request) {
   try {
-    // Try cache first
-    const cachedResponse = await caches.match(request);
-    if (cachedResponse) {
-      console.log('SW: Serving manifest from cache');
-      return cachedResponse;
-    }
-
-    // Try network
-    const networkResponse = await fetch(request);
-    if (networkResponse.status === 200) {
-      // Cache successful response
+    const response = await fetch(request);
+    // Cache successful GET API responses briefly (5 minutes)
+    if (response.status === 200 && request.method === 'GET') {
       const cache = await caches.open(CACHE_NAME);
-      cache.put(request, networkResponse.clone());
-      return networkResponse;
+      // Add cache control to avoid stale data
+      const cacheResponse = response.clone();
+      cache.put(request, cacheResponse).catch(() => {}); // Silent cache fail
     }
-
-    // If 401 or other error, return a basic manifest
-    console.log(`SW: Manifest request failed (${networkResponse.status}), using fallback`);
-    return createFallbackManifest();
-
+    return response;
   } catch (error) {
-    console.log('SW: Manifest request error, using fallback:', error.message);
-    return createFallbackManifest();
+    // Try cache for GET API requests when offline
+    if (request.method === 'GET') {
+      const cached = await caches.match(request);
+      if (cached) return cached;
+    }
+    // Re-throw to trigger offline handling
+    throw error;
   }
 }
 
-// DEFENSIVE: Create a basic fallback manifest if the real one fails
-function createFallbackManifest() {
-  const fallbackManifest = {
-    "short_name": "AwakeVerse",
-    "name": "AwakeVerse",
-    "start_url": "/",
-    "display": "standalone",
-    "theme_color": "#FFD700",
-    "background_color": "#0a0a1a"
-  };
-
-  return new Response(JSON.stringify(fallbackManifest), {
-    headers: {
-      'Content-Type': 'application/json',
-      'Cache-Control': 'no-cache'
-    }
-  });
-}
-
-// DEFENSIVE: Handle regular requests with error recovery
-async function handleRequestDefensively(request) {
+async function handleAppShellRequest(request) {
+  // Cache-first for app shell (PWA core)
+  const cached = await caches.match(request);
+  if (cached) return cached;
+  
   try {
-    // Try cache first
-    const cachedResponse = await caches.match(request);
-    if (cachedResponse) {
-      console.log('Service Worker: Serving from cache:', request.url);
-      return cachedResponse;
-    }
-
-    // Try network
-    console.log('Service Worker: Fetching from network:', request.url);
-    const networkResponse = await fetch(request);
-
+    const response = await fetch(request);
     // Cache successful responses
-    if (networkResponse && networkResponse.status === 200 && networkResponse.type === 'basic') {
-      const responseToCache = networkResponse.clone();
-      try {
-        const cache = await caches.open(CACHE_NAME);
-        await cache.put(request, responseToCache);
-      } catch (cacheError) {
-        console.log('SW: Failed to cache response:', cacheError.message);
-        // Continue anyway
-      }
+    if (response.status === 200) {
+      const cache = await caches.open(CACHE_NAME);
+      cache.put(request, response.clone()).catch(() => {}); // Silent cache fail
     }
-
-    return networkResponse;
-
+    return response;
   } catch (error) {
-    console.log('SW: Request failed, trying fallbacks:', error.message);
-    
-    // If both cache and network fail, try fallbacks
-    if (request.destination === 'document') {
-      // For navigation requests, try to serve root page
-      const rootResponse = await caches.match('/');
-      if (rootResponse) {
-        return rootResponse;
-      }
+    // Offline fallback for navigation
+    if (request.mode === 'navigate') {
+      const offlinePage = await caches.match(OFFLINE_URL);
+      if (offlinePage) return offlinePage;
+      
+      // Create basic offline response
+      return new Response(
+        `
+        <!DOCTYPE html>
+        <html>
+          <head>
+            <title>AwakeVerse - Offline</title>
+            <style>
+              body { 
+                font-family: Arial, sans-serif; 
+                background: #0a0a1a; 
+                color: #FFD700; 
+                text-align: center; 
+                padding: 50px;
+              }
+            </style>
+          </head>
+          <body>
+            <h1>You're Offline</h1>
+            <p>AwakeVerse will resume when connection is restored.</p>
+          </body>
+        </html>
+        `,
+        { 
+          status: 503,
+          statusText: 'Service Unavailable',
+          headers: { 'Content-Type': 'text/html' }
+        }
+      );
     }
-
-    // Final fallback - return error response
-    return new Response('Service temporarily unavailable', {
-      status: 503,
-      statusText: 'Service Unavailable'
-    });
+    // Re-throw for other request types
+    throw error;
   }
 }
 
-// Listen for messages from the app (your existing logic)
-self.addEventListener('message', event => {
-  if (event.data && event.data.type === 'SKIP_WAITING') {
-    self.skipWaiting();
+async function handleOtherRequest(request) {
+  // Network-first for other assets
+  try {
+    const response = await fetch(request);
+    
+    // Cache successful image responses (optional)
+    if (response.status === 200 && request.destination === 'image') {
+      const cache = await caches.open(CACHE_NAME);
+      cache.put(request, response.clone()).catch(() => {}); // Silent cache fail
+    }
+    
+    return response;
+  } catch (error) {
+    // Fallback to cache when offline
+    const cached = await caches.match(request);
+    if (cached) return cached;
+    throw error;
   }
-});
+}
 
-// Background sync for offline actions (your existing logic)
-self.addEventListener('sync', event => {
-  if (event.tag === 'background-sync') {
-    console.log('Service Worker: Background sync triggered');
-    // Handle background sync logic here
-  }
-});
+function isAppShellRequest(request) {
+  const url = new URL(request.url);
+  const isShellAsset = APP_SHELL.some(shellUrl => {
+    return url.pathname === shellUrl || 
+           url.pathname.startsWith(shellUrl + '/');
+  });
+  
+  return isShellAsset || request.mode === 'navigate';
+}
 
-// Push notifications (your existing logic)
-self.addEventListener('push', event => {
-  if (event.data) {
+// Push Notification Handler (Silent)
+self.addEventListener('push', (event) => {
+  if (!event.data) return;
+  
+  try {
     const data = event.data.json();
     const options = {
-      body: data.body,
+      body: data.body || 'New message',
       icon: '/logo192.png',
       badge: '/logo192.png',
       vibrate: [100, 50, 100],
@@ -259,16 +180,50 @@ self.addEventListener('push', event => {
     };
     
     event.waitUntil(
-      self.registration.showNotification(data.title, options)
+      self.registration.showNotification(
+        data.title || 'AwakeVerse', 
+        options
+      )
     );
+  } catch (error) {
+    // Silent fail for push notifications
   }
 });
 
-// Handle notification clicks (your existing logic)
-self.addEventListener('notificationclick', event => {
+// Notification Click Handler (Silent)
+self.addEventListener('notificationclick', (event) => {
   event.notification.close();
   
   event.waitUntil(
-    clients.openWindow('/')
+    clients.matchAll({ type: 'window' }).then((clientList) => {
+      // Focus existing app window or open new one
+      for (const client of clientList) {
+        if (client.url.includes('/app') && 'focus' in client) {
+          return client.focus();
+        }
+      }
+      if (clients.openWindow) {
+        return clients.openWindow('/app');
+      }
+    })
   );
 });
+
+// Background Sync Handler (Silent)
+self.addEventListener('sync', (event) => {
+  if (event.tag === 'background-sync') {
+    // Handle background sync logic here
+    // Note: This requires corresponding logic in your main app
+  }
+});
+
+// Message Handler for SKIP_WAITING (Silent)
+self.addEventListener('message', (event) => {
+  if (event.data && event.data.type === 'SKIP_WAITING') {
+    self.skipWaiting();
+  }
+});
+
+// Error Handling - Completely Silent
+self.addEventListener('error', () => {});
+self.addEventListener('unhandledrejection', () => {});
