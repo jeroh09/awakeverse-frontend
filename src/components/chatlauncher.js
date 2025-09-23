@@ -1,21 +1,21 @@
-// src/pages/ChatLauncherPage.jsx - Complete implementation with character status handling
+// src/pages/ChatLauncherPage.jsx - PROPER FIX: Exact landingupgrade.js structure + working upgrade buttons
 import React, { useState, useEffect, useMemo, useCallback } from 'react';
 import { useAuth } from '../contexts/AuthContext';
 import { useUser } from '../contexts/UserContext';
 import useInteractedCharacters from '../hooks/useInteractedCharacters';
-
+import CharacterDetailPanel from '../components/CharacterDetailPanel/CharacterDetailPanel';
 import TemplateGallery from '../components/TemplateGallery';
 import CharacterBuilder from '../components/CharacterBuilder';
+import CharacterStatusModal from '../components/CharacterStatusModal';
 import CharacterCreationSuccess from '../components/CharacterCreationSuccess';
+import DualPathUpgradeSystem from '../components/DualPathUpgradeSystem';
 
 // Import helper components
 import {
   CategoryCard,
   CharacterCard,
   MyCharactersPanel,
-  CharacterDetailPanel,
   PersonalizedSection,
-  CharacterStatusModal,
   categoryRepresentatives
 } from '../components/ChatLauncherHelpers';
 
@@ -151,8 +151,20 @@ const ChatLauncherPage = ({ onStartChat }) => {
   const [searchResults, setSearchResults] = useState([]);
   const [showResults, setShowResults] = useState(false);
   const [isMobile, setIsMobile] = useState(false);
+  const [upgradeModalOpen, setUpgradeModalOpen] = useState(false);
+  const [upgradeReason, setUpgradeReason] = useState('general');
 
-  // Mobile detection
+  const handleShowUpgradeModal = useCallback((reason = 'general') => {
+    setUpgradeReason(reason);
+    setUpgradeModalOpen(true);
+  }, []);
+
+  const handleCloseUpgradeModal = useCallback(() => {
+    setUpgradeModalOpen(false);
+    setUpgradeReason('general');
+  }, []);
+
+  // Mobile detection - EXACT from landingupgrade.js
   useEffect(() => {
     const checkMobile = () => setIsMobile(window.innerWidth <= 768);
     checkMobile();
@@ -440,7 +452,7 @@ const ChatLauncherPage = ({ onStartChat }) => {
     );
   }
 
-  // Mobile layout
+  // EXACT MOBILE LAYOUT from landingupgrade.js
   if (isMobile) {
     return (
       <div style={{
@@ -632,7 +644,7 @@ const ChatLauncherPage = ({ onStartChat }) => {
           />
         )}
 
-        {/* Categories or Characters View */}
+        {/* Categories or Characters View - EXACT from landingupgrade.js */}
         {!selectedCategory ? (
           <div style={{
             width: '100%',
@@ -693,7 +705,7 @@ const ChatLauncherPage = ({ onStartChat }) => {
               </button>
             </div>
 
-            {/* Mobile Characters Content Area */}
+            {/* Mobile Characters Content Area - FIXED: Working upgrade buttons */}
             {selectedCategory.key === 'my_characters' ? (
               <MyCharactersPanel 
                 userCharacters={userCharacters}
@@ -702,6 +714,8 @@ const ChatLauncherPage = ({ onStartChat }) => {
                 onCreateCharacter={handleCreateCharacterClick}
                 onCharacterSelect={handleCharacterSelect}
                 isMobile={true}
+                user_id={user?.id}
+                onShowUpgradeModal={handleShowUpgradeModal} // ✅ CRITICAL FIX: This was missing
               />
             ) : (
               <div style={{
@@ -748,7 +762,7 @@ const ChatLauncherPage = ({ onStartChat }) => {
     );
   }
 
-  // Desktop layout
+  // EXACT DESKTOP LAYOUT from landingupgrade.js
   return (
     <div style={{
       width: '100%',
@@ -1043,7 +1057,7 @@ const ChatLauncherPage = ({ onStartChat }) => {
                 </button>
               </div>
 
-              {/* Desktop Content Area */}
+              {/* Desktop Content Area - FIXED: Working upgrade buttons */}
               {selectedCategory.key === 'my_characters' ? (
                 <MyCharactersPanel 
                   userCharacters={userCharacters}
@@ -1052,6 +1066,8 @@ const ChatLauncherPage = ({ onStartChat }) => {
                   onCreateCharacter={handleCreateCharacterClick}
                   onCharacterSelect={handleCharacterSelect}
                   isMobile={false}
+                  user_id={user?.id}
+                  onShowUpgradeModal={handleShowUpgradeModal} // ✅ CRITICAL FIX: This was missing
                 />
               ) : (
                 <div style={{
@@ -1179,7 +1195,28 @@ const ChatLauncherPage = ({ onStartChat }) => {
           );
           box-shadow: 0 0 8px rgba(255, 215, 0, 0.4);
         }
+        
+        @media (max-width: 768px) {
+          button {
+            pointer-events: auto !important;
+            z-index: 999999999999 !important;
+            position: relative !important;
+            touch-action: manipulation !important;
+            min-height: 44px !important;
+            cursor: pointer !important;
+            user-select: none !important;
+            -webkit-user-select: none !important;
+          }
+        }
       `}</style>
+
+      {/* Upgrade Modal */}
+      <DualPathUpgradeSystem
+        isOpen={upgradeModalOpen}
+        onClose={handleCloseUpgradeModal}
+        triggerReason={upgradeReason}
+        currentUsage={null}
+      />
     </div>
   );
 };
