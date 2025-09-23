@@ -1,4 +1,4 @@
-// src/components/ChatLauncherHelpers.jsx - FIXED: My Characters flow
+// src/components/ChatLauncherHelpers.jsx
 // Helper components for ChatLauncherPage (decentralized: NO status modal here)
 import React from 'react';
 import DefensiveCharacterCreationWrapper from './DefensiveCharacterCreationWrapper';
@@ -61,11 +61,9 @@ export const CategoryCard = ({
 }) => {
   const isMyCharacters = category.key === 'my_characters';
 
-  // ✅ FIXED: Handle My Characters category correctly
   const handleClick = () => {
-    if (isMyCharacters) {
-      // Always go to category view first - the MyCharactersPanel will handle the flow
-      onClick?.();
+    if (isMyCharacters && (category.characterCount || 0) === 0) {
+      onCreateCharacter?.();
     } else {
       onClick?.();
     }
@@ -136,10 +134,20 @@ export const CategoryCard = ({
         justifyContent: 'center',
         textAlign: 'center',
         aspectRatio: '1',
+        opacity: 0,
         opacity: isMobile ? 1 : 0,
+        visibility: isMobile ? 'visible' : undefined,
+        transform: isMobile ? 'translateZ(0)' : undefined,
+        animation: isMobile ? 'none' : `characterSlideIn 0.6s ease-out ${index * 0.05}s forwards`,
+        minHeight: isMobile ? '120px' : '150px',
+        maxHeight: isMobile ? '160px' : '200px',
+        // ... keep all existing styles, but change these specific lines:
+        opacity: isMobile ? 1 : 0,  // FORCE VISIBLE ON MOBILE
         animation: isMobile ? 'none' : `categorySlideIn 0.6s ease-out ${index * 0.1}s forwards`,
         minHeight: isMobile ? '120px' : '150px',
         maxHeight: isMobile ? '160px' : '200px',
+        position: 'relative',
+        // ADD THESE NEW LINES:
         visibility: isMobile ? 'visible' : undefined,
         transform: isMobile ? 'translateZ(0)' : undefined,
         willChange: isMobile ? 'auto' : 'opacity, transform'
@@ -242,7 +250,7 @@ export const CategoryCard = ({
         {isMyCharacters
           ? ((category.characterCount || 0) > 0
               ? `${category.characterCount} characters`
-              : 'Get Started')
+              : 'Create Character')
           : `${(category.characters || []).length} guides`
         }
       </span>
@@ -604,7 +612,6 @@ export const MyCharactersPanel = ({
     );
   }
 
-  // ✅ FIXED: Educational screen for new users (when no characters exist)
   if (userCharacters.length === 0) {
     return (
       <div style={{
@@ -648,50 +655,49 @@ export const MyCharactersPanel = ({
             </p>
           </div>
 
-          {/* ✅ PROPER CHARACTER CREATION BUTTON WITH DEFENSIVE WRAPPER */}
           <DefensiveCharacterCreationWrapper 
             user_id={user_id}
             onUpgradePrompt={() => {
               onShowUpgradeModal('character_limit');
             }}
+            
           >
-            <button
-              onClick={onCreateCharacter}
-              style={{
-                background: 'linear-gradient(135deg, #FFD700, #FFA500)',
-                border: 'none',
-                borderRadius: isMobile ? '20px' : '25px',
-                color: '#000',
-                fontSize: isMobile ? '0.9rem' : '1rem',
-                fontWeight: 700,
-                padding: isMobile ? '0.8rem 1.5rem' : '1rem 2rem',
-                cursor: 'pointer',
-                transition: 'all 0.3s ease',
-                fontFamily: "'Georgia', serif",
-                boxShadow: '0 4px 15px rgba(255, 215, 0, 0.3)'
-              }}
-              onMouseEnter={(e) => {
-                if (!isMobile) {
-                  e.currentTarget.style.transform = 'translateY(-2px)';
-                  e.currentTarget.style.boxShadow = '0 6px 20px rgba(255, 215, 0, 0.4)';
-                }
-              }}
-              onMouseLeave={(e) => {
-                if (!isMobile) {
-                  e.currentTarget.style.transform = 'translateY(0)';
-                  e.currentTarget.style.boxShadow = '0 4px 15px rgba(255, 215, 0, 0.3)';
-                }
-              }}
-            >
-              Start Creating
-            </button>
-          </DefensiveCharacterCreationWrapper>
+          <button
+            onClick={onCreateCharacter}
+            style={{
+              background: 'linear-gradient(135deg, #FFD700, #FFA500)',
+              border: 'none',
+              borderRadius: isMobile ? '20px' : '25px',
+              color: '#000',
+              fontSize: isMobile ? '0.9rem' : '1rem',
+              fontWeight: 700,
+              padding: isMobile ? '0.8rem 1.5rem' : '1rem 2rem',
+              cursor: 'pointer',
+              transition: 'all 0.3s ease',
+              fontFamily: "'Georgia', serif",
+              boxShadow: '0 4px 15px rgba(255, 215, 0, 0.3)'
+            }}
+            onMouseEnter={(e) => {
+              if (!isMobile) {
+                e.currentTarget.style.transform = 'translateY(-2px)';
+                e.currentTarget.style.boxShadow = '0 6px 20px rgba(255, 215, 0, 0.4)';
+              }
+            }}
+            onMouseLeave={(e) => {
+              if (!isMobile) {
+                e.currentTarget.style.transform = 'translateY(0)';
+                e.currentTarget.style.boxShadow = '0 4px 15px rgba(255, 215, 0, 0.3)';
+              }
+            }}
+          >
+            Start Creating
+          </button>
+        </DefensiveCharacterCreationWrapper>
         </div>
       </div>
     );
   }
 
-  // ✅ FIXED: When characters exist, show them properly
   return (
     <div style={{ width: '100%' }}>
       {(pendingCharacters.length > 0 || rejectedCharacters.length > 0) && (
@@ -783,36 +789,36 @@ export const MyCharactersPanel = ({
             onShowUpgradeModal('character_limit');
           }}
         >
-          <button
-            onClick={onCreateCharacter}
-            style={{
-              background: 'rgba(255, 215, 0, 0.1)',
-              border: '2px dashed rgba(255, 215, 0, 0.4)',
-              borderRadius: '12px',
-              color: '#FFD700',
-              fontSize: isMobile ? '0.8rem' : '0.9rem',
-              fontWeight: 600,
-              padding: isMobile ? '0.8rem 1.2rem' : '1rem 1.5rem',
-              cursor: 'pointer',
-              transition: 'all 0.3s ease',
-              fontFamily: "'Georgia', serif"
-            }}
-            onMouseEnter={(e) => {
-              if (!isMobile) {
-                e.currentTarget.style.background = 'rgba(255, 215, 0, 0.15)';
-                e.currentTarget.style.borderColor = 'rgba(255, 215, 0, 0.6)';
-              }
-            }}
-            onMouseLeave={(e) => {
-              if (!isMobile) {
-                e.currentTarget.style.background = 'rgba(255, 215, 0, 0.1)';
-                e.currentTarget.style.borderColor = 'rgba(255, 215, 0, 0.4)';
-              }
-            }}
-          >
-            Create New Character
-          </button>
-        </DefensiveCharacterCreationWrapper>
+        <button
+          onClick={onCreateCharacter}
+          style={{
+            background: 'rgba(255, 215, 0, 0.1)',
+            border: '2px dashed rgba(255, 215, 0, 0.4)',
+            borderRadius: '12px',
+            color: '#FFD700',
+            fontSize: isMobile ? '0.8rem' : '0.9rem',
+            fontWeight: 600,
+            padding: isMobile ? '0.8rem 1.2rem' : '1rem 1.5rem',
+            cursor: 'pointer',
+            transition: 'all 0.3s ease',
+            fontFamily: "'Georgia', serif"
+          }}
+          onMouseEnter={(e) => {
+            if (!isMobile) {
+              e.currentTarget.style.background = 'rgba(255, 215, 0, 0.15)';
+              e.currentTarget.style.borderColor = 'rgba(255, 215, 0, 0.6)';
+            }
+          }}
+          onMouseLeave={(e) => {
+            if (!isMobile) {
+              e.currentTarget.style.background = 'rgba(255, 215, 0, 0.1)';
+              e.currentTarget.style.borderColor = 'rgba(255, 215, 0, 0.4)';
+            }
+          }}
+        >
+          Create New Character
+        </button>
+      </DefensiveCharacterCreationWrapper>
       </div>
     </div>
   );
