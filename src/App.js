@@ -2,8 +2,6 @@
 import React, { useEffect } from 'react';
 import { Routes, Route, Navigate, useLocation, useNavigate } from 'react-router-dom';
 import { useAuth } from './contexts/AuthContext';
-
-// Landing page (new module)
 import LandingPage     from './landing/pages/LandingPage';
 import Login           from './pages/Login';
 import Register        from './pages/Register';
