@@ -724,15 +724,24 @@ const ChatLauncherPage = ({ onStartChat }) => {
                 gridTemplateColumns: 'repeat(2, 1fr)',
                 gap: '1rem',
                 marginTop: '1rem',
+                position: 'relative', // FIXED: Ensure proper positioning context
+                zIndex: 1 // FIXED: Ensure cards are visible above container background
               }}>
                 {selectedCategory.characters.map((character) => (
-                  <CharacterCard
+                  <div
                     key={character.key}
-                    character={character}
-                    onClick={() => handleCharacterSelect(character)}
-                    isMobile={true}
-                    showStatusIndicator={character.key?.startsWith('user_')}
-                  />
+                    style={{ 
+                      position: 'relative',
+                      zIndex: 2 // FIXED: Ensure individual cards are visible
+                    }}
+                  >
+                    <CharacterCard
+                      character={character}
+                      onClick={() => handleCharacterSelect(character)}
+                      isMobile={true}
+                      showStatusIndicator={character.key?.startsWith('user_')}
+                    />
+                  </div>
                 ))}
               </div>
             )}
@@ -1211,6 +1220,23 @@ const ChatLauncherPage = ({ onStartChat }) => {
         .character-panel {
           position: relative;
           z-index: 600;
+        }
+        
+        /* CRITICAL FIX: Ensure character cards are visible within their containers */
+        .character-panel * {
+          position: relative;
+          z-index: auto;
+        }
+        
+        /* Ensure mobile character cards are properly layered */
+        @media (max-width: 768px) {
+          /* Force character cards to be visible */
+          div[style*="display: grid"] > div {
+            position: relative !important;
+            z-index: 1 !important;
+            visibility: visible !important;
+            opacity: 1 !important;
+          }
         }
         
         /* FIXED: Mobile button improvements */
