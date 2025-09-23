@@ -1,4 +1,4 @@
-// src/index.js - ULTRA SILENT VERSION
+// src/index.js - Smart security for different environments
 import './styles.css';
 import React from 'react';
 import ReactDOM from 'react-dom/client';
@@ -12,63 +12,100 @@ import { CharacterProvider } from './contexts/CharacterContext';
 import { ContextProvider } from './contexts/ContextContext';
 import App from './App';
 
-// ULTRA SILENT console - completely mute everything
-if (process.env.NODE_ENV === 'production') {
-  const silent = () => {};
-  console.log = silent;
-  console.warn = silent;
-  console.info = silent;
-  console.debug = silent;
-  console.error = silent; // MUTE ERRORS TOO
-  console.trace = silent;
-  console.table = silent;
+// SMART SECURITY: Different levels for different environments
+const getEnvironmentConfig = () => {
+  // Vercel-specific environment variables
+  const isPreview = process.env.REACT_APP_VERCEL_ENV === 'preview' || 
+                    process.env.VERCEL_ENV === 'preview';
   
-  // Override global error handlers
-  window.onerror = () => true; // Suppress all errors
-  window.onunhandledrejection = () => true; // Suppress promise rejections
+  const isDevelopment = process.env.NODE_ENV === 'development';
+  const isProduction = process.env.NODE_ENV === 'production' && !isPreview;
+
+  return {
+    isPreview,
+    isDevelopment, 
+    isProduction,
+    allowTokenLogging: isPreview || isDevelopment, // Allow tokens in preview/dev
+    allowDetailedErrors: isPreview || isDevelopment,
+    allowDebugLogs: isPreview || isDevelopment
+  };
+};
+
+const envConfig = getEnvironmentConfig();
+
+// SMART CONSOLE MANAGEMENT
+if (envConfig.isProduction) {
+  // PRODUCTION: Maximum security - complete silence
+  const noop = () => {};
+  console.log = noop;
+  console.warn = noop;
+  console.info = noop;
+  console.debug = noop;
+  console.error = noop;
+} else if (envConfig.isPreview) {
+  // PREVIEW: Developer-friendly with token visibility
+  const originalLog = console.log;
+  const originalError = console.error;
+  
+  console.log = (...args) => {
+    const message = args.join(' ').toLowerCase();
+    
+    // Allow tokens in preview builds for debugging
+    if (message.includes('token') || message.includes('bearer') || message.includes('auth')) {
+      originalLog('🔐 [PREVIEW] Auth Token Debug:', ...args);
+      return;
+    }
+    
+    // Allow other debug info
+    originalLog('[PREVIEW]', ...args);
+  };
+  
+  console.error = (...args) => {
+    // Always show errors in preview
+    originalError('[PREVIEW ERROR]', ...args);
+  };
+  
+  console.info = (...args) => {
+    originalLog('[PREVIEW INFO]', ...args);
+  };
+  
+  console.log('🚀 Preview Build - Debug mode enabled');
+  console.log('🔐 Token debugging available for authentication testing');
 }
 
-// ERROR-FREE rendering with try/catch
 const root = ReactDOM.createRoot(document.getElementById('root'));
 
-try {
-  root.render(
-    <React.StrictMode>
-      <BrowserRouter>
-        <ThemeProvider>
-          <UserProvider>
-            <AuthProvider>
-              <CharacterProvider>
-                <ContextProvider>
-                  <WebSocketProvider>
-                    <PremiumCapabilitiesProvider>
-                      <App />
-                    </PremiumCapabilitiesProvider>
-                  </WebSocketProvider>
-                </ContextProvider>
-              </CharacterProvider>
-            </AuthProvider>
-          </UserProvider>
-        </ThemeProvider>
-      </BrowserRouter>
-    </React.StrictMode>
-  );
-} catch (error) {
-  // Silent fail - don't show rendering errors
+root.render(
+  <React.StrictMode>
+    <BrowserRouter>
+      <ThemeProvider>
+        <UserProvider>
+          <AuthProvider>
+            <CharacterProvider>
+              <ContextProvider>
+                <WebSocketProvider>
+                  <PremiumCapabilitiesProvider>
+                    <App />
+                  </PremiumCapabilitiesProvider>
+                </WebSocketProvider>
+              </ContextProvider>
+            </CharacterProvider>
+          </AuthProvider>
+        </UserProvider>
+      </ThemeProvider>
+    </BrowserRouter>
+  </React.StrictMode>
+);
+
+// Service Worker - Preview-friendly
+if ('serviceWorker' in navigator) {
+  if (envConfig.isProduction) {
+    // Production: silent registration
+    navigator.serviceWorker.register('/sw.js').catch(() => {});
+  } else {
+    // Preview/Dev: verbose registration
+    navigator.serviceWorker.register('/sw.js')
+      .then(reg => console.log('🔧 [PREVIEW] SW registered:', reg.scope))
+      .catch(err => console.log('🔧 [PREVIEW] SW registration failed:', err));
+  }
 }
-
-// SILENT Service Worker
-if ('serviceWorker' in navigator && process.env.NODE_ENV === 'production') {
-  navigator.serviceWorker.register('/sw.js').catch(() => {});
-}
-
-// SILENT PWA installation
-let deferredPrompt;
-window.addEventListener('beforeinstallprompt', (e) => {
-  e.preventDefault();
-  deferredPrompt = e;
-});
-
-window.addEventListener('appinstalled', () => {
-  document.documentElement.classList.add('pwa-mode');
-});
