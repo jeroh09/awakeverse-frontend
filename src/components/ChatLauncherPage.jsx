@@ -726,21 +726,14 @@ const ChatLauncherPage = ({ onStartChat }) => {
                 marginTop: '1rem'
               }}>
                 {selectedCategory.characters.map((character, index) => (
-                  <div
+                  <CharacterCard
                     key={character.key}
-                    style={{ 
-                      animation: `characterSlideIn 0.6s ease-out ${index * 0.05}s forwards`,
-                      opacity: 1 // FIXED: Override the starting opacity from CharacterCard
-                    }}
-                  >
-                    <CharacterCard
-                      character={character}
-                      onClick={() => handleCharacterSelect(character)}
-                      isMobile={true}
-                      showStatusIndicator={character.key?.startsWith('user_')}
-                      index={index}
-                    />
-                  </div>
+                    character={character}
+                    onClick={() => handleCharacterSelect(character)}
+                    isMobile={true}
+                    showStatusIndicator={character.key?.startsWith('user_')}
+                    index={index}
+                  />
                 ))}
               </div>
             )}
@@ -1229,20 +1222,18 @@ const ChatLauncherPage = ({ onStartChat }) => {
         
         /* Ensure mobile character cards are properly layered */
         @media (max-width: 768px) {
-          /* CRITICAL FIX: Force character cards to be visible on mobile */
-          /* The issue is that characterSlideIn animation is not completing properly due to z-index conflicts */
-          div[style*="display: grid"] div[style*="animation"]:not([style*="categorySlideIn"]) {
-            animation: characterSlideIn 0.6s ease-out forwards !important;
-            opacity: 1 !important; /* Force visibility after animation */
+          /* SIMPLE MOBILE FIX: Force all character cards visible, bypass animation issues */
+          div[style*="animation"][style*="characterSlideIn"] {
+            opacity: 1 !important;
+            animation: none !important;
             visibility: visible !important;
-            position: relative !important;
-            z-index: 10 !important;
+            transform: none !important;
           }
           
-          /* Ensure the grid container doesn't interfere */
+          /* Ensure mobile character grid is properly positioned */
           div[style*="gridTemplateColumns: repeat(2, 1fr)"] {
-            position: relative !important;
-            z-index: 5 !important;
+            position: relative;
+            z-index: 1;
           }
         }
         
