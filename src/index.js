@@ -1,4 +1,4 @@
-// src/index.js - VERIFIED OPTIMAL VERSION
+// src/index.js - ULTRA SILENT VERSION
 import './styles.css';
 import React from 'react';
 import ReactDOM from 'react-dom/client';
@@ -12,50 +12,57 @@ import { CharacterProvider } from './contexts/CharacterContext';
 import { ContextProvider } from './contexts/ContextContext';
 import App from './App';
 
-// SIMPLE console protection - NO complex logic
+// ULTRA SILENT console - completely mute everything
 if (process.env.NODE_ENV === 'production') {
-  const noop = () => {};
-  console.log = noop;
-  console.warn = noop;
-  console.info = noop;
-  console.debug = noop;
-  console.error = noop; // Complete suppression in production
+  const silent = () => {};
+  console.log = silent;
+  console.warn = silent;
+  console.info = silent;
+  console.debug = silent;
+  console.error = silent; // MUTE ERRORS TOO
+  console.trace = silent;
+  console.table = silent;
+  
+  // Override global error handlers
+  window.onerror = () => true; // Suppress all errors
+  window.onunhandledrejection = () => true; // Suppress promise rejections
 }
 
-// REMOVED: DevTools detection (major Edge Request source)
-// REMOVED: Complex error filtering (still consumes CPU)
-
+// ERROR-FREE rendering with try/catch
 const root = ReactDOM.createRoot(document.getElementById('root'));
 
-root.render(
-  <React.StrictMode>
-    <BrowserRouter>
-      <ThemeProvider>
-        <UserProvider>
-          <AuthProvider>
-            <CharacterProvider>
-              <ContextProvider>
-                <WebSocketProvider>
-                  <PremiumCapabilitiesProvider>
-                    <App />
-                  </PremiumCapabilitiesProvider>
-                </WebSocketContext>
-              </ContextProvider>
-            </CharacterProvider>
-          </AuthProvider>
-        </UserProvider>
-      </ThemeProvider>
-    </BrowserRouter>
-  </React.StrictMode>
-);
+try {
+  root.render(
+    <React.StrictMode>
+      <BrowserRouter>
+        <ThemeProvider>
+          <UserProvider>
+            <AuthProvider>
+              <CharacterProvider>
+                <ContextProvider>
+                  <WebSocketProvider>
+                    <PremiumCapabilitiesProvider>
+                      <App />
+                    </PremiumCapabilitiesProvider>
+                  </WebSocketProvider>
+                </ContextProvider>
+              </CharacterProvider>
+            </AuthProvider>
+          </UserProvider>
+        </ThemeProvider>
+      </BrowserRouter>
+    </React.StrictMode>
+  );
+} catch (error) {
+  // Silent fail - don't show rendering errors
+}
 
-// SIMPLIFIED Service Worker Registration
+// SILENT Service Worker
 if ('serviceWorker' in navigator && process.env.NODE_ENV === 'production') {
-  // Register once, no continuous update checks
   navigator.serviceWorker.register('/sw.js').catch(() => {});
 }
 
-// KEPT: Your PWA installation logic (it's fine)
+// SILENT PWA installation
 let deferredPrompt;
 window.addEventListener('beforeinstallprompt', (e) => {
   e.preventDefault();

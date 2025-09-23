@@ -1,4 +1,4 @@
-// src/pages/ChatLauncherPage.jsx - MOBILE REFACTOR: Steps
+// src/pages/ChatLauncherPage.jsx - MOBILE REFACTOR: Steps 3-4 Implementation
 import React, { useState, useEffect, useMemo, useCallback } from 'react';
 import { useAuth } from '../contexts/AuthContext';
 import { useUser } from '../contexts/UserContext';
@@ -713,7 +713,6 @@ const ChatLauncherPage = ({ onStartChat }) => {
               charactersError={charactersError}
               onCreateCharacter={handleCreateCharacterClick}
               onCharacterSelect={handleCharacterSelect}
-              onShowUpgradeModal={handleShowUpgradeModal}
               user_id={user?.id}
             />
           </>

@@ -92,7 +92,7 @@ const DefensiveCharacterCreationWrapper = ({
           justifyContent: 'center',
           borderRadius: '8px',
           cursor: 'pointer',
-          zIndex: 5
+          zIndex: 999
         }}
         onClick={() => onUpgradePrompt?.()}
         >
