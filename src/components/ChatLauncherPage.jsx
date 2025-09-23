@@ -723,16 +723,14 @@ const ChatLauncherPage = ({ onStartChat }) => {
                 display: 'grid',
                 gridTemplateColumns: 'repeat(2, 1fr)',
                 gap: '1rem',
-                marginTop: '1rem',
-                position: 'relative', // FIXED: Ensure proper positioning context
-                zIndex: 1 // FIXED: Ensure cards are visible above container background
+                marginTop: '1rem'
               }}>
-                {selectedCategory.characters.map((character) => (
+                {selectedCategory.characters.map((character, index) => (
                   <div
                     key={character.key}
                     style={{ 
-                      position: 'relative',
-                      zIndex: 2 // FIXED: Ensure individual cards are visible
+                      animation: `characterSlideIn 0.6s ease-out ${index * 0.05}s forwards`,
+                      opacity: 1 // FIXED: Override the starting opacity from CharacterCard
                     }}
                   >
                     <CharacterCard
@@ -740,6 +738,7 @@ const ChatLauncherPage = ({ onStartChat }) => {
                       onClick={() => handleCharacterSelect(character)}
                       isMobile={true}
                       showStatusIndicator={character.key?.startsWith('user_')}
+                      index={index}
                     />
                   </div>
                 ))}
@@ -1230,12 +1229,20 @@ const ChatLauncherPage = ({ onStartChat }) => {
         
         /* Ensure mobile character cards are properly layered */
         @media (max-width: 768px) {
-          /* Force character cards to be visible */
-          div[style*="display: grid"] > div {
-            position: relative !important;
-            z-index: 1 !important;
+          /* CRITICAL FIX: Force character cards to be visible on mobile */
+          /* The issue is that characterSlideIn animation is not completing properly due to z-index conflicts */
+          div[style*="display: grid"] div[style*="animation"]:not([style*="categorySlideIn"]) {
+            animation: characterSlideIn 0.6s ease-out forwards !important;
+            opacity: 1 !important; /* Force visibility after animation */
             visibility: visible !important;
-            opacity: 1 !important;
+            position: relative !important;
+            z-index: 10 !important;
+          }
+          
+          /* Ensure the grid container doesn't interfere */
+          div[style*="gridTemplateColumns: repeat(2, 1fr)"] {
+            position: relative !important;
+            z-index: 5 !important;
           }
         }
         
