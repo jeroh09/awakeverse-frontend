@@ -4,7 +4,6 @@ import { useAuth } from '../contexts/AuthContext';
 import { useUser } from '../contexts/UserContext';
 import usePremiumCapabilities from './usePremiumCapabilities';
 
-
 const API_BASE = process.env.REACT_APP_API_URL || 'http://localhost:5000';
 export default function usePremiumCharacters() {
   const { token } = useAuth();
@@ -22,6 +21,7 @@ export default function usePremiumCharacters() {
     
     try {
       setLoading(true);
+      setError(null);
       const response = await fetch(`${API_BASE}/api/premium/characters`, {
         method: 'GET',
         headers: {
@@ -32,7 +32,7 @@ export default function usePremiumCharacters() {
 
       if (!response.ok) {
         if (response.status === 404) return [];
-        throw new Error(`Characters API failed: ${response.status}`);
+        throw new Error(`Failed to load characters`);
       }
 
       const data = await response.json();
@@ -41,7 +41,6 @@ export default function usePremiumCharacters() {
       return characters;
       
     } catch (error) {
-      console.error('Failed to fetch characters:', error);
       setError(error.message);
       return [];
     } finally {
@@ -51,9 +50,10 @@ export default function usePremiumCharacters() {
 
   // Fetch character templates with pagination
   const fetchCharacterTemplates = useCallback(async () => {
-    if (!token) return [];
+    if (!token) return {};
 
     try {
+      setError(null);
       // Load all templates in one request
       const response = await fetch(`${API_BASE}/api/premium/templates?per_page=100`, {
         method: 'GET',
@@ -64,17 +64,15 @@ export default function usePremiumCharacters() {
       });
 
       if (!response.ok) {
-        throw new Error(`Templates API failed: ${response.status}`);
+        throw new Error(`Failed to load templates`);
       }
 
       const data = await response.json();
-      alert(`RAW API RESPONSE: ${JSON.stringify(data, null, 2)}`);
       setCharacterTemplates(data.template_groups || {});
 
       return data;
 
     } catch (error) {
-      console.error('Failed to fetch templates:', error);
       setError(error.message);
       return {};
     }
@@ -83,14 +81,11 @@ export default function usePremiumCharacters() {
   // Create character with optimistic updates
   const createCharacter = useCallback(async (characterData) => {
     if (!user?.id || !token) {
-      throw new Error('User not authenticated');
+      throw new Error('Authentication required');
     }
-    alert(`DEBUG 1: About to create character
-      URL: ${API_BASE}/api/premium/characters
-      User: ${user.id}
-      Token: ${token ? 'Present' : 'Missing'}`);
 
     try {
+      setError(null);
       const response = await fetch(`${API_BASE}/api/premium/characters`, {
         method: 'POST',
         headers: {
@@ -99,19 +94,13 @@ export default function usePremiumCharacters() {
         },
         body: JSON.stringify(characterData)
       });
-      alert(`DEBUG 2: Response received
-        Status: ${response.status}
-        OK: ${response.ok}`);
 
       if (!response.ok) {
         const errorData = await response.json().catch(() => ({}));
-        alert(`DEBUG 3: Error response: ${JSON.stringify(errorData)}`);
-
-        throw new Error(errorData.error || `Character creation failed: ${response.status}`);
+        throw new Error(errorData.error || 'Character creation failed');
       }
 
       const data = await response.json();
-      alert(`DEBUG 4: Success response: ${JSON.stringify(data)}`);
       // Optimistically add to local state
       const newCharacter = {
         ...data.character,
@@ -126,20 +115,17 @@ export default function usePremiumCharacters() {
       
       // Invalidate capabilities cache since user now has pending character
       await invalidateAndRefresh();
-      
       return data;
-      
     } catch (error) {
-      alert(`DEBUG 5: Exception caught: ${error.message}`);
-      console.error('Character creation failed:', error);
+      setError(error.message);
       throw error;
     }
-  }, [user?.id, token]);
+  }, [user?.id, token, invalidateAndRefresh]);
 
   // Load data on mount
   useEffect(() => {
     const loadData = async () => {
-      const [characters, templates] = await Promise.all([
+      await Promise.allSettled([
         fetchUserCharacters(),
         fetchCharacterTemplates()
       ]);
@@ -173,6 +159,6 @@ export default function usePremiumCharacters() {
     hasPendingCharacters: pendingCharacters.length > 0,
     
     // Legacy compatibility
-    isPremium // For components that still check this
+    isPremium
   };
 }
