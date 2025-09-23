@@ -1,4 +1,4 @@
-// src/pages/ChatLauncherPage.jsx - MOBILE REFACTOR: Steps 3-4 Implementation
+// src/pages/ChatLauncherPage.jsx - MOBILE REFACTOR: Steps
 import React, { useState, useEffect, useMemo, useCallback } from 'react';
 import { useAuth } from '../contexts/AuthContext';
 import { useUser } from '../contexts/UserContext';
