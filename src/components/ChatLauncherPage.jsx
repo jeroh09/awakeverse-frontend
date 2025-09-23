@@ -1,4 +1,4 @@
-// src/pages/ChatLauncherPage.jsx - Complete implementation with mobile modal fix
+// src/pages/ChatLauncherPage.jsx - Complete implementation with character status handling
 import React, { useState, useEffect, useMemo, useCallback } from 'react';
 import { useAuth } from '../contexts/AuthContext';
 import { useUser } from '../contexts/UserContext';
@@ -126,12 +126,12 @@ const ChatLauncherPage = ({ onStartChat }) => {
   const [showSuccess, setShowSuccess] = useState(false);
   const [selectedTemplate, setSelectedTemplate] = useState(null);
 
-  // Premium character state management
+  // NEW: Premium character state management
   const [userCharacters, setUserCharacters] = useState([]);
   const [charactersLoading, setCharactersLoading] = useState(false);
   const [charactersError, setCharactersError] = useState(null);
 
-  // Character status modal state
+  // NEW: Character status modal state
   const [showStatusModal, setShowStatusModal] = useState(false);
   const [selectedStatusCharacter, setSelectedStatusCharacter] = useState(null);
 
@@ -164,10 +164,9 @@ const ChatLauncherPage = ({ onStartChat }) => {
     setUpgradeReason('general');
   }, []);
 
-  // FIXED: Mobile detection with modal protection
+  // Mobile detection - FIXED: Don't change mobile state if upgrade modal is open
   useEffect(() => {
     const checkMobile = () => {
-      // CRITICAL FIX: Don't change mobile state if upgrade modal is open
       if (upgradeModalOpen) {
         console.log('Upgrade modal is open, preventing mobile state change');
         return;
@@ -177,7 +176,7 @@ const ChatLauncherPage = ({ onStartChat }) => {
     checkMobile();
     window.addEventListener('resize', checkMobile);
     return () => window.removeEventListener('resize', checkMobile);
-  }, [upgradeModalOpen]); // Add upgradeModalOpen dependency
+  }, [upgradeModalOpen]);
 
   // Rotate placeholder text
   useEffect(() => {
@@ -188,7 +187,7 @@ const ChatLauncherPage = ({ onStartChat }) => {
     return () => clearInterval(interval);
   }, []);
 
-  // Load user's custom characters
+  // NEW: Load user's custom characters
   const loadUserCharacters = useCallback(async () => {
     if (!token) return;
 
@@ -353,7 +352,7 @@ const ChatLauncherPage = ({ onStartChat }) => {
     }
   }, [selectedChar, trackInteraction, onStartChat]);
 
-  // Status modal handlers
+  // NEW: Status modal handlers
   const handleStatusModalClose = useCallback(() => {
     setShowStatusModal(false);
     setSelectedStatusCharacter(null);
@@ -402,10 +401,67 @@ const ChatLauncherPage = ({ onStartChat }) => {
 
   const currentPlaceholder = ORACLE_PROMPTS[placeholderIndex];
 
-  // SHARED MODALS - RENDERED FIRST TO AVOID MOBILE/DESKTOP CONFLICTS
-  const renderSharedModals = () => (
+  // Character Creation Flow Modals
+  if (showSuccess) {
+    return (
+      <div style={{
+        position: 'fixed',
+        top: 0,
+        left: 0,
+        width: '100%',
+        height: '100%',
+        zIndex: 4000,
+        background: 'rgba(0, 0, 0, 0.95)'
+      }}>
+        <CharacterCreationSuccess onClose={handleCloseCreationFlow} />
+      </div>
+    );
+  }
+
+  if (showTemplates) {
+    return (
+      <div style={{
+        position: 'fixed',
+        top: 0,
+        left: 0,
+        width: '100%',
+        height: '100%',
+        zIndex: 3000,
+        background: 'rgba(0, 0, 0, 0.95)',
+        overflowY: 'auto'
+      }}>
+        <TemplateGallery 
+          onSelectTemplate={handleTemplateSelect}
+          onClose={handleCloseCreationFlow}
+        />
+      </div>
+    );
+  }
+
+  if (showBuilder && selectedTemplate) {
+    return (
+      <div style={{
+        position: 'fixed',
+        top: 0,
+        left: 0,
+        width: '100%',
+        height: '100%',
+        zIndex: 3000,
+        background: 'rgba(0, 0, 0, 0.95)'
+      }}>
+        <CharacterBuilder 
+          template={selectedTemplate}
+          onClose={handleCloseCreationFlow}
+          onSuccess={handleCharacterCreationComplete}
+        />
+      </div>
+    );
+  }
+
+  // MAIN RETURN - MODALS RENDERED OUTSIDE MOBILE/DESKTOP CONDITIONAL
+  return (
     <>
-      {/* Character Status Modal */}
+      {/* FIXED: Render modals first, outside mobile/desktop logic */}
       {showStatusModal && selectedStatusCharacter && (
         <CharacterStatusModal
           character={selectedStatusCharacter}
@@ -415,103 +471,17 @@ const ChatLauncherPage = ({ onStartChat }) => {
         />
       )}
 
-      {/* Upgrade Modal - ISOLATED FROM MOBILE/DESKTOP LOGIC */}
       {upgradeModalOpen && (
-        <div style={{
-          position: 'fixed',
-          top: 0,
-          left: 0,
-          width: '100vw',
-          height: '100vh',
-          zIndex: 999999999999,
-          isolation: 'isolate'
-        }}>
-          <DualPathUpgradeSystem
-            isOpen={upgradeModalOpen}
-            onClose={handleCloseUpgradeModal}
-            triggerReason={upgradeReason}
-            currentUsage={null}
-          />
-        </div>
+        <DualPathUpgradeSystem
+          isOpen={upgradeModalOpen}
+          onClose={handleCloseUpgradeModal}
+          triggerReason={upgradeReason}
+          currentUsage={null}
+        />
       )}
-    </>
-  );
 
-  // Character Creation Flow Modals
-  if (showSuccess) {
-    return (
-      <>
-        {renderSharedModals()}
-        <div style={{
-          position: 'fixed',
-          top: 0,
-          left: 0,
-          width: '100%',
-          height: '100%',
-          zIndex: 4000,
-          background: 'rgba(0, 0, 0, 0.95)'
-        }}>
-          <CharacterCreationSuccess onClose={handleCloseCreationFlow} />
-        </div>
-      </>
-    );
-  }
-
-  if (showTemplates) {
-    return (
-      <>
-        {renderSharedModals()}
-        <div style={{
-          position: 'fixed',
-          top: 0,
-          left: 0,
-          width: '100%',
-          height: '100%',
-          zIndex: 3000,
-          background: 'rgba(0, 0, 0, 0.95)',
-          overflowY: 'auto'
-        }}>
-          <TemplateGallery 
-            onSelectTemplate={handleTemplateSelect}
-            onClose={handleCloseCreationFlow}
-          />
-        </div>
-      </>
-    );
-  }
-
-  if (showBuilder && selectedTemplate) {
-    return (
-      <>
-        {renderSharedModals()}
-        <div style={{
-          position: 'fixed',
-          top: 0,
-          left: 0,
-          width: '100%',
-          height: '100%',
-          zIndex: 3000,
-          background: 'rgba(0, 0, 0, 0.95)'
-        }}>
-          <CharacterBuilder 
-            template={selectedTemplate}
-            onClose={handleCloseCreationFlow}
-            onSuccess={handleCharacterCreationComplete}
-          />
-        </div>
-      </>
-    );
-  }
-
-  // MAIN LAYOUT RETURN - MODALS RENDERED FIRST
-  return (
-    <>
-      {/* RENDER SHARED MODALS FIRST - OUTSIDE OF MOBILE/DESKTOP LOGIC */}
-      {renderSharedModals()}
-
-      {/* THEN RENDER MOBILE/DESKTOP LAYOUTS */}
+      {/* THEN YOUR ORIGINAL MOBILE/DESKTOP LAYOUT */}
       {isMobile ? (
-        // Mobile layout
         <div style={{
           width: '100%',
           minHeight: '100vh',
@@ -712,7 +682,7 @@ const ChatLauncherPage = ({ onStartChat }) => {
             />
           )}
 
-          {/* Categories/Characters View */}
+          {/* SIMPLIFIED Categories/Characters View - NO NESTED TERNARY */}
           {!selectedCategory ? (
             // CATEGORIES VIEW
             <div style={{
@@ -766,7 +736,8 @@ const ChatLauncherPage = ({ onStartChat }) => {
                     fontWeight: 600,
                     padding: '0.3rem 0.8rem',
                     cursor: 'pointer',
-                    fontFamily: "'Georgia', serif"
+                    fontFamily: "'Georgia', serif",
+                    zIndex: 10 // Lower z-index than character detail panel
                   }}
                 >
                   ← Back
@@ -1096,7 +1067,8 @@ const ChatLauncherPage = ({ onStartChat }) => {
                         padding: '0.5rem 1rem',
                         cursor: 'pointer',
                         transition: 'all 0.3s ease',
-                        fontFamily: "'Georgia', serif"
+                        fontFamily: "'Georgia', serif",
+                        zIndex: 10 // Lower z-index than character detail panel
                       }}
                       onMouseEnter={(e) => {
                         e.currentTarget.style.background = 'rgba(255, 215, 0, 0.2)';
@@ -1161,7 +1133,6 @@ const ChatLauncherPage = ({ onStartChat }) => {
         </div>
       )}
 
-      {/* Styles */}
       <style jsx>{`
         @import url('https://fonts.googleapis.com/css2?family=Cinzel:wght@400;600&family=Cinzel+Decorative:wght@400;700&display=swap');
         
