@@ -1,4 +1,4 @@
-// src/pages/ChatLauncherPage.jsx - PROPER FIX: Exact landingupgrade.js structure + working upgrade buttons
+// src/pages/ChatLauncherPage.jsx - MOBILE REFACTOR: Steps 3-4 Implementation
 import React, { useState, useEffect, useMemo, useCallback } from 'react';
 import { useAuth } from '../contexts/AuthContext';
 import { useUser } from '../contexts/UserContext';
@@ -9,6 +9,7 @@ import CharacterBuilder from '../components/CharacterBuilder';
 import CharacterStatusModal from '../components/CharacterStatusModal';
 import CharacterCreationSuccess from '../components/CharacterCreationSuccess';
 import DualPathUpgradeSystem from '../components/DualPathUpgradeSystem';
+import MobileCharacterView from '../components/MobileCharacterView'; // STEP 1: Import added
 
 // Import helper components
 import {
@@ -126,12 +127,12 @@ const ChatLauncherPage = ({ onStartChat }) => {
   const [showSuccess, setShowSuccess] = useState(false);
   const [selectedTemplate, setSelectedTemplate] = useState(null);
 
-  // NEW: Premium character state management
+  // Premium character state management
   const [userCharacters, setUserCharacters] = useState([]);
   const [charactersLoading, setCharactersLoading] = useState(false);
   const [charactersError, setCharactersError] = useState(null);
 
-  // NEW: Character status modal state
+  // Character status modal state
   const [showStatusModal, setShowStatusModal] = useState(false);
   const [selectedStatusCharacter, setSelectedStatusCharacter] = useState(null);
 
@@ -164,7 +165,7 @@ const ChatLauncherPage = ({ onStartChat }) => {
     setUpgradeReason('general');
   }, []);
 
-  // Mobile detection - EXACT from landingupgrade.js
+  // Mobile detection
   useEffect(() => {
     const checkMobile = () => setIsMobile(window.innerWidth <= 768);
     checkMobile();
@@ -181,7 +182,7 @@ const ChatLauncherPage = ({ onStartChat }) => {
     return () => clearInterval(interval);
   }, []);
 
-  // NEW: Load user's custom characters
+  // Load user's custom characters
   const loadUserCharacters = useCallback(async () => {
     if (!token) return;
 
@@ -291,7 +292,7 @@ const ChatLauncherPage = ({ onStartChat }) => {
     }
   }, [performSemanticSearch]);
 
-  // ENHANCED: Character selection with status checking
+  // Character selection with status checking
   const handleCharacterSelect = useCallback((character) => {
     // Check if this is a custom character (user_xxx format)
     const isCustomCharacter = character.key?.startsWith('user_');
@@ -346,7 +347,7 @@ const ChatLauncherPage = ({ onStartChat }) => {
     }
   }, [selectedChar, trackInteraction, onStartChat]);
 
-  // NEW: Status modal handlers
+  // Status modal handlers
   const handleStatusModalClose = useCallback(() => {
     setShowStatusModal(false);
     setSelectedStatusCharacter(null);
@@ -452,7 +453,7 @@ const ChatLauncherPage = ({ onStartChat }) => {
     );
   }
 
-  // EXACT MOBILE LAYOUT from landingupgrade.js
+  // MOBILE LAYOUT - STEPS 3-4: Refactored Implementation
   if (isMobile) {
     return (
       <div style={{
@@ -546,7 +547,7 @@ const ChatLauncherPage = ({ onStartChat }) => {
               backdropFilter: 'blur(20px)',
               padding: '1rem',
               marginTop: '0.5rem',
-              zIndex: 999 // FIXED: Lower than Header (1000)
+              zIndex: 999
             }}>
               {searchResults.map((character, index) => (
                 <div
@@ -615,7 +616,7 @@ const ChatLauncherPage = ({ onStartChat }) => {
               padding: '1rem',
               marginTop: '0.5rem',
               textAlign: 'center',
-              zIndex: 999 // FIXED: Lower than Header
+              zIndex: 999
             }}>
               <p style={{
                 color: 'rgba(255, 215, 0, 0.8)',
@@ -644,7 +645,7 @@ const ChatLauncherPage = ({ onStartChat }) => {
           />
         )}
 
-        {/* Categories or Characters View - EXACT from landingupgrade.js */}
+        {/* STEPS 3-4 IMPLEMENTATION: Categories or Characters View - TRUE CLEAN SLATE */}
         {!selectedCategory ? (
           <div style={{
             width: '100%',
@@ -704,39 +705,17 @@ const ChatLauncherPage = ({ onStartChat }) => {
                 ← Back
               </button>
             </div>
-
-            {/* Mobile Characters Content Area - FIXED: Working upgrade buttons */}
-            {selectedCategory.key === 'my_characters' ? (
-              <MyCharactersPanel 
-                userCharacters={userCharacters}
-                charactersLoading={charactersLoading}
-                charactersError={charactersError}
-                onCreateCharacter={handleCreateCharacterClick}
-                onCharacterSelect={handleCharacterSelect}
-                isMobile={true}
-                user_id={user?.id}
-                onShowUpgradeModal={handleShowUpgradeModal} // ✅ CRITICAL FIX: This was missing
-              />
-            ) : (
-              <div style={{
-                width: '100%',
-                display: 'grid',
-                gridTemplateColumns: 'repeat(2, 1fr)',
-                gap: '1rem',
-                marginTop: '1rem'
-              }}>
-                {selectedCategory.characters.map((character, index) => (
-                  <CharacterCard
-                    key={character.key}
-                    character={character}
-                    onClick={() => handleCharacterSelect(character)}
-                    isMobile={true}
-                    showStatusIndicator={character.key?.startsWith('user_')}
-                    index={index}
-                  />
-                ))}
-              </div>
-            )}
+            {/* SINGLE Mobile Component - No conditionals, complete clean slate */}
+            <MobileCharacterView
+              selectedCategory={selectedCategory}
+              userCharacters={userCharacters}
+              charactersLoading={charactersLoading}
+              charactersError={charactersError}
+              onCreateCharacter={handleCreateCharacterClick}
+              onCharacterSelect={handleCharacterSelect}
+              onShowUpgradeModal={handleShowUpgradeModal}
+              user_id={user?.id}
+            />
           </>
         )}
 
@@ -763,7 +742,7 @@ const ChatLauncherPage = ({ onStartChat }) => {
     );
   }
 
-  // EXACT DESKTOP LAYOUT from landingupgrade.js
+  // DESKTOP LAYOUT - Unchanged
   return (
     <div style={{
       width: '100%',
@@ -930,7 +909,7 @@ const ChatLauncherPage = ({ onStartChat }) => {
               padding: '1rem',
               marginTop: '0.5rem',
               textAlign: 'center',
-              zIndex: 999 // FIXED: Lower than Header
+              zIndex: 999
             }}>
               <p style={{
                 color: 'rgba(255, 215, 0, 0.8)',
@@ -1058,7 +1037,7 @@ const ChatLauncherPage = ({ onStartChat }) => {
                 </button>
               </div>
 
-              {/* Desktop Content Area - FIXED: Working upgrade buttons */}
+              {/* Desktop Content Area */}
               {selectedCategory.key === 'my_characters' ? (
                 <MyCharactersPanel 
                   userCharacters={userCharacters}
@@ -1068,7 +1047,7 @@ const ChatLauncherPage = ({ onStartChat }) => {
                   onCharacterSelect={handleCharacterSelect}
                   isMobile={false}
                   user_id={user?.id}
-                  onShowUpgradeModal={handleShowUpgradeModal} // ✅ CRITICAL FIX: This was missing
+                  onShowUpgradeModal={handleShowUpgradeModal}
                 />
               ) : (
                 <div style={{
@@ -1098,7 +1077,7 @@ const ChatLauncherPage = ({ onStartChat }) => {
 
       {/* Character Detail Modal (Desktop) */}
       {selectedChar && (
-        <div style={{ zIndex: 2500 }}> {/* FIXED: Higher z-index than Header */}
+        <div style={{ zIndex: 2500 }}>
           <CharacterDetailPanel
             character={selectedChar}
             onStartChat={handleStartChatFromSelection}
@@ -1121,12 +1100,7 @@ const ChatLauncherPage = ({ onStartChat }) => {
       <style jsx>{`
         @import url('https://fonts.googleapis.com/css2?family=Cinzel:wght@400;600&family=Cinzel+Decorative:wght@400;700&display=swap');
         
-        /* CRITICAL: Z-INDEX HIERARCHY FIX */
-        /* Header (global): z-index 1000-1002 (showButton at 1002) */
-        /* ChatLauncher content: z-index 500-999 */
-        /* Character panels: z-index 2500 (wrapper override) */
-        /* Modals: z-index 3000+ */
-        
+        /* Z-INDEX HIERARCHY */
         @keyframes categorySlideIn {
           from { opacity: 0; transform: translateY(30px) scale(0.7); }
           to   { opacity: 1; transform: translateY(0) scale(1); }
@@ -1171,7 +1145,6 @@ const ChatLauncherPage = ({ onStartChat }) => {
         .categories-grid-container {
           scrollbar-width: thin;
           scrollbar-color: rgba(255, 215, 0, 0.6) rgba(11, 20, 38, 0.8);
-          /* FIXED: Ensure categories don't conflict with Header */
           position: relative;
           z-index: 500;
         }
@@ -1208,21 +1181,17 @@ const ChatLauncherPage = ({ onStartChat }) => {
           box-shadow: 0 0 8px rgba(255, 215, 0, 0.4);
         }
         
-        /* FIXED: Ensure character panel doesn't conflict with Header */
         .character-panel {
           position: relative;
           z-index: 600;
         }
         
-        /* CRITICAL FIX: Ensure character cards are visible within their containers */
         .character-panel * {
           position: relative;
           z-index: auto;
         }
         
-        /* Ensure mobile character cards are properly layered */
         @media (max-width: 768px) {
-          /* SIMPLE MOBILE FIX: Force all character cards visible, bypass animation issues */
           div[style*="animation"][style*="characterSlideIn"] {
             opacity: 1 !important;
             animation: none !important;
@@ -1230,14 +1199,12 @@ const ChatLauncherPage = ({ onStartChat }) => {
             transform: none !important;
           }
           
-          /* Ensure mobile character grid is properly positioned */
           div[style*="gridTemplateColumns: repeat(2, 1fr)"] {
             position: relative;
             z-index: 1;
           }
         }
         
-        /* FIXED: Mobile button improvements */
         @media (max-width: 768px) {
           button {
             pointer-events: auto !important;
@@ -1250,7 +1217,6 @@ const ChatLauncherPage = ({ onStartChat }) => {
             -webkit-user-select: none !important;
           }
           
-          /* CRITICAL: Ensure search results stay below Header on mobile */
           div[style*="position: absolute"][style*="zIndex: 999"] {
             z-index: 950 !important;
           }
