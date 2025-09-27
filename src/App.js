@@ -1,4 +1,4 @@
-// src/App.js
+// src/App.js - Add test route to existing structure
 import React, { useEffect } from 'react';
 import { Routes, Route, Navigate, useLocation, useNavigate } from 'react-router-dom';
 import { useAuth } from './contexts/AuthContext';
@@ -9,13 +9,13 @@ import ChatApp         from './ChatApp';
 import ProfileSettings from './pages/ProfileSettings';
 import UploadAvatar    from './pages/UploadAvatar';
 import ContactUs       from './pages/ContactUs';
-import TermsOfService  from './pages/TermsOfService';  // 🆕 Added
-import PrivacyPolicy   from './pages/PrivacyPolicy';   // 🆕 Added
-import CommunityGuidelines from './pages/CommunityGuidelines'; // 🆕 Added
-import CopyrightPolicy from './pages/CopyrightPolicy'; // 🆕 Added
-import SecurityPolicy from './pages/SecurityPolicy';   // 🆕 Added
-import AIDisclaimer from './pages/AIDisclaimer';       // 🆕 Added
-import ContractorAgreements from './pages/ContractorAgreements'; // 🆕 Added
+import TermsOfService  from './pages/TermsOfService';
+import PrivacyPolicy   from './pages/PrivacyPolicy';
+import CommunityGuidelines from './pages/CommunityGuidelines';
+import CopyrightPolicy from './pages/CopyrightPolicy';
+import SecurityPolicy from './pages/SecurityPolicy';
+import AIDisclaimer from './pages/AIDisclaimer';
+import ContractorAgreements from './pages/ContractorAgreements';
 import ProtectedRoute  from './components/ProtectedRoute';
 import MinimalUsageTest from './components/MinimalUsageTest';
 import TestUsageComponents from './components/TestUsageComponents';
@@ -24,7 +24,8 @@ import ForgotPassword from './pages/ForgotPassword';
 import ResetPassword from './pages/ResetPassword';
 import EmailVerification from './pages/EmailVerification';
 
-
+// 🧪 NEW: Add hook test component
+import TestHooksComponent from './components/TestHooksComponent';
 
 import './styles.css';
 
@@ -91,7 +92,7 @@ export default function App() {
       <Route path="/verify-email" element={<EmailVerification />} />
       <Route path="/verify-email" element={<Login />} /> {/* Login handles verification */}
 
-      {/* Legal pages - 🆕 Added these routes */}
+      {/* Legal pages */}
       <Route path="/terms" element={<TermsOfService />} />
       <Route path="/privacy" element={<PrivacyPolicy />} />
       <Route path="/community-guidelines" element={<CommunityGuidelines />} />
@@ -99,10 +100,12 @@ export default function App() {
       <Route path="/security" element={<SecurityPolicy />} />
       <Route path="/ai-disclaimer" element={<AIDisclaimer />} />
       <Route path="/contractor-agreements" element={<ContractorAgreements />} />
+      
+      {/* Testing routes */}
       <Route path="/minimal-test" element={<MinimalUsageTest />} />
       <Route path="/test-usage" element={<TestUsageComponents />} />
-
-      
+      {/* 🧪 NEW: Hook testing route */}
+      <Route path="/test-hooks" element={<TestHooksComponent />} />
 
       {/* Main app (protected) */}
       <Route

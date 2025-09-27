@@ -1,0 +1,288 @@
+// src/hooks/useMarketHub.js
+import { useState, useEffect, useCallback, useRef } from 'react';
+import { useAuth } from '../contexts/AuthContext';
+
+const API_BASE = process.env.REACT_APP_API_URL || 'https://api.awakeverse.com';
+
+export const useMarketHub = ({ 
+  page = 1, 
+  search = '', 
+  filters = {}, 
+  perPage = 20,
+  enabled = true 
+} = {}) => {
+  const { getAuthHeaders } = useAuth();
+  const [state, setState] = useState({
+    characters: [],
+    loading: true,
+    error: null,
+    pagination: null,
+    lastFetch: null
+  });
+
+  const abortControllerRef = useRef(null);
+  const cacheRef = useRef(new Map());
+
+  // Create cache key for request
+  const createCacheKey = useCallback((page, search, filters, perPage) => {
+    return `${page}-${search}-${JSON.stringify(filters)}-${perPage}`;
+  }, []);
+
+  // Defensive API call with retry logic
+  const fetchMarketHub = useCallback(async (page, search, filters, perPage, retryCount = 0) => {
+    const MAX_RETRIES = 2;
+    const cacheKey = createCacheKey(page, search, filters, perPage);
+
+    // Cancel previous request
+    if (abortControllerRef.current) {
+      abortControllerRef.current.abort();
+    }
+
+    // Create new abort controller
+    abortControllerRef.current = new AbortController();
+
+    try {
+      // Check cache first (5 minute cache)
+      const cached = cacheRef.current.get(cacheKey);
+      if (cached && Date.now() - cached.timestamp < 5 * 60 * 1000) {
+        setState(prev => ({
+          ...prev,
+          ...cached.data,
+          loading: false,
+          error: null
+        }));
+        return cached.data;
+      }
+
+      setState(prev => ({ ...prev, loading: true, error: null }));
+
+      // Build query parameters
+      const params = new URLSearchParams({
+        page: page.toString(),
+        per_page: perPage.toString()
+      });
+
+      if (search.trim()) {
+        params.set('search', search.trim());
+      }
+
+      if (filters.archetype) {
+        params.set('archetype', filters.archetype);
+      }
+
+      if (filters.domain) {
+        params.set('domain', filters.domain);
+      }
+
+      if (filters.sort) {
+        params.set('sort', filters.sort);
+      }
+
+      const response = await fetch(
+        `${API_BASE}/api/market-hub/browse?${params}`,
+        {
+          method: 'GET',
+          headers: {
+            'Content-Type': 'application/json',
+            ...getAuthHeaders()
+          },
+          signal: abortControllerRef.current.signal
+        }
+      );
+
+      if (!response.ok) {
+        // Handle specific error cases
+        if (response.status === 401) {
+          throw new Error('Authentication required');
+        }
+        if (response.status === 403) {
+          throw new Error('Access denied - please check your subscription');
+        }
+        if (response.status === 404) {
+          // For starter accounts or when hub is not available
+          const resultData = {
+            characters: [],
+            pagination: { total: 0, pages: 0, page: 1, has_next: false, has_prev: false },
+            hubNotAvailable: true
+          };
+          
+          setState(prev => ({
+            ...prev,
+            ...resultData,
+            loading: false,
+            error: null
+          }));
+          
+          return resultData;
+        }
+        
+        throw new Error(`Server error: ${response.status}`);
+      }
+
+      const data = await response.json();
+
+      // Validate response structure
+      const resultData = {
+        characters: Array.isArray(data.characters) ? data.characters : [],
+        pagination: data.pagination || { 
+          total: 0, 
+          pages: 0, 
+          page: 1, 
+          has_next: false, 
+          has_prev: false 
+        },
+        hubNotAvailable: false
+      };
+
+      // Cache the result
+      cacheRef.current.set(cacheKey, {
+        data: resultData,
+        timestamp: Date.now()
+      });
+
+      // Clean old cache entries (keep last 10)
+      if (cacheRef.current.size > 10) {
+        const entries = Array.from(cacheRef.current.entries());
+        entries.sort((a, b) => b[1].timestamp - a[1].timestamp);
+        cacheRef.current.clear();
+        entries.slice(0, 10).forEach(([key, value]) => {
+          cacheRef.current.set(key, value);
+        });
+      }
+
+      setState(prev => ({
+        ...prev,
+        ...resultData,
+        loading: false,
+        error: null,
+        lastFetch: Date.now()
+      }));
+
+      return resultData;
+
+    } catch (error) {
+      if (error.name === 'AbortError') {
+        return; // Request was cancelled
+      }
+
+      // Retry logic for network errors
+      if (retryCount < MAX_RETRIES && 
+          (error.message.includes('fetch') || error.message.includes('network'))) {
+        console.warn(`Market hub fetch attempt ${retryCount + 1} failed, retrying...`);
+        await new Promise(resolve => setTimeout(resolve, 1000 * (retryCount + 1)));
+        return fetchMarketHub(page, search, filters, perPage, retryCount + 1);
+      }
+
+      const errorMessage = error.message === 'Authentication required' 
+        ? 'Please sign in to access Market Hub'
+        : error.message === 'Access denied - please check your subscription'
+        ? 'Market Hub access requires authentication'
+        : error.message.includes('fetch') || error.message.includes('network')
+        ? 'Unable to connect to Market Hub. Please check your internet connection.'
+        : 'Unable to load characters from Market Hub';
+
+      setState(prev => ({
+        ...prev,
+        loading: false,
+        error: errorMessage
+      }));
+
+      console.error('Market hub fetch error:', error);
+    }
+  }, [getAuthHeaders, createCacheKey]);
+
+  // Refetch function for error recovery
+  const refetch = useCallback(() => {
+    fetchMarketHub(page, search, filters, perPage);
+  }, [fetchMarketHub, page, search, filters, perPage]);
+
+  // Clear cache function
+  const clearCache = useCallback(() => {
+    cacheRef.current.clear();
+  }, []);
+
+  // Effect to fetch data when parameters change
+  useEffect(() => {
+    if (!enabled) return;
+
+    fetchMarketHub(page, search, filters, perPage);
+
+    // Cleanup function
+    return () => {
+      if (abortControllerRef.current) {
+        abortControllerRef.current.abort();
+      }
+    };
+  }, [fetchMarketHub, page, search, filters, perPage, enabled]);
+
+  // Cleanup on unmount
+  useEffect(() => {
+    return () => {
+      if (abortControllerRef.current) {
+        abortControllerRef.current.abort();
+      }
+    };
+  }, []);
+
+  return {
+    characters: state.characters,
+    loading: state.loading,
+    error: state.error,
+    pagination: state.pagination,
+    hubNotAvailable: state.hubNotAvailable || false,
+    lastFetch: state.lastFetch,
+    refetch,
+    clearCache
+  };
+};
+
+// Hook for character engagement actions
+export const useCharacterEngagement = () => {
+  const { getAuthHeaders } = useAuth();
+  const [loading, setLoading] = useState(false);
+
+  const engageWithCharacter = useCallback(async (characterId, engagementType, metadata = {}) => {
+    setLoading(true);
+    
+    try {
+      const response = await fetch(`${API_BASE}/api/market-hub/engage`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          ...getAuthHeaders()
+        },
+        body: JSON.stringify({
+          character_id: characterId,
+          engagement_type: engagementType,
+          metadata
+        })
+      });
+
+      if (!response.ok) {
+        if (response.status === 401) {
+          throw new Error('Please sign in to engage with characters');
+        }
+        if (response.status === 404) {
+          throw new Error('Character not found');
+        }
+        throw new Error('Failed to record engagement');
+      }
+
+      const data = await response.json();
+      return data;
+
+    } catch (error) {
+      console.error('Character engagement error:', error);
+      throw error;
+    } finally {
+      setLoading(false);
+    }
+  }, [getAuthHeaders]);
+
+  return {
+    engageWithCharacter,
+    loading
+  };
+};
+
+export default useMarketHub;

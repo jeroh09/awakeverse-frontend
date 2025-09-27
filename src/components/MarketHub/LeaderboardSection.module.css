@@ -1,0 +1,353 @@
+/* src/components/MarketHub/LeaderboardSection.module.css */
+
+.container {
+  background: rgba(255, 255, 255, 0.03);
+  border: 1px solid rgba(255, 215, 0, 0.2);
+  border-radius: 12px;
+  padding: 20px;
+  height: fit-content;
+}
+
+.header {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 16px;
+  padding-bottom: 12px;
+  border-bottom: 1px solid rgba(255, 215, 0, 0.1);
+}
+
+.headerIcon {
+  color: rgba(255, 215, 0, 0.8);
+}
+
+.header h3 {
+  font-family: 'Playfair Display', serif;
+  font-size: 18px;
+  font-weight: 600;
+  color: #ffffff;
+  margin: 0;
+}
+
+/* Period Selector */
+.periodSelector {
+  display: flex;
+  gap: 4px;
+  margin-bottom: 16px;
+  background: rgba(255, 255, 255, 0.02);
+  border-radius: 8px;
+  padding: 4px;
+}
+
+.periodButton {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 4px;
+  background: transparent;
+  border: none;
+  color: rgba(255, 255, 255, 0.6);
+  font-size: 11px;
+  font-weight: 500;
+  padding: 6px 8px;
+  border-radius: 6px;
+  cursor: pointer;
+  transition: all 0.3s ease;
+}
+
+.periodButton:hover {
+  background: rgba(255, 215, 0, 0.1);
+  color: rgba(255, 215, 0, 0.8);
+}
+
+.periodButton.active {
+  background: rgba(255, 215, 0, 0.2);
+  color: rgba(255, 215, 0, 1);
+  font-weight: 600;
+}
+
+/* Rankings */
+.rankings {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.rankItem {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 12px;
+  background: rgba(255, 255, 255, 0.02);
+  border: 1px solid rgba(255, 215, 0, 0.1);
+  border-radius: 8px;
+  transition: all 0.3s ease;
+  position: relative;
+}
+
+.rankItem:hover {
+  background: rgba(255, 215, 0, 0.05);
+  border-color: rgba(255, 215, 0, 0.2);
+  transform: translateY(-1px);
+}
+
+/* Special rank styling */
+.firstPlace {
+  background: linear-gradient(135deg, rgba(255, 215, 0, 0.1), rgba(255, 215, 0, 0.05));
+  border-color: rgba(255, 215, 0, 0.3);
+}
+
+.secondPlace {
+  background: linear-gradient(135deg, rgba(192, 192, 192, 0.1), rgba(192, 192, 192, 0.05));
+  border-color: rgba(192, 192, 192, 0.3);
+}
+
+.thirdPlace {
+  background: linear-gradient(135deg, rgba(205, 127, 50, 0.1), rgba(205, 127, 50, 0.05));
+  border-color: rgba(205, 127, 50, 0.3);
+}
+
+.rankNumber {
+  font-weight: 700;
+  font-size: 14px;
+  color: rgba(255, 215, 0, 0.9);
+  min-width: 24px;
+  text-align: center;
+}
+
+.avatar {
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  object-fit: cover;
+  border: 1px solid rgba(255, 215, 0, 0.3);
+}
+
+.characterInfo {
+  flex: 1;
+  min-width: 0;
+}
+
+.characterName {
+  font-size: 13px;
+  font-weight: 600;
+  color: #ffffff;
+  margin: 0 0 2px 0;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.creatorName {
+  font-size: 11px;
+  color: rgba(255, 255, 255, 0.6);
+  margin: 0 0 6px 0;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  font-style: italic;
+}
+
+.stats {
+  display: flex;
+  gap: 8px;
+}
+
+.stat {
+  display: flex;
+  align-items: center;
+  gap: 3px;
+  font-size: 10px;
+  color: rgba(255, 255, 255, 0.5);
+}
+
+.stat svg {
+  color: rgba(255, 215, 0, 0.6);
+}
+
+.creatorLevel {
+  display: flex;
+  align-items: center;
+  gap: 2px;
+  font-size: 9px;
+  color: rgba(255, 215, 0, 0.8);
+  text-transform: capitalize;
+  font-weight: 500;
+}
+
+.creatorLevel svg {
+  color: rgba(255, 215, 0, 1);
+}
+
+/* Loading State */
+.loadingState {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.loadingRank {
+  height: 56px;
+  background: rgba(255, 255, 255, 0.02);
+  border: 1px solid rgba(255, 215, 0, 0.1);
+  border-radius: 8px;
+  background: linear-gradient(90deg, rgba(255, 255, 255, 0.02), rgba(255, 255, 255, 0.05), rgba(255, 255, 255, 0.02));
+  background-size: 200% 100%;
+  animation: shimmer 1.5s infinite;
+}
+
+@keyframes shimmer {
+  0% { background-position: -200% 0; }
+  100% { background-position: 200% 0; }
+}
+
+/* Empty State */
+.emptyState {
+  text-align: center;
+  padding: 30px 10px;
+  color: rgba(255, 255, 255, 0.5);
+}
+
+.emptyIcon {
+  color: rgba(255, 215, 0, 0.4);
+  margin-bottom: 12px;
+}
+
+.emptyState p {
+  font-size: 14px;
+  margin: 0 0 4px 0;
+  color: rgba(255, 255, 255, 0.7);
+}
+
+.emptyState span {
+  font-size: 12px;
+  font-style: italic;
+}
+
+/* Error State */
+.errorState {
+  text-align: center;
+  padding: 20px;
+  color: rgba(255, 255, 255, 0.6);
+}
+
+.errorState p {
+  margin: 0 0 12px 0;
+  font-size: 14px;
+}
+
+.retryButton {
+  background: rgba(255, 215, 0, 0.1);
+  border: 1px solid rgba(255, 215, 0, 0.3);
+  color: rgba(255, 215, 0, 0.9);
+  padding: 6px 12px;
+  border-radius: 6px;
+  cursor: pointer;
+  font-size: 12px;
+  transition: all 0.3s ease;
+}
+
+.retryButton:hover {
+  background: rgba(255, 215, 0, 0.2);
+}
+
+/* More Info */
+.moreInfo {
+  text-align: center;
+  padding: 8px;
+  border-top: 1px solid rgba(255, 215, 0, 0.1);
+}
+
+.moreInfo p {
+  font-size: 11px;
+  color: rgba(255, 255, 255, 0.5);
+  margin: 0;
+}
+
+/* Footer */
+.footer {
+  margin-top: 16px;
+  padding-top: 12px;
+  border-top: 1px solid rgba(255, 215, 0, 0.1);
+}
+
+.footerText {
+  font-size: 10px;
+  color: rgba(255, 255, 255, 0.4);
+  text-align: center;
+  margin: 0;
+  font-style: italic;
+}
+
+/* Mobile Responsiveness */
+@media (max-width: 768px) {
+  .container {
+    padding: 16px;
+  }
+  
+  .periodSelector {
+    gap: 2px;
+  }
+  
+  .periodButton {
+    padding: 5px 6px;
+    font-size: 10px;
+  }
+  
+  .rankItem {
+    padding: 10px;
+    gap: 10px;
+  }
+  
+  .avatar {
+    width: 28px;
+    height: 28px;
+  }
+  
+  .characterName {
+    font-size: 12px;
+  }
+  
+  .creatorName {
+    font-size: 10px;
+  }
+  
+  .stats {
+    gap: 6px;
+  }
+  
+  .stat {
+    font-size: 9px;
+  }
+  
+  .creatorLevel {
+    font-size: 8px;
+  }
+}
+
+/* Compact Mode */
+.container.compact {
+  padding: 16px;
+}
+
+.container.compact .header h3 {
+  font-size: 16px;
+}
+
+.container.compact .periodSelector {
+  margin-bottom: 12px;
+}
+
+.container.compact .rankings {
+  gap: 8px;
+}
+
+.container.compact .rankItem {
+  padding: 8px;
+  gap: 8px;
+}
+
+.container.compact .footer {
+  display: none;
+}
