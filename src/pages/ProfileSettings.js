@@ -1,13 +1,24 @@
-// src/pages/ProfileSettings.js - UPDATED with test component
+// src/pages/ProfileSettings.js - WITH DEBUG CHECK
 import React from 'react';
 import SettingsPage from '../components/ProfileSettings/SettingsPage';
-import TestHooksComponent from '../components/TestHooksComponent';
 import '../styles.css';
 
+// 🧪 TEMPORARY: Try to import test component
+let TestHooksComponent;
+try {
+  TestHooksComponent = require('../components/TestHooksComponent').default;
+  console.log('✅ TestHooksComponent imported successfully');
+} catch (error) {
+  console.error('❌ Failed to import TestHooksComponent:', error);
+  TestHooksComponent = null;
+}
+
 export default function ProfileSettings() {
+  console.log('🧪 ProfileSettings rendering, TestHooksComponent:', TestHooksComponent ? 'LOADED' : 'NOT LOADED');
+  
   return (
     <div>
-      {/* 🧪 TEMPORARY: Market Hub Hook Testing - Remove after testing */}
+      {/* 🧪 TEMPORARY: Debug test component */}
       <div style={{ 
         background: '#f0f8ff', 
         padding: '20px', 
@@ -17,12 +28,21 @@ export default function ProfileSettings() {
         fontFamily: 'Arial, sans-serif'
       }}>
         <h2 style={{ color: '#007acc', marginTop: 0 }}>
-          🧪 TEMPORARY TESTING - Market Hub Hooks
+          🧪 DEBUG - Market Hub Hook Testing
         </h2>
-        <p style={{ color: '#666', fontSize: '14px' }}>
-          Remove this section after testing is complete
-        </p>
-        <TestHooksComponent />
+        
+        {TestHooksComponent ? (
+          <div>
+            <p style={{ color: 'green' }}>✅ TestHooksComponent loaded successfully</p>
+            <TestHooksComponent />
+          </div>
+        ) : (
+          <div>
+            <p style={{ color: 'red' }}>❌ TestHooksComponent failed to load</p>
+            <p>Check browser console for import errors</p>
+            <p>Make sure TestHooksComponent.jsx exists in src/components/</p>
+          </div>
+        )}
       </div>
       
       {/* Your existing ProfileSettings content */}

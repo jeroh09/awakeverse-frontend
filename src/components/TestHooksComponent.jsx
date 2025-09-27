@@ -1,4 +1,4 @@
-// TestHooksComponent.jsx - Quick test component for verifying our fixes
+// src/components/TestHooksComponent.jsx - Complete test component file
 import React from 'react';
 import { useFeaturedCharacters } from '../hooks/useFeaturedCharacters';
 import { useLeaderboard } from '../hooks/useLeaderboard';
@@ -43,6 +43,12 @@ const TestHooksComponent = () => {
             </pre>
           </div>
         )}
+        
+        {featuredError && (
+          <div style={{ background: '#ffe6e6', padding: '10px', margin: '10px 0' }}>
+            <strong>❌ Featured Characters Error:</strong> {featuredError}
+          </div>
+        )}
       </div>
 
       {/* Leaderboard Test */}
@@ -62,6 +68,12 @@ const TestHooksComponent = () => {
             </pre>
           </div>
         )}
+        
+        {leaderboardError && (
+          <div style={{ background: '#ffe6e6', padding: '10px', margin: '10px 0' }}>
+            <strong>❌ Leaderboard Error:</strong> {leaderboardError}
+          </div>
+        )}
       </div>
 
       {/* Status Summary */}
@@ -69,6 +81,13 @@ const TestHooksComponent = () => {
         <h3>📊 Test Summary</h3>
         <p>✅ Featured Characters: {featuredError ? '❌ FAILED' : featuredCharacters.length > 0 ? '✅ SUCCESS' : '⏳ LOADING'}</p>
         <p>✅ Leaderboard: {leaderboardError ? '❌ FAILED' : rankings.length > 0 ? '✅ SUCCESS' : '⏳ LOADING'}</p>
+        
+        {/* Debug info */}
+        <div style={{ marginTop: '10px', fontSize: '12px', color: '#666' }}>
+          <p><strong>Debug Info:</strong></p>
+          <p>Featured Loading: {String(featuredLoading)} | Leaderboard Loading: {String(leaderboardLoading)}</p>
+          <p>Component Mounted: ✅</p>
+        </div>
       </div>
     </div>
   );
