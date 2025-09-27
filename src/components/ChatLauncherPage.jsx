@@ -10,8 +10,6 @@ import CharacterStatusModal from '../components/CharacterStatusModal';
 import CharacterCreationSuccess from '../components/CharacterCreationSuccess';
 import DualPathUpgradeSystem from '../components/DualPathUpgradeSystem';
 import MobileCharacterView from '../components/MobileCharacterView'; // STEP 1: Import added
-import { useFeaturedCharacters } from '../hooks/useFeaturedCharacters';
-import { useLeaderboard } from '../hooks/useLeaderboard';
 
 // Import helper components
 import {
@@ -23,6 +21,10 @@ import {
 } from '../components/ChatLauncherHelpers';
 
 import { characterCategories } from '../data/characterCategories';
+
+// NEW: Import debug hooks
+import { useFeaturedCharacters } from '../hooks/useFeaturedCharacters';
+import { useLeaderboard } from '../hooks/useLeaderboard';
 
 // Enhanced semantic mappings for character search
 const ENHANCED_SEMANTIC_MAPPINGS = {
@@ -121,12 +123,12 @@ const ORACLE_PROMPTS = [
 
 const ChatLauncherPage = ({ onStartChat }) => {
   const { user } = useUser();
-  const { token } = useAuth();
+  const { token, getAuthHeaders, isAuthenticated } = useAuth();
 
-  // 🧪 ADD THESE HOOK CALLS
+  // NEW: Debug hooks
   const featuredResult = useFeaturedCharacters({ enabled: true });
   const leaderboardResult = useLeaderboard({ period: 'week', limit: 5 });
-
+  const authHeaders = getAuthHeaders();
 
   // Character creation flow state
   const [showTemplates, setShowTemplates] = useState(false);
@@ -748,7 +750,7 @@ const ChatLauncherPage = ({ onStartChat }) => {
     );
   }
 
-  // DESKTOP LAYOUT - Unchanged
+  // DESKTOP LAYOUT - With Debug Sections
   return (
     <div style={{
       width: '100%',
@@ -931,7 +933,7 @@ const ChatLauncherPage = ({ onStartChat }) => {
           )}
         </div>
 
-          {/* 🧪 DEBUG SECTION - ADD THIS BLOCK */}
+        {/* 🧪 Backend Response Debug Section */}
         <div style={{ 
           width: '100%',
           maxWidth: '400px',
@@ -951,7 +953,7 @@ const ChatLauncherPage = ({ onStartChat }) => {
           }}>
             🧪 Backend Response Debug
           </h4>
-
+          
           {/* Featured Characters Raw Response */}
           <div style={{ marginBottom: '15px' }}>
             <strong style={{ color: '#FFA500' }}>Featured Characters:</strong>
@@ -1004,6 +1006,55 @@ const ChatLauncherPage = ({ onStartChat }) => {
           </div>
         </div>
 
+        {/* 🔐 Authentication Debug Section */}
+        <div style={{ 
+          width: '100%',
+          maxWidth: '400px',
+          background: 'rgba(255, 243, 205, 0.2)',
+          border: '1px solid rgba(255, 234, 167, 0.4)',
+          borderRadius: '8px',
+          padding: '15px',
+          margin: '15px 0',
+          fontSize: '12px',
+          color: '#FFD700'
+        }}>
+          <h4 style={{ 
+            margin: '0 0 10px 0', 
+            fontFamily: 'sans-serif',
+            color: '#FFA500'
+          }}>
+            🔐 Authentication Debug
+          </h4>
+          
+          <div style={{ marginBottom: '10px' }}>
+            <strong style={{ color: '#FFA500' }}>Auth State:</strong><br/>
+            isAuthenticated: {String(isAuthenticated)}<br/>
+            hasToken: {token ? '✅ YES' : '❌ NO'}<br/>
+            tokenLength: {token ? token.length : 0}
+          </div>
+          
+          <div style={{ marginBottom: '10px' }}>
+            <strong style={{ color: '#FFA500' }}>Auth Headers:</strong>
+            <pre style={{ 
+              background: 'rgba(248, 249, 250, 0.1)', 
+              padding: '8px', 
+              borderRadius: '4px',
+              margin: '5px 0',
+              color: '#FFD700',
+              border: '1px solid rgba(255, 215, 0, 0.3)',
+              overflow: 'auto',
+              maxHeight: '80px'
+            }}>
+              {JSON.stringify(authHeaders, null, 2)}
+            </pre>
+          </div>
+          
+          <div style={{ marginBottom: '10px' }}>
+            <strong style={{ color: '#FFA500' }}>API Errors:</strong><br/>
+            Featured: {featuredResult.error ? '❌ ' + featuredResult.error : '✅ None'}<br/>
+            Leaderboard: {leaderboardResult.error ? '❌ ' + leaderboardResult.error : '✅ None'}
+          </div>
+        </div>
 
         {/* Personalized Section (Desktop) */}
         {shouldShowForYou && (
