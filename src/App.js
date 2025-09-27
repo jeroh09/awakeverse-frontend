@@ -1,4 +1,4 @@
-// src/App.js - Add test route to existing structure
+// src/App.js - Add protected test route
 import React, { useEffect } from 'react';
 import { Routes, Route, Navigate, useLocation, useNavigate } from 'react-router-dom';
 import { useAuth } from './contexts/AuthContext';
@@ -104,8 +104,16 @@ export default function App() {
       {/* Testing routes */}
       <Route path="/minimal-test" element={<MinimalUsageTest />} />
       <Route path="/test-usage" element={<TestUsageComponents />} />
-      {/* 🧪 NEW: Hook testing route */}
-      <Route path="/test-hooks" element={<TestHooksComponent />} />
+
+      {/* 🧪 NEW: Protected hook testing route */}
+      <Route
+        path="/test-hooks"
+        element={
+          <ProtectedRoute>
+            <TestHooksComponent />
+          </ProtectedRoute>
+        }
+      />
 
       {/* Main app (protected) */}
       <Route
