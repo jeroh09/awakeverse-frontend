@@ -10,6 +10,8 @@ import CharacterStatusModal from '../components/CharacterStatusModal';
 import CharacterCreationSuccess from '../components/CharacterCreationSuccess';
 import DualPathUpgradeSystem from '../components/DualPathUpgradeSystem';
 import MobileCharacterView from '../components/MobileCharacterView'; // STEP 1: Import added
+import { useFeaturedCharacters } from '../hooks/useFeaturedCharacters';
+import { useLeaderboard } from '../hooks/useLeaderboard';
 
 // Import helper components
 import {
@@ -120,6 +122,11 @@ const ORACLE_PROMPTS = [
 const ChatLauncherPage = ({ onStartChat }) => {
   const { user } = useUser();
   const { token } = useAuth();
+
+  // 🧪 ADD THESE HOOK CALLS
+  const featuredResult = useFeaturedCharacters({ enabled: true });
+  const leaderboardResult = useLeaderboard({ period: 'week', limit: 5 });
+
 
   // Character creation flow state
   const [showTemplates, setShowTemplates] = useState(false);
@@ -923,6 +930,80 @@ const ChatLauncherPage = ({ onStartChat }) => {
             </div>
           )}
         </div>
+
+          {/* 🧪 DEBUG SECTION - ADD THIS BLOCK */}
+        <div style={{ 
+          width: '100%',
+          maxWidth: '400px',
+          background: 'rgba(248, 249, 250, 0.1)',
+          border: '1px solid rgba(222, 226, 230, 0.3)',
+          borderRadius: '8px',
+          padding: '15px',
+          margin: '15px 0',
+          fontFamily: 'monospace',
+          fontSize: '12px',
+          color: '#FFD700'
+        }}>
+          <h4 style={{ 
+            margin: '0 0 10px 0', 
+            fontFamily: 'sans-serif',
+            color: '#FFD700'
+          }}>
+            🧪 Backend Response Debug
+          </h4>
+
+          {/* Featured Characters Raw Response */}
+          <div style={{ marginBottom: '15px' }}>
+            <strong style={{ color: '#FFA500' }}>Featured Characters:</strong>
+            <pre style={{ 
+              background: 'rgba(233, 236, 239, 0.1)', 
+              padding: '8px', 
+              borderRadius: '4px',
+              overflow: 'auto',
+              maxHeight: '150px',
+              margin: '5px 0',
+              color: '#FFD700',
+              border: '1px solid rgba(255, 215, 0, 0.3)'
+            }}>
+              {JSON.stringify(featuredResult, null, 2)}
+            </pre>
+          </div>
+
+          {/* Leaderboard Raw Response */}
+          <div>
+            <strong style={{ color: '#FFA500' }}>Leaderboard:</strong>
+            <pre style={{ 
+              background: 'rgba(233, 236, 239, 0.1)', 
+              padding: '8px', 
+              borderRadius: '4px',
+              overflow: 'auto',
+              maxHeight: '150px',
+              margin: '5px 0',
+              color: '#FFD700',
+              border: '1px solid rgba(255, 215, 0, 0.3)'
+            }}>
+              {JSON.stringify(leaderboardResult, null, 2)}
+            </pre>
+          </div>
+
+          {/* Quick Analysis */}
+          <div style={{ 
+            marginTop: '10px', 
+            padding: '8px',
+            background: 'rgba(209, 236, 241, 0.1)',
+            borderRadius: '4px',
+            fontSize: '11px',
+            fontFamily: 'sans-serif',
+            color: '#FFD700',
+            border: '1px solid rgba(255, 215, 0, 0.2)'
+          }}>
+            <strong>Quick Check:</strong><br/>
+            Featured: {featuredResult.error ? '❌ ERROR' : featuredResult.loading ? '⏳ LOADING' : '✅ RESPONDED'}<br/>
+            Leaderboard: {leaderboardResult.error ? '❌ ERROR' : leaderboardResult.loading ? '⏳ LOADING' : '✅ RESPONDED'}<br/>
+            Data: Featured={featuredResult.featuredCharacters?.length || 0}, Leaderboard={leaderboardResult.rankings?.length || 0}
+          </div>
+        </div>
+
 
         {/* Personalized Section (Desktop) */}
         {shouldShowForYou && (
