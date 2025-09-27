@@ -12,7 +12,10 @@ import ChatWindow from './components/ChatWindow';
 import CharacterDetailPanel from './components/CharacterDetailPanel/CharacterDetailPanel';
 import FloatingCharacterHub from './components/FloatingCharacterHub/FloatingCharacterHub';
 import { characterCategories } from './data/characterCategories';
-import usePremiumCharacters from './hooks/usePremiumCharacters'; // NEW: Import custom character hook
+import usePremiumCharacters from './hooks/usePremiumCharacters';
+// NEW: Add featured characters and leaderboard imports
+import { useFeaturedCharacters } from './hooks/useFeaturedCharacters';
+import { useLeaderboard } from './hooks/useLeaderboard';
 import './styles.css';
 
 function useMediaQuery(maxWidth) {
@@ -45,12 +48,44 @@ export default function ChatApp() {
   const { userCharacters, loading: customCharactersLoading } = usePremiumCharacters();
   window.debugUserChars = userCharacters;
 
+  // 🧪 TEMPORARY: Console testing hooks - Remove after testing
+  const featuredResult = useFeaturedCharacters({ enabled: true });
+  const leaderboardResult = useLeaderboard({ period: 'week', limit: 5 });
+
   const [sessionsByCharacter, setSessionsByCharacter] = useState({});
   const [currentSessionId, setCurrentSessionId] = useState(null);
   const [targetMessage] = useState(null);
   const [useFloatingHub, setUseFloatingHub] = useState(true);
   const [isHubVisible, setIsHubVisible] = useState(true);
   const [prestigeHubVisible, setPrestigeHubVisible] = useState(false);
+
+  // 🧪 TEMPORARY: Console testing - Remove after testing
+  useEffect(() => {
+    console.log('🧪 FEATURED CHARACTERS TEST:', {
+      loading: featuredResult.loading,
+      error: featuredResult.error,
+      characters: featuredResult.featuredCharacters,
+      totalFeatured: featuredResult.totalFeatured,
+      weekStart: featuredResult.weekStart
+    });
+    
+    console.log('🧪 LEADERBOARD TEST:', {
+      loading: leaderboardResult.loading,
+      error: leaderboardResult.error,
+      rankings: leaderboardResult.rankings,
+      period: leaderboardResult.period,
+      totalEntries: leaderboardResult.totalEntries
+    });
+    
+    // Test API endpoints directly
+    if (featuredResult.featuredCharacters?.length > 0) {
+      console.log('✅ Featured Characters SUCCESS - First character:', featuredResult.featuredCharacters[0]);
+    }
+    
+    if (leaderboardResult.rankings?.length > 0) {
+      console.log('✅ Leaderboard SUCCESS - First ranking:', leaderboardResult.rankings[0]);
+    }
+  }, [featuredResult, leaderboardResult]);
 
   // History-safe back navigation
   const handleBackToLauncher = useCallback(() => {
