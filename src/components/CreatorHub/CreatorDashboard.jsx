@@ -38,7 +38,7 @@ const CreatorDashboard = () => {
       setError(null);
 
       // UPDATED: Changed from /api/market-hub to /api/creator-hub
-      const response = await api.get('/api/creator-hub/analytics/dashboard');
+      const response = await api.get('/creator-hub/analytics/dashboard');
       
       if (response.data && response.data.status === 'success') {
         setDashboardData(response.data.dashboard);

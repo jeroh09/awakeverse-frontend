@@ -7,7 +7,7 @@ const isPreview = process.env.REACT_APP_VERCEL_ENV === 'preview' ||
 
 const api = axios.create({
   // FIXED: Remove /api from baseURL - components already include it
-  baseURL: environment.API_BASE_URL,
+  baseURL: `${environment.API_BASE_URL}/api`,
   timeout: 10000,
   withCredentials: true,
 });
