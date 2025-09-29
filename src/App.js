@@ -1,7 +1,8 @@
-// src/App.js
+// src/App.js - Enhanced with AppViewProvider for Navigation Integration
 import React, { useEffect } from 'react';
 import { Routes, Route, Navigate, useLocation, useNavigate } from 'react-router-dom';
 import { useAuth } from './contexts/AuthContext';
+import { AppViewProvider } from './contexts/AppViewContext'; // NEW: Import view context
 import LandingPage     from './landing/pages/LandingPage';
 import Login           from './pages/Login';
 import Register        from './pages/Register';
@@ -9,72 +10,36 @@ import ChatApp         from './ChatApp';
 import ProfileSettings from './pages/ProfileSettings';
 import UploadAvatar    from './pages/UploadAvatar';
 import ContactUs       from './pages/ContactUs';
-import TermsOfService  from './pages/TermsOfService';  // 🆕 Added
-import PrivacyPolicy   from './pages/PrivacyPolicy';   // 🆕 Added
-import CommunityGuidelines from './pages/CommunityGuidelines'; // 🆕 Added
-import CopyrightPolicy from './pages/CopyrightPolicy'; // 🆕 Added
-import SecurityPolicy from './pages/SecurityPolicy';   // 🆕 Added
-import AIDisclaimer from './pages/AIDisclaimer';       // 🆕 Added
-import ContractorAgreements from './pages/ContractorAgreements'; // 🆕 Added
+import TermsOfService  from './pages/TermsOfService';
+import PrivacyPolicy   from './pages/PrivacyPolicy';
+import CommunityGuidelines from './pages/CommunityGuidelines';
+import CopyrightPolicy from './pages/CopyrightPolicy';
+import SecurityPolicy from './pages/SecurityPolicy';
+import AIDisclaimer from './pages/AIDisclaimer';
+import ContractorAgreements from './pages/ContractorAgreements';
 import ProtectedRoute  from './components/ProtectedRoute';
 import MinimalUsageTest from './components/MinimalUsageTest';
 import TestUsageComponents from './components/TestUsageComponents';
-// Add these imports to your existing App.js
 import ForgotPassword from './pages/ForgotPassword';
 import ResetPassword from './pages/ResetPassword';
 import EmailVerification from './pages/EmailVerification';
-
-
+import MarketHubPage from './components/MarketHub/MarketHubPage';
 
 import './styles.css';
+
+// NEW: Wrapper component for protected routes that need view context
+const ProtectedAppRoute = ({ children }) => (
+  <ProtectedRoute>
+    <AppViewProvider>
+      {children}
+    </AppViewProvider>
+  </ProtectedRoute>
+);
 
 export default function App() {
   const { token } = useAuth();
   const location = useLocation();
   const navigate = useNavigate();
-
-  // 🛡️ NEW: Navigation guard for authenticated users
-  useEffect(() => {
-    // Only apply guard when authenticated and on protected routes
-    if (!token || !location.pathname.startsWith('/app')) {
-      return;
-    }
-
-    const handlePopState = (event) => {
-      // Check if user is trying to navigate back past the app
-      const isAppRoot = event.state?.isAppRoot;
-      
-      // If we're in the app and there's no app root marker,
-      // or if we detect navigation back to auth routes
-      if (location.pathname.startsWith('/app') && 
-          (location.pathname === '/login' || location.pathname === '/register' || location.pathname === '/')) {
-        
-        console.log('🛡️ Navigation guard: Preventing back navigation to auth');
-        
-        // Prevent going back to auth, redirect to app instead
-        event.preventDefault();
-        navigate('/app', { replace: true });
-        
-        // Re-establish the app root marker
-        window.history.pushState({ isAppRoot: true }, '', '/app');
-      }
-    };
-
-    // Listen for back navigation attempts
-    window.addEventListener('popstate', handlePopState);
-
-    return () => {
-      window.removeEventListener('popstate', handlePopState);
-    };
-  }, [token, location.pathname, navigate]);
-
-  // 🔧 NEW: Set up app root marker when entering protected routes
-  useEffect(() => {
-    if (token && location.pathname.startsWith('/app') && !window.history.state?.isAppRoot) {
-      // Mark this as the app root for the navigation guard
-      window.history.replaceState({ isAppRoot: true }, '', location.pathname);
-    }
-  }, [token, location.pathname]);
 
   return (
     <Routes>
@@ -85,13 +50,13 @@ export default function App() {
       <Route path="/login" element={<Login />} />
       <Route path="/register" element={<Register />} />
 
-      {/* NEW: Email authentication routes */}
+      {/* Email authentication routes */}
       <Route path="/forgot-password" element={<ForgotPassword />} />
       <Route path="/reset-password" element={<ResetPassword />} />
       <Route path="/verify-email" element={<EmailVerification />} />
-      <Route path="/verify-email" element={<Login />} /> {/* Login handles verification */}
+      <Route path="/verify-email" element={<Login />} />
 
-      {/* Legal pages - 🆕 Added these routes */}
+      {/* Legal pages */}
       <Route path="/terms" element={<TermsOfService />} />
       <Route path="/privacy" element={<PrivacyPolicy />} />
       <Route path="/community-guidelines" element={<CommunityGuidelines />} />
@@ -101,20 +66,21 @@ export default function App() {
       <Route path="/contractor-agreements" element={<ContractorAgreements />} />
       <Route path="/minimal-test" element={<MinimalUsageTest />} />
       <Route path="/test-usage" element={<TestUsageComponents />} />
-
       
+      {/* Market Hub - Keep existing route for backward compatibility */}
+      <Route path="/market-hub" element={<MarketHubPage />} />
 
-      {/* Main app (protected) */}
+      {/* Main app with NEW AppViewProvider wrapper */}
       <Route
         path="/app"
         element={
-          <ProtectedRoute>
+          <ProtectedAppRoute>
             <ChatApp />
-          </ProtectedRoute>
+          </ProtectedAppRoute>
         }
       />
 
-      {/* Profile settings (protected) */}
+      {/* Profile settings (wrapped for consistency) */}
       <Route
         path="/profile-settings"
         element={
@@ -124,7 +90,7 @@ export default function App() {
         }
       />
 
-      {/* Avatar upload (protected) */}
+      {/* Avatar upload (wrapped for consistency) */}
       <Route
         path="/upload-avatar"
         element={
@@ -133,6 +99,8 @@ export default function App() {
           </ProtectedRoute>
         }
       />
+
+      {/* NOTE: No separate /hub route - all navigation happens within /app using view state */}
 
       {/* Contact us */}
       <Route path="/contact-us" element={<ContactUs />} />

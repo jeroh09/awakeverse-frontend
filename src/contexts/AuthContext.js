@@ -14,6 +14,8 @@ export function AuthProvider({ children }) {
   const [authChecked, setAuthChecked] = useState(false);
   const { setUser } = useUser();
   const navigate = useNavigate();
+    // Add computed property for isAuthenticated
+  const isAuthenticated = !!token;
 
   useEffect(() => {
     const savedToken = localStorage.getItem("token");
@@ -387,6 +389,17 @@ export function AuthProvider({ children }) {
     }
   }
 
+  // Add this function inside AuthProvider (before the return statement)
+  function getAuthHeaders() {
+    if (!token) {
+      return {};
+    }
+    
+    return {
+      'Authorization': `Bearer ${token}`
+    };
+  }
+
   function logout() {
     localStorage.removeItem("token");
     setToken(null);
@@ -404,6 +417,8 @@ export function AuthProvider({ children }) {
         logout,
         verifyEmail,
         requestPasswordReset,
+        isAuthenticated,      // ← ADD THIS
+        getAuthHeaders,  
         resetPassword,
         resendVerification
       }}

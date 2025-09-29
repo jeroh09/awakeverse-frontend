@@ -1,4 +1,4 @@
-// src/pages/ChatLauncherPage.jsx - MOBILE REFACTOR: Steps 3-4 Implementation
+// src/pages/ChatLauncherPage.jsx - PRODUCTION READY
 import React, { useState, useEffect, useMemo, useCallback } from 'react';
 import { useAuth } from '../contexts/AuthContext';
 import { useUser } from '../contexts/UserContext';
@@ -9,7 +9,7 @@ import CharacterBuilder from '../components/CharacterBuilder';
 import CharacterStatusModal from '../components/CharacterStatusModal';
 import CharacterCreationSuccess from '../components/CharacterCreationSuccess';
 import DualPathUpgradeSystem from '../components/DualPathUpgradeSystem';
-import MobileCharacterView from '../components/MobileCharacterView'; // STEP 1: Import added
+import MobileCharacterView from '../components/MobileCharacterView';
 
 // Import helper components
 import {
@@ -121,9 +121,15 @@ const ORACLE_PROMPTS = [
   "Find your mentor...",
 ];
 
-const ChatLauncherPage = ({ onStartChat }) => {
+// NEW: Updated to accept discoveredCharacters prop
+const ChatLauncherPage = ({ onStartChat, discoveredCharacters = [] }) => {
   const { user } = useUser();
   const { token, getAuthHeaders, isAuthenticated } = useAuth();
+
+  // NEW: Debug discovered characters
+  useEffect(() => {
+    console.log('🔍 DEBUG: ChatLauncherPage received discoveredCharacters:', discoveredCharacters);
+  }, [discoveredCharacters]);
 
   // NEW: Debug hooks
   const featuredResult = useFeaturedCharacters({ enabled: true });
@@ -230,8 +236,10 @@ const ChatLauncherPage = ({ onStartChat }) => {
     loadUserCharacters();
   }, [loadUserCharacters]);
 
-  // Enhanced categories with user characters
+  // NEW: Enhanced categories with user characters AND discovered characters
   const enhancedCategories = useMemo(() => {
+    console.log('🔍 DEBUG: Building enhancedCategories with discoveredCharacters:', discoveredCharacters);
+    
     const baseCategories = [...characterCategories];
     
     // Find and update my_characters category
@@ -253,11 +261,45 @@ const ChatLauncherPage = ({ onStartChat }) => {
         approvedCount: userCharacters.filter(c => c.status === 'approved').length
       };
     }
+
+    // NEW: Check if discovered category already exists in base
+    const existingDiscoveredIndex = baseCategories.findIndex(cat => cat.key === 'discovered');
+    
+    // Add or update discovered characters category
+    if (discoveredCharacters && discoveredCharacters.length > 0) {
+      const discoveredCategory = {
+        key: 'discovered',
+        title: 'Discovered',
+        characters: discoveredCharacters.map(char => ({
+          key: char.character_key,
+          name: char.display_name || char.name,
+          description: char.short_description || char.description || '',
+          thumbnailUrl: char.avatar_url || char.thumbnailUrl || `/images/${char.character_key}.jpg`,
+          source: 'market_hub',
+          expertise_domain: char.expertise_domain,
+          creator: char.creator
+        })),
+        characterCount: discoveredCharacters.length,
+        icon: '✨',
+        description: 'Characters you\'ve discovered from the Market Hub'
+      };
+      
+      if (existingDiscoveredIndex !== -1) {
+        // Update existing discovered category
+        baseCategories[existingDiscoveredIndex] = discoveredCategory;
+      } else {
+        // Insert after my_characters (position 12)
+        baseCategories.splice(12, 0, discoveredCategory);
+      }
+    } else if (existingDiscoveredIndex !== -1) {
+      // Remove discovered category if no characters and it exists
+      baseCategories.splice(existingDiscoveredIndex, 1);
+    }
     
     return baseCategories;
-  }, [userCharacters]);
+  }, [userCharacters.length, discoveredCharacters.length]);
 
-  // Search functionality
+  // NEW: Enhanced search to include discovered characters
   const performSemanticSearch = useMemo(() => {
     return (query) => {
       if (!query.trim()) return [];
@@ -273,12 +315,16 @@ const ChatLauncherPage = ({ onStartChat }) => {
             part.includes(searchTerm) || searchTerm.includes(part)
           );
 
-          if (nameMatch || descMatch || partialNameMatch) {
+          // NEW: Also search expertise domain for discovered characters
+          const domainMatch = character.expertise_domain && 
+            character.expertise_domain.toLowerCase().includes(searchTerm);
+
+          if (nameMatch || descMatch || partialNameMatch || domainMatch) {
             results.push({
               ...character,
               category: category.title,
               categoryKey: category.key,
-              relevance: nameMatch ? 100 : (partialNameMatch ? 90 : 80)
+              relevance: nameMatch ? 100 : (partialNameMatch ? 90 : (domainMatch ? 85 : 80))
             });
           }
         });
@@ -322,7 +368,7 @@ const ChatLauncherPage = ({ onStartChat }) => {
       }
     }
     
-    // Allow chat for approved custom characters and all existing characters
+    // Allow chat for approved custom characters, discovered characters, and all existing characters
     trackInteraction(character.key);
     setSelectedChar({
       key: character.key,
@@ -330,7 +376,10 @@ const ChatLauncherPage = ({ onStartChat }) => {
       thumbnailUrl: character.thumbnailUrl,
       description: character.description,
       category: character.category,
-      status: character.status
+      status: character.status,
+      source: character.source, // NEW: Track source for discovered characters
+      expertise_domain: character.expertise_domain,
+      creator: character.creator
     });
   }, [trackInteraction]);
 
@@ -462,7 +511,7 @@ const ChatLauncherPage = ({ onStartChat }) => {
     );
   }
 
-  // MOBILE LAYOUT - STEPS 3-4: Refactored Implementation
+  // MOBILE LAYOUT - Enhanced with discovered characters
   if (isMobile) {
     return (
       <div style={{
@@ -510,6 +559,24 @@ const ChatLauncherPage = ({ onStartChat }) => {
           }}>
             {currentPlaceholder}
           </p>
+
+          {/* NEW: Show discovered count if any */}
+          {discoveredCharacters.length > 0 && (
+            <div style={{
+              marginTop: '0.5rem',
+              padding: '0.3rem 0.8rem',
+              background: 'rgba(255, 215, 0, 0.1)',
+              border: '1px solid rgba(255, 215, 0, 0.3)',
+              borderRadius: '12px',
+              fontSize: '0.8rem',
+              color: 'rgba(255, 215, 0, 0.9)',
+              display: 'inline-flex',
+              alignItems: 'center',
+              gap: '0.3rem'
+            }}>
+              ✨ {discoveredCharacters.length} character{discoveredCharacters.length !== 1 ? 's' : ''} discovered
+            </div>
+          )}
         </div>
 
         {/* Search Section */}
@@ -541,7 +608,7 @@ const ChatLauncherPage = ({ onStartChat }) => {
             }}
           />
 
-          {/* Search Results */}
+          {/* Enhanced Search Results with source indicators */}
           {showResults && searchResults.length > 0 && (
             <div style={{
               position: 'absolute',
@@ -597,6 +664,19 @@ const ChatLauncherPage = ({ onStartChat }) => {
                       marginBottom: '0.25rem'
                     }}>
                       {character.name}
+                      {/* NEW: Source indicator */}
+                      {character.source === 'market_hub' && (
+                        <span style={{
+                          marginLeft: '0.5rem',
+                          fontSize: '0.7rem',
+                          background: 'rgba(255, 215, 0, 0.2)',
+                          padding: '0.1rem 0.4rem',
+                          borderRadius: '6px',
+                          color: 'rgba(255, 215, 0, 0.9)'
+                        }}>
+                          ✨ Discovered
+                        </span>
+                      )}
                     </div>
                     <div style={{
                       fontSize: '0.75rem',
@@ -654,7 +734,7 @@ const ChatLauncherPage = ({ onStartChat }) => {
           />
         )}
 
-        {/* STEPS 3-4 IMPLEMENTATION: Categories or Characters View - TRUE CLEAN SLATE */}
+        {/* Categories or Characters View */}
         {!selectedCategory ? (
           <div style={{
             width: '100%',
@@ -692,8 +772,14 @@ const ChatLauncherPage = ({ onStartChat }) => {
                 fontFamily: "'Playfair Display', serif",
                 margin: 0,
                 letterSpacing: '1px',
-                textShadow: '0 0 10px rgba(255, 215, 0, 0.5)'
+                textShadow: '0 0 10px rgba(255, 215, 0, 0.5)',
+                display: 'flex',
+                alignItems: 'center',
+                gap: '0.5rem'
               }}>
+                {selectedCategory.icon && (
+                  <span style={{ fontSize: '1.2rem' }}>{selectedCategory.icon}</span>
+                )}
                 {selectedCategory.title}
               </h2>
               
@@ -714,7 +800,8 @@ const ChatLauncherPage = ({ onStartChat }) => {
                 ← Back
               </button>
             </div>
-            {/* SINGLE Mobile Component - No conditionals, complete clean slate */}
+
+            {/* Mobile Character View */}
             <MobileCharacterView
               selectedCategory={selectedCategory}
               userCharacters={userCharacters}
@@ -750,7 +837,7 @@ const ChatLauncherPage = ({ onStartChat }) => {
     );
   }
 
-  // DESKTOP LAYOUT - With Debug Sections
+  // DESKTOP LAYOUT - Enhanced with discovered characters
   return (
     <div style={{
       width: '100%',
@@ -800,6 +887,25 @@ const ChatLauncherPage = ({ onStartChat }) => {
           }}>
             {currentPlaceholder}
           </p>
+
+          {/* NEW: Show discovered count if any */}
+          {discoveredCharacters.length > 0 && (
+            <div style={{
+              marginTop: '1rem',
+              padding: '0.5rem 1rem',
+              background: 'rgba(255, 215, 0, 0.1)',
+              border: '1px solid rgba(255, 215, 0, 0.3)',
+              borderRadius: '15px',
+              fontSize: '0.9rem',
+              color: 'rgba(255, 215, 0, 0.9)',
+              display: 'inline-flex',
+              alignItems: 'center',
+              gap: '0.5rem',
+              backdropFilter: 'blur(10px)'
+            }}>
+              ✨ {discoveredCharacters.length} character{discoveredCharacters.length !== 1 ? 's' : ''} discovered from Market Hub
+            </div>
+          )}
         </div>
 
         {/* Search Section */}
@@ -826,7 +932,7 @@ const ChatLauncherPage = ({ onStartChat }) => {
             }}
           />
 
-          {/* Search Results (Desktop) */}
+          {/* Enhanced Search Results (Desktop) with source indicators */}
           {showResults && searchResults.length > 0 && (
             <div style={{
               position: 'absolute',
@@ -887,9 +993,24 @@ const ChatLauncherPage = ({ onStartChat }) => {
                       fontSize: '0.9rem', 
                       fontWeight: 600, 
                       color: character.status === 'approved' ? '#FFD700' : '#FFA500', 
-                      marginBottom: '0.25rem' 
+                      marginBottom: '0.25rem',
+                      display: 'flex',
+                      alignItems: 'center',
+                      gap: '0.5rem'
                     }}>
                       {character.name}
+                      {/* NEW: Source indicator */}
+                      {character.source === 'market_hub' && (
+                        <span style={{
+                          fontSize: '0.7rem',
+                          background: 'rgba(255, 215, 0, 0.2)',
+                          padding: '0.1rem 0.4rem',
+                          borderRadius: '6px',
+                          color: 'rgba(255, 215, 0, 0.9)'
+                        }}>
+                          ✨ Discovered
+                        </span>
+                      )}
                     </div>
                     <div style={{
                       fontSize: '0.75rem',
@@ -897,6 +1018,14 @@ const ChatLauncherPage = ({ onStartChat }) => {
                       letterSpacing: '0.5px'
                     }}>
                       {character.category}
+                      {character.expertise_domain && character.source === 'market_hub' && (
+                        <span style={{ margin: '0 0.3rem', color: 'rgba(255, 255, 255, 0.5)' }}>•</span>
+                      )}
+                      {character.expertise_domain && character.source === 'market_hub' && (
+                        <span style={{ color: 'rgba(255, 215, 0, 0.6)' }}>
+                          {character.expertise_domain}
+                        </span>
+                      )}
                     </div>
                   </div>
                 </div>
@@ -931,129 +1060,6 @@ const ChatLauncherPage = ({ onStartChat }) => {
               </small>
             </div>
           )}
-        </div>
-
-        {/* 🧪 Backend Response Debug Section */}
-        <div style={{ 
-          width: '100%',
-          maxWidth: '400px',
-          background: 'rgba(248, 249, 250, 0.1)',
-          border: '1px solid rgba(222, 226, 230, 0.3)',
-          borderRadius: '8px',
-          padding: '15px',
-          margin: '15px 0',
-          fontFamily: 'monospace',
-          fontSize: '12px',
-          color: '#FFD700'
-        }}>
-          <h4 style={{ 
-            margin: '0 0 10px 0', 
-            fontFamily: 'sans-serif',
-            color: '#FFD700'
-          }}>
-            🧪 Backend Response Debug
-          </h4>
-          
-          {/* Featured Characters Raw Response */}
-          <div style={{ marginBottom: '15px' }}>
-            <strong style={{ color: '#FFA500' }}>Featured Characters:</strong>
-            <pre style={{ 
-              background: 'rgba(233, 236, 239, 0.1)', 
-              padding: '8px', 
-              borderRadius: '4px',
-              overflow: 'auto',
-              maxHeight: '150px',
-              margin: '5px 0',
-              color: '#FFD700',
-              border: '1px solid rgba(255, 215, 0, 0.3)'
-            }}>
-              {JSON.stringify(featuredResult, null, 2)}
-            </pre>
-          </div>
-
-          {/* Leaderboard Raw Response */}
-          <div>
-            <strong style={{ color: '#FFA500' }}>Leaderboard:</strong>
-            <pre style={{ 
-              background: 'rgba(233, 236, 239, 0.1)', 
-              padding: '8px', 
-              borderRadius: '4px',
-              overflow: 'auto',
-              maxHeight: '150px',
-              margin: '5px 0',
-              color: '#FFD700',
-              border: '1px solid rgba(255, 215, 0, 0.3)'
-            }}>
-              {JSON.stringify(leaderboardResult, null, 2)}
-            </pre>
-          </div>
-
-          {/* Quick Analysis */}
-          <div style={{ 
-            marginTop: '10px', 
-            padding: '8px',
-            background: 'rgba(209, 236, 241, 0.1)',
-            borderRadius: '4px',
-            fontSize: '11px',
-            fontFamily: 'sans-serif',
-            color: '#FFD700',
-            border: '1px solid rgba(255, 215, 0, 0.2)'
-          }}>
-            <strong>Quick Check:</strong><br/>
-            Featured: {featuredResult.error ? '❌ ERROR' : featuredResult.loading ? '⏳ LOADING' : '✅ RESPONDED'}<br/>
-            Leaderboard: {leaderboardResult.error ? '❌ ERROR' : leaderboardResult.loading ? '⏳ LOADING' : '✅ RESPONDED'}<br/>
-            Data: Featured={featuredResult.featuredCharacters?.length || 0}, Leaderboard={leaderboardResult.rankings?.length || 0}
-          </div>
-        </div>
-
-        {/* 🔐 Authentication Debug Section */}
-        <div style={{ 
-          width: '100%',
-          maxWidth: '400px',
-          background: 'rgba(255, 243, 205, 0.2)',
-          border: '1px solid rgba(255, 234, 167, 0.4)',
-          borderRadius: '8px',
-          padding: '15px',
-          margin: '15px 0',
-          fontSize: '12px',
-          color: '#FFD700'
-        }}>
-          <h4 style={{ 
-            margin: '0 0 10px 0', 
-            fontFamily: 'sans-serif',
-            color: '#FFA500'
-          }}>
-            🔐 Authentication Debug
-          </h4>
-          
-          <div style={{ marginBottom: '10px' }}>
-            <strong style={{ color: '#FFA500' }}>Auth State:</strong><br/>
-            isAuthenticated: {String(isAuthenticated)}<br/>
-            hasToken: {token ? '✅ YES' : '❌ NO'}<br/>
-            tokenLength: {token ? token.length : 0}
-          </div>
-          
-          <div style={{ marginBottom: '10px' }}>
-            <strong style={{ color: '#FFA500' }}>Auth Headers:</strong>
-            <pre style={{ 
-              background: 'rgba(248, 249, 250, 0.1)', 
-              padding: '8px', 
-              borderRadius: '4px',
-              margin: '5px 0',
-              color: '#FFD700',
-              border: '1px solid rgba(255, 215, 0, 0.3)',
-              overflow: 'auto',
-              maxHeight: '80px'
-            }}>
-              {JSON.stringify(authHeaders, null, 2)}
-            </pre>
-          </div>
-          
-          <div style={{ marginBottom: '10px' }}>
-            <strong style={{ color: '#FFA500' }}>API Errors:</strong><br/>
-            Featured: {featuredResult.error ? '❌ ' + featuredResult.error : '✅ None'}<br/>
-            Leaderboard: {leaderboardResult.error ? '❌ ' + leaderboardResult.error : '✅ None'}
-          </div>
         </div>
 
         {/* Personalized Section (Desktop) */}
@@ -1136,8 +1142,14 @@ const ChatLauncherPage = ({ onStartChat }) => {
                   fontFamily: "'Playfair Display', serif",
                   margin: 0,
                   letterSpacing: '2px',
-                  textShadow: '0 0 20px rgba(255, 215, 0, 0.5)'
+                  textShadow: '0 0 20px rgba(255, 215, 0, 0.5)',
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: '0.5rem'
                 }}>
+                  {selectedCategory.icon && (
+                    <span style={{ fontSize: '1.5rem' }}>{selectedCategory.icon}</span>
+                  )}
                   {selectedCategory.title}
                 </h2>
                 
@@ -1180,7 +1192,73 @@ const ChatLauncherPage = ({ onStartChat }) => {
                   user_id={user?.id}
                   onShowUpgradeModal={handleShowUpgradeModal}
                 />
-              ) : (
+                ) : selectedCategory.key === 'discovered' ? (
+                  /* Special handling for discovered characters */
+                  <div>
+                    {selectedCategory.description && (
+                      <p style={{
+                        color: 'rgba(255, 215, 0, 0.8)',
+                        fontSize: '1rem',
+                        marginBottom: '1.5rem',
+                        textAlign: 'center',
+                        fontStyle: 'italic'
+                      }}>
+                        {selectedCategory.description}
+                      </p>
+                    )}
+
+                    <div style={{
+                      display: 'grid',
+                      gridTemplateColumns: 'repeat(auto-fit, minmax(180px, 1fr))',
+                      gap: '1rem',
+                      maxHeight: 'calc(100vh - 200px)',
+                      overflowY: 'auto',
+                      paddingRight: '0.5rem'
+                    }}>
+                      {selectedCategory.characters.map((character, index) => (
+                        <div key={character.key} style={{ position: 'relative' }}>
+                          <CharacterCard
+                            character={character}
+                            onClick={() => handleCharacterSelect(character)}
+                            index={index}
+                            isMobile={false}
+                            showStatusIndicator={false}
+                          />
+                          {/* Discovered badge */}
+                          <div style={{
+                            position: 'absolute',
+                            top: '8px',
+                            right: '8px',
+                            background: 'rgba(255, 215, 0, 0.9)',
+                            color: 'rgba(0, 0, 0, 0.8)',
+                            fontSize: '0.7rem',
+                            padding: '0.2rem 0.4rem',
+                            borderRadius: '6px',
+                            fontWeight: 600,
+                            zIndex: 2
+                          }}>
+                            ✨
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+
+                    {selectedCategory.characters.length === 0 && (
+                      <div style={{
+                        textAlign: 'center',
+                        padding: '2rem',
+                        color: 'rgba(255, 215, 0, 0.7)'
+                      }}>
+                        <h3 style={{ margin: '0 0 1rem 0', fontSize: '1.2rem' }}>
+                          No characters discovered yet
+                        </h3>
+                        <p style={{ margin: 0, fontSize: '1rem' }}>
+                          Explore the Market Hub to find interesting characters and add them to this collection!
+                        </p>
+                      </div>
+                    )}
+                  </div>
+                ) : (
                 <div style={{
                   display: 'grid',
                   gridTemplateColumns: 'repeat(auto-fit, minmax(180px, 1fr))',

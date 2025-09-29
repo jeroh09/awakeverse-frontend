@@ -1,14 +1,25 @@
-// src/components/Header/Header.js - MODIFIED: Retracts again after 30 sec
+// src/components/Header/Header.js - Fixed navigation following AppViewContext pattern
 import { useState, useEffect, useRef } from 'react';
 import styles from './Header.module.css';
 import { useUser } from '../../contexts/UserContext';
+import { useAuth } from '../../contexts/AuthContext';
+import { useAppView } from '../../contexts/AppViewContext';
 import ProfileButton from '../ProfileButton';
 
 export default function Header() {
   const { user } = useUser();
+  const { isAuthenticated } = useAuth();
   const [isRetracted, setIsRetracted] = useState(false);
   const retractionTimerRef = useRef(null);
   const API_BASE = process.env.REACT_APP_API_URL || 'https://api.awakeverse.com';
+
+  // Get view context safely
+  let viewContext = null;
+  try {
+    viewContext = useAppView();
+  } catch (error) {
+    // Context not available on non-app routes - this is normal
+  }
 
   // Handle automatic retraction
   useEffect(() => {
@@ -19,19 +30,16 @@ export default function Header() {
       }, delay);
     };
 
-    // Initial retraction after 6 seconds
     if (!isRetracted) {
       scheduleRetraction(6000);
     }
 
-    // Reset timer on user activity
     const handleUserActivity = () => {
       if (!isRetracted) {
         scheduleRetraction(6000);
       }
     };
 
-    // Set up event listeners
     const events = ['mousemove', 'click', 'keydown', 'scroll'];
     events.forEach(event => 
       document.addEventListener(event, handleUserActivity)
@@ -45,19 +53,59 @@ export default function Header() {
     };
   }, [isRetracted]);
 
-  // Handle manual show and schedule next retraction
   const handleShowHeader = () => {
     setIsRetracted(false);
-    // Schedule retraction again after 30 seconds
     clearTimeout(retractionTimerRef.current);
     retractionTimerRef.current = setTimeout(() => {
       setIsRetracted(true);
     }, 30000);
   };
 
+  // Handle navigation - simplified, no return value check
+  const handleNavClick = (viewState) => {
+    if (!viewContext) return;
+    viewContext.switchView(viewState);
+  };
+
+  // Show navigation only when authenticated and context available
+  const showNavigation = isAuthenticated && viewContext;
+
   return (
     <header className={`${styles.header} ${isRetracted ? styles.retracted : ''}`}>
-      <h1 className={styles.title}>Awakeverse</h1>
+      <div className={styles.leftSection}>
+        <h1 className={styles.title}>Awakeverse</h1>
+        
+        {/* Navigation tabs */}
+        {showNavigation && (
+          <nav className={styles.navigation}>
+            <button 
+              className={`${styles.navTab} ${
+                viewContext.currentView === viewContext.VIEW_STATES.CHAT ? styles.active : ''
+              }`}
+              onClick={() => handleNavClick(viewContext.VIEW_STATES.CHAT)}
+            >
+              Chat
+            </button>
+            <button 
+              className={`${styles.navTab} ${
+                viewContext.currentView === viewContext.VIEW_STATES.MARKET_HUB ? styles.active : ''
+              }`}
+              onClick={() => handleNavClick(viewContext.VIEW_STATES.MARKET_HUB)}
+            >
+              Discover
+            </button>
+            <button 
+              className={`${styles.navTab} ${
+                viewContext.currentView === viewContext.VIEW_STATES.CREATOR_DASHBOARD ? styles.active : ''
+              }`}
+              onClick={() => handleNavClick(viewContext.VIEW_STATES.CREATOR_DASHBOARD)}
+            >
+              Create
+            </button>
+          </nav>
+        )}
+      </div>
+
       <div className={styles.userSection}>
         <img
           src={user?.avatarUrl || `${API_BASE}/avatars/user_${user?.id || 'unknown'}_default.jpg`}

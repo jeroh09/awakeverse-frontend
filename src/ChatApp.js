@@ -1,9 +1,10 @@
-// src/ChatApp.js - Enhanced with Custom Character Display Names
+// src/ChatApp.js - Enhanced with View Switching Logic
 import React, { useState, useEffect, useCallback, useMemo } from 'react';
 import { useSocket } from './contexts/WebSocketContext';
 import { useCharacter } from './contexts/CharacterContext';
 import { useAuth } from './contexts/AuthContext';
 import { useUser } from './contexts/UserContext';
+import { useAppView } from './contexts/AppViewContext';
 import { useNavigate, useLocation } from 'react-router-dom';
 import api from './api';
 import Header from './components/Header/Header';
@@ -11,11 +12,13 @@ import ChatLauncherPage from './components/ChatLauncherPage';
 import ChatWindow from './components/ChatWindow';
 import CharacterDetailPanel from './components/CharacterDetailPanel/CharacterDetailPanel';
 import FloatingCharacterHub from './components/FloatingCharacterHub/FloatingCharacterHub';
+import MarketHubPage from './components/MarketHub/MarketHubPage';
+import DebugViewContext from './components/DebugViewContext'; // Temporary debug
 import { characterCategories } from './data/characterCategories';
 import usePremiumCharacters from './hooks/usePremiumCharacters';
-// NEW: Add featured characters and leaderboard imports
 import { useFeaturedCharacters } from './hooks/useFeaturedCharacters';
 import { useLeaderboard } from './hooks/useLeaderboard';
+import CreatorDashboard from './components/CreatorHub/CreatorDashboard';
 import './styles.css';
 
 function useMediaQuery(maxWidth) {
@@ -33,6 +36,15 @@ function useMediaQuery(maxWidth) {
 }
 
 export default function ChatApp() {
+  // Get view context
+  const { 
+    currentView, 
+    VIEW_STATES, 
+    switchView, 
+    addDiscoveredCharacter,
+    discoveredCharacters 
+  } = useAppView();
+
   const {
     selectedCharacterKey,
     setSelectedCharacterKey,
@@ -44,11 +56,10 @@ export default function ChatApp() {
   const navigate = useNavigate();
   const location = useLocation();
 
-  // NEW: Get custom character data for display names
+  // Get custom character data for display names
   const { userCharacters, loading: customCharactersLoading } = usePremiumCharacters();
-  window.debugUserChars = userCharacters;
 
-  // 🧪 TEMPORARY: Console testing hooks - Remove after testing
+  // Testing hooks - Remove after testing
   const featuredResult = useFeaturedCharacters({ enabled: true });
   const leaderboardResult = useLeaderboard({ period: 'week', limit: 5 });
 
@@ -59,33 +70,6 @@ export default function ChatApp() {
   const [isHubVisible, setIsHubVisible] = useState(true);
   const [prestigeHubVisible, setPrestigeHubVisible] = useState(false);
 
-  // 🧪 TEMPORARY: Console testing - Remove after testing
-  useEffect(() => {
-    console.log('🧪 FEATURED CHARACTERS TEST:', {
-      loading: featuredResult.loading,
-      error: featuredResult.error,
-      characters: featuredResult.featuredCharacters,
-      totalFeatured: featuredResult.totalFeatured,
-      weekStart: featuredResult.weekStart
-    });
-    
-    console.log('🧪 LEADERBOARD TEST:', {
-      loading: leaderboardResult.loading,
-      error: leaderboardResult.error,
-      rankings: leaderboardResult.rankings,
-      period: leaderboardResult.period,
-      totalEntries: leaderboardResult.totalEntries
-    });
-    
-    // Test API endpoints directly
-    if (featuredResult.featuredCharacters?.length > 0) {
-      console.log('✅ Featured Characters SUCCESS - First character:', featuredResult.featuredCharacters[0]);
-    }
-    
-    if (leaderboardResult.rankings?.length > 0) {
-      console.log('✅ Leaderboard SUCCESS - First ranking:', leaderboardResult.rankings[0]);
-    }
-  }, [featuredResult, leaderboardResult]);
 
   // History-safe back navigation
   const handleBackToLauncher = useCallback(() => {
@@ -93,10 +77,9 @@ export default function ChatApp() {
     setPreviewCharacterKey(null);
     setPrestigeHubVisible(false);
     
-    // Don't use navigate() here - just update internal state
-    // This keeps us within the /app route and prevents history pollution
+    // Switch to chat view when going back to launcher
+    switchView(VIEW_STATES.CHAT);
     
-    // Optional: Update URL fragment for better UX without affecting history
     if (window.location.hash !== '#launcher') {
       window.history.replaceState(
         { isAppRoot: true, view: 'launcher' }, 
@@ -104,7 +87,7 @@ export default function ChatApp() {
         '/app#launcher'
       );
     }
-  }, [setSelectedCharacterKey, setPreviewCharacterKey]);
+  }, [setSelectedCharacterKey, setPreviewCharacterKey, switchView, VIEW_STATES]);
 
   // History-safe character selection
   const handleCharacterSelection = useCallback((key, source = 'direct') => {
@@ -114,20 +97,37 @@ export default function ChatApp() {
     setPreviewCharacterKey(null);
     setPrestigeHubVisible(false);
     
-    // Update URL fragment without affecting browser history
+    // Switch to chat view when character is selected
+    switchView(VIEW_STATES.CHAT);
+    
     window.history.replaceState(
       { isAppRoot: true, view: 'chat', character: key }, 
       '', 
       `/app#chat/${key}`
     );
-  }, [setSelectedCharacterKey, setPreviewCharacterKey]);
+  }, [setSelectedCharacterKey, setPreviewCharacterKey, switchView, VIEW_STATES]);
+
+  // NEW: Handle character selection from Market Hub
+  const handleMarketHubCharacterSelect = useCallback((character) => {
+    console.log('🔍 DEBUG: Character selected from Market Hub:', character);
+    
+    // Add to discovered characters list
+    addDiscoveredCharacter(character);
+    
+    // Start chat with this character
+    handleCharacterSelection(character.character_key, 'market_hub');
+  }, [addDiscoveredCharacter, handleCharacterSelection]);
+
+  // NEW: Handle chat start from Market Hub
+  const handleMarketHubStartChat = useCallback((characterKey) => {
+    handleCharacterSelection(characterKey, 'market_hub_chat');
+  }, [handleCharacterSelection]);
 
   // Initialize app state from URL on load
   useEffect(() => {
     if (!token) return;
     
-    // Parse initial state from URL hash
-    const hash = window.location.hash.slice(1); // Remove #
+    const hash = window.location.hash.slice(1);
     
     if (hash.startsWith('chat/')) {
       const characterKey = hash.replace('chat/', '');
@@ -135,14 +135,14 @@ export default function ChatApp() {
         cat.characters.some(char => char.key === characterKey)
       )) {
         setSelectedCharacterKey(characterKey);
+        switchView(VIEW_STATES.CHAT);
       }
     }
     
-    // Ensure we have the app root marker
     if (!window.history.state?.isAppRoot) {
       window.history.replaceState({ isAppRoot: true }, '', '/app');
     }
-  }, [token, setSelectedCharacterKey]);
+  }, [token, setSelectedCharacterKey, switchView, VIEW_STATES]);
 
   const togglePrestigeHub = useCallback(() => {
     console.log('ChatApp togglePrestigeHub called, current state:', prestigeHubVisible);
@@ -286,16 +286,14 @@ export default function ChatApp() {
     }));
   };
 
-  // ENHANCED: Character display name mapping including custom characters
-  const charactersMap = useMemo(() => {
-    // Start with static characters from characterCategories
-    const map = characterCategories.reduce((acc, cat) => {
-      cat.characters.forEach(c => (acc[c.key] = c.name));
-      return acc;
-    }, {});
-    
-    // Add custom characters with proper field names and defensive error handling
-    try {
+  // Character display name mapping including custom characters
+      const charactersMap = useMemo(() => {
+      const map = characterCategories.reduce((acc, cat) => {
+        cat.characters.forEach(c => (acc[c.key] = c.name));
+        return acc;
+      }, {});
+
+      // Add user's custom characters
       if (userCharacters && Array.isArray(userCharacters)) {
         userCharacters
           .filter(char => char && char.status === 'approved')
@@ -305,19 +303,26 @@ export default function ChatApp() {
             }
           });
       }
-    } catch (error) {
-      console.warn('Failed to load custom character names:', error);
-      // Static characters still work, app continues functioning
-    }
-    
-    return map;
-  }, [userCharacters]);
+
+      discoveredCharacters.forEach(char => {
+        if (char.character_key && char.display_name) {
+          map[char.character_key] = char.display_name;
+        }
+      });
+      return map;
+    }, [userCharacters, discoveredCharacters]); // Add discoveredCharacters dependency
+
+  // NEW: Placeholder Creator Dashboard component
+  {/* NEW: Creator Dashboard view */}
+  {currentView === VIEW_STATES.CREATOR_DASHBOARD && (
+    <CreatorDashboard />
+  )}
+  
 
   return (
     <div className="app-container">
       <Header />
-
-      {selectedCharacterKey && useFloatingHub && (
+      {selectedCharacterKey && useFloatingHub && currentView === VIEW_STATES.CHAT && (
         <>
           <FloatingCharacterHub
             current={selectedCharacterKey}
@@ -329,32 +334,54 @@ export default function ChatApp() {
         </>
       )}
 
-      {/* DEBUG BUTTONS REMOVED - Using inline alerts instead */}
-
-      {!selectedCharacterKey && (
-        <ChatLauncherPage onStartChat={handleStartChat} />
-      )}
-      
-      {selectedCharacterKey && (
-        <div className="chat-body">
-          <div className="chat-window">
-            <ChatWindow
-              key={currentSessionId}
-              character={selectedCharacterKey}
-              characterName={charactersMap[selectedCharacterKey]} // Now includes custom characters
-              threadId={currentSessionId}
-              onBack={handleBackToLauncher}
-              session={sessionsByCharacter[selectedCharacterKey]}
-              targetMessage={targetMessage}
-              onNewMessage={handleNewMessage}
-              avatarUrl={user?.avatarUrl ? `${user.avatarUrl}?ts=${Date.now()}` : undefined}
-              isHubVisible={isHubVisible}
-              onToggleVisibility={() => setIsHubVisible(!isHubVisible)}
-              prestigeHubVisible={prestigeHubVisible}
-              onPrestigeHubToggle={togglePrestigeHub}
+      {/* NEW: Conditional rendering based on current view */}
+      {currentView === VIEW_STATES.CHAT && (
+        <>
+          {!selectedCharacterKey && (
+            <ChatLauncherPage 
+              onStartChat={handleStartChat}
+              discoveredCharacters={discoveredCharacters}
             />
-          </div>
+          )}
+          
+          {selectedCharacterKey && (
+            <div className="chat-body">
+              <div className="chat-window">
+                <ChatWindow
+                  key={currentSessionId}
+                  character={selectedCharacterKey}
+                  characterName={charactersMap[selectedCharacterKey] || selectedCharacterKey}
+                  threadId={currentSessionId}
+                  onBack={handleBackToLauncher}
+                  session={sessionsByCharacter[selectedCharacterKey]}
+                  targetMessage={targetMessage}
+                  onNewMessage={handleNewMessage}
+                  avatarUrl={user?.avatarUrl ? `${user.avatarUrl}?ts=${Date.now()}` : undefined}
+                  isHubVisible={isHubVisible}
+                  onToggleVisibility={() => setIsHubVisible(!isHubVisible)}
+                  prestigeHubVisible={prestigeHubVisible}
+                  onPrestigeHubToggle={togglePrestigeHub}
+                  discoveredCharacters={discoveredCharacters}
+                />
+              </div>
+            </div>
+          )}
+        </>
+      )}
+
+      {currentView === VIEW_STATES.MARKET_HUB && (
+        <div>
+          <MarketHubPage 
+            onCharacterSelect={handleMarketHubCharacterSelect}
+            onStartChat={handleMarketHubStartChat}
+            isViewMode={true}
+          />
         </div>
+      )}
+
+      {/* NEW: Creator Dashboard view */}
+      {currentView === VIEW_STATES.CREATOR_DASHBOARD && (
+        <CreatorDashboard />
       )}
 
       {previewCharacterKey && (

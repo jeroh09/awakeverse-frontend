@@ -2,7 +2,13 @@
 import React, { useState } from 'react';
 import floatingGlassStyles from './CharacterDetailPanel.module.css';
 
-const CharacterDetailPanel = ({ character, onClose, onStartChat }) => {
+const CharacterDetailPanel = ({ 
+  character, 
+  onClose, 
+  onStartChat, 
+  onCharacterSelect,  // NEW: Add this prop
+  showDiscoverAction  // NEW: Add this prop
+}) => {
   // Toggle between versions - remove this in production
   const [useOrganicBlob, setUseOrganicBlob] = useState(false);
   const styles = useOrganicBlob ? organicBlobStyles : floatingGlassStyles;
@@ -54,9 +60,21 @@ const CharacterDetailPanel = ({ character, onClose, onStartChat }) => {
         </div>
         
         <div className={styles.footer}>
+          {/* Existing start chat button */}
           <button className={styles.cta} onClick={() => onStartChat(character.key)}>
             Start Chat
           </button>
+          
+          {/* NEW: Add discovery button for Market Hub */}
+          {showDiscoverAction && onCharacterSelect && (
+            <button 
+              className={styles.cta} 
+              onClick={() => onCharacterSelect(character)}
+              style={{ marginLeft: '10px', background: '#10b981' }}
+            >
+              Add to Discovered
+            </button>
+          )}
         </div>
       </aside>
     </>

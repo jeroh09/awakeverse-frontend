@@ -1,5 +1,11 @@
 // src/data/characterCategories.js
 export const characterCategories = [
+
+  {
+    key: 'discovered',
+    title: '⭐ Discovered',
+    characters: [] // Will be populated dynamically from Market Hub discoveries
+  },
   {
     key: 'sleuths',
     title: 'Detectives',

@@ -81,15 +81,6 @@ const ChatItem = memo(({ index, style, data }) => {
     return new Set(msg.invite_candidates || []);
   });
 
-  // Helper function to get character display name
-  const getCharacterDisplayName = (characterKey) => {
-    const char = CHARACTERS[characterKey];
-    if (char) {
-      return char.display_name || char.name || characterKey.replace(/_/g, ' ');
-    }
-    return characterKey.replace(/_/g, ' ');
-  };
-
   // Resize tracking for smooth auto-layout
   useEffect(() => {
     if (rowRef.current) {
@@ -124,7 +115,7 @@ const ChatItem = memo(({ index, style, data }) => {
       return staticChar;
     }
 
-    // Then check custom characters from userCharacters
+    // Then check custom characters from userCharacters (owner's characters)
     if (data.userCharacters && Array.isArray(data.userCharacters)) {
       const customChar = data.userCharacters.find(char => 
         char && char.character_key === characterKey && char.status === 'approved'
@@ -137,8 +128,21 @@ const ChatItem = memo(({ index, style, data }) => {
       }
     }
 
+    // FIXED: Check discovered characters from Market Hub
+    if (data.discoveredCharacters && Array.isArray(data.discoveredCharacters)) {
+      const discoveredChar = data.discoveredCharacters.find(char => 
+        char && char.character_key === characterKey
+      );
+      if (discoveredChar) {
+        return {
+          display_name: discoveredChar.display_name || discoveredChar.name,
+          thumbnailUrl: discoveredChar.avatar_url || discoveredChar.thumbnailUrl || `/images/${discoveredChar.character_key}.jpg`
+        };
+      }
+    }
+
     // Fallback for unknown characters
-    console.warn(`Character "${characterKey}" not found in static or custom characters`);
+    console.warn(`Character "${characterKey}" not found in static, custom, or discovered characters`);
     return {
       display_name: characterKey?.replace(/_/g, ' ') || 'Unknown'
     };
@@ -280,8 +284,13 @@ export default function ChatWindow({
   isHubVisible,
   onToggleVisibility,
   prestigeHubVisible,
-  onPrestigeHubToggle
+  onPrestigeHubToggle,
+  discoveredCharacters = []
 }) {
+  console.log('🔍 ChatWindow received discoveredCharacters:', discoveredCharacters);
+  console.log('🔍 Current character:', character);
+
+  
   const { token } = useAuth();
   const { user } = useUser();
   const socket = useSocket();
@@ -524,7 +533,7 @@ export default function ChatWindow({
   } = useSmartScroll(listRef, chatHistory);
   const controllerRef = useRef(null);
   const sizeMap = useRef({});
-  const displayName = characterName || character;
+  const displayName = characterName || character?.replace(/_/g, ' ') || 'Unknown';
   const lastMessageCountRef = useRef(0);
   
   // Row height calculation with invite spacing
@@ -1097,6 +1106,7 @@ export default function ChatWindow({
                   isSending,
                   participants,
                   userCharacters,
+                  discoveredCharacters,  // ADD THIS LINE
                   userId: user?.id
                 }}
                 overscanCount={3}

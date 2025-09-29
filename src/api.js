@@ -1,4 +1,4 @@
-// src/api.js - Preview-aware token handling
+// src/api.js - Fixed base URL to prevent double /api
 import axios from 'axios';
 import environment from './config/environment';
 
@@ -6,7 +6,8 @@ const isPreview = process.env.REACT_APP_VERCEL_ENV === 'preview' ||
                   process.env.VERCEL_ENV === 'preview';
 
 const api = axios.create({
-  baseURL: `${environment.API_BASE_URL}/api`,
+  // FIXED: Remove /api from baseURL - components already include it
+  baseURL: environment.API_BASE_URL,
   timeout: 10000,
   withCredentials: true,
 });
@@ -20,7 +21,7 @@ api.interceptors.request.use(config => {
     
     // Token debugging for preview builds
     if (isPreview) {
-      console.log('🔐 [PREVIEW] API Request with Token:', {
+      console.log('🔍 [PREVIEW] API Request with Token:', {
         url: config.url,
         method: config.method,
         tokenPreview: token.substring(0, 20) + '...', // First 20 chars only
@@ -28,7 +29,7 @@ api.interceptors.request.use(config => {
       });
     }
   } else if (isPreview) {
-    console.log('🔐 [PREVIEW] API Request without Token:', config.url);
+    console.log('🔍 [PREVIEW] API Request without Token:', config.url);
   }
   
   return config;
@@ -38,7 +39,7 @@ api.interceptors.request.use(config => {
 api.interceptors.response.use(
   response => {
     if (isPreview) {
-      console.log('🔐 [PREVIEW] API Response:', {
+      console.log('🔍 [PREVIEW] API Response:', {
         url: response.config.url,
         status: response.status,
         data: response.data
@@ -48,7 +49,7 @@ api.interceptors.response.use(
   },
   error => {
     if (isPreview) {
-      console.error('🔐 [PREVIEW] API Error:', {
+      console.error('🔍 [PREVIEW] API Error:', {
         url: error.config?.url,
         status: error.response?.status,
         message: error.message

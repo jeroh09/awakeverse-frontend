@@ -1,18 +1,23 @@
-// src/pages/MarketHub/MarketHubPage.jsx
+// src/components/MarketHub/MarketHubPage.jsx - Fixed for ChatApp View Integration
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { ArrowLeft, Search, Filter, TrendingUp, Trophy, Users, Star, Shield, Zap } from 'lucide-react';
 import { useAuth } from '../../contexts/AuthContext';
 import { useUser } from '../../contexts/UserContext';
-import EnhancedCharacterCard from '../../components/MarketHub/EnhancedCharacterCard';
-import FeaturedCarousel from '../../components/MarketHub/FeaturedCarousel';
-import LeaderboardSection from '../../components/MarketHub/LeaderboardSection';
-import CharacterDetailPanel from '../../components/CharacterDetailPanel/CharacterDetailPanel';
+import EnhancedCharacterCard from './EnhancedCharacterCard';
+import FeaturedCarousel from './FeaturedCarousel';
+import LeaderboardSection from './LeaderboardSection';
+import CharacterDetailPanel from '../CharacterDetailPanel/CharacterDetailPanel';
 import { useMarketHub } from '../../hooks/useMarketHub';
 import { useFeaturedCharacters } from '../../hooks/useFeaturedCharacters';
 import styles from './MarketHubPage.module.css';
 
-const MarketHubPage = () => {
+// NEW: Updated to accept props for character selection callbacks
+const MarketHubPage = ({ 
+  onCharacterSelect, 
+  onStartChat,
+  isViewMode = false // Flag to indicate if called from ChatApp view switching
+}) => {
   const navigate = useNavigate();
   const { isAuthenticated } = useAuth();
   const { user } = useUser();
@@ -26,15 +31,29 @@ const MarketHubPage = () => {
     return () => window.removeEventListener('resize', handleResize);
   }, []);
 
-  // Route based on authentication status
+  // NEW: When in view mode (called from ChatApp), always show authenticated version
+  // When standalone route, use authentication check with educational fallback
+  if (isViewMode) {
+    // Called from ChatApp view switching - always show authenticated version
+    return (
+      <AuthenticatedMarketHub 
+        onCharacterSelect={onCharacterSelect}
+        onStartChat={onStartChat}
+        isViewMode={true}
+      />
+    );
+  }
+
+  // Standalone route - check authentication
   if (!isAuthenticated) {
     return <AnonymousMarketHub />;
   }
 
+  // Standalone authenticated route
   return <AuthenticatedMarketHub />;
 };
 
-// Anonymous/Public Market Hub View
+// Anonymous/Public Market Hub View (Educational Modal)
 const AnonymousMarketHub = () => {
   const navigate = useNavigate();
   const [selectedCharacter, setSelectedCharacter] = useState(null);
@@ -350,8 +369,12 @@ const AnonymousMarketHub = () => {
   );
 };
 
-// Authenticated Market Hub View (our existing full hub)
-const AuthenticatedMarketHub = () => {
+// NEW: Enhanced Authenticated Market Hub for view integration
+const AuthenticatedMarketHub = ({ 
+  onCharacterSelect, 
+  onStartChat, 
+  isViewMode = false 
+}) => {
   const navigate = useNavigate();
   const { user } = useUser();
   
@@ -394,17 +417,58 @@ const AuthenticatedMarketHub = () => {
     return () => window.removeEventListener('resize', handleResize);
   }, []);
 
-  // Navigation handlers
+  // NEW: Enhanced navigation handlers for view integration
   const handleBackToCharacters = () => {
-    navigate('/chat');
+    if (isViewMode) {
+      // When in view mode, don't navigate - let parent handle view switching
+      console.log('Back clicked in view mode - parent should handle this');
+    } else {
+      // Standalone mode - navigate normally
+      navigate('/chat');
+    }
   };
 
   const handleStartChat = (characterKey) => {
-    navigate(`/chat?character=${characterKey}`);
+    if (isViewMode && onStartChat) {
+      // Use callback when in view mode
+      onStartChat(characterKey);
+    } else {
+      // Standalone mode - navigate normally
+      navigate(`/chat?character=${characterKey}`);
+    }
   };
 
   const handleCharacterDetails = (character) => {
     setSelectedCharacter(character);
+  };
+
+  // NEW: Enhanced character selection for discovered flow
+  const handleCharacterSelect = (character) => {
+    const transformedCharacter = {
+      name: character.display_name || character.name || character.character_key,
+      description: character.short_description || character.description || '',
+      key: character.character_key || character.key,
+      thumbnailUrl: character.avatar_url || character.thumbnailUrl || `/images/${character.character_key}.jpg`,
+      display_name: character.display_name,
+      character_key: character.character_key,
+      short_description: character.short_description,
+      avatar_url: character.avatar_url
+    };
+
+    setSelectedCharacter(transformedCharacter);
+  };
+
+  // NEW: Handle character selection from detail panel
+  const handleCharacterSelectFromPanel = (character) => {
+    if (isViewMode && onCharacterSelect) {
+      // Add to discovered characters when in view mode
+      onCharacterSelect(character);
+      // Close the detail panel since we're switching views
+      setSelectedCharacter(null);
+    } else {
+      // Standalone mode - just close panel
+      setSelectedCharacter(null);
+    }
   };
 
   // Search and filter handlers
@@ -481,21 +545,29 @@ const AuthenticatedMarketHub = () => {
 
   return (
     <div className={styles.container}>
-      {/* Header */}
+      {/* Header - Modified for view mode */}
       <header className={styles.header}>
         <div className={styles.headerContent}>
-          <button 
-            className={styles.backButton}
-            onClick={handleBackToCharacters}
-            aria-label="Back to characters"
-          >
-            <ArrowLeft size={20} />
-            <span>Back to Characters</span>
-          </button>
+          {/* NEW: Only show back button in standalone mode */}
+          {!isViewMode && (
+            <button 
+              className={styles.backButton}
+              onClick={handleBackToCharacters}
+              aria-label="Back to characters"
+            >
+              <ArrowLeft size={20} />
+              <span>Back to Characters</span>
+            </button>
+          )}
           
           <div className={styles.titleSection}>
             <h1 className={styles.title}>Market Hub</h1>
-            <p className={styles.subtitle}>Discover amazing characters from our community</p>
+            <p className={styles.subtitle}>
+              {isViewMode 
+                ? 'Discover characters and add them to your collection'
+                : 'Discover amazing characters from our community'
+              }
+            </p>
           </div>
         </div>
 
@@ -624,7 +696,7 @@ const AuthenticatedMarketHub = () => {
                       isOwner={character.creator?.user_id === user?.id}
                       showEarnings={character.creator?.user_id === user?.id}
                       onChatClick={handleStartChat}
-                      onCardClick={handleCharacterDetails}
+                      onCardClick={handleCharacterSelect}
                     />
                   ))}
                 </div>
@@ -697,6 +769,8 @@ const AuthenticatedMarketHub = () => {
           character={selectedCharacter}
           onClose={() => setSelectedCharacter(null)}
           onStartChat={handleStartChat}
+          onCharacterSelect={isViewMode ? handleCharacterSelectFromPanel : undefined}
+          showDiscoverAction={isViewMode}
         />
       )}
     </div>
