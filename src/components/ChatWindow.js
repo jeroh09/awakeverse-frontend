@@ -792,6 +792,9 @@ export default function ChatWindow({
   }, [chatHistory.length, shouldAutoScroll, isNearBottom]);
 
   // Replace your sendAI function in ChatWindow.js with this streaming version
+  // Replace your sendAI function in ChatWindow.js with this complete version
+  // This fixes the speaker tracking issue
+
   const sendAI = async (userText, aiIndex) => {
     const controller = new AbortController();
     controllerRef.current = controller;
@@ -821,6 +824,7 @@ export default function ChatWindow({
       let fullReply = '';
       let hasInviteSuggestion = false;
       let inviteCandidates = [];
+      let actualSpeaker = character; // ✅ Track the ACTUAL speaker from backend
 
       // ✅ STREAMING: Process each chunk immediately
       while (true) {
@@ -835,17 +839,23 @@ export default function ChatWindow({
             const data = JSON.parse(line);
             const token = data.response || '';
 
+            // ✅ CRITICAL: Track actual speaker from backend response
+            if (data.speaker) {
+              actualSpeaker = data.speaker;
+              console.log('📢 Speaker from backend:', actualSpeaker);
+            }
+
             // ✅ STREAMING: Add each token immediately
             if (token) {
               fullReply += token;
 
-              // ✅ STREAMING: Update UI with each token (not just at the end)
+              // ✅ Update UI with ACTUAL speaker (not hardcoded)
               setChatHistory(prev => {
                 const copy = [...prev];
                 if (copy[aiIndex]) {
                   copy[aiIndex] = {
                     ...copy[aiIndex],
-                    speaker: data.speaker || character,
+                    speaker: actualSpeaker, // ✅ Use actual speaker
                     text: fullReply,
                     has_invite_suggestion: hasInviteSuggestion,
                     invite_candidates: inviteCandidates
@@ -874,13 +884,13 @@ export default function ChatWindow({
         }
       }
 
-      // ✅ STREAMING: Final update to ensure everything is set correctly
+      // ✅ Final update with ACTUAL speaker (not hardcoded character)
       setChatHistory(prev => {
         const copy = [...prev];
         if (copy[aiIndex]) {
           copy[aiIndex] = {
             ...copy[aiIndex],
-            speaker: character,
+            speaker: actualSpeaker, // ✅ Use tracked speaker
             text: fullReply,
             has_invite_suggestion: hasInviteSuggestion,
             invite_candidates: inviteCandidates
@@ -889,12 +899,22 @@ export default function ChatWindow({
         return copy;
       });
 
+      console.log('✅ Final message persisted with speaker:', actualSpeaker);
+
+      // ✅ Update participants if speaker is different from primary
+      if (actualSpeaker !== character) {
+        setParticipants(prev => {
+          if (prev.includes(actualSpeaker)) return prev;
+          return [...prev, actualSpeaker];
+        });
+      }
+
       // ✅ CRITICAL: REFRESH USAGE AFTER SUCCESSFUL MESSAGE COMPLETION
       if (usageTracking.isCustomCharacter) {
         setTimeout(() => {
           usageTracking.refreshUsage().then(success => {
             if (success) {
-            } else {
+              console.log('✅ Usage data refreshed successfully');
             }
           });
         }, 500);
@@ -902,12 +922,10 @@ export default function ChatWindow({
 
     } catch (err) {
       if (err.name === 'AbortError') {
-        // ✅ EVEN IF ABORTED, CHECK IF WE NEED TO REFRESH USAGE
+        console.log('Chat request aborted');
+
         if (usageTracking.isCustomCharacter) {
-          usageTracking.refreshUsage().then(success => {
-            if (success) {
-            }
-          });
+          usageTracking.refreshUsage();
         }
       } else {
         reportError(err, {
