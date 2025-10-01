@@ -188,14 +188,11 @@ const ChatLauncherPage = ({ onStartChat }) => {
 
       if (response.ok) {
         const data = await response.json();
-        console.log('User characters loaded:', data);
         setUserCharacters(data.characters || []);
       } else {
-        console.warn('Failed to load user characters:', response.status);
         setUserCharacters([]);
       }
     } catch (error) {
-      console.error('Error loading user characters:', error);
       setCharactersError('Failed to load your characters');
       setUserCharacters([]);
     } finally {
@@ -354,19 +351,16 @@ const ChatLauncherPage = ({ onStartChat }) => {
 
   // Character creation handlers
   const handleCreateCharacterClick = useCallback(() => {
-    console.log('Create character clicked - starting template selection');
     setShowTemplates(true);
   }, []);
 
   const handleTemplateSelect = useCallback((template) => {
-    console.log('Template selected:', template.name);
     setSelectedTemplate(template);
     setShowTemplates(false);
     setShowBuilder(true);
   }, []);
 
   const handleCharacterCreationComplete = useCallback(() => {
-    console.log('Character creation completed');
     setShowBuilder(false);
     setShowSuccess(true);
     // Reload user characters to show the new one
@@ -374,7 +368,6 @@ const ChatLauncherPage = ({ onStartChat }) => {
   }, [loadUserCharacters]);
 
   const handleCloseCreationFlow = useCallback(() => {
-    console.log('Closing character creation flow');
     setShowTemplates(false);
     setShowBuilder(false);
     setShowSuccess(false);

@@ -2,6 +2,9 @@
 // Helper components for ChatLauncherPage (decentralized: NO status modal here)
 import React from 'react';
 import DefensiveCharacterCreationWrapper from './DefensiveCharacterCreationWrapper';
+import PublishToHubButton from './CreatorHub/PublishToHubButton';
+import { renderSafeAvatar } from '../utils/imageUtils';
+
 
 /* ------------------------------ Assets Map ------------------------------ */
 export const categoryRepresentatives = {
@@ -16,7 +19,7 @@ export const categoryRepresentatives = {
   warlords: '/images/sun_tzu.jpg',
   pathfinders: '/images/christopher_columbus.jpg',
   performers: '/images/harry_houdini.jpg',
-  my_characters: '/images/default-character.jpg'
+  my_characters: null
 };
 
 /* ------------------------------ StatusBadge ----------------------------- */
@@ -262,12 +265,14 @@ export const CategoryCard = ({
 };
 
 /* ------------------------------ CharacterCard --------------------------- */
+/* ------------------------------ CharacterCard (Updated with Publish Button) --------------------------- */
 export const CharacterCard = ({
-  character,          // { key, name, description, thumbnailUrl, status, rejection_reason }
+  character,          // { key, name, description, thumbnailUrl, status, rejection_reason, id, is_market_featured }
   onClick,            // (character) => void
   index = 0,
   isMobile,
-  showStatusIndicator = false
+  showStatusIndicator = false,
+  onPublishToggle     // NEW: Callback when publish state changes
 }) => {
   const getStatusIndicator = () => {
     if (!showStatusIndicator || !character?.status || character.status === 'approved') return null;
@@ -304,7 +309,6 @@ export const CharacterCard = ({
 
   return (
     <div
-      onClick={() => onClick?.(character)}
       style={{
         background: 'rgba(255, 255, 255, 0.05)',
         border: '1px solid rgba(255, 215, 0, 0.2)',
@@ -314,7 +318,7 @@ export const CharacterCard = ({
         transition: 'all 0.3s ease',
         opacity: 0,
         animation: `characterSlideIn 0.6s ease-out ${index * 0.05}s forwards`,
-        minHeight: isMobile ? '140px' : '200px',
+        minHeight: isMobile ? '180px' : '240px', // Increased height for publish button
         display: 'flex',
         flexDirection: 'column',
         alignItems: 'center',
@@ -340,23 +344,26 @@ export const CharacterCard = ({
       {/* Status flag */}
       {getStatusIndicator()}
 
-      {/* Avatar */}
-      <div style={{
-        width: isMobile ? '40px' : '50px',
-        height: isMobile ? '40px' : '50px',
-        borderRadius: '50%',
-        overflow: 'hidden',
-        marginBottom: '0.75rem',
-        border: '3px solid rgba(255, 215, 0, 0.3)',
-        flexShrink: 0,
-        opacity: character.status === 'rejected' ? 0.6 : 1
-      }}>
+      {/* Avatar - clickable for details */}
+      <div 
+        onClick={() => onClick?.(character)}
+        style={{
+          width: isMobile ? '40px' : '50px',
+          height: isMobile ? '40px' : '50px',
+          borderRadius: '50%',
+          overflow: 'hidden',
+          marginBottom: '0.75rem',
+          border: '3px solid rgba(255, 215, 0, 0.3)',
+          flexShrink: 0,
+          opacity: character.status === 'rejected' ? 0.6 : 1,
+          cursor: 'pointer'
+        }}
+      >
         <img
           src={character.thumbnailUrl || '/images/default-character.jpg'}
           alt={character.name}
           style={{ width: '100%', height: '100%', objectFit: 'cover' }}
           onError={(e) => { 
-            // Stop error loop and show text fallback
             e.currentTarget.onError = null;
             e.currentTarget.style.display = 'none';
 
@@ -365,15 +372,25 @@ export const CharacterCard = ({
               const fallback = document.createElement('div');
               fallback.className = 'text-fallback';
               fallback.style.cssText = 'width:100%;height:100%;display:flex;align-items:center;justify-content:center;background:rgba(255,215,0,0.2);color:#FFD700;font-size:1.2rem;font-weight:bold;border-radius:50%;';
-              fallback.textContent = (character.name || category?.title || 'C').charAt(0).toUpperCase();
+              fallback.textContent = (character.name || 'C').charAt(0).toUpperCase();
               parent.appendChild(fallback);
             }
           }}
         />
       </div>
 
-      {/* Info */}
-      <div style={{ textAlign: 'center', flex: 1, display: 'flex', flexDirection: 'column' }}>
+      {/* Info - clickable for details */}
+      <div 
+        onClick={() => onClick?.(character)}
+        style={{ 
+          textAlign: 'center', 
+          flex: 1, 
+          display: 'flex', 
+          flexDirection: 'column',
+          cursor: 'pointer',
+          width: '100%'
+        }}
+      >
         <h3 style={{
           color: character.status === 'approved' ? '#FFD700' : '#FFA500',
           fontSize: isMobile ? '0.8rem' : '0.85rem',
@@ -392,12 +409,39 @@ export const CharacterCard = ({
           margin: 0,
           flex: 1,
           display: '-webkit-box',
-          WebkitLineClamp: 3,
+          WebkitLineClamp: 2,
           WebkitBoxOrient: 'vertical',
           overflow: 'hidden'
         }}>
-          {(character.description || '').slice(0, isMobile ? 80 : 100)}{(character.description || '').length > (isMobile ? 80 : 100) ? '…' : ''}
+          {(character.description || '').slice(0, isMobile ? 60 : 80)}{(character.description || '').length > (isMobile ? 60 : 80) ? '…' : ''}
         </p>
+      </div>
+
+      {/* NEW: Publish Button - not clickable for card (stops propagation) */}
+      <div 
+        onClick={(e) => e.stopPropagation()} 
+        style={{ 
+          width: '100%', 
+          marginTop: '0.75rem',
+          pointerEvents: 'auto'
+        }}
+      >
+        <PublishToHubButton
+          character={{
+            id: character.id,
+            character_key: character.key,
+            display_name: character.name,
+            status: character.status,
+            is_market_featured: character.is_market_featured
+          }}
+          onPublishSuccess={(updatedChar) => {
+            console.log('Character publish state changed:', updatedChar);
+            onPublishToggle?.(updatedChar);
+          }}
+          onPublishError={(error) => {
+            console.error('Publish error:', error);
+          }}
+        />
       </div>
     </div>
   );
@@ -547,6 +591,7 @@ export const MyCharactersPanel = ({
   charactersError,
   onCreateCharacter,
   onCharacterSelect,       // (characterLite) => void
+  onCharacterPublishToggle,  // ← ADD THIS
   isMobile,
   user_id,
   onShowUpgradeModal
@@ -764,7 +809,9 @@ export const MyCharactersPanel = ({
               description: c.short_description || c.description,
               thumbnailUrl: c.avatar_url || c.thumbnailUrl || '/images/default-character.jpg',
               status: c.status,
-              rejection_reason: c.rejection_reason
+              rejection_reason: c.rejection_reason,
+              id: c.id,  // ADD THIS
+              is_market_featured: c.is_market_featured  // ADD THIS
             }}
             onClick={() => onCharacterSelect?.({
               key: c.character_key || c.key,
@@ -778,6 +825,7 @@ export const MyCharactersPanel = ({
             index={idx}
             isMobile={isMobile}
             showStatusIndicator={true}
+            onPublishToggle={onCharacterPublishToggle}  // ← CHANGE THIS LINE
           />
         ))}
       </div>

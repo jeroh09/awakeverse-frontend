@@ -50,7 +50,7 @@ const ChatItem = memo(({ index, style, data }) => {
     chatHistory, sizeMap, setSize,
     startEditing, editingIndex, editText,
     onEditChange, cancelInlineEdit, sendEdited,
-    retry, character, userAvatar, participants
+    retry, character, userAvatar, participants, getCharacterDisplayName
   } = data;
 
   const msg = chatHistory[index];
@@ -104,7 +104,7 @@ const ChatItem = memo(({ index, style, data }) => {
   const API_BASE = process.env.REACT_APP_API_URL || 'https://api.awakeverse.com';
   const avatarSrc = msg.user
     ? userAvatar || `${API_BASE}/avatars/user_${data.userId || 'unknown'}_default.jpg`
-    : `/images/${msg.speaker || character}.jpg`;
+    : (msg.speaker || character) ? `/images/${msg.speaker || character}.jpg` : null;
 
   // Character label fallback
     // Character label fallback - FIXED to handle custom characters
@@ -162,18 +162,53 @@ const ChatItem = memo(({ index, style, data }) => {
   return (
     <div style={style}>
       <div ref={rowRef} className={cls}>
-        <img
-          src={avatarSrc}
-          alt={msg.user
-            ? 'You'
-            : characterInfo?.display_name || 'AI'}
-          className="message-icon"
-          onError={(e) => {
-            e.target.src = msg.user 
-              ? '/images/user-icon.jpg' 
-              : '/images/default-character.jpg';
-          }}
-        />
+        {msg.user ? (
+          <img
+            src={avatarSrc}
+            alt="You"
+            className="message-icon"
+            onError={(e) => {
+              e.currentTarget.onError = null;
+              e.currentTarget.src = '/images/user-icon.jpg';
+            }}
+          />
+        ) : avatarSrc ? (
+          <img
+            src={avatarSrc}
+            alt={characterInfo?.display_name || 'AI'}
+            className="message-icon"
+            onError={(e) => {
+              e.currentTarget.onError = null;
+              e.currentTarget.style.display = 'none';
+              
+              const parent = e.currentTarget.parentElement;
+              if (!parent.querySelector('.text-fallback')) {
+                const fallback = document.createElement('div');
+                fallback.className = 'text-fallback message-icon';
+                fallback.style.cssText = 'display:flex;align-items:center;justify-content:center;background:rgba(255,215,0,0.2);color:#FFD700;font-weight:bold;border-radius:50%;width:40px;height:40px;flex-shrink:0;';
+                fallback.textContent = (characterInfo?.display_name || 'AI').charAt(0).toUpperCase();
+                parent.insertBefore(fallback, e.currentTarget);
+              }
+            }}
+          />
+        ) : (
+          <div 
+            className="message-icon text-fallback"
+            style={{
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              background: 'rgba(255, 215, 0, 0.2)',
+              color: '#FFD700',
+              fontWeight: 'bold',
+              borderRadius: '50%',
+              width: '40px',
+              height: '40px'
+            }}
+          >
+            {(characterInfo?.display_name || 'AI').charAt(0).toUpperCase()}
+          </div>
+        )}   
         <div className="message-content">
           <strong>
             {msg.user
@@ -287,10 +322,8 @@ export default function ChatWindow({
   onPrestigeHubToggle,
   discoveredCharacters = []
 }) {
-  console.log('🔍 ChatWindow received discoveredCharacters:', discoveredCharacters);
-  console.log('🔍 Current character:', character);
 
-  
+
   const { token } = useAuth();
   const { user } = useUser();
   const socket = useSocket();
@@ -347,7 +380,6 @@ export default function ChatWindow({
     };
     
     // Log detailed technical information for debugging
-    console.error('ChatWindow Error Report:', errorReport);
   };
 
   // Emotion state definition
@@ -550,14 +582,6 @@ export default function ChatWindow({
 
   // 5. ADD this handler function (add after other function definitions):
   const handleScrollToBottomClick = useCallback(() => {
-  // Add mobile logging for debugging
-    console.log('🔽 Mobile scroll triggered', {
-      isMobile,
-      userAgent: navigator.userAgent,
-      innerWidth: window.innerWidth,
-      viewportHeight: window.innerHeight
-    });
-
   // Manual scroll to bottom using direct DOM manipulation
    if (listRef.current?._outerRef) {
       const scrollElement = listRef.current._outerRef;
@@ -569,11 +593,6 @@ export default function ChatWindow({
         top: targetScrollTop,
         behavior: 'smooth'
       });
-    
-      console.log('🔽 Manual scroll triggered', {
-        scrollTop: scrollElement.scrollTop,
-        targetScrollTop: targetScrollTop
-      });
     }
 
   // Re-enable autoscroll and reset counts
@@ -581,16 +600,6 @@ export default function ChatWindow({
     setNewMessageCount(0);
     lastMessageCountRef.current = chatHistory.length;
   }, [enableAutoScroll, chatHistory.length, isMobile]);
-
-  // Auto-scroll when new messages are added
-  useEffect(() => {
-    console.log('🔄 ChatWindow scroll state:', {
-      isNearBottom,
-      shouldAutoScroll,
-      hasNewMessages,
-      messageCount: chatHistory.length
-    });
-  }, [isNearBottom, shouldAutoScroll, hasNewMessages, chatHistory.length]);
 
   const onInvite = async (invitee) => {
     if (isSending) return;
@@ -607,7 +616,6 @@ export default function ChatWindow({
       // Get last user message
       const lastUserMsg = [...chatHistory].reverse().find(m => m.user)?.text;
       if (!lastUserMsg) {
-        console.warn('No user message found for invite');
         return;
       }
 
@@ -664,7 +672,6 @@ export default function ChatWindow({
             const token = data.response || '';
             fullResponse += token;
           } catch (parseError) {
-            console.warn('Failed to parse invite response line:', parseError);
           }
         }
       }
@@ -1106,7 +1113,8 @@ export default function ChatWindow({
                   isSending,
                   participants,
                   userCharacters,
-                  discoveredCharacters,  // ADD THIS LINE
+                  discoveredCharacters,
+                  getCharacterDisplayName,  // ADD THIS LINE
                   userId: user?.id
                 }}
                 overscanCount={3}

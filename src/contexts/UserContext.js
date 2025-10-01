@@ -10,8 +10,6 @@ export function UserProvider({ children }) {
 
   useEffect(() => {
     const token = localStorage.getItem('token');
-    console.log("🔍 token in localStorage:", token);
-
     if (!token) {
       console.warn("⚠️ No token found, user is null");
       setUser(null);
@@ -21,10 +19,8 @@ export function UserProvider({ children }) {
 
     try {
       const decoded = jwtDecode(token);
-      console.log("🧠 Decoded token:", decoded);
 
       if (typeof decoded.sub === 'string') {
-        console.log("📡 Fetching current user from API...");
 
         fetch('https://api.awakeverse.com/api/current_user', {
           headers: {
@@ -38,7 +34,6 @@ export function UserProvider({ children }) {
           })
           .then(data => {
             if (!data.error) {
-              console.log("✅ current_user data:", data);
               setUser(data);
             } else {
               console.error('❌ current_user API error:', data.error);
@@ -50,7 +45,6 @@ export function UserProvider({ children }) {
             setUser(null);
           })
           .finally(() => {
-            console.log("🧹 Done fetching user");
             setLoading(false);
           });
 

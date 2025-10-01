@@ -126,11 +126,6 @@ const ChatLauncherPage = ({ onStartChat, discoveredCharacters = [] }) => {
   const { user } = useUser();
   const { token, getAuthHeaders, isAuthenticated } = useAuth();
 
-  // NEW: Debug discovered characters
-  useEffect(() => {
-    console.log('🔍 DEBUG: ChatLauncherPage received discoveredCharacters:', discoveredCharacters);
-  }, [discoveredCharacters]);
-
   // NEW: Debug hooks
   const featuredResult = useFeaturedCharacters({ enabled: true });
   const leaderboardResult = useLeaderboard({ period: 'week', limit: 5 });
@@ -179,6 +174,7 @@ const ChatLauncherPage = ({ onStartChat, discoveredCharacters = [] }) => {
     setUpgradeModalOpen(false);
     setUpgradeReason('general');
   }, []);
+  
 
   // Mobile detection
   useEffect(() => {
@@ -216,7 +212,6 @@ const ChatLauncherPage = ({ onStartChat, discoveredCharacters = [] }) => {
 
       if (response.ok) {
         const data = await response.json();
-        console.log('User characters loaded:', data);
         setUserCharacters(data.characters || []);
       } else {
         console.warn('Failed to load user characters:', response.status);
@@ -237,9 +232,7 @@ const ChatLauncherPage = ({ onStartChat, discoveredCharacters = [] }) => {
   }, [loadUserCharacters]);
 
   // NEW: Enhanced categories with user characters AND discovered characters
-  const enhancedCategories = useMemo(() => {
-    console.log('🔍 DEBUG: Building enhancedCategories with discoveredCharacters:', discoveredCharacters);
-    
+  const enhancedCategories = useMemo(() => {    
     const baseCategories = [...characterCategories];
     
     // Find and update my_characters category
@@ -251,7 +244,7 @@ const ChatLauncherPage = ({ onStartChat, discoveredCharacters = [] }) => {
           key: char.character_key,
           name: char.display_name,
           description: char.short_description,
-          thumbnailUrl: char.avatar_url || '/images/default-character.jpg',
+          thumbnailUrl: char.avatar_url || char.thumbnailUrl || null,
           status: char.status,
           rejection_reason: char.rejection_reason
         })),
@@ -425,19 +418,16 @@ const ChatLauncherPage = ({ onStartChat, discoveredCharacters = [] }) => {
 
   // Character creation handlers
   const handleCreateCharacterClick = useCallback(() => {
-    console.log('Create character clicked - starting template selection');
     setShowTemplates(true);
   }, []);
 
   const handleTemplateSelect = useCallback((template) => {
-    console.log('Template selected:', template.name);
     setSelectedTemplate(template);
     setShowTemplates(false);
     setShowBuilder(true);
   }, []);
 
   const handleCharacterCreationComplete = useCallback(() => {
-    console.log('Character creation completed');
     setShowBuilder(false);
     setShowSuccess(true);
     // Reload user characters to show the new one
@@ -445,11 +435,22 @@ const ChatLauncherPage = ({ onStartChat, discoveredCharacters = [] }) => {
   }, [loadUserCharacters]);
 
   const handleCloseCreationFlow = useCallback(() => {
-    console.log('Closing character creation flow');
     setShowTemplates(false);
     setShowBuilder(false);
     setShowSuccess(false);
     setSelectedTemplate(null);
+  }, []);
+
+  // Add this new handler
+  const handleCharacterPublishToggle = useCallback((updatedCharacter) => {  
+  // Update the character in userCharacters array
+    setUserCharacters(prevChars => 
+      prevChars.map(char => 
+        char.id === updatedCharacter.id
+          ? { ...char, is_market_featured: updatedCharacter.is_market_featured }
+          : char
+      )
+    );
   }, []);
 
   const currentPlaceholder = ORACLE_PROMPTS[placeholderIndex];
@@ -654,7 +655,19 @@ const ChatLauncherPage = ({ onStartChat, discoveredCharacters = [] }) => {
                       border: '2px solid rgba(255, 215, 0, 0.3)',
                       opacity: character.status === 'rejected' ? 0.6 : 1
                     }}
-                    onError={(e) => { e.target.src = '/images/default-character.jpg'; }}
+                    onError={(e) => { 
+                      e.currentTarget.onError = null;
+                      e.currentTarget.style.display = 'none';
+
+                      const parent = e.currentTarget.parentElement;
+                      if (!parent.querySelector('.text-fallback')) {
+                        const fallback = document.createElement('div');
+                        fallback.className = 'text-fallback';
+                        fallback.style.cssText = 'width:100%;height:100%;display:flex;align-items:center;justify-content:center;background:rgba(255,215,0,0.2);color:#FFD700;font-size:1.2rem;font-weight:bold;border-radius:50%;';
+                        fallback.textContent = (character.name || 'C').charAt(0).toUpperCase();
+                        parent.appendChild(fallback);
+                      }
+                    }}
                   />
                   <div style={{ flex: 1, minWidth: 0 }}>
                     <div style={{
@@ -986,7 +999,19 @@ const ChatLauncherPage = ({ onStartChat, discoveredCharacters = [] }) => {
                       border: '2px solid rgba(255, 215, 0, 0.3)',
                       opacity: character.status === 'rejected' ? 0.6 : 1
                     }}
-                    onError={(e) => { e.target.src = '/images/default-character.jpg'; }}
+                    onError={(e) => { 
+                      e.currentTarget.onError = null;
+                      e.currentTarget.style.display = 'none';
+
+                      const parent = e.currentTarget.parentElement;
+                      if (!parent.querySelector('.text-fallback')) {
+                        const fallback = document.createElement('div');
+                        fallback.className = 'text-fallback';
+                        fallback.style.cssText = 'width:100%;height:100%;display:flex;align-items:center;justify-content:center;background:rgba(255,215,0,0.2);color:#FFD700;font-size:1.2rem;font-weight:bold;border-radius:50%;';
+                        fallback.textContent = (character.name || 'C').charAt(0).toUpperCase();
+                        parent.appendChild(fallback);
+                      }
+                    }}
                   />
                   <div style={{ flex: 1, minWidth: 0 }}>
                     <div style={{ 
@@ -1188,6 +1213,7 @@ const ChatLauncherPage = ({ onStartChat, discoveredCharacters = [] }) => {
                   charactersError={charactersError}
                   onCreateCharacter={handleCreateCharacterClick}
                   onCharacterSelect={handleCharacterSelect}
+                  onCharacterPublishToggle={handleCharacterPublishToggle}  // ← ADD THIS
                   isMobile={false}
                   user_id={user?.id}
                   onShowUpgradeModal={handleShowUpgradeModal}

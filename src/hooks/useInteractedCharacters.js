@@ -18,12 +18,8 @@ export default function useInteractedCharacters() {
       setLoading(true);
       setError(null);
       
-      console.log('🔄 Fetching enhanced interacted characters...');
       const response = await api.get('/interacted-characters');
-      
-      console.log('📡 Enhanced API Response:', response);
-      console.log('📊 Enhanced Response data:', response.data);
-      
+            
       // Ensure we have an array and validate the enhanced structure
       const charactersData = Array.isArray(response.data) ? response.data : [];
       
@@ -43,13 +39,7 @@ export default function useInteractedCharacters() {
         .filter(char => char != null && char !== '')
         .map(char => String(char).trim())
         .filter(char => char.length > 0);
-      
-      console.log('✅ Enhanced characters data:', {
-        recentCount: validRecentCharacters.length,
-        totalKeys: characterKeys.length,
-        sampleRecent: validRecentCharacters.slice(0, 2)
-      });
-      
+    
       // Set both data structures
       setRecentCharacters(validRecentCharacters);
       setInteractedCharacters(characterKeys); // Maintain backward compatibility
@@ -69,7 +59,6 @@ export default function useInteractedCharacters() {
     try {
       const response = await api.get('/interaction-stats');
       setInteractionStats(response.data);
-      console.log('📈 Interaction stats:', response.data);
     } catch (error) {
       console.warn('⚠️ Failed to fetch interaction stats:', error);
       // Non-critical, don't set error state
@@ -79,9 +68,7 @@ export default function useInteractedCharacters() {
   // 🆕 NEW: Track interaction (call when user starts chat)
   const trackInteraction = useCallback(async (characterKey) => {
     try {
-      await api.post('/interactions/track', { character: characterKey });
-      console.log(`📊 Tracked interaction with ${characterKey}`);
-      
+      await api.post('/interactions/track', { character: characterKey });      
       // Refresh data after tracking
       setTimeout(() => {
         fetchCharacters();

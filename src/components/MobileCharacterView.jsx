@@ -312,7 +312,7 @@ const MobileCharacterView = ({
         key: c.character_key || c.key,
         name: c.display_name || c.name,
         description: c.short_description || c.description,
-        thumbnailUrl: c.avatar_url || c.thumbnailUrl || '/images/default-character.jpg',
+        thumbnailUrl: c.avatar_url || c.thumbnailUrl || null,
         status: c.status,
         rejection_reason: c.rejection_reason
       }))

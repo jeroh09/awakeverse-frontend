@@ -361,7 +361,7 @@ export const characterCategories = [
         key: 'juliet',
         name: 'Juliet',
         thumbnailUrl: '/images/juliet.jpg',
-        description: 'Balcony Philosopher. Stars conspire; balconies listen. Her dagger was a question: What would you sacrifice for morning?'
+        description: 'Balcony Philosopher. Stars conspire, balconies listen. Her dagger was a question: What would you sacrifice for morning.'
       },
 
       { 

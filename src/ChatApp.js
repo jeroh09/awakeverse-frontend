@@ -90,9 +90,7 @@ export default function ChatApp() {
   }, [setSelectedCharacterKey, setPreviewCharacterKey, switchView, VIEW_STATES]);
 
   // History-safe character selection
-  const handleCharacterSelection = useCallback((key, source = 'direct') => {
-    console.log(`Character selected: ${key} (source: ${source})`);
-    
+  const handleCharacterSelection = useCallback((key, source = 'direct') => { 
     setSelectedCharacterKey(key);
     setPreviewCharacterKey(null);
     setPrestigeHubVisible(false);
@@ -109,8 +107,6 @@ export default function ChatApp() {
 
   // NEW: Handle character selection from Market Hub
   const handleMarketHubCharacterSelect = useCallback((character) => {
-    console.log('🔍 DEBUG: Character selected from Market Hub:', character);
-    
     // Add to discovered characters list
     addDiscoveredCharacter(character);
     
@@ -145,9 +141,7 @@ export default function ChatApp() {
   }, [token, setSelectedCharacterKey, switchView, VIEW_STATES]);
 
   const togglePrestigeHub = useCallback(() => {
-    console.log('ChatApp togglePrestigeHub called, current state:', prestigeHubVisible);
     setPrestigeHubVisible(v => {
-      console.log('PrestigeHub state changing from', v, 'to', !v);
       return !v;
     });
   }, [prestigeHubVisible]);
@@ -175,7 +169,6 @@ export default function ChatApp() {
     };
 
     const handleMessage = (msg) => {
-      console.log("[ChatApp] Message:", msg);
     };
 
     socket.on("connect", handleConnect);
@@ -201,7 +194,6 @@ export default function ChatApp() {
       if (!sess || !sess.messages || !sess.messages.length) {
         const res2 = await api.post('/sessions', { characterKey: key });
         sess = res2.data;
-        console.log("Created session:", sess);
         setCurrentSessionId(sess.id);
       }
 

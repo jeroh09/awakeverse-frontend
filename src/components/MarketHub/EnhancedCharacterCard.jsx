@@ -1,6 +1,9 @@
 // src/components/MarketHub/EnhancedCharacterCard.jsx
-import React from 'react';
+// FIXED: Now loads engagement state from backend on mount
+
+import React, { useEffect } from 'react';
 import { Eye, Heart, Share2, Bookmark, Gem } from 'lucide-react';
+import { useEngagementTracking, useEngagementState } from '../../hooks/useEngagementTracking';
 import styles from './EnhancedCharacterCard.module.css';
 
 const EnhancedCharacterCard = ({ 
@@ -11,7 +14,7 @@ const EnhancedCharacterCard = ({
   showEarnings = false 
 }) => {
   const {
-    character_key,
+    character_id,
     display_name,
     short_description,
     expertise_domain,
@@ -21,6 +24,29 @@ const EnhancedCharacterCard = ({
     creator = {},
     earnings = {}
   } = character;
+
+  // ENGAGEMENT TRACKING HOOKS
+  const { trackView, trackShare } = useEngagementTracking();
+  
+  // FIXED: Now loads state from backend
+  const { 
+    liked, 
+    bookmarked, 
+    loaded,
+    loading,
+    toggleLike, 
+    toggleBookmark 
+  } = useEngagementState(character_id);
+
+  // Track view when card is displayed
+  useEffect(() => {
+    if (character_id) {
+      trackView(character_id, {
+        view_context: 'character_card',
+        expertise_domain: expertise_domain
+      });
+    }
+  }, [character_id, trackView, expertise_domain]);
 
   // Format large numbers compactly
   const formatNumber = (num) => {
@@ -38,11 +64,53 @@ const EnhancedCharacterCard = ({
 
   const handleChatClick = (e) => {
     e.stopPropagation();
-    onChatClick?.(character_key);
+    onChatClick?.(character.character_key || character.key);
   };
 
   const handleCardClick = () => {
     onCardClick?.(character);
+  };
+
+  // Handle like with tracking
+  const handleLikeClick = async (e) => {
+    e.stopPropagation();
+    
+    // Don't allow interaction while loading
+    if (loading) return;
+    
+    await toggleLike();
+  };
+
+  // Handle bookmark with tracking
+  const handleBookmarkClick = async (e) => {
+    e.stopPropagation();
+    
+    // Don't allow interaction while loading
+    if (loading) return;
+    
+    await toggleBookmark();
+  };
+
+  // Handle share with tracking
+  const handleShareClick = async (e) => {
+    e.stopPropagation();
+    
+    const characterUrl = `${window.location.origin}/market-hub?character=${character.character_key || character.key}`;
+    
+    try {
+      await navigator.clipboard.writeText(characterUrl);
+      
+      // Track the share event with metadata
+      await trackShare(character_id, 'link_copy', {
+        character_name: display_name,
+        expertise_domain: expertise_domain
+      });
+      
+      // TODO: Replace with toast notification
+      alert('Character link copied to clipboard!');
+    } catch (err) {
+      console.error('Share failed:', err);
+    }
   };
 
   return (
@@ -81,21 +149,42 @@ const EnhancedCharacterCard = ({
       </div>
 
       <div className={styles.metrics}>
-        {/* Public engagement metrics */}
+        {/* View count */}
         <div className={styles.metric}>
           <Eye size={14} />
           <span>{formatNumber(engagement_30d.total_views || 0)}</span>
         </div>
         
-        <div className={styles.metric}>
-          <Heart size={14} />
+        {/* Like button with tracking - Shows loading state */}
+        <button 
+          className={`${styles.metric} ${styles.actionButton} ${liked ? styles.active : ''} ${loading ? styles.loading : ''}`}
+          onClick={handleLikeClick}
+          disabled={loading}
+          title={liked ? "Unlike this character" : "Like this character"}
+        >
+          <Heart size={14} fill={liked ? 'currentColor' : 'none'} />
           <span>{formatNumber(engagement_30d.total_likes || 0)}</span>
-        </div>
+        </button>
 
-        <div className={styles.metric}>
+        {/* Share button with tracking */}
+        <button 
+          className={`${styles.metric} ${styles.actionButton}`}
+          onClick={handleShareClick}
+          title="Share this character"
+        >
           <Share2 size={14} />
           <span>{formatNumber(engagement_30d.total_shares || 0)}</span>
-        </div>
+        </button>
+
+        {/* Bookmark button with tracking - Shows loading state */}
+        <button 
+          className={`${styles.metric} ${styles.actionButton} ${bookmarked ? styles.active : ''} ${loading ? styles.loading : ''}`}
+          onClick={handleBookmarkClick}
+          disabled={loading}
+          title={bookmarked ? "Remove bookmark" : "Bookmark this character"}
+        >
+          <Bookmark size={14} fill={bookmarked ? 'currentColor' : 'none'} />
+        </button>
 
         {/* Earnings - only show to character owner */}
         {isOwner && showEarnings && earnings.total_30d > 0 && (

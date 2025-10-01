@@ -1,22 +1,22 @@
 // src/components/CreatorHub/CreatorDashboard.jsx
-// UPDATED: Using /api/creator-hub routes instead of /api/market-hub
+// FIXED: Add defensive null checks for all data
+
 import React, { useState, useEffect, useCallback } from 'react';
 import { useAuth } from '../../contexts/AuthContext';
 import { useUser } from '../../contexts/UserContext';
 import api from '../../api';
+import { Eye, Heart, Bookmark, Share2, MessageCircle, TrendingUp, Calendar } from 'lucide-react';
 import './CreatorDashboard.css';
 
 const CreatorDashboard = () => {
   const { token } = useAuth();
   const { user } = useUser();
   
-  // State management - defensive defaults
   const [dashboardData, setDashboardData] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
-  const [selectedTimeframe, setSelectedTimeframe] = useState('30'); // 30 days default
+  const [selectedCharacter, setSelectedCharacter] = useState(null);
   
-  // Mobile detection
   const [isMobile, setIsMobile] = useState(window.innerWidth <= 768);
   
   useEffect(() => {
@@ -25,7 +25,6 @@ const CreatorDashboard = () => {
     return () => window.removeEventListener('resize', handleResize);
   }, []);
 
-  // Load dashboard data with defensive error handling
   const loadDashboardData = useCallback(async () => {
     if (!token) {
       setError('Authentication required');
@@ -37,22 +36,38 @@ const CreatorDashboard = () => {
       setLoading(true);
       setError(null);
 
-      // UPDATED: Changed from /api/market-hub to /api/creator-hub
       const response = await api.get('/creator-hub/analytics/dashboard');
       
       if (response.data && response.data.status === 'success') {
-        setDashboardData(response.data.dashboard);
+        // DEFENSIVE: Ensure characters array exists
+        const dashboard = response.data.dashboard || {};
+        const characters = dashboard.characters || [];
+        const summary = dashboard.summary || {
+          total_characters: 0,
+          total_views: 0,
+          total_likes: 0,
+          total_bookmarks: 0,
+          total_shares: 0,
+          total_chat_sessions: 0,
+          total_engagements: 0,
+          avg_engagement_rate: 0
+        };
+        
+        setDashboardData({
+          summary,
+          characters,
+          engagement_trends: dashboard.engagement_trends || [],
+          recent_achievements: dashboard.recent_achievements || [],
+          creator_info: dashboard.creator_info || {}
+        });
       } else {
         throw new Error('Invalid dashboard response');
       }
     } catch (err) {
-      console.error('Dashboard load error:', err);
-      
-      // DEFENSIVE: Check for tier requirement error
       if (err.response?.status === 403) {
         setError('Unlimited tier required to access Creator Hub');
       } else {
-        setError(err.response?.data?.error || 'Failed to load dashboard');
+        setError(err.response?.data?.error || err.message || 'Failed to load dashboard');
       }
       setDashboardData(null);
     } finally {
@@ -60,21 +75,10 @@ const CreatorDashboard = () => {
     }
   }, [token]);
 
-  // Initial load
   useEffect(() => {
     loadDashboardData();
   }, [loadDashboardData]);
 
-  // Auto-refresh every 5 minutes
-  useEffect(() => {
-    const interval = setInterval(() => {
-      loadDashboardData();
-    }, 300000);
-
-    return () => clearInterval(interval);
-  }, [loadDashboardData]);
-
-  // Loading state
   if (loading) {
     return (
       <div className="creator-dashboard">
@@ -86,7 +90,6 @@ const CreatorDashboard = () => {
     );
   }
 
-  // Error state - ENHANCED with upgrade prompt
   if (error) {
     return (
       <div className="creator-dashboard">
@@ -113,8 +116,8 @@ const CreatorDashboard = () => {
     );
   }
 
-  // Empty state - no published characters yet
-  if (!dashboardData || dashboardData.summary.total_characters === 0) {
+  // DEFENSIVE: Check if data exists and has characters
+  if (!dashboardData || !dashboardData.characters || dashboardData.characters.length === 0) {
     return (
       <div className="creator-dashboard">
         <EmptyDashboardState />
@@ -122,7 +125,7 @@ const CreatorDashboard = () => {
     );
   }
 
-  const { summary, published_characters, recent_achievements } = dashboardData;
+  const { summary, characters, engagement_trends } = dashboardData;
 
   return (
     <div className="creator-dashboard">
@@ -137,70 +140,74 @@ const CreatorDashboard = () => {
         </button>
       </header>
 
-      {/* Summary Stats */}
+      {/* Summary Stats - REAL DATA */}
       <section className="stats-grid">
-        <StatCard
-          icon="📊"
-          label="Published Characters"
-          value={summary.total_characters}
-          trend={null}
+        <EngagementStatCard
+          icon={<Eye size={24} />}
+          label="Total Views"
+          value={summary.total_views || 0}
+          color="#3b82f6"
         />
-        <StatCard
-          icon="👁️"
-          label="Total Views (30d)"
-          value={summary.total_views_30d}
-          trend={null}
+        <EngagementStatCard
+          icon={<Heart size={24} />}
+          label="Total Likes"
+          value={summary.total_likes || 0}
+          color="#ef4444"
         />
-        <StatCard
-          icon="❤️"
-          label="Total Likes (30d)"
-          value={summary.total_likes_30d}
-          trend={null}
+        <EngagementStatCard
+          icon={<Bookmark size={24} />}
+          label="Total Bookmarks"
+          value={summary.total_bookmarks || 0}
+          color="#f59e0b"
         />
-        <StatCard
-          icon="📈"
+        <EngagementStatCard
+          icon={<Share2 size={24} />}
+          label="Total Shares"
+          value={summary.total_shares || 0}
+          color="#10b981"
+        />
+        <EngagementStatCard
+          icon={<MessageCircle size={24} />}
+          label="Chat Sessions"
+          value={summary.total_chat_sessions || 0}
+          color="#8b5cf6"
+        />
+        <EngagementStatCard
+          icon={<TrendingUp size={24} />}
           label="Avg Engagement Rate"
-          value={`${(summary.avg_engagement_rate * 100).toFixed(1)}%`}
-          trend={null}
+          value={`${summary.avg_engagement_rate || 0}%`}
+          color="#06b6d4"
         />
       </section>
 
-      {/* Creator Level & Progress */}
-      <section className="creator-level-section">
-        <CreatorLevelCard
-          currentLevel={summary.creator_level}
-          achievementsCount={summary.achievements_count}
-          trendingScore={summary.trending_score}
-        />
-      </section>
+      {/* Engagement Trends Chart */}
+      {engagement_trends && engagement_trends.length > 0 && (
+        <section className="trends-section">
+          <h2>Engagement Trends (Last 30 Days)</h2>
+          <EngagementTrendsChart data={engagement_trends} />
+        </section>
+      )}
 
-      {/* Published Characters List */}
+      {/* Published Characters with REAL Engagement */}
       <section className="characters-section">
-        <h2>Your Published Characters</h2>
+        <h2>Your Published Characters ({characters.length})</h2>
         <div className="characters-grid">
-          {published_characters.map(character => (
-            <PublishedCharacterCard
+          {characters.map(character => (
+            <CharacterEngagementCard
               key={character.character_id}
               character={character}
-              isMobile={isMobile}
+              onClick={() => setSelectedCharacter(character)}
             />
           ))}
         </div>
       </section>
 
-      {/* Recent Achievements */}
-      {recent_achievements && recent_achievements.length > 0 && (
-        <section className="achievements-section">
-          <h2>Recent Achievements</h2>
-          <div className="achievements-list">
-            {recent_achievements.map((achievement, index) => (
-              <AchievementCard
-                key={index}
-                achievement={achievement}
-              />
-            ))}
-          </div>
-        </section>
+      {/* Character Detail Modal */}
+      {selectedCharacter && (
+        <CharacterDetailModal
+          character={selectedCharacter}
+          onClose={() => setSelectedCharacter(null)}
+        />
       )}
     </div>
   );
@@ -235,130 +242,262 @@ const EmptyDashboardState = () => (
   </div>
 );
 
-const StatCard = ({ icon, label, value, trend }) => (
-  <div className="stat-card">
-    <div className="stat-icon">{icon}</div>
-    <div className="stat-content">
-      <div className="stat-label">{label}</div>
-      <div className="stat-value">{value}</div>
-      {trend && (
-        <div className={`stat-trend ${trend > 0 ? 'positive' : 'negative'}`}>
-          {trend > 0 ? '↑' : '↓'} {Math.abs(trend)}%
-        </div>
-      )}
-    </div>
-  </div>
-);
-
-const CreatorLevelCard = ({ currentLevel, achievementsCount, trendingScore }) => {
-  const levelInfo = {
-    newcomer: { color: '#9E9E9E', next: 'established_creator', emoji: '🌱' },
-    established_creator: { color: '#4CAF50', next: 'rising_star', emoji: '⭐' },
-    rising_star: { color: '#FF9800', next: 'veteran_creator', emoji: '🚀' },
-    veteran_creator: { color: '#9C27B0', next: null, emoji: '👑' }
-  };
-
-  const info = levelInfo[currentLevel] || levelInfo.newcomer;
-
+const EngagementStatCard = ({ icon, label, value, color }) => {
+  // DEFENSIVE: Ensure value is a number
+  const displayValue = typeof value === 'number' ? value : 
+                       typeof value === 'string' ? value : 0;
+  
   return (
-    <div className="creator-level-card" style={{ borderColor: info.color }}>
-      <div className="level-header">
-        <span className="level-emoji">{info.emoji}</span>
-        <div className="level-info">
-          <h3>Creator Level: {currentLevel.replace('_', ' ').toUpperCase()}</h3>
-          <p>{achievementsCount} achievements earned</p>
-        </div>
+    <div className="stat-card" style={{ borderLeftColor: color }}>
+      <div className="stat-icon" style={{ color }}>
+        {icon}
       </div>
-      <div className="level-stats">
-        <div className="level-stat">
-          <span className="stat-label">Trending Score</span>
-          <span className="stat-value">{trendingScore.toFixed(1)}</span>
+      <div className="stat-content">
+        <div className="stat-label">{label}</div>
+        <div className="stat-value">
+          {typeof displayValue === 'number' ? displayValue.toLocaleString() : displayValue}
         </div>
-        {info.next && (
-          <div className="level-progress">
-            <span className="progress-label">Next: {info.next.replace('_', ' ')}</span>
-            <div className="progress-bar">
-              <div 
-                className="progress-fill" 
-                style={{ width: `${Math.min((trendingScore / 100) * 100, 100)}%` }}
-              />
-            </div>
-          </div>
-        )}
       </div>
     </div>
   );
 };
 
-const PublishedCharacterCard = ({ character, isMobile }) => {
-  const [showDetails, setShowDetails] = useState(false);
-
+const CharacterEngagementCard = ({ character, onClick }) => {
+  // DEFENSIVE: Provide default engagement object
+  const engagement = character.engagement || {
+    total_views: 0,
+    total_likes: 0,
+    total_bookmarks: 0,
+    total_shares: 0,
+    chat_sessions: 0,
+    engagement_rate: 0,
+    engagements_7d: 0,
+    engagements_30d: 0,
+    last_engagement_at: null
+  };
+  
   return (
-    <div className="published-character-card">
+    <div className="character-engagement-card" onClick={onClick}>
       <div className="character-header">
         <img
-          src={`/images/${character.character_key}.jpg`}
-          alt={character.display_name}
+          src={character.avatar_url || '/images/default-character.jpg'}
+          alt={character.display_name || 'Character'}
           className="character-avatar"
           onError={(e) => {
             e.target.src = '/images/default-character.jpg';
           }}
         />
         <div className="character-info">
-          <h3>{character.display_name}</h3>
-          <span className="creator-level-badge">{character.creator_level}</span>
-        </div>
-      </div>
-
-      <div className="character-stats">
-        <div className="stat">
-          <span className="stat-label">Engagement Score</span>
-          <span className="stat-value">{character.total_engagement_score}</span>
-        </div>
-        <div className="stat">
-          <span className="stat-label">Published</span>
-          <span className="stat-value">
-            {character.published_at 
-              ? new Date(character.published_at).toLocaleDateString() 
-              : 'N/A'}
+          <h3>{character.display_name || 'Unnamed Character'}</h3>
+          <span className="creator-level-badge">
+            {character.creator_level || 'newcomer'}
           </span>
         </div>
       </div>
 
-      <div className="character-actions">
-        <button 
-          onClick={() => setShowDetails(!showDetails)}
-          className="details-button"
-        >
-          {showDetails ? 'Hide' : 'View'} Analytics
-        </button>
-        <button 
-          onClick={() => window.location.href = `/market-hub?character=${character.character_key}`}
-          className="view-button"
-        >
-          View in Hub
-        </button>
+      {character.short_description && (
+        <div className="character-description">
+          {character.short_description}
+        </div>
+      )}
+
+      {/* REAL Engagement Metrics */}
+      <div className="engagement-metrics">
+        <div className="metric-row">
+          <div className="metric">
+            <Eye size={16} />
+            <span className="metric-value">{engagement.total_views}</span>
+            <span className="metric-label">views</span>
+          </div>
+          <div className="metric">
+            <Heart size={16} />
+            <span className="metric-value">{engagement.total_likes}</span>
+            <span className="metric-label">likes</span>
+          </div>
+        </div>
+        
+        <div className="metric-row">
+          <div className="metric">
+            <Bookmark size={16} />
+            <span className="metric-value">{engagement.total_bookmarks}</span>
+            <span className="metric-label">bookmarks</span>
+          </div>
+          <div className="metric">
+            <Share2 size={16} />
+            <span className="metric-value">{engagement.total_shares}</span>
+            <span className="metric-label">shares</span>
+          </div>
+        </div>
       </div>
 
-      {showDetails && (
-        <div className="character-details">
-          <p>Detailed analytics coming soon...</p>
+      <div className="engagement-summary">
+        <div className="summary-item">
+          <MessageCircle size={14} />
+          <span>{engagement.chat_sessions} chats</span>
+        </div>
+        <div className="summary-item">
+          <TrendingUp size={14} />
+          <span>{engagement.engagement_rate}% rate</span>
+        </div>
+      </div>
+
+      {engagement.last_engagement_at && (
+        <div className="last-engagement">
+          <Calendar size={12} />
+          <span>Last: {new Date(engagement.last_engagement_at).toLocaleDateString()}</span>
         </div>
       )}
     </div>
   );
 };
 
-const AchievementCard = ({ achievement }) => (
-  <div className="achievement-card">
-    <div className="achievement-icon">🏆</div>
-    <div className="achievement-content">
-      <h4>{achievement.achievement_type.replace('_', ' ').toUpperCase()}</h4>
-      <p className="achievement-date">
-        Earned {new Date(achievement.earned_at).toLocaleDateString()}
-      </p>
+const EngagementTrendsChart = ({ data }) => {
+  if (!data || data.length === 0) {
+    return <div className="no-trends">No engagement data yet</div>;
+  }
+  
+  const maxTotal = Math.max(...data.map(d => d.total || 0), 1); // Avoid division by zero
+  
+  return (
+    <div className="trends-chart">
+      {data.slice(0, 14).reverse().map((day, index) => (
+        <div key={index} className="trend-bar-container">
+          <div className="trend-date">
+            {new Date(day.date).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}
+          </div>
+          <div className="trend-bars">
+            <div 
+              className="trend-bar view-bar" 
+              style={{ height: `${((day.views || 0) / maxTotal) * 100}%` }}
+              title={`${day.views || 0} views`}
+            />
+            <div 
+              className="trend-bar like-bar" 
+              style={{ height: `${((day.likes || 0) / maxTotal) * 100}%` }}
+              title={`${day.likes || 0} likes`}
+            />
+            <div 
+              className="trend-bar bookmark-bar" 
+              style={{ height: `${((day.bookmarks || 0) / maxTotal) * 100}%` }}
+              title={`${day.bookmarks || 0} bookmarks`}
+            />
+            <div 
+              className="trend-bar share-bar" 
+              style={{ height: `${((day.shares || 0) / maxTotal) * 100}%` }}
+              title={`${day.shares || 0} shares`}
+            />
+          </div>
+          <div className="trend-total">{day.total || 0}</div>
+        </div>
+      ))}
+      
+      <div className="chart-legend">
+        <div className="legend-item"><span className="view-color"></span> Views</div>
+        <div className="legend-item"><span className="like-color"></span> Likes</div>
+        <div className="legend-item"><span className="bookmark-color"></span> Bookmarks</div>
+        <div className="legend-item"><span className="share-color"></span> Shares</div>
+      </div>
     </div>
-  </div>
-);
+  );
+};
+
+const CharacterDetailModal = ({ character, onClose }) => {
+  const engagement = character.engagement || {};
+  
+  return (
+    <div className="modal-overlay" onClick={onClose}>
+      <div className="modal-content" onClick={(e) => e.stopPropagation()}>
+        <button className="modal-close" onClick={onClose}>×</button>
+        
+        <div className="modal-header">
+          <img 
+            src={character.avatar_url || '/images/default-character.jpg'} 
+            alt={character.display_name} 
+          />
+          <div>
+            <h2>{character.display_name}</h2>
+            <p>{character.short_description}</p>
+          </div>
+        </div>
+
+        <div className="modal-stats">
+          <h3>Engagement Breakdown</h3>
+          
+          <div className="stats-grid-modal">
+            <div className="stat-item">
+              <Eye size={20} />
+              <div>
+                <div className="stat-number">{engagement.total_views || 0}</div>
+                <div className="stat-label">Total Views</div>
+                <div className="stat-sublabel">{engagement.unique_viewers || 0} unique</div>
+              </div>
+            </div>
+            
+            <div className="stat-item">
+              <Heart size={20} />
+              <div>
+                <div className="stat-number">{engagement.total_likes || 0}</div>
+                <div className="stat-label">Total Likes</div>
+                <div className="stat-sublabel">{engagement.unique_likes || 0} unique</div>
+              </div>
+            </div>
+            
+            <div className="stat-item">
+              <Bookmark size={20} />
+              <div>
+                <div className="stat-number">{engagement.total_bookmarks || 0}</div>
+                <div className="stat-label">Total Bookmarks</div>
+                <div className="stat-sublabel">{engagement.unique_bookmarks || 0} unique</div>
+              </div>
+            </div>
+            
+            <div className="stat-item">
+              <Share2 size={20} />
+              <div>
+                <div className="stat-number">{engagement.total_shares || 0}</div>
+                <div className="stat-label">Total Shares</div>
+                <div className="stat-sublabel">{engagement.unique_shares || 0} unique</div>
+              </div>
+            </div>
+            
+            <div className="stat-item">
+              <MessageCircle size={20} />
+              <div>
+                <div className="stat-number">{engagement.chat_sessions || 0}</div>
+                <div className="stat-label">Chat Sessions</div>
+                <div className="stat-sublabel">from Market Hub</div>
+              </div>
+            </div>
+          </div>
+
+          <div className="engagement-rate-display">
+            <TrendingUp size={24} />
+            <div>
+              <div className="rate-number">{engagement.engagement_rate || 0}%</div>
+              <div className="rate-label">Engagement Rate</div>
+              <div className="rate-formula">
+                (likes + bookmarks + shares) / views
+              </div>
+            </div>
+          </div>
+
+          <div className="recent-activity">
+            <h4>Recent Activity</h4>
+            <div className="activity-stats">
+              <div>Last 7 days: <strong>{engagement.engagements_7d || 0}</strong> engagements</div>
+              <div>Last 30 days: <strong>{engagement.engagements_30d || 0}</strong> engagements</div>
+            </div>
+          </div>
+        </div>
+
+        <button className="view-hub-button" onClick={() => {
+          window.open(`/market-hub?character=${character.character_key}`, '_blank');
+        }}>
+          View in Market Hub
+        </button>
+      </div>
+    </div>
+  );
+};
 
 export default CreatorDashboard;

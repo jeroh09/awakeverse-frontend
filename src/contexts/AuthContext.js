@@ -26,7 +26,6 @@ export function AuthProvider({ children }) {
 
     try {
       const decoded = jwt_decode(savedToken);
-      console.log("Token decoded on load:", decoded);
       if (!decoded.sub) throw new Error("Missing subject");
 
       setToken(savedToken);
@@ -38,7 +37,6 @@ export function AuthProvider({ children }) {
         emailVerified: decoded.email_verified
       });
     } catch (err) {
-      console.error("Invalid token on load:", err);
       localStorage.removeItem("token");
       setToken(null);
       setUser(null);
@@ -134,7 +132,6 @@ export function AuthProvider({ children }) {
         clearTimeout(timeoutId);
 
         const raw = await res.clone().text();
-        console.log(`Raw login response (attempt ${attempt}):`, raw);
 
         if (!res.ok) {
           const errorData = await res.json().catch(() => ({}));
@@ -150,7 +147,6 @@ export function AuthProvider({ children }) {
         setToken(access_token);
 
         const decoded = jwt_decode(access_token);
-        console.log("Decoded login token:", decoded);
 
         setUser({
           id: decoded.user_id,
@@ -207,7 +203,6 @@ export function AuthProvider({ children }) {
       clearTimeout(timeoutId);
 
       const raw = await res.clone().text();
-      console.log("Raw register response:", raw);
 
       if (!res.ok) {
         const errorData = await res.json().catch(() => ({}));
@@ -216,7 +211,6 @@ export function AuthProvider({ children }) {
       }
 
       const data = await res.json();
-      console.log("Registration response:", data);
 
       // Check if email verification is required
       if (data.requires_verification) {
@@ -237,7 +231,6 @@ export function AuthProvider({ children }) {
         setToken(access_token);
 
         const decoded = jwt_decode(access_token);
-        console.log("Decoded register token:", decoded);
 
         setUser({
           id: decoded.user_id,

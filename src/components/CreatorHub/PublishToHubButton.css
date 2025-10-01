@@ -138,3 +138,36 @@
   position: relative;
   z-index: 1;
 }
+.publish-to-hub-button.published {
+  background: linear-gradient(135deg, #28a745, #20c997);
+  border: 2px solid rgba(40, 167, 69, 0.4);
+}
+
+.publish-to-hub-button.published:hover:not(:disabled) {
+  background: linear-gradient(135deg, #20c997, #28a745);
+  box-shadow: 0 4px 12px rgba(40, 167, 69, 0.4);
+}
+
+.publish-to-hub-button.published .button-icon {
+  color: #fff;
+}
+.upgrade-modal {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100vw;
+  height: 100vh;
+  z-index: 10000;
+}
+
+.upgrade-modal-content {
+  position: fixed;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  width: 90%;
+  max-width: 600px;
+  max-height: 90vh;
+  overflow-y: auto;
+  z-index: 10001;
+}

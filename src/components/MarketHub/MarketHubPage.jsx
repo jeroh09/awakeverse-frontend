@@ -10,6 +10,7 @@ import LeaderboardSection from './LeaderboardSection';
 import CharacterDetailPanel from '../CharacterDetailPanel/CharacterDetailPanel';
 import { useMarketHub } from '../../hooks/useMarketHub';
 import { useFeaturedCharacters } from '../../hooks/useFeaturedCharacters';
+import { getSafeAvatarUrl, createImageErrorHandler } from '../../utils/imageUtils';
 import styles from './MarketHubPage.module.css';
 
 // NEW: Updated to accept props for character selection callbacks
@@ -134,14 +135,22 @@ const AnonymousMarketHub = () => {
                   className={styles.previewCard}
                   onClick={() => handleCharacterPreview(character)}
                 >
-                  <img
-                    src={character.avatar_url}
-                    alt={character.display_name}
-                    className={styles.previewAvatar}
-                    onError={(e) => {
-                      e.target.src = '/images/default-character.jpg';
-                    }}
-                  />
+                  {getSafeAvatarUrl(character) ? (
+                    <img
+                      src={getSafeAvatarUrl(character)}
+                      alt={character.display_name}
+                      onError={createImageErrorHandler(character.display_name)}
+                    />
+                  ) : (
+                    <div className="text-fallback" style={{
+                      width: '100%', height: '100%',
+                      display: 'flex', alignItems: 'center', justifyContent: 'center',
+                      background: 'rgba(255, 215, 0, 0.2)', color: '#FFD700',
+                      fontSize: '1.2rem', fontWeight: 'bold', borderRadius: '50%'
+                    }}>
+                      {(character.display_name || 'C').charAt(0).toUpperCase()}
+                    </div>
+                  )}
                   <div className={styles.previewInfo}>
                     <h3 className={styles.previewName}>{character.display_name}</h3>
                     <p className={styles.previewDomain}>{character.expertise_domain}</p>

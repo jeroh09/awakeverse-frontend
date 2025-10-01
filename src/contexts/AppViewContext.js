@@ -32,7 +32,6 @@ export const AppViewProvider = ({ children }) => {
       if (cached) {
         const parsed = JSON.parse(cached);
         setDiscoveredCharacters(parsed);
-        console.log(`📦 Loaded ${parsed.length} discovered characters from localStorage`);
         return parsed;
       }
     } catch (e) {
@@ -44,7 +43,6 @@ export const AppViewProvider = ({ children }) => {
   const saveToLocalStorage = useCallback((characters) => {
     try {
       localStorage.setItem(STORAGE_KEY, JSON.stringify(characters));
-      console.log(`💾 Saved ${characters.length} discovered characters to localStorage`);
     } catch (e) {
       console.warn('Failed to save to localStorage:', e);
     }
@@ -60,7 +58,7 @@ export const AppViewProvider = ({ children }) => {
     try {
       setIsSyncing(true);
       
-      const response = await api.get('/api/discovered-characters');
+      const response = await api.get('/discovered-characters');
       const backendCharacters = response.data;
       
       // Update state and localStorage with backend data
@@ -90,9 +88,6 @@ export const AppViewProvider = ({ children }) => {
     // Prevent multiple initializations
     if (isInitialized.current) return;
     isInitialized.current = true;
-
-    console.log('🚀 AppViewContext: Initializing discovered characters');
-
     // Immediately load from localStorage for instant UI
     const cachedCharacters = loadFromLocalStorage();
 
@@ -117,11 +112,9 @@ export const AppViewProvider = ({ children }) => {
   // ============================================================================
 
   const addDiscoveredCharacter = useCallback(async (character) => {
-    console.log('📝 Adding discovered character:', character.character_key);
     
     // DEFENSIVE: Prevent duplicates
     if (discoveredCharacters.some(c => c.character_key === character.character_key)) {
-      console.log('⚠️ Character already in discovered list');
       return;
     }
 
@@ -132,14 +125,13 @@ export const AppViewProvider = ({ children }) => {
 
     // BACKGROUND SYNC: Persist to backend
     try {
-      await api.post('/api/discovered-characters', {
+      await api.post('/discovered-characters', {
         character_key: character.character_key,
         display_name: character.display_name || character.name,
         short_description: character.short_description || character.description,
         avatar_url: character.avatar_url || character.thumbnailUrl
       });
       
-      console.log('✅ Character saved to backend:', character.character_key);
     } catch (error) {
       console.warn('Failed to save to backend, will retry on next sync:', error);
       // DEFENSIVE: Keep in localStorage, will sync later
@@ -150,9 +142,7 @@ export const AppViewProvider = ({ children }) => {
   // REMOVE CHARACTER: Optimistic update + backend sync
   // ============================================================================
 
-  const removeDiscoveredCharacter = useCallback(async (characterKey) => {
-    console.log('🗑️ Removing discovered character:', characterKey);
-    
+  const removeDiscoveredCharacter = useCallback(async (characterKey) => {    
     // OPTIMISTIC UPDATE: Remove from state immediately
     const newList = discoveredCharacters.filter(c => c.character_key !== characterKey);
     setDiscoveredCharacters(newList);
@@ -160,10 +150,8 @@ export const AppViewProvider = ({ children }) => {
 
     // BACKGROUND SYNC: Remove from backend
     try {
-      await api.delete(`/api/discovered-characters/${characterKey}`);
-      console.log('✅ Character removed from backend:', characterKey);
+      await api.delete(`/discovered-characters/${characterKey}`);
     } catch (error) {
-      console.warn('Failed to remove from backend:', error);
     }
   }, [discoveredCharacters, saveToLocalStorage]);
 
@@ -172,7 +160,6 @@ export const AppViewProvider = ({ children }) => {
   // ============================================================================
 
   const switchView = useCallback((newView) => {
-    console.log(`🔄 Switching view: ${currentView} → ${newView}`);
     setCurrentView(newView);
   }, [currentView]);
 
@@ -181,7 +168,6 @@ export const AppViewProvider = ({ children }) => {
   // ============================================================================
 
   const manualSync = useCallback(async () => {
-    console.log('🔄 Manual sync triggered');
     return await syncWithBackend(false);
   }, [syncWithBackend]);
 

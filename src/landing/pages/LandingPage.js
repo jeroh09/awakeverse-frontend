@@ -5,7 +5,8 @@ import { characterCategories } from '../../data/characterCategories';
 import EnhancedCharacterPanels from '../components/EnhancedCharacterPanels';
 import DemoCharacterBuilder from './DemoCharacterBuilder';
 import SubscriptionPlansCards from './SubscriptionPlansCards'; 
-import CreatorHubTeaser from './CreatorHubTeaser'; 
+import CreatorHubTeaser from './CreatorHubTeaser';
+import CreatorShowcase from '../components/CreatorShowcase'; 
 import './LandingPage.css';
 
 export default function LandingPage() {
@@ -915,6 +916,22 @@ export default function LandingPage() {
             </div>
           </section>
 
+          {/* NEW: Creator Showcase Carousel - Between Section 2 and Section 3 */}
+          <section className="desktop-section-creator-showcase" style={{
+            minHeight: '100vh',
+            position: 'relative',
+            scrollSnapAlign: 'start',
+            background: 'linear-gradient(135deg, #0f3460 0%, #1a1a2e 100%)',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            padding: '120px 2rem 4rem 2rem'
+          }}>
+            <div style={{ width: '100%', maxWidth: '1200px' }}>
+              <CreatorShowcase />
+            </div>
+          </section>
+
           {/* Section 3: Subscription Plans + Creator Hub */}
           <section className="desktop-section-3">
             <div className="desktop-section-content" style={{ paddingTop: '40px' }}>
@@ -1277,8 +1294,12 @@ export default function LandingPage() {
                 className={`scroll-dot ${currentSection === 2 ? 'active' : ''}`} 
                 onClick={() => scrollToSection(2)}
               ></div>
+              <div 
+                className={`scroll-dot ${currentSection === 3 ? 'active' : ''}`} 
+                onClick={() => scrollToSection(3)}
+              ></div>
             </div>
-          )}
+          )} 
         </div>
       )}
     </div>

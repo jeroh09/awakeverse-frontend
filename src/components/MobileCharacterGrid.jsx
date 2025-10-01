@@ -77,7 +77,7 @@ const MobileCharacterGrid = ({ characters, onCharacterSelect, showStatusIndicato
             opacity: character.status === 'rejected' ? 0.6 : 1
           }}>
             <img
-              src={character.thumbnailUrl || '/images/default-character.jpg'}
+              src={character.thumbnailUrl || null}
               alt={character.name}
               style={{ width: '100%', height: '100%', objectFit: 'cover' }}
               onError={(e) => {

@@ -2609,3 +2609,13 @@ body, html {
   pointer-events: none;
   z-index: -1;
 }
+/* Add to LandingPage.css */
+@keyframes glow-horizontal {
+  0% { background-position: -200% 0; }
+  100% { background-position: 200% 0; }
+}
+
+@keyframes glow-vertical {
+  0% { background-position: 0 -200%; }
+  100% { background-position: 0 200%; }
+}

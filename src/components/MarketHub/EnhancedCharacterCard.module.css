@@ -250,3 +250,105 @@
   0% { background-position: -200% 0; }
   100% { background-position: 200% 0; }
 }
+/* Add to EnhancedCharacterCard.module.css */
+
+/* Make metrics row interactive */
+.metrics {
+  display: flex;
+  gap: 12px;
+  align-items: center;
+  padding: 12px 0;
+  border-top: 1px solid #e5e7eb;
+  border-bottom: 1px solid #e5e7eb;
+}
+
+.metric {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  color: #6b7280;
+  font-size: 0.875rem;
+  transition: color 0.2s ease;
+}
+
+/* Interactive buttons */
+.actionButton {
+  background: none;
+  border: none;
+  cursor: pointer;
+  padding: 4px 8px;
+  border-radius: 4px;
+  transition: all 0.2s ease;
+}
+
+.actionButton:hover {
+  background-color: #f3f4f6;
+  color: #374151;
+  transform: translateY(-1px);
+}
+
+/* Active/liked state */
+.actionButton.active {
+  color: #ef4444;
+}
+
+.actionButton.active:hover {
+  color: #dc2626;
+  background-color: #fee2e2;
+}
+
+/* Bookmark active state */
+.actionButton.active svg[data-icon="bookmark"] {
+  fill: #3b82f6;
+}
+
+/* Disable button interaction during tracking */
+.actionButton:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+/* Earnings badge - creator only */
+.earnings {
+  margin-left: auto;
+  background: linear-gradient(135deg, #fbbf24 0%, #f59e0b 100%);
+  color: white;
+  padding: 4px 8px;
+  border-radius: 12px;
+  font-weight: 600;
+}
+
+/* Responsive adjustments */
+@media (max-width: 768px) {
+  .metrics {
+    gap: 8px;
+  }
+  
+  .metric {
+    font-size: 0.8125rem;
+  }
+  
+  .actionButton {
+    padding: 3px 6px;
+  }
+}
+
+/* Animation for like/bookmark actions */
+@keyframes heartPulse {
+  0%, 100% { transform: scale(1); }
+  50% { transform: scale(1.2); }
+}
+
+.actionButton.active svg {
+  animation: heartPulse 0.3s ease;
+}
+
+/* Hover effects for icons */
+.metric svg,
+.actionButton svg {
+  transition: transform 0.2s ease;
+}
+
+.actionButton:hover svg {
+  transform: scale(1.1);
+}

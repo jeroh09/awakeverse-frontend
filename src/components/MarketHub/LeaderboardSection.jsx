@@ -2,6 +2,7 @@
 import React, { useState } from 'react';
 import { Trophy, TrendingUp, Calendar, Award, Eye, Heart, Crown } from 'lucide-react';
 import { useLeaderboard } from '../../hooks/useLeaderboard';
+import { getSafeAvatarUrl, createImageErrorHandler } from '../../utils/imageUtils';
 import styles from './LeaderboardSection.module.css';
 
 const LeaderboardSection = ({ compact = false }) => {
@@ -101,15 +102,31 @@ const LeaderboardSection = ({ compact = false }) => {
                 <div className={styles.rankNumber}>
                   {getRankIcon(character.rank) || `#${character.rank}`}
                 </div>
-                
-                <img
-                  src={character.avatar_url}
-                  alt={character.display_name}
-                  className={styles.avatar}
-                  onError={(e) => {
-                    e.target.src = '/images/default-character.jpg';
-                  }}
-                />
+                                
+                {getSafeAvatarUrl(character) ? (
+                  <img
+                    src={character.avatar_url}
+                    alt={character.display_name}
+                    className={styles.avatar}
+                    onError={createImageErrorHandler(character.display_name)}
+                  />
+                ) : (
+                  <div 
+                    className={`${styles.avatar} text-fallback`}
+                    style={{
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                      background: 'rgba(255, 215, 0, 0.2)',
+                      color: '#FFD700',
+                      fontSize: '1.2rem',
+                      fontWeight: 'bold',
+                      borderRadius: '50%'
+                    }}
+                  >
+                    {(character.display_name || 'C').charAt(0).toUpperCase()}
+                  </div>
+                )}
                 
                 <div className={styles.characterInfo}>
                   <h4 className={styles.characterName}>

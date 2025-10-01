@@ -23,7 +23,7 @@ import TestUsageComponents from './components/TestUsageComponents';
 import ForgotPassword from './pages/ForgotPassword';
 import ResetPassword from './pages/ResetPassword';
 import EmailVerification from './pages/EmailVerification';
-import MarketHubPage from './components/MarketHub/MarketHubPage';
+import CreatorsLanding from './pages/CreatorsLanding/CreatorsLanding';
 
 import './styles.css';
 
@@ -68,7 +68,8 @@ export default function App() {
       <Route path="/test-usage" element={<TestUsageComponents />} />
       
       {/* Market Hub - Keep existing route for backward compatibility */}
-      <Route path="/market-hub" element={<MarketHubPage />} />
+      <Route path="/creators" element={<CreatorsLanding />} />
+
 
       {/* Main app with NEW AppViewProvider wrapper */}
       <Route
