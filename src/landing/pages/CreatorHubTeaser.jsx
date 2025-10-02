@@ -55,7 +55,7 @@ const CreatorHubTeaser = () => {
           </div>
           <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '0.5rem' }}>
             <span style={{ color: '#FFD700' }}>✓</span>
-            Get featured in our hub
+            Get featured in Market hub
           </div>
           <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '0.5rem' }}>
             <span style={{ color: '#FFD700' }}>✓</span>

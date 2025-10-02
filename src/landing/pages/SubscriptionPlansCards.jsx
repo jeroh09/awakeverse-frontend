@@ -7,7 +7,7 @@ const SubscriptionPlansCards = () => {
     {
       id: 'starter',
       name: 'Starter',
-      price: '$9.99',
+      price: '$5.99',
       period: '/month',
       description: 'Perfect for getting started',
       features: [
@@ -22,7 +22,7 @@ const SubscriptionPlansCards = () => {
     {
       id: 'pro',
       name: 'Pro',
-      price: '$19.99',
+      price: '$15.99',
       period: '/month',
       description: 'Most popular choice',
       features: [
@@ -47,7 +47,9 @@ const SubscriptionPlansCards = () => {
         'All Features',
         'VIP Support',
         'Early Access',
-        'Creator Hub Access'
+        'Creator Hub Access',
+        'Scenarios Hub Access',
+        'Verse Hub Access',
       ],
       cta: 'Get Unlimited',
       popular: false

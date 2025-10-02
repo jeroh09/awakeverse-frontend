@@ -1133,7 +1133,7 @@ export default function LandingPage() {
                       onMouseEnter={(e) => e.target.style.color = '#FFD700'}
                       onMouseLeave={(e) => e.target.style.color = 'rgba(255, 255, 255, 0.7)'}
                       >
-                        Pricing
+                        Pricing Page
                       </Link>
                       <Link to="/features" style={{
                         color: 'rgba(255, 255, 255, 0.7)',
@@ -1146,7 +1146,7 @@ export default function LandingPage() {
                       >
                         Features
                       </Link>
-                      <Link to="/creator-hub" style={{
+                      <Link to="/creators" style={{
                         color: 'rgba(255, 255, 255, 0.7)',
                         textDecoration: 'none',
                         fontSize: '0.9rem',
@@ -1155,7 +1155,7 @@ export default function LandingPage() {
                       onMouseEnter={(e) => e.target.style.color = '#FFD700'}
                       onMouseLeave={(e) => e.target.style.color = 'rgba(255, 255, 255, 0.7)'}
                       >
-                        Creator Hub
+                        Creators Landing
                       </Link>
                     </div>
                   </div>

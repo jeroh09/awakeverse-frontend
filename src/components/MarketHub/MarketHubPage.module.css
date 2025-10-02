@@ -1601,3 +1601,48 @@
     font-size: 13px;
   }
 }
+
+/* ==================== CUSTOM SCROLLBAR STYLES ==================== */
+/* Custom scrollbar for desktop mode panels */
+.scrollablePanel {
+  scrollbar-width: thin;
+  scrollbar-color: #FFD700 rgba(26, 26, 46, 0.8);
+  max-height: 500px; /* Adjust as needed */
+  overflow-y: auto;
+}
+
+/* Webkit browsers (Chrome, Safari, Edge) */
+.scrollablePanel::-webkit-scrollbar {
+  width: 12px;
+  height: 12px;
+}
+
+.scrollablePanel::-webkit-scrollbar-track {
+  background: rgba(26, 26, 46, 0.8);
+  border-radius: 6px;
+  margin: 4px;
+}
+
+.scrollablePanel::-webkit-scrollbar-thumb {
+  background: #FFD700;
+  border-radius: 6px;
+  border: 2px solid rgba(26, 26, 46, 0.8);
+}
+
+.scrollablePanel::-webkit-scrollbar-thumb:hover {
+  background: #FFED4E;
+  box-shadow: 0 0 4px rgba(255, 215, 0, 0.4);
+}
+
+.scrollablePanel::-webkit-scrollbar-thumb:active {
+  background: #E6C200;
+}
+
+.scrollablePanel::-webkit-scrollbar-corner {
+  background: rgba(26, 26, 46, 0.8);
+}
+
+/* Optional smooth scrolling */
+.scrollablePanel {
+  scroll-behavior: smooth;
+}
