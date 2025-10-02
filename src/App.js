@@ -25,6 +25,8 @@ import ResetPassword from './pages/ResetPassword';
 import EmailVerification from './pages/EmailVerification';
 import CreatorsLanding from './pages/CreatorsLanding/CreatorsLanding';
 import PricingPage from './pages/PricingPage';
+import MarketHubPage from './components/MarketHub/MarketHubPage';
+
 
 import './styles.css';
 
@@ -67,12 +69,13 @@ export default function App() {
       <Route path="/contractor-agreements" element={<ContractorAgreements />} />
       <Route path="/minimal-test" element={<MinimalUsageTest />} />
       <Route path="/test-usage" element={<TestUsageComponents />} />
-      <Route path="/pricing" element={<PricingPage />} />
 
       
       {/* Market Hub - Keep existing route for backward compatibility */}
       <Route path="/creators" element={<CreatorsLanding />} />
       <Route path="/pricing" element={<PricingPage />} />
+      <Route path="/market-hub" element={<MarketHubPage />} />
+
 
 
       {/* Main app with NEW AppViewProvider wrapper */}
