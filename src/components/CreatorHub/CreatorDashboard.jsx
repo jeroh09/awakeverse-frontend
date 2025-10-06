@@ -16,6 +16,8 @@ const CreatorDashboard = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [selectedCharacter, setSelectedCharacter] = useState(null);
+  const [showEducationalModal, setShowEducationalModal] = useState(false);
+  const [requiresUpgrade, setRequiresUpgrade] = useState(false);
   
   const [isMobile, setIsMobile] = useState(window.innerWidth <= 768);
   
@@ -35,6 +37,7 @@ const CreatorDashboard = () => {
     try {
       setLoading(true);
       setError(null);
+      setRequiresUpgrade(false);
 
       const response = await api.get('/creator-hub/analytics/dashboard');
       
@@ -65,7 +68,7 @@ const CreatorDashboard = () => {
       }
     } catch (err) {
       if (err.response?.status === 403) {
-        setError('Unlimited tier required to access Creator Hub');
+        setRequiresUpgrade(true);
       } else {
         setError(err.response?.data?.error || err.message || 'Failed to load dashboard');
       }
@@ -90,27 +93,28 @@ const CreatorDashboard = () => {
     );
   }
 
+  // CHANGED: Show educational experience instead of error for upgrade required
+  if (requiresUpgrade) {
+    return (
+      <div className="creator-dashboard">
+        <UpgradeRequiredState onLearnMore={() => setShowEducationalModal(true)} />
+        <EducationalUpgradeModal 
+          isOpen={showEducationalModal}
+          onClose={() => setShowEducationalModal(false)}
+        />
+      </div>
+    );
+  }
+
   if (error) {
     return (
       <div className="creator-dashboard">
         <div className="dashboard-error">
           <h2>Unable to Load Dashboard</h2>
           <p>{error}</p>
-          {error.includes('Unlimited tier') ? (
-            <div className="upgrade-prompt">
-              <p>Creator Hub features require Unlimited tier subscription.</p>
-              <button 
-                onClick={() => window.location.href = '/profile-settings?tab=subscription'}
-                className="upgrade-button"
-              >
-                Upgrade to Unlimited
-              </button>
-            </div>
-          ) : (
-            <button onClick={loadDashboardData} className="retry-button">
-              Try Again
-            </button>
-          )}
+          <button onClick={loadDashboardData} className="retry-button">
+            Try Again
+          </button>
         </div>
       </div>
     );
@@ -120,7 +124,11 @@ const CreatorDashboard = () => {
   if (!dashboardData || !dashboardData.characters || dashboardData.characters.length === 0) {
     return (
       <div className="creator-dashboard">
-        <EmptyDashboardState />
+        <EmptyDashboardState onLearnMore={() => setShowEducationalModal(true)} />
+        <EducationalUpgradeModal 
+          isOpen={showEducationalModal}
+          onClose={() => setShowEducationalModal(false)}
+        />
       </div>
     );
   }
@@ -129,7 +137,7 @@ const CreatorDashboard = () => {
 
   return (
     <div className="creator-dashboard">
-      {/* Header */}
+      {/* Header - REMOVED educational button from gated area */}
       <header className="dashboard-header">
         <div className="header-content">
           <h1>Creator Dashboard</h1>
@@ -217,7 +225,67 @@ const CreatorDashboard = () => {
 // SUB-COMPONENTS
 // ============================================================================
 
-const EmptyDashboardState = () => (
+// ADDED: Upgrade Required State Component
+const UpgradeRequiredState = ({ onLearnMore }) => (
+  <div className="upgrade-required-state">
+    <div className="upgrade-required-content">
+      <span className="upgrade-icon">💎</span>
+      <h2>Unlock Creator Hub</h2>
+      <p>Upgrade to Unlimited tier to access powerful creator analytics and publishing tools</p>
+      
+      <div className="upgrade-features-preview">
+        <h3>With Unlimited Tier You Get:</h3>
+        <div className="preview-features">
+          <div className="preview-feature">
+            <TrendingUp size={20} />
+            <span>Real-time Analytics</span>
+          </div>
+          <div className="preview-feature">
+            <Eye size={20} />
+            <span>Engagement Tracking</span>
+          </div>
+          <div className="preview-feature">
+            <Heart size={20} />
+            <span>Performance Metrics</span>
+          </div>
+          <div className="preview-feature">
+            <MessageCircle size={20} />
+            <span>Chat Session Insights</span>
+          </div>
+          <div className="preview-feature">
+            <Bookmark size={20} />
+            <span>Bookmark & Share Analytics</span>
+          </div>
+          <div className="preview-feature">
+            <Share2 size={20} />
+            <span>Character Publishing</span>
+          </div>
+        </div>
+      </div>
+
+      <div className="upgrade-actions">
+        <button 
+          onClick={() => window.location.href = '/profile-settings?tab=subscription'}
+          className="upgrade-now-button"
+        >
+          Upgrade to Unlimited - $49.99/month
+        </button>
+        <button 
+          onClick={onLearnMore}
+          className="learn-features-button"
+        >
+          Learn About All Features
+        </button>
+      </div>
+
+      <div className="upgrade-footer">
+        <p>⭐ <strong>14-day money-back guarantee</strong> · Cancel anytime</p>
+      </div>
+    </div>
+  </div>
+);
+
+const EmptyDashboardState = ({ onLearnMore }) => (
   <div className="empty-state">
     <div className="empty-state-content">
       <span className="empty-state-icon">🎨</span>
@@ -232,12 +300,20 @@ const EmptyDashboardState = () => (
           <li>Track performance and earn recognition!</li>
         </ol>
       </div>
-      <button 
-        onClick={() => window.location.href = '/app#my_characters'}
-        className="create-character-button"
-      >
-        Go to My Characters
-      </button>
+      <div className="empty-state-actions">
+        <button 
+          onClick={() => window.location.href = '/app'}
+          className="create-character-button"
+        >
+          Go to My Characters
+        </button>
+        <button 
+          onClick={onLearnMore}
+          className="learn-more-button"
+        >
+          Learn About Unlimited Features
+        </button>
+      </div>
     </div>
   </div>
 );
@@ -495,6 +571,110 @@ const CharacterDetailModal = ({ character, onClose }) => {
         }}>
           View in Market Hub
         </button>
+      </div>
+    </div>
+  );
+};
+
+// ADDED: Educational Upgrade Modal Component
+const EducationalUpgradeModal = ({ isOpen, onClose }) => {
+  if (!isOpen) return null;
+
+  const unlimitedFeatures = [
+    {
+      icon: '💎',
+      title: 'Full Creator Hub Access',
+      description: 'Publish unlimited characters and track detailed analytics'
+    },
+    {
+      icon: '📊',
+      title: 'Advanced Analytics',
+      description: 'Real-time engagement metrics and performance insights'
+    },
+    {
+      icon: '💰',
+      title: 'Earn Monthly Payouts',
+      description: 'Get paid based on your characters\' popularity and usage'
+    },
+    {
+      icon: '🚀',
+      title: 'Priority Featuring',
+      description: 'Your characters get promoted in Market Hub'
+    },
+    {
+      icon: '🎭',
+      title: 'Scenarios Hub',
+      description: 'Create multi-AI conversations and dynamic storylines'
+    },
+    {
+      icon: '⚡',
+      title: 'Unlimited Everything',
+      description: 'No limits on characters, messages, or features'
+    }
+  ];
+
+  return (
+    <div className="modal-overlay" onClick={onClose}>
+      <div className="modal-content educational-modal" onClick={(e) => e.stopPropagation()}>
+        <button className="modal-close" onClick={onClose}>×</button>
+        
+        <div className="educational-header">
+          <div className="educational-icon">🚀</div>
+          <h2>Unlock Your Full Creative Potential</h2>
+          <p className="educational-subtitle">
+            Upgrade to Unlimited tier and get access to powerful creator tools
+          </p>
+        </div>
+
+        <div className="educational-features">
+          {unlimitedFeatures.map((feature, index) => (
+            <div key={index} className="feature-row">
+              <div className="feature-icon">{feature.icon}</div>
+              <div className="feature-text">
+                <h4>{feature.title}</h4>
+                <p>{feature.description}</p>
+              </div>
+            </div>
+          ))}
+        </div>
+
+        <div className="pricing-card">
+          <div className="pricing-header">
+            <h3>Unlimited Plan</h3>
+            <div className="price">
+              <span className="amount">$49.99</span>
+              <span className="period">/month</span>
+            </div>
+          </div>
+          
+          <div className="pricing-features">
+            <div className="pricing-feature">✓ Unlimited Characters</div>
+            <div className="pricing-feature">✓ Unlimited Messages</div>
+            <div className="pricing-feature">✓ Creator Hub Pro Tools</div>
+            <div className="pricing-feature">✓ All Premium Templates</div>
+            <div className="pricing-feature">✓ VIP Support</div>
+            <div className="pricing-feature">✓ All Hub Access</div>
+          </div>
+
+          <div className="pricing-actions">
+            <button 
+              className="upgrade-cta-button"
+              onClick={() => window.location.href = '/profile-settings?tab=subscription'}
+            >
+              Upgrade to Unlimited - $49.99/month
+            </button>
+            <button 
+              className="compare-plans-button"
+              onClick={() => window.open('/pricing', '_blank')}
+            >
+              Compare All Plans
+            </button>
+          </div>
+        </div>
+
+        <div className="educational-footer">
+          <p>⭐ <strong>14-day money-back guarantee</strong> · Cancel anytime</p>
+        </div>
       </div>
     </div>
   );

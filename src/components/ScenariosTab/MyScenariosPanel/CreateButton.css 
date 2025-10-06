@@ -1,0 +1,46 @@
+/* src/components/ScenariosTab/MyScenariosPanel/CreateButton.css */
+.create-button {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  padding: 1rem 1.5rem;
+  border: none;
+  border-radius: 8px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  font-size: 1rem;
+  width: 100%;
+  justify-content: center;
+}
+
+.create-button.primary {
+  background: linear-gradient(135deg, var(--scenarios-accent-primary), var(--scenarios-accent-secondary));
+  color: white;
+}
+
+.create-button.secondary {
+  background: var(--scenarios-bg-card);
+  color: var(--scenarios-accent-primary);
+  border: 2px solid var(--scenarios-accent-primary);
+}
+
+.create-button:hover:not(.disabled) {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 16px var(--scenarios-shadow);
+}
+
+.create-button.disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+  transform: none;
+}
+
+.button-icon {
+  font-size: 1.25rem;
+  font-weight: bold;
+}
+
+.button-text {
+  font-size: 0.95rem;
+}

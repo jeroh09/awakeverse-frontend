@@ -1,4 +1,4 @@
-// src/contexts/AppViewContext.jsx - Enhanced with discovered characters persistence
+// src/contexts/AppViewContext.jsx - Enhanced with SCENARIOS view state
 import React, { createContext, useContext, useState, useEffect, useCallback } from 'react';
 import api from '../api';
 
@@ -7,7 +7,8 @@ const AppViewContext = createContext();
 export const VIEW_STATES = {
   CHAT: 'chat',
   MARKET_HUB: 'market_hub',
-  CREATOR_DASHBOARD: 'creator_dashboard'
+  CREATOR_DASHBOARD: 'creator_dashboard',
+  SCENARIOS: 'scenarios'  // NEW: Scenarios view
 };
 
 const STORAGE_KEY = 'awakeverse_discovered_characters';
@@ -21,6 +22,11 @@ export const AppViewProvider = ({ children }) => {
   
   // Add this near the top with other state declarations (around line 20)
   const isInitialized = React.useRef(false);
+
+  // NEW: Scenarios state
+  const [activeScenario, setActiveScenario] = useState(null);
+  const [activeDebate, setActiveDebate] = useState(null);
+  const [myScenarios, setMyScenarios] = useState([]);
 
   // ============================================================================
   // LOCALSTORAGE CACHE LAYER (Instant load, offline support)
@@ -156,12 +162,52 @@ export const AppViewProvider = ({ children }) => {
   }, [discoveredCharacters, saveToLocalStorage]);
 
   // ============================================================================
-  // VIEW SWITCHING
+  // VIEW SWITCHING (Enhanced with Scenarios)
   // ============================================================================
 
   const switchView = useCallback((newView) => {
-    setCurrentView(newView);
-  }, [currentView]);
+    if (Object.values(VIEW_STATES).includes(newView)) {
+      setCurrentView(newView);
+      
+      // Update URL hash based on view
+      const hashMap = {
+        [VIEW_STATES.CHAT]: '#chat',
+        [VIEW_STATES.MARKET_HUB]: '#discover',
+        [VIEW_STATES.CREATOR_DASHBOARD]: '#create',
+        [VIEW_STATES.SCENARIOS]: '#scenarios'
+      };
+      
+      window.history.replaceState(
+        { isAppRoot: true, view: newView },
+        '',
+        `/app${hashMap[newView] || ''}`
+      );
+      
+      console.log(`🔄 Switched to view: ${newView}`);
+      return true;
+    }
+    console.warn(`❌ Invalid view state: ${newView}`);
+    return false;
+  }, []);
+
+  // ============================================================================
+  // NEW: SCENARIO MANAGEMENT METHODS
+  // ============================================================================
+
+  const setActiveScenarioData = useCallback((scenario) => {
+    console.log('🎭 Setting active scenario:', scenario?.id);
+    setActiveScenario(scenario);
+  }, []);
+
+  const setActiveDebateData = useCallback((debate) => {
+    console.log('💬 Setting active debate:', debate?.debate_id);
+    setActiveDebate(debate);
+  }, []);
+
+  const updateMyScenarios = useCallback((scenarios) => {
+    console.log('📚 Updating my scenarios:', scenarios?.length);
+    setMyScenarios(scenarios || []);
+  }, []);
 
   // ============================================================================
   // MANUAL SYNC (for pull-to-refresh or settings)
@@ -185,7 +231,15 @@ export const AppViewProvider = ({ children }) => {
     // Sync status
     isSyncing,
     lastSyncTime,
-    manualSync
+    manualSync,
+
+    // NEW: Scenario context values
+    activeScenario,
+    setActiveScenario: setActiveScenarioData,
+    activeDebate,
+    setActiveDebate: setActiveDebateData,
+    myScenarios,
+    updateMyScenarios
   };
 
   return (

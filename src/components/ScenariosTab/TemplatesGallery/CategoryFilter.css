@@ -1,0 +1,48 @@
+/* src/components/ScenariosTab/TemplatesGallery/CategoryFilter.css */
+.category-filter {
+  display: flex;
+  gap: 0.75rem;
+  margin-bottom: 2rem;
+  overflow-x: auto;
+  padding-bottom: 0.5rem;
+}
+
+.category-chip {
+  padding: 0.75rem 1.25rem;
+  background: var(--scenarios-bg-card);
+  border: 1px solid var(--scenarios-border-color);
+  border-radius: 24px;
+  cursor: pointer;
+  white-space: nowrap;
+  transition: all 0.3s ease;
+  color: var(--scenarios-text-secondary);
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-size: 0.9rem;
+}
+
+.category-chip:hover {
+  border-color: var(--scenarios-accent-primary);
+  background: var(--scenarios-accent-light);
+}
+
+.category-chip.active {
+  background: var(--scenarios-accent-light);
+  border-color: var(--scenarios-accent-primary);
+  color: var(--scenarios-accent-primary);
+  font-weight: 600;
+}
+
+.category-count {
+  background: var(--scenarios-accent-primary);
+  color: white;
+  border-radius: 12px;
+  padding: 0.25rem 0.5rem;
+  font-size: 0.75rem;
+  font-weight: 600;
+}
+
+.category-chip.active .category-count {
+  background: var(--scenarios-accent-secondary);
+}

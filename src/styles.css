@@ -1772,3 +1772,30 @@ html::before {
   background-image: none !important;
   opacity: 0 !important;
 }
+/* Add this to your main CSS or create a scenarios-theme.css */
+:root {
+  /* Light Theme (Default) */
+  --scenarios-bg-primary: #0a1724;
+  --scenarios-bg-secondary: #130f4b;
+  --scenarios-bg-card: #110b25;
+  --scenarios-text-primary: #2c3e50;
+  --scenarios-text-secondary: #6c757d;
+  --scenarios-accent-primary: #163d57;
+  --scenarios-accent-secondary: #133347;
+  --scenarios-accent-light: rgba(52, 152, 219, 0.1);
+  --scenarios-border-color: #1a344e;
+  --scenarios-shadow: rgba(0, 0, 0, 0.1);
+}
+
+body.theme-awakeverse {
+  --scenarios-bg-primary: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%);
+  --scenarios-bg-secondary: rgba(0, 0, 0, 0.4);
+  --scenarios-bg-card: rgba(30, 30, 46, 0.8);
+  --scenarios-text-primary: #e0e0e0;
+  --scenarios-text-secondary: #ffda07;
+  --scenarios-accent-primary: #FFD700;
+  --scenarios-accent-secondary: #FFA500;
+  --scenarios-accent-light: rgba(255, 215, 0, 0.1);
+  --scenarios-border-color: rgba(255, 215, 0, 0.2);
+  --scenarios-shadow: rgba(0, 0, 0, 0.3);
+}

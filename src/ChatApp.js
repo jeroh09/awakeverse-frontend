@@ -13,12 +13,12 @@ import ChatWindow from './components/ChatWindow';
 import CharacterDetailPanel from './components/CharacterDetailPanel/CharacterDetailPanel';
 import FloatingCharacterHub from './components/FloatingCharacterHub/FloatingCharacterHub';
 import MarketHubPage from './components/MarketHub/MarketHubPage';
-import DebugViewContext from './components/DebugViewContext'; // Temporary debug
 import { characterCategories } from './data/characterCategories';
 import usePremiumCharacters from './hooks/usePremiumCharacters';
 import { useFeaturedCharacters } from './hooks/useFeaturedCharacters';
 import { useLeaderboard } from './hooks/useLeaderboard';
 import CreatorDashboard from './components/CreatorHub/CreatorDashboard';
+import ScenariosTab from './components/ScenariosTab/index';
 import './styles.css';
 
 function useMediaQuery(maxWidth) {
@@ -374,6 +374,12 @@ export default function ChatApp() {
       {/* NEW: Creator Dashboard view */}
       {currentView === VIEW_STATES.CREATOR_DASHBOARD && (
         <CreatorDashboard />
+      )}
+
+      {currentView === VIEW_STATES.SCENARIOS && (
+        <div className="scenarios-view-container">
+          <ScenariosTab />
+        </div>
       )}
 
       {previewCharacterKey && (

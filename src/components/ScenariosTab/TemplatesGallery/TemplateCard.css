@@ -1,0 +1,121 @@
+/* src/components/ScenariosTab/TemplatesGallery/TemplateCard.css */
+.template-card {
+  background: var(--scenarios-bg-card);
+  border: 1px solid var(--scenarios-border-color);
+  border-radius: 12px;
+  padding: 1.5rem;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+}
+
+.template-card:hover {
+  transform: translateY(-4px);
+  border-color: var(--scenarios-accent-primary);
+  box-shadow: 0 8px 24px var(--scenarios-shadow);
+}
+
+.template-card.locked {
+  opacity: 0.8;
+}
+
+.lock-indicator {
+  position: absolute;
+  top: 1rem;
+  right: 1rem;
+  font-size: 1.25rem;
+}
+
+.category-badge {
+  display: inline-block;
+  padding: 0.5rem 1rem;
+  background: var(--scenarios-accent-light);
+  color: var(--scenarios-accent-primary);
+  border-radius: 16px;
+  font-size: 0.8rem;
+  font-weight: 600;
+  margin-bottom: 1rem;
+  align-self: flex-start;
+}
+
+.template-title {
+  font-size: 1.25rem;
+  color: var(--scenarios-text-primary);
+  margin-bottom: 0.75rem;
+  font-weight: 600;
+  line-height: 1.3;
+}
+
+.template-description {
+  color: var(--scenarios-text-secondary);
+  font-size: 0.9rem;
+  margin-bottom: 1.5rem;
+  line-height: 1.5;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+  flex-grow: 1;
+}
+
+.character-avatars {
+  display: flex;
+  gap: 0.5rem;
+  margin-bottom: 1rem;
+}
+
+.avatar-circle {
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, var(--scenarios-accent-primary), var(--scenarios-accent-secondary));
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 0.9rem;
+  font-weight: bold;
+  color: white;
+  box-shadow: 0 2px 4px var(--scenarios-shadow);
+}
+
+.avatar-circle.more {
+  background: var(--scenarios-text-secondary);
+  font-size: 0.8rem;
+}
+
+.starter-questions-preview {
+  color: var(--scenarios-text-secondary);
+  font-size: 0.85rem;
+  margin-bottom: 1.5rem;
+}
+
+.use-button {
+  width: 100%;
+  padding: 0.75rem;
+  background: linear-gradient(135deg, var(--scenarios-accent-primary), var(--scenarios-accent-secondary));
+  border: none;
+  border-radius: 8px;
+  color: white;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  font-size: 0.9rem;
+}
+
+.use-button:hover {
+  transform: scale(1.02);
+  box-shadow: 0 4px 16px var(--scenarios-shadow);
+}
+
+.use-button.upgrade {
+  background: var(--scenarios-bg-secondary);
+  color: var(--scenarios-accent-primary);
+  border: 2px solid var(--scenarios-accent-primary);
+}
+
+.use-button.upgrade:hover {
+  background: var(--scenarios-accent-light);
+}
