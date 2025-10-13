@@ -573,3 +573,26 @@
   background: var(--scenarios-bg-secondary);
   border-color: var(--scenarios-border-color);
 }
+/* More subtle browser scrollbar */
+::-webkit-scrollbar {
+  width: 10px;
+}
+
+::-webkit-scrollbar-track {
+  background: #0a0f1c; /* Darker navy */
+}
+
+::-webkit-scrollbar-thumb {
+  background: #1e40af; /* Rich navy blue */
+  border-radius: 5px;
+  border: 1px solid #0a0f1c;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: #3b82f6;
+}
+
+html {
+  scrollbar-width: thin;
+  scrollbar-color: #1e40af #0a0f1c;
+}

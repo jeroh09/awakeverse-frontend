@@ -1,12 +1,12 @@
 {
   "files": {
-    "main.css": "/static/css/main.af55df3d.css",
-    "main.js": "/static/js/main.e9118f23.js",
+    "main.css": "/static/css/main.c7ba7945.css",
+    "main.js": "/static/js/main.11ba7384.js",
     "static/media/star-overlay.png": "/static/media/star-overlay.b0f55352225ffaa5a533.png",
     "index.html": "/index.html"
   },
   "entrypoints": [
-    "static/css/main.af55df3d.css",
-    "static/js/main.e9118f23.js"
+    "static/css/main.c7ba7945.css",
+    "static/js/main.11ba7384.js"
   ]
 }

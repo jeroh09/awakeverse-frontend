@@ -1792,7 +1792,7 @@ body.theme-awakeverse {
   --scenarios-bg-secondary: rgba(0, 0, 0, 0.4);
   --scenarios-bg-card: rgba(30, 30, 46, 0.8);
   --scenarios-text-primary: #e0e0e0;
-  --scenarios-text-secondary: #ffda07;
+  --scenarios-text-secondary: #aaa;
   --scenarios-accent-primary: #FFD700;
   --scenarios-accent-secondary: #FFA500;
   --scenarios-accent-light: rgba(255, 215, 0, 0.1);

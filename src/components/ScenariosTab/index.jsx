@@ -1,86 +1,146 @@
-// src/components/ScenariosTab/index.jsx - USE DIRECT AXIOS INSTANCE
+// src/components/ScenariosTab/index.jsx - Complete Merged Version
 import React, { useState, useEffect, useCallback } from 'react';
 import { useAuth } from '../../contexts/AuthContext';
 import { useUser } from '../../contexts/UserContext';
-import api from '../../api'; // Import the axios instance directly
+import SubscriptionService from '../../services/SubscriptionService';
 import TemplatesGallery from './TemplatesGallery';
 import MyScenariosPanel from './MyScenariosPanel';
+import ScenarioCreator from './ScenarioCreator';
+import ScenarioChatWindow from './ScenarioChatWindow';
 import './ScenariosTab.css';
 
 export default function ScenariosTab() {
   const { token } = useAuth();
   const { user } = useUser();
-  const [componentError, setComponentError] = useState(null);
-  const [isInitialized, setIsInitialized] = useState(false);
-  const [currentTheme, setCurrentTheme] = useState('light');
+  const [subscriptionData, setSubscriptionData] = useState(null);
+  const [loading, setLoading] = useState(true);
   const [requiresUpgrade, setRequiresUpgrade] = useState(false);
   const [showEducationalModal, setShowEducationalModal] = useState(false);
+  const [currentTheme, setCurrentTheme] = useState('light');
+  const [myScenarios, setMyScenarios] = useState([]);
+  const [showBlankCreator, setShowBlankCreator] = useState(false);
+  const [activeScenario, setActiveScenario] = useState(null);
 
-  // USE DIRECT AXIOS INSTANCE LIKE CREATOR DASHBOARD
-  const loadScenariosData = useCallback(async () => {
-    if (!token) {
-      setComponentError('Authentication required');
-      setIsInitialized(true);
+  // Fetch subscription data using SubscriptionService
+  const loadSubscriptionData = useCallback(async () => {
+    if (!user?.id) {
+      setLoading(false);
       return;
     }
 
     try {
-      setComponentError(null);
-      setRequiresUpgrade(false);
-
-      // DIRECT AXIOS CALL - SAME AS CREATOR DASHBOARD
-      const response = await api.get('/debate/templates');
+      console.log('🔍 Loading subscription data for user:', user.id);
       
-      // If we get here, user has access
-      setRequiresUpgrade(false);
-      console.log('✅ User has access to Scenarios');
+      const data = await SubscriptionService.getUserSubscriptionStatus(user.id);
       
-    } catch (err) {
-      // Same 403 detection as CreatorDashboard
-      if (err.response?.status === 403) {
-        setRequiresUpgrade(true);
+      console.log('✅ Subscription data loaded:', {
+        tier: data.subscription?.tier,
+        tier_name: data.subscription?.tier_name,
+        unlimited: data.subscription?.unlimited,
+        status: data.status
+      });
+      
+      if (data.status === 'success' && data.subscription) {
+        setSubscriptionData(data);
+        
+        // Check if user has unlimited tier
+        const hasUnlimited = data.subscription.tier === 'unlimited' || 
+                           data.subscription.tier_name === 'unlimited' ||
+                           data.subscription.unlimited === true;
+        
+        setRequiresUpgrade(!hasUnlimited);
+        
+        console.log('🎭 Scenarios Access:', hasUnlimited ? 'GRANTED' : 'REQUIRES UPGRADE');
       } else {
-        setComponentError(err.response?.data?.error || err.message || 'Failed to load scenarios');
+        // Use fallback data
+        console.warn('⚠️ Using fallback subscription data');
+        const fallback = SubscriptionService.getFallbackSubscriptionData();
+        setSubscriptionData(fallback);
+        setRequiresUpgrade(true); // Fallback is free tier
       }
+    } catch (error) {
+      console.error('❌ Failed to load subscription:', error);
+      const fallback = SubscriptionService.getFallbackSubscriptionData();
+      setSubscriptionData(fallback);
+      setRequiresUpgrade(true);
     } finally {
-      setIsInitialized(true);
+      setLoading(false);
     }
-  }, [token]);
-  // Initialize - same pattern as CreatorDashboard
-  useEffect(() => {
-    loadScenariosData();
-  }, [loadScenariosData]);
+  }, [user?.id]);
 
-  // Theme toggle - keep existing functionality
+  // Initialize on mount
+  useEffect(() => {
+    loadSubscriptionData();
+  }, [loadSubscriptionData]);
+
+  // Load user's scenarios
+  const loadMyScenarios = useCallback(async () => {
+    if (!user?.id) return;
+    
+    try {
+      const { getMyScenarios } = await import('../../api');
+      const data = await getMyScenarios();
+      setMyScenarios(data.scenarios || []);
+      console.log('📋 My scenarios loaded:', data.scenarios?.length || 0);
+    } catch (error) {
+      console.error('❌ Failed to load scenarios:', error);
+      setMyScenarios([]);
+    }
+  }, [user?.id]);
+
+  // Load scenarios when subscription is loaded
+  useEffect(() => {
+    if (!loading && !requiresUpgrade) {
+      loadMyScenarios();
+    }
+  }, [loading, requiresUpgrade, loadMyScenarios]);
+
+  // Handle scenario created from templates
+  const handleScenarioCreated = useCallback((newScenario) => {
+    console.log('🎭 ScenariosTab: New scenario created, refreshing list');
+    loadMyScenarios();
+  }, [loadMyScenarios]);
+
+  // Handle "Create New" from MyScenariosPanel
+  const handleCreateNew = useCallback(() => {
+    setShowBlankCreator(true);
+  }, []);
+
+  // Handle starting a debate
+  const handleStartDebate = useCallback((scenarioId) => {
+    const scenario = myScenarios.find(s => s.id === scenarioId);
+    if (scenario) {
+      setActiveScenario(scenario);
+    }
+  }, [myScenarios]);
+
+  // Handle closing chat window
+  const handleCloseChatWindow = useCallback(() => {
+    setActiveScenario(null);
+  }, []);
+
+  const handleBlankCreatorClose = () => {
+    setShowBlankCreator(false);
+  };
+
+  const handleBlankCreatorSuccess = (newScenario) => {
+    console.log('✅ Blank scenario created:', newScenario);
+    setShowBlankCreator(false);
+    loadMyScenarios();
+  };
+
+  // Theme toggle
   const toggleTheme = () => {
     setCurrentTheme(currentTheme === 'light' ? 'awakeverse' : 'light');
   };
 
-  // DEFENSIVE: Render error state
-  if (componentError) {
-    return (
-      <div className="scenarios-tab-container">
-        <div className="scenarios-error-state">
-          <div className="error-content">
-            <h3>⚠️ Unable to Load Scenarios</h3>
-            <p>There was an issue loading the scenarios feature.</p>
-            <div className="error-details">
-              <code>{componentError}</code>
-            </div>
-            <button 
-              className="retry-button"
-              onClick={loadScenariosData}
-            >
-              Try Again
-            </button>
-          </div>
-        </div>
-      </div>
-    );
-  }
+  // Check if user is unlimited
+  const isUnlimited = subscriptionData?.subscription?.tier === 'unlimited' || 
+                     subscriptionData?.subscription?.tier_name === 'unlimited' ||
+                     subscriptionData?.subscription?.unlimited === true;
 
-  // DEFENSIVE: Show loading until fully initialized
-  if (!isInitialized) {
+  // DEFENSIVE: Show loading until subscription is loaded
+  if (loading) {
     return (
       <div className="scenarios-tab-container">
         <div className="scenarios-loading-state">
@@ -91,10 +151,10 @@ export default function ScenariosTab() {
     );
   }
 
-  // UPGRADE REQUIRED - same pattern as CreatorDashboard
+  // UPGRADE REQUIRED - User does not have unlimited tier
   if (requiresUpgrade) {
     return (
-      <div className="scenarios-tab-container">
+      <div className={`scenarios-tab-container ${currentTheme === 'awakeverse' ? 'theme-awakeverse' : ''}`}>
         <ScenariosUpgradeRequired onLearnMore={() => setShowEducationalModal(true)} />
         <EducationalUpgradeModal 
           isOpen={showEducationalModal}
@@ -104,56 +164,64 @@ export default function ScenariosTab() {
     );
   }
 
-  // MAIN CONTENT - User has access
-  try {
+  // IF CHAT WINDOW IS ACTIVE, SHOW IT FULLSCREEN (TOP LEVEL)
+  if (activeScenario) {
     return (
-      <div className={`scenarios-tab-container ${currentTheme === 'awakeverse' ? 'theme-awakeverse' : ''}`}>
-        {/* Theme toggle button */}
-        <div className="scenarios-theme-toggle">
-          <button onClick={toggleTheme}>
-            {currentTheme === 'light' ? '🌙 Dark' : '☀️ Light'}
-          </button>
-        </div>
-        
-        <div className="scenarios-content">
-          {/* Templates Gallery */}
-          <div className="gallery-section">
-            <TemplatesGallery 
-              onUpgradeRequired={() => setRequiresUpgrade(true)} // Fallback
-            />
-          </div>
-
-          {/* My Scenarios Panel - User has access so show it */}
-          <div className="scenarios-section">
-            <MyScenariosPanel 
-              token={token}
-              userId={user?.id || 'unknown'}
-              onCreateNew={() => {
-                console.log('Navigate to template gallery');
-              }}
-            />
-          </div>
-        </div>
-      </div>
-    );
-  } catch (error) {
-    // Ultimate fallback - if even the render fails
-    console.error('❌ CRITICAL: ScenariosTab render failed:', error);
-    return (
-      <div className="scenarios-tab-container">
-        <div className="scenarios-critical-error">
-          <h3>🚨 Critical Error</h3>
-          <p>The scenarios feature encountered a critical error and cannot be displayed.</p>
-          <button 
-            onClick={() => window.location.reload()}
-            className="reload-button"
-          >
-            Reload Page
-          </button>
-        </div>
-      </div>
+      <ScenarioChatWindow
+        scenario={activeScenario}
+        onBack={handleCloseChatWindow}
+        theme={currentTheme}
+      />
     );
   }
+
+  // MAIN CONTENT - User has unlimited access
+  return (
+    <div className={`scenarios-tab-container ${currentTheme === 'awakeverse' ? 'theme-awakeverse' : ''}`}>
+      {/* Theme toggle button */}
+      <div className="scenarios-theme-toggle">
+        <button onClick={toggleTheme}>
+          {currentTheme === 'light' ? '🌙 Dark' : '☀️ Light'}
+        </button>
+      </div>
+      
+      <div className="scenarios-content">
+        {/* Templates Gallery - User has access */}
+        <div className="gallery-section">
+          <TemplatesGallery 
+            isUnlimited={isUnlimited}
+            onUpgradeRequired={() => {}} // No-op since user already has access
+            currentScenarioCount={myScenarios.length}
+            onScenarioCreated={handleScenarioCreated}
+          />
+        </div>
+
+        {/* My Scenarios Panel - User has access */}
+        <div className="scenarios-section">
+          <MyScenariosPanel 
+            token={token}
+            userId={user?.id}
+            scenarios={myScenarios}
+            onRefresh={loadMyScenarios}
+            onCreateNew={handleCreateNew}
+            onStartDebate={handleStartDebate}
+            theme={currentTheme}
+          />
+        </div>
+      </div>
+
+      {/* Blank Scenario Creator - opened from "Create New" button */}
+      {showBlankCreator && (
+        <ScenarioCreator
+          template={null}
+          isOpen={showBlankCreator}
+          onClose={handleBlankCreatorClose}
+          onSuccess={handleBlankCreatorSuccess}
+          currentScenarioCount={myScenarios.length}
+        />
+      )}
+    </div>
+  );
 }
 
 // UPGRADE REQUIRED COMPONENT - Same pattern as CreatorDashboard

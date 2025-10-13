@@ -76,3 +76,210 @@
     font-size: 1.5rem;
   }
 }
+.avatar-circle {
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 0.9rem;
+  font-weight: bold;
+  color: white;
+  box-shadow: 0 2px 4px var(--scenarios-shadow);
+  position: relative;
+  overflow: hidden;
+  border: 2px solid var(--scenarios-border-color);
+  background: linear-gradient(135deg, var(--scenarios-accent-primary), var(--scenarios-accent-secondary));
+}
+
+/* Avatar initial text (shows as fallback) */
+.avatar-initial {
+  position: absolute;
+  z-index: 1;
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.5);
+  pointer-events: none;
+}
+
+/* Hide initial when background image is present */
+.avatar-circle[style*="background-image"]:not([style*="background-image: url();"]) .avatar-initial {
+  display: none;
+}
+
+.avatar-circle.more {
+  background: var(--scenarios-text-secondary);
+  font-size: 0.8rem;
+}
+.character-avatar-small {
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 0.8rem;
+  font-weight: bold;
+  color: white;
+  position: relative;
+  overflow: hidden;
+  border: 2px solid var(--scenarios-border-color);
+  background: linear-gradient(135deg, var(--scenarios-accent-primary), var(--scenarios-accent-secondary));
+}
+
+/* Avatar initial text (shows as fallback) */
+.avatar-initial-small {
+  position: absolute;
+  z-index: 1;
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.5);
+  pointer-events: none;
+}
+
+/* Hide initial when background image is present */
+.character-avatar-small[style*="background-image"]:not([style*="background-image: url();"]) .avatar-initial-small {
+  display: none;
+}
+/* Add to src/components/ScenariosTab/TemplatesGallery/TemplatesGallery.css */
+
+/* Show More CTA Styles */
+.show-more-cta {
+  width: 100%;
+  padding: 1.25rem;
+  background: var(--scenarios-bg-secondary);
+  border: 2px dashed var(--scenarios-border-color);
+  border-radius: 12px;
+  color: var(--scenarios-text-secondary);
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  margin-top: 1.5rem;
+  text-align: center;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.75rem;
+  font-size: 1rem;
+}
+
+.show-more-cta:hover {
+  border-color: var(--scenarios-accent-primary);
+  color: var(--scenarios-accent-primary);
+  background: var(--scenarios-accent-light);
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px var(--scenarios-shadow);
+}
+
+.show-more-cta:active {
+  transform: translateY(0);
+}
+
+.cta-icon {
+  font-size: 1.25rem;
+  font-weight: bold;
+}
+
+.cta-text {
+  font-weight: 600;
+}
+
+/* Dark theme specific overrides */
+.scenarios-tab-container.theme-awakeverse .show-more-cta {
+  background: rgba(255, 215, 0, 0.05);
+  border-color: rgba(255, 215, 0, 0.3);
+  color: #FFD700;
+}
+
+.scenarios-tab-container.theme-awakeverse .show-more-cta:hover {
+  background: rgba(255, 215, 0, 0.1);
+  border-color: #FFD700;
+  box-shadow: 0 4px 12px rgba(255, 215, 0, 0.2);
+}
+
+/* Mobile responsive */
+@media (max-width: 768px) {
+  .show-more-cta {
+    padding: 1rem;
+    font-size: 0.9rem;
+  }
+  
+  .cta-icon {
+    font-size: 1.1rem;
+  }
+}
+
+/* Ensure template grid shows 2 rows of 4 on desktop */
+.template-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+  gap: 1.5rem;
+  margin-top: 2rem;
+}
+
+/* On larger screens, ensure we get the 2x4 layout */
+@media (min-width: 1200px) {
+  .template-grid {
+    grid-template-columns: repeat(3, 1fr);
+  }
+}
+/* Add to src/components/ScenariosTab/TemplatesGallery/TemplatesGallery.css */
+
+/* Custom navy blue scrollbars for Template Gallery */
+.templates-gallery ::-webkit-scrollbar {
+  width: 8px;
+}
+
+.templates-gallery ::-webkit-scrollbar-track {
+  background: #0f172a; /* Navy blue background */
+  border-radius: 4px;
+}
+
+.templates-gallery ::-webkit-scrollbar-thumb {
+  background: #1e3a8a; /* Medium navy blue */
+  border-radius: 4px;
+  border: 1px solid #0f172a;
+}
+
+.templates-gallery ::-webkit-scrollbar-thumb:hover {
+  background: #2563eb; /* Brighter blue on hover */
+}
+
+.templates-gallery ::-webkit-scrollbar-thumb:active {
+  background: #3b82f6; /* Even brighter when active */
+}
+
+/* For Firefox */
+.templates-gallery {
+  scrollbar-width: thin;
+  scrollbar-color: #1e3a8a #0f172a;
+}
+
+/* Specific targeting for template grid */
+.template-grid::-webkit-scrollbar {
+  width: 8px;
+}
+
+.template-grid::-webkit-scrollbar-track {
+  background: #0f172a;
+  border-radius: 4px;
+}
+
+.template-grid::-webkit-scrollbar-thumb {
+  background: #1e3a8a;
+  border-radius: 4px;
+}
+
+.template-grid::-webkit-scrollbar-thumb:hover {
+  background: #2563eb;
+}
+
+/* For Firefox template grid */
+.template-grid {
+  scrollbar-width: thin;
+  scrollbar-color: #1e3a8a #0f172a;
+}
+
+/* If you're using the side-by-side layout */
+.templates-panel .template-grid {
+  max-height: 600px;
+  overflow-y: auto;
+  padding-right: 8px;
+}

@@ -1,4 +1,4 @@
-// src/components/ScenariosTab/TemplatesGallery/index.jsx
+// src/components/ScenariosTab/TemplatesGallery/index.jsx - COMPLETE WITH ORIGINAL HEADERS
 import React, { useState, useEffect } from 'react';
 import { getTemplates, getCategories } from '../../../api';
 import CategoryFilter from './CategoryFilter';
@@ -6,13 +6,19 @@ import TemplateCard from './TemplateCard';
 import TemplateDetailModal from './TemplateDetailModal';
 import './TemplatesGallery.css';
 
-export default function TemplatesGallery({ isUnlimited, onUpgradeRequired }) {
+export default function TemplatesGallery({ 
+  isUnlimited, 
+  onUpgradeRequired,
+  currentScenarioCount = 0,
+  onScenarioCreated = () => {} 
+}) {
   const [templates, setTemplates] = useState([]);
   const [categories, setCategories] = useState([]);
   const [selectedCategory, setSelectedCategory] = useState(null);
   const [selectedTemplate, setSelectedTemplate] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
+  const [visibleCount, setVisibleCount] = useState(6); // Show 8 templates (2 rows of 4)
 
   // Load templates and categories on mount
   useEffect(() => {
@@ -58,6 +64,7 @@ export default function TemplatesGallery({ isUnlimited, onUpgradeRequired }) {
 
   const handleCategorySelect = (category) => {
     setSelectedCategory(category === 'all' ? null : category);
+    setVisibleCount(6); // Reset to 8 when category changes
   };
 
   const handleTemplateSelect = (template) => {
@@ -71,6 +78,18 @@ export default function TemplatesGallery({ isUnlimited, onUpgradeRequired }) {
   const handleCloseModal = () => {
     setSelectedTemplate(null);
   };
+
+  const handleScenarioCreated = (newScenario) => {
+    console.log('🎭 Gallery: Scenario created, notifying parent');
+    onScenarioCreated(newScenario);
+  };
+
+  const handleShowMore = () => {
+    setVisibleCount(prev => prev + 6); // Show 8 more templates
+  };
+
+  const visibleTemplates = templates.slice(0, visibleCount);
+  const hasMoreTemplates = visibleCount < templates.length;
 
   if (loading) {
     return (
@@ -98,6 +117,7 @@ export default function TemplatesGallery({ isUnlimited, onUpgradeRequired }) {
 
   return (
     <div className="templates-gallery">
+      {/* ORIGINAL HEADER - KEEP INTACT */}
       <div className="gallery-header">
         <h2 className="gallery-title">Verse Scenarios</h2>
         <p className="gallery-subtitle">
@@ -105,6 +125,7 @@ export default function TemplatesGallery({ isUnlimited, onUpgradeRequired }) {
         </p>
       </div>
 
+      {/* Category Filter */}
       <CategoryFilter
         categories={categories}
         selectedCategory={selectedCategory}
@@ -112,7 +133,7 @@ export default function TemplatesGallery({ isUnlimited, onUpgradeRequired }) {
       />
 
       <div className="template-grid">
-        {templates.map(template => (
+        {visibleTemplates.map(template => (
           <TemplateCard
             key={template.id}
             template={template}
@@ -129,12 +150,22 @@ export default function TemplatesGallery({ isUnlimited, onUpgradeRequired }) {
         </div>
       )}
 
+      {/* NEW: Show More CTA */}
+      {hasMoreTemplates && (
+        <button className="show-more-cta" onClick={handleShowMore}>
+          <span className="cta-icon">+</span>
+          <span className="cta-text">+{templates.length - visibleCount} more templates</span>
+        </button>
+      )}
+
       {selectedTemplate && (
         <TemplateDetailModal
           template={selectedTemplate}
           isUnlimited={isUnlimited}
           onClose={handleCloseModal}
           onUpgradeRequired={onUpgradeRequired}
+          currentScenarioCount={currentScenarioCount}
+          onScenarioCreated={handleScenarioCreated}
         />
       )}
     </div>
