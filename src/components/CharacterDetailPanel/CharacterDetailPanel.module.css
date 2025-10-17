@@ -287,3 +287,89 @@
     transform: none;
   }
 }
+/* Add to CharacterDetailPanel.module.css */
+
+.footer {
+  padding: 24px;
+  border-top: 1px solid rgba(255, 215, 0, 0.1);
+  background: linear-gradient(180deg, 
+    transparent, 
+    rgba(255, 215, 0, 0.05)
+  );
+  display: flex;
+  align-items: center;
+  gap: 16px; /* Consistent spacing */
+}
+
+.cta {
+  flex: 1;
+  /* Your existing cta styles remain the same */
+}
+
+/* NEW: Icon button styles */
+.iconButton {
+  background: linear-gradient(135deg, 
+    rgba(16, 185, 129, 0.9), 
+    rgba(5, 150, 105, 0.8)
+  );
+  color: white;
+  border: none;
+  width: 48px;
+  height: 48px;
+  border-radius: 16px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.3s ease;
+  font-size: 20px;
+  font-weight: bold;
+  flex-shrink: 0;
+}
+
+.iconButton:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 8px 25px rgba(16, 185, 129, 0.4);
+}
+
+.tooltip {
+  position: relative;
+}
+
+.tooltip::after {
+  content: "Add to Discovered";
+  position: absolute;
+  bottom: 100%;
+  left: 50%;
+  transform: translateX(-50%);
+  background: rgba(0, 0, 0, 0.8);
+  color: white;
+  padding: 8px 12px;
+  border-radius: 8px;
+  font-size: 12px;
+  white-space: nowrap;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.3s ease;
+  margin-bottom: 8px;
+  z-index: 1002;
+}
+
+.tooltip:hover::after {
+  opacity: 1;
+}
+
+/* Mobile responsiveness */
+@media (max-width: 768px) {
+  .footer {
+    padding: 16px;
+    gap: 12px;
+  }
+  
+  .iconButton {
+    width: 44px;
+    height: 44px;
+    border-radius: 14px;
+    font-size: 18px;
+  }
+}

@@ -6,12 +6,12 @@ const CharacterDetailPanel = ({
   character, 
   onClose, 
   onStartChat, 
-  onCharacterSelect,  // NEW: Add this prop
-  showDiscoverAction  // NEW: Add this prop
+  onCharacterSelect,
+  showDiscoverAction
 }) => {
   // Toggle between versions - remove this in production
   const [useOrganicBlob, setUseOrganicBlob] = useState(false);
-  const styles = useOrganicBlob ? organicBlobStyles : floatingGlassStyles;
+  const styles = floatingGlassStyles; // Remove the toggle logic for now
 
   if (!character) return null;
 
@@ -27,7 +27,7 @@ const CharacterDetailPanel = ({
               position: 'absolute',
               top: '10px',
               left: '10px',
-              background: useOrganicBlob ? '#10b981' : '#6366f1',
+              background: '#6366f1',
               color: 'white',
               border: 'none',
               padding: '6px 12px',
@@ -38,7 +38,7 @@ const CharacterDetailPanel = ({
               fontWeight: '600'
             }}
           >
-            {useOrganicBlob ? 'Blob' : 'Glass'}
+            Glass
           </button>
         )}
 
@@ -60,19 +60,17 @@ const CharacterDetailPanel = ({
         </div>
         
         <div className={styles.footer}>
-          {/* Existing start chat button */}
           <button className={styles.cta} onClick={() => onStartChat(character.key)}>
             Start Chat
           </button>
           
-          {/* NEW: Add discovery button for Market Hub */}
           {showDiscoverAction && onCharacterSelect && (
             <button 
-              className={styles.cta} 
+              className={`${styles.iconButton} ${styles.tooltip}`}
               onClick={() => onCharacterSelect(character)}
-              style={{ marginLeft: '10px', background: '#10b981' }}
+              aria-label="Add to Discovered"
             >
-              Add to Discovered
+              +
             </button>
           )}
         </div>
