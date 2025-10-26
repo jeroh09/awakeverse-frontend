@@ -1,15 +1,19 @@
-// src/components/ScenariosTab/index.jsx - Complete Merged Version
+// src/components/ScenariosTab/index.jsx - Complete Merged Version with Payment Handlers
 import React, { useState, useEffect, useCallback } from 'react';
 import { useAuth } from '../../contexts/AuthContext';
 import { useUser } from '../../contexts/UserContext';
 import SubscriptionService from '../../services/SubscriptionService';
+import PaymentRouter from '../../services/PaymentRouter';
 import TemplatesGallery from './TemplatesGallery';
 import MyScenariosPanel from './MyScenariosPanel';
 import ScenarioCreator from './ScenarioCreator';
 import ScenarioChatWindow from './ScenarioChatWindow';
 import './ScenariosTab.css';
 
-export default function ScenariosTab() {
+export default function ScenariosTab({ 
+  marketHubScenario = null,
+  onMarketHubScenarioClosed = null  // ✅ ADD THIS - callback when chat closes
+ }) {
   const { token } = useAuth();
   const { user } = useUser();
   const [subscriptionData, setSubscriptionData] = useState(null);
@@ -20,6 +24,25 @@ export default function ScenariosTab() {
   const [myScenarios, setMyScenarios] = useState([]);
   const [showBlankCreator, setShowBlankCreator] = useState(false);
   const [activeScenario, setActiveScenario] = useState(null);
+
+    // ============================================================================
+  // NEW: Handle Market Hub scenario passed from ChatApp
+  // ============================================================================
+  useEffect(() => {
+    if (marketHubScenario) {
+      console.log('🌍 ScenariosTab: Received Market Hub scenario:', {
+        debateId: marketHubScenario.debateId,
+        scenarioId: marketHubScenario.scenarioId,
+        title: marketHubScenario.title,
+        is_market_hub: marketHubScenario.is_market_hub
+      });
+
+      // Open the chat window with this scenario
+      setActiveScenario(marketHubScenario);
+
+      console.log('✅ ScenariosTab: Opening chat window for Market Hub scenario');
+    }
+  }, [marketHubScenario]);
 
   // Fetch subscription data using SubscriptionService
   const loadSubscriptionData = useCallback(async () => {
@@ -117,7 +140,12 @@ export default function ScenariosTab() {
   // Handle closing chat window
   const handleCloseChatWindow = useCallback(() => {
     setActiveScenario(null);
-  }, []);
+    // ✅ If this was a Market Hub scenario, notify parent to clear it
+    if (marketHubScenario && onMarketHubScenarioClosed) {
+      console.log('🔄 Notifying ChatApp to clear Market Hub scenario');
+      onMarketHubScenarioClosed();
+    }
+  }, [marketHubScenario, onMarketHubScenarioClosed]);
 
   const handleBlankCreatorClose = () => {
     setShowBlankCreator(false);
@@ -127,6 +155,33 @@ export default function ScenariosTab() {
     console.log('✅ Blank scenario created:', newScenario);
     setShowBlankCreator(false);
     loadMyScenarios();
+  };
+
+  // ✅ ADDED: Payment handlers
+  const handleUpgradeWithStripe = async () => {
+    try {
+      await PaymentRouter.redirectToCheckout({
+        tier: 'unlimited',
+        provider: 'stripe',
+        triggerSource: 'scenarios_tab_upgrade_required'
+      });
+    } catch (error) {
+      console.error('Stripe payment redirect failed:', error);
+      alert('Unable to redirect to Stripe payment page. Please try again or contact support.');
+    }
+  };
+
+  const handleUpgradeWithPayPal = async () => {
+    try {
+      await PaymentRouter.redirectToCheckout({
+        tier: 'unlimited',
+        provider: 'paypal',
+        triggerSource: 'scenarios_tab_upgrade_required'
+      });
+    } catch (error) {
+      console.error('PayPal payment redirect failed:', error);
+      alert('Unable to redirect to PayPal payment page. Please try again or contact support.');
+    }
   };
 
   // Theme toggle
@@ -151,14 +206,21 @@ export default function ScenariosTab() {
     );
   }
 
-  // UPGRADE REQUIRED - User does not have unlimited tier
-  if (requiresUpgrade) {
+  // ✅ EXCEPTION: Market Hub scenarios bypass this (freemium with limits)
+  // This is the key line that was changed in index1.js that broke the flow
+  if (requiresUpgrade && !marketHubScenario) {
     return (
       <div className={`scenarios-tab-container ${currentTheme === 'awakeverse' ? 'theme-awakeverse' : ''}`}>
-        <ScenariosUpgradeRequired onLearnMore={() => setShowEducationalModal(true)} />
+        <ScenariosUpgradeRequired 
+          onLearnMore={() => setShowEducationalModal(true)}
+          onUpgradeWithStripe={handleUpgradeWithStripe}
+          onUpgradeWithPayPal={handleUpgradeWithPayPal}
+        />
         <EducationalUpgradeModal 
           isOpen={showEducationalModal}
           onClose={() => setShowEducationalModal(false)}
+          onUpgradeWithStripe={handleUpgradeWithStripe}
+          onUpgradeWithPayPal={handleUpgradeWithPayPal}
         />
       </div>
     );
@@ -175,7 +237,7 @@ export default function ScenariosTab() {
     );
   }
 
-  // MAIN CONTENT - User has unlimited access
+  // MAIN CONTENT - User has unlimited access OR is using Market Hub scenario
   return (
     <div className={`scenarios-tab-container ${currentTheme === 'awakeverse' ? 'theme-awakeverse' : ''}`}>
       {/* Theme toggle button */}
@@ -224,8 +286,8 @@ export default function ScenariosTab() {
   );
 }
 
-// UPGRADE REQUIRED COMPONENT - Same pattern as CreatorDashboard
-const ScenariosUpgradeRequired = ({ onLearnMore }) => (
+// UPGRADE REQUIRED COMPONENT - Updated with payment options
+const ScenariosUpgradeRequired = ({ onLearnMore, onUpgradeWithStripe, onUpgradeWithPayPal }) => (
   <div className="upgrade-required-state">
     <div className="upgrade-required-content">
       <span className="upgrade-icon">🎭</span>
@@ -263,12 +325,22 @@ const ScenariosUpgradeRequired = ({ onLearnMore }) => (
       </div>
 
       <div className="upgrade-actions">
-        <button 
-          onClick={() => window.location.href = '/profile-settings?tab=subscription'}
-          className="upgrade-now-button"
-        >
-          Upgrade to Unlimited - $49.99/month
-        </button>
+        <div className="upgrade-payment-options">
+          <button 
+            onClick={onUpgradeWithStripe}
+            className="upgrade-button primary-upgrade"
+          >
+            💳 Upgrade with Stripe - £11.99/month
+          </button>
+
+          <button 
+            onClick={onUpgradeWithPayPal}
+            className="upgrade-button secondary-upgrade"
+          >
+            🅿️ Pay with PayPal
+          </button>
+        </div>
+
         <button 
           onClick={onLearnMore}
           className="learn-features-button"
@@ -284,8 +356,8 @@ const ScenariosUpgradeRequired = ({ onLearnMore }) => (
   </div>
 );
 
-// EDUCATIONAL MODAL - Same pattern as CreatorDashboard
-const EducationalUpgradeModal = ({ isOpen, onClose }) => {
+// EDUCATIONAL MODAL - Updated with payment options
+const EducationalUpgradeModal = ({ isOpen, onClose, onUpgradeWithStripe, onUpgradeWithPayPal }) => {
   if (!isOpen) return null;
 
   const unlimitedFeatures = [
@@ -350,7 +422,7 @@ const EducationalUpgradeModal = ({ isOpen, onClose }) => {
           <div className="pricing-header">
             <h3>Unlimited Plan</h3>
             <div className="price">
-              <span className="amount">$49.99</span>
+              <span className="amount">£11.99</span>
               <span className="period">/month</span>
             </div>
           </div>
@@ -367,9 +439,15 @@ const EducationalUpgradeModal = ({ isOpen, onClose }) => {
           <div className="pricing-actions">
             <button 
               className="upgrade-cta-button"
-              onClick={() => window.location.href = '/profile-settings?tab=subscription'}
+              onClick={onUpgradeWithStripe}
             >
-              Upgrade to Unlimited - $49.99/month
+              Upgrade with Stripe - £11.99/month
+            </button>
+            <button 
+              className="upgrade-cta-button secondary"
+              onClick={onUpgradeWithPayPal}
+            >
+              Pay with PayPal - £11.99/month
             </button>
             <button 
               className="compare-plans-button"

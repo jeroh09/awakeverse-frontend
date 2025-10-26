@@ -1,4 +1,4 @@
-// src/components/MarketHub/MarketHubPage.jsx - Fixed for ChatApp View Integration
+// src/components/MarketHub/MarketHubPage.jsx - FIXED ScenarioChatWindow Integration
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { ArrowLeft, Search, Filter, TrendingUp, Trophy, Users, Star, Shield, Zap } from 'lucide-react';
@@ -8,20 +8,29 @@ import EnhancedCharacterCard from './EnhancedCharacterCard';
 import FeaturedCarousel from './FeaturedCarousel';
 import LeaderboardSection from './LeaderboardSection';
 import CharacterDetailPanel from '../CharacterDetailPanel/CharacterDetailPanel';
-import { useMarketHub } from '../../hooks/useMarketHub';
+import useMarketHub, { useCharacterEngagement, useScenarioEngagement } from '../../hooks/useMarketHub';
 import { useFeaturedCharacters } from '../../hooks/useFeaturedCharacters';
 import { getSafeAvatarUrl, createImageErrorHandler } from '../../utils/imageUtils';
+import usePremiumCharacters from '../../hooks/usePremiumCharacters';
+import ScenarioDetailModal from '../../components/MarketHub/ScenarioDetailModal';
+import UnifiedContentCard from '../../components/MarketHub/UnifiedContentCard';
 import styles from './MarketHubPage.module.css';
+
+// 🆕 UPDATE: Import the CORRECT ScenarioChatWindow from ScenariosTab
+import ScenarioChatWindow from '../../components/ScenariosTab/ScenarioChatWindow';
+
+
+const API_BASE = process.env.REACT_APP_API_URL || 'https://api.awakeverse.com';
 
 // NEW: Updated to accept props for character selection callbacks
 const MarketHubPage = ({ 
   onCharacterSelect, 
   onStartChat,
+  onScenarioSelect,
   isViewMode = false // Flag to indicate if called from ChatApp view switching
 }) => {
   const navigate = useNavigate();
   const { isAuthenticated } = useAuth();
-  const { user } = useUser();
   
   // Mobile detection
   const [isMobile, setIsMobile] = useState(window.innerWidth <= 768);
@@ -40,6 +49,7 @@ const MarketHubPage = ({
       <AuthenticatedMarketHub 
         onCharacterSelect={onCharacterSelect}
         onStartChat={onStartChat}
+        onScenarioSelect={onScenarioSelect}
         isViewMode={true}
       />
     );
@@ -58,6 +68,8 @@ const MarketHubPage = ({
 const AnonymousMarketHub = () => {
   const navigate = useNavigate();
   const [selectedCharacter, setSelectedCharacter] = useState(null);
+  // ✅ ADD THIS - Get user's custom characters
+  const { userCharacters = [] } = usePremiumCharacters();
   
   // Get featured characters for public preview (limited data)
   const { 
@@ -382,10 +394,14 @@ const AnonymousMarketHub = () => {
 const AuthenticatedMarketHub = ({ 
   onCharacterSelect, 
   onStartChat, 
+  onScenarioSelect,  // ✅ ADD THIS - callback to switch views and open scenario
   isViewMode = false 
 }) => {
   const navigate = useNavigate();
+  const { getAuthHeaders } = useAuth();  // ✅ ADD THIS LINE if not present
   const { user } = useUser();
+  // ✅ ADD THIS - Get user's custom characters (even though it will be empty for anonymous users)
+  const { userCharacters = [] } = usePremiumCharacters();
   
   // State management
   const [searchQuery, setSearchQuery] = useState('');
@@ -398,9 +414,14 @@ const AuthenticatedMarketHub = ({
   const [selectedCharacter, setSelectedCharacter] = useState(null);
   const [currentPage, setCurrentPage] = useState(1);
 
-  // Custom hooks for data
+  // 🆕 ADD: State for active scenario (like MyScenariosPanel pattern)
+  const [activeScenario, setActiveScenario] = useState(null);
+  const [selectedScenario, setSelectedScenario] = useState(null);
+
+  // 🆕 UPDATE: Add includeScenarios parameter to hook
   const { 
     characters, 
+    scenarios,  // 🆕 ADD this
     loading, 
     error, 
     pagination,
@@ -409,13 +430,73 @@ const AuthenticatedMarketHub = ({
     page: currentPage,
     search: searchQuery,
     filters: selectedFilters,
-    perPage: 20
+    perPage: 20,
+    includeScenarios: true  // 🆕 ADD this to enable scenarios
   });
 
   const { 
     featuredCharacters, 
     loading: featuredLoading 
   } = useFeaturedCharacters();
+
+  // 🆕 ADD: Scenario engagement hook
+  const { engageWithScenario } = useScenarioEngagement();
+  
+  // Existing character engagement hook
+  const { engageWithCharacter } = useCharacterEngagement();
+
+  // 🆕 ADD: Combine characters and scenarios into one array
+  const allContent = React.useMemo(() => {
+    return [...characters, ...scenarios];
+  }, [characters, scenarios]);
+
+  // ✅ UPDATED: Handle content selection - characters show modal, scenarios direct to debate
+  const handleCardClick = (item) => {
+    console.log('🔍 handleCardClick received:', item);
+    if (item.content_type === 'character') {
+      // ✅ Transform the character data like handleCharacterSelect does
+      const transformedCharacter = {
+        name: item.display_name || item.name || item.character_key,
+        description: item.short_description || item.description || '',
+        key: item.character_key || item.key,
+        thumbnailUrl: item.avatar_url || item.thumbnailUrl || `/images/${item.character_key}.jpg`,
+        display_name: item.display_name,
+        character_key: item.character_key,
+        short_description: item.short_description,
+        avatar_url: item.avatar_url
+      };
+
+      console.log('✅ Transformed character:', transformedCharacter);
+      setSelectedCharacter(transformedCharacter);
+
+    } else if (item.content_type === 'scenario') {
+      // ✅ ENSURE scenario has required id field
+      const scenarioWithId = {
+        ...item,
+        id: item.id || item.scenario_id // Use scenario_id if id is missing
+      };
+      console.log('📝 Setting selected scenario:', scenarioWithId);
+      setSelectedScenario(scenarioWithId);
+    }
+  };
+
+  // 🆕 ADD: Handle closing scenario chat window
+  const handleCloseScenario = () => {
+    console.log('🔙 Closing scenario chat window');
+    setActiveScenario(null);
+  };
+
+  // 🆕 ADD: If scenario is active, show fullscreen chat window
+  if (activeScenario) {
+    console.log('🔄 Rendering ScenarioChatWindow with:', activeScenario);
+    return (
+      <ScenarioChatWindow
+        scenario={activeScenario}
+        onBack={handleCloseScenario}
+        theme="awakeverse"
+      />
+    );
+  }
 
   // Mobile detection
   const [isMobile, setIsMobile] = useState(window.innerWidth <= 768);
@@ -444,6 +525,132 @@ const AuthenticatedMarketHub = ({
     } else {
       // Standalone mode - navigate normally
       navigate(`/chat?character=${characterKey}`);
+    }
+  };
+
+  // ✅ FIXED: Handle start debate with proper scenario data
+  const handleStartDebate = async (scenario) => {
+    console.log('🎭 handleStartDebate called with scenario:', scenario);
+    setSelectedScenario(null); // Close modal first
+
+    try {
+      // ============================================================================
+      // STEP 1: Start debate session via backend
+      // ============================================================================
+
+      console.log('📡 Calling backend to start debate for scenario:', scenario.scenario_id);
+
+      const startResponse = await fetch(
+        `${API_BASE}/api/debate/scenarios/${scenario.scenario_id}/start`,
+        {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            ...getAuthHeaders()
+          }
+        }
+      );
+
+      if (!startResponse.ok) {
+        const errorData = await startResponse.json().catch(() => ({}));
+
+        // Handle specific error cases
+        if (startResponse.status === 403) {
+          alert('Unlimited tier required to start debates');
+          return;
+        }
+
+        if (startResponse.status === 404) {
+          alert('Scenario not found or not accessible');
+          return;
+        }
+
+        throw new Error(errorData.error || 'Failed to start debate');
+      }
+
+      const debateData = await startResponse.json();
+
+      console.log('✅ Backend response:', debateData);
+      console.log(`${debateData.is_market_hub ? '🌍 Market Hub' : '📝 My Scenarios'} debate started`);
+
+      // ============================================================================
+      // STEP 2: Build props for ScenarioChatWindow (matching ScenariosTab pattern)
+      // ============================================================================
+
+      const scenarioForChat = {
+        // IDs
+        id: scenario.scenario_id || scenario.id,
+        debateId: debateData.debate_id,
+        scenarioId: scenario.scenario_id || scenario.id,
+
+        // Display info
+        title: debateData.title || scenario.title,
+        description: scenario.description || '',
+        category: scenario.category || '',
+
+        // Characters
+        participants: debateData.characters || scenario.character_keys || [],
+        character_keys: debateData.characters || scenario.character_keys || [],
+
+        // State flags
+        initialized: !!debateData.debate_id,  // ✅ Only true if we have debate_id
+        is_market_hub: debateData.is_market_hub || false,
+
+        // Existing messages (if resuming)
+        messages: debateData.messages || [],
+
+        // Usage data (will be loaded by ScenarioChatWindow)
+        usageData: {
+          questionsAsked: 0,
+          tier: 'unlimited',
+          limit: null,
+          limitReached: false,
+          remaining: null
+        }
+      };
+
+      console.log('📝 Opening ScenarioChatWindow with:', {
+        debateId: scenarioForChat.debateId,
+        scenarioId: scenarioForChat.scenarioId,
+        initialized: scenarioForChat.initialized,
+        title: scenarioForChat.title,
+        participants: scenarioForChat.participants,
+        is_market_hub: scenarioForChat.is_market_hub,
+        messageCount: scenarioForChat.messages.length
+      });
+
+      // ============================================================================
+      // STEP 3: Open ScenarioChatWindow
+      // ============================================================================
+
+      // ✅ Signal parent to switch to Scenarios view
+
+      if (isViewMode && onScenarioSelect) {
+        console.log('🌍 Market Hub: Calling onScenarioSelect callback');
+        onScenarioSelect(scenarioForChat);
+      } else {
+        console.warn('⚠️ No callback');
+        alert('Please access Market Hub from main app');
+      }
+
+    } catch (error) {
+
+
+      // User-friendly error messages
+      const errorMessage = error.message === 'Failed to fetch'
+        ? 'Network error. Please check your connection.'
+        : error.message || 'Failed to start debate. Please try again.';
+
+      alert(errorMessage);
+    }
+  };
+
+  const handleScenarioSelectFromModal = (scenario) => {
+    if (isViewMode && onScenarioSelect) {
+      onScenarioSelect(scenario);
+      setSelectedScenario(null);
+    } else {
+      setSelectedScenario(null);
     }
   };
 
@@ -478,6 +685,26 @@ const AuthenticatedMarketHub = ({
       // Standalone mode - just close panel
       setSelectedCharacter(null);
     }
+  };
+
+  // 🆕 ADD: Handle engagement (unified for both types)
+  const handleEngage = async (item, engagementType) => {
+    try {
+      if (item.content_type === 'character') {
+        await engageWithCharacter(item.character_id, engagementType);
+      } else if (item.content_type === 'scenario') {
+        await engageWithScenario(item.scenario_id, engagementType);
+      }
+      // Optionally show success message
+      console.log(`${engagementType} recorded for ${item.content_type}`);
+    } catch (error) {
+      console.error('Engagement failed:', error);
+      // Optionally show error message
+    }
+  };
+
+  const handleChatClick = (characterKey) => {
+    navigate(`/chat/${characterKey}`);
   };
 
   // Search and filter handlers
@@ -679,11 +906,11 @@ const AuthenticatedMarketHub = ({
             <div className={styles.sectionHeader}>
               <div className={styles.resultsInfo}>
                 <h2>
-                  {searchQuery ? `Results for "${searchQuery}"` : 'All Characters'}
+                  {searchQuery ? `Results for "${searchQuery}"` : 'Browse Creators & Scenarios'}
                 </h2>
                 {pagination && (
                   <span className={styles.resultCount}>
-                    {pagination.total} characters found
+                    {pagination?.character_count || 0} characters, {pagination?.scenario_count || 0} scenarios
                   </span>
                 )}
               </div>
@@ -695,17 +922,22 @@ const AuthenticatedMarketHub = ({
                   <div key={i} className={styles.loadingCard} />
                 ))}
               </div>
-            ) : characters.length > 0 ? (
+            ) : allContent.length > 0 ? (
               <>
+                {/* 🆕 REPLACE YOUR EXISTING CHARACTER GRID WITH THIS */}
                 <div className={styles.charactersGrid}>
-                  {characters.map(character => (
-                    <EnhancedCharacterCard
-                      key={character.character_key}
-                      character={character}
-                      isOwner={character.creator?.user_id === user?.id}
-                      showEarnings={character.creator?.user_id === user?.id}
+                  {allContent.map((item) => (
+                    <UnifiedContentCard
+                      key={
+                        item.content_type === 'character' 
+                          ? `char-${item.character_id}` 
+                          : `scen-${item.scenario_id}`
+                      }
+                      item={item}
+                      onCardClick={handleCardClick}
                       onChatClick={handleStartChat}
-                      onCardClick={handleCharacterSelect}
+                      onEngage={handleEngage}
+                      userCharacters={userCharacters}  // ✅ ADD THIS LINE
                     />
                   ))}
                 </div>
@@ -750,7 +982,7 @@ const AuthenticatedMarketHub = ({
               </>
             ) : (
               <div className={styles.emptyState}>
-                <h3>No characters found</h3>
+                <h3>No content found</h3>
                 <p>Try adjusting your search or filters</p>
                 <button onClick={handleClearFilters} className={styles.clearButton}>
                   Clear Filters
@@ -779,6 +1011,17 @@ const AuthenticatedMarketHub = ({
           onClose={() => setSelectedCharacter(null)}
           onStartChat={handleStartChat}
           onCharacterSelect={isViewMode ? handleCharacterSelectFromPanel : undefined}
+          showDiscoverAction={isViewMode}
+        />
+      )}
+      
+      {/* Scenario Detail Modal - FIXED with proper onStartDebate prop */}
+      {selectedScenario && (
+        <ScenarioDetailModal
+          scenario={selectedScenario}
+          onClose={() => setSelectedScenario(null)}
+          onStartDebate={handleStartDebate} // ✅ FIXED: Pass the correct function
+          onScenarioSelect={isViewMode ? handleScenarioSelectFromModal : undefined}
           showDiscoverAction={isViewMode}
         />
       )}

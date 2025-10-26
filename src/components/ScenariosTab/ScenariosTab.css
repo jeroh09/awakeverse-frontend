@@ -596,3 +596,133 @@ html {
   scrollbar-width: thin;
   scrollbar-color: #1e40af #0a0f1c;
 }
+/* Add these styles to your existing ScenariosTab.css */
+
+.upgrade-payment-options {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  width: 100%;
+}
+
+.upgrade-button {
+  padding: 16px 24px;
+  border-radius: 12px;
+  border: none;
+  font-size: 16px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  width: 100%;
+}
+
+.primary-upgrade {
+  background: linear-gradient(135deg, #FFD700, #FFA500);
+  color: #000;
+  box-shadow: 0 4px 12px rgba(255, 215, 0, 0.3);
+}
+
+.primary-upgrade:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 6px 16px rgba(255, 215, 0, 0.4);
+}
+
+.secondary-upgrade {
+  background: rgba(255, 255, 255, 0.05);
+  color: rgba(255, 255, 255, 0.4);
+  border: 1px solid rgba(255, 255, 255, 0.15);
+  cursor: not-allowed;
+}
+
+.learn-features-button {
+  background: transparent;
+  border: none;
+  color: rgba(255, 215, 0, 0.8);
+  font-size: 14px;
+  cursor: pointer;
+  text-decoration: underline;
+  padding: 8px;
+}
+
+.learn-features-button:hover {
+  color: #FFD700;
+}
+
+/* PayPal button styles for educational modal */
+.pricing-actions .upgrade-now-button.secondary {
+  background: rgba(255, 215, 0, 0.1);
+  border: 2px solid rgba(255, 215, 0, 0.4);
+  color: #FFD700;
+  margin-top: 0.5rem;
+}
+
+.pricing-actions .upgrade-now-button.secondary:hover {
+  background: rgba(255, 215, 0, 0.2);
+  border-color: rgba(255, 215, 0, 0.6);
+  transform: translateY(-2px);
+}
+
+/* ===== FORCE DARK THEME FOR UPGRADE STATES ===== */
+/* This ensures unauthorized users always see dark theme in upgrade modals */
+.upgrade-required-state,
+.modal-overlay {
+  /* Override light theme variables with dark theme values */
+  --scenarios-bg-primary: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%) !important;
+  --scenarios-bg-secondary: rgba(0, 0, 0, 0.4) !important;
+  --scenarios-bg-card: rgba(30, 30, 46, 0.8) !important;
+  --scenarios-text-primary: #e0e0e0 !important;
+  --scenarios-text-secondary: #aaa !important;
+  --scenarios-border-color: rgba(255, 215, 0, 0.2) !important;
+  --scenarios-accent-primary: #FFD700 !important;
+  --scenarios-accent-secondary: #FFA500 !important;
+  --scenarios-accent-light: rgba(255, 215, 0, 0.1) !important;
+  --scenarios-shadow: rgba(255, 215, 0, 0.2) !important;
+}
+
+/* Ensure the upgrade content uses dark theme */
+.upgrade-required-content,
+.modal-content,
+.educational-modal,
+.pricing-card {
+  background: var(--scenarios-bg-card) !important;
+  border-color: var(--scenarios-border-color) !important;
+  color: var(--scenarios-text-primary) !important;
+}
+
+/* Fix PayPal button visibility in dark theme */
+.upgrade-payment-options .secondary-upgrade {
+  background: rgba(255, 255, 255, 0.05) !important;
+  color: rgba(255, 255, 255, 0.8) !important;
+  border: 1px solid rgba(255, 255, 255, 0.3) !important;
+  cursor: pointer !important;
+}
+
+.upgrade-payment-options .secondary-upgrade:hover {
+  background: rgba(255, 215, 0, 0.1) !important;
+  border-color: rgba(255, 215, 0, 0.6) !important;
+  color: #FFD700 !important;
+}
+
+/* Ensure all text in upgrade states is visible */
+.upgrade-required-content h2,
+.upgrade-required-content p,
+.upgrade-features-preview h3,
+.preview-feature,
+.educational-header h2,
+.educational-subtitle,
+.feature-text h4,
+.feature-text p,
+.pricing-header h3,
+.pricing-feature,
+.educational-footer p {
+  color: var(--scenarios-text-primary) !important;
+}
+
+.upgrade-required-content > p,
+.upgrade-footer,
+.feature-text p,
+.educational-subtitle,
+.period,
+.compare-plans-button {
+  color: var(--scenarios-text-secondary) !important;
+}

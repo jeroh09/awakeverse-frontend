@@ -74,8 +74,8 @@ const CharacterStatusModal = ({ character, onClose, onCreateNew }) => {
 
   const upgradeOptions = [
     {
-      tier: 'Pro',
-      price: '$19.99/month',
+      tier: 'Creator',
+      price: '£6.99/month',
       benefits: [
         'Priority 12-hour approval',
         '15 custom characters',
@@ -85,8 +85,8 @@ const CharacterStatusModal = ({ character, onClose, onCreateNew }) => {
       recommended: true
     },
     {
-      tier: 'Unlimited',
-      price: '$49.99/month',
+      tier: 'Professional',
+      price: '£11.99/month',
       benefits: [
         'Instant approval',
         'Unlimited characters',

@@ -1,16 +1,22 @@
 // src/components/CreatorHub/CreatorDashboard.jsx
-// FIXED: Add defensive null checks for all data
+// MIGRATED TO PAYMENTROUTER - All payment flows now use centralized service
+// CHANGES: Lines 13, 97-105, 271 - Replaced hardcoded URLs with PaymentRouter
 
 import React, { useState, useEffect, useCallback } from 'react';
 import { useAuth } from '../../contexts/AuthContext';
 import { useUser } from '../../contexts/UserContext';
+import { useAppView } from '../../contexts/AppViewContext';
 import api from '../../api';
 import { Eye, Heart, Bookmark, Share2, MessageCircle, TrendingUp, Calendar } from 'lucide-react';
 import './CreatorDashboard.css';
 
+// ✅ NEW: Import PaymentRouter instead of using hardcoded URLs
+import PaymentRouter from '../../services/PaymentRouter';
+
 const CreatorDashboard = () => {
   const { token } = useAuth();
   const { user } = useUser();
+  const { switchView, VIEW_STATES } = useAppView();
   
   const [dashboardData, setDashboardData] = useState(null);
   const [loading, setLoading] = useState(true);
@@ -42,7 +48,6 @@ const CreatorDashboard = () => {
       const response = await api.get('/creator-hub/analytics/dashboard');
       
       if (response.data && response.data.status === 'success') {
-        // DEFENSIVE: Ensure characters array exists
         const dashboard = response.data.dashboard || {};
         const characters = dashboard.characters || [];
         const summary = dashboard.summary || {
@@ -67,6 +72,7 @@ const CreatorDashboard = () => {
         throw new Error('Invalid dashboard response');
       }
     } catch (err) {
+      console.error('Dashboard load error:', err);
       if (err.response?.status === 403) {
         setRequiresUpgrade(true);
       } else {
@@ -82,6 +88,46 @@ const CreatorDashboard = () => {
     loadDashboardData();
   }, [loadDashboardData]);
 
+  const handleGoToCharacters = () => {
+    switchView(VIEW_STATES.CHAT);
+  };
+
+  // ✅ PRODUCTION-READY: Separate handlers for each payment provider
+  const handleUpgradeWithStripe = async () => {
+    try {
+      await PaymentRouter.redirectToCheckout({
+        tier: 'unlimited',
+        provider: 'stripe',
+        triggerSource: 'creator_dashboard'
+      });
+    } catch (error) {
+      console.error('Stripe payment redirect failed:', error);
+      alert('Unable to redirect to Stripe payment page. Please try again or contact support.');
+    }
+  };
+
+  const handleUpgradeWithPayPal = async () => {
+    try {
+      await PaymentRouter.redirectToCheckout({
+        tier: 'unlimited',
+        provider: 'paypal',
+        triggerSource: 'creator_dashboard'
+      });
+    } catch (error) {
+      console.error('PayPal payment redirect failed:', error);
+      alert('Unable to redirect to PayPal payment page. Please try again or contact support.');
+    }
+  };
+
+  const handleComparePlans = () => {
+    // Default to Stripe for comparison
+    handleUpgradeWithStripe();
+  };
+
+  const handleViewInMarketHub = (characterKey) => {
+    window.open(`/market-hub?character=${characterKey}`, '_blank');
+  };
+
   if (loading) {
     return (
       <div className="creator-dashboard">
@@ -93,14 +139,20 @@ const CreatorDashboard = () => {
     );
   }
 
-  // CHANGED: Show educational experience instead of error for upgrade required
   if (requiresUpgrade) {
     return (
       <div className="creator-dashboard">
-        <UpgradeRequiredState onLearnMore={() => setShowEducationalModal(true)} />
+        <UpgradeRequiredState 
+          onLearnMore={() => setShowEducationalModal(true)}
+          onUpgradeWithStripe={handleUpgradeWithStripe}
+          onUpgradeWithPayPal={handleUpgradeWithPayPal}
+        />
         <EducationalUpgradeModal 
           isOpen={showEducationalModal}
           onClose={() => setShowEducationalModal(false)}
+          onUpgradeWithStripe={handleUpgradeWithStripe}
+          onUpgradeWithPayPal={handleUpgradeWithPayPal}
+          onComparePlans={handleComparePlans}
         />
       </div>
     );
@@ -120,24 +172,28 @@ const CreatorDashboard = () => {
     );
   }
 
-  // DEFENSIVE: Check if data exists and has characters
   if (!dashboardData || !dashboardData.characters || dashboardData.characters.length === 0) {
     return (
       <div className="creator-dashboard">
-        <EmptyDashboardState onLearnMore={() => setShowEducationalModal(true)} />
+        <EmptyDashboardState 
+          onLearnMore={() => setShowEducationalModal(true)}
+          onGoToCharacters={handleGoToCharacters}
+        />
         <EducationalUpgradeModal 
           isOpen={showEducationalModal}
           onClose={() => setShowEducationalModal(false)}
+          onUpgradeWithStripe={handleUpgradeWithStripe}
+          onUpgradeWithPayPal={handleUpgradeWithPayPal}
+          onComparePlans={handleComparePlans}
         />
       </div>
     );
   }
 
-  const { summary, characters, engagement_trends } = dashboardData;
+  const { summary, characters, engagement_trends, recent_achievements, creator_info } = dashboardData;
 
   return (
     <div className="creator-dashboard">
-      {/* Header - REMOVED educational button from gated area */}
       <header className="dashboard-header">
         <div className="header-content">
           <h1>Creator Dashboard</h1>
@@ -148,7 +204,6 @@ const CreatorDashboard = () => {
         </button>
       </header>
 
-      {/* Summary Stats - REAL DATA */}
       <section className="stats-grid">
         <EngagementStatCard
           icon={<Eye size={24} />}
@@ -188,7 +243,6 @@ const CreatorDashboard = () => {
         />
       </section>
 
-      {/* Engagement Trends Chart */}
       {engagement_trends && engagement_trends.length > 0 && (
         <section className="trends-section">
           <h2>Engagement Trends (Last 30 Days)</h2>
@@ -196,7 +250,6 @@ const CreatorDashboard = () => {
         </section>
       )}
 
-      {/* Published Characters with REAL Engagement */}
       <section className="characters-section">
         <h2>Your Published Characters ({characters.length})</h2>
         <div className="characters-grid">
@@ -205,16 +258,17 @@ const CreatorDashboard = () => {
               key={character.character_id}
               character={character}
               onClick={() => setSelectedCharacter(character)}
+              onViewInHub={handleViewInMarketHub}
             />
           ))}
         </div>
       </section>
 
-      {/* Character Detail Modal */}
       {selectedCharacter && (
         <CharacterDetailModal
           character={selectedCharacter}
           onClose={() => setSelectedCharacter(null)}
+          onViewInHub={handleViewInMarketHub}
         />
       )}
     </div>
@@ -225,16 +279,15 @@ const CreatorDashboard = () => {
 // SUB-COMPONENTS
 // ============================================================================
 
-// ADDED: Upgrade Required State Component
-const UpgradeRequiredState = ({ onLearnMore }) => (
+const UpgradeRequiredState = ({ onLearnMore, onUpgradeWithStripe, onUpgradeWithPayPal }) => (
   <div className="upgrade-required-state">
     <div className="upgrade-required-content">
       <span className="upgrade-icon">💎</span>
       <h2>Unlock Creator Hub</h2>
-      <p>Upgrade to Unlimited tier to access powerful creator analytics and publishing tools</p>
+      <p>Upgrade to professional tier to access powerful creator analytics and publishing tools</p>
       
       <div className="upgrade-features-preview">
-        <h3>With Unlimited Tier You Get:</h3>
+        <h3>With Professional Tier You Get:</h3>
         <div className="preview-features">
           <div className="preview-feature">
             <TrendingUp size={20} />
@@ -264,12 +317,22 @@ const UpgradeRequiredState = ({ onLearnMore }) => (
       </div>
 
       <div className="upgrade-actions">
-        <button 
-          onClick={() => window.location.href = '/profile-settings?tab=subscription'}
-          className="upgrade-now-button"
-        >
-          Upgrade to Unlimited - $49.99/month
-        </button>
+        <div className="upgrade-payment-options">
+          <button 
+            className="upgrade-button primary-upgrade"
+            onClick={onUpgradeWithStripe}
+          >
+            💳 Upgrade with Stripe - £11.99/month
+          </button>
+
+          <button 
+            className="upgrade-button secondary-upgrade"
+            onClick={onUpgradeWithPayPal}
+          >
+            🅿️ Pay with PayPal
+          </button>
+        </div>
+
         <button 
           onClick={onLearnMore}
           className="learn-features-button"
@@ -279,13 +342,13 @@ const UpgradeRequiredState = ({ onLearnMore }) => (
       </div>
 
       <div className="upgrade-footer">
-        <p>⭐ <strong>14-day money-back guarantee</strong> · Cancel anytime</p>
+        <p>⭐<strong>Secured by Stripe</strong> · 🅿️<strong>PayPal Secure</strong> · Cancel anytime</p>
       </div>
     </div>
   </div>
 );
 
-const EmptyDashboardState = ({ onLearnMore }) => (
+const EmptyDashboardState = ({ onLearnMore, onGoToCharacters }) => (
   <div className="empty-state">
     <div className="empty-state-content">
       <span className="empty-state-icon">🎨</span>
@@ -296,13 +359,13 @@ const EmptyDashboardState = ({ onLearnMore }) => (
         <ol>
           <li>Create an amazing character in Character Builder</li>
           <li>Get it approved by our team</li>
-          <li>Publish to Market Hub (Unlimited tier required)</li>
+          <li>Publish to Market Hub (Professional tier required)</li>
           <li>Track performance and earn recognition!</li>
         </ol>
       </div>
       <div className="empty-state-actions">
         <button 
-          onClick={() => window.location.href = '/app'}
+          onClick={onGoToCharacters}
           className="create-character-button"
         >
           Go to My Characters
@@ -311,7 +374,7 @@ const EmptyDashboardState = ({ onLearnMore }) => (
           onClick={onLearnMore}
           className="learn-more-button"
         >
-          Learn About Unlimited Features
+          Learn About Professional Features
         </button>
       </div>
     </div>
@@ -319,7 +382,6 @@ const EmptyDashboardState = ({ onLearnMore }) => (
 );
 
 const EngagementStatCard = ({ icon, label, value, color }) => {
-  // DEFENSIVE: Ensure value is a number
   const displayValue = typeof value === 'number' ? value : 
                        typeof value === 'string' ? value : 0;
   
@@ -338,8 +400,7 @@ const EngagementStatCard = ({ icon, label, value, color }) => {
   );
 };
 
-const CharacterEngagementCard = ({ character, onClick }) => {
-  // DEFENSIVE: Provide default engagement object
+const CharacterEngagementCard = ({ character, onClick, onViewInHub }) => {
   const engagement = character.engagement || {
     total_views: 0,
     total_likes: 0,
@@ -377,7 +438,6 @@ const CharacterEngagementCard = ({ character, onClick }) => {
         </div>
       )}
 
-      {/* REAL Engagement Metrics */}
       <div className="engagement-metrics">
         <div className="metric-row">
           <div className="metric">
@@ -432,7 +492,7 @@ const EngagementTrendsChart = ({ data }) => {
     return <div className="no-trends">No engagement data yet</div>;
   }
   
-  const maxTotal = Math.max(...data.map(d => d.total || 0), 1); // Avoid division by zero
+  const maxTotal = Math.max(...data.map(d => d.total || 0), 1);
   
   return (
     <div className="trends-chart">
@@ -477,7 +537,7 @@ const EngagementTrendsChart = ({ data }) => {
   );
 };
 
-const CharacterDetailModal = ({ character, onClose }) => {
+const CharacterDetailModal = ({ character, onClose, onViewInHub }) => {
   const engagement = character.engagement || {};
   
   return (
@@ -566,9 +626,10 @@ const CharacterDetailModal = ({ character, onClose }) => {
           </div>
         </div>
 
-        <button className="view-hub-button" onClick={() => {
-          window.open(`/market-hub?character=${character.character_key}`, '_blank');
-        }}>
+        <button 
+          className="view-hub-button" 
+          onClick={() => onViewInHub(character.character_key)}
+        >
           View in Market Hub
         </button>
       </div>
@@ -576,8 +637,7 @@ const CharacterDetailModal = ({ character, onClose }) => {
   );
 };
 
-// ADDED: Educational Upgrade Modal Component
-const EducationalUpgradeModal = ({ isOpen, onClose }) => {
+const EducationalUpgradeModal = ({ isOpen, onClose, onUpgradeWithStripe, onUpgradeWithPayPal, onComparePlans }) => {
   if (!isOpen) return null;
 
   const unlimitedFeatures = [
@@ -620,9 +680,9 @@ const EducationalUpgradeModal = ({ isOpen, onClose }) => {
         
         <div className="educational-header">
           <div className="educational-icon">🚀</div>
-          <h2>Unlock Your Full Creative Potential</h2>
+          <h2>Choose your plan and pay securely with Stripe or PayPal</h2>
           <p className="educational-subtitle">
-            Upgrade to Unlimited tier and get access to powerful creator tools
+            Upgrade to Professional tier and get access to powerful creator tools
           </p>
         </div>
 
@@ -640,9 +700,9 @@ const EducationalUpgradeModal = ({ isOpen, onClose }) => {
 
         <div className="pricing-card">
           <div className="pricing-header">
-            <h3>Unlimited Plan</h3>
+            <h3>Professional Plan</h3>
             <div className="price">
-              <span className="amount">$49.99</span>
+              <span className="amount">£11.99</span>
               <span className="period">/month</span>
             </div>
           </div>
@@ -658,14 +718,20 @@ const EducationalUpgradeModal = ({ isOpen, onClose }) => {
 
           <div className="pricing-actions">
             <button 
-              className="upgrade-cta-button"
-              onClick={() => window.location.href = '/profile-settings?tab=subscription'}
+              onClick={onUpgradeWithStripe}
+              className="upgrade-now-button"
             >
-              Upgrade to Unlimited - $49.99/month
+              Pay with Stripe - £11.99/month
+            </button>
+            <button 
+              onClick={onUpgradeWithPayPal}
+              className="upgrade-now-button secondary"
+            >
+              Pay with PayPal - £11.99/month
             </button>
             <button 
               className="compare-plans-button"
-              onClick={() => window.open('/pricing', '_blank')}
+              onClick={onComparePlans}
             >
               Compare All Plans
             </button>
@@ -673,7 +739,7 @@ const EducationalUpgradeModal = ({ isOpen, onClose }) => {
         </div>
 
         <div className="educational-footer">
-          <p>⭐ <strong>14-day money-back guarantee</strong> · Cancel anytime</p>
+          <p>⭐ <strong>Secured by Stripe</strong> · 🅿️ <strong>PayPal Secure</strong> · Cancel anytime</p>
         </div>
       </div>
     </div>

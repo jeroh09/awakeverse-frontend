@@ -202,17 +202,17 @@ const useUsageTracking = (character) => {
       'free': {
         suggestedTier: 'Starter',
         suggestedLimit: '500 messages/month',
-        suggestedPrice: '$9.99'
+        suggestedPrice: '£3.99'
       },
       'starter': {
         suggestedTier: 'Pro', 
         suggestedLimit: '2,000 messages/month',
-        suggestedPrice: '$19.99'
+        suggestedPrice: '£6.99'
       },
       'pro': {
         suggestedTier: 'Unlimited',
         suggestedLimit: 'Unlimited messages',
-        suggestedPrice: '$29.99'
+        suggestedPrice: '£111.99'
       }
     };
     

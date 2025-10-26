@@ -132,8 +132,9 @@ export default function ScenarioChatWindow({
       return;
     }
 
-    // Check usage limit
-    if (!isUnlimited && usageData.limitReached) {
+    // ✅ Check usage limit (freemium enforcement)
+    if (usageData.limitReached) {
+      console.log('❌ Message limit reached, showing upgrade modal');
       setShowUpgradeModal(true);
       return;
     }
@@ -142,8 +143,8 @@ export default function ScenarioChatWindow({
       await sendMessage(messageText);
     } catch (error) {
       console.error('❌ Failed to send message:', error);
-      
-      // Show upgrade modal if limit reached
+
+      // ✅ Check if error was due to limit
       if (error.message === 'MESSAGE_LIMIT_REACHED') {
         setShowUpgradeModal(true);
       }
@@ -359,7 +360,7 @@ function UpgradeModal({ onClose, theme, questionsUsed, limit }) {
 
           <div className="upgrade-pricing">
             <div className="pricing-amount">
-              <span className="price">$49.99</span>
+              <span className="price">£11.99</span>
               <span className="period">/month</span>
             </div>
             <p className="pricing-guarantee">
@@ -372,7 +373,7 @@ function UpgradeModal({ onClose, theme, questionsUsed, limit }) {
               className="upgrade-cta-button"
               onClick={() => window.location.href = '/profile-settings?tab=subscription'}
             >
-              Upgrade to Unlimited
+              Upgrade to Professional
             </button>
             <button 
               className="maybe-later-button"

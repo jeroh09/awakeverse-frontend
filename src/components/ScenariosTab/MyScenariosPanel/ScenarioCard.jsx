@@ -1,4 +1,4 @@
-// src/components/ScenariosTab/MyScenariosPanel/ScenarioCard.jsx - SIMPLE IMG APPROACH
+// src/components/ScenariosTab/MyScenariosPanel/ScenarioCard.jsx - UPDATED
 import React from 'react';
 import { characterCategories } from '../../../data/characterCategories';
 import { getDisplayNameFromKey, isCustomCharacterKey } from '../../../utils/characterUtils';
@@ -9,16 +9,11 @@ export default function ScenarioCard({
   onStartDebate, 
   onDelete, 
   onEdit,
+  onPublish,
   isDeleting = false,
+  isPublishing = false,
   userCharacters = []
 }) {
-  // ADD THE CONSOLE.LOG RIGHT HERE ↓
-  console.log('🎭 ScenarioCard Debug:', {
-    scenarioTitle: scenario.title,
-    characterKeys: scenario.character_keys,
-    userCharactersCount: userCharacters.length,
-    userCharactersSample: userCharacters[0]
-  });
   const handleStartDebate = () => {
     onStartDebate(scenario.id);
   };
@@ -33,6 +28,10 @@ export default function ScenarioCard({
     onEdit(scenario);
   };
 
+  const handlePublishClick = () => {
+    onPublish(scenario);
+  };
+
   // Helper to get character info
   const getCharacterInfo = (charKey) => {
     const isCustom = isCustomCharacterKey(charKey);
@@ -41,12 +40,6 @@ export default function ScenarioCard({
       const customChar = userCharacters.find(c => c.character_key === charKey);
       
       if (customChar) {
-        console.log('⭐ Custom character:', {
-          key: charKey,
-          name: customChar.display_name,
-          avatar: customChar.avatar_url
-        });
-        
         return {
           name: customChar.display_name,
           thumbnailUrl: customChar.avatar_url,
@@ -54,7 +47,6 @@ export default function ScenarioCard({
         };
       }
       
-      // Fallback
       return {
         name: getDisplayNameFromKey(charKey),
         thumbnailUrl: `/images/${charKey}.jpg`,
@@ -66,12 +58,6 @@ export default function ScenarioCard({
         if (category.characters) {
           const found = category.characters.find(c => c.key === charKey);
           if (found) {
-            console.log('📚 Static character:', {
-              key: charKey,
-              name: found.name,
-              thumbnail: found.thumbnailUrl
-            });
-            
             return {
               name: found.name,
               thumbnailUrl: found.thumbnailUrl,
@@ -91,16 +77,10 @@ export default function ScenarioCard({
 
   const characterKeys = scenario.character_keys || scenario.characters || [];
   
-  // Generate thumbnails with IMG tags (simpler, easier to debug)
+  // Generate thumbnails
   const characterThumbnails = characterKeys.slice(0, 4).map((charKey, index) => {
     const charInfo = getCharacterInfo(charKey);
     const initial = charInfo.name.charAt(0).toUpperCase();
-    
-    console.log(`🖼️  Rendering thumbnail ${index}:`, {
-      charKey,
-      name: charInfo.name,
-      thumbnailUrl: charInfo.thumbnailUrl
-    });
     
     return (
       <div 
@@ -113,9 +93,7 @@ export default function ScenarioCard({
             src={charInfo.thumbnailUrl}
             alt={charInfo.name}
             className="thumbnail-img"
-            onLoad={() => console.log(`✅ Loaded: ${charInfo.thumbnailUrl}`)}
             onError={(e) => {
-              console.error(`❌ Failed to load: ${charInfo.thumbnailUrl}`);
               e.target.style.display = 'none';
               e.target.nextSibling.style.display = 'flex';
             }}
@@ -129,16 +107,34 @@ export default function ScenarioCard({
   });
 
   const questionCount = scenario.starter_questions?.length || 0;
+  const isPublished = scenario.is_public === true;
 
   return (
     <div className={`scenario-card ${isDeleting ? 'deleting' : ''}`}>
       <div className="scenario-header">
         <h4 className="scenario-title">{scenario.title}</h4>
         <div className="scenario-actions">
+          {/* Publish/Unpublish Button - UPDATED WITH CONFETTI */}
+          <button 
+            className={`action-button publish ${isPublished ? 'published' : ''}`}
+            onClick={handlePublishClick}
+            disabled={isDeleting || isPublishing}
+            title={
+              isPublishing 
+                ? 'Processing...' 
+                : isPublished 
+                  ? 'Published to Market Hub • Click to unpublish' 
+                  : 'Publish to Market Hub'
+            }
+          >
+            {isPublishing ? '⏳' : isPublished ? '🌐' : '🌍'}
+          </button>
+          
           <button 
             className="action-button edit" 
             onClick={handleEdit}
             disabled={isDeleting}
+            title="Edit scenario"
           >
             ✏️
           </button>
@@ -146,11 +142,20 @@ export default function ScenarioCard({
             className="action-button delete" 
             onClick={handleDelete}
             disabled={isDeleting}
+            title="Delete scenario"
           >
             {isDeleting ? '⏳' : '🗑️'}
           </button>
         </div>
       </div>
+
+      {/* Published Badge */}
+      {isPublished && (
+        <div className="published-badge">
+          <span className="badge-icon">🌐</span>
+          <span className="badge-text">Published</span>
+        </div>
+      )}
       
       <p className="scenario-description">{scenario.description}</p>
       

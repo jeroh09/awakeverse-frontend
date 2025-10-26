@@ -62,8 +62,8 @@ const PricingPage = () => {
   const subscriptionPlans = [
     {
       id: 'starter',
-      name: 'Starter',
-      price: '$5.99',
+      name: 'Explorer',
+      price: '£3.99',
       period: '/month',
       description: 'Perfect for getting started with AI conversations',
       features: [
@@ -80,8 +80,8 @@ const PricingPage = () => {
     },
     {
       id: 'pro',
-      name: 'Pro', 
-      price: '$15.99',
+      name: 'Creator', 
+      price: '£6.99',
       period: '/month',
       description: 'Most popular for serious creators and power users',
       features: [
@@ -99,8 +99,8 @@ const PricingPage = () => {
     },
     {
       id: 'unlimited',
-      name: 'Unlimited',
-      price: '$49.99', 
+      name: 'Professional',
+      price: '£11.99', 
       period: '/month',
       description: 'Maximum power for unlimited creativity',
       features: [
@@ -257,7 +257,7 @@ const PricingPage = () => {
               </div>
               <div className="trust-item">
                 <div className="trust-icon">🚀</div>
-                <span>14-Day Trial</span>
+                <span>Monetize Characters</span>
               </div>
             </div>
           </div>

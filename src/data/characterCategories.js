@@ -270,6 +270,14 @@ export const characterCategories = [
        description: 'The Persian Polymath. Medicine, philosophy, and the cosmos bowed to his logic. He mapped the human soul with the same precision as the stars—proving East and West share one sky.'
       },
 
+      {
+        key: 'simone_de_beauvoir',
+        name: 'Simone de Beauvoir',
+        thumbnailUrl: '/images/simone_de_beauvoir.jpg',
+        description: 'The Essential Other. In life with Sartre, in philosophy alone—she forged existential feminism, proving that freedom is the ultimate project and love its most dangerous terrain.'
+      
+      },
+
       
       { 
         key: 'lilith',
@@ -466,9 +474,9 @@ export const characterCategories = [
        description: 'The Old Master. His Tao Te Ching is a river—simple on the surface, bottomless beneath. He wrote 5,000 characters, then rode a buffalo into legend.'
       },
       { 
-       key: 'kant',
+       key: 'immanuel_kant',
        name: 'Immanuel Kant',
-       thumbnailUrl: '/images/kant.jpg',
+       thumbnailUrl: '/images/immanuel_kant.jpg',
        description: 'The Prussian Clockwork. Morality isn\'t felt—it\'s calculated. His categorical imperative: a compass so rigid it bends the universe toward justice.'
       },
 

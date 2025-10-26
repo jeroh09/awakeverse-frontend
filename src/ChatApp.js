@@ -1,4 +1,4 @@
-// src/ChatApp.js - Enhanced with View Switching Logic
+// src/ChatApp.js - Enhanced with Stripe Success Handler (No Reload)
 import React, { useState, useEffect, useCallback, useMemo } from 'react';
 import { useSocket } from './contexts/WebSocketContext';
 import { useCharacter } from './contexts/CharacterContext';
@@ -19,6 +19,8 @@ import { useFeaturedCharacters } from './hooks/useFeaturedCharacters';
 import { useLeaderboard } from './hooks/useLeaderboard';
 import CreatorDashboard from './components/CreatorHub/CreatorDashboard';
 import ScenariosTab from './components/ScenariosTab/index';
+import { useSearchParams } from 'react-router-dom';
+import StripeSuccessHandler from './components/StripeSuccessHandler';
 import './styles.css';
 
 function useMediaQuery(maxWidth) {
@@ -69,7 +71,7 @@ export default function ChatApp() {
   const [useFloatingHub, setUseFloatingHub] = useState(true);
   const [isHubVisible, setIsHubVisible] = useState(true);
   const [prestigeHubVisible, setPrestigeHubVisible] = useState(false);
-
+  const [marketHubScenario, setMarketHubScenario] = useState(null);
 
   // History-safe back navigation
   const handleBackToLauncher = useCallback(() => {
@@ -105,7 +107,7 @@ export default function ChatApp() {
     );
   }, [setSelectedCharacterKey, setPreviewCharacterKey, switchView, VIEW_STATES]);
 
-  // NEW: Handle character selection from Market Hub
+  // Handle character selection from Market Hub
   const handleMarketHubCharacterSelect = useCallback((character) => {
     // Add to discovered characters list
     addDiscoveredCharacter(character);
@@ -114,10 +116,53 @@ export default function ChatApp() {
     handleCharacterSelection(character.character_key, 'market_hub');
   }, [addDiscoveredCharacter, handleCharacterSelection]);
 
-  // NEW: Handle chat start from Market Hub
-  const handleMarketHubStartChat = useCallback((characterKey) => {
+  // SIMPLEST FIX: Just use the same function for both actions
+  const handleMarketHubStartChat = useCallback((character) => {
+    console.log('🔄 Market Hub start chat with:', character);
+
+    // Extract character key whether we get object or string
+    const characterKey = typeof character === 'string' ? character : character.character_key;
+
+    if (!characterKey) {
+      console.error('❌ No character key found:', character);
+      return;
+    }
+
+    // If we have the full character object, add it to discovered
+    if (typeof character !== 'string') {
+      console.log('✅ Auto-adding to discovered:', character.display_name);
+      addDiscoveredCharacter(character);
+    }
+
+    // Start the chat
     handleCharacterSelection(characterKey, 'market_hub_chat');
-  }, [handleCharacterSelection]);
+  }, [handleCharacterSelection, addDiscoveredCharacter]);
+  
+  // Handle scenario selection from Market Hub (for debates)
+  const handleMarketHubScenarioSelect = useCallback((scenario) => {
+    console.log('🌍 Market Hub scenario selected:', scenario);
+    
+    if (!scenario || !scenario.debateId || !scenario.scenarioId) {
+      console.error('❌ Invalid scenario data:', scenario);
+      return;
+    }
+
+    console.log('🔄 Switching to Scenarios view with Market Hub scenario');
+    
+    // Store the scenario to pass to ScenariosTab
+    setMarketHubScenario(scenario);
+    
+    // Switch to scenarios view
+    switchView(VIEW_STATES.SCENARIOS);
+    
+    console.log('✅ View switched to SCENARIOS, scenario ready to open');
+  }, [switchView, VIEW_STATES.SCENARIOS]);
+
+  // Clear Market Hub scenario when chat closes
+  const handleMarketHubScenarioClosed = useCallback(() => {
+    console.log('🔄 Clearing Market Hub scenario');
+    setMarketHubScenario(null);
+  }, []);
 
   // Initialize app state from URL on load
   useEffect(() => {
@@ -279,41 +324,38 @@ export default function ChatApp() {
   };
 
   // Character display name mapping including custom characters
-      const charactersMap = useMemo(() => {
-      const map = characterCategories.reduce((acc, cat) => {
-        cat.characters.forEach(c => (acc[c.key] = c.name));
-        return acc;
-      }, {});
+  const charactersMap = useMemo(() => {
+    const map = characterCategories.reduce((acc, cat) => {
+      cat.characters.forEach(c => (acc[c.key] = c.name));
+      return acc;
+    }, {});
 
-      // Add user's custom characters
-      if (userCharacters && Array.isArray(userCharacters)) {
-        userCharacters
-          .filter(char => char && char.status === 'approved')
-          .forEach(char => {
-            if (char.character_key && char.display_name) {
-              map[char.character_key] = char.display_name;
-            }
-          });
+    // Add user's custom characters
+    if (userCharacters && Array.isArray(userCharacters)) {
+      userCharacters
+        .filter(char => char && char.status === 'approved')
+        .forEach(char => {
+          if (char.character_key && char.display_name) {
+            map[char.character_key] = char.display_name;
+          }
+        });
+    }
+
+    discoveredCharacters.forEach(char => {
+      if (char.character_key && char.display_name) {
+        map[char.character_key] = char.display_name;
       }
-
-      discoveredCharacters.forEach(char => {
-        if (char.character_key && char.display_name) {
-          map[char.character_key] = char.display_name;
-        }
-      });
-      return map;
-    }, [userCharacters, discoveredCharacters]); // Add discoveredCharacters dependency
-
-  // NEW: Placeholder Creator Dashboard component
-  {/* NEW: Creator Dashboard view */}
-  {currentView === VIEW_STATES.CREATOR_DASHBOARD && (
-    <CreatorDashboard />
-  )}
-  
+    });
+    return map;
+  }, [userCharacters, discoveredCharacters]);
 
   return (
     <div className="app-container">
       <Header />
+      
+      {/* Stripe Success Handler - Processes payments without page reload */}
+      <StripeSuccessHandler />
+      
       {selectedCharacterKey && useFloatingHub && currentView === VIEW_STATES.CHAT && (
         <>
           <FloatingCharacterHub
@@ -326,7 +368,7 @@ export default function ChatApp() {
         </>
       )}
 
-      {/* NEW: Conditional rendering based on current view */}
+      {/* Conditional rendering based on current view */}
       {currentView === VIEW_STATES.CHAT && (
         <>
           {!selectedCharacterKey && (
@@ -366,19 +408,23 @@ export default function ChatApp() {
           <MarketHubPage 
             onCharacterSelect={handleMarketHubCharacterSelect}
             onStartChat={handleMarketHubStartChat}
+            onScenarioSelect={handleMarketHubScenarioSelect}
             isViewMode={true}
           />
         </div>
       )}
 
-      {/* NEW: Creator Dashboard view */}
+      {/* Creator Dashboard view */}
       {currentView === VIEW_STATES.CREATOR_DASHBOARD && (
         <CreatorDashboard />
       )}
 
       {currentView === VIEW_STATES.SCENARIOS && (
         <div className="scenarios-view-container">
-          <ScenariosTab />
+          <ScenariosTab 
+            marketHubScenario={marketHubScenario}
+            onMarketHubScenarioClosed={handleMarketHubScenarioClosed} 
+          />
         </div>
       )}
 

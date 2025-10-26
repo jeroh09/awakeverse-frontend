@@ -1,4 +1,4 @@
-// src/components/CharacterDetailPanel/CharacterDetailPanel.js
+// src/components/CharacterDetailPanel/CharacterDetailPanel.js - UPDATED VERSION
 import React, { useState } from 'react';
 import floatingGlassStyles from './CharacterDetailPanel.module.css';
 
@@ -14,6 +14,21 @@ const CharacterDetailPanel = ({
   const styles = floatingGlassStyles; // Remove the toggle logic for now
 
   if (!character) return null;
+
+  // 🆕 ADD: Handle both data structures
+  const displayName = character.name || character.display_name || 'Character';
+  const description = character.description || character.short_description || 'No description available.';
+  const imageUrl = character.thumbnailUrl || character.avatar_url || '/default-avatar.jpg';
+  const characterKey = character.key || character.character_key;
+
+  // 🆕 ADD: Debug logging to see what data we're receiving
+  console.log('🔍 CharacterDetailPanel - Raw character data:', character);
+  console.log('🔍 CharacterDetailPanel - Processed data:', {
+    displayName,
+    description,
+    imageUrl,
+    characterKey
+  });
 
   return (
     <>
@@ -48,19 +63,22 @@ const CharacterDetailPanel = ({
         
         <div className={styles.header}>
           <img
-            src={character.thumbnailUrl}
-            alt={character.name}
+            src={imageUrl}
+            alt={displayName}
             className={styles.panelImage}
+            onError={(e) => {
+              e.target.src = '/default-avatar.jpg';
+            }}
           />
-          <h2 className={styles.name}>{character.name}</h2>
+          <h2 className={styles.name}>{displayName}</h2>
         </div>
         
         <div className={styles.content}>
-          <p className={styles.description}>{character.description}</p>
+          <p className={styles.description}>{description}</p>
         </div>
         
         <div className={styles.footer}>
-          <button className={styles.cta} onClick={() => onStartChat(character.key)}>
+          <button className={styles.cta} onClick={() => onStartChat(character)}>
             Start Chat
           </button>
           

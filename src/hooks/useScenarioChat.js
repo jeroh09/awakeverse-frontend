@@ -63,6 +63,13 @@ export default function useScenarioChat() {
         });
 
         console.log('📊 Usage data loaded:', data);
+        // ✅ ADD THIS DEBUG LOG
+        console.log('📊 Usage updated:', {
+          questionsAsked: usageData.questionsAsked + 1,
+          limit: usageData.limit,
+          remaining: usageData.remaining,
+          limitReached: usageData.limitReached
+        });
       }
     } catch (error) {
       console.error('⚠️ Failed to fetch usage:', error);

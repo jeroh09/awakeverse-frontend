@@ -1,6 +1,7 @@
-// src/components/MarketHub/FeaturedCarousel.jsx
+// src/components/MarketHub/FeaturedCarousel.jsx - FIXED VERSION
 import React, { useState, useRef, useEffect } from 'react';
-import { ChevronLeft, ChevronRight, Star, Users, TrendingUp } from 'lucide-react';
+import { ChevronLeft, ChevronRight, Star, Users, TrendingUp, MessageCircle, Heart, Bookmark } from 'lucide-react';
+import { useEngagementTracking } from '../../hooks/useEngagementTracking';
 import styles from './FeaturedCarousel.module.css';
 
 const FeaturedCarousel = ({ 
@@ -9,10 +10,92 @@ const FeaturedCarousel = ({
   onCharacterClick, 
   onChatClick 
 }) => {
+  // 🆕 ADD DEBUG HERE - Right at the top of the component
+  console.log('🔍 FeaturedCarousel RAW DATA:', {
+    charactersCount: characters.length,
+    characters: characters,
+    firstCharacter: characters[0],
+    loading: loading
+  });
+
   const [currentIndex, setCurrentIndex] = useState(0);
   const [isAutoPlaying, setIsAutoPlaying] = useState(true);
   const carouselRef = useRef(null);
   const autoPlayRef = useRef(null);
+  
+  const { trackView, trackShare } = useEngagementTracking();
+
+  // Track view when featured character changes
+  useEffect(() => {
+    if (characters.length > 0 && characters[currentIndex]) {
+      const currentCharacter = characters[currentIndex];
+      if (currentCharacter.character_id) {
+        trackView(currentCharacter.character_id, {
+          view_context: 'featured_carousel',
+          expertise_domain: currentCharacter.expertise_domain,
+          feature_position: currentCharacter.feature_position
+        });
+      }
+    }
+  }, [currentIndex, characters, trackView]);
+
+  // 🆕 FIXED: Map backend field names to frontend expected names
+  const normalizeCharacterData = (character) => {
+    if (!character) return null;
+    
+    // 🆕 ADD DEBUG HERE - Inside normalization function
+    console.log('🔍 NORMALIZE DEBUG - RAW CHARACTER:', {
+      rawCharacter: character,
+      creatorObject: character.creator,
+      display_name: character.creator?.display_name,
+      hasCreatorName: !!character.creator_name
+    });
+    
+    const normalizedCharacter = {
+      // ✅ FIXED: Map correct field names from database query results
+      character_key: character.character_key,
+      character_id: character.character_id,
+      display_name: character.character_name || character.display_name,
+      short_description: character.character_description || character.short_description,
+      expertise_domain: character.expertise_domain,
+      avatar_url: character.avatar_url,
+      feature_position: character.feature_position,
+      total_engagement: character.total_engagement,
+      
+      // ✅ FIXED: Creator info - Look in creator object first
+      creator: {
+        display_name: character.creator?.display_name || 'Creator', // 🆕 FIXED THIS LINE
+        username: character.creator?.username,
+        creator_level: character.creator?.creator_level || 'newcomer'
+      },
+      
+      // Engagement data (create mock if missing)
+      engagement_30d: character.engagement_30d || {
+        total_views: 0,
+        total_likes: 0,
+        total_shares: 0,
+        total_chats: 0,
+        total_bookmarks: 0
+      }
+    };
+
+    // 🆕 ADD DEBUG HERE - After normalization
+    console.log('🔍 NORMALIZE DEBUG - NORMALIZED CHARACTER:', normalizedCharacter);
+    
+    return normalizedCharacter;
+  };
+
+  // 🆕 FIXED: Get normalized character for display
+  const getCurrentCharacter = () => {
+    const normalized = normalizeCharacterData(characters[currentIndex]);
+    console.log('🔍 CURRENT CHARACTER DEBUG:', {
+      currentIndex,
+      raw: characters[currentIndex],
+      normalized: normalized,
+      creatorDisplayName: normalized?.creator?.display_name
+    });
+    return normalized;
+  };
 
   // Auto-play functionality
   useEffect(() => {
@@ -53,14 +136,56 @@ const FeaturedCarousel = ({
     setCurrentIndex(index);
   };
 
-  // Handle click events
-  const handleCharacterClick = (character) => {
-    onCharacterClick?.(character);
+  // 🆕 FIXED: Handle engagement data structure
+  const getEngagementData = (character) => {
+    const normalizedChar = normalizeCharacterData(character);
+    const engagement = normalizedChar?.engagement_30d || {};
+    
+    return {
+      totalLikes: engagement.total_likes || 0,
+      totalBookmarks: engagement.total_bookmarks || 0,
+      totalEngagement: engagement.total_views || normalizedChar?.total_engagement || 0,
+      totalChats: engagement.total_chats || 0
+    };
   };
 
-  const handleChatClick = (e, characterKey) => {
+  // 🆕 FIXED: Get proper display name
+  const getDisplayName = (character) => {
+    const normalizedChar = normalizeCharacterData(character);
+    return normalizedChar?.display_name || 'Character';
+  };
+
+  // 🆕 FIXED: Enhanced character click handler
+  const handleCharacterClick = (character) => {
+    const normalizedChar = normalizeCharacterData(character);
+    console.log('🔍 Featured Carousel - Character clicked:', normalizedChar);
+    onCharacterClick?.(normalizedChar);
+  };
+
+  // 🆕 FIXED: Simplified chat click handler
+  const handleChatClick = (e, character) => {
     e.stopPropagation();
-    onChatClick?.(characterKey);
+    
+    const normalizedChar = normalizeCharacterData(character);
+    const displayName = getDisplayName(character);
+    
+    console.log('🔍 Featured Carousel - Starting chat with:', {
+      displayName,
+      character_key: normalizedChar?.character_key,
+      character_id: normalizedChar?.character_id
+    });
+
+    // Call the onChatClick prop directly
+    if (onChatClick) {
+      onChatClick(normalizedChar);
+    }
+  };
+
+  // Format numbers for display
+  const formatNumber = (num) => {
+    if (num >= 1000000) return `${(num / 1000000).toFixed(1)}M`;
+    if (num >= 1000) return `${(num / 1000).toFixed(1)}K`;
+    return num.toString();
   };
 
   if (loading) {
@@ -89,6 +214,10 @@ const FeaturedCarousel = ({
     );
   }
 
+  const currentCharacter = getCurrentCharacter();
+  const engagement = getEngagementData(characters[currentIndex]);
+  const displayName = getDisplayName(characters[currentIndex]);
+
   return (
     <div 
       className={styles.carousel}
@@ -115,8 +244,8 @@ const FeaturedCarousel = ({
           >
             <div className={styles.characterInfo}>
               <img
-                src={characters[currentIndex].avatar_url}
-                alt={characters[currentIndex].display_name}
+                src={currentCharacter?.avatar_url || '/default-avatar.jpg'}
+                alt={displayName}
                 className={styles.avatar}
                 onError={(e) => {
                   e.target.src = '/images/default-character.jpg';
@@ -126,51 +255,57 @@ const FeaturedCarousel = ({
               <div className={styles.details}>
                 <div className={styles.header}>
                   <h3 className={styles.name}>
-                    {characters[currentIndex].display_name}
+                    {displayName}
                   </h3>
                   
-                  {characters[currentIndex].feature_position && (
+                  {currentCharacter?.feature_position && (
                     <div className={styles.positionBadge}>
-                      #{characters[currentIndex].feature_position}
+                      #{currentCharacter.feature_position}
                     </div>
                   )}
                 </div>
 
                 <p className={styles.description}>
-                  {characters[currentIndex].short_description}
+                  {currentCharacter?.short_description || 'No description available.'}
                 </p>
 
-                {characters[currentIndex].expertise_domain && (
+                {currentCharacter?.expertise_domain && (
                   <div className={styles.domain}>
-                    {characters[currentIndex].expertise_domain}
+                    {currentCharacter.expertise_domain}
                   </div>
                 )}
 
                 <div className={styles.creator}>
-                  Created by {characters[currentIndex].creator?.display_name || 'Creator'}
-                  {characters[currentIndex].creator?.creator_level && (
+                  Created by {currentCharacter?.creator?.display_name || 'Creator'}
+                  {currentCharacter?.creator?.creator_level && (
                     <span className={styles.creatorLevel}>
-                      • {characters[currentIndex].creator.creator_level}
+                      • {currentCharacter.creator.creator_level.replace('_', ' ')}
                     </span>
                   )}
                 </div>
               </div>
             </div>
 
+            {/* 🆕 UPDATED: Engagement metrics with proper data */}
             <div className={styles.engagement}>
               <div className={styles.metric}>
-                <Users size={16} />
-                <span>{characters[currentIndex].engagement_30d?.total_chats || 0} chats</span>
+                <MessageCircle size={16} />
+                <span>{formatNumber(engagement.totalChats)} chats</span>
               </div>
               
               <div className={styles.metric}>
-                <Star size={16} />
-                <span>{characters[currentIndex].engagement_30d?.total_likes || 0} likes</span>
+                <Users size={16} />
+                <span>{formatNumber(engagement.totalEngagement)} views</span>
               </div>
 
               <div className={styles.metric}>
-                <TrendingUp size={16} />
-                <span>{characters[currentIndex].total_engagement || 0} total</span>
+                <Heart size={16} />
+                <span>{formatNumber(engagement.totalLikes)} likes</span>
+              </div>
+
+              <div className={styles.metric}>
+                <Bookmark size={16} />
+                <span>{formatNumber(engagement.totalBookmarks)} bookmarks</span>
               </div>
             </div>
           </div>
@@ -178,7 +313,7 @@ const FeaturedCarousel = ({
           <div className={styles.actions}>
             <button 
               className={styles.chatButton}
-              onClick={(e) => handleChatClick(e, characters[currentIndex].character_key)}
+              onClick={(e) => handleChatClick(e, characters[currentIndex])}
             >
               Start Chat
             </button>
@@ -208,23 +343,23 @@ const FeaturedCarousel = ({
         <div className={styles.thumbnailNav}>
           {characters.map((character, index) => (
             <button
-              key={character.character_key}
+              key={character.character_id || index}
               className={`${styles.thumbnail} ${
                 index === currentIndex ? styles.active : ''
               }`}
               onClick={() => goToSlide(index)}
-              aria-label={`View ${character.display_name}`}
+              aria-label={`View ${getDisplayName(character)}`}
             >
               <img
-                src={character.avatar_url}
-                alt={character.display_name}
+                src={character.avatar_url || '/default-avatar.jpg'}
+                alt={getDisplayName(character)}
                 onError={(e) => {
                   e.target.src = '/images/default-character.jpg';
                 }}
               />
               <div className={styles.thumbnailInfo}>
                 <span className={styles.thumbnailName}>
-                  {character.display_name}
+                  {getDisplayName(character)}
                 </span>
                 {character.feature_position && (
                   <span className={styles.thumbnailPosition}>

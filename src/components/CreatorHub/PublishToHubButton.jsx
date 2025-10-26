@@ -1,10 +1,10 @@
 // src/components/CreatorHub/PublishToHubButton.jsx
-// DEFENSIVE: Only show for custom characters (user_*)
 import React, { useState, useCallback } from 'react';
 import { useAuth } from '../../contexts/AuthContext';
 import { useUser } from '../../contexts/UserContext';
 import api from '../../api';
 import DualPathUpgradeSystem from '../DualPathUpgradeSystem';
+import { triggerPublishConfetti } from '../../utils/confettiUtils';
 import './PublishToHubButton.css';
 
 const PublishToHubButton = ({ 
@@ -18,6 +18,7 @@ const PublishToHubButton = ({
   const [isProcessing, setIsProcessing] = useState(false);
   const [showUpgradeModal, setShowUpgradeModal] = useState(false);
   const [error, setError] = useState(null);
+  const [justPublished, setJustPublished] = useState(false);
   
   // DEFENSIVE: Only show for custom characters
   const isCustomCharacter = character?.character_key?.startsWith('user_');
@@ -26,15 +27,14 @@ const PublishToHubButton = ({
   if (!isCustomCharacter) {
     return null;
   }
+  
   if (character?.source === 'market_hub') {
-  return null;  // Hide button for discovered characters
-}
+    return null;
+  }
 
-// DEFENSIVE: If character doesn't have status field, it's likely not owned by user
-// (Owned characters ALWAYS have status: pending/approved/rejected)
-if (!character?.status) {
-  return null;  // Hide button instead of showing "Character not ready"
-}
+  if (!character?.status) {
+    return null;
+  }
   
   // Determine current state
   const isPublished = character?.is_market_featured;
@@ -47,7 +47,6 @@ if (!character?.status) {
       return;
     }
 
-    // DEFENSIVE: Check tier before attempting
     const isUnlimitedTier = await checkUnlimitedTier();
     
     if (!isUnlimitedTier) {
@@ -55,7 +54,6 @@ if (!character?.status) {
       return;
     }
 
-    // User has unlimited tier - proceed with toggle
     await toggleCharacterPublish();
   }, [token, user, character]);
 
@@ -80,28 +78,34 @@ if (!character?.status) {
   const toggleCharacterPublish = async () => {
     setIsProcessing(true);
     setError(null);
+    setJustPublished(false);
 
     try {
       const response = await api.post('/creator-hub/toggle-publish', {
         character_id: character.id
       });
 
-      // DEFENSIVE: Check response structure
       if (!response.data) {
         throw new Error('Invalid server response');
       }
 
       const data = response.data;
 
-      // Success path
       if (data.status === 'success') {
-        // Use backend's confirmed state
         const newPublishState = data.is_published;
-        const actionTaken = data.action_taken; // 'published' or 'unpublished'
+        const actionTaken = data.action_taken;
         
         console.log(`Character ${actionTaken}:`, character.display_name);
         
-        // Update parent component with NEW state from backend
+        // 🎉 TRIGGER CONFETTI WHEN PUBLISHING
+        if (actionTaken === 'published') {
+          triggerPublishConfetti();
+          setJustPublished(true);
+          
+          // Reset celebration state after animation
+          setTimeout(() => setJustPublished(false), 3000);
+        }
+        
         if (onPublishSuccess) {
           onPublishSuccess({
             ...character,
@@ -110,18 +114,15 @@ if (!character?.status) {
           });
         }
         
-        // DEFENSIVE: Clear error on success
         setError(null);
         
       } else {
-        // Backend returned success: false
         throw new Error(data.error || data.message || 'Toggle failed');
       }
       
     } catch (err) {
       console.error('Toggle error:', err);
       
-      // DEFENSIVE: Extract error message with fallbacks
       let errorMessage = 'Failed to toggle publish state';
       
       if (err.response?.data?.error) {
@@ -132,7 +133,6 @@ if (!character?.status) {
         errorMessage = err.message;
       }
       
-      // Special handling for known errors
       if (errorMessage.includes('private character')) {
         errorMessage = 'Character must be public to publish to Market Hub';
       } else if (errorMessage.includes('Unauthorized') || errorMessage.includes('tier required')) {
@@ -162,7 +162,7 @@ if (!character?.status) {
         <button
           onClick={handleToggleClick}
           disabled={isProcessing}
-          className="publish-to-hub-button published"
+          className={`publish-to-hub-button published ${justPublished ? 'celebrating' : ''}`}
           title="Click to unpublish from Market Hub"
         >
           {isProcessing ? (
@@ -173,7 +173,7 @@ if (!character?.status) {
           ) : (
             <>
               <span className="button-icon">✓</span>
-              Published • Click to Unpublish
+              {justPublished ? 'Published! 🎉' : 'Published • Click to Unpublish'}
             </>
           )}
         </button>
@@ -232,7 +232,8 @@ if (!character?.status) {
       </>
     );
   }
-    // Character not approved yet - show status for OWNER only
+
+  // Character not approved yet - show status for OWNER only
   if (character.status === 'pending') {
     return (
       <div className="publish-status disabled">

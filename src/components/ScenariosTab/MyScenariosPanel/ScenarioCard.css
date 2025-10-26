@@ -241,3 +241,96 @@
 .scenarios-tab-container.theme-awakeverse .action-button.delete:hover:not(:disabled) {
   background: rgba(231, 76, 60, 0.15);
 }
+/* Add these styles to src/components/ScenariosTab/MyScenariosPanel/ScenarioCard.css */
+/* APPEND TO END OF FILE */
+
+/* ============================================
+   PUBLISH BUTTON STYLES - THEME-AWARE
+   ============================================ */
+
+/* Publish Button - Unpublished State - DARK MODE */
+.action-button.publish {
+  border-color: rgba(255, 215, 0, 0.3);
+  color: rgba(255, 215, 0, 0.7);
+}
+
+.action-button.publish:hover:not(:disabled) {
+  border-color: rgba(255, 215, 0, 0.6);
+  color: rgba(255, 215, 0, 1);
+  background: rgba(255, 215, 0, 0.1);
+}
+
+/* Publish Button - Published State - DARK MODE */
+.action-button.publish.published {
+  border-color: rgba(255, 215, 0, 0.6);
+  color: rgba(255, 215, 0, 1);
+  background: rgba(255, 215, 0, 0.15);
+}
+
+/* Publish Button - Published Hover (unpublish warning) - DARK MODE */
+.action-button.publish.published:hover:not(:disabled) {
+  border-color: rgba(231, 76, 60, 0.5);
+  color: rgba(231, 76, 60, 0.9);
+  background: rgba(231, 76, 60, 0.1);
+}
+
+/* Published Badge - DARK MODE */
+.published-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.5rem 0.75rem;
+  background: rgba(255, 215, 0, 0.1);
+  border: 1px solid rgba(255, 215, 0, 0.3);
+  border-radius: 12px;
+  margin-bottom: 1rem;
+  font-size: 0.85rem;
+  color: rgba(255, 215, 0, 1);
+  font-weight: 600;
+}
+
+.badge-icon {
+  font-size: 1rem;
+}
+
+.badge-text {
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+/* ============================================
+   LIGHT MODE OVERRIDES
+   ============================================ */
+
+/* Publish Button - Unpublished State - LIGHT MODE */
+.scenarios-tab-container:not(.theme-awakeverse) .action-button.publish {
+  border-color: rgba(52, 152, 219, 0.4);
+  color: rgba(52, 152, 219, 0.8);
+}
+
+.scenarios-tab-container:not(.theme-awakeverse) .action-button.publish:hover:not(:disabled) {
+  border-color: rgba(52, 152, 219, 0.7);
+  color: rgba(52, 152, 219, 1);
+  background: rgba(52, 152, 219, 0.1);
+}
+
+/* Publish Button - Published State - LIGHT MODE */
+.scenarios-tab-container:not(.theme-awakeverse) .action-button.publish.published {
+  border-color: rgba(52, 152, 219, 0.7);
+  color: rgba(52, 152, 219, 1);
+  background: rgba(52, 152, 219, 0.15);
+}
+
+/* Publish Button - Published Hover - LIGHT MODE */
+.scenarios-tab-container:not(.theme-awakeverse) .action-button.publish.published:hover:not(:disabled) {
+  border-color: rgba(231, 76, 60, 0.6);
+  color: rgba(231, 76, 60, 1);
+  background: rgba(231, 76, 60, 0.15);
+}
+
+/* Published Badge - LIGHT MODE */
+.scenarios-tab-container:not(.theme-awakeverse) .published-badge {
+  background: rgba(52, 152, 219, 0.1);
+  border-color: rgba(52, 152, 219, 0.4);
+  color: rgba(52, 152, 219, 1);
+}

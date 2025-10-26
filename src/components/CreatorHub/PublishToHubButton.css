@@ -1,4 +1,4 @@
-/* PublishToHubButton.css - Defensive styling following your patterns */
+/* PublishToHubButton.css - Updated with celebration styles */
 
 .publish-to-hub-button {
   display: flex;
@@ -23,6 +23,9 @@
   
   width: 100%;
   min-height: 36px;
+  
+  position: relative;
+  overflow: hidden;
 }
 
 .publish-to-hub-button:hover:not(:disabled) {
@@ -41,9 +44,75 @@
   background: rgba(255, 215, 0, 0.3);
 }
 
+/* Published state */
+.publish-to-hub-button.published {
+  background: linear-gradient(135deg, #28a745, #20c997);
+  border: 1px solid rgba(40, 167, 69, 0.4);
+  color: white;
+}
+
+.publish-to-hub-button.published:hover:not(:disabled) {
+  background: linear-gradient(135deg, #20c997, #28a745);
+  box-shadow: 0 4px 12px rgba(40, 167, 69, 0.4);
+}
+
+/* Celebration state */
+.publish-to-hub-button.celebrating {
+  animation: celebrate-pulse 0.6s ease-in-out 3;
+  background: linear-gradient(135deg, #FFD700, #1E90FF, #FFFFFF);
+  background-size: 200% 200%;
+  animation: celebrate-gradient 2s ease infinite;
+  color: #000;
+  font-weight: 700;
+  box-shadow: 0 0 20px rgba(255, 215, 0, 0.5);
+}
+
+@keyframes celebrate-pulse {
+  0%, 100% { 
+    transform: scale(1);
+    box-shadow: 0 0 20px rgba(255, 215, 0, 0.5);
+  }
+  50% { 
+    transform: scale(1.05);
+    box-shadow: 0 0 30px rgba(255, 215, 0, 0.8);
+  }
+}
+
+@keyframes celebrate-gradient {
+  0% { background-position: 0% 50%; }
+  50% { background-position: 100% 50%; }
+  100% { background-position: 0% 50%; }
+}
+
+/* Celebration particles (fallback if confetti doesn't work) */
+.publish-to-hub-button.celebrating::before {
+  content: '🎉';
+  position: absolute;
+  top: -10px;
+  right: -10px;
+  font-size: 1.2rem;
+  animation: float-up 1s ease-out;
+}
+
+@keyframes float-up {
+  0% { transform: translateY(0) scale(0.8); opacity: 0; }
+  50% { transform: translateY(-20px) scale(1.2); opacity: 1; }
+  100% { transform: translateY(-40px) scale(0.8); opacity: 0; }
+}
+
 .button-icon {
   font-size: 1rem;
   line-height: 1;
+  transition: transform 0.3s ease;
+}
+
+.publish-to-hub-button.celebrating .button-icon {
+  animation: bounce 0.5s ease-in-out 3;
+}
+
+@keyframes bounce {
+  0%, 100% { transform: translateY(0) scale(1); }
+  50% { transform: translateY(-3px) scale(1.2); }
 }
 
 .button-spinner {
@@ -138,19 +207,7 @@
   position: relative;
   z-index: 1;
 }
-.publish-to-hub-button.published {
-  background: linear-gradient(135deg, #28a745, #20c997);
-  border: 2px solid rgba(40, 167, 69, 0.4);
-}
 
-.publish-to-hub-button.published:hover:not(:disabled) {
-  background: linear-gradient(135deg, #20c997, #28a745);
-  box-shadow: 0 4px 12px rgba(40, 167, 69, 0.4);
-}
-
-.publish-to-hub-button.published .button-icon {
-  color: #fff;
-}
 .upgrade-modal {
   position: fixed;
   top: 0;

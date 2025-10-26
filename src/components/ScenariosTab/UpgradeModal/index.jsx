@@ -18,7 +18,7 @@ export default function UpgradeModal({ isOpen, onClose, reason, currentTier }) {
           <p>Current tier: <strong>{currentTier}</strong></p>
           
           <div className="upgrade-features">
-            <h4>Unlimited tier includes:</h4>
+            <h4>Professional tier includes:</h4>
             <ul>
               <li>Multi-character debates</li>
               <li>20+ scenario templates</li>

@@ -26,8 +26,12 @@ import EmailVerification from './pages/EmailVerification';
 import CreatorsLanding from './pages/CreatorsLanding/CreatorsLanding';
 import PricingPage from './pages/PricingPage';
 import MarketHubPage from './components/MarketHub/MarketHubPage';
-
-
+import PaymentSuccess from './components/PaymentSuccess';
+import PaymentCancelled from './components/PaymentCancelled'; // Add this import
+import ErrorBoundary from './components/ErrorBoundary';
+import PaymentRouterTest from './tests/PaymentRouterTest';
+import PaymentRouterIntegrationTest from './tests/PaymentRouterIntegrationTest';
+import UpgradeButtonTest from './tests/UpgradeButtonTest';
 import './styles.css';
 
 // NEW: Wrapper component for protected routes that need view context
@@ -76,15 +80,24 @@ export default function App() {
       <Route path="/pricing" element={<PricingPage />} />
       <Route path="/market-hub" element={<MarketHubPage />} />
 
+      {/* Payment routes - PROTECTED */}
+      <Route path="/payment-success"  element={<PaymentSuccess />} />
+      <Route path="/payment-cancelled" element={<PaymentCancelled />} />
+      <Route path="/test-payment" element={<PaymentRouterTest />} />
+      <Route path="/test-payment-integration" element={<PaymentRouterIntegrationTest />} />
+      <Route path="/test-upgrade" element={<UpgradeButtonTest />} />
+
 
 
       {/* Main app with NEW AppViewProvider wrapper */}
       <Route
         path="/app"
         element={
-          <ProtectedAppRoute>
-            <ChatApp />
-          </ProtectedAppRoute>
+          <ErrorBoundary>
+            <ProtectedAppRoute>
+              <ChatApp />
+            </ProtectedAppRoute>
+          </ErrorBoundary>
         }
       />
 

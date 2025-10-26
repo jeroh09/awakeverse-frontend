@@ -1,33 +1,93 @@
-// src/components/PaymentProcessor.jsx
+// src/components/PaymentProcessor.jsx - UPDATED with PayPal support
 import React, { useState, useEffect } from 'react';
 import { useAuth } from '../contexts/AuthContext';
 import { useUser } from '../contexts/UserContext';
+import PaymentRouter from '../services/PaymentRouter';
 
+// SUBSCRIPTION_TIERS with CORRECT multi-currency pricing
 const SUBSCRIPTION_TIERS = {
   starter: {
     name: 'starter',
-    display_name: 'Starter',
-    price: 9.99,
-    character_limit: 5,
-    message_limit: 500,
-    features: ['5 Custom Characters', '500 Messages/Month', 'Priority Support']
+    display_name: 'EXPLORER',
+    tagline: 'Start Your Journey',
+    prices: {
+      GBP: { amount: 3.99, symbol: '£', display: '£3.99' },
+      USD: { amount: 4.99, symbol: '$', display: '$4.99' },
+      EUR: { amount: 4.99, symbol: '€', display: '€4.99' }
+    },
+    character_limit: 0,
+    message_limit: 2000,
+    features: [
+      'Basic chat access',
+      'Rate-limited usage',
+      'Browse marketplace',
+      'Engage with characters'
+    ],
+    popular: false
   },
   pro: {
-    name: 'pro', 
-    display_name: 'Pro',
-    price: 19.99,
-    character_limit: 15,
-    message_limit: 2000,
-    features: ['15 Custom Characters', '2,000 Messages/Month', 'All Features', 'Priority Support'],
+    name: 'pro',
+    display_name: 'CREATOR',
+    tagline: 'Build & Earn',
+    prices: {
+      GBP: { amount: 6.99, symbol: '£', display: '£6.99' },
+      USD: { amount: 7.99, symbol: '$', display: '$7.99' },
+      EUR: { amount: 7.99, symbol: '€', display: '€7.99' }
+    },
+    character_limit: -1,
+    message_limit: -1,
+    features: [
+      'Unlimited chats & scenarios',
+      'Character creation tools',
+      'Marketplace publishing',
+      '60/40 revenue share',
+      'Standard AI models',
+      'Basic analytics'
+    ],
     popular: true
   },
   unlimited: {
     name: 'unlimited',
-    display_name: 'Unlimited', 
-    price: 49.99,
+    display_name: 'PROFESSIONAL',
+    tagline: 'Go Pro & Scale',
+    prices: {
+      GBP: { amount: 11.99, symbol: '£', display: '£11.99' },
+      USD: { amount: 14.99, symbol: '$', display: '$14.99' },
+      EUR: { amount: 14.99, symbol: '€', display: '€14.99' }
+    },
     character_limit: -1,
     message_limit: -1,
-    features: ['Unlimited Characters', 'Unlimited Messages', 'All Features', 'VIP Support']
+    features: [
+      'Everything in Creator',
+      'Advanced multi-character designer',
+      'Featured marketplace placement',
+      '70/30 revenue share',
+      'Live debate hosting',
+      'Advanced analytics',
+      'Priority AI models',
+      'Commercial rights',
+      'Priority support'
+    ],
+    popular: false
+  }
+};
+
+// Helper to detect user's currency
+const getUserCurrency = () => {
+  try {
+    const savedCurrency = localStorage.getItem('preferred_currency');
+    if (savedCurrency && ['GBP', 'USD', 'EUR'].includes(savedCurrency)) {
+      return savedCurrency;
+    }
+    
+    const locale = navigator.language || 'en-GB';
+    if (locale.includes('US')) return 'USD';
+    if (locale.includes('GB') || locale.includes('UK')) return 'GBP';
+    if (locale.includes('EU') || locale.includes('FR') || locale.includes('DE')) return 'EUR';
+    
+    return 'GBP';
+  } catch (e) {
+    return 'GBP';
   }
 };
 
@@ -42,29 +102,22 @@ const PaymentProcessor = ({
   const { user } = useUser();
   
   const [selectedTier, setSelectedTier] = useState('pro');
-  const [currentStep, setCurrentStep] = useState(1); // 1: Plan Selection, 2: Payment Form, 3: Success
+  const [selectedCurrency, setSelectedCurrency] = useState('GBP');
   const [isProcessing, setIsProcessing] = useState(false);
+  const [processingProvider, setProcessingProvider] = useState(null); // Track which provider is processing
   const [error, setError] = useState(null);
   const [currentSubscription, setCurrentSubscription] = useState(null);
 
-  // Payment form state
-  const [paymentData, setPaymentData] = useState({
-    cardNumber: '',
-    expiryDate: '',
-    cvv: '',
-    name: '',
-    email: user?.username || '',
-    billingAddress: ''
-  });
+  useEffect(() => {
+    setSelectedCurrency(getUserCurrency());
+  }, []);
 
-  // Load current subscription on open
   useEffect(() => {
     if (isOpen && user?.id) {
       loadCurrentSubscription();
     }
   }, [isOpen, user?.id]);
 
-  // Set recommended tier based on trigger reason
   useEffect(() => {
     if (triggerReason === 'character_limit') {
       setSelectedTier('starter');
@@ -75,8 +128,8 @@ const PaymentProcessor = ({
 
   const loadCurrentSubscription = async () => {
     try {
-      const API_BASE = process.env.REACT_APP_API_URL || 'http://localhost:5000';
-      const response = await fetch(`${API_BASE}/api/premium/user_subscription/${user.id}`, {
+      const env = PaymentRouter.getEnvironment();
+      const response = await fetch(`${env.apiBase}/api/premium/user_subscription/${user.id}`, {
         headers: { 'Authorization': `Bearer ${token}` }
       });
       
@@ -89,267 +142,232 @@ const PaymentProcessor = ({
     }
   };
 
-  const handlePayment = async () => {
+  const handleStripeCheckout = async () => {
     if (isProcessing) return;
     
-    // Basic form validation
-    if (!paymentData.cardNumber || !paymentData.expiryDate || !paymentData.cvv || !paymentData.name) {
-      setError('Please fill in all required payment fields');
-      return;
-    }
-    
     setIsProcessing(true);
+    setProcessingProvider('stripe');
     setError(null);
 
     try {
-      const API_BASE = process.env.REACT_APP_API_URL || 'http://localhost:5000';
+      console.log('🔄 Starting payment redirect via PaymentRouter...');
       
-      const response = await fetch(`${API_BASE}/api/premium/subscription/create`, {
-        method: 'POST',
-        headers: {
-          'Authorization': `Bearer ${token}`,
-          'Content-Type': 'application/json'
-        },
-        body: JSON.stringify({
-          tier_name: selectedTier,
-          payment_provider: 'mock', // Will be 'stripe' or 'paypal' in production
-          payment_data: {
-            card_number: paymentData.cardNumber.replace(/\s/g, ''),
-            expiry_date: paymentData.expiryDate,
-            cvv: paymentData.cvv,
-            cardholder_name: paymentData.name,
-            billing_email: paymentData.email
-          }
-        })
+      // Use PaymentRouter - it handles everything!
+      await PaymentRouter.redirectToCheckout({
+        tier: selectedTier,
+        currency: selectedCurrency,
+        provider: 'stripe',
+        triggerSource: triggerReason || 'payment_modal',
+        metadata: {
+          currentUsage: currentUsage,
+          timestamp: new Date().toISOString()
+        }
       });
-
-      const result = await response.json();
-
-      if (result.status === 'success') {
-        setCurrentStep(3); // Success step
-        // Auto-close and refresh after success
-        setTimeout(() => {
-          onClose();
-          window.location.reload();
-        }, 3000);
-      } else {
-        setError(result.error || 'Payment failed. Please try again.');
-      }
-
-    } catch (error) {
-      console.error('Payment error:', error);
-      setError('Network error. Please check your connection and try again.');
-    } finally {
+      
+      // If we reach here, redirect failed
+      console.warn('⚠️ Redirect did not occur - user still on page');
       setIsProcessing(false);
+      setProcessingProvider(null);
+      
+    } catch (error) {
+      console.error('❌ Payment error:', error);
+      setError(error.message || 'Payment failed. Please try again.');
+      setIsProcessing(false);
+      setProcessingProvider(null);
     }
   };
 
-  const formatCardNumber = (value) => {
-    const v = value.replace(/\s+/g, '').replace(/[^0-9]/gi, '');
-    const matches = v.match(/\d{4,16}/g);
-    const match = matches && matches[0] || '';
-    const parts = [];
-    for (let i = 0, len = match.length; i < len; i += 4) {
-      parts.push(match.substring(i, i + 4));
-    }
-    if (parts.length) {
-      return parts.join(' ');
-    } else {
-      return v;
+  // ✅ ADDED: PayPal Handler
+  const handlePayPalCheckout = async () => {
+    if (isProcessing) return;
+    
+    setIsProcessing(true);
+    setProcessingProvider('paypal');
+    setError(null);
+
+    try {
+      console.log('🔄 Starting PayPal redirect via PaymentRouter...');
+      
+      await PaymentRouter.redirectToCheckout({
+        tier: selectedTier,
+        currency: selectedCurrency,
+        provider: 'paypal',  // ← KEY DIFFERENCE
+        triggerSource: triggerReason || 'payment_modal',
+        metadata: {
+          currentUsage: currentUsage,
+          timestamp: new Date().toISOString()
+        }
+      });
+      
+      console.warn('⚠️ Redirect did not occur - user still on page');
+      setIsProcessing(false);
+      setProcessingProvider(null);
+      
+    } catch (error) {
+      console.error('❌ PayPal error:', error);
+      setError(error.message || 'PayPal payment failed. Please try again.');
+      setIsProcessing(false);
+      setProcessingProvider(null);
     }
   };
 
-  const formatExpiryDate = (value) => {
-    const v = value.replace(/\s+/g, '').replace(/[^0-9]/gi, '');
-    if (v.length >= 2) {
-      return v.substring(0, 2) + '/' + v.substring(2, 4);
-    }
-    return v;
+  const getPriceDisplay = (tier) => {
+    const priceData = SUBSCRIPTION_TIERS[tier].prices[selectedCurrency];
+    return priceData ? priceData.display : '£0.00';
   };
 
   if (!isOpen) return null;
 
-  // Success State
-  if (currentStep === 3) {
-    return (
+  return (
+    <div style={{
+      position: 'fixed',
+      top: 0,
+      left: 0,
+      width: '100%',
+      height: '100%',
+      background: 'rgba(0, 0, 0, 0.9)',
+      display: 'flex',
+      alignItems: 'center',
+      justifyContent: 'center',
+      zIndex: 9999,
+      padding: '1rem'
+    }}>
       <div style={{
-        position: 'fixed',
-        top: 0,
-        left: 0,
+        background: 'linear-gradient(135deg, #0B1426 0%, #1A2B47 25%, #2C1810 50%, #0F1A2E 75%, #0B1426 100%)',
+        border: '2px solid rgba(255, 215, 0, 0.3)',
+        borderRadius: '20px',
+        padding: '2rem',
         width: '100%',
-        height: '100%',
-        background: 'rgba(0, 0, 0, 0.9)',
-        display: 'flex',
-        alignItems: 'center',
-        justifyContent: 'center',
-        zIndex: 9999
+        maxWidth: '800px',
+        maxHeight: '90vh',
+        overflowY: 'auto'
       }}>
+        {/* Header */}
         <div style={{
-          background: 'linear-gradient(135deg, #0B1426 0%, #1A2B47 50%, #0B1426 100%)',
-          border: '2px solid #00FF88',
-          borderRadius: '20px',
-          padding: '3rem',
-          textAlign: 'center',
-          maxWidth: '500px',
-          backdropFilter: 'blur(10px)'
+          display: 'flex',
+          justifyContent: 'space-between',
+          alignItems: 'flex-start',
+          marginBottom: '2rem'
         }}>
-          <div style={{ fontSize: '4rem', marginBottom: '1rem' }}>✨</div>
+          <div>
+            <h2 style={{
+              color: '#FFD700',
+              fontSize: '1.8rem',
+              margin: '0 0 0.5rem 0'
+            }}>
+              {triggerReason === 'character_limit' ? 'Create More Characters' : 
+               triggerReason === 'message_limit' ? 'Continue Chatting' : 
+               'Upgrade Your Experience'}
+            </h2>
+            {/* ✅ UPDATED: Text to include PayPal */}
+            <p style={{
+              color: 'rgba(255, 255, 255, 0.8)',
+              margin: 0
+            }}>
+              Choose your plan and pay securely with Stripe or PayPal
+            </p>
+          </div>
           
-          <h2 style={{
-            color: '#00FF88',
-            fontSize: '1.8rem',
-            margin: '0 0 1rem 0'
-          }}>
-            Welcome to {SUBSCRIPTION_TIERS[selectedTier].display_name}!
-          </h2>
-          
-          <p style={{
-            color: 'rgba(255, 255, 255, 0.9)',
-            margin: '0 0 2rem 0',
-            lineHeight: 1.6
-          }}>
-            Your subscription is now active. You can now{' '}
-            {triggerReason === 'character_limit' ? 'create more characters' : 'continue chatting'}{' '}
-            with full access to all premium features.
-          </p>
-          
-          <div style={{
-            width: '60px',
-            height: '4px',
-            background: 'linear-gradient(90deg, #00FF88, #FFD700)',
-            margin: '0 auto',
-            borderRadius: '2px'
-          }} />
-          
-          <p style={{
-            color: 'rgba(255, 255, 255, 0.6)',
-            fontSize: '0.9rem',
-            margin: '1rem 0 0 0'
-          }}>
-            Redirecting you back to continue...
-          </p>
-        </div>
-      </div>
-    );
-  }
-
-  // Plan Selection Step
-  if (currentStep === 1) {
-    return (
-      <div style={{
-        position: 'fixed',
-        top: 0,
-        left: 0,
-        width: '100%',
-        height: '100%',
-        background: 'rgba(0, 0, 0, 0.9)',
-        display: 'flex',
-        alignItems: 'center',
-        justifyContent: 'center',
-        zIndex: 9999,
-        padding: '1rem'
-      }}>
-        <div style={{
-          background: 'linear-gradient(135deg, #0B1426 0%, #1A2B47 25%, #2C1810 50%, #0F1A2E 75%, #0B1426 100%)',
-          border: '2px solid rgba(255, 215, 0, 0.3)',
-          borderRadius: '20px',
-          padding: '2rem',
-          width: '100%',
-          maxWidth: '800px',
-          maxHeight: '90vh',
-          overflowY: 'auto'
-        }}>
-          {/* Header */}
-          <div style={{
-            display: 'flex',
-            justifyContent: 'space-between',
-            alignItems: 'flex-start',
-            marginBottom: '2rem'
-          }}>
-            <div>
-              <h2 style={{
-                color: '#FFD700',
-                fontSize: '1.8rem',
-                margin: '0 0 0.5rem 0'
-              }}>
-                {triggerReason === 'character_limit' ? 'Create More Characters' : 
-                 triggerReason === 'message_limit' ? 'Continue Chatting' : 
-                 'Upgrade Your Experience'}
-              </h2>
-              <p style={{
-                color: 'rgba(255, 255, 255, 0.8)',
-                margin: 0
-              }}>
-                Choose the plan that fits your needs
-              </p>
-            </div>
-            
-            <div style={{ display: 'flex', gap: '0.5rem' }}>
-              {onBack && (
-                <button
-                  onClick={onBack}
-                  style={{
-                    background: 'none',
-                    border: '1px solid rgba(255, 255, 255, 0.3)',
-                    borderRadius: '4px',
-                    color: 'rgba(255, 255, 255, 0.6)',
-                    fontSize: '0.9rem',
-                    cursor: 'pointer',
-                    padding: '0.25rem 0.5rem'
-                  }}
-                >
-                  ← Back
-                </button>
-              )}
+          <div style={{ display: 'flex', gap: '0.5rem', alignItems: 'center' }}>
+            {onBack && (
               <button
-                onClick={onClose}
+                onClick={onBack}
                 style={{
                   background: 'none',
-                  border: 'none',
+                  border: '1px solid rgba(255, 255, 255, 0.3)',
+                  borderRadius: '4px',
                   color: 'rgba(255, 255, 255, 0.6)',
-                  fontSize: '1.5rem',
+                  fontSize: '0.9rem',
                   cursor: 'pointer',
-                  padding: '0.25rem'
+                  padding: '0.5rem'
                 }}
               >
-                ×
+                ← Back
               </button>
-            </div>
+            )}
+            <button
+              onClick={onClose}
+              style={{
+                background: 'none',
+                border: 'none',
+                color: 'rgba(255, 255, 255, 0.6)',
+                fontSize: '1.5rem',
+                cursor: 'pointer',
+                padding: '0.25rem'
+              }}
+            >
+              ×
+            </button>
           </div>
+        </div>
 
-          {/* Current Plan Info */}
-          {currentSubscription && (
-            <div style={{
-              background: 'rgba(255, 255, 255, 0.05)',
-              border: '1px solid rgba(255, 215, 0, 0.2)',
-              borderRadius: '8px',
-              padding: '1rem',
-              marginBottom: '2rem'
-            }}>
-              <h4 style={{ color: '#FFD700', margin: '0 0 0.5rem 0' }}>
-                Current Plan: {currentSubscription.tier_display}
-              </h4>
-              <div style={{
-                display: 'grid',
-                gridTemplateColumns: 'repeat(auto-fit, minmax(150px, 1fr))',
-                gap: '1rem',
-                color: 'rgba(255, 255, 255, 0.8)',
-                fontSize: '0.9rem'
-              }}>
-                <div>Messages: {currentSubscription.messages_used || 0}/{currentSubscription.message_limit === -1 ? '∞' : currentSubscription.message_limit}</div>
-                <div>Characters: {currentSubscription.characters_used || 0}/{currentSubscription.character_limit === -1 ? '∞' : currentSubscription.character_limit}</div>
-              </div>
-            </div>
-          )}
+        {/* Currency Selector */}
+        <div style={{
+          marginBottom: '2rem',
+          display: 'flex',
+          justifyContent: 'center',
+          gap: '0.5rem'
+        }}>
+          {['GBP', 'USD', 'EUR'].map(currency => (
+            <button
+              key={currency}
+              onClick={() => setSelectedCurrency(currency)}
+              style={{
+                background: selectedCurrency === currency 
+                  ? 'rgba(255, 215, 0, 0.2)' 
+                  : 'rgba(255, 255, 255, 0.05)',
+                border: selectedCurrency === currency 
+                  ? '1px solid #FFD700' 
+                  : '1px solid rgba(255, 255, 255, 0.2)',
+                borderRadius: '6px',
+                color: selectedCurrency === currency ? '#FFD700' : 'rgba(255, 255, 255, 0.8)',
+                padding: '0.5rem 1rem',
+                fontSize: '0.9rem',
+                cursor: 'pointer',
+                transition: 'all 0.3s ease'
+              }}
+            >
+              {currency === 'GBP' ? '£ GBP' : currency === 'USD' ? '$ USD' : '€ EUR'}
+            </button>
+          ))}
+        </div>
 
-          {/* Tier Selection */}
+        {/* Current Plan Info */}
+        {currentSubscription && (
           <div style={{
-            display: 'grid',
-            gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))',
-            gap: '1rem',
+            background: 'rgba(255, 255, 255, 0.05)',
+            border: '1px solid rgba(255, 215, 0, 0.2)',
+            borderRadius: '8px',
+            padding: '1rem',
             marginBottom: '2rem'
           }}>
-            {Object.entries(SUBSCRIPTION_TIERS).map(([tier, config]) => (
+            <h4 style={{ color: '#FFD700', margin: '0 0 0.5rem 0' }}>
+              Current Plan: {currentSubscription.tier_display}
+            </h4>
+            <div style={{
+              display: 'grid',
+              gridTemplateColumns: 'repeat(auto-fit, minmax(150px, 1fr))',
+              gap: '1rem',
+              color: 'rgba(255, 255, 255, 0.8)',
+              fontSize: '0.9rem'
+            }}>
+              <div>Messages: {currentSubscription.messages_used || 0}/{currentSubscription.message_limit === -1 ? '∞' : currentSubscription.message_limit}</div>
+              <div>Characters: {currentSubscription.characters_used || 0}/{currentSubscription.character_limit === -1 ? '∞' : currentSubscription.character_limit}</div>
+            </div>
+          </div>
+        )}
+
+        {/* Tier Selection */}
+        <div style={{
+          display: 'grid',
+          gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))',
+          gap: '1rem',
+          marginBottom: '2rem'
+        }}>
+          {Object.entries(SUBSCRIPTION_TIERS).map(([tier, config]) => {
+            const priceDisplay = getPriceDisplay(tier);
+            
+            return (
               <div
                 key={tier}
                 onClick={() => setSelectedTier(tier)}
@@ -397,7 +415,7 @@ const PaymentProcessor = ({
                   fontWeight: 'bold',
                   margin: '0 0 1rem 0'
                 }}>
-                  ${config.price}
+                  {priceDisplay}
                   <span style={{
                     fontSize: '0.8rem',
                     color: 'rgba(255, 255, 255, 0.6)'
@@ -426,258 +444,8 @@ const PaymentProcessor = ({
                   ))}
                 </ul>
               </div>
-            ))}
-          </div>
-
-          {/* Action Button */}
-          <div style={{ textAlign: 'center' }}>
-            <button
-              onClick={() => setCurrentStep(2)}
-              style={{
-                background: 'linear-gradient(135deg, #FFD700, #FFA500)',
-                border: 'none',
-                borderRadius: '8px',
-                color: '#000',
-                fontSize: '1rem',
-                fontWeight: 700,
-                padding: '0.75rem 2rem',
-                cursor: 'pointer',
-                transition: 'all 0.3s ease'
-              }}
-            >
-              Continue to Payment
-            </button>
-          </div>
-        </div>
-      </div>
-    );
-  }
-
-  // Payment Form Step
-  return (
-    <div style={{
-      position: 'fixed',
-      top: 0,
-      left: 0,
-      width: '100%',
-      height: '100%',
-      background: 'rgba(0, 0, 0, 0.9)',
-      display: 'flex',
-      alignItems: 'center',
-      justifyContent: 'center',
-      zIndex: 9999,
-      padding: '1rem'
-    }}>
-      <div style={{
-        background: 'linear-gradient(135deg, #0B1426 0%, #1A2B47 25%, #2C1810 50%, #0F1A2E 75%, #0B1426 100%)',
-        border: '2px solid rgba(255, 215, 0, 0.3)',
-        borderRadius: '20px',
-        padding: '2rem',
-        width: '100%',
-        maxWidth: '500px',
-        maxHeight: '90vh',
-        overflowY: 'auto'
-      }}>
-        {/* Header */}
-        <div style={{
-          textAlign: 'center',
-          marginBottom: '2rem'
-        }}>
-          <h2 style={{
-            color: '#FFD700',
-            fontSize: '1.5rem',
-            margin: '0 0 0.5rem 0'
-          }}>
-            Complete Your Upgrade
-          </h2>
-          <p style={{
-            color: 'rgba(255, 255, 255, 0.8)',
-            margin: 0
-          }}>
-            {SUBSCRIPTION_TIERS[selectedTier].display_name} - ${SUBSCRIPTION_TIERS[selectedTier].price}/month
-          </p>
-        </div>
-
-        {/* Payment Form */}
-        <div style={{ marginBottom: '2rem' }}>
-          <div style={{ marginBottom: '1rem' }}>
-            <label style={{
-              display: 'block',
-              color: 'rgba(255, 255, 255, 0.9)',
-              fontSize: '0.9rem',
-              marginBottom: '0.5rem'
-            }}>
-              Card Number *
-            </label>
-            <input
-              type="text"
-              value={paymentData.cardNumber}
-              onChange={(e) => setPaymentData(prev => ({
-                ...prev,
-                cardNumber: formatCardNumber(e.target.value)
-              }))}
-              placeholder="1234 5678 9012 3456"
-              maxLength="19"
-              style={{
-                width: '100%',
-                padding: '0.75rem',
-                fontSize: '1rem',
-                border: '1px solid rgba(255, 255, 255, 0.3)',
-                borderRadius: '6px',
-                background: 'rgba(255, 255, 255, 0.1)',
-                color: '#fff',
-                outline: 'none'
-              }}
-            />
-          </div>
-
-          <div style={{
-            display: 'grid',
-            gridTemplateColumns: '1fr 1fr',
-            gap: '1rem',
-            marginBottom: '1rem'
-          }}>
-            <div>
-              <label style={{
-                display: 'block',
-                color: 'rgba(255, 255, 255, 0.9)',
-                fontSize: '0.9rem',
-                marginBottom: '0.5rem'
-              }}>
-                Expiry Date *
-              </label>
-              <input
-                type="text"
-                value={paymentData.expiryDate}
-                onChange={(e) => setPaymentData(prev => ({
-                  ...prev,
-                  expiryDate: formatExpiryDate(e.target.value)
-                }))}
-                placeholder="MM/YY"
-                maxLength="5"
-                style={{
-                  width: '100%',
-                  padding: '0.75rem',
-                  fontSize: '1rem',
-                  border: '1px solid rgba(255, 255, 255, 0.3)',
-                  borderRadius: '6px',
-                  background: 'rgba(255, 255, 255, 0.1)',
-                  color: '#fff',
-                  outline: 'none'
-                }}
-              />
-            </div>
-
-            <div>
-              <label style={{
-                display: 'block',
-                color: 'rgba(255, 255, 255, 0.9)',
-                fontSize: '0.9rem',
-                marginBottom: '0.5rem'
-              }}>
-                CVV *
-              </label>
-              <input
-                type="text"
-                value={paymentData.cvv}
-                onChange={(e) => setPaymentData(prev => ({
-                  ...prev,
-                  cvv: e.target.value.replace(/\D/g, '').slice(0, 4)
-                }))}
-                placeholder="123"
-                maxLength="4"
-                style={{
-                  width: '100%',
-                  padding: '0.75rem',
-                  fontSize: '1rem',
-                  border: '1px solid rgba(255, 255, 255, 0.3)',
-                  borderRadius: '6px',
-                  background: 'rgba(255, 255, 255, 0.1)',
-                  color: '#fff',
-                  outline: 'none'
-                }}
-              />
-            </div>
-          </div>
-
-          <div style={{ marginBottom: '1rem' }}>
-            <label style={{
-              display: 'block',
-              color: 'rgba(255, 255, 255, 0.9)',
-              fontSize: '0.9rem',
-              marginBottom: '0.5rem'
-            }}>
-              Cardholder Name *
-            </label>
-            <input
-              type="text"
-              value={paymentData.name}
-              onChange={(e) => setPaymentData(prev => ({
-                ...prev,
-                name: e.target.value
-              }))}
-              placeholder="John Doe"
-              style={{
-                width: '100%',
-                padding: '0.75rem',
-                fontSize: '1rem',
-                border: '1px solid rgba(255, 255, 255, 0.3)',
-                borderRadius: '6px',
-                background: 'rgba(255, 255, 255, 0.1)',
-                color: '#fff',
-                outline: 'none'
-              }}
-            />
-          </div>
-
-          <div style={{ marginBottom: '1rem' }}>
-            <label style={{
-              display: 'block',
-              color: 'rgba(255, 255, 255, 0.9)',
-              fontSize: '0.9rem',
-              marginBottom: '0.5rem'
-            }}>
-              Email
-            </label>
-            <input
-              type="email"
-              value={paymentData.email}
-              onChange={(e) => setPaymentData(prev => ({
-                ...prev,
-                email: e.target.value
-              }))}
-              placeholder="your@email.com"
-              style={{
-                width: '100%',
-                padding: '0.75rem',
-                fontSize: '1rem',
-                border: '1px solid rgba(255, 255, 255, 0.3)',
-                borderRadius: '6px',
-                background: 'rgba(255, 255, 255, 0.1)',
-                color: '#fff',
-                outline: 'none'
-              }}
-            />
-          </div>
-        </div>
-
-        {/* Security Badge */}
-        <div style={{
-          display: 'flex',
-          justifyContent: 'center',
-          gap: '2rem',
-          marginBottom: '1rem',
-          fontSize: '0.8rem',
-          color: 'rgba(255, 255, 255, 0.7)'
-        }}>
-          <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-            <span style={{ color: '#00FF88' }}>🔒</span>
-            <span>SSL Secured</span>
-          </div>
-          <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-            <span style={{ color: '#00FF88' }}>💳</span>
-            <span>PCI Compliant</span>
-          </div>
+            );
+          })}
         </div>
 
         {/* Error Display */}
@@ -696,67 +464,146 @@ const PaymentProcessor = ({
           </div>
         )}
 
-        {/* Action Buttons */}
+        {/* Stripe Trust Badge & Action Button */}
         <div style={{
-          display: 'flex',
-          gap: '1rem',
-          justifyContent: 'center'
+          background: 'rgba(255, 255, 255, 0.05)',
+          borderRadius: '8px',
+          padding: '1.5rem',
+          marginBottom: '1rem'
         }}>
-          <button
-            onClick={() => setCurrentStep(1)}
-            disabled={isProcessing}
-            style={{
-              background: 'rgba(255, 255, 255, 0.1)',
-              border: '2px solid rgba(255, 255, 255, 0.3)',
-              borderRadius: '8px',
-              color: 'rgba(255, 255, 255, 0.8)',
-              fontSize: '1rem',
-              fontWeight: 600,
-              padding: '0.75rem 1.5rem',
-              cursor: isProcessing ? 'not-allowed' : 'pointer',
-              opacity: isProcessing ? 0.5 : 1
-            }}
-          >
-            Back
-          </button>
+          <div style={{
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            gap: '1rem',
+            marginBottom: '1rem',
+            fontSize: '0.9rem',
+            color: 'rgba(255, 255, 255, 0.7)'
+          }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+              <span style={{ color: '#00FF88', fontSize: '1.2rem' }}>🔒</span>
+              <span>Secured by Stripe</span>
+            </div>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+              <span style={{ color: '#00FF88', fontSize: '1.2rem' }}>💳</span>
+              <span>PCI Compliant</span>
+            </div>
+          </div>
           
           <button
-            onClick={handlePayment}
-            disabled={isProcessing}
+            onClick={handleStripeCheckout}
+            disabled={isProcessing && processingProvider !== 'stripe'}
             style={{
-              background: isProcessing 
+              width: '100%',
+              background: (isProcessing && processingProvider === 'stripe') 
                 ? 'rgba(255, 215, 0, 0.5)' 
                 : 'linear-gradient(135deg, #FFD700, #FFA500)',
               border: 'none',
               borderRadius: '8px',
               color: '#000',
-              fontSize: '1rem',
+              fontSize: '1.1rem',
               fontWeight: 700,
-              padding: '0.75rem 2rem',
-              cursor: isProcessing ? 'not-allowed' : 'pointer',
+              padding: '1rem 2rem',
+              cursor: (isProcessing && processingProvider !== 'stripe') ? 'not-allowed' : 'pointer',
               transition: 'all 0.3s ease',
               display: 'flex',
               alignItems: 'center',
+              justifyContent: 'center',
               gap: '0.5rem'
             }}
           >
-            {isProcessing ? (
+            {(isProcessing && processingProvider === 'stripe') ? (
               <>
                 <div style={{
-                  width: '16px',
-                  height: '16px',
-                  border: '2px solid rgba(0,0,0,0.3)',
-                  borderTop: '2px solid rgba(0,0,0,0.8)',
+                  width: '20px',
+                  height: '20px',
+                  border: '3px solid rgba(0,0,0,0.3)',
+                  borderTop: '3px solid rgba(0,0,0,0.8)',
                   borderRadius: '50%',
                   animation: 'spin 1s linear infinite'
                 }} />
-                Processing...
+                Redirecting to Stripe...
               </>
             ) : (
-              `Complete Purchase - ${SUBSCRIPTION_TIERS[selectedTier].price}`
+              `Pay ${getPriceDisplay(selectedTier)}/month with Stripe →`
             )}
           </button>
         </div>
+
+        {/* ✅ ADDED: PayPal Trust Badge & Action Button */}
+        <div style={{
+          background: 'rgba(255, 255, 255, 0.05)',
+          borderRadius: '8px',
+          padding: '1.5rem',
+          marginBottom: '1rem'
+        }}>
+          <div style={{
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            gap: '1rem',
+            marginBottom: '1rem',
+            fontSize: '0.9rem',
+            color: 'rgba(255, 255, 255, 0.7)'
+          }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+              <span style={{ color: '#00FF88', fontSize: '1.2rem' }}>🅿️</span>
+              <span>PayPal Secure</span>
+            </div>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+              <span style={{ color: '#00FF88', fontSize: '1.2rem' }}>🔒</span>
+              <span>Buyer Protection</span>
+            </div>
+          </div>
+          
+          <button
+            onClick={handlePayPalCheckout}
+            disabled={isProcessing && processingProvider !== 'paypal'}
+            style={{
+              width: '100%',
+              background: (isProcessing && processingProvider === 'paypal') 
+                ? 'rgba(0, 48, 135, 0.5)' 
+                : 'linear-gradient(135deg, #0070BA, #003087)',
+              border: 'none',
+              borderRadius: '8px',
+              color: '#FFF',
+              fontSize: '1.1rem',
+              fontWeight: 700,
+              padding: '1rem 2rem',
+              cursor: (isProcessing && processingProvider !== 'paypal') ? 'not-allowed' : 'pointer',
+              transition: 'all 0.3s ease',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              gap: '0.5rem'
+            }}
+          >
+            {(isProcessing && processingProvider === 'paypal') ? (
+              <>
+                <div style={{
+                  width: '20px',
+                  height: '20px',
+                  border: '3px solid rgba(255,255,255,0.3)',
+                  borderTop: '3px solid rgba(255,255,255,0.8)',
+                  borderRadius: '50%',
+                  animation: 'spin 1s linear infinite'
+                }} />
+                Redirecting to PayPal...
+              </>
+            ) : (
+              `Pay ${getPriceDisplay(selectedTier)}/month with PayPal →`
+            )}
+          </button>
+        </div>
+
+        <p style={{
+          textAlign: 'center',
+          color: 'rgba(255, 255, 255, 0.6)',
+          fontSize: '0.85rem',
+          margin: 0
+        }}>
+          You'll be redirected to our secure checkout page
+        </p>
 
         <style jsx>{`
           @keyframes spin {

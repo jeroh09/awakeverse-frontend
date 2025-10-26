@@ -153,17 +153,17 @@ export const useSubscriptionAwareUsage = (character, user_id) => {
       'free': { 
         suggestedTier: 'Starter', 
         suggestedLimit: '500 messages/month', 
-        suggestedPrice: '$9.99' 
+        suggestedPrice: '£3.99' 
       },
       'starter': { 
         suggestedTier: 'Pro', 
         suggestedLimit: '2,000 messages/month', 
-        suggestedPrice: '$19.99' 
+        suggestedPrice: '£6.99' 
       },
       'pro': { 
         suggestedTier: 'Unlimited', 
         suggestedLimit: 'Unlimited messages', 
-        suggestedPrice: '$49.99' 
+        suggestedPrice: '£11.99' 
       }
     };
 

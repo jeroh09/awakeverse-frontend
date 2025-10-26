@@ -130,7 +130,7 @@ export default function ForgotPassword() {
   return (
     <div className="auth-page">
       {/* MOBILE: Simple mobile form */}
-      <div className="mobile-forgot-form">
+      <div className="mobile-forgot-form mobile-only">
         <div className="mobile-form-content">
           <h2>Reset Password</h2>
           <p>Enter your email to receive reset instructions.</p>

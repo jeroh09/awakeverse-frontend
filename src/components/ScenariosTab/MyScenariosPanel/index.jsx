@@ -1,50 +1,52 @@
-// src/components/ScenariosTab/MyScenariosPanel/index.jsx - CORRECTED WITH ORIGINAL FUNCTIONALITY
+// src/components/ScenariosTab/MyScenariosPanel/index.jsx - UPDATED
 import React, { useState } from 'react';
+import { useAuth } from '../../../contexts/AuthContext';
+import { useUser } from '../../../contexts/UserContext';
 import { deleteScenario } from '../../../api';
+import { triggerPublishConfetti } from '../../../utils/confettiUtils';
 import usePremiumCharacters from '../../../hooks/usePremiumCharacters';
 import ScenarioCard from './ScenarioCard';
 import CreateButton from './CreateButton';
 import ScenarioChatWindow from '../ScenarioChatWindow';
+import PublishScenarioModal from '../PublishScenarioModal';
 import './MyScenariosPanel.css';
 
 export default function MyScenariosPanel({ 
   scenarios = [],
   onRefresh = () => {},
   onCreateNew = () => {},
-  theme = 'light' // Get from parent ScenariosTab
+  theme = 'light'
 }) {
+  const { token } = useAuth();
+  const { user } = useUser();
   const [error, setError] = useState(null);
   const [deleting, setDeleting] = useState(null);
   const [activeScenario, setActiveScenario] = useState(null);
   
-  // Get user's custom characters for avatar lookups
+  // Publishing state
+  const [publishing, setPublishing] = useState(null);
+  const [publishModalOpen, setPublishModalOpen] = useState(false);
+  const [selectedScenarioForPublish, setSelectedScenarioForPublish] = useState(null);
+  const [publishError, setPublishError] = useState(null);
+  
   const { userCharacters = [] } = usePremiumCharacters();
 
-  console.log('📋 MyScenariosPanel:', {
-    scenariosCount: scenarios.length,
-    userCharactersCount: userCharacters.length,
-    hasUserCharacters: userCharacters.length > 0
-  });
-
-  // Handle starting a debate - ORIGINAL LOGIC
+  // Handle starting a debate
   const handleStartDebate = async (scenarioId) => {
     try {
-      console.log('🎭 Starting debate for scenario:', scenarioId);
-      
       const scenario = scenarios.find(s => s.id === scenarioId);
       if (!scenario) {
         throw new Error('Scenario not found');
       }
       
       setActiveScenario(scenario);
-      
     } catch (error) {
       console.error('❌ Failed to start debate:', error);
       alert('Failed to start debate. Please try again.');
     }
   };
 
-  // Handle closing chat window - ORIGINAL LOGIC
+  // Handle closing chat window
   const handleCloseChatWindow = () => {
     setActiveScenario(null);
   };
@@ -57,8 +59,6 @@ export default function MyScenariosPanel({
 
     try {
       setDeleting(scenarioId);
-      console.log('🗑️ Deleting scenario:', scenarioId);
-      
       const result = await deleteScenario(scenarioId);
       
       if (result.status === 'success') {
@@ -78,12 +78,90 @@ export default function MyScenariosPanel({
 
   // Handle editing a scenario
   const handleEditScenario = (scenario) => {
-    // TODO: Open ScenarioCreator in edit mode
     console.log('✏️ Editing scenario:', scenario.id);
     alert(`Edit functionality coming soon!\n\nScenario: ${scenario.title}`);
   };
 
-  // IF CHAT WINDOW IS ACTIVE, SHOW IT FULLSCREEN - ORIGINAL LOGIC
+  // Handle publish button click - opens modal
+  const handlePublishClick = (scenario) => {
+    setSelectedScenarioForPublish(scenario);
+    setPublishError(null);
+    setPublishModalOpen(true);
+  };
+
+  // Handle modal close
+  const handlePublishModalClose = () => {
+    if (!publishing) {
+      setPublishModalOpen(false);
+      setSelectedScenarioForPublish(null);
+      setPublishError(null);
+    }
+  };
+
+  // Handle publish/unpublish confirmation - UPDATED WITH CONFETTI
+  const handlePublishConfirm = async (scenario) => {
+    const isPublished = scenario.is_public === true;
+    const action = isPublished ? 'unpublish' : 'publish';
+    
+    try {
+      setPublishing(scenario.id);
+      setPublishError(null);
+      
+      const API_BASE = process.env.REACT_APP_API_URL || 'http://localhost:5000';
+      const endpoint = isPublished 
+        ? `${API_BASE}/api/market-hub/unpublish-scenario`
+        : `${API_BASE}/api/market-hub/publish-scenario`;
+
+      console.log(`🌐 ${action === 'publish' ? 'Publishing' : 'Unpublishing'} scenario:`, scenario.id);
+
+      const response = await fetch(endpoint, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`
+        },
+        body: JSON.stringify({ scenario_id: scenario.id })
+      });
+
+      const data = await response.json();
+
+      if (!response.ok) {
+        // Handle specific error cases
+        if (response.status === 403) {
+          setPublishError('Professional tier required to publish scenarios. Please upgrade your account.');
+          return;
+        }
+        if (response.status === 400 && data.error?.includes('2 characters')) {
+          setPublishError('Scenario must have at least 2 characters to publish.');
+          return;
+        }
+        throw new Error(data.error || `Failed to ${action} scenario`);
+      }
+
+      console.log(`✅ Scenario ${action}ed successfully:`, data);
+      
+      // 🎉 TRIGGER CONFETTI WHEN PUBLISHING (not unpublishing)
+      if (action === 'publish') {
+        triggerPublishConfetti();
+      }
+      
+      // Close modal and refresh scenarios list
+      setPublishModalOpen(false);
+      setSelectedScenarioForPublish(null);
+      onRefresh();
+      
+      // Show success message
+      alert(`Scenario ${action === 'publish' ? 'published to' : 'removed from'} Market Hub successfully!`);
+      
+    } catch (error) {
+      console.error(`❌ Failed to ${action} scenario:`, error);
+      setPublishError(error.message || `Failed to ${action} scenario`);
+    } finally {
+      setPublishing(null);
+    }
+  };
+
+  // If chat window is active, show it fullscreen
   if (activeScenario) {
     return (
       <ScenarioChatWindow
@@ -134,22 +212,23 @@ export default function MyScenariosPanel({
         </div>
       )}
       
-      {/* ONLY CHANGE: scenarios-list → scenarios-grid */}
       <div className="scenarios-grid">
         {scenarios.map(scenario => (
           <ScenarioCard
             key={scenario.id}
             scenario={scenario}
-            onStartDebate={handleStartDebate} // This calls the local function that sets activeScenario
+            onStartDebate={handleStartDebate}
             onDelete={handleDeleteScenario}
             onEdit={handleEditScenario}
+            onPublish={handlePublishClick}
             isDeleting={deleting === scenario.id}
+            isPublishing={publishing === scenario.id}
             userCharacters={userCharacters}
           />
         ))}
       </div>
 
-      {/* Create New Button - Always visible if under 5 scenarios */}
+      {/* Create New Button */}
       {scenarios.length < 5 && (
         <div className="create-new-section">
           <CreateButton 
@@ -167,6 +246,17 @@ export default function MyScenariosPanel({
           <p className="hint">Delete a scenario to create a new one</p>
         </div>
       )}
+
+      {/* Publish/Unpublish Modal */}
+      <PublishScenarioModal
+        isOpen={publishModalOpen}
+        onClose={handlePublishModalClose}
+        onConfirm={handlePublishConfirm}
+        scenario={selectedScenarioForPublish}
+        isLoading={publishing !== null}
+        error={publishError}
+        isUnpublishing={selectedScenarioForPublish?.is_public === true}
+      />
     </div>
   );
 }

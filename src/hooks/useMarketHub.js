@@ -2,18 +2,20 @@
 import { useState, useEffect, useCallback, useRef } from 'react';
 import { useAuth } from '../contexts/AuthContext';
 
-const API_BASE = process.env.REACT_APP_API_URL || 'https://api.awakeverse.com';
+const API_BASE = process.env.REACT_APP_API_URL || 'http://localhost:5000';
 
 export const useMarketHub = ({ 
   page = 1, 
   search = '', 
   filters = {}, 
   perPage = 20,
-  enabled = true 
+  enabled = true,
+  includeScenarios = false  // 🆕 ADD THIS PARAMETER
 } = {}) => {
   const { getAuthHeaders } = useAuth();
   const [state, setState] = useState({
     characters: [],
+    scenarios: [],  // 🆕 ADD scenarios to state
     loading: true,
     error: null,
     pagination: null,
@@ -23,15 +25,15 @@ export const useMarketHub = ({
   const abortControllerRef = useRef(null);
   const cacheRef = useRef(new Map());
 
-  // Create cache key for request
-  const createCacheKey = useCallback((page, search, filters, perPage) => {
-    return `${page}-${search}-${JSON.stringify(filters)}-${perPage}`;
+  // 🆕 UPDATE: Modify createCacheKey to include includeScenarios
+  const createCacheKey = useCallback((page, search, filters, perPage, includeScenarios) => {
+    return `${page}-${search}-${JSON.stringify(filters)}-${perPage}-${includeScenarios}`;
   }, []);
 
-  // Defensive API call with retry logic
-  const fetchMarketHub = useCallback(async (page, search, filters, perPage, retryCount = 0) => {
+  // 🆕 UPDATE: Modify fetchMarketHub signature and params
+  const fetchMarketHub = useCallback(async (page, search, filters, perPage, includeScenarios, retryCount = 0) => {
     const MAX_RETRIES = 2;
-    const cacheKey = createCacheKey(page, search, filters, perPage);
+    const cacheKey = createCacheKey(page, search, filters, perPage, includeScenarios);
 
     // Cancel previous request
     if (abortControllerRef.current) {
@@ -78,6 +80,11 @@ export const useMarketHub = ({
         params.set('sort', filters.sort);
       }
 
+      // 🆕 ADD: Include scenarios parameter
+      if (includeScenarios) {
+        params.set('include_scenarios', 'true');
+      }
+
       const response = await fetch(
         `${API_BASE}/api/market-hub/browse?${params}`,
         {
@@ -102,6 +109,7 @@ export const useMarketHub = ({
           // For starter accounts or when hub is not available
           const resultData = {
             characters: [],
+            scenarios: [],  // 🆕 ADD scenarios
             pagination: { total: 0, pages: 0, page: 1, has_next: false, has_prev: false },
             hubNotAvailable: true
           };
@@ -121,9 +129,10 @@ export const useMarketHub = ({
 
       const data = await response.json();
 
-      // Validate response structure
+      // 🆕 UPDATE: Validate response structure to include scenarios
       const resultData = {
         characters: Array.isArray(data.characters) ? data.characters : [],
+        scenarios: Array.isArray(data.scenarios) ? data.scenarios : [],  // 🆕 ADD scenarios
         pagination: data.pagination || { 
           total: 0, 
           pages: 0, 
@@ -170,7 +179,7 @@ export const useMarketHub = ({
           (error.message.includes('fetch') || error.message.includes('network'))) {
         console.warn(`Market hub fetch attempt ${retryCount + 1} failed, retrying...`);
         await new Promise(resolve => setTimeout(resolve, 1000 * (retryCount + 1)));
-        return fetchMarketHub(page, search, filters, perPage, retryCount + 1);
+        return fetchMarketHub(page, search, filters, perPage, includeScenarios, retryCount + 1);
       }
 
       const errorMessage = error.message === 'Authentication required' 
@@ -179,7 +188,7 @@ export const useMarketHub = ({
         ? 'Market Hub access requires authentication'
         : error.message.includes('fetch') || error.message.includes('network')
         ? 'Unable to connect to Market Hub. Please check your internet connection.'
-        : 'Unable to load characters from Market Hub';
+        : 'Unable to load content from Market Hub';
 
       setState(prev => ({
         ...prev,
@@ -191,21 +200,21 @@ export const useMarketHub = ({
     }
   }, [getAuthHeaders, createCacheKey]);
 
-  // Refetch function for error recovery
+  // 🆕 UPDATE: Modify refetch to include includeScenarios
   const refetch = useCallback(() => {
-    fetchMarketHub(page, search, filters, perPage);
-  }, [fetchMarketHub, page, search, filters, perPage]);
+    fetchMarketHub(page, search, filters, perPage, includeScenarios);
+  }, [fetchMarketHub, page, search, filters, perPage, includeScenarios]);
 
   // Clear cache function
   const clearCache = useCallback(() => {
     cacheRef.current.clear();
   }, []);
 
-  // Effect to fetch data when parameters change
+  // 🆕 UPDATE: Effect to fetch data when parameters change
   useEffect(() => {
     if (!enabled) return;
 
-    fetchMarketHub(page, search, filters, perPage);
+    fetchMarketHub(page, search, filters, perPage, includeScenarios);
 
     // Cleanup function
     return () => {
@@ -213,7 +222,7 @@ export const useMarketHub = ({
         abortControllerRef.current.abort();
       }
     };
-  }, [fetchMarketHub, page, search, filters, perPage, enabled]);
+  }, [fetchMarketHub, page, search, filters, perPage, includeScenarios, enabled]);
 
   // Cleanup on unmount
   useEffect(() => {
@@ -224,8 +233,10 @@ export const useMarketHub = ({
     };
   }, []);
 
+  // 🆕 UPDATE: Return scenarios in the hook result
   return {
     characters: state.characters,
+    scenarios: state.scenarios,  // 🆕 ADD scenarios to return
     loading: state.loading,
     error: state.error,
     pagination: state.pagination,
@@ -281,6 +292,55 @@ export const useCharacterEngagement = () => {
 
   return {
     engageWithCharacter,
+    loading
+  };
+};
+
+// 🆕 NEW: Add Scenario Engagement Hook (after useCharacterEngagement)
+export const useScenarioEngagement = () => {
+  const { getAuthHeaders } = useAuth();
+  const [loading, setLoading] = useState(false);
+
+  const engageWithScenario = useCallback(async (scenarioId, engagementType, metadata = {}) => {
+    setLoading(true);
+    
+    try {
+      const response = await fetch(`${API_BASE}/api/market-hub/engage-scenario`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          ...getAuthHeaders()
+        },
+        body: JSON.stringify({
+          scenario_id: scenarioId,
+          engagement_type: engagementType,
+          metadata
+        })
+      });
+
+      if (!response.ok) {
+        if (response.status === 401) {
+          throw new Error('Please sign in to engage with scenarios');
+        }
+        if (response.status === 404) {
+          throw new Error('Scenario not found');
+        }
+        throw new Error('Failed to record engagement');
+      }
+
+      const data = await response.json();
+      return data;
+
+    } catch (error) {
+      console.error('Scenario engagement error:', error);
+      throw error;
+    } finally {
+      setLoading(false);
+    }
+  }, [getAuthHeaders]);
+
+  return {
+    engageWithScenario,
     loading
   };
 };

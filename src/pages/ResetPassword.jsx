@@ -176,7 +176,7 @@ export default function ResetPassword() {
   return (
     <div className="auth-page">
       {/* MOBILE FORM */}
-      <div className="mobile-reset-form">
+      <div className="mobile-reset-form mobile-only">
         <div className="mobile-form-content">
           <h2>Create New Password</h2>
           <p>Enter your new password below.</p>

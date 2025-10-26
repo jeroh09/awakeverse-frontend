@@ -1,5 +1,7 @@
-// src/contexts/AppViewContext.jsx - Enhanced with SCENARIOS view state
-import React, { createContext, useContext, useState, useEffect, useCallback } from 'react';
+// src/contexts/AppViewContext.jsx - FIXED: Proper hash parsing in popstate
+// DEFENSIVE: Fixes browser back button, navigation state loss, and Stripe redirect issues
+
+import React, { createContext, useContext, useState, useEffect, useCallback, useRef } from 'react';
 import api from '../api';
 
 const AppViewContext = createContext();
@@ -8,11 +10,152 @@ export const VIEW_STATES = {
   CHAT: 'chat',
   MARKET_HUB: 'market_hub',
   CREATOR_DASHBOARD: 'creator_dashboard',
-  SCENARIOS: 'scenarios'  // NEW: Scenarios view
+  SCENARIOS: 'scenarios'
 };
 
 const STORAGE_KEY = 'awakeverse_discovered_characters';
+const NAVIGATION_HISTORY_KEY = 'awakeverse_navigation_history';
 const SYNC_INTERVAL = 60000; // Sync every 60 seconds
+
+// ============================================================================
+// HASH NAVIGATION UTILITIES - STEP 1: Core parsing functions
+// ============================================================================
+
+/**
+ * Parse hash fragment with query params
+ * Example: "#chat?stripe_success=true&session_id=XXX"
+ * Returns: { view: "chat", params: { stripe_success: "true", session_id: "XXX" } }
+ * 
+ * DEFENSIVE: Handles all edge cases gracefully
+ */
+export function parseHashFragment(hashString) {
+  try {
+    // Remove leading # if present
+    const hash = hashString.startsWith('#') ? hashString.slice(1) : hashString;
+    
+    // DEFENSIVE: Empty hash
+    if (!hash) {
+      return { view: null, params: {} };
+    }
+    
+    // Split on ? to separate view from params
+    const [viewPart, paramsPart] = hash.split('?');
+    
+    // Parse view (e.g., "chat", "discover", "chat/characterKey")
+    const view = viewPart || null;
+    
+    // Parse query params
+    const params = {};
+    if (paramsPart) {
+      try {
+        const searchParams = new URLSearchParams(paramsPart);
+        searchParams.forEach((value, key) => {
+          params[key] = value;
+        });
+      } catch (paramError) {
+        console.warn('Failed to parse hash params:', paramError);
+      }
+    }
+    
+    return { view, params };
+  } catch (error) {
+    console.error('Hash parsing error:', error);
+    return { view: null, params: {} };
+  }
+}
+
+/**
+ * Build clean hash URL from view and optional params
+ * Example: buildHashUrl('chat', { test: 'value' }) → "#chat?test=value"
+ * 
+ * DEFENSIVE: Always returns valid string
+ */
+export function buildHashUrl(view, params = {}) {
+  try {
+    if (!view) return '#chat'; // Default fallback
+    
+    const paramKeys = Object.keys(params);
+    
+    // No params - return simple hash
+    if (paramKeys.length === 0) {
+      return `#${view}`;
+    }
+    
+    // Build query string
+    const queryString = new URLSearchParams(params).toString();
+    return `#${view}?${queryString}`;
+  } catch (error) {
+    console.error('Hash building error:', error);
+    return '#chat'; // Safe fallback
+  }
+}
+
+/**
+ * Clean URL by removing query params from hash
+ * Example: "#chat?stripe_success=true" → "#chat"
+ * 
+ * DEFENSIVE: Never reloads page
+ */
+export function cleanHashUrl(preserveView = true) {
+  try {
+    const { view } = parseHashFragment(window.location.hash);
+    const cleanView = preserveView && view ? view : 'chat';
+    
+    // Use replaceState to avoid reload and maintain history
+    window.history.replaceState(
+      { isAppRoot: true, view: cleanView, cleaned: true },
+      '',
+      `/app#${cleanView}`
+    );
+    
+    console.log(`🧹 Cleaned hash URL to: #${cleanView}`);
+    return cleanView;
+  } catch (error) {
+    console.error('Hash cleaning error:', error);
+    return 'chat';
+  }
+}
+
+/**
+ * Map view state to hash string
+ */
+const VIEW_TO_HASH_MAP = {
+  [VIEW_STATES.CHAT]: 'chat',
+  [VIEW_STATES.MARKET_HUB]: 'discover',
+  [VIEW_STATES.CREATOR_DASHBOARD]: 'create',
+  [VIEW_STATES.SCENARIOS]: 'scenarios'
+};
+
+/**
+ * Map hash string to view state
+ * FIXED: Now handles hash with params properly
+ */
+function getViewFromHash(hashString) {
+  // Parse the hash to extract just the view part
+  const { view: hashView } = parseHashFragment(hashString);
+  
+  if (!hashView) return VIEW_STATES.CHAT;
+  
+  // Extract base view (before any / or params)
+  const baseView = hashView.split('/')[0];
+  
+  // Map to view state
+  const HASH_TO_VIEW_MAP = {
+    'chat': VIEW_STATES.CHAT,
+    'launcher': VIEW_STATES.CHAT, // Alias
+    'discover': VIEW_STATES.MARKET_HUB,
+    'market_hub': VIEW_STATES.MARKET_HUB, // Alias
+    'create': VIEW_STATES.CREATOR_DASHBOARD,
+    'creator_dashboard': VIEW_STATES.CREATOR_DASHBOARD, // Alias
+    'scenarios': VIEW_STATES.SCENARIOS
+  };
+  
+  return HASH_TO_VIEW_MAP[baseView] || VIEW_STATES.CHAT;
+}
+
+// ============================================================================
+// MAIN PROVIDER COMPONENT
+// ============================================================================
 
 export const AppViewProvider = ({ children }) => {
   const [currentView, setCurrentView] = useState(VIEW_STATES.CHAT);
@@ -20,10 +163,12 @@ export const AppViewProvider = ({ children }) => {
   const [isSyncing, setIsSyncing] = useState(false);
   const [lastSyncTime, setLastSyncTime] = useState(null);
   
-  // Add this near the top with other state declarations (around line 20)
-  const isInitialized = React.useRef(false);
+  // Navigation history stack for back button support
+  const [navigationHistory, setNavigationHistory] = useState([]);
+  const isInitialized = useRef(false);
+  const popstateListenerAttached = useRef(false);
 
-  // NEW: Scenarios state
+  // Scenarios state
   const [activeScenario, setActiveScenario] = useState(null);
   const [activeDebate, setActiveDebate] = useState(null);
   const [myScenarios, setMyScenarios] = useState([]);
@@ -55,6 +200,31 @@ export const AppViewProvider = ({ children }) => {
   }, []);
 
   // ============================================================================
+  // NAVIGATION HISTORY PERSISTENCE
+  // ============================================================================
+
+  const loadNavigationHistory = useCallback(() => {
+    try {
+      const cached = sessionStorage.getItem(NAVIGATION_HISTORY_KEY);
+      if (cached) {
+        const parsed = JSON.parse(cached);
+        return Array.isArray(parsed) ? parsed : [];
+      }
+    } catch (e) {
+      console.warn('Failed to load navigation history:', e);
+    }
+    return [];
+  }, []);
+
+  const saveNavigationHistory = useCallback((history) => {
+    try {
+      sessionStorage.setItem(NAVIGATION_HISTORY_KEY, JSON.stringify(history));
+    } catch (e) {
+      console.warn('Failed to save navigation history:', e);
+    }
+  }, []);
+
+  // ============================================================================
   // BACKEND SYNC LAYER (Source of truth, cross-device sync)
   // ============================================================================
 
@@ -79,7 +249,6 @@ export const AppViewProvider = ({ children }) => {
       return backendCharacters;
     } catch (error) {
       console.warn('Backend sync failed, using localStorage cache:', error);
-      // DEFENSIVE: On sync failure, keep using localStorage cache
       return discoveredCharacters;
     } finally {
       setIsSyncing(false);
@@ -87,17 +256,160 @@ export const AppViewProvider = ({ children }) => {
   }, [isSyncing, discoveredCharacters, saveToLocalStorage]);
 
   // ============================================================================
-  // INITIALIZATION: Load from cache, then sync with backend
+  // STEP 2: ENHANCED VIEW SWITCHING WITH BROWSER HISTORY
+  // ============================================================================
+
+  /**
+   * Switch to a new view with proper browser history integration
+   * DEFENSIVE: This fixes the browser back button issue
+   */
+  const switchView = useCallback((newView, options = {}) => {
+    const { 
+      skipHistory = false,  // Don't add to history stack
+      replace = false,      // Replace current history entry
+      params = {}           // Optional query params
+    } = options;
+
+    try {
+      // DEFENSIVE: Validate view
+      if (!Object.values(VIEW_STATES).includes(newView)) {
+        console.warn(`❌ Invalid view state: ${newView}`);
+        return false;
+      }
+
+      // Update React state
+      setCurrentView(newView);
+      
+      // Build hash URL
+      const hashName = VIEW_TO_HASH_MAP[newView] || 'chat';
+      const fullHash = buildHashUrl(hashName, params);
+      const fullUrl = `/app${fullHash}`;
+      
+      // CRITICAL: Use pushState (not replaceState) for browser back button to work
+      // This adds the navigation to browser history
+      const historyMethod = replace ? 'replaceState' : 'pushState';
+      
+      window.history[historyMethod](
+        { 
+          isAppRoot: true, 
+          view: newView,
+          timestamp: Date.now(),
+          params
+        },
+        '',
+        fullUrl
+      );
+      
+      // Update navigation history stack (for our own tracking)
+      if (!skipHistory && !replace) {
+        setNavigationHistory(prev => {
+          const newHistory = [...prev, { view: newView, timestamp: Date.now(), hash: fullHash }];
+          // Keep only last 50 entries
+          const trimmed = newHistory.slice(-50);
+          saveNavigationHistory(trimmed);
+          return trimmed;
+        });
+      }
+      
+      console.log(`🔄 Switched to view: ${newView} (${fullHash})`);
+      return true;
+      
+    } catch (error) {
+      console.error('View switching error:', error);
+      return false;
+    }
+  }, [saveNavigationHistory]);
+
+  /**
+   * Navigate back using browser history
+   * DEFENSIVE: Safe back navigation that won't log user out
+   */
+  const navigateBack = useCallback((fallbackView = VIEW_STATES.CHAT) => {
+    try {
+      // Check if we have history to go back to
+      if (navigationHistory.length > 1) {
+        // Go back in browser history (this will trigger popstate)
+        window.history.back();
+        return true;
+      } else {
+        // No history - go to fallback view
+        console.log('📍 No navigation history, going to fallback view');
+        switchView(fallbackView, { replace: true });
+        return false;
+      }
+    } catch (error) {
+      console.error('Back navigation error:', error);
+      switchView(fallbackView, { replace: true });
+      return false;
+    }
+  }, [navigationHistory, switchView]);
+
+  // ============================================================================
+  // BROWSER POPSTATE LISTENER - FIXED: Proper hash parsing
+  // ============================================================================
+
+  useEffect(() => {
+    // Only attach once
+    if (popstateListenerAttached.current) return;
+    
+    const handlePopState = (event) => {
+      console.log('🔙 Browser back/forward button pressed', event.state);
+      
+      try {
+        // FIXED: Use getViewFromHash helper that properly parses the hash
+        const mappedView = getViewFromHash(window.location.hash);
+        
+        // Update React state to match URL
+        setCurrentView(mappedView);
+        
+        console.log(`🔄 Popstate: Updated view to ${mappedView} from hash ${window.location.hash}`);
+      } catch (error) {
+        console.error('Popstate handling error:', error);
+        setCurrentView(VIEW_STATES.CHAT);
+      }
+    };
+    
+    window.addEventListener('popstate', handlePopState);
+    popstateListenerAttached.current = true;
+    
+    return () => {
+      window.removeEventListener('popstate', handlePopState);
+      popstateListenerAttached.current = false;
+    };
+  }, []);
+
+  // ============================================================================
+  // INITIALIZATION: Load from cache, parse URL, then sync with backend
   // ============================================================================
 
   useEffect(() => {
     // Prevent multiple initializations
     if (isInitialized.current) return;
     isInitialized.current = true;
-    // Immediately load from localStorage for instant UI
-    const cachedCharacters = loadFromLocalStorage();
+    
+    console.log('🚀 Initializing AppViewContext...');
+    
+    // Load cached data immediately
+    loadFromLocalStorage();
+    const cachedHistory = loadNavigationHistory();
+    setNavigationHistory(cachedHistory);
+    
+    // Parse initial URL to set correct view - FIXED: Use getViewFromHash
+    const initialView = getViewFromHash(window.location.hash);
+    
+    console.log(`📍 Initial view from URL: ${initialView} (hash: ${window.location.hash})`);
+    setCurrentView(initialView);
+    
+    // Initialize browser history with current state if not already set
+    if (!window.history.state?.isAppRoot) {
+      window.history.replaceState(
+        { isAppRoot: true, view: initialView, timestamp: Date.now() },
+        '',
+        window.location.pathname + window.location.hash
+      );
+    }
 
-    // Then sync with backend in background
+    // Sync with backend in background
     const syncTimer = setTimeout(() => {
       syncWithBackend(true);
     }, 500);
@@ -111,14 +423,13 @@ export const AppViewProvider = ({ children }) => {
       clearTimeout(syncTimer);
       clearInterval(syncInterval);
     };
-  }, []); // Run once on mount - useRef prevents re-initialization
+  }, [loadFromLocalStorage, loadNavigationHistory, syncWithBackend]);
 
   // ============================================================================
-  // ADD CHARACTER: Optimistic update + backend sync
+  // DISCOVERED CHARACTERS MANAGEMENT
   // ============================================================================
 
   const addDiscoveredCharacter = useCallback(async (character) => {
-    
     // DEFENSIVE: Prevent duplicates
     if (discoveredCharacters.some(c => c.character_key === character.character_key)) {
       return;
@@ -137,16 +448,10 @@ export const AppViewProvider = ({ children }) => {
         short_description: character.short_description || character.description,
         avatar_url: character.avatar_url || character.thumbnailUrl
       });
-      
     } catch (error) {
       console.warn('Failed to save to backend, will retry on next sync:', error);
-      // DEFENSIVE: Keep in localStorage, will sync later
     }
   }, [discoveredCharacters, saveToLocalStorage]);
-
-  // ============================================================================
-  // REMOVE CHARACTER: Optimistic update + backend sync
-  // ============================================================================
 
   const removeDiscoveredCharacter = useCallback(async (characterKey) => {    
     // OPTIMISTIC UPDATE: Remove from state immediately
@@ -158,40 +463,12 @@ export const AppViewProvider = ({ children }) => {
     try {
       await api.delete(`/discovered-characters/${characterKey}`);
     } catch (error) {
+      console.warn('Failed to remove from backend:', error);
     }
   }, [discoveredCharacters, saveToLocalStorage]);
 
   // ============================================================================
-  // VIEW SWITCHING (Enhanced with Scenarios)
-  // ============================================================================
-
-  const switchView = useCallback((newView) => {
-    if (Object.values(VIEW_STATES).includes(newView)) {
-      setCurrentView(newView);
-      
-      // Update URL hash based on view
-      const hashMap = {
-        [VIEW_STATES.CHAT]: '#chat',
-        [VIEW_STATES.MARKET_HUB]: '#discover',
-        [VIEW_STATES.CREATOR_DASHBOARD]: '#create',
-        [VIEW_STATES.SCENARIOS]: '#scenarios'
-      };
-      
-      window.history.replaceState(
-        { isAppRoot: true, view: newView },
-        '',
-        `/app${hashMap[newView] || ''}`
-      );
-      
-      console.log(`🔄 Switched to view: ${newView}`);
-      return true;
-    }
-    console.warn(`❌ Invalid view state: ${newView}`);
-    return false;
-  }, []);
-
-  // ============================================================================
-  // NEW: SCENARIO MANAGEMENT METHODS
+  // SCENARIO MANAGEMENT METHODS
   // ============================================================================
 
   const setActiveScenarioData = useCallback((scenario) => {
@@ -217,11 +494,24 @@ export const AppViewProvider = ({ children }) => {
     return await syncWithBackend(false);
   }, [syncWithBackend]);
 
+  // ============================================================================
+  // CONTEXT VALUE
+  // ============================================================================
+
   const value = {
     // View state
     currentView,
     VIEW_STATES,
     switchView,
+    navigateBack,
+    
+    // Hash utilities (exported for use in other components)
+    parseHashFragment,
+    buildHashUrl,
+    cleanHashUrl,
+    
+    // Navigation history
+    navigationHistory,
     
     // Discovered characters
     discoveredCharacters,
@@ -233,7 +523,7 @@ export const AppViewProvider = ({ children }) => {
     lastSyncTime,
     manualSync,
 
-    // NEW: Scenario context values
+    // Scenario context values
     activeScenario,
     setActiveScenario: setActiveScenarioData,
     activeDebate,
