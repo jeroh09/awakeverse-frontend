@@ -1,7 +1,7 @@
 {
-  "buildCommand": "GENERATE_SOURCEMAP=false npm run build",
+  "buildCommand": "GENERATE_SOURCEMAP=false craco build",
   "outputDirectory": "build", 
-  "devCommand": "npm start",
+  "devCommand": "craco start",
   "installCommand": "npm install",
   "framework": "create-react-app",
 
