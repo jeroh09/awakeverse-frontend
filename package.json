@@ -1,5 +1,6 @@
 {
   "dependencies": {
+    "@craco/craco": "^7.1.0",
     "@testing-library/dom": "^10.4.0",
     "@testing-library/jest-dom": "^6.6.3",
     "@testing-library/react": "^16.2.0",
@@ -21,20 +22,17 @@
     "web-vitals": "^2.1.4"
   },
   "devDependencies": {
-    "@craco/craco": "^7.1.0",
     "ajv": "^8.17.1",
     "babel-plugin-transform-remove-console": "^6.9.4",
     "jest": "^27.5.1",
     "nodemon": "^3.0.2"
   },
-  
   "scripts": {
     "start": "craco start",
     "build": "GENERATE_SOURCEMAP=false craco build",
     "test": "craco test",
     "eject": "react-scripts eject"
   },
-
   "browserslist": {
     "production": [
       ">0.2%",
