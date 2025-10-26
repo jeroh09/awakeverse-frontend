@@ -1,15 +1,20 @@
 {
+  "name": "awakeverse-frontend",
+  "private": true,
+  "engines": {
+    "node": "22.x"
+  },
   "dependencies": {
-    "@craco/craco": "^7.1.0",
     "@testing-library/dom": "^10.4.0",
     "@testing-library/jest-dom": "^6.6.3",
     "@testing-library/react": "^16.2.0",
     "@testing-library/user-event": "^13.5.0",
     "axios": "^1.8.4",
+    "babel-plugin-transform-remove-console": "^6.9.4",
     "canvas-confetti": "^1.9.3",
     "jwt-decode": "3.1.2",
     "lucide-react": "^0.516.0",
-    "postcss": "^8.5.6",
+    "postcss": "^8.4.47",
     "react": "18.2.0",
     "react-dom": "18.2.0",
     "react-icons": "^5.5.0",
@@ -23,12 +28,13 @@
     "web-vitals": "^2.1.4"
   },
   "devDependencies": {
+    "@craco/craco": "^7.1.0",
     "ajv": "^8.17.1",
-    "babel-plugin-transform-remove-console": "^6.9.4",
     "jest": "^27.5.1",
     "nodemon": "^3.0.2"
   },
   "scripts": {
+    "prebuild": "node -e \"require.resolve('babel-plugin-transform-remove-console') && console.log('✔ console plugin present')\"",
     "start": "craco start",
     "build": "GENERATE_SOURCEMAP=false craco build",
     "test": "craco test",
@@ -45,8 +51,5 @@
       "last 1 firefox version",
       "last 1 safari version"
     ]
-  },
-  "engines": {
-    "node": "22.x"
   }
 }
