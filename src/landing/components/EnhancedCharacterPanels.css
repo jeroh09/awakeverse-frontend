@@ -386,3 +386,52 @@
     -webkit-backface-visibility: hidden;
   }
 }
+/* Add this to EnhancedCharacterPanels.css to override any leaked variables */
+.character-name,
+.category-label {
+  color: #ffd700 !important;
+}
+
+.character-description,
+.mini-character-name,
+.category-description {
+  color: rgba(255, 255, 255, 0.9) !important;
+}
+
+.flip-hint {
+  color: rgba(255, 255, 255, 0.55) !important;
+}
+/* Enhanced gold styling with different shades */
+.character-name {
+  color: #ffd700 !important; /* Bright gold */
+  text-shadow: 0 0 10px rgba(255, 215, 0, 0.5) !important;
+}
+
+.category-label {
+  color: #ffed4a !important; /* Lighter gold */
+  text-shadow: 0 0 8px rgba(255, 215, 0, 0.4) !important;
+}
+
+.character-description,
+.category-description {
+  color: rgba(255, 215, 0, 0.9) !important; /* Gold with slight transparency */
+}
+
+.mini-character-name {
+  color: rgba(255, 215, 0, 0.85) !important;
+}
+
+.chat-link {
+  color: #ffd700 !important;
+  border-color: #ffd700 !important;
+}
+
+.flip-hint {
+  color: rgba(255, 215, 0, 0.7) !important; /* More transparent gold */
+}
+
+/* Remove any potential grey backgrounds */
+.character-panel.front,
+.character-panel.back {
+  background: rgba(255, 255, 255, 0.08) !important;
+}

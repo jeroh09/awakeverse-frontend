@@ -118,7 +118,6 @@ const ORACLE_PROMPTS = [
 
 const ChatLauncherPage = ({ onStartChat }) => {
   const { user } = useUser();
-  const { token } = useAuth();
 
   // Character creation flow state
   const [showTemplates, setShowTemplates] = useState(false);
@@ -171,7 +170,7 @@ const ChatLauncherPage = ({ onStartChat }) => {
 
   // NEW: Load user's custom characters
   const loadUserCharacters = useCallback(async () => {
-    if (!token) return;
+    if (!user) return; // gate on user presence
 
     try {
       setCharactersLoading(true);
@@ -181,9 +180,10 @@ const ChatLauncherPage = ({ onStartChat }) => {
       const response = await fetch(`${API_BASE}/api/premium/characters`, {
         method: 'GET',
         headers: {
-          'Authorization': `Bearer ${token}`,
-          'Content-Type': 'application/json'
-        }
+          'Content-Type': 'application/json',
+          'X-CSRF-Token': getCookie('av_csrf')
+        },
+        credentials: 'include'
       });
 
       if (response.ok) {
@@ -558,7 +558,8 @@ const ChatLauncherPage = ({ onStartChat }) => {
                       border: '2px solid rgba(255, 215, 0, 0.3)',
                       opacity: character.status === 'rejected' ? 0.6 : 1
                     }}
-                    onError={(e) => { e.target.src = '/images/default-character.jpg'; }}
+                    onError={createImageErrorHandler(character.name || character.display_name)}
+
                   />
                   <div style={{ flex: 1, minWidth: 0 }}>
                     <div style={{

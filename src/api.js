@@ -8,29 +8,60 @@ const api = axios.create({
   withCredentials: true,
 });
 
-// Request interceptor
+
+// Request interceptor (cookie session + CSRF)
 api.interceptors.request.use(config => {
-  const token = localStorage.getItem('token');
-  
-  if (token) {
-    config.headers.Authorization = `Bearer ${token}`;
+  // Ensure credentials are sent (HttpOnly cookies)
+  config.withCredentials = true;
+
+  // For unsafe methods, attach CSRF header from av_csrf cookie
+  const method = (config.method || 'GET').toUpperCase();
+  if (['POST', 'PUT', 'PATCH', 'DELETE'].includes(method)) {
+    const m = document.cookie.match(/(?:^|;\s*)av_csrf=([^;]+)/);
+    if (m && m[1]) {
+      config.headers['X-CSRF-Token'] = decodeURIComponent(m[1]);
+    }
   }
-  
   return config;
 });
 
+
 // Response interceptor
+// Response interceptor with one-time refresh + retry
 api.interceptors.response.use(
-  response => {
-    return response;
-  },
-  error => {
-    if (error.response?.status === 401) {
-      localStorage.removeItem('token');
-      window.location.href = '/login';
+  response => response,
+  async (error) => {
+    const { config, response } = error;
+
+    // If no response or not a 401, just bubble up
+    if (!response || response.status !== 401) {
+      return Promise.reject(error);
     }
-    
-    return Promise.reject(error);
+
+    // Prevent infinite loops
+    if (config.__retried) {
+      // Already retried once: hard fail → redirect to login
+      try { window.location.href = '/login'; } catch {}
+      return Promise.reject(error);
+    }
+
+    // Try refresh once
+    try {
+      // Attach CSRF header for refresh
+      const m = document.cookie.match(/(?:^|;\s*)av_csrf=([^;]+)/);
+      const headers = {};
+      if (m && m[1]) headers['X-CSRF-Token'] = decodeURIComponent(m[1]);
+
+      await api.post('/auth/refresh', null, { headers });
+
+      // Mark and retry original request
+      config.__retried = true;
+      return api(config);
+    } catch (e) {
+      // Refresh failed → go to login
+      try { window.location.href = '/login'; } catch {}
+      return Promise.reject(error);
+    }
   }
 );
 

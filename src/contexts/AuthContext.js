@@ -1,6 +1,5 @@
-// src/contexts/AuthContext.js - Enhanced with email verification support
+// src/contexts/AuthContext.js - Updated for cookie-based authentication
 import { createContext, useContext, useState, useEffect } from "react";
-import jwt_decode from "jwt-decode";
 import { useUser } from "./UserContext";
 import { useNavigate } from "react-router-dom";
 
@@ -10,39 +9,44 @@ export const AuthContext = createContext();
 export const useAuth = () => useContext(AuthContext);
 
 export function AuthProvider({ children }) {
-  const [token, setToken] = useState(null);
   const [authChecked, setAuthChecked] = useState(false);
-  const { setUser } = useUser();
+  const { setUser, user } = useUser();
   const navigate = useNavigate();
-    // Add computed property for isAuthenticated
-  const isAuthenticated = !!token;
+  
+  // Add computed property for isAuthenticated - now based on user state
+  const isAuthenticated = !!user;
 
+  // Load current user from cookie session
   useEffect(() => {
-    const savedToken = localStorage.getItem("token");
-    if (!savedToken) {
-      setAuthChecked(true);
-      return;
-    }
+    (async () => {
+      try {
+        const res = await fetch(`${API}/api/auth/me`, {
+          method: "GET",
+          credentials: 'include', // Important for cookies
+          headers: {
+            "Content-Type": "application/json",
+          },
+        });
 
-    try {
-      const decoded = jwt_decode(savedToken);
-      if (!decoded.sub) throw new Error("Missing subject");
-
-      setToken(savedToken);
-      setUser({
-        id: decoded.user_id,
-        username: decoded.sub,
-        displayName: decoded.display_name,
-        avatarUrl: decoded.avatar_url,
-        emailVerified: decoded.email_verified
-      });
-    } catch (err) {
-      localStorage.removeItem("token");
-      setToken(null);
-      setUser(null);
-    } finally {
-      setAuthChecked(true);
-    }
+        if (res.ok) {
+          const data = await res.json();
+          setUser({
+            id: data.id,
+            username: data.username,
+            displayName: data.display_name,
+            tier: data.tier,
+            emailVerified: true // If we get user data, email is verified
+          });
+        } else {
+          setUser(null);
+        }
+      } catch (error) {
+        console.error("Auth check failed:", error);
+        setUser(null);
+      } finally {
+        setAuthChecked(true);
+      }
+    })();
   }, [setUser]);
 
   const navigateToAppWithHistoryManagement = () => {
@@ -107,7 +111,7 @@ export function AuthProvider({ children }) {
     return "Login failed. Please try again.";
   };
 
-  // Enhanced login with retry logic
+  // Enhanced login with retry logic - UPDATED FOR COOKIE AUTH
   async function loginWithRetry(credentials, maxAttempts = 2) {
     let lastError = null;
     
@@ -118,42 +122,48 @@ export function AuthProvider({ children }) {
         const controller = new AbortController();
         const timeoutId = setTimeout(() => controller.abort(), 15000);
         
-        // Use new auth endpoint
-        const res = await fetch(`${API}/api/auth/login`, {
+        // Login endpoint sets cookies
+        const loginRes = await fetch(`${API}/api/auth/login`, {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({ 
-            username: credentials.email, 
+            email: credentials.email, 
             password: credentials.password 
           }),
+          credentials: 'include', // Important for cookies
           signal: controller.signal
         });
 
         clearTimeout(timeoutId);
 
-        const raw = await res.clone().text();
-
-        if (!res.ok) {
-          const errorData = await res.json().catch(() => ({}));
-          const errorMessage = errorData.error || errorData.message || `HTTP ${res.status}`;
+        if (!loginRes.ok) {
+          const errorData = await loginRes.json().catch(() => ({}));
+          const errorMessage = errorData.error || errorData.message || `HTTP ${loginRes.status}`;
           throw new Error(errorMessage);
         }
 
-        const data = await res.json();
-        const { access_token } = data;
+        // Get user data after successful login
+        const userRes = await fetch(`${API}/api/auth/me`, {
+          method: "GET",
+          credentials: 'include',
+          headers: {
+            "Content-Type": "application/json",
+          },
+        });
+
+        if (!userRes.ok) {
+          throw new Error("Failed to get user data after login");
+        }
+
+        const userData = await userRes.json();
         console.log("Login successful on attempt", attempt);
 
-        localStorage.setItem("token", access_token);
-        setToken(access_token);
-
-        const decoded = jwt_decode(access_token);
-
         setUser({
-          id: decoded.user_id,
-          username: decoded.sub,
-          displayName: decoded.display_name,
-          avatarUrl: decoded.avatar_url,
-          emailVerified: decoded.email_verified
+          id: userData.id,
+          username: userData.username,
+          displayName: userData.display_name,
+          tier: userData.tier,
+          emailVerified: true // If we get user data, email is verified
         });
 
         navigateToAppWithHistoryManagement();
@@ -182,13 +192,12 @@ export function AuthProvider({ children }) {
     return await loginWithRetry(credentials, 2);
   }
 
-  // Enhanced register function
+  // Enhanced register function - UPDATED FOR COOKIE AUTH
   async function register({ email, password, displayName }) {
     try {
       const controller = new AbortController();
       const timeoutId = setTimeout(() => controller.abort(), 15000);
 
-      // Use new auth endpoint
       const res = await fetch(`${API}/api/auth/register`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -197,6 +206,7 @@ export function AuthProvider({ children }) {
           password, 
           display_name: displayName 
         }),
+        credentials: 'include',
         signal: controller.signal
       });
 
@@ -214,7 +224,6 @@ export function AuthProvider({ children }) {
 
       // Check if email verification is required
       if (data.requires_verification) {
-        // Don't auto-login, return success but require verification
         return {
           success: true,
           requiresVerification: true,
@@ -222,25 +231,28 @@ export function AuthProvider({ children }) {
         };
       }
 
-      // Legacy behavior: auto-login if token provided
-      if (data.access_token) {
-        const { access_token } = data;
-        console.log("Registration successful with auto-login");
-
-        localStorage.setItem("token", access_token);
-        setToken(access_token);
-
-        const decoded = jwt_decode(access_token);
-
-        setUser({
-          id: decoded.user_id,
-          username: decoded.sub,
-          displayName: decoded.display_name,
-          avatarUrl: decoded.avatar_url,
-          emailVerified: decoded.email_verified
+      // If no verification required, get user data
+      if (data.success) {
+        const userRes = await fetch(`${API}/api/auth/me`, {
+          method: "GET",
+          credentials: 'include',
+          headers: {
+            "Content-Type": "application/json",
+          },
         });
 
-        navigateToAppWithHistoryManagement();
+        if (userRes.ok) {
+          const userData = await userRes.json();
+          setUser({
+            id: userData.id,
+            username: userData.username,
+            displayName: userData.display_name,
+            tier: userData.tier,
+            emailVerified: true
+          });
+
+          navigateToAppWithHistoryManagement();
+        }
       }
 
       return { success: true };
@@ -251,7 +263,7 @@ export function AuthProvider({ children }) {
     }
   }
 
-  // Email verification function
+  // Email verification function - UPDATED FOR COOKIE AUTH
   async function verifyEmail(token) {
     try {
       const controller = new AbortController();
@@ -261,6 +273,7 @@ export function AuthProvider({ children }) {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ token }),
+        credentials: 'include',
         signal: controller.signal
       });
 
@@ -273,17 +286,22 @@ export function AuthProvider({ children }) {
 
       const data = await res.json();
       
-      // If verification includes auto-login
-      if (data.access_token) {
-        localStorage.setItem("token", data.access_token);
-        setToken(data.access_token);
+      // Get updated user data after verification
+      const userRes = await fetch(`${API}/api/auth/me`, {
+        method: "GET",
+        credentials: 'include',
+        headers: {
+          "Content-Type": "application/json",
+        },
+      });
 
-        const decoded = jwt_decode(data.access_token);
+      if (userRes.ok) {
+        const userData = await userRes.json();
         setUser({
-          id: decoded.user_id,
-          username: decoded.sub,
-          displayName: decoded.display_name,
-          avatarUrl: decoded.avatar_url,
+          id: userData.id,
+          username: userData.username,
+          displayName: userData.display_name,
+          tier: userData.tier,
           emailVerified: true
         });
 
@@ -382,38 +400,57 @@ export function AuthProvider({ children }) {
     }
   }
 
-  // Add this function inside AuthProvider (before the return statement)
+  // Updated getAuthHeaders for CSRF protection
   function getAuthHeaders() {
-    if (!token) {
-      return {};
-    }
-    
+    // For cookie-based auth, we need to include CSRF token for mutating requests
     return {
-      'Authorization': `Bearer ${token}`
+      'Content-Type': 'application/json',
+      // CSRF token will be handled automatically by browser via cookie
     };
   }
 
-  function logout() {
-    localStorage.removeItem("token");
-    setToken(null);
-    setUser(null);
-    navigate('/login', { replace: true });
+  // Updated logout function - calls logout endpoint and clears local state
+   // Updated logout function - needs CSRF token
+  async function logout() {
+    try {
+      await fetch(`${API}/api/auth/logout`, {
+        method: "POST",
+        credentials: 'include',
+        headers: {
+          "Content-Type": 'application/json',
+          'X-CSRF-Token': getCsrfToken() // ← ADD THIS LINE
+        },
+      });
+    } catch (error) {
+      console.error("Logout API call failed:", error);
+    } finally {
+      setUser(null);
+      navigate('/login', { replace: true });
+    }
+  }
+
+  // Add this helper function to get CSRF token
+  function getCsrfToken() {
+    return document.cookie
+      .split('; ')
+      .find(row => row.startsWith('av_csrf='))
+      ?.split('=')[1];
   }
 
   return (
     <AuthContext.Provider
       value={{ 
-        token, 
         authChecked, 
         login, 
         register, 
         logout,
         verifyEmail,
         requestPasswordReset,
-        isAuthenticated,      // ← ADD THIS
+        isAuthenticated,
         getAuthHeaders,  
         resetPassword,
-        resendVerification
+        resendVerification,
+        user // Export user for convenience
       }}
     >
       {children}

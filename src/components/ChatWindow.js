@@ -324,7 +324,7 @@ export default function ChatWindow({
 }) {
 
 
-  const { token } = useAuth();
+
   const { user } = useUser();
   const socket = useSocket();
   const isMobile = useMediaQuery(600);
@@ -634,13 +634,14 @@ export default function ChatWindow({
       ]);
 
       // Make invite request
-      const API = process.env.REACT_APP_API_BASE_URL || '';
+      const csrf = document.cookie.match(/(?:^|;\s*)av_csrf=([^;]+)/)?.[1] || '';
       const res = await fetch(`${API}/invite`, {
         method: 'POST',
         headers: {
-          'Authorization': `Bearer ${token}`,
-          'Content-Type': 'application/json'
+          'Content-Type': 'application/json',
+          'X-CSRF-Token': csrf
         },
+        credentials: 'include',
         body: JSON.stringify({
           from: character,
           to: invitee,
@@ -648,6 +649,7 @@ export default function ChatWindow({
           thread_id: localThreadId.current
         })
       });
+
       
       if (!res.ok) {
         throw new Error(`Invite failed (${res.status}): ${res.statusText}`);
@@ -801,19 +803,23 @@ export default function ChatWindow({
     setIsSending(true);
 
     try {
+      const csrf = document.cookie.match(/(?:^|;\s*)av_csrf=([^;]+)/)?.[1] || '';
       const res = await fetch(`${process.env.REACT_APP_API_BASE_URL}/chat`, {
         method: 'POST',
         headers: {
-          'Authorization': `Bearer ${token}`,
-          'Content-Type': 'application/json'
+          'Content-Type': 'application/json',
+          'X-CSRF-Token': csrf
         },
-        body: JSON.stringify({ 
-          character, 
-          message: userText, 
-          thread_id: localThreadId.current 
+        credentials: 'include',
+        body: JSON.stringify({
+          character,
+          message: userText,
+          thread_id: localThreadId.current
         }),
         signal: controller.signal
       });
+
+
 
       if (!res.ok || !res.body) {
         throw new Error(`Chat API failed: ${res.status} ${res.statusText}`);

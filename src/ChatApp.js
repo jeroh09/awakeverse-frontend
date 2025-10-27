@@ -2,7 +2,6 @@
 import React, { useState, useEffect, useCallback, useMemo } from 'react';
 import { useSocket } from './contexts/WebSocketContext';
 import { useCharacter } from './contexts/CharacterContext';
-import { useAuth } from './contexts/AuthContext';
 import { useUser } from './contexts/UserContext';
 import { useAppView } from './contexts/AppViewContext';
 import { useNavigate, useLocation } from 'react-router-dom';
@@ -53,7 +52,6 @@ export default function ChatApp() {
     previewCharacterKey,
     setPreviewCharacterKey
   } = useCharacter();
-  const { token } = useAuth();
   const { user } = useUser();
   const navigate = useNavigate();
   const location = useLocation();
@@ -166,7 +164,7 @@ export default function ChatApp() {
 
   // Initialize app state from URL on load
   useEffect(() => {
-    if (!token) return;
+    if (!user) return;
     
     const hash = window.location.hash.slice(1);
     
@@ -183,7 +181,7 @@ export default function ChatApp() {
     if (!window.history.state?.isAppRoot) {
       window.history.replaceState({ isAppRoot: true }, '', '/app');
     }
-  }, [token, setSelectedCharacterKey, switchView, VIEW_STATES]);
+  }, [user, setSelectedCharacterKey, switchView, VIEW_STATES]);
 
   const togglePrestigeHub = useCallback(() => {
     setPrestigeHubVisible(v => {
@@ -227,7 +225,7 @@ export default function ChatApp() {
 
   useEffect(() => {
     const key = selectedCharacterKey;
-    if (!key || !token) return;
+    if (!key || !user) return;
     (async () => {
       let list = [];
       try {
@@ -275,7 +273,7 @@ export default function ChatApp() {
         }
       }
     })();
-  }, [selectedCharacterKey, token, currentSessionId]);
+  }, [selectedCharacterKey, user, currentSessionId]);
 
   const handleStartChat = useCallback((key) => {
     handleCharacterSelection(key, 'start_chat');

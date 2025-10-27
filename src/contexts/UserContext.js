@@ -5,7 +5,10 @@ import React, { createContext, useContext, useState, useEffect, useCallback } fr
 import jwtDecode from 'jwt-decode';
 
 // Add this constant at the top
-const API_BASE = process.env.REACT_APP_API_URL || 'http://localhost:5000';
+
+// Use the deployed API base (or env override)
+const API_BASE = process.env.REACT_APP_API_URL || 'https://api.awakeverse.com';
+
 
 const UserContext = createContext();
 
@@ -26,13 +29,6 @@ export function UserProvider({ children }) {
    * @returns {Promise<object|null>} Updated user data or null on error
    */
   const refreshSubscription = useCallback(async (silent = false) => {
-    const token = localStorage.getItem('token');
-    
-    if (!token) {
-      console.warn('⚠️ No token available for refresh');
-      return null;
-    }
-
     try {
       if (!silent) {
         setRefreshing(true);
@@ -40,11 +36,7 @@ export function UserProvider({ children }) {
 
       console.log('🔄 Refreshing user subscription data...');
 
-      const API_BASE = process.env.REACT_APP_API_URL || 'https://api.awakeverse.com';
-      const response = await fetch(`${API_BASE}/api/current_user`, {    
-        headers: {
-          Authorization: `Bearer ${token}`
-        },
+      const response = await fetch(`${API_BASE}/api/current_user`, {
         credentials: 'include'
       });
 
@@ -134,60 +126,30 @@ export function UserProvider({ children }) {
   // ============================================================================
 
   useEffect(() => {
-    const token = localStorage.getItem('token');
-    if (!token) {
-      console.warn("⚠️ No token found, user is null");
-      setUser(null);
-      setLoading(false);
-      return;
-    }
-
-    try {
-      const decoded = jwtDecode(token);
-
-      if (typeof decoded.sub === 'string') {
-        fetch(`${API_BASE}/api/current_user`, {
-          headers: {
-            Authorization: `Bearer ${token}`
-          },
-          credentials: 'include'
-        })
-          .then(res => {
-            console.log("🌐 Response status:", res.status);
-            return res.json();
-          })
-          .then(data => {
-            if (!data.error) {
-              setUser(data);
-              
-              // Log subscription info on initial load
-              console.log('👤 User loaded:', data.username);
-              console.log('💎 Subscription:', data.subscription_tier || 'free');
-            } else {
-              console.error('❌ current_user API error:', data.error);
-              setUser(null);
-            }
-          })
-          .catch(err => {
-            console.error('❌ fetch failed:', err);
-            setUser(null);
-          })
-          .finally(() => {
-            setLoading(false);
-          });
-
-      } else {
-        console.warn('❗ Invalid sub format in token');
+    // Cookie-based auth: just ask the server who we are
+    fetch(`${API_BASE}/api/current_user`, {
+      credentials: 'include'
+    })
+      .then(res => {
+        console.log("🌐 current_user status:", res.status);
+        return res.json().catch(() => ({}));
+      })
+      .then(data => {
+        if (data && !data.error) {
+          setUser(data);
+          console.log('👤 User loaded:', data.username);
+          console.log('💎 Subscription:', data.subscription_tier || 'free');
+        } else {
+          setUser(null);
+        }
+      })
+      .catch(err => {
+        console.error('❌ current_user fetch failed:', err);
         setUser(null);
-        setLoading(false);
-      }
-
-    } catch (err) {
-      console.error('❌ jwtDecode error:', err);
-      setUser(null);
-      setLoading(false);
-    }
+      })
+      .finally(() => setLoading(false));
   }, []);
+
 
   const value = {
     user,

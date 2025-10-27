@@ -43,9 +43,10 @@ export default function Login() {
   }, [location, navigate]);
 
   // Handle email verification from URL token
+    // Handle email verification from URL token (opaque-cookie flow: no JWT handling)
   const handleEmailVerification = async (token) => {
     setVerificationStatus('processing');
-    
+
     try {
       const res = await fetch(`${API}/api/auth/verify-email`, {
         method: "POST",
@@ -58,12 +59,7 @@ export default function Login() {
       if (res.ok) {
         setVerificationStatus('success');
         setSuccessMessage('Email verified successfully! You can now sign in.');
-        
-        if (data.access_token) {
-          localStorage.setItem("token", data.access_token);
-          navigate('/app');
-          return;
-        }
+        // No localStorage token; user will sign in normally and receive cookies.
       } else {
         setVerificationStatus('error');
         setError(data.error || 'Email verification failed');
@@ -73,6 +69,7 @@ export default function Login() {
       setError('Verification failed. Please try again.');
     }
   };
+
 
   // Enhanced submit handler with email verification support
   const handleSubmit = async (formData) => {

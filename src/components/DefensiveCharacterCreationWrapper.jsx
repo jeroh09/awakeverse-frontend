@@ -24,23 +24,22 @@ const DefensiveCharacterCreationWrapper = ({
 
       try {
         const API_BASE = process.env.REACT_APP_API_URL || 'http://localhost:5000';
-        const token = localStorage.getItem('token');
 
         // Get subscription data
+         // Get subscription data (cookies carry the session)
         const subResponse = await fetch(`${API_BASE}/api/premium/user_subscription/${user_id}`, {
-          headers: { 'Authorization': `Bearer ${token}` },
-          timeout: 5000
+          credentials: 'include'
         });
 
         if (!subResponse.ok) throw new Error('Subscription API unavailable');
 
         const subData = await subResponse.json();
         const subscription = subData.subscription;
-
         // Get current character count
         const charResponse = await fetch(`${API_BASE}/api/premium/characters`, {
-          headers: { 'Authorization': `Bearer ${token}` }
+          credentials: 'include'
         });
+
 
         if (!charResponse.ok) throw new Error('Characters API unavailable');
 

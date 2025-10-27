@@ -1,6 +1,5 @@
 // src/pages/ChatLauncherPage.jsx - PRODUCTION READY
 import React, { useState, useEffect, useMemo, useCallback } from 'react';
-import { useAuth } from '../contexts/AuthContext';
 import { useUser } from '../contexts/UserContext';
 import useInteractedCharacters from '../hooks/useInteractedCharacters';
 import CharacterDetailPanel from '../components/CharacterDetailPanel/CharacterDetailPanel';
@@ -124,12 +123,6 @@ const ORACLE_PROMPTS = [
 // NEW: Updated to accept discoveredCharacters prop
 const ChatLauncherPage = ({ onStartChat, discoveredCharacters = [] }) => {
   const { user } = useUser();
-  const { token, getAuthHeaders, isAuthenticated } = useAuth();
-
-  // NEW: Debug hooks
-  const featuredResult = useFeaturedCharacters({ enabled: true });
-  const leaderboardResult = useLeaderboard({ period: 'week', limit: 5 });
-  const authHeaders = getAuthHeaders();
 
   // Character creation flow state
   const [showTemplates, setShowTemplates] = useState(false);
@@ -194,8 +187,9 @@ const ChatLauncherPage = ({ onStartChat, discoveredCharacters = [] }) => {
   }, []);
 
   // Load user's custom characters
+   // Load user's custom characters (opaque-cookie auth)
   const loadUserCharacters = useCallback(async () => {
-    if (!token) return;
+    if (!user) return;
 
     try {
       setCharactersLoading(true);
@@ -205,9 +199,9 @@ const ChatLauncherPage = ({ onStartChat, discoveredCharacters = [] }) => {
       const response = await fetch(`${API_BASE}/api/premium/characters`, {
         method: 'GET',
         headers: {
-          'Authorization': `Bearer ${token}`,
           'Content-Type': 'application/json'
-        }
+        },
+        credentials: 'include'
       });
 
       if (response.ok) {
@@ -224,7 +218,8 @@ const ChatLauncherPage = ({ onStartChat, discoveredCharacters = [] }) => {
     } finally {
       setCharactersLoading(false);
     }
-  }, [token]);
+  }, [user]);
+
 
   // Load user characters on mount and token change
   useEffect(() => {

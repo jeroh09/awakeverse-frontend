@@ -5,8 +5,14 @@ import { useUser } from '../contexts/UserContext';
 
 const API_BASE = process.env.REACT_APP_API_URL || 'http://localhost:5000';
 
+const getCookie = (name) => {
+  const value = `; ${document.cookie}`;
+  const parts = value.split(`; ${name}=`);
+  if (parts.length === 2) return parts.pop().split(';').shift();
+};
+
+
 const CharacterBuilder = ({ template, onClose, onSuccess }) => {
-  const { token } = useAuth();
   const { user } = useUser();
   const [isMobile, setIsMobile] = useState(false);
   
@@ -176,15 +182,16 @@ Engage users with the depth and authenticity that comes from your unique histori
       };
 
       console.log('Submitting character payload:', characterPayload);
-
       const response = await fetch(`${API_BASE}/api/premium/characters`, {
         method: 'POST',
         headers: {
-          'Authorization': `Bearer ${token}`,
-          'Content-Type': 'application/json'
+          'Content-Type': 'application/json',
+          'X-CSRF-Token': getCookie('av_csrf')
         },
+        credentials: 'include',
         body: JSON.stringify(characterPayload)
       });
+
 
       const result = await response.json();
       console.log('Backend response:', result);
@@ -201,9 +208,10 @@ Engage users with the depth and authenticity that comes from your unique histori
               const trialResponse = await fetch(`${API_BASE}/api/premium/trial/${user?.id}`, {
                 method: 'POST',
                 headers: {
-                  'Authorization': `Bearer ${token}`,
-                  'Content-Type': 'application/json'
+                  'Content-Type': 'application/json',
+                  'X-CSRF-Token': getCookie('av_csrf')
                 },
+                credentials: 'include',
                 body: JSON.stringify({ trial_days: 3 })
               });
 
