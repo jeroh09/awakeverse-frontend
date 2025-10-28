@@ -7,7 +7,7 @@ import './StripeSuccessHandler.css';
 
 export default function StripeSuccessHandler() {
   const { parseHashFragment, cleanHashUrl, switchView, VIEW_STATES } = useAppView();
-  const { refreshSubscription, getSubscriptionInfo } = useUser();
+  const { user, refreshSubscription, getSubscriptionInfo } = useUser();
 
   const [state, setState] = useState({
     isProcessing: false,
@@ -65,7 +65,9 @@ export default function StripeSuccessHandler() {
   // ============================================================================
 
   useEffect(() => {
-    if (!token) return;
+    const { user } = useUser();
+    if (!user) return;
+
 
     // Parse current URL hash for Stripe params
     const { view, params } = parseHashFragment(window.location.hash);
@@ -78,7 +80,7 @@ export default function StripeSuccessHandler() {
       console.log('🎯 Stripe success params detected in URL');
       handleStripeSuccess(sessionId);
     }
-  }, [token, parseHashFragment, handleStripeSuccess]);
+  }, [user, parseHashFragment, handleStripeSuccess]);
 
   // ============================================================================
   // RENDER PROCESSING OVERLAY

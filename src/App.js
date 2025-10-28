@@ -18,8 +18,6 @@ import SecurityPolicy from './pages/SecurityPolicy';
 import AIDisclaimer from './pages/AIDisclaimer';
 import ContractorAgreements from './pages/ContractorAgreements';
 import ProtectedRoute  from './components/ProtectedRoute';
-import MinimalUsageTest from './components/MinimalUsageTest';
-import TestUsageComponents from './components/TestUsageComponents';
 import ForgotPassword from './pages/ForgotPassword';
 import ResetPassword from './pages/ResetPassword';
 import EmailVerification from './pages/EmailVerification';
@@ -29,9 +27,6 @@ import MarketHubPage from './components/MarketHub/MarketHubPage';
 import PaymentSuccess from './components/PaymentSuccess';
 import PaymentCancelled from './components/PaymentCancelled'; // Add this import
 import ErrorBoundary from './components/ErrorBoundary';
-import PaymentRouterTest from './tests/PaymentRouterTest';
-import PaymentRouterIntegrationTest from './tests/PaymentRouterIntegrationTest';
-import UpgradeButtonTest from './tests/UpgradeButtonTest';
 import './styles.css';
 
 // NEW: Wrapper component for protected routes that need view context
@@ -71,8 +66,7 @@ export default function App() {
       <Route path="/security" element={<SecurityPolicy />} />
       <Route path="/ai-disclaimer" element={<AIDisclaimer />} />
       <Route path="/contractor-agreements" element={<ContractorAgreements />} />
-      <Route path="/minimal-test" element={<MinimalUsageTest />} />
-      <Route path="/test-usage" element={<TestUsageComponents />} />
+      
 
       
       {/* Market Hub - Keep existing route for backward compatibility */}
@@ -83,10 +77,6 @@ export default function App() {
       {/* Payment routes - PROTECTED */}
       <Route path="/payment-success"  element={<PaymentSuccess />} />
       <Route path="/payment-cancelled" element={<PaymentCancelled />} />
-      <Route path="/test-payment" element={<PaymentRouterTest />} />
-      <Route path="/test-payment-integration" element={<PaymentRouterIntegrationTest />} />
-      <Route path="/test-upgrade" element={<UpgradeButtonTest />} />
-
 
 
       {/* Main app with NEW AppViewProvider wrapper */}
