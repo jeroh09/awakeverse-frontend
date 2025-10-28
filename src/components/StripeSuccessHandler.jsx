@@ -65,7 +65,6 @@ export default function StripeSuccessHandler() {
   // ============================================================================
 
   useEffect(() => {
-    const { user } = useUser();
     if (!user) return;
 
 
