@@ -1,6 +1,5 @@
 // src/hooks/useUsageTracking.js - Enhanced with defensive patterns and soft messaging
 import { useState, useEffect, useCallback, useRef } from 'react';
-import { useAuth } from '../contexts/AuthContext';
 import { useUser } from '../contexts/UserContext';
 
 const API_BASE = process.env.REACT_APP_API_URL || 'http://localhost:5000';
@@ -13,7 +12,6 @@ const API_BASE = process.env.REACT_APP_API_URL || 'http://localhost:5000';
  * - Never blocks chat experience
  */
 const useUsageTracking = (character) => {
-  const { token } = useAuth();
   const { user } = useUser();
   
   // Core usage state
@@ -31,7 +29,7 @@ const useUsageTracking = (character) => {
   
   // Defensive data fetching with caching
   const fetchUsageData = useCallback(async () => {
-    if (!isCustomCharacter || !token || !user?.id) {
+    if (!isCustomCharacter || !user?.id) {
       return;
     }
     
@@ -59,9 +57,9 @@ const useUsageTracking = (character) => {
       const response = await fetch(`${API_BASE}/api/premium/user_subscription/${user.id}`, {
         method: 'GET',
         headers: {
-          'Authorization': `Bearer ${token}`,
           'Content-Type': 'application/json'
         },
+        credentials: 'include',
         signal: AbortSignal.timeout(10000) // 10s timeout
       });
       
@@ -97,7 +95,7 @@ const useUsageTracking = (character) => {
     } finally {
       setLoading(false);
     }
-  }, [isCustomCharacter, character, token, user?.id]);
+  }, [isCustomCharacter, character, user?.id]);
   
   // Defensive fallback data matching your backend patterns
   const getFallbackUsageData = useCallback(() => {

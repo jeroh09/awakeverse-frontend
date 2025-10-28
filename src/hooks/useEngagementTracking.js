@@ -2,7 +2,7 @@
 // UPDATED: Add function to load user's engagement history
 
 import { useState, useCallback, useRef, useEffect } from 'react';
-import { useAuth } from '../contexts/AuthContext';
+import { useUser } from '../contexts/UserContext';
 import api from '../api';
 
 /**
@@ -10,7 +10,7 @@ import api from '../api';
  * Now includes loading existing engagement state
  */
 export const useEngagementTracking = () => {
-  const { token } = useAuth();
+  const { use } = useUser();
   const [isTracking, setIsTracking] = useState(false);
   const [error, setError] = useState(null);
   
@@ -18,7 +18,7 @@ export const useEngagementTracking = () => {
   const DEBOUNCE_TIME = 2000;
 
   const trackEngagement = useCallback(async (characterId, engagementType, metadata = {}) => {
-    if (!token) {
+    if (!user) {
       return false;
     }
 
@@ -68,7 +68,7 @@ export const useEngagementTracking = () => {
     } finally {
       setIsTracking(false);
     }
-  }, [token]);
+  }, [user]);
 
   const trackView = useCallback((characterId, metadata = {}) => {
     return trackEngagement(characterId, 'view', {
@@ -120,7 +120,7 @@ export const useEngagementTracking = () => {
  * Loads liked/bookmarked status from backend on mount
  */
 export const useEngagementState = (characterId) => {
-  const { token } = useAuth();
+  const { user } = useUser();
   const [engagementState, setEngagementState] = useState({
     liked: false,
     bookmarked: false,
@@ -135,7 +135,7 @@ export const useEngagementState = (characterId) => {
     let isMounted = true;
 
     const loadEngagementState = async () => {
-      if (!token || !characterId) {
+      if (!user || !characterId) {
         setEngagementState(prev => ({ ...prev, loading: false, loaded: true }));
         return;
       }
@@ -171,7 +171,7 @@ export const useEngagementState = (characterId) => {
     return () => {
       isMounted = false;
     };
-  }, [characterId, token]);
+  }, [characterId, user]);
 
   const toggleLike = useCallback(async () => {
     const newState = !engagementState.liked;

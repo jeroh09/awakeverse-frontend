@@ -1,6 +1,5 @@
 // src/components/UpgradeModal.jsx
 import React, { useState, useEffect } from 'react';
-import { useAuth } from '../contexts/AuthContext';
 import { useUser } from '../contexts/UserContext';
 
 const SUBSCRIPTION_TIERS = {
@@ -37,7 +36,6 @@ const UpgradeModal = ({
   triggerReason = 'general', // 'message_limit', 'character_limit', 'general'
   currentUsage = null 
 }) => {
-  const { token } = useAuth();
   const { user } = useUser();
   
   const [selectedTier, setSelectedTier] = useState('pro');
@@ -57,7 +55,7 @@ const UpgradeModal = ({
     try {
       const API_BASE = process.env.REACT_APP_API_URL || 'http://localhost:5000';
       const response = await fetch(`${API_BASE}/api/premium/user_subscription/${user.id}`, {
-        headers: { 'Authorization': `Bearer ${token}` }
+        credentials: 'include'
       });
       
       if (response.ok) {
@@ -77,13 +75,15 @@ const UpgradeModal = ({
 
     try {
       const API_BASE = process.env.REACT_APP_API_URL || 'http://localhost:5000';
-      
+
+      const csrf = document.cookie.match(/(?:^|;\s*)av_csrf=([^;]+)/)?.[1] || '';
       const response = await fetch(`${API_BASE}/api/premium/subscription/create`, {
         method: 'POST',
         headers: {
-          'Authorization': `Bearer ${token}`,
-          'Content-Type': 'application/json'
+          'Content-Type': 'application/json',
+          'X-CSRF-Token': csrf
         },
+        credentials: 'include',
         body: JSON.stringify({
           tier_name: selectedTier,
           payment_provider: 'mock' // Will be 'stripe' or 'paypal' in production

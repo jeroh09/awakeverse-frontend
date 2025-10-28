@@ -1,6 +1,5 @@
 // src/components/ScenariosTab/index.jsx - Complete Merged Version with Payment Handlers
 import React, { useState, useEffect, useCallback } from 'react';
-import { useAuth } from '../../contexts/AuthContext';
 import { useUser } from '../../contexts/UserContext';
 import SubscriptionService from '../../services/SubscriptionService';
 import PaymentRouter from '../../services/PaymentRouter';
@@ -14,7 +13,6 @@ export default function ScenariosTab({
   marketHubScenario = null,
   onMarketHubScenarioClosed = null  // ✅ ADD THIS - callback when chat closes
  }) {
-  const { token } = useAuth();
   const { user } = useUser();
   const [subscriptionData, setSubscriptionData] = useState(null);
   const [loading, setLoading] = useState(true);
@@ -261,7 +259,6 @@ export default function ScenariosTab({
         {/* My Scenarios Panel - User has access */}
         <div className="scenarios-section">
           <MyScenariosPanel 
-            token={token}
             userId={user?.id}
             scenarios={myScenarios}
             onRefresh={loadMyScenarios}

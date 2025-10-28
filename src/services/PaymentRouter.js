@@ -211,14 +211,15 @@ const ERROR_TYPES = {
 // ============================================================================
 
 /**
- * Get authentication token from localStorage
+ * Get authentication status - check if user is logged in via cookies
  */
-function getAuthToken() {
+function isAuthenticated() {
   try {
-    return localStorage.getItem('token');
+    // Check if we have session cookies by looking for av_sid
+    return document.cookie.includes('av_sid=');
   } catch (error) {
-    console.error('Failed to get auth token:', error);
-    return null;
+    console.error('Failed to check authentication:', error);
+    return false;
   }
 }
 
@@ -391,10 +392,9 @@ class PaymentRouter {
       
       // Use validated options
       const validatedOptions = validation.options;
-      
-      // 3. Check authentication
-      const token = getAuthToken();
-      if (!token) {
+
+    // 3. Check authentication
+      if (!isAuthenticated()) {
         logError('Not authenticated');
         return createErrorResponse(ERROR_TYPES.NOT_AUTHENTICATED);
       }
@@ -407,8 +407,7 @@ class PaymentRouter {
         tier: validatedOptions.tier,
         currency: validatedOptions.currency,
         triggerSource: validatedOptions.triggerSource,
-        metadata: validatedOptions.metadata,
-        token: token
+        metadata: validatedOptions.metadata
       });
       
       // 6. Handle provider response
@@ -470,9 +469,8 @@ class PaymentRouter {
       
       const validatedOptions = validation.options;
       
-      // Check authentication
-      const token = getAuthToken();
-      if (!token) {
+    // Check authentication
+      if (!isAuthenticated()) {
         logError('Not authenticated');
         return createErrorResponse(ERROR_TYPES.NOT_AUTHENTICATED);
       }
@@ -483,10 +481,9 @@ class PaymentRouter {
         tier: validatedOptions.tier,
         currency: validatedOptions.currency,
         triggerSource: validatedOptions.triggerSource,
-        metadata: validatedOptions.metadata,
-        token: token
+        metadata: validatedOptions.metadata
       });
-      
+
       if (result.success) {
         return {
           success: true,
@@ -563,9 +560,8 @@ class PaymentRouter {
     }
     
     // Check authentication
-    const token = getAuthToken();
-    if (!token) {
-      warnings.push('No authentication token found');
+    if (!isAuthenticated()) {
+      warnings.push('User not authenticated');
     }
     
     // Check providers

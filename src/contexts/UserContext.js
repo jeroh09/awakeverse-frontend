@@ -2,7 +2,6 @@
 // DEFENSIVE: Adds subscription refresh for Stripe success handling
 
 import React, { createContext, useContext, useState, useEffect, useCallback } from 'react';
-import jwtDecode from 'jwt-decode';
 
 // Add this constant at the top
 
@@ -36,7 +35,7 @@ export function UserProvider({ children }) {
 
       console.log('🔄 Refreshing user subscription data...');
 
-      const response = await fetch(`${API_BASE}/api/current_user`, {
+      const response = await fetch(`${API_BASE}/api/auth/me`, {
         credentials: 'include'
       });
 
@@ -124,14 +123,13 @@ export function UserProvider({ children }) {
   // ============================================================================
   // INITIAL USER LOAD (existing logic)
   // ============================================================================
-
   useEffect(() => {
     // Cookie-based auth: just ask the server who we are
-    fetch(`${API_BASE}/api/current_user`, {
+    fetch(`${API_BASE}/api/auth/me`, {
       credentials: 'include'
     })
       .then(res => {
-        console.log("🌐 current_user status:", res.status);
+        console.log("🌐 auth/me status:", res.status);
         return res.json().catch(() => ({}));
       })
       .then(data => {
@@ -144,7 +142,7 @@ export function UserProvider({ children }) {
         }
       })
       .catch(err => {
-        console.error('❌ current_user fetch failed:', err);
+        console.error('❌ auth/me fetch failed:', err);
         setUser(null);
       })
       .finally(() => setLoading(false));

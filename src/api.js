@@ -288,14 +288,16 @@ export const getScenarioUsage = async (scenarioId) => {
 };
 
 // Streaming message - uses fetch directly for streaming
-export const postDebateMessage = async (debateId, message, token) => {
+export const postDebateMessage = async (debateId, message) => {
   const API_BASE = process.env.REACT_APP_API_URL || 'https://api.awakeverse.com';
+  const csrf = document.cookie.match(/(?:^|;\s*)av_csrf=([^;]+)/)?.[1] || '';
   const response = await fetch(`${API_BASE}/api/debate/${debateId}/message`, {
     method: 'POST',
     headers: {
-      'Authorization': `Bearer ${token}`,
-      'Content-Type': 'application/json'
+      'Content-Type': 'application/json',
+      'X-CSRF-Token': csrf
     },
+    credentials: 'include',
     body: JSON.stringify({ message })
   });
   

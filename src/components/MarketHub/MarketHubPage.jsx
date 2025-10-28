@@ -2,7 +2,6 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { ArrowLeft, Search, Filter, TrendingUp, Trophy, Users, Star, Shield, Zap } from 'lucide-react';
-import { useAuth } from '../../contexts/AuthContext';
 import { useUser } from '../../contexts/UserContext';
 import EnhancedCharacterCard from './EnhancedCharacterCard';
 import FeaturedCarousel from './FeaturedCarousel';
@@ -30,7 +29,8 @@ const MarketHubPage = ({
   isViewMode = false // Flag to indicate if called from ChatApp view switching
 }) => {
   const navigate = useNavigate();
-  const { isAuthenticated } = useAuth();
+  const { user } = useUser();
+
   
   // Mobile detection
   const [isMobile, setIsMobile] = useState(window.innerWidth <= 768);
@@ -398,7 +398,6 @@ const AuthenticatedMarketHub = ({
   isViewMode = false 
 }) => {
   const navigate = useNavigate();
-  const { getAuthHeaders } = useAuth();  // ✅ ADD THIS LINE if not present
   const { user } = useUser();
   // ✅ ADD THIS - Get user's custom characters (even though it will be empty for anonymous users)
   const { userCharacters = [] } = usePremiumCharacters();
@@ -539,15 +538,16 @@ const AuthenticatedMarketHub = ({
       // ============================================================================
 
       console.log('📡 Calling backend to start debate for scenario:', scenario.scenario_id);
-
+      const csrf = document.cookie.match(/(?:^|;\s*)av_csrf=([^;]+)/)?.[1] || '';
       const startResponse = await fetch(
         `${API_BASE}/api/debate/scenarios/${scenario.scenario_id}/start`,
         {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json',
-            ...getAuthHeaders()
-          }
+            'X-CSRF-Token': csrf
+          },
+          credentials: 'include'
         }
       );
 

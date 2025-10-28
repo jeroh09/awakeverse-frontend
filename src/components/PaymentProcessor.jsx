@@ -1,6 +1,5 @@
 // src/components/PaymentProcessor.jsx - UPDATED with PayPal support
 import React, { useState, useEffect } from 'react';
-import { useAuth } from '../contexts/AuthContext';
 import { useUser } from '../contexts/UserContext';
 import PaymentRouter from '../services/PaymentRouter';
 
@@ -98,7 +97,6 @@ const PaymentProcessor = ({
   currentUsage = null,
   onBack = null
 }) => {
-  const { token } = useAuth();
   const { user } = useUser();
   
   const [selectedTier, setSelectedTier] = useState('pro');
@@ -130,7 +128,8 @@ const PaymentProcessor = ({
     try {
       const env = PaymentRouter.getEnvironment();
       const response = await fetch(`${env.apiBase}/api/premium/user_subscription/${user.id}`, {
-        headers: { 'Authorization': `Bearer ${token}` }
+        credentials: 'include'
+
       });
       
       if (response.ok) {

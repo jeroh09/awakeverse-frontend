@@ -1,102 +1,46 @@
-// src/components/StripeSuccessHandler.jsx - STEP 3
-// DEFENSIVE: Handles Stripe redirect without page reload
-
+// src/components/StripeSuccessHandler.jsx
 import React, { useEffect, useState, useCallback } from 'react';
 import { useAppView } from '../contexts/AppViewContext';
 import { useUser } from '../contexts/UserContext';
-import { useAuth } from '../contexts/AuthContext';
-import api from '../api';
+import api from '../api'; // axios instance (withCredentials true)
 import './StripeSuccessHandler.css';
 
-/**
- * StripeSuccessHandler Component
- * 
- * Detects Stripe success params in URL hash and handles subscription update
- * WITHOUT page reload - smooth UX with loading states
- * 
- * Usage: Add to ChatApp.js as a child component
- */
 export default function StripeSuccessHandler() {
   const { parseHashFragment, cleanHashUrl, switchView, VIEW_STATES } = useAppView();
   const { refreshSubscription, getSubscriptionInfo } = useUser();
-  const { token } = useAuth();
 
   const [state, setState] = useState({
     isProcessing: false,
-    stage: null, // 'detecting' | 'validating' | 'refreshing' | 'success' | 'error'
+    stage: null,
     message: '',
     error: null,
     sessionId: null,
     newTier: null
   });
 
-  // ============================================================================
-  // STEP 3: STRIPE SUCCESS DETECTION & PROCESSING
-  // ============================================================================
-
   const handleStripeSuccess = useCallback(async (sessionId) => {
     try {
-      // STAGE 1: Detecting
-      setState(prev => ({
-        ...prev,
-        isProcessing: true,
-        stage: 'detecting',
-        message: 'Payment detected...',
-        sessionId
-      }));
+      setState(prev => ({ ...prev, isProcessing: true, stage: 'detecting', message: 'Payment detected...', sessionId }));
+      await new Promise(r => setTimeout(r, 1500));
 
-      console.log('💳 Stripe success detected! Session:', sessionId);
+      setState(prev => ({ ...prev, stage: 'validating', message: 'Validating payment...' }));
 
-      // Small delay for UX (let webhook process in background)
-      await new Promise(resolve => setTimeout(resolve, 1500));
-
-      // STAGE 2: Validating session
-      setState(prev => ({
-        ...prev,
-        stage: 'validating',
-        message: 'Validating payment...'
-      }));
-
-      console.log('🔍 Validating Stripe session...');
-
-      // Optional: Validate session with backend (if you have this endpoint)
+      // Optional validation (will send cookies automatically)
       try {
         const validation = await api.get(`/stripe/session-status/${sessionId}`);
-        
         if (validation.data?.status === 'success') {
-          console.log('✅ Session validated:', validation.data);
-          
-          const tierName = validation.data.tier_name;
-          setState(prev => ({
-            ...prev,
-            newTier: tierName
-          }));
+          setState(prev => ({ ...prev, newTier: validation.data.tier_name }));
         }
-      } catch (validationError) {
-        // DEFENSIVE: Continue even if validation endpoint doesn't exist
-        console.warn('Session validation skipped:', validationError.message);
+      } catch (e) {
+        console.warn('Session validation skipped:', e?.message);
       }
 
-      // STAGE 3: Refreshing subscription
-      setState(prev => ({
-        ...prev,
-        stage: 'refreshing',
-        message: 'Updating your subscription...'
-      }));
+      setState(prev => ({ ...prev, stage: 'refreshing', message: 'Updating your subscription...' }));
+      await new Promise(r => setTimeout(r, 1000));
 
-      console.log('🔄 Refreshing user subscription...');
-
-      // Wait a bit more for webhook to complete (defensive timing)
-      await new Promise(resolve => setTimeout(resolve, 1000));
-
-      // Refresh user subscription data from API
       const updatedUser = await refreshSubscription(true);
+      if (!updatedUser) throw new Error('Failed to refresh subscription data');
 
-      if (!updatedUser) {
-        throw new Error('Failed to refresh subscription data');
-      }
-
-      // STAGE 4: Success!
       setState(prev => ({
         ...prev,
         stage: 'success',
@@ -104,46 +48,17 @@ export default function StripeSuccessHandler() {
         newTier: updatedUser.subscription_tier || prev.newTier
       }));
 
-      console.log('✅ Subscription updated successfully!');
-      console.log('📊 New tier:', updatedUser.subscription_tier);
-
-      // Clean URL (remove query params) - NO RELOAD
       cleanHashUrl(true);
-
-      // Wait for success message to show
-      await new Promise(resolve => setTimeout(resolve, 2000));
-
-      // Navigate to chat view
-      switchView(VIEW_STATES.CHAT, { replace: true });
-
-      // Clear processing state
-      setState(prev => ({
-        ...prev,
-        isProcessing: false,
-        stage: null
-      }));
+      // (anything else you already do after success)
 
     } catch (error) {
-      console.error('❌ Stripe success handling error:', error);
-
-      setState(prev => ({
-        ...prev,
-        stage: 'error',
-        message: 'Payment successful, but subscription update failed',
-        error: error.message,
-        isProcessing: true // Keep showing so user can see error
-      }));
-
-      // Auto-hide error after 5 seconds
-      setTimeout(() => {
-        setState(prev => ({
-          ...prev,
-          isProcessing: false,
-          stage: null
-        }));
-      }, 5000);
+      setState(prev => ({ ...prev, stage: 'error', error: error.message || 'Stripe update failed' }));
+    } finally {
+      setState(prev => ({ ...prev, isProcessing: false }));
     }
-  }, [refreshSubscription, cleanHashUrl, switchView, VIEW_STATES]);
+  }, [refreshSubscription, cleanHashUrl]);
+
+  // (rest of your component unchanged
 
   // ============================================================================
   // DETECT STRIPE SUCCESS ON MOUNT

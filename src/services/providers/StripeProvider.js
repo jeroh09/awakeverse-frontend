@@ -46,7 +46,7 @@ class StripeProvider extends BaseProvider {
     return this.envConfig.getApiBase();
   }
   
-  /**
+    /**
    * Create Stripe checkout session
    * 
    * @param {Object} options
@@ -54,24 +54,21 @@ class StripeProvider extends BaseProvider {
    * @param {string} options.currency - Currency code
    * @param {string} options.triggerSource - Analytics source
    * @param {Object} options.metadata - Additional metadata
-   * @param {string} options.token - Auth token
    * @returns {Promise<Object>} Result with checkoutUrl or error
    */
   async createCheckoutSession(options) {
-    const { tier, currency, triggerSource, metadata, token } = options;
+    const { tier, currency, triggerSource, metadata } = options;
     
     try {
       // DEFENSIVE: Validate inputs
       if (!tier) {
         return this._error('Tier is required', false);
       }
-      if (!token) {
-        return this._error('Authentication required', false);
-      }
       
       // Build request
       const apiBase = this.getApiBase();
       const endpoint = `${apiBase}${this.config.endpoints.createSession}`;
+      const csrf = document.cookie.match(/(?:^|;\s*)av_csrf=([^;]+)/)?.[1] || '';
       
       const requestBody = {
         tier_name: tier,
@@ -100,9 +97,10 @@ class StripeProvider extends BaseProvider {
       const response = await fetch(endpoint, {
         method: 'POST',
         headers: {
-          'Authorization': `Bearer ${token}`,
-          'Content-Type': 'application/json'
+          'Content-Type': 'application/json',
+          'X-CSRF-Token': csrf
         },
+        credentials: 'include',
         body: JSON.stringify(requestBody)
       });
       
@@ -146,18 +144,17 @@ class StripeProvider extends BaseProvider {
       );
     }
   }
-  
-  /**
+
+    /**
    * Check Stripe session status
    * 
    * @param {string} sessionId - Stripe session ID
-   * @param {string} token - Auth token
    * @returns {Promise<Object>} Session status
    */
-  async getSessionStatus(sessionId, token) {
+  async getSessionStatus(sessionId) {
     try {
-      if (!sessionId || !token) {
-        return this._error('Session ID and token required', false);
+      if (!sessionId) {
+        return this._error('Session ID required', false);
       }
       
       const apiBase = this.getApiBase();
@@ -166,9 +163,9 @@ class StripeProvider extends BaseProvider {
       const response = await fetch(endpoint, {
         method: 'GET',
         headers: {
-          'Authorization': `Bearer ${token}`,
           'Content-Type': 'application/json'
-        }
+        },
+        credentials: 'include'
       });
       
       if (!response.ok) {

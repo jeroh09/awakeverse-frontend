@@ -1,11 +1,9 @@
 // src/hooks/useScenarioChat.js - WITH USAGE TRACKING & LIMITS
 import { useState, useCallback, useRef } from 'react';
-import { useAuth } from '../contexts/AuthContext';
 
 const API_BASE = process.env.REACT_APP_API_BASE_URL || 'http://localhost:5000';
 
 export default function useScenarioChat() {
-  const { token } = useAuth();
   
   const [debateId, setDebateId] = useState(null);
   const [scenarioId, setScenarioId] = useState(null);
@@ -38,17 +36,16 @@ export default function useScenarioChat() {
   }, []);
 
   const fetchUsage = useCallback(async (scenarioIdToFetch) => {
-    if (!token || !scenarioIdToFetch) return;
-
+    if (!scenarioIdToFetch) return;
     try {
       setUsageLoading(true);
       
       const response = await fetch(`${API_BASE}/api/debate/scenarios/${scenarioIdToFetch}/usage`, {
         method: 'GET',
         headers: {
-          'Authorization': `Bearer ${token}`,
           'Content-Type': 'application/json'
-        }
+        },
+        credentials: 'include'
       });
 
       if (response.ok) {
@@ -76,22 +73,25 @@ export default function useScenarioChat() {
     } finally {
       setUsageLoading(false);
     }
-  }, [token]);
+  }, []);
 
   const startScenario = useCallback(async (scenario) => {
-    if (!token || !scenario) {
+    if (!scenario) {
       console.error('❌ startScenario: Missing token or scenario');
       return null;
     }
 
     try {
+      const csrf = document.cookie.match(/(?:^|;\s*)av_csrf=([^;]+)/)?.[1] || '';
       console.log('🎭 Starting scenario:', scenario.id);
       const response = await fetch(`${API_BASE}/api/debate/scenarios/${scenario.id}/start`, {
         method: 'POST',
         headers: {
-          'Authorization': `Bearer ${token}`,
-          'Content-Type': 'application/json'
+          'Content-Type': 'application/json',
+          'X-CSRF-Token': csrf
         },
+        credentials: 'include'
+
       });
 
       if (!response.ok) {
@@ -135,10 +135,10 @@ export default function useScenarioChat() {
 
       throw error;
     }
-  }, [token, fetchUsage]);
+  }, [fetchUsage]);
 
   const sendMessage = useCallback(async (messageText) => {
-    if (!debateId || !token || !messageText.trim()) {
+    if (!debateId || !messageText.trim()) {
       console.error('❌ sendMessage: Missing required params');
       return;
     }
@@ -167,12 +167,14 @@ export default function useScenarioChat() {
       setMessages(prev => [...prev, userMessage]);
       console.log('📤 Sending message:', { id: userMessageId, text: messageText });
 
+      const csrf = document.cookie.match(/(?:^|;\s*)av_csrf=([^;]+)/)?.[1] || '';
       const response = await fetch(`${API_BASE}/api/debate/${debateId}/message`, {
         method: 'POST',
         headers: {
-          'Authorization': `Bearer ${token}`,
-          'Content-Type': 'application/json'
+          'Content-Type': 'application/json',
+          'X-CSRF-Token': csrf
         },
+        credentials: 'include',
         body: JSON.stringify({ message: messageText }),
         signal: controller.signal
       });
@@ -369,7 +371,7 @@ export default function useScenarioChat() {
         }, 30000);
       });
     }
-  }, [debateId, token, circuitBreakerState.status, usageData, scenarioId, fetchUsage, generateMessageId]);
+  }, [debateId, circuitBreakerState.status, usageData, scenarioId, fetchUsage, generateMessageId]);
 
   const stopStream = useCallback(() => {
     if (controllerRef.current) {

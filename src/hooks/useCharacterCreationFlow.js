@@ -1,6 +1,5 @@
 // src/hooks/useCharacterCreationFlow.js - Decentralized: Remove premium blocking
 import { useState, useCallback, useRef, useEffect } from 'react';
-import { useAuth } from '../contexts/AuthContext';
 import { useUser } from '../contexts/UserContext';
 import usePremiumCharacters from './usePremiumCharacters';
 
@@ -16,7 +15,6 @@ const FLOW_STEPS = {
 };
 
 export default function useCharacterCreationFlow() {
-  const { token } = useAuth();
   const { user } = useUser();
   
   // Character data integration

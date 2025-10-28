@@ -1,6 +1,5 @@
 // src/components/CreatorHub/PublishToHubButton.jsx
 import React, { useState, useCallback } from 'react';
-import { useAuth } from '../../contexts/AuthContext';
 import { useUser } from '../../contexts/UserContext';
 import api from '../../api';
 import DualPathUpgradeSystem from '../DualPathUpgradeSystem';
@@ -12,7 +11,6 @@ const PublishToHubButton = ({
   onPublishSuccess,
   onPublishError 
 }) => {
-  const { token } = useAuth();
   const { user } = useUser();
   
   const [isProcessing, setIsProcessing] = useState(false);
@@ -42,7 +40,7 @@ const PublishToHubButton = ({
   
   // Handle toggle click with tier check
   const handleToggleClick = useCallback(async () => {
-    if (!token || !user) {
+    if (!user) {
       setError('Authentication required');
       return;
     }
@@ -55,7 +53,7 @@ const PublishToHubButton = ({
     }
 
     await toggleCharacterPublish();
-  }, [token, user, character]);
+  }, [user, character]);
 
   // Check if user has unlimited tier
   const checkUnlimitedTier = async () => {

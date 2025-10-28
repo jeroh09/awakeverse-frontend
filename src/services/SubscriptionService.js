@@ -1,6 +1,5 @@
 // src/services/SubscriptionService.js
 // Defensive subscription service following existing API patterns
-import { useAuth } from '../contexts/AuthContext';
 
 class SubscriptionService {
   constructor() {
@@ -15,13 +14,14 @@ class SubscriptionService {
     }
 
     try {
-      const token = localStorage.getItem('token');
+      const csrf = document.cookie.match(/(?:^|;\s*)av_csrf=([^;]+)/)?.[1] || '';
       const response = await fetch(`${this.apiBase}/api/premium/subscription/create`, {
         method: 'POST',
         headers: {
-          'Authorization': `Bearer ${token}`,
-          'Content-Type': 'application/json'
+          'Content-Type': 'application/json',
+          'X-CSRF-Token': csrf
         },
+        credentials: 'include',
         body: JSON.stringify({ 
           tier_name: tier_name, 
           payment_provider: payment_provider 
@@ -53,10 +53,9 @@ class SubscriptionService {
   // Matches premium_routes.py get_user_subscription endpoint
   async getUserSubscriptionStatus(user_id) {
     try {
-      const token = localStorage.getItem('token');
       const response = await fetch(`${this.apiBase}/api/premium/user_subscription/${user_id}`, {
         method: 'GET',
-        headers: { 'Authorization': `Bearer ${token}` }
+        credentials: 'include'
       });
 
       if (!response.ok) {
@@ -77,13 +76,12 @@ class SubscriptionService {
     }
   }
 
-  // Follows subscription_service.py get_available_tiers pattern
+    // Follows subscription_service.py get_available_tiers pattern
   async getAvailableTiers() {
     try {
-      const token = localStorage.getItem('token');
       const response = await fetch(`${this.apiBase}/api/premium/subscription/tiers`, {
         method: 'GET',
-        headers: { 'Authorization': `Bearer ${token}` }
+        credentials: 'include'
       });
 
       if (!response.ok) {
@@ -110,10 +108,9 @@ class SubscriptionService {
   // Payment recovery status - connects to payment_recovery_service.py
   async getPaymentRecoveryStatus(user_id) {
     try {
-      const token = localStorage.getItem('token');
       const response = await fetch(`${this.apiBase}/api/payment-recovery/status/${user_id}`, {
         method: 'GET',
-        headers: { 'Authorization': `Bearer ${token}` }
+        credentials: 'include'
       });
 
       if (!response.ok) {

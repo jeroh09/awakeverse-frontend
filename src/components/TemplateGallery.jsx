@@ -1,7 +1,7 @@
 // Fixed TemplateGallery.jsx - Complete version with proper backend structure usage
 
 import React, { useState, useEffect } from 'react';
-import { useAuth } from '../contexts/AuthContext';
+import { useUser } from '../contexts/UserContext';
 
 const API_BASE = process.env.REACT_APP_API_URL || 'http://localhost:5000';
 
@@ -60,7 +60,7 @@ const FALLBACK_TEMPLATES = {
 };
 
 const TemplateGallery = ({ onSelectTemplate, onClose }) => {
-  const { token } = useAuth();
+  const { user } = useUser();
   const [templates, setTemplates] = useState([]);
   const [templateGroups, setTemplateGroups] = useState({});
   const [availableCategories, setAvailableCategories] = useState([]);
@@ -76,21 +76,22 @@ const TemplateGallery = ({ onSelectTemplate, onClose }) => {
       try {
         setLoading(true);
         setError(null);
-
+        
         // Primary API attempt
-        if (token) {
+        if (user) {
           try {
             const response = await fetch(`${API_BASE}/api/premium/templates?per_page=100`, {
               method: 'GET',
               headers: {
-                'Authorization': `Bearer ${token}`,
                 'Content-Type': 'application/json'
               },
+              credentials: 'include',
               signal: AbortSignal.timeout(10000)
             });
 
             if (response.ok) {
               const data = await response.json();
+        
 
               // FIXED: Use the proper backend structure
               if (data.status === 'success') {
@@ -133,7 +134,7 @@ const TemplateGallery = ({ onSelectTemplate, onClose }) => {
     };
 
     loadTemplates();
-  }, [token]);
+  }, [user]);
 
   // FIXED: Build archetypes list from availableCategories instead of templateGroups
   const archetypes = ['all', ...availableCategories];

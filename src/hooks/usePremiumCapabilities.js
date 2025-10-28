@@ -1,6 +1,5 @@
 // src/hooks/usePremiumCapabilities.js - Backend-compatible capabilities hook
 import { useState, useEffect, useCallback, useRef } from 'react';
-import { useAuth } from '../contexts/AuthContext';
 import { useUser } from '../contexts/UserContext';
 
 const API_BASE = process.env.REACT_APP_API_URL || 'http://localhost:5000';
@@ -25,7 +24,6 @@ const CTA_ACTIONS = {
 };
 
 export default function usePremiumCapabilities() {
-  const { token } = useAuth();
   const { user } = useUser();
   
   // Core state - single source of truth
@@ -161,7 +159,7 @@ export default function usePremiumCapabilities() {
   }, [user?.id]);
   
   const fetchCapabilities = useCallback(async (forceRefresh = false) => {
-    if (!user?.id || !token) {
+    if (!user?.id) {
       setLoading(false);
       return;
     }
@@ -189,9 +187,9 @@ export default function usePremiumCapabilities() {
       const response = await fetch(`${API_BASE}/api/premium/status/${user.id}`, {
         method: 'GET',
         headers: {
-          'Authorization': `Bearer ${token}`,
           'Content-Type': 'application/json'
         },
+        credentials: 'include',
         signal: abortControllerRef.current.signal
       });
 
@@ -237,7 +235,7 @@ export default function usePremiumCapabilities() {
       setLoading(false);
       abortControllerRef.current = null;
     }
-  }, [user?.id, token, getCacheKey, transformStatusToCapabilities]);
+  }, [user?.id, getCacheKey, transformStatusToCapabilities]);
 
   // Auto-fetch on mount and user changes
   useEffect(() => {

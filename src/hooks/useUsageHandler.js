@@ -1,9 +1,7 @@
 // hooks/useUsageHandler.js - Defensive usage handling for custom characters only
 import { useState, useEffect, useCallback } from 'react';
-import { useAuth } from '../contexts/AuthContext';
 
 export const useUsageHandler = (character) => {
-  const { token } = useAuth();
   const [usageState, setUsageState] = useState({
     isBlocked: false,
     usageData: null,
@@ -18,14 +16,16 @@ export const useUsageHandler = (character) => {
   // Enhanced sendMessage that replaces sendAI for custom characters
   const sendMessageWithUsageHandling = useCallback(async (userText, aiIndex, setChatHistory) => {
     const API_BASE = process.env.REACT_APP_API_URL || 'http://localhost:5000';
+    const csrf = document.cookie.match(/(?:^|;\s*)av_csrf=([^;]+)/)?.[1] || '';
     
     try {
       const response = await fetch(`${API_BASE}/chat`, {
         method: 'POST',
         headers: {
-          'Authorization': `Bearer ${token}`,
-          'Content-Type': 'application/json'
+          'Content-Type': 'application/json',
+          'X-CSRF-Token': csrf
         },
+        credentials: 'include',
         body: JSON.stringify({ 
           character, 
           message: userText, 
@@ -158,7 +158,7 @@ export const useUsageHandler = (character) => {
       
       return { blocked: false, error: err.message };
     }
-  }, [character, token, isCustomCharacter]);
+  }, [character, isCustomCharacter]);
 
   // Get current usage warning message
   const getUsageWarning = useCallback(() => {

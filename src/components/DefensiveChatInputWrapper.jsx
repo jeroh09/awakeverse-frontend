@@ -32,11 +32,10 @@ const DefensiveChatInputWrapper = ({
         setBlockState(prev => ({ ...prev, loading: true }));
 
         const API_BASE = process.env.REACT_APP_API_URL || 'http://localhost:5000';
-        const token = localStorage.getItem('token');
 
         // Direct API call - no hook dependencies
         const response = await fetch(`${API_BASE}/api/premium/user_subscription/${user_id}`, {
-          headers: { 'Authorization': `Bearer ${token}` },
+          credentials: 'include',
           timeout: 5000 // Quick timeout
         });
 

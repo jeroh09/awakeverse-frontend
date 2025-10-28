@@ -1,12 +1,10 @@
 // src/hooks/usePremiumCharacters.js - Simplified character-specific hook
 import { useState, useEffect, useCallback } from 'react';
-import { useAuth } from '../contexts/AuthContext';
 import { useUser } from '../contexts/UserContext';
 import usePremiumCapabilities from './usePremiumCapabilities';
 
 const API_BASE = process.env.REACT_APP_API_URL || 'http://localhost:5000';
 export default function usePremiumCharacters() {
-  const { token } = useAuth();
   const { user } = useUser();
   const { isPremium, invalidateAndRefresh } = usePremiumCapabilities();
   
@@ -17,7 +15,7 @@ export default function usePremiumCharacters() {
 
   // Fetch user's characters - NO premium gate
   const fetchUserCharacters = useCallback(async () => {
-    if (!user?.id || !token) return [];
+    if (!user?.id) return [];
     
     try {
       setLoading(true);
@@ -25,9 +23,9 @@ export default function usePremiumCharacters() {
       const response = await fetch(`${API_BASE}/api/premium/characters`, {
         method: 'GET',
         headers: {
-          'Authorization': `Bearer ${token}`,
           'Content-Type': 'application/json'
-        }
+        },
+        credentials: 'include'
       });
 
       if (!response.ok) {
@@ -46,11 +44,10 @@ export default function usePremiumCharacters() {
     } finally {
       setLoading(false);
     }
-  }, [user?.id, token]);
+  }, [user?.id]);
 
   // Fetch character templates with pagination
   const fetchCharacterTemplates = useCallback(async () => {
-    if (!token) return {};
 
     try {
       setError(null);
@@ -58,9 +55,10 @@ export default function usePremiumCharacters() {
       const response = await fetch(`${API_BASE}/api/premium/templates?per_page=100`, {
         method: 'GET',
         headers: {
-          'Authorization': `Bearer ${token}`,
           'Content-Type': 'application/json'
-        }
+        },
+        credentials: 'include'
+
       });
 
       if (!response.ok) {
@@ -76,22 +74,24 @@ export default function usePremiumCharacters() {
       setError(error.message);
       return {};
     }
-  }, [token]);
+  }, []);
 
   // Create character with optimistic updates
   const createCharacter = useCallback(async (characterData) => {
-    if (!user?.id || !token) {
+    if (!user?.id) {
       throw new Error('Authentication required');
     }
 
     try {
+      const csrf = document.cookie.match(/(?:^|;\s*)av_csrf=([^;]+)/)?.[1] || '';
       setError(null);
       const response = await fetch(`${API_BASE}/api/premium/characters`, {
         method: 'POST',
         headers: {
-          'Authorization': `Bearer ${token}`,
-          'Content-Type': 'application/json'
+          'Content-Type': 'application/json',
+          'X-CSRF-Token': csrf
         },
+        credentials: 'include',
         body: JSON.stringify(characterData)
       });
 
@@ -120,7 +120,7 @@ export default function usePremiumCharacters() {
       setError(error.message);
       throw error;
     }
-  }, [user?.id, token, invalidateAndRefresh]);
+  }, [user?.id, invalidateAndRefresh]);
 
   // Load data on mount
   useEffect(() => {

@@ -1,6 +1,5 @@
 // src/hooks/useMarketHub.js
 import { useState, useEffect, useCallback, useRef } from 'react';
-import { useAuth } from '../contexts/AuthContext';
 
 const API_BASE = process.env.REACT_APP_API_URL || 'http://localhost:5000';
 
@@ -12,7 +11,6 @@ export const useMarketHub = ({
   enabled = true,
   includeScenarios = false  // 🆕 ADD THIS PARAMETER
 } = {}) => {
-  const { getAuthHeaders } = useAuth();
   const [state, setState] = useState({
     characters: [],
     scenarios: [],  // 🆕 ADD scenarios to state
@@ -91,8 +89,8 @@ export const useMarketHub = ({
           method: 'GET',
           headers: {
             'Content-Type': 'application/json',
-            ...getAuthHeaders()
           },
+          credentials: 'include',
           signal: abortControllerRef.current.signal
         }
       );
@@ -198,7 +196,7 @@ export const useMarketHub = ({
 
       console.error('Market hub fetch error:', error);
     }
-  }, [getAuthHeaders, createCacheKey]);
+  }, [createCacheKey]);
 
   // 🆕 UPDATE: Modify refetch to include includeScenarios
   const refetch = useCallback(() => {
@@ -249,19 +247,21 @@ export const useMarketHub = ({
 
 // Hook for character engagement actions
 export const useCharacterEngagement = () => {
-  const { getAuthHeaders } = useAuth();
   const [loading, setLoading] = useState(false);
 
   const engageWithCharacter = useCallback(async (characterId, engagementType, metadata = {}) => {
     setLoading(true);
+    const csrf = document.cookie.match(/(?:^|;\s*)av_csrf=([^;]+)/)?.[1] || '';
+
     
     try {
       const response = await fetch(`${API_BASE}/api/market-hub/engage`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
-          ...getAuthHeaders()
+          'X-CSRF-Token': csrf
         },
+        credentials: 'include',
         body: JSON.stringify({
           character_id: characterId,
           engagement_type: engagementType,
@@ -288,7 +288,7 @@ export const useCharacterEngagement = () => {
     } finally {
       setLoading(false);
     }
-  }, [getAuthHeaders]);
+  }, []);
 
   return {
     engageWithCharacter,
@@ -298,18 +298,19 @@ export const useCharacterEngagement = () => {
 
 // 🆕 NEW: Add Scenario Engagement Hook (after useCharacterEngagement)
 export const useScenarioEngagement = () => {
-  const { getAuthHeaders } = useAuth();
   const [loading, setLoading] = useState(false);
 
   const engageWithScenario = useCallback(async (scenarioId, engagementType, metadata = {}) => {
     setLoading(true);
+    const csrf = document.cookie.match(/(?:^|;\s*)av_csrf=([^;]+)/)?.[1] || '';
+
     
     try {
       const response = await fetch(`${API_BASE}/api/market-hub/engage-scenario`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
-          ...getAuthHeaders()
+          'X-CSRF-Token': csrf
         },
         body: JSON.stringify({
           scenario_id: scenarioId,
@@ -337,7 +338,7 @@ export const useScenarioEngagement = () => {
     } finally {
       setLoading(false);
     }
-  }, [getAuthHeaders]);
+  }, []);
 
   return {
     engageWithScenario,

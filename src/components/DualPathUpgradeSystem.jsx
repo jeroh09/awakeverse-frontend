@@ -1,6 +1,5 @@
 // src/components/DualPathUpgradeSystem.jsx - EXACT ORIGINAL with ONLY z-index changes
 import React, { useState } from 'react';
-import { useAuth } from '../contexts/AuthContext';
 import { useUser } from '../contexts/UserContext';
 
 // Shared payment processor for both paths

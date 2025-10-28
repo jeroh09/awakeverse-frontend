@@ -9,7 +9,8 @@ export const useFeaturedCharacters = ({
   enabled = true,
   refreshInterval = 5 * 60 * 1000 // 5 minutes default
 } = {}) => {
-  const { getAuthHeaders, isAuthenticated } = useAuth();
+  const { isAuthenticated } = useAuth();
+
   const [state, setState] = useState({
     featuredCharacters: [],
     loading: true,
@@ -51,17 +52,12 @@ export const useFeaturedCharacters = ({
       setState(prev => ({ ...prev, loading: true, error: null }));
 
       // Build headers - public view doesn't need auth
-      const headers = {
-        'Content-Type': 'application/json'
-      };
-
-      if (!publicView && isAuthenticated) {
-        Object.assign(headers, getAuthHeaders());
-      }
-
       const response = await fetch(`${API_BASE}/api/market-hub/featured`, {
         method: 'GET',
-        headers,
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        credentials: (!publicView && isAuthenticated) ? 'include' : 'omit',
         signal: abortControllerRef.current.signal
       });
 
@@ -179,7 +175,7 @@ export const useFeaturedCharacters = ({
 
       console.error('Featured characters fetch error:', error);
     }
-  }, [getAuthHeaders, isAuthenticated, publicView]);
+  }, [isAuthenticated, publicView]);
 
   // Refetch function for error recovery
   const refetch = useCallback(() => {
@@ -250,7 +246,7 @@ export const useFeaturedCharacters = ({
 
 // Hook for getting character engagement stats (public view)
 export const useCharacterStats = (characterId, { enabled = true } = {}) => {
-  const { getAuthHeaders, isAuthenticated } = useAuth();
+  const { isAuthenticated } = useAuth();
   const [state, setState] = useState({
     character: null,
     engagement: null,
@@ -264,19 +260,14 @@ export const useCharacterStats = (characterId, { enabled = true } = {}) => {
     try {
       setState(prev => ({ ...prev, loading: true, error: null }));
 
-      const headers = {
-        'Content-Type': 'application/json'
-      };
-
-      if (isAuthenticated) {
-        Object.assign(headers, getAuthHeaders());
-      }
-
       const response = await fetch(
         `${API_BASE}/api/market-hub/character/${characterId}/stats`,
         {
           method: 'GET',
-          headers
+          headers: {
+            'Content-Type': 'application/json'
+          },
+          credentials: isAuthenticated ? 'include' : 'omit'
         }
       );
 
@@ -305,7 +296,7 @@ export const useCharacterStats = (characterId, { enabled = true } = {}) => {
       }));
       console.error('Character stats fetch error:', error);
     }
-  }, [characterId, getAuthHeaders, isAuthenticated]);
+  }, [characterId, isAuthenticated]);
 
   useEffect(() => {
     if (!enabled || !characterId) return;

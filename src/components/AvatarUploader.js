@@ -1,10 +1,8 @@
 // src/components/AvatarUploader.js
 import React, { useState } from 'react';
 import styles from './AvatarUploader.module.css';
-import { useAuth } from '../contexts/AuthContext';
 
 export default function AvatarUploader({ userId, onUpload }) {
-  const { token } = useAuth();
   const [preview, setPreview] = useState(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
@@ -33,11 +31,13 @@ export default function AvatarUploader({ userId, onUpload }) {
       const API_BASE = process.env.REACT_APP_API_URL || 'https://api.awakeverse.com';
       console.log('🚀 URL:', `${API_BASE}/api/users/${userId}/avatar-test`);
 
+      const csrf = document.cookie.match(/(?:^|;\s*)av_csrf=([^;]+)/)?.[1] || '';
       const response = await fetch(`${API_BASE}/api/users/${userId}/avatar`, {
         method: 'POST',
         headers: {
-          Authorization: `Bearer ${token}`
+          'X-CSRF-Token': csrf
         },
+        credentials: 'include',
         body: form
       });
        console.log('✅ Fetch completed, response:', response);

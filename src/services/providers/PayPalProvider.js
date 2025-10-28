@@ -20,35 +20,7 @@ class BaseProvider {
     this.envConfig = envConfig;
   }
   
-  async createCheckoutSession(options) {
-    throw new Error('createCheckoutSession must be implemented');
-  }
-  
-  async isAvailable() {
-    throw new Error('isAvailable must be implemented');
-  }
-  
-  async healthCheck() {
-    throw new Error('healthCheck must be implemented');
-  }
-}
-
-/**
- * PayPalProvider - PayPal integration implementation
- */
-class PayPalProvider extends BaseProvider {
-  constructor({ config, envConfig }) {
-    super({ config, envConfig });
-  }
-  
-  /**
-   * Get API base URL
-   */
-  getApiBase() {
-    return this.envConfig.getApiBase();
-  }
-  
-  /**
+    /**
    * Create PayPal checkout order
    * 
    * @param {Object} options
@@ -56,24 +28,21 @@ class PayPalProvider extends BaseProvider {
    * @param {string} options.currency - Currency code
    * @param {string} options.triggerSource - Analytics source
    * @param {Object} options.metadata - Additional metadata
-   * @param {string} options.token - Auth token
    * @returns {Promise<Object>} Result with checkoutUrl or error
    */
   async createCheckoutSession(options) {
-    const { tier, currency, triggerSource, metadata, token } = options;
+    const { tier, currency, triggerSource, metadata } = options;
     
     try {
       // DEFENSIVE: Validate inputs
       if (!tier) {
         return this._error('Tier is required', false);
       }
-      if (!token) {
-        return this._error('Authentication required', false);
-      }
       
       // Build request
       const apiBase = this.getApiBase();
       const endpoint = `${apiBase}${this.config.endpoints.createOrder}`;
+      const csrf = document.cookie.match(/(?:^|;\s*)av_csrf=([^;]+)/)?.[1] || '';
       
       const requestBody = {
         tier_name: tier,
@@ -102,9 +71,10 @@ class PayPalProvider extends BaseProvider {
       const response = await fetch(endpoint, {
         method: 'POST',
         headers: {
-          'Authorization': `Bearer ${token}`,
-          'Content-Type': 'application/json'
+          'Content-Type': 'application/json',
+          'X-CSRF-Token': csrf
         },
+        credentials: 'include',
         body: JSON.stringify(requestBody)
       });
       
@@ -165,13 +135,12 @@ class PayPalProvider extends BaseProvider {
    * Check PayPal order status
    * 
    * @param {string} orderId - PayPal order ID
-   * @param {string} token - Auth token
    * @returns {Promise<Object>} Order status
    */
-  async getOrderStatus(orderId, token) {
+  async getOrderStatus(orderId) {
     try {
-      if (!orderId || !token) {
-        return this._error('Order ID and token required', false);
+      if (!orderId) {
+        return this._error('Order ID required', false);
       }
       
       const apiBase = this.getApiBase();
@@ -180,9 +149,9 @@ class PayPalProvider extends BaseProvider {
       const response = await fetch(endpoint, {
         method: 'GET',
         headers: {
-          'Authorization': `Bearer ${token}`,
           'Content-Type': 'application/json'
-        }
+        },
+        credentials: 'include'
       });
       
       if (!response.ok) {

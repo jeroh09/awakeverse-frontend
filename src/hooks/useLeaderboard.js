@@ -9,7 +9,7 @@ export const useLeaderboard = ({
   limit = 10,
   enabled = true 
 } = {}) => {
-  const { getAuthHeaders, isAuthenticated } = useAuth();
+  const { isAuthenticated } = useAuth();
   const [state, setState] = useState({
     rankings: [],
     loading: true,
@@ -62,22 +62,18 @@ export const useLeaderboard = ({
       });
 
       // Build headers - leaderboard might be available to anonymous users
-      const headers = {
-        'Content-Type': 'application/json'
-      };
-
-      if (isAuthenticated) {
-        Object.assign(headers, getAuthHeaders());
-      }
-
       const response = await fetch(
         `${API_BASE}/api/market-hub/leaderboard?${params}`,
         {
           method: 'GET',
-          headers,
+          headers: {
+            'Content-Type': 'application/json'
+          },
+          credentials: isAuthenticated ? 'include' : 'omit',
           signal: abortControllerRef.current.signal
         }
       );
+      
 
       if (!response.ok) {
         // Handle specific error cases
@@ -187,7 +183,7 @@ export const useLeaderboard = ({
 
       console.error('Leaderboard fetch error:', error);
     }
-  }, [getAuthHeaders, isAuthenticated, createCacheKey]);
+  }, [isAuthenticated, createCacheKey]);
 
   // Refetch function for error recovery
   const refetch = useCallback(() => {

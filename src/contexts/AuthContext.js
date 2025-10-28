@@ -401,13 +401,7 @@ export function AuthProvider({ children }) {
   }
 
   // Updated getAuthHeaders for CSRF protection
-  function getAuthHeaders() {
-    // For cookie-based auth, we need to include CSRF token for mutating requests
-    return {
-      'Content-Type': 'application/json',
-      // CSRF token will be handled automatically by browser via cookie
-    };
-  }
+ 
 
   // Updated logout function - calls logout endpoint and clears local state
    // Updated logout function - needs CSRF token
@@ -447,7 +441,6 @@ export function AuthProvider({ children }) {
         verifyEmail,
         requestPasswordReset,
         isAuthenticated,
-        getAuthHeaders,  
         resetPassword,
         resendVerification,
         user // Export user for convenience

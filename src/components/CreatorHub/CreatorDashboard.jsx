@@ -3,7 +3,6 @@
 // CHANGES: Lines 13, 97-105, 271 - Replaced hardcoded URLs with PaymentRouter
 
 import React, { useState, useEffect, useCallback } from 'react';
-import { useAuth } from '../../contexts/AuthContext';
 import { useUser } from '../../contexts/UserContext';
 import { useAppView } from '../../contexts/AppViewContext';
 import api from '../../api';
@@ -14,7 +13,6 @@ import './CreatorDashboard.css';
 import PaymentRouter from '../../services/PaymentRouter';
 
 const CreatorDashboard = () => {
-  const { token } = useAuth();
   const { user } = useUser();
   const { switchView, VIEW_STATES } = useAppView();
   
@@ -34,7 +32,7 @@ const CreatorDashboard = () => {
   }, []);
 
   const loadDashboardData = useCallback(async () => {
-    if (!token) {
+    if (!user) {
       setError('Authentication required');
       setLoading(false);
       return;
@@ -82,7 +80,7 @@ const CreatorDashboard = () => {
     } finally {
       setLoading(false);
     }
-  }, [token]);
+  }, [user]);
 
   useEffect(() => {
     loadDashboardData();

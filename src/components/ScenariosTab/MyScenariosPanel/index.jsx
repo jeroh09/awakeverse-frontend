@@ -1,6 +1,5 @@
 // src/components/ScenariosTab/MyScenariosPanel/index.jsx - UPDATED
 import React, { useState } from 'react';
-import { useAuth } from '../../../contexts/AuthContext';
 import { useUser } from '../../../contexts/UserContext';
 import { deleteScenario } from '../../../api';
 import { triggerPublishConfetti } from '../../../utils/confettiUtils';
@@ -17,7 +16,6 @@ export default function MyScenariosPanel({
   onCreateNew = () => {},
   theme = 'light'
 }) {
-  const { token } = useAuth();
   const { user } = useUser();
   const [error, setError] = useState(null);
   const [deleting, setDeleting] = useState(null);
@@ -113,13 +111,15 @@ export default function MyScenariosPanel({
         : `${API_BASE}/api/market-hub/publish-scenario`;
 
       console.log(`🌐 ${action === 'publish' ? 'Publishing' : 'Unpublishing'} scenario:`, scenario.id);
-
+      
+      const csrf = document.cookie.match(/(?:^|;\s*)av_csrf=([^;]+)/)?.[1] || '';
       const response = await fetch(endpoint, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
-          'Authorization': `Bearer ${token}`
+          'X-CSRF-Token': csrf
         },
+        credentials: 'include',
         body: JSON.stringify({ scenario_id: scenario.id })
       });
 
