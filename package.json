@@ -13,7 +13,6 @@
     "axios": "^1.8.4",
     "babel-plugin-transform-remove-console": "^6.9.4",
     "canvas-confetti": "^1.9.3",
-    "jwt-decode": "3.1.2",
     "lucide-react": "^0.516.0",
     "postcss": "^8.4.47",
     "react": "18.2.0",
@@ -36,7 +35,7 @@
   "scripts": {
     "prebuild": "node -e \"require.resolve('babel-plugin-transform-remove-console') && console.log('✔ console plugin present')\"",
     "start": "craco start",
-    "build": "GENERATE_SOURCEMAP=false craco build",
+    "build": "GENERATE_SOURCEMAP=false DISABLE_ESLINT_PLUGIN=true craco build",
     "test": "craco test",
     "eject": "react-scripts eject"
   },

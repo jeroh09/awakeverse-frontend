@@ -44,7 +44,7 @@ const ProtectedAppRoute = ({ children }) => (
 );
 
 export default function App() {
-  const { token } = useAuth();
+  const { isAuthenticated } = useAuth();
   const location = useLocation();
   const navigate = useNavigate();
 

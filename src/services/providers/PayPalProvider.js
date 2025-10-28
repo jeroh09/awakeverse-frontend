@@ -12,12 +12,17 @@
  */
 
 /**
- * Base provider interface (same as StripeProvider)
+ * PayPalProvider - PayPal payment integration
  */
-class BaseProvider {
+
+class PayPalProvider {
   constructor({ config, envConfig }) {
     this.config = config;
     this.envConfig = envConfig;
+  }
+
+  getApiBase() {
+    return this.envConfig.getApiBase();
   }
   
     /**
