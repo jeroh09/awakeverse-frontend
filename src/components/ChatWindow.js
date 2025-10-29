@@ -5,7 +5,6 @@ import { ArrowLeft, Pen, RotateCw, Crown, TrendingUp } from 'lucide-react';
 import ReactMarkdown from 'react-markdown';
 import { VariableSizeList as List } from 'react-window';
 import AutoSizer from 'react-virtualized-auto-sizer';
-import { useAuth } from '../contexts/AuthContext';
 import { useUser } from '../contexts/UserContext';
 import { useConversation } from '../hooks/useConversation';
 import { CHARACTERS } from '../data/characters';
@@ -22,6 +21,8 @@ import DefensiveChatInputWrapper from './DefensiveChatInputWrapper';
 import DualPathUpgradeSystem from '../components/DualPathUpgradeSystem';
 import '../styles.css';
 import '../style/InviteStyles.css';
+
+const API = process.env.REACT_APP_API_BASE_URL || 'https://api.awakeverse.com';
 
 function useMediaQuery(maxWidth) {
   const query = `(max-width: ${maxWidth}px)`;
@@ -703,6 +704,7 @@ export default function ChatWindow({
   // Delay between words for reading pace
         await new Promise(resolve => setTimeout(resolve, 250));
       }
+    } catch (e) {
       // ✅ UPDATED ERROR HANDLING WITH FRIENDLY MESSAGES + LOGGING
       reportError(e, {
         action: 'invite_request',
@@ -760,7 +762,7 @@ export default function ChatWindow({
     }
 
     return () => {
-      if (window.visualViewspot) {
+      if (window.visualViewport) {
         window.visualViewport.removeEventListener('resize', updatePadding);
       }
     };
@@ -804,7 +806,7 @@ export default function ChatWindow({
 
     try {
       const csrf = document.cookie.match(/(?:^|;\s*)av_csrf=([^;]+)/)?.[1] || '';
-      const res = await fetch(`${process.env.REACT_APP_API_BASE_URL}/chat`, {
+      const res = await fetch(`${API}/chat`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -961,7 +963,7 @@ export default function ChatWindow({
     // ✅ CRITICAL: Check usage limits for custom characters
     if (usageTracking.isCustomCharacter && !usageTracking.canSendMessage) {
       // Block the message and show upgrade flow
-      setShowUpgradeFlow(message_limit);
+      setShowUpgradeFlow('message_limit');
       return;
     }
     
@@ -1170,7 +1172,7 @@ export default function ChatWindow({
             user_id={user?.id}
             onUpgradePrompt={() => {
               // Handle upgrade prompt - you can use existing upgrade flow
-              setShowUpgradeFlow(message_limit);
+              setShowUpgradeFlow('message_limit');
             }}
           >
             <InputArea
