@@ -1,6 +1,7 @@
 // src/hooks/useInteractedCharacters.js - Enhanced version
 import { useState, useEffect, useCallback } from 'react';
 import api from '../api';
+import { useSocket } from '../contexts/WebSocketContext'; // ← ensure this import exists
 
 export default function useInteractedCharacters() {
   const [interactedCharacters, setInteractedCharacters] = useState([]);
@@ -12,6 +13,8 @@ export default function useInteractedCharacters() {
   }); // 🆕 NEW: Overall stats
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
+  
+  const socket = useSocket(); // ← Get socket instance
 
   const fetchCharacters = useCallback(async () => {
     try {
@@ -80,6 +83,56 @@ export default function useInteractedCharacters() {
       // Non-critical, don't show error to user
     }
   }, [fetchCharacters, fetchInteractionStats]);
+
+  // 🆕 NEW: WebSocket listener for real-time interaction updates
+  useEffect(() => {
+    if (!socket) return;
+
+    const onTick = (payload) => {
+      // payload: { character, name, interactionCount, last_seen, active_until }
+      // Update just the affected entry to avoid full rerenders/refetches
+      setRecentCharacters((prev) => {
+        if (!Array.isArray(prev)) return prev;
+        const idx = prev.findIndex((c) => (c.character || c.key) === payload.character);
+        const next = [...prev];
+
+        if (idx >= 0) {
+          const prevItem = next[idx] || {};
+          next[idx] = {
+            ...prevItem,
+            character: payload.character,
+            name: payload.name || prevItem.name,
+            interactionCount: payload.interactionCount ?? prevItem.interactionCount ?? 1,
+            last_seen: payload.last_seen ?? prevItem.last_seen ?? Date.now()/1000,
+            hasActiveConversation: (payload.active_until && payload.active_until * 1000 > Date.now()) || prevItem.hasActiveConversation || false,
+          };
+        } else {
+          // if the character isn't in the list yet, optionally prepend a lightweight card
+          next.unshift({
+            character: payload.character,
+            name: payload.name || payload.character.replace(/_/g, ' '),
+            interactionCount: payload.interactionCount ?? 1,
+            last_seen: payload.last_seen ?? Math.floor(Date.now()/1000),
+            hasActiveConversation: !!(payload.active_until && payload.active_until * 1000 > Date.now()),
+            thumbnailUrl: '/images/default-character.jpg'
+          });
+        }
+        return next;
+      });
+
+      // Update interaction stats optimistically
+      setInteractionStats(prev => ({
+        ...prev,
+        totalInteractions: prev.totalInteractions + 1,
+        hasRecentActivity: true
+      }));
+    };
+
+    socket.on('interaction:tick', onTick);
+    return () => {
+      socket.off('interaction:tick', onTick);
+    };
+  }, [socket]);
 
   useEffect(() => {
     fetchCharacters();
