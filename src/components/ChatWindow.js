@@ -1432,8 +1432,10 @@ export default function ChatWindow({
                   participants,
                   userCharacters,
                   discoveredCharacters,
+                  showToast,
                   getCharacterDisplayName,  // ADD THIS LINE
                   userId: user?.id
+                  
                 }}
                 overscanCount={3}
               >

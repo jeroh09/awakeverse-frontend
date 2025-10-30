@@ -8,8 +8,8 @@ import { sanitizeError } from '../utils/errorUtils';
 import '../components/ElegantCharacterPortraits.css';
 import '../style/AuthPageStyles.css';
 
-const API = process.env.REACT_APP_API_URL || "https://api.awakeverse.com";
-
+//const API = process.env.REACT_APP_API_URL || "https://api.awakeverse.com";
+const API = process.env.NODE_ENV === 'development' ? '' : 'https://api.awakeverse.com';
 export default function Login() {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');

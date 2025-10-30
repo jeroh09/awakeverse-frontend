@@ -2,7 +2,8 @@ import { createContext, useContext, useState, useEffect } from "react";
 import { jwtDecode } from "jwt-decode";  // Correct named import
 import { UserContext } from "./UserContext";
 
-const API = "https://api.awakeverse.com";
+//const API = "https://api.awakeverse.com";
+const API = process.env.NODE_ENV === 'development' ? '' : 'https://api.awakeverse.com';
 
 export const AuthContext = createContext();
 
