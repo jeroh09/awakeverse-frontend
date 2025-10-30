@@ -619,38 +619,171 @@ export default function ChatWindow({
   const showToast = (msg) => { setToast(msg); setTimeout(() => setToast(null), 2500); };
 
   const onInvite = async (inviteeKey) => {
-    if (isSending) return;
+    console.log('🎯 INVITE DEBUG: Function called', { inviteeKey });
 
-    // ✅ cap: max 2 invitees (excluding main character)
+    // ============================================================
+    // CHECKPOINT 1: Initial State
+    // ============================================================
+    console.log('📊 INVITE DEBUG: Initial state check', {
+      isSending,
+      participants: participants?.length,
+      character,
+      inviteeKey,
+      inviteeType: typeof inviteeKey
+    });
+
+    // Check if already sending
+    if (isSending) {
+      console.warn('⚠️ INVITE DEBUG: Already sending, aborting');
+      return;
+    }
+
+    // ============================================================
+    // CHECKPOINT 2: Participant Limit
+    // ============================================================
     const activeInvitees = (participants?.length || 1) - 1;
+    console.log('🔢 INVITE DEBUG: Checking participant limit', {
+      participantsLength: participants?.length,
+      activeInvitees,
+      limit: 2,
+      wouldExceedLimit: activeInvitees >= 2
+    });
+
     if (activeInvitees >= 2) {
+      console.warn('⚠️ INVITE DEBUG: Participant limit reached');
       showToast('Invite limit reached (2).');
       return;
     }
 
-    // Ensure canonical key as string
+    // ============================================================
+    // CHECKPOINT 3: Variable Preparation
+    // ============================================================
     const toKey = String(inviteeKey);
+    console.log('🔑 INVITE DEBUG: Key prepared', {
+      original: inviteeKey,
+      normalized: toKey
+    });
 
-    // Use the precise last user prompt (not assistant)
+    // ============================================================
+    // CHECKPOINT 4: Last User Message Extraction
+    // ============================================================
     const lastUserMsg =
       lastUserMessageRef.current ||
       ([...chatHistory].reverse().find(m => m.user)?.text || '');
 
+    console.log('💬 INVITE DEBUG: Last user message', {
+      fromRef: lastUserMessageRef.current,
+      fromHistory: [...chatHistory].reverse().find(m => m.user)?.text,
+      final: lastUserMsg,
+      isEmpty: !lastUserMsg
+    });
+
+    // ============================================================
+    // CHECKPOINT 5: Refs Check
+    // ============================================================
+    console.log('📌 INVITE DEBUG: Refs state', {
+      lastSpeaker: lastSpeakerRef.current,
+      character,
+      finalFrom: lastSpeakerRef.current || character,
+      lastThreadId: lastThreadIdRef.current,
+      localThreadId: localThreadId.current,
+      finalThreadId: lastThreadIdRef.current || localThreadId.current || 'main'
+    });
+
+    // ============================================================
+    // CHECKPOINT 6: API Configuration
+    // ============================================================
+    console.log('🌐 INVITE DEBUG: API configuration', {
+      API,
+      fullUrl: `${API}/invite`,
+      apiType: typeof API,
+      apiDefined: API !== undefined
+    });
+
+    // ============================================================
+    // CHECKPOINT 7: Cookie Check
+    // ============================================================
+    const csrf = getCookie('av_csrf');
+    const sid = getCookie('av_sid');
+    const rid = getCookie('av_rid');
+
+    console.log('🍪 INVITE DEBUG: Cookie check', {
+      csrf: csrf ? `${csrf.substring(0, 10)}...` : null,
+      sid: sid ? `${sid.substring(0, 10)}...` : null,
+      rid: rid ? `${rid.substring(0, 10)}...` : null,
+      allCookiesPresent: !!(csrf && sid && rid)
+    });
+
+    if (!csrf) {
+      console.error('❌ INVITE DEBUG: CSRF token missing!');
+      showToast('Authentication error. Please refresh the page.');
+      return;
+    }
+
+    // ============================================================
+    // CHECKPOINT 8: Payload Construction
+    // ============================================================
     const placeholderIndex = chatHistory.length;
+    const payload = {
+      from: lastSpeakerRef.current || character,
+      to: toKey,
+      message: lastUserMsg,
+      thread_id: lastThreadIdRef.current || localThreadId.current || 'main'
+    };
 
+    console.log('📦 INVITE DEBUG: Payload constructed', {
+      placeholderIndex,
+      payload,
+      payloadJSON: JSON.stringify(payload)
+    });
+
+    // ============================================================
+    // CHECKPOINT 9: Request Preparation
+    // ============================================================
     try {
-      // Optimistically add participant (UI state)
-      setParticipants(prev => (prev.includes(toKey) ? prev : [...prev, toKey]));
+      console.log('🚀 INVITE DEBUG: Starting invite request');
+
+      // Optimistically add participant
+      setParticipants(prev => {
+        const newParticipants = prev.includes(toKey) ? prev : [...prev, toKey];
+        console.log('👥 INVITE DEBUG: Participants updated', {
+          before: prev,
+          after: newParticipants
+        });
+        return newParticipants;
+      });
+
       setIsSending(true);
+      console.log('🔒 INVITE DEBUG: isSending set to true');
 
-      // Reserve placeholder bubble for the invitee response
-      setChatHistory(prev => [
-        ...prev,
-        { user: false, speaker: toKey, text: '', error: null, has_invite_suggestion: false }
-      ]);
+      // Reserve placeholder bubble
+      setChatHistory(prev => {
+        const newHistory = [
+          ...prev,
+          { user: false, speaker: toKey, text: '', error: null, has_invite_suggestion: false }
+        ];
+        console.log('💭 INVITE DEBUG: Placeholder added', {
+          historyLength: newHistory.length,
+          placeholder: newHistory[newHistory.length - 1]
+        });
+        return newHistory;
+      });
 
-      // Make invite request with cookies + CSRF (no Bearer)
-      const csrf = getCookie('av_csrf');
+      // ============================================================
+      // CHECKPOINT 10: Fetch Request
+      // ============================================================
+      console.log('📡 INVITE DEBUG: About to fetch', {
+        url: `${API}/invite`,
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'X-CSRF-Token': csrf ? 'present' : 'missing'
+        },
+        credentials: 'include',
+        body: JSON.stringify(payload)
+      });
+
+      const fetchStartTime = Date.now();
       const res = await fetch(`${API}/invite`, {
         method: 'POST',
         headers: {
@@ -658,63 +791,96 @@ export default function ChatWindow({
           'X-CSRF-Token': csrf
         },
         credentials: 'include',
-        body: JSON.stringify({
-          from: lastSpeakerRef.current || character,                   // ✅ actual stream speaker
-          to: toKey,                                                   // ✅ canonical key
-          message: lastUserMsg,                                        // ✅ last user prompt
-          thread_id: lastThreadIdRef.current || localThreadId.current || 'main' // ✅ continuity
-        })
+        body: JSON.stringify(payload)
       });
 
+      const fetchEndTime = Date.now();
+      console.log('✅ INVITE DEBUG: Fetch completed', {
+        status: res.status,
+        statusText: res.statusText,
+        ok: res.ok,
+        duration: `${fetchEndTime - fetchStartTime}ms`,
+        headers: {
+          contentType: res.headers.get('content-type'),
+          provider: res.headers.get('X-AI-Provider')
+        }
+      });
+
+      // ============================================================
+      // CHECKPOINT 11: Response Check
+      // ============================================================
       if (!res.ok) {
-        // Surface “not found” nicely if present
-        const text = await res.text().catch(() => '');
-        if (/not found/i.test(text)) {
+        const errorText = await res.text().catch(() => '');
+        console.error('❌ INVITE DEBUG: Request failed', {
+          status: res.status,
+          statusText: res.statusText,
+          errorText
+        });
+
+        if (/not found/i.test(errorText)) {
           showToast(`Invite failed: key '${toKey}' not found.`);
-          console.warn('invitee-key', toKey);
+          console.warn('🔍 INVITE DEBUG: Character not found', { toKey });
         }
         throw new Error(`Invite failed (${res.status}): ${res.statusText}`);
       }
 
-      // ✅ Stream the response into the placeholder bubble (keep your existing “drip” feel if desired)
-            // ✅ Incremental NDJSON parsing
+      // ============================================================
+      // CHECKPOINT 12: Stream Reading
+      // ============================================================
+      console.log('🌊 INVITE DEBUG: Starting stream read');
       const reader = res.body.getReader();
       const decoder = new TextDecoder();
       let bufferStr = '';
       let accumulatedText = '';
+      let chunkCount = 0;
+      let tokenCount = 0;
 
       for (;;) {
         const { done, value } = await reader.read();
-        if (done) break;
+        chunkCount++;
+
+        if (done) {
+          console.log('✅ INVITE DEBUG: Stream complete', {
+            totalChunks: chunkCount,
+            totalTokens: tokenCount,
+            finalText: accumulatedText
+          });
+          break;
+        }
 
         bufferStr += decoder.decode(value, { stream: true });
 
-        // split by newlines and keep any partial
+        // Split by newlines
         const lines = bufferStr.split('\n');
-        bufferStr = lines.pop() || ''; // carry incomplete line to next chunk
+        bufferStr = lines.pop() || '';
 
         for (const line of lines) {
           const trimmed = line.trim();
           if (!trimmed) continue;
 
-          // each line is a JSON object: { response, speaker, thread_id, ... }
+          // Parse JSON
           let obj;
           try {
             obj = JSON.parse(trimmed);
+            tokenCount++;
+
+            if (tokenCount === 1) {
+              console.log('📝 INVITE DEBUG: First token received', { obj });
+            }
           } catch (e) {
-            // if a provider leaks raw tokens occasionally, skip unparsable lines
+            console.warn('⚠️ INVITE DEBUG: Failed to parse line', { line: trimmed, error: e.message });
             continue;
           }
 
           const token = (obj.response ?? '');
-          const speakerFromServer = obj.speaker || toKey;     // server may override speaker per chunk
-          const threadFromServer  = obj.thread_id || 'main';
+          const speakerFromServer = obj.speaker || toKey;
+          const threadFromServer = obj.thread_id || 'main';
 
-          // keep your refs in sync with the live stream
+          // Update refs
           lastSpeakerRef.current = speakerFromServer;
           lastThreadIdRef.current = threadFromServer;
 
-          // append token to the placeholder bubble
+          // Append token
           if (token) {
             accumulatedText += token;
 
@@ -735,13 +901,14 @@ export default function ChatWindow({
         }
       }
 
-      // flush any trailing partial line
+      // Flush trailing partial
       if (bufferStr.trim()) {
         try {
           const obj = JSON.parse(bufferStr.trim());
           const token = (obj.response ?? '');
           const speakerFromServer = obj.speaker || toKey;
-          const threadFromServer  = obj.thread_id || 'main';
+          const threadFromServer = obj.thread_id || 'main';
+
           if (token) {
             accumulatedText += token;
             setChatHistory(prev => {
@@ -751,25 +918,62 @@ export default function ChatWindow({
                   ...copy[placeholderIndex],
                   text: accumulatedText,
                   speaker: speakerFromServer,
-                  thread_id: threadFromServer
+                  thread_id: threadFromServer,
+                  has_invite_suggestion: false
                 };
               }
               return copy;
             });
           }
-        } catch {}
+        } catch (e) {
+          console.warn('⚠️ INVITE DEBUG: Failed to parse trailing buffer', { buffer: bufferStr });
+        }
       }
 
+      // Final success log
+      console.log('🎉 INVITE DEBUG: Invite completed successfully', {
+        invitee: toKey,
+        tokensReceived: tokenCount,
+        finalLength: accumulatedText.length
+      });
+
     } catch (e) {
-      console.error('Invite error:', e);
-      // Put the error on the placeholder bubble if it exists
+      // ============================================================
+      // CHECKPOINT 13: Error Handling
+      // ============================================================
+      console.error('💥 INVITE DEBUG: Exception caught', {
+        error: e,
+        message: e.message,
+        stack: e.stack,
+        name: e.name
+      });
+
+      reportError(e, {
+        action: 'invite_request',
+        character: character,
+        invitee: toKey,
+        lastUserMessage: lastUserMsg?.substring(0, 50)
+      });
+
       setChatHistory(prev => {
         const copy = [...prev];
-        if (copy[placeholderIndex]) copy[placeholderIndex] = { ...copy[placeholderIndex], error: e.message };
+        if (copy[placeholderIndex]) {
+          copy[placeholderIndex] = {
+            ...copy[placeholderIndex],
+            error: `Unable to invite ${getCharacterDisplayName(toKey)} right now. Please try again.`,
+            text: ''
+          };
+        }
         return copy;
       });
+
+      showToast(`Failed to invite ${getCharacterDisplayName(toKey)}`);
     } finally {
+      // ============================================================
+      // CHECKPOINT 14: Cleanup
+      // ============================================================
       setIsSending(false);
+      console.log('🔓 INVITE DEBUG: isSending set to false (finally block)');
     }
   };
 
