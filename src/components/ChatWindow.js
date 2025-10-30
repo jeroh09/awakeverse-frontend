@@ -677,29 +677,87 @@ export default function ChatWindow({
       }
 
       // ✅ Stream the response into the placeholder bubble (keep your existing “drip” feel if desired)
+            // ✅ Incremental NDJSON parsing
       const reader = res.body.getReader();
       const decoder = new TextDecoder();
-      let fullResponse = '';
+      let bufferStr = '';
+      let accumulatedText = '';
 
-      while (true) {
+      for (;;) {
         const { done, value } = await reader.read();
         if (done) break;
-        const chunk = decoder.decode(value);
-        fullResponse += chunk;
+
+        bufferStr += decoder.decode(value, { stream: true });
+
+        // split by newlines and keep any partial
+        const lines = bufferStr.split('\n');
+        bufferStr = lines.pop() || ''; // carry incomplete line to next chunk
+
+        for (const line of lines) {
+          const trimmed = line.trim();
+          if (!trimmed) continue;
+
+          // each line is a JSON object: { response, speaker, thread_id, ... }
+          let obj;
+          try {
+            obj = JSON.parse(trimmed);
+          } catch (e) {
+            // if a provider leaks raw tokens occasionally, skip unparsable lines
+            continue;
+          }
+
+          const token = (obj.response ?? '');
+          const speakerFromServer = obj.speaker || toKey;     // server may override speaker per chunk
+          const threadFromServer  = obj.thread_id || 'main';
+
+          // keep your refs in sync with the live stream
+          lastSpeakerRef.current = speakerFromServer;
+          lastThreadIdRef.current = threadFromServer;
+
+          // append token to the placeholder bubble
+          if (token) {
+            accumulatedText += token;
+
+            setChatHistory(prev => {
+              const copy = [...prev];
+              if (copy[placeholderIndex]) {
+                copy[placeholderIndex] = {
+                  ...copy[placeholderIndex],
+                  text: accumulatedText,
+                  speaker: speakerFromServer,
+                  thread_id: threadFromServer,
+                  has_invite_suggestion: false
+                };
+              }
+              return copy;
+            });
+          }
+        }
       }
 
-      const words = fullResponse.split(' ');
-      let displayedText = '';
-      for (const word of words) {
-        displayedText += (displayedText ? ' ' : '') + word;
-        setChatHistory(prev => {
-          const copy = [...prev];
-          if (copy[placeholderIndex]) {
-            copy[placeholderIndex] = { ...copy[placeholderIndex], text: displayedText, speaker: toKey };
+      // flush any trailing partial line
+      if (bufferStr.trim()) {
+        try {
+          const obj = JSON.parse(bufferStr.trim());
+          const token = (obj.response ?? '');
+          const speakerFromServer = obj.speaker || toKey;
+          const threadFromServer  = obj.thread_id || 'main';
+          if (token) {
+            accumulatedText += token;
+            setChatHistory(prev => {
+              const copy = [...prev];
+              if (copy[placeholderIndex]) {
+                copy[placeholderIndex] = {
+                  ...copy[placeholderIndex],
+                  text: accumulatedText,
+                  speaker: speakerFromServer,
+                  thread_id: threadFromServer
+                };
+              }
+              return copy;
+            });
           }
-          return copy;
-        });
-        await new Promise(r => setTimeout(r, 250));
+        } catch {}
       }
 
     } catch (e) {
