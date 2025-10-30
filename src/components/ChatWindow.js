@@ -566,6 +566,13 @@ export default function ChatWindow({
   } = useSmartScroll(listRef, chatHistory);
   const controllerRef = useRef(null);
   const sizeMap = useRef({});
+  // AFTER: refs to keep last stream metadata for invite wiring
+  const lastSpeakerRef = useRef(character);
+  const lastThreadIdRef = useRef(localThreadId.current || 'main');
+  const lastUserMessageRef = useRef(null);                     // NEW: tracks last user prompt text
+  const lastSuggestionRef = useRef(null); 
+// optional: debounce “invite suggestion” once per user message
+  const suggestionShownForMessageRef = useRef(null);
   const displayName = characterName || character?.replace(/_/g, ' ') || 'Unknown';
   const lastMessageCountRef = useRef(0);
   
@@ -602,40 +609,48 @@ export default function ChatWindow({
     lastMessageCountRef.current = chatHistory.length;
   }, [enableAutoScroll, chatHistory.length, isMobile]);
 
-  const onInvite = async (invitee) => {
+    // ===== /invite HANDLER — AFTER REPLACEMENT START =====
+
+  // Simple helper (optional): getCookie by name
+  const getCookie = (name) =>
+    document.cookie.match(new RegExp(`(?:^|;\\s*)${name}=([^;]*)`))?.[1] || '';
+
+  const [toast, setToast] = useState(null);           // tiny toast message
+  const showToast = (msg) => { setToast(msg); setTimeout(() => setToast(null), 2500); };
+
+  const onInvite = async (inviteeKey) => {
     if (isSending) return;
 
-    const aiIndex = chatHistory.length;
+    // ✅ cap: max 2 invitees (excluding main character)
+    const activeInvitees = (participants?.length || 1) - 1;
+    if (activeInvitees >= 2) {
+      showToast('Invite limit reached (2).');
+      return;
+    }
+
+    // Ensure canonical key as string
+    const toKey = String(inviteeKey);
+
+    // Use the precise last user prompt (not assistant)
+    const lastUserMsg =
+      lastUserMessageRef.current ||
+      ([...chatHistory].reverse().find(m => m.user)?.text || '');
+
+    const placeholderIndex = chatHistory.length;
 
     try {
-      // Add invitee to participants immediately
-      setParticipants(prev => {
-        const newParticipants = prev.includes(invitee) ? prev : [...prev, invitee];
-        return newParticipants;
-      });
-
-      // Get last user message
-      const lastUserMsg = [...chatHistory].reverse().find(m => m.user)?.text;
-      if (!lastUserMsg) {
-        return;
-      }
-
+      // Optimistically add participant (UI state)
+      setParticipants(prev => (prev.includes(toKey) ? prev : [...prev, toKey]));
       setIsSending(true);
-      
-      // Reserve placeholder bubble
+
+      // Reserve placeholder bubble for the invitee response
       setChatHistory(prev => [
         ...prev,
-        { 
-          user: false, 
-          speaker: invitee, 
-          text: '', 
-          error: null, 
-          has_invite_suggestion: false 
-        }
+        { user: false, speaker: toKey, text: '', error: null, has_invite_suggestion: false }
       ]);
 
-      // Make invite request
-      const csrf = document.cookie.match(/(?:^|;\s*)av_csrf=([^;]+)/)?.[1] || '';
+      // Make invite request with cookies + CSRF (no Bearer)
+      const csrf = getCookie('av_csrf');
       const res = await fetch(`${API}/invite`, {
         method: 'POST',
         headers: {
@@ -644,90 +659,62 @@ export default function ChatWindow({
         },
         credentials: 'include',
         body: JSON.stringify({
-          from: character,
-          to: invitee,
-          message: lastUserMsg,
-          thread_id: localThreadId.current
+          from: lastSpeakerRef.current || character,                   // ✅ actual stream speaker
+          to: toKey,                                                   // ✅ canonical key
+          message: lastUserMsg,                                        // ✅ last user prompt
+          thread_id: lastThreadIdRef.current || localThreadId.current || 'main' // ✅ continuity
         })
       });
 
-      
       if (!res.ok) {
+        // Surface “not found” nicely if present
+        const text = await res.text().catch(() => '');
+        if (/not found/i.test(text)) {
+          showToast(`Invite failed: key '${toKey}' not found.`);
+          console.warn('invitee-key', toKey);
+        }
         throw new Error(`Invite failed (${res.status}): ${res.statusText}`);
       }
 
-      // Stream tokens into the bubble
-      // Stream tokens into the bubble
+      // ✅ Stream the response into the placeholder bubble (keep your existing “drip” feel if desired)
       const reader = res.body.getReader();
       const decoder = new TextDecoder();
-      let fullResponse = '';  // Buffer the complete response first
+      let fullResponse = '';
 
-// First, collect the entire response quickly
-      // First, collect the entire response quickly
       while (true) {
         const { done, value } = await reader.read();
         if (done) break;
-
         const chunk = decoder.decode(value);
-        for (const line of chunk.split('\n').filter(Boolean)) {
-          try {
-            const data = JSON.parse(line);
-            const token = data.response || '';
-            fullResponse += token;
-          } catch (parseError) {
-          }
-        }
+        fullResponse += chunk;
       }
 
-// ✅ ADD THIS LINE:
-      const finalSpeaker = invitee; // Store speaker outside the loop
-
-// Now drip out the buffered response slowly
       const words = fullResponse.split(' ');
       let displayedText = '';
-
       for (const word of words) {
-        displayedText += word + ' ';
-
+        displayedText += (displayedText ? ' ' : '') + word;
         setChatHistory(prev => {
           const copy = [...prev];
-          if (copy[aiIndex]) {
-            copy[aiIndex] = {
-              ...copy[aiIndex],
-              text: displayedText,
-              speaker: finalSpeaker  // ✅ Use stored speaker instead of data.speaker
-            };
+          if (copy[placeholderIndex]) {
+            copy[placeholderIndex] = { ...copy[placeholderIndex], text: displayedText, speaker: toKey };
           }
           return copy;
         });
-  
-  // Delay between words for reading pace
-        await new Promise(resolve => setTimeout(resolve, 250));
+        await new Promise(r => setTimeout(r, 250));
       }
-    } catch (e) {
-      // ✅ UPDATED ERROR HANDLING WITH FRIENDLY MESSAGES + LOGGING
-      reportError(e, {
-        action: 'invite_request',
-        character: character,
-        invitee: invitee,
-        lastUserMessage: lastUserMsg?.substring(0, 50)
-      });
 
+    } catch (e) {
       console.error('Invite error:', e);
+      // Put the error on the placeholder bubble if it exists
       setChatHistory(prev => {
         const copy = [...prev];
-        if (copy[aiIndex]) {
-          copy[aiIndex] = {
-            ...copy[aiIndex],
-            error: `Unable to invite ${getCharacterDisplayName(invitee)} right now. Please try again.`
-          };
-        }
+        if (copy[placeholderIndex]) copy[placeholderIndex] = { ...copy[placeholderIndex], error: e.message };
         return copy;
       });
     } finally {
       setIsSending(false);
     }
   };
+
 
   // Initialize chat history from session
   useEffect(() => {
@@ -844,14 +831,37 @@ export default function ChatWindow({
 
         for (const line of lines) {
           try {
+            // inside the /chat stream loop
             const data = JSON.parse(line);
             const token = data.response || '';
 
-            // ✅ CRITICAL: Track actual speaker from backend response
+            // ✅ Track actual speaker and thread for invites
             if (data.speaker) {
               actualSpeaker = data.speaker;
-              console.log('📢 Speaker from backend:', actualSpeaker);
+              lastSpeakerRef.current = data.speaker;
             }
+            if (data.thread_id) {
+              lastThreadIdRef.current = data.thread_id;
+            }
+
+            // ✅ Debounce & cache last suggestion for quick-invite
+            if (data.has_invite_suggestion && Array.isArray(data.invite_candidates)) {
+              const currentUserMsg = lastUserMessageRef.current || '∅';
+              if (suggestionShownForMessageRef.current !== currentUserMsg) {
+                suggestionShownForMessageRef.current = currentUserMsg;
+
+                // Only store if there’s at least one candidate
+                if (data.invite_candidates.length > 0) {
+                  lastSuggestionRef.current = {
+                    keys: data.invite_candidates,                 // canonical keys (e.g., ["sherlock"])
+                    matched: data.matched_trigger || null,        // optional
+                    threadId: data.thread_id || lastThreadIdRef.current || 'main',
+                    from: data.speaker || lastSpeakerRef.current || character
+                  };
+                }
+              }
+            }
+
 
             // ✅ STREAMING: Add each token immediately
             if (token) {
@@ -966,9 +976,13 @@ export default function ChatWindow({
       setShowUpgradeFlow('message_limit');
       return;
     }
-    
     if (!message.trim() || isSending) return;
     const userText = message;
+
+    // ✅ record last user prompt + reset debounce guard
+    lastUserMessageRef.current = userText;
+    suggestionShownForMessageRef.current = null;
+
     setMessage('');
     enableAutoScroll();
     const aiIndex = chatHistory.length + 1;
@@ -1061,12 +1075,28 @@ export default function ChatWindow({
         <div className="pane-invite-bar">
           <button
             className="pane-invite-button"
-            onClick={() => onInvite(character, lastUserMsg.thread_id)}
+            disabled={
+              // ✅ cap: max 2 invitees (excluding main character)
+              (participants?.length || 1) - 1 >= 2 ||
+              // no cached suggestion to quick-invite
+              !(lastSuggestionRef.current && lastSuggestionRef.current.keys?.length)
+            }
+            onClick={() => {
+              const cached = lastSuggestionRef.current;
+              if (cached?.keys?.length) {
+                // ✅ quick-invite the first suggestion key
+                onInvite(cached.keys[0]);
+              } else {
+                // fallback: open your existing pane (if you have one)
+                setInvitePaneOpen?.(true);
+              }
+            }}
           >
             Invite Expert
           </button>
         </div>
       )}
+      
       
       <div className="chat-window">
         {/* Conditional Header - Only show if FloatingAvatar is disabled */}
@@ -1207,6 +1237,23 @@ export default function ChatWindow({
         triggerReason={upgradeReason}
         currentUsage={usageTracking.usage}
       />
+      {toast && (
+        <div
+          style={{
+            position: 'fixed',
+            bottom: 16,
+            right: 16,
+            background: 'rgba(0,0,0,0.8)',
+            color: '#fff',
+            padding: '8px 12px',
+            borderRadius: 8,
+            fontSize: 14,
+            zIndex: 4000
+          }}
+        >
+          {toast}
+        </div>
+      )}
     </div>
   );
 }
