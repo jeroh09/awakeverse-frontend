@@ -66,9 +66,12 @@ const MarketHubPage = ({
       />
     );
   }
+
+
   // Standalone authenticated route
   return <AuthenticatedMarketHub />;
 };
+
 
 // NEW: Enhanced Authenticated Market Hub for view integration
 const AuthenticatedMarketHub = ({ 
