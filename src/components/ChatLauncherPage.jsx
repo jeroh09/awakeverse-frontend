@@ -21,9 +21,7 @@ import {
 
 import { characterCategories } from '../data/characterCategories';
 
-// NEW: Import debug hooks
-import { useFeaturedCharacters } from '../hooks/useFeaturedCharacters';
-import { useLeaderboard } from '../hooks/useLeaderboard';
+
 
 // Enhanced semantic mappings for character search
 const ENHANCED_SEMANTIC_MAPPINGS = {
