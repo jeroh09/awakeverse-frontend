@@ -1,4 +1,3 @@
-// src/components/MarketHub/MarketHubPage.jsx - FIXED ScenarioChatWindow Integration
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { ArrowLeft, Search, Filter, TrendingUp, Trophy, Users, Star, Shield, Zap } from 'lucide-react';
@@ -665,6 +664,66 @@ const AuthenticatedMarketHub = ({
         />
       )}
     </div>
+  );
+};
+
+// NEW: Updated to accept props for character selection callbacks - MOVED TO BOTTOM
+const MarketHubPage = ({ 
+  onCharacterSelect, 
+  onStartChat,
+  onScenarioSelect,
+  isViewMode = false // Flag to indicate if called from ChatApp view switching
+}) => {
+  const navigate = useNavigate();
+  const { user, loading } = useUser();
+
+  
+  // Mobile detection
+  const [isMobile, setIsMobile] = useState(window.innerWidth <= 768);
+  
+  useEffect(() => {
+    const handleResize = () => setIsMobile(window.innerWidth <= 768);
+    window.addEventListener('resize', handleResize);
+    return () => window.removeEventListener('resize', handleResize);
+  }, []);
+
+   // ✅ CRITICAL: Check loading state BEFORE using user
+  if (loading) {
+    return (
+      <div className={styles.loadingContainer}>
+        <div className={styles.loadingSpinner} />
+        <p>Loading Market Hub...</p>
+      </div>
+    );
+  }
+
+  // ✅ CRITICAL: Now safe to check authentication
+  const isAuthenticated = !!user;
+
+  // NEW: When in view mode (called from ChatApp), always show authenticated version
+  // When standalone route, use authentication check with educational fallback
+  if (isViewMode) {
+    // Called from ChatApp view switching - always show authenticated version
+    return (
+      <AuthenticatedMarketHub 
+        onCharacterSelect={onCharacterSelect}
+        onStartChat={onStartChat}
+        onScenarioSelect={onScenarioSelect}
+        isViewMode={false}
+      />
+    );
+  }
+
+
+  // Standalone authenticated route
+  // Line 71-72 should be:
+  return (
+    <AuthenticatedMarketHub 
+      onCharacterSelect={onCharacterSelect}
+      onStartChat={onStartChat}
+      onScenarioSelect={onScenarioSelect}
+      isViewMode={false}
+    />
   );
 };
 
