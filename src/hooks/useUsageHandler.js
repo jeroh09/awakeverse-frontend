@@ -15,7 +15,7 @@ export const useUsageHandler = (character) => {
   
   // Enhanced sendMessage that replaces sendAI for custom characters
   const sendMessageWithUsageHandling = useCallback(async (userText, aiIndex, setChatHistory) => {
-    const API_BASE = process.env.REACT_APP_API_URL || 'http://localhost:5000';
+  const API_BASE = process.env.REACT_APP_API_URL || 'https://api.awakeverse.com';
     const csrf = document.cookie.match(/(?:^|;\s*)av_csrf=([^;]+)/)?.[1] || '';
     
     try {

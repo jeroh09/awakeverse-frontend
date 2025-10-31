@@ -1,7 +1,9 @@
 // src/hooks/useMarketHub.js
 import { useState, useEffect, useCallback, useRef } from 'react';
+import api from '../api'; // ✅ ADD THIS IMPORT
 
-const API_BASE = process.env.REACT_APP_API_URL || 'http://localhost:5000';
+// ✅ CHANGED: Use production API as default
+const API_BASE = process.env.REACT_APP_API_URL || 'https://api.awakeverse.com';
 
 export const useMarketHub = ({ 
   page = 1, 
@@ -83,19 +85,12 @@ export const useMarketHub = ({
         params.set('include_scenarios', 'true');
       }
 
-      const response = await fetch(
-        `${API_BASE}/api/market-hub/browse?${params}`,
-        {
-          method: 'GET',
-          headers: {
-            'Content-Type': 'application/json',
-          },
-          credentials: 'include',
-          signal: abortControllerRef.current.signal
-        }
-      );
+      // ✅ CHANGED: Use centralized api instance but keep manual signal for abort control
+      const response = await api.get(`/market-hub/browse?${params}`, {
+        signal: abortControllerRef.current.signal
+      });
 
-      if (!response.ok) {
+      if (!response.status === 200) {
         // Handle specific error cases
         if (response.status === 401) {
           throw new Error('Authentication required');
@@ -125,7 +120,7 @@ export const useMarketHub = ({
         throw new Error(`Server error: ${response.status}`);
       }
 
-      const data = await response.json();
+      const data = response.data;
 
       // 🆕 UPDATE: Validate response structure to include scenarios
       const resultData = {
@@ -251,36 +246,16 @@ export const useCharacterEngagement = () => {
 
   const engageWithCharacter = useCallback(async (characterId, engagementType, metadata = {}) => {
     setLoading(true);
-    const csrf = document.cookie.match(/(?:^|;\s*)av_csrf=([^;]+)/)?.[1] || '';
-
     
     try {
-      const response = await fetch(`${API_BASE}/api/market-hub/engage`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'X-CSRF-Token': csrf
-        },
-        credentials: 'include',
-        body: JSON.stringify({
-          character_id: characterId,
-          engagement_type: engagementType,
-          metadata
-        })
+      // ✅ CHANGED: Use centralized api instance (handles CSRF automatically)
+      const response = await api.post('/market-hub/engage', {
+        character_id: characterId,
+        engagement_type: engagementType,
+        metadata
       });
 
-      if (!response.ok) {
-        if (response.status === 401) {
-          throw new Error('Please sign in to engage with characters');
-        }
-        if (response.status === 404) {
-          throw new Error('Character not found');
-        }
-        throw new Error('Failed to record engagement');
-      }
-
-      const data = await response.json();
-      return data;
+      return response.data;
 
     } catch (error) {
       console.error('Character engagement error:', error);
@@ -302,35 +277,16 @@ export const useScenarioEngagement = () => {
 
   const engageWithScenario = useCallback(async (scenarioId, engagementType, metadata = {}) => {
     setLoading(true);
-    const csrf = document.cookie.match(/(?:^|;\s*)av_csrf=([^;]+)/)?.[1] || '';
-
     
     try {
-      const response = await fetch(`${API_BASE}/api/market-hub/engage-scenario`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'X-CSRF-Token': csrf
-        },
-        body: JSON.stringify({
-          scenario_id: scenarioId,
-          engagement_type: engagementType,
-          metadata
-        })
+      // ✅ CHANGED: Use centralized api instance (handles CSRF automatically)
+      const response = await api.post('/market-hub/engage-scenario', {
+        scenario_id: scenarioId,
+        engagement_type: engagementType,
+        metadata
       });
 
-      if (!response.ok) {
-        if (response.status === 401) {
-          throw new Error('Please sign in to engage with scenarios');
-        }
-        if (response.status === 404) {
-          throw new Error('Scenario not found');
-        }
-        throw new Error('Failed to record engagement');
-      }
-
-      const data = await response.json();
-      return data;
+      return response.data;
 
     } catch (error) {
       console.error('Scenario engagement error:', error);

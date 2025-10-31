@@ -1,7 +1,7 @@
 // src/hooks/useScenarioChat.js - WITH USAGE TRACKING & LIMITS
 import { useState, useCallback, useRef } from 'react';
 
-const API_BASE = process.env.REACT_APP_API_BASE_URL || 'http://localhost:5000';
+const API_BASE = process.env.REACT_APP_API_URL || 'https://api.awakeverse.com';
 
 export default function useScenarioChat() {
   

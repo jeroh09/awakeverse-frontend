@@ -3,7 +3,7 @@ import { useState, useCallback, useRef, useEffect } from 'react';
 import { useUser } from '../contexts/UserContext';
 import usePremiumCharacters from './usePremiumCharacters';
 
-const API_BASE = process.env.REACT_APP_API_URL || 'http://localhost:5000';
+const API_BASE = process.env.REACT_APP_API_URL || 'https://api.awakeverse.com';
 
 // Flow step constants
 const FLOW_STEPS = {

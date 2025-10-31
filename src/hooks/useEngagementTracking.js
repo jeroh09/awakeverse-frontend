@@ -3,14 +3,16 @@
 
 import { useState, useCallback, useRef, useEffect } from 'react';
 import { useUser } from '../contexts/UserContext';
-import api from '../api';
+
+// ✅ CHANGED: Use production API as default
+const API_BASE = process.env.REACT_APP_API_URL || 'https://api.awakeverse.com';
 
 /**
  * Hook for tracking user engagement with Market Hub characters
  * Now includes loading existing engagement state
  */
 export const useEngagementTracking = () => {
-  const { user } = useUser();
+  const { user } = useUser(); // ✅ FIXED: Changed "use" to "user"
   const [isTracking, setIsTracking] = useState(false);
   const [error, setError] = useState(null);
   
@@ -43,25 +45,42 @@ export const useEngagementTracking = () => {
     setError(null);
 
     try {
-      const response = await api.post('/market-hub/engage', {
-        character_id: characterId,
-        engagement_type: engagementType,
-        metadata: {
-          ...metadata,
-          timestamp: new Date().toISOString(),
-          source: 'market_hub_ui'
-        }
+      // ✅ CHANGED: Use manual fetch with CSRF token (like your working files)
+      const csrf = document.cookie.match(/(?:^|;\s*)av_csrf=([^;]+)/)?.[1] || '';
+      
+      const response = await fetch(`${API_BASE}/api/market-hub/engage`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'X-CSRF-Token': csrf  // ✅ ADD CSRF TOKEN
+        },
+        credentials: 'include',
+        body: JSON.stringify({
+          character_id: characterId,
+          engagement_type: engagementType,
+          metadata: {
+            ...metadata,
+            timestamp: new Date().toISOString(),
+            source: 'market_hub_ui'
+          }
+        })
       });
 
-      if (response.data && response.data.status === 'success') {
+      if (!response.ok) {
+        throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+      }
+
+      const data = await response.json();
+
+      if (data && data.status === 'success') {
         trackingCache.current.set(cacheKey, now);
         return true;
       } else {
-        throw new Error(response.data?.error || 'Engagement tracking failed');
+        throw new Error(data?.error || 'Engagement tracking failed');
       }
 
     } catch (err) {
-      const errorMessage = err.response?.data?.error || err.message || 'Unknown error';
+      const errorMessage = err.message || 'Unknown error';
       setError(errorMessage);
       return false;
 
@@ -141,11 +160,20 @@ export const useEngagementState = (characterId) => {
       }
 
       try {
-        // Call backend to get user's engagements for this character
-        const response = await api.get(`/market-hub/character/${characterId}/user-engagement`);
+        // ✅ CHANGED: Use manual fetch with CSRF token
+        const csrf = document.cookie.match(/(?:^|;\s*)av_csrf=([^;]+)/)?.[1] || '';
         
-        if (isMounted && response.data) {
-          const { liked, bookmarked } = response.data;
+        const response = await fetch(`${API_BASE}/api/market-hub/character/${characterId}/user-engagement`, {
+          method: 'GET',
+          headers: {
+            'X-CSRF-Token': csrf  // ✅ ADD CSRF TOKEN
+          },
+          credentials: 'include'
+        });
+        
+        if (isMounted && response.ok) {
+          const data = await response.json();
+          const { liked, bookmarked } = data;
           setEngagementState({
             liked: liked || false,
             bookmarked: bookmarked || false,

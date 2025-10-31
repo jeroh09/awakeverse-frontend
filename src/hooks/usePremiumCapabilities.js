@@ -2,7 +2,7 @@
 import { useState, useEffect, useCallback, useRef } from 'react';
 import { useUser } from '../contexts/UserContext';
 
-const API_BASE = process.env.REACT_APP_API_URL || 'http://localhost:5000';
+const API_BASE = process.env.REACT_APP_API_URL || 'https://api.awakeverse.com';
 
 // Subscription states computed from backend data
 const SUBSCRIPTION_STATES = {
