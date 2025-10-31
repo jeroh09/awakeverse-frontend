@@ -23,7 +23,6 @@ import ResetPassword from './pages/ResetPassword';
 import EmailVerification from './pages/EmailVerification';
 import CreatorsLanding from './pages/CreatorsLanding/CreatorsLanding';
 import PricingPage from './pages/PricingPage';
-import MarketHubPage from './components/MarketHub/MarketHubPage';
 import PaymentSuccess from './components/PaymentSuccess';
 import PaymentCancelled from './components/PaymentCancelled'; // Add this import
 import ErrorBoundary from './components/ErrorBoundary';
@@ -72,7 +71,6 @@ export default function App() {
       {/* Market Hub - Keep existing route for backward compatibility */}
       <Route path="/creators" element={<CreatorsLanding />} />
       <Route path="/pricing" element={<PricingPage />} />
-      <Route path="/market-hub" element={<MarketHubPage />} />
 
       {/* Payment routes - PROTECTED */}
       <Route path="/payment-success"  element={<PaymentSuccess />} />
