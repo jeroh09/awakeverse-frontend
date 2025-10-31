@@ -17,71 +17,9 @@ import styles from './MarketHubPage.module.css';
 // 🆕 UPDATE: Import the CORRECT ScenarioChatWindow from ScenariosTab
 import ScenarioChatWindow from '../../components/ScenariosTab/ScenarioChatWindow';
 
-
 const API_BASE = process.env.REACT_APP_API_URL || 'https://api.awakeverse.com';
 
-// NEW: Updated to accept props for character selection callbacks
-const MarketHubPage = ({ 
-  onCharacterSelect, 
-  onStartChat,
-  onScenarioSelect,
-  isViewMode = false // Flag to indicate if called from ChatApp view switching
-}) => {
-  const navigate = useNavigate();
-  const { user, loading } = useUser();
-
-  
-  // Mobile detection
-  const [isMobile, setIsMobile] = useState(window.innerWidth <= 768);
-  
-  useEffect(() => {
-    const handleResize = () => setIsMobile(window.innerWidth <= 768);
-    window.addEventListener('resize', handleResize);
-    return () => window.removeEventListener('resize', handleResize);
-  }, []);
-
-   // ✅ CRITICAL: Check loading state BEFORE using user
-  if (loading) {
-    return (
-      <div className={styles.loadingContainer}>
-        <div className={styles.loadingSpinner} />
-        <p>Loading Market Hub...</p>
-      </div>
-    );
-  }
-
-  // ✅ CRITICAL: Now safe to check authentication
-  const isAuthenticated = !!user;
-
-  // NEW: When in view mode (called from ChatApp), always show authenticated version
-  // When standalone route, use authentication check with educational fallback
-  if (isViewMode) {
-    // Called from ChatApp view switching - always show authenticated version
-    return (
-      <AuthenticatedMarketHub 
-        onCharacterSelect={onCharacterSelect}
-        onStartChat={onStartChat}
-        onScenarioSelect={onScenarioSelect}
-        isViewMode={false}
-      />
-    );
-  }
-
-
-  // Standalone authenticated route
-  // Line 71-72 should be:
-  return (
-    <AuthenticatedMarketHub 
-      onCharacterSelect={onCharacterSelect}
-      onStartChat={onStartChat}
-      onScenarioSelect={onScenarioSelect}
-      isViewMode={false}
-    />
-  );
-};
-
-
-// NEW: Enhanced Authenticated Market Hub for view integration
+// NEW: Enhanced Authenticated Market Hub for view integration - MOVED TO TOP
 const AuthenticatedMarketHub = ({ 
   onCharacterSelect, 
   onStartChat, 
