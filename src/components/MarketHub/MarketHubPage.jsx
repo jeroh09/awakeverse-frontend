@@ -30,6 +30,8 @@ const MarketHubPage = ({
 }) => {
   const navigate = useNavigate();
   const { user } = useUser();
+  const isAuthenticated = !!user;  // ← ADD THIS LINE
+
 
   
   // Mobile detection
@@ -69,8 +71,8 @@ const AnonymousMarketHub = () => {
   const navigate = useNavigate();
   const [selectedCharacter, setSelectedCharacter] = useState(null);
   // ✅ ADD THIS - Get user's custom characters
-  const { userCharacters = [] } = usePremiumCharacters();
-  
+  const { user } = useUser();  // ← ADD THIS
+  const { userCharacters = [] } = user ? usePremiumCharacters() : { userCharacters: [] };  
   // Get featured characters for public preview (limited data)
   const { 
     featuredCharacters, 
