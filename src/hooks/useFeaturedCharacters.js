@@ -1,6 +1,6 @@
-// src/hooks/useFeaturedCharacters.js - FIXED VERSION
+// src/hooks/useFeaturedCharacters.js
+// ✅ STEP 4: Removed useAuth import - using cookies now
 import { useState, useEffect, useCallback, useRef } from 'react';
-import { useAuth } from '../contexts/AuthContext';
 
 const API_BASE = process.env.REACT_APP_API_URL || 'https://api.awakeverse.com';
 
@@ -9,8 +9,8 @@ export const useFeaturedCharacters = ({
   enabled = true,
   refreshInterval = 5 * 60 * 1000 // 5 minutes default
 } = {}) => {
-  const { isAuthenticated } = useAuth();
-
+  // ✅ STEP 4: No need for getAuthHeaders - using cookies now
+  // publicView removed - backend now requires auth for all users
   const [state, setState] = useState({
     featuredCharacters: [],
     loading: true,
@@ -37,8 +37,8 @@ export const useFeaturedCharacters = ({
     abortControllerRef.current = new AbortController();
 
     try {
-      // Check cache first (for public view, cache longer since data changes less frequently)
-      const cacheTime = publicView ? 10 * 60 * 1000 : 5 * 60 * 1000; // 10min public, 5min authenticated
+      // ✅ STEP 4: Simplified cache time (all users are authenticated now)
+      const cacheTime = 5 * 60 * 1000; // 5 minutes
       if (cacheRef.current && Date.now() - cacheRef.current.timestamp < cacheTime) {
         setState(prev => ({
           ...prev,
@@ -51,19 +51,19 @@ export const useFeaturedCharacters = ({
 
       setState(prev => ({ ...prev, loading: true, error: null }));
 
-      // Build headers - public view doesn't need auth
+      // ✅ STEP 4: Use cookie-based auth (credentials: 'include')
       const response = await fetch(`${API_BASE}/api/market-hub/featured`, {
         method: 'GET',
         headers: {
           'Content-Type': 'application/json'
         },
-        credentials: (!publicView && isAuthenticated) ? 'include' : 'omit',
+        credentials: 'include', // ✅ Send cookies for authentication
         signal: abortControllerRef.current.signal
       });
 
       if (!response.ok) {
         // Handle specific error cases
-        if (response.status === 401 && !publicView) {
+        if (response.status === 401) {
           throw new Error('Authentication required');
         }
         if (response.status === 404) {
@@ -90,41 +90,28 @@ export const useFeaturedCharacters = ({
 
       const data = await response.json();
 
-      // ✅ FIXED: Validate and transform response structure based on actual backend response
+      // Validate and transform response structure
       const resultData = {
         featuredCharacters: Array.isArray(data.featured_creators) 
           ? data.featured_creators.map(creator => ({
-              // ✅ FIXED: Map correct field names from database query results
               character_key: creator.character_key,
               character_id: creator.character_id,
-              display_name: creator.display_name, // ✅ Already correct in backend
-              short_description: creator.short_description || '',
-              historical_period: creator.historical_period || '',
-              personality_archetype: creator.personality_archetype || '',
-              expertise_domain: creator.expertise_domain || '',
+              display_name: creator.character_name,
+              short_description: creator.character_description || '',
+              expertise_domain: creator.character_domain || '',
               avatar_url: creator.avatar_url || `/images/${creator.character_key}.jpg`,
-              
-              // ✅ FIXED: Parse engagement_30d JSON string from backend
-              engagement_30d: typeof creator.engagement_30d === 'string' 
-                ? JSON.parse(creator.engagement_30d)
-                : creator.engagement_30d || {
-                    total_views: 0,
-                    total_likes: 0,
-                    total_shares: 0,
-                    total_chats: 0
-                  },
-              
-              // ✅ FIXED: Map creator information correctly
+              engagement_30d: {
+                total_views: creator.total_views || 0,
+                total_likes: creator.total_likes || 0,
+                total_shares: creator.total_shares || 0,
+                total_chats: creator.total_chats || 0
+              },
               creator: {
                 display_name: creator.creator_display_name || 'Creator',
-                username: creator.creator_username, // Will be sanitized by backend decorator
                 creator_level: creator.creator_level || 'newcomer'
               },
-              
-              // Additional fields
-              feature_position: creator.feature_position || null,
-              total_engagement: creator.total_engagement_score || 0,
-              market_published_at: creator.market_published_at
+              feature_position: creator.feature_position,
+              total_engagement: creator.total_engagement || 0
             }))
           : [],
         weekStart: data.week_start || new Date().toISOString().split('T')[0],
@@ -175,7 +162,7 @@ export const useFeaturedCharacters = ({
 
       console.error('Featured characters fetch error:', error);
     }
-  }, [isAuthenticated, publicView]);
+  }, []); // ✅ STEP 4: Removed getAuthHeaders, isAuthenticated, publicView
 
   // Refetch function for error recovery
   const refetch = useCallback(() => {
@@ -244,9 +231,9 @@ export const useFeaturedCharacters = ({
   };
 };
 
-// Hook for getting character engagement stats (public view)
+// Hook for getting character engagement stats
 export const useCharacterStats = (characterId, { enabled = true } = {}) => {
-  const { isAuthenticated } = useAuth();
+  // ✅ STEP 4: No need for getAuthHeaders - using cookies now
   const [state, setState] = useState({
     character: null,
     engagement: null,
@@ -260,6 +247,7 @@ export const useCharacterStats = (characterId, { enabled = true } = {}) => {
     try {
       setState(prev => ({ ...prev, loading: true, error: null }));
 
+      // ✅ STEP 4: Use cookie-based auth
       const response = await fetch(
         `${API_BASE}/api/market-hub/character/${characterId}/stats`,
         {
@@ -267,7 +255,7 @@ export const useCharacterStats = (characterId, { enabled = true } = {}) => {
           headers: {
             'Content-Type': 'application/json'
           },
-          credentials: isAuthenticated ? 'include' : 'omit'
+          credentials: 'include' // ✅ Send cookies for authentication
         }
       );
 
@@ -296,7 +284,7 @@ export const useCharacterStats = (characterId, { enabled = true } = {}) => {
       }));
       console.error('Character stats fetch error:', error);
     }
-  }, [characterId, isAuthenticated]);
+  }, [characterId]); // ✅ STEP 4: Removed getAuthHeaders, isAuthenticated
 
   useEffect(() => {
     if (!enabled || !characterId) return;

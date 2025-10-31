@@ -1,6 +1,6 @@
-// src/hooks/useLeaderboard.js - FIXED VERSION
+// src/hooks/useLeaderboard.js
+// ✅ STEP 3: Removed useAuth import - using cookies now
 import { useState, useEffect, useCallback, useRef } from 'react';
-import { useAuth } from '../contexts/AuthContext';
 
 const API_BASE = process.env.REACT_APP_API_URL || 'https://api.awakeverse.com';
 
@@ -9,7 +9,7 @@ export const useLeaderboard = ({
   limit = 10,
   enabled = true 
 } = {}) => {
-  const { isAuthenticated } = useAuth();
+  // ✅ STEP 3: No need for getAuthHeaders - using cookies now
   const [state, setState] = useState({
     rankings: [],
     loading: true,
@@ -61,7 +61,7 @@ export const useLeaderboard = ({
         limit: limit.toString()
       });
 
-      // Build headers - leaderboard might be available to anonymous users
+      // ✅ STEP 3: Use cookie-based auth (credentials: 'include')
       const response = await fetch(
         `${API_BASE}/api/market-hub/leaderboard?${params}`,
         {
@@ -69,11 +69,10 @@ export const useLeaderboard = ({
           headers: {
             'Content-Type': 'application/json'
           },
-          credentials: isAuthenticated ? 'include' : 'omit',
+          credentials: 'include', // ✅ Send cookies for authentication
           signal: abortControllerRef.current.signal
         }
       );
-      
 
       if (!response.ok) {
         // Handle specific error cases
@@ -101,30 +100,22 @@ export const useLeaderboard = ({
 
       const data = await response.json();
 
-      // ✅ FIXED: Validate and transform response structure based on backend response
+      // Validate and transform response structure
       const resultData = {
-        // ✅ FIXED: Backend returns data.leaderboard.rankings array
         rankings: Array.isArray(data.leaderboard?.rankings) 
-          ? data.leaderboard.rankings.map(rankEntry => ({
-              // Map fields from database query results
-              rank: rankEntry.rank,
-              character_id: rankEntry.character_id,
-              character_key: rankEntry.character_key,
-              display_name: rankEntry.display_name,
-              creator_level: rankEntry.creator_level,
-              creator_name: rankEntry.creator_name,
-              period_views: rankEntry.period_views || 0,
-              period_likes: rankEntry.period_likes || 0,
-              avg_engagement_rate: rankEntry.avg_engagement_rate || 0,
-              avatar_url: rankEntry.avatar_url || `/images/${rankEntry.character_key}.jpg`,
-              
-              // Additional computed fields for frontend
-              total_engagement: rankEntry.period_views + rankEntry.period_likes,
-              engagement_display: `${rankEntry.period_views} views`
+          ? data.leaderboard.rankings.map(ranking => ({
+              rank: ranking.rank,
+              character_id: ranking.character_id,
+              character_key: ranking.character_key,
+              display_name: ranking.display_name,
+              creator_name: ranking.creator_name,
+              creator_level: ranking.creator_level,
+              period_views: ranking.period_views || 0,
+              period_likes: ranking.period_likes || 0,
+              avg_engagement_rate: ranking.avg_engagement_rate || 0,
+              avatar_url: ranking.avatar_url || `/images/${ranking.character_key}.jpg`
             }))
           : [],
-        
-        // ✅ FIXED: Map period and totalEntries from correct response structure  
         period: data.leaderboard?.period || period,
         totalEntries: data.leaderboard?.total_entries || 0,
         leaderboardNotAvailable: false
@@ -136,12 +127,12 @@ export const useLeaderboard = ({
         timestamp: Date.now()
       });
 
-      // Clean old cache entries (keep last 10)
-      if (cacheRef.current.size > 10) {
+      // Clean old cache entries (keep last 6)
+      if (cacheRef.current.size > 6) {
         const entries = Array.from(cacheRef.current.entries());
         entries.sort((a, b) => b[1].timestamp - a[1].timestamp);
         cacheRef.current.clear();
-        entries.slice(0, 10).forEach(([key, value]) => {
+        entries.slice(0, 6).forEach(([key, value]) => {
           cacheRef.current.set(key, value);
         });
       }
@@ -169,9 +160,7 @@ export const useLeaderboard = ({
         return fetchLeaderboard(period, limit, retryCount + 1);
       }
 
-      const errorMessage = error.message === 'Authentication required' 
-        ? 'Please sign in to view leaderboard'
-        : error.message.includes('fetch') || error.message.includes('network')
+      const errorMessage = error.message.includes('fetch') || error.message.includes('network')
         ? 'Unable to connect to leaderboard. Please check your internet connection.'
         : 'Unable to load leaderboard rankings';
 
@@ -183,7 +172,7 @@ export const useLeaderboard = ({
 
       console.error('Leaderboard fetch error:', error);
     }
-  }, [isAuthenticated, createCacheKey]);
+  }, [createCacheKey]); // ✅ STEP 3: Removed getAuthHeaders, isAuthenticated
 
   // Refetch function for error recovery
   const refetch = useCallback(() => {
