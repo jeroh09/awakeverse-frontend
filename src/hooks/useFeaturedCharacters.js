@@ -9,7 +9,8 @@ export const useFeaturedCharacters = ({
   enabled = true,
   refreshInterval = 5 * 60 * 1000 // 5 minutes default
 } = {}) => {
-  const { isAuthenticated } = useAuth();
+  const { user } = useUser() || {};
+  const { isAuthenticated } = useAuth() || {};
 
   const [state, setState] = useState({
     featuredCharacters: [],

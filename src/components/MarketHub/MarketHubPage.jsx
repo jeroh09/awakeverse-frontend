@@ -71,8 +71,6 @@ const AnonymousMarketHub = () => {
   const navigate = useNavigate();
   const [selectedCharacter, setSelectedCharacter] = useState(null);
   // ✅ ADD THIS - Get user's custom characters
-  const { user } = useUser();  // ← ADD THIS
-  const { userCharacters = [] } = user ? usePremiumCharacters() : { userCharacters: [] };  
   // Get featured characters for public preview (limited data)
   const { 
     featuredCharacters, 
