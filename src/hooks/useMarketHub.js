@@ -1,7 +1,7 @@
 // src/hooks/useMarketHub.js
 import { useState, useEffect, useCallback, useRef } from 'react';
 
-const API_BASE = process.env.REACT_APP_API_URL || 'https://api.awakeverse.com';
+const API_BASE = process.env.REACT_APP_API_URL || 'http://localhost:5000';
 
 export const useMarketHub = ({ 
   page = 1, 
