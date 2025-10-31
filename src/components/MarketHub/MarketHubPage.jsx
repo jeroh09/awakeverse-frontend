@@ -93,7 +93,8 @@ const AuthenticatedMarketHub = ({
   // ✅ ADD THIS - Get user's custom characters (even though it will be empty for anonymous users)
   const { userCharacters = [] } = usePremiumCharacters();
   // ✅ ADD THIS CHECK
-  if (loading || !user) {
+  // ✅ ADD DEFENSIVE CHECK (like ScenariosTab line 47)
+  if (!user) {
     return (
       <div className={styles.loadingContainer}>
         <div className={styles.loadingSpinner} />
