@@ -10,7 +10,7 @@ import api from '../api';
  * Now includes loading existing engagement state
  */
 export const useEngagementTracking = () => {
-  const { use } = useUser();
+  const { user } = useUser();
   const [isTracking, setIsTracking] = useState(false);
   const [error, setError] = useState(null);
   
