@@ -23,6 +23,7 @@ import ResetPassword from './pages/ResetPassword';
 import EmailVerification from './pages/EmailVerification';
 import CreatorsLanding from './pages/CreatorsLanding/CreatorsLanding';
 import PricingPage from './pages/PricingPage';
+import MarketHubPage from './components/MarketHub/MarketHubPage';
 import PaymentSuccess from './components/PaymentSuccess';
 import PaymentCancelled from './components/PaymentCancelled'; // Add this import
 import ErrorBoundary from './components/ErrorBoundary';
@@ -66,11 +67,19 @@ export default function App() {
       <Route path="/ai-disclaimer" element={<AIDisclaimer />} />
       <Route path="/contractor-agreements" element={<ContractorAgreements />} />
       
-
-      
-      {/* Market Hub - Keep existing route for backward compatibility */}
+      {/* Market Hub - FIXED: Wrapped with ProtectedRoute + ErrorBoundary */}
       <Route path="/creators" element={<CreatorsLanding />} />
       <Route path="/pricing" element={<PricingPage />} />
+      <Route 
+        path="/market-hub" 
+        element={
+          <ErrorBoundary>
+            <ProtectedRoute>
+              <MarketHubPage />
+            </ProtectedRoute>
+          </ErrorBoundary>
+        } 
+      />
 
       {/* Payment routes - PROTECTED */}
       <Route path="/payment-success"  element={<PaymentSuccess />} />
