@@ -62,14 +62,22 @@ const MarketHubPage = ({
         onCharacterSelect={onCharacterSelect}
         onStartChat={onStartChat}
         onScenarioSelect={onScenarioSelect}
-        isViewMode={true}
+        isViewMode={false}
       />
     );
   }
 
 
   // Standalone authenticated route
-  return <AuthenticatedMarketHub />;
+  // Line 71-72 should be:
+  return (
+    <AuthenticatedMarketHub 
+      onCharacterSelect={onCharacterSelect}
+      onStartChat={onStartChat}
+      onScenarioSelect={onScenarioSelect}
+      isViewMode={false}
+    />
+  );
 };
 
 
