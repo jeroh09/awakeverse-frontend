@@ -1,11 +1,6 @@
-// src/components/CreatorHub/PublishToHubButton.jsx - DEFENSIVE AUTH VERSION
-// ✅ STEP 4: Replace useUser() with defensive useMarketHubAuth()
-// CHANGES: Lines 2, 10-11
-
+// src/components/CreatorHub/PublishToHubButton.jsx
 import React, { useState, useCallback } from 'react';
-// ❌ REMOVE: import { useUser } from '../../contexts/UserContext';
-// ✅ ADD: Import defensive auth hook
-import { useMarketHubAuth } from '../../hooks/useMarketHubAuth';
+import { useUser } from '../../contexts/UserContext';
 import api from '../../api';
 import DualPathUpgradeSystem from '../DualPathUpgradeSystem';
 import { triggerPublishConfetti } from '../../utils/confettiUtils';
@@ -16,20 +11,12 @@ const PublishToHubButton = ({
   onPublishSuccess,
   onPublishError 
 }) => {
-  // ✅ STEP 4 CHANGE: Replace useUser() with useMarketHubAuth()
-  // ❌ OLD: const { user } = useUser();
-  // ✅ NEW: Defensive hook with guaranteed values
-  const { user, userId, isAuthenticated } = useMarketHubAuth();
+  const { user } = useUser();
   
   const [isProcessing, setIsProcessing] = useState(false);
   const [showUpgradeModal, setShowUpgradeModal] = useState(false);
   const [error, setError] = useState(null);
   const [justPublished, setJustPublished] = useState(false);
-  
-  // ✅ DEFENSIVE: Guard against missing authentication
-  if (!isAuthenticated || !user) {
-    return null;
-  }
   
   // DEFENSIVE: Only show for custom characters
   const isCustomCharacter = character?.character_key?.startsWith('user_');
@@ -53,8 +40,7 @@ const PublishToHubButton = ({
   
   // Handle toggle click with tier check
   const handleToggleClick = useCallback(async () => {
-    // ✅ DEFENSIVE: Double-check authentication
-    if (!user || !userId) {
+    if (!user) {
       setError('Authentication required');
       return;
     }
@@ -67,13 +53,12 @@ const PublishToHubButton = ({
     }
 
     await toggleCharacterPublish();
-  }, [user, userId, character]);
+  }, [user, character]);
 
   // Check if user has unlimited tier
   const checkUnlimitedTier = async () => {
     try {
-      // ✅ DEFENSIVE: Use userId from hook instead of user.id
-      const response = await api.get(`/premium/user_subscription/${userId}`);
+      const response = await api.get(`/premium/user_subscription/${user.id}`);
       
       if (response.data && response.data.subscription) {
         const tier = response.data.subscription.tier;

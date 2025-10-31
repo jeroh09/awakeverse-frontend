@@ -1,11 +1,6 @@
-// src/components/ScenariosTab/MyScenariosPanel/index.jsx - DEFENSIVE AUTH VERSION
-// ✅ STEP 5: Replace useUser() with defensive useMarketHubAuth()
-// CHANGES: Lines 2, 18
-
+// src/components/ScenariosTab/MyScenariosPanel/index.jsx - UPDATED
 import React, { useState } from 'react';
-// ❌ REMOVE: import { useUser } from '../../../contexts/UserContext';
-// ✅ ADD: Import defensive auth hook
-import { useMarketHubAuth } from '../../../hooks/useMarketHubAuth';
+import { useUser } from '../../../contexts/UserContext';
 import { deleteScenario } from '../../../api';
 import { triggerPublishConfetti } from '../../../utils/confettiUtils';
 import usePremiumCharacters from '../../../hooks/usePremiumCharacters';
@@ -21,11 +16,7 @@ export default function MyScenariosPanel({
   onCreateNew = () => {},
   theme = 'light'
 }) {
-  // ✅ STEP 5 CHANGE: Replace useUser() with useMarketHubAuth()
-  // ❌ OLD: const { user } = useUser();
-  // ✅ NEW: Defensive hook with guaranteed values
-  const { user, isAuthenticated, userId } = useMarketHubAuth();
-  
+  const { user } = useUser();
   const [error, setError] = useState(null);
   const [deleting, setDeleting] = useState(null);
   const [activeScenario, setActiveScenario] = useState(null);
@@ -37,18 +28,6 @@ export default function MyScenariosPanel({
   const [publishError, setPublishError] = useState(null);
   
   const { userCharacters = [] } = usePremiumCharacters();
-
-  // ✅ DEFENSIVE: Early return if not authenticated (shouldn't happen in protected route)
-  if (!isAuthenticated) {
-    return (
-      <div className="my-scenarios-panel">
-        <div className="panel-error-banner">
-          <span className="error-icon">⚠️</span>
-          Please sign in to manage scenarios
-        </div>
-      </div>
-    );
-  }
 
   // Handle starting a debate
   const handleStartDebate = async (scenarioId) => {
@@ -117,14 +96,8 @@ export default function MyScenariosPanel({
     }
   };
 
-  // Handle publish/unpublish confirmation - WITH DEFENSIVE AUTH
+  // Handle publish/unpublish confirmation - UPDATED WITH CONFETTI
   const handlePublishConfirm = async (scenario) => {
-    // ✅ DEFENSIVE: Double-check authentication
-    if (!isAuthenticated) {
-      setPublishError('Authentication required to publish scenarios');
-      return;
-    }
-
     const isPublished = scenario.is_public === true;
     const action = isPublished ? 'unpublish' : 'publish';
     
@@ -139,13 +112,7 @@ export default function MyScenariosPanel({
 
       console.log(`🌐 ${action === 'publish' ? 'Publishing' : 'Unpublishing'} scenario:`, scenario.id);
       
-      // ✅ DEFENSIVE: Safe CSRF token extraction
       const csrf = document.cookie.match(/(?:^|;\s*)av_csrf=([^;]+)/)?.[1] || '';
-      
-      if (!csrf) {
-        console.warn('⚠️ No CSRF token found, request may fail');
-      }
-      
       const response = await fetch(endpoint, {
         method: 'POST',
         headers: {
@@ -162,10 +129,6 @@ export default function MyScenariosPanel({
         // Handle specific error cases
         if (response.status === 403) {
           setPublishError('Professional tier required to publish scenarios. Please upgrade your account.');
-          return;
-        }
-        if (response.status === 401) {
-          setPublishError('Authentication required. Please sign in again.');
           return;
         }
         if (response.status === 400 && data.error?.includes('2 characters')) {
@@ -192,15 +155,7 @@ export default function MyScenariosPanel({
       
     } catch (error) {
       console.error(`❌ Failed to ${action} scenario:`, error);
-      
-      // ✅ DEFENSIVE: User-friendly error messages
-      let errorMessage = error.message || `Failed to ${action} scenario`;
-      
-      if (error.message.includes('fetch') || error.message.includes('network')) {
-        errorMessage = 'Network error. Please check your connection and try again.';
-      }
-      
-      setPublishError(errorMessage);
+      setPublishError(error.message || `Failed to ${action} scenario`);
     } finally {
       setPublishing(null);
     }

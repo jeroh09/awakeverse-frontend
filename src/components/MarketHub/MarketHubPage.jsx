@@ -1,13 +1,8 @@
-// src/components/MarketHub/MarketHubPage.jsx - DEFENSIVE AUTH VERSION
-// ✅ STEP 3: Replace useUser() with defensive useMarketHubAuth()
-// CHANGES: Lines 5, 32-33, 401-402
-
+// src/components/MarketHub/MarketHubPage.jsx - FIXED ScenarioChatWindow Integration
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { ArrowLeft, Search, Filter, TrendingUp, Trophy, Users, Star, Shield, Zap } from 'lucide-react';
-// ❌ REMOVE: import { useUser } from '../../contexts/UserContext';
-// ✅ ADD: Import defensive auth hook
-import { useMarketHubAuth } from '../../hooks/useMarketHubAuth';
+import { useUser } from '../../contexts/UserContext';
 import EnhancedCharacterCard from './EnhancedCharacterCard';
 import FeaturedCarousel from './FeaturedCarousel';
 import LeaderboardSection from './LeaderboardSection';
@@ -34,14 +29,7 @@ const MarketHubPage = ({
   isViewMode = false // Flag to indicate if called from ChatApp view switching
 }) => {
   const navigate = useNavigate();
-  
-  // ✅ STEP 3 CHANGE: Replace useUser() with useMarketHubAuth()
-  // ❌ OLD: const { user } = useUser();
-  // ✅ NEW: Defensive hook with guaranteed values
-  const { user, isAuthenticated, loading: authLoading } = useMarketHubAuth();
-  
-  // ❌ REMOVE: const isAuthenticated = !!user;
-  // ✅ Already provided by useMarketHubAuth()
+  const { user, loading } = useUser();
 
   
   // Mobile detection
@@ -52,6 +40,19 @@ const MarketHubPage = ({
     window.addEventListener('resize', handleResize);
     return () => window.removeEventListener('resize', handleResize);
   }, []);
+
+   // ✅ CRITICAL: Check loading state BEFORE using user
+  if (loading) {
+    return (
+      <div className={styles.loadingContainer}>
+        <div className={styles.loadingSpinner} />
+        <p>Loading Market Hub...</p>
+      </div>
+    );
+  }
+
+  // ✅ CRITICAL: Now safe to check authentication
+  const isAuthenticated = !!user;
 
   // NEW: When in view mode (called from ChatApp), always show authenticated version
   // When standalone route, use authentication check with educational fallback
@@ -64,18 +65,6 @@ const MarketHubPage = ({
         onScenarioSelect={onScenarioSelect}
         isViewMode={true}
       />
-    );
-  }
-
-  // ✅ DEFENSIVE: Show loading state while auth is checking
-  if (authLoading) {
-    return (
-      <div className={styles.container}>
-        <div className={styles.loadingState}>
-          <div className={styles.spinner} />
-          <p>Loading Market Hub...</p>
-        </div>
-      </div>
     );
   }
 
@@ -93,6 +82,8 @@ const AnonymousMarketHub = () => {
   const navigate = useNavigate();
   const [selectedCharacter, setSelectedCharacter] = useState(null);
   // ✅ ADD THIS - Get user's custom characters
+  const { userCharacters = [] } = usePremiumCharacters();
+  
   // Get featured characters for public preview (limited data)
   const { 
     featuredCharacters, 
@@ -420,12 +411,7 @@ const AuthenticatedMarketHub = ({
   isViewMode = false 
 }) => {
   const navigate = useNavigate();
-  
-  // ✅ STEP 3 CHANGE: Replace useUser() with useMarketHubAuth()
-  // ❌ OLD: const { user } = useUser();
-  // ✅ NEW: Defensive hook with guaranteed values
-  const { user, isAuthenticated, userId, displayName } = useMarketHubAuth();
-  
+  const { user } = useUser();
   // ✅ ADD THIS - Get user's custom characters (even though it will be empty for anonymous users)
   const { userCharacters = [] } = usePremiumCharacters();
   
@@ -792,13 +778,12 @@ const AuthenticatedMarketHub = ({
     { value: 'popular', label: 'Most Popular' }
   ];
 
-  // ✅ DEFENSIVE: Add error boundary for content rendering
   if (error) {
     return (
       <div className={styles.container}>
         <div className={styles.errorState}>
-          <h3>Unable to Load Market Hub</h3>
-          <p>{error}</p>
+          <h2>Unable to load Market Hub</h2>
+          <p>Please check your connection and try again.</p>
           <button onClick={refetch} className={styles.retryButton}>
             Try Again
           </button>
