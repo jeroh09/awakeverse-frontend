@@ -92,6 +92,15 @@ const AuthenticatedMarketHub = ({
   const { user } = useUser();
   // ✅ ADD THIS - Get user's custom characters (even though it will be empty for anonymous users)
   const { userCharacters = [] } = usePremiumCharacters();
+  // ✅ ADD THIS CHECK
+  if (loading || !user) {
+    return (
+      <div className={styles.loadingContainer}>
+        <div className={styles.loadingSpinner} />
+        <p>Loading Market Hub...</p>
+      </div>
+    );
+  }
   
   // State management
   const [searchQuery, setSearchQuery] = useState('');
