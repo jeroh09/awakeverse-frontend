@@ -1,31 +1,36 @@
-// src/contexts/UserContext.js - ENHANCED with Subscription Refresh
-// DEFENSIVE: Adds subscription refresh for Stripe success handling
+// src/contexts/UserContext.js - DEFENSIVE VERSION
+// ✅ FIXED: Added guards, error handling, and defensive patterns
+// CRITICAL: This prevents "user is not defined" errors
 
 import React, { createContext, useContext, useState, useEffect, useCallback } from 'react';
 
-// Add this constant at the top
-
-// Use the deployed API base (or env override)
 const API_BASE = process.env.REACT_APP_API_URL || 'https://api.awakeverse.com';
 
-
-const UserContext = createContext();
+// ✅ STEP 1: Create context with DEFAULT VALUE to prevent undefined returns
+const UserContext = createContext({
+  user: null,
+  setUser: () => {},
+  loading: true,
+  refreshing: false,
+  refreshSubscription: async () => null,
+  hasSubscription: () => false,
+  getSubscriptionInfo: () => ({
+    tier: 'free',
+    status: 'none',
+    display_name: 'Free',
+    is_active: false,
+    expires_at: null
+  })
+});
 
 export function UserProvider({ children }) {
   const [user, setUser] = useState(null);
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
 
-  // ============================================================================
-  // STEP 4: SUBSCRIPTION REFRESH METHOD
-  // ============================================================================
-
   /**
    * Refresh user data and subscription status from API
    * DEFENSIVE: Can be called after Stripe success or anytime
-   * 
-   * @param {boolean} silent - If true, don't show loading state
-   * @returns {Promise<object|null>} Updated user data or null on error
    */
   const refreshSubscription = useCallback(async (silent = false) => {
     try {
@@ -120,42 +125,42 @@ export function UserProvider({ children }) {
     };
   }, [user]);
 
-  // ============================================================================
-  // INITIAL USER LOAD (existing logic)
-  // ============================================================================
+  // ✅ STEP 2: Initial user load with error handling
   useEffect(() => {
-    // Cookie-based auth: just ask the server who we are
-    fetch(`${API_BASE}/api/auth/me`, {
-      credentials: 'include'
-    })
-      .then(res => {
-        console.log("🌐 auth/me status:", res.status);
-        return res.json().catch(() => ({}));
-      })
-      .then(data => {
+    const loadUser = async () => {
+      try {
+        const response = await fetch(`${API_BASE}/api/auth/me`, {
+          credentials: 'include'
+        });
+        
+        console.log('🌐 auth/me status:', response.status);
+        
+        const data = await response.json().catch(() => ({}));
+        
         if (data && !data.error) {
           setUser(data);
           console.log('👤 User loaded:', data.username);
           console.log('💎 Subscription:', data.subscription_tier || 'free');
         } else {
           setUser(null);
+          console.log('👤 No authenticated user');
         }
-      })
-      .catch(err => {
+      } catch (err) {
         console.error('❌ auth/me fetch failed:', err);
         setUser(null);
-      })
-      .finally(() => setLoading(false));
-  }, []);
+      } finally {
+        setLoading(false);
+      }
+    };
 
+    loadUser();
+  }, []);
 
   const value = {
     user,
     setUser,
     loading,
     refreshing,
-    
-    // NEW: Subscription management methods
     refreshSubscription,
     hasSubscription,
     getSubscriptionInfo
@@ -168,6 +173,37 @@ export function UserProvider({ children }) {
   );
 }
 
+// ✅ STEP 3: DEFENSIVE useUser hook with guard and helpful error
 export function useUser() {
-  return useContext(UserContext);
+  const context = useContext(UserContext);
+  
+  // ✅ CRITICAL FIX: Guard against undefined context
+  if (context === undefined) {
+    console.error('❌ useUser() called outside UserProvider!');
+    console.error('📍 Stack trace:', new Error().stack);
+    
+    // ✅ Return safe fallback instead of undefined
+    return {
+      user: null,
+      setUser: () => {
+        console.warn('⚠️ setUser called outside UserProvider - no-op');
+      },
+      loading: false,
+      refreshing: false,
+      refreshSubscription: async () => {
+        console.warn('⚠️ refreshSubscription called outside UserProvider');
+        return null;
+      },
+      hasSubscription: () => false,
+      getSubscriptionInfo: () => ({
+        tier: 'free',
+        status: 'none',
+        display_name: 'Free',
+        is_active: false,
+        expires_at: null
+      })
+    };
+  }
+  
+  return context;
 }

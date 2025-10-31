@@ -1,8 +1,13 @@
-// src/components/MarketHub/MarketHubPage.jsx - FIXED ScenarioChatWindow Integration
+// src/components/MarketHub/MarketHubPage.jsx - DEFENSIVE AUTH VERSION
+// ✅ STEP 3: Replace useUser() with defensive useMarketHubAuth()
+// CHANGES: Lines 5, 32-33, 401-402
+
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { ArrowLeft, Search, Filter, TrendingUp, Trophy, Users, Star, Shield, Zap } from 'lucide-react';
-import { useUser } from '../../contexts/UserContext';
+// ❌ REMOVE: import { useUser } from '../../contexts/UserContext';
+// ✅ ADD: Import defensive auth hook
+import { useMarketHubAuth } from '../../hooks/useMarketHubAuth';
 import EnhancedCharacterCard from './EnhancedCharacterCard';
 import FeaturedCarousel from './FeaturedCarousel';
 import LeaderboardSection from './LeaderboardSection';
@@ -29,9 +34,14 @@ const MarketHubPage = ({
   isViewMode = false // Flag to indicate if called from ChatApp view switching
 }) => {
   const navigate = useNavigate();
-  const { user } = useUser();
-  const isAuthenticated = !!user;  // ← ADD THIS LINE
-
+  
+  // ✅ STEP 3 CHANGE: Replace useUser() with useMarketHubAuth()
+  // ❌ OLD: const { user } = useUser();
+  // ✅ NEW: Defensive hook with guaranteed values
+  const { user, isAuthenticated, loading: authLoading } = useMarketHubAuth();
+  
+  // ❌ REMOVE: const isAuthenticated = !!user;
+  // ✅ Already provided by useMarketHubAuth()
 
   
   // Mobile detection
@@ -54,6 +64,18 @@ const MarketHubPage = ({
         onScenarioSelect={onScenarioSelect}
         isViewMode={true}
       />
+    );
+  }
+
+  // ✅ DEFENSIVE: Show loading state while auth is checking
+  if (authLoading) {
+    return (
+      <div className={styles.container}>
+        <div className={styles.loadingState}>
+          <div className={styles.spinner} />
+          <p>Loading Market Hub...</p>
+        </div>
+      </div>
     );
   }
 
@@ -398,7 +420,12 @@ const AuthenticatedMarketHub = ({
   isViewMode = false 
 }) => {
   const navigate = useNavigate();
-  const { user } = useUser();
+  
+  // ✅ STEP 3 CHANGE: Replace useUser() with useMarketHubAuth()
+  // ❌ OLD: const { user } = useUser();
+  // ✅ NEW: Defensive hook with guaranteed values
+  const { user, isAuthenticated, userId, displayName } = useMarketHubAuth();
+  
   // ✅ ADD THIS - Get user's custom characters (even though it will be empty for anonymous users)
   const { userCharacters = [] } = usePremiumCharacters();
   
@@ -765,12 +792,13 @@ const AuthenticatedMarketHub = ({
     { value: 'popular', label: 'Most Popular' }
   ];
 
+  // ✅ DEFENSIVE: Add error boundary for content rendering
   if (error) {
     return (
       <div className={styles.container}>
         <div className={styles.errorState}>
-          <h2>Unable to load Market Hub</h2>
-          <p>Please check your connection and try again.</p>
+          <h3>Unable to Load Market Hub</h3>
+          <p>{error}</p>
           <button onClick={refetch} className={styles.retryButton}>
             Try Again
           </button>
