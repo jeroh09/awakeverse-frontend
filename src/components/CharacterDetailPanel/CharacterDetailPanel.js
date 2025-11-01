@@ -54,6 +54,17 @@ const CharacterDetailPanel = ({
     // onClose();
   };
 
+  // ✅ DEBUG: Check why button isn't showing
+  console.log('🔍 Button visibility debug:', {
+    showDiscoverAction,
+    hasOnCharacterSelect: !!onCharacterSelect,
+    character: character ? 'exists' : 'null',
+    shouldShowButton: showDiscoverAction && !!onCharacterSelect
+  });
+
+  // ✅ TEST: Force show the button for debugging
+  const forceShowButton = true; // Set to true temporarily to test
+
   return (
     <>
       <div className={styles.overlay} onClick={onClose} />
@@ -112,6 +123,23 @@ const CharacterDetailPanel = ({
               Key: {characterKey}
             </div>
           )}
+
+          {/* ✅ DEBUG: Show props status */}
+          {process.env.NODE_ENV === 'development' && (
+            <div style={{ 
+              marginTop: '15px', 
+              padding: '10px',
+              background: 'rgba(255,0,0,0.1)',
+              borderRadius: '8px',
+              fontSize: '12px',
+              color: '#ff4444',
+              fontFamily: 'monospace'
+            }}>
+              <div>showDiscoverAction: {String(showDiscoverAction)}</div>
+              <div>onCharacterSelect: {onCharacterSelect ? 'EXISTS' : 'MISSING'}</div>
+              <div>Button should show: {String(showDiscoverAction && !!onCharacterSelect)}</div>
+            </div>
+          )}
         </div>
         
         <div className={styles.footer}>
@@ -124,16 +152,36 @@ const CharacterDetailPanel = ({
             Start Chat
           </button>
           
-          {/* ✅ FIXED: "+" button also uses same handler */}
-          {showDiscoverAction && onCharacterSelect && (
+          {/* ✅ DEBUG: Test button visibility */}
+          { (showDiscoverAction && onCharacterSelect) || forceShowButton ? (
             <button 
               className={`${styles.iconButton} ${styles.tooltip}`}
               onClick={handleStartChatWithDiscover}
               aria-label="Add to Discovered & Chat"
               title="Add to Discovered & Start Chat"
+              style={{ 
+                border: '2px solid red',
+                background: forceShowButton ? '#ff4444' : undefined 
+              }}
             >
               +
             </button>
+          ) : (
+            // Show why button is hidden in development
+            process.env.NODE_ENV === 'development' && (
+              <div style={{
+                padding: '8px',
+                background: 'rgba(255,0,0,0.1)',
+                borderRadius: '8px',
+                fontSize: '10px',
+                color: '#ff4444',
+                textAlign: 'center'
+              }}>
+                Button hidden:<br/>
+                showDiscover: {String(showDiscoverAction)}<br/>
+                onCharSelect: {onCharacterSelect ? 'Y' : 'N'}
+              </div>
+            )
           )}
         </div>
       </aside>
