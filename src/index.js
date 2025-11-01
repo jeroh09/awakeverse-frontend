@@ -1,10 +1,10 @@
 // src/index.js - MINIMAL SECURITY VERSION
 import './styles.css';
+import './utils/csrfInterceptor';  // ✅ Add this FIRST (before React imports)
 import React from 'react';
 import ReactDOM from 'react-dom/client';
 import { BrowserRouter } from 'react-router-dom';
 import { ThemeProvider } from './contexts/ThemeContext';
-import './utils/csrfInterceptor';  // ✅ Add this FIRST (before React imports)
 import { AuthProvider } from './contexts/AuthContext';
 import { UserProvider } from './contexts/UserContext';
 import { WebSocketProvider } from './contexts/WebSocketContext';

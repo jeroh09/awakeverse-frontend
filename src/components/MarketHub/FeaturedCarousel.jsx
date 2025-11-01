@@ -155,11 +155,31 @@ const FeaturedCarousel = ({
     return normalizedChar?.display_name || 'Character';
   };
 
-  // 🆕 FIXED: Enhanced character click handler
+    // ✅ FIXED: Enhanced character click handler with dual format
   const handleCharacterClick = (character) => {
     const normalizedChar = normalizeCharacterData(character);
+
+    // ✅ Transform to DUAL format (for CharacterDetailPanel compatibility)
+    const dualFormatChar = {
+      // Old format (for CharacterDetailPanel backward compatibility)
+      name: normalizedChar.display_name || normalizedChar.character_key || 'Character',
+      description: normalizedChar.short_description || '',
+      key: normalizedChar.character_key,
+      thumbnailUrl: normalizedChar.avatar_url || `/images/${normalizedChar.character_key}.jpg`,
+
+      // New format (spread all normalized fields)
+      ...normalizedChar,
+
+      // Ensure critical fields are present
+      display_name: normalizedChar.display_name || normalizedChar.character_key,
+      character_key: normalizedChar.character_key,
+      short_description: normalizedChar.short_description || '',
+      avatar_url: normalizedChar.avatar_url
+    };
+
     console.log('🔍 Featured Carousel - Character clicked:', normalizedChar);
-    onCharacterClick?.(normalizedChar);
+    console.log('✅ Featured Carousel - Dual format character:', dualFormatChar);
+    onCharacterClick?.(dualFormatChar);
   };
 
   // 🆕 FIXED: Simplified chat click handler
