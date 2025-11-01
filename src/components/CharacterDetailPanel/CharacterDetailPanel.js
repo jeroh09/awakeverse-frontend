@@ -20,13 +20,6 @@ const CharacterDetailPanel = ({
   const imageUrl = character.thumbnailUrl || character.avatar_url || `/images/${character.character_key || character.key}.jpg`;
   const characterKey = character.key || character.character_key;
 
-  // ✅ Debug logging
-  console.log('🔍 CharacterDetailPanel - Props:', {
-    showDiscoverAction,
-    hasOnCharacterSelect: !!onCharacterSelect,
-    characterName: displayName
-  });
-
   // ✅ NEW: Helper function to handle both discover + chat
   const handleStartChatWithDiscover = () => {
     // Step 1: Add to discovered (if in view mode)
@@ -86,23 +79,6 @@ const CharacterDetailPanel = ({
         
         <div className={styles.content}>
           <p className={styles.description}>{description}</p>
-          
-          {/* ✅ ALWAYS VISIBLE DEBUG INFO */}
-          <div style={{ 
-            marginTop: '15px', 
-            padding: '10px',
-            background: 'rgba(255,215,0,0.1)',
-            borderRadius: '8px',
-            fontSize: '12px',
-            color: '#FFD700',
-            fontFamily: 'monospace',
-            border: '1px solid rgba(255,215,0,0.3)'
-          }}>
-            <div><strong>Debug Info:</strong></div>
-            <div>showDiscoverAction: <span style={{color: showDiscoverAction ? '#10b981' : '#ef4444'}}>{String(showDiscoverAction)}</span></div>
-            <div>onCharacterSelect: <span style={{color: onCharacterSelect ? '#10b981' : '#ef4444'}}>{onCharacterSelect ? 'EXISTS' : 'MISSING'}</span></div>
-            <div>Discover Button: <span style={{color: shouldShowDiscoverButton ? '#10b981' : '#ef4444'}}>{shouldShowDiscoverButton ? 'VISIBLE' : 'HIDDEN'}</span></div>
-          </div>
         </div>
         
         <div className={styles.footer}>
