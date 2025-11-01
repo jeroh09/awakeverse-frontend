@@ -1,7 +1,6 @@
-// src/components/MarketHub/MarketHubPage.jsx - PRODUCTION READY
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { ArrowLeft, Search, Filter, TrendingUp, Trophy, Users, Star, Shield, Zap, X } from 'lucide-react';
+import { ArrowLeft, Search, Filter, TrendingUp, Trophy, Users, Star, Shield, Zap } from 'lucide-react';
 import { useUser } from '../../contexts/UserContext';
 import FeaturedCarousel from './FeaturedCarousel';
 import LeaderboardSection from './LeaderboardSection';
@@ -14,74 +13,32 @@ import ScenarioDetailModal from '../../components/MarketHub/ScenarioDetailModal'
 import UnifiedContentCard from '../../components/MarketHub/UnifiedContentCard';
 import styles from './MarketHubPage.module.css';
 
-// Import the CORRECT ScenarioChatWindow from ScenariosTab
+// 🆕 UPDATE: Import the CORRECT ScenarioChatWindow from ScenariosTab
 import ScenarioChatWindow from '../../components/ScenariosTab/ScenarioChatWindow';
 
 const API_BASE = process.env.REACT_APP_API_URL || 'https://api.awakeverse.com';
 
-// Educational Modal Component
-const EducationalSignupModal = ({ 
-  isOpen, 
-  onClose, 
-  onSignup, 
-  onLogin, 
-  context = 'access this feature' 
-}) => {
-  if (!isOpen) return null;
-  
-  return (
-    <div className={styles.modalOverlay}>
-      <div className={styles.modalContent}>
-        <button className={styles.closeButton} onClick={onClose}>
-          <X size={20} />
-        </button>
-        
-        <div className={styles.modalIcon}>
-          <Zap size={32} />
-        </div>
-        
-        <h3 className={styles.modalTitle}>Join the AwakeVerse Community</h3>
-        <p className={styles.modalText}>Sign up to {context} and explore thousands of characters and scenarios</p>
-        
-        <div className={styles.modalActions}>
-          <button 
-            onClick={onSignup} 
-            className={styles.primaryCta}
-          >
-            Create Free Account
-          </button>
-          <button 
-            onClick={onLogin} 
-            className={styles.secondaryCta}
-          >
-            Sign In
-          </button>
-          <button 
-            onClick={onClose} 
-            className={styles.tertiaryCta}
-          >
-            Continue Exploring
-          </button>
-        </div>
-        
-        <p className={styles.modalFooter}>
-          Join thousands of users discovering amazing characters every day
-        </p>
-      </div>
-    </div>
-  );
-};
-
-// Enhanced Authenticated Market Hub for view integration
+// NEW: Enhanced Authenticated Market Hub for view integration - MOVED TO TOP
 const AuthenticatedMarketHub = ({ 
   onCharacterSelect, 
   onStartChat, 
-  onScenarioSelect,
+  onScenarioSelect,  // ✅ ADD THIS - callback to switch views and open scenario
   isViewMode = false 
 }) => {
   const navigate = useNavigate();
-  const { user } = useUser();
+  const { user, loading: userLoading } = useUser(); 
+  // ✅ ADD THIS - Get user's custom characters (even though it will be empty for anonymous users)
   const { userCharacters = [] } = usePremiumCharacters();
+  // ✅ ADD THIS CHECK
+  // ✅ ADD DEFENSIVE CHECK (like ScenariosTab line 47)
+  if (userLoading || !user) {
+    return (
+      <div className={styles.loadingContainer}>
+        <div className={styles.loadingSpinner} />
+        <p>Loading Market Hub...</p>
+      </div>
+    );
+  }
   
   // State management
   const [searchQuery, setSearchQuery] = useState('');
@@ -93,13 +50,15 @@ const AuthenticatedMarketHub = ({
   const [showFilters, setShowFilters] = useState(false);
   const [selectedCharacter, setSelectedCharacter] = useState(null);
   const [currentPage, setCurrentPage] = useState(1);
+
+  // 🆕 ADD: State for active scenario (like MyScenariosPanel pattern)
   const [activeScenario, setActiveScenario] = useState(null);
   const [selectedScenario, setSelectedScenario] = useState(null);
 
-  // Market hub data with scenarios
+  // 🆕 UPDATE: Add includeScenarios parameter to hook
   const { 
     characters, 
-    scenarios,
+    scenarios,  // 🆕 ADD this
     loading, 
     error, 
     pagination,
@@ -109,7 +68,7 @@ const AuthenticatedMarketHub = ({
     search: searchQuery,
     filters: selectedFilters,
     perPage: 20,
-    includeScenarios: true
+    includeScenarios: true  // 🆕 ADD this to enable scenarios
   });
 
   const { 
@@ -117,27 +76,22 @@ const AuthenticatedMarketHub = ({
     loading: featuredLoading 
   } = useFeaturedCharacters();
 
-  // Engagement hooks
+  // 🆕 ADD: Scenario engagement hook
   const { engageWithScenario } = useScenarioEngagement();
+  
+  // Existing character engagement hook
   const { engageWithCharacter } = useCharacterEngagement();
 
-  // Combine characters and scenarios
+  // 🆕 ADD: Combine characters and scenarios into one array
   const allContent = React.useMemo(() => {
     return [...characters, ...scenarios];
   }, [characters, scenarios]);
 
-  // Mobile detection
-  const [isMobile, setIsMobile] = useState(window.innerWidth <= 768);
-  
-  useEffect(() => {
-    const handleResize = () => setIsMobile(window.innerWidth <= 768);
-    window.addEventListener('resize', handleResize);
-    return () => window.removeEventListener('resize', handleResize);
-  }, []);
-
-  // Content selection handler
+  // ✅ UPDATED: Handle content selection - characters show modal, scenarios direct to debate
   const handleCardClick = (item) => {
+    console.log('🔍 handleCardClick received:', item);
     if (item.content_type === 'character') {
+      // ✅ Transform the character data like handleCharacterSelect does
       const transformedCharacter = {
         name: item.display_name || item.name || item.character_key,
         description: item.short_description || item.description || '',
@@ -148,38 +102,80 @@ const AuthenticatedMarketHub = ({
         short_description: item.short_description,
         avatar_url: item.avatar_url
       };
+
+      console.log('✅ Transformed character:', transformedCharacter);
       setSelectedCharacter(transformedCharacter);
+
     } else if (item.content_type === 'scenario') {
+      // ✅ ENSURE scenario has required id field
       const scenarioWithId = {
         ...item,
-        id: item.id || item.scenario_id
+        id: item.id || item.scenario_id // Use scenario_id if id is missing
       };
+      console.log('📝 Setting selected scenario:', scenarioWithId);
       setSelectedScenario(scenarioWithId);
     }
   };
 
-  // Navigation handlers
+  // 🆕 ADD: Handle closing scenario chat window
+  const handleCloseScenario = () => {
+    console.log('🔙 Closing scenario chat window');
+    setActiveScenario(null);
+  };
+
+  // 🆕 ADD: If scenario is active, show fullscreen chat window
+  if (activeScenario) {
+    console.log('🔄 Rendering ScenarioChatWindow with:', activeScenario);
+    return (
+      <ScenarioChatWindow
+        scenario={activeScenario}
+        onBack={handleCloseScenario}
+        theme="awakeverse"
+      />
+    );
+  }
+
+  // Mobile detection
+  const [isMobile, setIsMobile] = useState(window.innerWidth <= 768);
+  
+  useEffect(() => {
+    const handleResize = () => setIsMobile(window.innerWidth <= 768);
+    window.addEventListener('resize', handleResize);
+    return () => window.removeEventListener('resize', handleResize);
+  }, []);
+
+  // NEW: Enhanced navigation handlers for view integration
   const handleBackToCharacters = () => {
     if (isViewMode) {
+      // When in view mode, don't navigate - let parent handle view switching
       console.log('Back clicked in view mode - parent should handle this');
     } else {
+      // Standalone mode - navigate normally
       navigate('/chat');
     }
   };
 
   const handleStartChat = (characterKey) => {
     if (isViewMode && onStartChat) {
+      // Use callback when in view mode
       onStartChat(characterKey);
     } else {
+      // Standalone mode - navigate normally
       navigate(`/chat?character=${characterKey}`);
     }
   };
 
-  // Scenario debate handler
+  // ✅ FIXED: Handle start debate with proper scenario data
   const handleStartDebate = async (scenario) => {
-    setSelectedScenario(null);
+    console.log('🎭 handleStartDebate called with scenario:', scenario);
+    setSelectedScenario(null); // Close modal first
 
     try {
+      // ============================================================================
+      // STEP 1: Start debate session via backend
+      // ============================================================================
+
+      console.log('📡 Calling backend to start debate for scenario:', scenario.scenario_id);
       const csrf = document.cookie.match(/(?:^|;\s*)av_csrf=([^;]+)/)?.[1] || '';
       const startResponse = await fetch(
         `${API_BASE}/api/debate/scenarios/${scenario.scenario_id}/start`,
@@ -195,31 +191,53 @@ const AuthenticatedMarketHub = ({
 
       if (!startResponse.ok) {
         const errorData = await startResponse.json().catch(() => ({}));
+
+        // Handle specific error cases
         if (startResponse.status === 403) {
           alert('Unlimited tier required to start debates');
           return;
         }
+
         if (startResponse.status === 404) {
           alert('Scenario not found or not accessible');
           return;
         }
+
         throw new Error(errorData.error || 'Failed to start debate');
       }
 
       const debateData = await startResponse.json();
 
+      console.log('✅ Backend response:', debateData);
+      console.log(`${debateData.is_market_hub ? '🌍 Market Hub' : '📝 My Scenarios'} debate started`);
+
+      // ============================================================================
+      // STEP 2: Build props for ScenarioChatWindow (matching ScenariosTab pattern)
+      // ============================================================================
+
       const scenarioForChat = {
+        // IDs
         id: scenario.scenario_id || scenario.id,
         debateId: debateData.debate_id,
         scenarioId: scenario.scenario_id || scenario.id,
+
+        // Display info
         title: debateData.title || scenario.title,
         description: scenario.description || '',
         category: scenario.category || '',
+
+        // Characters
         participants: debateData.characters || scenario.character_keys || [],
         character_keys: debateData.characters || scenario.character_keys || [],
-        initialized: !!debateData.debate_id,
+
+        // State flags
+        initialized: !!debateData.debate_id,  // ✅ Only true if we have debate_id
         is_market_hub: debateData.is_market_hub || false,
+
+        // Existing messages (if resuming)
         messages: debateData.messages || [],
+
+        // Usage data (will be loaded by ScenarioChatWindow)
         usageData: {
           questionsAsked: 0,
           tier: 'unlimited',
@@ -229,17 +247,38 @@ const AuthenticatedMarketHub = ({
         }
       };
 
+      console.log('📝 Opening ScenarioChatWindow with:', {
+        debateId: scenarioForChat.debateId,
+        scenarioId: scenarioForChat.scenarioId,
+        initialized: scenarioForChat.initialized,
+        title: scenarioForChat.title,
+        participants: scenarioForChat.participants,
+        is_market_hub: scenarioForChat.is_market_hub,
+        messageCount: scenarioForChat.messages.length
+      });
+
+      // ============================================================================
+      // STEP 3: Open ScenarioChatWindow
+      // ============================================================================
+
+      // ✅ Signal parent to switch to Scenarios view
+
       if (isViewMode && onScenarioSelect) {
+        console.log('🌍 Market Hub: Calling onScenarioSelect callback');
         onScenarioSelect(scenarioForChat);
       } else {
-        console.warn('No callback available');
+        console.warn('⚠️ No callback');
         alert('Please access Market Hub from main app');
       }
 
     } catch (error) {
+
+
+      // User-friendly error messages
       const errorMessage = error.message === 'Failed to fetch'
         ? 'Network error. Please check your connection.'
         : error.message || 'Failed to start debate. Please try again.';
+
       alert(errorMessage);
     }
   };
@@ -253,15 +292,40 @@ const AuthenticatedMarketHub = ({
     }
   };
 
+  const handleCharacterDetails = (character) => {
+    setSelectedCharacter(character);
+  };
+
+  // NEW: Enhanced character selection for discovered flow
+  const handleCharacterSelect = (character) => {
+    const transformedCharacter = {
+      name: character.display_name || character.name || character.character_key,
+      description: character.short_description || character.description || '',
+      key: character.character_key || character.key,
+      thumbnailUrl: character.avatar_url || character.thumbnailUrl || `/images/${character.character_key}.jpg`,
+      display_name: character.display_name,
+      character_key: character.character_key,
+      short_description: character.short_description,
+      avatar_url: character.avatar_url
+    };
+
+    setSelectedCharacter(transformedCharacter);
+  };
+
+  // NEW: Handle character selection from detail panel
   const handleCharacterSelectFromPanel = (character) => {
     if (isViewMode && onCharacterSelect) {
+      // Add to discovered characters when in view mode
       onCharacterSelect(character);
+      // Close the detail panel since we're switching views
       setSelectedCharacter(null);
     } else {
+      // Standalone mode - just close panel
       setSelectedCharacter(null);
     }
   };
 
+  // 🆕 ADD: Handle engagement (unified for both types)
   const handleEngage = async (item, engagementType) => {
     try {
       if (item.content_type === 'character') {
@@ -269,9 +333,16 @@ const AuthenticatedMarketHub = ({
       } else if (item.content_type === 'scenario') {
         await engageWithScenario(item.scenario_id, engagementType);
       }
+      // Optionally show success message
+      console.log(`${engagementType} recorded for ${item.content_type}`);
     } catch (error) {
       console.error('Engagement failed:', error);
+      // Optionally show error message
     }
+  };
+
+  const handleChatClick = (characterKey) => {
+    navigate(`/chat/${characterKey}`);
   };
 
   // Search and filter handlers
@@ -315,7 +386,7 @@ const AuthenticatedMarketHub = ({
     setCurrentPage(page);
   };
 
-  // Filter options
+  // Available filter options
   const archetypeOptions = [
     'Sage', 'Warrior', 'Explorer', 'Ruler', 'Creator', 'Caregiver', 
     'Innocent', 'Magician', 'Hero', 'Rebel', 'Lover', 'Jester'
@@ -346,21 +417,12 @@ const AuthenticatedMarketHub = ({
     );
   }
 
-  if (activeScenario) {
-    return (
-      <ScenarioChatWindow
-        scenario={activeScenario}
-        onBack={() => setActiveScenario(null)}
-        theme="awakeverse"
-      />
-    );
-  }
-
   return (
     <div className={styles.container}>
-      {/* Header */}
+      {/* Header - Modified for view mode */}
       <header className={styles.header}>
         <div className={styles.headerContent}>
+          {/* NEW: Only show back button in standalone mode */}
           {!isViewMode && (
             <button 
               className={styles.backButton}
@@ -471,7 +533,7 @@ const AuthenticatedMarketHub = ({
               <FeaturedCarousel 
                 characters={featuredCharacters}
                 loading={featuredLoading}
-                onCharacterClick={(character) => setSelectedCharacter(character)}
+                onCharacterClick={handleCharacterDetails}
                 onChatClick={handleStartChat}
               />
             </section>
@@ -500,6 +562,7 @@ const AuthenticatedMarketHub = ({
               </div>
             ) : allContent.length > 0 ? (
               <>
+                {/* 🆕 REPLACE YOUR EXISTING CHARACTER GRID WITH THIS */}
                 <div className={styles.charactersGrid}>
                   {allContent.map((item) => (
                     <UnifiedContentCard
@@ -512,7 +575,7 @@ const AuthenticatedMarketHub = ({
                       onCardClick={handleCardClick}
                       onChatClick={handleStartChat}
                       onEngage={handleEngage}
-                      userCharacters={userCharacters}
+                      userCharacters={userCharacters}  // ✅ ADD THIS LINE
                     />
                   ))}
                 </div>
@@ -567,7 +630,7 @@ const AuthenticatedMarketHub = ({
           </section>
         </div>
 
-        {/* Leaderboard Sidebar */}
+        {/* Leaderboard Sidebar (Desktop) / Section (Mobile) */}
         {!isMobile ? (
           <aside className={styles.sidebar}>
             <LeaderboardSection />
@@ -590,12 +653,12 @@ const AuthenticatedMarketHub = ({
         />
       )}
       
-      {/* Scenario Detail Modal */}
+      {/* Scenario Detail Modal - FIXED with proper onStartDebate prop */}
       {selectedScenario && (
         <ScenarioDetailModal
           scenario={selectedScenario}
           onClose={() => setSelectedScenario(null)}
-          onStartDebate={handleStartDebate}
+          onStartDebate={handleStartDebate} // ✅ FIXED: Pass the correct function
           onScenarioSelect={isViewMode ? handleScenarioSelectFromModal : undefined}
           showDiscoverAction={isViewMode}
         />
@@ -604,295 +667,27 @@ const AuthenticatedMarketHub = ({
   );
 };
 
-// Anonymous Market Hub with Educational Modal
-const AnonymousMarketHub = () => {
-  const navigate = useNavigate();
-  const [selectedCharacter, setSelectedCharacter] = useState(null);
-  const [showEducationalModal, setShowEducationalModal] = useState(false);
-  const [modalContext, setModalContext] = useState('');
-
-  // Get featured characters for public preview
-  const { 
-    featuredCharacters, 
-    loading: featuredLoading 
-  } = useFeaturedCharacters();
-
-  // Educational modal handlers
-  const handleEducationalAction = (context) => {
-    setModalContext(context);
-    setShowEducationalModal(true);
-  };
-
-  const handleSignup = () => {
-    navigate('/register?redirect=/market-hub');
-  };
-
-  const handleLogin = () => {
-    navigate('/login?redirect=/market-hub');
-  };
-
-  const handleCloseModal = () => {
-    setShowEducationalModal(false);
-    setModalContext('');
-  };
-
-  const handleCharacterPreview = (character) => {
-    setSelectedCharacter({
-      ...character,
-      isPreview: true
-    });
-  };
-
-  const handleChatPrompt = (character) => {
-    handleEducationalAction(`chat with ${character.display_name}`);
-  };
-
-  const handleDebatePrompt = (scenario) => {
-    handleEducationalAction(`join the "${scenario.title}" debate`);
-  };
-
-  return (
-    <div className={styles.container}>
-      {/* Hero Section */}
-      <section className={styles.heroSection}>
-        <div className={styles.heroContent}>
-          <h1 className={styles.heroTitle}>
-            Discover Extraordinary Characters
-          </h1>
-          <p className={styles.heroSubtitle}>
-            Chat with history's greatest minds, explore fascinating personalities, 
-            and connect with characters created by our vibrant community
-          </p>
-          
-          <div className={styles.heroActions}>
-            <button 
-              className={styles.primaryCta}
-              onClick={() => handleEducationalAction('explore the Market Hub')}
-            >
-              Start Exploring
-            </button>
-            <button 
-              className={styles.secondaryCta}
-              onClick={handleLogin}
-            >
-              Sign In
-            </button>
-          </div>
-        </div>
-      </section>
-
-      {/* Featured Characters Preview */}
-      <section className={styles.featuredPreview}>
-        <div className={styles.sectionContent}>
-          <div className={styles.sectionHeader}>
-            <TrendingUp className={styles.sectionIcon} size={24} />
-            <h2>Featured This Week</h2>
-            <p className={styles.sectionSubtext}>
-              Discover the most engaging characters in our community
-            </p>
-          </div>
-
-          {featuredLoading ? (
-            <div className={styles.loadingGrid}>
-              {Array.from({ length: 4 }).map((_, i) => (
-                <div key={i} className={styles.loadingCard} />
-              ))}
-            </div>
-          ) : featuredCharacters?.length > 0 ? (
-            <div className={styles.previewGrid}>
-              {featuredCharacters.slice(0, 6).map(character => (
-                <div 
-                  key={character.character_key}
-                  className={styles.previewCard}
-                  onClick={() => handleCharacterPreview(character)}
-                >
-                  {getSafeAvatarUrl(character) ? (
-                    <img
-                      src={getSafeAvatarUrl(character)}
-                      alt={character.display_name}
-                      onError={createImageErrorHandler(character.display_name)}
-                      className={styles.previewImage}
-                    />
-                  ) : (
-                    <div className={styles.previewFallback}>
-                      {(character.display_name || 'C').charAt(0).toUpperCase()}
-                    </div>
-                  )}
-                  <div className={styles.previewInfo}>
-                    <h3 className={styles.previewName}>{character.display_name}</h3>
-                    <p className={styles.previewDomain}>{character.expertise_domain}</p>
-                    <div className={styles.previewStats}>
-                      <span className={styles.previewStat}>
-                        <Star size={12} />
-                        {character.engagement_30d?.total_likes || 0}
-                      </span>
-                      <span className={styles.previewCreator}>
-                        by {character.creator?.display_name || 'Creator'}
-                      </span>
-                    </div>
-                  </div>
-                  <div 
-                    className={styles.previewOverlay}
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      handleChatPrompt(character);
-                    }}
-                  >
-                    <span>Sign in to chat</span>
-                  </div>
-                </div>
-              ))}
-            </div>
-          ) : (
-            <div className={styles.comingSoon}>
-              <h3>Featured Characters Coming Soon</h3>
-              <p>Our community is creating amazing characters. Check back soon!</p>
-            </div>
-          )}
-        </div>
-      </section>
-
-      {/* How It Works Section */}
-      <section className={styles.howItWorks}>
-        <div className={styles.sectionContent}>
-          <h2 className={styles.sectionTitle}>How Market Hub Works</h2>
-          
-          <div className={styles.stepsGrid}>
-            <div className={styles.step}>
-              <div className={styles.stepIcon}>
-                <Search size={24} />
-              </div>
-              <h3>Discover</h3>
-              <p>
-                Browse thousands of characters created by our community. 
-                From historical figures to original creations, find personalities that fascinate you.
-              </p>
-            </div>
-            
-            <div className={styles.step}>
-              <div className={styles.stepIcon}>
-                <Zap size={24} />
-              </div>
-              <h3>Engage</h3>
-              <p>
-                Chat with characters and experience their unique personalities. 
-                Each character has been crafted with care by talented creators.
-              </p>
-            </div>
-            
-            <div className={styles.step}>
-              <div className={styles.stepIcon}>
-                <Users size={24} />
-              </div>
-              <h3>Connect</h3>
-              <p>
-                Join a community of character creators and enthusiasts. 
-                Share your favorites and discover new personalities daily.
-              </p>
-            </div>
-          </div>
-        </div>
-      </section>
-
-      {/* Final CTA */}
-      <section className={styles.finalCta}>
-        <div className={styles.ctaContent}>
-          <h2>Ready to Explore?</h2>
-          <p>Join thousands of users discovering amazing characters every day</p>
-          <div className={styles.ctaActions}>
-            <button 
-              className={styles.primaryCta}
-              onClick={handleSignup}
-            >
-              Create Account
-            </button>
-            <button 
-              className={styles.secondaryCta}
-              onClick={handleLogin}
-            >
-              Sign In
-            </button>
-          </div>
-        </div>
-      </section>
-
-      {/* Character Preview Panel */}
-      {selectedCharacter && (
-        <div className={styles.previewPanel}>
-          <div className={styles.previewOverlayBg} onClick={() => setSelectedCharacter(null)} />
-          <div className={styles.previewContent}>
-            <button 
-              className={styles.previewClose}
-              onClick={() => setSelectedCharacter(null)}
-            >
-              ×
-            </button>
-            
-            <div className={styles.previewHeader}>
-              {getSafeAvatarUrl(selectedCharacter) ? (
-                <img
-                  src={getSafeAvatarUrl(selectedCharacter)}
-                  alt={selectedCharacter.display_name}
-                  className={styles.previewPanelAvatar}
-                />
-              ) : (
-                <div className={styles.previewPanelFallback}>
-                  {(selectedCharacter.display_name || 'C').charAt(0).toUpperCase()}
-                </div>
-              )}
-              <div>
-                <h3>{selectedCharacter.display_name}</h3>
-                <p>{selectedCharacter.expertise_domain}</p>
-                <p className={styles.previewCreatorInfo}>
-                  Created by {selectedCharacter.creator?.display_name || 'Community Creator'}
-                </p>
-              </div>
-            </div>
-            
-            <div className={styles.previewDescription}>
-              <p>{selectedCharacter.short_description}</p>
-            </div>
-            
-            <div className={styles.previewActions}>
-              <button 
-                className={styles.previewLoginBtn}
-                onClick={() => handleEducationalAction(`chat with ${selectedCharacter.display_name}`)}
-              >
-                Sign In to Chat
-              </button>
-              <button 
-                className={styles.previewRegisterBtn}
-                onClick={handleSignup}
-              >
-                Create Account
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
-
-      {/* Educational Modal */}
-      <EducationalSignupModal
-        isOpen={showEducationalModal}
-        onClose={handleCloseModal}
-        onSignup={handleSignup}
-        onLogin={handleLogin}
-        context={modalContext}
-      />
-    </div>
-  );
-};
-
-// Main MarketHubPage Component
+// NEW: Updated to accept props for character selection callbacks - MOVED TO BOTTOM
 const MarketHubPage = ({ 
   onCharacterSelect, 
   onStartChat,
   onScenarioSelect,
-  isViewMode = false
+  isViewMode = false // Flag to indicate if called from ChatApp view switching
 }) => {
+  const navigate = useNavigate();
   const { user, loading } = useUser();
 
-  // Loading state
+  
+  // Mobile detection
+  const [isMobile, setIsMobile] = useState(window.innerWidth <= 768);
+  
+  useEffect(() => {
+    const handleResize = () => setIsMobile(window.innerWidth <= 768);
+    window.addEventListener('resize', handleResize);
+    return () => window.removeEventListener('resize', handleResize);
+  }, []);
+
+   // ✅ CRITICAL: Check loading state BEFORE using user
   if (loading) {
     return (
       <div className={styles.loadingContainer}>
@@ -902,10 +697,13 @@ const MarketHubPage = ({
     );
   }
 
+  // ✅ CRITICAL: Now safe to check authentication
   const isAuthenticated = !!user;
 
-  // View mode (from ChatApp)
+  // NEW: When in view mode (called from ChatApp), always show authenticated version
+  // When standalone route, use authentication check with educational fallback
   if (isViewMode) {
+    // Called from ChatApp view switching - always show authenticated version
     return (
       <AuthenticatedMarketHub 
         onCharacterSelect={onCharacterSelect}
@@ -916,12 +714,9 @@ const MarketHubPage = ({
     );
   }
 
-  // Standalone mode
-  if (!isAuthenticated) {
-    return <AnonymousMarketHub />;
-  }
 
-  // Authenticated standalone
+  // Standalone authenticated route
+  // Line 71-72 should be:
   return (
     <AuthenticatedMarketHub 
       onCharacterSelect={onCharacterSelect}

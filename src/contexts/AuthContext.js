@@ -1,9 +1,17 @@
-// src/contexts/AuthContext.js - Updated for cookie-based authentication
+// src/contexts/AuthContext.js - PRODUCTION READY WITH CSRF FIX
 import { createContext, useContext, useState, useEffect } from "react";
 import { useUser } from "./UserContext";
 import { useNavigate } from "react-router-dom";
 
 const API = process.env.REACT_APP_API_URL || "https://api.awakeverse.com";
+
+// CSRF Helper function
+const getCsrfToken = () => {
+  return document.cookie
+    .split('; ')
+    .find(row => row.startsWith('av_csrf='))
+    ?.split('=')[1];
+};
 
 export const AuthContext = createContext();
 export const useAuth = () => useContext(AuthContext);
@@ -111,7 +119,7 @@ export function AuthProvider({ children }) {
     return "Login failed. Please try again.";
   };
 
-  // Enhanced login with retry logic - UPDATED FOR COOKIE AUTH
+  // Enhanced login with retry logic - FIXED WITH CSRF
   async function loginWithRetry(credentials, maxAttempts = 2) {
     let lastError = null;
     
@@ -122,10 +130,15 @@ export function AuthProvider({ children }) {
         const controller = new AbortController();
         const timeoutId = setTimeout(() => controller.abort(), 15000);
         
-        // Login endpoint sets cookies
+        // ✅ FIXED: Add CSRF token to login
+        const csrfToken = getCsrfToken();
+        
         const loginRes = await fetch(`${API}/api/auth/login`, {
           method: "POST",
-          headers: { "Content-Type": "application/json" },
+          headers: { 
+            "Content-Type": "application/json",
+            "X-CSRF-Token": csrfToken || "" // ✅ ADDED CSRF
+          },
           body: JSON.stringify({ 
             email: credentials.email, 
             password: credentials.password 
@@ -192,15 +205,21 @@ export function AuthProvider({ children }) {
     return await loginWithRetry(credentials, 2);
   }
 
-  // Enhanced register function - UPDATED FOR COOKIE AUTH
+  // Enhanced register function - FIXED WITH CSRF
   async function register({ email, password, displayName }) {
     try {
       const controller = new AbortController();
       const timeoutId = setTimeout(() => controller.abort(), 15000);
 
+      // ✅ FIXED: Add CSRF token to register
+      const csrfToken = getCsrfToken();
+
       const res = await fetch(`${API}/api/auth/register`, {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
+        headers: { 
+          "Content-Type": "application/json",
+          "X-CSRF-Token": csrfToken || "" // ✅ ADDED CSRF
+        },
         body: JSON.stringify({ 
           username: email, 
           password, 
@@ -263,15 +282,21 @@ export function AuthProvider({ children }) {
     }
   }
 
-  // Email verification function - UPDATED FOR COOKIE AUTH
+  // Email verification function - FIXED WITH CSRF
   async function verifyEmail(token) {
     try {
       const controller = new AbortController();
-      const timeoutId = setTimeout(() => controller.abort(), 10000);
+      const timeoutId = setTimeout(() => controller.abbit(), 10000);
+
+      // ✅ FIXED: Add CSRF token to verify-email
+      const csrfToken = getCsrfToken();
 
       const res = await fetch(`${API}/api/auth/verify-email`, {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
+        headers: { 
+          "Content-Type": "application/json",
+          "X-CSRF-Token": csrfToken || "" // ✅ ADDED CSRF
+        },
         body: JSON.stringify({ token }),
         credentials: 'include',
         signal: controller.signal
@@ -316,15 +341,21 @@ export function AuthProvider({ children }) {
     }
   }
 
-  // Password reset request function
+  // Password reset request function - FIXED WITH CSRF
   async function requestPasswordReset(email) {
     try {
       const controller = new AbortController();
       const timeoutId = setTimeout(() => controller.abort(), 10000);
 
+      // ✅ FIXED: Add CSRF token to forgot-password
+      const csrfToken = getCsrfToken();
+
       const res = await fetch(`${API}/api/auth/forgot-password`, {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
+        headers: { 
+          "Content-Type": "application/json",
+          "X-CSRF-Token": csrfToken || "" // ✅ ADDED CSRF
+        },
         body: JSON.stringify({ email }),
         signal: controller.signal
       });
@@ -344,15 +375,21 @@ export function AuthProvider({ children }) {
     }
   }
 
-  // Password reset confirmation function
+  // Password reset confirmation function - FIXED WITH CSRF
   async function resetPassword(token, newPassword) {
     try {
       const controller = new AbortController();
       const timeoutId = setTimeout(() => controller.abort(), 10000);
 
+      // ✅ FIXED: Add CSRF token to reset-password
+      const csrfToken = getCsrfToken();
+
       const res = await fetch(`${API}/api/auth/reset-password`, {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
+        headers: { 
+          "Content-Type": "application/json",
+          "X-CSRF-Token": csrfToken || "" // ✅ ADDED CSRF
+        },
         body: JSON.stringify({ token, password: newPassword }),
         signal: controller.signal
       });
@@ -372,15 +409,21 @@ export function AuthProvider({ children }) {
     }
   }
 
-  // Resend verification email
+  // Resend verification email - FIXED WITH CSRF
   async function resendVerification(email) {
     try {
       const controller = new AbortController();
       const timeoutId = setTimeout(() => controller.abort(), 10000);
 
+      // ✅ FIXED: Add CSRF token to resend-verification
+      const csrfToken = getCsrfToken();
+
       const res = await fetch(`${API}/api/auth/resend-verification`, {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
+        headers: { 
+          "Content-Type": "application/json",
+          "X-CSRF-Token": csrfToken || "" // ✅ ADDED CSRF
+        },
         body: JSON.stringify({ email }),
         signal: controller.signal
       });
@@ -400,19 +443,18 @@ export function AuthProvider({ children }) {
     }
   }
 
-  // Updated getAuthHeaders for CSRF protection
- 
-
-  // Updated logout function - calls logout endpoint and clears local state
-   // Updated logout function - needs CSRF token
+  // Updated logout function - FIXED WITH CSRF
   async function logout() {
     try {
+      // ✅ FIXED: Add CSRF token to logout
+      const csrfToken = getCsrfToken();
+      
       await fetch(`${API}/api/auth/logout`, {
         method: "POST",
         credentials: 'include',
         headers: {
           "Content-Type": 'application/json',
-          'X-CSRF-Token': getCsrfToken() // ← ADD THIS LINE
+          "X-CSRF-Token": csrfToken || "" // ✅ ADDED CSRF
         },
       });
     } catch (error) {
@@ -421,14 +463,6 @@ export function AuthProvider({ children }) {
       setUser(null);
       navigate('/login', { replace: true });
     }
-  }
-
-  // Add this helper function to get CSRF token
-  function getCsrfToken() {
-    return document.cookie
-      .split('; ')
-      .find(row => row.startsWith('av_csrf='))
-      ?.split('=')[1];
   }
 
   return (
