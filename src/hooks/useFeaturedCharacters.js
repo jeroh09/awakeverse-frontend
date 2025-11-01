@@ -1,5 +1,5 @@
-// src/hooks/useFeaturedCharacters.js
-// ✅ STEP 4: Removed useAuth import - using cookies now
+// src/hooks/useFeaturedCharacters.js - FIXED VERSION
+// ✅ Fixed to match actual backend response structure
 import { useState, useEffect, useCallback, useRef } from 'react';
 
 const API_BASE = process.env.REACT_APP_API_URL || 'https://api.awakeverse.com';
@@ -7,10 +7,8 @@ const API_BASE = process.env.REACT_APP_API_URL || 'https://api.awakeverse.com';
 export const useFeaturedCharacters = ({ 
   publicView = false,
   enabled = true,
-  refreshInterval = 5 * 60 * 1000 // 5 minutes default
+  refreshInterval = 5 * 60 * 1000
 } = {}) => {
-  // ✅ STEP 4: No need for getAuthHeaders - using cookies now
-  // publicView removed - backend now requires auth for all users
   const [state, setState] = useState({
     featuredCharacters: [],
     loading: true,
@@ -24,21 +22,17 @@ export const useFeaturedCharacters = ({
   const cacheRef = useRef(null);
   const refreshTimeoutRef = useRef(null);
 
-  // Defensive API call with retry logic
   const fetchFeaturedCharacters = useCallback(async (retryCount = 0) => {
     const MAX_RETRIES = 2;
 
-    // Cancel previous request
     if (abortControllerRef.current) {
       abortControllerRef.current.abort();
     }
 
-    // Create new abort controller
     abortControllerRef.current = new AbortController();
 
     try {
-      // ✅ STEP 4: Simplified cache time (all users are authenticated now)
-      const cacheTime = 5 * 60 * 1000; // 5 minutes
+      const cacheTime = 5 * 60 * 1000;
       if (cacheRef.current && Date.now() - cacheRef.current.timestamp < cacheTime) {
         setState(prev => ({
           ...prev,
@@ -51,23 +45,20 @@ export const useFeaturedCharacters = ({
 
       setState(prev => ({ ...prev, loading: true, error: null }));
 
-      // ✅ STEP 4: Use cookie-based auth (credentials: 'include')
       const response = await fetch(`${API_BASE}/api/market-hub/featured`, {
         method: 'GET',
         headers: {
           'Content-Type': 'application/json'
         },
-        credentials: 'include', // ✅ Send cookies for authentication
+        credentials: 'include',
         signal: abortControllerRef.current.signal
       });
 
       if (!response.ok) {
-        // Handle specific error cases
         if (response.status === 401) {
           throw new Error('Authentication required');
         }
         if (response.status === 404) {
-          // Featured characters not available (starter accounts, empty hub, etc.)
           const resultData = {
             featuredCharacters: [],
             weekStart: new Date().toISOString().split('T')[0],
@@ -90,36 +81,54 @@ export const useFeaturedCharacters = ({
 
       const data = await response.json();
 
-      // Validate and transform response structure
+      // ✅ FIXED: Use actual field names from backend response
+      console.log('🔍 useFeaturedCharacters - Raw backend data:', data.featured_creators?.[0]);
+      
       const resultData = {
         featuredCharacters: Array.isArray(data.featured_creators) 
-          ? data.featured_creators.map(creator => ({
-              character_key: creator.character_key,
-              character_id: creator.character_id,
-              display_name: creator.character_name,
-              short_description: creator.character_description || '',
-              expertise_domain: creator.character_domain || '',
-              avatar_url: creator.avatar_url || `/images/${creator.character_key}.jpg`,
-              engagement_30d: {
-                total_views: creator.total_views || 0,
-                total_likes: creator.total_likes || 0,
-                total_shares: creator.total_shares || 0,
-                total_chats: creator.total_chats || 0
-              },
-              creator: {
-                display_name: creator.creator_display_name || 'Creator',
-                creator_level: creator.creator_level || 'newcomer'
-              },
-              feature_position: creator.feature_position,
-              total_engagement: creator.total_engagement || 0
-            }))
+          ? data.featured_creators.map(creator => {
+              // ✅ CRITICAL: Use the field names backend ACTUALLY sends
+              const transformed = {
+                character_key: creator.character_key,
+                character_id: creator.character_id,
+                display_name: creator.display_name,  // ✅ Backend sends this
+                short_description: creator.short_description || '',  // ✅ Backend sends this
+                expertise_domain: creator.expertise_domain || '',  // ✅ Backend sends this
+                avatar_url: creator.avatar_url || `/images/${creator.character_key}.jpg`,
+                
+                // ✅ Backend already sends engagement_30d as object
+                engagement_30d: creator.engagement_30d || {
+                  total_views: 0,
+                  total_likes: 0,
+                  total_shares: 0,
+                  total_chats: 0,
+                  total_bookmarks: 0
+                },
+                
+                // ✅ Backend already sends creator as object
+                creator: creator.creator || {
+                  display_name: 'Creator',
+                  creator_level: 'newcomer'
+                },
+                
+                feature_position: creator.feature_position,
+                total_engagement: creator.total_engagement || 0,
+                
+                // ✅ Include all other fields
+                historical_period: creator.historical_period,
+                personality_archetype: creator.personality_archetype,
+                market_published_at: creator.market_published_at
+              };
+              
+              console.log('✅ useFeaturedCharacters - Transformed:', transformed);
+              return transformed;
+            })
           : [],
         weekStart: data.week_start || new Date().toISOString().split('T')[0],
         totalFeatured: data.total_featured || 0,
         featuredNotAvailable: false
       };
 
-      // Cache the result
       cacheRef.current = {
         data: resultData,
         timestamp: Date.now()
@@ -137,10 +146,9 @@ export const useFeaturedCharacters = ({
 
     } catch (error) {
       if (error.name === 'AbortError') {
-        return; // Request was cancelled
+        return;
       }
 
-      // Retry logic for network errors
       if (retryCount < MAX_RETRIES && 
           (error.message.includes('fetch') || error.message.includes('network'))) {
         console.warn(`Featured characters fetch attempt ${retryCount + 1} failed, retrying...`);
@@ -162,19 +170,16 @@ export const useFeaturedCharacters = ({
 
       console.error('Featured characters fetch error:', error);
     }
-  }, []); // ✅ STEP 4: Removed getAuthHeaders, isAuthenticated, publicView
+  }, []);
 
-  // Refetch function for error recovery
   const refetch = useCallback(() => {
     fetchFeaturedCharacters();
   }, [fetchFeaturedCharacters]);
 
-  // Clear cache function
   const clearCache = useCallback(() => {
     cacheRef.current = null;
   }, []);
 
-  // Setup periodic refresh
   const setupRefresh = useCallback(() => {
     if (refreshTimeoutRef.current) {
       clearTimeout(refreshTimeoutRef.current);
@@ -183,19 +188,17 @@ export const useFeaturedCharacters = ({
     if (refreshInterval > 0) {
       refreshTimeoutRef.current = setTimeout(() => {
         fetchFeaturedCharacters();
-        setupRefresh(); // Schedule next refresh
+        setupRefresh();
       }, refreshInterval);
     }
   }, [fetchFeaturedCharacters, refreshInterval]);
 
-  // Effect to fetch data and setup refresh
   useEffect(() => {
     if (!enabled) return;
 
     fetchFeaturedCharacters();
     setupRefresh();
 
-    // Cleanup function
     return () => {
       if (abortControllerRef.current) {
         abortControllerRef.current.abort();
@@ -206,7 +209,6 @@ export const useFeaturedCharacters = ({
     };
   }, [fetchFeaturedCharacters, setupRefresh, enabled]);
 
-  // Cleanup on unmount
   useEffect(() => {
     return () => {
       if (abortControllerRef.current) {
@@ -231,9 +233,7 @@ export const useFeaturedCharacters = ({
   };
 };
 
-// Hook for getting character engagement stats
 export const useCharacterStats = (characterId, { enabled = true } = {}) => {
-  // ✅ STEP 4: No need for getAuthHeaders - using cookies now
   const [state, setState] = useState({
     character: null,
     engagement: null,
@@ -247,7 +247,6 @@ export const useCharacterStats = (characterId, { enabled = true } = {}) => {
     try {
       setState(prev => ({ ...prev, loading: true, error: null }));
 
-      // ✅ STEP 4: Use cookie-based auth
       const response = await fetch(
         `${API_BASE}/api/market-hub/character/${characterId}/stats`,
         {
@@ -255,7 +254,7 @@ export const useCharacterStats = (characterId, { enabled = true } = {}) => {
           headers: {
             'Content-Type': 'application/json'
           },
-          credentials: 'include' // ✅ Send cookies for authentication
+          credentials: 'include'
         }
       );
 
@@ -284,7 +283,7 @@ export const useCharacterStats = (characterId, { enabled = true } = {}) => {
       }));
       console.error('Character stats fetch error:', error);
     }
-  }, [characterId]); // ✅ STEP 4: Removed getAuthHeaders, isAuthenticated
+  }, [characterId]);
 
   useEffect(() => {
     if (!enabled || !characterId) return;
