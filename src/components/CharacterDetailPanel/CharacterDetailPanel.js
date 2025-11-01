@@ -9,7 +9,6 @@ const CharacterDetailPanel = ({
   onCharacterSelect,
   showDiscoverAction
 }) => {
-  // Toggle between versions - remove this in production
   const [useOrganicBlob, setUseOrganicBlob] = useState(false);
   const styles = floatingGlassStyles;
 
@@ -21,49 +20,26 @@ const CharacterDetailPanel = ({
   const imageUrl = character.thumbnailUrl || character.avatar_url || `/images/${character.character_key || character.key}.jpg`;
   const characterKey = character.key || character.character_key;
 
-  // ✅ Debug logging to see what data we're receiving
-  console.log('🔍 CharacterDetailPanel - Raw character data:', character);
-  console.log('🔍 CharacterDetailPanel - Processed data:', {
-    displayName,
-    description,
-    imageUrl,
-    characterKey,
+  // ✅ Debug logging
+  console.log('🔍 CharacterDetailPanel - Props:', {
     showDiscoverAction,
-    hasOnCharacterSelect: !!onCharacterSelect
+    hasOnCharacterSelect: !!onCharacterSelect,
+    characterName: displayName
   });
 
   // ✅ NEW: Helper function to handle both discover + chat
   const handleStartChatWithDiscover = () => {
-    console.log('🚀 Starting chat with discover:', { 
-      characterKey, 
-      displayName,
-      willAddToDiscovered: showDiscoverAction && !!onCharacterSelect
-    });
-    
     // Step 1: Add to discovered (if in view mode)
     if (showDiscoverAction && onCharacterSelect) {
-      console.log('📌 Adding to discovered panel');
       onCharacterSelect(character);
     }
     
     // Step 2: Start chat
-    console.log('💬 Opening chat window');
     onStartChat(character);
-    
-    // Optional: Close panel after starting chat
-    // onClose();
   };
 
-  // ✅ DEBUG: Check why button isn't showing
-  console.log('🔍 Button visibility debug:', {
-    showDiscoverAction,
-    hasOnCharacterSelect: !!onCharacterSelect,
-    character: character ? 'exists' : 'null',
-    shouldShowButton: showDiscoverAction && !!onCharacterSelect
-  });
-
-  // ✅ TEST: Force show the button for debugging
-  const forceShowButton = true; // Set to true temporarily to test
+  // Check if we should show the discover button
+  const shouldShowDiscoverButton = showDiscoverAction && onCharacterSelect;
 
   return (
     <>
@@ -102,7 +78,6 @@ const CharacterDetailPanel = ({
             alt={displayName}
             className={styles.panelImage}
             onError={(e) => {
-              console.warn('⚠️ Image load failed, using fallback:', imageUrl);
               e.target.src = '/default-avatar.jpg';
             }}
           />
@@ -112,38 +87,25 @@ const CharacterDetailPanel = ({
         <div className={styles.content}>
           <p className={styles.description}>{description}</p>
           
-          {/* ✅ Optional: Show character key for debugging */}
-          {process.env.NODE_ENV === 'development' && characterKey && (
-            <div style={{ 
-              marginTop: '10px', 
-              fontSize: '11px', 
-              color: '#888',
-              fontFamily: 'monospace'
-            }}>
-              Key: {characterKey}
-            </div>
-          )}
-
-          {/* ✅ DEBUG: Show props status */}
-          {process.env.NODE_ENV === 'development' && (
-            <div style={{ 
-              marginTop: '15px', 
-              padding: '10px',
-              background: 'rgba(255,0,0,0.1)',
-              borderRadius: '8px',
-              fontSize: '12px',
-              color: '#ff4444',
-              fontFamily: 'monospace'
-            }}>
-              <div>showDiscoverAction: {String(showDiscoverAction)}</div>
-              <div>onCharacterSelect: {onCharacterSelect ? 'EXISTS' : 'MISSING'}</div>
-              <div>Button should show: {String(showDiscoverAction && !!onCharacterSelect)}</div>
-            </div>
-          )}
+          {/* ✅ ALWAYS VISIBLE DEBUG INFO */}
+          <div style={{ 
+            marginTop: '15px', 
+            padding: '10px',
+            background: 'rgba(255,215,0,0.1)',
+            borderRadius: '8px',
+            fontSize: '12px',
+            color: '#FFD700',
+            fontFamily: 'monospace',
+            border: '1px solid rgba(255,215,0,0.3)'
+          }}>
+            <div><strong>Debug Info:</strong></div>
+            <div>showDiscoverAction: <span style={{color: showDiscoverAction ? '#10b981' : '#ef4444'}}>{String(showDiscoverAction)}</span></div>
+            <div>onCharacterSelect: <span style={{color: onCharacterSelect ? '#10b981' : '#ef4444'}}>{onCharacterSelect ? 'EXISTS' : 'MISSING'}</span></div>
+            <div>Discover Button: <span style={{color: shouldShowDiscoverButton ? '#10b981' : '#ef4444'}}>{shouldShowDiscoverButton ? 'VISIBLE' : 'HIDDEN'}</span></div>
+          </div>
         </div>
         
         <div className={styles.footer}>
-          {/* ✅ FIXED: Start Chat button now adds to discovered first */}
           <button 
             className={styles.cta} 
             onClick={handleStartChatWithDiscover}
@@ -152,36 +114,16 @@ const CharacterDetailPanel = ({
             Start Chat
           </button>
           
-          {/* ✅ DEBUG: Test button visibility */}
-          { (showDiscoverAction && onCharacterSelect) || forceShowButton ? (
+          {/* ✅ FIXED: Only show when conditions are met */}
+          {shouldShowDiscoverButton && (
             <button 
               className={`${styles.iconButton} ${styles.tooltip}`}
               onClick={handleStartChatWithDiscover}
               aria-label="Add to Discovered & Chat"
               title="Add to Discovered & Start Chat"
-              style={{ 
-                border: '2px solid red',
-                background: forceShowButton ? '#ff4444' : undefined 
-              }}
             >
               +
             </button>
-          ) : (
-            // Show why button is hidden in development
-            process.env.NODE_ENV === 'development' && (
-              <div style={{
-                padding: '8px',
-                background: 'rgba(255,0,0,0.1)',
-                borderRadius: '8px',
-                fontSize: '10px',
-                color: '#ff4444',
-                textAlign: 'center'
-              }}>
-                Button hidden:<br/>
-                showDiscover: {String(showDiscoverAction)}<br/>
-                onCharSelect: {onCharacterSelect ? 'Y' : 'N'}
-              </div>
-            )
           )}
         </div>
       </aside>
