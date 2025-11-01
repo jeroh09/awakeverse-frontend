@@ -70,13 +70,12 @@ export default function App() {
       {/* Market Hub - FIXED: Wrapped with ProtectedRoute + ErrorBoundary */}
       <Route path="/creators" element={<CreatorsLanding />} />
       <Route path="/pricing" element={<PricingPage />} />
+      
       <Route 
         path="/market-hub" 
         element={
           <ErrorBoundary>
-            <ProtectedRoute>
-              <MarketHubPage />
-            </ProtectedRoute>
+            <MarketHubPage />
           </ErrorBoundary>
         } 
       />
