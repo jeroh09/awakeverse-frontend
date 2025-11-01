@@ -709,7 +709,7 @@ const MarketHubPage = ({
         onCharacterSelect={onCharacterSelect}
         onStartChat={onStartChat}
         onScenarioSelect={onScenarioSelect}
-        isViewMode={false}
+        isViewMode={true}
       />
     );
   }
