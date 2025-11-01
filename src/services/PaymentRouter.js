@@ -216,7 +216,7 @@ const ERROR_TYPES = {
 function isAuthenticated() {
   try {
     // Check if we have session cookies by looking for av_sid
-    return document.cookie.includes('av_sid=');
+    return document.cookie.includes('av_csrf=');
   } catch (error) {
     console.error('Failed to check authentication:', error);
     return false;
