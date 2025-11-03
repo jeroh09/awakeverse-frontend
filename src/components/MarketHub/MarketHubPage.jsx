@@ -83,9 +83,48 @@ const AuthenticatedMarketHub = ({
   const { engageWithCharacter } = useCharacterEngagement();
 
   // 🆕 ADD: Combine characters and scenarios into one array
+    // MarketHubPage.jsx
   const allContent = React.useMemo(() => {
-    return [...characters, ...scenarios];
-  }, [characters, scenarios]);
+    // Defensive: Ensure arrays exist and annotate content_type
+    const chars = (characters || []).map(c => ({
+      ...c,
+      content_type: c.content_type || 'character',
+      total_engagement_score: c.total_engagement_score ?? 0,
+      market_published_at: c.market_published_at || null
+    }));
+
+    const scens = (scenarios || []).map(s => ({
+      ...s,
+      content_type: s.content_type || 'scenario',
+      total_engagement_score: s.total_engagement_score ?? 0,
+      market_published_at: s.market_published_at || null
+    }));
+
+    const combined = [...chars, ...scens];
+
+    // Sort based on user preference
+    switch (selectedFilters.sort) {
+      case 'newest':
+        return combined.sort((a, b) => {
+          // Handle null dates: nulls go to end
+          if (!a.market_published_at && !b.market_published_at) return 0;
+          if (!a.market_published_at) return 1;
+          if (!b.market_published_at) return -1;
+          return new Date(b.market_published_at) - new Date(a.market_published_at);
+        });
+
+      case 'popular':
+        return combined.sort((a, b) =>
+          (b.engagement_30d?.total_likes || 0) - (a.engagement_30d?.total_likes || 0)
+        );
+
+      case 'trending':
+      default:
+        return combined.sort((a, b) =>
+          (b.total_engagement_score || 0) - (a.total_engagement_score || 0)
+        );
+    }
+  }, [characters, scenarios, selectedFilters.sort]);
 
   // ✅ UPDATED: Handle content selection - characters show modal, scenarios direct to debate
   const handleCardClick = (item) => {
