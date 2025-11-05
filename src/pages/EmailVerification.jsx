@@ -118,7 +118,7 @@ export default function EmailVerification() {
       case 'processing':
         return 'Please wait while we verify your email address...';
       case 'success':
-        return 'Your email has been verified! You can now access Awakeverse.';
+        return 'Your email has been verified! You can now access AwakeVerse.';
       case 'expired':
         return 'Your verification link has expired. Please request a new verification email.';
       case 'resent':
@@ -158,7 +158,7 @@ export default function EmailVerification() {
           {verificationStatus === 'success' && (
             <div className="mobile-verification-actions">
               <Link to="/app" className="mobile-primary-btn">
-                Enter Awakeverse
+                Enter AwakeVerse
               </Link>
               <Link to="/login" className="mobile-secondary-btn">
                 Go to Login
@@ -253,7 +253,7 @@ export default function EmailVerification() {
         {verificationStatus === 'success' && (
           <div className="verification-actions">
             <Link to="/app" className="primary-button">
-              Enter Awakeverse
+              Enter AwakeVerse
             </Link>
             <Link to="/login" className="secondary-button">
               Go to Login

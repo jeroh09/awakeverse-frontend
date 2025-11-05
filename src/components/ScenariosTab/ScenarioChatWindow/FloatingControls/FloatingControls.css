@@ -99,7 +99,7 @@
 
 /* ===== THEME VARIANTS ===== */
 
-/* Awakeverse (Dark) Theme */
+/* AwakeVerse (Dark) Theme */
 .theme-awakeverse.floating-home-button {
   background: var(--chat-bg-card, rgba(27, 38, 59, 0.9));
   border-color: var(--chat-border-color, rgba(52, 152, 219, 0.3));

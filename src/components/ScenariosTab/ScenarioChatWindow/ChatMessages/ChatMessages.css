@@ -250,7 +250,7 @@
 
 /* ===== THEME VARIANTS ===== */
 
-/* Awakeverse (Dark) Theme */
+/* AwakeVerse (Dark) Theme */
 .theme-awakeverse .character-message {
   background: var(--chat-bg-card, rgba(27, 38, 59, 0.9));
   border-left-color: var(--chat-accent-primary, #3498db);

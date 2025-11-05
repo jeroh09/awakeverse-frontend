@@ -116,10 +116,10 @@ export default function CommunityGuidelines() {
           <a href="/privacy">Privacy</a>
           <a href="/sources">Sources &amp; Licences</a>
         </nav>
-        <h1 id="cg-title">Awakeverse — Community Guidelines</h1>
+        <h1 id="cg-title">AwakeVerse — Community Guidelines</h1>
         <p className="meta">Effective: 19 August 2025 • Last updated: 19 August 2025</p>
         <div className="intro-card">
-          Awakeverse is a place to explore ideas with historic and fictional personas. 
+          AwakeVerse is a place to explore ideas with historic and fictional personas. 
           These guidelines keep the experience welcoming, safe, and creatively honest.
         </div>
       </header>
@@ -153,21 +153,21 @@ export default function CommunityGuidelines() {
 
         <h2 id="age">4) Age &amp; Sensitive Topics</h2>
         <ul>
-          <li>Awakeverse is for users <strong>13+</strong>. If you are under 18, obtain guardian consent.</li>
+          <li>AwakeVerse is for users <strong>13+</strong>. If you are under 18, obtain guardian consent.</li>
           <li>Adult/NSFW requests are restricted. Romantic themes may be allowed with boundaries.</li>
         </ul>
 
         <h2 id="ai">5) AI Content &amp; Historical Personas</h2>
         <ul>
           <li>Outputs are <strong>AI‑generated</strong>; they may be fictional or inaccurate.</li>
-          <li>Do not claim Awakeverse outputs are factual advice or real endorsements.</li>
+          <li>Do not claim AwakeVerse outputs are factual advice or real endorsements.</li>
           <li>Avoid prompts that attempt to bypass safety systems or policy constraints.</li>
         </ul>
 
         <h2 id="sharing">6) Sharing Content</h2>
         <ul>
-          <li>You may share your session snippets non‑commercially with attribution to Awakeverse.</li>
-          <li>Don't remove watermarks or branding; don't impersonate Awakeverse or its personas.</li>
+          <li>You may share your session snippets non‑commercially with attribution to AwakeVerse.</li>
+          <li>Don't remove watermarks or branding; don't impersonate AwakeVerse or its personas.</li>
         </ul>
 
         <h2 id="enforcement">7) Enforcement</h2>
@@ -199,7 +199,7 @@ export default function CommunityGuidelines() {
       </main>
 
       <footer className="document-footer">
-        <p>© {currentYear} Awakeverse Ltd. All rights reserved.</p>
+        <p>© {currentYear} AwakeVerse Ltd. All rights reserved.</p>
       </footer>
     </div>
   );

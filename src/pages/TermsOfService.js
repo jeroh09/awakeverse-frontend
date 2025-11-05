@@ -99,21 +99,21 @@ export default function TermsOfService() {
           <a href="/privacy">Privacy</a>
           <a href="/sources">Sources &amp; Licences</a>
         </nav>
-        <h1 id="tos-title">Awakeverse — Terms of Service</h1>
+        <h1 id="tos-title">AwakeVerse — Terms of Service</h1>
         <p className="meta">Effective: 19 August 2025 &nbsp;•&nbsp; Last updated: 19 August 2025</p>
         <div className="intro-card">
-          Welcome to Awakeverse, an AI platform for conversations with historical, cultural, and fictional personas. 
+          Welcome to AwakeVerse, an AI platform for conversations with historical, cultural, and fictional personas. 
           By accessing or using our services, you agree to these Terms.
         </div>
       </header>
 
       <main className="document-main">
         <h2 id="overview">1) Overview</h2>
-        <p>Awakeverse is provided by <strong>Awakeverse Ltd</strong> ("Awakeverse," "we," "us"). Our services include web and mobile experiences that generate AI content for education and entertainment.</p>
+        <p>AwakeVerse is provided by <strong>AwakeVerse Ltd</strong> ("AwakeVerse," "we," "us"). Our services include web and mobile experiences that generate AI content for education and entertainment.</p>
 
         <h2 id="eligibility">2) Eligibility</h2>
         <ul>
-          <li>You must be at least <strong>13</strong> years old to use Awakeverse. If you are under 18, you must have consent from a parent/guardian.</li>
+          <li>You must be at least <strong>13</strong> years old to use AwakeVerse. If you are under 18, you must have consent from a parent/guardian.</li>
           <li>You represent that all registration information you submit is accurate and you will keep it up to date.</li>
         </ul>
 
@@ -125,8 +125,8 @@ export default function TermsOfService() {
 
         <h2 id="content-ownership">4) Content &amp; Ownership</h2>
         <ul>
-          <li><strong>Your Inputs:</strong> You retain ownership of prompts, text, and other content you submit ("User Content"). You grant Awakeverse a worldwide, royalty‑free, sublicensable licence to host, process, display, and use your User Content to operate, maintain, and improve the services (including safety and moderation).</li>
-          <li><strong>Generated Outputs &amp; Platform IP:</strong> All AI outputs, system prompts, character definitions, avatars, animations, UI/UX, designs, and software are the exclusive intellectual property of Awakeverse. You receive a revocable licence to use outputs within the service and to share them non‑commercially, provided you do not misrepresent them as factual advice.</li>
+          <li><strong>Your Inputs:</strong> You retain ownership of prompts, text, and other content you submit ("User Content"). You grant AwakeVerse a worldwide, royalty‑free, sublicensable licence to host, process, display, and use your User Content to operate, maintain, and improve the services (including safety and moderation).</li>
+          <li><strong>Generated Outputs &amp; Platform IP:</strong> All AI outputs, system prompts, character definitions, avatars, animations, UI/UX, designs, and software are the exclusive intellectual property of AwakeVerse. You receive a revocable licence to use outputs within the service and to share them non‑commercially, provided you do not misrepresent them as factual advice.</li>
           <li><strong>Feedback:</strong> Ideas or suggestions you provide may be used without obligation to you.</li>
         </ul>
 
@@ -153,8 +153,8 @@ export default function TermsOfService() {
 
         <h2 id="ip">8) Intellectual Property</h2>
         <ul>
-          <li><strong>Trademarks:</strong> Awakeverse™ name, logos, and taglines are protected. You may not use them without permission.</li>
-          <li><strong>Copyright:</strong> All code, designs, assets, and content (other than User Content) are owned by Awakeverse and protected by law.</li>
+          <li><strong>Trademarks:</strong> AwakeVerse™ name, logos, and taglines are protected. You may not use them without permission.</li>
+          <li><strong>Copyright:</strong> All code, designs, assets, and content (other than User Content) are owned by AwakeVerse and protected by law.</li>
         </ul>
 
         <h2 id="third-parties">9) Third‑Party Services</h2>
@@ -170,7 +170,7 @@ export default function TermsOfService() {
         </ul>
 
         <h2 id="infringement">12) Notices of Infringement</h2>
-        <p>If you believe content on Awakeverse infringes your rights, email <a href="mailto:legal@awakeverse.com">legal@awakeverse.com</a> with: (a) your contact details, (b) a description of the work, (c) the URL of the allegedly infringing material, and (d) a statement you have a good‑faith belief the use is not authorised.</p>
+        <p>If you believe content on AwakeVerse infringes your rights, email <a href="mailto:legal@awakeverse.com">legal@awakeverse.com</a> with: (a) your contact details, (b) a description of the work, (c) the URL of the allegedly infringing material, and (d) a statement you have a good‑faith belief the use is not authorised.</p>
 
         <h2 id="governing-law">13) Governing Law &amp; Venue</h2>
         <p>These Terms are governed by the laws of England and Wales. Courts of England and Wales have exclusive jurisdiction.</p>
@@ -179,11 +179,11 @@ export default function TermsOfService() {
         <p>We may update these Terms. Material changes will be notified in‑app or by email. Continued use after changes means you accept the revised Terms.</p>
 
         <h2 id="contact">15) Contact</h2>
-        <p>Awakeverse Ltd • Support: <a href="mailto:support@awakeverse.com">support@awakeverse.com</a> • Legal: <a href="mailto:legal@awakeverse.com">legal@awakeverse.com</a></p>
+        <p>AwakeVerse Ltd • Support: <a href="mailto:support@awakeverse.com">support@awakeverse.com</a> • Legal: <a href="mailto:legal@awakeverse.com">legal@awakeverse.com</a></p>
       </main>
 
       <footer className="document-footer">
-        <p>© {currentYear} Awakeverse Ltd. All rights reserved.</p>
+        <p>© {currentYear} AwakeVerse Ltd. All rights reserved.</p>
       </footer>
     </div>
   );

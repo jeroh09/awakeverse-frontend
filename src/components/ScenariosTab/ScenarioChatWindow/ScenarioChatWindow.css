@@ -31,7 +31,7 @@
   z-index: 1000;
 }
 
-/* Awakeverse (Dark) Theme */
+/* AwakeVerse (Dark) Theme */
 .scenario-chat-window.theme-awakeverse {
   --chat-bg-primary: #0d1b2a;
   --chat-bg-secondary: rgba(13, 27, 42, 0.9);
@@ -400,7 +400,7 @@
 
 /* ===== THEME OVERRIDES ===== */
 
-/* Awakeverse (Dark) Theme */
+/* AwakeVerse (Dark) Theme */
 .theme-awakeverse .init-loading-state {
   color: var(--chat-text-secondary, #a8c5da);
 }
@@ -766,7 +766,7 @@
 
 /* ===== THEME OVERRIDES ===== */
 
-/* Awakeverse (Dark) Theme */
+/* AwakeVerse (Dark) Theme */
 .theme-awakeverse .usage-indicator {
   background: rgba(52, 152, 219, 0.15);
   border-color: rgba(52, 152, 219, 0.3);

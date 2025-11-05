@@ -179,7 +179,7 @@
 
 /* ===== THEME VARIANTS ===== */
 
-/* Awakeverse (Dark) Theme */
+/* AwakeVerse (Dark) Theme */
 .theme-awakeverse .starter-questions-bar {
   background: var(--chat-accent-light, rgba(52, 152, 219, 0.15));
   border-bottom-color: var(--chat-border-color, rgba(52, 152, 219, 0.3));

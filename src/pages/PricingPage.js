@@ -189,7 +189,7 @@ const PricingPage = () => {
         <div className="pricing-container-inner">
           <div className="pricing-header">
             <h2>AwakeVerse</h2>
-            <p>Start with 5 custom characters or go unlimited. Every plan includes access to our growing library of AI personalities.</p>
+            <p>Customize & Monetize Your Characters.</p>
           </div>
 
           <div className="plans-grid">

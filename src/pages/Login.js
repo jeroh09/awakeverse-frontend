@@ -302,7 +302,7 @@ export default function Login() {
         
         <div className="auth-links">
           <Link to="/forgot-password">Forgot your password?</Link>
-          <Link to="/register">New to Awakeverse? Begin your journey</Link>
+          <Link to="/register">New to AwakeVerse? Begin your journey</Link>
         </div>
       </form>
     </div>

@@ -1273,7 +1273,7 @@ export default function LandingPage() {
                   color: 'rgba(255, 255, 255, 0.5)',
                   fontSize: '0.9rem'
                 }}>
-                  © 2025 Awakeverse Ltd. All rights reserved.
+                  © 2025 AwakeVerse Ltd. All rights reserved.
                 </div>
               </div>
             </div>

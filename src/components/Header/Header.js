@@ -73,7 +73,7 @@ export default function Header() {
   return (
     <header className={`${styles.header} ${isRetracted ? styles.retracted : ''}`}>
       <div className={styles.leftSection}>
-        <h1 className={styles.title}>Awakeverse</h1>
+        <h1 className={styles.title}>AwakeVerse</h1>
         
         {/* Navigation tabs */}
         {showNavigation && (
