@@ -1881,3 +1881,51 @@ body.theme-awakeverse {
   word-wrap: break-word;
   overflow-wrap: break-word;
 }
+/* =======================
+   USER MESSAGE BUBBLE FIX - PREVENT OVER-STRETCHING
+   ======================= */
+@media (min-width: 601px) {
+  .user-message {
+    max-width: 85% !important; /* Limit user bubble width */
+    width: fit-content !important; /* Wrap to content */
+    margin-left: auto !important;
+    margin-right: 0 !important;
+    flex-direction: row-reverse;
+  }
+  
+  .user-message .message-content {
+    max-width: 100% !important;
+    width: auto !important;
+  }
+  
+  .ai-message {
+    max-width: 85% !important; /* Also limit AI bubbles */
+    width: fit-content !important;
+    margin-right: auto !important;
+    margin-left: 0 !important;
+    flex-direction: row;
+  }
+}
+
+/* =======================
+   FORCE TEXT WRAPPING IN USER BUBBLES
+   ======================= */
+.user-message .message-content {
+  max-width: 100% !important;
+  min-width: 0 !important;
+  flex: 1 !important;
+  word-wrap: break-word !important;
+  overflow-wrap: break-word !important;
+  word-break: break-word !important;
+  hyphens: auto !important;
+}
+
+/* Ensure user message text wraps */
+.user-message .message-content p,
+.user-message .message-content div,
+.user-message .message-content span {
+  max-width: 100% !important;
+  word-wrap: break-word !important;
+  overflow-wrap: break-word !important;
+  word-break: break-word !important;
+}
