@@ -85,45 +85,64 @@ const AuthenticatedMarketHub = ({
   // 🆕 ADD: Combine characters and scenarios into one array
     // MarketHubPage.jsx
   const allContent = React.useMemo(() => {
-    // Defensive: Ensure arrays exist and annotate content_type
+    console.log('🔄 Force mixing content...');
+
+    // Defensive: ensure arrays exist and annotate
     const chars = (characters || []).map(c => ({
       ...c,
-      content_type: c.content_type || 'character',
-      total_engagement_score: c.total_engagement_score ?? 0,
-      market_published_at: c.market_published_at || null
+      content_type: 'character',
+      total_engagement_score: c.total_engagement_score ?? 0
     }));
 
     const scens = (scenarios || []).map(s => ({
       ...s,
-      content_type: s.content_type || 'scenario',
-      total_engagement_score: s.total_engagement_score ?? 0,
-      market_published_at: s.market_published_at || null
+      content_type: 'scenario',
+      total_engagement_score: s.total_engagement_score ?? 0
     }));
 
-    const combined = [...chars, ...scens];
+    // Sort each type separately according to user's preference
+    const sortFn = (a, b) => {
+      switch (selectedFilters.sort) {
+        case 'newest':
+          const dateA = a.market_published_at ? new Date(a.market_published_at) : new Date(0);
+          const dateB = b.market_published_at ? new Date(b.market_published_at) : new Date(0);
+          return dateB - dateA;
+        case 'popular':
+          return (b.engagement_30d?.total_likes || 0) - (a.engagement_30d?.total_likes || 0);
+        case 'trending':
+        default:
+          return (b.total_engagement_score || 0) - (a.total_engagement_score || 0);
+      }
+    };
 
-    // Sort based on user preference
-    switch (selectedFilters.sort) {
-      case 'newest':
-        return combined.sort((a, b) => {
-          // Handle null dates: nulls go to end
-          if (!a.market_published_at && !b.market_published_at) return 0;
-          if (!a.market_published_at) return 1;
-          if (!b.market_published_at) return -1;
-          return new Date(b.market_published_at) - new Date(a.market_published_at);
-        });
+    const sortedChars = [...chars].sort(sortFn);
+    const sortedScens = [...scens].sort(sortFn);
 
-      case 'popular':
-        return combined.sort((a, b) =>
-          (b.engagement_30d?.total_likes || 0) - (a.engagement_30d?.total_likes || 0)
-        );
+    // Interleave with ratio: 5 characters, then 1 scenario
+    const CHAR_RATIO = 5;
+    const SCEN_RATIO = 1;
+    const result = [];
+    let charIdx = 0;
+    let scenIdx = 0;
 
-      case 'trending':
-      default:
-        return combined.sort((a, b) =>
-          (b.total_engagement_score || 0) - (a.total_engagement_score || 0)
-        );
+    while (charIdx < sortedChars.length || scenIdx < sortedScens.length) {
+      // Add characters according to ratio
+      for (let i = 0; i < CHAR_RATIO && charIdx < sortedChars.length; i++) {
+        result.push(sortedChars[charIdx++]);
+      }
+
+      // Add scenarios according to ratio
+      for (let i = 0; i < SCEN_RATIO && scenIdx < sortedScens.length; i++) {
+        result.push(sortedScens[scenIdx++]);
+      }
     }
+
+    console.log('✅ Mixed result:', {
+      total: result.length,
+      pattern: result.slice(0, 8).map(c => c.content_type)
+    });
+
+    return result;
   }, [characters, scenarios, selectedFilters.sort]);
 
   // ✅ UPDATED: Handle content selection - characters show modal, scenarios direct to debate
