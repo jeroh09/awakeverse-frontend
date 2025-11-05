@@ -1819,48 +1819,65 @@ body.theme-awakeverse {
   --scenarios-shadow: rgba(0, 0, 0, 0.3);
 }
 /* =======================
-   RIGHT-SIDE CUTOFF FIX - OVERRIDE ALL CONSTRAINTS
+   DESKTOP CHAT LAYOUT - 70% WIDTH WITH PROPER TEXT WRAPPING
    ======================= */
-
-/* Remove all width constraints from chat containers */
 @media (min-width: 601px) {
-  .chat-window .chat-input,
-  .chat-window .chat-history {
-    width: 95% !important;
-    max-width: none !important;
-    margin: 0 auto !important;
+  .chat-window .chat-input {
+    justify-content: center;
+    width: 70%;
+    margin: 0 auto;
   }
   
-  /* Allow messages to use full available width */
+  .chat-window .chat-history {
+    width: 70%;
+    margin: 0 auto;
+  }
+  
   .user-message,
   .ai-message {
-    max-width: 100% !important;
-    width: auto !important;
+    max-width: 100%; /* Let messages use full container width */
+    width: 100%; /* Ensure they fill the available space */
   }
   
-  /* Fix message content overflow */
   .message-content {
-    max-width: 100% !important;
-    min-width: 0 !important;
-    flex: 1 !important;
+    max-width: 100%;
+    min-width: 0;
+    flex: 1;
+    word-wrap: break-word;
+    overflow-wrap: break-word;
+    word-break: break-word;
+    hyphens: auto;
   }
   
-  /* Ensure the React window list doesn't constrain width */
-  .react-window-list {
-    width: 100% !important;
-    max-width: 100% !important;
+  .user-message {
+    flex-direction: row-reverse;
+    margin-left: auto;
+    margin-right: 0;
+  }
+  
+  .ai-message {
+    flex-direction: row;
+    margin-right: auto;
+    margin-left: 0;
   }
 }
 
-/* Additional mobile fix */
-@media (max-width: 600px) {
-  .user-message,
-  .ai-message {
-    max-width: 100% !important;
-    width: auto !important;
-  }
-  
-  .message-content {
-    max-width: 100% !important;
-  }
+/* =======================
+   MESSAGE BUBBLE TEXT WRAPPING FIX
+   ======================= */
+.message-content p,
+.message-content div,
+.message-content span {
+  word-wrap: break-word !important;
+  overflow-wrap: break-word !important;
+  word-break: break-word !important;
+  hyphens: auto !important;
+  max-width: 100% !important;
+}
+
+/* Ensure ReactMarkdown content wraps properly */
+.message-content * {
+  max-width: 100%;
+  word-wrap: break-word;
+  overflow-wrap: break-word;
 }
