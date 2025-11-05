@@ -85,7 +85,7 @@ const AuthenticatedMarketHub = ({
   // 🆕 ADD: Combine characters and scenarios into one array
     // MarketHubPage.jsx
   const allContent = React.useMemo(() => {
-    console.log('🔄 Force mixing content...');
+    console.log('🔄 Force mixing content with dynamic ratio...');
 
     // Defensive: ensure arrays exist and annotate
     const chars = (characters || []).map(c => ({
@@ -118,9 +118,36 @@ const AuthenticatedMarketHub = ({
     const sortedChars = [...chars].sort(sortFn);
     const sortedScens = [...scens].sort(sortFn);
 
-    // Interleave with ratio: 5 characters, then 1 scenario
-    const CHAR_RATIO = 5;
-    const SCEN_RATIO = 1;
+    // 🆕 DYNAMIC RATIO: Calculate optimal ratio based on counts
+    let CHAR_RATIO = 5; // Default
+    let SCEN_RATIO = 1;
+
+    if (sortedScens.length > 0 && sortedChars.length > 0) {
+      // Calculate how many characters per scenario for even distribution
+      const optimalRatio = sortedChars.length / sortedScens.length;
+
+      if (optimalRatio <= 1) {
+        // More scenarios than characters: alternate 1:1 or favor scenarios
+        CHAR_RATIO = 1;
+        SCEN_RATIO = 1;
+      } else if (optimalRatio <= 3) {
+        // Close counts: use 3:1 or 2:1
+        CHAR_RATIO = Math.ceil(optimalRatio);
+        SCEN_RATIO = 1;
+      } else {
+        // Many more characters: cap at 5:1 to keep scenarios visible
+        CHAR_RATIO = Math.min(Math.ceil(optimalRatio), 5);
+        SCEN_RATIO = 1;
+      }
+    }
+
+    console.log('📊 Dynamic ratio calculated:', {
+      charCount: sortedChars.length,
+      scenCount: sortedScens.length,
+      ratio: `${CHAR_RATIO}:${SCEN_RATIO}`
+    });
+
+    // Interleave with calculated ratio
     const result = [];
     let charIdx = 0;
     let scenIdx = 0;
@@ -139,7 +166,7 @@ const AuthenticatedMarketHub = ({
 
     console.log('✅ Mixed result:', {
       total: result.length,
-      pattern: result.slice(0, 8).map(c => c.content_type)
+      pattern: result.slice(0, 12).map(c => c.content_type)
     });
 
     return result;
@@ -698,32 +725,6 @@ const AuthenticatedMarketHub = ({
             <LeaderboardSection />
           </section>
         )}
-        {/* 🔍 TEMPORARY DEBUG - Remove after fixing */}
-        <div style={{
-          padding: '20px',
-          background: '#f0f0f0',
-          margin: '20px',
-          fontFamily: 'monospace',
-          fontSize: '12px',
-          maxHeight: '300px',
-          overflow: 'auto'
-        }}>
-          <strong>DEBUG INFO:</strong><br/>
-          allContent.length: {allContent.length}<br/>
-          characters.length: {characters?.length || 0}<br/>
-          scenarios.length: {scenarios?.length || 0}<br/>
-          <br/>
-          <strong>First 10 items:</strong><br/>
-          {allContent.slice(0, 10).map((item, idx) => (
-            <div key={idx} style={{
-              padding: '4px',
-              background: item.content_type === 'character' ? '#e3f2fd' : '#fff3e0'
-            }}>
-              {idx + 1}. [{item.content_type}] {item.display_name || item.title} 
-              (score: {item.total_engagement_score})
-            </div>
-          ))}
-        </div>
       </main>
 
       {/* Character Detail Panel */}
