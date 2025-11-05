@@ -546,18 +546,37 @@ button {
 }
 
 /* =======================
-   Desktop Input Centering
+   Desktop Input Centering - FIXED
    ======================= */
 @media (min-width: 601px) {
   .chat-window .chat-input {
     justify-content: center;
-    width: 65%;
+    width: 80%; /* Increased from 65% */
+    max-width: 900px; /* Added max-width for better control */
     margin: 0 auto;
   }
   
   .chat-window .chat-history {
-    width: 65%;
+    width: 80%; /* Increased from 65% */
+    max-width: 900px; /* Added max-width for better control */
     margin: 0 auto;
+  }
+  
+  .user-message,
+  .ai-message {
+    max-width: 85%; /* Increased from 65% */
+  }
+  
+  .user-message {
+    flex-direction: row-reverse;
+    margin-left: auto;
+    margin-right: 1rem;
+  }
+  
+  .ai-message {
+    flex-direction: row;
+    margin-right: auto;
+    margin-left: 0;
   }
 }
 

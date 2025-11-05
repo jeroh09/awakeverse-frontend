@@ -66,10 +66,12 @@ export default function App() {
       <Route path="/security" element={<SecurityPolicy />} />
       <Route path="/ai-disclaimer" element={<AIDisclaimer />} />
       <Route path="/contractor-agreements" element={<ContractorAgreements />} />
+
       
       {/* Market Hub - FIXED: Wrapped with ProtectedRoute + ErrorBoundary */}
       <Route path="/creators" element={<CreatorsLanding />} />
       <Route path="/pricing" element={<PricingPage />} />
+
       
       <Route 
         path="/market-hub" 
