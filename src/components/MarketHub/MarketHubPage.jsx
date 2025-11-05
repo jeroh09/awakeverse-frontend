@@ -679,7 +679,37 @@ const AuthenticatedMarketHub = ({
             <LeaderboardSection />
           </section>
         )}
+      {/* 🔍 TEMPORARY DEBUG - Remove after fixing */}
+      <div style={{
+        padding: '20px',
+        background: '#f0f0f0',
+        margin: '20px',
+        fontFamily: 'monospace',
+        fontSize: '12px',
+        maxHeight: '300px',
+        overflow: 'auto'
+      }}>
+        <strong>DEBUG INFO:</strong><br/>
+        allContent.length: {allContent.length}<br/>
+        characters.length: {characters?.length || 0}<br/>
+        scenarios.length: {scenarios?.length || 0}<br/>
+        <br/>
+        <strong>First 10 items:</strong><br/>
+        {allContent.slice(0, 10).map((item, idx) => (
+          <div key={idx} style={{
+            padding: '4px',
+            background: item.content_type === 'character' ? '#e3f2fd' : '#fff3e0'
+          }}>
+            {idx + 1}. [{item.content_type}] {item.display_name || item.title} 
+            (score: {item.total_engagement_score})
+          </div>
+        ))}
+      </div>
+
+      <main className={styles.main}>
+
       </main>
+      
 
       {/* Character Detail Panel */}
       {selectedCharacter && (
