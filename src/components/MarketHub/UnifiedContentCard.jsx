@@ -1,8 +1,8 @@
-// ============================================================================
-// UnifiedContentCard.jsx - COMPLETE FIXED VERSION
-// ============================================================================
+// UnifiedContentCard.jsx - UPDATED WITH SHARE FUNCTIONALITY
+// Location: src/components/MarketHub/UnifiedContentCard.jsx
 
-import React, { useEffect } from 'react';
+import React, { useEffect, useState } from 'react';
+import { Share2 } from 'lucide-react';
 import { characterCategories } from '../../data/characterCategories';
 import { isCustomCharacterKey, getDisplayNameFromKey } from '../../utils/characterUtils';
 import styles from './UnifiedContentCard.module.css';
@@ -17,6 +17,8 @@ const UnifiedContentCard = ({
 }) => {
   const isCharacter = item.content_type === 'character';
   const isScenario = item.content_type === 'scenario';
+  
+  const [copySuccess, setCopySuccess] = useState(false);
 
   // ADD ENGAGEMENT HOOKS FOR CHARACTERS
   const { trackView, trackShare } = useEngagementTracking();
@@ -103,6 +105,69 @@ const UnifiedContentCard = ({
     onCardClick?.(item);
   };
 
+  // NEW: Handle share button click
+  const handleShareClick = async (e) => {
+    e.stopPropagation();
+    
+    try {
+      let shareUrl;
+      let shareTitle;
+      let shareText;
+      
+      if (isCharacter) {
+        // Build character share URL
+        const characterKey = item.character_key || `user_${item.character_id}_${item.display_name?.toLowerCase().replace(/\s+/g, '_')}`;
+        shareUrl = `${window.location.origin}/c/${characterKey}`;
+        shareTitle = `${item.display_name} - AI Character on Awakeverse`;
+        shareText = item.short_description;
+        
+        // Track the share event
+        if (item.character_id) {
+          await trackShare(item.character_id, 'link_copy', {
+            character_name: item.display_name,
+            expertise_domain: item.expertise_domain
+          });
+        }
+      } else if (isScenario) {
+        // Build scenario share URL
+        shareUrl = `${window.location.origin}/s/${item.id || item.scenario_id}`;
+        shareTitle = `${item.title} - Multi-Character Debate on Awakeverse`;
+        shareText = item.description;
+      }
+      
+      // Try native Web Share API first (mobile friendly)
+      if (navigator.share) {
+        try {
+          await navigator.share({
+            title: shareTitle,
+            text: shareText,
+            url: shareUrl
+          });
+          console.log('✅ Shared successfully via Web Share API');
+          return;
+        } catch (shareError) {
+          // User cancelled or share failed, fall back to clipboard
+          if (shareError.name !== 'AbortError') {
+            console.log('Web Share failed, falling back to clipboard');
+          }
+        }
+      }
+      
+      // Fallback: Copy to clipboard
+      await navigator.clipboard.writeText(shareUrl);
+      
+      // Show success feedback
+      setCopySuccess(true);
+      setTimeout(() => setCopySuccess(false), 2000);
+      
+      console.log('✅ Link copied to clipboard:', shareUrl);
+      
+    } catch (err) {
+      console.error('❌ Share failed:', err);
+      alert('Failed to share. Please try again.');
+    }
+  };
+
   // Format numbers for display
   const formatNumber = (num) => {
     if (num >= 1000000) return `${(num / 1000000).toFixed(1)}M`;
@@ -111,41 +176,25 @@ const UnifiedContentCard = ({
   };
 
   // ============================================================================
-  // RENDER CHARACTER CARD - FIXED ENGAGEMENT METRICS
+  // RENDER CHARACTER CARD - WITH SHARE BUTTON
   // ============================================================================
   if (isCharacter) {
-    // ✅ HANDLE BOTH DATA STRUCTURES:
-    // 1. Leaderboard style: item.period_views, item.period_likes (root level)
-    // 2. Browse style: item.engagement_30d.total_views, item.engagement_30d.total_likes (nested)
-    
     const totalLikes = 
-      item.period_likes ||                           // Leaderboard format
-      item.engagement_30d?.total_likes ||            // Browse format  
+      item.period_likes ||
+      item.engagement_30d?.total_likes ||
       0;
 
     const totalBookmarks = 
-      item.period_bookmarks ||                       // Leaderboard format  
-      item.engagement_30d?.total_bookmarks ||        // Browse format
+      item.period_bookmarks ||
+      item.engagement_30d?.total_bookmarks ||
       0;
 
     const totalEngagement = 
       item.total_engagement_score || 
       item.engagement_score || 
-      item.period_views ||                           // Leaderboard format
-      item.engagement_30d?.total_views ||            // Browse format
+      item.period_views ||
+      item.engagement_30d?.total_views ||
       0;
-    
-    // 🐛 DEBUG: Add this right here to see what data is available
-    console.log('🔍 Character Card Data:', {
-      name: item.display_name,
-      period_likes: item.period_likes,
-      period_views: item.period_views,
-      engagement_30d: item.engagement_30d,
-      total_engagement_score: item.total_engagement_score,
-      computed_likes: totalLikes,
-      computed_bookmarks: totalBookmarks,
-      computed_engagement: totalEngagement
-    });
 
     return (
       <div 
@@ -199,6 +248,13 @@ const UnifiedContentCard = ({
             🔖 {formatNumber(totalBookmarks)}
           </button>
           <button 
+            className={`${styles.actionBtn} ${copySuccess ? styles.shareSuccess : ''}`}
+            onClick={handleShareClick}
+            title={copySuccess ? "Link copied!" : "Share character"}
+          >
+            {copySuccess ? '✓ Copied' : <><Share2 size={14} /> Share</>}
+          </button>
+          <button 
             className={styles.primaryBtn}
             onClick={handleChatClick}
             title="Start chatting"
@@ -211,7 +267,7 @@ const UnifiedContentCard = ({
   }
   
   // ============================================================================
-  // RENDER SCENARIO CARD - UNCHANGED
+  // RENDER SCENARIO CARD - WITH SHARE BUTTON
   // ============================================================================
   if (isScenario) {
     const characterKeys = item.character_keys || [];
@@ -301,6 +357,13 @@ const UnifiedContentCard = ({
             title="Bookmark"
           >
             🔖 {item.engagement_30d?.total_bookmarks || 0}
+          </button>
+          <button 
+            className={`${styles.actionBtn} ${copySuccess ? styles.shareSuccess : ''}`}
+            onClick={handleShareClick}
+            title={copySuccess ? "Link copied!" : "Share scenario"}
+          >
+            {copySuccess ? '✓ Copied' : <><Share2 size={14} /> Share</>}
           </button>
           <button 
             className={styles.primaryBtn}

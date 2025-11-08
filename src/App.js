@@ -27,6 +27,8 @@ import MarketHubPage from './components/MarketHub/MarketHubPage';
 import PaymentSuccess from './components/PaymentSuccess';
 import PaymentCancelled from './components/PaymentCancelled'; // Add this import
 import ErrorBoundary from './components/ErrorBoundary';
+import PublicCharacterPage from './pages/PublicCharacterPage';
+import PublicScenarioPage from './pages/PublicScenarioPage';
 import './styles.css';
 
 // NEW: Wrapper component for protected routes that need view context
@@ -57,6 +59,9 @@ export default function App() {
       <Route path="/reset-password" element={<ResetPassword />} />
       <Route path="/verify-email" element={<EmailVerification />} />
       <Route path="/verify-email" element={<Login />} />
+
+      <Route path="/c/:characterId" element={<PublicCharacterPage />} />
+      <Route path="/s/:scenarioId" element={<PublicScenarioPage />} />
 
       {/* Legal pages */}
       <Route path="/terms" element={<TermsOfService />} />
