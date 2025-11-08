@@ -21,7 +21,6 @@ const PublicScenarioPage = () => {
 
   useEffect(() => {
     fetchScenarioData();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [scenarioId]);
 
   const fetchScenarioData = async () => {

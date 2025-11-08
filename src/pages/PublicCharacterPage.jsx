@@ -19,7 +19,6 @@ const PublicCharacterPage = () => {
 
   useEffect(() => {
     fetchCharacterData();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [characterId]);
 
   const fetchCharacterData = async () => {
