@@ -1,9 +1,9 @@
-/* PublicCharacterPage.css */
-/* Clean, modern styling for public character profiles */
+/* PublicCharacterPage.css - THEME-MATCHED VERSION */
+/* Matches MarketHubPage dark blue/gold aesthetic */
 
 .public-character-page {
   min-height: 100vh;
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  background: linear-gradient(135deg, #0B1426 0%, #1A2B47 25%, #2C1810 50%, #0F1A2E 75%, #0B1426 100%);
   display: flex;
   flex-direction: column;
 }
@@ -14,14 +14,19 @@
   justify-content: space-between;
   align-items: center;
   padding: 1.5rem 2rem;
-  background: rgba(255, 255, 255, 0.1);
+  background: rgba(11, 20, 38, 0.8);
   backdrop-filter: blur(10px);
+  border-bottom: 1px solid rgba(255, 215, 0, 0.2);
 }
 
 .page-header .logo {
+  font-family: 'Playfair Display', serif;
   font-size: 1.5rem;
   font-weight: bold;
-  color: white;
+  background: linear-gradient(135deg, #FFD700, #FFA500);
+  background-clip: text;
+  -webkit-background-clip: text;
+  color: transparent;
   cursor: pointer;
   transition: transform 0.2s;
 }
@@ -43,41 +48,42 @@
   cursor: pointer;
   transition: all 0.3s;
   border: none;
+  font-family: 'Georgia', serif;
 }
 
 .login-btn {
   background: transparent;
-  color: white;
-  border: 2px solid white;
+  color: #FFD700;
+  border: 2px solid rgba(255, 215, 0, 0.5);
 }
 
 .login-btn:hover {
-  background: white;
-  color: #667eea;
+  background: rgba(255, 215, 0, 0.1);
+  border-color: #FFD700;
 }
 
 .signup-btn {
-  background: white;
-  color: #667eea;
+  background: linear-gradient(135deg, #FFD700, #FFA500);
+  color: #0B1426;
 }
 
 .signup-btn:hover {
   transform: translateY(-2px);
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+  box-shadow: 0 4px 12px rgba(255, 215, 0, 0.4);
 }
 
 /* Loading State */
 .public-character-page.loading {
   justify-content: center;
   align-items: center;
-  color: white;
+  color: #FFD700;
 }
 
 .spinner {
   width: 50px;
   height: 50px;
-  border: 4px solid rgba(255, 255, 255, 0.3);
-  border-top-color: white;
+  border: 4px solid rgba(255, 215, 0, 0.2);
+  border-top-color: #FFD700;
   border-radius: 50%;
   animation: spin 1s linear infinite;
   margin-bottom: 1rem;
@@ -94,7 +100,8 @@
 }
 
 .error-container {
-  background: white;
+  background: rgba(11, 20, 38, 0.9);
+  border: 1px solid rgba(255, 215, 0, 0.3);
   padding: 3rem;
   border-radius: 16px;
   text-align: center;
@@ -104,18 +111,19 @@
 
 .error-container h2 {
   margin-bottom: 1rem;
-  color: #333;
+  color: #FFD700;
+  font-family: 'Playfair Display', serif;
 }
 
 .error-container p {
-  color: #666;
+  color: rgba(255, 255, 255, 0.7);
   margin-bottom: 2rem;
 }
 
 .explore-button {
   padding: 0.75rem 2rem;
-  background: #667eea;
-  color: white;
+  background: linear-gradient(135deg, #FFD700, #FFA500);
+  color: #0B1426;
   border: none;
   border-radius: 8px;
   font-weight: 600;
@@ -124,8 +132,8 @@
 }
 
 .explore-button:hover {
-  background: #5568d3;
   transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(255, 215, 0, 0.4);
 }
 
 /* Character Profile */
@@ -138,12 +146,13 @@
 }
 
 .profile-content {
-  background: white;
+  background: rgba(11, 20, 38, 0.8);
+  border: 1px solid rgba(255, 215, 0, 0.3);
   border-radius: 24px;
   padding: 3rem;
   max-width: 900px;
   width: 100%;
-  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.5);
   display: grid;
   grid-template-columns: 300px 1fr;
   gap: 3rem;
@@ -162,14 +171,15 @@
   height: 250px;
   border-radius: 20px;
   object-fit: cover;
-  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
+  border: 3px solid rgba(255, 215, 0, 0.5);
+  box-shadow: 0 10px 30px rgba(255, 215, 0, 0.2);
 }
 
 .featured-badge {
   margin-top: 1rem;
   padding: 0.5rem 1rem;
-  background: linear-gradient(135deg, #ffd700, #ffed4e);
-  color: #333;
+  background: linear-gradient(135deg, #FFD700, #FFA500);
+  color: #0B1426;
   border-radius: 20px;
   font-weight: bold;
   font-size: 0.9rem;
@@ -183,28 +193,36 @@
 }
 
 .character-name {
+  font-family: 'Playfair Display', serif;
   font-size: 2.5rem;
   font-weight: bold;
-  color: #1a1a1a;
+  background: linear-gradient(135deg, #FFD700, #FFA500);
+  background-clip: text;
+  -webkit-background-clip: text;
+  color: transparent;
   margin: 0;
 }
 
 .domain-badge {
   display: inline-block;
   padding: 0.5rem 1rem;
-  background: linear-gradient(135deg, #667eea, #764ba2);
-  color: white;
+  background: rgba(255, 215, 0, 0.1);
+  border: 1px solid rgba(255, 215, 0, 0.3);
+  color: #FFD700;
   border-radius: 20px;
   font-size: 0.9rem;
   font-weight: 600;
   width: fit-content;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
 }
 
 .character-description {
   font-size: 1.1rem;
   line-height: 1.6;
-  color: #444;
+  color: rgba(255, 255, 255, 0.8);
   margin: 1rem 0;
+  font-family: 'Georgia', serif;
 }
 
 /* Character Details */
@@ -213,8 +231,8 @@
   flex-direction: column;
   gap: 0.5rem;
   padding: 1rem 0;
-  border-top: 1px solid #eee;
-  border-bottom: 1px solid #eee;
+  border-top: 1px solid rgba(255, 215, 0, 0.2);
+  border-bottom: 1px solid rgba(255, 215, 0, 0.2);
 }
 
 .detail-item {
@@ -224,27 +242,27 @@
 
 .detail-label {
   font-weight: 600;
-  color: #666;
+  color: #FFD700;
 }
 
 .detail-value {
-  color: #333;
+  color: rgba(255, 255, 255, 0.8);
 }
 
 /* Creator Info */
 .creator-info {
   font-size: 0.95rem;
-  color: #666;
+  color: rgba(255, 255, 255, 0.6);
 }
 
 .creator-name {
   font-weight: 600;
-  color: #667eea;
+  color: #FFA500;
 }
 
 .creator-level {
   text-transform: capitalize;
-  color: #999;
+  color: rgba(255, 215, 0, 0.7);
 }
 
 /* Engagement Stats */
@@ -260,19 +278,23 @@
   flex-direction: column;
   align-items: center;
   padding: 1rem;
-  background: #f8f9fa;
+  background: rgba(255, 215, 0, 0.05);
+  border: 1px solid rgba(255, 215, 0, 0.2);
   border-radius: 12px;
 }
 
 .stat-value {
   font-size: 1.5rem;
   font-weight: bold;
-  color: #667eea;
+  background: linear-gradient(135deg, #FFD700, #FFA500);
+  background-clip: text;
+  -webkit-background-clip: text;
+  color: transparent;
 }
 
 .stat-label {
   font-size: 0.85rem;
-  color: #666;
+  color: rgba(255, 255, 255, 0.6);
   margin-top: 0.25rem;
 }
 
@@ -286,44 +308,48 @@
 .start-chat-btn {
   flex: 2;
   padding: 1rem 2rem;
-  background: linear-gradient(135deg, #667eea, #764ba2);
-  color: white;
+  background: linear-gradient(135deg, #FFD700, #FFA500);
+  color: #0B1426;
   border: none;
   border-radius: 12px;
   font-size: 1.1rem;
   font-weight: 600;
   cursor: pointer;
   transition: all 0.3s;
+  font-family: 'Georgia', serif;
 }
 
 .start-chat-btn:hover {
   transform: translateY(-2px);
-  box-shadow: 0 8px 20px rgba(102, 126, 234, 0.4);
+  box-shadow: 0 8px 20px rgba(255, 215, 0, 0.4);
 }
 
 .explore-btn {
   flex: 1;
   padding: 1rem 2rem;
-  background: white;
-  color: #667eea;
-  border: 2px solid #667eea;
+  background: transparent;
+  color: #FFD700;
+  border: 2px solid rgba(255, 215, 0, 0.5);
   border-radius: 12px;
   font-size: 1rem;
   font-weight: 600;
   cursor: pointer;
   transition: all 0.3s;
+  font-family: 'Georgia', serif;
 }
 
 .explore-btn:hover {
-  background: #f8f9fa;
+  background: rgba(255, 215, 0, 0.1);
+  border-color: #FFD700;
 }
 
 /* Footer */
 .page-footer {
   text-align: center;
   padding: 2rem;
-  color: rgba(255, 255, 255, 0.8);
+  color: rgba(255, 255, 255, 0.5);
   font-size: 0.9rem;
+  border-top: 1px solid rgba(255, 215, 0, 0.1);
 }
 
 /* Responsive Design */
