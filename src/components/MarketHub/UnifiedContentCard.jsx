@@ -118,7 +118,7 @@ const UnifiedContentCard = ({
         // Build character share URL
         const characterKey = item.character_key || `user_${item.character_id}_${item.display_name?.toLowerCase().replace(/\s+/g, '_')}`;
         shareUrl = `${window.location.origin}/c/${characterKey}`;
-        shareTitle = `${item.display_name} - AI Character on Awakeverse`;
+        shareTitle = `${item.display_name} - AI Character on AwakeVerse`;
         shareText = item.short_description;
         
         // Track the share event
@@ -131,7 +131,7 @@ const UnifiedContentCard = ({
       } else if (isScenario) {
         // Build scenario share URL
         shareUrl = `${window.location.origin}/s/${item.id || item.scenario_id}`;
-        shareTitle = `${item.title} - Multi-Character Debate on Awakeverse`;
+        shareTitle = `${item.title} - Multi-Character Debate on AwakeVerse`;
         shareText = item.description;
       }
       

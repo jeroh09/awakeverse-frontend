@@ -12,7 +12,7 @@ export default function ContactUs() {
   const navigate = useNavigate();
 
   useEffect(() => {
-    document.title = 'Contact Us — Awakeverse';
+    document.title = 'Contact Us — AwakeVerse';
   }, []);
 
   const validate = () => {
@@ -326,7 +326,7 @@ export default function ContactUs() {
 
               <div className="info">
                 <h4>Office (by appointment)</h4>
-                <p>Awakeverse Ltd<br/>Oxford Road, Manchester M13 9PL<br/>United Kingdom</p>
+                <p>AwakeVerse Ltd<br/>Oxford Road, Manchester M13 9PL<br/>United Kingdom</p>
                 <p style={{ marginTop: 8 }}>Company No: 00000000</p>
               </div>
 

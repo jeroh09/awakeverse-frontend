@@ -139,7 +139,7 @@ const PublicScenarioPage = () => {
       {/* Header with branding */}
       <header className="page-header">
         <div className="logo" onClick={() => navigate('/')}>
-          Awakeverse
+          AwakeVerse
         </div>
         {!user && (
           <div className="header-actions">
@@ -255,7 +255,7 @@ const PublicScenarioPage = () => {
 
       {/* Footer */}
       <footer className="page-footer">
-        <p>© 2025 Awakeverse • Multi-Character AI Debates</p>
+        <p>© 2025 AwakeVerse • Multi-Character AI Debates</p>
       </footer>
     </div>
   );
