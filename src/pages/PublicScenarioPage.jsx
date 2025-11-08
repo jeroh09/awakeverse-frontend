@@ -1,13 +1,14 @@
 // PublicScenarioPage.jsx
 // Location: src/pages/PublicScenarioPage.jsx
 // Public scenario profile page for shared links
+// UPDATED: Using CSS Modules for proper style scoping
 
 import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { useUser } from '../contexts/UserContext';
 import { characterCategories } from '../data/characterCategories';
 import { isCustomCharacterKey, getDisplayNameFromKey } from '../utils/characterUtils';
-import './PublicScenarioPage.css';
+import styles from './PublicScenarioPage.module.css';
 
 const PublicScenarioPage = () => {
   const { scenarioId } = useParams();
@@ -20,6 +21,7 @@ const PublicScenarioPage = () => {
 
   useEffect(() => {
     fetchScenarioData();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [scenarioId]);
 
   const fetchScenarioData = async () => {
@@ -39,6 +41,7 @@ const PublicScenarioPage = () => {
 
       const data = await response.json();
       
+      // DEFENSIVE: Validate response structure
       if (data.status === 'success' && data.data) {
         setScenario(data.data);
       } else {
@@ -46,50 +49,75 @@ const PublicScenarioPage = () => {
       }
     } catch (err) {
       console.error('Error fetching scenario:', err);
-      setError(err.message);
+      setError(err.message || 'Unknown error occurred');
     } finally {
       setLoading(false);
     }
   };
 
   const getCharacterInfo = (charKey) => {
-    // Check if it's a custom character
-    const isCustom = isCustomCharacterKey(charKey);
-    
-    if (isCustom) {
+    // DEFENSIVE: Handle missing or invalid charKey
+    if (!charKey || typeof charKey !== 'string') {
       return {
-        name: getDisplayNameFromKey(charKey),
-        thumbnailUrl: `/images/${charKey}.jpg`,
-        isCustom: true
+        name: 'Unknown Character',
+        thumbnailUrl: '/images/default-character.jpg',
+        isCustom: false
       };
-    } else {
-      // Static character - look up in categories
-      for (const category of characterCategories) {
-        if (category.characters) {
-          const found = category.characters.find(c => c.key === charKey);
-          if (found) {
-            return {
-              name: found.name,
-              thumbnailUrl: found.thumbnailUrl,
-              isCustom: false
-            };
+    }
+
+    try {
+      // Check if it's a custom character
+      const isCustom = isCustomCharacterKey(charKey);
+      
+      if (isCustom) {
+        return {
+          name: getDisplayNameFromKey(charKey),
+          thumbnailUrl: `/images/${charKey}.jpg`,
+          isCustom: true
+        };
+      } else {
+        // Static character - look up in categories
+        if (Array.isArray(characterCategories)) {
+          for (const category of characterCategories) {
+            if (category.characters && Array.isArray(category.characters)) {
+              const found = category.characters.find(c => c.key === charKey);
+              if (found) {
+                return {
+                  name: found.name || charKey,
+                  thumbnailUrl: found.thumbnailUrl || `/images/${charKey}.jpg`,
+                  isCustom: false
+                };
+              }
+            }
           }
         }
+        
+        // Fallback if not found
+        return {
+          name: charKey,
+          thumbnailUrl: `/images/${charKey}.jpg`,
+          isCustom: false
+        };
       }
-      
+    } catch (err) {
+      console.error('Error getting character info:', err);
       return {
         name: charKey,
-        thumbnailUrl: `/images/${charKey}.jpg`,
+        thumbnailUrl: '/images/default-character.jpg',
         isCustom: false
       };
     }
   };
 
   const handleStartDebate = () => {
+    // DEFENSIVE: Ensure scenario exists and has ID
+    if (!scenario || !scenarioId) {
+      console.error('Scenario data incomplete');
+      return;
+    }
+
     if (user) {
       // User is logged in - go to scenario
-      // Note: You'll need to implement scenario launching from public page
-      // For now, redirect to scenarios tab or create a direct launch route
       navigate(`/scenarios?start=${scenarioId}`);
     } else {
       // User not logged in - redirect to register with return URL
@@ -102,15 +130,27 @@ const PublicScenarioPage = () => {
   };
 
   const formatNumber = (num) => {
+    // DEFENSIVE: Handle invalid inputs
+    if (typeof num !== 'number' || isNaN(num)) return '0';
+    
     if (num >= 1000000) return `${(num / 1000000).toFixed(1)}M`;
     if (num >= 1000) return `${(num / 1000).toFixed(1)}K`;
     return num.toString();
   };
 
+  // DEFENSIVE: Safe access to nested engagement data
+  const getEngagementValue = (field) => {
+    try {
+      return scenario?.engagement_30d?.[field] || 0;
+    } catch (e) {
+      return 0;
+    }
+  };
+
   if (loading) {
     return (
-      <div className="public-scenario-page loading">
-        <div className="spinner"></div>
+      <div className={`${styles.publicScenarioPage} ${styles.loading}`}>
+        <div className={styles.spinner}></div>
         <p>Loading scenario...</p>
       </div>
     );
@@ -118,11 +158,11 @@ const PublicScenarioPage = () => {
 
   if (error) {
     return (
-      <div className="public-scenario-page error">
-        <div className="error-container">
+      <div className={`${styles.publicScenarioPage} ${styles.error}`}>
+        <div className={styles.errorContainer}>
           <h2>😕 Scenario Not Found</h2>
           <p>{error}</p>
-          <button onClick={handleExploreMore} className="explore-button">
+          <button onClick={handleExploreMore} className={styles.exploreButton}>
             Explore Other Scenarios
           </button>
         </div>
@@ -130,23 +170,24 @@ const PublicScenarioPage = () => {
     );
   }
 
+  // DEFENSIVE: Don't render if no scenario data
   if (!scenario) {
     return null;
   }
 
   return (
-    <div className="public-scenario-page">
+    <div className={styles.publicScenarioPage}>
       {/* Header with branding */}
-      <header className="page-header">
-        <div className="logo" onClick={() => navigate('/')}>
+      <header className={styles.pageHeader}>
+        <div className={styles.logo} onClick={() => navigate('/')}>
           AwakeVerse
         </div>
         {!user && (
-          <div className="header-actions">
-            <button onClick={() => navigate('/login')} className="login-btn">
+          <div className={styles.headerActions}>
+            <button onClick={() => navigate('/login')} className={styles.loginBtn}>
               Log In
             </button>
-            <button onClick={() => navigate('/register')} className="signup-btn">
+            <button onClick={() => navigate('/register')} className={styles.signupBtn}>
               Sign Up
             </button>
           </div>
@@ -154,99 +195,111 @@ const PublicScenarioPage = () => {
       </header>
 
       {/* Scenario Profile Section */}
-      <div className="scenario-profile">
-        <div className="profile-content">
+      <div className={styles.scenarioProfile}>
+        <div className={styles.profileContent}>
           {/* Scenario Icon/Header */}
-          <div className="scenario-header">
-            <div className="scenario-icon">🎭</div>
-            <div className="scenario-info">
-              <h1 className="scenario-title">{scenario.title}</h1>
+          <div className={styles.scenarioHeader}>
+            <div className={styles.scenarioIcon}>🎭</div>
+            <div className={styles.scenarioInfo}>
+              <h1 className={styles.scenarioTitle}>
+                {scenario.title || 'Untitled Scenario'}
+              </h1>
               {scenario.category && (
-                <div className="category-badge">{scenario.category}</div>
+                <div className={styles.categoryBadge}>{scenario.category}</div>
               )}
               {scenario.is_market_featured && (
-                <div className="featured-badge">⭐ Featured</div>
+                <div className={styles.featuredBadge}>⭐ Featured</div>
               )}
             </div>
           </div>
 
           {/* Description */}
-          <div className="description-section">
-            <p className="scenario-description">{scenario.description}</p>
+          <div className={styles.descriptionSection}>
+            <p className={styles.scenarioDescription}>
+              {scenario.description || 'No description available'}
+            </p>
           </div>
 
           {/* Participants */}
-          <div className="participants-section">
-            <h3 className="section-title">
-              Debate Participants ({scenario.character_count})
-            </h3>
-            <div className="participants-grid">
-              {scenario.character_keys.map((charKey, index) => {
-                const charInfo = getCharacterInfo(charKey);
-                return (
-                  <div key={index} className="participant-card">
-                    <div className="participant-avatar">
-                      <img
-                        src={charInfo.thumbnailUrl}
-                        alt={charInfo.name}
-                        onError={(e) => {
-                          e.target.src = '/images/default-character.jpg';
-                        }}
-                      />
+          {scenario.character_keys && Array.isArray(scenario.character_keys) && scenario.character_keys.length > 0 && (
+            <div className={styles.participantsSection}>
+              <h3 className={styles.sectionTitle}>
+                Debate Participants ({scenario.character_count || scenario.character_keys.length})
+              </h3>
+              <div className={styles.participantsGrid}>
+                {scenario.character_keys.map((charKey, index) => {
+                  const charInfo = getCharacterInfo(charKey);
+                  return (
+                    <div key={`${charKey}-${index}`} className={styles.participantCard}>
+                      <div className={styles.participantAvatar}>
+                        <img
+                          src={charInfo.thumbnailUrl}
+                          alt={charInfo.name}
+                          onError={(e) => {
+                            e.target.src = '/images/default-character.jpg';
+                          }}
+                        />
+                      </div>
+                      <div className={styles.participantInfo}>
+                        <div className={styles.participantName}>{charInfo.name}</div>
+                        {charInfo.isCustom && (
+                          <div className={styles.customBadge}>Custom</div>
+                        )}
+                      </div>
                     </div>
-                    <div className="participant-info">
-                      <div className="participant-name">{charInfo.name}</div>
-                      {charInfo.isCustom && (
-                        <div className="custom-badge">Custom</div>
-                      )}
-                    </div>
-                  </div>
-                );
-              })}
+                  );
+                })}
+              </div>
             </div>
-          </div>
+          )}
 
           {/* Creator Info */}
-          <div className="creator-info">
-            <span className="created-by">Created by </span>
-            <span className="creator-name">{scenario.creator.display_name}</span>
-            <span className="creator-level">• {scenario.creator.creator_level}</span>
-          </div>
+          {scenario.creator && (
+            <div className={styles.creatorInfo}>
+              <span className={styles.createdBy}>Created by </span>
+              <span className={styles.creatorName}>
+                {scenario.creator.display_name || 'Anonymous'}
+              </span>
+              <span className={styles.creatorLevel}>
+                • {scenario.creator.creator_level || 'creator'}
+              </span>
+            </div>
+          )}
 
           {/* Engagement Stats */}
-          <div className="engagement-stats">
-            <div className="stat">
-              <span className="stat-value">
-                {formatNumber(scenario.engagement_30d.total_views)}
+          <div className={styles.engagementStats}>
+            <div className={styles.stat}>
+              <span className={styles.statValue}>
+                {formatNumber(getEngagementValue('total_views'))}
               </span>
-              <span className="stat-label">Views</span>
+              <span className={styles.statLabel}>Views</span>
             </div>
-            <div className="stat">
-              <span className="stat-value">
-                {formatNumber(scenario.engagement_30d.total_likes)}
+            <div className={styles.stat}>
+              <span className={styles.statValue}>
+                {formatNumber(getEngagementValue('total_likes'))}
               </span>
-              <span className="stat-label">Likes</span>
+              <span className={styles.statLabel}>Likes</span>
             </div>
-            <div className="stat">
-              <span className="stat-value">
-                {formatNumber(scenario.engagement_30d.total_starts)}
+            <div className={styles.stat}>
+              <span className={styles.statValue}>
+                {formatNumber(getEngagementValue('total_starts'))}
               </span>
-              <span className="stat-label">Debates</span>
+              <span className={styles.statLabel}>Debates</span>
             </div>
-            <div className="stat">
-              <span className="stat-value">
-                {formatNumber(scenario.engagement_30d.unique_users)}
+            <div className={styles.stat}>
+              <span className={styles.statValue}>
+                {formatNumber(getEngagementValue('unique_users'))}
               </span>
-              <span className="stat-label">Users</span>
+              <span className={styles.statLabel}>Users</span>
             </div>
           </div>
 
           {/* Call to Action */}
-          <div className="cta-section">
-            <button onClick={handleStartDebate} className="start-debate-btn">
+          <div className={styles.ctaSection}>
+            <button onClick={handleStartDebate} className={styles.startDebateBtn}>
               {user ? '🎭 Start Debate' : '🚀 Sign Up to Debate'}
             </button>
-            <button onClick={handleExploreMore} className="explore-btn">
+            <button onClick={handleExploreMore} className={styles.exploreBtn}>
               Explore More Scenarios
             </button>
           </div>
@@ -254,7 +307,7 @@ const PublicScenarioPage = () => {
       </div>
 
       {/* Footer */}
-      <footer className="page-footer">
+      <footer className={styles.pageFooter}>
         <p>© 2025 AwakeVerse • Multi-Character AI Debates</p>
       </footer>
     </div>

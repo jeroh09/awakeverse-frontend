@@ -1,11 +1,12 @@
 // PublicCharacterPage.jsx
 // Location: src/pages/PublicCharacterPage.jsx
 // Public character profile page for shared links
+// UPDATED: Using CSS Modules for proper style scoping
 
 import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { useUser } from '../contexts/UserContext';
-import './PublicCharacterPage.css';
+import styles from './PublicCharacterPage.module.css';
 
 const PublicCharacterPage = () => {
   const { characterId } = useParams();
@@ -18,6 +19,7 @@ const PublicCharacterPage = () => {
 
   useEffect(() => {
     fetchCharacterData();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [characterId]);
 
   const fetchCharacterData = async () => {
@@ -37,6 +39,7 @@ const PublicCharacterPage = () => {
 
       const data = await response.json();
       
+      // DEFENSIVE: Validate response structure
       if (data.status === 'success' && data.data) {
         setCharacter(data.data);
       } else {
@@ -44,13 +47,19 @@ const PublicCharacterPage = () => {
       }
     } catch (err) {
       console.error('Error fetching character:', err);
-      setError(err.message);
+      setError(err.message || 'Unknown error occurred');
     } finally {
       setLoading(false);
     }
   };
 
   const handleStartChat = () => {
+    // DEFENSIVE: Ensure character exists and has character_key
+    if (!character || !character.character_key) {
+      console.error('Character data incomplete');
+      return;
+    }
+
     if (user) {
       // User is logged in - go to chat
       navigate(`/chat/${character.character_key}`);
@@ -65,15 +74,27 @@ const PublicCharacterPage = () => {
   };
 
   const formatNumber = (num) => {
+    // DEFENSIVE: Handle invalid inputs
+    if (typeof num !== 'number' || isNaN(num)) return '0';
+    
     if (num >= 1000000) return `${(num / 1000000).toFixed(1)}M`;
     if (num >= 1000) return `${(num / 1000).toFixed(1)}K`;
     return num.toString();
   };
 
+  // DEFENSIVE: Safe access to nested engagement data
+  const getEngagementValue = (field) => {
+    try {
+      return character?.engagement_30d?.[field] || 0;
+    } catch (e) {
+      return 0;
+    }
+  };
+
   if (loading) {
     return (
-      <div className="public-character-page loading">
-        <div className="spinner"></div>
+      <div className={`${styles.publicCharacterPage} ${styles.loading}`}>
+        <div className={styles.spinner}></div>
         <p>Loading character...</p>
       </div>
     );
@@ -81,11 +102,11 @@ const PublicCharacterPage = () => {
 
   if (error) {
     return (
-      <div className="public-character-page error">
-        <div className="error-container">
+      <div className={`${styles.publicCharacterPage} ${styles.error}`}>
+        <div className={styles.errorContainer}>
           <h2>😕 Character Not Found</h2>
           <p>{error}</p>
-          <button onClick={handleExploreMore} className="explore-button">
+          <button onClick={handleExploreMore} className={styles.exploreButton}>
             Explore Other Characters
           </button>
         </div>
@@ -93,23 +114,24 @@ const PublicCharacterPage = () => {
     );
   }
 
+  // DEFENSIVE: Don't render if no character data
   if (!character) {
     return null;
   }
 
   return (
-    <div className="public-character-page">
+    <div className={styles.publicCharacterPage}>
       {/* Header with branding */}
-      <header className="page-header">
-        <div className="logo" onClick={() => navigate('/')}>
+      <header className={styles.pageHeader}>
+        <div className={styles.logo} onClick={() => navigate('/')}>
           AwakeVerse
         </div>
         {!user && (
-          <div className="header-actions">
-            <button onClick={() => navigate('/login')} className="login-btn">
+          <div className={styles.headerActions}>
+            <button onClick={() => navigate('/login')} className={styles.loginBtn}>
               Log In
             </button>
-            <button onClick={() => navigate('/register')} className="signup-btn">
+            <button onClick={() => navigate('/register')} className={styles.signupBtn}>
               Sign Up
             </button>
           </div>
@@ -117,90 +139,100 @@ const PublicCharacterPage = () => {
       </header>
 
       {/* Character Profile Section */}
-      <div className="character-profile">
-        <div className="profile-content">
+      <div className={styles.characterProfile}>
+        <div className={styles.profileContent}>
           {/* Avatar */}
-          <div className="avatar-section">
+          <div className={styles.avatarSection}>
             <img
-              src={character.avatar_url}
-              alt={character.display_name}
-              className="character-avatar"
+              src={character.avatar_url || '/images/default-character.jpg'}
+              alt={character.display_name || 'Character'}
+              className={styles.characterAvatar}
               onError={(e) => {
                 e.target.src = '/images/default-character.jpg';
               }}
             />
             {character.is_market_featured && (
-              <div className="featured-badge">⭐ Featured</div>
+              <div className={styles.featuredBadge}>⭐ Featured</div>
             )}
           </div>
 
           {/* Character Info */}
-          <div className="info-section">
-            <h1 className="character-name">{character.display_name}</h1>
+          <div className={styles.infoSection}>
+            <h1 className={styles.characterName}>
+              {character.display_name || 'Unknown Character'}
+            </h1>
             
             {character.expertise_domain && (
-              <div className="domain-badge">{character.expertise_domain}</div>
+              <div className={styles.domainBadge}>{character.expertise_domain}</div>
             )}
 
-            <p className="character-description">{character.short_description}</p>
+            <p className={styles.characterDescription}>
+              {character.short_description || 'No description available'}
+            </p>
 
             {/* Character Details */}
-            <div className="character-details">
+            <div className={styles.characterDetails}>
               {character.historical_period && (
-                <div className="detail-item">
-                  <span className="detail-label">Period:</span>
-                  <span className="detail-value">{character.historical_period}</span>
+                <div className={styles.detailItem}>
+                  <span className={styles.detailLabel}>Period:</span>
+                  <span className={styles.detailValue}>{character.historical_period}</span>
                 </div>
               )}
               {character.personality_archetype && (
-                <div className="detail-item">
-                  <span className="detail-label">Archetype:</span>
-                  <span className="detail-value">{character.personality_archetype}</span>
+                <div className={styles.detailItem}>
+                  <span className={styles.detailLabel}>Archetype:</span>
+                  <span className={styles.detailValue}>{character.personality_archetype}</span>
                 </div>
               )}
             </div>
 
             {/* Creator Info */}
-            <div className="creator-info">
-              <span className="created-by">Created by </span>
-              <span className="creator-name">{character.creator.display_name}</span>
-              <span className="creator-level">• {character.creator.creator_level}</span>
-            </div>
+            {character.creator && (
+              <div className={styles.creatorInfo}>
+                <span className={styles.createdBy}>Created by </span>
+                <span className={styles.creatorName}>
+                  {character.creator.display_name || 'Anonymous'}
+                </span>
+                <span className={styles.creatorLevel}>
+                  • {character.creator.creator_level || 'creator'}
+                </span>
+              </div>
+            )}
 
             {/* Engagement Stats */}
-            <div className="engagement-stats">
-              <div className="stat">
-                <span className="stat-value">
-                  {formatNumber(character.engagement_30d.total_views)}
+            <div className={styles.engagementStats}>
+              <div className={styles.stat}>
+                <span className={styles.statValue}>
+                  {formatNumber(getEngagementValue('total_views'))}
                 </span>
-                <span className="stat-label">Views</span>
+                <span className={styles.statLabel}>Views</span>
               </div>
-              <div className="stat">
-                <span className="stat-value">
-                  {formatNumber(character.engagement_30d.total_likes)}
+              <div className={styles.stat}>
+                <span className={styles.statValue}>
+                  {formatNumber(getEngagementValue('total_likes'))}
                 </span>
-                <span className="stat-label">Likes</span>
+                <span className={styles.statLabel}>Likes</span>
               </div>
-              <div className="stat">
-                <span className="stat-value">
-                  {formatNumber(character.engagement_30d.total_chats)}
+              <div className={styles.stat}>
+                <span className={styles.statValue}>
+                  {formatNumber(getEngagementValue('total_chats'))}
                 </span>
-                <span className="stat-label">Chats</span>
+                <span className={styles.statLabel}>Chats</span>
               </div>
-              <div className="stat">
-                <span className="stat-value">
-                  {formatNumber(character.engagement_30d.unique_users)}
+              <div className={styles.stat}>
+                <span className={styles.statValue}>
+                  {formatNumber(getEngagementValue('unique_users'))}
                 </span>
-                <span className="stat-label">Users</span>
+                <span className={styles.statLabel}>Users</span>
               </div>
             </div>
 
             {/* Call to Action */}
-            <div className="cta-section">
-              <button onClick={handleStartChat} className="start-chat-btn">
+            <div className={styles.ctaSection}>
+              <button onClick={handleStartChat} className={styles.startChatBtn}>
                 {user ? '💬 Start Chatting' : '🚀 Sign Up to Chat'}
               </button>
-              <button onClick={handleExploreMore} className="explore-btn">
+              <button onClick={handleExploreMore} className={styles.exploreBtn}>
                 Explore More Characters
               </button>
             </div>
@@ -209,7 +241,7 @@ const PublicCharacterPage = () => {
       </div>
 
       {/* Footer */}
-      <footer className="page-footer">
+      <footer className={styles.pageFooter}>
         <p>© 2025 AwakeVerse • AI Character Platform</p>
       </footer>
     </div>
