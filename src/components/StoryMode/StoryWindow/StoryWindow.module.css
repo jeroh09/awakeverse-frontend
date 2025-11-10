@@ -1,0 +1,73 @@
+/* src/components/StoryMode/StoryWindow/StoryWindow.module.css */
+
+.storyWindow {
+  position: fixed;
+  inset: 0;
+  background: var(--story-bg-primary);
+  z-index: 999;
+  display: flex;
+  flex-direction: column;
+}
+
+.windowHeader {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 1.5rem 2rem;
+  background: var(--story-bg-card);
+  border-bottom: 1px solid var(--story-border-color);
+}
+
+.backButton {
+  padding: 0.625rem 1.25rem;
+  background: var(--story-bg-secondary);
+  border: 1px solid var(--story-border-color);
+  border-radius: 8px;
+  color: var(--story-text-primary);
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.3s ease;
+}
+
+.backButton:hover {
+  background: var(--story-accent-light);
+  border-color: var(--story-accent-primary);
+  color: var(--story-accent-primary);
+}
+
+.windowHeader h2 {
+  color: var(--story-text-primary);
+  font-size: 1.5rem;
+  font-weight: 600;
+  margin: 0;
+}
+
+.comingSoonBadge {
+  padding: 0.5rem 1rem;
+  background: var(--story-accent-light);
+  color: var(--story-accent-primary);
+  font-size: 0.85rem;
+  font-weight: 600;
+  border-radius: 12px;
+}
+
+.placeholderContent {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 4rem 2rem;
+  text-align: center;
+}
+
+.placeholderContent p {
+  color: var(--story-text-secondary);
+  font-size: 1.2rem;
+  margin: 0.75rem 0;
+}
+
+.hint {
+  font-size: 1rem;
+  font-style: italic;
+}

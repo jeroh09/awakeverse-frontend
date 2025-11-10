@@ -1,0 +1,52 @@
+/* src/components/StoryMode/MyStoriesPanel/MyStoriesPanel.module.css */
+
+.myStoriesPanel {
+  margin-bottom: 2rem;
+}
+
+.panelHeader {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 1.5rem;
+  padding: 0 0.5rem;
+}
+
+.panelHeader h3 {
+  color: var(--story-accent-primary);
+  font-size: 1.75rem;
+  font-weight: 600;
+  margin: 0;
+}
+
+.comingSoonBadge {
+  padding: 0.5rem 1rem;
+  background: var(--story-accent-light);
+  color: var(--story-accent-primary);
+  font-size: 0.85rem;
+  font-weight: 600;
+  border-radius: 12px;
+}
+
+.placeholderContent {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 4rem 2rem;
+  text-align: center;
+  background: var(--story-bg-secondary);
+  border: 2px dashed var(--story-border-color);
+  border-radius: 16px;
+}
+
+.placeholderContent p {
+  color: var(--story-text-secondary);
+  font-size: 1.1rem;
+  margin: 0.5rem 0;
+}
+
+.hint {
+  font-size: 0.95rem;
+  font-style: italic;
+}

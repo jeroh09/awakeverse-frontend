@@ -1,0 +1,118 @@
+/* src/components/StoryMode/StoryCreationForm/StoryCreationForm.module.css */
+
+.modalOverlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.7);
+  backdrop-filter: blur(8px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1001;
+  padding: 1rem;
+}
+
+.creationModal {
+  background: var(--story-bg-card);
+  border: 1px solid var(--story-border-color);
+  border-radius: 20px;
+  max-width: 600px;
+  width: 100%;
+  max-height: 90vh;
+  overflow-y: auto;
+  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.5);
+}
+
+.modalHeader {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 2rem 2rem 1rem;
+  border-bottom: 1px solid var(--story-border-color);
+}
+
+.modalHeader h2 {
+  color: var(--story-text-primary);
+  font-size: 1.75rem;
+  font-weight: 600;
+  margin: 0;
+}
+
+.closeButton {
+  background: none;
+  border: none;
+  color: var(--story-text-secondary);
+  font-size: 2rem;
+  cursor: pointer;
+  padding: 0;
+  width: 40px;
+  height: 40px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 8px;
+  transition: all 0.3s ease;
+}
+
+.closeButton:hover {
+  background: var(--story-accent-light);
+  color: var(--story-accent-primary);
+}
+
+.modalContent {
+  padding: 2rem;
+}
+
+.placeholderContent {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 3rem 2rem;
+  text-align: center;
+  background: var(--story-bg-secondary);
+  border: 2px dashed var(--story-border-color);
+  border-radius: 12px;
+}
+
+.placeholderContent p {
+  color: var(--story-text-secondary);
+  font-size: 1rem;
+  margin: 0.5rem 0;
+}
+
+.hint {
+  font-size: 0.9rem;
+  font-style: italic;
+}
+
+.templateInfo {
+  color: var(--story-accent-primary);
+  font-weight: 600;
+  margin-top: 1rem;
+}
+
+.modalActions {
+  display: flex;
+  gap: 1rem;
+  padding: 1.5rem 2rem 2rem;
+  border-top: 1px solid var(--story-border-color);
+}
+
+.cancelButton {
+  flex: 1;
+  padding: 1rem;
+  background: var(--story-bg-secondary);
+  color: var(--story-text-secondary);
+  border: 1px solid var(--story-border-color);
+  border-radius: 10px;
+  font-weight: 600;
+  font-size: 1rem;
+  cursor: pointer;
+  transition: all 0.3s ease;
+}
+
+.cancelButton:hover {
+  background: var(--story-border-color);
+  color: var(--story-text-primary);
+}

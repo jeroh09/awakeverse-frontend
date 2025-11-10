@@ -18,7 +18,7 @@ import { useFeaturedCharacters } from './hooks/useFeaturedCharacters';
 import { useLeaderboard } from './hooks/useLeaderboard';
 import CreatorDashboard from './components/CreatorHub/CreatorDashboard';
 import ScenariosTab from './components/ScenariosTab/index';
-import StoryModeTab from './components/StoryMode'; 
+import StoryModeTab from './components/StoryMode/index';
 import { useSearchParams } from 'react-router-dom';
 import StripeSuccessHandler from './components/StripeSuccessHandler';
 import './styles.css';
@@ -427,24 +427,12 @@ export default function ChatApp() {
         </div>
       )}
 
-      {/* ★ NEW: Story Mode view */}
-      {currentView === VIEW_STATES.STORIES && (
-        <div className="stories-view-container">
+      {/* ✅ ADD THIS: Story Mode View */}
+      {currentView === VIEW_STATES.STORY_MODE && (
+        <div className="story-mode-view-container">
           <StoryModeTab />
         </div>
       )}
-
-      {/* Optional: prevent overlay on Stories */}
-      {previewCharacterKey && currentView !== VIEW_STATES.STORIES && (
-        <CharacterDetailPanel
-          character={
-            characterCategories.flatMap(c => c.characters).find(c => c.key === previewCharacterKey)
-          }
-          onClose={() => setPreviewCharacterKey(null)}
-          onStartChat={() => handleCharacterSelection(previewCharacterKey, 'preview_start')}
-        />
-      )}
-
       {previewCharacterKey && (
         <CharacterDetailPanel
           character={
