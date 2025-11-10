@@ -1,6 +1,6 @@
 // src/components/StoryMode/TemplatesGallery/index.jsx - Story Templates Gallery
 import React, { useState, useEffect } from 'react';
-import useStoryApi from '../hooks/useStoryApi';
+import useStoryApi from '../../../hooks/useStoryApi';
 import StoryTemplateCard from './StoryTemplateCard';
 import StoryTemplateDetailModal from './StoryTemplateDetailModal';
 import styles from './TemplatesGallery.module.css';
