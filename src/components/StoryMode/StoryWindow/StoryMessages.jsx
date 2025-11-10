@@ -7,55 +7,69 @@ import styles from './StoryWindow.module.css';
 const API_BASE = process.env.REACT_APP_API_URL || 'https://api.awakeverse.com';
 
 // Message Item Component
-function MessageItem({ message, characterKey }) {
-  if (message.user || message.role === 'user') {
+function MessageItem({ message, characterKey, style }) {
+  const messageRef = useRef(null);
+
+  if (message.role === 'user') {
     // User message (right-aligned)
     return (
-      <div className={styles.messageWrapper}>
-        <div className={styles.userMessage}>
-          <div className={styles.messageContent}>
-            {message.content || message.text}
+      <div style={style}>
+        <div className={styles.messageWrapper}>
+          <div className={styles.userMessage}>
+            <div 
+              ref={messageRef}
+              className={styles.messageContent}
+            >
+              {message.content}
+            </div>
           </div>
         </div>
       </div>
     );
-  } else if (message.speaker === 'system' || message.role === 'system') {
+  } else if (message.role === 'system') {
     // System message (centered)
     return (
-      <div className={styles.messageWrapper}>
-        <div className={styles.systemMessage}>
-          {message.content || message.text}
+      <div style={style}>
+        <div className={styles.messageWrapper}>
+          <div className={styles.systemMessage}>
+            {message.content}
+          </div>
         </div>
       </div>
     );
   } else {
     // Character message (left-aligned with avatar)
-    const speaker = message.speaker || message.character_key || characterKey;
+    const speaker = message.character_key || characterKey;
     const speakerName = speaker.charAt(0).toUpperCase() + speaker.slice(1);
     
     return (
-      <div className={styles.messageWrapper}>
-        <div className={styles.characterMessage}>
-          <img
-            src={`${API_BASE}/character_images/${speaker}.jpg`}
-            alt={speakerName}
-            className={styles.characterAvatar}
-            onError={(e) => {
-              e.target.style.display = 'none';
-              e.target.nextSibling.style.display = 'flex';
-            }}
-          />
-          <div 
-            className={styles.characterAvatarFallback}
-            style={{ display: 'none' }}
-          >
-            {speakerName.charAt(0)}
-          </div>
-          
-          <div className={styles.messageContent}>
-            <div className={styles.speakerName}>{speakerName}</div>
-            <div className={styles.messageText}>
-              {message.content || message.text}
+      <div style={style}>
+        <div className={styles.messageWrapper}>
+          <div className={styles.characterMessage}>
+            <img
+              src={`${API_BASE}/character_images/${speaker}.jpg`}
+              alt={speakerName}
+              className={styles.characterAvatar}
+              onError={(e) => {
+                e.target.style.display = 'none';
+                e.target.nextSibling.style.display = 'flex';
+              }}
+            />
+            <div 
+              className={styles.characterAvatarFallback}
+              style={{ display: 'none' }}
+            >
+              {speakerName.charAt(0)}
+            </div>
+            
+            <div className={styles.messageContent}>
+              <div className={styles.speakerName}>{speakerName}</div>
+              <div 
+                ref={messageRef}
+                className={styles.messageText}
+              >
+                {message.content}
+              </div>
             </div>
           </div>
         </div>
@@ -76,9 +90,9 @@ export default function StoryMessages({ messages, characterKey }) {
     }
   }, [messages.length]);
 
-  // Calculate item size
+  // Calculate item size based on content
   const getItemSize = (index) => {
-    return sizeMapRef.current[index] || 120;
+    return sizeMapRef.current[index] || 120; // Default height
   };
 
   const setItemSize = (index, size) => {
@@ -101,7 +115,7 @@ export default function StoryMessages({ messages, characterKey }) {
     );
   }
 
-  // Messages list
+  // Messages list with virtualization
   return (
     <div className={styles.messagesContainer}>
       <AutoSizer>
@@ -119,23 +133,12 @@ export default function StoryMessages({ messages, characterKey }) {
               const message = messages[index];
               
               return (
-                <div style={style}>
-                  <div
-                    ref={(el) => {
-                      if (el) {
-                        const height = el.getBoundingClientRect().height;
-                        if (height !== sizeMapRef.current[index]) {
-                          setItemSize(index, height);
-                        }
-                      }
-                    }}
-                  >
-                    <MessageItem
-                      message={message}
-                      characterKey={characterKey}
-                    />
-                  </div>
-                </div>
+                <MessageItem
+                  message={message}
+                  characterKey={characterKey}
+                  style={style}
+                  onSizeChange={(size) => setItemSize(index, size)}
+                />
               );
             }}
           </List>
