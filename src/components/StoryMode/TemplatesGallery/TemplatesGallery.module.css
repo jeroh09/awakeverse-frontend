@@ -1,0 +1,9 @@
+.section { margin-top: 8px; }
+.gridHeader { display:flex; align-items:center; gap:12px; }
+.gridHeader h2 { margin:0; }
+.actions { margin-left:auto; }
+.blankBtn { background:transparent; border:1px solid rgba(255,255,255,.18); color:#eaeefc; padding:8px 12px; border-radius:10px; cursor:pointer; }
+.info { color:#b9c7f2; margin:10px 0; }
+.error { color:#ffb3b3; margin:10px 0; }
+.grid { display:grid; gap:12px; grid-template-columns: repeat(auto-fill, minmax(230px, 1fr)); margin-top: 12px; }
+.note { margin-top: 10px; color: #d7c38b; font-size: 14px; }

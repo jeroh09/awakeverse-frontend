@@ -10,7 +10,8 @@ export const VIEW_STATES = {
   CHAT: 'chat',
   MARKET_HUB: 'market_hub',
   CREATOR_DASHBOARD: 'creator_dashboard',
-  SCENARIOS: 'scenarios'
+  SCENARIOS: 'scenarios',
+  STORIES: 'stories'
 };
 
 const STORAGE_KEY = 'awakeverse_discovered_characters';
@@ -123,7 +124,9 @@ const VIEW_TO_HASH_MAP = {
   [VIEW_STATES.CHAT]: 'chat',
   [VIEW_STATES.MARKET_HUB]: 'discover',
   [VIEW_STATES.CREATOR_DASHBOARD]: 'create',
-  [VIEW_STATES.SCENARIOS]: 'scenarios'
+  [VIEW_STATES.SCENARIOS]: 'scenarios',
+  [VIEW_STATES.STORIES]: 'stories',
+  
 };
 
 /**
@@ -147,7 +150,9 @@ function getViewFromHash(hashString) {
     'market_hub': VIEW_STATES.MARKET_HUB, // Alias
     'create': VIEW_STATES.CREATOR_DASHBOARD,
     'creator_dashboard': VIEW_STATES.CREATOR_DASHBOARD, // Alias
-    'scenarios': VIEW_STATES.SCENARIOS
+    'scenarios': VIEW_STATES.SCENARIOS,
+    'stories': VIEW_STATES.STORIES
+    
   };
   
   return HASH_TO_VIEW_MAP[baseView] || VIEW_STATES.CHAT;

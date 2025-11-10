@@ -1,0 +1,10 @@
+.card { position:relative; overflow:hidden; border-radius:14px; background:linear-gradient(180deg,#17213c,#10182e); border:1px solid rgba(255,255,255,.08); cursor:pointer; }
+.thumb { height:110px; display:grid; place-items:center; color:#dfe6ff; opacity:.9; background:linear-gradient(120deg,#23315b,#1a2444); font-weight:700; letter-spacing:.3px; }
+.pill { position:absolute; top:10px; left:10px; font-size:11px; padding:4px 8px; border-radius:999px; background:rgba(207,174,92,.18); color:#fff; border:1px solid rgba(207,174,92,.35); }
+.body { padding:12px; }
+.title { font-weight:700; margin-bottom:4px; }
+.desc { color:#c5cce6; font-size:13px; min-height:36px; }
+.meta { display:flex; gap:8px; flex-wrap:wrap; margin-top:8px; }
+.badge { padding:3px 8px; border-radius:999px; background:#1d2b52; border:1px solid rgba(255,255,255,.08); color:#dfe6ff; font-size:11px; }
+.row { margin-top:10px; display:flex; justify-content:flex-end; }
+.btn { padding:8px 10px; border-radius:10px; border:1px solid rgba(255,255,255,.12); background:linear-gradient(180deg,#e6c87e,#c6a758); color:#211a08; font-weight:700; cursor:pointer; }
