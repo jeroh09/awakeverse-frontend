@@ -110,6 +110,14 @@ export default function Header() {
             >
               Scenarios
             </button>
+            <button 
+              className={`${styles.navTab} ${
+                viewContext.currentView === viewContext.VIEW_STATES.STORIES ? styles.active : ''
+              }`}
+              onClick={() => handleNavClick(viewContext.VIEW_STATES.STORIES)}
+            >
+              Stories
+            </button>
           </nav>
         )}
       </div>
