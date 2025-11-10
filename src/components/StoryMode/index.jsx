@@ -1,6 +1,5 @@
-// src/components/StoryMode/index.jsx - Main Story Mode Tab
-import React, { useState, useEffect } from 'react';
-import { useAuth } from '../../contexts/AuthContext';
+// src/components/StoryMode/index.jsx - Fixed Version with Correct Subscription Structure
+import React, { useState, useEffect, useCallback } from 'react';
 import { useUser } from '../../contexts/UserContext';
 import SubscriptionService from '../../services/SubscriptionService';
 import DefensiveStoryWrapper from './DefensiveStoryWrapper';
@@ -10,10 +9,9 @@ import StoryWindow from './StoryWindow';
 import styles from './StoryMode_module.css';
 
 export default function StoryModeTab() {
-  const { token } = useAuth();
   const { user } = useUser();
   
-  // Subscription state
+  // Subscription state - matching ScenariosTab structure
   const [subscriptionData, setSubscriptionData] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
@@ -24,70 +22,90 @@ export default function StoryModeTab() {
   // Stories refresh trigger
   const [storiesRefreshKey, setStoriesRefreshKey] = useState(0);
 
-  // Load subscription data on mount
-  useEffect(() => {
-    loadSubscriptionData();
-  }, [user]);
+  // Fetch subscription data using SubscriptionService - FIXED to match ScenariosTab
+  const loadSubscriptionData = useCallback(async () => {
+    if (!user?.id) {
+      setLoading(false);
+      return;
+    }
 
-  const loadSubscriptionData = async () => {
     try {
-      setLoading(true);
-      setError(null);
-
-      if (!user?.id) {
-        throw new Error('User not authenticated');
-      }
-
-      const subData = await SubscriptionService.getSubscriptionStatus();
-      setSubscriptionData(subData);
-
-      console.log('📊 Story Mode - Subscription loaded:', {
-        tier: subData?.tier,
-        hasAccess: subData?.tier !== 'free'
+      console.log('🔍 Story Mode: Loading subscription data for user:', user.id);
+      
+      // ✅ FIXED: Use correct method name that exists
+      const data = await SubscriptionService.getUserSubscriptionStatus(user.id);
+      
+      console.log('✅ Story Mode - Subscription loaded:', {
+        tier: data.subscription?.tier,
+        tier_name: data.subscription?.tier_name,
+        unlimited: data.subscription?.unlimited,
+        status: data.status
       });
-
-    } catch (err) {
-      console.error('❌ Failed to load subscription:', err);
-      setError('Failed to load subscription data. Please refresh the page.');
+      
+      if (data.status === 'success' && data.subscription) {
+        setSubscriptionData(data);
+        
+        // Check subscription status (for logging only - not gating access)
+        const hasUnlimited = data.subscription.tier === 'unlimited' || 
+                           data.subscription.tier_name === 'unlimited' ||
+                           data.subscription.unlimited === true;
+        
+        console.log('📖 Story Mode Access:', hasUnlimited ? 'PREMIUM' : 'STANDARD');
+      } else {
+        // Use fallback data like ScenariosTab
+        console.warn('⚠️ Story Mode: Using fallback subscription data');
+        const fallback = SubscriptionService.getFallbackSubscriptionData();
+        setSubscriptionData(fallback);
+      }
+    } catch (error) {
+      console.error('❌ Story Mode: Failed to load subscription:', error);
+      // Use fallback like ScenariosTab
+      const fallback = SubscriptionService.getFallbackSubscriptionData();
+      setSubscriptionData(fallback);
     } finally {
       setLoading(false);
     }
-  };
+  }, [user?.id]);
+
+  // Initialize on mount
+  useEffect(() => {
+    loadSubscriptionData();
+  }, [loadSubscriptionData]);
 
   // Handle story opened
-  const handleStoryOpen = (story) => {
+  const handleStoryOpen = useCallback((story) => {
     console.log('📖 Opening story:', story.id);
     setActiveStory(story);
-  };
+  }, []);
 
   // Handle story closed
-  const handleStoryClose = () => {
+  const handleStoryClose = useCallback(() => {
     console.log('📖 Closing story');
     setActiveStory(null);
     // Refresh stories list
     setStoriesRefreshKey(prev => prev + 1);
-  };
+  }, []);
 
   // Handle story created
-  const handleStoryCreated = (newStory) => {
+  const handleStoryCreated = useCallback((newStory) => {
     console.log('✅ Story created:', newStory);
     setStoriesRefreshKey(prev => prev + 1);
-  };
+  }, []);
 
   // Handle story deleted
-  const handleStoryDeleted = () => {
+  const handleStoryDeleted = useCallback(() => {
     console.log('🗑️ Story deleted');
     setStoriesRefreshKey(prev => prev + 1);
-  };
+  }, []);
 
   // Handle upgrade required (not gated for now)
-  const handleUpgradeRequired = (reason) => {
+  const handleUpgradeRequired = useCallback((reason) => {
     console.log('⚠️ Upgrade required:', reason);
     // For now, Story Mode is not gated
-    // In the future, add upgrade modal here
-  };
+    // In the future, add upgrade modal here if needed
+  }, []);
 
-  // Loading state
+  // DEFENSIVE: Show loading until subscription is loaded - matching ScenariosTab pattern
   if (loading) {
     return (
       <DefensiveStoryWrapper>
@@ -130,7 +148,7 @@ export default function StoryModeTab() {
     );
   }
 
-  // Main story mode interface
+  // MAIN CONTENT - Story Mode is not gated, so always show
   return (
     <DefensiveStoryWrapper>
       <div className={styles.storyModeContainer}>
