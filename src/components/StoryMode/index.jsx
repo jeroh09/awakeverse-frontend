@@ -3,9 +3,11 @@ import { useUser } from '../../contexts/UserContext';
 import SubscriptionService from '../../services/SubscriptionService';
 import PaymentRouter from '../../services/PaymentRouter';
 import { getStoryTemplates, createStory } from '../../api';
+import { getMyStories } from '../../api';
+import StoryChat from './StoryChat/StoryChat';
+import MyStories from './MyStories/MyStories';
 import styles from './StoryMode.module.css';
 
-// Minimal card & modal inline for Step 1–2
 function TemplateCard({ tpl, onUse }) {
   return (
     <article className={styles.card} onClick={() => onUse(tpl)}>
@@ -24,7 +26,7 @@ function TemplateCard({ tpl, onUse }) {
   );
 }
 
-function CreatorModal({ open, onClose, template, gated, onSubmit }) {
+function CreatorModal({ open, onClose, template, gated, onSubmit, onCreated }) {
   const [title, setTitle] = useState('');
   const [characterKey, setCharacterKey] = useState('sherlock');
   const [era, setEra] = useState('');
@@ -57,7 +59,7 @@ function CreatorModal({ open, onClose, template, gated, onSubmit }) {
       });
       if (res?.status === 'error') throw new Error(res.error);
       onClose();
-      console.info('Story created:', res);
+      onCreated?.(res.story_id || res.story?.id, res);
     } catch (e) {
       setErr(e.message || 'Failed to create story');
     } finally {
@@ -123,18 +125,27 @@ function CreatorModal({ open, onClose, template, gated, onSubmit }) {
 
 export default function StoryModeTab() {
   const { user } = useUser();
+
+  // Gate
   const [subscriptionData, setSubscriptionData] = useState(null);
   const [loading, setLoading] = useState(true);
   const [requiresUpgrade, setRequiresUpgrade] = useState(false);
 
+  // Sub-tabs
+  const [subTab, setSubTab] = useState('templates'); // 'templates' | 'mine'
+
+  // Templates
   const [templates, setTemplates] = useState([]);
   const [templatesLoading, setTemplatesLoading] = useState(true);
   const [templatesError, setTemplatesError] = useState(null);
 
+  // Creator
   const [creatorOpen, setCreatorOpen] = useState(false);
   const [selectedTemplate, setSelectedTemplate] = useState(null);
 
-  // Subscription gate (mirror ScenariosTab)
+  // Chat overlay
+  const [openStoryId, setOpenStoryId] = useState(null);
+
   const loadSubscriptionData = useCallback(async () => {
     if (!user?.id) { setLoading(false); return; }
     try {
@@ -160,7 +171,7 @@ export default function StoryModeTab() {
 
   useEffect(() => { loadSubscriptionData(); }, [loadSubscriptionData]);
 
-  // Load templates
+  // load templates
   useEffect(() => {
     let mounted = true;
     (async () => {
@@ -174,17 +185,29 @@ export default function StoryModeTab() {
     return () => { mounted = false; };
   }, []);
 
-  const onUseTemplate = (tpl) => { setSelectedTemplate(tpl); setCreatorOpen(true); };
-  const onCreateBlank = () => { setSelectedTemplate(null); setCreatorOpen(true); };
+  const onUseTemplate = (tpl) => { setSelectedTemplate(tpl); setCreatorOpen(true); setSubTab('templates'); };
+  const onCreateBlank = () => { setSelectedTemplate(null); setCreatorOpen(true); setSubTab('templates'); };
 
   const onSubmitCreate = async (formValues) => {
     const res = await createStory(formValues);
     if (res.status === 'error') throw new Error(res.error);
-    // Step 3–4 will open the chat on success
     return res;
   };
 
-  // Payment CTA (same shape used in ScenariosTab)
+  const handleCreated = (storyId/*, payload*/) => {
+    // Immediately open chat, and switch to "Mine" tab when chat closes
+    setOpenStoryId(storyId);
+  };
+
+  const handleContinue = (story) => {
+    setOpenStoryId(story.id);
+  };
+
+  const handleCloseChat = () => {
+    setOpenStoryId(null);
+    setSubTab('mine');
+  };
+
   const handleUpgradeWithStripe = async () => {
     try {
       await PaymentRouter.redirectToCheckout({
@@ -192,11 +215,8 @@ export default function StoryModeTab() {
         provider: 'stripe',
         triggerSource: 'story_mode_upgrade_required'
       });
-    } catch (e) {
-      alert('Unable to redirect to Stripe. Please try again.');
-    }
+    } catch { /* noop */ }
   };
-
   const handleUpgradeWithPayPal = async () => {
     try {
       await PaymentRouter.redirectToCheckout({
@@ -204,23 +224,10 @@ export default function StoryModeTab() {
         provider: 'paypal',
         triggerSource: 'story_mode_upgrade_required'
       });
-    } catch (e) {
-      alert('Unable to redirect to PayPal. Please try again.');
-    }
+    } catch { /* noop */ }
   };
 
-  if (loading) {
-    return (
-      <div className={styles.loadingWrap}>
-        <div className={styles.spinner} />
-        <p>Loading Story Mode…</p>
-      </div>
-    );
-  }
-
-  const isUnlimited = subscriptionData?.subscription?.tier === 'unlimited' ||
-                      subscriptionData?.subscription?.tier_name === 'unlimited' ||
-                      subscriptionData?.subscription?.unlimited === true;
+  if (loading) return <div className={styles.loadingWrap}><div className={styles.spinner} /><p>Loading Story Mode…</p></div>;
 
   return (
     <div className={styles.wrap}>
@@ -232,33 +239,39 @@ export default function StoryModeTab() {
         <div className={styles.subpill}>Plan: <b>{subscriptionData?.subscription?.tier_name || 'Free'}</b></div>
       </header>
 
-      <div className={styles.hint}>
-        Pick a template or start from scratch. Era constraints guide actions; they never hard-block.
+      {/* Sub-tabs */}
+      <div className={styles.subtabs}>
+        <button className={`${styles.subtab} ${subTab==='templates'?styles.active:''}`} onClick={()=>setSubTab('templates')}>Templates</button>
+        <button className={`${styles.subtab} ${subTab==='mine'?styles.active:''}`} onClick={()=>setSubTab('mine')}>My Stories</button>
       </div>
 
-      {/* Controls */}
-      <div className={styles.actions}>
-        <button className={styles.btn} onClick={onCreateBlank}>Create from blank</button>
-      </div>
-
-      {/* Templates grid */}
-      {templatesLoading && <div className={styles.info}>Loading templates…</div>}
-      {templatesError && <div className={styles.error}>{templatesError}</div>}
-      <div className={styles.grid}>
-        {(templates || []).map(t => (
-          <TemplateCard key={t.id} tpl={t} onUse={onUseTemplate} />
-        ))}
-      </div>
-
-      {/* Upgrade note */}
-      {requiresUpgrade && (
-        <div className={styles.note}>
-          You can browse templates, but starting a story requires an upgrade.
-          <div className={styles.upgradeActions}>
-            <button className={styles.btnGold} onClick={handleUpgradeWithStripe}>Upgrade with Stripe</button>
-            <button className={styles.btn} onClick={handleUpgradeWithPayPal}>Pay with PayPal</button>
+      {subTab === 'templates' && (
+        <>
+          <div className={styles.hint}>Pick a template or start from scratch. Era constraints guide actions; they never hard-block.</div>
+          <div className={styles.actions}>
+            <button className={styles.btn} onClick={onCreateBlank}>Create from blank</button>
           </div>
-        </div>
+
+          {templatesLoading && <div className={styles.info}>Loading templates…</div>}
+          {templatesError && <div className={styles.error}>{templatesError}</div>}
+          <div className={styles.grid}>
+            {(templates || []).map(t => <TemplateCard key={t.id} tpl={t} onUse={onUseTemplate} />)}
+          </div>
+
+          {requiresUpgrade && (
+            <div className={styles.note}>
+              You can browse templates, but starting a story requires an upgrade.
+              <div className={styles.upgradeActions}>
+                <button className={styles.btnGold} onClick={handleUpgradeWithStripe}>Upgrade with Stripe</button>
+                <button className={styles.btn} onClick={handleUpgradeWithPayPal}>Pay with PayPal</button>
+              </div>
+            </div>
+          )}
+        </>
+      )}
+
+      {subTab === 'mine' && (
+        <MyStories onContinue={handleContinue} />
       )}
 
       {/* Creator modal */}
@@ -268,7 +281,13 @@ export default function StoryModeTab() {
         template={selectedTemplate}
         gated={requiresUpgrade}
         onSubmit={onSubmitCreate}
+        onCreated={handleCreated}
       />
+
+      {/* Chat overlay */}
+      {openStoryId && (
+        <StoryChat storyId={openStoryId} onClose={handleCloseChat} />
+      )}
     </div>
   );
 }
