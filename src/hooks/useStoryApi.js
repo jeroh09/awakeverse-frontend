@@ -94,7 +94,7 @@ export default function useStoryApi() {
   const sendMessage = useCallback(async (storyId, message) => {
     return request(`${API_BASE}/api/stories/${storyId}/message`, {
       method: 'POST',
-      body: JSON.stringify({ message })
+      body: JSON.stringify({ content })
     });
   }, [request]);
 

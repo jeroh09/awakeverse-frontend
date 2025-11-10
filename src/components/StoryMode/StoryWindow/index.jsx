@@ -34,6 +34,15 @@ export default function StoryWindow({ story, onClose }) {
         
         // Set messages from context (empty array for now per API guide)
         setMessages(data.messages || []);
+        // ADD THIS: If no messages but we have starting situation, create initial message
+        if ((!data.messages || data.messages.length === 0) && story.starting_situation) {
+          const initialMessage = {
+            role: 'system',
+            content: story.starting_situation,
+            timestamp: story.created_at || new Date().toISOString()
+          };
+          setMessages([initialMessage]);
+        }
         
         // TODO: Fetch available characters for invitations
         // For now, use placeholder - you'll need to implement this
@@ -57,9 +66,11 @@ export default function StoryWindow({ story, onClose }) {
 
   // Handle sending messages using YOUR sendMessage API
   const handleSendMessage = async (messageText) => {
+  
     try {
       // Use YOUR sendMessage method - follows exact API mapping
       const data = await sendMessage(story.id, messageText);
+      
       
       console.log('✅ Message sent response:', data);
 
