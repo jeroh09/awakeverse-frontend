@@ -13,15 +13,14 @@
 }
 
 .galleryTitle {
-  color: var(--story-accent-primary);
+  color: #3b82f6;
   font-size: 2.5rem;
   font-weight: 700;
   margin-bottom: 0.5rem;
-  text-shadow: 0 0 20px rgba(255, 215, 0, 0.3);
 }
 
 .gallerySubtitle {
-  color: var(--story-text-secondary);
+  color: #6b7280;
   font-size: 1.1rem;
   line-height: 1.5;
 }
@@ -40,8 +39,8 @@
 .loadingSpinner {
   width: 50px;
   height: 50px;
-  border: 4px solid var(--story-border-color);
-  border-top: 4px solid var(--story-accent-primary);
+  border: 4px solid #e5e7eb;
+  border-top: 4px solid #3b82f6;
   border-radius: 50%;
   animation: spin 1s linear infinite;
   margin-bottom: 1.5rem;
@@ -54,15 +53,15 @@
 
 .galleryLoading p,
 .galleryError p {
-  color: var(--story-text-secondary);
+  color: #6b7280;
   font-size: 1rem;
   margin-bottom: 1rem;
 }
 
 .retryButton {
   padding: 0.75rem 1.5rem;
-  background: linear-gradient(135deg, var(--story-accent-primary), var(--story-accent-secondary));
-  color: #1a1a2e;
+  background: #3b82f6;
+  color: white;
   border: none;
   border-radius: 8px;
   font-weight: 600;
@@ -71,8 +70,9 @@
 }
 
 .retryButton:hover {
+  background: #2563eb;
   transform: translateY(-2px);
-  box-shadow: 0 4px 12px var(--story-shadow);
+  box-shadow: 0 4px 12px rgba(59, 130, 246, 0.3);
 }
 
 /* ===== TEMPLATE GRID ===== */
@@ -85,14 +85,15 @@
 
 /* ===== TEMPLATE CARD ===== */
 .templateCard {
-  background: var(--story-bg-card);
-  border: 1px solid var(--story-border-color);
+  background: white;
+  border: 1px solid #e5e7eb;
   border-radius: 16px;
   padding: 1.5rem;
   cursor: pointer;
   transition: all 0.3s ease;
   position: relative;
   overflow: hidden;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
 }
 
 .templateCard::before {
@@ -102,15 +103,15 @@
   left: 0;
   right: 0;
   height: 4px;
-  background: linear-gradient(90deg, var(--story-accent-primary), var(--story-accent-secondary));
+  background: linear-gradient(90deg, #3b82f6, #1d4ed8);
   opacity: 0;
   transition: opacity 0.3s ease;
 }
 
 .templateCard:hover {
   transform: translateY(-4px);
-  border-color: var(--story-accent-primary);
-  box-shadow: 0 8px 24px var(--story-shadow);
+  border-color: #3b82f6;
+  box-shadow: 0 8px 24px rgba(59, 130, 246, 0.2);
 }
 
 .templateCard:hover::before {
@@ -123,7 +124,7 @@
   top: 1rem;
   right: 1rem;
   padding: 0.375rem 0.75rem;
-  background: rgba(0, 0, 0, 0.7);
+  background: rgba(0, 0, 0, 0.8);
   color: white;
   font-size: 0.75rem;
   font-weight: 600;
@@ -136,8 +137,8 @@
 .categoryBadge {
   display: inline-block;
   padding: 0.375rem 0.75rem;
-  background: var(--story-accent-light);
-  color: var(--story-accent-primary);
+  background: #dbeafe;
+  color: #1d4ed8;
   font-size: 0.75rem;
   font-weight: 600;
   border-radius: 12px;
@@ -148,7 +149,7 @@
 
 /* Template Title */
 .templateTitle {
-  color: var(--story-text-primary);
+  color: #1f2937;
   font-size: 1.25rem;
   font-weight: 600;
   margin-bottom: 0.75rem;
@@ -157,7 +158,7 @@
 
 /* Template Description */
 .templateDescription {
-  color: var(--story-text-secondary);
+  color: #6b7280;
   font-size: 0.9rem;
   line-height: 1.5;
   margin-bottom: 1.5rem;
@@ -173,8 +174,8 @@
   align-items: center;
   gap: 1rem;
   padding: 1rem;
-  background: var(--story-bg-secondary);
-  border: 1px solid var(--story-border-color);
+  background: #f9fafb;
+  border: 1px solid #e5e7eb;
   border-radius: 12px;
   margin-bottom: 1.5rem;
 }
@@ -183,7 +184,7 @@
   width: 50px;
   height: 50px;
   border-radius: 50%;
-  border: 2px solid var(--story-accent-primary);
+  border: 2px solid #3b82f6;
   position: relative;
   flex-shrink: 0;
 }
@@ -194,8 +195,8 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  background: linear-gradient(135deg, var(--story-accent-primary), var(--story-accent-secondary));
-  color: #1a1a2e;
+  background: linear-gradient(135deg, #3b82f6, #1d4ed8);
+  color: white;
   font-weight: 700;
   font-size: 1.25rem;
   border-radius: 50%;
@@ -209,14 +210,14 @@
 }
 
 .characterLabel {
-  color: var(--story-text-secondary);
+  color: #6b7280;
   font-size: 0.75rem;
   text-transform: uppercase;
   letter-spacing: 0.5px;
 }
 
 .characterName {
-  color: var(--story-text-primary);
+  color: #1f2937;
   font-weight: 600;
   font-size: 0.95rem;
 }
@@ -225,8 +226,8 @@
 .useButton {
   width: 100%;
   padding: 0.875rem;
-  background: linear-gradient(135deg, var(--story-accent-primary), var(--story-accent-secondary));
-  color: #1a1a2e;
+  background: linear-gradient(135deg, #3b82f6, #1d4ed8);
+  color: white;
   border: none;
   border-radius: 10px;
   font-weight: 600;
@@ -237,7 +238,7 @@
 
 .useButton:hover {
   transform: translateY(-2px);
-  box-shadow: 0 4px 16px rgba(255, 215, 0, 0.4);
+  box-shadow: 0 4px 16px rgba(59, 130, 246, 0.4);
 }
 
 /* ===== EMPTY STATE ===== */
@@ -248,13 +249,13 @@
   justify-content: center;
   padding: 4rem 2rem;
   text-align: center;
-  background: var(--story-bg-secondary);
-  border: 2px dashed var(--story-border-color);
+  background: #f9fafb;
+  border: 2px dashed #d1d5db;
   border-radius: 16px;
 }
 
 .emptyState p {
-  color: var(--story-text-secondary);
+  color: #6b7280;
   font-size: 1.1rem;
 }
 
@@ -266,19 +267,19 @@
   gap: 0.75rem;
   width: 100%;
   padding: 1rem;
-  background: var(--story-bg-card);
-  border: 2px dashed var(--story-border-color);
+  background: white;
+  border: 2px dashed #d1d5db;
   border-radius: 12px;
-  color: var(--story-text-primary);
+  color: #374151;
   font-weight: 600;
   cursor: pointer;
   transition: all 0.3s ease;
 }
 
 .showMoreButton:hover {
-  border-color: var(--story-accent-primary);
-  background: var(--story-accent-light);
-  color: var(--story-accent-primary);
+  border-color: #3b82f6;
+  background: #dbeafe;
+  color: #1d4ed8;
 }
 
 .buttonIcon {
@@ -306,14 +307,14 @@
 
 /* ===== TEMPLATE DETAIL MODAL ===== */
 .templateDetailModal {
-  background: var(--story-bg-card);
-  border: 1px solid var(--story-border-color);
+  background: white;
+  border: 1px solid #e5e7eb;
   border-radius: 20px;
   max-width: 700px;
   width: 100%;
   max-height: 90vh;
   overflow-y: auto;
-  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.5);
+  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
 }
 
 .modalHeader {
@@ -321,11 +322,11 @@
   justify-content: space-between;
   align-items: center;
   padding: 2rem 2rem 1rem;
-  border-bottom: 1px solid var(--story-border-color);
+  border-bottom: 1px solid #e5e7eb;
 }
 
 .modalHeader h2 {
-  color: var(--story-text-primary);
+  color: #1f2937;
   font-size: 1.75rem;
   font-weight: 600;
   margin: 0;
@@ -334,7 +335,7 @@
 .closeButton {
   background: none;
   border: none;
-  color: var(--story-text-secondary);
+  color: #6b7280;
   font-size: 2rem;
   cursor: pointer;
   padding: 0;
@@ -348,8 +349,8 @@
 }
 
 .closeButton:hover {
-  background: var(--story-accent-light);
-  color: var(--story-accent-primary);
+  background: #dbeafe;
+  color: #1d4ed8;
 }
 
 /* Modal Content */
@@ -374,10 +375,10 @@
   align-items: center;
   gap: 0.5rem;
   padding: 0.625rem 1rem;
-  background: var(--story-bg-secondary);
-  border: 1px solid var(--story-border-color);
+  background: #f9fafb;
+  border: 1px solid #e5e7eb;
   border-radius: 10px;
-  color: var(--story-text-primary);
+  color: #374151;
   font-size: 0.9rem;
   font-weight: 500;
 }
@@ -397,26 +398,26 @@
 .specDescription h3,
 .specSituation h3,
 .specCharacter h3 {
-  color: var(--story-accent-primary);
+  color: #1d4ed8;
   font-size: 1.1rem;
   font-weight: 600;
   margin: 0;
 }
 
 .specDescription p {
-  color: var(--story-text-secondary);
+  color: #6b7280;
   font-size: 1rem;
   line-height: 1.6;
   margin: 0;
 }
 
 .situationText {
-  color: var(--story-text-secondary);
+  color: #6b7280;
   font-size: 0.95rem;
   line-height: 1.6;
   padding: 1rem;
-  background: var(--story-bg-secondary);
-  border-left: 3px solid var(--story-accent-primary);
+  background: #f9fafb;
+  border-left: 3px solid #3b82f6;
   border-radius: 8px;
   font-style: italic;
   margin: 0;
@@ -427,8 +428,8 @@
   align-items: center;
   gap: 1.5rem;
   padding: 1.5rem;
-  background: var(--story-bg-secondary);
-  border: 1px solid var(--story-border-color);
+  background: #f9fafb;
+  border: 1px solid #e5e7eb;
   border-radius: 12px;
 }
 
@@ -436,7 +437,7 @@
   width: 70px;
   height: 70px;
   border-radius: 50%;
-  border: 3px solid var(--story-accent-primary);
+  border: 3px solid #3b82f6;
   position: relative;
   flex-shrink: 0;
 }
@@ -448,13 +449,13 @@
 }
 
 .characterNameLarge {
-  color: var(--story-text-primary);
+  color: #1f2937;
   font-size: 1.25rem;
   font-weight: 600;
 }
 
 .characterNote {
-  color: var(--story-text-secondary);
+  color: #6b7280;
   font-size: 0.85rem;
   font-style: italic;
 }
@@ -464,10 +465,10 @@
   align-items: center;
   gap: 0.5rem;
   padding: 1rem;
-  background: var(--story-accent-light);
-  border: 1px solid var(--story-accent-primary);
+  background: #dbeafe;
+  border: 1px solid #3b82f6;
   border-radius: 10px;
-  color: var(--story-text-primary);
+  color: #1e40af;
   font-size: 0.9rem;
   font-weight: 500;
 }
@@ -477,7 +478,7 @@
   display: flex;
   gap: 1rem;
   padding: 1.5rem 2rem 2rem;
-  border-top: 1px solid var(--story-border-color);
+  border-top: 1px solid #e5e7eb;
 }
 
 .cancelButton,
@@ -493,24 +494,24 @@
 }
 
 .cancelButton {
-  background: var(--story-bg-secondary);
-  color: var(--story-text-secondary);
-  border: 1px solid var(--story-border-color);
+  background: #f9fafb;
+  color: #6b7280;
+  border: 1px solid #e5e7eb;
 }
 
 .cancelButton:hover {
-  background: var(--story-border-color);
-  color: var(--story-text-primary);
+  background: #e5e7eb;
+  color: #374151;
 }
 
 .useTemplateButton {
-  background: linear-gradient(135deg, var(--story-accent-primary), var(--story-accent-secondary));
-  color: #1a1a2e;
+  background: linear-gradient(135deg, #3b82f6, #1d4ed8);
+  color: white;
 }
 
 .useTemplateButton:hover {
   transform: translateY(-2px);
-  box-shadow: 0 6px 20px rgba(255, 215, 0, 0.4);
+  box-shadow: 0 6px 20px rgba(59, 130, 246, 0.4);
 }
 
 /* ===== RESPONSIVE DESIGN ===== */
@@ -570,6 +571,6 @@
 .cancelButton:focus-visible,
 .useTemplateButton:focus-visible,
 .closeButton:focus-visible {
-  outline: 2px solid var(--story-accent-primary);
+  outline: 2px solid #3b82f6;
   outline-offset: 2px;
 }

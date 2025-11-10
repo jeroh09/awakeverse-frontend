@@ -13,14 +13,14 @@
 }
 
 .creationModal {
-  background: var(--story-bg-card);
-  border: 1px solid var(--story-border-color);
+  background: white;
+  border: 1px solid #e5e7eb;
   border-radius: 20px;
   max-width: 600px;
   width: 100%;
   max-height: 90vh;
   overflow-y: auto;
-  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.5);
+  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
 }
 
 .modalHeader {
@@ -28,11 +28,11 @@
   justify-content: space-between;
   align-items: center;
   padding: 2rem 2rem 1rem;
-  border-bottom: 1px solid var(--story-border-color);
+  border-bottom: 1px solid #e5e7eb;
 }
 
 .modalHeader h2 {
-  color: var(--story-text-primary);
+  color: #1f2937;
   font-size: 1.75rem;
   font-weight: 600;
   margin: 0;
@@ -41,7 +41,7 @@
 .closeButton {
   background: none;
   border: none;
-  color: var(--story-text-secondary);
+  color: #6b7280;
   font-size: 2rem;
   cursor: pointer;
   padding: 0;
@@ -55,8 +55,8 @@
 }
 
 .closeButton:hover {
-  background: var(--story-accent-light);
-  color: var(--story-accent-primary);
+  background: #dbeafe;
+  color: #1d4ed8;
 }
 
 .modalContent {
@@ -70,13 +70,13 @@
   justify-content: center;
   padding: 3rem 2rem;
   text-align: center;
-  background: var(--story-bg-secondary);
-  border: 2px dashed var(--story-border-color);
+  background: #f9fafb;
+  border: 2px dashed #d1d5db;
   border-radius: 12px;
 }
 
 .placeholderContent p {
-  color: var(--story-text-secondary);
+  color: #6b7280;
   font-size: 1rem;
   margin: 0.5rem 0;
 }
@@ -87,7 +87,7 @@
 }
 
 .templateInfo {
-  color: var(--story-accent-primary);
+  color: #1d4ed8;
   font-weight: 600;
   margin-top: 1rem;
 }
@@ -96,15 +96,15 @@
   display: flex;
   gap: 1rem;
   padding: 1.5rem 2rem 2rem;
-  border-top: 1px solid var(--story-border-color);
+  border-top: 1px solid #e5e7eb;
 }
 
 .cancelButton {
   flex: 1;
   padding: 1rem;
-  background: var(--story-bg-secondary);
-  color: var(--story-text-secondary);
-  border: 1px solid var(--story-border-color);
+  background: #f9fafb;
+  color: #6b7280;
+  border: 1px solid #e5e7eb;
   border-radius: 10px;
   font-weight: 600;
   font-size: 1rem;
@@ -113,6 +113,6 @@
 }
 
 .cancelButton:hover {
-  background: var(--story-border-color);
-  color: var(--story-text-primary);
+  background: #e5e7eb;
+  color: #374151;
 }
