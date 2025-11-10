@@ -1,25 +1,9 @@
-/* src/components/StoryMode/StoryMode_module.css - Awakeverse Dark Theme */
-
-/* ===== THEME VARIABLES (Awakeverse Dark) ===== */
+/* src/components/StoryMode/StoryMode.module.css - Night Blue Theme */
 .storyModeContainer {
-  --story-bg-primary: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%);
-  --story-bg-secondary: rgba(0, 0, 0, 0.4);
-  --story-bg-card: rgba(30, 30, 46, 0.8);
-  --story-text-primary: #e0e0e0;
-  --story-text-secondary: #aaa;
-  --story-border-color: rgba(255, 215, 0, 0.2);
-  --story-accent-primary: #FFD700;
-  --story-accent-secondary: #FFA500;
-  --story-accent-light: rgba(255, 215, 0, 0.1);
-  --story-shadow: rgba(255, 215, 0, 0.2);
-  --story-error-color: #e74c3c;
-  --story-success-color: #2ecc71;
-  
-  background: var(--story-bg-primary);
-  color: var(--story-text-primary);
+  background: linear-gradient(135deg, #0f172a 0%, #1e293b 100%);
+  color: #e2e8f0;
   min-height: 100vh;
   font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', sans-serif;
-  transition: all 0.3s ease;
 }
 
 /* ===== LAYOUT ===== */
@@ -35,7 +19,7 @@
 }
 
 .templatesSection {
-  border-bottom: 1px solid var(--story-border-color);
+  border-bottom: 1px solid #334155;
   padding-bottom: 3rem;
 }
 
@@ -53,8 +37,8 @@
 .loadingSpinner {
   width: 60px;
   height: 60px;
-  border: 4px solid var(--story-border-color);
-  border-top: 4px solid var(--story-accent-primary);
+  border: 4px solid #334155;
+  border-top: 4px solid #3b82f6;
   border-radius: 50%;
   animation: spin 1s linear infinite;
   margin-bottom: 1.5rem;
@@ -66,7 +50,7 @@
 }
 
 .loadingState p {
-  color: var(--story-text-secondary);
+  color: #94a3b8;
   font-size: 1.1rem;
 }
 
@@ -82,13 +66,13 @@
 }
 
 .errorState h3 {
-  color: var(--story-error-color);
+  color: #ef4444;
   font-size: 1.8rem;
   margin-bottom: 1rem;
 }
 
 .errorState p {
-  color: var(--story-text-secondary);
+  color: #94a3b8;
   font-size: 1rem;
   margin-bottom: 2rem;
   max-width: 500px;
@@ -97,8 +81,8 @@
 .retryButton,
 .reloadButton {
   padding: 0.75rem 2rem;
-  background: linear-gradient(135deg, var(--story-accent-primary), var(--story-accent-secondary));
-  color: #1a1a2e;
+  background: #3b82f6;
+  color: white;
   border: none;
   border-radius: 8px;
   font-weight: 600;
@@ -109,38 +93,39 @@
 
 .retryButton:hover,
 .reloadButton:hover {
+  background: #2563eb;
   transform: translateY(-2px);
-  box-shadow: 0 4px 12px var(--story-shadow);
+  box-shadow: 0 4px 12px rgba(59, 130, 246, 0.3);
 }
 
-/* ===== CRITICAL ERROR (Error Boundary) ===== */
+/* ===== CRITICAL ERROR ===== */
 .criticalError {
   display: flex;
   align-items: center;
   justify-content: center;
   min-height: 100vh;
   padding: 2rem;
-  background: var(--story-bg-primary);
+  background: linear-gradient(135deg, #0f172a 0%, #1e293b 100%);
 }
 
 .errorContent {
   max-width: 600px;
-  background: var(--story-bg-card);
+  background: #1e293b;
   padding: 3rem;
   border-radius: 16px;
-  border: 2px solid var(--story-error-color);
-  box-shadow: 0 8px 32px var(--story-shadow);
+  border: 2px solid #ef4444;
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
   text-align: center;
 }
 
 .errorContent h2 {
-  color: var(--story-error-color);
+  color: #ef4444;
   font-size: 2rem;
   margin-bottom: 1rem;
 }
 
 .errorContent p {
-  color: var(--story-text-secondary);
+  color: #94a3b8;
   font-size: 1rem;
   line-height: 1.6;
   margin-bottom: 2rem;
@@ -149,21 +134,21 @@
 .errorDetails {
   margin: 1.5rem 0;
   padding: 1rem;
-  background: rgba(0, 0, 0, 0.3);
-  border: 1px solid var(--story-border-color);
+  background: #334155;
+  border: 1px solid #475569;
   border-radius: 8px;
   text-align: left;
 }
 
 .errorDetails summary {
-  color: var(--story-text-primary);
+  color: #e2e8f0;
   cursor: pointer;
   font-weight: 600;
   margin-bottom: 0.5rem;
 }
 
 .errorDetails pre {
-  color: var(--story-text-secondary);
+  color: #94a3b8;
   font-size: 0.85rem;
   font-family: 'Monaco', 'Courier', monospace;
   white-space: pre-wrap;
@@ -207,37 +192,6 @@
   }
 }
 
-/* ===== SCROLLBAR STYLING ===== */
-::-webkit-scrollbar {
-  width: 10px;
-}
-
-::-webkit-scrollbar-track {
-  background: #0a0f1c;
-}
-
-::-webkit-scrollbar-thumb {
-  background: #1e40af;
-  border-radius: 5px;
-  border: 1px solid #0a0f1c;
-}
-
-::-webkit-scrollbar-thumb:hover {
-  background: #3b82f6;
-}
-
-html {
-  scrollbar-width: thin;
-  scrollbar-color: #1e40af #0a0f1c;
-}
-
-/* ===== ACCESSIBILITY ===== */
-.retryButton:focus-visible,
-.reloadButton:focus-visible {
-  outline: 2px solid var(--story-accent-primary);
-  outline-offset: 2px;
-}
-
 /* ===== ANIMATIONS ===== */
 @keyframes fadeIn {
   from {
@@ -253,4 +207,22 @@ html {
 .templatesSection,
 .myStoriesSection {
   animation: fadeIn 0.5s ease;
+}
+
+/* ===== SCROLLBAR ===== */
+::-webkit-scrollbar {
+  width: 8px;
+}
+
+::-webkit-scrollbar-track {
+  background: #1e293b;
+}
+
+::-webkit-scrollbar-thumb {
+  background: #475569;
+  border-radius: 4px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: #64748b;
 }

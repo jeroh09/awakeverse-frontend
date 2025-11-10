@@ -1,4 +1,4 @@
-// src/components/StoryMode/index.jsx - Fixed Version with Correct Subscription Structure
+// src/components/StoryMode/index.jsx - Clean version with app theme
 import React, { useState, useEffect, useCallback } from 'react';
 import { useUser } from '../../contexts/UserContext';
 import SubscriptionService from '../../services/SubscriptionService';
@@ -6,12 +6,12 @@ import DefensiveStoryWrapper from './DefensiveStoryWrapper';
 import TemplatesGallery from './TemplatesGallery';
 import MyStoriesPanel from './MyStoriesPanel';
 import StoryWindow from './StoryWindow';
-import styles from './StoryMode_module.css';
+import styles from './StoryMode.module.css';
 
 export default function StoryModeTab() {
   const { user } = useUser();
   
-  // Subscription state - matching ScenariosTab structure
+  // Subscription state
   const [subscriptionData, setSubscriptionData] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
@@ -22,7 +22,7 @@ export default function StoryModeTab() {
   // Stories refresh trigger
   const [storiesRefreshKey, setStoriesRefreshKey] = useState(0);
 
-  // Fetch subscription data using SubscriptionService - FIXED to match ScenariosTab
+  // Fetch subscription data using SubscriptionService
   const loadSubscriptionData = useCallback(async () => {
     if (!user?.id) {
       setLoading(false);
@@ -32,7 +32,6 @@ export default function StoryModeTab() {
     try {
       console.log('🔍 Story Mode: Loading subscription data for user:', user.id);
       
-      // ✅ FIXED: Use correct method name that exists
       const data = await SubscriptionService.getUserSubscriptionStatus(user.id);
       
       console.log('✅ Story Mode - Subscription loaded:', {
@@ -45,21 +44,18 @@ export default function StoryModeTab() {
       if (data.status === 'success' && data.subscription) {
         setSubscriptionData(data);
         
-        // Check subscription status (for logging only - not gating access)
         const hasUnlimited = data.subscription.tier === 'unlimited' || 
                            data.subscription.tier_name === 'unlimited' ||
                            data.subscription.unlimited === true;
         
         console.log('📖 Story Mode Access:', hasUnlimited ? 'PREMIUM' : 'STANDARD');
       } else {
-        // Use fallback data like ScenariosTab
         console.warn('⚠️ Story Mode: Using fallback subscription data');
         const fallback = SubscriptionService.getFallbackSubscriptionData();
         setSubscriptionData(fallback);
       }
     } catch (error) {
       console.error('❌ Story Mode: Failed to load subscription:', error);
-      // Use fallback like ScenariosTab
       const fallback = SubscriptionService.getFallbackSubscriptionData();
       setSubscriptionData(fallback);
     } finally {
@@ -82,7 +78,6 @@ export default function StoryModeTab() {
   const handleStoryClose = useCallback(() => {
     console.log('📖 Closing story');
     setActiveStory(null);
-    // Refresh stories list
     setStoriesRefreshKey(prev => prev + 1);
   }, []);
 
@@ -98,14 +93,7 @@ export default function StoryModeTab() {
     setStoriesRefreshKey(prev => prev + 1);
   }, []);
 
-  // Handle upgrade required (not gated for now)
-  const handleUpgradeRequired = useCallback((reason) => {
-    console.log('⚠️ Upgrade required:', reason);
-    // For now, Story Mode is not gated
-    // In the future, add upgrade modal here if needed
-  }, []);
-
-  // DEFENSIVE: Show loading until subscription is loaded - matching ScenariosTab pattern
+  // Loading state
   if (loading) {
     return (
       <DefensiveStoryWrapper>
@@ -148,7 +136,7 @@ export default function StoryModeTab() {
     );
   }
 
-  // MAIN CONTENT - Story Mode is not gated, so always show
+  // Main story mode interface
   return (
     <DefensiveStoryWrapper>
       <div className={styles.storyModeContainer}>
@@ -157,7 +145,6 @@ export default function StoryModeTab() {
           <section className={styles.templatesSection}>
             <TemplatesGallery
               onStoryCreated={handleStoryCreated}
-              onUpgradeRequired={handleUpgradeRequired}
             />
           </section>
 
