@@ -477,6 +477,54 @@ export const updateUserProfile = async (userData) => {
 };
 
 // ============================================================================
+// STORY MODE API (cookie auth + CSRF via interceptors)
+// ============================================================================
+
+export const getStoryTemplates = async () => {
+  try {
+    const response = await api.get('/stories/templates');
+    // Expect: { templates: [...] }
+    return { status: 'success', ...response.data };
+  } catch (error) {
+    console.error('❌ getStoryTemplates error:', error);
+    return {
+      status: 'error',
+      error: error.response?.data?.error || error.message || 'Failed to fetch story templates'
+    };
+  }
+};
+
+export const createStory = async (payload) => {
+  try {
+    // Expect: { success: true, story_id, story, constraints }
+    const response = await api.post('/stories/create', payload);
+    return { status: 'success', ...response.data };
+  } catch (error) {
+    console.error('❌ createStory error:', error);
+    return {
+      status: 'error',
+      error: error.response?.data?.error || error.message || 'Failed to create story'
+    };
+  }
+};
+
+export const getMyStoriesStories = async ({ status = 'active', limit = 20, offset = 0 } = {}) => {
+  try {
+    const response = await api.get(`/stories/my-stories?status=${encodeURIComponent(status)}&limit=${limit}&offset=${offset}`);
+    // Expect: { stories: [...], count, limit }
+    return { status: 'success', ...response.data };
+  } catch (error) {
+    console.error('❌ getMyStoriesStories error:', error);
+    return {
+      status: 'error',
+      error: error.response?.data?.error || error.message || 'Failed to fetch stories',
+      stories: []
+    };
+  }
+};
+
+
+// ============================================================================
 // CHAT & DISCOVERY METHODS (FIXED)
 // ============================================================================
 
