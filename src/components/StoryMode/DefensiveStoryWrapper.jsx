@@ -1,6 +1,6 @@
 // src/components/StoryMode/DefensiveStoryWrapper.jsx - Error Boundary
 import React from 'react';
-import styles from './StoryMode_module.css';
+import styles from './StoryMode.module.css';
 
 class DefensiveStoryWrapper extends React.Component {
   constructor(props) {
