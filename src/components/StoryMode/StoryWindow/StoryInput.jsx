@@ -1,48 +1,55 @@
-// src/components/StoryMode/StoryWindow/StoryInput.jsx - UPDATED
-import React, { useState, useRef, useEffect } from 'react';
+// src/components/StoryMode/StoryWindow/StoryInput.jsx
+import React, { useState, useRef, useEffect, useCallback } from 'react';
 import { Send, Square } from 'lucide-react';
 import styles from './StoryWindow.module.css';
 
-export default function StoryInput({ onSendMessage, isSending, isStreaming, onCancelStreaming, placeholder = "Continue the story..." }) {
+/**
+ * Props:
+ * - onSendMessage(text: string)
+ * - isSending: boolean    // network in-flight (create, context, etc.)
+ * - isStreaming: boolean  // model is currently streaming a reply
+ * - onCancelStreaming(): void
+ * - placeholder?: string
+ */
+export default function StoryInput({
+  onSendMessage,
+  isSending = false,
+  isStreaming = false,
+  onCancelStreaming,
+  placeholder = 'Continue the story...'
+}) {
   const [inputText, setInputText] = useState('');
   const textareaRef = useRef(null);
 
-  // Auto-resize textarea
-  useEffect(() => {
-    const textarea = textareaRef.current;
-    if (textarea) {
-      textarea.style.height = 'auto';
-      textarea.style.height = `${textarea.scrollHeight}px`;
-      
-      if (textarea.scrollHeight > 120) {
-        textarea.style.height = '120px';
-      }
-    }
-  }, [inputText]);
+  // Auto-resize textarea (clamped to 6 lines approx)
+  const resize = useCallback(() => {
+    const ta = textareaRef.current;
+    if (!ta) return;
+    ta.style.height = 'auto';
+    const max = 120; // px cap
+    ta.style.height = Math.min(ta.scrollHeight, max) + 'px';
+  }, []);
 
-  const handleSend = () => {
-    const trimmed = inputText.trim();
-    if (!trimmed || isSending) return;
+  useEffect(() => { resize(); }, [inputText, resize]);
 
-    onSendMessage(trimmed);
+  const resetTextarea = () => {
+    const ta = textareaRef.current;
+    if (ta) ta.style.height = 'auto';
+  };
+
+  const send = () => {
+    const text = inputText.trim();
+    if (!text || isSending) return;
+    onSendMessage?.(text);
     setInputText('');
-    
-    // Reset textarea height
-    if (textareaRef.current) {
-      textareaRef.current.style.height = 'auto';
-    }
+    resetTextarea();
   };
 
-  const handleCancel = () => {
-    if (onCancelStreaming) {
-      onCancelStreaming();
-    }
-  };
-
-  const handleKeyPress = (e) => {
+  const onKeyDown = (e) => {
+    // Enter to send, Shift+Enter for newline
     if (e.key === 'Enter' && !e.shiftKey) {
       e.preventDefault();
-      handleSend();
+      send();
     }
   };
 
@@ -55,32 +62,32 @@ export default function StoryInput({ onSendMessage, isSending, isStreaming, onCa
           placeholder={placeholder}
           value={inputText}
           onChange={(e) => setInputText(e.target.value)}
-          onKeyPress={handleKeyPress}
+          onKeyDown={onKeyDown}
           rows={1}
           disabled={isSending}
           aria-label="Continue the story"
+          spellCheck
         />
-        
+
         {isStreaming ? (
           <button
             className={styles.stopButton}
-            onClick={handleCancel}
+            onClick={onCancelStreaming}
             aria-label="Stop streaming"
+            type="button"
           >
             <Square size={18} />
           </button>
         ) : (
           <button
             className={styles.sendButton}
-            onClick={handleSend}
+            onClick={send}
             disabled={isSending || !inputText.trim()}
             aria-label="Send message"
+            type="button"
+            title={inputText.trim() ? 'Send (Enter)' : 'Type a message'}
           >
-            {isSending ? (
-              <div className={styles.sendingSpinner}></div>
-            ) : (
-              <Send size={18} />
-            )}
+            {isSending ? <div className={styles.sendingSpinner} /> : <Send size={18} />}
           </button>
         )}
       </div>

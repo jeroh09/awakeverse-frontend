@@ -1,5 +1,5 @@
 // src/components/StoryMode/StoryWindow/index.jsx - UPDATED
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import StoryHeader from './StoryHeader';
 import StoryMessages from './StoryMessages';
 import StoryInput from './StoryInput';
@@ -11,10 +11,13 @@ export default function StoryWindow({ story, onClose }) {
   const [messages, setMessages] = useState([]);
   const [showInviteSuggestion, setShowInviteSuggestion] = useState(false);
   const [availableCharacters, setAvailableCharacters] = useState([]);
+  const [isStreaming, setIsStreaming] = useState(false); // ADD THIS
+  const abortRef = useRef(null); // ADD THIS
   
   // Use YOUR API hook
   const { 
     sendMessage, 
+    sendMessageStream,
     inviteCharacter, 
     getStoryContext,
     loading,        // Use hook's loading state
@@ -64,41 +67,59 @@ export default function StoryWindow({ story, onClose }) {
     initializeStory();
   }, [story?.id, getStoryContext]);
 
-  // Handle sending messages using YOUR sendMessage API
-  const handleSendMessage = async (messageText) => {
-  
-    try {
-      // Use YOUR sendMessage method - follows exact API mapping
-      const data = await sendMessage(story.id, messageText);
-      
-      
-      console.log('✅ Message sent response:', data);
+    // Replace the entire handleSendMessage function with this:
+  const handleSendMessage = async (inputValue) => {
+    if (!inputValue.trim() || isStreaming) return;
 
-      // Handle response based on YOUR API structure
-      if (data.success) {
-        // Add user message to UI immediately
-        const userMessage = {
-          role: 'user',
-          content: messageText,
-          timestamp: new Date().toISOString()
-        };
-        
-        // Add character response from API
-        if (data.message) {
-          const characterMessage = {
-            ...data.message,
-            timestamp: data.message.created_at || new Date().toISOString()
-          };
-          setMessages(prev => [...prev, userMessage, characterMessage]);
-        } else {
-          // Fallback if no message object (shouldn't happen with your API)
-          setMessages(prev => [...prev, userMessage]);
-        }
-      }
-    } catch (err) {
-      console.error('❌ Message send failed:', err);
+    // append user message immediately
+    setMessages(prev => [...prev, { id: `u_${Date.now()}`, role: 'user', content: inputValue }]);
+
+    // append placeholder assistant bubble (live-updating)
+    const liveId = `a_${Date.now()}`;
+    setMessages(prev => [...prev, { id: liveId, role: 'assistant', content: '', isLive: true }]);
+
+
+    const userText = inputValue;
+    setIsStreaming(true);
+    abortRef.current = new AbortController();
+
+    try {
+      await sendMessageStream(story.id, userText, {
+        onDelta: (accumText) => {
+          // update the last message (assistant live bubble)
+          setMessages(prev => {
+            const next = [...prev];
+            const idx = next.findIndex(m => m.id === liveId);
+            if (idx >= 0) next[idx] = { ...next[idx], content: accumText };
+            return next;
+          });
+        },
+        onDone: (finalObj, fullText) => {
+          setIsStreaming(false);
+          abortRef.current = null;
+
+          // Optionally: reconcile with final envelope (state_update, banners, ending)
+          // Example: apply momentum score or banners to local state here using finalObj
+        },
+        onError: (msg) => {
+          setIsStreaming(false);
+          abortRef.current = null;
+          // turn the live bubble into an error note
+          setMessages(prev => {
+            const next = [...prev];
+            const idx = next.findIndex(m => m.id === liveId);
+            if (idx >= 0) next[idx] = { ...next[idx], content: '⚠️ Stream failed: ' + msg };
+            return next;
+          });
+        },
+        signal: abortRef.current.signal
+      });
+    } catch (e) {
+      // already handled by onError; nothing else required
     }
   };
+
+  const handleStop = () => abortRef.current?.abort();
 
   // Handle invite character using YOUR inviteCharacter API
   const handleInviteCharacter = async (characterKey) => {
@@ -201,6 +222,8 @@ export default function StoryWindow({ story, onClose }) {
           onSendMessage={handleSendMessage}
           isSending={loading}
           placeholder={`Continue the story with ${story.main_character_key}...`}
+          isStreaming={isStreaming}
+          onCancelStreaming={handleStop}
         />
       </div>
     </div>

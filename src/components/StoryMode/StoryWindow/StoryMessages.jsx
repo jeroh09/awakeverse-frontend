@@ -1,85 +1,103 @@
-// src/components/StoryMode/StoryWindow/StoryMessages.jsx - Message History
-import React, { useRef, useEffect } from 'react';
+// src/components/StoryMode/StoryWindow/StoryMessages.jsx
+import React, { useRef, useEffect, useCallback } from 'react';
 import { VariableSizeList as List } from 'react-window';
 import AutoSizer from 'react-virtualized-auto-sizer';
 import styles from './StoryWindow.module.css';
 
 const API_BASE = process.env.REACT_APP_API_URL || 'https://api.awakeverse.com';
 
-// Message Item Component
-function MessageItem({ message, characterKey, style }) {
-  const messageRef = useRef(null);
+/**
+ * Message shape expected:
+ * { id?: string, role: 'user'|'assistant'|'system', content: string,
+ *   character_key?: string, speaker?: string, isLive?: boolean }
+ *
+ * Props:
+ * - messages: Message[]
+ * - characterKey: string (fallback for assistant avatar/name)
+ * - openingBanner?: string  // optional: shown when messages.length === 0
+ */
+function MessageItem({ message, characterKey, style, onSizeChange }) {
+  const containerRef = useRef(null);
+
+  // Observe height and report to virtual list
+  useEffect(() => {
+    if (!containerRef.current || !onSizeChange) return;
+    const el = containerRef.current;
+
+    // Initial measure
+    onSizeChange(el.getBoundingClientRect().height || 120);
+
+    // Resize observer for dynamic growth (e.g., streaming)
+    const ro = new ResizeObserver((entries) => {
+      for (const entry of entries) {
+        onSizeChange(entry.contentRect.height || 120);
+      }
+    });
+    ro.observe(el);
+    return () => ro.disconnect();
+  }, [onSizeChange]);
 
   if (message.role === 'user') {
-    // User message (right-aligned)
     return (
       <div style={style}>
-        <div className={styles.messageWrapper}>
+        <div ref={containerRef} className={styles.messageWrapper}>
           <div className={styles.userMessage}>
-            <div 
-              ref={messageRef}
-              className={styles.messageContent}
-            >
-              {message.content}
-            </div>
-          </div>
-        </div>
-      </div>
-    );
-  } else if (message.role === 'system') {
-    // System message (centered)
-    return (
-      <div style={style}>
-        <div className={styles.messageWrapper}>
-          <div className={styles.systemMessage}>
-            {message.content}
-          </div>
-        </div>
-      </div>
-    );
-  } else {
-    // Character message (left-aligned with avatar)
-    const speaker = message.character_key || characterKey;
-    const speakerName = speaker.charAt(0).toUpperCase() + speaker.slice(1);
-    
-    return (
-      <div style={style}>
-        <div className={styles.messageWrapper}>
-          <div className={styles.characterMessage}>
-            <img
-              src={`${API_BASE}/character_images/${speaker}.jpg`}
-              alt={speakerName}
-              className={styles.characterAvatar}
-              onError={(e) => {
-                e.target.style.display = 'none';
-                e.target.nextSibling.style.display = 'flex';
-              }}
-            />
-            <div 
-              className={styles.characterAvatarFallback}
-              style={{ display: 'none' }}
-            >
-              {speakerName.charAt(0)}
-            </div>
-            
-            <div className={styles.messageContent}>
-              <div className={styles.speakerName}>{speakerName}</div>
-              <div 
-                ref={messageRef}
-                className={styles.messageText}
-              >
-                {message.content}
-              </div>
-            </div>
+            <div className={styles.messageContent}>{message.content}</div>
           </div>
         </div>
       </div>
     );
   }
+
+  if (message.role === 'system') {
+    return (
+      <div style={style}>
+        <div ref={containerRef} className={styles.messageWrapper}>
+          <div className={styles.systemMessage}>{message.content}</div>
+        </div>
+      </div>
+    );
+  }
+
+  // assistant / character
+  const speakerKey = message.character_key || message.speaker || characterKey || 'assistant';
+  const speakerName = (speakerKey || '')
+    .replace(/[_-]+/g, ' ')
+    .replace(/\b\w/g, (c) => c.toUpperCase()) || 'Assistant';
+
+  return (
+    <div style={style}>
+      <div ref={containerRef} className={styles.messageWrapper}>
+        <div className={styles.characterMessage}>
+          <img
+            src={`${API_BASE}/character_images/${speakerKey}.jpg`}
+            alt={speakerName}
+            className={styles.characterAvatar}
+            onError={(e) => {
+              const img = e.currentTarget;
+              img.style.display = 'none';
+              const fallback = img.nextElementSibling;
+              if (fallback) fallback.style.display = 'flex';
+            }}
+          />
+          <div className={styles.characterAvatarFallback} style={{ display: 'none' }}>
+            {speakerName.charAt(0)}
+          </div>
+
+          <div className={styles.messageContent}>
+            <div className={styles.speakerName}>{speakerName}</div>
+            <div className={styles.messageText}>
+              {message.content}
+              {message.isLive && <span className={styles.caretBlink}>▍</span>}
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
 }
 
-// Main Messages Component
-export default function StoryMessages({ messages, characterKey }) {
+export default function StoryMessages({ messages, characterKey, openingBanner }) {
   const listRef = useRef(null);
   const sizeMapRef = useRef({});
 
@@ -90,32 +108,41 @@ export default function StoryMessages({ messages, characterKey }) {
     }
   }, [messages.length]);
 
-  // Calculate item size based on content
-  const getItemSize = (index) => {
-    return sizeMapRef.current[index] || 120; // Default height
-  };
+  // Virtual list size plumbing
+  const getItemSize = useCallback(
+    (index) => sizeMapRef.current[index] || 120,
+    []
+  );
 
-  const setItemSize = (index, size) => {
-    sizeMapRef.current[index] = size;
+  const setItemSize = useCallback((index, size) => {
+    sizeMapRef.current[index] = Math.max(60, size); // minimum height
     if (listRef.current) {
-      listRef.current.resetAfterIndex(index);
+      // resetAfterIndex ensures react-window recalculates subsequent items
+      listRef.current.resetAfterIndex(index, false);
     }
-  };
+  }, []);
 
-  // Empty state
+  // Empty state with optional opening banner
   if (messages.length === 0) {
     return (
       <div className={styles.messagesContainer}>
-        <div className={styles.emptyMessages}>
-          <div className={styles.emptyIcon}>📖</div>
-          <h3>Begin Your Story</h3>
-          <p>Your adventure awaits. Send your first message to start the journey.</p>
-        </div>
+        {openingBanner ? (
+          <div className={styles.openingBanner}>
+            <div className={styles.openingIcon}>✨</div>
+            <div className={styles.openingText}>{openingBanner}</div>
+            <div className={styles.openingHint}>Send a message to begin…</div>
+          </div>
+        ) : (
+          <div className={styles.emptyMessages}>
+            <div className={styles.emptyIcon}>📖</div>
+            <h3>Begin Your Story</h3>
+            <p>Your adventure awaits. Send your first message to start the journey.</p>
+          </div>
+        )}
       </div>
     );
   }
 
-  // Messages list with virtualization
   return (
     <div className={styles.messagesContainer}>
       <AutoSizer>
@@ -131,13 +158,12 @@ export default function StoryMessages({ messages, characterKey }) {
           >
             {({ index, style }) => {
               const message = messages[index];
-              
               return (
                 <MessageItem
                   message={message}
                   characterKey={characterKey}
                   style={style}
-                  onSizeChange={(size) => setItemSize(index, size)}
+                  onSizeChange={(h) => setItemSize(index, h)}
                 />
               );
             }}

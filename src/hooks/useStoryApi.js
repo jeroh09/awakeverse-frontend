@@ -98,6 +98,64 @@ export default function useStoryApi() {
     });
   }, [request]);
 
+    // Send message with true streaming (NDJSON)
+  const sendMessageStream = useCallback(async (storyId, content, { onDelta, onDone, onError, signal } = {}) => {
+    const params = new URLSearchParams({ stream: '1' });
+
+    const res = await fetch(`${API_BASE}/api/stories/${storyId}/message?` + params.toString(), {
+      method: 'POST',
+      credentials: 'include',
+      headers: {
+        'Content-Type': 'application/json',
+        'X-CSRF-Token': getCsrfToken()
+      },
+      body: JSON.stringify({ content }),
+      signal
+    });
+
+    if (!res.ok || !res.body) {
+      const msg = `HTTP ${res.status}`;
+      onError?.(msg);
+      throw new Error(msg);
+    }
+
+    const reader = res.body.getReader();
+    const decoder = new TextDecoder();
+    let buf = '';
+    let full = '';
+
+    try {
+      while (true) {
+        const { value, done } = await reader.read();
+        if (done) break;
+        buf += decoder.decode(value, { stream: true });
+
+        let idx;
+        while ((idx = buf.indexOf('\n')) >= 0) {
+          const line = buf.slice(0, idx).trim();
+          buf = buf.slice(idx + 1);
+          if (!line) continue;
+
+          let obj;
+          try { obj = JSON.parse(line); } catch { continue; }
+
+          if (obj.delta != null) {
+            full += obj.delta;
+            onDelta?.(full);
+          } else if (obj.done) {
+            onDone?.(obj, full);
+          } else if (obj.error) {
+            onError?.(obj.detail || 'stream_failed');
+          }
+        }
+      }
+    } catch (e) {
+      onError?.(e?.message || 'stream_aborted');
+      throw e;
+    }
+  }, [getCsrfToken]);
+
+
   // Invite character to story
   const inviteCharacter = useCallback(async (storyId, characterKey) => {
     return request(`${API_BASE}/api/stories/${storyId}/invite`, {
@@ -124,6 +182,7 @@ export default function useStoryApi() {
     updateStory,
     deleteStory,
     sendMessage,
+    sendMessageStream,
     inviteCharacter,
     resumeStory
   };
