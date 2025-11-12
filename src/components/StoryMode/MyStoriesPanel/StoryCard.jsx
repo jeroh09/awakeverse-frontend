@@ -1,9 +1,19 @@
 // src/components/StoryMode/MyStoriesPanel/StoryCard.jsx
 import React from 'react';
+import { characterCategories } from '../../../data/characterCategories';
 import styles from './MyStoriesPanel.module.css';
 
 const API_BASE = process.env.REACT_APP_API_URL || 'https://api.awakeverse.com';
 
+// Same helper function as in StoryTemplateCard
+const getCharacterInfo = (charKey) => {
+  for (const category of characterCategories) {
+    const found = category.characters?.find(c => c.key === charKey);
+    if (found) return { name: found.name, thumbnailUrl: found.thumbnailUrl };
+  }
+  // graceful fallback
+  return { name: (charKey || '').replace(/[_-]+/g,' ').replace(/\b\w/g,c=>c.toUpperCase()), thumbnailUrl: null };
+};
 
 export default function StoryCard({ 
   story, 
@@ -45,11 +55,6 @@ export default function StoryCard({
     return eraMap[normalizedEra] || era;
   };
 
-  // Get character thumbnail
-  const getCharacterThumbnail = (characterKey) => {
-    return `${API_BASE}/character_images/${characterKey}.jpg`;
-  };
-
   // Get era badge color
   const getEraBadgeColor = (era) => {
     const eraColors = {
@@ -87,8 +92,10 @@ export default function StoryCard({
 
   // Check if story is paused
   const isPaused = story.status === 'paused';
-  const characterKey = story.main_character_key || 'sherlock';
-  const characterName = characterKey.charAt(0).toUpperCase() + characterKey.slice(1);
+  
+  // Character resolution using same helper as templates
+  const characterKey = story.main_character_key || null;
+  const { name: characterName, thumbnailUrl } = characterKey ? getCharacterInfo(characterKey) : { name: 'Your Character', thumbnailUrl: null };
   const eraBadgeColor = getEraBadgeColor(story.era);
 
   return (
@@ -136,15 +143,17 @@ export default function StoryCard({
       <div className={styles.characterPreview}>
         <div 
           className={styles.characterAvatar}
-          style={{
-            backgroundImage: `url(${getCharacterThumbnail(characterKey)})`,
+          style={thumbnailUrl ? {
+            backgroundImage: `url(${thumbnailUrl})`,
             backgroundSize: 'cover',
             backgroundPosition: 'center'
-          }}
+          } : {}}
         >
-          <span className={styles.avatarFallback}>
-            {characterName.charAt(0)}
-          </span>
+          {!thumbnailUrl && (
+            <span className={styles.avatarFallback}>
+              {characterName.charAt(0)}
+            </span>
+          )}
         </div>
         <div className={styles.characterInfo}>
           <span className={styles.characterLabel}>Main Character</span>

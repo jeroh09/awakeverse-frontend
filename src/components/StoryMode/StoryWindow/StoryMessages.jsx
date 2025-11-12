@@ -2,9 +2,18 @@
 import React, { useRef, useEffect, useCallback } from 'react';
 import { VariableSizeList as List } from 'react-window';
 import AutoSizer from 'react-virtualized-auto-sizer';
+import { characterCategories } from '../../../data/characterCategories';
 import styles from './StoryWindow.module.css';
 
-const API_BASE = process.env.REACT_APP_API_URL || 'https://api.awakeverse.com';
+// Same helper function as in other components
+const getCharacterInfo = (charKey) => {
+  for (const category of characterCategories) {
+    const found = category.characters?.find(c => c.key === charKey);
+    if (found) return { name: found.name, thumbnailUrl: found.thumbnailUrl };
+  }
+  // graceful fallback
+  return { name: (charKey || '').replace(/[_-]+/g,' ').replace(/\b\w/g,c=>c.toUpperCase()), thumbnailUrl: null };
+};
 
 /**
  * Message shape expected:
@@ -61,27 +70,25 @@ function MessageItem({ message, characterKey, style, onSizeChange }) {
 
   // assistant / character
   const speakerKey = message.character_key || message.speaker || characterKey || 'assistant';
-  const speakerName = (speakerKey || '')
-    .replace(/[_-]+/g, ' ')
-    .replace(/\b\w/g, (c) => c.toUpperCase()) || 'Assistant';
+  const { name: speakerName, thumbnailUrl } = getCharacterInfo(speakerKey);
 
   return (
     <div style={style}>
       <div ref={containerRef} className={styles.messageWrapper}>
         <div className={styles.characterMessage}>
-          <img
-            src={`${API_BASE}/character_images/${speakerKey}.jpg`}
-            alt={speakerName}
+          <div 
             className={styles.characterAvatar}
-            onError={(e) => {
-              const img = e.currentTarget;
-              img.style.display = 'none';
-              const fallback = img.nextElementSibling;
-              if (fallback) fallback.style.display = 'flex';
-            }}
-          />
-          <div className={styles.characterAvatarFallback} style={{ display: 'none' }}>
-            {speakerName.charAt(0)}
+            style={thumbnailUrl ? {
+              backgroundImage: `url(${thumbnailUrl})`,
+              backgroundSize: 'cover',
+              backgroundPosition: 'center'
+            } : {}}
+          >
+            {!thumbnailUrl && (
+              <span className={styles.avatarFallback}>
+                {speakerName.charAt(0)}
+              </span>
+            )}
           </div>
 
           <div className={styles.messageContent}>
@@ -123,14 +130,17 @@ export default function StoryMessages({ messages, characterKey, openingBanner })
   }, []);
 
   // Empty state with optional opening banner
+    // Empty state with optional opening banner
   if (messages.length === 0) {
     return (
       <div className={styles.messagesContainer}>
         {openingBanner ? (
           <div className={styles.openingBanner}>
-            <div className={styles.openingIcon}>✨</div>
-            <div className={styles.openingText}>{openingBanner}</div>
-            <div className={styles.openingHint}>Send a message to begin…</div>
+            <div className={styles.bannerContent}>
+              <div className={styles.bannerIcon}>🎭</div>
+              <div className={styles.bannerText}>{openingBanner}</div>
+              <div className={styles.bannerHint}>Send a message to begin your adventure…</div>
+            </div>
           </div>
         ) : (
           <div className={styles.emptyMessages}>

@@ -1,11 +1,22 @@
 // src/components/StoryMode/StoryWindow/index.jsx - UPDATED
 import React, { useState, useEffect, useRef } from 'react';
+import { characterCategories } from '../../../data/characterCategories';
 import StoryHeader from './StoryHeader';
 import StoryMessages from './StoryMessages';
 import StoryInput from './StoryInput';
 import InviteSuggestion from './InviteSuggestion';
 import useStoryApi from '../../../hooks/useStoryApi'; // YOUR HOOK
 import styles from './StoryWindow.module.css';
+
+// Same helper function as in other components
+const getCharacterInfo = (charKey) => {
+  for (const category of characterCategories) {
+    const found = category.characters?.find(c => c.key === charKey);
+    if (found) return { name: found.name, thumbnailUrl: found.thumbnailUrl };
+  }
+  // graceful fallback
+  return { name: (charKey || '').replace(/[_-]+/g,' ').replace(/\b\w/g,c=>c.toUpperCase()), thumbnailUrl: null };
+};
 
 export default function StoryWindow({ story, onClose }) {
   const [messages, setMessages] = useState([]);
@@ -198,6 +209,7 @@ export default function StoryWindow({ story, onClose }) {
           messages={messages}
           characterKey={story.main_character_key}
           openingBanner={openingBanner}
+          getCharacterInfo={getCharacterInfo} // Pass the helper to StoryMessages
         />
 
         {/* Error banner for non-fatal errors */}
