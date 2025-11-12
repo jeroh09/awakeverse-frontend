@@ -930,3 +930,78 @@
 
 /* 7) Subtle scrollbar + no horizontal bleed */
 .messagesContainer { overflow-x: hidden; }
+/* ================================
+   HEADER POLISH — CSS-ONLY PATCH
+   ================================ */
+
+/* Keep the header anchored and harmonized with the chat frame */
+.storyHeader {
+  position: sticky;
+  top: 0;
+  z-index: 5;
+  backdrop-filter: saturate(110%) blur(6px);
+  background: linear-gradient(180deg, rgba(12,20,38,.92), rgba(12,20,38,.65));
+  border-bottom: 1px solid rgba(207,174,92,.35);
+  padding: 12px 20px;
+  box-shadow: 0 3px 10px rgba(0,0,0,.25);
+}
+
+/* Internal wrapper (title + chips) */
+.headerInner {
+  max-width: 980px;
+  margin: 0 auto;
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 12px;
+}
+
+/* Title uses Cinzel + gold accent line */
+.storyTitle {
+  font-family: "Cinzel Decorative", serif;
+  font-size: 26px;
+  letter-spacing: 0.3px;
+  color: var(--ivory, #F2E8D5);
+  text-shadow: 0 2px 6px rgba(0,0,0,.35);
+  margin-right: 12px;
+  position: relative;
+}
+.storyTitle::after {
+  content: "";
+  position: absolute;
+  bottom: -4px;
+  left: 0;
+  width: 36px;
+  height: 2px;
+  background: linear-gradient(90deg, rgba(207,174,92,.8), transparent);
+  border-radius: 2px;
+}
+
+/* Gold-outline chips (era, character, turns) */
+.headerChip {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 5px 10px 5px 9px;
+  border: 1px solid rgba(207,174,92,.35);
+  border-radius: 999px;
+  color: var(--ivory, #F2E8D5);
+  font-size: 13px;
+  background: linear-gradient(180deg, rgba(207,174,92,.08), rgba(207,174,92,.03));
+  box-shadow: inset 0 0 8px rgba(207,174,92,.04);
+  transition: background .2s ease, transform .1s ease;
+}
+.headerChip:hover {
+  background: rgba(207,174,92,.12);
+  transform: translateY(-1px);
+}
+.headerDot {
+  width: 6px; height: 6px; border-radius: 50%;
+  background: rgba(207,174,92,.85);
+}
+
+/* Responsive tidy */
+@media (max-width: 768px) {
+  .storyHeader { padding: 10px 14px; }
+  .storyTitle { font-size: 22px; }
+}
