@@ -847,3 +847,86 @@
     font-size: 0.95rem;
   }
 }
+/* ================================
+   UX POLISH — CSS-ONLY PATCH
+   Append to bottom of StoryWindow.module.css
+   ================================ */
+
+/* 1) Draw a subtle inner frame so borders/glows stay INSIDE the window */
+.storyContainer { position: relative; } /* allow pseudo-element */
+.storyContainer::before {
+  content: "";
+  position: absolute;
+  inset: 12px 12px 84px;        /* top, sides, leave room for composer */
+  border: 1px solid rgba(207,174,92,.28);
+  border-radius: 20px;
+  pointer-events: none;
+}
+
+/* 2) Messages: keep bubbles comfortably inside the frame */
+.messagesContainer { padding: 14px 18px; }
+.messageWrapper { margin-bottom: 12px; }
+.userMessage, .characterMessage { max-width: 68%; }
+@media (max-width: 768px) {
+  .messagesContainer { padding: 10px 12px; }
+  .userMessage, .characterMessage { max-width: 86%; }
+}
+
+/* 3) Bubble visuals (slightly denser, on-brand, still readable) */
+.userMessage .messageContent {
+  padding: 0.9rem 1.1rem;
+  border-radius: 14px 14px 4px 14px;
+  box-shadow: 0 2px 10px rgba(0,0,0,.22);
+}
+.messageText {
+  padding: 0.9rem 1.1rem;
+  border-radius: 4px 14px 14px 14px;
+  box-shadow: 0 2px 10px rgba(0,0,0,.22);
+}
+
+/* 4) Opening banner: render like a polished AI bubble (readable on night blue) */
+.openingBanner { padding: 16px; }
+.bannerContent {
+  background: rgba(20,26,42,.92);
+  border: 1px solid rgba(207,174,92,.38);
+  border-radius: 16px;
+  padding: 20px 22px;
+  max-width: 720px;
+}
+.bannerText { color: #e9e5d8; line-height: 1.55; }
+.bannerHint { color: #CFAE5C; }
+
+/* 5) Composer: compact, pill-like, no sprawling height */
+.storyInputContainer { padding: 10px 18px 18px; }
+.inputArea { gap: 10px; align-items: center; }
+
+.textInput {
+  min-height: 44px;            /* was 56px */
+  max-height: 96px;            /* was 120px */
+  padding: 10px 12px;          /* slightly tighter */
+  border-radius: 999px;        /* pill */
+  background: rgba(10,14,24,.7);
+  border: 1px solid rgba(207,174,92,.35);
+}
+
+.sendButton, .stopButton {
+  height: 44px;                /* was 56px */
+  min-width: 44px;             /* was 56px */
+  padding: 0 10px;
+  border-radius: 999px;
+}
+.sendButton:hover:not(:disabled),
+.stopButton:hover:not(:disabled) {
+  transform: translateY(-1px);
+  box-shadow: 0 6px 18px rgba(207,174,92,.22);
+}
+.sendingSpinner { width: 16px; height: 16px; }
+
+/* 6) Avatars: keep tidy, don’t spill */
+.characterAvatar,
+.characterAvatarFallback {
+  width: 42px; height: 42px; border-width: 1px;
+}
+
+/* 7) Subtle scrollbar + no horizontal bleed */
+.messagesContainer { overflow-x: hidden; }
