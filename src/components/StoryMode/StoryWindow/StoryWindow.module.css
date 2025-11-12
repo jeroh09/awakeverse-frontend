@@ -1005,3 +1005,12 @@
   .storyHeader { padding: 10px 14px; }
   .storyTitle { font-size: 22px; }
 }
+.headerContent {
+  width: 100%;
+  max-width: 980px;          /* same width as chat frame */
+  margin: 0 auto;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+}

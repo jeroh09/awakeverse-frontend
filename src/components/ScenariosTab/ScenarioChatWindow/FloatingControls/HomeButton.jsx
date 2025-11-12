@@ -1,7 +1,6 @@
 import React from 'react';
 import { Home } from 'lucide-react';
 import './FloatingControls.css';
-
 /**
  * HomeButton - Floating home icon to return to ChatLauncher
  * 
