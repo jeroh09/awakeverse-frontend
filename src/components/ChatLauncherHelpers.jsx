@@ -265,14 +265,16 @@ export const CategoryCard = ({
 };
 
 /* ------------------------------ CharacterCard --------------------------- */
-/* ------------------------------ CharacterCard (Updated with Publish Button) --------------------------- */
+// src/components/ChatLauncherHelpers.jsx - UPDATED CharacterCard
+
+/* ------------------------------ CharacterCard (Image-Dominant Design) --------------------------- */
 export const CharacterCard = ({
   character,          // { key, name, description, thumbnailUrl, status, rejection_reason, id, is_market_featured }
   onClick,            // (character) => void
   index = 0,
   isMobile,
   showStatusIndicator = false,
-  onPublishToggle     // NEW: Callback when publish state changes
+  onPublishToggle     // Callback when publish state changes
 }) => {
   const getStatusIndicator = () => {
     if (!showStatusIndicator || !character?.status || character.status === 'approved') return null;
@@ -286,143 +288,151 @@ export const CharacterCard = ({
     return (
       <div style={{
         position: 'absolute',
-        top: isMobile ? '-6px' : '-8px',
-        right: isMobile ? '-6px' : '-8px',
+        top: '12px',
+        right: '12px',
         background: config.color,
         color: '#fff',
-        fontSize: isMobile ? '0.6rem' : '0.7rem',
+        fontSize: '0.7rem',
         fontWeight: 'bold',
-        padding: isMobile ? '1px 4px' : '2px 6px',
-        borderRadius: isMobile ? '6px' : '8px',
+        padding: '4px 8px',
+        borderRadius: '8px',
         display: 'flex',
         alignItems: 'center',
-        gap: '2px',
-        zIndex: 1,
+        gap: '4px',
+        zIndex: 2,
         border: '2px solid #0B1426',
         whiteSpace: 'nowrap'
       }}>
-        <span style={{ fontSize: isMobile ? '0.5rem' : '0.6rem' }}>{config.icon}</span>
+        <span style={{ fontSize: '0.6rem' }}>{config.icon}</span>
         {!isMobile && config.text}
       </div>
     );
   };
 
+  // Handle image error with fallback
+  const handleImageError = (e) => {
+    e.currentTarget.style.display = 'none';
+    const parent = e.currentTarget.parentElement;
+    if (!parent.querySelector('.text-fallback')) {
+      const fallback = document.createElement('div');
+      fallback.className = 'text-fallback';
+      fallback.style.cssText = `
+        width: 100%;
+        height: 100%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        background: linear-gradient(135deg, rgba(255,215,0,0.3), rgba(255,215,0,0.1));
+        color: #FFD700;
+        font-size: 2rem;
+        font-weight: bold;
+        border-radius: 16px;
+      `;
+      fallback.textContent = (character.name || 'C').charAt(0).toUpperCase();
+      parent.appendChild(fallback);
+    }
+  };
+
   return (
     <div
       style={{
-        background: 'rgba(255, 255, 255, 0.05)',
-        border: '1px solid rgba(255, 215, 0, 0.2)',
+        position: 'relative',
+        aspectRatio: '3/4',
+        background: '#000',
+        border: '2px solid rgba(255, 215, 0, 0.3)',
         borderRadius: '16px',
-        padding: '1rem',
+        overflow: 'hidden',
         cursor: 'pointer',
         transition: 'all 0.3s ease',
         opacity: 0,
         animation: `characterSlideIn 0.6s ease-out ${index * 0.05}s forwards`,
-        minHeight: isMobile ? '180px' : '240px', // Increased height for publish button
-        display: 'flex',
-        flexDirection: 'column',
-        alignItems: 'center',
-        position: 'relative'
+        minHeight: isMobile ? '180px' : '240px'
       }}
+      onClick={() => onClick?.(character)}
       onMouseEnter={(e) => {
         if (!isMobile) {
-          e.currentTarget.style.background = 'rgba(255, 215, 0, 0.1)';
-          e.currentTarget.style.borderColor = 'rgba(255, 215, 0, 0.5)';
-          e.currentTarget.style.transform = 'translateY(-6px)';
-          e.currentTarget.style.boxShadow = '0 16px 32px rgba(255, 215, 0, 0.2)';
+          e.currentTarget.style.borderColor = 'rgba(255, 215, 0, 0.6)';
+          e.currentTarget.style.transform = 'translateY(-8px)';
+          e.currentTarget.style.boxShadow = '0 12px 30px rgba(255, 215, 0, 0.2)';
+          
+          // Scale image on hover
+          const img = e.currentTarget.querySelector('.character-image');
+          if (img) img.style.transform = 'scale(1.05)';
         }
       }}
       onMouseLeave={(e) => {
         if (!isMobile) {
-          e.currentTarget.style.background = 'rgba(255, 255, 255, 0.05)';
-          e.currentTarget.style.borderColor = 'rgba(255, 215, 0, 0.2)';
+          e.currentTarget.style.borderColor = 'rgba(255, 215, 0, 0.3)';
           e.currentTarget.style.transform = 'translateY(0)';
           e.currentTarget.style.boxShadow = 'none';
+          
+          // Reset image scale
+          const img = e.currentTarget.querySelector('.character-image');
+          if (img) img.style.transform = 'scale(1)';
         }
       }}
     >
-      {/* Status flag */}
+      {/* Character Image - Full Background */}
+      <img
+        src={character.thumbnailUrl || '/images/default-character.jpg'}
+        alt={character.name}
+        className="character-image"
+        style={{
+          width: '100%',
+          height: '100%',
+          objectFit: 'cover',
+          transition: 'transform 0.3s ease',
+          opacity: character.status === 'rejected' ? 0.6 : 1
+        }}
+        onError={handleImageError}
+      />
+
+      {/* Status Indicator */}
       {getStatusIndicator()}
 
-      {/* Avatar - clickable for details */}
-      <div 
-        onClick={() => onClick?.(character)}
-        style={{
-          width: isMobile ? '40px' : '50px',
-          height: isMobile ? '40px' : '50px',
-          borderRadius: '50%',
-          overflow: 'hidden',
-          marginBottom: '0.75rem',
-          border: '3px solid rgba(255, 215, 0, 0.3)',
-          flexShrink: 0,
-          opacity: character.status === 'rejected' ? 0.6 : 1,
-          cursor: 'pointer'
-        }}
-      >
-        <img
-          src={character.thumbnailUrl || '/images/default-character.jpg'}
-          alt={character.name}
-          style={{ width: '100%', height: '100%', objectFit: 'cover' }}
-          onError={(e) => { 
-            e.currentTarget.onError = null;
-            e.currentTarget.style.display = 'none';
-
-            const parent = e.currentTarget.parentElement;
-            if (!parent.querySelector('.text-fallback')) {
-              const fallback = document.createElement('div');
-              fallback.className = 'text-fallback';
-              fallback.style.cssText = 'width:100%;height:100%;display:flex;align-items:center;justify-content:center;background:rgba(255,215,0,0.2);color:#FFD700;font-size:1.2rem;font-weight:bold;border-radius:50%;';
-              fallback.textContent = (character.name || 'C').charAt(0).toUpperCase();
-              parent.appendChild(fallback);
-            }
-          }}
-        />
-      </div>
-
-      {/* Info - clickable for details */}
-      <div 
-        onClick={() => onClick?.(character)}
-        style={{ 
-          textAlign: 'center', 
-          flex: 1, 
-          display: 'flex', 
-          flexDirection: 'column',
-          cursor: 'pointer',
-          width: '100%'
-        }}
-      >
+      {/* Text Overlay */}
+      <div style={{
+        position: 'absolute',
+        bottom: 0,
+        left: 0,
+        right: 0,
+        background: 'linear-gradient(transparent, rgba(0, 0, 0, 0.9))',
+        padding: '1.5rem 1rem 1rem',
+        color: 'white'
+      }}>
         <h3 style={{
           color: character.status === 'approved' ? '#FFD700' : '#FFA500',
-          fontSize: isMobile ? '0.8rem' : '0.85rem',
+          fontSize: isMobile ? '0.9rem' : '1rem',
           fontWeight: 600,
           margin: '0 0 0.5rem 0',
-          letterSpacing: '0.5px',
+          fontFamily: "'Playfair Display', serif",
           lineHeight: 1.2
         }}>
           {character.name}
         </h3>
 
         <p style={{
-          color: 'rgba(255, 255, 255, 0.85)',
-          fontSize: isMobile ? '0.65rem' : '0.7rem',
+          color: 'rgba(255, 255, 255, 0.9)',
+          fontSize: isMobile ? '0.7rem' : '0.75rem',
           lineHeight: 1.3,
           margin: 0,
-          flex: 1,
           display: '-webkit-box',
           WebkitLineClamp: 2,
           WebkitBoxOrient: 'vertical',
           overflow: 'hidden'
         }}>
-          {(character.description || '').slice(0, isMobile ? 60 : 80)}{(character.description || '').length > (isMobile ? 60 : 80) ? '…' : ''}
+          {character.description || ''}
         </p>
       </div>
 
-      {/* NEW: Publish Button - not clickable for card (stops propagation) */}
+      {/* Publish Button - Positioned absolutely to not interfere with card layout */}
       <div 
         onClick={(e) => e.stopPropagation()} 
         style={{ 
-          width: '100%', 
-          marginTop: '0.75rem',
+          position: 'absolute',
+          top: '12px',
+          left: '12px',
+          zIndex: 2,
           pointerEvents: 'auto'
         }}
       >
