@@ -40,7 +40,6 @@ export default function StoryHeader({ story, onBack, onClose }) {
     <>
       {/* Transparent floating Home icon (matches Scenarios) */}
       <StoryHomeButton onClick={onBack || onClose} />
-      <HomeButton onClick={handleBack} theme="awakeverse" />
       <header className={styles.storyHeader}>
         {/* Optional inner wrapper for consistent max width with chat frame */}
         <div className={styles.headerContent}>
