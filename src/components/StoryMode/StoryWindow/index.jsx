@@ -9,6 +9,7 @@ import styles from './StoryWindow.module.css';
 
 export default function StoryWindow({ story, onClose }) {
   const [messages, setMessages] = useState([]);
+  const [openingBanner, setOpeningBanner] = useState(null);
   const [showInviteSuggestion, setShowInviteSuggestion] = useState(false);
   const [availableCharacters, setAvailableCharacters] = useState([]);
   const [isStreaming, setIsStreaming] = useState(false); // ADD THIS
@@ -36,16 +37,15 @@ export default function StoryWindow({ story, onClose }) {
         const data = await getStoryContext(story.id);
         
         // Set messages from context (empty array for now per API guide)
-        setMessages(data.messages || []);
-        // ADD THIS: If no messages but we have starting situation, create initial message
-        if ((!data.messages || data.messages.length === 0) && story.starting_situation) {
-          const initialMessage = {
-            role: 'system',
-            content: story.starting_situation,
-            timestamp: story.created_at || new Date().toISOString()
-          };
-          setMessages([initialMessage]);
-        }
+        const msgs = data.messages || [];
+         setMessages(msgs);
+
+         // Source of truth: server
+         const banner =
+           data.story?.starting_situation ||
+           data.story?.current_situation ||
+           null;
+         setOpeningBanner(banner);
         
         // TODO: Fetch available characters for invitations
         // For now, use placeholder - you'll need to implement this
@@ -197,6 +197,7 @@ export default function StoryWindow({ story, onClose }) {
         <StoryMessages
           messages={messages}
           characterKey={story.main_character_key}
+          openingBanner={openingBanner}
         />
 
         {/* Error banner for non-fatal errors */}

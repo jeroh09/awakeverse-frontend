@@ -5,6 +5,16 @@ import { characterCategories } from '../../../data/characterCategories'; // SAME
 import usePremiumCharacters from '../../../hooks/usePremiumCharacters'; // SAME HOOK
 import styles from './StoryWindow.module.css';
 
+// ADDED: Same helper function from StoryTemplateCard
+const getCharacterInfo = (charKey) => {
+  for (const category of characterCategories) {
+    const found = category.characters?.find(c => c.key === charKey);
+    if (found) return { name: found.name, thumbnailUrl: found.thumbnailUrl };
+  }
+  // graceful fallback
+  return { name: (charKey || '').replace(/[_-]+/g,' ').replace(/\b\w/g,c=>c.toUpperCase()), thumbnailUrl: null };
+};
+
 export default function InviteSuggestion({ 
   story, 
   onInvite, 
@@ -29,7 +39,9 @@ export default function InviteSuggestion({
               key: char.key,
               name: char.name,
               description: char.description || char.tagline || 'Character',
-              type: 'static'
+              type: 'static',
+              // ADDED: Include thumbnail info
+              thumbnailUrl: char.thumbnailUrl
             });
           }
         });
@@ -45,11 +57,15 @@ export default function InviteSuggestion({
       approvedCustomChars.forEach(char => {
         if (!seenKeys.has(char.character_key)) {
           seenKeys.add(char.character_key);
+          // ADDED: Use getCharacterInfo for custom characters too
+          const charInfo = getCharacterInfo(char.character_key);
           chars.push({
             key: char.character_key,
-            name: char.display_name || char.character_key.charAt(0).toUpperCase() + char.character_key.slice(1),
+            name: char.display_name || charInfo.name,
             description: char.short_description || 'Custom character',
-            type: 'custom'
+            type: 'custom',
+            // ADDED: Include thumbnail info
+            thumbnailUrl: charInfo.thumbnailUrl
           });
         }
       });
@@ -98,8 +114,16 @@ export default function InviteSuggestion({
             className={styles.characterSuggestion}
             onClick={() => handleInvite(character.key)}
           >
-            <div className={styles.characterAvatar}>
-              {character.name.charAt(0)}
+            {/* UPDATED: Character avatar with thumbnail support */}
+            <div 
+              className={styles.characterAvatar}
+              style={character.thumbnailUrl ? {
+                backgroundImage: `url(${character.thumbnailUrl})`,
+                backgroundSize: 'cover',
+                backgroundPosition: 'center'
+              } : {}}
+            >
+              {!character.thumbnailUrl && character.name.charAt(0)}
             </div>
             <div className={styles.characterInfo}>
               <div className={styles.characterName}>{character.name}</div>

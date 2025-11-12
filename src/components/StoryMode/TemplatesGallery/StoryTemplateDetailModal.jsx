@@ -3,7 +3,7 @@ import React, { useState } from 'react';
 import StoryCreationForm from '../StoryCreationForm';
 import styles from './TemplatesGallery.module.css';
 
-const API_BASE = process.env.REACT_APP_API_URL || 'http://localhost:5000';
+const API_BASE = process.env.REACT_APP_API_URL || 'https://api.awakeverse.com';
 
 export default function StoryTemplateDetailModal({ 
   template, 
