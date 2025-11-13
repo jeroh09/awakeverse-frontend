@@ -1,10 +1,49 @@
-// src/components/ChatLauncherHelpers.jsx
-// Helper components for ChatLauncherPage (decentralized: NO status modal here)
+// src/components/ChatLauncherHelpers.jsx - PRODUCTION READY
+// Helper components for ChatLauncherPage with SUBSTANTIAL DESIGN
 import React from 'react';
 import DefensiveCharacterCreationWrapper from './DefensiveCharacterCreationWrapper';
 import PublishToHubButton from './CreatorHub/PublishToHubButton';
 import { renderSafeAvatar } from '../utils/imageUtils';
 
+/* =======================
+   SUBSTANTIAL DESIGN SYSTEM
+   ======================= */
+const substantialStyles = {
+  // COLORS
+  colors: {
+    navy: '#0A0A15',
+    darkContainer: '#1A1A2E', 
+    charcoal: '#2C2C2C',
+    ivory: '#F5F5DC',
+    silver: '#C0C0C0',
+    border: '#444'
+  },
+
+  // TYPOGRAPHY
+  typography: {
+    heading: {
+      color: '#F5F5DC',
+      fontFamily: "'Playfair Display', serif",
+      textShadow: '0 2px 4px rgba(0, 0, 0, 0.5)'
+    },
+    body: {
+      color: 'rgba(245, 245, 220, 0.9)',
+      fontFamily: "'Georgia', serif"
+    },
+    subtle: {
+      color: '#C0C0C0',
+      fontFamily: "'Georgia', serif"
+    }
+  },
+
+  // SHADOWS & BORDERS
+  effects: {
+    shadowMedium: '0 4px 16px rgba(0, 0, 0, 0.4)',
+    shadowHeavy: '0 6px 24px rgba(0, 0, 0, 0.6)',
+    borderThick: '2px solid #444',
+    borderMedium: '1px solid #444'
+  }
+};
 
 /* ------------------------------ Assets Map ------------------------------ */
 export const categoryRepresentatives = {
@@ -56,7 +95,7 @@ export const StatusBadge = ({ status, size = 'normal' }) => {
 
 /* ------------------------------ CategoryCard ---------------------------- */
 export const CategoryCard = ({
-  category,           // { key, title, characters?, characterCount?, pendingCount?, rejectedCount?, approvedCount? }
+  category,
   onClick,
   index = 0,
   isMobile,
@@ -123,11 +162,11 @@ export const CategoryCard = ({
         overflow: 'hidden',
         alignSelf: 'stretch',
 
-        background: 'rgba(255, 255, 255, 0.05)',
-        border: isMyCharacters
-          ? '1px solid rgba(255, 215, 0, 0.4)'
-          : '1px solid rgba(255, 215, 0, 0.2)',
+        // SUBSTANTIAL STYLES
+        background: substantialStyles.colors.darkContainer,
+        border: substantialStyles.effects.borderThick,
         borderRadius: '16px',
+        boxShadow: substantialStyles.effects.shadowMedium,
         padding: isMobile ? '1rem' : '1.5rem',
         cursor: 'pointer',
         transition: 'all 0.3s ease',
@@ -137,40 +176,28 @@ export const CategoryCard = ({
         justifyContent: 'center',
         textAlign: 'center',
         aspectRatio: '1',
-        opacity: 0,
         opacity: isMobile ? 1 : 0,
         visibility: isMobile ? 'visible' : undefined,
         transform: isMobile ? 'translateZ(0)' : undefined,
-        animation: isMobile ? 'none' : `characterSlideIn 0.6s ease-out ${index * 0.05}s forwards`,
-        minHeight: isMobile ? '120px' : '150px',
-        maxHeight: isMobile ? '160px' : '200px',
-        // ... keep all existing styles, but change these specific lines:
-        opacity: isMobile ? 1 : 0,  // FORCE VISIBLE ON MOBILE
         animation: isMobile ? 'none' : `categorySlideIn 0.6s ease-out ${index * 0.1}s forwards`,
         minHeight: isMobile ? '120px' : '150px',
         maxHeight: isMobile ? '160px' : '200px',
-        position: 'relative',
-        // ADD THESE NEW LINES:
-        visibility: isMobile ? 'visible' : undefined,
-        transform: isMobile ? 'translateZ(0)' : undefined,
         willChange: isMobile ? 'auto' : 'opacity, transform'
       }}
       onMouseEnter={(e) => {
         if (!isMobile) {
-          e.currentTarget.style.background = 'rgba(255, 215, 0, 0.08)';
-          e.currentTarget.style.borderColor = 'rgba(255, 215, 0, 0.6)';
+          e.currentTarget.style.background = '#252545';
+          e.currentTarget.style.borderColor = '#666';
           e.currentTarget.style.transform = 'translateY(-6px)';
-          e.currentTarget.style.boxShadow = '0 12px 24px rgba(255, 215, 0, 0.2)';
+          e.currentTarget.style.boxShadow = substantialStyles.effects.shadowHeavy;
         }
       }}
       onMouseLeave={(e) => {
         if (!isMobile) {
-          e.currentTarget.style.background = 'rgba(255, 255, 255, 0.05)';
-          e.currentTarget.style.borderColor = isMyCharacters
-            ? 'rgba(255, 215, 0, 0.4)'
-            : 'rgba(255, 215, 0, 0.2)';
+          e.currentTarget.style.background = substantialStyles.colors.darkContainer;
+          e.currentTarget.style.borderColor = substantialStyles.colors.border;
           e.currentTarget.style.transform = 'translateY(0)';
-          e.currentTarget.style.boxShadow = 'none';
+          e.currentTarget.style.boxShadow = substantialStyles.effects.shadowMedium;
         }
       }}
     >
@@ -181,9 +208,7 @@ export const CategoryCard = ({
         borderRadius: '50%',
         overflow: 'hidden',
         marginBottom: '0.7rem',
-        border: isMyCharacters
-          ? '3px solid rgba(255, 215, 0, 0.6)'
-          : '3px solid rgba(255, 215, 0, 0.4)',
+        border: substantialStyles.effects.borderThick,
         transition: 'all 0.3s ease',
         background: 'rgba(0,0,0,0.3)',
         position: 'relative'
@@ -217,7 +242,7 @@ export const CategoryCard = ({
             if (!parent.querySelector('.text-fallback')) {
               const fallback = document.createElement('div');
               fallback.className = 'text-fallback';
-              fallback.style.cssText = 'width:100%;height:100%;display:flex;align-items:center;justify-content:center;background:rgba(255,215,0,0.2);color:#FFD700;font-size:1.2rem;font-weight:bold;border-radius:50%;';
+              fallback.style.cssText = 'width:100%;height:100%;display:flex;align-items:center;justify-content:center;background:rgba(255,255,255,0.1);color:#F5F5DC;font-size:1.2rem;font-weight:bold;border-radius:50%;';
               fallback.textContent = category.title.charAt(0).toUpperCase();
               parent.appendChild(fallback);
             }
@@ -227,13 +252,11 @@ export const CategoryCard = ({
 
       {/* Title */}
       <h3 style={{
-        color: '#FFD700',
+        ...substantialStyles.typography.heading,
         fontSize: isMobile ? '0.85rem' : '0.9rem',
         fontWeight: 600,
         margin: '0 0 0.3rem 0',
         letterSpacing: '0.5px',
-        fontFamily: "'Georgia', serif",
-        textShadow: '1px 1px 2px rgba(0,0,0,0.8)',
         lineHeight: 1.1
       }}>
         {category.title}
@@ -241,14 +264,12 @@ export const CategoryCard = ({
 
       {/* Badge */}
       <span style={{
-        color: isMyCharacters ? '#FFD700' : 'rgba(255, 215, 0, 0.7)',
+        ...substantialStyles.typography.subtle,
         fontSize: isMobile ? '0.65rem' : '0.7rem',
-        background: isMyCharacters ? 'rgba(255, 215, 0, 0.2)' : 'rgba(255, 215, 0, 0.1)',
+        background: 'rgba(255, 255, 255, 0.1)',
         padding: '0.15rem 0.4rem',
         borderRadius: '8px',
-        border: isMyCharacters
-          ? '1px solid rgba(255, 215, 0, 0.4)'
-          : '1px solid rgba(255, 215, 0, 0.2)'
+        border: substantialStyles.effects.borderMedium
       }}>
         {isMyCharacters
           ? ((category.characterCount || 0) > 0
@@ -265,14 +286,13 @@ export const CategoryCard = ({
 };
 
 /* ------------------------------ CharacterCard --------------------------- */
-/* ------------------------------ CharacterCard (Updated with Publish Button) --------------------------- */
 export const CharacterCard = ({
-  character,          // { key, name, description, thumbnailUrl, status, rejection_reason, id, is_market_featured }
-  onClick,            // (character) => void
+  character,
+  onClick,
   index = 0,
   isMobile,
   showStatusIndicator = false,
-  onPublishToggle     // NEW: Callback when publish state changes
+  onPublishToggle
 }) => {
   const getStatusIndicator = () => {
     if (!showStatusIndicator || !character?.status || character.status === 'approved') return null;
@@ -310,15 +330,17 @@ export const CharacterCard = ({
   return (
     <div
       style={{
-        background: 'rgba(255, 255, 255, 0.05)',
-        border: '1px solid rgba(255, 215, 0, 0.2)',
+        // SUBSTANTIAL STYLES
+        background: substantialStyles.colors.darkContainer,
+        border: substantialStyles.effects.borderThick,
         borderRadius: '16px',
+        boxShadow: substantialStyles.effects.shadowMedium,
         padding: '1rem',
         cursor: 'pointer',
         transition: 'all 0.3s ease',
         opacity: 0,
         animation: `characterSlideIn 0.6s ease-out ${index * 0.05}s forwards`,
-        minHeight: isMobile ? '180px' : '240px', // Increased height for publish button
+        minHeight: isMobile ? '180px' : '240px',
         display: 'flex',
         flexDirection: 'column',
         alignItems: 'center',
@@ -326,25 +348,25 @@ export const CharacterCard = ({
       }}
       onMouseEnter={(e) => {
         if (!isMobile) {
-          e.currentTarget.style.background = 'rgba(255, 215, 0, 0.1)';
-          e.currentTarget.style.borderColor = 'rgba(255, 215, 0, 0.5)';
+          e.currentTarget.style.background = '#252545';
+          e.currentTarget.style.borderColor = '#666';
           e.currentTarget.style.transform = 'translateY(-6px)';
-          e.currentTarget.style.boxShadow = '0 16px 32px rgba(255, 215, 0, 0.2)';
+          e.currentTarget.style.boxShadow = substantialStyles.effects.shadowHeavy;
         }
       }}
       onMouseLeave={(e) => {
         if (!isMobile) {
-          e.currentTarget.style.background = 'rgba(255, 255, 255, 0.05)';
-          e.currentTarget.style.borderColor = 'rgba(255, 215, 0, 0.2)';
+          e.currentTarget.style.background = substantialStyles.colors.darkContainer;
+          e.currentTarget.style.borderColor = substantialStyles.colors.border;
           e.currentTarget.style.transform = 'translateY(0)';
-          e.currentTarget.style.boxShadow = 'none';
+          e.currentTarget.style.boxShadow = substantialStyles.effects.shadowMedium;
         }
       }}
     >
       {/* Status flag */}
       {getStatusIndicator()}
 
-      {/* Avatar - clickable for details */}
+      {/* Avatar */}
       <div 
         onClick={() => onClick?.(character)}
         style={{
@@ -353,7 +375,7 @@ export const CharacterCard = ({
           borderRadius: '50%',
           overflow: 'hidden',
           marginBottom: '0.75rem',
-          border: '3px solid rgba(255, 215, 0, 0.3)',
+          border: substantialStyles.effects.borderThick,
           flexShrink: 0,
           opacity: character.status === 'rejected' ? 0.6 : 1,
           cursor: 'pointer'
@@ -371,7 +393,7 @@ export const CharacterCard = ({
             if (!parent.querySelector('.text-fallback')) {
               const fallback = document.createElement('div');
               fallback.className = 'text-fallback';
-              fallback.style.cssText = 'width:100%;height:100%;display:flex;align-items:center;justify-content:center;background:rgba(255,215,0,0.2);color:#FFD700;font-size:1.2rem;font-weight:bold;border-radius:50%;';
+              fallback.style.cssText = 'width:100%;height:100%;display:flex;align-items:center;justify-content:center;background:rgba(255,255,255,0.1);color:#F5F5DC;font-size:1.2rem;font-weight:bold;border-radius:50%;';
               fallback.textContent = (character.name || 'C').charAt(0).toUpperCase();
               parent.appendChild(fallback);
             }
@@ -379,7 +401,7 @@ export const CharacterCard = ({
         />
       </div>
 
-      {/* Info - clickable for details */}
+      {/* Info */}
       <div 
         onClick={() => onClick?.(character)}
         style={{ 
@@ -392,7 +414,7 @@ export const CharacterCard = ({
         }}
       >
         <h3 style={{
-          color: character.status === 'approved' ? '#FFD700' : '#FFA500',
+          ...substantialStyles.typography.heading,
           fontSize: isMobile ? '0.8rem' : '0.85rem',
           fontWeight: 600,
           margin: '0 0 0.5rem 0',
@@ -403,7 +425,7 @@ export const CharacterCard = ({
         </h3>
 
         <p style={{
-          color: 'rgba(255, 255, 255, 0.85)',
+          ...substantialStyles.typography.body,
           fontSize: isMobile ? '0.65rem' : '0.7rem',
           lineHeight: 1.3,
           margin: 0,
@@ -417,7 +439,7 @@ export const CharacterCard = ({
         </p>
       </div>
 
-      {/* NEW: Publish Button - not clickable for card (stops propagation) */}
+      {/* Publish Button */}
       <div 
         onClick={(e) => e.stopPropagation()} 
         style={{ 
@@ -449,8 +471,8 @@ export const CharacterCard = ({
 
 /* --------------------------- PersonalizedSection ------------------------ */
 export const PersonalizedSection = ({
-  characters = [],          // [{ character, name, thumbnailUrl, hasActiveConversation }]
-  onCharacterSelect,        // (characterObj) => void
+  characters = [],
+  onCharacterSelect,
   hasActiveConversations,
   isMobile
 }) => {
@@ -468,23 +490,21 @@ export const PersonalizedSection = ({
         marginBottom: '1rem', padding: '0 0.5rem'
       }}>
         <h3 style={{
+          ...substantialStyles.typography.heading,
           fontSize: isMobile ? '0.9rem' : '1rem',
-          color: '#FFD700',
           fontWeight: 600,
           letterSpacing: '0.5px',
-          textShadow: '0 2px 4px rgba(0, 0, 0, 0.6)',
           margin: 0,
-          fontFamily: "'Georgia', serif"
         }}>
           For You
         </h3>
         <span style={{
-          background: 'linear-gradient(135deg, rgba(255, 215, 0, 0.2), rgba(255, 215, 0, 0.1))',
-          border: '1px solid rgba(255, 215, 0, 0.4)',
+          ...substantialStyles.typography.subtle,
+          background: 'rgba(255, 255, 255, 0.1)',
+          border: substantialStyles.effects.borderMedium,
           borderRadius: '12px',
           padding: '0.2rem 0.6rem',
           fontSize: '0.7rem',
-          color: 'rgba(255, 215, 0, 0.9)',
           letterSpacing: '0.3px'
         }}>
           Recent
@@ -504,8 +524,8 @@ export const PersonalizedSection = ({
             key={c.character || c.name}
             onClick={() => onCharacterSelect?.(c)}
             style={{
-              background: 'rgba(255, 255, 255, 0.05)',
-              border: '1px solid rgba(255, 215, 0, 0.2)',
+              background: substantialStyles.colors.darkContainer,
+              border: substantialStyles.effects.borderMedium,
               borderRadius: '12px',
               cursor: 'pointer',
               transition: 'all 0.3s ease',
@@ -528,7 +548,7 @@ export const PersonalizedSection = ({
                   width: isMobile ? '50px' : '45px',
                   height: isMobile ? '50px' : '45px',
                   borderRadius: '50%',
-                  border: '2px solid rgba(255, 215, 0, 0.3)',
+                  border: substantialStyles.effects.borderMedium,
                   objectFit: 'cover'
                 }}
                 onError={(e) => { 
@@ -539,7 +559,7 @@ export const PersonalizedSection = ({
                   if (!parent.querySelector('.text-fallback')) {
                     const fallback = document.createElement('div');
                     fallback.className = 'text-fallback';
-                    fallback.style.cssText = 'width:100%;height:100%;display:flex;align-items:center;justify-content:center;background:rgba(255,215,0,0.2);color:#FFD700;font-size:0.9rem;font-weight:bold;border-radius:50%;';
+                    fallback.style.cssText = 'width:100%;height:100%;display:flex;align-items:center;justify-content:center;background:rgba(255,255,255,0.1);color:#F5F5DC;font-size:0.9rem;font-weight:bold;border-radius:50%;';
                     fallback.textContent = (c.name || 'C').charAt(0).toUpperCase();
                     parent.appendChild(fallback);
                   }
@@ -563,8 +583,8 @@ export const PersonalizedSection = ({
               minWidth: 0, flex: 1
             }}>
               <span style={{
+                ...substantialStyles.typography.heading,
                 fontSize: isMobile ? '0.7rem' : '0.85rem',
-                color: '#FFD700',
                 fontWeight: 600,
                 lineHeight: 1.1,
                 letterSpacing: '0.3px'
@@ -572,7 +592,7 @@ export const PersonalizedSection = ({
                 {(String(c.name || '').split(' ')[0]) || 'Character'}
               </span>
               {!isMobile && hasActiveConversations && c.hasActiveConversation && (
-                <span style={{ fontSize: '0.65rem', color: 'rgba(255, 255, 255, 0.7)' }}>
+                <span style={{ ...substantialStyles.typography.subtle, fontSize: '0.65rem' }}>
                   Active now
                 </span>
               )}
@@ -586,12 +606,12 @@ export const PersonalizedSection = ({
 
 /* ---------------------------- MyCharactersPanel ------------------------- */
 export const MyCharactersPanel = ({
-  userCharacters = [],     // array of backend user characters
+  userCharacters = [],
   charactersLoading,
   charactersError,
   onCreateCharacter,
-  onCharacterSelect,       // (characterLite) => void
-  onCharacterPublishToggle,  // ← ADD THIS
+  onCharacterSelect,
+  onCharacterPublishToggle,
   isMobile,
   user_id,
   onShowUpgradeModal
@@ -609,13 +629,13 @@ export const MyCharactersPanel = ({
         <div style={{
           width: isMobile ? '32px' : '40px',
           height: isMobile ? '32px' : '40px',
-          border: '3px solid rgba(255, 215, 0, 0.3)',
-          borderTop: '3px solid #FFD700',
+          border: substantialStyles.effects.borderThick,
+          borderTop: '3px solid #F5F5DC',
           borderRadius: '50%',
           animation: 'spin 1s linear infinite',
           marginBottom: '1rem'
         }} />
-        <p style={{ color: 'rgba(255, 215, 0, 0.8)', fontSize: isMobile ? '0.9rem' : '1rem', margin: 0 }}>
+        <p style={{ ...substantialStyles.typography.body, fontSize: isMobile ? '0.9rem' : '1rem', margin: 0 }}>
           Loading your characters...
         </p>
       </div>
@@ -641,10 +661,10 @@ export const MyCharactersPanel = ({
           <button
             onClick={() => window.location.reload()}
             style={{
-              background: 'rgba(255, 215, 0, 0.1)',
-              border: '1px solid rgba(255, 215, 0, 0.3)',
+              background: 'rgba(255, 255, 255, 0.1)',
+              border: substantialStyles.effects.borderMedium,
               borderRadius: '6px',
-              color: '#FFD700',
+              ...substantialStyles.typography.body,
               fontSize: '0.8rem',
               padding: '0.5rem 1rem',
               cursor: 'pointer'
@@ -672,8 +692,8 @@ export const MyCharactersPanel = ({
             width: isMobile ? '80px' : '100px',
             height: isMobile ? '80px' : '100px',
             borderRadius: '50%',
-            background: 'linear-gradient(135deg, rgba(255, 215, 0, 0.2), rgba(255, 215, 0, 0.1))',
-            border: '3px solid rgba(255, 215, 0, 0.3)',
+            background: 'rgba(255, 255, 255, 0.1)',
+            border: substantialStyles.effects.borderThick,
             display: 'flex', alignItems: 'center', justifyContent: 'center',
             fontSize: isMobile ? '32px' : '40px'
           }}>
@@ -682,15 +702,14 @@ export const MyCharactersPanel = ({
 
           <div>
             <h3 style={{
-              color: '#FFD700', fontSize: isMobile ? '1.3rem' : '1.5rem',
-              fontFamily: "'Playfair Display', serif",
+              ...substantialStyles.typography.heading,
+              fontSize: isMobile ? '1.3rem' : '1.5rem',
               margin: '0 0 1rem 0', letterSpacing: '1px',
-              textShadow: '0 0 15px rgba(255, 215, 0, 0.5)'
             }}>
               Create Your Own Character
             </h3>
             <p style={{
-              color: 'rgba(255, 255, 255, 0.9)',
+              ...substantialStyles.typography.body,
               fontSize: isMobile ? '0.9rem' : '1rem',
               lineHeight: 1.6, margin: '0 0 2rem 0',
               maxWidth: isMobile ? '300px' : '400px'
@@ -705,12 +724,11 @@ export const MyCharactersPanel = ({
             onUpgradePrompt={() => {
               onShowUpgradeModal('character_limit');
             }}
-            
           >
           <button
             onClick={onCreateCharacter}
             style={{
-              background: 'linear-gradient(135deg, #FFD700, #FFA500)',
+              background: 'linear-gradient(135deg, #F5F5DC, #C0C0C0)',
               border: 'none',
               borderRadius: isMobile ? '20px' : '25px',
               color: '#000',
@@ -720,18 +738,18 @@ export const MyCharactersPanel = ({
               cursor: 'pointer',
               transition: 'all 0.3s ease',
               fontFamily: "'Georgia', serif",
-              boxShadow: '0 4px 15px rgba(255, 215, 0, 0.3)'
+              boxShadow: substantialStyles.effects.shadowMedium
             }}
             onMouseEnter={(e) => {
               if (!isMobile) {
                 e.currentTarget.style.transform = 'translateY(-2px)';
-                e.currentTarget.style.boxShadow = '0 6px 20px rgba(255, 215, 0, 0.4)';
+                e.currentTarget.style.boxShadow = substantialStyles.effects.shadowHeavy;
               }
             }}
             onMouseLeave={(e) => {
               if (!isMobile) {
                 e.currentTarget.style.transform = 'translateY(0)';
-                e.currentTarget.style.boxShadow = '0 4px 15px rgba(255, 215, 0, 0.3)';
+                e.currentTarget.style.boxShadow = substantialStyles.effects.shadowMedium;
               }
             }}
           >
@@ -749,12 +767,13 @@ export const MyCharactersPanel = ({
         <div style={{
           marginBottom: '1.5rem',
           padding: isMobile ? '0.8rem' : '1rem',
-          background: 'rgba(255, 255, 255, 0.05)',
+          background: substantialStyles.colors.darkContainer,
           borderRadius: '8px',
-          border: '1px solid rgba(255, 215, 0, 0.2)'
+          border: substantialStyles.effects.borderMedium
         }}>
           <h4 style={{
-            color: '#FFD700', margin: '0 0 0.5rem 0',
+            ...substantialStyles.typography.heading,
+            margin: '0 0 0.5rem 0',
             fontSize: isMobile ? '0.8rem' : '0.9rem', textAlign: 'center'
           }}>
             Character Status Summary
@@ -810,8 +829,8 @@ export const MyCharactersPanel = ({
               thumbnailUrl: c.avatar_url || c.thumbnailUrl || '/images/default-character.jpg',
               status: c.status,
               rejection_reason: c.rejection_reason,
-              id: c.id,  // ADD THIS
-              is_market_featured: c.is_market_featured  // ADD THIS
+              id: c.id,
+              is_market_featured: c.is_market_featured
             }}
             onClick={() => onCharacterSelect?.({
               key: c.character_key || c.key,
@@ -825,7 +844,7 @@ export const MyCharactersPanel = ({
             index={idx}
             isMobile={isMobile}
             showStatusIndicator={true}
-            onPublishToggle={onCharacterPublishToggle}  // ← CHANGE THIS LINE
+            onPublishToggle={onCharacterPublishToggle}
           />
         ))}
       </div>
@@ -840,27 +859,26 @@ export const MyCharactersPanel = ({
         <button
           onClick={onCreateCharacter}
           style={{
-            background: 'rgba(255, 215, 0, 0.1)',
-            border: '2px dashed rgba(255, 215, 0, 0.4)',
+            background: 'rgba(255, 255, 255, 0.1)',
+            border: `2px dashed ${substantialStyles.colors.border}`,
             borderRadius: '12px',
-            color: '#FFD700',
+            ...substantialStyles.typography.body,
             fontSize: isMobile ? '0.8rem' : '0.9rem',
             fontWeight: 600,
             padding: isMobile ? '0.8rem 1.2rem' : '1rem 1.5rem',
             cursor: 'pointer',
             transition: 'all 0.3s ease',
-            fontFamily: "'Georgia', serif"
           }}
           onMouseEnter={(e) => {
             if (!isMobile) {
-              e.currentTarget.style.background = 'rgba(255, 215, 0, 0.15)';
-              e.currentTarget.style.borderColor = 'rgba(255, 215, 0, 0.6)';
+              e.currentTarget.style.background = 'rgba(255, 255, 255, 0.15)';
+              e.currentTarget.style.borderColor = '#666';
             }
           }}
           onMouseLeave={(e) => {
             if (!isMobile) {
-              e.currentTarget.style.background = 'rgba(255, 215, 0, 0.1)';
-              e.currentTarget.style.borderColor = 'rgba(255, 215, 0, 0.4)';
+              e.currentTarget.style.background = 'rgba(255, 255, 255, 0.1)';
+              e.currentTarget.style.borderColor = substantialStyles.colors.border;
             }
           }}
         >
