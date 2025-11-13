@@ -22,60 +22,103 @@ import {
 import { characterCategories } from '../data/characterCategories';
 
 
+
 // Enhanced semantic mappings for character search
 const ENHANCED_SEMANTIC_MAPPINGS = {
-  truth: ['truthweavers', 'thinkers'],
-  meaning: ['thinkers', 'veilwalkers'],
-  power: ['warlords', 'goldhands'],
-  war: ['warlords'],
-  strategy: ['warlords', 'goldhands'],
-  battle: ['warlords'],
-  leadership: ['warlords', 'goldhands'],
-  create: ['makers', 'heartstrings'],
-  invent: ['makers'],
-  art: ['makers', 'heartstrings'],
-  innovation: ['makers'],
-  technology: ['makers'],
-  money: ['goldhands'],
-  business: ['goldhands'],
-  success: ['goldhands', 'warlords'],
-  love: ['heartstrings'],
-  romance: ['heartstrings'],
-  betrayal: ['heartstrings', 'veilwalkers'],
-  prophecy: ['stargazers'],
-  future: ['stargazers'],
-  stars: ['stargazers'],
-  fate: ['stargazers', 'truthweavers'],
-  mystery: ['veilwalkers', 'sleuths'],
-  secrets: ['veilwalkers'],
-  revolution: ['truthweavers', 'warlords'],
-  rebellion: ['truthweavers', 'warlords'],
-  freedom: ['truthweavers', 'warlords'],
-  explore: ['pathfinders', 'stargazers'],
-  journey: ['pathfinders', 'truthweavers'],
-  performance: ['performers', 'heartstrings'],
-  magic: ['performers', 'veilwalkers'],
-  code: ['makers', 'thinkers'],
-  logic: ['thinkers', 'sleuths'],
-  deduction: ['sleuths'],
-  justice: ['truthweavers', 'sleuths'],
-  literature: ['heartstrings', 'truthweavers'],
-  poetry: ['heartstrings', 'truthweavers'],
-  empire: ['warlords', 'goldhands'],
-  trade: ['goldhands'],
-  legends: ['truthweavers', 'pathfinders'],
-  myth: ['veilwalkers', 'truthweavers']
+  'truth': ['truthweavers', 'thinkers'],
+  'meaning': ['thinkers', 'veilwalkers'],
+  'power': ['warlords', 'goldhands'],
+  'war': ['warlords'],
+  'strategy': ['warlords', 'goldhands'],
+  'battle': ['warlords'],
+  'leadership': ['warlords', 'goldhands'],
+  'create': ['makers', 'heartstrings'],
+  'invent': ['makers'],
+  'art': ['makers', 'heartstrings'],
+  'innovation': ['makers'],
+  'technology': ['makers'],
+  'money': ['goldhands'],
+  'business': ['goldhands'],
+  'success': ['goldhands', 'warlords'],
+  'wealth': ['goldhands'],
+  'entrepreneur': ['goldhands'],
+  'spiritual': ['veilwalkers', 'stargazers'],
+  'magic': ['veilwalkers'],
+  'destiny': ['stargazers', 'veilwalkers'],
+  'future': ['stargazers', 'veilwalkers'],
+  'stars': ['stargazers'],
+  'astrology': ['stargazers'],
+  'detective': ['sleuths'],
+  'mystery': ['sleuths'],
+  'investigation': ['sleuths'],
+  'love': ['heartstrings'],
+  'romance': ['heartstrings'],
+  'passion': ['heartstrings'],
+  'philosophy': ['thinkers'],
+  'wisdom': ['thinkers', 'veilwalkers'],
+  'science': ['makers', 'thinkers'],
+  'invention': ['makers'],
+  'engineering': ['makers'],
+  'enlightenment': ['thinkers', 'truthweavers'],
+  'revolution': ['truthweavers', 'warlords'],
+  'mysticism': ['veilwalkers'],
+  'prophecy': ['stargazers', 'veilwalkers'],
+  'trade': ['goldhands'],
+  'empire': ['warlords', 'goldhands'],
+  'poetry': ['heartstrings', 'truthweavers'],
+  'literature': ['heartstrings', 'truthweavers'],
+  'justice': ['truthweavers', 'sleuths'],
+  'deduction': ['sleuths'],
+  'logic': ['thinkers', 'sleuths'],
+  'mathematics': ['makers', 'thinkers'],
+  'alchemy': ['veilwalkers', 'makers'],
+  'medicine': ['veilwalkers', 'makers'],
+  'astronomy': ['stargazers', 'makers'],
+  'exploration': ['truthweavers', 'makers'],
+  'adventure': ['truthweavers', 'warlords'],
+  'rebellion': ['truthweavers', 'warlords'],
+  'freedom': ['truthweavers', 'warlords'],
+  'honor': ['warlords', 'truthweavers'],
+  'courage': ['warlords', 'truthweavers'],
+  'beauty': ['heartstrings'],
+  'seduction': ['heartstrings'],
+  'desire': ['heartstrings'],
+  'mythology': ['veilwalkers', 'stargazers'],
+  'legend': ['veilwalkers', 'warlords'],
+  'folklore': ['veilwalkers', 'truthweavers'],
+  'economics': ['goldhands'],
+  'finance': ['goldhands'],
+  'industry': ['goldhands', 'makers'],
+  'discovery': ['makers', 'truthweavers'],
+  'genius': ['makers', 'thinkers'],
+  'military': ['warlords'],
+  'tactics': ['warlords'],
+  'conquest': ['warlords'],
+  'diplomacy': ['warlords', 'goldhands'],
+  'espionage': ['sleuths', 'warlords'],
+  'spy': ['sleuths'],
+  'crime': ['sleuths'],
+  'puzzle': ['sleuths', 'thinkers'],
+  'riddle': ['sleuths', 'veilwalkers'],
+  'secret': ['sleuths', 'veilwalkers'],
+  'hidden': ['sleuths', 'veilwalkers'],
+  'ancient': ['veilwalkers', 'stargazers', 'thinkers'],
+  'classical': ['thinkers', 'heartstrings'],
+  'renaissance': ['makers', 'heartstrings'],
+  'medieval': ['veilwalkers', 'warlords'],
+  'modern': ['makers', 'goldhands'],
+  'contemporary': ['makers', 'goldhands']
 };
 
-// Oracle prompts for rotating placeholder text
 const ORACLE_PROMPTS = [
-  'Ask Sherlock to untangle a decision.',
-  'Consult a stargazer about your next move.',
-  'Invite a warlord to critique your strategy.',
-  'Ask a truthweaver to reframe your story.',
-  'Test an inventor with your wildest idea.'
+  "Who do you want to talk to?",
+  "Seek wisdom from...",
+  "Which guide calls to you?",
+  "Who would you counsel with?",
+  "Find your mentor...",
 ];
 
+// NEW: Updated to accept discoveredCharacters prop
 const ChatLauncherPage = ({ onStartChat, discoveredCharacters = [] }) => {
   const { user } = useUser();
 
@@ -122,6 +165,7 @@ const ChatLauncherPage = ({ onStartChat, discoveredCharacters = [] }) => {
     setUpgradeModalOpen(false);
     setUpgradeReason('general');
   }, []);
+  
 
   // Mobile detection
   useEffect(() => {
@@ -134,13 +178,14 @@ const ChatLauncherPage = ({ onStartChat, discoveredCharacters = [] }) => {
   // Rotate placeholder text
   useEffect(() => {
     const interval = setInterval(
-      () => setPlaceholderIndex((prev) => (prev + 1) % ORACLE_PROMPTS.length),
+      () => setPlaceholderIndex(prev => (prev + 1) % ORACLE_PROMPTS.length),
       4000
     );
     return () => clearInterval(interval);
   }, []);
 
-  // Load user's custom characters (opaque-cookie auth)
+  // Load user's custom characters
+   // Load user's custom characters (opaque-cookie auth)
   const loadUserCharacters = useCallback(async () => {
     if (!user) return;
 
@@ -157,50 +202,38 @@ const ChatLauncherPage = ({ onStartChat, discoveredCharacters = [] }) => {
         credentials: 'include'
       });
 
-      if (!response.ok) {
-        throw new Error('Failed to load your characters');
+      if (response.ok) {
+        const data = await response.json();
+        setUserCharacters(data.characters || []);
+      } else {
+        console.warn('Failed to load user characters:', response.status);
+        setUserCharacters([]);
       }
-
-      const data = await response.json();
-      setUserCharacters(Array.isArray(data.characters) ? data.characters : []);
     } catch (error) {
       console.error('Error loading user characters:', error);
-      setCharactersError(
-        error.message || 'Unable to load your characters. Please try again later.'
-      );
+      setCharactersError('Failed to load your characters');
+      setUserCharacters([]);
     } finally {
       setCharactersLoading(false);
     }
   }, [user]);
 
+
+  // Load user characters on mount and token change
   useEffect(() => {
-    if (user) {
-      loadUserCharacters();
-    } else {
-      setUserCharacters([]);
-    }
-  }, [user, loadUserCharacters]);
+    loadUserCharacters();
+  }, [loadUserCharacters]);
 
-  // Build enhanced categories including my characters & discovered characters
-  const enhancedCategories = useMemo(() => {
-    const baseCategories = characterCategories.map((category) => ({
-      ...category,
-      characters: category.characters.map((character) => ({
-        ...character,
-        source: character.source || 'template',
-        expertise_domain: character.expertise_domain || null,
-        creator: character.creator || null
-      }))
-    }));
-
+  // NEW: Enhanced categories with user characters AND discovered characters
+  const enhancedCategories = useMemo(() => {    
+    const baseCategories = [...characterCategories];
+    
     // Find and update my_characters category
-    const myCharactersIndex = baseCategories.findIndex(
-      (cat) => cat.key === 'my_characters'
-    );
+    const myCharactersIndex = baseCategories.findIndex(cat => cat.key === 'my_characters');
     if (myCharactersIndex !== -1) {
       baseCategories[myCharactersIndex] = {
         ...baseCategories[myCharactersIndex],
-        characters: userCharacters.map((char) => ({
+        characters: userCharacters.map(char => ({
           key: char.character_key,
           name: char.display_name,
           description: char.short_description,
@@ -209,56 +242,48 @@ const ChatLauncherPage = ({ onStartChat, discoveredCharacters = [] }) => {
           rejection_reason: char.rejection_reason
         })),
         characterCount: userCharacters.length,
-        pendingCount: userCharacters.filter((c) => c.status === 'pending').length,
-        rejectedCount: userCharacters.filter((c) => c.status === 'rejected').length,
-        approvedCount: userCharacters.filter((c) => c.status === 'approved').length
+        pendingCount: userCharacters.filter(c => c.status === 'pending').length,
+        rejectedCount: userCharacters.filter(c => c.status === 'rejected').length,
+        approvedCount: userCharacters.filter(c => c.status === 'approved').length
       };
     }
 
     // NEW: Check if discovered category already exists in base
-    const existingDiscoveredIndex = baseCategories.findIndex(
-      (cat) => cat.key === 'discovered'
-    );
-
+    const existingDiscoveredIndex = baseCategories.findIndex(cat => cat.key === 'discovered');
+    
     // Add or update discovered characters category
     if (discoveredCharacters && discoveredCharacters.length > 0) {
       const discoveredCategory = {
         key: 'discovered',
         title: 'Discovered',
-        characters: discoveredCharacters.map((char) => ({
+        characters: discoveredCharacters.map(char => ({
           key: char.character_key,
           name: char.display_name || char.name,
-          description: char.short_description || char.description,
-          thumbnailUrl: char.avatar_url || char.thumbnailUrl || null,
-          status: char.status || 'approved',
-          source: 'discovered',
+          description: char.short_description || char.description || '',
+          thumbnailUrl: char.avatar_url || char.thumbnailUrl || `/images/${char.character_key}.jpg`,
+          source: 'market_hub',
           expertise_domain: char.expertise_domain,
           creator: char.creator
         })),
         characterCount: discoveredCharacters.length,
         icon: '✨',
-        description: 'Characters you unlocked from the Hub and special sessions.'
+        description: 'Characters you\'ve discovered from the Market Hub'
       };
-
+      
       if (existingDiscoveredIndex !== -1) {
-        baseCategories[existingDiscoveredIndex] = {
-          ...baseCategories[existingDiscoveredIndex],
-          ...discoveredCategory
-        };
+        // Update existing discovered category
+        baseCategories[existingDiscoveredIndex] = discoveredCategory;
       } else {
-        baseCategories.push(discoveredCategory);
+        // Insert after my_characters (position 12)
+        baseCategories.splice(12, 0, discoveredCategory);
       }
+    } else if (existingDiscoveredIndex !== -1) {
+      // Remove discovered category if no characters and it exists
+      baseCategories.splice(existingDiscoveredIndex, 1);
     }
-
-    // Recalculate characterCount where needed
-    baseCategories.forEach((category) => {
-      if (!category.characterCount && category.characters) {
-        category.characterCount = category.characters.length;
-      }
-    });
-
+    
     return baseCategories;
-  }, [userCharacters.length, discoveredCharacters.length, userCharacters, discoveredCharacters]);
+  }, [userCharacters.length, discoveredCharacters.length]);
 
   // NEW: Enhanced search to include discovered characters
   const performSemanticSearch = useMemo(() => {
@@ -267,18 +292,17 @@ const ChatLauncherPage = ({ onStartChat, discoveredCharacters = [] }) => {
       const searchTerm = query.toLowerCase().trim();
       const results = [];
 
-      enhancedCategories.forEach((category) => {
-        category.characters.forEach((character) => {
+      enhancedCategories.forEach(category => {
+        category.characters.forEach(character => {
           const nameMatch = character.name.toLowerCase().includes(searchTerm);
           const descMatch = character.description.toLowerCase().includes(searchTerm);
           const nameParts = character.name.toLowerCase().split(' ');
-          const partialNameMatch = nameParts.some(
-            (part) => part.includes(searchTerm) || searchTerm.includes(part)
+          const partialNameMatch = nameParts.some(part =>
+            part.includes(searchTerm) || searchTerm.includes(part)
           );
 
           // NEW: Also search expertise domain for discovered characters
-          const domainMatch =
-            character.expertise_domain &&
+          const domainMatch = character.expertise_domain && 
             character.expertise_domain.toLowerCase().includes(searchTerm);
 
           if (nameMatch || descMatch || partialNameMatch || domainMatch) {
@@ -286,110 +310,69 @@ const ChatLauncherPage = ({ onStartChat, discoveredCharacters = [] }) => {
               ...character,
               category: category.title,
               categoryKey: category.key,
-              source: character.source,
-              expertise_domain: character.expertise_domain,
-              creator: character.creator
+              relevance: nameMatch ? 100 : (partialNameMatch ? 90 : (domainMatch ? 85 : 80))
             });
           }
         });
       });
-
-      // Semantic boost by mapping keywords to likely categories
-      Object.entries(ENHANCED_SEMANTIC_MAPPINGS).forEach(([keyword, mappedCategories]) => {
-        if (searchTerm.includes(keyword)) {
-          mappedCategories.forEach((catKey) => {
-            const category = enhancedCategories.find((c) => c.key === catKey);
-            if (category) {
-              category.characters.forEach((character) => {
-                results.push({
-                  ...character,
-                  category: category.title,
-                  categoryKey: category.key,
-                  source: character.source,
-                  expertise_domain: character.expertise_domain,
-                  creator: character.creator
-                });
-              });
-            }
-          });
-        }
-      });
-
-      // Deduplicate by character key
-      const uniqueResults = [];
-      const seenKeys = new Set();
-
-      results.forEach((character) => {
-        const key = character.key || `${character.categoryKey}-${character.name}`;
-        if (!seenKeys.has(key)) {
-          seenKeys.add(key);
-          uniqueResults.push(character);
-        }
-      });
-
-      // Reduce noise: prefer exact matches + discovered + my characters
-      return uniqueResults.slice(0, 30);
+      
+      return results.sort((a, b) => b.relevance - a.relevance).slice(0, 8);
     };
   }, [enhancedCategories]);
 
-  const handleInputChange = useCallback(
-    (text) => {
-      setInputValue(text);
-      if (text.length >= 2) {
-        const results = performSemanticSearch(text);
-        setSearchResults(results);
-        setShowResults(true);
-      } else {
-        setShowResults(false);
-        setSearchResults([]);
-      }
-    },
-    [performSemanticSearch]
-  );
+  // Event handlers
+  const handleInputChange = useCallback((text) => {
+    setInputValue(text);
+    if (text.length >= 2) {
+      const results = performSemanticSearch(text);
+      setSearchResults(results);
+      setShowResults(true);
+    } else {
+      setShowResults(false);
+      setSearchResults([]);
+    }
+  }, [performSemanticSearch]);
 
   // Character selection with status checking
-  const handleCharacterSelect = useCallback(
-    (character) => {
-      // Check if this is a custom character (user_xxx format)
-      const isCustomCharacter = character.key?.startsWith('user_');
-
-      if (isCustomCharacter) {
-        // For custom characters, check status before allowing chat
-        const characterStatus = character.status || 'approved';
-
-        if (characterStatus === 'pending' || characterStatus === 'rejected') {
-          // Block chat access and show status modal
-          setSelectedStatusCharacter({
-            ...character,
-            status: characterStatus,
-            rejection_reason: character.rejection_reason || null
-          });
-          setShowStatusModal(true);
-          return;
-        }
+  const handleCharacterSelect = useCallback((character) => {
+    // Check if this is a custom character (user_xxx format)
+    const isCustomCharacter = character.key?.startsWith('user_');
+    
+    if (isCustomCharacter) {
+      // For custom characters, check status before allowing chat
+      const characterStatus = character.status || 'approved';
+      
+      if (characterStatus === 'pending' || characterStatus === 'rejected') {
+        // Block chat access and show status modal
+        setSelectedStatusCharacter({
+          ...character,
+          status: characterStatus,
+          rejection_reason: character.rejection_reason
+        });
+        setShowStatusModal(true);
+        return;
       }
+    }
+    
+    // Allow chat for approved custom characters, discovered characters, and all existing characters
+    trackInteraction(character.key);
+    setSelectedChar({
+      key: character.key,
+      name: character.name,
+      thumbnailUrl: character.thumbnailUrl,
+      description: character.description,
+      category: character.category,
+      status: character.status,
+      source: character.source, // NEW: Track source for discovered characters
+      expertise_domain: character.expertise_domain,
+      creator: character.creator
+    });
+  }, [trackInteraction]);
 
-      // Normal behavior: open character detail
-      setSelectedChar(character);
-      trackInteraction({
-        characterKey: character.key,
-        name: character.name,
-        categoryKey: character.categoryKey || character.category,
-        source: character.source, // Track source for discovered characters
-        expertise_domain: character.expertise_domain,
-        creator: character.creator
-      });
-    },
-    [trackInteraction]
-  );
-
-  const handleRecentCharacterSelect = useCallback(
-    (recentCharacter) => {
-      trackInteraction(recentCharacter.character);
-      onStartChat(recentCharacter.character);
-    },
-    [trackInteraction, onStartChat]
-  );
+  const handleRecentCharacterSelect = useCallback((recentCharacter) => {
+    trackInteraction(recentCharacter.character);
+    onStartChat(recentCharacter.character);
+  }, [trackInteraction, onStartChat]);
 
   const handleCategorySelect = useCallback((category) => {
     setSelectedCategory(category);
@@ -445,32 +428,397 @@ const ChatLauncherPage = ({ onStartChat, discoveredCharacters = [] }) => {
   }, [loadUserCharacters]);
 
   const handleCloseCreationFlow = useCallback(() => {
-    setShowSuccess(false);
-    setShowBuilder(false);
     setShowTemplates(false);
+    setShowBuilder(false);
+    setShowSuccess(false);
     setSelectedTemplate(null);
   }, []);
 
-  // Mobile-only early return
+  // Add this new handler
+  const handleCharacterPublishToggle = useCallback((updatedCharacter) => {  
+  // Update the character in userCharacters array
+    setUserCharacters(prevChars => 
+      prevChars.map(char => 
+        char.id === updatedCharacter.id
+          ? { ...char, is_market_featured: updatedCharacter.is_market_featured }
+          : char
+      )
+    );
+  }, []);
+
+  const currentPlaceholder = ORACLE_PROMPTS[placeholderIndex];
+
+  // Character Creation Flow Modals
+  if (showSuccess) {
+    return (
+      <div style={{
+        position: 'fixed',
+        top: 0,
+        left: 0,
+        width: '100%',
+        height: '100%',
+        zIndex: 4000,
+        background: 'rgba(0, 0, 0, 0.95)'
+      }}>
+        <CharacterCreationSuccess onClose={handleCloseCreationFlow} />
+      </div>
+    );
+  }
+
+  if (showTemplates) {
+    return (
+      <div style={{
+        position: 'fixed',
+        top: 0,
+        left: 0,
+        width: '100%',
+        height: '100%',
+        zIndex: 3000,
+        background: 'rgba(0, 0, 0, 0.95)',
+        overflowY: 'auto'
+      }}>
+        <TemplateGallery 
+          onSelectTemplate={handleTemplateSelect}
+          onClose={handleCloseCreationFlow}
+        />
+      </div>
+    );
+  }
+
+  if (showBuilder && selectedTemplate) {
+    return (
+      <div style={{
+        position: 'fixed',
+        top: 0,
+        left: 0,
+        width: '100%',
+        height: '100%',
+        zIndex: 3000,
+        background: 'rgba(0, 0, 0, 0.95)'
+      }}>
+        <CharacterBuilder 
+          template={selectedTemplate}
+          onClose={handleCloseCreationFlow}
+          onSuccess={handleCharacterCreationComplete}
+        />
+      </div>
+    );
+  }
+
+  // MOBILE LAYOUT - Enhanced with discovered characters
   if (isMobile) {
     return (
-      <div
-        style={{
+      <div style={{
+        width: '100%',
+        minHeight: '100vh',
+        padding: '1rem',
+        fontFamily: "'Georgia', serif",
+        background: 'linear-gradient(135deg, #0B1426 0%, #1A2B47 25%, #2C1810 50%, #0F1A2E 75%, #0B1426 100%)',
+        display: 'flex',
+        flexDirection: 'column',
+        alignItems: 'center',
+      }}>
+
+        {/* Welcome Section */}
+        <div style={{
+          textAlign: 'center',
+          marginBottom: '1.5rem',
           width: '100%',
-          minHeight: '100vh',
-          background: '#020617',
-          color: '#f9fafb'
-        }}
-      >
-        <MobileCharacterView
-          selectedCategory={selectedCategory}
-          userCharacters={userCharacters}
-          charactersLoading={charactersLoading}
-          charactersError={charactersError}
-          onCreateCharacter={handleCreateCharacterClick}
-          onCharacterSelect={handleCharacterSelect}
-          user_id={user?.id}
-        />
+          maxWidth: '500px',
+        }}>
+          <h1 style={{
+            fontFamily: "'Playfair Display', serif",
+            fontSize: '1.8rem',
+            background: 'linear-gradient(135deg, #FFD700, #FFA500, #FFD700)',
+            backgroundClip: 'text',
+            WebkitBackgroundClip: 'text',
+            color: 'transparent',
+            margin: '0 0 1rem 0',
+            textShadow: '0 0 30px rgba(255, 215, 0, 0.5)',
+            letterSpacing: '1px',
+            fontWeight: 700
+          }}>
+            Welcome, {user?.displayName || 'Seeker'}
+          </h1>
+          
+          <p style={{
+            fontSize: '1rem',
+            color: 'rgba(255, 215, 0, 0.8)',
+            fontStyle: 'italic',
+            letterSpacing: '0.5px',
+            textShadow: '0 2px 4px rgba(0, 0, 0, 0.8)',
+            margin: 0,
+            transition: 'opacity 0.5s ease',
+            opacity: showResults ? 0.5 : 1
+          }}>
+            {currentPlaceholder}
+          </p>
+
+          {/* NEW: Show discovered count if any */}
+          {discoveredCharacters.length > 0 && (
+            <div style={{
+              marginTop: '0.5rem',
+              padding: '0.3rem 0.8rem',
+              background: 'rgba(255, 215, 0, 0.1)',
+              border: '1px solid rgba(255, 215, 0, 0.3)',
+              borderRadius: '12px',
+              fontSize: '0.8rem',
+              color: 'rgba(255, 215, 0, 0.9)',
+              display: 'inline-flex',
+              alignItems: 'center',
+              gap: '0.3rem'
+            }}>
+              ✨ {discoveredCharacters.length} character{discoveredCharacters.length !== 1 ? 's' : ''} discovered
+            </div>
+          )}
+        </div>
+
+        {/* Search Section */}
+        <div style={{
+          width: '100%',
+          maxWidth: '500px',
+          position: 'relative',
+          marginBottom: '1rem'
+        }}>
+          <input
+            type="text"
+            placeholder="Search characters..."
+            value={inputValue}
+            onChange={(e) => handleInputChange(e.target.value)}
+            onFocus={() => inputValue.length >= 2 && setShowResults(true)}
+            onBlur={() => setTimeout(() => setShowResults(false), 200)}
+            style={{
+              width: '100%',
+              padding: '1rem',
+              fontSize: '1rem',
+              border: '2px solid rgba(255, 215, 0, 0.3)',
+              borderRadius: '25px',
+              background: 'rgba(255, 255, 255, 0.1)',
+              color: '#FFD700',
+              outline: 'none',
+              backdropFilter: 'blur(10px)',
+              transition: 'all 0.3s ease',
+              fontFamily: "'Georgia', serif"
+            }}
+          />
+
+          {/* Enhanced Search Results with source indicators */}
+          {showResults && searchResults.length > 0 && (
+            <div style={{
+              position: 'absolute',
+              top: '100%',
+              left: 0,
+              right: 0,
+              maxHeight: '300px',
+              overflowY: 'auto',
+              background: 'rgba(11, 20, 38, 0.95)',
+              border: '1px solid rgba(255, 215, 0, 0.3)',
+              borderRadius: '15px',
+              backdropFilter: 'blur(20px)',
+              padding: '1rem',
+              marginTop: '0.5rem',
+              zIndex: 999
+            }}>
+              {searchResults.map((character, index) => (
+                <div
+                  key={character.key}
+                  onClick={() => handleCharacterSelect(character)}
+                  style={{
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: '1rem',
+                    padding: '0.75rem',
+                    background: 'rgba(255, 255, 255, 0.05)',
+                    border: '1px solid rgba(255, 215, 0, 0.2)',
+                    borderRadius: '10px',
+                    cursor: 'pointer',
+                    transition: 'all 0.3s ease',
+                    marginBottom: index < searchResults.length - 1 ? '0.5rem' : 0,
+                    position: 'relative'
+                  }}
+                >
+                  <img
+                    src={character.thumbnailUrl}
+                    alt={character.name}
+                    style={{
+                      width: '40px',
+                      height: '40px',
+                      borderRadius: '50%',
+                      objectFit: 'cover',
+                      border: '2px solid rgba(255, 215, 0, 0.3)',
+                      opacity: character.status === 'rejected' ? 0.6 : 1
+                    }}
+                    onError={(e) => { 
+                      e.currentTarget.onError = null;
+                      e.currentTarget.style.display = 'none';
+
+                      const parent = e.currentTarget.parentElement;
+                      if (!parent.querySelector('.text-fallback')) {
+                        const fallback = document.createElement('div');
+                        fallback.className = 'text-fallback';
+                        fallback.style.cssText = 'width:100%;height:100%;display:flex;align-items:center;justify-content:center;background:rgba(255,215,0,0.2);color:#FFD700;font-size:1.2rem;font-weight:bold;border-radius:50%;';
+                        fallback.textContent = (character.name || 'C').charAt(0).toUpperCase();
+                        parent.appendChild(fallback);
+                      }
+                    }}
+                  />
+                  <div style={{ flex: 1, minWidth: 0 }}>
+                    <div style={{
+                      fontSize: '0.9rem',
+                      fontWeight: 600,
+                      color: character.status === 'approved' ? '#FFD700' : '#FFA500',
+                      marginBottom: '0.25rem'
+                    }}>
+                      {character.name}
+                      {/* NEW: Source indicator */}
+                      {character.source === 'market_hub' && (
+                        <span style={{
+                          marginLeft: '0.5rem',
+                          fontSize: '0.7rem',
+                          background: 'rgba(255, 215, 0, 0.2)',
+                          padding: '0.1rem 0.4rem',
+                          borderRadius: '6px',
+                          color: 'rgba(255, 215, 0, 0.9)'
+                        }}>
+                          ✨ Discovered
+                        </span>
+                      )}
+                    </div>
+                    <div style={{
+                      fontSize: '0.75rem',
+                      color: 'rgba(255, 215, 0, 0.7)',
+                      textTransform: 'uppercase',
+                      letterSpacing: '0.5px'
+                    }}>
+                      {character.category}
+                    </div>
+                  </div>
+                </div>
+              ))}
+            </div>
+          )}
+
+          {showResults && searchResults.length === 0 && inputValue.length >= 2 && (
+            <div style={{
+              position: 'absolute',
+              top: '100%',
+              left: 0,
+              right: 0,
+              background: 'rgba(11, 20, 38, 0.95)',
+              border: '1px solid rgba(255, 215, 0, 0.3)',
+              borderRadius: '15px',
+              backdropFilter: 'blur(20px)',
+              padding: '1rem',
+              marginTop: '0.5rem',
+              textAlign: 'center',
+              zIndex: 999
+            }}>
+              <p style={{
+                color: 'rgba(255, 215, 0, 0.8)',
+                margin: '0 0 0.5rem 0',
+                fontSize: '1rem'
+              }}>
+                No matches for "{inputValue}"
+              </p>
+              <small style={{
+                color: 'rgba(255, 255, 255, 0.6)',
+                fontSize: '0.85rem'
+              }}>
+                Try searching for character names or themes
+              </small>
+            </div>
+          )}
+        </div>
+
+        {/* Personalized Section (Mobile) */}
+        {shouldShowForYou && (
+          <PersonalizedSection 
+            characters={recentCharacters}
+            onCharacterSelect={handleRecentCharacterSelect}
+            hasActiveConversations={hasActiveConversations}
+            isMobile={true}
+          />
+        )}
+
+        {/* Categories or Characters View */}
+        {!selectedCategory ? (
+          <div style={{
+            width: '100%',
+            display: 'grid',
+            gridTemplateColumns: 'repeat(2, 1fr)',
+            gap: '1rem',
+            marginTop: '1rem',
+          }}>
+            {enhancedCategories.map((category) => (
+              <CategoryCard
+                key={category.key}
+                category={category}
+                onClick={() => handleCategorySelect(category)}
+                isMobile={true}
+                onCreateCharacter={handleCreateCharacterClick}
+              />
+            ))}
+          </div>
+        ) : (
+          <>
+            {/* Category Header */}
+            <div style={{
+              display: 'flex',
+              justifyContent: 'space-between',
+              alignItems: 'center',
+              width: '100%',
+              maxWidth: '500px',
+              marginBottom: '1rem',
+              paddingBottom: '0.5rem',
+              borderBottom: '1px solid rgba(255, 215, 0, 0.3)'
+            }}>
+              <h2 style={{
+                color: '#FFD700',
+                fontSize: '1.5rem',
+                fontFamily: "'Playfair Display', serif",
+                margin: 0,
+                letterSpacing: '1px',
+                textShadow: '0 0 10px rgba(255, 215, 0, 0.5)',
+                display: 'flex',
+                alignItems: 'center',
+                gap: '0.5rem'
+              }}>
+                {selectedCategory.icon && (
+                  <span style={{ fontSize: '1.2rem' }}>{selectedCategory.icon}</span>
+                )}
+                {selectedCategory.title}
+              </h2>
+              
+              <button
+                onClick={handleBackToCategories}
+                style={{
+                  background: 'rgba(255, 215, 0, 0.1)',
+                  border: '1px solid rgba(255, 215, 0, 0.4)',
+                  borderRadius: '6px',
+                  color: '#FFD700',
+                  fontSize: '0.8rem',
+                  fontWeight: 600,
+                  padding: '0.3rem 0.8rem',
+                  cursor: 'pointer',
+                  fontFamily: "'Georgia', serif"
+                }}
+              >
+                ← Back
+              </button>
+            </div>
+
+            {/* Mobile Character View */}
+            <MobileCharacterView
+              selectedCategory={selectedCategory}
+              userCharacters={userCharacters}
+              charactersLoading={charactersLoading}
+              charactersError={charactersError}
+              onCreateCharacter={handleCreateCharacterClick}
+              onCharacterSelect={handleCharacterSelect}
+              user_id={user?.id}
+            />
+          </>
+        )}
 
         {/* Character Detail Modal (Mobile) */}
         {selectedChar && (
@@ -495,639 +843,621 @@ const ChatLauncherPage = ({ onStartChat, discoveredCharacters = [] }) => {
     );
   }
 
-  // Success screen
-  if (showSuccess) {
-    return (
-      <div
-        style={{
-          position: 'fixed',
-          inset: 0,
-          zIndex: 4000,
-          background: 'rgba(0, 0, 0, 0.95)'
-        }}
-      >
-        <CharacterCreationSuccess onClose={handleCloseCreationFlow} />
-      </div>
-    );
-  }
-
-  // Template gallery overlay
-  if (showTemplates) {
-    return (
-      <div
-        style={{
-          position: 'fixed',
-          inset: 0,
-          zIndex: 3000,
-          background: 'rgba(0, 0, 0, 0.95)',
-          overflowY: 'auto'
-        }}
-      >
-        <TemplateGallery
-          onSelectTemplate={handleTemplateSelect}
-          onClose={handleCloseCreationFlow}
-        />
-      </div>
-    );
-  }
-
-  // Builder overlay
-  if (showBuilder) {
-    return (
-      <div
-        style={{
-          position: 'fixed',
-          inset: 0,
-          zIndex: 3000,
-          background: 'rgba(0, 0, 0, 0.95)',
-          overflowY: 'auto'
-        }}
-      >
-        <CharacterBuilder
-          template={selectedTemplate}
-          onClose={handleCloseCreationFlow}
-          onComplete={handleCharacterCreationComplete}
-        />
-      </div>
-    );
-  }
-
-  // DESKTOP LAYOUT - Minimal two-pane launcher
+  // DESKTOP LAYOUT - Enhanced with discovered characters
   return (
-    <div
-      style={{
-        width: '100%',
-        minHeight: '100vh',
+    <div style={{
+      width: '100%',
+      height: '100vh',
+      display: 'flex',
+      fontFamily: "'Georgia', serif",
+      background: 'linear-gradient(135deg, #0B1426 0%, #1A2B47 25%, #2C1810 50%, #0F1A2E 75%, #0B1426 100%)',
+      overflow: 'hidden'
+    }}>
+      {/* LEFT HALF - Search Section */}
+      <div style={{
+        width: '50%',
+        height: '100%',
         display: 'flex',
-        alignItems: 'stretch',
-        justifyContent: 'center',
-        padding: '24px',
-        boxSizing: 'border-box',
-        background: 'radial-gradient(circle at top, #111827 0, #020617 55%, #000 100%)',
-        color: '#f2e8d5',
-        fontFamily:
-          "system-ui, -apple-system, BlinkMacSystemFont, 'SF Pro Text', sans-serif"
-      }}
-    >
-      <div
-        style={{
-          width: '100%',
-          maxWidth: '1160px',
-          minHeight: '620px',
-          background: '#020617',
-          borderRadius: 28,
-          padding: 20,
-          border: '1px solid rgba(15, 23, 42, 0.9)',
-          boxShadow: '0 20px 45px rgba(0, 0, 0, 0.8)',
-          display: 'grid',
-          gridTemplateColumns: 'minmax(0, 0.38fr) minmax(0, 0.62fr)',
-          gap: 18,
-          position: 'relative',
-          overflow: 'hidden'
-        }}
-      >
-        {/* LEFT PANE: Search + Personalized */}
-        <section
-          style={{
-            background: '#0b1220',
-            borderRadius: 24,
-            padding: '18px 16px',
-            border: '1px solid rgba(31, 41, 55, 1)',
-            display: 'flex',
-            flexDirection: 'column',
-            gap: 14,
-            position: 'relative',
-            overflow: 'hidden'
-          }}
-        >
-          <header style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
-            <div
-              style={{
-                fontSize: 11,
-                letterSpacing: '0.18em',
-                textTransform: 'uppercase',
-                color: '#6b7280'
-              }}
-            >
-              Chat launcher
-            </div>
-            <div style={{ display: 'flex', justifyContent: 'space-between', gap: 8 }}>
-              <h1
-                style={{
-                  fontSize: 20,
-                  fontWeight: 600,
-                  letterSpacing: '0.06em',
-                  textTransform: 'uppercase',
-                  margin: 0
-                }}
-              >
-                Awaken a legend
-              </h1>
-            </div>
-            <p
-              style={{
-                fontSize: 12,
-                color: '#cbd5f5',
-                margin: '2px 0 0 0'
-              }}
-            >
-              Pick up a conversation where you left off, or switch smoothly to another
-              legend.
-            </p>
-            <p
-              style={{
-                fontSize: 11,
-                color: '#9ca3af',
-                margin: '2px 0 0 0'
-              }}
-            >
-              Showing your recent legends
-              {recentCharacters && recentCharacters.length
-                ? ` · ${recentCharacters.length} tracked`
-                : ''}
-              {hasActiveConversations ? ' · active sessions running' : ''}
-            </p>
-          </header>
+        flexDirection: 'column',
+        justifyContent: 'flex-start',
+        alignItems: 'center',
+        padding: '4rem 2rem 2rem 2rem',
+        position: 'relative',
+        borderRight: '1px solid rgba(255, 215, 0, 0.2)'
+      }}>
+        {/* Welcome Section */}
+        <div style={{ textAlign: 'center', marginBottom: '1.5rem' }}>
+          <h1 style={{
+            fontFamily: "'Playfair Display', serif",
+            fontSize: '2.5rem',
+            background: 'linear-gradient(135deg, #FFD700, #FFA500, #FFD700)',
+            backgroundClip: 'text',
+            WebkitBackgroundClip: 'text',
+            color: 'transparent',
+            margin: '0 0 1rem 0',
+            textShadow: '0 0 30px rgba(255, 215, 0, 0.5)',
+            letterSpacing: '2px',
+            fontWeight: 700
+          }}>
+            Welcome, {user?.displayName || 'Seeker'}
+          </h1>
+          <p style={{
+            fontSize: '1.2rem',
+            color: 'rgba(255, 215, 0, 0.8)',
+            fontStyle: 'italic',
+            letterSpacing: '1px',
+            textShadow: '0 2px 4px rgba(0, 0, 0, 0.8)',
+            margin: 0,
+            transition: 'opacity 0.5s ease',
+            opacity: showResults ? 0.5 : 1
+          }}>
+            {currentPlaceholder}
+          </p>
 
-          {/* Search input + semantic results overlay */}
-          <div style={{ marginTop: 6, position: 'relative' }}>
-            <input
-              type="search"
-              value={inputValue}
-              onChange={(e) => handleInputChange(e.target.value)}
-              placeholder={ORACLE_PROMPTS[placeholderIndex]}
-              style={{
-                width: '100%',
-                borderRadius: 999,
-                border: '1px solid rgba(148, 163, 184, 0.35)',
-                background: 'rgba(15, 23, 42, 0.85)',
-                padding: '8px 12px',
-                fontSize: 12,
-                color: '#f2e8d5',
-                outline: 'none'
-              }}
-            />
-            <p
-              style={{
-                fontSize: 10,
-                color: '#6b7280',
-                marginTop: 4
-              }}
-            >
-              Type at least 2 letters to filter across created, templates and discovered
-              characters.
-            </p>
-
-            {/* Search results dropdown */}
-            {showResults && searchResults.length > 0 && (
-              <div
-                style={{
-                  position: 'absolute',
-                  top: '100%',
-                  left: 0,
-                  right: 0,
-                  maxHeight: 300,
-                  overflowY: 'auto',
-                  background: 'rgba(15, 23, 42, 0.98)',
-                  border: '1px solid rgba(207, 174, 92, 0.5)',
-                  borderRadius: 14,
-                  backdropFilter: 'blur(18px)',
-                  padding: '10px 10px',
-                  marginTop: 8,
-                  zIndex: 999
-                }}
-              >
-                {searchResults.map((character, index) => (
-                  <div
-                    key={`${character.key}-${index}`}
-                    onClick={() => {
-                      handleCharacterSelect(character);
-                      setShowResults(false);
-                    }}
-                    style={{
-                      display: 'flex',
-                      alignItems: 'center',
-                      gap: 10,
-                      padding: '8px 9px',
-                      background: 'rgba(15, 23, 42, 0.95)',
-                      border: '1px solid rgba(31, 41, 55, 0.9)',
-                      borderRadius: 10,
-                      cursor: 'pointer',
-                      marginBottom: index < searchResults.length - 1 ? 8 : 0
-                    }}
-                  >
-                    {/* Thumbnail / avatar */}
-                    <div
-                      style={{
-                        width: 40,
-                        height: 40,
-                        borderRadius: '50%',
-                        overflow: 'hidden',
-                        border: '2px solid rgba(207, 174, 92, 0.4)',
-                        flexShrink: 0
-                      }}
-                    >
-                      <img
-                        src={character.thumbnailUrl || '/images/default-character.jpg'}
-                        alt={character.name}
-                        style={{ width: '100%', height: '100%', objectFit: 'cover' }}
-                        onError={(e) => {
-                          e.currentTarget.onError = null;
-                          e.currentTarget.style.display = 'none';
-                          const parent = e.currentTarget.parentElement;
-                          if (parent && !parent.querySelector('.text-fallback')) {
-                            const fallback = document.createElement('div');
-                            fallback.className = 'text-fallback';
-                            fallback.style.cssText =
-                              'width:100%;height:100%;display:flex;align-items:center;justify-content:center;background:rgba(15,23,42,1);color:#FBBF24;font-size:1.1rem;font-weight:bold;border-radius:50%;';
-                            fallback.textContent = (character.name || 'C')
-                              .charAt(0)
-                              .toUpperCase();
-                            parent.appendChild(fallback);
-                          }
-                        }}
-                      />
-                    </div>
-
-                    <div style={{ flex: 1, minWidth: 0 }}>
-                      <div
-                        style={{
-                          fontSize: 13,
-                          fontWeight: 600,
-                          color: character.status === 'approved' ? '#fbbf24' : '#fb923c',
-                          marginBottom: 2,
-                          display: 'flex',
-                          alignItems: 'center',
-                          gap: 6
-                        }}
-                      >
-                        <span
-                          style={{
-                            whiteSpace: 'nowrap',
-                            overflow: 'hidden',
-                            textOverflow: 'ellipsis'
-                          }}
-                        >
-                          {character.name}
-                        </span>
-                        {character.source === 'market_hub' && (
-                          <span
-                            style={{
-                              fontSize: 9,
-                              padding: '2px 6px',
-                              borderRadius: 999,
-                              border: '1px solid rgba(59, 130, 246, 0.7)',
-                              color: '#bfdbfe'
-                            }}
-                          >
-                            Hub
-                          </span>
-                        )}
-                        {character.source === 'discovered' && (
-                          <span
-                            style={{
-                              fontSize: 9,
-                              padding: '2px 6px',
-                              borderRadius: 999,
-                              border: '1px solid rgba(34, 197, 94, 0.7)',
-                              color: '#bbf7d0'
-                            }}
-                          >
-                            Discovered
-                          </span>
-                        )}
-                      </div>
-                      <div
-                        style={{
-                          fontSize: 11,
-                          color: '#9ca3af',
-                          whiteSpace: 'nowrap',
-                          overflow: 'hidden',
-                          textOverflow: 'ellipsis'
-                        }}
-                      >
-                        {character.description}
-                      </div>
-                    </div>
-                  </div>
-                ))}
-              </div>
-            )}
-
-            {showResults && searchResults.length === 0 && inputValue.length >= 2 && (
-              <div
-                style={{
-                  position: 'absolute',
-                  top: '100%',
-                  left: 0,
-                  right: 0,
-                  background: 'rgba(15, 23, 42, 0.98)',
-                  border: '1px solid rgba(207, 174, 92, 0.4)',
-                  borderRadius: 14,
-                  backdropFilter: 'blur(18px)',
-                  padding: '10px 10px',
-                  marginTop: 8,
-                  textAlign: 'center',
-                  zIndex: 999
-                }}
-              >
-                <p
-                  style={{
-                    color: 'rgba(248, 250, 252, 0.9)',
-                    margin: '0 0 4px 0',
-                    fontSize: 13
-                  }}
-                >
-                  No matches for "{inputValue}"
-                </p>
-                <small style={{ color: 'rgba(148, 163, 184, 0.9)', fontSize: 11 }}>
-                  Try searching for character names, themes or expertise.
-                </small>
-              </div>
-            )}
-          </div>
-
-          {/* Personalized suggestions */}
-          {shouldShowForYou && (
-            <div style={{ marginTop: 10 }}>
-              <PersonalizedSection
-                characters={recentCharacters}
-                onCharacterSelect={handleRecentCharacterSelect}
-                hasActiveConversations={hasActiveConversations}
-                isMobile={false}
-              />
+          {/* NEW: Show discovered count if any */}
+          {discoveredCharacters.length > 0 && (
+            <div style={{
+              marginTop: '1rem',
+              padding: '0.5rem 1rem',
+              background: 'rgba(255, 215, 0, 0.1)',
+              border: '1px solid rgba(255, 215, 0, 0.3)',
+              borderRadius: '15px',
+              fontSize: '0.9rem',
+              color: 'rgba(255, 215, 0, 0.9)',
+              display: 'inline-flex',
+              alignItems: 'center',
+              gap: '0.5rem',
+              backdropFilter: 'blur(10px)'
+            }}>
+              ✨ {discoveredCharacters.length} character{discoveredCharacters.length !== 1 ? 's' : ''} discovered from Market Hub
             </div>
           )}
-        </section>
+        </div>
 
-        {/* RIGHT PANE: Categories + Character grid */}
-        <section
-          style={{
-            background: 'rgba(15, 23, 42, 0.98)',
-            borderRadius: 24,
-            padding: '18px 16px',
-            border: '1px solid rgba(31, 41, 55, 1)',
-            display: 'flex',
-            flexDirection: 'column',
-            gap: 14,
-            overflow: 'hidden'
-          }}
-        >
-          <header style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
-            <div
-              style={{
-                fontSize: 11,
-                letterSpacing: '0.18em',
-                textTransform: 'uppercase',
-                color: '#6b7280'
-              }}
-            >
-              Browse by archetype
-            </div>
-            <div
-              style={{
-                display: 'flex',
-                justifyContent: 'space-between',
-                alignItems: 'baseline',
-                gap: 12
-              }}
-            >
-              <h2
-                style={{
-                  fontSize: 18,
-                  fontWeight: 600,
-                  letterSpacing: '0.08em',
-                  textTransform: 'uppercase',
-                  margin: 0
-                }}
-              >
-                Discover a legend
-              </h2>
-              <p
-                style={{
-                  fontSize: 11,
-                  color: '#cbd5f5',
-                  margin: 0
-                }}
-              >
-                Tap a category to explore templates and your own characters from that
-                group.
-              </p>
-            </div>
-
-            {/* Category strip */}
-            <div
-              style={{
-                display: 'flex',
-                flexWrap: 'wrap',
-                gap: 8,
-                marginTop: 4
-              }}
-            >
-              {enhancedCategories.map((category) => (
-                <button
-                  key={category.key}
-                  type="button"
-                  onClick={() => handleCategorySelect(category)}
-                  style={{
-                    borderRadius: 999,
-                    border:
-                      selectedCategory && selectedCategory.key === category.key
-                        ? '1px solid rgba(207, 174, 92, 0.8)'
-                        : '1px solid rgba(148, 163, 184, 0.6)',
-                    padding: '5px 9px',
-                    fontSize: 11,
-                    background:
-                      selectedCategory && selectedCategory.key === category.key
-                        ? 'rgba(15, 23, 42, 0.9)'
-                        : 'rgba(15, 23, 42, 0.7)',
-                    color:
-                      selectedCategory && selectedCategory.key === category.key
-                        ? '#fbbf24'
-                        : '#e5e7eb',
-                    display: 'inline-flex',
-                    alignItems: 'center',
-                    gap: 6,
-                    cursor: 'pointer'
-                  }}
-                >
-                  {category.icon && <span>{category.icon}</span>}
-                  <span>{category.title}</span>
-                  {typeof category.characterCount === 'number' && (
-                    <span
-                      style={{
-                        fontSize: 10,
-                        color: '#9ca3af'
-                      }}
-                    >
-                      · {category.characterCount}
-                    </span>
-                  )}
-                </button>
-              ))}
-            </div>
-          </header>
-
-          {/* Category or character view */}
-          <div
+        {/* Search Section */}
+        <div style={{ width: '100%', maxWidth: '400px', position: 'relative', marginBottom: '1rem' }}>
+          <input
+            type="text"
+            placeholder="Search characters..."
+            value={inputValue}
+            onChange={(e) => handleInputChange(e.target.value)}
+            onFocus={() => inputValue.length >= 2 && setShowResults(true)}
+            onBlur={() => setTimeout(() => setShowResults(false), 200)}
             style={{
-              marginTop: 4,
-              display: 'flex',
-              flexDirection: 'column',
-              gap: 10,
-              flex: 1,
-              minHeight: 0
+              width: '100%',
+              padding: '1rem 1.5rem',
+              fontSize: '1.1rem',
+              border: '2px solid rgba(255, 215, 0, 0.3)',
+              borderRadius: '25px',
+              background: 'rgba(255, 255, 255, 0.1)',
+              color: '#FFD700',
+              outline: 'none',
+              backdropFilter: 'blur(10px)',
+              transition: 'all 0.3s ease',
+              fontFamily: "'Georgia', serif"
             }}
-          >
-            {!selectedCategory && (
-              <div
-                style={{
-                  width: '100%',
-                  display: 'grid',
-                  gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))',
-                  gap: 12,
-                  marginTop: 4
-                }}
-              >
-                {enhancedCategories.map((category, index) => (
-                  <CategoryCard
-                    key={category.key}
-                    category={category}
-                    onClick={() => handleCategorySelect(category)}
-                    isMobile={false}
-                    index={index}
-                    onCreateCharacter={handleCreateCharacterClick}
-                  />
-                ))}
-              </div>
-            )}
+          />
 
-            {selectedCategory && (
-              <div
-                style={{
-                  marginTop: 4,
-                  display: 'flex',
-                  flexDirection: 'column',
-                  gap: 10,
-                  flex: 1,
-                  minHeight: 0
-                }}
-              >
+          {/* Enhanced Search Results (Desktop) with source indicators */}
+          {showResults && searchResults.length > 0 && (
+            <div style={{
+              position: 'absolute',
+              top: '100%',
+              left: 0,
+              right: 0,
+              maxHeight: '300px',
+              overflowY: 'auto',
+              background: 'rgba(11, 20, 38, 0.95)',
+              border: '1px solid rgba(255, 215, 0, 0.3)',
+              borderRadius: '15px',
+              backdropFilter: 'blur(20px)',
+              padding: '1rem',
+              marginTop: '0.5rem',
+              zIndex: 1000
+            }}>
+              {searchResults.map((character, index) => (
                 <div
+                  key={character.key}
+                  onClick={() => handleCharacterSelect(character)}
                   style={{
                     display: 'flex',
-                    justifyContent: 'space-between',
                     alignItems: 'center',
-                    marginBottom: 6
+                    gap: '1rem',
+                    padding: '0.75rem',
+                    background: 'rgba(255, 255, 255, 0.05)',
+                    border: '1px solid rgba(255, 215, 0, 0.2)',
+                    borderRadius: '10px',
+                    cursor: 'pointer',
+                    transition: 'all 0.3s ease',
+                    marginBottom: index < searchResults.length - 1 ? '0.5rem' : 0,
+                    position: 'relative'
+                  }}
+                  onMouseEnter={(e) => {
+                    e.currentTarget.style.background = 'rgba(255, 215, 0, 0.1)';
+                    e.currentTarget.style.borderColor = 'rgba(255, 215, 0, 0.5)';
+                  }}
+                  onMouseLeave={(e) => {
+                    e.currentTarget.style.background = 'rgba(255, 255, 255, 0.05)';
+                    e.currentTarget.style.borderColor = 'rgba(255, 215, 0, 0.2)';
                   }}
                 >
+                  <img
+                    src={character.thumbnailUrl}
+                    alt={character.name}
+                    style={{
+                      width: '40px',
+                      height: '40px',
+                      borderRadius: '50%',
+                      objectFit: 'cover',
+                      border: '2px solid rgba(255, 215, 0, 0.3)',
+                      opacity: character.status === 'rejected' ? 0.6 : 1
+                    }}
+                    onError={(e) => { 
+                      e.currentTarget.onError = null;
+                      e.currentTarget.style.display = 'none';
+
+                      const parent = e.currentTarget.parentElement;
+                      if (!parent.querySelector('.text-fallback')) {
+                        const fallback = document.createElement('div');
+                        fallback.className = 'text-fallback';
+                        fallback.style.cssText = 'width:100%;height:100%;display:flex;align-items:center;justify-content:center;background:rgba(255,215,0,0.2);color:#FFD700;font-size:1.2rem;font-weight:bold;border-radius:50%;';
+                        fallback.textContent = (character.name || 'C').charAt(0).toUpperCase();
+                        parent.appendChild(fallback);
+                      }
+                    }}
+                  />
+                  <div style={{ flex: 1, minWidth: 0 }}>
+                    <div style={{ 
+                      fontSize: '0.9rem', 
+                      fontWeight: 600, 
+                      color: character.status === 'approved' ? '#FFD700' : '#FFA500', 
+                      marginBottom: '0.25rem',
+                      display: 'flex',
+                      alignItems: 'center',
+                      gap: '0.5rem'
+                    }}>
+                      {character.name}
+                      {/* NEW: Source indicator */}
+                      {character.source === 'market_hub' && (
+                        <span style={{
+                          fontSize: '0.7rem',
+                          background: 'rgba(255, 215, 0, 0.2)',
+                          padding: '0.1rem 0.4rem',
+                          borderRadius: '6px',
+                          color: 'rgba(255, 215, 0, 0.9)'
+                        }}>
+                          ✨ Discovered
+                        </span>
+                      )}
+                    </div>
+                    <div style={{
+                      fontSize: '0.75rem',
+                      color: 'rgba(255, 215, 0, 0.7)',
+                      letterSpacing: '0.5px'
+                    }}>
+                      {character.category}
+                      {character.expertise_domain && character.source === 'market_hub' && (
+                        <span style={{ margin: '0 0.3rem', color: 'rgba(255, 255, 255, 0.5)' }}>•</span>
+                      )}
+                      {character.expertise_domain && character.source === 'market_hub' && (
+                        <span style={{ color: 'rgba(255, 215, 0, 0.6)' }}>
+                          {character.expertise_domain}
+                        </span>
+                      )}
+                    </div>
+                  </div>
+                </div>
+              ))}
+            </div>
+          )}
+
+          {showResults && searchResults.length === 0 && inputValue.length >= 2 && (
+            <div style={{
+              position: 'absolute',
+              top: '100%',
+              left: 0,
+              right: 0,
+              background: 'rgba(11, 20, 38, 0.95)',
+              border: '1px solid rgba(255, 215, 0, 0.3)',
+              borderRadius: '15px',
+              backdropFilter: 'blur(20px)',
+              padding: '1rem',
+              marginTop: '0.5rem',
+              textAlign: 'center',
+              zIndex: 999
+            }}>
+              <p style={{
+                color: 'rgba(255, 215, 0, 0.8)',
+                margin: '0 0 0.5rem 0',
+                fontSize: '1rem'
+              }}>
+                No matches for "{inputValue}"
+              </p>
+              <small style={{ color: 'rgba(255, 255, 255, 0.6)', fontSize: '0.85rem' }}>
+                Try searching for character names or themes
+              </small>
+            </div>
+          )}
+        </div>
+
+        {/* Personalized Section (Desktop) */}
+        {shouldShowForYou && (
+          <PersonalizedSection 
+            characters={recentCharacters}
+            onCharacterSelect={handleRecentCharacterSelect}
+            hasActiveConversations={hasActiveConversations}
+            isMobile={false}
+          />
+        )}
+      </div>
+
+      {/* RIGHT HALF - Categories/Characters */}
+      <div style={{ width: '50%', height: '100%', position: 'relative', perspective: '1000px' }}>
+
+        {/* Categories Grid */}
+        <div 
+          className="categories-grid-container"
+          style={{
+            position: 'absolute',
+            width: '100%',
+            height: '100%',
+            zIndex: 3,
+            padding: '2rem',
+            display: 'grid',
+            gridTemplateColumns: 'repeat(3, 1fr)',
+            gridTemplateRows: 'repeat(4, 1fr)',
+            gap: '1rem',
+            alignContent: 'start',
+            justifyContent: 'center',
+            transform: selectedCategory ? 'rotateY(-90deg)' : 'rotateY(0deg)',
+            transition: 'transform 0.6s ease-in-out',
+            transformStyle: 'preserve-3d',
+            backfaceVisibility: 'hidden',
+            overflowY: 'auto',
+            overflowX: 'hidden',
+            maxHeight: '100%',
+            paddingRight: '2.5rem'
+          }}
+        >
+          {enhancedCategories.map((category, index) => (
+            <CategoryCard
+              key={category.key}
+              category={category}
+              onClick={() => handleCategorySelect(category)}
+              index={index}
+              isMobile={false}
+              onCreateCharacter={handleCreateCharacterClick}
+            />
+          ))}
+        </div>
+
+        {/* Characters Panel */}
+        <div style={{
+          position: 'absolute',
+          width: '100%',
+          height: '100%',
+          padding: '2rem',
+          transform: selectedCategory ? 'rotateY(0deg)' : 'rotateY(90deg)',
+          transition: 'transform 0.6s ease-in-out',
+          transformStyle: 'preserve-3d',
+          backfaceVisibility: 'hidden',
+          overflowY: 'auto'
+        }} className="character-panel">
+          {selectedCategory && (
+            <>
+              {/* Header */}
+              <div style={{
+                display: 'flex',
+                justifyContent: 'space-between',
+                alignItems: 'center',
+                marginBottom: '2rem',
+                paddingBottom: '1rem',
+                borderBottom: '2px solid rgba(255, 215, 0, 0.3)'
+              }}>
+                <h2 style={{
+                  color: '#FFD700',
+                  fontSize: '2rem',
+                  fontFamily: "'Playfair Display', serif",
+                  margin: 0,
+                  letterSpacing: '2px',
+                  textShadow: '0 0 20px rgba(255, 215, 0, 0.5)',
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: '0.5rem'
+                }}>
+                  {selectedCategory.icon && (
+                    <span style={{ fontSize: '1.5rem' }}>{selectedCategory.icon}</span>
+                  )}
+                  {selectedCategory.title}
+                </h2>
+                
+                <button
+                  onClick={handleBackToCategories}
+                  style={{
+                    background: 'rgba(255, 215, 0, 0.1)',
+                    border: '2px solid rgba(255, 215, 0, 0.4)',
+                    borderRadius: '8px',
+                    color: '#FFD700',
+                    fontSize: '0.9rem',
+                    fontWeight: 600,
+                    padding: '0.5rem 1rem',
+                    cursor: 'pointer',
+                    transition: 'all 0.3s ease',
+                    fontFamily: "'Georgia', serif"
+                  }}
+                  onMouseEnter={(e) => {
+                    e.currentTarget.style.background = 'rgba(255, 215, 0, 0.2)';
+                    e.currentTarget.style.borderColor = 'rgba(255, 215, 0, 0.6)';
+                  }}
+                  onMouseLeave={(e) => {
+                    e.currentTarget.style.background = 'rgba(255, 215, 0, 0.1)';
+                    e.currentTarget.style.borderColor = 'rgba(255, 215, 0, 0.4)';
+                  }}
+                >
+                  ← Back
+                </button>
+              </div>
+
+              {/* Desktop Content Area */}
+              {selectedCategory.key === 'my_characters' ? (
+                <MyCharactersPanel 
+                  userCharacters={userCharacters}
+                  charactersLoading={charactersLoading}
+                  charactersError={charactersError}
+                  onCreateCharacter={handleCreateCharacterClick}
+                  onCharacterSelect={handleCharacterSelect}
+                  onCharacterPublishToggle={handleCharacterPublishToggle}  // ← ADD THIS
+                  isMobile={false}
+                  user_id={user?.id}
+                  onShowUpgradeModal={handleShowUpgradeModal}
+                />
+                ) : selectedCategory.key === 'discovered' ? (
+                  /* Special handling for discovered characters */
                   <div>
-                    <h3
-                      style={{
-                        margin: 0,
-                        fontSize: 16,
-                        fontWeight: 600
-                      }}
-                    >
-                      {selectedCategory.title}
-                    </h3>
                     {selectedCategory.description && (
-                      <p
-                        style={{
-                          margin: '4px 0 0 0',
-                          fontSize: 11,
-                          color: '#9ca3af'
-                        }}
-                      >
+                      <p style={{
+                        color: 'rgba(255, 215, 0, 0.8)',
+                        fontSize: '1rem',
+                        marginBottom: '1.5rem',
+                        textAlign: 'center',
+                        fontStyle: 'italic'
+                      }}>
                         {selectedCategory.description}
                       </p>
                     )}
-                  </div>
-                  <button
-                    type="button"
-                    onClick={handleBackToCategories}
-                    style={{
-                      fontSize: 11,
-                      padding: '4px 9px',
-                      borderRadius: 999,
-                      border: '1px solid rgba(148, 163, 184, 0.7)',
-                      background: 'transparent',
-                      color: '#e5e7eb',
-                      cursor: 'pointer'
-                    }}
-                  >
-                    ← Back to categories
-                  </button>
-                </div>
 
-                {/* My Characters special handling */}
-                {selectedCategory.key === 'my_characters' ? (
-                  <MyCharactersPanel
-                    userCharacters={userCharacters}
-                    charactersLoading={charactersLoading}
-                    charactersError={charactersError}
-                    onCreateCharacter={handleCreateCharacterClick}
-                    onCharacterSelect={handleCharacterSelect}
-                    user_id={user?.id}
-                  />
-                ) : (
-                  <div
-                    style={{
+                    <div style={{
                       display: 'grid',
                       gridTemplateColumns: 'repeat(auto-fit, minmax(180px, 1fr))',
-                      gap: 10,
-                      maxHeight: 'calc(100vh - 260px)',
+                      gap: '1rem',
+                      maxHeight: 'calc(100vh - 200px)',
                       overflowY: 'auto',
-                      paddingRight: 4
-                    }}
-                  >
-                    {selectedCategory.characters.map((character, index) => (
-                      <CharacterCard
-                        key={character.key}
-                        character={character}
-                        onClick={() => handleCharacterSelect(character)}
-                        index={index}
-                        isMobile={false}
-                        showStatusIndicator={character.key?.startsWith('user_')}
-                      />
-                    ))}
+                      paddingRight: '0.5rem'
+                    }}>
+                      {selectedCategory.characters.map((character, index) => (
+                        <div key={character.key} style={{ position: 'relative' }}>
+                          <CharacterCard
+                            character={character}
+                            onClick={() => handleCharacterSelect(character)}
+                            index={index}
+                            isMobile={false}
+                            showStatusIndicator={false}
+                          />
+                          {/* Discovered badge */}
+                          <div style={{
+                            position: 'absolute',
+                            top: '8px',
+                            right: '8px',
+                            background: 'rgba(255, 215, 0, 0.9)',
+                            color: 'rgba(0, 0, 0, 0.8)',
+                            fontSize: '0.7rem',
+                            padding: '0.2rem 0.4rem',
+                            borderRadius: '6px',
+                            fontWeight: 600,
+                            zIndex: 2
+                          }}>
+                            ✨
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+
+                    {selectedCategory.characters.length === 0 && (
+                      <div style={{
+                        textAlign: 'center',
+                        padding: '2rem',
+                        color: 'rgba(255, 215, 0, 0.7)'
+                      }}>
+                        <h3 style={{ margin: '0 0 1rem 0', fontSize: '1.2rem' }}>
+                          No characters discovered yet
+                        </h3>
+                        <p style={{ margin: 0, fontSize: '1rem' }}>
+                          Explore the Market Hub to find interesting characters and add them to this collection!
+                        </p>
+                      </div>
+                    )}
                   </div>
-                )}
-              </div>
-            )}
-          </div>
-        </section>
-
-        {/* Character Detail Modal (Desktop) */}
-        {selectedChar && (
-          <div style={{ zIndex: 2500 }}>
-            <CharacterDetailPanel
-              character={selectedChar}
-              onStartChat={handleStartChatFromSelection}
-              onClose={() => setSelectedChar(null)}
-              isMobile={false}
-            />
-          </div>
-        )}
-
-        {/* Character Status Modal */}
-        {showStatusModal && selectedStatusCharacter && (
-          <CharacterStatusModal
-            character={selectedStatusCharacter}
-            onClose={handleStatusModalClose}
-            onCreateNew={handleCreateNewCharacter}
-            onUpgrade={handleUpgradeFlow}
-          />
-        )}
-
-        {/* Upgrade Modal */}
-        <DualPathUpgradeSystem
-          isOpen={upgradeModalOpen}
-          onClose={handleCloseUpgradeModal}
-          triggerReason={upgradeReason}
-          currentUsage={null}
-        />
+                ) : (
+                <div style={{
+                  display: 'grid',
+                  gridTemplateColumns: 'repeat(auto-fit, minmax(180px, 1fr))',
+                  gap: '1rem',
+                  maxHeight: 'calc(100vh - 200px)',
+                  overflowY: 'auto',
+                  paddingRight: '0.5rem'
+                }}>
+                  {selectedCategory.characters.map((character, index) => (
+                    <CharacterCard
+                      key={character.key}
+                      character={character}
+                      onClick={() => handleCharacterSelect(character)}
+                      index={index}
+                      isMobile={false}
+                      showStatusIndicator={character.key?.startsWith('user_')}
+                    />
+                  ))}
+                </div>
+              )}
+            </>
+          )}
+        </div>
       </div>
+
+      {/* Character Detail Modal (Desktop) */}
+      {selectedChar && (
+        <div style={{ zIndex: 2500 }}>
+          <CharacterDetailPanel
+            character={selectedChar}
+            onStartChat={handleStartChatFromSelection}
+            onClose={() => setSelectedChar(null)}
+            isMobile={false}
+          />
+        </div>
+      )}
+
+      {/* Character Status Modal */}
+      {showStatusModal && selectedStatusCharacter && (
+        <CharacterStatusModal
+          character={selectedStatusCharacter}
+          onClose={handleStatusModalClose}
+          onCreateNew={handleCreateNewCharacter}
+          onUpgrade={handleUpgradeFlow}
+        />
+      )}
+
+      <style jsx>{`
+        @import url('https://fonts.googleapis.com/css2?family=Cinzel:wght@400;600&family=Cinzel+Decorative:wght@400;700&display=swap');
+        
+        /* Z-INDEX HIERARCHY */
+        @keyframes categorySlideIn {
+          from { opacity: 0; transform: translateY(30px) scale(0.7); }
+          to   { opacity: 1; transform: translateY(0) scale(1); }
+        }
+        
+        @keyframes characterSlideIn {
+          from { opacity: 0; transform: translateY(20px); }
+          to   { opacity: 1; transform: translateY(0); }
+        }
+        
+        @keyframes spin {
+          0% { transform: rotate(0deg); }
+          100% { transform: rotate(360deg); }
+        }
+        
+        @keyframes slideInFromLeft {
+          from { opacity: 0; transform: translateX(-30px); }
+          to   { opacity: 1; transform: translateX(0); }
+        }
+
+        @keyframes pulse {
+          0%, 100% { opacity: 1; transform: scale(1); }
+          50%      { opacity: 0.7; transform: scale(1.1); }
+        }
+
+        .recent-characters::-webkit-scrollbar { display: none; }
+        
+        .character-panel::-webkit-scrollbar { width: 6px; }
+        .character-panel::-webkit-scrollbar-track {
+          background: rgba(255, 215, 0, 0.1);
+          border-radius: 3px;
+        }
+        
+        .character-panel::-webkit-scrollbar-thumb {
+          background: rgba(255, 215, 0, 0.5);
+          border-radius: 3px;
+        }
+        .character-panel::-webkit-scrollbar-thumb:hover {
+          background: rgba(255, 215, 0, 0.7);
+        }
+        
+        .categories-grid-container {
+          scrollbar-width: thin;
+          scrollbar-color: rgba(255, 215, 0, 0.6) rgba(11, 20, 38, 0.8);
+          position: relative;
+          z-index: 500;
+        }
+
+        .categories-grid-container::-webkit-scrollbar {
+          width: 8px;
+        }
+
+        .categories-grid-container::-webkit-scrollbar-track {
+          background: rgba(11, 20, 38, 0.8);
+          border-radius: 4px;
+          border: 1px solid rgba(255, 215, 0, 0.1);
+        }
+
+        .categories-grid-container::-webkit-scrollbar-thumb {
+          background: linear-gradient(
+            180deg, 
+            rgba(255, 215, 0, 0.8) 0%, 
+            rgba(255, 215, 0, 0.6) 50%,
+            rgba(255, 215, 0, 0.4) 100%
+          );
+          border-radius: 4px;
+          border: 1px solid rgba(255, 215, 0, 0.3);
+          transition: all 0.3s ease;
+        }
+
+        .categories-grid-container::-webkit-scrollbar-thumb:hover {
+          background: linear-gradient(
+            180deg, 
+            rgba(255, 215, 0, 1) 0%, 
+            rgba(255, 215, 0, 0.8) 50%,
+            rgba(255, 215, 0, 0.6) 100%
+          );
+          box-shadow: 0 0 8px rgba(255, 215, 0, 0.4);
+        }
+        
+        .character-panel {
+          position: relative;
+          z-index: 600;
+        }
+        
+        .character-panel * {
+          position: relative;
+          z-index: auto;
+        }
+        
+        @media (max-width: 768px) {
+          div[style*="animation"][style*="characterSlideIn"] {
+            opacity: 1 !important;
+            animation: none !important;
+            visibility: visible !important;
+            transform: none !important;
+          }
+          
+          div[style*="gridTemplateColumns: repeat(2, 1fr)"] {
+            position: relative;
+            z-index: 1;
+          }
+        }
+        
+        @media (max-width: 768px) {
+          button {
+            pointer-events: auto !important;
+            z-index: 999999999999 !important;
+            position: relative !important;
+            touch-action: manipulation !important;
+            min-height: 44px !important;
+            cursor: pointer !important;
+            user-select: none !important;
+            -webkit-user-select: none !important;
+          }
+          
+          div[style*="position: absolute"][style*="zIndex: 999"] {
+            z-index: 950 !important;
+          }
+        }
+      `}</style>
+
+      {/* Upgrade Modal */}
+      <DualPathUpgradeSystem
+        isOpen={upgradeModalOpen}
+        onClose={handleCloseUpgradeModal}
+        triggerReason={upgradeReason}
+        currentUsage={null}
+      />
     </div>
   );
 };
