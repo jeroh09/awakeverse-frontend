@@ -1929,3 +1929,82 @@ body.theme-awakeverse {
   overflow-wrap: break-word !important;
   word-break: break-word !important;
 }
+/* =======================
+   SUBSTANTIAL QUICK WINS - Chat Launcher
+   ======================= */
+
+/* KILL CINZEL & FLOATY STYLES */
+.chat-launcher-page * {
+  font-family: 'Georgia', 'Playfair Display', serif !important;
+  text-transform: none !important;
+}
+
+/* RICH MIDNIGHT BLUE BACKGROUND */
+.chat-launcher-page {
+  background: #0A0A15 !important; /* Rich navy blue */
+  background-image: none !important; /* Remove any gradients causing floatiness */
+}
+
+/* SUBSTANTIAL TEXT COLORS */
+.chat-launcher-page h1,
+.chat-launcher-page h2,
+.chat-launcher-page h3,
+.chat-launcher-page .category-title,
+.chat-launcher-page .character-name {
+  color: #F5F5DC !important; /* Ivory headings */
+  font-family: 'Playfair Display', serif !important;
+  text-shadow: 0 2px 4px rgba(0, 0, 0, 0.5) !important;
+}
+
+.chat-launcher-page p,
+.chat-launcher-page .character-description,
+.chat-launcher-page .category-description {
+  color: rgba(245, 245, 220, 0.9) !important; /* Slightly transparent ivory */
+  font-family: 'Georgia', serif !important;
+}
+
+.chat-launcher-page .subtle-text,
+.chat-launcher-page .category-count {
+  color: #C0C0C0 !important; /* Silver for less important text */
+}
+
+/* THICKEN CONTAINERS */
+.chat-launcher-page .category-card,
+.chat-launcher-page .character-card {
+  border-width: 2px !important;
+  border-color: #444 !important;
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.4) !important;
+}
+
+/* SUBSTANTIAL SEARCH INPUT */
+.chat-launcher-page input[type="text"] {
+  background: #1A1A2E !important;
+  border: 2px solid #444 !important;
+  color: #F5F5DC !important;
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.4) !important;
+}
+
+.chat-launcher-page input[type="text"]::placeholder {
+  color: rgba(245, 245, 220, 0.6) !important;
+}
+/* For specific ChatLauncherPage container */
+.chat-launcher-container {
+  background: #0A0A15 !important;
+  font-family: 'Georgia', serif !important;
+}
+
+/* Force remove any gold gradients causing floatiness */
+.chat-launcher-page .welcome-title,
+.chat-launcher-page .oracle-prompt {
+  background: none !important;
+  background-image: none !important;
+  color: #F5F5DC !important;
+  text-shadow: 0 2px 4px rgba(0, 0, 0, 0.5) !important;
+}
+
+/* Substantial category cards */
+.chat-launcher-page .category-card {
+  background: #1A1A2E !important;
+  border: 2px solid #444 !important;
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.4) !important;
+}
