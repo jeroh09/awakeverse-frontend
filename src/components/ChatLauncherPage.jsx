@@ -1228,11 +1228,12 @@ const ChatLauncherPage = ({ onStartChat, discoveredCharacters = [] }) => {
 
                     <div style={{
                       display: 'grid',
-                      gridTemplateColumns: 'repeat(auto-fit, minmax(180px, 1fr))',
-                      gap: '1rem',
+                      gridTemplateColumns: 'repeat(auto-fill, minmax(200px, 1fr))', // Increased min width
+                      gap: '1.5rem',
                       maxHeight: 'calc(100vh - 200px)',
                       overflowY: 'auto',
-                      paddingRight: '0.5rem'
+                      paddingRight: '0.5rem',
+                      alignContent: 'start' // Better alignment
                     }}>
                       {selectedCategory.characters.map((character, index) => (
                         <div key={character.key} style={{ position: 'relative' }}>
@@ -1280,11 +1281,12 @@ const ChatLauncherPage = ({ onStartChat, discoveredCharacters = [] }) => {
                 ) : (
                 <div style={{
                   display: 'grid',
-                  gridTemplateColumns: 'repeat(auto-fit, minmax(180px, 1fr))',
-                  gap: '1rem',
+                  gridTemplateColumns: 'repeat(auto-fill, minmax(200px, 1fr))',
+                  gap: '1.5rem',
                   maxHeight: 'calc(100vh - 200px)',
                   overflowY: 'auto',
-                  paddingRight: '0.5rem'
+                  paddingRight: '0.5rem',
+                  alignContent: 'start'
                 }}>
                   {selectedCategory.characters.map((character, index) => (
                     <CharacterCard
