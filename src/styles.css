@@ -1929,3 +1929,23 @@ body.theme-awakeverse {
   overflow-wrap: break-word !important;
   word-break: break-word !important;
 }
+/* OVERRIDE CIRCULAR AVATARS FOR NEW CARD DESIGN */
+.character-card img {
+  border-radius: 0 !important;
+  width: 100% !important;
+  height: 100% !important;
+  object-fit: cover !important;
+}
+
+/* OVERRIDE CHARACTER ITEM LAYOUT */
+.character-item {
+  display: block !important;
+  text-align: left !important;
+}
+
+.character-item img {
+  border-radius: 0 !important;
+  width: 100% !important;
+  height: auto !important;
+  aspect-ratio: 3/4 !important;
+}
