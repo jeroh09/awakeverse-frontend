@@ -55,7 +55,7 @@ const PremiumCategoryCard = ({
         right: 0,
         height: '30%',
         background: 'linear-gradient(180deg, transparent 0%, rgba(10, 15, 26, 0.45) 100%)',
-        backdropFilter: 'blur(4px)',
+        backdropFilter: 'blur(1px)',
         zIndex: 1
       }} />
 
