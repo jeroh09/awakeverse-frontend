@@ -1404,8 +1404,6 @@ const ChatLauncherPage = ({ onStartChat, discoveredCharacters = [] }) => {
                   display: 'grid',
                   gridTemplateColumns: 'repeat(auto-fill, minmax(220px, 1fr))',
                   gap: '24px',
-                  maxHeight: 'calc(100vh - 200px)',
-                  overflowY: 'auto',
                   padding: '1rem',
                   paddingRight: '1.5rem'
                 }}>
