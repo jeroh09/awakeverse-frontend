@@ -217,7 +217,7 @@ export const characterCategories = [
   {
     key: 'my_characters',
     title: 'My Characters',
-    sceneImage: '/images/categories/creator.jpeg',
+    sceneImage: '/images/categories/creators.jpeg',
     characters: [] // Will be populated dynamically
   },
   {

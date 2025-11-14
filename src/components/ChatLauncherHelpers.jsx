@@ -467,7 +467,7 @@ export const CharacterCard = ({
           }}
           onPublishSuccess={(updatedChar) => {
             console.log('Character publish state changed:', updatedChar);
-            onPublishToggle?.(updatedChar);
+            onCharacterPublishToggle?.(updatedChar);
           }}
           onPublishError={(error) => {
             console.error('Publish error:', error);
@@ -904,7 +904,7 @@ export const MyCharactersPanel = ({
                   }}
                   onPublishSuccess={(updatedChar) => {
                     console.log('Character publish state changed:', updatedChar);
-                    onPublishToggle?.(updatedChar);
+                    onCharacterPublishToggle?.(updatedChar);
                   }}
                   onPublishError={(error) => {
                     console.error('Publish error:', error);
