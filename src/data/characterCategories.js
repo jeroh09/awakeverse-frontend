@@ -9,6 +9,7 @@ export const characterCategories = [
   {
     key: 'sleuths',
     title: 'Detectives',
+    sceneImage: '/images/categories/sleuths.jpeg', // NEW
     characters: [
       { 
         key: 'sherlock',
@@ -81,6 +82,7 @@ export const characterCategories = [
   {
     key: 'stargazers',
     title: 'Astrologers',
+    sceneImage: '/images/categories/stargazers.jpeg',
     characters: [
       { 
         key: 'ptolemy',
@@ -117,6 +119,7 @@ export const characterCategories = [
   {
     key: 'truthweavers',
     title: 'Truthseekers',
+    sceneImage: '/images/categories/truthweavers.jpeg',
     characters: [
       { 
         key: 'iktomi',
@@ -218,6 +221,7 @@ export const characterCategories = [
   {
     key: 'veilwalkers',
     title: 'Mystics',
+    sceneImage: '/images/categories/veilwalkers.jpeg',
     characters: [
       { 
         key: 'mami_wata',
@@ -290,6 +294,7 @@ export const characterCategories = [
   {
     key: 'goldhands',
     title: 'Entrepreneurs',
+    sceneImage: '/images/categories/goldhands.jpeg',
     characters: [
       { 
         key: 'mansa_musa',
@@ -346,6 +351,7 @@ export const characterCategories = [
   {
     key: 'heartstrings',
     title: 'Cupids',
+    sceneImage: '/images/categories/heartstrings.jpeg',
     characters: [
       { 
         key: 'helen_of_troy',
@@ -416,6 +422,7 @@ export const characterCategories = [
   {
     key: 'thinkers',
     title: 'Philosophers',
+    sceneImage: '/images/categories/thinkers.jpeg',
     characters: [
       { 
         key: 'socrates',
@@ -497,6 +504,7 @@ export const characterCategories = [
   {
     key: 'makers',
     title: 'Inventors',
+    sceneImage: '/images/categories/makers.jpeg',
     characters: [
       { 
         key: 'da_vinci',
@@ -545,6 +553,7 @@ export const characterCategories = [
   {
     key: 'warlords',
     title: 'Strategos',
+    sceneImage: '/images/categories/warlords.jpeg',
     characters: [
       { 
         key: 'sun_tzu',
@@ -624,6 +633,7 @@ export const characterCategories = [
   {
     key: 'pathfinders',
     title: 'Explorers',
+    sceneImage: '/images/categories/psthfinders.jpeg',
     characters: [
       { 
         key: 'christopher_columbus',
@@ -714,6 +724,7 @@ export const characterCategories = [
   {
     key: 'performers',
     title: 'Entertainers',
+    sceneImage: '/images/categories/performers.jpeg',
     characters: [
       { 
         key: 'edgar_allan_poe',

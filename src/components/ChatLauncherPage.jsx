@@ -9,6 +9,11 @@ import CharacterStatusModal from '../components/CharacterStatusModal';
 import CharacterCreationSuccess from '../components/CharacterCreationSuccess';
 import DualPathUpgradeSystem from '../components/DualPathUpgradeSystem';
 import MobileCharacterView from '../components/MobileCharacterView';
+import PremiumOracleSearch from '../components/PremiumOracleSearch';
+import PremiumCategoryCard from './PremiumCategoryCard';
+import { useAppView, VIEW_STATES } from '../contexts/AppViewContext';
+import theme from '../design-system/tokens';
+
 
 // Import helper components
 import {
@@ -110,6 +115,7 @@ const ENHANCED_SEMANTIC_MAPPINGS = {
   'contemporary': ['makers', 'goldhands']
 };
 
+
 const ORACLE_PROMPTS = [
   "Who do you want to talk to?",
   "Seek wisdom from...",
@@ -118,9 +124,81 @@ const ORACLE_PROMPTS = [
   "Find your mentor...",
 ];
 
-// NEW: Updated to accept discoveredCharacters prop
+// ADD THE NEW CATEGORY CARD COMPONENT RIGHT HERE
+export const CategoryCard = (props) => {
+  const { category, isMobile } = props;
+  
+  // Use premium card for regular categories
+  if (category.key !== 'my_characters') {
+    return <PremiumCategoryCard {...props} />;
+  }
+  
+  // Keep your existing my_characters card logic
+  return (
+    <div 
+      onClick={props.onClick}
+      style={{
+        background: 'linear-gradient(135deg, rgba(255, 215, 0, 0.15) 0%, rgba(255, 165, 0, 0.1) 100%)',
+        border: '2px solid rgba(255, 215, 0, 0.4)',
+        borderRadius: '15px',
+        padding: isMobile ? '1rem' : '1.5rem',
+        cursor: 'pointer',
+        transition: 'all 0.3s ease',
+        position: 'relative',
+        overflow: 'hidden',
+        display: 'flex',
+        flexDirection: 'column',
+        alignItems: 'center',
+        justifyContent: 'center',
+        textAlign: 'center',
+        minHeight: isMobile ? '120px' : '150px'
+      }}
+      onMouseEnter={(e) => {
+        if (!isMobile) {
+          e.currentTarget.style.transform = 'translateY(-5px) scale(1.02)';
+          e.currentTarget.style.background = 'linear-gradient(135deg, rgba(255, 215, 0, 0.25) 0%, rgba(255, 165, 0, 0.2) 100%)';
+          e.currentTarget.style.borderColor = 'rgba(255, 215, 0, 0.6)';
+          e.currentTarget.style.boxShadow = '0 10px 25px rgba(255, 215, 0, 0.3)';
+        }
+      }}
+      onMouseLeave={(e) => {
+        if (!isMobile) {
+          e.currentTarget.style.transform = 'translateY(0) scale(1)';
+          e.currentTarget.style.background = 'linear-gradient(135deg, rgba(255, 215, 0, 0.15) 0%, rgba(255, 165, 0, 0.1) 100%)';
+          e.currentTarget.style.borderColor = 'rgba(255, 215, 0, 0.4)';
+          e.currentTarget.style.boxShadow = 'none';
+        }
+      }}
+    >
+      <div style={{ fontSize: isMobile ? '1.8rem' : '2.5rem', marginBottom: '0.5rem' }}>
+        {category.icon || '👤'}
+      </div>
+      <h3 style={{
+        color: '#FFD700',
+        fontSize: isMobile ? '1rem' : '1.2rem',
+        margin: '0 0 0.5rem 0',
+        fontWeight: 600,
+        fontFamily: "'Playfair Display', serif"
+      }}>
+        {category.title}
+      </h3>
+      <p style={{
+        color: 'rgba(255, 215, 0, 0.8)',
+        fontSize: isMobile ? '0.8rem' : '0.9rem',
+        margin: 0,
+        opacity: 0.9
+      }}>
+        {category.characterCount || 0} character{category.characterCount !== 1 ? 's' : ''}
+      </p>
+    </div>
+  );
+}
+
+// NEW: Updated to accept iscoveredCharacters prop
 const ChatLauncherPage = ({ onStartChat, discoveredCharacters = [] }) => {
   const { user } = useUser();
+  // In your component:
+  const { switchView } = useAppView();
 
   // Character creation flow state
   const [showTemplates, setShowTemplates] = useState(false);
@@ -513,7 +591,7 @@ const ChatLauncherPage = ({ onStartChat, discoveredCharacters = [] }) => {
         minHeight: '100vh',
         padding: '1rem',
         fontFamily: "'Georgia', serif",
-        background: 'linear-gradient(135deg, #0B1426 0%, #1A2B47 25%, #2C1810 50%, #0F1A2E 75%, #0B1426 100%)',
+        background: theme.colors.background.canvas, // NEW: #0A0F1A
         display: 'flex',
         flexDirection: 'column',
         alignItems: 'center',
@@ -580,25 +658,12 @@ const ChatLauncherPage = ({ onStartChat, discoveredCharacters = [] }) => {
           position: 'relative',
           marginBottom: '1rem'
         }}>
-          <input
-            type="text"
-            placeholder="Search characters..."
+          <PremiumOracleSearch
             value={inputValue}
-            onChange={(e) => handleInputChange(e.target.value)}
+            onChange={(e) => setInputValue(e.target.value)}
             onFocus={() => inputValue.length >= 2 && setShowResults(true)}
-            onBlur={() => setTimeout(() => setShowResults(false), 200)}
-            style={{
-              width: '100%',
-              padding: '1rem',
-              fontSize: '1rem',
-              border: '2px solid rgba(255, 215, 0, 0.3)',
-              borderRadius: '25px',
-              background: 'rgba(255, 255, 255, 0.1)',
-              color: '#FFD700',
-              outline: 'none',
-              backdropFilter: 'blur(10px)',
-              transition: 'all 0.3s ease',
-              fontFamily: "'Georgia', serif"
+            onBlur={() => {
+              setTimeout(() => setShowResults(false), 200);
             }}
           />
 
@@ -850,7 +915,7 @@ const ChatLauncherPage = ({ onStartChat, discoveredCharacters = [] }) => {
       height: '100vh',
       display: 'flex',
       fontFamily: "'Georgia', serif",
-      background: 'linear-gradient(135deg, #0B1426 0%, #1A2B47 25%, #2C1810 50%, #0F1A2E 75%, #0B1426 100%)',
+      background: theme.colors.background.canvas, // NEW: #0A0F1A
       overflow: 'hidden'
     }}>
       {/* LEFT HALF - Search Section */}
@@ -916,28 +981,14 @@ const ChatLauncherPage = ({ onStartChat, discoveredCharacters = [] }) => {
 
         {/* Search Section */}
         <div style={{ width: '100%', maxWidth: '400px', position: 'relative', marginBottom: '1rem' }}>
-          <input
-            type="text"
-            placeholder="Search characters..."
+          <PremiumOracleSearch
             value={inputValue}
-            onChange={(e) => handleInputChange(e.target.value)}
+            onChange={(e) => setInputValue(e.target.value)}
             onFocus={() => inputValue.length >= 2 && setShowResults(true)}
-            onBlur={() => setTimeout(() => setShowResults(false), 200)}
-            style={{
-              width: '100%',
-              padding: '1rem 1.5rem',
-              fontSize: '1.1rem',
-              border: '2px solid rgba(255, 215, 0, 0.3)',
-              borderRadius: '25px',
-              background: 'rgba(255, 255, 255, 0.1)',
-              color: '#FFD700',
-              outline: 'none',
-              backdropFilter: 'blur(10px)',
-              transition: 'all 0.3s ease',
-              fontFamily: "'Georgia', serif"
+            onBlur={() => {
+              setTimeout(() => setShowResults(false), 200);
             }}
           />
-
           {/* Enhanced Search Results (Desktop) with source indicators */}
           {showResults && searchResults.length > 0 && (
             <div style={{
@@ -1089,6 +1140,81 @@ const ChatLauncherPage = ({ onStartChat, discoveredCharacters = [] }) => {
             isMobile={false}
           />
         )}
+        {/* ADD BUTTONS CONTAINER RIGHT HERE */}
+        <div style={{
+          display: 'flex',
+          gap: theme.spacing.md,
+          marginTop: theme.spacing.lg,
+          width: '100%',
+          maxWidth: '400px'
+        }}>
+          {/* CREATE Button - Opens My Characters Panel */}
+          <button
+            onClick={() => {
+              const myCharsCategory = enhancedCategories.find(c => c.key === 'my_characters');
+              if (myCharsCategory) {
+                handleCategorySelect(myCharsCategory);
+              }
+            }}
+            style={{
+              flex: 1,
+              padding: `${theme.spacing.md} ${theme.spacing.lg}`,
+              borderRadius: theme.borderRadius.md,
+              fontSize: theme.typography.sizes.body,
+              fontWeight: theme.typography.weights.semibold,
+              fontFamily: theme.typography.fonts.body,
+              cursor: 'pointer',
+              transition: theme.transitions.normal,
+              border: 'none',
+              outline: 'none',
+              background: `linear-gradient(135deg, ${theme.colors.accent.primary} 0%, ${theme.colors.accent.hover} 100%)`,
+              color: '#fff',
+              boxShadow: theme.shadows.elevation02
+            }}
+            onMouseEnter={(e) => {
+              e.currentTarget.style.transform = 'translateY(-2px)';
+              e.currentTarget.style.boxShadow = `${theme.shadows.elevation03}, ${theme.shadows.glow}`;
+            }}
+            onMouseLeave={(e) => {
+              e.currentTarget.style.transform = 'translateY(0)';
+              e.currentTarget.style.boxShadow = theme.shadows.elevation02;
+            }}
+          >
+            Create
+          </button>
+
+          {/* DISCOVER Button - Opens Market Hub */}
+          <button
+            onClick={() => switchView(VIEW_STATES.MARKET_HUB)}
+            style={{
+              flex: 1,
+              padding: `${theme.spacing.md} ${theme.spacing.lg}`,
+              borderRadius: theme.borderRadius.md,
+              fontSize: theme.typography.sizes.body,
+              fontWeight: theme.typography.weights.semibold,
+              fontFamily: theme.typography.fonts.body,
+              cursor: 'pointer',
+              transition: theme.transitions.normal,
+              border: `1px solid ${theme.colors.border.strong}`,
+              outline: 'none',
+              background: theme.colors.background.interactive,
+              color: theme.colors.text.primary,
+              boxShadow: theme.shadows.elevation01
+            }}
+            onMouseEnter={(e) => {
+              e.currentTarget.style.transform = 'translateY(-2px)';
+              e.currentTarget.style.background = theme.colors.background.peak;
+              e.currentTarget.style.borderColor = theme.colors.accent.primary;
+            }}
+            onMouseLeave={(e) => {
+              e.currentTarget.style.transform = 'translateY(0)';
+              e.currentTarget.style.background = theme.colors.background.interactive;
+              e.currentTarget.style.borderColor = theme.colors.border.strong;
+            }}
+          >
+            Discover
+          </button>
+        </div>
       </div>
 
       {/* RIGHT HALF - Categories/Characters */}
@@ -1119,6 +1245,29 @@ const ChatLauncherPage = ({ onStartChat, discoveredCharacters = [] }) => {
             paddingRight: '2.5rem'
           }}
         >
+          {/* ADD THIS SECTION HERE - BEFORE the category grid */}
+          <div style={{
+            marginBottom: '24px',
+            padding: '0 16px' // Optional padding for alignment
+          }}>
+            <h2 style={{
+              fontFamily: theme.typography.fonts.display,
+              fontSize: theme.typography.sizes.h2,
+              fontWeight: theme.typography.weights.bold,
+              color: theme.colors.text.primary,
+              marginBottom: theme.spacing.sm,
+              letterSpacing: '-0.5px'
+            }}>
+              Explore by Category
+            </h2>
+            <p style={{
+              fontFamily: theme.typography.fonts.body,
+              fontSize: theme.typography.sizes.bodySmall,
+              color: theme.colors.text.secondary
+            }}>
+              Discover characters across different domains of knowledge
+            </p>
+          </div>
           {enhancedCategories.map((category, index) => (
             <CategoryCard
               key={category.key}
