@@ -14,7 +14,7 @@ const PremiumCategoryCard = ({
       onMouseEnter={() => !isMobile && setIsHovered(true)}
       onMouseLeave={() => !isMobile && setIsHovered(false)}
       style={{
-        height: isMobile ? '140px' : '180px',
+        height: isMobile ? '200px' : '240px',
         background: theme.colors.background.surface,
         borderRadius: theme.borderRadius.lg,
         overflow: 'hidden',
@@ -26,88 +26,74 @@ const PremiumCategoryCard = ({
             ? theme.colors.accent.primary + '33'
             : theme.colors.border.subtle
         }`,
-        display: 'flex',
         transform: isHovered ? 'translateY(-4px)' : 'translateY(0)',
         position: 'relative'
       }}
     >
-      {/* Scene Section - 55% */}
-      <div style={{
-        width: '55%',
-        position: 'relative',
-        overflow: 'hidden'
-      }}>
-        <div
-          style={{
-            width: '100%',
-            height: '100%',
-            backgroundImage: `url(${category.sceneImage})`,
-            backgroundSize: 'cover',
-            backgroundPosition: 'center left',
-            transition: theme.transitions.normal,
-            transform: isHovered ? 'scale(1.05)' : 'scale(1)',
-            filter: isHovered ? 'brightness(1.1)' : 'brightness(1)'
-          }}
-        />
-      </div>
+      {/* Full Scene Background */}
+      <div
+        style={{
+          width: '100%',
+          height: '100%',
+          backgroundImage: `url(${category.sceneImage})`,
+          backgroundSize: 'cover',
+          backgroundPosition: 'center',
+          transition: theme.transitions.normal,
+          transform: isHovered ? 'scale(1.05)' : 'scale(1)',
+          filter: isHovered ? 'brightness(1.1)' : 'brightness(1)',
+          position: 'absolute',
+          top: 0,
+          left: 0
+        }}
+      />
 
-      {/* VERTICAL CATEGORY NAME - Acts as divider */}
+      {/* Bottom Blur + Dark Gradient Overlay */}
       <div style={{
-        width: '50px',
-        display: 'flex',
-        alignItems: 'center',
-        justifyContent: 'center',
-        background: theme.colors.background.interactive,
-        borderLeft: `1px solid ${theme.colors.border.medium}`,
-        borderRight: `1px solid ${theme.colors.border.medium}`,
-        position: 'relative',
-        zIndex: 2
+        position: 'absolute',
+        bottom: 0,
+        left: 0,
+        right: 0,
+        height: '50%',
+        background: 'linear-gradient(180deg, transparent 0%, rgba(10, 15, 26, 0.95) 100%)',
+        backdropFilter: 'blur(4px)',
+        zIndex: 1
+      }} />
+
+      {/* Text Overlay - Bottom */}
+      <div style={{
+        position: 'absolute',
+        bottom: 0,
+        left: 0,
+        right: 0,
+        padding: isMobile ? '16px' : '20px',
+        zIndex: 2,
+        textAlign: 'center'
       }}>
+        {/* Category Name */}
         <h3 style={{
           fontFamily: theme.typography.fonts.display,
-          fontSize: isMobile ? '16px' : '18px',
+          fontSize: isMobile ? '18px' : '22px',
           fontWeight: 700,
           color: theme.colors.text.primary,
-          letterSpacing: '2px',
-          textTransform: 'uppercase',
-          transform: 'rotate(-90deg)',
-          whiteSpace: 'nowrap',
-          margin: 0
+          marginBottom: theme.spacing.sm,
+          lineHeight: 1.2,
+          letterSpacing: '-0.5px'
         }}>
           {category.title}
         </h3>
-      </div>
 
-      {/* Info Section - Remaining space */}
-      <div style={{
-        flex: 1,
-        padding: isMobile ? '16px 12px' : '24px 16px',
-        display: 'flex',
-        flexDirection: 'column',
-        justifyContent: 'center',
-        alignItems: 'center',
-        textAlign: 'center'
-      }}>
-        {/* CHARACTER COUNT */}
+        {/* Character Count */}
         <p style={{
           fontFamily: theme.typography.fonts.body,
-          fontSize: isMobile ? '24px' : '32px',
-          fontWeight: 700,
-          color: theme.colors.text.primary,
-          lineHeight: 1,
-          marginBottom: theme.spacing.sm
-        }}>
-          {category.characterCount || category.characters?.length || 0}
-        </p>
-        
-        <p style={{
-          fontFamily: theme.typography.fonts.body,
-          fontSize: isMobile ? '16px' : '20px', // Larger for icon
-          color: theme.colors.text.tertiary,
+          fontSize: isMobile ? '12px' : '14px',
+          color: theme.colors.text.secondary,
           fontWeight: 500,
-          lineHeight: 1
+          display: 'flex',
+          alignItems: 'center',
+          gap: '4px'
         }}>
-          👤
+          {category.characterCount || category.characters?.length || 0} 
+          <span style={{ fontSize: '16px' }}>👤</span>
         </p>
       </div>
 
@@ -118,7 +104,8 @@ const PremiumCategoryCard = ({
           inset: 0,
           background: `radial-gradient(circle at center, ${theme.colors.accent.glow} 0%, transparent 70%)`,
           opacity: 0.3,
-          pointerEvents: 'none'
+          pointerEvents: 'none',
+          zIndex: 3
         }} />
       )}
     </div>
