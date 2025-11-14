@@ -14,6 +14,7 @@ import PremiumCategoryCard from './PremiumCategoryCard';
 import { useAppView, VIEW_STATES } from '../contexts/AppViewContext';
 import PremiumCharacterCard from '../components/PremiumCharacterCard';
 import theme from '../design-system/tokens';
+import ScrollShell from '../components/ScrollShell';
 
 
 // Import helper components
@@ -1361,28 +1362,26 @@ const ChatLauncherPage = ({ onStartChat, discoveredCharacters = [] }) => {
                         {selectedCategory.description}
                       </p>
                     )}
-                    <div style={{
-                      display: 'grid',
-                      gridTemplateColumns: 'repeat(auto-fill, minmax(220px, 1fr))',
-                      gap: '24px',
-                      maxHeight: 'calc(100vh - 200px)',
-                      overflowY: 'auto',
-                      padding: '1rem',
-                      paddingRight: '1.5rem'
-                    }}>
-                      {selectedCategory.characters.map((character, index) => (
-                        <div key={character.key} style={{ position: 'relative' }}>
-                          <PremiumCharacterCard
-                            character={character}
-                            onClick={() => handleCharacterSelect(character)}
-                            isMobile={false}
-                            showBadge={true}
-                          />
-                          {/* Discovered badge */}
-                        </div>
-                      ))}
-                    </div>
-
+                                        <ScrollShell>
+                      <div style={{
+                        display: 'grid',
+                        gridTemplateColumns: 'repeat(auto-fill, minmax(220px, 1fr))',
+                        gap: '24px',
+                        padding: '1rem',
+                        paddingRight: '1.5rem'
+                      }}>
+                        {selectedCategory.characters.map((character, index) => (
+                          <div key={character.key} style={{ position: 'relative' }}>
+                            <PremiumCharacterCard
+                              character={character}
+                              onClick={() => handleCharacterSelect(character)}
+                              isMobile={false}
+                              showBadge={true}
+                            />
+                          </div>
+                        ))}
+                      </div>
+                    </ScrollShell>
                     {selectedCategory.characters.length === 0 && (
                       <div style={{
                         textAlign: 'center',
@@ -1400,23 +1399,25 @@ const ChatLauncherPage = ({ onStartChat, discoveredCharacters = [] }) => {
                   </div>
                 ) : (
                 // REPLACE WITH:
-                <div style={{
-                  display: 'grid',
-                  gridTemplateColumns: 'repeat(auto-fill, minmax(220px, 1fr))',
-                  gap: '24px',
-                  padding: '1rem',
-                  paddingRight: '1.5rem'
-                }}>
-                  {selectedCategory.characters.map((character, index) => (
-                    <PremiumCharacterCard
-                      key={character.key}
-                      character={character}
-                      onClick={() => handleCharacterSelect(character)}
-                      isMobile={false}
-                      showBadge={true}
-                    />
-                  ))}
-                </div>
+                <ScrollShell>
+                  <div style={{
+                    display: 'grid',
+                    gridTemplateColumns: 'repeat(auto-fill, minmax(220px, 1fr))',
+                    gap: '24px',
+                    padding: '1rem',
+                    paddingRight: '1.5rem'
+                  }}>
+                    {selectedCategory.characters.map((character, index) => (
+                      <PremiumCharacterCard
+                        key={character.key}
+                        character={character}
+                        onClick={() => handleCharacterSelect(character)}
+                        isMobile={false}
+                        showBadge={true}
+                      />
+                    ))}
+                  </div>
+                </ScrollShell>
               )}
             </>
           )}
@@ -1475,69 +1476,6 @@ const ChatLauncherPage = ({ onStartChat, discoveredCharacters = [] }) => {
         }
 
         .recent-characters::-webkit-scrollbar { display: none; }
-        
-        .character-panel::-webkit-scrollbar { width: 6px; }
-        .character-panel::-webkit-scrollbar-track {
-          background: rgba(255, 215, 0, 0.1);
-          border-radius: 3px;
-        }
-        
-        .character-panel::-webkit-scrollbar-thumb {
-          background: rgba(255, 215, 0, 0.5);
-          border-radius: 3px;
-        }
-        .character-panel::-webkit-scrollbar-thumb:hover {
-          background: rgba(255, 215, 0, 0.7);
-        }
-        
-        .categories-grid-container {
-          scrollbar-width: thin;
-          scrollbar-color: rgba(255, 215, 0, 0.6) rgba(11, 20, 38, 0.8);
-          position: relative;
-          z-index: 500;
-        }
-
-        .categories-grid-container::-webkit-scrollbar {
-          width: 8px;
-        }
-
-        .categories-grid-container::-webkit-scrollbar-track {
-          background: rgba(11, 20, 38, 0.8);
-          border-radius: 4px;
-          border: 1px solid rgba(255, 215, 0, 0.1);
-        }
-
-        .categories-grid-container::-webkit-scrollbar-thumb {
-          background: linear-gradient(
-            180deg, 
-            rgba(255, 215, 0, 0.8) 0%, 
-            rgba(255, 215, 0, 0.6) 50%,
-            rgba(255, 215, 0, 0.4) 100%
-          );
-          border-radius: 4px;
-          border: 1px solid rgba(255, 215, 0, 0.3);
-          transition: all 0.3s ease;
-        }
-
-        .categories-grid-container::-webkit-scrollbar-thumb:hover {
-          background: linear-gradient(
-            180deg, 
-            rgba(255, 215, 0, 1) 0%, 
-            rgba(255, 215, 0, 0.8) 50%,
-            rgba(255, 215, 0, 0.6) 100%
-          );
-          box-shadow: 0 0 8px rgba(255, 215, 0, 0.4);
-        }
-        
-        .character-panel {
-          position: relative;
-          z-index: 600;
-        }
-        
-        .character-panel * {
-          position: relative;
-          z-index: auto;
-        }
         
         @media (max-width: 768px) {
           div[style*="animation"][style*="characterSlideIn"] {

@@ -66,7 +66,7 @@ const PremiumCharacterCard = ({
             backgroundImage: `url(${character.thumbnailUrl || character.avatar_url || '/images/default-character.jpg'})`,
             backgroundSize: 'cover',
             backgroundPosition: 'center',
-            filter: 'blur(8px) brightness(0.6)',
+            filter: 'brightness(0.6)',
             transform: isHovered ? 'scale(1.15)' : 'scale(1.1)',
             transition: theme.transitions.normal
           }}
