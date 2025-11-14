@@ -17,7 +17,6 @@ import theme from '../design-system/tokens';
 
 // Import helper components
 import {
-  CategoryCard,
   CharacterCard,
   MyCharactersPanel,
   PersonalizedSection,
