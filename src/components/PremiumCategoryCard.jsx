@@ -81,7 +81,7 @@ const PremiumCategoryCard = ({
           lineHeight: 1.1,
           letterSpacing: '-0.5px'
         }}>
-          {category.name}
+          {category.title}
         </h3>
 
         {/* CHARACTER COUNT - SMALL AND SUBTLE */}
