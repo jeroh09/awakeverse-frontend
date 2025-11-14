@@ -606,29 +606,21 @@ const ChatLauncherPage = ({ onStartChat, discoveredCharacters = [] }) => {
           maxWidth: '500px',
         }}>
           <h1 style={{
-            fontFamily: "'Playfair Display', serif",
-            fontSize: '1.8rem',
-            background: 'linear-gradient(135deg, #FFD700, #FFA500, #FFD700)',
-            backgroundClip: 'text',
-            WebkitBackgroundClip: 'text',
-            color: 'transparent',
-            margin: '0 0 1rem 0',
-            textShadow: '0 0 30px rgba(255, 215, 0, 0.5)',
-            letterSpacing: '1px',
-            fontWeight: 700
+            fontFamily: theme.typography.fonts.display,
+            fontSize: '32px', // Smaller for mobile
+            fontWeight: theme.typography.weights.bold,
+            color: theme.colors.brand.ivory,
+            letterSpacing: '-0.5px',
+            marginBottom: '8px'
           }}>
-            Welcome, {user?.displayName || 'Seeker'}
+            Welcome, {user?.first_name || 'Seeker'}
           </h1>
-          
           <p style={{
-            fontSize: '1rem',
-            color: 'rgba(255, 215, 0, 0.8)',
+            fontFamily: theme.typography.fonts.body,
+            fontSize: '16px', // Smaller for mobile
+            color: theme.colors.text.secondary,
             fontStyle: 'italic',
-            letterSpacing: '0.5px',
-            textShadow: '0 2px 4px rgba(0, 0, 0, 0.8)',
-            margin: 0,
-            transition: 'opacity 0.5s ease',
-            opacity: showResults ? 0.5 : 1
+            marginBottom: '24px'
           }}>
             {currentPlaceholder}
           </p>
@@ -934,28 +926,21 @@ const ChatLauncherPage = ({ onStartChat, discoveredCharacters = [] }) => {
         {/* Welcome Section */}
         <div style={{ textAlign: 'center', marginBottom: '1.5rem' }}>
           <h1 style={{
-            fontFamily: "'Playfair Display', serif",
-            fontSize: '2.5rem',
-            background: 'linear-gradient(135deg, #FFD700, #FFA500, #FFD700)',
-            backgroundClip: 'text',
-            WebkitBackgroundClip: 'text',
-            color: 'transparent',
-            margin: '0 0 1rem 0',
-            textShadow: '0 0 30px rgba(255, 215, 0, 0.5)',
-            letterSpacing: '2px',
-            fontWeight: 700
+            fontFamily: theme.typography.fonts.display,
+            fontSize: '48px',
+            fontWeight: theme.typography.weights.bold,
+            color: theme.colors.brand.ivory,
+            letterSpacing: '-1px',
+            marginBottom: '8px'
           }}>
-            Welcome, {user?.displayName || 'Seeker'}
+            Welcome, {user?.first_name || 'Seeker'}
           </h1>
           <p style={{
-            fontSize: '1.2rem',
-            color: 'rgba(255, 215, 0, 0.8)',
+            fontFamily: theme.typography.fonts.body,
+            fontSize: '18px',
+            color: theme.colors.text.secondary,
             fontStyle: 'italic',
-            letterSpacing: '1px',
-            textShadow: '0 2px 4px rgba(0, 0, 0, 0.8)',
-            margin: 0,
-            transition: 'opacity 0.5s ease',
-            opacity: showResults ? 0.5 : 1
+            marginBottom: '32px'
           }}>
             {currentPlaceholder}
           </p>
