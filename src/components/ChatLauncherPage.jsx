@@ -244,7 +244,7 @@ export const CategoryCard = (props) => {
       </div>
     </div>
   );
-
+};
 
 // NEW: Updated to accept iscoveredCharacters prop
 const ChatLauncherPage = ({ onStartChat, discoveredCharacters = [] }) => {
