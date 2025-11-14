@@ -1367,7 +1367,8 @@ const ChatLauncherPage = ({ onStartChat, discoveredCharacters = [] }) => {
                       gap: '24px',
                       maxHeight: 'calc(100vh - 200px)',
                       overflowY: 'auto',
-                      paddingRight: '0.5rem'
+                      padding: '1rem',
+                      paddingRight: '1.5rem'
                     }}>
                       {selectedCategory.characters.map((character, index) => (
                         <div key={character.key} style={{ position: 'relative' }}>
@@ -1405,7 +1406,8 @@ const ChatLauncherPage = ({ onStartChat, discoveredCharacters = [] }) => {
                   gap: '24px',
                   maxHeight: 'calc(100vh - 200px)',
                   overflowY: 'auto',
-                  paddingRight: '0.5rem'
+                  padding: '1rem',
+                  paddingRight: '1.5rem'
                 }}>
                   {selectedCategory.characters.map((character, index) => (
                     <PremiumCharacterCard
