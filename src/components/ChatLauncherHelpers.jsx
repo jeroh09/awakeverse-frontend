@@ -5,6 +5,8 @@ import DefensiveCharacterCreationWrapper from './DefensiveCharacterCreationWrapp
 import PublishToHubButton from './CreatorHub/PublishToHubButton';
 import PremiumCategoryCard from './PremiumCategoryCard';
 import theme from '../design-system/tokens';
+import PremiumCharacterCard from './PremiumCharacterCard';
+import ScrollShell from './ScrollShell';
 
 import { renderSafeAvatar } from '../utils/imageUtils';
 
@@ -97,8 +99,10 @@ export const StatusBadge = ({ status, size = 'normal' }) => {
 };
 
 /* ------------------------------ CategoryCard ---------------------------- */
+/* ------------------------------ CategoryCard ---------------------------- */
 export const CategoryCard = (props) => {
   const { category, isMobile } = props;
+  const [isHovered, setIsHovered] = React.useState(false);  // ← ADDED HERE
   
   // Use premium card for regular categories
   if (category.key !== 'my_characters') {
@@ -107,7 +111,6 @@ export const CategoryCard = (props) => {
   
   // Keep your existing my_characters card logic
   const isMyCharacters = category.key === 'my_characters';
-
   const handleClick = () => {
     if (isMyCharacters && (category.characterCount || 0) === 0) {
       props.onCreateCharacter?.();
@@ -115,176 +118,178 @@ export const CategoryCard = (props) => {
       props.onClick?.();
     }
   };
-  const getStatusSummary = () => {
-    if (!isMyCharacters || !category.characterCount) return null;
-    const { pendingCount = 0, rejectedCount = 0, approvedCount = 0 } = category;
-    return (
-      <div style={{
-        position: 'absolute',
-        bottom: isMobile ? '0.5rem' : '0.75rem',
-        left: '50%',
-        transform: 'translateX(-50%)',
-        display: 'flex',
-        gap: '0.25rem',
-        fontSize: '0.6rem',
-        zIndex: 1
-      }}>
-        {approvedCount > 0 && (
-          <span style={{
-            background: '#28a745', color: '#fff', padding: '1px 4px',
-            borderRadius: '4px', border: '1px solid #0B1426'
-          }}>
-            {approvedCount}✓
-          </span>
-        )}
-        {pendingCount > 0 && (
-          <span style={{
-            background: '#FFA500', color: '#fff', padding: '1px 4px',
-            borderRadius: '4px', border: '1px solid #0B1426'
-          }}>
-            {pendingCount}⏳
-          </span>
-        )}
-        {rejectedCount > 0 && (
-          <span style={{
-            background: '#ff6b6b', color: '#fff', padding: '1px 4px',
-            borderRadius: '4px', border: '1px solid #0B1426'
-          }}>
-            {rejectedCount}❌
-          </span>
-        )}
-      </div>
-    );
-  };
 
+  // Special premium styling for My Characters category
+  const hasCharacters = (category.characterCount || 0) > 0;
+  
   return (
     <div
       onClick={handleClick}
-      style={{        
-        position: 'relative',
-        height: 'auto',
+      onMouseEnter={() => !isMobile && setIsHovered(true)}
+      onMouseLeave={() => !isMobile && setIsHovered(false)}
+      style={{
+        height: isMobile ? '200px' : '240px',
+        background: theme.colors.background.surface,
+        borderRadius: theme.borderRadius.lg,
         overflow: 'hidden',
-        alignSelf: 'stretch',
-
-        // SUBSTANTIAL STYLES
-        background: substantialStyles.colors.darkContainer,
-        border: substantialStyles.effects.borderThick,
-        borderRadius: '16px',
-        boxShadow: substantialStyles.effects.shadowMedium,
-        padding: isMobile ? '1rem' : '1.5rem',
         cursor: 'pointer',
-        transition: 'all 0.3s ease',
-        display: 'flex',
-        flexDirection: 'column',
-        alignItems: 'center',
-        justifyContent: 'center',
-        textAlign: 'center',
-        aspectRatio: '1',
-        opacity: isMobile ? 1 : 0,
-        visibility: isMobile ? 'visible' : undefined,
-        transform: isMobile ? 'translateZ(0)' : undefined,
-        animation: isMobile ? 'none' : `categorySlideIn 0.6s ease-out ${index * 0.1}s forwards`,
-        minHeight: isMobile ? '120px' : '150px',
-        maxHeight: isMobile ? '160px' : '200px',
-        willChange: isMobile ? 'auto' : 'opacity, transform'
-      }}
-      onMouseEnter={(e) => {
-        if (!isMobile) {
-          e.currentTarget.style.background = '#252545';
-          e.currentTarget.style.borderColor = '#666';
-          e.currentTarget.style.transform = 'translateY(-6px)';
-          e.currentTarget.style.boxShadow = substantialStyles.effects.shadowHeavy;
-        }
-      }}
-      onMouseLeave={(e) => {
-        if (!isMobile) {
-          e.currentTarget.style.background = substantialStyles.colors.darkContainer;
-          e.currentTarget.style.borderColor = substantialStyles.colors.border;
-          e.currentTarget.style.transform = 'translateY(0)';
-          e.currentTarget.style.boxShadow = substantialStyles.effects.shadowMedium;
-        }
+        transition: theme.transitions.normal,
+        boxShadow: isHovered ? theme.shadows.elevation03 : theme.shadows.elevation02,
+        border: `2px solid ${
+          isHovered 
+            ? theme.colors.brand.ivory
+            : theme.colors.brand.ivoryDim
+        }`,
+        transform: isHovered ? 'translateY(-4px)' : 'translateY(0)',
+        position: 'relative'
       }}
     >
-      {/* Avatar */}
-      <div style={{
-        width: isMobile ? '48px' : '56px',
-        height: isMobile ? '48px' : '56px',
-        borderRadius: '50%',
-        overflow: 'hidden',
-        marginBottom: '0.7rem',
-        border: substantialStyles.effects.borderThick,
-        transition: 'all 0.3s ease',
-        background: 'rgba(0,0,0,0.3)',
-        position: 'relative'
-      }}>
-        {isMyCharacters && (
-          <div style={{
-            position: 'absolute',
-            top: '-8px', right: '-8px',
-            width: '16px', height: '16px',
-            background: 'linear-gradient(135deg, #FFD700, #FFA500)',
-            borderRadius: '50%',
-            fontSize: '8px',
-            display: 'flex', alignItems: 'center', justifyContent: 'center',
-            color: '#000', fontWeight: 'bold', zIndex: 1
-          }}>
-            ⭐
-          </div>
-        )}
-        <img
-          src={categoryRepresentatives[category.key]}
-          alt={category.title}
-          style={{
-            width: '100%', height: '100%', objectFit: 'cover',
-            filter: 'sepia(20%) contrast(1.1)', transition: 'filter 0.3s ease'
-          }}
-          onError={(e) => { 
-            e.currentTarget.onError = null;
-            e.currentTarget.style.display = 'none';
+      {/* Background Image */}
+      <div
+        style={{
+          width: '100%',
+          height: '100%',
+          backgroundImage: 'url(/images/creators.jpeg)',
+          backgroundSize: 'cover',
+          backgroundPosition: 'center',
+          transition: theme.transitions.normal,
+          transform: isHovered ? 'scale(1.05)' : 'scale(1)',
+          filter: isHovered ? 'brightness(1.1)' : 'brightness(1)',
+          position: 'absolute',
+          top: 0,
+          left: 0
+        }}
+      />
 
-            const parent = e.currentTarget.parentElement;
-            if (!parent.querySelector('.text-fallback')) {
-              const fallback = document.createElement('div');
-              fallback.className = 'text-fallback';
-              fallback.style.cssText = 'width:100%;height:100%;display:flex;align-items:center;justify-content:center;background:rgba(255,255,255,0.1);color:#F5F5DC;font-size:1.2rem;font-weight:bold;border-radius:50%;';
-              fallback.textContent = category.title.charAt(0).toUpperCase();
-              parent.appendChild(fallback);
-            }
-          }}
-        />
+      {/* Dark Overlay for Text Readability */}
+      <div style={{
+        position: 'absolute',
+        inset: 0,
+        background: 'linear-gradient(180deg, rgba(10, 15, 26, 0.3) 0%, rgba(10, 15, 26, 0.7) 100%)',
+        zIndex: 1
+      }} />
+
+      {/* Premium Badge */}
+      <div style={{
+        position: 'absolute',
+        top: '12px',
+        right: '12px',
+        background: `linear-gradient(135deg, ${theme.colors.brand.ivory}, ${theme.colors.brand.ivoryDim})`,
+        color: theme.colors.background.canvas,
+        fontSize: '10px',
+        fontWeight: 700,
+        padding: '4px 10px',
+        borderRadius: '6px',
+        textTransform: 'uppercase',
+        letterSpacing: '1px',
+        zIndex: 3,
+        boxShadow: theme.shadows.elevation02
+      }}>
+        Creator
       </div>
 
-      {/* Title */}
-      <h3 style={{
-        ...substantialStyles.typography.heading,
-        fontSize: isMobile ? '0.85rem' : '0.9rem',
-        fontWeight: 600,
-        margin: '0 0 0.3rem 0',
-        letterSpacing: '0.5px',
-        lineHeight: 1.1
-      }}>
-        {category.title}
-      </h3>
+      {/* Status Summary */}
+      {hasCharacters && (category.pendingCount || 0) + (category.rejectedCount || 0) + (category.approvedCount || 0) > 0 && (
+        <div style={{
+          position: 'absolute',
+          top: '12px',
+          left: '12px',
+          display: 'flex',
+          gap: '4px',
+          zIndex: 3
+        }}>
+          {(category.approvedCount || 0) > 0 && (
+            <span style={{
+              background: theme.colors.semantic.success,
+              color: 'white',
+              fontSize: '9px',
+              fontWeight: 600,
+              padding: '3px 6px',
+              borderRadius: '4px',
+              boxShadow: theme.shadows.elevation01
+            }}>
+              {category.approvedCount}✓
+            </span>
+          )}
+          {(category.pendingCount || 0) > 0 && (
+            <span style={{
+              background: theme.colors.semantic.warning,
+              color: 'white',
+              fontSize: '9px',
+              fontWeight: 600,
+              padding: '3px 6px',
+              borderRadius: '4px',
+              boxShadow: theme.shadows.elevation01
+            }}>
+              {category.pendingCount}⏳
+            </span>
+          )}
+          {(category.rejectedCount || 0) > 0 && (
+            <span style={{
+              background: theme.colors.semantic.error,
+              color: 'white',
+              fontSize: '9px',
+              fontWeight: 600,
+              padding: '3px 6px',
+              borderRadius: '4px',
+              boxShadow: theme.shadows.elevation01
+            }}>
+              {category.rejectedCount}❌
+            </span>
+          )}
+        </div>
+      )}
 
-      {/* Badge */}
-      <span style={{
-        ...substantialStyles.typography.subtle,
-        fontSize: isMobile ? '0.65rem' : '0.7rem',
-        background: 'rgba(255, 255, 255, 0.1)',
-        padding: '0.15rem 0.4rem',
-        borderRadius: '8px',
-        border: substantialStyles.effects.borderMedium
+      {/* Text Content - Bottom */}
+      <div style={{
+        position: 'absolute',
+        bottom: 0,
+        left: 0,
+        right: 0,
+        padding: isMobile ? '16px' : '20px',
+        zIndex: 2,
+        textAlign: 'center'
       }}>
-        {isMyCharacters
-          ? ((category.characterCount || 0) > 0
-              ? `${category.characterCount} characters`
-              : 'Create Character')
-          : `${(category.characters || []).length} guides`
-        }
-      </span>
+        {/* Category Title */}
+        <h3 style={{
+          fontFamily: theme.typography.fonts.display,
+          fontSize: isMobile ? '18px' : '22px',
+          fontWeight: 700,
+          color: theme.colors.brand.ivory,
+          marginBottom: theme.spacing.xs,
+          lineHeight: 1.2,
+          letterSpacing: '-0.5px',
+          textShadow: '0 2px 8px rgba(0, 0, 0, 0.5)'
+        }}>
+          {category.title}
+        </h3>
 
-      {/* Status summary for My Characters */}
-      {getStatusSummary()}
+        {/* Character Count or CTA */}
+        <p style={{
+          fontFamily: theme.typography.fonts.body,
+          fontSize: isMobile ? '12px' : '14px',
+          color: theme.colors.brand.ivoryDim,
+          fontWeight: 500,
+          margin: 0
+        }}>
+          {hasCharacters 
+            ? `${category.characterCount} character${category.characterCount !== 1 ? 's' : ''}`
+            : 'Create your first character'
+          }
+        </p>
+      </div>
+
+      {/* Hover Glow - Ivory */}
+      {isHovered && (
+        <div style={{
+          position: 'absolute',
+          inset: 0,
+          background: `radial-gradient(circle at center, ${theme.colors.brand.ivory}20 0%, transparent 70%)`,
+          opacity: 0.5,
+          pointerEvents: 'none',
+          zIndex: 3
+        }} />
+      )}
     </div>
   );
 };
@@ -816,43 +821,100 @@ export const MyCharactersPanel = ({
           </div>
         </div>
       )}
+      <ScrollShell maxHeight="calc(100vh - 300px)">
+        <div style={{
+          display: 'grid',
+          gridTemplateColumns: isMobile ? 'repeat(2, 1fr)' : 'repeat(auto-fill, minmax(220px, 1fr))',
+          gap: theme.spacing.lg,
+          padding: theme.spacing.md,
+          paddingRight: theme.spacing.xl
+        }}>
+          {userCharacters.map((c, idx) => (
+            <div key={c.character_key || c.key || `${c.display_name}-${idx}`} style={{ position: 'relative' }}>
+              {/* Status Badge - Positioned Absolutely Over Card */}
+              {c.status && c.status !== 'approved' && (
+                <div style={{
+                  position: 'absolute',
+                  top: '8px',
+                  right: '8px',
+                  zIndex: 10,
+                  background: c.status === 'pending' ? '#FFA500' : '#ff6b6b',
+                  color: '#fff',
+                  fontSize: '10px',
+                  fontWeight: 600,
+                  padding: '4px 8px',
+                  borderRadius: '6px',
+                  textTransform: 'uppercase',
+                  letterSpacing: '0.5px',
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: '4px',
+                  border: '2px solid rgba(0, 0, 0, 0.3)',
+                  boxShadow: theme.shadows.elevation02
+                }}>
+                  <span style={{ fontSize: '8px' }}>
+                    {c.status === 'pending' ? '⏳' : '❌'}
+                  </span>
+                  {!isMobile && (c.status === 'pending' ? 'Pending' : 'Rejected')}
+                </div>
+              )}
 
-      <div style={{
-        display: 'grid',
-        gridTemplateColumns: isMobile ? 'repeat(2, 1fr)' : 'repeat(auto-fit, minmax(180px, 1fr))',
-        gap: '1rem',
-        marginBottom: '1.5rem'
-      }}>
-        {userCharacters.map((c, idx) => (
-          <CharacterCard
-            key={c.character_key || c.key || `${c.display_name}-${idx}`}
-            character={{
-              key: c.character_key || c.key,
-              name: c.display_name || c.name,
-              description: c.short_description || c.description,
-              thumbnailUrl: c.avatar_url || c.thumbnailUrl || '/images/default-character.jpg',
-              status: c.status,
-              rejection_reason: c.rejection_reason,
-              id: c.id,
-              is_market_featured: c.is_market_featured
-            }}
-            onClick={() => onCharacterSelect?.({
-              key: c.character_key || c.key,
-              name: c.display_name || c.name,
-              status: c.status,
-              display_name: c.display_name || c.name,
-              rejection_reason: c.rejection_reason,
-              description: c.short_description || c.description,
-              thumbnailUrl: c.avatar_url || c.thumbnailUrl || '/images/default-character.jpg'
-            })}
-            index={idx}
-            isMobile={isMobile}
-            showStatusIndicator={true}
-            onPublishToggle={onCharacterPublishToggle}
-          />
-        ))}
-      </div>
+              {/* Premium Character Card */}
+              <PremiumCharacterCard
+                character={{
+                  name: c.display_name || c.name,
+                  display_name: c.display_name || c.name,
+                  description: c.short_description || c.description,
+                  short_description: c.short_description || c.description,
+                  avatar_url: c.avatar_url || c.thumbnailUrl || '/images/default-character.jpg',
+                  thumbnailUrl: c.avatar_url || c.thumbnailUrl || '/images/default-character.jpg',
+                  category: c.category,
+                  status: c.status,
+                  is_market_featured: c.is_market_featured
+                }}
+                onClick={() => onCharacterSelect?.({
+                  key: c.character_key || c.key,
+                  name: c.display_name || c.name,
+                  status: c.status,
+                  display_name: c.display_name || c.name,
+                  rejection_reason: c.rejection_reason,
+                  description: c.short_description || c.description,
+                  thumbnailUrl: c.avatar_url || c.thumbnailUrl || '/images/default-character.jpg'
+                })}
+                isMobile={isMobile}
+                showBadge={false}
+              />
 
+              {/* Publish Button Below Card */}
+              <div 
+                onClick={(e) => e.stopPropagation()} 
+                style={{ 
+                  width: '100%', 
+                  marginTop: theme.spacing.sm,
+                  pointerEvents: 'auto'
+                }}
+              >
+                <PublishToHubButton
+                  character={{
+                    id: c.id,
+                    character_key: c.character_key || c.key,
+                    display_name: c.display_name || c.name,
+                    status: c.status,
+                    is_market_featured: c.is_market_featured
+                  }}
+                  onPublishSuccess={(updatedChar) => {
+                    console.log('Character publish state changed:', updatedChar);
+                    onPublishToggle?.(updatedChar);
+                  }}
+                  onPublishError={(error) => {
+                    console.error('Publish error:', error);
+                  }}
+                />
+              </div>
+            </div>
+          ))}
+        </div>
+      </ScrollShell>
       <div style={{ textAlign: 'center' }}>
         <DefensiveCharacterCreationWrapper 
           user_id={user_id}
