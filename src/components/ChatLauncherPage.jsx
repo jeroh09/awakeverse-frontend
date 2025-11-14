@@ -137,6 +137,7 @@ export const CategoryCard = (props) => {
   // -------------------------------
   // MY CHARACTERS CARD
   // -------------------------------
+    // MY CHARACTERS CARD — AWAKEVERSE DESIGN SYSTEM
   const bgImage = category.sceneImage || '/images/categories/creators.jpeg';
 
   return (
@@ -145,11 +146,27 @@ export const CategoryCard = (props) => {
       style={{
         position: 'relative',
         overflow: 'hidden',
-        borderRadius: '15px',
+        borderRadius: theme.borderRadius.lg,
         cursor: 'pointer',
-        minHeight: isMobile ? '120px' : '150px',
-        border: '2px solid rgba(255, 215, 0, 0.4)',
-        transition: 'all 0.3s ease'
+        minHeight: isMobile ? '130px' : '170px',
+        border: `1.5px solid ${theme.colors.accent.primary}55`,
+        background: theme.colors.background.surface,
+        boxShadow: theme.shadows.elevation02,
+        transition: theme.transitions.normal
+      }}
+      onMouseEnter={(e) => {
+        if (!isMobile) {
+          e.currentTarget.style.transform = 'translateY(-4px)';
+          e.currentTarget.style.boxShadow = theme.shadows.elevation03;
+          e.currentTarget.style.borderColor = theme.colors.accent.primary;
+        }
+      }}
+      onMouseLeave={(e) => {
+        if (!isMobile) {
+          e.currentTarget.style.transform = 'translateY(0px)';
+          e.currentTarget.style.boxShadow = theme.shadows.elevation02;
+          e.currentTarget.style.borderColor = `${theme.colors.accent.primary}55`;
+        }
       }}
     >
       {/* Background Image */}
@@ -160,21 +177,21 @@ export const CategoryCard = (props) => {
           backgroundImage: `url(${bgImage})`,
           backgroundSize: 'cover',
           backgroundPosition: 'center',
-          filter: 'brightness(0.7)'
+          filter: 'brightness(0.62)'
         }}
       />
 
-      {/* Dark gradient overlay */}
+      {/* Dark overlay */}
       <div
         style={{
           position: 'absolute',
           inset: 0,
           background:
-            'linear-gradient(180deg, rgba(0,0,0,0.2) 0%, rgba(0,0,0,0.75) 100%)'
+            'linear-gradient(180deg, rgba(0,0,0,0.15) 0%, rgba(0,0,0,0.85) 100%)'
         }}
       />
 
-      {/* Text content */}
+      {/* Content Layer */}
       <div
         style={{
           position: 'relative',
@@ -184,30 +201,42 @@ export const CategoryCard = (props) => {
           flexDirection: 'column',
           justifyContent: 'center',
           alignItems: 'center',
-          padding: isMobile ? '1rem' : '1.5rem',
-          color: '#FFD700',
-          fontFamily: "'Playfair Display', serif",
-          textAlign: 'center'
+          padding: isMobile ? '0.75rem' : '1.25rem',
+          textAlign: 'center',
+          color: theme.colors.accent.primary
         }}
       >
-        <div style={{ fontSize: isMobile ? '1.6rem' : '2rem' }}>👤</div>
+        {/* Icon */}
+        <div
+          style={{
+            fontSize: isMobile ? '1.6rem' : '2.1rem',
+            marginBottom: '0.25rem'
+          }}
+        >
+          👤
+        </div>
 
+        {/* Title (Syne) */}
         <h3
           style={{
             margin: 0,
-            fontSize: isMobile ? '1rem' : '1.2rem',
-            fontWeight: 600,
+            fontFamily: theme.typography.fonts.display,
+            fontSize: isMobile ? '1.05rem' : '1.35rem',
+            fontWeight: 700,
             letterSpacing: '0.5px'
           }}
         >
           My Characters
         </h3>
 
+        {/* Count (Inter) */}
         <p
           style={{
-            margin: 0,
-            fontSize: isMobile ? '0.75rem' : '0.9rem',
-            opacity: 0.9
+            margin: '0.25rem 0 0 0',
+            fontFamily: theme.typography.fonts.body,
+            fontSize: isMobile ? '0.78rem' : '0.9rem',
+            opacity: 0.9,
+            color: theme.colors.accent.primary
           }}
         >
           {category.characterCount || 0} created
@@ -215,7 +244,7 @@ export const CategoryCard = (props) => {
       </div>
     </div>
   );
-};
+
 
 // NEW: Updated to accept iscoveredCharacters prop
 const ChatLauncherPage = ({ onStartChat, discoveredCharacters = [] }) => {
