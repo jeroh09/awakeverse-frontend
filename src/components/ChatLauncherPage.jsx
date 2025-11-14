@@ -625,23 +625,23 @@ const ChatLauncherPage = ({ onStartChat, discoveredCharacters = [] }) => {
             {currentPlaceholder}
           </p>
 
-          {/* NEW: Show discovered count if any */}
           {discoveredCharacters.length > 0 && (
-            <div style={{
-              marginTop: '0.5rem',
-              padding: '0.3rem 0.8rem',
-              background: 'rgba(255, 215, 0, 0.1)',
-              border: '1px solid rgba(255, 215, 0, 0.3)',
-              borderRadius: '12px',
-              fontSize: '0.8rem',
-              color: 'rgba(255, 215, 0, 0.9)',
-              display: 'inline-flex',
-              alignItems: 'center',
-              gap: '0.3rem'
-            }}>
-              ✨ {discoveredCharacters.length} character{discoveredCharacters.length !== 1 ? 's' : ''} discovered
-            </div>
-          )}
+          <div style={{
+            marginTop: '1rem',
+            padding: '0.5rem 1rem',
+            background: theme.colors.brand.ivory + '1A', // 10% opacity hex
+            border: `1px solid ${theme.colors.brand.ivory}33`, // 20% opacity hex
+            borderRadius: '15px',
+            fontSize: '0.9rem',
+            color: theme.colors.brand.ivory,
+            display: 'inline-flex',
+            alignItems: 'center',
+            gap: '0.5rem',
+            backdropFilter: 'blur(10px)'
+          }}>
+            ✨ {discoveredCharacters.length} character{discoveredCharacters.length !== 1 ? 's' : ''} discovered from Market Hub
+          </div>
+        )}
         </div>
 
         {/* Search Section */}
@@ -927,20 +927,20 @@ const ChatLauncherPage = ({ onStartChat, discoveredCharacters = [] }) => {
         <div style={{ textAlign: 'center', marginBottom: '1.5rem' }}>
           <h1 style={{
             fontFamily: theme.typography.fonts.display,
-            fontSize: '48px',
+            fontSize: '30',
             fontWeight: theme.typography.weights.bold,
             color: theme.colors.brand.ivory,
             letterSpacing: '-1px',
             marginBottom: '8px'
           }}>
-            Welcome, {user?.first_name || 'Seeker'}
+            Welcome, {user?.displayName || 'Seeker'}
           </h1>
           <p style={{
             fontFamily: theme.typography.fonts.body,
-            fontSize: '18px',
+            fontSize: '12px',
             color: theme.colors.text.secondary,
             fontStyle: 'italic',
-            marginBottom: '32px'
+            marginBottom: '22px'
           }}>
             {currentPlaceholder}
           </p>
