@@ -830,40 +830,50 @@ const ChatLauncherPage = ({ onStartChat, discoveredCharacters = [] }) => {
               maxWidth: '500px',
               marginBottom: '1rem',
               paddingBottom: '0.5rem',
-              borderBottom: '1px solid rgba(255, 215, 0, 0.3)'
+              borderBottom: `1px solid ${theme.colors.border.medium}`
             }}>
               <h2 style={{
-                color: '#FFD700',
+                color: theme.colors.text.primary,
                 fontSize: '1.5rem',
-                fontFamily: "'Playfair Display', serif",
+                fontFamily: theme.typography.fonts.display,
                 margin: 0,
-                letterSpacing: '1px',
-                textShadow: '0 0 10px rgba(255, 215, 0, 0.5)',
+                fontWeight: theme.typography.weights.bold,
+                letterSpacing: '-0.5px',
                 display: 'flex',
                 alignItems: 'center',
                 gap: '0.5rem'
               }}>
                 {selectedCategory.icon && (
-                  <span style={{ fontSize: '1.2rem' }}>{selectedCategory.icon}</span>
+                  <span style={{ 
+                    fontSize: '1.4rem',
+                    filter: 'drop-shadow(0 2px 4px rgba(0, 0, 0, 0.3))'
+                  }}>
+                    {selectedCategory.icon}
+                  </span>
                 )}
                 {selectedCategory.title}
               </h2>
-              
+
               <button
                 onClick={handleBackToCategories}
                 style={{
-                  background: 'rgba(255, 215, 0, 0.1)',
-                  border: '1px solid rgba(255, 215, 0, 0.4)',
-                  borderRadius: '6px',
-                  color: '#FFD700',
-                  fontSize: '0.8rem',
-                  fontWeight: 600,
-                  padding: '0.3rem 0.8rem',
+                  background: theme.colors.background.interactive,
+                  border: `1px solid ${theme.colors.border.strong}`,
+                  borderRadius: theme.borderRadius.sm,
+                  color: theme.colors.text.primary,
+                  fontSize: theme.typography.sizes.bodySmall,
+                  fontWeight: theme.typography.weights.semibold,
+                  fontFamily: theme.typography.fonts.body,
+                  padding: '0.4rem 0.9rem',
                   cursor: 'pointer',
-                  fontFamily: "'Georgia', serif"
+                  transition: theme.transitions.normal,
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: '0.3rem'
                 }}
               >
-                ← Back
+                <span style={{ fontSize: '1.1rem' }}>←</span>
+                <span>Back</span>
               </button>
             </div>
 

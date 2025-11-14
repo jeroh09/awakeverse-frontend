@@ -149,7 +149,7 @@ export const CategoryCard = (props) => {
         style={{
           width: '100%',
           height: '100%',
-          backgroundImage: 'url(/images/creators.jpeg)',
+          backgroundImage: `url(${category.sceneImage})`,
           backgroundSize: 'cover',
           backgroundPosition: 'center',
           transition: theme.transitions.normal,
