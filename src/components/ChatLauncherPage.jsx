@@ -128,72 +128,94 @@ const ORACLE_PROMPTS = [
 // ADD THE NEW CATEGORY CARD COMPONENT RIGHT HERE
 export const CategoryCard = (props) => {
   const { category, isMobile } = props;
-  
-  // Use premium card for regular categories
+
+  // Normal categories use PremiumCategoryCard
   if (category.key !== 'my_characters') {
     return <PremiumCategoryCard {...props} />;
   }
-  
-  // Keep your existing my_characters card logic
+
+  // -------------------------------
+  // MY CHARACTERS CARD
+  // -------------------------------
+  const bgImage = category.sceneImage || '/images/categories/creators.jpeg';
+
   return (
-    <div 
+    <div
       onClick={props.onClick}
       style={{
-        background: 'linear-gradient(135deg, rgba(255, 215, 0, 0.15) 0%, rgba(255, 165, 0, 0.1) 100%)',
-        border: '2px solid rgba(255, 215, 0, 0.4)',
-        borderRadius: '15px',
-        padding: isMobile ? '1rem' : '1.5rem',
-        cursor: 'pointer',
-        transition: 'all 0.3s ease',
         position: 'relative',
         overflow: 'hidden',
-        display: 'flex',
-        flexDirection: 'column',
-        alignItems: 'center',
-        justifyContent: 'center',
-        textAlign: 'center',
-        minHeight: isMobile ? '120px' : '150px'
-      }}
-      onMouseEnter={(e) => {
-        if (!isMobile) {
-          e.currentTarget.style.transform = 'translateY(-5px) scale(1.02)';
-          e.currentTarget.style.background = 'linear-gradient(135deg, rgba(255, 215, 0, 0.25) 0%, rgba(255, 165, 0, 0.2) 100%)';
-          e.currentTarget.style.borderColor = 'rgba(255, 215, 0, 0.6)';
-          e.currentTarget.style.boxShadow = '0 10px 25px rgba(255, 215, 0, 0.3)';
-        }
-      }}
-      onMouseLeave={(e) => {
-        if (!isMobile) {
-          e.currentTarget.style.transform = 'translateY(0) scale(1)';
-          e.currentTarget.style.background = 'linear-gradient(135deg, rgba(255, 215, 0, 0.15) 0%, rgba(255, 165, 0, 0.1) 100%)';
-          e.currentTarget.style.borderColor = 'rgba(255, 215, 0, 0.4)';
-          e.currentTarget.style.boxShadow = 'none';
-        }
+        borderRadius: '15px',
+        cursor: 'pointer',
+        minHeight: isMobile ? '120px' : '150px',
+        border: '2px solid rgba(255, 215, 0, 0.4)',
+        transition: 'all 0.3s ease'
       }}
     >
-      <div style={{ fontSize: isMobile ? '1.8rem' : '2.5rem', marginBottom: '0.5rem' }}>
-        {category.icon || '👤'}
+      {/* Background Image */}
+      <div
+        style={{
+          position: 'absolute',
+          inset: 0,
+          backgroundImage: `url(${bgImage})`,
+          backgroundSize: 'cover',
+          backgroundPosition: 'center',
+          filter: 'brightness(0.7)'
+        }}
+      />
+
+      {/* Dark gradient overlay */}
+      <div
+        style={{
+          position: 'absolute',
+          inset: 0,
+          background:
+            'linear-gradient(180deg, rgba(0,0,0,0.2) 0%, rgba(0,0,0,0.75) 100%)'
+        }}
+      />
+
+      {/* Text content */}
+      <div
+        style={{
+          position: 'relative',
+          zIndex: 2,
+          height: '100%',
+          display: 'flex',
+          flexDirection: 'column',
+          justifyContent: 'center',
+          alignItems: 'center',
+          padding: isMobile ? '1rem' : '1.5rem',
+          color: '#FFD700',
+          fontFamily: "'Playfair Display', serif",
+          textAlign: 'center'
+        }}
+      >
+        <div style={{ fontSize: isMobile ? '1.6rem' : '2rem' }}>👤</div>
+
+        <h3
+          style={{
+            margin: 0,
+            fontSize: isMobile ? '1rem' : '1.2rem',
+            fontWeight: 600,
+            letterSpacing: '0.5px'
+          }}
+        >
+          My Characters
+        </h3>
+
+        <p
+          style={{
+            margin: 0,
+            fontSize: isMobile ? '0.75rem' : '0.9rem',
+            opacity: 0.9
+          }}
+        >
+          {category.characterCount || 0} created
+        </p>
       </div>
-      <h3 style={{
-        color: '#FFD700',
-        fontSize: isMobile ? '1rem' : '1.2rem',
-        margin: '0 0 0.5rem 0',
-        fontWeight: 600,
-        fontFamily: "'Playfair Display', serif"
-      }}>
-        {category.title}
-      </h3>
-      <p style={{
-        color: 'rgba(255, 215, 0, 0.8)',
-        fontSize: isMobile ? '0.8rem' : '0.9rem',
-        margin: 0,
-        opacity: 0.9
-      }}>
-        {category.characterCount || 0} character{category.characterCount !== 1 ? 's' : ''}
-      </p>
     </div>
   );
-}
+};
 
 // NEW: Updated to accept iscoveredCharacters prop
 const ChatLauncherPage = ({ onStartChat, discoveredCharacters = [] }) => {
