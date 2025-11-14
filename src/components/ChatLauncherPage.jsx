@@ -321,7 +321,8 @@ const ChatLauncherPage = ({ onStartChat, discoveredCharacters = [] }) => {
         characterCount: userCharacters.length,
         pendingCount: userCharacters.filter(c => c.status === 'pending').length,
         rejectedCount: userCharacters.filter(c => c.status === 'rejected').length,
-        approvedCount: userCharacters.filter(c => c.status === 'approved').length
+        approvedCount: userCharacters.filter(c => c.status === 'approved').length,
+        sceneImage: '/images/categories/creator.jpeg' 
       };
     }
 
@@ -343,7 +344,8 @@ const ChatLauncherPage = ({ onStartChat, discoveredCharacters = [] }) => {
           creator: char.creator
         })),
         characterCount: discoveredCharacters.length,
-        icon: '✨',
+        sceneImage: '/images/categories/discover.jpeg',  // ADD THIS LINE
+        icon: '',
         description: 'Characters you\'ve discovered from the Market Hub'
       };
       

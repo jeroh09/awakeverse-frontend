@@ -3,6 +3,9 @@
 import React from 'react';
 import DefensiveCharacterCreationWrapper from './DefensiveCharacterCreationWrapper';
 import PublishToHubButton from './CreatorHub/PublishToHubButton';
+import PremiumCategoryCard from './PremiumCategoryCard';
+import theme from '../design-system/tokens';
+
 import { renderSafeAvatar } from '../utils/imageUtils';
 
 /* =======================
@@ -94,23 +97,24 @@ export const StatusBadge = ({ status, size = 'normal' }) => {
 };
 
 /* ------------------------------ CategoryCard ---------------------------- */
-export const CategoryCard = ({
-  category,
-  onClick,
-  index = 0,
-  isMobile,
-  onCreateCharacter
-}) => {
+export const CategoryCard = (props) => {
+  const { category, isMobile } = props;
+  
+  // Use premium card for regular categories
+  if (category.key !== 'my_characters') {
+    return <PremiumCategoryCard {...props} />;
+  }
+  
+  // Keep your existing my_characters card logic
   const isMyCharacters = category.key === 'my_characters';
 
   const handleClick = () => {
     if (isMyCharacters && (category.characterCount || 0) === 0) {
-      onCreateCharacter?.();
+      props.onCreateCharacter?.();
     } else {
-      onClick?.();
+      props.onClick?.();
     }
   };
-
   const getStatusSummary = () => {
     if (!isMyCharacters || !category.characterCount) return null;
     const { pendingCount = 0, rejectedCount = 0, approvedCount = 0 } = category;
