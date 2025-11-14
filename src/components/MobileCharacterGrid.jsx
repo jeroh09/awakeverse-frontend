@@ -8,7 +8,7 @@ const MobileCharacterGrid = ({ characters, onCharacterSelect, showStatusIndicato
       <div style={{
         width: '100%',
         display: 'grid',
-        gridTemplateColumns: 'repeat(2, 1fr)',
+        gridTemplateColumns: '1fr',
         gap: '1rem',
         padding: '0.5rem'
       }}>

@@ -324,7 +324,8 @@ const ChatLauncherPage = ({ onStartChat, discoveredCharacters = [] }) => {
         pendingCount: userCharacters.filter(c => c.status === 'pending').length,
         rejectedCount: userCharacters.filter(c => c.status === 'rejected').length,
         approvedCount: userCharacters.filter(c => c.status === 'approved').length,
-        sceneImage: '/images/categories/creator.jpeg' 
+        sceneImage: '/images/categories/creators.jpeg' 
+        
       };
     }
 
