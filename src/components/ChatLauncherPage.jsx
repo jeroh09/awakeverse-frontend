@@ -12,6 +12,7 @@ import MobileCharacterView from '../components/MobileCharacterView';
 import PremiumOracleSearch from '../components/PremiumOracleSearch';
 import PremiumCategoryCard from './PremiumCategoryCard';
 import { useAppView, VIEW_STATES } from '../contexts/AppViewContext';
+import PremiumCharacterCard from '../components/PremiumCharacterCard';
 import theme from '../design-system/tokens';
 
 
@@ -1360,39 +1361,23 @@ const ChatLauncherPage = ({ onStartChat, discoveredCharacters = [] }) => {
                         {selectedCategory.description}
                       </p>
                     )}
-
                     <div style={{
                       display: 'grid',
-                      gridTemplateColumns: 'repeat(auto-fit, minmax(180px, 1fr))',
-                      gap: '1rem',
+                      gridTemplateColumns: 'repeat(auto-fill, minmax(220px, 1fr))',
+                      gap: '24px',
                       maxHeight: 'calc(100vh - 200px)',
                       overflowY: 'auto',
                       paddingRight: '0.5rem'
                     }}>
                       {selectedCategory.characters.map((character, index) => (
                         <div key={character.key} style={{ position: 'relative' }}>
-                          <CharacterCard
+                          <PremiumCharacterCard
                             character={character}
                             onClick={() => handleCharacterSelect(character)}
-                            index={index}
                             isMobile={false}
-                            showStatusIndicator={false}
+                            showBadge={true}
                           />
                           {/* Discovered badge */}
-                          <div style={{
-                            position: 'absolute',
-                            top: '8px',
-                            right: '8px',
-                            background: 'rgba(255, 215, 0, 0.9)',
-                            color: 'rgba(0, 0, 0, 0.8)',
-                            fontSize: '0.7rem',
-                            padding: '0.2rem 0.4rem',
-                            borderRadius: '6px',
-                            fontWeight: 600,
-                            zIndex: 2
-                          }}>
-                            ✨
-                          </div>
                         </div>
                       ))}
                     </div>
@@ -1413,22 +1398,22 @@ const ChatLauncherPage = ({ onStartChat, discoveredCharacters = [] }) => {
                     )}
                   </div>
                 ) : (
+                // REPLACE WITH:
                 <div style={{
                   display: 'grid',
-                  gridTemplateColumns: 'repeat(auto-fit, minmax(180px, 1fr))',
-                  gap: '1rem',
+                  gridTemplateColumns: 'repeat(auto-fill, minmax(220px, 1fr))',
+                  gap: '24px',
                   maxHeight: 'calc(100vh - 200px)',
                   overflowY: 'auto',
                   paddingRight: '0.5rem'
                 }}>
                   {selectedCategory.characters.map((character, index) => (
-                    <CharacterCard
+                    <PremiumCharacterCard
                       key={character.key}
                       character={character}
                       onClick={() => handleCharacterSelect(character)}
-                      index={index}
                       isMobile={false}
-                      showStatusIndicator={character.key?.startsWith('user_')}
+                      showBadge={true}
                     />
                   ))}
                 </div>
