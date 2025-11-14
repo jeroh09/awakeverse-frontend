@@ -68,41 +68,31 @@ const PremiumCategoryCard = ({
         padding: isMobile ? '16px' : '24px',
         display: 'flex',
         flexDirection: 'column',
-        justifyContent: 'center'
+        justifyContent: 'center',
+        alignItems: 'flex-start'
       }}>
+        {/* CATEGORY NAME - BIG AND CLEAR */}
         <h3 style={{
           fontFamily: theme.typography.fonts.display,
-          fontSize: isMobile ? '18px' : '20px',
-          fontWeight: theme.typography.weights.bold,
+          fontSize: isMobile ? '22px' : '26px',
+          fontWeight: 700,
           color: theme.colors.text.primary,
-          marginBottom: theme.spacing.sm,
-          lineHeight: 1.2
+          marginBottom: theme.spacing.md,
+          lineHeight: 1.1,
+          letterSpacing: '-0.5px'
         }}>
           {category.name}
         </h3>
 
+        {/* CHARACTER COUNT - SMALL AND SUBTLE */}
         <p style={{
           fontFamily: theme.typography.fonts.body,
-          fontSize: isMobile ? '11px' : '13px',
-          color: theme.colors.text.secondary,
-          marginBottom: isMobile ? theme.spacing.sm : theme.spacing.md,
-          lineHeight: 1.5,
-          fontWeight: theme.typography.weights.medium
+          fontSize: isMobile ? '12px' : '14px',
+          color: theme.colors.text.tertiary,
+          fontWeight: 500,
+          lineHeight: 1
         }}>
           {category.characterCount || category.characters?.length || 0} characters
-        </p>
-
-        <p style={{
-          fontFamily: theme.typography.fonts.body,
-          fontSize: isMobile ? '11px' : '12px',
-          color: theme.colors.text.tertiary,
-          lineHeight: 1.5,
-          display: '-webkit-box',
-          WebkitLineClamp: isMobile ? 2 : 3,
-          WebkitBoxOrient: 'vertical',
-          overflow: 'hidden'
-        }}>
-          {category.description}
         </p>
       </div>
 

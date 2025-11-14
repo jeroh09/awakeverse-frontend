@@ -4,6 +4,7 @@ export const characterCategories = [
   {
     key: 'discovered',
     title: '⭐ Discovered',
+    sceneImage: '/images/categories/discover.jpeg',
     characters: [] // Will be populated dynamically from Market Hub discoveries
   },
   {
@@ -216,6 +217,7 @@ export const characterCategories = [
   {
     key: 'my_characters',
     title: 'My Characters',
+    sceneImage: '/images/categories/creator.jpeg',
     characters: [] // Will be populated dynamically
   },
   {
@@ -633,7 +635,7 @@ export const characterCategories = [
   {
     key: 'pathfinders',
     title: 'Explorers',
-    sceneImage: '/images/categories/psthfinders.jpeg',
+    sceneImage: '/images/categories/pathfinders.jpeg',
     characters: [
       { 
         key: 'christopher_columbus',
