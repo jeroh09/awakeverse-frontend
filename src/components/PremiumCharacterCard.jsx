@@ -66,7 +66,7 @@ const PremiumCharacterCard = ({
             backgroundImage: `url(${character.thumbnailUrl || character.avatar_url || '/images/default-character.jpg'})`,
             backgroundSize: 'cover',
             backgroundPosition: 'center',
-            filter: 'brightness(0.6)',
+            filter: 'blur(8px) brightness(0.6)',
             transform: isHovered ? 'scale(1.15)' : 'scale(1.1)',
             transition: theme.transitions.normal
           }}
@@ -87,13 +87,7 @@ const PremiumCharacterCard = ({
           }}
         />
 
-        {/* Vignette Effect */}
-        <div style={{
-          position: 'absolute',
-          inset: 0,
-          background: 'radial-gradient(circle at center, transparent 30%, rgba(10, 15, 26, 0.7) 100%)',
-          zIndex: 1
-        }} />
+        {/* REMOVED: Vignette Effect - Was causing edge blur */}
       </div>
 
       {/* Character Info */}

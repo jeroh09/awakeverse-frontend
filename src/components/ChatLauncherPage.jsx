@@ -1289,21 +1289,26 @@ const ChatLauncherPage = ({ onStartChat, discoveredCharacters = [] }) => {
                 alignItems: 'center',
                 marginBottom: '2rem',
                 paddingBottom: '1rem',
-                borderBottom: '2px solid rgba(255, 215, 0, 0.3)'
+                borderBottom: `1px solid ${theme.colors.border.medium}`
               }}>
                 <h2 style={{
-                  color: '#FFD700',
+                  color: theme.colors.text.primary,
                   fontSize: '2rem',
-                  fontFamily: "'Playfair Display', serif",
+                  fontFamily: theme.typography.fonts.display,
                   margin: 0,
-                  letterSpacing: '2px',
-                  textShadow: '0 0 20px rgba(255, 215, 0, 0.5)',
+                  fontWeight: theme.typography.weights.bold,
+                  letterSpacing: '-0.5px',
                   display: 'flex',
                   alignItems: 'center',
-                  gap: '0.5rem'
+                  gap: '0.75rem'
                 }}>
                   {selectedCategory.icon && (
-                    <span style={{ fontSize: '1.5rem' }}>{selectedCategory.icon}</span>
+                    <span style={{ 
+                      fontSize: '1.8rem',
+                      filter: 'drop-shadow(0 2px 4px rgba(0, 0, 0, 0.3))'
+                    }}>
+                      {selectedCategory.icon}
+                    </span>
                   )}
                   {selectedCategory.title}
                 </h2>
@@ -1311,30 +1316,38 @@ const ChatLauncherPage = ({ onStartChat, discoveredCharacters = [] }) => {
                 <button
                   onClick={handleBackToCategories}
                   style={{
-                    background: 'rgba(255, 215, 0, 0.1)',
-                    border: '2px solid rgba(255, 215, 0, 0.4)',
-                    borderRadius: '8px',
-                    color: '#FFD700',
-                    fontSize: '0.9rem',
-                    fontWeight: 600,
-                    padding: '0.5rem 1rem',
+                    background: theme.colors.background.interactive,
+                    border: `1px solid ${theme.colors.border.strong}`,
+                    borderRadius: theme.borderRadius.md,
+                    color: theme.colors.text.primary,
+                    fontSize: theme.typography.sizes.bodySmall,
+                    fontWeight: theme.typography.weights.semibold,
+                    fontFamily: theme.typography.fonts.body,
+                    padding: '0.6rem 1.2rem',
                     cursor: 'pointer',
-                    transition: 'all 0.3s ease',
-                    fontFamily: "'Georgia', serif"
+                    transition: theme.transitions.normal,
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: '0.5rem',
+                    boxShadow: theme.shadows.elevation01
                   }}
                   onMouseEnter={(e) => {
-                    e.currentTarget.style.background = 'rgba(255, 215, 0, 0.2)';
-                    e.currentTarget.style.borderColor = 'rgba(255, 215, 0, 0.6)';
+                    e.currentTarget.style.background = theme.colors.background.peak;
+                    e.currentTarget.style.borderColor = theme.colors.accent.primary;
+                    e.currentTarget.style.boxShadow = theme.shadows.elevation02;
+                    e.currentTarget.style.transform = 'translateY(-2px)';
                   }}
                   onMouseLeave={(e) => {
-                    e.currentTarget.style.background = 'rgba(255, 215, 0, 0.1)';
-                    e.currentTarget.style.borderColor = 'rgba(255, 215, 0, 0.4)';
+                    e.currentTarget.style.background = theme.colors.background.interactive;
+                    e.currentTarget.style.borderColor = theme.colors.border.strong;
+                    e.currentTarget.style.boxShadow = theme.shadows.elevation01;
+                    e.currentTarget.style.transform = 'translateY(0)';
                   }}
                 >
-                  ← Back
+                  <span style={{ fontSize: '1.2rem' }}>←</span>
+                  <span>Back</span>
                 </button>
               </div>
-
               {/* Desktop Content Area */}
               {selectedCategory.key === 'my_characters' ? (
                 <MyCharactersPanel 
@@ -1353,16 +1366,18 @@ const ChatLauncherPage = ({ onStartChat, discoveredCharacters = [] }) => {
                   <div>
                     {selectedCategory.description && (
                       <p style={{
-                        color: 'rgba(255, 215, 0, 0.8)',
-                        fontSize: '1rem',
-                        marginBottom: '1.5rem',
+                        color: theme.colors.text.secondary,
+                        fontSize: theme.typography.sizes.body,
+                        fontFamily: theme.typography.fonts.body,
+                        marginBottom: theme.spacing.xl,
                         textAlign: 'center',
-                        fontStyle: 'italic'
+                        fontStyle: 'italic',
+                        lineHeight: 1.6
                       }}>
                         {selectedCategory.description}
                       </p>
                     )}
-                                        <ScrollShell>
+                    <ScrollShell>
                       <div style={{
                         display: 'grid',
                         gridTemplateColumns: 'repeat(auto-fill, minmax(220px, 1fr))',
