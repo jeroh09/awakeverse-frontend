@@ -89,24 +89,6 @@ button, label, nav, .ui-element {
   font-family: var(--font-ui);
   text-transform: none !important;
 }
-/* Light & dark theme variables */
-:root {
-  --bg-color:       #ffffff;
-  --text-color:     #222222;
-  --primary-color:  #1d4ed8;
-  --muted-color:    #888888;
-  --surface-bg:     #f9fafb;
-  --surface-border: #e5e7eb;
-}
-
-.dark {
-  --bg-color:       #121212;
-  --text-color:     #e5e5e5;
-  --primary-color:  #3b82f6;
-  --muted-color:    #aaaaaa;
-  --surface-bg:     #1e1e1e;
-  --surface-border: #333333;
-}
 
 /* Remove all uppercase text transforms globally */
 * {
@@ -1316,29 +1298,6 @@ textarea:focus,
   }
 }
 
-/* 🌑 ULTRA DARK MATTE COSMIC */
-body, .app-container {
-  background: linear-gradient(
-    135deg,
-    #050508 0%,     /* Almost black */
-    #080B12 25%,    /* Very dark navy */
-    #060A15 50%,    /* Deep dark navy */
-    #040608 75%,    /* Nearly black */
-    #050508 100%    /* Almost black */
-  );
-  background-size: 400% 400%;
-  animation: cosmicShift 90s ease-in-out infinite;
-  min-height: 100vh;
-}
-
-/* Ultra subtle stars */
-body::before {
-  opacity: 0.2; /* Very matte */
-  background-image: 
-    radial-gradient(1px 1px at 30px 40px, rgba(160,170,180,0.3), transparent),
-    radial-gradient(0.5px 0.5px at 70px 90px, rgba(150,160,170,0.2), transparent),
-    radial-gradient(1px 1px at 110px 50px, rgba(170,180,190,0.25), transparent);
-}
 /* 🔧 OVERRIDE PURPLE BACKGROUND */
 .chat-window {
   background-color: #050508 !important; /* Dark navy instead of purple */

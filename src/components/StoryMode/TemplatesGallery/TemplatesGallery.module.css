@@ -497,7 +497,7 @@
 }
 
 .modalTitle {
-  font-size: 1.35rem;
+  font-size: 1.1rem;
   font-weight: 600;
   color: #f9fafb;
 }
@@ -571,7 +571,7 @@
 
 /* Description */
 .specDescriptionTitle {
-  font-size: 0.85rem;
+  font-size: 0.65rem;
   text-transform: uppercase;
   letter-spacing: 0.08em;
   color: #9ca3af;
@@ -579,14 +579,14 @@
 }
 
 .specDescription {
-  font-size: 0.95rem;
+  font-size: 0.85rem;
   color: #e5e7eb;
   line-height: 1.6;
 }
 
 /* Situation Text */
 .specSituationTitle {
-  font-size: 0.85rem;
+  font-size: 0.75rem;
   text-transform: uppercase;
   letter-spacing: 0.08em;
   color: #9ca3af;
@@ -757,6 +757,15 @@
   }
 }
 
+/* Mobile-first: single column */
+.templateGrid {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 1.25rem;
+  margin-bottom: 2.5rem;
+}
+
+/* Small tablets: 2 columns */
 @media (min-width: 640px) {
   .templateGrid {
     grid-template-columns: repeat(2, minmax(0, 1fr));
@@ -764,9 +773,10 @@
   }
 }
 
+/* Desktop: 4 columns (4 x 2 layout) */
 @media (min-width: 1024px) {
   .templateGrid {
-    grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+    grid-template-columns: repeat(4, minmax(0, 1fr));
     gap: 1.75rem;
     margin-bottom: 3rem;
   }
