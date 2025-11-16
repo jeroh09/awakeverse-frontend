@@ -71,8 +71,10 @@ export default function StoryTemplateCard({ template, onSelect }) {
 
   const eraBadgeColor = getEraBadgeColor(template.preset_era);
 
-  // Prefer an explicit template image, otherwise fall back gracefully
+  // ✅ Prefer scenic template image first, then fall back as before
+  const scenicUrl = template.scene_url || template.sceneUrl || null;
   const cardImageUrl =
+    scenicUrl ||
     template.image_url ||
     template.preview_image_url ||
     thumbnailUrl ||
@@ -135,10 +137,7 @@ export default function StoryTemplateCard({ template, onSelect }) {
         </div>
 
         {/* CTA Button */}
-        <button
-          className={styles.useButton}
-          type="button"
-        >
+        <button className={styles.useButton} type="button">
           Use Template
         </button>
       </div>
