@@ -1,4 +1,4 @@
-// src/components/StoryMode/StoryWindow/StoryMessages.jsx
+// src/components/StoryMode/StoRYWindow/StoryMessages.jsx
 import React, { useRef, useEffect, useCallback } from 'react';
 import { VariableSizeList as List } from 'react-window';
 import AutoSizer from 'react-virtualized-auto-sizer';
