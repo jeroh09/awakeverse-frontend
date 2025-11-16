@@ -1,15 +1,16 @@
-// src/components/StoryMode/StoryCreationForm/index.jsx - Complete Creation Form
+// src/components/StoryMode/StoryCreationForm/index.jsx
+// Complete Creation Form with Scene Style support
 import React, { useState, useEffect } from 'react';
 import useStoryApi from '../../../hooks/useStoryApi';
 import CharacterSelector from './CharacterSelector';
 import { getDisplayNameFromKey } from '../../../utils/characterUtils';
 import styles from './StoryCreationForm.module.css';
 
-export default function StoryCreationForm({ 
+export default function StoryCreationForm({
   template,
   isOpen,
   onClose = () => {},
-  onSuccess = () => {}
+  onSuccess = () => {},
 }) {
   const [step, setStep] = useState(1); // 1: Character, 2: Details
   const [loading, setLoading] = useState(false);
@@ -20,29 +21,55 @@ export default function StoryCreationForm({
   const [title, setTitle] = useState('');
   const [startingSituation, setStartingSituation] = useState('');
   const [customEra, setCustomEra] = useState('');
+  const [sceneStyle, setSceneStyle] = useState(''); // NEW: scene prompt text
 
   const { createStory } = useStoryApi();
 
-  // Initialize from template
+  // Initialize from template when opened
   useEffect(() => {
     if (template && isOpen) {
       setTitle(template.title || '');
       setStartingSituation(template.preset_situation || '');
       setCustomEra(template.preset_era || '');
       setSelectedCharacter(template.preset_character_key || null);
+      setSceneStyle(template.scene_prompt || '');
+    }
+
+    if (!template && isOpen) {
+      // Blank create: clear fields
+      setTitle('');
+      setStartingSituation('');
+      setCustomEra('');
+      setSelectedCharacter(null);
+      setSceneStyle('');
     }
   }, [template, isOpen]);
 
   // Validation
   const canProceedToStep2 = selectedCharacter !== null;
-  const canSave = canProceedToStep2 && title.trim().length > 0 && startingSituation.trim().length > 0;
+  const canSave =
+    canProceedToStep2 &&
+    title.trim().length > 0 &&
+    startingSituation.trim().length > 0;
 
-  // Handle character selection
+  // Character selection
   const handleCharacterSelect = (characterKey) => {
     setSelectedCharacter(characterKey);
   };
 
-  // Handle save
+  // Close & reset
+  const handleClose = () => {
+    setStep(1);
+    setError(null);
+    setSelectedCharacter(null);
+    setTitle('');
+    setStartingSituation('');
+    setCustomEra('');
+    setSceneStyle('');
+    onClose();
+  };
+
+  // Save / create story
   const handleSave = async () => {
     if (!canSave) {
       setError('Please complete all required fields');
@@ -53,12 +80,16 @@ export default function StoryCreationForm({
       setLoading(true);
       setError(null);
 
+      const scenePromptTrimmed = sceneStyle.trim();
+
       const storyData = {
         title: title.trim(),
         character_key: selectedCharacter,
         starting_situation: startingSituation.trim(),
         template_id: template?.id || null,
-        custom_era: customEra || null
+        custom_era: customEra || null,
+        // NEW: scene prompt sent to backend
+        scene_prompt: scenePromptTrimmed || null,
       };
 
       console.log('📖 Creating story:', storyData);
@@ -80,17 +111,6 @@ export default function StoryCreationForm({
     }
   };
 
-  // Handle close
-  const handleClose = () => {
-    setStep(1);
-    setError(null);
-    setSelectedCharacter(null);
-    setTitle('');
-    setStartingSituation('');
-    setCustomEra('');
-    onClose();
-  };
-
   // Navigation
   const goToStep = (newStep) => {
     setError(null);
@@ -101,7 +121,10 @@ export default function StoryCreationForm({
 
   return (
     <div className={styles.modalOverlay} onClick={handleClose}>
-      <div className={styles.creationModal} onClick={(e) => e.stopPropagation()}>
+      <div
+        className={styles.creationModal}
+        onClick={(e) => e.stopPropagation()}
+      >
         {/* Header */}
         <div className={styles.modalHeader}>
           <div className={styles.titleSection}>
@@ -112,39 +135,41 @@ export default function StoryCreationForm({
               </span>
             )}
           </div>
-          <button className={styles.closeButton} onClick={handleClose}>×</button>
+          <button className={styles.closeButton} onClick={handleClose}>
+            ×
+          </button>
         </div>
 
-        {/* Progress Steps */}
+        {/* Progress steps */}
         <div className={styles.progressSteps}>
-          <div className={`${styles.step} ${step >= 1 ? styles.active : ''} ${step > 1 ? styles.completed : ''}`}>
+          <div
+            className={`${styles.step} ${
+              step >= 1 ? styles.active : ''
+            } ${step > 1 ? styles.completed : ''}`}
+          >
             <div className={styles.stepNumber}>1</div>
             <div className={styles.stepLabel}>Character</div>
           </div>
-          <div className={`${styles.step} ${step >= 2 ? styles.active : ''}`}>
+          <div
+            className={`${styles.step} ${
+              step >= 2 ? styles.active : ''
+            } ${step > 2 ? styles.completed : ''}`}
+          >
             <div className={styles.stepNumber}>2</div>
             <div className={styles.stepLabel}>Story Details</div>
           </div>
         </div>
 
-        {/* Error Display */}
-        {error && (
-          <div className={styles.errorBanner}>
-            <span className={styles.errorIcon}>⚠️</span>
-            {error}
-          </div>
-        )}
-
-        {/* Content Area */}
+        {/* Content */}
         <div className={styles.modalContent}>
-          {/* Step 1: Character Selection */}
+          {/* Step 1: Character */}
           {step === 1 && (
             <div className={styles.stepContent}>
               <h3>Select Your Character</h3>
               <p className={styles.stepDescription}>
                 Choose the character who will be the protagonist of your story.
               </p>
-              
+
               <CharacterSelector
                 selectedCharacter={selectedCharacter}
                 onCharacterSelect={handleCharacterSelect}
@@ -155,7 +180,7 @@ export default function StoryCreationForm({
                   <h4>Selected Character:</h4>
                   <div className={styles.selectedCharacterChip}>
                     <span>{getDisplayNameFromKey(selectedCharacter)}</span>
-                    <button 
+                    <button
                       onClick={() => setSelectedCharacter(null)}
                       className={styles.removeChip}
                     >
@@ -167,14 +192,15 @@ export default function StoryCreationForm({
             </div>
           )}
 
-          {/* Step 2: Story Details */}
+          {/* Step 2: Details */}
           {step === 2 && (
             <div className={styles.stepContent}>
               <h3>Story Details</h3>
               <p className={styles.stepDescription}>
-                Customize your story title and starting situation.
+                Customize your story title, opening scene, and era.
               </p>
 
+              {/* Title */}
               <div className={styles.formGroup}>
                 <label htmlFor="story-title">Title *</label>
                 <input
@@ -189,6 +215,7 @@ export default function StoryCreationForm({
                 <div className={styles.charCount}>{title.length}/100</div>
               </div>
 
+              {/* Starting situation */}
               <div className={styles.formGroup}>
                 <label htmlFor="starting-situation">Starting Situation *</label>
                 <textarea
@@ -200,9 +227,12 @@ export default function StoryCreationForm({
                   rows={6}
                   className={styles.formTextarea}
                 />
-                <div className={styles.charCount}>{startingSituation.length}/500</div>
+                <div className={styles.charCount}>
+                  {startingSituation.length}/500
+                </div>
               </div>
 
+              {/* Era */}
               <div className={styles.formGroup}>
                 <label htmlFor="custom-era">Era (Optional)</label>
                 <select
@@ -225,24 +255,51 @@ export default function StoryCreationForm({
                 </select>
               </div>
 
-              {/* Selected Character Reminder */}
-              <div className={styles.characterReminder}>
-                <span className={styles.reminderLabel}>Selected Character:</span>
-                <span className={styles.reminderValue}>
-                  {getDisplayNameFromKey(selectedCharacter)}
-                </span>
+              {/* NEW: Scene Style */}
+              <div className={styles.formGroup}>
+                <label htmlFor="scene-style">
+                  Scene Style (optional){' '}
+                  <span style={{ fontWeight: 400, color: '#6b7280' }}>
+                    – helps generate your scenic image
+                  </span>
+                </label>
+                <textarea
+                  id="scene-style"
+                  value={sceneStyle}
+                  onChange={(e) => setSceneStyle(e.target.value)}
+                  placeholder="e.g., A fog-drenched Victorian alley lit by a single gas lamp."
+                  maxLength={220}
+                  rows={3}
+                  className={styles.formTextarea}
+                />
+                <div className={styles.charCount}>
+                  {sceneStyle.length}/220
+                </div>
               </div>
+
+              {/* Selected Character Reminder */}
+              {selectedCharacter && (
+                <div className={styles.characterReminder}>
+                  <span className={styles.reminderLabel}>
+                    Selected Character:
+                  </span>
+                  <span className={styles.reminderValue}>
+                    {getDisplayNameFromKey(selectedCharacter)}
+                  </span>
+                </div>
+              )}
             </div>
           )}
         </div>
 
-        {/* Footer Actions */}
+        {/* Footer */}
         <div className={styles.modalFooter}>
           <div className={styles.footerLeft}>
             {step > 1 && (
               <button
-                onClick={() => goToStep(step - 1)}
+                type="button"
                 className={styles.navButton}
+                onClick={() => goToStep(step - 1)}
                 disabled={loading}
               >
                 ← Back
@@ -251,16 +308,27 @@ export default function StoryCreationForm({
           </div>
 
           <div className={styles.footerRight}>
-            {step < 2 ? (
+            <button
+              type="button"
+              className={styles.navButton}
+              onClick={handleClose}
+              disabled={loading}
+            >
+              Cancel
+            </button>
+
+            {step === 1 ? (
               <button
+                type="button"
                 onClick={() => goToStep(step + 1)}
                 className={styles.navButtonPrimary}
-                disabled={!canProceedToStep2}
+                disabled={!canProceedToStep2 || loading}
               >
                 Next →
               </button>
             ) : (
               <button
+                type="button"
                 onClick={handleSave}
                 className={styles.saveButton}
                 disabled={!canSave || loading}

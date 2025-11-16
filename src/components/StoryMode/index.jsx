@@ -1,4 +1,4 @@
-// src/components/StoryMode/index.jsx - Clean version with app theme
+// src/components/StoryMode/index.jsx - Updated with creation form integration
 import React, { useState, useEffect, useCallback } from 'react';
 import { useUser } from '../../contexts/UserContext';
 import SubscriptionService from '../../services/SubscriptionService';
@@ -6,6 +6,7 @@ import DefensiveStoryWrapper from './DefensiveStoryWrapper';
 import TemplatesGallery from './TemplatesGallery';
 import MyStoriesPanel from './MyStoriesPanel';
 import StoryWindow from './StoryWindow';
+import StoryCreationForm from './StoryCreationForm'; // Add this import
 import styles from './StoryMode.module.css';
 
 export default function StoryModeTab() {
@@ -21,6 +22,10 @@ export default function StoryModeTab() {
   
   // Stories refresh trigger
   const [storiesRefreshKey, setStoriesRefreshKey] = useState(0);
+
+  // NEW: Creation form state
+  const [showCreateForm, setShowCreateForm] = useState(false);
+  const [activeTemplate, setActiveTemplate] = useState(null);
 
   // Fetch subscription data using SubscriptionService
   const loadSubscriptionData = useCallback(async () => {
@@ -81,16 +86,50 @@ export default function StoryModeTab() {
     setStoriesRefreshKey(prev => prev + 1);
   }, []);
 
-  // Handle story created
+  // Handle story created from templates
   const handleStoryCreated = useCallback((newStory) => {
-    console.log('✅ Story created:', newStory);
+    console.log('✅ Story created from template:', newStory);
     setStoriesRefreshKey(prev => prev + 1);
+    // Optionally open the story immediately
+    // setActiveStory(newStory);
   }, []);
 
   // Handle story deleted
   const handleStoryDeleted = useCallback(() => {
     console.log('🗑️ Story deleted');
     setStoriesRefreshKey(prev => prev + 1);
+  }, []);
+
+  // NEW: Open creation form with template
+  const handleTemplateSelect = useCallback((template) => {
+    console.log('📝 Opening creation form with template:', template?.title);
+    setActiveTemplate(template);
+    setShowCreateForm(true);
+  }, []);
+
+  // NEW: Open blank creation form
+  const handleBlankCreate = useCallback(() => {
+    console.log('📝 Opening blank creation form');
+    setActiveTemplate(null);
+    setShowCreateForm(true);
+  }, []);
+
+  // NEW: Handle creation form success
+  const handleCreateSuccess = useCallback((newStory) => {
+    console.log('✅ Story created successfully:', newStory);
+    setShowCreateForm(false);
+    setActiveTemplate(null);
+    setStoriesRefreshKey(prev => prev + 1);
+    
+    // Optionally open the new story immediately
+    // setActiveStory(newStory);
+  }, []);
+
+  // NEW: Handle creation form close
+  const handleCreateClose = useCallback(() => {
+    console.log('📝 Creation form closed');
+    setShowCreateForm(false);
+    setActiveTemplate(null);
   }, []);
 
   // Loading state
@@ -145,6 +184,7 @@ export default function StoryModeTab() {
           <section className={styles.templatesSection}>
             <TemplatesGallery
               onStoryCreated={handleStoryCreated}
+              onTemplateSelect={handleTemplateSelect} // NEW: Pass template selection handler
             />
           </section>
 
@@ -154,10 +194,19 @@ export default function StoryModeTab() {
               refreshKey={storiesRefreshKey}
               onStoryOpen={handleStoryOpen}
               onStoryDeleted={handleStoryDeleted}
+              onCreateStory={handleBlankCreate} // NEW: Pass create story handler
             />
           </section>
         </div>
       </div>
+
+      {/* NEW: Story Creation Form Modal */}
+      <StoryCreationForm
+        template={activeTemplate}
+        isOpen={showCreateForm}
+        onClose={handleCreateClose}
+        onSuccess={handleCreateSuccess}
+      />
     </DefensiveStoryWrapper>
   );
 }
