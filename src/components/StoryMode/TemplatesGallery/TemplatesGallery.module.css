@@ -579,14 +579,14 @@
 }
 
 .specDescription {
-  font-size: 0.85rem;
+  font-size: 0.65rem;
   color: #e5e7eb;
   line-height: 1.6;
 }
 
 /* Situation Text */
 .specSituationTitle {
-  font-size: 0.75rem;
+  font-size: 0.65rem;
   text-transform: uppercase;
   letter-spacing: 0.08em;
   color: #9ca3af;
