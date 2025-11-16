@@ -327,3 +327,154 @@
   outline: 2px solid #3b82f6;
   outline-offset: 2px;
 }
+/* === STORY MODE PREMIUM – STEP 7: Character Selector === */
+
+/* Container */
+.characterSelector {
+  background: var(--bg-surface);
+  border-radius: var(--radius-lg);
+  padding: var(--space-xl);
+  border: 1px solid var(--border-subtle);
+  box-shadow: var(--elevation-02);
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-md);
+}
+
+/* Mobile-first: tighten padding on very small screens */
+@media (max-width: 480px) {
+  .characterSelector {
+    padding: var(--space-lg);
+  }
+}
+
+/* Search bar */
+.characterSearch {
+  width: 100%;
+  padding: var(--space-sm) var(--space-md);
+  border-radius: var(--radius-full);
+  background: var(--bg-interactive);
+  border: 1px solid var(--border-medium);
+  color: var(--text-primary);
+  font-family: var(--font-body);
+  font-size: var(--font-size-body-md);
+  outline: none;
+  transition: border-color var(--transition-fast), box-shadow var(--transition-fast), background var(--transition-fast);
+}
+
+.characterSearch::placeholder {
+  color: var(--text-muted);
+}
+
+.characterSearch:focus {
+  border-color: var(--accent-primary);
+  box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.18);
+  background: var(--bg-canvas);
+}
+
+/* Character option list wrapper (mobile friendly defaults) */
+.characterOptionsList {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: var(--space-sm);
+}
+
+/* On wider screens, allow two or three columns if you already use this class */
+@media (min-width: 640px) {
+  .characterOptionsList {
+    grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+  }
+}
+
+/* Character cards */
+.characterOption {
+  position: relative;
+  display: flex;
+  align-items: center;
+  gap: var(--space-md);
+  padding: var(--space-md);
+  border-radius: var(--radius-md);
+  background: var(--bg-interactive);
+  border: 1px solid var(--border-subtle);
+  cursor: pointer;
+  transition: background var(--transition-base), 
+              border-color var(--transition-base), 
+              box-shadow var(--transition-base), 
+              transform var(--transition-base);
+}
+
+.characterOption:hover {
+  border-color: var(--accent-primary);
+  box-shadow: var(--elevation-02), var(--glow-indigo);
+  transform: translateY(-2px);
+}
+
+/* Selected state */
+.characterOption.selected {
+  background: rgba(99, 102, 241, 0.10);
+  border-color: var(--accent-primary);
+  box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.22);
+}
+
+/* Avatar (if your JSX uses something like this) */
+.characterAvatar {
+  width: 40px;
+  height: 40px;
+  border-radius: 999px;
+  overflow: hidden;
+  flex-shrink: 0;
+  background: var(--bg-surface);
+  border: 1px solid var(--border-subtle);
+}
+
+/* Character text stack */
+.characterMeta {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0; /* allow text truncation on mobile */
+}
+
+.characterName {
+  font-family: var(--font-display);
+  font-size: var(--font-size-body-lg);
+  font-weight: var(--font-weight-semibold);
+  color: var(--brand-ivory);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.characterEra {
+  font-family: var(--font-body);
+  font-size: var(--font-size-body-xs);
+  color: var(--text-secondary);
+}
+
+/* Optional badge container (e.g. “Premium”, “Historical”) */
+.characterBadges {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px;
+  margin-top: 4px;
+}
+
+.characterBadge {
+  padding: 2px 8px;
+  border-radius: 999px;
+  border: 1px solid var(--border-medium);
+  background: rgba(15, 23, 42, 0.8);
+  font-size: var(--font-size-body-xs);
+  color: var(--text-secondary);
+}
+
+/* Small screen tweaks: keep card height compact on mobile */
+@media (max-width: 480px) {
+  .characterOption {
+    padding: var(--space-sm) var(--space-md);
+  }
+
+  .characterName {
+    font-size: var(--font-size-body-md);
+  }
+}

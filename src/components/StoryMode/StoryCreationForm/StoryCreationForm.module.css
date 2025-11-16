@@ -426,3 +426,220 @@
   outline: 2px solid #3b82f6;
   outline-offset: 2px;
 }
+/* === STORY MODE PREMIUM – STEP 8: Creation Form Modal === */
+
+/* Modal overlay */
+.modalOverlay {
+  position: fixed;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(10, 15, 26, 0.90);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  z-index: 1000;
+}
+
+/* Creation modal container */
+.creationModal {
+  position: relative;
+  width: 100%;
+  max-width: 720px;
+  margin: 0 var(--space-md);
+  background: var(--bg-surface);
+  border-radius: var(--radius-xl);
+  border: 1px solid var(--border-medium);
+  box-shadow:
+    var(--elevation-04),
+    0 0 80px -10px rgba(99, 102, 241, 0.4);
+  padding: var(--space-xl);
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-lg);
+}
+
+/* Mobile-first: modal should hug viewport nicely */
+@media (max-width: 480px) {
+  .creationModal {
+    padding: var(--space-lg);
+    border-radius: var(--radius-lg);
+    max-height: 90vh;
+    overflow-y: auto;
+  }
+}
+
+/* Header inside the modal (if present) */
+.creationHeader {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: var(--space-md);
+}
+
+.creationTitle {
+  font-family: var(--font-display);
+  font-size: var(--font-size-h3);
+  font-weight: var(--font-weight-bold);
+  color: var(--brand-ivory);
+}
+
+/* Progress steps */
+.stepsRow {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-sm);
+}
+
+.step {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-family: var(--font-body);
+  font-size: var(--font-size-body-sm);
+  color: var(--text-secondary);
+}
+
+.stepNumber {
+  width: 26px;
+  height: 26px;
+  border-radius: 999px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border: 1px solid var(--border-medium);
+  background: var(--bg-interactive);
+  font-size: var(--font-size-body-xs);
+  font-weight: var(--font-weight-medium);
+  color: var(--text-secondary);
+}
+
+/* Active step state */
+.step.active .stepNumber {
+  background: linear-gradient(135deg, var(--accent-primary), var(--accent-hover));
+  color: #ffffff;
+  border-color: transparent;
+  box-shadow: var(--glow-indigo);
+}
+
+.step.active .stepLabel {
+  color: var(--text-primary);
+  font-weight: var(--font-weight-medium);
+}
+
+/* Form body layout */
+.creationBody {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-md);
+}
+
+/* On bigger screens, allow two-column layout if you already use such wrappers */
+@media (min-width: 768px) {
+  .creationBody--twoColumn {
+    display: grid;
+    grid-template-columns: minmax(0, 1.4fr) minmax(0, 1fr);
+    gap: var(--space-xl);
+  }
+}
+
+/* Form fields */
+.formGroup {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.formLabel {
+  font-family: var(--font-body);
+  font-size: var(--font-size-body-sm);
+  color: var(--text-secondary);
+}
+
+/* Inputs & textareas */
+.formInput,
+.formTextarea {
+  width: 100%;
+  padding: var(--space-sm) var(--space-md);
+  border-radius: var(--radius-md);
+  background: var(--bg-interactive);
+  border: 1px solid var(--border-medium);
+  color: var(--text-primary);
+  font-family: var(--font-body);
+  font-size: var(--font-size-body-md);
+  outline: none;
+  resize: vertical;
+  min-height: 44px;
+  transition: border-color var(--transition-fast), box-shadow var(--transition-fast), background var(--transition-fast);
+}
+
+.formTextarea {
+  min-height: 96px;
+}
+
+.formInput::placeholder,
+.formTextarea::placeholder {
+  color: var(--text-muted);
+}
+
+.formInput:focus,
+.formTextarea:focus {
+  border-color: var(--accent-primary);
+  box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.14);
+  background: var(--bg-canvas);
+}
+
+/* Footer / buttons row */
+.creationFooter {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+  gap: var(--space-sm);
+  margin-top: var(--space-md);
+}
+
+/* Primary action button */
+.primaryButton {
+  padding: var(--space-sm) var(--space-lg);
+  border-radius: var(--radius-md);
+  border: none;
+  cursor: pointer;
+  font-family: var(--font-body);
+  font-size: var(--font-size-body-md);
+  font-weight: var(--font-weight-semibold);
+  background: linear-gradient(135deg, var(--accent-primary), var(--accent-hover));
+  color: #ffffff;
+  box-shadow: var(--elevation-02);
+  transition: transform var(--transition-fast), box-shadow var(--transition-fast), opacity var(--transition-fast);
+}
+
+.primaryButton:hover {
+  transform: translateY(-2px);
+  box-shadow: var(--elevation-03), var(--glow-indigo);
+}
+
+.primaryButton:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+  transform: none;
+  box-shadow: var(--elevation-01);
+}
+
+/* Secondary / cancel button */
+.secondaryButton {
+  padding: var(--space-sm) var(--space-lg);
+  border-radius: var(--radius-md);
+  border: 1px solid var(--border-medium);
+  background: transparent;
+  color: var(--text-secondary);
+  cursor: pointer;
+  font-family: var(--font-body);
+  font-size: var(--font-size-body-md);
+  transition: background var(--transition-fast), border-color var(--transition-fast), color var(--transition-fast);
+}
+
+.secondaryButton:hover {
+  background: var(--bg-interactive);
+  border-color: var(--border-medium);
+  color: var(--text-primary);
+}
