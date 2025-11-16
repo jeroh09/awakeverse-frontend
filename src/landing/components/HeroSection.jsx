@@ -103,12 +103,6 @@ export default function HeroSection() {
         </div>
 
       </div>
-
-      {/* Scroll Indicator */}
-      <div className="scroll-indicator" aria-hidden="true">
-        <span>Scroll</span>
-        <span>↓</span>
-      </div>
     </section>
   );
 }
