@@ -219,6 +219,15 @@
   word-wrap: break-word;
 }
 
+.userMessage {
+  margin-left: auto;
+  max-width: 82%;
+  display: flex;
+  justify-content: flex-end;
+  /* NEW: a little extra space above user replies */
+  margin-top: 0.25rem;
+}
+
 /* System message (centered ribbon) */
 
 .systemMessage {

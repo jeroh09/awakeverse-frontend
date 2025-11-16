@@ -45,13 +45,27 @@ export default function StoryInput({
     resetTextarea();
   };
 
-  const onKeyDown = (e) => {
-    // Enter to send, Shift+Enter for newline
-    if (e.key === 'Enter' && !e.shiftKey) {
+    const isMobile =
+    typeof window !== 'undefined' &&
+    window.matchMedia &&
+    window.matchMedia('(max-width: 768px)').matches;
+
+  const handleKeyDown = (e) => {
+    if (e.key !== 'Enter') return;
+
+    // On mobile: Enter always behaves like Shift+Enter (newline only)
+    if (isMobile) {
+      // Let the browser insert a newline; don't send
+      return;
+    }
+
+    // Desktop behavior: Enter = send, Shift+Enter = newline
+    if (!e.shiftKey) {
       e.preventDefault();
-      send();
+      onSend();
     }
   };
+
 
   return (
     <div className={styles.storyInputContainer}>

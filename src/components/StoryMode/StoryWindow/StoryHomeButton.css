@@ -40,3 +40,28 @@
     height: 18px;
   }
 }
+.story-home-button {
+  position: fixed;
+  top: 1.25rem;
+  left: 1.1rem;
+  z-index: 2000;
+  width: 44px;
+  height: 44px;
+  border-radius: 999px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  /* …existing background/box-shadow… */
+}
+
+/* Make sure it's NOT hidden on small screens */
+@media (max-width: 768px) {
+  .story-home-button {
+    top: 0.85rem;
+    left: 0.8rem;
+    width: 36px;
+    height: 36px;
+    /* slightly smaller icon inside if needed */
+    font-size: 0.9rem;
+  }
+}
