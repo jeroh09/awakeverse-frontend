@@ -758,3 +758,14 @@
   outline: 2px solid #6366f1;
   outline-offset: 2px;
 }
+/* === TYPOGRAPHY TUNING: TEMPLATE TITLE === */
+.templateTitle {
+  font-size: 0.73rem !important; /* 30% smaller */
+}
+/* === TYPOGRAPHY TUNING: TEMPLATE SUBTITLE === */
+.templateDescription {
+  font-size: 0.77rem !important; /* 15% smaller */
+}
+.templateTitleRow {
+  margin-bottom: 0.35rem !important;
+}

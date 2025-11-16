@@ -30,7 +30,9 @@ export default function StoryInput({
     ta.style.height = Math.min(ta.scrollHeight, max) + 'px';
   }, []);
 
-  useEffect(() => { resize(); }, [inputText, resize]);
+  useEffect(() => {
+    resize();
+  }, [inputText, resize]);
 
   const resetTextarea = () => {
     const ta = textareaRef.current;
@@ -45,27 +47,29 @@ export default function StoryInput({
     resetTextarea();
   };
 
-    const isMobile =
+  // Small helper: check if we're on a narrow/mobile viewport
+  const isMobile =
     typeof window !== 'undefined' &&
     window.matchMedia &&
     window.matchMedia('(max-width: 768px)').matches;
 
-  const handleKeyDown = (e) => {
+  const onKeyDown = (e) => {
+    // We only care about Enter
     if (e.key !== 'Enter') return;
 
-    // On mobile: Enter always behaves like Shift+Enter (newline only)
+    // 📱 MOBILE: Enter should behave like Shift+Enter (newline only)
     if (isMobile) {
-      // Let the browser insert a newline; don't send
+      // Do not preventDefault; let the browser insert a newline.
       return;
     }
 
-    // Desktop behavior: Enter = send, Shift+Enter = newline
+    // 🖥 DESKTOP: Enter = send, Shift+Enter = newline
     if (!e.shiftKey) {
       e.preventDefault();
-      onSend();
+      send();
     }
+    // If Shift+Enter, default behavior inserts newline
   };
-
 
   return (
     <div className={styles.storyInputContainer}>
