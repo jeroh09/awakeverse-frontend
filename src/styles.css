@@ -546,6 +546,37 @@ button {
 }
 
 /* =======================
+   Authentication Pages
+   ======================= */
+.auth-page {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  height: 100vh;
+  padding: 1rem;
+  background: var(--parchment-color);
+  background-image: var(--parchment-noise);
+}
+
+.auth-form {
+  display: flex;
+  flex-direction: column;
+  width: 100%;
+  max-width: 400px;
+  background: #ffffff;
+  padding: 2rem;
+  border-radius: 8px;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+  gap: 1rem;
+}
+
+.auth-form input,
+.auth-form button {
+  width: 100%;
+  box-sizing: border-box;
+}
+
+/* =======================
    Character Selection
    ======================= */
 .category-page-wrapper {
@@ -724,6 +755,67 @@ button {
 .chat-input {
   background: transparent !important;
 }
+/* ============================================================================ */
+/* MOBILE-ONLY STYLES - APPEND TO YOUR EXISTING STYLES.CSS */
+/* ============================================================================ */
+
+/* ===== LANDING PAGE MOBILE CAROUSEL ===== */
+@media (max-width: 401px) {
+  .panel-grid {
+    display: flex !important;
+    overflow-x: auto;
+    scroll-snap-type: x mandatory;
+    -webkit-overflow-scrolling: touch;
+    gap: 0.67rem;
+    padding-bottom: 0.67rem;
+    width: 100%;
+    grid-template-columns: none !important; /* Override desktop grid */
+  }
+  
+  .panel-grid::-webkit-scrollbar {
+    height: 5.36px;
+  }
+  
+  .panel-grid::-webkit-scrollbar-track {
+    background: rgba(10,10,30,0.4);
+    border-radius: 2.68px;
+  }
+  
+  .panel-grid::-webkit-scrollbar-thumb {
+    background: gold;
+    border-radius: 2.68px;
+    box-shadow: 0 0 4.02px gold;
+  }
+
+  /* Each panel takes most of viewport width for one-at-a-time viewing */
+  .panel-grid > * {
+    scroll-snap-align: center;
+    flex: 0 0 auto;
+    width: 85vw; /* 85% of viewport width */
+    max-height: calc(100vh - 20rem);
+    overflow: hidden;
+    margin-top: 0 !important; /* Override desktop staggered margins */
+  }
+}
+
+/* ===== AUTH PAGE MOBILE LAYOUT (Your Original Scaling Approach) ===== */
+@media (max-width: 768px) {
+  .auth-page {
+    flex-direction: column !important;
+    padding: 0.5rem;
+  }
+
+  /* Hide the golden divider on mobile */
+  .auth-page::before {
+    display: none !important;
+  }
+
+  .auth-demo-container {
+    flex: 0 0 auto !important;
+    max-width: 100% !important;
+    width: 100% !important;
+    margin: 0 0 1rem 0 !important;
+  }
 
   /* Scale down the device frame like your original approach */
   .auth-demo-container .device-frame {
@@ -732,6 +824,64 @@ button {
     padding: 12px !important;        /* Your original mobile scaling */
   }
 
+  .auth-form {
+    flex: 0 0 auto !important;
+    max-width: 350px !important;     /* Your original mobile width */
+    width: 95% !important;           /* Your original mobile width */
+    margin: 0 !important;
+    padding: 1rem !important;        /* Your original mobile padding */
+    
+    /* Keep the styling but use your original responsive sizing */
+    background: rgba(0, 0, 0, 0.4) !important;
+    backdrop-filter: blur(12px);
+    border: 1px solid gold;
+    border-radius: 12px;
+    box-shadow: 0 0 10px rgba(255, 215, 0, 0.2);
+  }
+
+  /* Mobile form inputs - keep gold styling but use proper sizing */
+  .auth-form input {
+    width: 100% !important;
+    padding: 0.6rem !important;
+    margin-top: 1rem !important;
+    background: rgba(255, 255, 255, 0.05) !important;
+    border: 1px solid gold !important;
+    border-radius: 6px;
+    color: gold !important;
+    box-sizing: border-box !important;
+  }
+
+  .auth-form button {
+    margin-top: 1.5rem !important;
+    width: 100% !important;
+    background: gold !important;
+    color: #000 !important;
+    font-weight: bold;
+    padding: 0.75rem !important;
+    border: none !important;
+    border-radius: 6px;
+    cursor: pointer;
+  }
+
+  .auth-form h2 {
+    color: gold !important;
+    margin-bottom: 1rem !important;
+    text-align: center;
+    font-family: 'Playfair Display', serif !important;
+  }
+
+  .auth-form label {
+    display: block !important;
+    color: gold !important;
+    margin-bottom: 0.5rem !important;
+    font-size: 0.9rem !important;
+  }
+
+  .auth-form a {
+    color: gold !important;
+    text-decoration: underline !important;
+  }
+}
 
 /* ===== MOBILE DEVICE FRAME RESPONSIVE ADJUSTMENTS ===== */
 @media (max-width: 600px) {
