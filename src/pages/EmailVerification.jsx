@@ -1,9 +1,7 @@
-// src/pages/EmailVerification.jsx - Mobile-friendly version
+// src/pages/EmailVerification.jsx - PREMIUM GLASSMORPHISM REDESIGN
 import React, { useState, useEffect } from 'react';
 import { Link, useNavigate, useSearchParams } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
-import ElegantCharacterPortraits from '../components/ElegantCharacterPortraits';
-import '../components/ElegantCharacterPortraits.css';
 import '../style/AuthPageStyles.css';
 
 const API = process.env.REACT_APP_API_URL || "https://api.awakeverse.com";
@@ -12,7 +10,6 @@ export default function EmailVerification() {
   const [verificationStatus, setVerificationStatus] = useState('processing');
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
-  const [currentCharacter, setCurrentCharacter] = useState(null);
   const [email, setEmail] = useState('');
   const [searchParams] = useSearchParams();
   const { verifyEmail, resendVerification } = useAuth();
@@ -29,6 +26,7 @@ export default function EmailVerification() {
     }
   }, [token]);
 
+  // KEEPING YOUR VERIFICATION FLOW
   const handleEmailVerification = async (verificationToken) => {
     setVerificationStatus('processing');
     
@@ -77,10 +75,7 @@ export default function EmailVerification() {
     }
   };
 
-  const handleCharacterChange = (character) => {
-    setCurrentCharacter(character);
-  };
-
+  // KEEPING YOUR STATUS HANDLING FLOW
   const getTitle = () => {
     switch (verificationStatus) {
       case 'processing':
@@ -131,104 +126,8 @@ export default function EmailVerification() {
 
   return (
     <div className="auth-page">
-      {/* MOBILE: Simple mobile verification display */}
-      <div className="mobile-verification">
-        <div className="mobile-verification-content">
-          <h2>{getTitle()}</h2>
-          
-          <div className="mobile-verification-icon">
-            {getIcon()}
-          </div>
-          
-          <p>{getDescription()}</p>
-          
-          {error && (
-            <div className="mobile-error">{error}</div>
-          )}
-          
-          {/* Processing state */}
-          {verificationStatus === 'processing' && (
-            <div className="mobile-spinner-container">
-              <div className="mobile-spinner"></div>
-              <p>Verifying your email...</p>
-            </div>
-          )}
-          
-          {/* Success state */}
-          {verificationStatus === 'success' && (
-            <div className="mobile-verification-actions">
-              <Link to="/app" className="mobile-primary-btn">
-                Enter AwakeVerse
-              </Link>
-              <Link to="/login" className="mobile-secondary-btn">
-                Go to Login
-              </Link>
-            </div>
-          )}
-          
-          {/* Expired or error state */}
-          {(verificationStatus === 'expired' || verificationStatus === 'error') && (
-            <div className="mobile-resend-section">
-              <label>Enter your email for a new verification link:</label>
-              <input
-                type="email"
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
-                placeholder="your@email.com"
-                disabled={loading}
-                className="mobile-email-input"
-              />
-              <button
-                onClick={handleResendVerification}
-                disabled={loading || !email}
-                className="mobile-primary-btn"
-              >
-                {loading ? 'Sending...' : 'Send New Verification'}
-              </button>
-              
-              <div className="mobile-verification-actions">
-                <Link to="/register" className="mobile-secondary-btn">
-                  Create New Account
-                </Link>
-                <Link to="/login" className="mobile-secondary-btn">
-                  Back to Login
-                </Link>
-              </div>
-            </div>
-          )}
-          
-          {/* Resent state */}
-          {verificationStatus === 'resent' && (
-            <div className="mobile-verification-actions">
-              <Link to="/login" className="mobile-primary-btn">
-                Go to Login
-              </Link>
-              <button
-                onClick={() => setVerificationStatus('expired')}
-                className="mobile-secondary-btn"
-              >
-                Try Different Email
-              </button>
-            </div>
-          )}
-          
-          {/* Compact help */}
-          <div className="mobile-help-compact">
-            <small>Check spam folder • Links expire in 24 hours</small>
-          </div>
-        </div>
-      </div>
-
-      {/* DESKTOP: Character portraits */}
-      <div className="auth-demo-container desktop-only">
-        <ElegantCharacterPortraits 
-          autoAdvanceInterval={15000}
-          onCharacterChange={handleCharacterChange}
-        />
-      </div>
-
-      {/* DESKTOP: Verification status display */}
-      <div className="auth-form verification-pending desktop-only">
+      {/* GLASSMORPHISM VERIFICATION CARD */}
+      <div className="auth-form verification-pending">
         <h2>{getTitle()}</h2>
         
         <div className="verification-icon">
@@ -241,7 +140,7 @@ export default function EmailVerification() {
           <div className="error-text">{error}</div>
         )}
         
-        {/* Processing state */}
+        {/* KEEPING YOUR PROCESSING STATE */}
         {verificationStatus === 'processing' && (
           <div className="verification-progress">
             <div className="spinner"></div>
@@ -249,7 +148,7 @@ export default function EmailVerification() {
           </div>
         )}
         
-        {/* Success state */}
+        {/* KEEPING YOUR SUCCESS STATE */}
         {verificationStatus === 'success' && (
           <div className="verification-actions">
             <Link to="/app" className="primary-button">
@@ -261,7 +160,7 @@ export default function EmailVerification() {
           </div>
         )}
         
-        {/* Expired or error state */}
+        {/* KEEPING YOUR EXPIRED/ERROR STATE */}
         {(verificationStatus === 'expired' || verificationStatus === 'error') && (
           <div className="verification-recovery">
             <div className="resend-section">
@@ -276,12 +175,12 @@ export default function EmailVerification() {
                   disabled={loading}
                   style={{
                     width: '100%',
-                    padding: '0.75rem',
-                    marginBottom: '1rem',
-                    border: '2px solid rgba(255, 255, 255, 0.3)',
-                    borderRadius: '8px',
-                    background: 'rgba(255, 255, 255, 0.1)',
-                    color: '#fff'
+                    padding: 'var(--space-md)',
+                    marginBottom: 'var(--space-md)',
+                    border: '1px solid var(--border-medium)',
+                    borderRadius: 'var(--radius-md)',
+                    background: 'rgba(255, 255, 255, 0.05)',
+                    color: 'var(--text-primary)'
                   }}
                 />
                 <button
@@ -306,7 +205,7 @@ export default function EmailVerification() {
           </div>
         )}
         
-        {/* Resent state */}
+        {/* KEEPING YOUR RESENT STATE */}
         {verificationStatus === 'resent' && (
           <div className="verification-actions">
             <Link to="/login" className="primary-button">
@@ -321,15 +220,8 @@ export default function EmailVerification() {
           </div>
         )}
         
-        {/* Help section */}
-        <div className="verification-help">
-          <p>Having trouble?</p>
-          <ul>
-            <li>Check your spam/junk folder</li>
-            <li>Make sure you clicked the complete link from the email</li>
-            <li>Verification links expire after 24 hours</li>
-            <li>Contact support if you continue having issues</li>
-          </ul>
+        <div className="auth-legal-text">
+          <p>Check spam folder • Links expire in 24 hours</p>
         </div>
       </div>
     </div>

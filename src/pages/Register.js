@@ -1,9 +1,6 @@
-// src/pages/Register.jsx - Enhanced with email verification
+// src/pages/Register.jsx - HALF-IN HALF-OUT DESIGN
 import React, { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import ElegantCharacterPortraits from '../components/ElegantCharacterPortraits';
-import UnifiedMobileAuth from '../components/UnifiedMobileAuth';
-import '../components/ElegantCharacterPortraits.css';
 import '../style/AuthPageStyles.css';
 
 const API = process.env.REACT_APP_API_URL || "https://api.awakeverse.com";
@@ -14,13 +11,12 @@ export default function Register() {
   const [displayName, setDisplayName] = useState('');
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
-  const [currentCharacter, setCurrentCharacter] = useState(null);
-  const [registrationStep, setRegistrationStep] = useState('form'); // 'form', 'verification-sent', 'verification-complete'
+  const [registrationStep, setRegistrationStep] = useState('form');
   const [successMessage, setSuccessMessage] = useState('');
   
   const navigate = useNavigate();
 
-  // Enhanced registration with email verification
+  // KEEP YOUR EXISTING REGISTRATION FLOW
   const registerUser = async (userData) => {
     try {
       const res = await fetch(`${API}/api/auth/register`, {
@@ -45,29 +41,26 @@ export default function Register() {
     }
   };
 
-  const handleSubmit = async (formData) => {
-    const emailValue = formData.email || email;
-    const passwordValue = formData.password || password;
-    const displayNameValue = formData.displayName || displayName;
+  const handleSubmit = async (e) => {
+    e.preventDefault();
 
-    if (!emailValue || !passwordValue || !displayNameValue) {
+    if (!email || !password || !displayName) {
       setError('Please fill in all fields');
       return;
     }
 
-    // Enhanced password validation
-    if (passwordValue.length < 8) {
+    // KEEP YOUR VALIDATION
+    if (password.length < 8) {
       setError('Password must be at least 8 characters long');
       return;
     }
 
-    if (!/(?=.*[a-z])(?=.*[A-Z])(?=.*\d)/.test(passwordValue)) {
+    if (!/(?=.*[a-z])(?=.*[A-Z])(?=.*\d)/.test(password)) {
       setError('Password must contain uppercase, lowercase, and number');
       return;
     }
 
-    // Basic email validation
-    if (!emailValue.includes('@') || !emailValue.includes('.')) {
+    if (!email.includes('@') || !email.includes('.')) {
       setError('Please enter a valid email address');
       return;
     }
@@ -77,17 +70,15 @@ export default function Register() {
 
     try {
       const result = await registerUser({ 
-        email: emailValue, 
-        password: passwordValue, 
-        displayName: displayNameValue 
+        email, 
+        password, 
+        displayName 
       });
       
       if (result.requires_verification) {
-        // Show verification pending step
         setRegistrationStep('verification-sent');
         setSuccessMessage('Account created! Please check your email for verification instructions.');
       } else {
-        // Immediate success (fallback case)
         navigate('/login', { 
           state: { message: 'Registration successful! Please sign in.' }
         });
@@ -126,80 +117,74 @@ export default function Register() {
     }
   };
 
-  const handleDesktopSubmit = async (e) => {
-    e.preventDefault();
-    await handleSubmit({ email, password, displayName });
-  };
-
-  const handleCharacterChange = (character) => {
-    setCurrentCharacter(character);
-  };
-
-  const getFormTitle = () => {
-    if (registrationStep === 'verification-sent') {
-      return 'Check Your Email';
-    }
-    if (currentCharacter) {
-      return `Chat with ${currentCharacter.name}`;
-    }
-    return 'Awaken the Legends';
-  };
-
-  // Render verification pending view
+  // VERIFICATION SENT VIEW
   if (registrationStep === 'verification-sent') {
     return (
       <div className="auth-page">
-        <div className="auth-demo-container">
-          <ElegantCharacterPortraits 
-            autoAdvanceInterval={15000}
-            onCharacterChange={handleCharacterChange}
-          />
+        {/* BRAND IN TOP LEFT */}
+        <div style={{
+          position: 'absolute',
+          top: 'var(--space-xl)',
+          left: 'var(--space-xl)',
+          zIndex: 100
+        }}>
+          <h1 style={{
+            fontFamily: 'var(--font-display)',
+            fontSize: '1.5rem',
+            fontWeight: 700,
+            color: 'var(--brand-ivory)',
+            textShadow: '0 0 20px var(--accent-glow)',
+            margin: 0
+          }}>
+            AwakeVerse
+          </h1>
         </div>
 
-        <div className="auth-form verification-pending">
-          <h2>Verify Your Email</h2>
+        <div className="auth-container">
+          <div className="auth-scene-panel"></div>
           
-          <div className="verification-icon">
-            📧
-          </div>
-          
-          {successMessage && (
-            <div className="success-text">{successMessage}</div>
-          )}
-          
-          {error && (
-            <div className="error-text">{error}</div>
-          )}
-          
-          <p>
-            We've sent a verification email to <strong>{email}</strong>
-          </p>
-          
-          <p>
-            Click the verification link in your email to activate your account and start chatting with legendary figures.
-          </p>
-          
-          <div className="verification-actions">
-            <button 
-              onClick={handleResendVerification}
-              disabled={loading}
-              className="secondary-button"
-            >
-              {loading ? 'Sending...' : 'Resend Email'}
-            </button>
-            
-            <Link to="/login" className="primary-button">
-              Go to Login
-            </Link>
-          </div>
-          
-          <div className="verification-help">
-            <p>Don't see the email?</p>
-            <ul>
-              <li>Check your spam/junk folder</li>
-              <li>Make sure you entered the correct email address</li>
-              <li>Try resending the verification email</li>
-            </ul>
+          <div className="auth-form-container">
+            <div className="auth-form verification-pending">
+              <h2>Verify Your Email</h2>
+              
+              <div className="verification-icon">
+                📧
+              </div>
+              
+              {successMessage && (
+                <div className="success-text">{successMessage}</div>
+              )}
+              
+              {error && (
+                <div className="error-text">{error}</div>
+              )}
+              
+              <p>
+                We've sent a verification email to <strong>{email}</strong>
+              </p>
+              
+              <p>
+                Click the verification link in your email to activate your account.
+              </p>
+              
+              <div className="verification-actions">
+                <button 
+                  onClick={handleResendVerification}
+                  disabled={loading}
+                  className="secondary-button"
+                >
+                  {loading ? 'Sending...' : 'Resend Email'}
+                </button>
+                
+                <Link to="/login" className="primary-button">
+                  Go to Login
+                </Link>
+              </div>
+              
+              <div className="auth-legal-text">
+                <p>Check spam folder • Links expire in 24 hours</p>
+              </div>
+            </div>
           </div>
         </div>
       </div>
@@ -208,97 +193,117 @@ export default function Register() {
 
   return (
     <div className="auth-page">
-      {/* MOBILE */}
-      <UnifiedMobileAuth 
-        mode="register"
-        onSubmit={handleSubmit}
-        error={error}
-        loading={loading}
-      />
-
-      {/* DESKTOP */}
-      <div className="auth-demo-container">
-        <ElegantCharacterPortraits 
-          autoAdvanceInterval={12000}
-          onCharacterChange={handleCharacterChange}
-        />
-        <div className="showcase-legal-text">
-          <p>
-            By creating an account, you agree to our{' '}
-            <a 
-              href="https://www.awakeverse.com/terms" 
-              target="_blank" 
-              rel="noopener noreferrer"
-            >
-              Terms of Service
-            </a>{' '}
-            and{' '}
-            <a 
-              href="https://www.awakeverse.com/privacy" 
-              target="_blank" 
-              rel="noopener noreferrer"
-            >
-              Privacy Policy
-            </a>
-            .
-          </p>
-        </div>
+      {/* BRAND IN TOP LEFT */}
+      <div style={{
+        position: 'absolute',
+        top: 'var(--space-xl)',
+        left: 'var(--space-xl)',
+        zIndex: 100
+      }}>
+        <h1 style={{
+          fontFamily: 'var(--font-display)',
+          fontSize: '1.5rem',
+          fontWeight: 700,
+          color: 'var(--brand-ivory)',
+          textShadow: '0 0 20px var(--accent-glow)',
+          margin: 0
+        }}>
+          AwakeVerse
+        </h1>
       </div>
 
-      <form className="auth-form" onSubmit={handleDesktopSubmit}>
-        <h2>{getFormTitle()}</h2>
+      <div className="auth-container">
+        {/* SCENE PANEL */}
+        <div 
+          className="auth-scene-panel"
+          style={{
+            background: `url(${process.env.PUBLIC_URL}/images/auth-scene.jpeg) center/cover`
+          }}
+        ></div>
         
-        {error && <div className="error-text">{error}</div>}
-        
-        <label htmlFor="displayName">Your Display Name</label>
-        <input
-          id="displayName"
-          type="text"
-          value={displayName}
-          onChange={(e) => setDisplayName(e.target.value)}
-          placeholder="Choose your identity"
-          disabled={loading}
-          required
-        />
-        
-        <label htmlFor="email">Email</label>
-        <input
-          id="email"
-          type="email"
-          autoComplete="email"
-          value={email}
-          onChange={(e) => setEmail(e.target.value)}
-          placeholder="Enter your email"
-          disabled={loading}
-          required
-        />
-        
-        <label htmlFor="password">Password</label>
-        <input
-          id="password"
-          type="password"
-          autoComplete="new-password"
-          value={password}
-          onChange={(e) => setPassword(e.target.value)}
-          placeholder="Create a secure password (8+ chars, upper, lower, number)"
-          disabled={loading}
-          required
-        />
-        
-        <div className="password-requirements">
-          <small>
-            Password must contain: uppercase letter, lowercase letter, number, and be 8+ characters
-          </small>
+        {/* FLOATING AUTH FORM */}
+        <div className="auth-form-container">
+          <form className="auth-form" onSubmit={handleSubmit}>
+            {error && <div className="error-text">{error}</div>}
+            
+            <div className="form-group">
+              <label htmlFor="displayName">Display Name</label>
+              <input
+                id="displayName"
+                type="text"
+                value={displayName}
+                onChange={(e) => setDisplayName(e.target.value)}
+                placeholder="Choose your display name"
+                disabled={loading}
+                required
+              />
+            </div>
+            
+            <div className="form-group">
+              <label htmlFor="email">Email</label>
+              <input
+                id="email"
+                type="email"
+                autoComplete="email"
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+                placeholder="Your email"
+                disabled={loading}
+                required
+              />
+            </div>
+            
+            <div className="form-group">
+              <label htmlFor="password">Password</label>
+              <input
+                id="password"
+                type="password"
+                autoComplete="new-password"
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+                placeholder="Create a password"
+                disabled={loading}
+                required
+              />
+            </div>
+            
+            <div className="password-requirements">
+              <small>
+                Password must contain: uppercase, lowercase, number, 8+ characters
+              </small>
+            </div>
+            
+            <button type="submit" disabled={loading}>
+              {loading ? 'Creating Account...' : 'Create Account'}
+            </button>
+            
+            <div className="auth-links">
+              <Link to="/login">Already have an account?</Link>
+            </div>
+            
+            <div className="auth-legal-text">
+              <p>
+                By creating an account, you agree with our{' '}
+                <a 
+                  href="https://www.awakeverse.com/terms" 
+                  target="_blank" 
+                  rel="noopener noreferrer"
+                >
+                  Terms
+                </a>{' '}
+                and{' '}
+                <a 
+                  href="https://www.awakeverse.com/privacy" 
+                  target="_blank" 
+                  rel="noopener noreferrer"
+                >
+                  Privacy Policy
+                </a>
+              </p>
+            </div>
+          </form>
         </div>
-        
-        <button type="submit" disabled={loading}>
-          {loading ? 'Creating Account...' : 'Begin Your Journey'}
-        </button>
-        
-        <p>
-          Already registered? <Link to="/login">Return to your realm</Link>
-        </p>
-      </form>
+      </div>
     </div>
   );
 }

@@ -1,0 +1,228 @@
+/* src/landing/styles/footer.css */
+/* Footer Styles - Premium Design System */
+
+.landing-footer {
+  background: var(--bg-surface);
+  border-top: 1px solid var(--border-subtle);
+  padding: var(--space-3xl) 0 var(--space-xl);
+  margin-top: auto;
+}
+
+.footer-container {
+  max-width: 1400px;
+  margin: 0 auto;
+  padding: 0 var(--space-lg);
+}
+
+/* ================================
+   FOOTER CONTENT
+   ================================ */
+
+.footer-content {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: var(--space-2xl);
+  margin-bottom: var(--space-2xl);
+}
+
+/* ================================
+   FOOTER SECTIONS
+   ================================ */
+
+.footer-section {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-md);
+}
+
+.footer-title {
+  font-family: var(--font-display);
+  font-size: var(--font-size-body-lg);
+  font-weight: var(--font-weight-semibold);
+  color: var(--brand-ivory);
+  margin: 0;
+  letter-spacing: -0.01em;
+}
+
+.footer-links {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-sm);
+}
+
+/* ================================
+   FOOTER LINKS
+   ================================ */
+
+.footer-link {
+  font-family: var(--font-body);
+  font-size: var(--font-size-body-sm);
+  font-weight: var(--font-weight-regular);
+  color: var(--text-secondary);
+  text-decoration: none;
+  transition: all var(--transition-base);
+  position: relative;
+  padding: var(--space-xs) 0;
+  width: fit-content;
+}
+
+.footer-link:hover {
+  color: var(--text-primary);
+  transform: translateX(4px);
+}
+
+.footer-link::after {
+  content: '';
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  width: 0;
+  height: 1px;
+  background: var(--accent-primary);
+  transition: width var(--transition-base);
+}
+
+.footer-link:hover::after {
+  width: 100%;
+}
+
+/* Email link specific styling */
+.footer-link[href^="mailto:"] {
+  font-style: italic;
+}
+
+/* ================================
+   FOOTER BOTTOM
+   ================================ */
+
+.footer-bottom {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding-top: var(--space-xl);
+  border-top: 1px solid var(--border-subtle);
+  gap: var(--space-lg);
+}
+
+.footer-copyright {
+  font-family: var(--font-body);
+  font-size: var(--font-size-body-sm);
+  font-weight: var(--font-weight-regular);
+  color: var(--text-tertiary);
+}
+
+.footer-tagline {
+  font-family: var(--font-display);
+  font-size: var(--font-size-body-sm);
+  font-weight: var(--font-weight-medium);
+  color: var(--text-secondary);
+  letter-spacing: 0.02em;
+}
+
+/* ================================
+   RESPONSIVE DESIGN
+   ================================ */
+
+@media (max-width: 1024px) {
+  .footer-content {
+    gap: var(--space-xl);
+  }
+  
+  .footer-bottom {
+    flex-direction: column;
+    text-align: center;
+    gap: var(--space-md);
+  }
+}
+
+@media (max-width: 768px) {
+  .landing-footer {
+    padding: var(--space-2xl) 0 var(--space-lg);
+  }
+  
+  .footer-container {
+    padding: 0 var(--space-md);
+  }
+  
+  .footer-content {
+    grid-template-columns: repeat(2, 1fr);
+    gap: var(--space-lg);
+    margin-bottom: var(--space-xl);
+  }
+  
+  .footer-section {
+    gap: var(--space-sm);
+  }
+  
+  .footer-title {
+    font-size: var(--font-size-body);
+  }
+  
+  .footer-link {
+    font-size: var(--font-size-body-sm);
+  }
+}
+
+@media (max-width: 480px) {
+  .footer-container {
+    padding: 0 var(--space-sm);
+  }
+  
+  .footer-content {
+    grid-template-columns: 1fr;
+    gap: var(--space-lg);
+  }
+  
+  .footer-section {
+    text-align: center;
+    align-items: center;
+  }
+  
+  .footer-link {
+    width: auto;
+  }
+}
+
+/* ================================
+   ACCESSIBILITY
+   ================================ */
+
+.footer-link:focus-visible {
+  outline: 2px solid var(--accent-primary);
+  outline-offset: 4px;
+  border-radius: var(--radius-sm);
+}
+
+/* Reduced motion preference */
+@media (prefers-reduced-motion: reduce) {
+  .footer-link {
+    transition: none;
+  }
+  
+  .footer-link:hover {
+    transform: none;
+  }
+  
+  .footer-link::after {
+    transition: none;
+  }
+}
+
+/* High contrast mode support */
+@media (prefers-contrast: high) {
+  .landing-footer {
+    border-top: 2px solid var(--border-strong);
+  }
+  
+  .footer-bottom {
+    border-top: 2px solid var(--border-strong);
+  }
+  
+  .footer-link {
+    text-decoration: underline;
+  }
+  
+  .footer-link::after {
+    display: none;
+  }
+}
