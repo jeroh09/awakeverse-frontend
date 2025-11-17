@@ -770,6 +770,7 @@
   margin-bottom: 0.35rem !important;
 }
 /* ===== TEMPLATE CARD BACKGROUND ELEMENTS ===== */
+/* ===== TEMPLATE CARD BACKGROUND ELEMENTS ===== */
 .cardBackground {
   position: absolute;
   top: 0;
@@ -790,44 +791,4 @@
   bottom: 0;
   background: linear-gradient(to bottom, transparent 0%, rgba(0,0,0,0.7) 100%);
   z-index: 1;
-}
-
-.cardContent {
-  position: relative;
-  z-index: 2;
-}
-
-.cardBadges {
-  position: absolute;
-  top: 1rem;
-  left: 1rem;
-  display: flex;
-  flex-direction: column;
-  gap: 0.5rem;
-  z-index: 3;
-}
-
-.categoryBadge {
-  padding: 0.35rem 0.75rem;
-  border-radius: 999px;
-  font-size: 0.7rem;
-  font-weight: 600;
-  background: rgba(15, 23, 42, 0.92);
-  border: 1px solid rgba(148, 163, 184, 0.85);
-  color: #f9fafb;
-}
-
-.cardTitle {
-  font-size: 1.05rem;
-  font-weight: 700;
-  color: var(--brand-ivory, #f9fafb);
-  margin: 0 0 0.5rem 0;
-  font-family: var(--font-display, 'Syne', system-ui, sans-serif);
-}
-
-.cardDescription {
-  color: #cbd5f5;
-  font-size: 0.9rem;
-  line-height: 1.5;
-  margin-bottom: 1.1rem;
 }
