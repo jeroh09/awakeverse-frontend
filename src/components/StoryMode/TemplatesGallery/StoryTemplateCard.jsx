@@ -72,6 +72,7 @@ export default function StoryTemplateCard({ template, onSelect }) {
   const eraBadgeColor = getEraBadgeColor(template.preset_era);
 
   // ✅ Prefer scenic template image first, then fall back as before
+  const scenicUrl = template.scene_url || template.sceneUrl || null;  // DECLARE FIRST
   const cardImageUrl = scenicUrl 
     ? `${window.location.protocol}//www.awakeverse.com${scenicUrl}`
     : template.image_url || template.preview_image_url || thumbnailUrl || null;
