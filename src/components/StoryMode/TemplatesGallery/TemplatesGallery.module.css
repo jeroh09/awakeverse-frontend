@@ -824,8 +824,8 @@
 }
 
 /* Make sure the existing content sits ABOVE the gradient */
-.templateTitle,
-.templateDescription,
+.cardTitle,
+.cardDescription,
 .characterPreview,
 .useButton,
 .categoryBadge {
@@ -834,11 +834,11 @@
 }
 
 /* Only COLOR tweaks – keep your existing sizes & spacing */
-.templateTitle {
+.cardTitle {
   color: #f9fafb;          /* ivory on dark */
 }
 
-.templateDescription {
+.cardDescription {
   color: #e5e7eb;          /* light gray */
 }
 
