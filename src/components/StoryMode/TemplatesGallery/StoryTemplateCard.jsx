@@ -24,7 +24,7 @@ export default function StoryTemplateCard({ template, onSelect }) {
     onSelect(template);
   };
 
-  // Era → badge color (kept exactly as before)
+  // Get era badge color based on era
   const getEraBadgeColor = (era) => {
     const eraColors = {
       ancient: '#8B4513',
@@ -43,6 +43,7 @@ export default function StoryTemplateCard({ template, onSelect }) {
     return eraColors[normalizedEra] || '#3498DB';
   };
 
+  // Format era display name
   const formatEraName = (era) => {
     if (!era) return 'Modern';
 
@@ -70,15 +71,11 @@ export default function StoryTemplateCard({ template, onSelect }) {
 
   const eraBadgeColor = getEraBadgeColor(template.preset_era);
 
-  // 🔥 Scenic image preference (db scene_url → fallback to existing fields)
-  const scenicUrl = template.scene_url || template.sceneUrl || null;
-  const cardImageUrl =
-    scenicUrl
-      ? `${window.location.protocol}//www.awakeverse.com${scenicUrl}`
-      : template.image_url ||
-        template.preview_image_url ||
-        thumbnailUrl ||
-        null;
+  // ✅ Prefer scenic template image first, then fall back as before
+  const scenicUrl = template.scene_url || template.sceneUrl || null;  // DECLARE FIRST
+  const cardImageUrl = scenicUrl 
+    ? `${window.location.protocol}//www.awakeverse.com${scenicUrl}`
+    : template.image_url || template.preview_image_url || thumbnailUrl || null;
 
   const categoryLabel =
     template.category?.charAt(0).toUpperCase() + template.category?.slice(1) ||
@@ -86,15 +83,13 @@ export default function StoryTemplateCard({ template, onSelect }) {
 
   return (
     <div className={styles.templateCard} onClick={handleClick}>
-      {/* Background image + gradient */}
-      {cardImageUrl && (
-        <div
-          className={styles.cardBackground}
-          style={{ backgroundImage: `url(${cardImageUrl})` }}
-        >
-          <div className={styles.cardGradient} />
-        </div>
-      )}
+      {/* Full background image + gradient overlay */}
+      <div
+        className={styles.cardBackground}
+        style={cardImageUrl ? { backgroundImage: `url(${cardImageUrl})` } : {}}
+      >
+        <div className={styles.cardGradient} />
+      </div>
 
       {/* Floating badges */}
       <div className={styles.cardBadges}>
@@ -107,11 +102,12 @@ export default function StoryTemplateCard({ template, onSelect }) {
         <span className={styles.categoryBadge}>{categoryLabel}</span>
       </div>
 
-      {/* Bottom content overlay */}
+      {/* Content overlay at bottom */}
       <div className={styles.cardContent}>
         <h3 className={styles.cardTitle}>{template.title}</h3>
         <p className={styles.cardDescription}>{template.description}</p>
 
+        {/* Character preview */}
         <div className={styles.characterPreview}>
           <div
             className={styles.characterAvatar}
@@ -122,23 +118,25 @@ export default function StoryTemplateCard({ template, onSelect }) {
                     backgroundSize: 'cover',
                     backgroundPosition: 'center',
                   }
-                : undefined
+                : {}
             }
           >
             {!thumbnailUrl && (
               <span className={styles.avatarFallback}>
-                {(characterName || 'A').charAt(0)}
+                {characterName.charAt(0)}
               </span>
             )}
           </div>
-
           <div className={styles.characterInfo}>
-            <span className={styles.characterLabel}>Guided by</span>
+            <span className={styles.characterLabel}>Featured Character</span>
             <span className={styles.characterName}>{characterName}</span>
           </div>
         </div>
 
-        <button className={styles.useButton}>Use Template →</button>
+        {/* CTA Button */}
+        <button className={styles.useButton} type="button">
+          Use Template
+        </button>
       </div>
     </div>
   );

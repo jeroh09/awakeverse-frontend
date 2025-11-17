@@ -792,209 +792,67 @@
   background: linear-gradient(to bottom, transparent 0%, rgba(0,0,0,0.7) 100%);
   z-index: 1;
 }
-/* ==== PREMIUM SCENIC TEMPLATE CARD OVERRIDES ==== */
+/* ===== SCENIC DARK-MODE ADJUSTMENTS FOR TEMPLATE CARDS ===== */
 
-/* Card container: fixed height, no inner padding (content handles its own) */
+/* Ensure card is a stacking context for background layers */
 .templateCard {
   position: relative;
-  height: 420px;
-  border-radius: 20px;
   overflow: hidden;
-  cursor: pointer;
-  border: 1px solid var(--border-subtle, rgba(148, 163, 184, 0.4));
-  box-shadow: var(--elevation-02, 0 2px 8px rgba(15, 23, 42, 0.6));
-  background: radial-gradient(circle at top, #1f2937 0%, #020617 60%);
-  transition: transform 0.25s ease, box-shadow 0.25s ease, border-color 0.25s ease;
 }
 
-/* Full background image */
+/* Background layers (you already added these) */
 .cardBackground {
   position: absolute;
-  inset: 0;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
   background-size: cover;
   background-position: center;
   background-repeat: no-repeat;
-  transform: scale(1.02);
-  transition: transform 0.5s ease;
   z-index: 0;
 }
 
-.templateCard:hover .cardBackground {
-  transform: scale(1.06);
-}
-
-/* Dark gradient for readability */
 .cardGradient {
   position: absolute;
-  inset: 0;
-  background: linear-gradient(
-    to top,
-    rgba(2, 6, 23, 0.96) 0%,
-    rgba(15, 23, 42, 0.88) 35%,
-    rgba(15, 23, 42, 0.5) 60%,
-    transparent 100%
-  );
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: linear-gradient(to bottom, transparent 0%, rgba(0,0,0,0.7) 100%);
   z-index: 1;
 }
 
-/* Hover elevation */
-.templateCard:hover {
-  border-color: var(--accent-primary, #4f46e5);
-  box-shadow:
-    0 16px 40px rgba(15, 23, 42, 0.75),
-    0 0 32px rgba(79, 70, 229, 0.5);
-  transform: translateY(-4px);
-}
-
-/* Badges row */
-.cardBadges {
-  position: absolute;
-  top: 1rem;
-  left: 1rem;
-  right: 1rem;
-  display: flex;
-  justify-content: space-between;
-  gap: 0.5rem;
-  z-index: 3;
-}
-
-/* Era badge – reuse existing class, just refine */
-.eraBadge {
-  padding: 0.35rem 0.75rem;
-  border-radius: 999px;
-  font-size: 0.7rem;
-  font-weight: 600;
-  text-transform: uppercase;
-  letter-spacing: 0.06em;
-  color: #f9fafb;
-  box-shadow: 0 0 0 1px rgba(15, 23, 42, 0.7);
-}
-
-/* Category badge sits on left side now, darker glass */
+/* Make sure the existing content sits ABOVE the gradient */
+.templateTitle,
+.templateDescription,
+.characterPreview,
+.useButton,
 .categoryBadge {
-  padding: 0.35rem 0.9rem;
-  border-radius: 999px;
-  font-size: 0.7rem;
-  font-weight: 600;
-  text-transform: uppercase;
-  letter-spacing: 0.06em;
+  position: relative;
+  z-index: 2;
+}
+
+/* Only COLOR tweaks – keep your existing sizes & spacing */
+.templateTitle {
+  color: #f9fafb;          /* ivory on dark */
+}
+
+.templateDescription {
+  color: #e5e7eb;          /* light gray */
+}
+
+.categoryBadge {
   background: rgba(15, 23, 42, 0.9);
   color: #e5e7eb;
-  border: 1px solid rgba(148, 163, 184, 0.7);
-}
-
-/* Bottom content overlay */
-.cardContent {
-  position: absolute;
-  inset-inline: 1.5rem;
-  bottom: 1.5rem;
-  z-index: 3;
-  display: flex;
-  flex-direction: column;
-  gap: 0.75rem;
-}
-
-/* Title + description now use dark-mode typography */
-.cardTitle {
-  font-family: var(--font-display, 'Syne', system-ui, sans-serif);
-  font-size: 1.1rem;
-  font-weight: 700;
-  color: var(--brand-ivory, #f9fafb);
-  margin: 0;
-  line-height: 1.2;
-}
-
-.cardDescription {
-  font-family: var(--font-body, 'Inter', system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif);
-  font-size: 0.9rem;
-  color: rgba(226, 232, 240, 0.92);
-  margin: 0;
-  line-height: 1.5;
-  display: -webkit-box;
-  -webkit-line-clamp: 3;
-  -webkit-box-orient: vertical;
-  overflow: hidden;
-}
-
-/* Character preview over dark card */
-.characterPreview {
-  display: flex;
-  align-items: center;
-  gap: 0.75rem;
-  padding: 0.65rem 0.75rem;
-  border-radius: 999px;
-  background: rgba(15, 23, 42, 0.85);
-  border: 1px solid rgba(148, 163, 184, 0.6);
-  backdrop-filter: blur(10px);
-  -webkit-backdrop-filter: blur(10px);
-}
-
-.characterAvatar {
-  width: 32px;
-  height: 32px;
-  border-radius: 999px;
-  border: 2px solid var(--accent-primary, #6366f1);
-  overflow: hidden;
-  position: relative;
-  background: radial-gradient(circle at 30% 0%, #4f46e5, #0f172a);
-  flex-shrink: 0;
-  background-size: cover;
-  background-position: center;
-}
-
-.avatarFallback {
-  position: absolute;
-  inset: 0;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  font-weight: 700;
-  font-size: 0.9rem;
-  color: #e5e7eb;
-}
-
-.characterInfo {
-  display: flex;
-  flex-direction: column;
-  gap: 0.1rem;
-  min-width: 0;
+  border-color: rgba(148, 163, 184, 0.8);
 }
 
 .characterLabel {
-  font-size: 0.7rem;
-  text-transform: uppercase;
-  letter-spacing: 0.08em;
-  color: rgba(148, 163, 184, 0.95);
+  color: #cbd5f5;
 }
 
-.characterName {
-  font-size: 0.9rem;
-  font-weight: 600;
-  color: #e5e7eb;
-}
-
-/* CTA button */
-.useButton {
-  margin-top: 0.6rem;
-  width: 100%;
-  padding: 0.7rem 1rem;
-  border-radius: 999px;
-  border: none;
-  font-family: var(--font-body, 'Inter', system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif);
-  font-size: 0.9rem;
-  font-weight: 600;
-  cursor: pointer;
-  background: linear-gradient(135deg, #4f46e5, #7c3aed);
+.characterName,
+.characterNameLarge {
   color: #f9fafb;
-  box-shadow: 0 8px 22px rgba(79, 70, 229, 0.6);
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  gap: 0.25rem;
-  transition: transform 0.2s ease, box-shadow 0.2s ease, background 0.2s ease;
-}
-
-.useButton:hover {
-  transform: translateY(-1px);
-  box-shadow: 0 12px 30px rgba(79, 70, 229, 0.7);
 }
