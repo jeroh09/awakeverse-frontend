@@ -46,7 +46,7 @@ const LeaderboardSection = ({ compact = false }) => {
 
   if (error) {
     return (
-      <div className={styles.container}>
+      <div className={`${styles.container} ${compact ? styles.compact : ''}`}>
         <div className={styles.header}>
           <Trophy className={styles.headerIcon} size={20} />
           <h3>Leaderboard</h3>
@@ -61,8 +61,24 @@ const LeaderboardSection = ({ compact = false }) => {
     );
   }
 
+  if (loading && !rankings.length) {
+    return (
+      <div className={`${styles.container} ${compact ? styles.compact : ''}`}>
+        <div className={styles.header}>
+          <Trophy className={styles.headerIcon} size={20} />
+          <h3>Leaderboard</h3>
+        </div>
+        <div className={styles.loadingState}>
+          <div className={styles.loadingRank} />
+          <div className={styles.loadingRank} />
+          <div className={styles.loadingRank} />
+        </div>
+      </div>
+    );
+  }
+
   return (
-    <div className={styles.container}>
+    <div className={`${styles.container} ${compact ? styles.compact : ''}`}>
       <div className={styles.header}>
         <Trophy className={styles.headerIcon} size={20} />
         <h3>Leaderboard</h3>
@@ -78,25 +94,19 @@ const LeaderboardSection = ({ compact = false }) => {
             }`}
             onClick={() => setSelectedPeriod(value)}
           >
-            <Icon size={14} />
-            {compact ? value : label}
+            <Icon size={14} className={styles.periodIcon} />
+            <span>{label}</span>
           </button>
         ))}
       </div>
 
       {/* Rankings */}
       <div className={styles.rankings}>
-        {loading ? (
-          <div className={styles.loadingState}>
-            {Array.from({ length: compact ? 3 : 5 }).map((_, i) => (
-              <div key={i} className={styles.loadingRank} />
-            ))}
-          </div>
-        ) : rankings.length > 0 ? (
+        {rankings.length > 0 ? (
           <>
-            {rankings.map((character, index) => (
-              <div 
-                key={character.character_id || index}
+            {rankings.map((character) => (
+              <div
+                key={character.character_id}
                 className={`${styles.rankItem} ${getRankClass(character.rank)}`}
               >
                 <div className={styles.rankNumber}>
@@ -111,19 +121,7 @@ const LeaderboardSection = ({ compact = false }) => {
                     onError={createImageErrorHandler(character.display_name)}
                   />
                 ) : (
-                  <div 
-                    className={`${styles.avatar} text-fallback`}
-                    style={{
-                      display: 'flex',
-                      alignItems: 'center',
-                      justifyContent: 'center',
-                      background: 'rgba(255, 215, 0, 0.2)',
-                      color: '#FFD700',
-                      fontSize: '1.2rem',
-                      fontWeight: 'bold',
-                      borderRadius: '50%'
-                    }}
-                  >
+                  <div className={`${styles.avatar} ${styles.avatarFallback} text-fallback`}>
                     {(character.display_name || 'C').charAt(0).toUpperCase()}
                   </div>
                 )}
@@ -134,6 +132,12 @@ const LeaderboardSection = ({ compact = false }) => {
                   </h4>
                   <p className={styles.creatorName}>
                     {character.creator_name}
+                    {character.creator_level && (
+                      <span className={styles.creatorLevel}>
+                        {' · '}
+                        {character.creator_level}
+                      </span>
+                    )}
                   </p>
                   
                   <div className={styles.stats}>
@@ -145,15 +149,14 @@ const LeaderboardSection = ({ compact = false }) => {
                       <Heart size={12} />
                       <span>{character.period_likes || 0}</span>
                     </div>
+                    {typeof character.total_engagement_score === 'number' && (
+                      <div className={styles.stat}>
+                        <Crown size={12} />
+                        <span>{character.total_engagement_score}</span>
+                      </div>
+                    )}
                   </div>
                 </div>
-
-                {character.creator_level && (
-                  <div className={styles.creatorLevel}>
-                    {character.creator_level === 'veteran_creator' && <Crown size={12} />}
-                    <span>{character.creator_level.replace('_', ' ')}</span>
-                  </div>
-                )}
               </div>
             ))}
 
