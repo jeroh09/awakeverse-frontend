@@ -1,4 +1,46 @@
-/* MarketHubPage.module.css - PHASE 2: COMPACT PREMIUM LAYOUT */
+/* MarketHubPage.module.css - PHASE 2: COMPACT PREMIUM LAYOUT WITH REAL DESIGN SYSTEM VALUES */
+
+/* ============================================================================
+   DESIGN SYSTEM VARIABLES (From AWAKEVERSE-DESIGN-SYSTEM.md)
+   ============================================================================ */
+
+:root {
+  /* Backgrounds (Night Blue Spectrum) */
+  --bg-canvas: #0A0F1A;
+  --bg-surface: #141B2E;
+  --bg-elevated: #1C2640;
+  --bg-interactive: #243152;
+  
+  /* Accents (Indigo, not Gold!) */
+  --accent-primary: #6366F1;
+  --accent-hover: #818CF8;
+  --accent-glow: rgba(99, 102, 241, 0.2);
+  --accent-glow-strong: rgba(99, 102, 241, 0.3);
+  
+  /* Brand Colors */
+  --brand-ivory: #F5F5DC;
+  --brand-ivory-dim: #E5E5CC;
+  
+  /* Text Colors */
+  --text-primary: #F1F5F9;
+  --text-secondary: #94A3B8;
+  --text-tertiary: #64748B;
+  --text-muted: #475569;
+  
+  /* Border Colors */
+  --border-subtle: rgba(148, 163, 184, 0.1);
+  --border-medium: rgba(148, 163, 184, 0.2);
+  --border-strong: rgba(148, 163, 184, 0.3);
+  
+  /* Typography */
+  --font-display: 'Syne', system-ui, sans-serif;
+  --font-body: 'Inter', system-ui, sans-serif;
+  
+  /* Shadows */
+  --shadow-elevation-01: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
+  --shadow-elevation-02: 0 2px 8px -2px rgba(0, 0, 0, 0.1), 0 4px 12px -4px rgba(99, 102, 241, 0.1);
+  --shadow-elevation-03: 0 4px 16px -4px rgba(0, 0, 0, 0.15), 0 8px 24px -8px rgba(99, 102, 241, 0.15);
+}
 
 /* ============================================================================
    ROOT CONTAINER & GLOBAL STYLES
@@ -19,16 +61,16 @@
   background: var(--bg-surface, #141B2E);
   border-bottom: 1px solid var(--border-subtle, rgba(148, 163, 184, 0.1));
   backdrop-filter: blur(10px);
-  padding: 24px 20px 16px;
+  padding: 20px 20px 16px;
   position: sticky;
   top: 0;
   z-index: 100;
-  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+  box-shadow: var(--shadow-elevation-01);
 }
 
 .headerContent {
   max-width: 1200px;
-  margin: 0 auto 20px;
+  margin: 0 auto 16px;
   display: flex;
   align-items: flex-start;
   gap: 16px;
@@ -62,7 +104,7 @@
 
 .pageTitle {
   font-family: var(--font-display, 'Syne', system-ui, sans-serif);
-  font-size: 28px;
+  font-size: 24px;
   font-weight: 700;
   color: var(--text-primary, #F1F5F9);
   margin: 0 0 4px 0;
@@ -174,7 +216,7 @@
   border: 1px solid var(--border-subtle, rgba(148, 163, 184, 0.1));
   border-radius: 12px;
   padding: 20px;
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+  box-shadow: var(--shadow-elevation-02);
 }
 
 .filterGroup {
@@ -255,7 +297,7 @@
   height: fit-content;
   position: sticky;
   top: 120px;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+  box-shadow: var(--shadow-elevation-01);
 }
 
 /* ============================================================================
@@ -346,6 +388,10 @@
   text-align: center;
   padding: 60px 20px;
   color: var(--text-secondary, #94A3B8);
+  background: var(--bg-surface, #141B2E);
+  border: 1px solid var(--border-subtle, rgba(148, 163, 184, 0.1));
+  border-radius: 16px;
+  margin: 20px 0;
 }
 
 .emptyState h3 {
@@ -449,6 +495,10 @@
   text-align: center;
   padding: 60px 20px;
   color: var(--text-secondary, #94A3B8);
+  background: var(--bg-surface, #141B2E);
+  border: 1px solid var(--border-subtle, rgba(148, 163, 184, 0.1));
+  border-radius: 16px;
+  margin: 20px;
 }
 
 .errorState h2 {
@@ -517,7 +567,7 @@
   }
   
   .pageTitle {
-    font-size: 24px;
+    font-size: 22px;
   }
   
   .pageSubtitle {
