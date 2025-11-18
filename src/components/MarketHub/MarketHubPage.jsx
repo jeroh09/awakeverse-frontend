@@ -633,7 +633,7 @@ const AuthenticatedMarketHub = ({
             <div className={styles.sectionHeader}>
               <div className={styles.resultsInfo}>
                 <h2>
-                  {searchQuery ? `Results for "${searchQuery}"` : 'Browse Creators & Scenarios'}
+                  {searchQuery ? `Results for "${searchQuery}"` : 'Browse Characters & Scenarios'}
                 </h2>
                 {pagination && (
                   <span className={styles.resultCount}>
