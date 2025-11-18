@@ -234,7 +234,7 @@ export default function StoryWindow({ story, onClose }) {
         <StoryInput
           onSendMessage={handleSendMessage}
           isSending={loading}
-          placeholder={`Continue the story with ${story.main_character_key}...`}
+          characterKey={story?.main_character_key}
           isStreaming={isStreaming}
           onCancelStreaming={handleStop}
         />

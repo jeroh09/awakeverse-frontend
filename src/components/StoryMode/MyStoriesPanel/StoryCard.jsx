@@ -1,23 +1,44 @@
 // src/components/StoryMode/MyStoriesPanel/StoryCard.jsx
 import React from 'react';
 import { characterCategories } from '../../../data/characterCategories';
+import {
+  getDisplayNameFromKey,
+  getCharacterThumbnailUrl,
+  isCustomCharacterKey
+} from '../../../utils/characterUtils';
 import styles from './MyStoriesPanel.module.css';
 
 const API_BASE = process.env.REACT_APP_API_URL || 'https://api.awakeverse.com';
 
-// Same helper function as in StoryTemplateCard
+// Helper: resolve character name + thumbnail, with custom key support
 const getCharacterInfo = (charKey) => {
-  for (const category of characterCategories) {
-    const found = category.characters?.find(c => c.key === charKey);
-    if (found) return { name: found.name, thumbnailUrl: found.thumbnailUrl };
+  if (!charKey) {
+    return {
+      name: 'Your Character',
+      thumbnailUrl: null
+    };
   }
-  // graceful fallback
-  return {
-    name: (charKey || '')
-      .replace(/[_-]+/g, ' ')
-      .replace(/\b\w/g, c => c.toUpperCase()),
-    thumbnailUrl: null
-  };
+
+  // 1) Try static character definitions
+  for (const category of characterCategories) {
+    const found = category.characters?.find((c) => c.key === charKey);
+    if (found) {
+      return {
+        name: found.name,
+        thumbnailUrl:
+          found.thumbnailUrl || getCharacterThumbnailUrl(charKey, false)
+      };
+    }
+  }
+
+  // 2) Fallback: use shared utils (handles user_45_imhotep, etc.)
+  const name = getDisplayNameFromKey(charKey);
+  const thumbnailUrl = getCharacterThumbnailUrl(
+    charKey,
+    isCustomCharacterKey(charKey)
+  );
+
+  return { name, thumbnailUrl };
 };
 
 export default function StoryCard({
@@ -140,11 +161,7 @@ export default function StoryCard({
             {formatEraName(story.era)}
           </span>
 
-          {isPaused && (
-            <span className={styles.statusBadge}>
-              Paused
-            </span>
-          )}
+          {isPaused && <span className={styles.statusBadge}>Paused</span>}
         </div>
 
         {/* Main content block */}

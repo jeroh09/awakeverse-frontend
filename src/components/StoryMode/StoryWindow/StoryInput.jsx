@@ -1,6 +1,7 @@
 // src/components/StoryMode/StoryWindow/StoryInput.jsx
 import React, { useState, useRef, useEffect, useCallback } from 'react';
 import { Send, Square } from 'lucide-react';
+import { getDisplayNameFromKey } from '../../../utils/characterUtils';
 import styles from './StoryWindow.module.css';
 
 /**
@@ -10,16 +11,27 @@ import styles from './StoryWindow.module.css';
  * - isStreaming: boolean  // model is currently streaming a reply
  * - onCancelStreaming(): void
  * - placeholder?: string
+ * - characterKey?: string // used to build a smart default placeholder
  */
 export default function StoryInput({
   onSendMessage,
   isSending = false,
   isStreaming = false,
   onCancelStreaming,
-  placeholder = 'Continue the story...'
+  placeholder,
+  characterKey
 }) {
   const [inputText, setInputText] = useState('');
   const textareaRef = useRef(null);
+
+  // Derive a friendly placeholder
+  const effectivePlaceholder =
+    placeholder ||
+    (characterKey
+      ? `Continue the story with ${getDisplayNameFromKey(
+          characterKey
+        )}...`
+      : 'Continue the story...');
 
   // Auto-resize textarea (clamped to 6 lines approx)
   const resize = useCallback(() => {
@@ -77,7 +89,7 @@ export default function StoryInput({
         <textarea
           ref={textareaRef}
           className={styles.textInput}
-          placeholder={placeholder}
+          placeholder={effectivePlaceholder}
           value={inputText}
           onChange={(e) => setInputText(e.target.value)}
           onKeyDown={onKeyDown}
@@ -105,7 +117,11 @@ export default function StoryInput({
             type="button"
             title={inputText.trim() ? 'Send (Enter)' : 'Type a message'}
           >
-            {isSending ? <div className={styles.sendingSpinner} /> : <Send size={18} />}
+            {isSending ? (
+              <div className={styles.sendingSpinner} />
+            ) : (
+              <Send size={18} />
+            )}
           </button>
         )}
       </div>

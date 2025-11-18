@@ -1,18 +1,44 @@
-// src/components/StoryMode/StoRYWindow/StoryMessages.jsx
+// src/components/StoryMode/StoryWindow/StoryMessages.jsx
 import React, { useRef, useEffect, useCallback } from 'react';
 import { VariableSizeList as List } from 'react-window';
 import AutoSizer from 'react-virtualized-auto-sizer';
 import { characterCategories } from '../../../data/characterCategories';
+import {
+  getDisplayNameFromKey,
+  getCharacterThumbnailUrl,
+  isCustomCharacterKey
+} from '../../../utils/characterUtils';
 import styles from './StoryWindow.module.css';
 
-// Same helper function as in other components
+// Character lookup with graceful fallback to shared utils
 const getCharacterInfo = (charKey) => {
-  for (const category of characterCategories) {
-    const found = category.characters?.find(c => c.key === charKey);
-    if (found) return { name: found.name, thumbnailUrl: found.thumbnailUrl };
+  if (!charKey) {
+    return {
+      name: 'Assistant',
+      thumbnailUrl: null
+    };
   }
-  // graceful fallback
-  return { name: (charKey || '').replace(/[_-]+/g,' ').replace(/\b\w/g,c=>c.toUpperCase()), thumbnailUrl: null };
+
+  // 1) Try static character metadata first
+  for (const category of characterCategories) {
+    const found = category.characters?.find((c) => c.key === charKey);
+    if (found) {
+      return {
+        name: found.name,
+        thumbnailUrl:
+          found.thumbnailUrl || getCharacterThumbnailUrl(charKey, false)
+      };
+    }
+  }
+
+  // 2) Fallback: use shared helpers (handles custom `user_45_imhotep` keys)
+  const name = getDisplayNameFromKey(charKey);
+  const thumbnailUrl = getCharacterThumbnailUrl(
+    charKey,
+    isCustomCharacterKey(charKey)
+  );
+
+  return { name, thumbnailUrl };
 };
 
 /**
@@ -69,20 +95,25 @@ function MessageItem({ message, characterKey, style, onSizeChange }) {
   }
 
   // assistant / character
-  const speakerKey = message.character_key || message.speaker || characterKey || 'assistant';
+  const speakerKey =
+    message.character_key || message.speaker || characterKey || 'assistant';
   const { name: speakerName, thumbnailUrl } = getCharacterInfo(speakerKey);
 
   return (
     <div style={style}>
       <div ref={containerRef} className={styles.messageWrapper}>
         <div className={styles.characterMessage}>
-          <div 
+          <div
             className={styles.characterAvatar}
-            style={thumbnailUrl ? {
-              backgroundImage: `url(${thumbnailUrl})`,
-              backgroundSize: 'cover',
-              backgroundPosition: 'center'
-            } : {}}
+            style={
+              thumbnailUrl
+                ? {
+                    backgroundImage: `url(${thumbnailUrl})`,
+                    backgroundSize: 'cover',
+                    backgroundPosition: 'center'
+                  }
+                : {}
+            }
           >
             {!thumbnailUrl && (
               <span className={styles.avatarFallback}>
@@ -104,7 +135,11 @@ function MessageItem({ message, characterKey, style, onSizeChange }) {
   );
 }
 
-export default function StoryMessages({ messages, characterKey, openingBanner }) {
+export default function StoryMessages({
+  messages,
+  characterKey,
+  openingBanner
+}) {
   const listRef = useRef(null);
   const sizeMapRef = useRef({});
 
@@ -130,7 +165,6 @@ export default function StoryMessages({ messages, characterKey, openingBanner })
   }, []);
 
   // Empty state with optional opening banner
-    // Empty state with optional opening banner
   if (messages.length === 0) {
     return (
       <div className={styles.messagesContainer}>
@@ -139,14 +173,19 @@ export default function StoryMessages({ messages, characterKey, openingBanner })
             <div className={styles.bannerContent}>
               <div className={styles.bannerIcon}>🎭</div>
               <div className={styles.bannerText}>{openingBanner}</div>
-              <div className={styles.bannerHint}>Send a message to begin your adventure…</div>
+              <div className={styles.bannerHint}>
+                Send a message to begin your adventure…
+              </div>
             </div>
           </div>
         ) : (
           <div className={styles.emptyMessages}>
             <div className={styles.emptyIcon}>📖</div>
             <h3>Begin Your Story</h3>
-            <p>Your adventure awaits. Send your first message to start the journey.</p>
+            <p>
+              Your adventure awaits. Send your first message to start the
+              journey.
+            </p>
           </div>
         )}
       </div>

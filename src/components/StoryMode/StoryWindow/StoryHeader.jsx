@@ -1,6 +1,7 @@
 // src/components/StoryMode/StoryWindow/StoryHeader.jsx
 import React from 'react';
 import StoryHomeButton from './StoryHomeButton';
+import { getDisplayNameFromKey } from '../../../utils/characterUtils';
 import styles from './StoryWindow.module.css';
 
 export default function StoryHeader({ story, onBack, onClose }) {
@@ -25,23 +26,15 @@ export default function StoryHeader({ story, onBack, onClose }) {
     return map[key] || era;
   };
 
-  const formatCharacterName = (key) => {
-    if (!key) return 'Unknown';
-    if (key.startsWith?.('user_')) {
-      const parts = key.split('_');
-      return parts[2]
-        ? parts[2].charAt(0).toUpperCase() + parts[2].slice(1)
-        : 'Custom Character';
-    }
-    return key.charAt(0).toUpperCase() + key.slice(1);
-  };
+  const characterName = getDisplayNameFromKey(story?.main_character_key);
 
   return (
     <>
       {/* Transparent floating Home icon (matches Scenarios) */}
-      <StoryHomeButton onClick={onBack || onClose} />
+      <StoryHomeButton onClick={handleBack} />
+
       <header className={styles.storyHeader}>
-        {/* Optional inner wrapper for consistent max width with chat frame */}
+        {/* Inner wrapper for consistent max width with chat frame */}
         <div className={styles.headerContent}>
           <h1 className={styles.storyTitle}>
             {story?.title || 'Untitled Story'}
@@ -53,7 +46,7 @@ export default function StoryHeader({ story, onBack, onClose }) {
             </span>
 
             <span className={styles.characterBadge}>
-              <span>👤</span> {formatCharacterName(story?.main_character_key)}
+              <span>👤</span> {characterName}
             </span>
 
             {Number.isFinite?.(story?.current_act) && (
