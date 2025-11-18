@@ -1,76 +1,124 @@
-/* UnifiedContentCard.module.css - UPDATED VERSION */
+/* UnifiedContentCard.module.css - CINEMATIC BACKGROUND VERSION */
+
+/* ============================================================================
+   CORE CARD STRUCTURE
+   ============================================================================ */
 
 .card {
-  background: rgba(255, 255, 255, 0.05);
-  border: 1px solid rgba(255, 215, 0, 0.2);
-  border-radius: 12px;
-  padding: 16px;
+  position: relative;
+  border-radius: 16px;
   cursor: pointer;
-  transition: all 0.3s ease;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  overflow: hidden;
+  min-height: 260px;
   display: flex;
   flex-direction: column;
-  gap: 12px;
+  
+  /* Design System Background Fallback */
+  background: var(--bg-surface, #141B2E);
+  border: 1px solid var(--border-subtle, rgba(148, 163, 184, 0.1));
+  
+  /* Elevation */
+  box-shadow: 0 2px 8px -2px rgba(0, 0, 0, 0.1), 
+              0 4px 12px -4px rgba(99, 102, 241, 0.1);
 }
 
 .card:hover {
-  background: rgba(255, 215, 0, 0.08);
-  border-color: rgba(255, 215, 0, 0.4);
   transform: translateY(-4px);
-  box-shadow: 0 8px 24px rgba(255, 215, 0, 0.2);
+  border-color: var(--accent-primary, #6366F1);
+  box-shadow: 0 8px 32px -8px rgba(0, 0, 0, 0.2), 
+              0 16px 48px -12px rgba(99, 102, 241, 0.2);
 }
 
-.scenarioCard {
-  border-color: rgba(138, 43, 226, 0.3);
+/* Character vs Scenario specific accents */
+.characterCard:hover {
+  border-color: var(--accent-primary, #6366F1);
 }
 
 .scenarioCard:hover {
-  background: rgba(138, 43, 226, 0.08);
-  border-color: rgba(138, 43, 226, 0.5);
+  border-color: rgba(138, 43, 226, 0.6);
 }
+
+/* ============================================================================
+   CINEMATIC BACKGROUND LAYERS
+   ============================================================================ */
+
+.cardBackground {
+  position: absolute;
+  inset: 0;
+  background-size: cover;
+  background-position: center;
+  background-repeat: no-repeat;
+  z-index: 1;
+  transition: transform 0.3s ease;
+}
+
+.card:hover .cardBackground {
+  transform: scale(1.05);
+}
+
+.cardGradient {
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(
+    to bottom,
+    rgba(10, 15, 26, 0.1) 0%,
+    rgba(10, 15, 26, 0.3) 30%,
+    rgba(10, 15, 26, 0.7) 60%,
+    rgba(10, 15, 26, 0.95) 100%
+  );
+  z-index: 2;
+}
+
+/* ============================================================================
+   CARD CONTENT LAYER
+   ============================================================================ */
+
+.cardInner {
+  position: relative;
+  z-index: 3;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  flex: 1;
+  padding: 20px;
+  min-height: 260px;
+}
+
+/* ============================================================================
+   CARD HEADER
+   ============================================================================ */
 
 .cardHeader {
   display: flex;
-  align-items: center;
+  align-items: flex-start;
   justify-content: space-between;
-}
-
-.avatar {
-  width: 60px;
-  height: 60px;
-  border-radius: 50%;
-  object-fit: cover;
-  border: 2px solid rgba(255, 215, 0, 0.3);
-}
-
-.scenarioIcon {
-  width: 60px;
-  height: 60px;
-  border-radius: 50%;
-  background: linear-gradient(135deg, rgba(138, 43, 226, 0.2), rgba(75, 0, 130, 0.2));
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  font-size: 28px;
-  border: 2px solid rgba(138, 43, 226, 0.3);
+  margin-bottom: 12px;
 }
 
 .badge {
-  background: rgba(255, 215, 0, 0.1);
-  border: 1px solid rgba(255, 215, 0, 0.3);
-  color: rgba(255, 215, 0, 0.9);
-  padding: 4px 8px;
-  border-radius: 8px;
+  background: rgba(255, 255, 255, 0.15);
+  backdrop-filter: blur(10px);
+  border: 1px solid rgba(255, 255, 255, 0.3);
+  color: var(--text-primary, #F1F5F9);
+  padding: 6px 12px;
+  border-radius: 12px;
   font-size: 11px;
   font-weight: 600;
   text-transform: uppercase;
   letter-spacing: 0.5px;
+  font-family: var(--font-body, 'Inter', system-ui, sans-serif);
 }
 
 .scenarioBadge {
-  background: rgba(138, 43, 226, 0.1);
-  border-color: rgba(138, 43, 226, 0.3);
-  color: rgba(138, 43, 226, 0.9);
+  background: rgba(138, 43, 226, 0.2);
+  border-color: rgba(138, 43, 226, 0.4);
+  color: rgba(255, 255, 255, 0.9);
 }
+
+/* ============================================================================
+   CARD CONTENT
+   ============================================================================ */
 
 .cardContent {
   flex: 1;
@@ -79,179 +127,156 @@
   gap: 8px;
 }
 
+/* Typography - Design System Aligned */
 .title {
-  font-family: 'Playfair Display', serif;
+  font-family: var(--font-display, 'Syne', system-ui, sans-serif);
   font-size: 18px;
-  font-weight: 600;
-  color: #ffffff;
+  font-weight: 700;
+  color: var(--text-primary, #F1F5F9);
   margin: 0;
   line-height: 1.3;
+  text-shadow: 0 2px 4px rgba(0, 0, 0, 0.5);
 }
 
 .domain {
+  font-family: var(--font-body, 'Inter', system-ui, sans-serif);
   font-size: 12px;
-  color: rgba(255, 215, 0, 0.8);
-  background: rgba(255, 215, 0, 0.1);
-  padding: 4px 8px;
-  border-radius: 6px;
+  color: var(--accent-primary, #6366F1);
+  background: rgba(99, 102, 241, 0.15);
+  padding: 4px 10px;
+  border-radius: 8px;
   display: inline-block;
   align-self: flex-start;
   text-transform: uppercase;
   letter-spacing: 0.5px;
+  font-weight: 600;
+  border: 1px solid rgba(99, 102, 241, 0.3);
 }
 
 .description {
-  color: rgba(255, 255, 255, 0.7);
+  font-family: var(--font-body, 'Inter', system-ui, sans-serif);
   font-size: 14px;
+  color: var(--text-secondary, #94A3B8);
   line-height: 1.5;
-  margin: 0;
+  margin: 4px 0 0 0;
   display: -webkit-box;
   -webkit-line-clamp: 3;
   -webkit-box-orient: vertical;
   overflow: hidden;
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.3);
 }
 
-/* 🆕 UPDATED: Meta section for engagement metrics */
+/* ============================================================================
+   META SECTION
+   ============================================================================ */
+
 .meta {
   display: flex;
-  gap: 12px;
-  font-size: 12px;
-  color: rgba(255, 255, 255, 0.8);
-  margin-top: 8px;
-  padding: 8px 0;
-  border-top: 1px solid rgba(255, 255, 255, 0.1);
-  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+  gap: 8px;
+  margin-top: 12px;
+  flex-wrap: wrap;
 }
 
 .metaItem {
+  font-family: var(--font-body, 'Inter', system-ui, sans-serif);
+  font-size: 11px;
+  color: var(--text-secondary, #94A3B8);
+  background: rgba(255, 255, 255, 0.1);
+  padding: 4px 8px;
+  border-radius: 6px;
+  border: 1px solid rgba(255, 255, 255, 0.1);
   display: flex;
   align-items: center;
   gap: 4px;
-  background: rgba(255, 215, 0, 0.1);
-  padding: 4px 8px;
-  border-radius: 6px;
-  border: 1px solid rgba(255, 215, 0, 0.2);
+  backdrop-filter: blur(5px);
 }
 
-.metaItem:first-child {
-  background: rgba(255, 215, 0, 0.15);
-  font-weight: 600;
-  color: rgba(255, 215, 0, 0.9);
-}
-
-.characterThumbnails {
-  display: flex;
-  gap: 6px;
-  margin-top: 8px;
-}
-
-.characterThumb {
-  width: 32px;
-  height: 32px;
-  border-radius: 50%;
-  background: linear-gradient(135deg, rgba(138, 43, 226, 0.3), rgba(75, 0, 130, 0.3));
-  border: 2px solid rgba(138, 43, 226, 0.4);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  font-size: 12px;
-  font-weight: 600;
-  color: rgba(255, 255, 255, 0.9);
-}
+/* ============================================================================
+   ACTIONS SECTION
+   ============================================================================ */
 
 .actions {
   display: flex;
   gap: 8px;
-  padding-top: 12px;
+  margin-top: 16px;
+  flex-wrap: wrap;
 }
 
 .actionBtn {
   flex: 1;
-  background: rgba(255, 255, 255, 0.05);
-  border: 1px solid rgba(255, 215, 0, 0.2);
-  color: rgba(255, 215, 0, 0.9);
-  padding: 8px;
-  border-radius: 6px;
+  background: rgba(255, 255, 255, 0.1);
+  backdrop-filter: blur(10px);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  color: var(--text-primary, #F1F5F9);
+  padding: 8px 10px;
+  border-radius: 8px;
   cursor: pointer;
-  font-size: 12px;
+  font-size: 11px;
   transition: all 0.2s ease;
   display: flex;
   align-items: center;
   justify-content: center;
   gap: 4px;
+  font-family: var(--font-body, 'Inter', system-ui, sans-serif);
+  font-weight: 500;
 }
 
 .actionBtn:hover {
-  background: rgba(255, 215, 0, 0.1);
-  border-color: rgba(255, 215, 0, 0.4);
+  background: rgba(255, 255, 255, 0.15);
+  border-color: rgba(255, 255, 255, 0.3);
+  transform: translateY(-1px);
 }
 
 .primaryBtn {
   flex: 2;
-  background: linear-gradient(135deg, rgba(138, 43, 226, 0.2), rgba(75, 0, 130, 0.2));
-  border: 1px solid rgba(138, 43, 226, 0.4);
-  color: rgba(255, 255, 255, 0.9);
+  background: linear-gradient(135deg, var(--accent-primary, #6366F1), var(--accent-hover, #818CF8));
+  border: 1px solid rgba(99, 102, 241, 0.4);
+  color: white;
   padding: 8px 16px;
-  border-radius: 6px;
+  border-radius: 8px;
   cursor: pointer;
   font-weight: 600;
-  font-size: 13px;
+  font-size: 12px;
   transition: all 0.2s ease;
-}
-
-.card .primaryBtn {
-  /* Characters get gold theme for primary button */
-  background: linear-gradient(135deg, rgba(255, 215, 0, 0.2), rgba(255, 165, 0, 0.2));
-  border-color: rgba(255, 215, 0, 0.4);
-}
-
-.scenarioCard .primaryBtn {
-  /* Scenarios get purple theme for primary button */
-  background: linear-gradient(135deg, rgba(138, 43, 226, 0.2), rgba(75, 0, 130, 0.2));
-  border-color: rgba(138, 43, 226, 0.4);
+  font-family: var(--font-body, 'Inter', system-ui, sans-serif);
+  box-shadow: 0 2px 8px rgba(99, 102, 241, 0.3);
 }
 
 .primaryBtn:hover {
-  transform: scale(1.02);
+  background: linear-gradient(135deg, var(--accent-hover, #818CF8), #a5b4fc);
+  transform: translateY(-1px);
+  box-shadow: 0 4px 16px rgba(99, 102, 241, 0.4);
 }
 
-.card .primaryBtn:hover {
-  background: linear-gradient(135deg, rgba(255, 215, 0, 0.3), rgba(255, 165, 0, 0.3));
-}
+/* ============================================================================
+   CHARACTER THUMBNAILS (Scenario Cards)
+   ============================================================================ */
 
-.scenarioCard .primaryBtn:hover {
-  background: linear-gradient(135deg, rgba(138, 43, 226, 0.3), rgba(75, 0, 130, 0.3));
-}
-
-/* Character Thumbnails Container */
 .characterThumbnails {
   display: flex;
-  gap: 0.5rem;
+  gap: 6px;
+  margin-top: 12px;
   flex-wrap: wrap;
-  margin: 0.75rem 0;
 }
 
-/* Individual Thumbnail */
 .characterThumb {
-  width: 32px;
-  height: 32px;
-  min-width: 32px;
+  width: 28px;
+  height: 28px;
+  min-width: 28px;
   border-radius: 50%;
   display: flex;
   align-items: center;
   justify-content: center;
-  font-size: 0.8rem;
+  font-size: 10px;
   font-weight: bold;
   color: white;
-  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
-  cursor: default;
   position: relative;
   overflow: hidden;
-  border: 2px solid rgba(255, 215, 0, 0.3);
-  background: linear-gradient(135deg, rgba(255, 215, 0, 0.4), rgba(255, 165, 0, 0.4));
+  border: 2px solid rgba(255, 255, 255, 0.3);
+  background: linear-gradient(135deg, rgba(99, 102, 241, 0.4), rgba(129, 140, 248, 0.4));
+  backdrop-filter: blur(5px);
 }
 
-/* Thumbnail Image */
 .thumbImg {
   width: 100%;
   height: 100%;
@@ -262,50 +287,77 @@
   left: 0;
 }
 
-/* Fallback Initial Letter */
 .thumbFallback {
   position: absolute;
   z-index: 1;
-  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.5);
   display: flex;
   align-items: center;
   justify-content: center;
   width: 100%;
   height: 100%;
+  font-family: var(--font-body, 'Inter', system-ui, sans-serif);
 }
 
-/* "+X more" indicator */
 .characterThumb.more {
   background: rgba(255, 255, 255, 0.2);
-  font-size: 0.7rem;
-  border-color: rgba(255, 215, 0, 0.2);
+  font-size: 9px;
+  border-color: rgba(255, 255, 255, 0.2);
+  font-family: var(--font-body, 'Inter', system-ui, sans-serif);
 }
+
+/* ============================================================================
+   SHARE SUCCESS STATE
+   ============================================================================ */
+
+.shareSuccess {
+  background: rgba(34, 197, 94, 0.2) !important;
+  border-color: rgba(34, 197, 94, 0.4) !important;
+  color: rgb(34, 197, 94) !important;
+}
+
+/* ============================================================================
+   MOBILE RESPONSIVENESS
+   ============================================================================ */
 
 @media (max-width: 768px) {
   .card {
-    padding: 12px;
+    min-height: 240px;
   }
   
-  .avatar, .scenarioIcon {
-    width: 50px;
-    height: 50px;
+  .cardInner {
+    padding: 16px;
+    min-height: 240px;
   }
   
   .title {
     font-size: 16px;
   }
   
+  .description {
+    font-size: 13px;
+  }
+  
   .meta {
-    gap: 8px;
-    font-size: 11px;
+    gap: 6px;
+  }
+  
+  .metaItem {
+    font-size: 10px;
+    padding: 3px 6px;
   }
   
   .actions {
-    flex-wrap: wrap;
+    gap: 6px;
   }
   
   .actionBtn, .primaryBtn {
-    font-size: 11px;
-    padding: 6px;
+    font-size: 10px;
+    padding: 6px 8px;
+  }
+  
+  .characterThumb {
+    width: 24px;
+    height: 24px;
+    font-size: 9px;
   }
 }

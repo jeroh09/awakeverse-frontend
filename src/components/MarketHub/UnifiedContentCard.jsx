@@ -1,4 +1,4 @@
-// UnifiedContentCard.jsx - UPDATED WITH SHARE FUNCTIONALITY
+// UnifiedContentCard.jsx - UPDATED WITH CINEMATIC BACKGROUNDS
 // Location: src/components/MarketHub/UnifiedContentCard.jsx
 
 import React, { useEffect, useState } from 'react';
@@ -45,6 +45,34 @@ const UnifiedContentCard = ({
     console.error('❌ UnifiedContentCard: Invalid item data', item);
     return null;
   }
+
+  // ============================================================================
+  // NEW: Background Image Resolution Helper
+  // ============================================================================
+  const getBackgroundImageUrl = () => {
+    // Priority order: scene_url > avatar_url > character thumbnail lookup
+    if (item.scene_url) {
+      return item.scene_url;
+    }
+    
+    if (isCharacter && item.avatar_url) {
+      return item.avatar_url;
+    }
+    
+    if (isScenario) {
+      // For scenarios, use a thematic background or fallback
+      return item.background_url || '/images/scenario-default.jpg';
+    }
+    
+    // Fallback for characters without avatar
+    if (isCharacter && item.character_key) {
+      return `/images/${item.character_key}.jpg`;
+    }
+    
+    return null;
+  };
+
+  const backgroundUrl = getBackgroundImageUrl();
 
   const getCharacterInfo = (charKey) => {
     const isCustom = isCustomCharacterKey(charKey);
@@ -105,7 +133,7 @@ const UnifiedContentCard = ({
     onCardClick?.(item);
   };
 
-  // NEW: Handle share button click
+  // Handle share button click
   const handleShareClick = async (e) => {
     e.stopPropagation();
     
@@ -176,7 +204,7 @@ const UnifiedContentCard = ({
   };
 
   // ============================================================================
-  // RENDER CHARACTER CARD - WITH SHARE BUTTON
+  // RENDER CHARACTER CARD - WITH CINEMATIC BACKGROUND
   // ============================================================================
   if (isCharacter) {
     const totalLikes = 
@@ -198,76 +226,83 @@ const UnifiedContentCard = ({
 
     return (
       <div 
-        className={styles.card} 
+        className={`${styles.card} ${styles.characterCard}`} 
         onClick={handleCardClick}
         role="button"
         tabIndex={0}
       >
-        <div className={styles.cardHeader}>
-          <img 
-            src={item.avatar_url || '/default-avatar.jpg'} 
-            alt={item.display_name}
-            className={styles.avatar}
-            onError={(e) => {e.target.src = '/default-avatar.jpg'}}
-          />
-          <div className={styles.badge}>Character</div>
-        </div>
+        {/* NEW: Cinematic Background Layers */}
+        {backgroundUrl && (
+          <>
+            <div 
+              className={styles.cardBackground}
+              style={{ backgroundImage: `url(${backgroundUrl})` }}
+            />
+            <div className={styles.cardGradient} />
+          </>
+        )}
 
-        <div className={styles.cardContent}>
-          <h3 className={styles.title}>{item.display_name}</h3>
-
-          {item.expertise_domain && (
-            <div className={styles.domain}>{item.expertise_domain}</div>
-          )}
-
-          <p className={styles.description}>{item.short_description}</p>
-
-          <div className={styles.meta}>
-            <span className={styles.metaItem}>
-              🏆 {formatNumber(totalEngagement)}
-            </span>
-            <span className={styles.metaItem}>
-              {item.creator_level || 'newcomer'}
-            </span>
+        <div className={styles.cardInner}>
+          <div className={styles.cardHeader}>
+            <div className={styles.badge}>Character</div>
           </div>
-        </div>
 
-        <div className={styles.actions}>
-          <button 
-            className={styles.actionBtn}
-            onClick={(e) => handleEngage('like', e)}
-            title="Like"
-          >
-            ❤️ {formatNumber(totalLikes)}
-          </button>
-          <button 
-            className={styles.actionBtn}
-            onClick={(e) => handleEngage('bookmark', e)}
-            title="Bookmark"
-          >
-            🔖 {formatNumber(totalBookmarks)}
-          </button>
-          <button 
-            className={`${styles.actionBtn} ${copySuccess ? styles.shareSuccess : ''}`}
-            onClick={handleShareClick}
-            title={copySuccess ? "Link copied!" : "Share character"}
-          >
-            {copySuccess ? '✓ Copied' : <><Share2 size={14} /> Share</>}
-          </button>
-          <button 
-            className={styles.primaryBtn}
-            onClick={handleChatClick}
-            title="Start chatting"
-          >
-            Start Chat →
-          </button>
+          <div className={styles.cardContent}>
+            <h3 className={styles.title}>{item.display_name}</h3>
+
+            {item.expertise_domain && (
+              <div className={styles.domain}>{item.expertise_domain}</div>
+            )}
+
+            <p className={styles.description}>{item.short_description}</p>
+
+            <div className={styles.meta}>
+              <span className={styles.metaItem}>
+                🏆 {formatNumber(totalEngagement)}
+              </span>
+              <span className={styles.metaItem}>
+                {item.creator_level || 'newcomer'}
+              </span>
+            </div>
+          </div>
+
+          <div className={styles.actions}>
+            <button 
+              className={styles.actionBtn}
+              onClick={(e) => handleEngage('like', e)}
+              title="Like"
+            >
+              ❤️ {formatNumber(totalLikes)}
+            </button>
+            <button 
+              className={styles.actionBtn}
+              onClick={(e) => handleEngage('bookmark', e)}
+              title="Bookmark"
+            >
+              🔖 {formatNumber(totalBookmarks)}
+            </button>
+            <button 
+              className={`${styles.actionBtn} ${copySuccess ? styles.shareSuccess : ''}`}
+              onClick={handleShareClick}
+              title={copySuccess ? "Link copied!" : "Share character"}
+            >
+              {copySuccess ? '✓ Copied' : <><Share2 size={14} /> Share</>}
+            </button>
+            <button 
+              className={styles.primaryBtn}
+              onClick={handleChatClick}
+              title="Start chatting"
+            >
+              Start Chat →
+            </button>
+          </div>
         </div>
       </div>
     );
   }
   
   // ============================================================================
-  // RENDER SCENARIO CARD - WITH SHARE BUTTON
+  // RENDER SCENARIO CARD - WITH CINEMATIC BACKGROUND
   // ============================================================================
   if (isScenario) {
     const characterKeys = item.character_keys || [];
@@ -310,68 +345,80 @@ const UnifiedContentCard = ({
         role="button"
         tabIndex={0}
       >
-        <div className={styles.cardHeader}>
-          <div className={styles.scenarioIcon}>🎭</div>
-          <div className={`${styles.badge} ${styles.scenarioBadge}`}>Scenario</div>
-        </div>
+        {/* NEW: Cinematic Background Layers */}
+        {backgroundUrl && (
+          <>
+            <div 
+              className={styles.cardBackground}
+              style={{ backgroundImage: `url(${backgroundUrl})` }}
+            />
+            <div className={styles.cardGradient} />
+          </>
+        )}
 
-        <div className={styles.cardContent}>
-          <h3 className={styles.title}>{item.title}</h3>
-          
-          {item.category && (
-            <div className={styles.domain}>{item.category}</div>
-          )}
-          
-          <p className={styles.description}>{item.description}</p>
-          
-          <div className={styles.characterThumbnails}>
-            {characterThumbnails}
-            {item.character_count > 4 && (
-              <div className={`${styles.characterThumb} ${styles.more}`}>
-                +{item.character_count - 4}
-              </div>
+        <div className={styles.cardInner}>
+          <div className={styles.cardHeader}>
+            <div className={`${styles.badge} ${styles.scenarioBadge}`}>Scenario</div>
+          </div>
+
+          <div className={styles.cardContent}>
+            <h3 className={styles.title}>{item.title}</h3>
+            
+            {item.category && (
+              <div className={styles.domain}>{item.category}</div>
             )}
+            
+            <p className={styles.description}>{item.description}</p>
+            
+            <div className={styles.characterThumbnails}>
+              {characterThumbnails}
+              {item.character_count > 4 && (
+                <div className={`${styles.characterThumb} ${styles.more}`}>
+                  +{item.character_count - 4}
+                </div>
+              )}
+            </div>
+            
+            <div className={styles.meta}>
+              <span className={styles.metaItem}>
+                👥 {item.character_count || 0} characters
+              </span>
+              <span className={styles.metaItem}>
+                🏆 {item.total_engagement_score || 0}
+              </span>
+            </div>
           </div>
-          
-          <div className={styles.meta}>
-            <span className={styles.metaItem}>
-              👥 {item.character_count || 0} characters
-            </span>
-            <span className={styles.metaItem}>
-              🏆 {item.total_engagement_score || 0}
-            </span>
-          </div>
-        </div>
 
-        <div className={styles.actions}>
-          <button 
-            className={styles.actionBtn}
-            onClick={(e) => handleEngage('like', e)}
-            title="Like"
-          >
-            ❤️ {item.engagement_30d?.total_likes || 0}
-          </button>
-          <button 
-            className={styles.actionBtn}
-            onClick={(e) => handleEngage('bookmark', e)}
-            title="Bookmark"
-          >
-            🔖 {item.engagement_30d?.total_bookmarks || 0}
-          </button>
-          <button 
-            className={`${styles.actionBtn} ${copySuccess ? styles.shareSuccess : ''}`}
-            onClick={handleShareClick}
-            title={copySuccess ? "Link copied!" : "Share scenario"}
-          >
-            {copySuccess ? '✓ Copied' : <><Share2 size={14} /> Share</>}
-          </button>
-          <button 
-            className={styles.primaryBtn}
-            onClick={handleCardClick}
-            title="Start this debate"
-          >
-            Start Debate →
-          </button>
+          <div className={styles.actions}>
+            <button 
+              className={styles.actionBtn}
+              onClick={(e) => handleEngage('like', e)}
+              title="Like"
+            >
+              ❤️ {item.engagement_30d?.total_likes || 0}
+            </button>
+            <button 
+              className={styles.actionBtn}
+              onClick={(e) => handleEngage('bookmark', e)}
+              title="Bookmark"
+            >
+              🔖 {item.engagement_30d?.total_bookmarks || 0}
+            </button>
+            <button 
+              className={`${styles.actionBtn} ${copySuccess ? styles.shareSuccess : ''}`}
+              onClick={handleShareClick}
+              title={copySuccess ? "Link copied!" : "Share scenario"}
+            >
+              {copySuccess ? '✓ Copied' : <><Share2 size={14} /> Share</>}
+            </button>
+            <button 
+              className={styles.primaryBtn}
+              onClick={handleCardClick}
+              title="Start this debate"
+            >
+              Start Debate →
+            </button>
+          </div>
         </div>
       </div>
     );
