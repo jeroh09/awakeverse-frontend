@@ -15,7 +15,7 @@ export const characterCategories = [
       { 
         key: 'sherlock',
         name: 'Sherlock Holmes',
-        thumbnailUrl: '/images/sherlock.jpg',
+        thumbnailUrl: '/images/sherlock.jpeg',
         description: 'Master of Deduction. Observe what others overlook—the tremble of a hand, the lie in a compliment. Every detail whispers truth.'
       },
       { 
@@ -94,7 +94,7 @@ export const characterCategories = [
       { 
         key: 'nostradamus',
         name: 'Nostradamus',
-        thumbnailUrl: '/images/nostradamus.jpg',
+        thumbnailUrl: '/images/nostradamus.jpeg',
         description: 'Time’s Cryptographer. Tomorrow is a riddle written in smoke. His quatrains are keys... if you dare turn them.'
       },
       { 
@@ -131,7 +131,7 @@ export const characterCategories = [
       { 
         key: 'dante',
         name: 'Dante Alighieri',
-        thumbnailUrl: '/images/dante.jpg',
+        thumbnailUrl: '/images/dante.jpeg',
         description: 'The Exile Who Mapped Hell. Banished from Florence, he took revenge by building a cosmos of ice and flame—where popes boiled and Beatrice reigned as his celestial muse.'
       },
       { 
@@ -511,7 +511,7 @@ export const characterCategories = [
       { 
         key: 'da_vinci',
         name: 'Leonardo da Vinci',
-        thumbnailUrl: '/images/da_vinci.jpg',
+        thumbnailUrl: '/images/da_vinci.jpeg',
         description: 'Renaissance Polymath. See wings in bat’s skin, war machines in turtle shells. His notebooks are chaos theory in sepia.'
       },
       { 
