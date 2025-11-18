@@ -120,7 +120,7 @@ const AuthenticatedMarketHub = ({
 
     // 🆕 DYNAMIC RATIO: Calculate optimal ratio based on counts
     let CHAR_RATIO = 5; // Default
-    let SCEN_RATIO = 1;
+    let SCEN_RATIO = 1; // Default
 
     if (sortedScens.length > 0 && sortedChars.length > 0) {
       // Calculate how many characters per scenario for even distribution
@@ -504,8 +504,10 @@ const AuthenticatedMarketHub = ({
 
   return (
     <div className={styles.container}>
-      {/* Header - Modified for view mode */}
-      <header className={styles.header}>
+      {/* ============================================================================
+          UPDATED: Compact Premium Header - No Hero/Banner
+          ============================================================================ */}
+      <header className={styles.pageHeader}>
         <div className={styles.headerContent}>
           {/* NEW: Only show back button in standalone mode */}
           {!isViewMode && (
@@ -515,13 +517,13 @@ const AuthenticatedMarketHub = ({
               aria-label="Back to characters"
             >
               <ArrowLeft size={20} />
-              <span>Back to Characters</span>
+              <span>Back</span>
             </button>
           )}
           
           <div className={styles.titleSection}>
-            <h1 className={styles.title}>Market Hub</h1>
-            <p className={styles.subtitle}>
+            <h1 className={styles.pageTitle}>Market Hub</h1>
+            <p className={styles.pageSubtitle}>
               {isViewMode 
                 ? 'Discover characters and add them to your collection'
                 : 'Discover amazing characters from our community'
@@ -530,9 +532,11 @@ const AuthenticatedMarketHub = ({
           </div>
         </div>
 
-        {/* Search and Filters */}
-        <div className={styles.searchSection}>
-          <div className={styles.searchBar}>
+        {/* ============================================================================
+            UPDATED: Compact Search & Filters Row
+            ============================================================================ */}
+        <div className={styles.controlsRow}>
+          <div className={styles.searchContainer}>
             <Search className={styles.searchIcon} size={18} />
             <input
               type="text"
@@ -606,8 +610,8 @@ const AuthenticatedMarketHub = ({
       </header>
 
       {/* Main Content */}
-      <main className={styles.main}>
-        <div className={styles.content}>
+      <main className={styles.mainContent}>
+        <div className={styles.contentArea}>
           {/* Featured Characters Section */}
           {!searchQuery && !Object.values(selectedFilters).some(v => v && v !== 'trending') && (
             <section className={styles.featuredSection}>
@@ -647,8 +651,8 @@ const AuthenticatedMarketHub = ({
               </div>
             ) : allContent.length > 0 ? (
               <>
-                {/* 🆕 REPLACE YOUR EXISTING CHARACTER GRID WITH THIS */}
-                <div className={styles.charactersGrid}>
+                {/* 🆕 UPDATED: Content Grid with Design System Spacing */}
+                <div className={styles.contentGrid}>
                   {allContent.map((item) => (
                     <UnifiedContentCard
                       key={
