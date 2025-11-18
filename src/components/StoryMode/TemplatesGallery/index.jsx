@@ -13,7 +13,7 @@ export default function TemplatesGallery({
   const [selectedTemplate, setSelectedTemplate] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
-  const [visibleCount, setVisibleCount] = useState(6); // Show 6 templates initially
+  const [visibleCount, setVisibleCount] = useState(4); // Show 6 templates initially
 
   const { getTemplates } = useStoryApi();
 
