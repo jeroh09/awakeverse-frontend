@@ -1,9 +1,9 @@
 // src/components/DualPathUpgradeSystem.jsx - STYLING UPDATED, LOGIC UNCHANGED
 import React, { useState } from 'react';
-import { useUser } from './contexts/UserContext';
+import { useUser } from '../contexts/UserContext';
 
 // Shared payment processor for both paths
-import PaymentProcessor from './components/PaymentProcessor';
+import PaymentProcessor from '../components/PaymentProcessor';
 
 // Educational Character Creation modal flow
 const EducationalUpgradeModal = ({
