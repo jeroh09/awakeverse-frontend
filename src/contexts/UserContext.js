@@ -1,6 +1,7 @@
-// src/contexts/UserContext.js - DEFENSIVE VERSION
-// ✅ FIXED: Added guards, error handling, and defensive patterns
-// CRITICAL: This prevents "user is not defined" errors
+// src/contexts/UserContext.js - FIXED: Step 1-2 Subscription Display
+// ✅ CHANGES:
+// 1. Added getTierDisplayName helper function (NEW - line 132-142)
+// 2. Updated getSubscriptionInfo to use helper instead of non-existent field (line 160)
 
 import React, { createContext, useContext, useState, useEffect, useCallback } from 'react';
 
@@ -100,7 +101,21 @@ export function UserProvider({ children }) {
   }, [user]);
 
   /**
-   * Get current subscription tier info
+   * ✅ STEP 1: NEW HELPER - Map tier name to display name
+   * DEFENSIVE: Always returns valid display name
+   */
+  const getTierDisplayName = useCallback((tier) => {
+    const tierMap = {
+      'free': 'Free',
+      'starter': 'Starter',
+      'pro': 'Pro',
+      'unlimited': 'Unlimited'
+    };
+    return tierMap[tier?.toLowerCase()] || 'Free';
+  }, []);
+
+  /**
+   * ✅ STEP 2: FIXED - Get current subscription tier info with proper display name mapping
    * DEFENSIVE: Always returns valid object
    */
   const getSubscriptionInfo = useCallback(() => {
@@ -117,15 +132,19 @@ export function UserProvider({ children }) {
     return {
       tier: user.subscription_tier || 'free',
       status: user.subscription_status || 'none',
-      display_name: user.subscription_tier_display || 'Free',
+      // ✅ FIXED: Use helper instead of non-existent user.subscription_tier_display
+      display_name: getTierDisplayName(user.subscription_tier),
       is_active: ['active', 'trialing'].includes(user.subscription_status),
       expires_at: user.subscription_expires_at || null,
       message_limit: user.message_limit || 0,
-      character_limit: user.character_limit || 0
+      character_limit: user.character_limit || 0,
+      // ✅ BONUS: Add usage stats if available
+      messages_used: user.messages_used || 0,
+      characters_created: user.custom_character_count || 0
     };
-  }, [user]);
+  }, [user, getTierDisplayName]);
 
-  // ✅ STEP 2: Initial user load with error handling
+  // ✅ Initial user load with error handling
   useEffect(() => {
     const loadUser = async () => {
       try {
@@ -141,6 +160,7 @@ export function UserProvider({ children }) {
           setUser(data);
           console.log('👤 User loaded:', data.username);
           console.log('💎 Subscription:', data.subscription_tier || 'free');
+          console.log('📊 Message limit:', data.message_limit || 150);
         } else {
           setUser(null);
           console.log('👤 No authenticated user');
@@ -173,7 +193,7 @@ export function UserProvider({ children }) {
   );
 }
 
-// ✅ STEP 3: DEFENSIVE useUser hook with guard and helpful error
+// ✅ DEFENSIVE useUser hook with guard and helpful error
 export function useUser() {
   const context = useContext(UserContext);
   
