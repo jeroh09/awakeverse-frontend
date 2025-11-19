@@ -454,3 +454,26 @@
     padding: 0.2rem 0.5rem;
   }
 }
+/* ==== MOBILE NAV: HORIZONTAL SCROLL STRIP ==== */
+@media (max-width: 768px) {
+  .navigation {
+    max-width: 100%;
+    overflow-x: auto;
+    scrollbar-width: thin;
+    -webkit-overflow-scrolling: touch;
+  }
+
+  .navigation::-webkit-scrollbar {
+    height: 4px;
+  }
+
+  .navigation::-webkit-scrollbar-thumb {
+    background: rgba(148, 163, 184, 0.45);
+    border-radius: 999px;
+  }
+
+  .navTab {
+    flex: 0 0 auto;        /* don’t squish */
+    white-space: nowrap;   /* keep each label on one line */
+  }
+}

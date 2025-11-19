@@ -595,3 +595,37 @@
 .auth-legal-text a {
   color: var(--text-secondary) !important; /* Keep legal links subtle */
 }
+/* ==== FINAL MOBILE OVERRIDE – KEEP FORM CENTERED UNDER SCENE ==== */
+@media (max-width: 768px) {
+  .auth-container {
+    flex-direction: column;
+    max-width: 100%;
+    width: 100%;
+    height: auto;
+    min-height: 100vh;
+    border-radius: 0;
+  }
+
+  .auth-scene-panel {
+    flex: none;
+    height: 40vh;
+    border-radius: 0;
+  }
+
+  .auth-form-container {
+    /* kill the floating behaviour on mobile */
+    position: static !important;
+    right: auto !important;
+    top: auto !important;
+    transform: none !important;
+
+    width: 100%;
+    max-width: 360px;
+    margin: -72px auto 32px; /* pulls card slightly over the image */
+    padding-inline: var(--space-lg);
+  }
+
+  .auth-form {
+    width: 100%;
+  }
+}
