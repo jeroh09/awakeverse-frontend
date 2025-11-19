@@ -41,11 +41,12 @@
   transition: transform 0.25s ease-out, opacity 0.25s ease-out;
 }
 
-/* Retracted: slide header mostly off screen */
+/* Retracted: slide header fully off screen */
 .retracted {
-  transform: translateY(-80%);
-  opacity: 0.92;
+  transform: translateY(-100%);
+  opacity: 0;
 }
+
 
 /* ===================== LEFT SIDE (LOGO + DESKTOP NAV) ===================== */
 
@@ -491,5 +492,351 @@
 
   .mobileNav {
     width: 240px;
+  }
+}
+/* ===================== LEFT SIDEBAR HANDLE ===================== */
+
+.sidebarHandle {
+  position: fixed;
+  top: calc(var(--header-height-desktop, 72px) + 1rem);
+  left: 0;
+  z-index: 1100;
+
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+
+  padding: 0.4rem 0.4rem 0.4rem 0.3rem;
+  border-radius: 0 999px 999px 0;
+  border: 1px solid rgba(148, 163, 184, 0.6);
+  border-left: none;
+
+  background:
+    radial-gradient(circle at 0 50%, rgba(129, 140, 248, 0.32), transparent 70%),
+    rgba(15, 23, 42, 0.98);
+
+  box-shadow:
+    0 10px 24px rgba(15, 23, 42, 0.9),
+    0 0 0 1px rgba(15, 23, 42, 1);
+
+  cursor: pointer;
+  transition:
+    transform 0.25s ease-out,
+    box-shadow 0.25s ease-out,
+    border-color 0.18s ease-out;
+}
+
+.sidebarHandle:hover {
+  transform: translateX(2px);
+  border-color: rgba(129, 140, 248, 0.9);
+  box-shadow:
+    0 14px 30px rgba(15, 23, 42, 0.95),
+    0 0 0 1px rgba(15, 23, 42, 1);
+}
+
+.sidebarHandleOpen {
+  transform: translateX(260px); /* match sidebar width */
+}
+
+.handleIcon {
+  display: inline-flex;
+  flex-direction: column;
+  gap: 3px;
+  padding: 0.1rem 0.35rem;
+}
+
+.handleBar {
+  width: 14px;
+  height: 2px;
+  border-radius: 999px;
+  background-image: linear-gradient(
+    to right,
+    var(--accent-primary, #6366f1),
+    var(--accent-hover, #818cf8)
+  );
+}
+
+/* Only show the "Menu" label on hover via ::after */
+.sidebarHandle::after {
+  content: 'Menu';
+  font-family: var(--font-body, 'Inter', system-ui, sans-serif);
+  font-size: 0.72rem;
+  font-weight: 500;
+  text-transform: uppercase;
+  letter-spacing: 0.14em;
+  color: var(--text-secondary, #94a3b8);
+
+  overflow: hidden;
+  max-width: 0;
+  opacity: 0;
+  white-space: nowrap;
+  transition:
+    max-width 0.22s ease-out,
+    opacity 0.22s ease-out,
+    margin-left 0.22s ease-out;
+  margin-left: 0;
+}
+
+.sidebarHandle:hover::after {
+  max-width: 80px;
+  opacity: 1;
+  margin-left: 0.3rem;
+}
+
+/* When header retracts, bring handle closer to top of viewport */
+.retracted ~ .sidebarHandle {
+  top: 1.25rem;
+}
+
+/* ===================== LEFT SIDEBAR ===================== */
+
+.sidebar {
+  position: fixed;
+  top: var(--header-height-desktop, 72px);
+  left: 0;
+  bottom: 0;
+  width: 260px;
+  z-index: 1095;
+
+  transform: translateX(-100%);
+  transition:
+    transform 0.25s ease-out,
+    top 0.35s cubic-bezier(0.4, 0, 0.2, 1);
+
+  background:
+    radial-gradient(circle at 0 0, rgba(129, 140, 248, 0.18), transparent 60%),
+    linear-gradient(180deg, #020617, #020617);
+  border-right: 1px solid rgba(37, 99, 235, 0.55);
+  box-shadow: 18px 0 50px rgba(15, 23, 42, 0.9);
+}
+
+.sidebarOpen {
+  transform: translateX(0);
+}
+
+/* When header fully retracts, sidebar occupies full height */
+.retracted ~ .sidebar {
+  top: 0;
+}
+
+.sidebarInner {
+  height: 100%;
+  padding: 1.25rem 1.1rem 1.1rem;
+  display: flex;
+  flex-direction: column;
+  gap: 1.25rem;
+}
+
+.sidebarSection {
+  padding-bottom: 0.5rem;
+  border-bottom: 1px solid rgba(15, 23, 42, 0.9);
+}
+
+.sidebarSection:last-of-type {
+  border-bottom: none;
+}
+
+.sidebarLabel {
+  font-family: var(--font-body, 'Inter', system-ui, sans-serif);
+  font-size: 0.72rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.16em;
+  color: var(--text-tertiary, #64748b);
+  margin-bottom: 0.6rem;
+}
+
+.sidebarNavGroup {
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+}
+
+.sidebarNavItem {
+  display: flex;
+  align-items: center;
+  gap: 0.65rem;
+
+  width: 100%;
+  padding: 0.55rem 0.7rem;
+  border-radius: 999px;
+  border: 1px solid transparent;
+
+  background: transparent;
+  color: var(--text-secondary, #cbd5f5);
+  font-family: var(--font-body, 'Inter', system-ui, sans-serif);
+  font-size: 0.85rem;
+  font-weight: 500;
+
+  cursor: pointer;
+  transition:
+    background 0.18s ease-out,
+    border-color 0.18s ease-out,
+    color 0.18s ease-out,
+    transform 0.18s ease-out,
+    box-shadow 0.18s ease-out;
+}
+
+.sidebarNavItem:hover {
+  background: rgba(15, 23, 42, 0.96);
+  border-color: rgba(129, 140, 248, 0.9);
+  color: var(--text-primary, #f9fafb);
+  transform: translateY(-1px);
+  box-shadow:
+    0 8px 20px rgba(15, 23, 42, 0.9),
+    0 0 0 1px rgba(15, 23, 42, 1);
+}
+
+.sidebarNavItemActive {
+  background-image: linear-gradient(
+    to right,
+    var(--accent-primary, #6366f1),
+    var(--accent-hover, #818cf8)
+  );
+  color: #ffffff;
+  border-color: transparent;
+  box-shadow:
+    0 0 0 1px rgba(15, 23, 42, 0.98),
+    0 10px 26px rgba(79, 70, 229, 0.9);
+}
+
+.sidebarNavIcon {
+  width: 18px;
+  height: 18px;
+  flex-shrink: 0;
+  color: currentColor;
+}
+
+.sidebarNavText {
+  flex: 1;
+  text-align: left;
+}
+
+/* ===================== SIDEBAR FOOTER ===================== */
+
+.sidebarFooter {
+  margin-top: auto;
+  padding-top: 0.6rem;
+  border-top: 1px solid rgba(15, 23, 42, 0.9);
+  display: flex;
+  flex-direction: column;
+  gap: 0.6rem;
+}
+
+.sidebarUserRow {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+}
+
+.sidebarAvatar {
+  width: 32px;
+  height: 32px;
+  border-radius: 999px;
+  background: radial-gradient(
+    circle at 30% 0,
+    var(--accent-primary, #6366f1),
+    #0f172a
+  );
+  border: 1px solid rgba(148, 163, 184, 0.9);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
+}
+
+.sidebarAvatarImage {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.sidebarAvatarInitial {
+  font-family: var(--font-display, 'Syne', system-ui, sans-serif);
+  font-size: 0.9rem;
+  font-weight: 600;
+  color: #e5e7eb;
+}
+
+.sidebarUserMeta {
+  display: flex;
+  flex-direction: column;
+}
+
+.sidebarUserName {
+  font-size: 0.8rem;
+  font-weight: 600;
+  color: var(--text-primary, #f9fafb);
+}
+
+.sidebarUserPlan {
+  font-size: 0.72rem;
+  color: var(--text-secondary, #94a3b8);
+}
+
+.sidebarUserSubscription,
+.sidebarUserUsage {
+  font-size: 0.7rem;
+  color: var(--text-tertiary, #64748b);
+}
+
+.sidebarProfileActions {
+  display: flex;
+  gap: 0.4rem;
+}
+
+.sidebarChipButton {
+  flex: 1;
+  padding: 0.35rem 0.55rem;
+  border-radius: 999px;
+  border: 1px solid rgba(148, 163, 184, 0.7);
+  background: rgba(15, 23, 42, 0.98);
+  color: var(--text-secondary, #cbd5f5);
+  font-size: 0.75rem;
+  font-weight: 500;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.3rem;
+}
+
+.sidebarChipButton:hover {
+  border-color: rgba(129, 140, 248, 0.9);
+  color: var(--text-primary, #f9fafb);
+}
+
+.sidebarChipButtonDanger {
+  border-color: rgba(248, 113, 113, 0.8);
+  color: #fecaca;
+}
+
+/* Backdrop for click-off */
+.sidebarBackdrop {
+  position: fixed;
+  inset: 0;
+  z-index: 1090;
+  background:
+    radial-gradient(circle at top left, rgba(15, 23, 42, 0.9), transparent 65%),
+    radial-gradient(circle at bottom right, rgba(0, 0, 0, 0.95), transparent 65%),
+    rgba(0, 0, 0, 0.82);
+  backdrop-filter: blur(18px);
+  border: none;
+}
+
+/* ===================== RESPONSIVE ===================== */
+
+@media (max-width: 768px) {
+  .sidebar {
+    top: var(--header-height-mobile, 56px);
+    width: 240px;
+  }
+
+  .sidebarHandle {
+    top: calc(var(--header-height-mobile, 56px) + 0.75rem);
+  }
+
+  .retracted ~ .sidebarHandle {
+    top: 1.25rem;
   }
 }
