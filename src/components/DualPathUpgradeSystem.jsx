@@ -1,127 +1,156 @@
-// src/components/DualPathUpgradeSystem.jsx - EXACT ORIGINAL with ONLY z-index changes
+// src/components/DualPathUpgradeSystem.jsx - STYLING UPDATED, LOGIC UNCHANGED
 import React, { useState } from 'react';
-import { useUser } from '../contexts/UserContext';
+import { useUser } from './contexts/UserContext';
 
 // Shared payment processor for both paths
-import PaymentProcessor from '../components/PaymentProcessor';
+import PaymentProcessor from './components/PaymentProcessor';
 
-// Educational Character Creaion modal Flow
-const EducationalUpgradeModal = ({ 
-  isOpen, 
-  onClose, 
-  onProceedToPayment 
+// Educational Character Creation modal flow
+const EducationalUpgradeModal = ({
+  isOpen,
+  onClose,
+  onProceedToPayment
 }) => {
-  const [currentStep, setCurrentStep] = useState(1); // 1: Education, 2: Benefits, 3: Ready to Pay
+  const [currentStep, setCurrentStep] = useState(1); // 1: Education, 2: Benefits
 
   if (!isOpen) return null;
 
   const renderEducationStep = () => (
-    <div style={{
-      background: 'linear-gradient(135deg, #0B1426 0%, #1A2B47 25%, #2C1810 50%, #0F1A2E 75%, #0B1426 100%)',
-      border: '2px solid rgba(255, 215, 0, 0.3)',
-      borderRadius: '20px',
-      padding: '2rem',
-      width: '90vw',
-      maxWidth: '800px',
-      maxHeight: '90vh',
-      overflowY: 'auto'
-    }}>
+    <div
+      style={{
+        background:
+          'radial-gradient(circle at top, #111827 0%, #020617 55%, #020617 100%)',
+        border: '1px solid rgba(148, 163, 184, 0.35)',
+        borderRadius: '20px',
+        padding: '2rem',
+        width: '90vw',
+        maxWidth: '800px',
+        maxHeight: '90vh',
+        overflowY: 'auto',
+        boxShadow:
+          '0 24px 60px rgba(15, 23, 42, 0.95), 0 0 40px rgba(99, 102, 241, 0.35)'
+      }}
+    >
       {/* Educational Header */}
       <div style={{ textAlign: 'center', marginBottom: '2rem' }}>
-        <h2 style={{
-          color: '#FFD700',
-          fontSize: '2rem',
-          margin: '0 0 1rem 0',
-          fontFamily: "'Playfair Display', serif"
-        }}>
+        <h2
+          style={{
+            color: '#F5F5DC',
+            fontSize: '1.9rem',
+            margin: '0 0 1rem 0',
+            letterSpacing: '-0.04em'
+          }}
+        >
           Unlock Your Creative Potential
         </h2>
-        <p style={{
-          color: 'rgba(255, 255, 255, 0.8)',
-          fontSize: '1.1rem',
-          maxWidth: '600px',
-          margin: '0 auto',
-          lineHeight: 1.6
-        }}>
-          You've reached your character creation limit. See what premium users are creating 
-          and discover the advanced features that bring characters to life.
+        <p
+          style={{
+            color: '#94A3B8',
+            fontSize: '1rem',
+            maxWidth: '600px',
+            margin: '0 auto',
+            lineHeight: 1.6
+          }}
+        >
+          You&apos;ve reached your character creation limit. See what premium
+          creators are building and discover the advanced tools that bring
+          characters to life.
         </p>
       </div>
 
       {/* Premium Character Showcase */}
-      <div style={{
-        display: 'grid',
-        gridTemplateColumns: 'repeat(auto-fit, minmax(250px, 1fr))',
-        gap: '1.5rem',
-        marginBottom: '2rem'
-      }}>
+      <div
+        style={{
+          display: 'grid',
+          gridTemplateColumns: 'repeat(auto-fit, minmax(250px, 1fr))',
+          gap: '1.5rem',
+          marginBottom: '2rem'
+        }}
+      >
         {[
           {
-            name: "Victorian Detective",
-            description: "Advanced personality with 500+ conversation memories",
-            features: ["Complex backstory", "Evolving personality", "Memory system"]
+            name: 'Victorian Detective',
+            description: 'Advanced personality with 500+ conversation memories',
+            features: ['Complex backstory', 'Evolving personality', 'Memory system']
           },
           {
-            name: "Renaissance Artist", 
-            description: "Multi-layered character with artistic expertise",
-            features: ["Detailed knowledge base", "Creative responses", "Historical accuracy"]
+            name: 'Renaissance Artist',
+            description: 'Multi-layered character with artistic expertise',
+            features: ['Detailed knowledge base', 'Creative responses', 'Historical accuracy']
           },
           {
-            name: "Sci-Fi Explorer",
-            description: "Futuristic character with advanced AI integration",
-            features: ["Technical expertise", "Future scenarios", "Problem-solving"]
+            name: 'Sci-Fi Explorer',
+            description: 'Futuristic character with advanced AI integration',
+            features: ['Technical expertise', 'Future scenarios', 'Problem-solving']
           }
         ].map((character, index) => (
-          <div key={index} style={{
-            background: 'rgba(255, 255, 255, 0.05)',
-            border: '1px solid rgba(255, 215, 0, 0.2)',
-            borderRadius: '12px',
-            padding: '1.5rem',
-            textAlign: 'center'
-          }}>
-            <div style={{
-              width: '60px',
-              height: '60px',
-              background: 'linear-gradient(135deg, #FFD700, #FFA500)',
-              borderRadius: '50%',
-              margin: '0 auto 1rem',
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'center',
-              fontSize: '1.5rem'
-            }}>
+          <div
+            key={index}
+            style={{
+              background: '#141B2E',
+              border: '1px solid rgba(148, 163, 184, 0.35)',
+              borderRadius: '12px',
+              padding: '1.5rem',
+              textAlign: 'center',
+              boxShadow: '0 6px 18px rgba(15, 23, 42, 0.9)'
+            }}
+          >
+            <div
+              style={{
+                width: '60px',
+                height: '60px',
+                background: 'linear-gradient(135deg, #6366F1, #818CF8)',
+                borderRadius: '50%',
+                margin: '0 auto 1rem',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                fontSize: '1.5rem',
+                color: '#F9FAFB',
+                boxShadow: '0 0 18px rgba(99, 102, 241, 0.5)'
+              }}
+            >
               🎭
             </div>
-            <h3 style={{
-              color: '#FFD700',
-              margin: '0 0 0.5rem 0',
-              fontSize: '1.1rem'
-            }}>
+            <h3
+              style={{
+                color: '#F1F5F9',
+                margin: '0 0 0.5rem 0',
+                fontSize: '1.05rem'
+              }}
+            >
               {character.name}
             </h3>
-            <p style={{
-              color: 'rgba(255, 255, 255, 0.8)',
-              fontSize: '0.9rem',
-              margin: '0 0 1rem 0',
-              lineHeight: 1.4
-            }}>
+            <p
+              style={{
+                color: '#94A3B8',
+                fontSize: '0.9rem',
+                margin: '0 0 1rem 0',
+                lineHeight: 1.4
+              }}
+            >
               {character.description}
             </p>
-            <ul style={{
-              listStyle: 'none',
-              padding: 0,
-              margin: 0,
-              fontSize: '0.8rem',
-              color: 'rgba(255, 255, 255, 0.7)'
-            }}>
+            <ul
+              style={{
+                listStyle: 'none',
+                padding: 0,
+                margin: 0,
+                fontSize: '0.8rem',
+                color: '#CBD5F5'
+              }}
+            >
               {character.features.map((feature, i) => (
-                <li key={i} style={{
-                  marginBottom: '0.25rem',
-                  display: 'flex',
-                  alignItems: 'center',
-                  gap: '0.5rem'
-                }}>
-                  <span style={{ color: '#00FF88' }}>✓</span>
+                <li
+                  key={i}
+                  style={{
+                    marginBottom: '0.25rem',
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: '0.5rem'
+                  }}
+                >
+                  <span style={{ color: '#22C55E' }}>✓</span>
                   {feature}
                 </li>
               ))}
@@ -131,258 +160,304 @@ const EducationalUpgradeModal = ({
       </div>
 
       {/* Feature Comparison */}
-      <div style={{
-        background: 'rgba(255, 215, 0, 0.1)',
-        border: '1px solid rgba(255, 215, 0, 0.3)',
-        borderRadius: '12px',
-        padding: '2rem',
-        marginBottom: '2rem'
-      }}>
-        <h3 style={{
-          color: '#FFD700',
-          textAlign: 'center',
-          margin: '0 0 1.5rem 0',
-          fontSize: '1.3rem'
-        }}>
-          What You're Missing
+      <div
+        style={{
+          background: 'rgba(15, 23, 42, 0.95)',
+          border: '1px solid rgba(148, 163, 184, 0.4)',
+          borderRadius: '12px',
+          padding: '2rem',
+          marginBottom: '2rem'
+        }}
+      >
+        <h3
+          style={{
+            color: '#F1F5F9',
+            textAlign: 'center',
+            margin: '0 0 1.5rem 0',
+            fontSize: '1.25rem'
+          }}
+        >
+          What You&apos;re Missing
         </h3>
-        
-        <div style={{
-          display: 'grid',
-          gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))',
-          gap: '1rem'
-        }}>
+
+        <div
+          style={{
+            display: 'grid',
+            gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))',
+            gap: '1rem'
+          }}
+        >
           <div style={{ textAlign: 'center' }}>
-            <div style={{
-              fontSize: '2rem',
-              marginBottom: '0.5rem'
-            }}>🚫</div>
-            <h4 style={{
-              color: '#ff6b6b',
-              margin: '0 0 0.5rem 0'
-            }}>
+            <div style={{ fontSize: '2rem', marginBottom: '0.5rem' }}>🚫</div>
+            <h4
+              style={{
+                color: '#F97373',
+                margin: '0 0 0.5rem 0',
+                fontSize: '0.95rem'
+              }}
+            >
               Free Tier
             </h4>
-            <ul style={{
-              listStyle: 'none',
-              padding: 0,
-              margin: 0,
-              color: 'rgba(255, 255, 255, 0.7)',
-              fontSize: '0.9rem'
-            }}>
-              <li>1 Character Only</li>
-              <li>Basic Personality</li>
-              <li>150 Messages/Month</li>
-              <li>Standard Support</li>
+            <ul
+              style={{
+                listStyle: 'none',
+                padding: 0,
+                margin: 0,
+                color: '#94A3B8',
+                fontSize: '0.9rem'
+              }}
+            >
+              <li>1 character only</li>
+              <li>Basic personality</li>
+              <li>150 messages / month</li>
+              <li>Standard support</li>
             </ul>
           </div>
-          
+
           <div style={{ textAlign: 'center' }}>
-            <div style={{
-              fontSize: '2rem',
-              marginBottom: '0.5rem'
-            }}>🎯</div>
-            <h4 style={{
-              color: '#FFD700',
-              margin: '0 0 0.5rem 0'
-            }}>
-              Premium Access
+            <div style={{ fontSize: '2rem', marginBottom: '0.5rem' }}>🎯</div>
+            <h4
+              style={{
+                color: '#6366F1',
+                margin: '0 0 0.5rem 0',
+                fontSize: '0.95rem'
+              }}
+            >
+              Professional Tier
             </h4>
-            <ul style={{
-              listStyle: 'none',
-              padding: 0,
-              margin: 0,
-              color: 'rgba(255, 255, 255, 0.9)',
-              fontSize: '0.9rem'
-            }}>
-              <li>Up to 15 Characters</li>
-              <li>Advanced AI Features</li>
-              <li>2,000+ Messages/Month</li>
-              <li>Priority Support</li>
-              <li>Memory Systems</li>
-              <li>Custom Personalities</li>
+            <ul
+              style={{
+                listStyle: 'none',
+                padding: 0,
+                margin: 0,
+                color: '#E5E7EB',
+                fontSize: '0.9rem'
+              }}
+            >
+              <li>Up to 15 characters</li>
+              <li>Advanced AI features</li>
+              <li>2,000+ messages / month</li>
+              <li>Priority support</li>
+              <li>Memory systems</li>
+              <li>Custom personalities</li>
             </ul>
           </div>
         </div>
       </div>
 
       {/* Trust Building */}
-      <div style={{
-        textAlign: 'center',
-        marginBottom: '2rem'
-      }}>
-        <div style={{
-          display: 'flex',
-          justifyContent: 'center',
-          gap: '2rem',
-          marginBottom: '1rem',
-          flexWrap: 'wrap'
-        }}>
-          <div style={{
+      <div
+        style={{
+          textAlign: 'center',
+          marginBottom: '2rem'
+        }}
+      >
+        <div
+          style={{
             display: 'flex',
-            alignItems: 'center',
-            gap: '0.5rem',
-            color: 'rgba(255, 255, 255, 0.8)'
-          }}>
-            <span style={{ color: '#00FF88' }}>🔒</span>
-            <span>Secure Payment</span>
+            justifyContent: 'center',
+            gap: '2rem',
+            marginBottom: '1rem',
+            flexWrap: 'wrap'
+          }}
+        >
+          <div
+            style={{
+              display: 'flex',
+              alignItems: 'center',
+              gap: '0.5rem',
+              color: '#E5E7EB'
+            }}
+          >
+            <span style={{ color: '#22C55E' }}>🔒</span>
+            <span>Secure payment</span>
           </div>
-          <div style={{
-            display: 'flex',
-            alignItems: 'center',
-            gap: '0.5rem',
-            color: 'rgba(255, 255, 255, 0.8)'
-          }}>
-            <span style={{ color: '#00FF88' }}>💰</span>
-            <span>Earn with Your Characters</span>
+          <div
+            style={{
+              display: 'flex',
+              alignItems: 'center',
+              gap: '0.5rem',
+              color: '#E5E7EB'
+            }}
+          >
+            <span style={{ color: '#22C55E' }}>💰</span>
+            <span>Earn with your characters</span>
           </div>
-          <div style={{
-            display: 'flex',
-            alignItems: 'center',
-            gap: '0.5rem',
-            color: 'rgba(255, 255, 255, 0.8)'
-          }}>
-            <span style={{ color: '#00FF88' }}>⚡</span>
-            <span>Instant Activation</span>
+          <div
+            style={{
+              display: 'flex',
+              alignItems: 'center',
+              gap: '0.5rem',
+              color: '#E5E7EB'
+            }}
+          >
+            <span style={{ color: '#22C55E' }}>⚡</span>
+            <span>Instant activation</span>
           </div>
         </div>
       </div>
 
       {/* Action Buttons */}
-      <div style={{
-        display: 'flex',
-        gap: '1rem',
-        justifyContent: 'center',
-        flexWrap: 'wrap'
-      }}>
+      <div
+        style={{
+          display: 'flex',
+          gap: '1rem',
+          justifyContent: 'center',
+          flexWrap: 'wrap'
+        }}
+      >
         <button
           onClick={onClose}
           style={{
-            background: 'rgba(255, 255, 255, 0.1)',
-            border: '2px solid rgba(255, 255, 255, 0.3)',
-            borderRadius: '8px',
-            color: 'rgba(255, 255, 255, 0.8)',
-            fontSize: '1rem',
-            fontWeight: 600,
-            padding: '0.75rem 1.5rem',
+            background: 'rgba(15, 23, 42, 0.9)',
+            border: '1px solid rgba(148, 163, 184, 0.6)',
+            borderRadius: '999px',
+            color: '#E5E7EB',
+            fontSize: '0.95rem',
+            fontWeight: 500,
+            padding: '0.75rem 1.7rem',
             cursor: 'pointer'
           }}
         >
-          Maybe Later
+          Maybe later
         </button>
-        
+
         <button
           onClick={() => setCurrentStep(2)}
           style={{
-            background: 'linear-gradient(135deg, #FFD700, #FFA500)',
+            background: 'linear-gradient(135deg, #6366F1, #818CF8)',
             border: 'none',
-            borderRadius: '8px',
-            color: '#000',
-            fontSize: '1rem',
-            fontWeight: 700,
-            padding: '0.75rem 2rem',
-            cursor: 'pointer'
+            borderRadius: '999px',
+            color: '#F9FAFB',
+            fontSize: '0.98rem',
+            fontWeight: 600,
+            padding: '0.8rem 2.2rem',
+            cursor: 'pointer',
+            boxShadow:
+              '0 8px 24px rgba(15, 23, 42, 0.95), 0 0 24px rgba(99, 102, 241, 0.4)'
           }}
         >
-          See Pricing Plans
+          See pricing plans
         </button>
       </div>
     </div>
   );
 
   const renderBenefitsStep = () => (
-    <div style={{
-      background: 'linear-gradient(135deg, #0B1426 0%, #1A2B47 25%, #2C1810 50%, #0F1A2E 75%, #0B1426 100%)',
-      border: '2px solid rgba(255, 215, 0, 0.3)',
-      borderRadius: '20px',
-      padding: '2rem',
-      width: '90vw',
-      maxWidth: '900px',
-      maxHeight: '90vh',
-      overflowY: 'auto'
-    }}>
+    <div
+      style={{
+        background:
+          'radial-gradient(circle at top, #111827 0%, #020617 55%, #020617 100%)',
+        border: '1px solid rgba(148, 163, 184, 0.35)',
+        borderRadius: '20px',
+        padding: '2rem',
+        width: '90vw',
+        maxWidth: '900px',
+        maxHeight: '90vh',
+        overflowY: 'auto',
+        boxShadow:
+          '0 24px 60px rgba(15, 23, 42, 0.95), 0 0 40px rgba(99, 102, 241, 0.35)'
+      }}
+    >
       <div style={{ textAlign: 'center', marginBottom: '2rem' }}>
-        <h2 style={{
-          color: '#FFD700',
-          fontSize: '1.8rem',
-          margin: '0 0 0.5rem 0'
-        }}>
-          Choose Your Creative Journey
+        <h2
+          style={{
+            color: '#F1F5F9',
+            fontSize: '1.7rem',
+            margin: '0 0 0.5rem 0',
+            letterSpacing: '-0.03em'
+          }}
+        >
+          Choose your creative journey
         </h2>
-        <p style={{
-          color: 'rgba(255, 255, 255, 0.8)',
-          margin: 0
-        }}>
-          Select the plan that matches your creative ambitions
+        <p
+          style={{
+            color: '#94A3B8',
+            margin: 0,
+            fontSize: '0.95rem'
+          }}
+        >
+          Select the plan that matches your ambitions. You&apos;ll confirm safely
+          on the payment page.
         </p>
       </div>
 
-      {/* Plan Comparison - same as your UpgradeModal but with more space */}
-      <div style={{
-        display: 'grid',
-        gridTemplateColumns: 'repeat(auto-fit, minmax(250px, 1fr))',
-        gap: '1.5rem',
-        marginBottom: '2rem'
-      }}>
+      {/* Plan Comparison - space reserved for existing UpgradeModal visuals */}
+      <div
+        style={{
+          display: 'grid',
+          gridTemplateColumns: 'repeat(auto-fit, minmax(250px, 1fr))',
+          gap: '1.5rem',
+          marginBottom: '2rem'
+        }}
+      >
         {/* Plan cards would go here - same as UpgradeModal */}
       </div>
 
-      <div style={{
-        display: 'flex',
-        gap: '1rem',
-        justifyContent: 'center'
-      }}>
+      <div
+        style={{
+          display: 'flex',
+          gap: '1rem',
+          justifyContent: 'center',
+          flexWrap: 'wrap'
+        }}
+      >
         <button
           onClick={() => setCurrentStep(1)}
           style={{
-            background: 'rgba(255, 255, 255, 0.1)',
-            border: '2px solid rgba(255, 255, 255, 0.3)',
-            borderRadius: '8px',
-            color: 'rgba(255, 255, 255, 0.8)',
-            fontSize: '1rem',
-            padding: '0.75rem 1.5rem',
+            background: 'rgba(15, 23, 42, 0.9)',
+            border: '1px solid rgba(148, 163, 184, 0.6)',
+            borderRadius: '999px',
+            color: '#E5E7EB',
+            fontSize: '0.95rem',
+            padding: '0.75rem 1.7rem',
             cursor: 'pointer'
           }}
         >
           Back
         </button>
-        
+
         <button
           onClick={() => onProceedToPayment('character_limit')}
           style={{
-            background: 'linear-gradient(135deg, #FFD700, #FFA500)',
+            background: 'linear-gradient(135deg, #6366F1, #818CF8)',
             border: 'none',
-            borderRadius: '8px',
-            color: '#000',
-            fontSize: '1rem',
-            fontWeight: 700,
-            padding: '0.75rem 2rem',
-            cursor: 'pointer'
+            borderRadius: '999px',
+            color: '#F9FAFB',
+            fontSize: '0.98rem',
+            fontWeight: 600,
+            padding: '0.8rem 2.4rem',
+            cursor: 'pointer',
+            boxShadow:
+              '0 8px 24px rgba(15, 23, 42, 0.95), 0 0 24px rgba(99, 102, 241, 0.4)'
           }}
         >
-          Continue to Payment
+          Continue to payment
         </button>
       </div>
     </div>
   );
 
   return (
-    <div style={{
-      position: 'fixed',
-      top: 0,
-      left: 0,
-      width: '100%',
-      height: '100%',
-      background: 'rgba(0, 0, 0, 0.9)',
-      display: 'flex',
-      alignItems: 'center',
-      justifyContent: 'center',
-      // ONLY CHANGE: z-index from 999999 to 999999999999
-      zIndex: 999999999999,
-      overflow: 'auto',
-      WebkitOverflowScrolling: 'touch',
-      padding: '1rem'
-    }}>
+    <div
+      style={{
+        position: 'fixed',
+        top: 0,
+        left: 0,
+        width: '100%',
+        height: '100%',
+        background:
+          'radial-gradient(circle at top, rgba(15, 23, 42, 0.96), rgba(0, 0, 0, 0.96))',
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'center',
+        // z-index kept extremely high so it sits above other modals
+        zIndex: 999999999999,
+        overflow: 'auto',
+        WebkitOverflowScrolling: 'touch',
+        padding: '1rem'
+      }}
+    >
       {currentStep === 1 ? renderEducationStep() : renderBenefitsStep()}
     </div>
   );
