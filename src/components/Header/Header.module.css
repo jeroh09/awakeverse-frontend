@@ -1,5 +1,5 @@
-/* Header.module.css – AwakeVerse Header with Slide-in Mobile Nav
-   - Desktop: logo + inline icon+label nav
+/* Header.module.css – AwakeVerse Header with Slide-in Mobile Nav + Retract
+   - Desktop: logo + inline icon+label nav, avatar, retract control
    - Mobile: logo + hamburger, left slide-in menu
 */
 
@@ -27,17 +27,24 @@
 
   background: linear-gradient(
     135deg,
-    rgba(20, 27, 46, 0.96) 0%,
-    rgba(10, 15, 26, 0.94) 45%,
-    rgba(28, 38, 64, 0.96) 100%
+    rgba(15, 23, 42, 0.98) 0%,
+    rgba(12, 18, 35, 0.98) 40%,
+    rgba(17, 24, 39, 0.98) 100%
   );
-  border-bottom: 1px solid rgba(99, 102, 241, 0.3);
+  border-bottom: 1px solid rgba(99, 102, 241, 0.35);
   box-shadow:
     0 20px 40px rgba(15, 23, 42, 0.9),
-    0 0 0 1px rgba(15, 23, 42, 0.9);
+    0 0 0 1px rgba(15, 23, 42, 1);
 
   font-family: var(--font-body, 'Inter', system-ui, sans-serif);
   color: var(--text-primary, #e5e7eb);
+  transition: transform 0.25s ease-out, opacity 0.25s ease-out;
+}
+
+/* Retracted: slide header mostly off screen */
+.retracted {
+  transform: translateY(-80%);
+  opacity: 0.92;
 }
 
 /* ===================== LEFT SIDE (LOGO + DESKTOP NAV) ===================== */
@@ -50,15 +57,14 @@
   min-width: 0;
 }
 
-/* Brand row: AwakeVerse + mobile burger */
-
+/* Brand row: AwakeVerse + (mobile) burger */
 .brandRow {
   display: flex;
   align-items: center;
   gap: 0.75rem;
 }
 
-/* Brand title */
+/* Logo */
 .title {
   margin: 0;
   font-family: var(--font-display, 'Syne', system-ui, sans-serif);
@@ -80,19 +86,18 @@
   border-radius: 999px;
   background: radial-gradient(
       circle at 0 0,
-      rgba(129, 140, 248, 0.18),
+      rgba(129, 140, 248, 0.2),
       transparent 60%
     ),
-    rgba(15, 23, 42, 0.92);
-  border: 1px solid rgba(148, 163, 184, 0.5);
+    rgba(15, 23, 42, 0.96);
+  border: 1px solid rgba(148, 163, 184, 0.55);
   box-shadow:
     0 8px 24px rgba(15, 23, 42, 0.9),
-    0 0 0 1px rgba(15, 23, 42, 0.9);
+    0 0 0 1px rgba(15, 23, 42, 1);
 
   max-width: 100%;
 }
 
-/* Nav pill */
 .navTab {
   position: relative;
   display: inline-flex;
@@ -119,13 +124,12 @@
 }
 
 .navTab:hover {
-  background: rgba(15, 23, 42, 0.96);
-  border-color: rgba(129, 140, 248, 0.8);
+  background: rgba(15, 23, 42, 0.98);
+  border-color: rgba(129, 140, 248, 0.9);
   color: var(--text-primary, #f9fafb);
   transform: translateY(-1px);
 }
 
-/* Active nav pill */
 .active {
   background-image: linear-gradient(
     to right,
@@ -136,10 +140,9 @@
   border-color: transparent;
   box-shadow:
     0 0 0 1px rgba(15, 23, 42, 0.95),
-    0 8px 22px rgba(79, 70, 229, 0.7);
+    0 8px 22px rgba(79, 70, 229, 0.8);
 }
 
-/* Icon + label inside nav pill */
 .navIcon {
   width: 16px;
   height: 16px;
@@ -151,7 +154,7 @@
   white-space: nowrap;
 }
 
-/* ===================== RIGHT SIDE (USER SECTION) ===================== */
+/* ===================== RIGHT SIDE (USER / AVATAR) ===================== */
 
 .userSection {
   display: inline-flex;
@@ -161,26 +164,116 @@
   padding: 0.25rem 0.6rem;
   border-radius: 999px;
   background: rgba(15, 23, 42, 0.96);
-  border: 1px solid rgba(148, 163, 184, 0.6);
+  border: 1px solid rgba(148, 163, 184, 0.65);
   box-shadow:
     0 6px 18px rgba(15, 23, 42, 0.9),
     0 0 0 1px rgba(15, 23, 42, 1);
 }
 
-/* ===================== MOBILE MENU TOGGLE ===================== */
+.avatarShell {
+  width: 30px;
+  height: 30px;
+  border-radius: 999px;
+  overflow: hidden;
+  position: relative;
+  box-shadow:
+    0 0 0 1px rgba(15, 23, 42, 1),
+    0 0 0 2px rgba(148, 163, 184, 0.8),
+    0 6px 12px rgba(15, 23, 42, 0.95);
+}
+
+.avatarImage {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+}
+
+.avatarFallback {
+  width: 100%;
+  height: 100%;
+  border-radius: 999px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 0.8rem;
+  font-weight: 600;
+  font-family: var(--font-display, 'Syne', system-ui, sans-serif);
+  background: radial-gradient(circle at 30% 0, #4f46e5, #0f172a);
+  color: #e5e7eb;
+}
+
+/* Button to retract header on desktop */
+.retractButton {
+  border: none;
+  background: transparent;
+  color: rgba(148, 163, 184, 0.9);
+  cursor: pointer;
+  font-size: 0.9rem;
+  padding: 0 0.1rem 0 0.25rem;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  transition: color 0.18s ease-out, transform 0.18s ease-out;
+}
+
+.retractButton:hover {
+  color: #e5e7eb;
+  transform: translateY(-1px);
+}
+
+/* ===================== SHOW BUTTON (WHEN RETRACTED) ===================== */
+
+.showButton {
+  position: fixed;
+  top: 4px;
+  right: 10px;
+  z-index: 1101;
+
+  width: 30px;
+  height: 30px;
+  border-radius: 999px;
+  border: 1px solid rgba(148, 163, 184, 0.7);
+  background: rgba(15, 23, 42, 0.98);
+  color: var(--text-secondary, #cbd5f5);
+
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+
+  font-size: 1.1rem;
+  cursor: pointer;
+  box-shadow:
+    0 6px 18px rgba(15, 23, 42, 0.95),
+    0 0 0 1px rgba(15, 23, 42, 1);
+  transition:
+    background 0.18s ease-out,
+    border-color 0.18s ease-out,
+    color 0.18s ease-out,
+    transform 0.18s ease-out;
+}
+
+.showButton:hover {
+  background: rgba(15, 23, 42, 1);
+  border-color: var(--accent-primary, #6366f1);
+  color: var(--text-primary, #f9fafb);
+  transform: translateY(1px);
+}
+
+/* ===================== MOBILE MENU TOGGLE (HAMBURGER) ===================== */
 
 .menuToggle {
-  display: none;
   width: 32px;
   height: 32px;
   border-radius: 999px;
   border: 1px solid rgba(148, 163, 184, 0.7);
-  background: rgba(15, 23, 42, 0.96);
+  background: rgba(15, 23, 42, 0.98);
   cursor: pointer;
 
-  display: none;
+  display: none; /* shown in mobile breakpoint */
   align-items: center;
   justify-content: center;
+  flex-shrink: 0;
   gap: 3px;
 
   box-shadow:
@@ -208,12 +301,11 @@
   background:
     radial-gradient(circle at top left, rgba(15, 23, 42, 0.9), transparent 65%),
     radial-gradient(circle at bottom right, rgba(0, 0, 0, 0.95), transparent 65%),
-    rgba(0, 0, 0, 0.8);
+    rgba(0, 0, 0, 0.82);
 
-  backdrop-filter: blur(16px);
+  backdrop-filter: blur(18px);
 }
 
-/* Slide-in panel */
 .mobileNav {
   position: absolute;
   top: 0;
@@ -226,12 +318,12 @@
   padding: 0.9rem 0.9rem 1.2rem;
 
   background:
-    radial-gradient(circle at 0 0, rgba(129, 140, 248, 0.2), transparent 55%),
-    radial-gradient(circle at 100% 100%, rgba(56, 189, 248, 0.16), transparent 55%),
+    radial-gradient(circle at 0 0, rgba(129, 140, 248, 0.25), transparent 55%),
+    radial-gradient(circle at 100% 100%, rgba(56, 189, 248, 0.2), transparent 55%),
     var(--bg-surface, #020617);
-  border-right: 1px solid rgba(148, 163, 184, 0.7);
+  border-right: 1px solid rgba(148, 163, 184, 0.8);
   box-shadow:
-    8px 0 24px rgba(0, 0, 0, 0.85),
+    8px 0 24px rgba(0, 0, 0, 0.9),
     0 0 0 1px rgba(15, 23, 42, 1);
 
   animation: slideIn 0.2s ease-out forwards;
@@ -245,8 +337,6 @@
     transform: translateX(0);
   }
 }
-
-/* Mobile nav header area */
 
 .mobileNavHeader {
   display: flex;
@@ -268,7 +358,7 @@
   height: 28px;
   border-radius: 999px;
   border: 1px solid rgba(148, 163, 184, 0.7);
-  background: rgba(15, 23, 42, 0.96);
+  background: rgba(15, 23, 42, 0.98);
   color: var(--text-secondary, #cbd5f5);
   display: inline-flex;
   align-items: center;
@@ -282,7 +372,7 @@
   margin-top: 0.4rem;
   display: flex;
   flex-direction: column;
-  gap: 0.3rem;
+  gap: 0.35rem;
 }
 
 .mobileNavItem {
@@ -290,13 +380,13 @@
   align-items: center;
   gap: 0.55rem;
 
-  padding: 0.55rem 0.6rem;
+  padding: 0.6rem 0.6rem;
   border-radius: 999px;
   border: 1px solid rgba(148, 163, 184, 0.45);
-  background: rgba(15, 23, 42, 0.96);
+  background: rgba(15, 23, 42, 0.98);
 
   font-family: var(--font-body, 'Inter', system-ui, sans-serif);
-  font-size: 0.82rem;
+  font-size: 0.84rem;
   color: var(--text-secondary, #cbd5f5);
 
   cursor: pointer;
@@ -310,7 +400,7 @@
 
 .mobileNavItem:hover {
   background: rgba(15, 23, 42, 1);
-  border-color: rgba(129, 140, 248, 0.8);
+  border-color: rgba(129, 140, 248, 0.85);
   color: var(--text-primary, #f9fafb);
   transform: translateY(-1px);
 }
@@ -336,7 +426,7 @@
   border-color: transparent;
   box-shadow:
     0 0 0 1px rgba(15, 23, 42, 0.95),
-    0 8px 22px rgba(79, 70, 229, 0.7);
+    0 8px 22px rgba(79, 70, 229, 0.75);
 }
 
 /* ===================== RESPONSIVE ===================== */
@@ -367,7 +457,7 @@
   .leftSection {
     flex-direction: row;
     align-items: center;
-    justify-content: flex-start;
+    justify-content: space-between;
     gap: 0.75rem;
   }
 
@@ -381,6 +471,11 @@
 
   .userSection {
     padding: 0.2rem 0.5rem;
+  }
+
+  .showButton {
+    top: 2px;
+    right: 6px;
   }
 }
 

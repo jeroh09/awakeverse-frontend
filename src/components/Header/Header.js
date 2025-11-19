@@ -1,4 +1,4 @@
-// src/components/Header/Header.js - AwakeVerse header with slide-in mobile nav
+// src/components/Header/Header.js - AwakeVerse premium header with slide-in mobile nav
 import { useState } from 'react';
 import styles from './Header.module.css';
 import { useUser } from '../../contexts/UserContext';
@@ -6,7 +6,7 @@ import { useAuth } from '../../contexts/AuthContext';
 import { useAppView } from '../../contexts/AppViewContext';
 import ProfileButton from '../ProfileButton';
 
-/* === AwakeVerse Nav Icons (inline SVG, indigo glow via filter) === */
+// === AwakeVerse Nav Icons (inline SVG, indigo glow via filter) ===
 
 const ChatIcon = ({ className }) => (
   <svg
@@ -183,7 +183,6 @@ const CreateIcon = ({ className }) => (
         />
       </filter>
     </defs>
-
     <rect
       x="5"
       y="4"
@@ -194,7 +193,6 @@ const CreateIcon = ({ className }) => (
       strokeWidth="2"
       filter="url(#createGlow)"
     />
-
     <path
       d="M9 9h2 M12 12h3 M9 15h5"
       stroke="currentColor"
@@ -208,9 +206,10 @@ const CreateIcon = ({ className }) => (
 export default function Header() {
   const { user } = useUser();
   const { isAuthenticated } = useAuth();
+  const [isRetracted, setIsRetracted] = useState(false);
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
+  const API_BASE = process.env.REACT_APP_API_URL || 'https://api.awakeverse.com';
 
-  // Get view context safely
   let viewContext = null;
   try {
     viewContext = useAppView();
@@ -259,6 +258,7 @@ export default function Header() {
     if (!viewContext) return;
     viewContext.switchView(viewState);
     setIsMobileMenuOpen(false);
+    setIsRetracted(false);
   };
 
   const toggleMobileMenu = () => {
@@ -270,11 +270,37 @@ export default function Header() {
     setIsMobileMenuOpen(false);
   };
 
+  const handleRetractHeader = () => {
+    setIsRetracted(true);
+  };
+
+  const handleShowHeader = () => {
+    setIsRetracted(false);
+  };
+
+  const avatarUrlRaw = user?.avatarUrl || user?.avatar_url;
+  const avatarUrl =
+    avatarUrlRaw && typeof avatarUrlRaw === 'string'
+      ? avatarUrlRaw.startsWith('http')
+        ? avatarUrlRaw
+        : `${API_BASE}${avatarUrlRaw}`
+      : null;
+
+  const userInitial =
+    user?.displayName?.charAt(0) ||
+    user?.name?.charAt(0) ||
+    user?.email?.charAt(0) ||
+    'A';
+
+  const headerClassName = isRetracted
+    ? `${styles.header} ${styles.retracted}`
+    : styles.header;
+
   return (
     <>
-      <header className={styles.header}>
+      <header className={headerClassName}>
         <div className={styles.leftSection}>
-          {/* Brand row: logo + mobile menu toggle */}
+          {/* Logo row: AwakeVerse + (mobile) hamburger */}
           <div className={styles.brandRow}>
             <h1 className={styles.title}>AwakeVerse</h1>
 
@@ -291,7 +317,7 @@ export default function Header() {
             )}
           </div>
 
-          {/* Desktop navigation (icons + labels) */}
+          {/* Desktop nav: icons + labels */}
           {showNavigation && (
             <nav className={styles.navigationDesktop} aria-label="Primary">
               {navItems.map(({ key, label, icon: Icon, viewState }) => (
@@ -310,11 +336,51 @@ export default function Header() {
           )}
         </div>
 
-        {/* Right side: profile / user menu */}
+        {/* Right side: avatar + profile + retract control */}
         <div className={styles.userSection}>
-          {isAuthenticated && <ProfileButton user={user} />}
+          {isAuthenticated && (
+            <>
+              <div className={styles.avatarShell}>
+                {avatarUrl ? (
+                  <img
+                    src={avatarUrl}
+                    alt="User avatar"
+                    className={styles.avatarImage}
+                    onError={(e) => {
+                      e.target.style.display = 'none';
+                    }}
+                  />
+                ) : (
+                  <div className={styles.avatarFallback}>
+                    {userInitial.toUpperCase()}
+                  </div>
+                )}
+              </div>
+              <ProfileButton user={user} />
+              <button
+                className={styles.retractButton}
+                onClick={handleRetractHeader}
+                aria-label="Hide header"
+                title="Hide header"
+              >
+                ⌃
+              </button>
+            </>
+          )}
         </div>
       </header>
+
+      {/* Show button when header is retracted (desktop) */}
+      {isRetracted && (
+        <button
+          className={styles.showButton}
+          onClick={handleShowHeader}
+          aria-label="Show header"
+          title="Show header"
+        >
+          ⋯
+        </button>
+      )}
 
       {/* Mobile slide-in nav */}
       {showNavigation && isMobileMenuOpen && (
