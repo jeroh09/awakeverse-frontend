@@ -1,15 +1,12 @@
-// src/components/Header/Header.js - AwakeVerse premium header with left slide-in sidebar
-import { useState, useEffect } from 'react';
+// src/components/Header/Header.js
+import React, { useState, useEffect } from 'react';
 import styles from './Header.module.css';
 import { useUser } from '../../contexts/UserContext';
 import { useAuth } from '../../contexts/AuthContext';
 import { useAppView } from '../../contexts/AppViewContext';
 import ProfileButton from '../ProfileButton';
-import usePremiumCapabilities from '../../hooks/usePremiumCapabilities';
 
-// === SVG ICONS ABOVE THIS LINE STAY AS-IS ===
-
-// === AwakeVerse Nav Icons (inline SVG, indigo glow via filter) ===
+// === INLINE SVG ICONS (your custom AwakeVerse icons) ===
 
 const ChatIcon = ({ className }) => (
   <svg
@@ -102,27 +99,11 @@ const StoriesIcon = ({ className }) => (
         />
       </filter>
     </defs>
-    {/* parchment */}
     <path
-      d="M6 4h9a2 2 0 0 1 2 2v12H8a2 2 0 0 1-2-2V4z"
-      stroke="currentColor"
-      strokeWidth="2"
-      strokeLinejoin="round"
-      filter="url(#storiesGlow)"
-    />
-    {/* lines */}
-    <path
-      d="M10 10h4M10 13h3"
+      d="M7 5h8.5A2.5 2.5 0 0 1 18 7.5V18l-3.5-2L11 18l-4-2.5V7.5A2.5 2.5 0 0 1 9.5 5H11"
       stroke="currentColor"
       strokeWidth="2"
       strokeLinecap="round"
-      filter="url(#storiesGlow)"
-    />
-    {/* quill */}
-    <path
-      d="M16 4c1.5 1 3 3.8 3 6.5S16 16 13 17.5c0 0 0.5-2.5 2-5s1.4-4.5 1-6.5z"
-      stroke="currentColor"
-      strokeWidth="2"
       strokeLinejoin="round"
       filter="url(#storiesGlow)"
     />
@@ -206,44 +187,35 @@ const CreateIcon = ({ className }) => (
   </svg>
 );
 
-
-// Main Header component
 export default function Header() {
-  const { user } = useUser();
+  const { user, getSubscriptionInfo } = useUser();
   const { isAuthenticated } = useAuth();
-  const [isRetracted, setIsRetracted] = useState(false);
-  const [isSidebarOpen, setIsSidebarOpen] = useState(false);
+  const API_BASE = process.env.REACT_APP_API_URL || 'https://api.awakeverse.com';
 
-  const API_BASE =
-    process.env.REACT_APP_API_URL || 'https://api.awakeverse.com';
-
-  // View context (Chat / Discover / etc.)
   let viewContext = null;
   try {
     viewContext = useAppView();
   } catch (e) {
-    console.error(
-      'Header: useAppView must be used within AppViewProvider',
-      e,
-    );
+    console.error('Header: useAppView must be used within AppViewProvider', e);
   }
 
-  const showNavigation = isAuthenticated && viewContext;
+  const [isRetracted, setIsRetracted] = useState(false);
+  const [isSidebarOpen, setIsSidebarOpen] = useState(false);
 
-  // Premium capabilities (subscription + character usage)
-  const capabilities = usePremiumCapabilities();
-  const {
-    subscription_state,
-    is_premium,
-    is_trial,
-    days_remaining,
-    character_count,
-    character_limit,
-  } = capabilities || {};
+  const showNavigation = isAuthenticated && !!viewContext;
 
-  // Build nav items once we know view states
-  const navItems = showNavigation
-    ? [
+  // --- Auto-retract header after 6 seconds ---
+  useEffect(() => {
+    if (isRetracted) return;
+    const timer = setTimeout(() => setIsRetracted(true), 6000);
+    return () => clearTimeout(timer);
+  }, [isRetracted]);
+
+  // --- Build nav items & groups ---
+
+  const navItems = !showNavigation
+    ? []
+    : [
         {
           key: 'chat',
           label: 'Chat',
@@ -257,6 +229,12 @@ export default function Header() {
           viewState: viewContext.VIEW_STATES.MARKET_HUB,
         },
         {
+          key: 'stories',
+          label: 'Story',
+          icon: StoriesIcon,
+          viewState: viewContext.VIEW_STATES.STORY_MODE,
+        },
+        {
           key: 'create',
           label: 'Create',
           icon: CreateIcon,
@@ -268,68 +246,43 @@ export default function Header() {
           icon: ScenariosIcon,
           viewState: viewContext.VIEW_STATES.SCENARIOS,
         },
-        {
-          key: 'stories',
-          label: 'Stories',
-          icon: StoriesIcon,
-          viewState: viewContext.VIEW_STATES.STORY_MODE,
-        },
-      ]
-    : [];
+      ];
 
-  // Sections:
-  // Primary = Chat + Discover
-  const primaryNavItems = navItems.filter(
-    (item) => item.key === 'chat' || item.key === 'discover',
-  );
-  // Story World = Story (we’ll plug "My Characters" / "My Stories" inside that view later)
-  const storyWorldNavItems = navItems.filter(
-    (item) => item.key === 'stories',
-  );
-  // Productivity = Create + Scenarios
-  const productivityNavItems = navItems.filter(
-    (item) => item.key === 'create' || item.key === 'scenarios',
-  );
+  const itemsByKey = Object.fromEntries(navItems.map((item) => [item.key, item]));
+
+  const navGroups = [
+    {
+      key: 'primary',
+      label: 'Primary',
+      items: ['chat', 'discover'],
+    },
+    {
+      key: 'storyWorld',
+      label: 'Story world',
+      items: ['stories'],
+    },
+    {
+      key: 'productivity',
+      label: 'Productivity',
+      items: ['create', 'scenarios'],
+    },
+  ];
 
   const handleNavClick = (viewState) => {
     if (!viewContext) return;
     viewContext.switchView(viewState);
     setIsSidebarOpen(false);
-    // If user is navigating, we can safely hide the brand bar again later via timer
   };
 
-  const handleSidebarToggle = () => {
+  const toggleSidebar = () => {
     if (!showNavigation) return;
     setIsSidebarOpen((open) => !open);
-    // If header was fully retracted, bring it back when user opens the menu
-    setIsRetracted(false);
   };
 
-  const closeSidebar = () => {
-    setIsSidebarOpen(false);
-  };
+  const closeSidebar = () => setIsSidebarOpen(false);
 
-  const handleRetractHeader = () => {
-    setIsRetracted(true);
-  };
+  // --- Avatar + user meta ---
 
-  const handleShowHeader = () => {
-    setIsRetracted(false);
-  };
-
-  // Auto-retract the top header after 6 seconds (once user is authenticated)
-  useEffect(() => {
-    if (!isAuthenticated) return;
-    if (isRetracted) return;
-
-    const timer = setTimeout(() => {
-      setIsRetracted(true);
-    }, 6000);
-
-    return () => clearTimeout(timer);
-  }, [isAuthenticated, isRetracted]);
-
-  // Avatar / initials
   const avatarUrlRaw = user?.avatarUrl || user?.avatar_url;
   const avatarUrl =
     avatarUrlRaw && typeof avatarUrlRaw === 'string'
@@ -339,36 +292,15 @@ export default function Header() {
       : null;
 
   const userInitial =
+    user?.display_name?.charAt(0) ||
     user?.displayName?.charAt(0) ||
     user?.name?.charAt(0) ||
     user?.email?.charAt(0) ||
     'A';
 
-  // Subscription text in sidebar footer
-  let planLabel = 'Free Tier';
-  if (is_premium) planLabel = 'Premium';
-  else if (is_trial) planLabel = 'Trial';
-
-  let subscriptionLine = '';
-  if (typeof days_remaining === 'number') {
-    if (is_trial) {
-      subscriptionLine = `Trial: ${days_remaining} day${
-        days_remaining === 1 ? '' : 's'
-      } left`;
-    } else if (is_premium) {
-      subscriptionLine = `Renews in ${days_remaining} day${
-        days_remaining === 1 ? '' : 's'
-      }`;
-    }
-  } else if (subscription_state === 'trial_expired') {
-    subscriptionLine = 'Trial ended • Upgrade to keep benefits';
-  }
-
-  const usageLine =
-    typeof character_count === 'number' &&
-    typeof character_limit === 'number'
-      ? `${character_count} / ${character_limit} characters used`
-      : null;
+  const subscriptionInfo = getSubscriptionInfo ? getSubscriptionInfo() : null;
+  const subscriptionLabel = subscriptionInfo?.display_name || 'Free';
+  const subscriptionActive = subscriptionInfo?.is_active || false;
 
   const headerClassName = isRetracted
     ? `${styles.header} ${styles.retracted}`
@@ -376,15 +308,12 @@ export default function Header() {
 
   return (
     <>
-      {/* Top brand bar – AwakeVerse only */}
+      {/* Top brand bar (AwakeVerse only) */}
       <header className={headerClassName}>
-        <div className={styles.leftSection}>
-          <div className={styles.brandRow}>
-            <h1 className={styles.title}>AwakeVerse</h1>
-          </div>
+        <div className={styles.brandShell}>
+          <h1 className={styles.title}>AwakeVerse</h1>
         </div>
 
-        {/* Right side: avatar + profile + retract control */}
         <div className={styles.userSection}>
           {isAuthenticated && (
             <>
@@ -395,7 +324,6 @@ export default function Header() {
                     alt="User avatar"
                     className={styles.avatarImage}
                     onError={(e) => {
-                      // Hide broken avatars and fall back to initials
                       e.target.style.display = 'none';
                     }}
                   />
@@ -405,216 +333,123 @@ export default function Header() {
                   </div>
                 )}
               </div>
-
-              <ProfileButton />
-
-              <button
-                type="button"
-                className={styles.retractButton}
-                onClick={handleRetractHeader}
-                aria-label="Hide header"
-                title="Hide header"
-              >
-                ⌃
-              </button>
+              <ProfileButton user={user} />
             </>
           )}
         </div>
       </header>
 
-      {/* Left sidebar handle + slide-in navigation (desktop + mobile) */}
-      {showNavigation && (
-        <>
-          {/* Fixed hamburger handle on the left edge */}
-          <button
-            type="button"
-            className={`${styles.sidebarHandle} ${
-              isSidebarOpen ? styles.sidebarHandleOpen : ''
-            }`}
-            onClick={handleSidebarToggle}
-            aria-label={isSidebarOpen ? 'Close navigation' : 'Open navigation'}
-          >
-            <span className={styles.handleIcon} aria-hidden="true">
-              <span className={styles.handleBar} />
-              <span className={styles.handleBar} />
-              <span className={styles.handleBar} />
-            </span>
-          </button>
+      {/* Show-header pill when retracted */}
+      {isRetracted && (
+        <button
+          className={styles.showButton}
+          onClick={() => setIsRetracted(false)}
+          aria-label="Show header"
+          title="Show header"
+        >
+          AwakeVerse
+        </button>
+      )}
 
-          {/* Left slide-in sidebar */}
+      {/* Sidebar handle – single hamburger used everywhere */}
+      {showNavigation && (
+        <button
+          className={styles.sidebarHandle}
+          onClick={toggleSidebar}
+          aria-label={isSidebarOpen ? 'Close menu' : 'Open menu'}
+          title="Menu"
+        >
+          <span className={styles.menuBar} />
+          <span className={styles.menuBar} />
+          <span className={styles.menuBar} />
+        </button>
+      )}
+
+      {/* Left slide-in sidebar (desktop + mobile) */}
+      {showNavigation && (
+        <div
+          className={`${styles.sidebarOverlay} ${
+            isSidebarOpen ? styles.sidebarOverlayOpen : ''
+          }`}
+          onClick={closeSidebar}
+        >
           <aside
             className={`${styles.sidebar} ${
               isSidebarOpen ? styles.sidebarOpen : ''
             }`}
-            aria-label="AwakeVerse navigation"
+            onClick={(e) => e.stopPropagation()}
+            aria-label="Main navigation"
           >
-            <div className={styles.sidebarInner}>
-              {/* PRIMARY – Chat + Discover */}
-              {primaryNavItems.length > 0 && (
-                <section className={styles.sidebarSection}>
-                  <div className={styles.sidebarLabel}>Primary</div>
-                  <div className={styles.sidebarNavGroup}>
-                    {primaryNavItems.map(
-                      ({ key, label, icon: Icon, viewState }) => (
-                        <button
-                          key={key}
-                          type="button"
-                          className={`${styles.sidebarNavItem} ${
-                            viewContext.currentView === viewState
-                              ? styles.sidebarNavItemActive
-                              : ''
-                          }`}
-                          onClick={() => handleNavClick(viewState)}
-                        >
-                          <Icon className={styles.sidebarNavIcon} />
-                          <span className={styles.sidebarNavText}>{label}</span>
-                        </button>
-                      ),
-                    )}
-                  </div>
-                </section>
-              )}
-
-              {/* STORY WORLD – Story */}
-              {storyWorldNavItems.length > 0 && (
-                <section className={styles.sidebarSection}>
-                  <div className={styles.sidebarLabel}>Story World</div>
-                  <div className={styles.sidebarNavGroup}>
-                    {storyWorldNavItems.map(
-                      ({ key, label, icon: Icon, viewState }) => (
-                        <button
-                          key={key}
-                          type="button"
-                          className={`${styles.sidebarNavItem} ${
-                            viewContext.currentView === viewState
-                              ? styles.sidebarNavItemActive
-                              : ''
-                          }`}
-                          onClick={() => handleNavClick(viewState)}
-                        >
-                          <Icon className={styles.sidebarNavIcon} />
-                          <span className={styles.sidebarNavText}>{label}</span>
-                        </button>
-                      ),
-                    )}
-                  </div>
-                </section>
-              )}
-
-              {/* PRODUCTIVITY – Create + Scenarios */}
-              {productivityNavItems.length > 0 && (
-                <section className={styles.sidebarSection}>
-                  <div className={styles.sidebarLabel}>Productivity</div>
-                  <div className={styles.sidebarNavGroup}>
-                    {productivityNavItems.map(
-                      ({ key, label, icon: Icon, viewState }) => (
-                        <button
-                          key={key}
-                          type="button"
-                          className={`${styles.sidebarNavItem} ${
-                            viewContext.currentView === viewState
-                              ? styles.sidebarNavItemActive
-                              : ''
-                          }`}
-                          onClick={() => handleNavClick(viewState)}
-                        >
-                          <Icon className={styles.sidebarNavIcon} />
-                          <span className={styles.sidebarNavText}>{label}</span>
-                        </button>
-                      ),
-                    )}
-                  </div>
-                </section>
-              )}
-
-              {/* Sidebar footer – user + subscription plan */}
-              <footer className={styles.sidebarFooter}>
-                <div className={styles.sidebarUserRow}>
-                  <div className={styles.sidebarAvatar}>
-                    {avatarUrl ? (
-                      <img
-                        src={avatarUrl}
-                        alt="User avatar"
-                        className={styles.sidebarAvatarImage}
-                        onError={(e) => {
-                          e.target.style.display = 'none';
-                        }}
-                      />
-                    ) : (
-                      <span className={styles.sidebarAvatarInitial}>
-                        {userInitial.toUpperCase()}
-                      </span>
-                    )}
-                  </div>
-
-                  <div className={styles.sidebarUserMeta}>
-                    <span className={styles.sidebarUserName}>
-                      {user?.displayName || user?.name || 'Creator'}
-                    </span>
-                    <span className={styles.sidebarUserPlan}>
-                      {planLabel}
-                    </span>
-                    {subscriptionLine && (
-                      <span className={styles.sidebarUserSubscription}>
-                        {subscriptionLine}
-                      </span>
-                    )}
-                    {usageLine && (
-                      <span className={styles.sidebarUserUsage}>
-                        {usageLine}
-                      </span>
-                    )}
-                  </div>
-                </div>
-
-                <div className={styles.sidebarProfileActions}>
-                  <button
-                    type="button"
-                    className={styles.sidebarChipButton}
-                    onClick={() => {
-                      // You can hook this to a profile view later
-                      closeSidebar();
-                    }}
-                  >
-                    Profile
-                  </button>
-                  <button
-                    type="button"
-                    className={`${styles.sidebarChipButton} ${styles.sidebarChipButtonDanger}`}
-                    onClick={() => {
-                      // Let ProfileButton handle actual logout; this just closes the sidebar
-                      closeSidebar();
-                    }}
-                  >
-                    Log out
-                  </button>
-                </div>
-              </footer>
+            {/* Sidebar header */}
+            <div className={styles.sidebarHeader}>
+              <div className={styles.sidebarTitleBlock}>
+                <span className={styles.sidebarTitle}>AwakeVerse</span>
+                <span className={styles.sidebarSubtitle}>
+                  Which guide calls to you?
+                </span>
+              </div>
             </div>
+
+            {/* Nav groups */}
+            <nav className={styles.sidebarNav}>
+              {navGroups.map((group) => {
+                const groupItems = group.items
+                  .map((key) => itemsByKey[key])
+                  .filter(Boolean);
+
+                if (groupItems.length === 0) return null;
+
+                return (
+                  <div className={styles.sidebarSection} key={group.key}>
+                    <div className={styles.sidebarSectionLabel}>
+                      {group.label}
+                    </div>
+                    <div className={styles.sidebarSectionItems}>
+                      {groupItems.map(({ key, label, icon: Icon, viewState }) => (
+                        <button
+                          key={key}
+                          className={`${styles.sidebarNavItem} ${
+                            viewContext.currentView === viewState
+                              ? styles.sidebarNavItemActive
+                              : ''
+                          }`}
+                          onClick={() => handleNavClick(viewState)}
+                        >
+                          <Icon className={styles.sidebarNavIcon} />
+                          <span className={styles.sidebarNavLabel}>{label}</span>
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+                );
+              })}
+            </nav>
+
+            {/* Sidebar footer – user + subscription */}
+            {isAuthenticated && (
+              <div className={styles.sidebarFooter}>
+                <div className={styles.userMeta}>
+                  <div className={styles.userName}>
+                    {user?.display_name ||
+                      user?.displayName ||
+                      user?.name ||
+                      'AwakeVerse explorer'}
+                  </div>
+                  {user?.username && (
+                    <div className={styles.userEmail}>{user.username}</div>
+                  )}
+                </div>
+                <div
+                  className={`${styles.subscriptionBadge} ${
+                    subscriptionActive ? styles.subscriptionActive : ''
+                  }`}
+                >
+                  {subscriptionLabel}
+                </div>
+              </div>
+            )}
           </aside>
-
-          {/* Click-off backdrop when sidebar is open */}
-          {isSidebarOpen && (
-            <button
-              type="button"
-              className={styles.sidebarBackdrop}
-              aria-label="Close navigation"
-              onClick={closeSidebar}
-            />
-          )}
-        </>
-      )}
-
-      {/* Reveal button when header is fully retracted */}
-      {isRetracted && (
-        <button
-          type="button"
-          className={styles.revealButton}
-          onClick={handleShowHeader}
-          aria-label="Show header"
-        >
-          AwakeVerse
-        </button>
+        </div>
       )}
     </>
   );
