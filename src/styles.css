@@ -1598,3 +1598,21 @@ body.theme-awakeverse {
   overflow-wrap: break-word !important;
   word-break: break-word !important;
 }
+/* ============================================
+   ✅ FIXED SIDEBAR INNER CONTAINER
+   ============================================ */
+
+.sidebarInner {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  
+  /* ✅ FIX: Minimal gap for compact layout */
+  gap: 0.1rem;
+  
+  /* ✅ FIX: Minimal padding */
+  padding: 0.25rem 0.5rem;
+  
+  /* ✅ FIX: Scroll entire sidebar, not individual sections */
+  overflow-y: auto;
+}
