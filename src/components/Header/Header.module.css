@@ -1,58 +1,57 @@
-/* src/components/Header/Header.module.css */
+/* Header.module.css – AwakeVerse top brand bar + left sidebar nav */
 
-/* ===== ROOT HEADER BAR ===== */
+@import url('https://fonts.googleapis.com/css2?family=Syne:wght@600;700;800&family=Inter:wght@400;500;600;700&display=swap');
+
+:root {
+  --sidebar-width: 260px;
+}
+
+/* ============== HEADER BAR (BRAND ONLY) ============== */
+
 .header {
-  position: sticky;
-  top: 0;
+  position: fixed;
+  inset: 0 0 auto 0;
   z-index: 40;
+
   display: flex;
   align-items: center;
   justify-content: space-between;
-  padding: 0.5rem 1.5rem;
-  background: radial-gradient(circle at top left, #111827 0%, #020617 55%, #020617 100%);
+  padding: 0.55rem 1.5rem;
+
+  background: radial-gradient(circle at top left, #020617 0%, #020617 50%, #020617 100%);
   border-bottom: 1px solid rgba(148, 163, 184, 0.35);
   box-shadow:
-    0 12px 30px rgba(15, 23, 42, 0.85),
+    0 18px 40px rgba(15, 23, 42, 0.95),
     0 0 0 1px rgba(15, 23, 42, 1);
-  transform: translateY(0);
-  transition:
-    transform 0.35s ease,
-    box-shadow 0.35s ease,
-    border-color 0.35s ease;
+
+  font-family: 'Inter', system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI',
+    sans-serif;
+  color: #e5e7eb;
 }
 
-.retracted {
-  transform: translateY(-100%);
-  box-shadow: none;
-  border-bottom-color: transparent; /* prevents the white line */
-}
-
-/* Brand block */
 .brandShell {
   display: flex;
   align-items: center;
 }
 
 .title {
-  font-family: var(--font-display, 'Syne', system-ui, sans-serif);
+  font-family: 'Syne', system-ui, sans-serif;
   font-size: 1rem;
   font-weight: 800;
-  letter-spacing: 0.12em;
+  letter-spacing: 0.16em;
   text-transform: uppercase;
-  color: var(--brand-ivory, #f5f5dc);
+  color: #f5f5dc;
 }
 
-/* ===== USER SECTION (RIGHT) ===== */
-
+/* Right side: avatar + profile + caret */
 .userSection {
   display: inline-flex;
   align-items: center;
   gap: 0.5rem;
-
   padding: 0.25rem 0.6rem;
   border-radius: 999px;
-  background: rgba(15, 23, 42, 0.96);
   border: 1px solid rgba(148, 163, 184, 0.65);
+  background: rgba(15, 23, 42, 0.96);
   box-shadow:
     0 6px 18px rgba(15, 23, 42, 0.9),
     0 0 0 1px rgba(15, 23, 42, 1);
@@ -74,7 +73,6 @@
   width: 100%;
   height: 100%;
   object-fit: cover;
-  display: block;
 }
 
 .avatarFallback {
@@ -83,14 +81,23 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  font-family: var(--font-display, 'Syne', system-ui, sans-serif);
+  font-family: 'Syne', system-ui, sans-serif;
   font-weight: 700;
   font-size: 0.8rem;
-  color: var(--brand-ivory, #f5f5dc);
+  color: #f5f5dc;
   background: radial-gradient(circle at 20% 0%, #4f46e5, #0f172a);
 }
 
-/* ===== SHOW HEADER PILL WHEN RETRACTED ===== */
+.retractButton {
+  border: none;
+  background: transparent;
+  color: #9ca3af;
+  cursor: pointer;
+  font-size: 0.9rem;
+  padding: 0.1rem 0.2rem;
+}
+
+/* ============== SHOW HEADER PILL (WHEN HIDDEN) ============== */
 
 .showButton {
   position: fixed;
@@ -103,8 +110,8 @@
   border-radius: 999px;
   border: 1px solid rgba(148, 163, 184, 0.6);
   background: rgba(15, 23, 42, 0.95);
-  color: var(--brand-ivory, #f5f5dc);
-  font-family: var(--font-display, 'Syne', system-ui, sans-serif);
+  color: #f5f5dc;
+  font-family: 'Syne', system-ui, sans-serif;
   font-size: 0.65rem;
   letter-spacing: 0.18em;
   text-transform: uppercase;
@@ -116,7 +123,6 @@
   transition:
     background 0.2s ease,
     border-color 0.2s ease,
-    transform 0.2s ease,
     box-shadow 0.2s ease;
 }
 
@@ -128,55 +134,62 @@
     0 0 0 1px rgba(15, 23, 42, 1);
 }
 
-/* ===== SIDEBAR HANDLE (HAMBURGER) ===== */
+/* ============== VERTICAL SIDEBAR HANDLE ============== */
 
 .sidebarHandle {
   position: fixed;
-  top: 0.6rem;
-  left: 0.75rem;
-  z-index: 50;
+  top: 50%;
+  left: 0;
+  transform: translateY(-50%);
+  z-index: 45;
 
-  width: 36px;
-  height: 32px;
-  border-radius: 999px;
+  width: 38px;
+  height: 80px;
+  border-radius: 0 999px 999px 0;
+  border: 1px solid rgba(148, 163, 184, 0.7);
+  border-left: none;
 
   display: flex;
+  flex-direction: column;
   align-items: center;
   justify-content: center;
-  gap: 3px;
+  gap: 4px;
 
-  background: rgba(15, 23, 42, 0.98);
-  border: 1px solid rgba(148, 163, 184, 0.8);
+  background:
+    radial-gradient(circle at 0 50%, rgba(129, 140, 248, 0.32), transparent 70%),
+    rgba(15, 23, 42, 0.98);
+
   box-shadow:
-    0 10px 25px rgba(15, 23, 42, 0.95),
+    0 10px 24px rgba(15, 23, 42, 0.9),
     0 0 0 1px rgba(15, 23, 42, 1);
 
   cursor: pointer;
   transition:
-    background 0.18s ease,
-    border-color 0.18s ease,
-    transform 0.18s ease,
-    box-shadow 0.18s ease;
+    transform 0.25s ease-out,
+    box-shadow 0.25s ease-out,
+    border-color 0.18s ease-out;
 }
 
 .sidebarHandle:hover {
-  background: rgba(15, 23, 42, 1);
   border-color: rgba(129, 140, 248, 0.9);
-  transform: translateY(-1px);
   box-shadow:
-    0 14px 30px rgba(15, 23, 42, 1),
+    0 14px 30px rgba(15, 23, 42, 0.95),
     0 0 0 1px rgba(15, 23, 42, 1);
 }
 
-/* three bars of the hamburger */
-.menuBar {
+/* when sidebar open, slide handle with it */
+.sidebarHandleOpen {
+  transform: translateX(var(--sidebar-width)) translateY(-50%);
+}
+
+.handleBar {
   width: 16px;
   height: 2px;
   border-radius: 999px;
-  background: var(--brand-ivory, #f5f5dc);
+  background-image: linear-gradient(to right, #6366f1, #818cf8);
 }
 
-/* ===== SIDEBAR OVERLAY & PANEL ===== */
+/* ============== SIDEBAR OVERLAY & PANEL ============== */
 
 .sidebarOverlay {
   pointer-events: none;
@@ -190,23 +203,24 @@
   content: '';
   position: fixed;
   inset: 0;
-  background: radial-gradient(circle at top left, rgba(15, 23, 42, 0.9), rgba(15, 23, 42, 0.96));
+  background:
+    radial-gradient(circle at top left, rgba(15, 23, 42, 0.9), rgba(15, 23, 42, 0.96));
   backdrop-filter: blur(6px);
-  z-index: 40;
+  z-index: 41;
 }
 
-/* Sidebar itself */
+/* Sidebar panel */
 .sidebar {
   position: fixed;
   inset: 0 auto 0 0;
-  width: 260px;
+  width: var(--sidebar-width);
   max-width: 80vw;
-  z-index: 41;
+  z-index: 42;
 
   display: flex;
   flex-direction: column;
 
-  background: radial-gradient(circle at top left, #020617, #020617 40%, #020617 100%);
+  background: radial-gradient(circle at top left, #020617 0%, #020617 40%, #020617 100%);
   border-right: 1px solid rgba(148, 163, 184, 0.35);
   box-shadow:
     0 0 0 1px rgba(15, 23, 42, 1),
@@ -220,15 +234,13 @@
   transform: translateX(0);
 }
 
-/* Mobile: sidebar takes full width */
-@media (max-width: 640px) {
-  .sidebar {
-    width: min(320px, 90vw);
-  }
+.sidebarInner {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
 }
 
-/* ===== SIDEBAR HEADER ===== */
-
+/* Sidebar header */
 .sidebarHeader {
   padding: 1.2rem 1.3rem 0.8rem;
   border-bottom: 1px solid rgba(148, 163, 184, 0.25);
@@ -241,22 +253,21 @@
 }
 
 .sidebarTitle {
-  font-family: var(--font-display, 'Syne', system-ui, sans-serif);
-  font-size: 1rem;
-  font-weight: 800;
-  letter-spacing: 0.18em;
+  font-family: 'Syne', system-ui, sans-serif;
+  font-size: 0.9rem;
+  font-weight: 700;
+  letter-spacing: 0.14em;
   text-transform: uppercase;
-  color: var(--brand-ivory, #f5f5dc);
+  color: #f5f5dc;
 }
 
 .sidebarSubtitle {
-  font-family: var(--font-body, 'Inter', system-ui, sans-serif);
+  font-family: 'Inter', system-ui, sans-serif;
   font-size: 0.7rem;
-  color: var(--text-secondary, #94a3b8);
+  color: #94a3b8;
 }
 
-/* ===== SIDEBAR NAVIGATION ===== */
-
+/* Sidebar nav body */
 .sidebarNav {
   flex: 1;
   padding: 0.75rem 0.9rem 0.9rem;
@@ -268,11 +279,11 @@
 }
 
 .sidebarSectionLabel {
-  font-family: var(--font-body, 'Inter', system-ui, sans-serif);
+  font-family: 'Inter', system-ui, sans-serif;
   font-size: 0.65rem;
   text-transform: uppercase;
   letter-spacing: 0.14em;
-  color: var(--text-muted, #64748b);
+  color: #64748b;
   margin-bottom: 0.35rem;
 }
 
@@ -294,10 +305,10 @@
   border: 1px solid transparent;
   background: rgba(15, 23, 42, 0.9);
 
-  font-family: var(--font-body, 'Inter', system-ui, sans-serif);
+  font-family: 'Inter', system-ui, sans-serif;
   font-size: 0.8rem;
   font-weight: 500;
-  color: var(--text-secondary, #cbd5f5);
+  color: #cbd5f5;
 
   cursor: pointer;
   transition:
@@ -311,17 +322,13 @@
 .sidebarNavItem:hover {
   background: rgba(15, 23, 42, 0.98);
   border-color: rgba(129, 140, 248, 0.9);
-  color: var(--text-primary, #f9fafb);
+  color: #f9fafb;
   transform: translateX(1px);
   box-shadow: 0 6px 20px rgba(15, 23, 42, 0.9);
 }
 
 .sidebarNavItemActive {
-  background-image: linear-gradient(
-    135deg,
-    var(--accent-primary, #6366f1),
-    var(--accent-hover, #818cf8)
-  );
+  background-image: linear-gradient(135deg, #6366f1, #818cf8);
   border-color: transparent;
   color: #ffffff;
   box-shadow: 0 8px 24px rgba(79, 70, 229, 0.8);
@@ -338,7 +345,7 @@
   white-space: nowrap;
 }
 
-/* ===== SIDEBAR FOOTER (USER + SUBSCRIPTION) ===== */
+/* Sidebar footer: user + subscription */
 
 .sidebarFooter {
   padding: 0.75rem 1rem 1rem;
@@ -357,19 +364,19 @@
 }
 
 .userName {
-  font-family: var(--font-display, 'Syne', system-ui, sans-serif);
+  font-family: 'Syne', system-ui, sans-serif;
   font-size: 0.85rem;
   font-weight: 600;
-  color: var(--brand-ivory, #f5f5dc);
+  color: #f5f5dc;
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
 }
 
 .userEmail {
-  font-family: var(--font-body, 'Inter', system-ui, sans-serif);
+  font-family: 'Inter', system-ui, sans-serif;
   font-size: 0.7rem;
-  color: var(--text-muted, #64748b);
+  color: #64748b;
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
@@ -379,17 +386,40 @@
   padding: 0.3rem 0.65rem;
   border-radius: 999px;
   border: 1px solid rgba(148, 163, 184, 0.6);
-  font-family: var(--font-body, 'Inter', system-ui, sans-serif);
+  font-family: 'Inter', system-ui, sans-serif;
   font-size: 0.7rem;
   font-weight: 600;
   text-transform: uppercase;
   letter-spacing: 0.1em;
-  color: var(--text-secondary, #cbd5f5);
+  color: #cbd5f5;
   background: rgba(15, 23, 42, 0.96);
 }
 
 .subscriptionActive {
   border-color: rgba(129, 140, 248, 0.95);
   color: #e0e7ff;
-  background: radial-gradient(circle at top left, rgba(79, 70, 229, 0.25), rgba(15, 23, 42, 0.98));
+  background: radial-gradient(
+    circle at top left,
+    rgba(79, 70, 229, 0.25),
+    rgba(15, 23, 42, 0.98)
+  );
+}
+
+/* ============== RESPONSIVE TWEAKS ============== */
+
+@media (max-width: 768px) {
+  .header {
+    padding: 0.5rem 1rem;
+  }
+
+  .sidebar {
+    width: min(320px, 90vw);
+  }
+}
+
+@media (max-width: 480px) {
+  .title {
+    font-size: 0.9rem;
+    letter-spacing: 0.14em;
+  }
 }

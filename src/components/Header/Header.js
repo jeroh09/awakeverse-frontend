@@ -1,4 +1,4 @@
-// src/components/Header/Header.js
+// src/components/Header/Header.js – AwakeVerse header + left sidebar nav
 import React, { useState, useEffect } from 'react';
 import styles from './Header.module.css';
 import { useUser } from '../../contexts/UserContext';
@@ -6,7 +6,7 @@ import { useAuth } from '../../contexts/AuthContext';
 import { useAppView } from '../../contexts/AppViewContext';
 import ProfileButton from '../ProfileButton';
 
-// === INLINE SVG ICONS (your custom AwakeVerse icons) ===
+// === AwakeVerse Nav Icons (inline SVG, indigo glow) ===
 
 const ChatIcon = ({ className }) => (
   <svg
@@ -199,20 +199,19 @@ export default function Header() {
     console.error('Header: useAppView must be used within AppViewProvider', e);
   }
 
-  const [isRetracted, setIsRetracted] = useState(false);
+  const [isHeaderVisible, setIsHeaderVisible] = useState(true);
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
 
   const showNavigation = isAuthenticated && !!viewContext;
 
-  // --- Auto-retract header after 6 seconds ---
+  // Auto-hide header after 6s (completely unmount)
   useEffect(() => {
-    if (isRetracted) return;
-    const timer = setTimeout(() => setIsRetracted(true), 6000);
+    if (!isHeaderVisible || !isAuthenticated) return;
+    const timer = setTimeout(() => setIsHeaderVisible(false), 6000);
     return () => clearTimeout(timer);
-  }, [isRetracted]);
+  }, [isHeaderVisible, isAuthenticated]);
 
-  // --- Build nav items & groups ---
-
+  // Build nav items
   const navItems = !showNavigation
     ? []
     : [
@@ -248,24 +247,12 @@ export default function Header() {
         },
       ];
 
-  const itemsByKey = Object.fromEntries(navItems.map((item) => [item.key, item]));
+  const itemsByKey = Object.fromEntries(navItems.map((i) => [i.key, i]));
 
   const navGroups = [
-    {
-      key: 'primary',
-      label: 'Primary',
-      items: ['chat', 'discover'],
-    },
-    {
-      key: 'storyWorld',
-      label: 'Story world',
-      items: ['stories'],
-    },
-    {
-      key: 'productivity',
-      label: 'Productivity',
-      items: ['create', 'scenarios'],
-    },
+    { key: 'primary', label: 'Primary', items: ['chat', 'discover'] },
+    { key: 'storyWorld', label: 'Story world', items: ['stories'] },
+    { key: 'productivity', label: 'Productivity', items: ['create', 'scenarios'] },
   ];
 
   const handleNavClick = (viewState) => {
@@ -281,8 +268,7 @@ export default function Header() {
 
   const closeSidebar = () => setIsSidebarOpen(false);
 
-  // --- Avatar + user meta ---
-
+  // Avatar
   const avatarUrlRaw = user?.avatarUrl || user?.avatar_url;
   const avatarUrl =
     avatarUrlRaw && typeof avatarUrlRaw === 'string'
@@ -302,70 +288,77 @@ export default function Header() {
   const subscriptionLabel = subscriptionInfo?.display_name || 'Free';
   const subscriptionActive = subscriptionInfo?.is_active || false;
 
-  const headerClassName = isRetracted
-    ? `${styles.header} ${styles.retracted}`
-    : styles.header;
-
   return (
     <>
-      {/* Top brand bar (AwakeVerse only) */}
-      <header className={headerClassName}>
-        <div className={styles.brandShell}>
-          <h1 className={styles.title}>AwakeVerse</h1>
-        </div>
+      {/* Header bar – completely unmounted when hidden */}
+      {isHeaderVisible && (
+        <header className={styles.header}>
+          <div className={styles.brandShell}>
+            <h1 className={styles.title}>AwakeVerse</h1>
+          </div>
 
-        <div className={styles.userSection}>
-          {isAuthenticated && (
-            <>
-              <div className={styles.avatarShell}>
-                {avatarUrl ? (
-                  <img
-                    src={avatarUrl}
-                    alt="User avatar"
-                    className={styles.avatarImage}
-                    onError={(e) => {
-                      e.target.style.display = 'none';
-                    }}
-                  />
-                ) : (
-                  <div className={styles.avatarFallback}>
-                    {userInitial.toUpperCase()}
-                  </div>
-                )}
-              </div>
-              <ProfileButton user={user} />
-            </>
-          )}
-        </div>
-      </header>
+          <div className={styles.userSection}>
+            {isAuthenticated && (
+              <>
+                <div className={styles.avatarShell}>
+                  {avatarUrl ? (
+                    <img
+                      src={avatarUrl}
+                      alt="User avatar"
+                      className={styles.avatarImage}
+                      onError={(e) => {
+                        e.target.style.display = 'none';
+                      }}
+                    />
+                  ) : (
+                    <div className={styles.avatarFallback}>
+                      {userInitial.toUpperCase()}
+                    </div>
+                  )}
+                </div>
+                <ProfileButton user={user} />
+                <button
+                  className={styles.retractButton}
+                  onClick={() => setIsHeaderVisible(false)}
+                  aria-label="Hide header"
+                  title="Hide header"
+                >
+                  ⌃
+                </button>
+              </>
+            )}
+          </div>
+        </header>
+      )}
 
-      {/* Show-header pill when retracted */}
-      {isRetracted && (
+      {/* Pill to show header again */}
+      {!isHeaderVisible && (
         <button
           className={styles.showButton}
-          onClick={() => setIsRetracted(false)}
+          onClick={() => setIsHeaderVisible(true)}
           aria-label="Show header"
-          title="Show header"
         >
           AwakeVerse
         </button>
       )}
 
-      {/* Sidebar handle – single hamburger used everywhere */}
+      {/* Vertical sidebar handle – mid-left, never overlaps brand */}
       {showNavigation && (
         <button
-          className={styles.sidebarHandle}
+          type="button"
+          className={`${styles.sidebarHandle} ${
+            isSidebarOpen ? styles.sidebarHandleOpen : ''
+          }`}
           onClick={toggleSidebar}
           aria-label={isSidebarOpen ? 'Close menu' : 'Open menu'}
-          title="Menu"
         >
-          <span className={styles.menuBar} />
-          <span className={styles.menuBar} />
-          <span className={styles.menuBar} />
+          <span className={styles.handleBar} />
+          <span className={styles.handleBar} />
+          <span className={styles.handleBar} />
         </button>
       )}
 
-      {/* Left slide-in sidebar (desktop + mobile) */}
+      {/* Sidebar + overlay */}
       {showNavigation && (
         <div
           className={`${styles.sidebarOverlay} ${
@@ -378,76 +371,79 @@ export default function Header() {
               isSidebarOpen ? styles.sidebarOpen : ''
             }`}
             onClick={(e) => e.stopPropagation()}
-            aria-label="Main navigation"
+            aria-label="AwakeVerse navigation"
           >
-            {/* Sidebar header */}
-            <div className={styles.sidebarHeader}>
-              <div className={styles.sidebarTitleBlock}>
-                <span className={styles.sidebarTitle}>AwakeVerse</span>
-                <span className={styles.sidebarSubtitle}>
-                  Which guide calls to you?
-                </span>
+            <div className={styles.sidebarInner}>
+              <div className={styles.sidebarHeader}>
+                <div className={styles.sidebarTitleBlock}>
+                  <span className={styles.sidebarTitle}>AwakeVerse</span>
+                  <span className={styles.sidebarSubtitle}>
+                    Primary, story worlds, and productivity.
+                  </span>
+                </div>
               </div>
+
+              <nav className={styles.sidebarNav}>
+                {navGroups.map((group) => {
+                  const groupItems = group.items
+                    .map((key) => itemsByKey[key])
+                    .filter(Boolean);
+
+                  if (groupItems.length === 0) return null;
+
+                  return (
+                    <section
+                      key={group.key}
+                      className={styles.sidebarSection}
+                    >
+                      <div className={styles.sidebarSectionLabel}>
+                        {group.label}
+                      </div>
+                      <div className={styles.sidebarSectionItems}>
+                        {groupItems.map(({ key, label, icon: Icon, viewState }) => (
+                          <button
+                            key={key}
+                            type="button"
+                            className={`${styles.sidebarNavItem} ${
+                              viewContext.currentView === viewState
+                                ? styles.sidebarNavItemActive
+                                : ''
+                            }`}
+                            onClick={() => handleNavClick(viewState)}
+                          >
+                            <Icon className={styles.sidebarNavIcon} />
+                            <span className={styles.sidebarNavLabel}>{label}</span>
+                          </button>
+                        ))}
+                      </div>
+                    </section>
+                  );
+                })}
+              </nav>
+
+              {isAuthenticated && (
+                <footer className={styles.sidebarFooter}>
+                  <div className={styles.userMeta}>
+                    <div className={styles.userName}>
+                      {user?.display_name ||
+                        user?.displayName ||
+                        user?.name ||
+                        'AwakeVerse explorer'}
+                    </div>
+                    {user?.username && (
+                      <div className={styles.userEmail}>{user.username}</div>
+                    )}
+                  </div>
+                  <div
+                    className={`${styles.subscriptionBadge} ${
+                      subscriptionActive ? styles.subscriptionActive : ''
+                    }`}
+                  >
+                    {subscriptionLabel}
+                  </div>
+                </footer>
+              )}
             </div>
-
-            {/* Nav groups */}
-            <nav className={styles.sidebarNav}>
-              {navGroups.map((group) => {
-                const groupItems = group.items
-                  .map((key) => itemsByKey[key])
-                  .filter(Boolean);
-
-                if (groupItems.length === 0) return null;
-
-                return (
-                  <div className={styles.sidebarSection} key={group.key}>
-                    <div className={styles.sidebarSectionLabel}>
-                      {group.label}
-                    </div>
-                    <div className={styles.sidebarSectionItems}>
-                      {groupItems.map(({ key, label, icon: Icon, viewState }) => (
-                        <button
-                          key={key}
-                          className={`${styles.sidebarNavItem} ${
-                            viewContext.currentView === viewState
-                              ? styles.sidebarNavItemActive
-                              : ''
-                          }`}
-                          onClick={() => handleNavClick(viewState)}
-                        >
-                          <Icon className={styles.sidebarNavIcon} />
-                          <span className={styles.sidebarNavLabel}>{label}</span>
-                        </button>
-                      ))}
-                    </div>
-                  </div>
-                );
-              })}
-            </nav>
-
-            {/* Sidebar footer – user + subscription */}
-            {isAuthenticated && (
-              <div className={styles.sidebarFooter}>
-                <div className={styles.userMeta}>
-                  <div className={styles.userName}>
-                    {user?.display_name ||
-                      user?.displayName ||
-                      user?.name ||
-                      'AwakeVerse explorer'}
-                  </div>
-                  {user?.username && (
-                    <div className={styles.userEmail}>{user.username}</div>
-                  )}
-                </div>
-                <div
-                  className={`${styles.subscriptionBadge} ${
-                    subscriptionActive ? styles.subscriptionActive : ''
-                  }`}
-                >
-                  {subscriptionLabel}
-                </div>
-              </div>
-            )}
           </aside>
         </div>
       )}
