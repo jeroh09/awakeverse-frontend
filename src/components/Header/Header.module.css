@@ -1,8 +1,6 @@
 /* ==========================================================
    AwakeVerse Header + Sidebar Navigation (Drop-in Replacement)
-   ✅ STEPS 3-4 FIXES:
-   - Line 251: Added gap and overflow to .sidebarInner
-   - Line 298: Removed flex: 1 from .sidebarNav
+   ✅ FIXED: Ultra-compact spacing to eliminate sidebar scroll
    ========================================================== */
 
 /* Fonts */
@@ -265,7 +263,7 @@
 }
 
 /* ============================================
-   ✅ STEP 4: FIXED SIDEBAR INNER CONTAINER
+   ✅ FIXED: ULTRA-COMPACT SIDEBAR INNER CONTAINER
    ============================================ */
 
 .sidebarInner {
@@ -273,29 +271,29 @@
   flex-direction: column;
   height: 100%;
   
-  /* ✅ FIX: Add explicit gap between sections */
-  gap: 0.75rem;
+  /* ✅ FIX: Minimal gap to prevent scroll */
+  gap: 0.1rem;
   
-  /* ✅ FIX: Add padding for content spacing */
-  padding: 1rem 0.9rem;
+  /* ✅ FIX: Minimal padding */
+  padding: 0.25rem 0.5rem;
   
-  /* ✅ FIX: Scroll entire sidebar, not individual sections */
+  /* ✅ FIX: Scroll only if absolutely necessary */
   overflow-y: auto;
 }
 
 /* ============================================
-   SIDEBAR HEADER
+   COMPACT SIDEBAR HEADER
    ============================================ */
 
 .sidebarHeader {
-  padding: 1rem 1.25rem 0.8rem;
+  padding: 0.4rem 0.75rem 0.2rem;
   border-bottom: 1px solid rgba(148, 163, 184, 0.25);
 }
 
 .sidebarTitleBlock {
   display: flex;
   flex-direction: column;
-  gap: 0.15rem;
+  gap: 0.1rem;
 }
 
 .sidebarTitle {
@@ -314,7 +312,7 @@
 }
 
 /* ============================================
-   ✅ STEP 3: FIXED SIDEBAR NAV COLUMN
+   ✅ FIXED: ULTRA-COMPACT SIDEBAR NAV COLUMN
    ============================================ */
 
 .sidebarNav {
@@ -328,9 +326,12 @@
   overflow-y: visible;
 }
 
-/* Group headings */
+/* ============================================
+   ✅ FIXED: COMPACT SIDEBAR SECTIONS
+   ============================================ */
+
 .sidebarSection {
-  margin-bottom: 0.35rem;   /* compact spacing between groups */
+  margin-bottom: 0.05rem;   /* Ultra compact spacing between groups */
 }
 
 .sidebarSectionLabel {
@@ -339,24 +340,25 @@
   letter-spacing: 0.14em;
   text-transform: uppercase;
   color: #64748b;
-  margin-bottom: 0.18rem;
+  margin-bottom: 0.02rem;
+  padding: 0.05rem 0.5rem;
 }
 
-/* Items stacked tightly */
+/* Items stacked ultra tightly */
 .sidebarSectionItems {
   display: flex;
   flex-direction: column;
-  gap: 0.2rem;
+  gap: 0.02rem;
 }
 
-/* Individual nav button */
+/* Individual nav button - more compact */
 .sidebarNavItem {
   display: flex;
   align-items: center;
   gap: 0.55rem;
 
   width: 100%;
-  padding: 0.40rem 0.65rem;
+  padding: 0.2rem 0.65rem;
   border-radius: 0.7rem;
 
   background: rgba(15, 23, 42, 0.9);
@@ -398,23 +400,23 @@
 }
 
 /* ============================================
-   SIDEBAR FOOTER – USER + SUBSCRIPTION
+   ✅ FIXED: COMPACT SIDEBAR FOOTER
    ============================================ */
 
 .sidebarFooter {
-  padding: 0.75rem 1rem 1rem;
+  padding: 0.3rem 0.5rem 0.5rem;
   border-top: 1px solid rgba(148, 163, 184, 0.25);
 
   display: flex;
   align-items: center;
   justify-content: space-between;
-  gap: 0.75rem;
+  gap: 0.3rem;
 }
 
 .userMeta {
   display: flex;
   flex-direction: column;
-  gap: 0.1rem;
+  gap: 0.05rem;
 }
 
 .userName {
@@ -431,12 +433,12 @@
 }
 
 .subscriptionBadge {
-  padding: 0.3rem 0.65rem;
+  padding: 0.2rem 0.5rem;
   border-radius: 999px;
   border: 1px solid rgba(148, 163, 184, 0.6);
 
   font-family: 'Inter';
-  font-size: 0.7rem;
+  font-size: 0.65rem;
   font-weight: 600;
   letter-spacing: 0.1em;
   text-transform: uppercase;
