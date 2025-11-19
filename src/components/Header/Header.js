@@ -1,5 +1,5 @@
-// src/components/Header/Header.js - Fixed navigation following AppViewContext pattern
-import { useState, useEffect, useRef } from 'react';
+// src/components/Header/Header.js - AwakeVerse header with slide-in mobile nav
+import { useState } from 'react';
 import styles from './Header.module.css';
 import { useUser } from '../../contexts/UserContext';
 import { useAuth } from '../../contexts/AuthContext';
@@ -126,6 +126,43 @@ const StoriesIcon = ({ className }) => (
   </svg>
 );
 
+const ScenariosIcon = ({ className }) => (
+  <svg
+    className={className}
+    width="20"
+    height="20"
+    viewBox="0 0 24 24"
+    fill="none"
+    xmlns="http://www.w3.org/2000/svg"
+  >
+    <defs>
+      <filter id="scenariosGlow" x="-50%" y="-50%" width="200%" height="200%">
+        <feDropShadow
+          dx="0"
+          dy="0"
+          stdDeviation="2"
+          floodColor="#6366f1"
+          floodOpacity="0.55"
+        />
+      </filter>
+    </defs>
+    <path
+      d="M12 4c-4 0-7 2-7 6v2c0 4 3 6 7 6s7-2 7-6v-2c0-4-3-6-7-6z"
+      stroke="currentColor"
+      strokeWidth="2"
+      strokeLinejoin="round"
+      filter="url(#scenariosGlow)"
+    />
+    <path
+      d="M9 12c0-1 .8-1.5 1.5-1.5S12 11 12 12M15 12c0-1-.8-1.5-1.5-1.5S12 11 12 12"
+      stroke="currentColor"
+      strokeWidth="1.8"
+      strokeLinecap="round"
+      filter="url(#scenariosGlow)"
+    />
+  </svg>
+);
+
 const CreateIcon = ({ className }) => (
   <svg
     className={className}
@@ -168,194 +205,153 @@ const CreateIcon = ({ className }) => (
   </svg>
 );
 
-
-const ScenariosIcon = ({ className }) => (
-  <svg
-    className={className}
-    width="20"
-    height="20"
-    viewBox="0 0 24 24"
-    fill="none"
-    xmlns="http://www.w3.org/2000/svg"
-  >
-    <defs>
-      <filter id="scenariosGlow" x="-50%" y="-50%" width="200%" height="200%">
-        <feDropShadow
-          dx="0"
-          dy="0"
-          stdDeviation="2"
-          floodColor="#6366f1"
-          floodOpacity="0.55"
-        />
-      </filter>
-    </defs>
-    <path
-      d="M12 4c-4 0-7 2-7 6v2c0 4 3 6 7 6s7-2 7-6v-2c0-4-3-6-7-6z"
-      stroke="currentColor"
-      strokeWidth="2"
-      strokeLinejoin="round"
-      filter="url(#scenariosGlow)"
-    />
-    <path
-      d="M9 12c0-1 .8-1.5 1.5-1.5S12 11 12 12M15 12c0-1-.8-1.5-1.5-1.5S12 11 12 12"
-      stroke="currentColor"
-      strokeWidth="1.8"
-      strokeLinecap="round"
-      filter="url(#scenariosGlow)"
-    />
-  </svg>
-);
-
-
 export default function Header() {
   const { user } = useUser();
   const { isAuthenticated } = useAuth();
-  const [isRetracted, setIsRetracted] = useState(false);
-  const retractionTimerRef = useRef(null);
-  const API_BASE = process.env.REACT_APP_API_URL || 'https://api.awakeverse.com';
+  const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
 
   // Get view context safely
   let viewContext = null;
   try {
     viewContext = useAppView();
-  } catch (error) {
-    // Context not available on non-app routes - this is normal
+  } catch (e) {
+    console.error('Header: useAppView must be used within AppViewProvider', e);
   }
 
-  // Handle automatic retraction
-  useEffect(() => {
-    const scheduleRetraction = (delay) => {
-      clearTimeout(retractionTimerRef.current);
-      retractionTimerRef.current = setTimeout(() => {
-        setIsRetracted(true);
-      }, delay);
-    };
+  const showNavigation = isAuthenticated && viewContext;
 
-    if (!isRetracted) {
-      scheduleRetraction(6000);
-    }
+  const navItems = showNavigation
+    ? [
+        {
+          key: 'chat',
+          label: 'Chat',
+          icon: ChatIcon,
+          viewState: viewContext.VIEW_STATES.CHAT,
+        },
+        {
+          key: 'discover',
+          label: 'Discover',
+          icon: DiscoverIcon,
+          viewState: viewContext.VIEW_STATES.MARKET_HUB,
+        },
+        {
+          key: 'create',
+          label: 'Create',
+          icon: CreateIcon,
+          viewState: viewContext.VIEW_STATES.CREATOR_DASHBOARD,
+        },
+        {
+          key: 'scenarios',
+          label: 'Scenarios',
+          icon: ScenariosIcon,
+          viewState: viewContext.VIEW_STATES.SCENARIOS,
+        },
+        {
+          key: 'stories',
+          label: 'Stories',
+          icon: StoriesIcon,
+          viewState: viewContext.VIEW_STATES.STORY_MODE,
+        },
+      ]
+    : [];
 
-    const handleUserActivity = () => {
-      if (!isRetracted) {
-        scheduleRetraction(6000);
-      }
-    };
-
-    const events = ['mousemove', 'click', 'keydown', 'scroll'];
-    events.forEach(event => 
-      document.addEventListener(event, handleUserActivity)
-    );
-
-    return () => {
-      clearTimeout(retractionTimerRef.current);
-      events.forEach(event => 
-        document.removeEventListener(event, handleUserActivity)
-      );
-    };
-  }, [isRetracted]);
-
-  const handleShowHeader = () => {
-    setIsRetracted(false);
-    clearTimeout(retractionTimerRef.current);
-    retractionTimerRef.current = setTimeout(() => {
-      setIsRetracted(true);
-    }, 30000);
-  };
-
-  // Handle navigation - simplified, no return value check
   const handleNavClick = (viewState) => {
     if (!viewContext) return;
     viewContext.switchView(viewState);
+    setIsMobileMenuOpen(false);
   };
 
-  // Show navigation only when authenticated and context available
-  const showNavigation = isAuthenticated && viewContext;
+  const toggleMobileMenu = () => {
+    if (!showNavigation) return;
+    setIsMobileMenuOpen((open) => !open);
+  };
+
+  const closeMobileMenu = () => {
+    setIsMobileMenuOpen(false);
+  };
 
   return (
-    <header className={`${styles.header} ${isRetracted ? styles.retracted : ''}`}>
-      <div className={styles.leftSection}>
-        <h1 className={styles.title}>AwakeVerse</h1>
-        
-        {/* Navigation tabs */}
-        {showNavigation && (
-          <nav className={styles.navigation}>
-            <button
-              className={`${styles.navTab} ${
-                viewContext.currentView === viewContext.VIEW_STATES.CHAT ? styles.active : ''
-              }`}
-              onClick={() => handleNavClick(viewContext.VIEW_STATES.CHAT)}
-            >
-              <ChatIcon className={styles.navIcon} />
-              <span className={styles.navLabel}>Chat</span>
-            </button>
-            <button
-              className={`${styles.navTab} ${
-                viewContext.currentView === viewContext.VIEW_STATES.MARKET_HUB ? styles.active : ''
-              }`}
-              onClick={() => handleNavClick(viewContext.VIEW_STATES.MARKET_HUB)}
-            >
-              <DiscoverIcon className={styles.navIcon} />
-              <span className={styles.navLabel}>Discover</span>
-            </button>
+    <>
+      <header className={styles.header}>
+        <div className={styles.leftSection}>
+          {/* Brand row: logo + mobile menu toggle */}
+          <div className={styles.brandRow}>
+            <h1 className={styles.title}>AwakeVerse</h1>
 
-            <button 
-              className={`${styles.navTab} ${
-                viewContext.currentView === viewContext.VIEW_STATES.CREATOR_DASHBOARD ? styles.active : ''
-              }`}
-              onClick={() => handleNavClick(viewContext.VIEW_STATES.CREATOR_DASHBOARD)}
-            >
-              <CreateIcon className={styles.navIcon} />
-              <span className={styles.navLabel}>Create</span>
-            </button>
+            {showNavigation && (
+              <button
+                className={styles.menuToggle}
+                onClick={toggleMobileMenu}
+                aria-label={isMobileMenuOpen ? 'Close navigation' : 'Open navigation'}
+              >
+                <span className={styles.menuBar} />
+                <span className={styles.menuBar} />
+                <span className={styles.menuBar} />
+              </button>
+            )}
+          </div>
 
-             <button
-              className={`${styles.navTab} ${
-                viewContext.currentView === viewContext.VIEW_STATES.SCENARIOS ? styles.active : ''
-              }`}
-              onClick={() => handleNavClick(viewContext.VIEW_STATES.SCENARIOS)}
-            >
-              <ScenariosIcon className={styles.navIcon} />
-              <span className={styles.navLabel}>Scenarios</span>
-            </button>
-            <button
-              className={`${styles.navTab} ${
-                viewContext.currentView === viewContext.VIEW_STATES.STORY_MODE ? styles.active : ''
-              }`}
-              onClick={() => handleNavClick(viewContext.VIEW_STATES.STORY_MODE)}
-            >
-              <StoriesIcon className={styles.navIcon} />
-              <span className={styles.navLabel}>Stories</span>
-            </button>
-          </nav>
-        )}
-      </div>
-
-      <div className={styles.userSection}>
-        <img
-          src={user?.avatarUrl || `${API_BASE}/avatars/user_${user?.id || 'unknown'}_default.jpg`}
-          alt={user?.displayName || 'User'}
-          className={styles.avatar}
-          onError={(e) => {
-            e.target.style.display = 'none';
-            e.target.nextSibling.style.display = 'block';
-          }}
-        />
-        <div className={styles.placeholder} style={{ display: 'none' }}>
-          Profile
+          {/* Desktop navigation (icons + labels) */}
+          {showNavigation && (
+            <nav className={styles.navigationDesktop} aria-label="Primary">
+              {navItems.map(({ key, label, icon: Icon, viewState }) => (
+                <button
+                  key={key}
+                  className={`${styles.navTab} ${
+                    viewContext.currentView === viewState ? styles.active : ''
+                  }`}
+                  onClick={() => handleNavClick(viewState)}
+                >
+                  <Icon className={styles.navIcon} />
+                  <span className={styles.navLabel}>{label}</span>
+                </button>
+              ))}
+            </nav>
+          )}
         </div>
-        <ProfileButton />
-      </div>
-      
-      {isRetracted && (
-        <button 
-          className={styles.showButton}
-          onClick={handleShowHeader}
-          aria-label="Show header"
-          title="Click to show header"
-        >
-          ⋯
-        </button>
+
+        {/* Right side: profile / user menu */}
+        <div className={styles.userSection}>
+          {isAuthenticated && <ProfileButton user={user} />}
+        </div>
+      </header>
+
+      {/* Mobile slide-in nav */}
+      {showNavigation && isMobileMenuOpen && (
+        <div className={styles.mobileNavOverlay} onClick={closeMobileMenu}>
+          <nav
+            className={styles.mobileNav}
+            aria-label="Mobile navigation"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div className={styles.mobileNavHeader}>
+              <span className={styles.mobileNavTitle}>AwakeVerse</span>
+              <button
+                className={styles.mobileClose}
+                onClick={closeMobileMenu}
+                aria-label="Close navigation"
+              >
+                ✕
+              </button>
+            </div>
+
+            <div className={styles.mobileNavItems}>
+              {navItems.map(({ key, label, icon: Icon, viewState }) => (
+                <button
+                  key={key}
+                  className={`${styles.mobileNavItem} ${
+                    viewContext.currentView === viewState ? styles.mobileActive : ''
+                  }`}
+                  onClick={() => handleNavClick(viewState)}
+                >
+                  <Icon className={styles.mobileNavIcon} />
+                  <span className={styles.mobileNavLabel}>{label}</span>
+                </button>
+              ))}
+            </div>
+          </nav>
+        </div>
       )}
-    </header>
+    </>
   );
 }
