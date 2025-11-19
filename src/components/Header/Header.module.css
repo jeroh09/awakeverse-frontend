@@ -565,3 +565,13 @@
     display: none;
   }
 }
+/* === MOBILE HEADER FIX: HIDE AWAKEVERSE TITLE === */
+@media (max-width: 768px) {
+  .title {
+    display: none !important;
+  }
+
+  .leftSection {
+    padding-left: 0;
+  }
+}
