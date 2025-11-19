@@ -1,5 +1,8 @@
 /* ==========================================================
    AwakeVerse Header + Sidebar Navigation (Drop-in Replacement)
+   ✅ STEPS 3-4 FIXES:
+   - Line 251: Added gap and overflow to .sidebarInner
+   - Line 298: Removed flex: 1 from .sidebarNav
    ========================================================== */
 
 /* Fonts */
@@ -143,7 +146,7 @@
 }
 
 /* ============================================
-   HAMBURGER — SUBTLE PILL (HTML STYLE)
+   HAMBURGER – SUBTLE PILL (HTML STYLE)
    ============================================ */
 
 .sidebarHandle {
@@ -261,10 +264,23 @@
   transform: translateX(0);
 }
 
+/* ============================================
+   ✅ STEP 4: FIXED SIDEBAR INNER CONTAINER
+   ============================================ */
+
 .sidebarInner {
   display: flex;
   flex-direction: column;
   height: 100%;
+  
+  /* ✅ FIX: Add explicit gap between sections */
+  gap: 0.75rem;
+  
+  /* ✅ FIX: Add padding for content spacing */
+  padding: 1rem 0.9rem;
+  
+  /* ✅ FIX: Scroll entire sidebar, not individual sections */
+  overflow-y: auto;
 }
 
 /* ============================================
@@ -298,13 +314,18 @@
 }
 
 /* ============================================
-   SIDEBAR NAV COLUMN — COMPACT
+   ✅ STEP 3: FIXED SIDEBAR NAV COLUMN
    ============================================ */
 
 .sidebarNav {
-  flex: 1;
-  padding: 0.6rem 0.9rem 0.8rem;
-  overflow-y: auto;
+  /* ✅ FIX: Remove flex: 1 - don't expand to fill space! */
+  flex: 0 0 auto;
+  
+  /* ✅ FIX: Remove padding - spacing handled by parent */
+  padding: 0;
+  
+  /* ✅ FIX: No scroll on nav itself - parent handles it */
+  overflow-y: visible;
 }
 
 /* Group headings */
@@ -377,7 +398,7 @@
 }
 
 /* ============================================
-   SIDEBAR FOOTER — USER + SUBSCRIPTION
+   SIDEBAR FOOTER – USER + SUBSCRIPTION
    ============================================ */
 
 .sidebarFooter {
