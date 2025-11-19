@@ -6,6 +6,207 @@ import { useAuth } from '../../contexts/AuthContext';
 import { useAppView } from '../../contexts/AppViewContext';
 import ProfileButton from '../ProfileButton';
 
+/* === AwakeVerse Nav Icons (inline SVG, indigo glow via filter) === */
+
+const ChatIcon = ({ className }) => (
+  <svg
+    className={className}
+    width="20"
+    height="20"
+    viewBox="0 0 24 24"
+    fill="none"
+    xmlns="http://www.w3.org/2000/svg"
+  >
+    <defs>
+      <filter id="chatGlow" x="-50%" y="-50%" width="200%" height="200%">
+        <feDropShadow
+          dx="0"
+          dy="0"
+          stdDeviation="2"
+          floodColor="#6366f1"
+          floodOpacity="0.55"
+        />
+      </filter>
+    </defs>
+    <path
+      d="M5 6.5C5 5.12 6.12 4 7.5 4h9c1.38 0 2.5 1.12 2.5 2.5v6c0 1.38-1.12 2.5-2.5 2.5H10l-3.5 3v-3H7.5C6.12 15 5 13.88 5 12.5v-6z"
+      stroke="currentColor"
+      strokeWidth="2"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      filter="url(#chatGlow)"
+    />
+  </svg>
+);
+
+const DiscoverIcon = ({ className }) => (
+  <svg
+    className={className}
+    width="20"
+    height="20"
+    viewBox="0 0 24 24"
+    fill="none"
+    xmlns="http://www.w3.org/2000/svg"
+  >
+    <defs>
+      <filter id="discoverGlow" x="-50%" y="-50%" width="200%" height="200%">
+        <feDropShadow
+          dx="0"
+          dy="0"
+          stdDeviation="2"
+          floodColor="#6366f1"
+          floodOpacity="0.55"
+        />
+      </filter>
+    </defs>
+    <rect
+      x="4"
+      y="4"
+      width="16"
+      height="16"
+      rx="4"
+      stroke="currentColor"
+      strokeWidth="2"
+      filter="url(#discoverGlow)"
+    />
+    <path
+      d="M9 15V12M12 15V9M15 15V11"
+      stroke="currentColor"
+      strokeWidth="2"
+      strokeLinecap="round"
+      filter="url(#discoverGlow)"
+    />
+  </svg>
+);
+
+const StoriesIcon = ({ className }) => (
+  <svg
+    className={className}
+    width="20"
+    height="20"
+    viewBox="0 0 24 24"
+    fill="none"
+    xmlns="http://www.w3.org/2000/svg"
+  >
+    <defs>
+      <filter id="storiesGlow" x="-50%" y="-50%" width="200%" height="200%">
+        <feDropShadow
+          dx="0"
+          dy="0"
+          stdDeviation="2"
+          floodColor="#6366f1"
+          floodOpacity="0.55"
+        />
+      </filter>
+    </defs>
+    {/* parchment */}
+    <path
+      d="M6 4h9a2 2 0 0 1 2 2v12H8a2 2 0 0 1-2-2V4z"
+      stroke="currentColor"
+      strokeWidth="2"
+      strokeLinejoin="round"
+      filter="url(#storiesGlow)"
+    />
+    {/* lines */}
+    <path
+      d="M10 10h4M10 13h3"
+      stroke="currentColor"
+      strokeWidth="2"
+      strokeLinecap="round"
+      filter="url(#storiesGlow)"
+    />
+    {/* quill */}
+    <path
+      d="M16 4c1.5 1 3 3.8 3 6.5S16 16 13 17.5c0 0 0.5-2.5 2-5s1.4-4.5 1-6.5z"
+      stroke="currentColor"
+      strokeWidth="2"
+      strokeLinejoin="round"
+      filter="url(#storiesGlow)"
+    />
+  </svg>
+);
+
+const CreateIcon = ({ className }) => (
+  <svg
+    className={className}
+    width="20"
+    height="20"
+    viewBox="0 0 24 24"
+    fill="none"
+    xmlns="http://www.w3.org/2000/svg"
+  >
+    <defs>
+      <filter id="createGlow" x="-50%" y="-50%" width="200%" height="200%">
+        <feDropShadow
+          dx="0"
+          dy="0"
+          stdDeviation="2"
+          floodColor="#6366f1"
+          floodOpacity="0.55"
+        />
+      </filter>
+    </defs>
+
+    <rect
+      x="5"
+      y="4"
+      width="14"
+      height="16"
+      rx="3"
+      stroke="currentColor"
+      strokeWidth="2"
+      filter="url(#createGlow)"
+    />
+
+    <path
+      d="M9 9h2 M12 12h3 M9 15h5"
+      stroke="currentColor"
+      strokeWidth="2"
+      strokeLinecap="round"
+      filter="url(#createGlow)"
+    />
+  </svg>
+);
+
+
+const ScenariosIcon = ({ className }) => (
+  <svg
+    className={className}
+    width="20"
+    height="20"
+    viewBox="0 0 24 24"
+    fill="none"
+    xmlns="http://www.w3.org/2000/svg"
+  >
+    <defs>
+      <filter id="scenariosGlow" x="-50%" y="-50%" width="200%" height="200%">
+        <feDropShadow
+          dx="0"
+          dy="0"
+          stdDeviation="2"
+          floodColor="#6366f1"
+          floodOpacity="0.55"
+        />
+      </filter>
+    </defs>
+    <path
+      d="M12 4c-4 0-7 2-7 6v2c0 4 3 6 7 6s7-2 7-6v-2c0-4-3-6-7-6z"
+      stroke="currentColor"
+      strokeWidth="2"
+      strokeLinejoin="round"
+      filter="url(#scenariosGlow)"
+    />
+    <path
+      d="M9 12c0-1 .8-1.5 1.5-1.5S12 11 12 12M15 12c0-1-.8-1.5-1.5-1.5S12 11 12 12"
+      stroke="currentColor"
+      strokeWidth="1.8"
+      strokeLinecap="round"
+      filter="url(#scenariosGlow)"
+    />
+  </svg>
+);
+
+
 export default function Header() {
   const { user } = useUser();
   const { isAuthenticated } = useAuth();
@@ -78,45 +279,52 @@ export default function Header() {
         {/* Navigation tabs */}
         {showNavigation && (
           <nav className={styles.navigation}>
-            <button 
+            <button
               className={`${styles.navTab} ${
                 viewContext.currentView === viewContext.VIEW_STATES.CHAT ? styles.active : ''
               }`}
               onClick={() => handleNavClick(viewContext.VIEW_STATES.CHAT)}
             >
-              Chat
+              <ChatIcon className={styles.navIcon} />
+              <span className={styles.navLabel}>Chat</span>
             </button>
-            <button 
+            <button
               className={`${styles.navTab} ${
                 viewContext.currentView === viewContext.VIEW_STATES.MARKET_HUB ? styles.active : ''
               }`}
               onClick={() => handleNavClick(viewContext.VIEW_STATES.MARKET_HUB)}
             >
-              Discover
+              <DiscoverIcon className={styles.navIcon} />
+              <span className={styles.navLabel}>Discover</span>
             </button>
+
             <button 
               className={`${styles.navTab} ${
                 viewContext.currentView === viewContext.VIEW_STATES.CREATOR_DASHBOARD ? styles.active : ''
               }`}
               onClick={() => handleNavClick(viewContext.VIEW_STATES.CREATOR_DASHBOARD)}
             >
-              Create
+              <CreateIcon className={styles.navIcon} />
+              <span className={styles.navLabel}>Create</span>
             </button>
-            <button 
+
+             <button
               className={`${styles.navTab} ${
                 viewContext.currentView === viewContext.VIEW_STATES.SCENARIOS ? styles.active : ''
               }`}
               onClick={() => handleNavClick(viewContext.VIEW_STATES.SCENARIOS)}
             >
-              Scenarios
+              <ScenariosIcon className={styles.navIcon} />
+              <span className={styles.navLabel}>Scenarios</span>
             </button>
-            <button 
+            <button
               className={`${styles.navTab} ${
                 viewContext.currentView === viewContext.VIEW_STATES.STORY_MODE ? styles.active : ''
               }`}
               onClick={() => handleNavClick(viewContext.VIEW_STATES.STORY_MODE)}
             >
-              Stories
+              <StoriesIcon className={styles.navIcon} />
+              <span className={styles.navLabel}>Stories</span>
             </button>
           </nav>
         )}

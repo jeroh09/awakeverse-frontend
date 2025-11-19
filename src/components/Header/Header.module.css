@@ -477,3 +477,51 @@
     white-space: nowrap;   /* keep each label on one line */
   }
 }
+/* === Nav icons / labels === */
+
+.navTab {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+}
+
+.navIcon {
+  width: 16px;
+  height: 16px;
+  flex-shrink: 0;
+  color: inherit; /* use active text color */
+}
+
+.navLabel {
+  white-space: nowrap;
+}
+
+/* Mobile: keep icons small, allow scroll strip if needed */
+@media (max-width: 768px) {
+  .navigation {
+    max-width: 100%;
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+    scrollbar-width: thin;
+  }
+
+  .navigation::-webkit-scrollbar {
+    height: 4px;
+  }
+
+  .navigation::-webkit-scrollbar-thumb {
+    background: rgba(148, 163, 184, 0.45);
+    border-radius: 999px;
+  }
+
+  .navTab {
+    flex: 0 0 auto;
+    padding-inline: 0.5rem;
+    font-size: 0.75rem;
+  }
+
+  .navIcon {
+    width: 14px;
+    height: 14px;
+  }
+}
