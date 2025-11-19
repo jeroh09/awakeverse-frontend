@@ -1,4 +1,4 @@
-// src/components/Header/Header.js – AwakeVerse header + left sidebar nav (simplified layout)
+// src/components/Header/Header.js – FIXED VERSION
 import React, { useState, useEffect } from 'react';
 import styles from './Header.module.css';
 import { useUser } from '../../contexts/UserContext';
@@ -211,15 +211,74 @@ export default function Header() {
     return () => clearTimeout(timer);
   }, [isHeaderVisible, isAuthenticated]);
 
-  // View helpers (guard if context missing)
-  const VIEW_STATES = viewContext?.VIEW_STATES || {};
-  const currentView = viewContext?.currentView;
+  // --- Build nav items & groups (FROM WORKING VERSION) ---
+  const navItems = !showNavigation
+    ? []
+    : [
+        {
+          key: 'chat',
+          label: 'Chat',
+          icon: ChatIcon,
+          viewState: viewContext.VIEW_STATES.CHAT,
+        },
+        {
+          key: 'discover',
+          label: 'Discover',
+          icon: DiscoverIcon,
+          viewState: viewContext.VIEW_STATES.MARKET_HUB,
+        },
+        {
+          key: 'stories',
+          label: 'Story',
+          icon: StoriesIcon,
+          viewState: viewContext.VIEW_STATES.STORY_MODE,
+        },
+        {
+          key: 'create',
+          label: 'Create',
+          icon: CreateIcon,
+          viewState: viewContext.VIEW_STATES.CREATOR_DASHBOARD,
+        },
+        {
+          key: 'scenarios',
+          label: 'Scenarios',
+          icon: ScenariosIcon,
+          viewState: viewContext.VIEW_STATES.SCENARIOS,
+        },
+      ];
 
-  const switchTo = (viewState) => {
-    if (!viewContext || !viewState) return;
+  const itemsByKey = Object.fromEntries(navItems.map((item) => [item.key, item]));
+
+  const navGroups = [
+    {
+      key: 'primary',
+      label: 'Primary',
+      items: ['chat', 'discover'],
+    },
+    {
+      key: 'storyWorld',
+      label: 'Story world',
+      items: ['stories'],
+    },
+    {
+      key: 'productivity',
+      label: 'Productivity',
+      items: ['create', 'scenarios'],
+    },
+  ];
+
+  const handleNavClick = (viewState) => {
+    if (!viewContext) return;
     viewContext.switchView(viewState);
     setIsSidebarOpen(false);
   };
+
+  const toggleSidebar = () => {
+    if (!showNavigation) return;
+    setIsSidebarOpen((open) => !open);
+  };
+
+  const closeSidebar = () => setIsSidebarOpen(false);
 
   // Avatar
   const avatarUrlRaw = user?.avatarUrl || user?.avatar_url;
@@ -302,7 +361,7 @@ export default function Header() {
           className={`${styles.sidebarHandle} ${
             isSidebarOpen ? styles.sidebarHandleOpen : ''
           }`}
-          onClick={() => setIsSidebarOpen((open) => !open)}
+          onClick={toggleSidebar}
           aria-label={isSidebarOpen ? 'Close menu' : 'Open menu'}
         >
           <span className={styles.handleBar} />
@@ -317,7 +376,7 @@ export default function Header() {
           className={`${styles.sidebarOverlay} ${
             isSidebarOpen ? styles.sidebarOverlayOpen : ''
           }`}
-          onClick={() => setIsSidebarOpen(false)}
+          onClick={closeSidebar}
         >
           <aside
             className={`${styles.sidebar} ${
@@ -326,127 +385,74 @@ export default function Header() {
             onClick={(e) => e.stopPropagation()}
             aria-label="AwakeVerse navigation"
           >
-            <div className={styles.sidebarInner}>
-              {/* Sidebar header */}
-              <div className={styles.sidebarHeader}>
-                <div className={styles.sidebarTitleBlock}>
-                  <span className={styles.sidebarTitle}>AwakeVerse</span>
-                  <span className={styles.sidebarSubtitle}>
-                    Primary, story worlds, and productivity.
-                  </span>
-                </div>
+            {/* Sidebar header */}
+            <div className={styles.sidebarHeader}>
+              <div className={styles.sidebarTitleBlock}>
+                <span className={styles.sidebarTitle}>AwakeVerse</span>
+                <span className={styles.sidebarSubtitle}>
+                  Primary, story worlds, and productivity.
+                </span>
               </div>
-
-              {/* Sidebar nav – THREE EXPLICIT GROUPS (stacked) */}
-              <nav className={styles.sidebarNav}>
-                {/* Primary: Chat + Discover */}
-                <section className={styles.sidebarSection}>
-                  <div className={styles.sidebarSectionLabel}>Primary</div>
-                  <div className={styles.sidebarSectionItems}>
-                    <button
-                      type="button"
-                      className={`${styles.sidebarNavItem} ${
-                        currentView === VIEW_STATES.CHAT
-                          ? styles.sidebarNavItemActive
-                          : ''
-                      }`}
-                      onClick={() => switchTo(VIEW_STATES.CHAT)}
-                    >
-                      <ChatIcon className={styles.sidebarNavIcon} />
-                      <span className={styles.sidebarNavLabel}>Chat</span>
-                    </button>
-
-                    <button
-                      type="button"
-                      className={`${styles.sidebarNavItem} ${
-                        currentView === VIEW_STATES.MARKET_HUB
-                          ? styles.sidebarNavItemActive
-                          : ''
-                      }`}
-                      onClick={() => switchTo(VIEW_STATES.MARKET_HUB)}
-                    >
-                      <DiscoverIcon className={styles.sidebarNavIcon} />
-                      <span className={styles.sidebarNavLabel}>Discover</span>
-                    </button>
-                  </div>
-                </section>
-
-                {/* Story world: Story */}
-                <section className={styles.sidebarSection}>
-                  <div className={styles.sidebarSectionLabel}>Story world</div>
-                  <div className={styles.sidebarSectionItems}>
-                    <button
-                      type="button"
-                      className={`${styles.sidebarNavItem} ${
-                        currentView === VIEW_STATES.STORY_MODE
-                          ? styles.sidebarNavItemActive
-                          : ''
-                      }`}
-                      onClick={() => switchTo(VIEW_STATES.STORY_MODE)}
-                    >
-                      <StoriesIcon className={styles.sidebarNavIcon} />
-                      <span className={styles.sidebarNavLabel}>Story</span>
-                    </button>
-                  </div>
-                </section>
-
-                {/* Productivity: Create + Scenarios */}
-                <section className={styles.sidebarSection}>
-                  <div className={styles.sidebarSectionLabel}>Productivity</div>
-                  <div className={styles.sidebarSectionItems}>
-                    <button
-                      type="button"
-                      className={`${styles.sidebarNavItem} ${
-                        currentView === VIEW_STATES.CREATOR_DASHBOARD
-                          ? styles.sidebarNavItemActive
-                          : ''
-                      }`}
-                      onClick={() => switchTo(VIEW_STATES.CREATOR_DASHBOARD)}
-                    >
-                      <CreateIcon className={styles.sidebarNavIcon} />
-                      <span className={styles.sidebarNavLabel}>Create</span>
-                    </button>
-
-                    <button
-                      type="button"
-                      className={`${styles.sidebarNavItem} ${
-                        currentView === VIEW_STATES.SCENARIOS
-                          ? styles.sidebarNavItemActive
-                          : ''
-                      }`}
-                      onClick={() => switchTo(VIEW_STATES.SCENARIOS)}
-                    >
-                      <ScenariosIcon className={styles.sidebarNavIcon} />
-                      <span className={styles.sidebarNavLabel}>Scenarios</span>
-                    </button>
-                  </div>
-                </section>
-              </nav>
-
-              {/* Sidebar footer – user + subscription */}
-              {isAuthenticated && (
-                <footer className={styles.sidebarFooter}>
-                  <div className={styles.userMeta}>
-                    <div className={styles.userName}>
-                      {user?.display_name ||
-                        user?.displayName ||
-                        user?.name ||
-                        'AwakeVerse explorer'}
-                    </div>
-                    {user?.username && (
-                      <div className={styles.userEmail}>{user.username}</div>
-                    )}
-                  </div>
-                  <div
-                    className={`${styles.subscriptionBadge} ${
-                      subscriptionActive ? styles.subscriptionActive : ''
-                    }`}
-                  >
-                    {subscriptionLabel}
-                  </div>
-                </footer>
-              )}
             </div>
+
+            {/* ✅ FIXED: Nav groups (FROM WORKING VERSION) */}
+            <nav className={styles.sidebarNav}>
+              {navGroups.map((group) => {
+                const groupItems = group.items
+                  .map((key) => itemsByKey[key])
+                  .filter(Boolean);
+
+                if (groupItems.length === 0) return null;
+
+                return (
+                  <div className={styles.sidebarSection} key={group.key}>
+                    <div className={styles.sidebarSectionLabel}>
+                      {group.label}
+                    </div>
+                    <div className={styles.sidebarSectionItems}>
+                      {groupItems.map(({ key, label, icon: Icon, viewState }) => (
+                        <button
+                          key={key}
+                          className={`${styles.sidebarNavItem} ${
+                            viewContext.currentView === viewState
+                              ? styles.sidebarNavItemActive
+                              : ''
+                          }`}
+                          onClick={() => handleNavClick(viewState)}
+                        >
+                          <Icon className={styles.sidebarNavIcon} />
+                          <span className={styles.sidebarNavLabel}>{label}</span>
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+                );
+              })}
+            </nav>
+
+            {/* Sidebar footer – user + subscription */}
+            {isAuthenticated && (
+              <footer className={styles.sidebarFooter}>
+                <div className={styles.userMeta}>
+                  <div className={styles.userName}>
+                    {user?.display_name ||
+                      user?.displayName ||
+                      user?.name ||
+                      'AwakeVerse explorer'}
+                  </div>
+                  {user?.username && (
+                    <div className={styles.userEmail}>{user.username}</div>
+                  )}
+                </div>
+                <div
+                  className={`${styles.subscriptionBadge} ${
+                    subscriptionActive ? styles.subscriptionActive : ''
+                  }`}
+                >
+                  {subscriptionLabel}
+                </div>
+              </footer>
+            )}
           </aside>
         </div>
       )}

@@ -1,6 +1,7 @@
 /* ==========================================================
-   AwakeVerse Header + Sidebar Navigation (Drop-in Replacement)
-   ✅ FIXED: Ultra-compact spacing to eliminate sidebar scroll
+   AwakeVerse Header + Sidebar Navigation (FIXED LAYOUT)
+   ✅ Uses the working flexbox structure from your previous version
+   ✅ Keeps the current visual styling
    ========================================================== */
 
 /* Fonts */
@@ -154,7 +155,7 @@
   z-index: 45;
 
   display: flex;
-  flex-direction: column; /* *** THIS FIXED THE ISSUE *** */
+  flex-direction: column;
   align-items: center;
   justify-content: center;
 
@@ -189,36 +190,12 @@
   margin-top: 3px;
 }
 
-/* hover label ("Menu") appears only on hover */
-.sidebarHandle::after {
-  content: 'Menu';
-  opacity: 0;
-  max-width: 0;
-
-  overflow: hidden;
-  white-space: nowrap;
-
-  margin-left: 0;
-  transition: max-width 0.22s ease-out, opacity 0.22s ease-out, margin-left 0.22s ease-out;
-
-  font-family: 'Inter';
-  font-size: 0.72rem;
-  letter-spacing: 0.14em;
-  color: #94a3b8;
-}
-
-.sidebarHandle:hover::after {
-  opacity: 1;
-  max-width: 80px;
-  margin-left: 0.3rem;
-}
-
 .sidebarHandleOpen {
   transform: translateX(var(--sidebar-width));
 }
 
 /* ============================================
-   SIDEBAR OVERLAY + PANEL
+   SIDEBAR OVERLAY + PANEL (WORKING STRUCTURE)
    ============================================ */
 
 .sidebarOverlay {
@@ -238,13 +215,16 @@
   z-index: 41;
 }
 
-/* Sidebar panel */
-
+/* Sidebar panel - USING WORKING FLEXBOX STRUCTURE */
 .sidebar {
   position: fixed;
   inset: 0 auto 0 0;
   width: var(--sidebar-width);
   max-width: 80vw;
+  z-index: 42;
+
+  display: flex;
+  flex-direction: column; /* ✅ CRITICAL: This was missing */
 
   background: #020617;
   border-right: 1px solid rgba(148, 163, 184, 0.35);
@@ -255,7 +235,6 @@
 
   transform: translateX(-100%);
   transition: transform 0.3s ease-out;
-  z-index: 42;
 }
 
 .sidebarOpen {
@@ -263,45 +242,26 @@
 }
 
 /* ============================================
-   ✅ FIXED: ULTRA-COMPACT SIDEBAR INNER CONTAINER
-   ============================================ */
-
-.sidebarInner {
-  display: flex;
-  flex-direction: column;
-  height: 100%;
-  
-  /* ✅ FIX: Minimal gap to prevent scroll */
-  gap: 0.1rem;
-  
-  /* ✅ FIX: Minimal padding */
-  padding: 0.25rem 0.5rem;
-  
-  /* ✅ FIX: Scroll only if absolutely necessary */
-  overflow-y: auto;
-}
-
-/* ============================================
-   COMPACT SIDEBAR HEADER
+   ✅ FIXED: SIDEBAR HEADER (WORKING STRUCTURE)
    ============================================ */
 
 .sidebarHeader {
-  padding: 0.4rem 0.75rem 0.2rem;
+  padding: 1.2rem 1.3rem 0.8rem;
   border-bottom: 1px solid rgba(148, 163, 184, 0.25);
 }
 
 .sidebarTitleBlock {
   display: flex;
   flex-direction: column;
-  gap: 0.1rem;
+  gap: 0.15rem;
 }
 
 .sidebarTitle {
   font-family: 'Syne', system-ui, sans-serif;
-  font-size: 0.9rem;
+  font-size: 1rem;
+  font-weight: 800;
+  letter-spacing: 0.18em;
   text-transform: uppercase;
-  letter-spacing: 0.14em;
-  font-weight: 700;
   color: #f5f5dc;
 }
 
@@ -312,59 +272,48 @@
 }
 
 /* ============================================
-   ✅ FIXED: ULTRA-COMPACT SIDEBAR NAV COLUMN
+   ✅ FIXED: SIDEBAR NAVIGATION (WORKING STRUCTURE)
    ============================================ */
 
 .sidebarNav {
-  /* ✅ FIX: Remove flex: 1 - don't expand to fill space! */
-  flex: 0 0 auto;
-  
-  /* ✅ FIX: Remove padding - spacing handled by parent */
-  padding: 0;
-  
-  /* ✅ FIX: No scroll on nav itself - parent handles it */
-  overflow-y: visible;
+  flex: 1; /* ✅ CRITICAL: This allows proper expansion */
+  padding: 0.75rem 0.9rem 0.9rem;
+  overflow-y: auto;
 }
 
-/* ============================================
-   ✅ FIXED: COMPACT SIDEBAR SECTIONS
-   ============================================ */
-
 .sidebarSection {
-  margin-bottom: 0.05rem;   /* Ultra compact spacing between groups */
+  margin-bottom: 0.75rem;
 }
 
 .sidebarSectionLabel {
-  font-family: 'Inter';
+  font-family: 'Inter', system-ui, sans-serif;
   font-size: 0.65rem;
-  letter-spacing: 0.14em;
   text-transform: uppercase;
+  letter-spacing: 0.14em;
   color: #64748b;
-  margin-bottom: 0.02rem;
-  padding: 0.05rem 0.5rem;
+  margin-bottom: 0.35rem;
 }
 
-/* Items stacked ultra tightly */
 .sidebarSectionItems {
   display: flex;
   flex-direction: column;
-  gap: 0.02rem;
+  gap: 0.3rem;
 }
 
-/* Individual nav button - more compact */
+/* Individual nav button */
 .sidebarNavItem {
   display: flex;
   align-items: center;
-  gap: 0.55rem;
+  gap: 0.6rem;
 
   width: 100%;
-  padding: 0.2rem 0.65rem;
+  padding: 0.55rem 0.7rem;
   border-radius: 0.7rem;
 
   background: rgba(15, 23, 42, 0.9);
   border: 1px solid transparent;
 
-  font-family: 'Inter';
+  font-family: 'Inter', system-ui, sans-serif;
   font-size: 0.8rem;
   font-weight: 500;
   color: #cbd5f5;
@@ -400,45 +349,45 @@
 }
 
 /* ============================================
-   ✅ FIXED: COMPACT SIDEBAR FOOTER
+   ✅ FIXED: SIDEBAR FOOTER (WORKING STRUCTURE)
    ============================================ */
 
 .sidebarFooter {
-  padding: 0.3rem 0.5rem 0.5rem;
+  padding: 0.75rem 1rem 1rem;
   border-top: 1px solid rgba(148, 163, 184, 0.25);
 
   display: flex;
   align-items: center;
   justify-content: space-between;
-  gap: 0.3rem;
+  gap: 0.75rem;
 }
 
 .userMeta {
   display: flex;
   flex-direction: column;
-  gap: 0.05rem;
+  gap: 0.1rem;
 }
 
 .userName {
-  font-family: 'Syne';
+  font-family: 'Syne', system-ui, sans-serif;
   font-size: 0.85rem;
   font-weight: 600;
   color: #f5f5dc;
 }
 
 .userEmail {
-  font-family: 'Inter';
+  font-family: 'Inter', system-ui, sans-serif;
   font-size: 0.7rem;
   color: #64748b;
 }
 
 .subscriptionBadge {
-  padding: 0.2rem 0.5rem;
+  padding: 0.3rem 0.65rem;
   border-radius: 999px;
   border: 1px solid rgba(148, 163, 184, 0.6);
 
-  font-family: 'Inter';
-  font-size: 0.65rem;
+  font-family: 'Inter', system-ui, sans-serif;
+  font-size: 0.7rem;
   font-weight: 600;
   letter-spacing: 0.1em;
   text-transform: uppercase;
