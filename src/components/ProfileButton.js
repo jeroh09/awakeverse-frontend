@@ -1,4 +1,4 @@
-// src/components/ProfileButton.js
+// src/components/ProfileButton.js - UPDATED for AwakeVerse Design System
 import React, { useState, useRef, useContext, useEffect } from 'react';
 import { Link, useNavigate, useLocation } from 'react-router-dom';
 import { MoreVertical } from 'lucide-react';
@@ -53,7 +53,7 @@ export default function ProfileButton({ menuItems = defaultProfileMenu }) {
       toggleDarkMode();
     } else if (action === 'logout') {
       logout();
-      navigate('/login');
+      navigate('/');
     }
   };
 
@@ -86,7 +86,7 @@ export default function ProfileButton({ menuItems = defaultProfileMenu }) {
         aria-controls="profile-menu"
         title="Profile menu"
       >
-        <MoreVertical size={24} />
+        <MoreVertical size={20} />
       </button>
 
       <div
@@ -118,7 +118,8 @@ export default function ProfileButton({ menuItems = defaultProfileMenu }) {
                 to={item.to}
                 onClick={() => setOpen(false)}
               >
-                <item.icon className={styles.icon} size={20} />
+                <item.icon className={styles.icon} size={18} />
+                <span className={styles.menuLabel}>{label}</span>
               </Link>
             );
           }
@@ -129,7 +130,8 @@ export default function ProfileButton({ menuItems = defaultProfileMenu }) {
                 {...commonProps}
                 onClick={() => handleAction(item.onClick)}
               >
-                <item.icon className={styles.icon} size={20} />
+                <item.icon className={styles.icon} size={18} />
+                <span className={styles.menuLabel}>{label}</span>
               </button>
             );
           }

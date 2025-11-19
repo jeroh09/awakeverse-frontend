@@ -1,10 +1,10 @@
-// src/components/Header/Header.js – AwakeVerse header + left sidebar nav (simplified layout)
+// src/components/Header/Header.js – FIXED VERSION
 import React, { useState, useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
 import styles from './Header.module.css';
 import { useUser } from '../../contexts/UserContext';
 import { useAuth } from '../../contexts/AuthContext';
 import { useAppView } from '../../contexts/AppViewContext';
+import ProfileButton from '../ProfileButton';
 
 // === AwakeVerse Nav Icons (inline SVG, indigo glow) ===
 
@@ -189,8 +189,7 @@ const CreateIcon = ({ className }) => (
 
 export default function Header() {
   const { user, getSubscriptionInfo } = useUser();
-  const { isAuthenticated, logout } = useAuth();
-  const navigate = useNavigate();
+  const { isAuthenticated } = useAuth();
   const API_BASE = process.env.REACT_APP_API_URL || 'https://api.awakeverse.com';
 
   let viewContext = null;
@@ -202,7 +201,6 @@ export default function Header() {
 
   const [isHeaderVisible, setIsHeaderVisible] = useState(true);
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
-  const [isProfileMenuOpen, setIsProfileMenuOpen] = useState(false);
 
   const showNavigation = isAuthenticated && !!viewContext;
 
@@ -213,46 +211,74 @@ export default function Header() {
     return () => clearTimeout(timer);
   }, [isHeaderVisible, isAuthenticated]);
 
-  // Close profile menu when sidebar closes
-  useEffect(() => {
-    if (!isSidebarOpen) {
-      setIsProfileMenuOpen(false);
-    }
-  }, [isSidebarOpen]);
+  // --- Build nav items & groups (FROM WORKING VERSION) ---
+  const navItems = !showNavigation
+    ? []
+    : [
+        {
+          key: 'chat',
+          label: 'Chat',
+          icon: ChatIcon,
+          viewState: viewContext.VIEW_STATES.CHAT,
+        },
+        {
+          key: 'discover',
+          label: 'Discover',
+          icon: DiscoverIcon,
+          viewState: viewContext.VIEW_STATES.MARKET_HUB,
+        },
+        {
+          key: 'stories',
+          label: 'Story',
+          icon: StoriesIcon,
+          viewState: viewContext.VIEW_STATES.STORY_MODE,
+        },
+        {
+          key: 'create',
+          label: 'Create',
+          icon: CreateIcon,
+          viewState: viewContext.VIEW_STATES.CREATOR_DASHBOARD,
+        },
+        {
+          key: 'scenarios',
+          label: 'Scenarios',
+          icon: ScenariosIcon,
+          viewState: viewContext.VIEW_STATES.SCENARIOS,
+        },
+      ];
 
-  // View helpers (guard if context missing)
-  const VIEW_STATES = viewContext?.VIEW_STATES || {};
-  const currentView = viewContext?.currentView;
+  const itemsByKey = Object.fromEntries(navItems.map((item) => [item.key, item]));
 
-  const switchTo = (viewState) => {
-    if (!viewContext || !viewState) return;
+  const navGroups = [
+    {
+      key: 'primary',
+      label: 'Primary',
+      items: ['chat', 'discover'],
+    },
+    {
+      key: 'storyWorld',
+      label: 'Story world',
+      items: ['stories'],
+    },
+    {
+      key: 'productivity',
+      label: 'Productivity',
+      items: ['create', 'scenarios'],
+    },
+  ];
+
+  const handleNavClick = (viewState) => {
+    if (!viewContext) return;
     viewContext.switchView(viewState);
     setIsSidebarOpen(false);
-    setIsProfileMenuOpen(false);
   };
 
-  const handleProfileAction = (action) => {
-    setIsProfileMenuOpen(false);
-    setIsSidebarOpen(false);
-    
-    switch(action) {
-      case 'profile':
-        navigate('/profile-settings');
-        break;
-      case 'avatar':
-        navigate('/upload-avatar');
-        break;
-      case 'contact':
-        navigate('/contact-us');
-        break;
-      case 'logout':
-        logout();
-        navigate('/');
-        break;
-      default:
-        break;
-    }
+  const toggleSidebar = () => {
+    if (!showNavigation) return;
+    setIsSidebarOpen((open) => !open);
   };
+
+  const closeSidebar = () => setIsSidebarOpen(false);
 
   // Avatar
   const avatarUrlRaw = user?.avatarUrl || user?.avatar_url;
@@ -269,13 +295,6 @@ export default function Header() {
     user?.name?.charAt(0) ||
     user?.email?.charAt(0) ||
     'A';
-
-  const userName = user?.display_name ||
-    user?.displayName ||
-    user?.name ||
-    'AwakeVerse explorer';
-
-  const userEmail = user?.username || user?.email || '';
 
   const subscriptionInfo = getSubscriptionInfo ? getSubscriptionInfo() : null;
   const subscriptionLabel = subscriptionInfo?.display_name || 'Free';
@@ -309,6 +328,7 @@ export default function Header() {
                     </div>
                   )}
                 </div>
+                <ProfileButton user={user} />
                 <button
                   className={styles.retractButton}
                   onClick={() => setIsHeaderVisible(false)}
@@ -341,7 +361,7 @@ export default function Header() {
           className={`${styles.sidebarHandle} ${
             isSidebarOpen ? styles.sidebarHandleOpen : ''
           }`}
-          onClick={() => setIsSidebarOpen((open) => !open)}
+          onClick={toggleSidebar}
           aria-label={isSidebarOpen ? 'Close menu' : 'Open menu'}
         >
           <span className={styles.handleBar} />
@@ -356,7 +376,7 @@ export default function Header() {
           className={`${styles.sidebarOverlay} ${
             isSidebarOpen ? styles.sidebarOverlayOpen : ''
           }`}
-          onClick={() => setIsSidebarOpen(false)}
+          onClick={closeSidebar}
         >
           <aside
             className={`${styles.sidebar} ${
@@ -365,190 +385,74 @@ export default function Header() {
             onClick={(e) => e.stopPropagation()}
             aria-label="AwakeVerse navigation"
           >
-            <div className={styles.sidebarInner}>
-              {/* Sidebar header */}
-              <div className={styles.sidebarHeader}>
-                <div className={styles.sidebarTitleBlock}>
-                  <span className={styles.sidebarTitle}>AwakeVerse</span>
-                  <span className={styles.sidebarSubtitle}>
-                    Primary, story worlds, and productivity.
-                  </span>
-                </div>
+            {/* Sidebar header */}
+            <div className={styles.sidebarHeader}>
+              <div className={styles.sidebarTitleBlock}>
+                <span className={styles.sidebarTitle}>AwakeVerse</span>
+                <span className={styles.sidebarSubtitle}>
+                  Primary, story worlds, and productivity.
+                </span>
               </div>
-
-              {/* Sidebar nav – THREE EXPLICIT GROUPS (stacked) */}
-              <nav className={styles.sidebarNav}>
-                {/* Primary: Chat + Discover */}
-                <section className={styles.sidebarSection}>
-                  <div className={styles.sidebarSectionLabel}>Primary</div>
-                  <div className={styles.sidebarSectionItems}>
-                    <button
-                      type="button"
-                      className={`${styles.sidebarNavItem} ${
-                        currentView === VIEW_STATES.CHAT
-                          ? styles.sidebarNavItemActive
-                          : ''
-                      }`}
-                      onClick={() => switchTo(VIEW_STATES.CHAT)}
-                    >
-                      <ChatIcon className={styles.sidebarNavIcon} />
-                      <span className={styles.sidebarNavLabel}>Chat</span>
-                    </button>
-
-                    <button
-                      type="button"
-                      className={`${styles.sidebarNavItem} ${
-                        currentView === VIEW_STATES.MARKET_HUB
-                          ? styles.sidebarNavItemActive
-                          : ''
-                      }`}
-                      onClick={() => switchTo(VIEW_STATES.MARKET_HUB)}
-                    >
-                      <DiscoverIcon className={styles.sidebarNavIcon} />
-                      <span className={styles.sidebarNavLabel}>Discover</span>
-                    </button>
-                  </div>
-                </section>
-
-                {/* Story world: Story */}
-                <section className={styles.sidebarSection}>
-                  <div className={styles.sidebarSectionLabel}>Story world</div>
-                  <div className={styles.sidebarSectionItems}>
-                    <button
-                      type="button"
-                      className={`${styles.sidebarNavItem} ${
-                        currentView === VIEW_STATES.STORY_MODE
-                          ? styles.sidebarNavItemActive
-                          : ''
-                      }`}
-                      onClick={() => switchTo(VIEW_STATES.STORY_MODE)}
-                    >
-                      <StoriesIcon className={styles.sidebarNavIcon} />
-                      <span className={styles.sidebarNavLabel}>Story</span>
-                    </button>
-                  </div>
-                </section>
-
-                {/* Productivity: Create + Scenarios */}
-                <section className={styles.sidebarSection}>
-                  <div className={styles.sidebarSectionLabel}>Productivity</div>
-                  <div className={styles.sidebarSectionItems}>
-                    <button
-                      type="button"
-                      className={`${styles.sidebarNavItem} ${
-                        currentView === VIEW_STATES.CREATOR_DASHBOARD
-                          ? styles.sidebarNavItemActive
-                          : ''
-                      }`}
-                      onClick={() => switchTo(VIEW_STATES.CREATOR_DASHBOARD)}
-                    >
-                      <CreateIcon className={styles.sidebarNavIcon} />
-                      <span className={styles.sidebarNavLabel}>Create</span>
-                    </button>
-
-                    <button
-                      type="button"
-                      className={`${styles.sidebarNavItem} ${
-                        currentView === VIEW_STATES.SCENARIOS
-                          ? styles.sidebarNavItemActive
-                          : ''
-                      }`}
-                      onClick={() => switchTo(VIEW_STATES.SCENARIOS)}
-                    >
-                      <ScenariosIcon className={styles.sidebarNavIcon} />
-                      <span className={styles.sidebarNavLabel}>Scenarios</span>
-                    </button>
-                  </div>
-                </section>
-              </nav>
-
-              {/* Sidebar footer – profile menu */}
-              {isAuthenticated && (
-                <footer className={styles.sidebarFooter}>
-                  <button
-                    className={`${styles.profileTrigger} ${
-                      isProfileMenuOpen ? styles.profileTriggerExpanded : ''
-                    }`}
-                    onClick={() => setIsProfileMenuOpen(!isProfileMenuOpen)}
-                    aria-expanded={isProfileMenuOpen}
-                    aria-label="Profile menu"
-                  >
-                    <div className={styles.profileAvatar}>
-                      {avatarUrl ? (
-                        <img
-                          src={avatarUrl}
-                          alt="User avatar"
-                          className={styles.profileAvatarImage}
-                          onError={(e) => {
-                            e.target.style.display = 'none';
-                          }}
-                        />
-                      ) : (
-                        <div className={styles.profileAvatarFallback}>
-                          {userInitial.toUpperCase()}
-                        </div>
-                      )}
-                    </div>
-                    <div className={styles.profileInfo}>
-                      <div className={styles.profileName}>{userName}</div>
-                      <div className={styles.profileStatus}>{subscriptionLabel}</div>
-                    </div>
-                    <span className={styles.profileChevron}>▼</span>
-                  </button>
-
-                  {/* Profile dropdown menu */}
-                  {isProfileMenuOpen && (
-                    <div className={styles.profileMenu}>
-                      <button
-                        className={styles.profileMenuItem}
-                        onClick={() => handleProfileAction('profile')}
-                      >
-                        <svg className={styles.profileMenuIcon} viewBox="0 0 24 24" fill="none" stroke="currentColor">
-                          <path d="M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z"/>
-                        </svg>
-                        Profile Settings
-                      </button>
-                      
-                      <button
-                        className={styles.profileMenuItem}
-                        onClick={() => handleProfileAction('avatar')}
-                      >
-                        <svg className={styles.profileMenuIcon} viewBox="0 0 24 24" fill="none" stroke="currentColor">
-                          <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/>
-                          <circle cx="12" cy="7" r="4"/>
-                        </svg>
-                        Upload Avatar
-                      </button>
-                      
-                      <div className={styles.profileMenuDivider}></div>
-                      
-                      <button
-                        className={styles.profileMenuItem}
-                        onClick={() => handleProfileAction('contact')}
-                      >
-                        <svg className={styles.profileMenuIcon} viewBox="0 0 24 24" fill="none" stroke="currentColor">
-                          <path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/>
-                          <polyline points="22,6 12,13 2,6"/>
-                        </svg>
-                        Contact Support
-                      </button>
-                      
-                      <div className={styles.profileMenuDivider}></div>
-                      
-                      <button
-                        className={`${styles.profileMenuItem} ${styles.profileMenuDanger}`}
-                        onClick={() => handleProfileAction('logout')}
-                      >
-                        <svg className={styles.profileMenuIcon} viewBox="0 0 24 24" fill="none" stroke="currentColor">
-                          <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4M16 17l5-5-5-5M21 12H9"/>
-                        </svg>
-                        Sign Out
-                      </button>
-                    </div>
-                  )}
-                </footer>
-              )}
             </div>
+
+            {/* ✅ FIXED: Nav groups (FROM WORKING VERSION) */}
+            <nav className={styles.sidebarNav}>
+              {navGroups.map((group) => {
+                const groupItems = group.items
+                  .map((key) => itemsByKey[key])
+                  .filter(Boolean);
+
+                if (groupItems.length === 0) return null;
+
+                return (
+                  <div className={styles.sidebarSection} key={group.key}>
+                    <div className={styles.sidebarSectionLabel}>
+                      {group.label}
+                    </div>
+                    <div className={styles.sidebarSectionItems}>
+                      {groupItems.map(({ key, label, icon: Icon, viewState }) => (
+                        <button
+                          key={key}
+                          className={`${styles.sidebarNavItem} ${
+                            viewContext.currentView === viewState
+                              ? styles.sidebarNavItemActive
+                              : ''
+                          }`}
+                          onClick={() => handleNavClick(viewState)}
+                        >
+                          <Icon className={styles.sidebarNavIcon} />
+                          <span className={styles.sidebarNavLabel}>{label}</span>
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+                );
+              })}
+            </nav>
+
+            {/* Sidebar footer – user + subscription */}
+            {isAuthenticated && (
+              <footer className={styles.sidebarFooter}>
+                <div className={styles.userMeta}>
+                  <div className={styles.userName}>
+                    {user?.display_name ||
+                      user?.displayName ||
+                      user?.name ||
+                      'AwakeVerse explorer'}
+                  </div>
+                  {user?.username && (
+                    <div className={styles.userEmail}>{user.username}</div>
+                  )}
+                </div>
+                <div
+                  className={`${styles.subscriptionBadge} ${
+                    subscriptionActive ? styles.subscriptionActive : ''
+                  }`}
+                >
+                  {subscriptionLabel}
+                </div>
+              </footer>
+            )}
           </aside>
         </div>
       )}
