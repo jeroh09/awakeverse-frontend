@@ -1,18 +1,16 @@
 // src/components/CreatorHub/CreatorDashboard.jsx
-// PRODUCTION-READY REFACTORED VERSION - Design System Aligned
+// MIGRATED TO PAYMENTROUTER - All payment flows now use centralized service
+// CHANGES: Lines 13, 97-105, 271 - Replaced hardcoded URLs with PaymentRouter
 
 import React, { useState, useEffect, useCallback } from 'react';
 import { useUser } from '../../contexts/UserContext';
 import { useAppView } from '../../contexts/AppViewContext';
 import api from '../../api';
-import { 
-  Eye, Heart, Bookmark, Share2, MessageCircle, 
-  TrendingUp, Calendar, Users, Zap, Crown,
-  BarChart3, Sparkles, Target, Filter,
-  ArrowLeft, Plus
-} from 'lucide-react';
-import PaymentRouter from '../../services/PaymentRouter';
+import { Eye, Heart, Bookmark, Share2, MessageCircle, TrendingUp, Calendar } from 'lucide-react';
 import './CreatorDashboard.css';
+
+// ✅ NEW: Import PaymentRouter instead of using hardcoded URLs
+import PaymentRouter from '../../services/PaymentRouter';
 
 const CreatorDashboard = () => {
   const { user } = useUser();
@@ -24,9 +22,10 @@ const CreatorDashboard = () => {
   const [selectedCharacter, setSelectedCharacter] = useState(null);
   const [showEducationalModal, setShowEducationalModal] = useState(false);
   const [requiresUpgrade, setRequiresUpgrade] = useState(false);
-  const [activeTab, setActiveTab] = useState('overview');
-  
+  // Add this state at the top of your component with other states
+  const [showAllStats, setShowAllStats] = useState(false);
   const [isMobile, setIsMobile] = useState(window.innerWidth <= 768);
+  
   
   useEffect(() => {
     const handleResize = () => setIsMobile(window.innerWidth <= 768);
@@ -93,7 +92,7 @@ const CreatorDashboard = () => {
     switchView(VIEW_STATES.CHAT);
   };
 
-  // Payment handlers - PRESERVED EXACTLY
+  // ✅ PRODUCTION-READY: Separate handlers for each payment provider
   const handleUpgradeWithStripe = async () => {
     try {
       await PaymentRouter.redirectToCheckout({
@@ -121,24 +120,13 @@ const CreatorDashboard = () => {
   };
 
   const handleComparePlans = () => {
+    // Default to Stripe for comparison
     handleUpgradeWithStripe();
   };
 
   const handleViewInMarketHub = (characterKey) => {
     window.open(`/market-hub?character=${characterKey}`, '_blank');
   };
-
-  const handleCreateCharacter = () => {
-    switchView(VIEW_STATES.CHARACTER_BUILDER);
-  };
-
-  const handleViewMarketHub = () => {
-    switchView(VIEW_STATES.MARKET_HUB);
-  };
-
-  // ============================================================================
-  // RENDER LOGIC - PRESERVED EXISTING FLOW
-  // ============================================================================
 
   if (loading) {
     return (
@@ -190,7 +178,6 @@ const CreatorDashboard = () => {
         <EmptyDashboardState 
           onLearnMore={() => setShowEducationalModal(true)}
           onGoToCharacters={handleGoToCharacters}
-          onCreateCharacter={handleCreateCharacter}
         />
         <EducationalUpgradeModal 
           isOpen={showEducationalModal}
@@ -205,181 +192,103 @@ const CreatorDashboard = () => {
 
   const { summary, characters, engagement_trends, recent_achievements, creator_info } = dashboardData;
 
-  // ============================================================================
-  // NEW DESIGN LAYOUT
-  // ============================================================================
-
   return (
     <div className="creator-dashboard">
-      {/* ========= HEADER ========= */}
       <header className="dashboard-header">
         <div className="header-content">
-          <h1>Creator Hub</h1>
-          <p>Welcome back, {user?.displayName || 'Creator'}! Track your characters' performance.</p>
+          <h1>Creator Dashboard</h1>
+          <p>Welcome back, {user?.displayName || 'Creator'}!</p>
         </div>
-        <div className="header-actions">
-          <button onClick={loadDashboardData} className="refresh-button">
-            <Zap size={16} />
-            Refresh Data
-          </button>
-        </div>
+        <button onClick={loadDashboardData} className="refresh-button" title="Refresh data">
+          🔄 Refresh
+        </button>
       </header>
 
-      {/* ========= QUICK STATS CARDS ========= */}
       <section className="stats-section">
         <div className="section-header">
           <h2>Performance Overview</h2>
           <span className="section-subtitle">Last 30 days</span>
         </div>
+
+        {/* Main Stats Grid - Always show first 4 cards */}
         <div className="stats-grid">
           <StatCard
             icon={<Eye size={20} />}
             label="Total Views"
             value={summary.total_views || 0}
-            trend="+12%"
             color="#6366F1"
           />
           <StatCard
             icon={<Heart size={20} />}
             label="Total Likes"
             value={summary.total_likes || 0}
-            trend="+8%"
             color="#EF4444"
           />
           <StatCard
             icon={<Bookmark size={20} />}
             label="Total Bookmarks"
             value={summary.total_bookmarks || 0}
-            trend="+15%"
             color="#F59E0B"
-          />
-          <StatCard
-            icon={<Share2 size={20} />}
-            label="Total Shares"
-            value={summary.total_shares || 0}
-            trend="+5%"
-            color="#10B981"
           />
           <StatCard
             icon={<MessageCircle size={20} />}
             label="Chat Sessions"
             value={summary.total_chat_sessions || 0}
-            trend="+22%"
             color="#8B5CF6"
           />
-          <StatCard
-            icon={<TrendingUp size={20} />}
-            label="Engagement Rate"
-            value={`${summary.avg_engagement_rate || 0}%`}
-            trend="+3%"
-            color="#06B6D4"
-          />
+        </div>
+
+        {/* Additional Stats - Show when expanded */}
+        {showAllStats && (
+          <div className="stats-grid-additional">
+            <StatCard
+              icon={<Share2 size={20} />}
+              label="Total Shares"
+              value={summary.total_shares || 0}
+              color="#10B981"
+            />
+            <StatCard
+              icon={<TrendingUp size={20} />}
+              label="Engagement Rate"
+              value={`${summary.avg_engagement_rate || 0}%`}
+              color="#06B6D4"
+            />
+          </div>
+        )}
+
+        {/* See More/Less Toggle */}
+        <div className="stats-toggle">
+          <button 
+            className="stats-toggle-button"
+            onClick={() => setShowAllStats(!showAllStats)}
+          >
+            {showAllStats ? 'Show Less' : 'See More Metrics'}
+            <TrendingUp size={16} className={showAllStats ? 'rotated' : ''} />
+          </button>
+        </div>
+      </section>
+      
+      {engagement_trends && engagement_trends.length > 0 && (
+        <section className="trends-section">
+          <h2>Engagement Trends (Last 30 Days)</h2>
+          <EngagementTrendsChart data={engagement_trends} />
+        </section>
+      )}
+
+      <section className="characters-section">
+        <h2>Your Published Characters ({characters.length})</h2>
+        <div className="characters-grid">
+          {characters.map(character => (
+            <CharacterEngagementCard
+              key={character.character_id}
+              character={character}
+              onClick={() => setSelectedCharacter(character)}
+              onViewInHub={handleViewInMarketHub}
+            />
+          ))}
         </div>
       </section>
 
-      <div className="dashboard-content">
-        {/* ========= MAIN CONTENT AREA ========= */}
-        <main className="main-content">
-          {/* CHARACTERS GRID - TAKES MOST SPACE */}
-          <section className="characters-section">
-            <div className="section-header">
-              <h2>Your Characters</h2>
-              <span className="section-subtitle">
-                {characters.length} published characters
-              </span>
-            </div>
-            
-            <div className="characters-grid">
-              {characters.map(character => (
-                <CharacterCard
-                  key={character.character_id}
-                  character={character}
-                  onClick={() => setSelectedCharacter(character)}
-                />
-              ))}
-            </div>
-          </section>
-
-          {/* ENGAGEMENT TRENDS */}
-          {engagement_trends && engagement_trends.length > 0 && (
-            <section className="trends-section">
-              <div className="section-header">
-                <h2>Engagement Trends</h2>
-                <span className="section-subtitle">Last 14 days performance</span>
-              </div>
-              <EngagementChart data={engagement_trends} />
-            </section>
-          )}
-        </main>
-
-        {/* ========= SIDEBAR ========= */}
-        <aside className="dashboard-sidebar">
-          {/* QUICK ACTIONS */}
-          <section className="actions-panel">
-            <h3>Quick Actions</h3>
-            <div className="action-buttons">
-              <button className="action-btn primary" onClick={handleCreateCharacter}>
-                <Sparkles size={16} />
-                Create New Character
-              </button>
-              <button className="action-btn secondary" onClick={handleViewMarketHub}>
-                <BarChart3 size={16} />
-                View Market Hub
-              </button>
-              <button className="action-btn secondary" onClick={() => setShowEducationalModal(true)}>
-                <Target size={16} />
-                Upgrade Features
-              </button>
-            </div>
-          </section>
-
-          {/* RECENT ACHIEVEMENTS */}
-          {recent_achievements && recent_achievements.length > 0 && (
-            <section className="achievements-panel">
-              <h3>Recent Achievements</h3>
-              <div className="achievements-list">
-                {recent_achievements.slice(0, 3).map((achievement, index) => (
-                  <div key={index} className="achievement-item">
-                    <div className="achievement-icon">🏆</div>
-                    <div className="achievement-content">
-                      <div className="achievement-title">{achievement.title}</div>
-                      <div className="achievement-date">
-                        {new Date(achievement.earned_at || achievement.date).toLocaleDateString()}
-                      </div>
-                    </div>
-                  </div>
-                ))}
-              </div>
-            </section>
-          )}
-
-          {/* CREATOR LEVEL */}
-          <section className="level-panel">
-            <h3>Creator Level</h3>
-            <div className="level-display">
-              <div className="level-icon">
-                <Crown size={24} />
-              </div>
-              <div className="level-info">
-                <div className="level-name">{creator_info.level || 'Rising Star'}</div>
-                <div className="level-progress">
-                  <div className="progress-bar">
-                    <div 
-                      className="progress-fill" 
-                      style={{ width: `${creator_info.progress || 45}%` }}
-                    />
-                  </div>
-                  <span className="progress-text">
-                    {creator_info.progress || 45}% to next level
-                  </span>
-                </div>
-              </div>
-            </div>
-          </section>
-        </aside>
-      </div>
-
-      {/* ========= MODALS - PRESERVED EXISTING ========= */}
       {selectedCharacter && (
         <CharacterDetailModal
           character={selectedCharacter}
@@ -387,121 +296,13 @@ const CreatorDashboard = () => {
           onViewInHub={handleViewInMarketHub}
         />
       )}
-
-      <EducationalUpgradeModal 
-        isOpen={showEducationalModal}
-        onClose={() => setShowEducationalModal(false)}
-        onUpgradeWithStripe={handleUpgradeWithStripe}
-        onUpgradeWithPayPal={handleUpgradeWithPayPal}
-        onComparePlans={handleComparePlans}
-      />
     </div>
   );
 };
 
-// ========= SUBCOMPONENTS =========
-
-const StatCard = ({ icon, label, value, trend, color }) => (
-  <div className="stat-card">
-    <div className="stat-header">
-      <div className="stat-icon" style={{ color }}>
-        {icon}
-      </div>
-      <div className="stat-trend" style={{ color: trend.startsWith('+') ? '#10B981' : '#EF4444' }}>
-        {trend}
-      </div>
-    </div>
-    <div className="stat-content">
-      <div className="stat-value">{typeof value === 'number' ? value.toLocaleString() : value}</div>
-      <div className="stat-label">{label}</div>
-    </div>
-  </div>
-);
-
-const CharacterCard = ({ character, onClick }) => {
-  const engagement = character.engagement || {};
-  
-  return (
-    <div className="character-card" onClick={onClick}>
-      <div className="character-header">
-        <img
-          src={character.avatar_url || '/images/default-character.jpg'}
-          alt={character.display_name}
-          className="character-avatar"
-          onError={(e) => {
-            e.target.src = '/images/default-character.jpg';
-          }}
-        />
-        <div className="character-info">
-          <h3 className="character-name">{character.display_name || 'Unnamed Character'}</h3>
-          <span className="character-level">{character.creator_level || 'newcomer'}</span>
-        </div>
-      </div>
-      
-      {character.short_description && (
-        <p className="character-description">{character.short_description}</p>
-      )}
-      
-      <div className="engagement-metrics">
-        <div className="metric-row">
-          <div className="metric">
-            <Eye size={14} />
-            <span>{engagement.total_views || 0}</span>
-          </div>
-          <div className="metric">
-            <Heart size={14} />
-            <span>{engagement.total_likes || 0}</span>
-          </div>
-          <div className="metric">
-            <MessageCircle size={14} />
-            <span>{engagement.chat_sessions || 0}</span>
-          </div>
-        </div>
-      </div>
-      
-      <div className="engagement-rate">
-        <TrendingUp size={14} />
-        <span>{engagement.engagement_rate || 0}% engagement rate</span>
-      </div>
-    </div>
-  );
-};
-
-const EngagementChart = ({ data }) => (
-  <div className="engagement-chart">
-    <div className="chart-container">
-      {data.slice(0, 14).reverse().map((day, index) => (
-        <div key={index} className="chart-bar-container">
-          <div className="chart-date">
-            {new Date(day.date).getDate()}
-          </div>
-          <div className="chart-bars">
-            <div 
-              className="chart-bar views" 
-              style={{ height: `${((day.views || 0) / 100) * 100}%` }}
-            />
-            <div 
-              className="chart-bar likes" 
-              style={{ height: `${((day.likes || 0) / 100) * 100}%` }}
-            />
-          </div>
-        </div>
-      ))}
-    </div>
-    <div className="chart-legend">
-      <div className="legend-item">
-        <div className="legend-color views"></div>
-        <span>Views</span>
-      </div>
-      <div className="legend-item">
-        <div className="legend-color likes"></div>
-        <span>Likes</span>
-      </div>
-    </div>
-  </div>
-);
-
-// ========= EXISTING SUBCOMPONENTS - PRESERVED EXACTLY =========
+// ============================================================================
+// SUB-COMPONENTS
+// ============================================================================
 
 const UpgradeRequiredState = ({ onLearnMore, onUpgradeWithStripe, onUpgradeWithPayPal }) => (
   <div className="upgrade-required-state">
@@ -572,7 +373,7 @@ const UpgradeRequiredState = ({ onLearnMore, onUpgradeWithStripe, onUpgradeWithP
   </div>
 );
 
-const EmptyDashboardState = ({ onLearnMore, onGoToCharacters, onCreateCharacter }) => (
+const EmptyDashboardState = ({ onLearnMore, onGoToCharacters }) => (
   <div className="empty-state">
     <div className="empty-state-content">
       <span className="empty-state-icon">🎨</span>
@@ -589,22 +390,14 @@ const EmptyDashboardState = ({ onLearnMore, onGoToCharacters, onCreateCharacter 
       </div>
       <div className="empty-state-actions">
         <button 
-          onClick={onCreateCharacter}
+          onClick={onGoToCharacters}
           className="create-character-button"
         >
-          <Plus size={16} />
-          Create Character
-        </button>
-        <button 
-          onClick={onGoToCharacters}
-          className="learn-more-button"
-        >
-          <ArrowLeft size={16} />
-          My Characters
+          Go to My Characters
         </button>
         <button 
           onClick={onLearnMore}
-          className="learn-more-button secondary"
+          className="learn-more-button"
         >
           Learn About Professional Features
         </button>
@@ -613,9 +406,165 @@ const EmptyDashboardState = ({ onLearnMore, onGoToCharacters, onCreateCharacter 
   </div>
 );
 
-// KEEP ALL YOUR EXISTING MODAL COMPONENTS EXACTLY AS THEY ARE
+const EngagementStatCard = ({ icon, label, value, color }) => {
+  const displayValue = typeof value === 'number' ? value : 
+                       typeof value === 'string' ? value : 0;
+  
+  return (
+    <div className="stat-card" style={{ borderLeftColor: color }}>
+      <div className="stat-icon" style={{ color }}>
+        {icon}
+      </div>
+      <div className="stat-content">
+        <div className="stat-label">{label}</div>
+        <div className="stat-value">
+          {typeof displayValue === 'number' ? displayValue.toLocaleString() : displayValue}
+        </div>
+      </div>
+    </div>
+  );
+};
+
+const CharacterEngagementCard = ({ character, onClick, onViewInHub }) => {
+  const engagement = character.engagement || {
+    total_views: 0,
+    total_likes: 0,
+    total_bookmarks: 0,
+    total_shares: 0,
+    chat_sessions: 0,
+    engagement_rate: 0,
+    engagements_7d: 0,
+    engagements_30d: 0,
+    last_engagement_at: null
+  };
+  
+  return (
+    <div className="character-engagement-card" onClick={onClick}>
+      <div className="character-header">
+        <img
+          src={character.avatar_url || '/images/default-character.jpg'}
+          alt={character.display_name || 'Character'}
+          className="character-avatar"
+          onError={(e) => {
+            e.target.src = '/images/default-character.jpg';
+          }}
+        />
+        <div className="character-info">
+          <h3>{character.display_name || 'Unnamed Character'}</h3>
+          <span className="creator-level-badge">
+            {character.creator_level || 'newcomer'}
+          </span>
+        </div>
+      </div>
+
+      {character.short_description && (
+        <div className="character-description">
+          {character.short_description}
+        </div>
+      )}
+
+      <div className="engagement-metrics">
+        <div className="metric-row">
+          <div className="metric">
+            <Eye size={16} />
+            <span className="metric-value">{engagement.total_views}</span>
+            <span className="metric-label">views</span>
+          </div>
+          <div className="metric">
+            <Heart size={16} />
+            <span className="metric-value">{engagement.total_likes}</span>
+            <span className="metric-label">likes</span>
+          </div>
+        </div>
+        
+        <div className="metric-row">
+          <div className="metric">
+            <Bookmark size={16} />
+            <span className="metric-value">{engagement.total_bookmarks}</span>
+            <span className="metric-label">bookmarks</span>
+          </div>
+          <div className="metric">
+            <Share2 size={16} />
+            <span className="metric-value">{engagement.total_shares}</span>
+            <span className="metric-label">shares</span>
+          </div>
+        </div>
+      </div>
+
+      <div className="engagement-summary">
+        <div className="summary-item">
+          <MessageCircle size={14} />
+          <span>{engagement.chat_sessions} chats</span>
+        </div>
+        <div className="summary-item">
+          <TrendingUp size={14} />
+          <span>{engagement.engagement_rate}% rate</span>
+        </div>
+      </div>
+
+      {engagement.last_engagement_at && (
+        <div className="last-engagement">
+          <Calendar size={12} />
+          <span>Last: {new Date(engagement.last_engagement_at).toLocaleDateString()}</span>
+        </div>
+      )}
+    </div>
+  );
+};
+
+const EngagementTrendsChart = ({ data }) => {
+  if (!data || data.length === 0) {
+    return <div className="no-trends">No engagement data yet</div>;
+  }
+  
+  const maxTotal = Math.max(...data.map(d => d.total || 0), 1);
+  
+  return (
+    <div className="trends-chart">
+      {data.slice(0, 14).reverse().map((day, index) => (
+        <div key={index} className="trend-bar-container">
+          <div className="trend-date">
+            {new Date(day.date).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}
+          </div>
+          <div className="trend-bars">
+            <div 
+              className="trend-bar view-bar" 
+              style={{ height: `${((day.views || 0) / maxTotal) * 100}%` }}
+              title={`${day.views || 0} views`}
+            />
+            <div 
+              className="trend-bar like-bar" 
+              style={{ height: `${((day.likes || 0) / maxTotal) * 100}%` }}
+              title={`${day.likes || 0} likes`}
+            />
+            <div 
+              className="trend-bar bookmark-bar" 
+              style={{ height: `${((day.bookmarks || 0) / maxTotal) * 100}%` }}
+              title={`${day.bookmarks || 0} bookmarks`}
+            />
+            <div 
+              className="trend-bar share-bar" 
+              style={{ height: `${((day.shares || 0) / maxTotal) * 100}%` }}
+              title={`${day.shares || 0} shares`}
+            />
+          </div>
+          <div className="trend-total">{day.total || 0}</div>
+        </div>
+      ))}
+      
+      <div className="chart-legend">
+        <div className="legend-item"><span className="view-color"></span> Views</div>
+        <div className="legend-item"><span className="like-color"></span> Likes</div>
+        <div className="legend-item"><span className="bookmark-color"></span> Bookmarks</div>
+        <div className="legend-item"><span className="share-color"></span> Shares</div>
+      </div>
+    </div>
+  );
+};
+
 const CharacterDetailModal = ({ character, onClose, onViewInHub }) => {
-  // ... your existing CharacterDetailModal implementation
+  const engagement = character.engagement || {};
+  
   return (
     <div className="modal-overlay" onClick={onClose}>
       <div className="modal-content" onClick={(e) => e.stopPropagation()}>
@@ -632,8 +581,76 @@ const CharacterDetailModal = ({ character, onClose, onViewInHub }) => {
           </div>
         </div>
 
-        {/* ... rest of your existing modal content */}
-        
+        <div className="modal-stats">
+          <h3>Engagement Breakdown</h3>
+          
+          <div className="stats-grid-modal">
+            <div className="stat-item">
+              <Eye size={20} />
+              <div>
+                <div className="stat-number">{engagement.total_views || 0}</div>
+                <div className="stat-label">Total Views</div>
+                <div className="stat-sublabel">{engagement.unique_viewers || 0} unique</div>
+              </div>
+            </div>
+            
+            <div className="stat-item">
+              <Heart size={20} />
+              <div>
+                <div className="stat-number">{engagement.total_likes || 0}</div>
+                <div className="stat-label">Total Likes</div>
+                <div className="stat-sublabel">{engagement.unique_likes || 0} unique</div>
+              </div>
+            </div>
+            
+            <div className="stat-item">
+              <Bookmark size={20} />
+              <div>
+                <div className="stat-number">{engagement.total_bookmarks || 0}</div>
+                <div className="stat-label">Total Bookmarks</div>
+                <div className="stat-sublabel">{engagement.unique_bookmarks || 0} unique</div>
+              </div>
+            </div>
+            
+            <div className="stat-item">
+              <Share2 size={20} />
+              <div>
+                <div className="stat-number">{engagement.total_shares || 0}</div>
+                <div className="stat-label">Total Shares</div>
+                <div className="stat-sublabel">{engagement.unique_shares || 0} unique</div>
+              </div>
+            </div>
+            
+            <div className="stat-item">
+              <MessageCircle size={20} />
+              <div>
+                <div className="stat-number">{engagement.chat_sessions || 0}</div>
+                <div className="stat-label">Chat Sessions</div>
+                <div className="stat-sublabel">from Market Hub</div>
+              </div>
+            </div>
+          </div>
+
+          <div className="engagement-rate-display">
+            <TrendingUp size={24} />
+            <div>
+              <div className="rate-number">{engagement.engagement_rate || 0}%</div>
+              <div className="rate-label">Engagement Rate</div>
+              <div className="rate-formula">
+                (likes + bookmarks + shares) / views
+              </div>
+            </div>
+          </div>
+
+          <div className="recent-activity">
+            <h4>Recent Activity</h4>
+            <div className="activity-stats">
+              <div>Last 7 days: <strong>{engagement.engagements_7d || 0}</strong> engagements</div>
+              <div>Last 30 days: <strong>{engagement.engagements_30d || 0}</strong> engagements</div>
+            </div>
+          </div>
+        </div>
+
         <button 
           className="view-hub-button" 
           onClick={() => onViewInHub(character.character_key)}
@@ -648,11 +665,107 @@ const CharacterDetailModal = ({ character, onClose, onViewInHub }) => {
 const EducationalUpgradeModal = ({ isOpen, onClose, onUpgradeWithStripe, onUpgradeWithPayPal, onComparePlans }) => {
   if (!isOpen) return null;
 
-  // ... your existing EducationalUpgradeModal implementation
+  const unlimitedFeatures = [
+    {
+      icon: '💎',
+      title: 'Full Creator Hub Access',
+      description: 'Publish unlimited characters and track detailed analytics'
+    },
+    {
+      icon: '📊',
+      title: 'Advanced Analytics',
+      description: 'Real-time engagement metrics and performance insights'
+    },
+    {
+      icon: '💰',
+      title: 'Earn Monthly Payouts',
+      description: 'Get paid based on your characters\' popularity and usage'
+    },
+    {
+      icon: '🚀',
+      title: 'Priority Featuring',
+      description: 'Your characters get promoted in Market Hub'
+    },
+    {
+      icon: '🎭',
+      title: 'Scenarios Hub',
+      description: 'Create multi-AI conversations and dynamic storylines'
+    },
+    {
+      icon: '⚡',
+      title: 'Unlimited Everything',
+      description: 'No limits on characters, messages, or features'
+    }
+  ];
+
   return (
     <div className="modal-overlay" onClick={onClose}>
       <div className="modal-content educational-modal" onClick={(e) => e.stopPropagation()}>
-        {/* ... your existing modal content */}
+        <button className="modal-close" onClick={onClose}>×</button>
+        
+        <div className="educational-header">
+          <div className="educational-icon">🚀</div>
+          <h2>Choose your plan and pay securely with Stripe or PayPal</h2>
+          <p className="educational-subtitle">
+            Upgrade to Professional tier and get access to powerful creator tools
+          </p>
+        </div>
+
+        <div className="educational-features">
+          {unlimitedFeatures.map((feature, index) => (
+            <div key={index} className="feature-row">
+              <div className="feature-icon">{feature.icon}</div>
+              <div className="feature-text">
+                <h4>{feature.title}</h4>
+                <p>{feature.description}</p>
+              </div>
+            </div>
+          ))}
+        </div>
+
+        <div className="pricing-card">
+          <div className="pricing-header">
+            <h3>Professional Plan</h3>
+            <div className="price">
+              <span className="amount">£11.99</span>
+              <span className="period">/month</span>
+            </div>
+          </div>
+          
+          <div className="pricing-features">
+            <div className="pricing-feature">✓ Unlimited Characters</div>
+            <div className="pricing-feature">✓ Unlimited Messages</div>
+            <div className="pricing-feature">✓ Creator Hub Pro Tools</div>
+            <div className="pricing-feature">✓ All Premium Templates</div>
+            <div className="pricing-feature">✓ VIP Support</div>
+            <div className="pricing-feature">✓ All Hub Access</div>
+          </div>
+
+          <div className="pricing-actions">
+            <button 
+              onClick={onUpgradeWithStripe}
+              className="upgrade-now-button"
+            >
+              Pay with Stripe - £11.99/month
+            </button>
+            <button 
+              onClick={onUpgradeWithPayPal}
+              className="upgrade-now-button secondary"
+            >
+              Pay with PayPal - £11.99/month
+            </button>
+            <button 
+              className="compare-plans-button"
+              onClick={onComparePlans}
+            >
+              Compare All Plans
+            </button>
+          </div>
+        </div>
+
+        <div className="educational-footer">
+          <p>⭐ <strong>Secured by Stripe</strong> · 🅿️ <strong>PayPal Secure</strong> · Cancel anytime</p>
+        </div>
       </div>
     </div>
   );

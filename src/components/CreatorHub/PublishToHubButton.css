@@ -1,4 +1,4 @@
-/* PublishToHubButton.css - Updated with celebration styles */
+/* PublishToHubButton.css - Updated with AwakeVerse Design System */
 
 .publish-to-hub-button {
   display: flex;
@@ -6,14 +6,16 @@
   justify-content: center;
   gap: 0.5rem;
   
-  background: linear-gradient(135deg, #FFD700, #FFA500);
+  /* Updated to AwakeVerse indigo gradient */
+  background: linear-gradient(135deg, var(--accent-primary, #6366F1), var(--accent-hover, #818CF8));
   border: none;
   border-radius: 8px;
   
-  color: #000;
+  /* Updated text color for better contrast */
+  color: #FFFFFF;
   font-size: 0.75rem;
   font-weight: 600;
-  font-family: 'Georgia', serif;
+  font-family: var(--font-body, 'Inter', system-ui, sans-serif);
   
   padding: 0.5rem 0.8rem;
   margin-top: 0.5rem;
@@ -26,12 +28,15 @@
   
   position: relative;
   overflow: hidden;
+  
+  /* Add design system shadow */
+  box-shadow: 0 2px 8px rgba(99, 102, 241, 0.3);
 }
 
 .publish-to-hub-button:hover:not(:disabled) {
-  background: linear-gradient(135deg, #FFA500, #FFD700);
+  background: linear-gradient(135deg, var(--accent-hover, #818CF8), var(--accent-primary, #6366F1));
   transform: translateY(-2px);
-  box-shadow: 0 4px 12px rgba(255, 215, 0, 0.4);
+  box-shadow: 0 4px 16px rgba(99, 102, 241, 0.4);
 }
 
 .publish-to-hub-button:active:not(:disabled) {
@@ -41,40 +46,41 @@
 .publish-to-hub-button:disabled {
   opacity: 0.6;
   cursor: not-allowed;
-  background: rgba(255, 215, 0, 0.3);
+  background: rgba(99, 102, 241, 0.3);
 }
 
-/* Published state */
+/* Published state - Updated to success green */
 .publish-to-hub-button.published {
-  background: linear-gradient(135deg, #28a745, #20c997);
-  border: 1px solid rgba(40, 167, 69, 0.4);
+  background: linear-gradient(135deg, #10B981, #34D399);
+  border: 1px solid rgba(16, 185, 129, 0.4);
   color: white;
+  box-shadow: 0 2px 8px rgba(16, 185, 129, 0.3);
 }
 
 .publish-to-hub-button.published:hover:not(:disabled) {
-  background: linear-gradient(135deg, #20c997, #28a745);
-  box-shadow: 0 4px 12px rgba(40, 167, 69, 0.4);
+  background: linear-gradient(135deg, #34D399, #10B981);
+  box-shadow: 0 4px 16px rgba(16, 185, 129, 0.4);
 }
 
-/* Celebration state */
+/* Celebration state - Updated to indigo celebration */
 .publish-to-hub-button.celebrating {
   animation: celebrate-pulse 0.6s ease-in-out 3;
-  background: linear-gradient(135deg, #FFD700, #1E90FF, #FFFFFF);
+  background: linear-gradient(135deg, #6366F1, #818CF8, #A5B4FC);
   background-size: 200% 200%;
   animation: celebrate-gradient 2s ease infinite;
-  color: #000;
+  color: #FFFFFF;
   font-weight: 700;
-  box-shadow: 0 0 20px rgba(255, 215, 0, 0.5);
+  box-shadow: 0 0 20px rgba(99, 102, 241, 0.6);
 }
 
 @keyframes celebrate-pulse {
   0%, 100% { 
     transform: scale(1);
-    box-shadow: 0 0 20px rgba(255, 215, 0, 0.5);
+    box-shadow: 0 0 20px rgba(99, 102, 241, 0.6);
   }
   50% { 
     transform: scale(1.05);
-    box-shadow: 0 0 30px rgba(255, 215, 0, 0.8);
+    box-shadow: 0 0 30px rgba(99, 102, 241, 0.9);
   }
 }
 
@@ -86,7 +92,7 @@
 
 /* Celebration particles (fallback if confetti doesn't work) */
 .publish-to-hub-button.celebrating::before {
-  content: '🎉';
+  content: '✨';
   position: absolute;
   top: -10px;
   right: -10px;
@@ -119,8 +125,8 @@
   display: inline-block;
   width: 14px;
   height: 14px;
-  border: 2px solid rgba(0, 0, 0, 0.3);
-  border-top-color: #000;
+  border: 2px solid rgba(255, 255, 255, 0.3);
+  border-top-color: #FFFFFF;
   border-radius: 50%;
   animation: spinner-rotation 0.8s linear infinite;
 }
@@ -143,22 +149,22 @@
   border-radius: 8px;
   font-size: 0.75rem;
   font-weight: 600;
-  font-family: 'Georgia', serif;
+  font-family: var(--font-body, 'Inter', system-ui, sans-serif);
   
   width: 100%;
   min-height: 36px;
 }
 
 .publish-status.published {
-  background: rgba(40, 167, 69, 0.15);
-  border: 1px solid rgba(40, 167, 69, 0.4);
-  color: #28a745;
+  background: rgba(16, 185, 129, 0.15);
+  border: 1px solid rgba(16, 185, 129, 0.4);
+  color: #10B981;
 }
 
 .publish-status.disabled {
-  background: rgba(255, 255, 255, 0.05);
-  border: 1px solid rgba(255, 255, 255, 0.2);
-  color: rgba(255, 255, 255, 0.6);
+  background: rgba(148, 163, 184, 0.1);
+  border: 1px solid rgba(148, 163, 184, 0.3);
+  color: var(--text-secondary, #94A3B8);
 }
 
 .status-icon {
@@ -171,11 +177,11 @@
   margin-top: 0.5rem;
   padding: 0.5rem;
   
-  background: rgba(255, 107, 107, 0.1);
-  border: 1px solid rgba(255, 107, 107, 0.3);
+  background: rgba(239, 68, 68, 0.1);
+  border: 1px solid rgba(239, 68, 68, 0.3);
   border-radius: 6px;
   
-  color: #ff6b6b;
+  color: #EF4444;
   font-size: 0.7rem;
   text-align: center;
   line-height: 1.3;
