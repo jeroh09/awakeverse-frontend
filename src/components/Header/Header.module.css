@@ -525,3 +525,43 @@
     height: 14px;
   }
 }
+/* ==== MOBILE NAV: ICON-ONLY STRIP ==== */
+@media (max-width: 768px) {
+  .navigation {
+    max-width: 100%;
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+    scrollbar-width: thin;
+  }
+
+  .navigation::-webkit-scrollbar {
+    height: 4px;
+  }
+
+  .navigation::-webkit-scrollbar-thumb {
+    background: rgba(148, 163, 184, 0.45);
+    border-radius: 999px;
+  }
+
+  .navTab {
+    flex: 0 0 auto;
+    padding-inline: 0.5rem;
+    padding-block: 0.4rem;
+    font-size: 0.75rem;
+    /* center the single icon nicely */
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0; /* no extra gap with no label */
+  }
+
+  .navIcon {
+    width: 18px;
+    height: 18px;
+  }
+
+  /* 🔹 hide labels on mobile: icons only */
+  .navLabel {
+    display: none;
+  }
+}
