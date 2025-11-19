@@ -150,7 +150,7 @@ export const characterCategories = [
       { 
         key: 'huckleberry_finn',
         name: 'Huckleberry Finn',
-        thumbnailUrl: '/images/huckleberry_finn.jpg',
+        thumbnailUrl: '/images/huckleberry_finn.jpeg',
         description: 'River-Born Realist. Morality floats downstream—sometimes you must wreck the raft to see who you really are.'
       },
 
@@ -182,7 +182,7 @@ export const characterCategories = [
       { 
         key: 'sancho_panza',
         name: 'Sancho Panza',
-        thumbnailUrl: '/images/sancho_panza.jpg',
+        thumbnailUrl: '/images/sancho_panza.jpeg',
         description: 'Donkey-Riding Sage. The world’s giants are just windmills. His wineskin holds more truth than castles in the air.'
       },
 
