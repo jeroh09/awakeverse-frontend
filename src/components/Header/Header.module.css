@@ -32,7 +32,9 @@
 .brandShell {
   display: flex;
   align-items: center;
+  margin-left: 2.75rem; /* NEW: keeps logo clear of the handle */
 }
+
 
 .title {
   font-family: 'Syne', system-ui, sans-serif;
@@ -136,24 +138,22 @@
 
 /* ============== VERTICAL SIDEBAR HANDLE ============== */
 
+/* ===== Subtle pill-style sidebar handle (HTML-style) ===== */
+
 .sidebarHandle {
   position: fixed;
-  top: 50%;
-  left: 0;
-  transform: translateY(-50%);
+  top: 0.85rem;
+  left: 0.75rem;
   z-index: 45;
 
-  width: 38px;
-  height: 80px;
-  border-radius: 0 999px 999px 0;
-  border: 1px solid rgba(148, 163, 184, 0.7);
-  border-left: none;
-
-  display: flex;
-  flex-direction: column;
+  display: inline-flex;
   align-items: center;
   justify-content: center;
-  gap: 4px;
+
+  padding: 0.35rem 0.4rem 0.35rem 0.3rem;
+  border-radius: 0 999px 999px 0;
+  border: 1px solid rgba(148, 163, 184, 0.6);
+  border-left: none;
 
   background:
     radial-gradient(circle at 0 50%, rgba(129, 140, 248, 0.32), transparent 70%),
@@ -177,17 +177,51 @@
     0 0 0 1px rgba(15, 23, 42, 1);
 }
 
-/* when sidebar open, slide handle with it */
-.sidebarHandleOpen {
-  transform: translateX(var(--sidebar-width)) translateY(-50%);
-}
-
+/* three compact bars */
 .handleBar {
-  width: 16px;
+  width: 14px;
   height: 2px;
   border-radius: 999px;
   background-image: linear-gradient(to right, #6366f1, #818cf8);
 }
+
+/* align bars with a tiny gutter */
+.sidebarHandle > .handleBar + .handleBar {
+  margin-top: 3px;
+}
+
+/* slide handle horizontally with the sidebar when open */
+.sidebarHandleOpen {
+  transform: translateX(var(--sidebar-width));
+}
+
+/* “Menu” label only on hover */
+.sidebarHandle::after {
+  content: 'Menu';
+  font-family: 'Inter', system-ui, sans-serif;
+  font-size: 0.72rem;
+  font-weight: 500;
+  text-transform: uppercase;
+  letter-spacing: 0.14em;
+  color: #94a3b8;
+
+  overflow: hidden;
+  max-width: 0;
+  opacity: 0;
+  white-space: nowrap;
+  transition:
+    max-width 0.22s ease-out,
+    opacity 0.22s ease-out,
+    margin-left 0.22s ease-out;
+  margin-left: 0;
+}
+
+.sidebarHandle:hover::after {
+  max-width: 80px;
+  opacity: 1;
+  margin-left: 0.3rem;
+}
+
 
 /* ============== SIDEBAR OVERLAY & PANEL ============== */
 
@@ -267,16 +301,17 @@
   color: #94a3b8;
 }
 
-/* Sidebar nav body */
 .sidebarNav {
   flex: 1;
-  padding: 0.75rem 0.9rem 0.9rem;
+  padding: 0.6rem 0.9rem 0.8rem; /* was ~0.75 / 0.9 / 0.9 */
   overflow-y: auto;
 }
 
+
 .sidebarSection {
-  margin-bottom: 0.75rem;
+  margin-bottom: 0.5rem; /* was 0.75rem */
 }
+
 
 .sidebarSectionLabel {
   font-family: 'Inter', system-ui, sans-serif;
@@ -284,14 +319,15 @@
   text-transform: uppercase;
   letter-spacing: 0.14em;
   color: #64748b;
-  margin-bottom: 0.35rem;
+  margin-bottom: 0.25rem; /* tighter */
 }
 
 .sidebarSectionItems {
   display: flex;
   flex-direction: column;
-  gap: 0.3rem;
+  gap: 0.25rem; /* was 0.3rem */
 }
+
 
 .sidebarNavItem {
   display: flex;
@@ -299,7 +335,7 @@
   gap: 0.6rem;
 
   width: 100%;
-  padding: 0.55rem 0.7rem;
+  padding: 0.45rem 0.65rem;  /* was 0.55rem 0.7rem */
   border-radius: 0.7rem;
 
   border: 1px solid transparent;
