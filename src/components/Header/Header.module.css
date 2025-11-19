@@ -1,16 +1,23 @@
-/* Header.module.css – AwakeVerse top brand bar + left sidebar nav */
+/* ==========================================================
+   AwakeVerse Header + Sidebar Navigation (Drop-in Replacement)
+   ========================================================== */
 
+/* Fonts */
 @import url('https://fonts.googleapis.com/css2?family=Syne:wght@600;700;800&family=Inter:wght@400;500;600;700&display=swap');
 
 :root {
   --sidebar-width: 260px;
 }
 
-/* ============== HEADER BAR (BRAND ONLY) ============== */
+/* ============================================
+   TOP HEADER BAR (BRAND ONLY)
+   ============================================ */
 
 .header {
   position: fixed;
-  inset: 0 0 auto 0;
+  top: 0;
+  left: 0;
+  right: 0;
   z-index: 40;
 
   display: flex;
@@ -24,17 +31,16 @@
     0 18px 40px rgba(15, 23, 42, 0.95),
     0 0 0 1px rgba(15, 23, 42, 1);
 
-  font-family: 'Inter', system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI',
-    sans-serif;
   color: #e5e7eb;
+  font-family: 'Inter', system-ui, sans-serif;
 }
 
+/* SHIFT TITLE RIGHT so hamburger never overlaps */
 .brandShell {
   display: flex;
   align-items: center;
-  margin-left: 2.75rem; /* NEW: keeps logo clear of the handle */
+  margin-left: 2.75rem;
 }
-
 
 .title {
   font-family: 'Syne', system-ui, sans-serif;
@@ -45,15 +51,18 @@
   color: #f5f5dc;
 }
 
-/* Right side: avatar + profile + caret */
+/* Right side with avatar + profile btn */
 .userSection {
   display: inline-flex;
   align-items: center;
   gap: 0.5rem;
+
   padding: 0.25rem 0.6rem;
   border-radius: 999px;
-  border: 1px solid rgba(148, 163, 184, 0.65);
+
   background: rgba(15, 23, 42, 0.96);
+  border: 1px solid rgba(148, 163, 184, 0.65);
+
   box-shadow:
     0 6px 18px rgba(15, 23, 42, 0.9),
     0 0 0 1px rgba(15, 23, 42, 1);
@@ -64,7 +73,7 @@
   height: 30px;
   border-radius: 999px;
   overflow: hidden;
-  position: relative;
+
   box-shadow:
     0 0 0 1px rgba(15, 23, 42, 1),
     0 0 0 2px rgba(148, 163, 184, 0.8),
@@ -81,12 +90,14 @@
   width: 100%;
   height: 100%;
   display: flex;
-  align-items: center;
   justify-content: center;
+  align-items: center;
+
   font-family: 'Syne', system-ui, sans-serif;
-  font-weight: 700;
   font-size: 0.8rem;
+  font-weight: 700;
   color: #f5f5dc;
+
   background: radial-gradient(circle at 20% 0%, #4f46e5, #0f172a);
 }
 
@@ -96,10 +107,11 @@
   color: #9ca3af;
   cursor: pointer;
   font-size: 0.9rem;
-  padding: 0.1rem 0.2rem;
 }
 
-/* ============== SHOW HEADER PILL (WHEN HIDDEN) ============== */
+/* ============================================
+   SHOW HEADER BUTTON (when header hidden)
+   ============================================ */
 
 .showButton {
   position: fixed;
@@ -110,35 +122,29 @@
 
   padding: 0.25rem 0.9rem;
   border-radius: 999px;
-  border: 1px solid rgba(148, 163, 184, 0.6);
+
   background: rgba(15, 23, 42, 0.95);
-  color: #f5f5dc;
+  border: 1px solid rgba(148, 163, 184, 0.6);
+
   font-family: 'Syne', system-ui, sans-serif;
   font-size: 0.65rem;
   letter-spacing: 0.18em;
   text-transform: uppercase;
+  color: #f5f5dc;
 
   cursor: pointer;
   box-shadow:
     0 6px 20px rgba(15, 23, 42, 0.95),
     0 0 0 1px rgba(15, 23, 42, 1);
-  transition:
-    background 0.2s ease,
-    border-color 0.2s ease,
-    box-shadow 0.2s ease;
 }
 
 .showButton:hover {
-  background: rgba(15, 23, 42, 1);
   border-color: rgba(129, 140, 248, 0.9);
-  box-shadow:
-    0 10px 25px rgba(15, 23, 42, 1),
-    0 0 0 1px rgba(15, 23, 42, 1);
 }
 
-/* ============== VERTICAL SIDEBAR HANDLE ============== */
-
-/* ===== Subtle pill-style sidebar handle (HTML-style) ===== */
+/* ============================================
+   HAMBURGER — SUBTLE PILL (HTML STYLE)
+   ============================================ */
 
 .sidebarHandle {
   position: fixed;
@@ -146,11 +152,15 @@
   left: 0.75rem;
   z-index: 45;
 
-  display: inline-flex;
+  display: flex;
+  flex-direction: column; /* *** THIS FIXED THE ISSUE *** */
   align-items: center;
   justify-content: center;
 
-  padding: 0.35rem 0.4rem 0.35rem 0.3rem;
+  padding: 0.35rem 0.4rem;
+  width: 32px;
+  height: 40px;
+
   border-radius: 0 999px 999px 0;
   border: 1px solid rgba(148, 163, 184, 0.6);
   border-left: none;
@@ -164,66 +174,51 @@
     0 0 0 1px rgba(15, 23, 42, 1);
 
   cursor: pointer;
-  transition:
-    transform 0.25s ease-out,
-    box-shadow 0.25s ease-out,
-    border-color 0.18s ease-out;
+  transition: transform 0.25s ease-out, border-color 0.18s ease-out;
 }
 
-.sidebarHandle:hover {
-  border-color: rgba(129, 140, 248, 0.9);
-  box-shadow:
-    0 14px 30px rgba(15, 23, 42, 0.95),
-    0 0 0 1px rgba(15, 23, 42, 1);
-}
-
-/* three compact bars */
 .handleBar {
   width: 14px;
   height: 2px;
-  border-radius: 999px;
   background-image: linear-gradient(to right, #6366f1, #818cf8);
+  border-radius: 999px;
 }
 
-/* align bars with a tiny gutter */
-.sidebarHandle > .handleBar + .handleBar {
+.handleBar + .handleBar {
   margin-top: 3px;
 }
 
-/* slide handle horizontally with the sidebar when open */
+/* hover label ("Menu") appears only on hover */
+.sidebarHandle::after {
+  content: 'Menu';
+  opacity: 0;
+  max-width: 0;
+
+  overflow: hidden;
+  white-space: nowrap;
+
+  margin-left: 0;
+  transition: max-width 0.22s ease-out, opacity 0.22s ease-out, margin-left 0.22s ease-out;
+
+  font-family: 'Inter';
+  font-size: 0.72rem;
+  letter-spacing: 0.14em;
+  color: #94a3b8;
+}
+
+.sidebarHandle:hover::after {
+  opacity: 1;
+  max-width: 80px;
+  margin-left: 0.3rem;
+}
+
 .sidebarHandleOpen {
   transform: translateX(var(--sidebar-width));
 }
 
-/* “Menu” label only on hover */
-.sidebarHandle::after {
-  content: 'Menu';
-  font-family: 'Inter', system-ui, sans-serif;
-  font-size: 0.72rem;
-  font-weight: 500;
-  text-transform: uppercase;
-  letter-spacing: 0.14em;
-  color: #94a3b8;
-
-  overflow: hidden;
-  max-width: 0;
-  opacity: 0;
-  white-space: nowrap;
-  transition:
-    max-width 0.22s ease-out,
-    opacity 0.22s ease-out,
-    margin-left 0.22s ease-out;
-  margin-left: 0;
-}
-
-.sidebarHandle:hover::after {
-  max-width: 80px;
-  opacity: 1;
-  margin-left: 0.3rem;
-}
-
-
-/* ============== SIDEBAR OVERLAY & PANEL ============== */
+/* ============================================
+   SIDEBAR OVERLAY + PANEL
+   ============================================ */
 
 .sidebarOverlay {
   pointer-events: none;
@@ -237,31 +232,29 @@
   content: '';
   position: fixed;
   inset: 0;
-  background:
-    radial-gradient(circle at top left, rgba(15, 23, 42, 0.9), rgba(15, 23, 42, 0.96));
+  background: rgba(15, 23, 42, 0.82);
   backdrop-filter: blur(6px);
   z-index: 41;
 }
 
 /* Sidebar panel */
+
 .sidebar {
   position: fixed;
   inset: 0 auto 0 0;
   width: var(--sidebar-width);
   max-width: 80vw;
-  z-index: 42;
 
-  display: flex;
-  flex-direction: column;
-
-  background: radial-gradient(circle at top left, #020617 0%, #020617 40%, #020617 100%);
+  background: #020617;
   border-right: 1px solid rgba(148, 163, 184, 0.35);
+
   box-shadow:
     0 0 0 1px rgba(15, 23, 42, 1),
     15px 0 40px rgba(15, 23, 42, 0.9);
 
   transform: translateX(-100%);
   transition: transform 0.3s ease-out;
+  z-index: 42;
 }
 
 .sidebarOpen {
@@ -274,9 +267,12 @@
   height: 100%;
 }
 
-/* Sidebar header */
+/* ============================================
+   SIDEBAR HEADER
+   ============================================ */
+
 .sidebarHeader {
-  padding: 1.2rem 1.3rem 0.8rem;
+  padding: 1rem 1.25rem 0.8rem;
   border-bottom: 1px solid rgba(148, 163, 184, 0.25);
 }
 
@@ -289,9 +285,9 @@
 .sidebarTitle {
   font-family: 'Syne', system-ui, sans-serif;
   font-size: 0.9rem;
-  font-weight: 700;
-  letter-spacing: 0.14em;
   text-transform: uppercase;
+  letter-spacing: 0.14em;
+  font-weight: 700;
   color: #f5f5dc;
 }
 
@@ -301,58 +297,57 @@
   color: #94a3b8;
 }
 
+/* ============================================
+   SIDEBAR NAV COLUMN — COMPACT
+   ============================================ */
+
 .sidebarNav {
   flex: 1;
-  padding: 0.6rem 0.9rem 0.8rem; /* was ~0.75 / 0.9 / 0.9 */
+  padding: 0.6rem 0.9rem 0.8rem;
   overflow-y: auto;
 }
 
-
+/* Group headings */
 .sidebarSection {
-  margin-bottom: 0.5rem; /* was 0.75rem */
+  margin-bottom: 0.35rem;   /* compact spacing between groups */
 }
-
 
 .sidebarSectionLabel {
-  font-family: 'Inter', system-ui, sans-serif;
+  font-family: 'Inter';
   font-size: 0.65rem;
-  text-transform: uppercase;
   letter-spacing: 0.14em;
+  text-transform: uppercase;
   color: #64748b;
-  margin-bottom: 0.25rem; /* tighter */
+  margin-bottom: 0.18rem;
 }
 
+/* Items stacked tightly */
 .sidebarSectionItems {
   display: flex;
   flex-direction: column;
-  gap: 0.25rem; /* was 0.3rem */
+  gap: 0.2rem;
 }
 
-
+/* Individual nav button */
 .sidebarNavItem {
   display: flex;
   align-items: center;
-  gap: 0.6rem;
+  gap: 0.55rem;
 
   width: 100%;
-  padding: 0.45rem 0.65rem;  /* was 0.55rem 0.7rem */
+  padding: 0.40rem 0.65rem;
   border-radius: 0.7rem;
 
-  border: 1px solid transparent;
   background: rgba(15, 23, 42, 0.9);
+  border: 1px solid transparent;
 
-  font-family: 'Inter', system-ui, sans-serif;
+  font-family: 'Inter';
   font-size: 0.8rem;
   font-weight: 500;
   color: #cbd5f5;
 
   cursor: pointer;
-  transition:
-    background 0.16s ease,
-    border-color 0.16s ease,
-    color 0.16s ease,
-    transform 0.16s ease,
-    box-shadow 0.16s ease;
+  transition: background 0.16s, border-color 0.16s, color 0.16s, transform 0.16s;
 }
 
 .sidebarNavItem:hover {
@@ -360,16 +355,16 @@
   border-color: rgba(129, 140, 248, 0.9);
   color: #f9fafb;
   transform: translateX(1px);
-  box-shadow: 0 6px 20px rgba(15, 23, 42, 0.9);
 }
 
+/* ACTIVE STATE */
 .sidebarNavItemActive {
   background-image: linear-gradient(135deg, #6366f1, #818cf8);
+  color: #fff;
   border-color: transparent;
-  color: #ffffff;
-  box-shadow: 0 8px 24px rgba(79, 70, 229, 0.8);
 }
 
+/* Icon */
 .sidebarNavIcon {
   width: 18px;
   height: 18px;
@@ -381,11 +376,14 @@
   white-space: nowrap;
 }
 
-/* Sidebar footer: user + subscription */
+/* ============================================
+   SIDEBAR FOOTER — USER + SUBSCRIPTION
+   ============================================ */
 
 .sidebarFooter {
   padding: 0.75rem 1rem 1rem;
   border-top: 1px solid rgba(148, 163, 184, 0.25);
+
   display: flex;
   align-items: center;
   justify-content: space-between;
@@ -396,37 +394,32 @@
   display: flex;
   flex-direction: column;
   gap: 0.1rem;
-  min-width: 0;
 }
 
 .userName {
-  font-family: 'Syne', system-ui, sans-serif;
+  font-family: 'Syne';
   font-size: 0.85rem;
   font-weight: 600;
   color: #f5f5dc;
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
 }
 
 .userEmail {
-  font-family: 'Inter', system-ui, sans-serif;
+  font-family: 'Inter';
   font-size: 0.7rem;
   color: #64748b;
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
 }
 
 .subscriptionBadge {
   padding: 0.3rem 0.65rem;
   border-radius: 999px;
   border: 1px solid rgba(148, 163, 184, 0.6);
-  font-family: 'Inter', system-ui, sans-serif;
+
+  font-family: 'Inter';
   font-size: 0.7rem;
   font-weight: 600;
-  text-transform: uppercase;
   letter-spacing: 0.1em;
+  text-transform: uppercase;
+
   color: #cbd5f5;
   background: rgba(15, 23, 42, 0.96);
 }
@@ -434,14 +427,11 @@
 .subscriptionActive {
   border-color: rgba(129, 140, 248, 0.95);
   color: #e0e7ff;
-  background: radial-gradient(
-    circle at top left,
-    rgba(79, 70, 229, 0.25),
-    rgba(15, 23, 42, 0.98)
-  );
 }
 
-/* ============== RESPONSIVE TWEAKS ============== */
+/* ============================================
+   MOBILE CLEANUP
+   ============================================ */
 
 @media (max-width: 768px) {
   .header {
@@ -450,12 +440,5 @@
 
   .sidebar {
     width: min(320px, 90vw);
-  }
-}
-
-@media (max-width: 480px) {
-  .title {
-    font-size: 0.9rem;
-    letter-spacing: 0.14em;
   }
 }
