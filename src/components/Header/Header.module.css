@@ -280,7 +280,7 @@
   padding: 1rem 0.9rem;
   
   /* ✅ FIX: Scroll entire sidebar, not individual sections */
-  overflow-y: auto;
+  overflow-y: hidden;
 }
 
 /* ============================================
