@@ -1,4 +1,4 @@
-// src/components/Header/Header.js – AwakeVerse header + left sidebar nav
+// src/components/Header/Header.js – AwakeVerse header + left sidebar nav (simplified layout)
 import React, { useState, useEffect } from 'react';
 import styles from './Header.module.css';
 import { useUser } from '../../contexts/UserContext';
@@ -204,69 +204,22 @@ export default function Header() {
 
   const showNavigation = isAuthenticated && !!viewContext;
 
-  // Auto-hide header after 6s (completely unmount)
+  // Auto-hide header after 6s
   useEffect(() => {
     if (!isHeaderVisible || !isAuthenticated) return;
     const timer = setTimeout(() => setIsHeaderVisible(false), 6000);
     return () => clearTimeout(timer);
   }, [isHeaderVisible, isAuthenticated]);
 
-  // Build nav items
-  const navItems = !showNavigation
-    ? []
-    : [
-        {
-          key: 'chat',
-          label: 'Chat',
-          icon: ChatIcon,
-          viewState: viewContext.VIEW_STATES.CHAT,
-        },
-        {
-          key: 'discover',
-          label: 'Discover',
-          icon: DiscoverIcon,
-          viewState: viewContext.VIEW_STATES.MARKET_HUB,
-        },
-        {
-          key: 'stories',
-          label: 'Story',
-          icon: StoriesIcon,
-          viewState: viewContext.VIEW_STATES.STORY_MODE,
-        },
-        {
-          key: 'create',
-          label: 'Create',
-          icon: CreateIcon,
-          viewState: viewContext.VIEW_STATES.CREATOR_DASHBOARD,
-        },
-        {
-          key: 'scenarios',
-          label: 'Scenarios',
-          icon: ScenariosIcon,
-          viewState: viewContext.VIEW_STATES.SCENARIOS,
-        },
-      ];
+  // View helpers (guard if context missing)
+  const VIEW_STATES = viewContext?.VIEW_STATES || {};
+  const currentView = viewContext?.currentView;
 
-  const itemsByKey = Object.fromEntries(navItems.map((i) => [i.key, i]));
-
-  const navGroups = [
-    { key: 'primary', label: 'Primary', items: ['chat', 'discover'] },
-    { key: 'storyWorld', label: 'Story world', items: ['stories'] },
-    { key: 'productivity', label: 'Productivity', items: ['create', 'scenarios'] },
-  ];
-
-  const handleNavClick = (viewState) => {
-    if (!viewContext) return;
+  const switchTo = (viewState) => {
+    if (!viewContext || !viewState) return;
     viewContext.switchView(viewState);
     setIsSidebarOpen(false);
   };
-
-  const toggleSidebar = () => {
-    if (!showNavigation) return;
-    setIsSidebarOpen((open) => !open);
-  };
-
-  const closeSidebar = () => setIsSidebarOpen(false);
 
   // Avatar
   const avatarUrlRaw = user?.avatarUrl || user?.avatar_url;
@@ -290,7 +243,7 @@ export default function Header() {
 
   return (
     <>
-      {/* Header bar – completely unmounted when hidden */}
+      {/* Top brand bar – fully removed when not visible */}
       {isHeaderVisible && (
         <header className={styles.header}>
           <div className={styles.brandShell}>
@@ -342,14 +295,14 @@ export default function Header() {
         </button>
       )}
 
-      {/* Vertical sidebar handle – mid-left, never overlaps brand */}
+      {/* Subtle pill-style hamburger (left edge) */}
       {showNavigation && (
         <button
           type="button"
           className={`${styles.sidebarHandle} ${
             isSidebarOpen ? styles.sidebarHandleOpen : ''
           }`}
-          onClick={toggleSidebar}
+          onClick={() => setIsSidebarOpen((open) => !open)}
           aria-label={isSidebarOpen ? 'Close menu' : 'Open menu'}
         >
           <span className={styles.handleBar} />
@@ -364,7 +317,7 @@ export default function Header() {
           className={`${styles.sidebarOverlay} ${
             isSidebarOpen ? styles.sidebarOverlayOpen : ''
           }`}
-          onClick={closeSidebar}
+          onClick={() => setIsSidebarOpen(false)}
         >
           <aside
             className={`${styles.sidebar} ${
@@ -374,6 +327,7 @@ export default function Header() {
             aria-label="AwakeVerse navigation"
           >
             <div className={styles.sidebarInner}>
+              {/* Sidebar header */}
               <div className={styles.sidebarHeader}>
                 <div className={styles.sidebarTitleBlock}>
                   <span className={styles.sidebarTitle}>AwakeVerse</span>
@@ -383,44 +337,93 @@ export default function Header() {
                 </div>
               </div>
 
+              {/* Sidebar nav – THREE EXPLICIT GROUPS (stacked) */}
               <nav className={styles.sidebarNav}>
-                {navGroups.map((group) => {
-                  const groupItems = group.items
-                    .map((key) => itemsByKey[key])
-                    .filter(Boolean);
-
-                  if (groupItems.length === 0) return null;
-
-                  return (
-                    <section
-                      key={group.key}
-                      className={styles.sidebarSection}
+                {/* Primary: Chat + Discover */}
+                <section className={styles.sidebarSection}>
+                  <div className={styles.sidebarSectionLabel}>Primary</div>
+                  <div className={styles.sidebarSectionItems}>
+                    <button
+                      type="button"
+                      className={`${styles.sidebarNavItem} ${
+                        currentView === VIEW_STATES.CHAT
+                          ? styles.sidebarNavItemActive
+                          : ''
+                      }`}
+                      onClick={() => switchTo(VIEW_STATES.CHAT)}
                     >
-                      <div className={styles.sidebarSectionLabel}>
-                        {group.label}
-                      </div>
-                      <div className={styles.sidebarSectionItems}>
-                        {groupItems.map(({ key, label, icon: Icon, viewState }) => (
-                          <button
-                            key={key}
-                            type="button"
-                            className={`${styles.sidebarNavItem} ${
-                              viewContext.currentView === viewState
-                                ? styles.sidebarNavItemActive
-                                : ''
-                            }`}
-                            onClick={() => handleNavClick(viewState)}
-                          >
-                            <Icon className={styles.sidebarNavIcon} />
-                            <span className={styles.sidebarNavLabel}>{label}</span>
-                          </button>
-                        ))}
-                      </div>
-                    </section>
-                  );
-                })}
+                      <ChatIcon className={styles.sidebarNavIcon} />
+                      <span className={styles.sidebarNavLabel}>Chat</span>
+                    </button>
+
+                    <button
+                      type="button"
+                      className={`${styles.sidebarNavItem} ${
+                        currentView === VIEW_STATES.MARKET_HUB
+                          ? styles.sidebarNavItemActive
+                          : ''
+                      }`}
+                      onClick={() => switchTo(VIEW_STATES.MARKET_HUB)}
+                    >
+                      <DiscoverIcon className={styles.sidebarNavIcon} />
+                      <span className={styles.sidebarNavLabel}>Discover</span>
+                    </button>
+                  </div>
+                </section>
+
+                {/* Story world: Story */}
+                <section className={styles.sidebarSection}>
+                  <div className={styles.sidebarSectionLabel}>Story world</div>
+                  <div className={styles.sidebarSectionItems}>
+                    <button
+                      type="button"
+                      className={`${styles.sidebarNavItem} ${
+                        currentView === VIEW_STATES.STORY_MODE
+                          ? styles.sidebarNavItemActive
+                          : ''
+                      }`}
+                      onClick={() => switchTo(VIEW_STATES.STORY_MODE)}
+                    >
+                      <StoriesIcon className={styles.sidebarNavIcon} />
+                      <span className={styles.sidebarNavLabel}>Story</span>
+                    </button>
+                  </div>
+                </section>
+
+                {/* Productivity: Create + Scenarios */}
+                <section className={styles.sidebarSection}>
+                  <div className={styles.sidebarSectionLabel}>Productivity</div>
+                  <div className={styles.sidebarSectionItems}>
+                    <button
+                      type="button"
+                      className={`${styles.sidebarNavItem} ${
+                        currentView === VIEW_STATES.CREATOR_DASHBOARD
+                          ? styles.sidebarNavItemActive
+                          : ''
+                      }`}
+                      onClick={() => switchTo(VIEW_STATES.CREATOR_DASHBOARD)}
+                    >
+                      <CreateIcon className={styles.sidebarNavIcon} />
+                      <span className={styles.sidebarNavLabel}>Create</span>
+                    </button>
+
+                    <button
+                      type="button"
+                      className={`${styles.sidebarNavItem} ${
+                        currentView === VIEW_STATES.SCENARIOS
+                          ? styles.sidebarNavItemActive
+                          : ''
+                      }`}
+                      onClick={() => switchTo(VIEW_STATES.SCENARIOS)}
+                    >
+                      <ScenariosIcon className={styles.sidebarNavIcon} />
+                      <span className={styles.sidebarNavLabel}>Scenarios</span>
+                    </button>
+                  </div>
+                </section>
               </nav>
 
+              {/* Sidebar footer – user + subscription */}
               {isAuthenticated && (
                 <footer className={styles.sidebarFooter}>
                   <div className={styles.userMeta}>
