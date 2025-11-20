@@ -1,4 +1,4 @@
-// src/components/CharacterBuilder.jsx - Defensive character creation backend validation
+// src/components/CharacterBuilder.jsx - Updated with new design system
 import React, { useState, useEffect } from 'react';
 import { useAuth } from '../contexts/AuthContext';
 import { useUser } from '../contexts/UserContext';
@@ -11,10 +11,10 @@ const getCookie = (name) => {
   if (parts.length === 2) return parts.pop().split(';').shift();
 };
 
-
 const CharacterBuilder = ({ template, onClose, onSuccess }) => {
   const { user } = useUser();
   const [isMobile, setIsMobile] = useState(false);
+  const [showInfo, setShowInfo] = useState(false);
   
   const [formData, setFormData] = useState({
     display_name: '',
@@ -192,7 +192,6 @@ Engage users with the depth and authenticity that comes from your unique histori
         body: JSON.stringify(characterPayload)
       });
 
-
       const result = await response.json();
       console.log('Backend response:', result);
 
@@ -257,9 +256,24 @@ Engage users with the depth and authenticity that comes from your unique histori
   };
 
   const steps = [
-    { number: 1, title: 'Basic Details', description: 'Name and description' },
-    { number: 2, title: 'Personality', description: 'Instructions and traits' },
-    { number: 3, title: 'Review', description: 'Final confirmation' }
+    { 
+      number: 1, 
+      title: 'Basic Details', 
+      description: 'Name and description',
+      info: 'Start by giving your character a memorable name and compelling description. The name should reflect their historical context and personality. The description should capture their essence in 1-2 sentences - focus on what makes them unique and their area of expertise.'
+    },
+    { 
+      number: 2, 
+      title: 'Personality', 
+      description: 'Instructions and traits',
+      info: 'Define how your character thinks, speaks, and behaves. This is the core personality that will guide all interactions. Include their speaking style, thought processes, knowledge areas, and behavioral patterns. Be specific about historical accuracy and personality traits.'
+    },
+    { 
+      number: 3, 
+      title: 'Review', 
+      description: 'Final confirmation',
+      info: 'Review all character details before submission. Your character will be submitted for approval and should be available within 24 hours. Ensure everything reflects the historical authenticity and personality you want to create.'
+    }
   ];
 
   // Success state
@@ -268,15 +282,15 @@ Engage users with the depth and authenticity that comes from your unique histori
       <div style={{
         width: '100%',
         height: '100vh',
-        background: 'linear-gradient(135deg, #0B1426 0%, #1A2B47 25%, #2C1810 50%, #0F1A2E 75%, #0B1426 100%)',
-        fontFamily: "'Cinzel', serif",
+        background: '#0A0F1A',
+        fontFamily: "'Inter', system-ui, sans-serif",
         display: 'flex',
         alignItems: 'center',
         justifyContent: 'center'
       }}>
         <div style={{
-          background: 'rgba(255, 255, 255, 0.1)',
-          border: '2px solid rgba(255, 215, 0, 0.3)',
+          background: '#141B2E',
+          border: '1px solid rgba(99, 102, 241, 0.3)',
           borderRadius: '20px',
           padding: '3rem',
           textAlign: 'center',
@@ -286,48 +300,58 @@ Engage users with the depth and authenticity that comes from your unique histori
           <div style={{
             width: '80px',
             height: '80px',
-            background: 'linear-gradient(135deg, #00FF88, #00CC6A)',
+            background: 'linear-gradient(135deg, rgba(0, 255, 136, 0.9), #00CC6A)',
             borderRadius: '50%',
             display: 'flex',
             alignItems: 'center',
             justifyContent: 'center',
             margin: '0 auto 2rem',
-            fontSize: '2rem'
+            fontSize: '2rem',
+            color: 'white'
           }}>
             ✓
           </div>
           
           <h2 style={{
-            color: '#FFD700',
+            color: '#6366F1',
             fontSize: '1.8rem',
             margin: '0 0 1rem 0',
-            fontFamily: "'Playfair Display', serif"
+            fontFamily: "'Syne', sans-serif"
           }}>
             Character Created!
           </h2>
           
           <p style={{
-            color: 'rgba(255, 255, 255, 0.9)',
+            color: '#94A3B8',
             fontSize: '1rem',
             lineHeight: 1.6,
             margin: '0 0 2rem 0'
           }}>
-            <strong>{formData.display_name}</strong> has been submitted for approval. 
+            <strong style={{color: '#F1F5F9'}}>{formData.display_name}</strong> has been submitted for approval. 
             You'll receive an email notification when your character is ready, usually within 24-48 hours.
           </p>
           
           <button
             onClick={onClose}
             style={{
-              background: 'linear-gradient(135deg, #FFD700, #FFA500)',
+              background: 'linear-gradient(135deg, #6366F1, #4f46e5)',
               border: 'none',
               borderRadius: '25px',
-              color: '#000',
+              color: '#fff',
               fontSize: '1rem',
               fontWeight: 700,
               padding: '1rem 2rem',
               cursor: 'pointer',
-              transition: 'all 0.3s ease'
+              transition: 'all 0.3s ease',
+              fontFamily: "'Inter', system-ui, sans-serif"
+            }}
+            onMouseEnter={(e) => {
+              e.currentTarget.style.transform = 'translateY(-2px)';
+              e.currentTarget.style.boxShadow = '0 10px 26px rgba(79, 70, 229, 0.9)';
+            }}
+            onMouseLeave={(e) => {
+              e.currentTarget.style.transform = 'translateY(0)';
+              e.currentTarget.style.boxShadow = 'none';
             }}
           >
             Continue Exploring
@@ -341,8 +365,8 @@ Engage users with the depth and authenticity that comes from your unique histori
     <div style={{
       width: '100%',
       height: '100vh',
-      background: 'linear-gradient(135deg, #0B1426 0%, #1A2B47 25%, #2C1810 50%, #0F1A2E 75%, #0B1426 100%)',
-      fontFamily: "'Cinzel', serif",
+      background: '#0A0F1A',
+      fontFamily: "'Inter', system-ui, sans-serif",
       overflow: 'hidden',
       display: 'flex',
       flexDirection: 'column'
@@ -350,26 +374,27 @@ Engage users with the depth and authenticity that comes from your unique histori
 
       {/* Header */}
       <div style={{
-        padding: isMobile ? '1rem' : '2rem',
-        borderBottom: '1px solid rgba(255, 215, 0, 0.2)',
+        padding: isMobile ? '1.5rem' : '2rem',
+        borderBottom: '1px solid rgba(99, 102, 241, 0.2)',
         display: 'flex',
         flexDirection: isMobile ? 'column' : 'row',
         justifyContent: 'space-between',
         alignItems: isMobile ? 'flex-start' : 'center',
-        gap: isMobile ? '1rem' : '0'
+        gap: isMobile ? '1rem' : '0',
+        background: '#141B2E'
       }}>
-        <div>
+        <div style={{ flex: 1 }}>
           <h1 style={{
-            fontFamily: "'Cinzel Decorative', serif",
+            fontFamily: "'Syne', sans-serif",
             fontSize: isMobile ? '1.5rem' : '2rem',
-            color: '#FFD700',
+            color: '#F5F5DC',
             margin: '0 0 0.5rem 0',
-            textShadow: '0 0 20px rgba(255, 215, 0, 0.5)'
+            fontWeight: 700
           }}>
             Create Your Character
           </h1>
           <p style={{
-            color: 'rgba(255, 255, 255, 0.8)',
+            color: '#94A3B8',
             margin: 0,
             fontSize: isMobile ? '0.9rem' : '1rem'
           }}>
@@ -377,32 +402,122 @@ Engage users with the depth and authenticity that comes from your unique histori
           </p>
         </div>
 
-        <button
-          onClick={onClose}
-          disabled={isCreating}
-          style={{
-            background: 'rgba(255, 215, 0, 0.1)',
-            border: '2px solid rgba(255, 215, 0, 0.4)',
-            borderRadius: '8px',
-            color: '#FFD700',
-            fontSize: isMobile ? '0.8rem' : '0.9rem',
-            fontWeight: 600,
-            padding: isMobile ? '0.5rem 1rem' : '0.75rem 1.5rem',
-            cursor: isCreating ? 'not-allowed' : 'pointer',
-            transition: 'all 0.3s ease',
-            fontFamily: "'Cinzel', serif",
-            alignSelf: isMobile ? 'flex-start' : 'auto',
-            opacity: isCreating ? 0.5 : 1
-          }}
-        >
-          ← Back to Templates
-        </button>
+        <div style={{
+          display: 'flex',
+          gap: '1rem',
+          alignItems: 'center',
+          alignSelf: isMobile ? 'flex-start' : 'auto'
+        }}>
+          {/* Info Button */}
+          <button
+            onClick={() => setShowInfo(!showInfo)}
+            style={{
+              background: 'rgba(99, 102, 241, 0.1)',
+              border: '1px solid rgba(99, 102, 241, 0.3)',
+              borderRadius: '8px',
+              color: '#6366F1',
+              fontSize: '0.9rem',
+              fontWeight: 600,
+              padding: '0.5rem 1rem',
+              cursor: 'pointer',
+              transition: 'all 0.3s ease',
+              fontFamily: "'Inter', system-ui, sans-serif",
+              display: 'flex',
+              alignItems: 'center',
+              gap: '0.5rem'
+            }}
+            onMouseEnter={(e) => {
+              e.currentTarget.style.background = 'rgba(99, 102, 241, 0.2)';
+              e.currentTarget.style.borderColor = 'rgba(99, 102, 241, 0.5)';
+            }}
+            onMouseLeave={(e) => {
+              e.currentTarget.style.background = 'rgba(99, 102, 241, 0.1)';
+              e.currentTarget.style.borderColor = 'rgba(99, 102, 241, 0.3)';
+            }}
+          >
+            ℹ️ Info
+          </button>
+
+          <button
+            onClick={onClose}
+            disabled={isCreating}
+            style={{
+              background: 'rgba(28, 38, 64, 0.8)',
+              border: '1px solid rgba(148, 163, 184, 0.3)',
+              borderRadius: '8px',
+              color: '#F1F5F9',
+              fontSize: isMobile ? '0.8rem' : '0.9rem',
+              fontWeight: 600,
+              padding: isMobile ? '0.5rem 1rem' : '0.75rem 1.5rem',
+              cursor: isCreating ? 'not-allowed' : 'pointer',
+              transition: 'all 0.3s ease',
+              fontFamily: "'Inter', system-ui, sans-serif",
+              opacity: isCreating ? 0.5 : 1
+            }}
+            onMouseEnter={(e) => {
+              if (!isCreating) {
+                e.currentTarget.style.background = 'rgba(36, 49, 82, 0.8)';
+                e.currentTarget.style.borderColor = 'rgba(99, 102, 241, 0.5)';
+              }
+            }}
+            onMouseLeave={(e) => {
+              if (!isCreating) {
+                e.currentTarget.style.background = 'rgba(28, 38, 64, 0.8)';
+                e.currentTarget.style.borderColor = 'rgba(148, 163, 184, 0.3)';
+              }
+            }}
+          >
+            ← Back to Templates
+          </button>
+        </div>
       </div>
+
+      {/* Info Panel */}
+      {showInfo && (
+        <div style={{
+          background: 'rgba(99, 102, 241, 0.05)',
+          border: '1px solid rgba(99, 102, 241, 0.2)',
+          borderRadius: '12px',
+          padding: '1.5rem',
+          margin: '1rem 2rem',
+          color: '#94A3B8',
+          fontSize: '0.9rem',
+          lineHeight: 1.6
+        }}>
+          <h3 style={{
+            color: '#6366F1',
+            margin: '0 0 0.5rem 0',
+            fontFamily: "'Syne', sans-serif",
+            fontSize: '1rem'
+          }}>
+            {steps[currentStep - 1]?.title} - Step Guidance
+          </h3>
+          <p style={{ margin: 0 }}>
+            {steps[currentStep - 1]?.info}
+          </p>
+          {currentStep === 1 && (
+            <div style={{ marginTop: '1rem', padding: '0.75rem', background: 'rgba(0, 0, 0, 0.2)', borderRadius: '8px' }}>
+              <strong>Pro Tip:</strong> Use historically accurate names and focus on the character's core expertise. The description should hint at their personality and knowledge areas.
+            </div>
+          )}
+          {currentStep === 2 && (
+            <div style={{ marginTop: '1rem', padding: '0.75rem', background: 'rgba(0, 0, 0, 0.2)', borderRadius: '8px' }}>
+              <strong>Pro Tip:</strong> Be specific about speech patterns, historical context, and areas of expertise. The more detailed your instructions, the more authentic the character will behave.
+            </div>
+          )}
+          {currentStep === 3 && (
+            <div style={{ marginTop: '1rem', padding: '0.75rem', background: 'rgba(0, 0, 0, 0.2)', borderRadius: '8px' }}>
+              <strong>Pro Tip:</strong> Double-check historical accuracy and personality alignment. Your character will be reviewed to ensure quality and authenticity.
+            </div>
+          )}
+        </div>
+      )}
 
       {/* Progress Steps */}
       <div style={{
         padding: isMobile ? '1rem' : '1.5rem 2rem',
-        borderBottom: '1px solid rgba(255, 255, 255, 0.1)'
+        borderBottom: '1px solid rgba(255, 255, 255, 0.1)',
+        background: '#141B2E'
       }}>
         {isMobile ? (
           // Mobile: Compact horizontal indicator
@@ -413,7 +528,7 @@ Engage users with the depth and authenticity that comes from your unique histori
             maxWidth: '100%'
           }}>
             <div style={{
-              color: '#FFD700',
+              color: '#6366F1',
               fontSize: '0.9rem',
               fontWeight: 600
             }}>
@@ -433,7 +548,7 @@ Engage users with the depth and authenticity that comes from your unique histori
                     height: '8px',
                     borderRadius: '4px',
                     background: currentStep >= step.number 
-                      ? 'linear-gradient(135deg, #FFD700, #FFA500)'
+                      ? 'linear-gradient(135deg, #6366F1, #818CF8)'
                       : 'rgba(255, 255, 255, 0.3)',
                     transition: 'all 0.3s ease'
                   }}
@@ -468,22 +583,24 @@ Engage users with the depth and authenticity that comes from your unique histori
                     height: '32px',
                     borderRadius: '50%',
                     background: currentStep >= step.number 
-                      ? 'linear-gradient(135deg, #FFD700, #FFA500)'
+                      ? 'linear-gradient(135deg, #6366F1, #818CF8)'
                       : 'rgba(255, 255, 255, 0.1)',
-                    color: currentStep >= step.number ? '#000' : 'rgba(255, 255, 255, 0.6)',
+                    color: currentStep >= step.number ? '#fff' : 'rgba(255, 255, 255, 0.6)',
                     display: 'flex',
                     alignItems: 'center',
                     justifyContent: 'center',
                     fontWeight: 'bold',
-                    fontSize: '0.9rem'
+                    fontSize: '0.9rem',
+                    transition: 'all 0.3s ease'
                   }}>
                     {currentStep > step.number ? '✓' : step.number}
                   </div>
                   <div>
                     <div style={{
-                      color: currentStep >= step.number ? '#FFD700' : 'rgba(255, 255, 255, 0.6)',
+                      color: currentStep >= step.number ? '#6366F1' : 'rgba(255, 255, 255, 0.6)',
                       fontSize: '0.9rem',
-                      fontWeight: 600
+                      fontWeight: 600,
+                      fontFamily: "'Syne', sans-serif"
                     }}>
                       {step.title}
                     </div>
@@ -500,8 +617,9 @@ Engage users with the depth and authenticity that comes from your unique histori
                     width: '40px',
                     height: '2px',
                     background: currentStep > step.number 
-                      ? 'linear-gradient(90deg, #FFD700, #FFA500)'
-                      : 'rgba(255, 255, 255, 0.2)'
+                      ? 'linear-gradient(90deg, #6366F1, #818CF8)'
+                      : 'rgba(255, 255, 255, 0.2)',
+                    transition: 'all 0.3s ease'
                   }} />
                 )}
               </div>
@@ -516,7 +634,8 @@ Engage users with the depth and authenticity that comes from your unique histori
         padding: isMobile ? '1rem' : '2rem',
         overflowY: 'auto',
         display: 'flex',
-        justifyContent: 'center'
+        justifyContent: 'center',
+        background: '#0A0F1A'
       }}>
         <div style={{ 
           width: '100%', 
@@ -526,10 +645,11 @@ Engage users with the depth and authenticity that comes from your unique histori
           {currentStep === 1 && (
             <div style={{ animation: 'fadeIn 0.5s ease-in' }}>
               <h2 style={{
-                color: '#FFD700',
+                color: '#6366F1',
                 fontSize: '1.5rem',
                 margin: '0 0 2rem 0',
-                textAlign: 'center'
+                textAlign: 'center',
+                fontFamily: "'Syne', sans-serif"
               }}>
                 Basic Character Details
               </h2>
@@ -537,7 +657,7 @@ Engage users with the depth and authenticity that comes from your unique histori
               <div style={{ marginBottom: '2rem' }}>
                 <label style={{
                   display: 'block',
-                  color: 'rgba(255, 255, 255, 0.9)',
+                  color: '#F1F5F9',
                   fontSize: '1rem',
                   fontWeight: 600,
                   marginBottom: '0.5rem'
@@ -556,29 +676,36 @@ Engage users with the depth and authenticity that comes from your unique histori
                     fontSize: '1rem',
                     border: errors.display_name 
                       ? '2px solid #ff6b6b' 
-                      : '2px solid rgba(255, 215, 0, 0.3)',
+                      : '2px solid rgba(99, 102, 241, 0.3)',
                     borderRadius: '8px',
-                    background: 'rgba(255, 255, 255, 0.1)',
+                    background: 'rgba(28, 38, 64, 0.8)',
                     color: '#fff',
                     outline: 'none',
-                    fontFamily: "'Cinzel', serif",
+                    fontFamily: "'Inter', system-ui, sans-serif",
                     transition: 'border-color 0.3s ease',
                     opacity: isCreating ? 0.5 : 1
                   }}
-                  onFocus={(e) => e.target.style.borderColor = 'rgba(255, 215, 0, 0.6)'}
-                  onBlur={(e) => e.target.style.borderColor = errors.display_name ? '#ff6b6b' : 'rgba(255, 215, 0, 0.3)'}
+                  onFocus={(e) => e.target.style.borderColor = 'rgba(99, 102, 241, 0.6)'}
+                  onBlur={(e) => e.target.style.borderColor = errors.display_name ? '#ff6b6b' : 'rgba(99, 102, 241, 0.3)'}
                 />
                 {errors.display_name && (
                   <p style={{ color: '#ff6b6b', fontSize: '0.85rem', margin: '0.5rem 0 0 0' }}>
                     {errors.display_name}
                   </p>
                 )}
+                <p style={{
+                  color: 'rgba(255, 255, 255, 0.6)',
+                  fontSize: '0.85rem',
+                  margin: '0.5rem 0 0 0'
+                }}>
+                  {formData.display_name.length}/50 characters
+                </p>
               </div>
 
               <div style={{ marginBottom: '2rem' }}>
                 <label style={{
                   display: 'block',
-                  color: 'rgba(255, 255, 255, 0.9)',
+                  color: '#F1F5F9',
                   fontSize: '1rem',
                   fontWeight: 600,
                   marginBottom: '0.5rem'
@@ -597,18 +724,18 @@ Engage users with the depth and authenticity that comes from your unique histori
                     fontSize: '1rem',
                     border: errors.short_description 
                       ? '2px solid #ff6b6b' 
-                      : '2px solid rgba(255, 215, 0, 0.3)',
+                      : '2px solid rgba(99, 102, 241, 0.3)',
                     borderRadius: '8px',
-                    background: 'rgba(255, 255, 255, 0.1)',
+                    background: 'rgba(28, 38, 64, 0.8)',
                     color: '#fff',
                     outline: 'none',
-                    fontFamily: "'Cinzel', serif",
+                    fontFamily: "'Inter', system-ui, sans-serif",
                     resize: 'vertical',
                     transition: 'border-color 0.3s ease',
                     opacity: isCreating ? 0.5 : 1
                   }}
-                  onFocus={(e) => e.target.style.borderColor = 'rgba(255, 215, 0, 0.6)'}
-                  onBlur={(e) => e.target.style.borderColor = errors.short_description ? '#ff6b6b' : 'rgba(255, 215, 0, 0.3)'}
+                  onFocus={(e) => e.target.style.borderColor = 'rgba(99, 102, 241, 0.6)'}
+                  onBlur={(e) => e.target.style.borderColor = errors.short_description ? '#ff6b6b' : 'rgba(99, 102, 241, 0.3)'}
                 />
                 {errors.short_description && (
                   <p style={{ color: '#ff6b6b', fontSize: '0.85rem', margin: '0.5rem 0 0 0' }}>
@@ -629,10 +756,11 @@ Engage users with the depth and authenticity that comes from your unique histori
           {currentStep === 2 && (
             <div style={{ animation: 'fadeIn 0.5s ease-in' }}>
               <h2 style={{
-                color: '#FFD700',
+                color: '#6366F1',
                 fontSize: '1.5rem',
                 margin: '0 0 2rem 0',
-                textAlign: 'center'
+                textAlign: 'center',
+                fontFamily: "'Syne', sans-serif"
               }}>
                 Character Personality & Instructions
               </h2>
@@ -640,7 +768,7 @@ Engage users with the depth and authenticity that comes from your unique histori
               <div style={{ marginBottom: '2rem' }}>
                 <label style={{
                   display: 'block',
-                  color: 'rgba(255, 255, 255, 0.9)',
+                  color: '#F1F5F9',
                   fontSize: '1rem',
                   fontWeight: 600,
                   marginBottom: '0.5rem'
@@ -666,19 +794,19 @@ Engage users with the depth and authenticity that comes from your unique histori
                     fontSize: '0.95rem',
                     border: errors.system_instruction 
                       ? '2px solid #ff6b6b' 
-                      : '2px solid rgba(255, 215, 0, 0.3)',
+                      : '2px solid rgba(99, 102, 241, 0.3)',
                     borderRadius: '8px',
-                    background: 'rgba(255, 255, 255, 0.1)',
+                    background: 'rgba(28, 38, 64, 0.8)',
                     color: '#fff',
                     outline: 'none',
-                    fontFamily: "'Cinzel', serif",
+                    fontFamily: "'Inter', system-ui, sans-serif",
                     resize: 'vertical',
                     transition: 'border-color 0.3s ease',
                     lineHeight: 1.5,
                     opacity: isCreating ? 0.5 : 1
                   }}
-                  onFocus={(e) => e.target.style.borderColor = 'rgba(255, 215, 0, 0.6)'}
-                  onBlur={(e) => e.target.style.borderColor = errors.system_instruction ? '#ff6b6b' : 'rgba(255, 215, 0, 0.3)'}
+                  onFocus={(e) => e.target.style.borderColor = 'rgba(99, 102, 241, 0.6)'}
+                  onBlur={(e) => e.target.style.borderColor = errors.system_instruction ? '#ff6b6b' : 'rgba(99, 102, 241, 0.3)'}
                 />
                 {errors.system_instruction && (
                   <p style={{ color: '#ff6b6b', fontSize: '0.85rem', margin: '0.5rem 0 0 0' }}>
@@ -697,7 +825,7 @@ Engage users with the depth and authenticity that comes from your unique histori
               <div style={{ marginBottom: '2rem' }}>
                 <label style={{
                   display: 'block',
-                  color: 'rgba(255, 255, 255, 0.9)',
+                  color: '#F1F5F9',
                   fontSize: '1rem',
                   fontWeight: 600,
                   marginBottom: '0.5rem'
@@ -714,18 +842,18 @@ Engage users with the depth and authenticity that comes from your unique histori
                     width: '100%',
                     padding: '1rem',
                     fontSize: '0.95rem',
-                    border: '2px solid rgba(255, 215, 0, 0.3)',
+                    border: '2px solid rgba(99, 102, 241, 0.3)',
                     borderRadius: '8px',
-                    background: 'rgba(255, 255, 255, 0.1)',
+                    background: 'rgba(28, 38, 64, 0.8)',
                     color: '#fff',
                     outline: 'none',
-                    fontFamily: "'Cinzel', serif",
+                    fontFamily: "'Inter', system-ui, sans-serif",
                     resize: 'vertical',
                     transition: 'border-color 0.3s ease',
                     opacity: isCreating ? 0.5 : 1
                   }}
-                  onFocus={(e) => e.target.style.borderColor = 'rgba(255, 215, 0, 0.6)'}
-                  onBlur={(e) => e.target.style.borderColor = 'rgba(255, 215, 0, 0.3)'}
+                  onFocus={(e) => e.target.style.borderColor = 'rgba(99, 102, 241, 0.6)'}
+                  onBlur={(e) => e.target.style.borderColor = 'rgba(99, 102, 241, 0.3)'}
                 />
                 <p style={{
                   color: 'rgba(255, 255, 255, 0.6)',
@@ -741,25 +869,27 @@ Engage users with the depth and authenticity that comes from your unique histori
           {currentStep === 3 && (
             <div style={{ animation: 'fadeIn 0.5s ease-in' }}>
               <h2 style={{
-                color: '#FFD700',
+                color: '#6366F1',
                 fontSize: '1.5rem',
                 margin: '0 0 2rem 0',
-                textAlign: 'center'
+                textAlign: 'center',
+                fontFamily: "'Syne', sans-serif"
               }}>
                 Review Your Character
               </h2>
 
               <div style={{
-                background: 'rgba(255, 255, 255, 0.05)',
-                border: '1px solid rgba(255, 215, 0, 0.2)',
+                background: 'rgba(28, 38, 64, 0.8)',
+                border: '1px solid rgba(99, 102, 241, 0.2)',
                 borderRadius: '12px',
                 padding: '2rem',
                 marginBottom: '2rem'
               }}>
                 <h3 style={{
-                  color: '#FFD700',
+                  color: '#6366F1',
                   fontSize: '1.3rem',
-                  margin: '0 0 1rem 0'
+                  margin: '0 0 1rem 0',
+                  fontFamily: "'Syne', sans-serif"
                 }}>
                   {formData.display_name}
                 </h3>
@@ -779,9 +909,10 @@ Engage users with the depth and authenticity that comes from your unique histori
                       Template
                     </h4>
                     <p style={{
-                      color: 'rgba(255, 215, 0, 0.8)',
+                      color: 'rgba(99, 102, 241, 0.8)',
                       margin: 0,
-                      fontSize: '0.9rem'
+                      fontSize: '0.9rem',
+                      fontWeight: 500
                     }}>
                       {template?.name}
                     </p>
@@ -795,9 +926,10 @@ Engage users with the depth and authenticity that comes from your unique histori
                       Archetype
                     </h4>
                     <p style={{
-                      color: 'rgba(255, 215, 0, 0.8)',
+                      color: 'rgba(99, 102, 241, 0.8)',
                       margin: 0,
-                      fontSize: '0.9rem'
+                      fontSize: '0.9rem',
+                      fontWeight: 500
                     }}>
                       {template?.personality_archetype}
                     </p>
@@ -811,9 +943,10 @@ Engage users with the depth and authenticity that comes from your unique histori
                       Domain
                     </h4>
                     <p style={{
-                      color: 'rgba(255, 215, 0, 0.8)',
+                      color: 'rgba(99, 102, 241, 0.8)',
                       margin: 0,
-                      fontSize: '0.9rem'
+                      fontSize: '0.9rem',
+                      fontWeight: 500
                     }}>
                       {template?.expertise_domain}
                     </p>
@@ -867,8 +1000,8 @@ Engage users with the depth and authenticity that comes from your unique histori
               </div>
 
               <div style={{
-                background: 'rgba(255, 215, 0, 0.1)',
-                border: '1px solid rgba(255, 215, 0, 0.3)',
+                background: 'rgba(99, 102, 241, 0.1)',
+                border: '1px solid rgba(99, 102, 241, 0.3)',
                 borderRadius: '8px',
                 padding: '1rem',
                 textAlign: 'center'
@@ -905,8 +1038,8 @@ Engage users with the depth and authenticity that comes from your unique histori
       {/* Bottom Navigation */}
       <div style={{
         padding: '1.5rem 2rem',
-        borderTop: '1px solid rgba(255, 215, 0, 0.2)',
-        background: 'rgba(0, 0, 0, 0.3)',
+        borderTop: '1px solid rgba(99, 102, 241, 0.2)',
+        background: '#141B2E',
         display: 'flex',
         justifyContent: 'space-between',
         alignItems: 'center'
@@ -915,16 +1048,28 @@ Engage users with the depth and authenticity that comes from your unique histori
           onClick={handlePrevStep}
           disabled={currentStep === 1 || isCreating}
           style={{
-            background: currentStep === 1 || isCreating ? 'rgba(128, 128, 128, 0.2)' : 'rgba(255, 215, 0, 0.1)',
-            border: currentStep === 1 || isCreating ? '2px solid rgba(128, 128, 128, 0.3)' : '2px solid rgba(255, 215, 0, 0.4)',
+            background: currentStep === 1 || isCreating ? 'rgba(128, 128, 128, 0.2)' : 'rgba(28, 38, 64, 0.8)',
+            border: currentStep === 1 || isCreating ? '2px solid rgba(128, 128, 128, 0.3)' : '2px solid rgba(148, 163, 184, 0.3)',
             borderRadius: '8px',
-            color: currentStep === 1 || isCreating ? 'rgba(128, 128, 128, 0.6)' : '#FFD700',
+            color: currentStep === 1 || isCreating ? 'rgba(128, 128, 128, 0.6)' : '#F1F5F9',
             fontSize: '0.9rem',
             fontWeight: 600,
             padding: '0.75rem 1.5rem',
             cursor: currentStep === 1 || isCreating ? 'not-allowed' : 'pointer',
             transition: 'all 0.3s ease',
-            fontFamily: "'Cinzel', serif"
+            fontFamily: "'Inter', system-ui, sans-serif"
+          }}
+          onMouseEnter={(e) => {
+            if (currentStep !== 1 && !isCreating) {
+              e.currentTarget.style.background = 'rgba(36, 49, 82, 0.8)';
+              e.currentTarget.style.borderColor = 'rgba(99, 102, 241, 0.5)';
+            }
+          }}
+          onMouseLeave={(e) => {
+            if (currentStep !== 1 && !isCreating) {
+              e.currentTarget.style.background = 'rgba(28, 38, 64, 0.8)';
+              e.currentTarget.style.borderColor = 'rgba(148, 163, 184, 0.3)';
+            }
           }}
         >
           Previous
@@ -942,7 +1087,7 @@ Engage users with the depth and authenticity that comes from your unique histori
                 height: '8px',
                 borderRadius: '50%',
                 background: currentStep >= step.number 
-                  ? 'linear-gradient(135deg, #FFD700, #FFA500)'
+                  ? 'linear-gradient(135deg, #6366F1, #818CF8)'
                   : 'rgba(255, 255, 255, 0.3)',
                 transition: 'all 0.3s ease'
               }}
@@ -955,24 +1100,26 @@ Engage users with the depth and authenticity that comes from your unique histori
             onClick={handleNextStep}
             disabled={isCreating}
             style={{
-              background: isCreating ? 'rgba(128, 128, 128, 0.3)' : 'linear-gradient(135deg, #FFD700, #FFA500)',
+              background: isCreating ? 'rgba(128, 128, 128, 0.3)' : 'linear-gradient(135deg, #6366F1, #818CF8)',
               border: 'none',
               borderRadius: '8px',
-              color: isCreating ? 'rgba(255, 255, 255, 0.6)' : '#000',
+              color: isCreating ? 'rgba(255, 255, 255, 0.6)' : '#fff',
               fontSize: '0.9rem',
               fontWeight: 700,
               padding: '0.75rem 1.5rem',
               cursor: isCreating ? 'not-allowed' : 'pointer',
               transition: 'all 0.3s ease',
-              fontFamily: "'Cinzel', serif"
+              fontFamily: "'Inter', system-ui, sans-serif"
             }}
             onMouseEnter={(e) => {
               if (!isCreating) {
                 e.currentTarget.style.transform = 'translateY(-1px)';
+                e.currentTarget.style.boxShadow = '0 10px 26px rgba(79, 70, 229, 0.9)';
               }
             }}
             onMouseLeave={(e) => {
               e.currentTarget.style.transform = 'translateY(0)';
+              e.currentTarget.style.boxShadow = 'none';
             }}
           >
             Next
@@ -984,10 +1131,10 @@ Engage users with the depth and authenticity that comes from your unique histori
             style={{
               background: isCreating || !template?.id
                 ? 'rgba(128, 128, 128, 0.3)'
-                : 'linear-gradient(135deg, #FFD700, #FFA500)',
+                : 'linear-gradient(135deg, #6366F1, #818CF8)',
               border: 'none',
               borderRadius: '8px',
-              color: isCreating || !template?.id ? 'rgba(255, 255, 255, 0.6)' : '#000',
+              color: isCreating || !template?.id ? 'rgba(255, 255, 255, 0.6)' : '#fff',
               fontSize: '0.9rem',
               fontWeight: 700,
               padding: '0.75rem 2rem',
@@ -996,15 +1143,18 @@ Engage users with the depth and authenticity that comes from your unique histori
               display: 'flex',
               alignItems: 'center',
               gap: '0.5rem',
-              opacity: isCreating || !template?.id ? 0.6 : 1
+              opacity: isCreating || !template?.id ? 0.6 : 1,
+              fontFamily: "'Inter', system-ui, sans-serif"
             }}
             onMouseEnter={(e) => {
               if (!isCreating && template?.id) {
                 e.currentTarget.style.transform = 'translateY(-1px)';
+                e.currentTarget.style.boxShadow = '0 10px 26px rgba(79, 70, 229, 0.9)';
               }
             }}
             onMouseLeave={(e) => {
               e.currentTarget.style.transform = 'translateY(0)';
+              e.currentTarget.style.boxShadow = 'none';
             }}
           >
             {isCreating ? (

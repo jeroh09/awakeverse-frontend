@@ -1,5 +1,4 @@
-// Fixed TemplateGallery.jsx - Complete version with proper backend structure usage
-
+// Fixed TemplateGallery.jsx - Updated with new design system
 import React, { useState, useEffect } from 'react';
 import { useUser } from '../contexts/UserContext';
 
@@ -68,7 +67,7 @@ const TemplateGallery = ({ onSelectTemplate, onClose }) => {
   const [error, setError] = useState(null);
   const [selectedTemplate, setSelectedTemplate] = useState(null);
   const [selectedArchetype, setSelectedArchetype] = useState('all');
-  
+  const [debugInfo, setDebugInfo] = useState({});
 
   // Load templates with proper error handling and structure
   useEffect(() => {
@@ -91,7 +90,6 @@ const TemplateGallery = ({ onSelectTemplate, onClose }) => {
 
             if (response.ok) {
               const data = await response.json();
-        
 
               // FIXED: Use the proper backend structure
               if (data.status === 'success') {
@@ -161,6 +159,43 @@ const TemplateGallery = ({ onSelectTemplate, onClose }) => {
     }
   };
 
+  // Get era badge color based on era
+  const getEraBadgeColor = (era) => {
+    const eraColors = {
+      ancient: '#8B4513',
+      medieval: '#2C3E50',
+      renaissance: '#E67E22',
+      industrial: '#7D3C98',
+      sports: '#2E86C1',
+      'science fiction': '#16A085',
+      modern: '#1F618D',
+      future: '#27AE60',
+      default: '#3498DB'
+    };
+
+    const normalizedEra = (era || '').toLowerCase().trim();
+    return eraColors[normalizedEra] || eraColors.default;
+  };
+
+  // Format era display name
+  const formatEraName = (era) => {
+    if (!era) return 'Modern';
+
+    const eraMap = {
+      ancient: 'Ancient Times',
+      medieval: 'Medieval Era',
+      renaissance: 'Renaissance',
+      industrial: 'Industrial Era',
+      sports: 'Modern Sports',
+      'science fiction': 'Science Fiction',
+      modern: 'Modern Day',
+      future: 'Future'
+    };
+
+    const normalizedEra = era.toLowerCase().trim();
+    return eraMap[normalizedEra] || era;
+  };
+
   // Loading state
   if (loading) {
     return (
@@ -170,24 +205,24 @@ const TemplateGallery = ({ onSelectTemplate, onClose }) => {
         left: 0,
         width: '100%',
         height: '100%',
-        background: 'linear-gradient(135deg, #0B1426 0%, #1A2B47 25%, #2C1810 50%, #0F1A2E 75%, #0B1426 100%)',
+        background: '#0A0F1A',
         display: 'flex',
         flexDirection: 'column',
         alignItems: 'center',
         justifyContent: 'center',
-        fontFamily: "'Georgia', serif",
-        color: '#FFD700'
+        fontFamily: "'Inter', system-ui, sans-serif",
+        color: '#6366F1'
       }}>
         <div style={{
           width: '40px',
           height: '40px',
-          border: '3px solid rgba(255, 215, 0, 0.3)',
-          borderTop: '3px solid #FFD700',
+          border: '3px solid rgba(99, 102, 241, 0.3)',
+          borderTop: '3px solid #6366F1',
           borderRadius: '50%',
           animation: 'spin 1s linear infinite',
           marginBottom: '1rem'
         }} />
-        <p style={{ fontSize: '1.1rem', margin: 0 }}>
+        <p style={{ fontSize: '1.1rem', margin: 0, color: '#F1F5F9' }}>
           Loading character templates...
         </p>
       </div>
@@ -203,37 +238,38 @@ const TemplateGallery = ({ onSelectTemplate, onClose }) => {
         left: 0,
         width: '100%',
         height: '100%',
-        background: 'linear-gradient(135deg, #0B1426 0%, #1A2B47 25%, #2C1810 50%, #0F1A2E 75%, #0B1426 100%)',
+        background: '#0A0F1A',
         display: 'flex',
         alignItems: 'center',
         justifyContent: 'center',
-        fontFamily: "'Georgia', serif"
+        fontFamily: "'Inter', system-ui, sans-serif"
       }}>
         <div style={{
-          background: 'rgba(255, 255, 255, 0.1)',
-          border: '2px solid rgba(255, 215, 0, 0.3)',
+          background: '#141B2E',
+          border: '1px solid rgba(99, 102, 241, 0.3)',
           borderRadius: '16px',
           padding: '2rem',
           textAlign: 'center',
           maxWidth: '500px'
         }}>
-          <h2 style={{ color: '#FFD700', margin: '0 0 1rem 0' }}>
+          <h2 style={{ color: '#6366F1', margin: '0 0 1rem 0', fontFamily: "'Syne', sans-serif" }}>
             Service Temporarily Unavailable
           </h2>
-          <p style={{ color: 'rgba(255, 255, 255, 0.8)', margin: '0 0 1.5rem 0' }}>
+          <p style={{ color: '#94A3B8', margin: '0 0 1.5rem 0' }}>
             Template service is currently down. Please try again later or browse existing characters.
           </p>
           <button
             onClick={onClose}
             style={{
-              background: 'linear-gradient(135deg, #FFD700, #FFA500)',
+              background: 'linear-gradient(135deg, #6366F1, #4f46e5)',
               border: 'none',
               borderRadius: '8px',
-              color: '#000',
+              color: '#fff',
               fontSize: '1rem',
               fontWeight: 600,
               padding: '0.75rem 1.5rem',
-              cursor: 'pointer'
+              cursor: 'pointer',
+              fontFamily: "'Inter', system-ui, sans-serif"
             }}
           >
             Back to Characters
@@ -250,17 +286,17 @@ const TemplateGallery = ({ onSelectTemplate, onClose }) => {
       left: 0,
       width: '100%',
       height: '100%',
-      background: 'linear-gradient(135deg, #0B1426 0%, #1A2B47 25%, #2C1810 50%, #0F1A2E 75%, #0B1426 100%)',
+      background: '#0A0F1A',
       overflowY: 'auto',
-      fontFamily: "'Georgia', serif"
+      fontFamily: "'Inter', system-ui, sans-serif"
     }}>
       {/* Header */}
       <div style={{
         position: 'sticky',
         top: 0,
-        background: 'rgba(11, 20, 38, 0.95)',
+        background: 'rgba(10, 15, 26, 0.95)',
         backdropFilter: 'blur(10px)',
-        borderBottom: '1px solid rgba(255, 215, 0, 0.3)',
+        borderBottom: '1px solid rgba(99, 102, 241, 0.3)',
         padding: '1rem 2rem',
         zIndex: 100
       }}>
@@ -273,16 +309,17 @@ const TemplateGallery = ({ onSelectTemplate, onClose }) => {
         }}>
           <div>
             <h1 style={{
-              color: '#FFD700',
+              color: '#F5F5DC',
               fontSize: '1.8rem',
-              fontFamily: "'Playfair Display', serif",
+              fontFamily: "'Syne', sans-serif",
               margin: '0 0 0.5rem 0',
-              letterSpacing: '1px'
+              letterSpacing: '1px',
+              fontWeight: 700
             }}>
               Character Templates
             </h1>
             <p style={{
-              color: 'rgba(255, 255, 255, 0.7)',
+              color: '#94A3B8',
               margin: 0,
               fontSize: '0.9rem'
             }}>
@@ -292,15 +329,24 @@ const TemplateGallery = ({ onSelectTemplate, onClose }) => {
           <button
             onClick={onClose}
             style={{
-              background: 'rgba(255, 255, 255, 0.1)',
-              border: '2px solid rgba(255, 255, 255, 0.3)',
+              background: 'rgba(28, 38, 64, 0.8)',
+              border: '1px solid rgba(148, 163, 184, 0.3)',
               borderRadius: '8px',
-              color: 'rgba(255, 255, 255, 0.8)',
+              color: '#F1F5F9',
               fontSize: '0.9rem',
               fontWeight: 600,
               padding: '0.5rem 1rem',
               cursor: 'pointer',
-              transition: 'all 0.3s ease'
+              transition: 'all 0.3s ease',
+              fontFamily: "'Inter', system-ui, sans-serif"
+            }}
+            onMouseEnter={(e) => {
+              e.currentTarget.style.background = 'rgba(36, 49, 82, 0.8)';
+              e.currentTarget.style.borderColor = 'rgba(99, 102, 241, 0.5)';
+            }}
+            onMouseLeave={(e) => {
+              e.currentTarget.style.background = 'rgba(28, 38, 64, 0.8)';
+              e.currentTarget.style.borderColor = 'rgba(148, 163, 184, 0.3)';
             }}
           >
             × Close
@@ -328,7 +374,7 @@ const TemplateGallery = ({ onSelectTemplate, onClose }) => {
       <div style={{
         padding: '1rem 2rem',
         background: 'rgba(255, 255, 255, 0.02)',
-        borderBottom: '1px solid rgba(255, 215, 0, 0.1)'
+        borderBottom: '1px solid rgba(99, 102, 241, 0.1)'
       }}>
         <div style={{
           maxWidth: '1200px',
@@ -339,7 +385,7 @@ const TemplateGallery = ({ onSelectTemplate, onClose }) => {
           flexWrap: 'wrap'
         }}>
           <span style={{
-            color: 'rgba(255, 215, 0, 0.8)',
+            color: 'rgba(99, 102, 241, 0.8)',
             fontSize: '0.9rem',
             fontWeight: 600
           }}>
@@ -353,19 +399,33 @@ const TemplateGallery = ({ onSelectTemplate, onClose }) => {
                 onClick={() => setSelectedArchetype(archetype)}
                 style={{
                   background: selectedArchetype === archetype 
-                    ? 'linear-gradient(135deg, #FFD700, #FFA500)' 
-                    : 'rgba(255, 255, 255, 0.1)',
+                    ? 'radial-gradient(circle at top left, rgba(79, 70, 229, 0.7), rgba(15, 23, 42, 0.95))' 
+                    : '#141B2E',
                   border: selectedArchetype === archetype 
-                    ? 'none' 
-                    : '1px solid rgba(255, 215, 0, 0.3)',
+                    ? '1px solid #6366F1' 
+                    : '1px solid rgba(148, 163, 184, 0.3)',
                   borderRadius: '20px',
-                  color: selectedArchetype === archetype ? '#000' : '#FFD700',
+                  color: selectedArchetype === archetype ? '#F1F5F9' : '#94A3B8',
                   fontSize: '0.8rem',
                   fontWeight: 600,
                   padding: '0.4rem 0.8rem',
                   cursor: 'pointer',
                   transition: 'all 0.3s ease',
-                  textTransform: 'capitalize'
+                  textTransform: 'capitalize',
+                  fontFamily: "'Inter', system-ui, sans-serif",
+                  boxShadow: selectedArchetype === archetype ? '0 4px 14px rgba(99, 102, 241, 0.5)' : 'none'
+                }}
+                onMouseEnter={(e) => {
+                  if (selectedArchetype !== archetype) {
+                    e.currentTarget.style.borderColor = '#6366F1';
+                    e.currentTarget.style.color = '#F1F5F9';
+                  }
+                }}
+                onMouseLeave={(e) => {
+                  if (selectedArchetype !== archetype) {
+                    e.currentTarget.style.borderColor = 'rgba(148, 163, 184, 0.3)';
+                    e.currentTarget.style.color = '#94A3B8';
+                  }
                 }}
               >
                 {archetype} {archetype !== 'all' && templateGroups[archetype] ? `(${templateGroups[archetype].length})` : ''}
@@ -385,7 +445,7 @@ const TemplateGallery = ({ onSelectTemplate, onClose }) => {
           <div style={{
             textAlign: 'center',
             padding: '4rem 2rem',
-            color: 'rgba(255, 255, 255, 0.7)'
+            color: '#94A3B8'
           }}>
             <p style={{ fontSize: '1.1rem', margin: '0 0 1rem 0' }}>
               No templates found for "{selectedArchetype}"
@@ -393,13 +453,14 @@ const TemplateGallery = ({ onSelectTemplate, onClose }) => {
             <button
               onClick={() => setSelectedArchetype('all')}
               style={{
-                background: 'rgba(255, 215, 0, 0.1)',
-                border: '1px solid rgba(255, 215, 0, 0.3)',
+                background: 'rgba(99, 102, 241, 0.1)',
+                border: '1px solid rgba(99, 102, 241, 0.3)',
                 borderRadius: '8px',
-                color: '#FFD700',
+                color: '#6366F1',
                 fontSize: '0.9rem',
                 padding: '0.5rem 1rem',
-                cursor: 'pointer'
+                cursor: 'pointer',
+                fontFamily: "'Inter', system-ui, sans-serif"
               }}
             >
               View All Templates
@@ -417,55 +478,70 @@ const TemplateGallery = ({ onSelectTemplate, onClose }) => {
                 onClick={() => handleTemplateSelect(template)}
                 style={{
                   background: selectedTemplate?.id === template.id 
-                    ? 'rgba(255, 215, 0, 0.1)' 
-                    : 'rgba(255, 255, 255, 0.05)',
+                    ? 'rgba(99, 102, 241, 0.1)' 
+                    : '#141B2E',
                   border: selectedTemplate?.id === template.id 
-                    ? '2px solid rgba(255, 215, 0, 0.6)' 
-                    : '1px solid rgba(255, 215, 0, 0.2)',
+                    ? '2px solid rgba(99, 102, 241, 0.6)' 
+                    : '1px solid rgba(148, 163, 184, 0.2)',
                   borderRadius: '16px',
                   padding: '1.5rem',
                   cursor: 'pointer',
                   transition: 'all 0.3s ease',
-                  backdropFilter: 'blur(5px)'
+                  backdropFilter: 'blur(5px)',
+                  position: 'relative',
+                  overflow: 'hidden'
                 }}
                 onMouseEnter={(e) => {
                   if (selectedTemplate?.id !== template.id) {
-                    e.currentTarget.style.borderColor = 'rgba(255, 215, 0, 0.4)';
-                    e.currentTarget.style.background = 'rgba(255, 255, 255, 0.08)';
+                    e.currentTarget.style.borderColor = 'rgba(99, 102, 241, 0.4)';
+                    e.currentTarget.style.background = '#1C2640';
+                    e.currentTarget.style.transform = 'translateY(-4px)';
+                    e.currentTarget.style.boxShadow = '0 4px 16px -4px rgba(0, 0, 0, 0.15), 0 8px 24px -8px rgba(99, 102, 241, 0.15)';
                   }
                 }}
                 onMouseLeave={(e) => {
                   if (selectedTemplate?.id !== template.id) {
-                    e.currentTarget.style.borderColor = 'rgba(255, 215, 0, 0.2)';
-                    e.currentTarget.style.background = 'rgba(255, 255, 255, 0.05)';
+                    e.currentTarget.style.borderColor = 'rgba(148, 163, 184, 0.2)';
+                    e.currentTarget.style.background = '#141B2E';
+                    e.currentTarget.style.transform = 'translateY(0)';
+                    e.currentTarget.style.boxShadow = 'none';
                   }
                 }}
               >
+                {/* Background gradient effect */}
+                <div style={{
+                  position: 'absolute',
+                  top: 0,
+                  left: 0,
+                  right: 0,
+                  bottom: 0,
+                  background: 'radial-gradient(circle at top, rgba(79, 70, 229, 0.35), transparent 55%)',
+                  opacity: 0.7,
+                  pointerEvents: 'none'
+                }} />
+
                 {/* Template Header */}
                 <div style={{
                   display: 'flex',
                   justifyContent: 'space-between',
                   alignItems: 'flex-start',
-                  marginBottom: '1rem'
+                  marginBottom: '1rem',
+                  position: 'relative',
+                  zIndex: 1
                 }}>
                   <div style={{ flex: 1 }}>
-                    <h3 style={{
-                      color: '#FFD700',
-                      fontSize: '1.1rem',
-                      fontWeight: 600,
-                      margin: '0 0 0.5rem 0',
-                      letterSpacing: '0.5px'
+                    <div style={{
+                      display: 'flex',
+                      gap: '0.5rem',
+                      marginBottom: '0.5rem',
+                      flexWrap: 'wrap'
                     }}>
-                      {template.name}
-                    </h3>
-                    
-                    <div style={{ display: 'flex', gap: '0.5rem', marginBottom: '0.5rem' }}>
                       {template.personality_archetype && (
                         <span style={{
-                          background: 'rgba(255, 215, 0, 0.2)',
-                          border: '1px solid rgba(255, 215, 0, 0.3)',
+                          background: 'rgba(37, 99, 235, 0.18)',
+                          border: '1px solid rgba(99, 102, 241, 0.3)',
                           borderRadius: '12px',
-                          color: 'rgba(255, 215, 0, 0.9)',
+                          color: '#bfdbfe',
                           fontSize: '0.7rem',
                           padding: '0.2rem 0.5rem',
                           textTransform: 'capitalize',
@@ -477,17 +553,29 @@ const TemplateGallery = ({ onSelectTemplate, onClose }) => {
                       
                       {template.historical_period && (
                         <span style={{
-                          background: 'rgba(255, 255, 255, 0.1)',
+                          background: getEraBadgeColor(template.historical_period),
                           border: '1px solid rgba(255, 255, 255, 0.2)',
                           borderRadius: '12px',
-                          color: 'rgba(255, 255, 255, 0.7)',
+                          color: '#F1F5F9',
                           fontSize: '0.7rem',
-                          padding: '0.2rem 0.5rem'
+                          padding: '0.2rem 0.5rem',
+                          fontWeight: 600
                         }}>
-                          {template.historical_period}
+                          {formatEraName(template.historical_period)}
                         </span>
                       )}
                     </div>
+                    
+                    <h3 style={{
+                      color: '#F1F5F9',
+                      fontSize: '1.1rem',
+                      fontWeight: 700,
+                      margin: '0 0 0.5rem 0',
+                      letterSpacing: '0.5px',
+                      fontFamily: "'Syne', sans-serif"
+                    }}>
+                      {template.name}
+                    </h3>
                   </div>
                   
                   {template.usage_count !== undefined && (
@@ -505,15 +593,79 @@ const TemplateGallery = ({ onSelectTemplate, onClose }) => {
                     </div>
                   )}
                 </div>
+                
                 {/* Template Description */}
                 <p style={{
-                  color: 'rgba(255, 255, 255, 0.8)',
+                  color: '#94A3B8',
                   fontSize: '0.9rem',
                   lineHeight: 1.5,
-                  margin: '0 0 1rem 0'
+                  margin: '0 0 1rem 0',
+                  position: 'relative',
+                  zIndex: 1
                 }}>
                   {template.description}
                 </p>
+
+                {/* Expertise Domain */}
+                {template.expertise_domain && (
+                  <div style={{
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: '0.5rem',
+                    marginBottom: '1rem',
+                    position: 'relative',
+                    zIndex: 1
+                  }}>
+                    <span style={{
+                      color: '#64748B',
+                      fontSize: '0.8rem',
+                      fontWeight: 500
+                    }}>
+                      Expertise:
+                    </span>
+                    <span style={{
+                      color: '#6366F1',
+                      fontSize: '0.8rem',
+                      fontWeight: 600
+                    }}>
+                      {template.expertise_domain}
+                    </span>
+                  </div>
+                )}
+
+                {/* Use Template Button */}
+                <button
+                  style={{
+                    width: '100%',
+                    padding: '0.7rem 1.1rem',
+                    background: 'linear-gradient(135deg, #6366F1, #4f46e5)',
+                    color: 'white',
+                    border: 'none',
+                    borderRadius: '999px',
+                    fontSize: '0.88rem',
+                    fontWeight: 500,
+                    cursor: 'pointer',
+                    display: 'inline-flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    gap: '0.5rem',
+                    boxShadow: '0 8px 24px rgba(79, 70, 229, 0.7)',
+                    transition: 'all 0.2s ease',
+                    position: 'relative',
+                    zIndex: 1,
+                    fontFamily: "'Inter', system-ui, sans-serif"
+                  }}
+                  onMouseEnter={(e) => {
+                    e.currentTarget.style.transform = 'translateY(-2px)';
+                    e.currentTarget.style.boxShadow = '0 14px 30px rgba(79, 70, 229, 0.85)';
+                  }}
+                  onMouseLeave={(e) => {
+                    e.currentTarget.style.transform = 'translateY(0)';
+                    e.currentTarget.style.boxShadow = '0 8px 24px rgba(79, 70, 229, 0.7)';
+                  }}
+                >
+                  Use Template
+                </button>
               </div>
             ))}
           </div>
@@ -527,9 +679,9 @@ const TemplateGallery = ({ onSelectTemplate, onClose }) => {
           bottom: 0,
           left: 0,
           right: 0,
-          background: 'rgba(11, 20, 38, 0.95)',
+          background: 'rgba(10, 15, 26, 0.95)',
           backdropFilter: 'blur(10px)',
-          borderTop: '1px solid rgba(255, 215, 0, 0.3)',
+          borderTop: '1px solid rgba(99, 102, 241, 0.3)',
           padding: '1rem 2rem',
           zIndex: 100
         }}>
@@ -542,15 +694,16 @@ const TemplateGallery = ({ onSelectTemplate, onClose }) => {
           }}>
             <div>
               <p style={{
-                color: '#FFD700',
+                color: '#6366F1',
                 fontSize: '0.9rem',
                 fontWeight: 600,
-                margin: '0 0 0.25rem 0'
+                margin: '0 0 0.25rem 0',
+                fontFamily: "'Syne', sans-serif"
               }}>
                 Selected: {selectedTemplate.name}
               </p>
               <p style={{
-                color: 'rgba(255, 255, 255, 0.7)',
+                color: '#94A3B8',
                 fontSize: '0.8rem',
                 margin: 0
               }}>
@@ -562,15 +715,24 @@ const TemplateGallery = ({ onSelectTemplate, onClose }) => {
               <button
                 onClick={() => setSelectedTemplate(null)}
                 style={{
-                  background: 'rgba(255, 255, 255, 0.1)',
-                  border: '2px solid rgba(255, 255, 255, 0.3)',
+                  background: 'rgba(28, 38, 64, 0.8)',
+                  border: '1px solid rgba(148, 163, 184, 0.3)',
                   borderRadius: '8px',
-                  color: 'rgba(255, 255, 255, 0.8)',
+                  color: '#F1F5F9',
                   fontSize: '0.9rem',
                   fontWeight: 600,
                   padding: '0.75rem 1.5rem',
                   cursor: 'pointer',
-                  transition: 'all 0.3s ease'
+                  transition: 'all 0.3s ease',
+                  fontFamily: "'Inter', system-ui, sans-serif"
+                }}
+                onMouseEnter={(e) => {
+                  e.currentTarget.style.background = 'rgba(36, 49, 82, 0.8)';
+                  e.currentTarget.style.borderColor = 'rgba(99, 102, 241, 0.5)';
+                }}
+                onMouseLeave={(e) => {
+                  e.currentTarget.style.background = 'rgba(28, 38, 64, 0.8)';
+                  e.currentTarget.style.borderColor = 'rgba(148, 163, 184, 0.3)';
                 }}
               >
                 Cancel
@@ -581,18 +743,31 @@ const TemplateGallery = ({ onSelectTemplate, onClose }) => {
                 disabled={!selectedTemplate?.id}
                 style={{
                   background: selectedTemplate?.id 
-                    ? 'linear-gradient(135deg, #FFD700, #FFA500)'
+                    ? 'linear-gradient(135deg, #6366F1, #4f46e5)'
                     : 'rgba(128, 128, 128, 0.3)',
                   border: 'none',
                   borderRadius: '8px',
-                  color: selectedTemplate?.id ? '#000' : 'rgba(255, 255, 255, 0.5)',
+                  color: selectedTemplate?.id ? '#fff' : 'rgba(255, 255, 255, 0.5)',
                   fontSize: '0.9rem',
                   fontWeight: 700,
                   padding: '0.75rem 1.5rem',
                   cursor: selectedTemplate?.id ? 'pointer' : 'not-allowed',
                   transition: 'all 0.3s ease',
-                  boxShadow: selectedTemplate?.id ? '0 4px 15px rgba(255, 215, 0, 0.3)' : 'none',
-                  opacity: selectedTemplate?.id ? 1 : 0.6
+                  boxShadow: selectedTemplate?.id ? '0 4px 15px rgba(99, 102, 241, 0.3)' : 'none',
+                  opacity: selectedTemplate?.id ? 1 : 0.6,
+                  fontFamily: "'Inter', system-ui, sans-serif"
+                }}
+                onMouseEnter={(e) => {
+                  if (selectedTemplate?.id) {
+                    e.currentTarget.style.transform = 'translateY(-2px)';
+                    e.currentTarget.style.boxShadow = '0 10px 26px rgba(79, 70, 229, 0.9)';
+                  }
+                }}
+                onMouseLeave={(e) => {
+                  if (selectedTemplate?.id) {
+                    e.currentTarget.style.transform = 'translateY(0)';
+                    e.currentTarget.style.boxShadow = '0 4px 15px rgba(99, 102, 241, 0.3)';
+                  }
                 }}
               >
                 Use This Template
