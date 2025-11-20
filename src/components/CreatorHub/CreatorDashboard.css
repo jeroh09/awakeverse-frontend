@@ -1286,3 +1286,376 @@
     grid-template-columns: 1fr; /* 1 column on mobile */
   }
 }
+/* ========= DASHBOARD LAYOUT ========= */
+.dashboard-content {
+  display: grid;
+  grid-template-columns: 1fr 380px;
+  gap: 2rem;
+  margin-top: 2rem;
+}
+
+.main-content {
+  display: flex;
+  flex-direction: column;
+  gap: 2rem;
+}
+
+/* ========= SIDEBAR QUICK ACTIONS SECTIONS ========= */
+.dashboard-sidebar {
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+}
+
+/* Quick Actions Panel */
+.actions-panel {
+  padding: 1.5rem;
+  border-radius: 16px;
+  background: 
+    radial-gradient(circle at top right, rgba(99, 102, 241, 0.12), transparent 60%),
+    var(--bg-surface, #141B2E);
+  border: 1px solid var(--border-subtle, rgba(148, 163, 184, 0.2));
+  box-shadow: 
+    0 8px 32px rgba(15, 23, 42, 0.8),
+    0 0 0 1px rgba(15, 23, 42, 0.9);
+}
+
+.actions-panel h3 {
+  font-family: var(--font-display, 'Syne', system-ui, sans-serif);
+  font-size: 1.2rem;
+  font-weight: 700;
+  color: #F1F5F9;
+  margin: 0 0 1.25rem 0;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.actions-panel h3::before {
+  content: '⚡';
+  font-size: 1.1rem;
+}
+
+.action-buttons {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+
+.action-btn {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  padding: 1rem 1.25rem;
+  border-radius: 12px;
+  border: 1px solid;
+  font-family: var(--font-body, 'Inter', system-ui, sans-serif);
+  font-weight: 600;
+  font-size: 0.9rem;
+  cursor: pointer;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  text-align: left;
+  width: 100%;
+}
+
+.action-btn.primary {
+  background: linear-gradient(135deg, #6366F1, #818CF8);
+  color: white;
+  border-color: transparent;
+  box-shadow: 0 4px 16px rgba(99, 102, 241, 0.3);
+}
+
+.action-btn.primary:hover {
+  transform: translateY(-2px);
+  box-shadow: 
+    0 8px 25px rgba(99, 102, 241, 0.4),
+    0 0 20px rgba(99, 102, 241, 0.2);
+}
+
+.action-btn.secondary {
+  background: rgba(99, 102, 241, 0.08);
+  color: #6366F1;
+  border-color: rgba(99, 102, 241, 0.3);
+}
+
+.action-btn.secondary:hover {
+  background: rgba(99, 102, 241, 0.12);
+  border-color: rgba(99, 102, 241, 0.5);
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgba(99, 102, 241, 0.15);
+}
+
+/* Achievements Panel */
+.achievements-panel {
+  padding: 1.5rem;
+  border-radius: 16px;
+  background: 
+    radial-gradient(circle at bottom left, rgba(245, 158, 11, 0.1), transparent 60%),
+    var(--bg-surface, #141B2E);
+  border: 1px solid var(--border-subtle, rgba(148, 163, 184, 0.2));
+  box-shadow: 
+    0 8px 32px rgba(15, 23, 42, 0.8),
+    0 0 0 1px rgba(15, 23, 42, 0.9);
+}
+
+.achievements-panel h3 {
+  font-family: var(--font-display, 'Syne', system-ui, sans-serif);
+  font-size: 1.2rem;
+  font-weight: 700;
+  color: #F1F5F9;
+  margin: 0 0 1.25rem 0;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.achievements-panel h3::before {
+  content: '🏆';
+  font-size: 1.1rem;
+}
+
+.achievements-list {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+
+.achievement-item {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  padding: 1rem;
+  border-radius: 12px;
+  background: rgba(245, 158, 11, 0.05);
+  border: 1px solid rgba(245, 158, 11, 0.2);
+  transition: all 0.3s ease;
+  cursor: pointer;
+}
+
+.achievement-item:hover {
+  background: rgba(245, 158, 11, 0.08);
+  border-color: rgba(245, 158, 11, 0.4);
+  transform: translateX(4px);
+}
+
+.achievement-icon {
+  width: 40px;
+  height: 40px;
+  border-radius: 10px;
+  background: rgba(245, 158, 11, 0.15);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.1rem;
+  flex-shrink: 0;
+}
+
+.achievement-content {
+  flex: 1;
+  min-width: 0;
+}
+
+.achievement-title {
+  font-family: var(--font-body, 'Inter', system-ui, sans-serif);
+  font-weight: 600;
+  color: #F1F5F9;
+  font-size: 0.9rem;
+  margin-bottom: 0.25rem;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.achievement-date {
+  font-family: var(--font-body, 'Inter', system-ui, sans-serif);
+  font-size: 0.75rem;
+  color: rgba(255, 255, 255, 0.6);
+}
+
+/* Level Panel */
+.level-panel {
+  padding: 1.5rem;
+  border-radius: 16px;
+  background: 
+    radial-gradient(circle at top left, rgba(168, 85, 247, 0.1), transparent 60%),
+    var(--bg-surface, #141B2E);
+  border: 1px solid var(--border-subtle, rgba(148, 163, 184, 0.2));
+  box-shadow: 
+    0 8px 32px rgba(15, 23, 42, 0.8),
+    0 0 0 1px rgba(15, 23, 42, 0.9);
+}
+
+.level-panel h3 {
+  font-family: var(--font-display, 'Syne', system-ui, sans-serif);
+  font-size: 1.2rem;
+  font-weight: 700;
+  color: #F1F5F9;
+  margin: 0 0 1.25rem 0;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.level-panel h3::before {
+  content: '👑';
+  font-size: 1.1rem;
+}
+
+.level-display {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  padding: 1rem;
+  border-radius: 12px;
+  background: rgba(168, 85, 247, 0.05);
+  border: 1px solid rgba(168, 85, 247, 0.2);
+}
+
+.level-icon {
+  width: 50px;
+  height: 50px;
+  border-radius: 12px;
+  background: linear-gradient(135deg, #A855F7, #C084FC);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: white;
+  flex-shrink: 0;
+}
+
+.level-info {
+  flex: 1;
+  min-width: 0;
+}
+
+.level-name {
+  font-family: var(--font-display, 'Syne', system-ui, sans-serif);
+  font-weight: 700;
+  color: #F1F5F9;
+  font-size: 1.1rem;
+  margin-bottom: 0.5rem;
+}
+
+.level-progress {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.progress-bar {
+  width: 100%;
+  height: 6px;
+  background: rgba(255, 255, 255, 0.1);
+  border-radius: 3px;
+  overflow: hidden;
+}
+
+.progress-fill {
+  height: 100%;
+  background: linear-gradient(90deg, #A855F7, #C084FC);
+  border-radius: 3px;
+  transition: width 0.5s ease;
+  position: relative;
+}
+
+.progress-fill::after {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.3), transparent);
+  animation: shimmer 2s infinite;
+}
+
+@keyframes shimmer {
+  0% { transform: translateX(-100%); }
+  100% { transform: translateX(100%); }
+}
+
+.progress-text {
+  font-family: var(--font-body, 'Inter', system-ui, sans-serif);
+  font-size: 0.8rem;
+  color: rgba(255, 255, 255, 0.7);
+}
+
+/* ========= RESPONSIVE DESIGN FOR SIDEBAR ========= */
+@media (max-width: 1200px) {
+  .dashboard-content {
+    grid-template-columns: 1fr 320px;
+    gap: 1.5rem;
+  }
+}
+
+@media (max-width: 968px) {
+  .dashboard-content {
+    grid-template-columns: 1fr;
+    gap: 2rem;
+  }
+  
+  .dashboard-sidebar {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 1.5rem;
+  }
+  
+  .level-panel {
+    grid-column: 1 / -1;
+  }
+}
+
+@media (max-width: 768px) {
+  .dashboard-sidebar {
+    grid-template-columns: 1fr;
+  }
+  
+  .actions-panel,
+  .achievements-panel,
+  .level-panel {
+    padding: 1.25rem;
+  }
+  
+  .action-btn {
+    padding: 0.875rem 1rem;
+    font-size: 0.85rem;
+  }
+  
+  .achievement-item {
+    padding: 0.875rem;
+  }
+  
+  .level-display {
+    padding: 0.875rem;
+  }
+}
+
+@media (max-width: 480px) {
+  .dashboard-sidebar {
+    gap: 1rem;
+  }
+  
+  .actions-panel,
+  .achievements-panel,
+  .level-panel {
+    padding: 1rem;
+  }
+  
+  .action-buttons {
+    gap: 0.5rem;
+  }
+  
+  .achievements-list {
+    gap: 0.5rem;
+  }
+  
+  .level-display {
+    flex-direction: column;
+    text-align: center;
+    gap: 0.75rem;
+  }
+  
+  .level-info {
+    width: 100%;
+  }
+}
