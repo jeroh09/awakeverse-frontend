@@ -318,17 +318,34 @@ const CreatorDashboard = () => {
           <section className="actions-panel">
             <h3>Quick Actions</h3>
             <div className="action-buttons">
+              {/* PRIMARY: CREATE CHARACTER */}
               <button className="action-btn primary" onClick={handleCreateCharacter}>
                 <Sparkles size={16} />
                 Create New Character
               </button>
+
+              {/* SECONDARY: CREATE STORY */}
+              <button 
+                className="action-btn secondary" 
+                onClick={() => switchView(VIEW_STATES.STORY_MODE)}
+              >
+                <BookOpen size={16} />  {/* Changed icon to distinguish from Character */}
+                Create Story
+              </button>
+
+              {/* SECONDARY: CREATE SCENARIO */}
+              <button 
+                className="action-btn secondary" 
+                onClick={() => switchView(VIEW_STATES.SCENARIOS)}
+              >
+                <Users size={16} />
+                Create Scenario
+              </button>
+
+              {/* SECONDARY: MARKET HUB */}
               <button className="action-btn secondary" onClick={handleViewMarketHub}>
                 <BarChart3 size={16} />
                 View Market Hub
-              </button>
-              <button className="action-btn secondary" onClick={() => setShowEducationalModal(true)}>
-                <Target size={16} />
-                Upgrade Features
               </button>
             </div>
           </section>

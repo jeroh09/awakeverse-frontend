@@ -11,8 +11,8 @@ export default function AvatarUploader({ userId, onUpload }) {
   const validateImage = (file) => {
     const rules = {
       maxSize: 2 * 1024 * 1024, // 2MB
-      allowedTypes: ['image/jpeg', 'image/png', 'image/webp'],
-      dimensions: { width: 512, height: 512 }
+      allowedTypes: ['image/jpeg', 'image/png', 'image/webp']
+      // REMOVED: dimensions validation
     };
 
     // Check file type
@@ -25,18 +25,7 @@ export default function AvatarUploader({ userId, onUpload }) {
       throw new Error('Image must be smaller than 2MB');
     }
 
-    return new Promise((resolve, reject) => {
-      const img = new Image();
-      img.onload = () => {
-        if (img.width !== rules.dimensions.width || img.height !== rules.dimensions.height) {
-          reject(new Error(`Image must be exactly ${rules.dimensions.width}x${rules.dimensions.height} pixels`));
-        } else {
-          resolve(true);
-        }
-      };
-      img.onerror = () => reject(new Error('Failed to load image for validation'));
-      img.src = URL.createObjectURL(file);
-    });
+    return Promise.resolve(true); // Skip dimension validation
   };
 
   const handleFile = async (e) => {
@@ -138,10 +127,6 @@ export default function AvatarUploader({ userId, onUpload }) {
             Upload Requirements
           </h4>
           <ul className={styles.rulesList}>
-            <li className={styles.ruleItem}>
-              <span className={styles.ruleIcon}>✅</span>
-              <span>Square image <strong>512 × 512 pixels</strong> exactly</span>
-            </li>
             <li className={styles.ruleItem}>
               <span className={styles.ruleIcon}>✅</span>
               <span>File size under <strong>2 MB</strong></span>
