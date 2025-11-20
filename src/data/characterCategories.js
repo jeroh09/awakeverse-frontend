@@ -319,7 +319,7 @@ export const characterCategories = [
       { 
         key: 'madam_cj_walker',
         name: 'Madam C.J. Walker',
-        thumbnailUrl: '/images/madam_cj_walker.jpg',
+        thumbnailUrl: '/images/madam_cj_walker.jpeg',
         description: 'Self-Made Storm. From washtub to empire. Her formula? Mix stubbornness with lye, rinse with unapologetic ambition.'
       },
       { 
