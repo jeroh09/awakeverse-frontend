@@ -1,6 +1,7 @@
-// Fixed TemplateGallery.jsx - Updated with new design system
+// Fixed TemplateGallery.jsx - Complete version with design system implementation
 import React, { useState, useEffect } from 'react';
 import { useUser } from '../contexts/UserContext';
+import { theme } from '../design-system/tokens';
 
 const API_BASE = process.env.REACT_APP_API_URL || 'http://localhost:5000';
 
@@ -159,43 +160,6 @@ const TemplateGallery = ({ onSelectTemplate, onClose }) => {
     }
   };
 
-  // Get era badge color based on era
-  const getEraBadgeColor = (era) => {
-    const eraColors = {
-      ancient: '#8B4513',
-      medieval: '#2C3E50',
-      renaissance: '#E67E22',
-      industrial: '#7D3C98',
-      sports: '#2E86C1',
-      'science fiction': '#16A085',
-      modern: '#1F618D',
-      future: '#27AE60',
-      default: '#3498DB'
-    };
-
-    const normalizedEra = (era || '').toLowerCase().trim();
-    return eraColors[normalizedEra] || eraColors.default;
-  };
-
-  // Format era display name
-  const formatEraName = (era) => {
-    if (!era) return 'Modern';
-
-    const eraMap = {
-      ancient: 'Ancient Times',
-      medieval: 'Medieval Era',
-      renaissance: 'Renaissance',
-      industrial: 'Industrial Era',
-      sports: 'Modern Sports',
-      'science fiction': 'Science Fiction',
-      modern: 'Modern Day',
-      future: 'Future'
-    };
-
-    const normalizedEra = era.toLowerCase().trim();
-    return eraMap[normalizedEra] || era;
-  };
-
   // Loading state
   if (loading) {
     return (
@@ -205,24 +169,28 @@ const TemplateGallery = ({ onSelectTemplate, onClose }) => {
         left: 0,
         width: '100%',
         height: '100%',
-        background: '#0A0F1A',
+        background: theme.colors.background.canvas,
         display: 'flex',
         flexDirection: 'column',
         alignItems: 'center',
         justifyContent: 'center',
-        fontFamily: "'Inter', system-ui, sans-serif",
-        color: '#6366F1'
+        fontFamily: theme.typography.fonts.body,
+        color: theme.colors.accent.primary
       }}>
         <div style={{
           width: '40px',
           height: '40px',
-          border: '3px solid rgba(99, 102, 241, 0.3)',
-          borderTop: '3px solid #6366F1',
+          border: `3px solid ${theme.colors.accent.glow}`,
+          borderTop: `3px solid ${theme.colors.accent.primary}`,
           borderRadius: '50%',
           animation: 'spin 1s linear infinite',
-          marginBottom: '1rem'
+          marginBottom: theme.spacing.md
         }} />
-        <p style={{ fontSize: '1.1rem', margin: 0, color: '#F1F5F9' }}>
+        <p style={{ 
+          fontSize: theme.typography.sizes.body,
+          margin: 0,
+          color: theme.colors.text.secondary
+        }}>
           Loading character templates...
         </p>
       </div>
@@ -238,38 +206,48 @@ const TemplateGallery = ({ onSelectTemplate, onClose }) => {
         left: 0,
         width: '100%',
         height: '100%',
-        background: '#0A0F1A',
+        background: theme.colors.background.canvas,
         display: 'flex',
         alignItems: 'center',
         justifyContent: 'center',
-        fontFamily: "'Inter', system-ui, sans-serif"
+        fontFamily: theme.typography.fonts.body
       }}>
         <div style={{
-          background: '#141B2E',
-          border: '1px solid rgba(99, 102, 241, 0.3)',
-          borderRadius: '16px',
-          padding: '2rem',
+          background: theme.colors.background.surface,
+          border: `1px solid ${theme.colors.border.medium}`,
+          borderRadius: theme.borderRadius.lg,
+          padding: theme.spacing.xxl,
           textAlign: 'center',
-          maxWidth: '500px'
+          maxWidth: '500px',
+          boxShadow: theme.shadows.elevation03
         }}>
-          <h2 style={{ color: '#6366F1', margin: '0 0 1rem 0', fontFamily: "'Syne', sans-serif" }}>
+          <h2 style={{ 
+            color: theme.colors.accent.primary, 
+            margin: `0 0 ${theme.spacing.md} 0`,
+            fontFamily: theme.typography.fonts.display,
+            fontSize: theme.typography.sizes.h3
+          }}>
             Service Temporarily Unavailable
           </h2>
-          <p style={{ color: '#94A3B8', margin: '0 0 1.5rem 0' }}>
+          <p style={{ 
+            color: theme.colors.text.secondary, 
+            margin: `0 0 ${theme.spacing.lg} 0`,
+            fontSize: theme.typography.sizes.body
+          }}>
             Template service is currently down. Please try again later or browse existing characters.
           </p>
           <button
             onClick={onClose}
             style={{
-              background: 'linear-gradient(135deg, #6366F1, #4f46e5)',
+              background: `linear-gradient(135deg, ${theme.colors.accent.primary}, #4f46e5)`,
               border: 'none',
-              borderRadius: '8px',
-              color: '#fff',
-              fontSize: '1rem',
-              fontWeight: 600,
-              padding: '0.75rem 1.5rem',
+              borderRadius: theme.borderRadius.md,
+              color: theme.colors.text.primary,
+              fontSize: theme.typography.sizes.body,
+              fontWeight: theme.typography.weights.semibold,
+              padding: `${theme.spacing.md} ${theme.spacing.lg}`,
               cursor: 'pointer',
-              fontFamily: "'Inter', system-ui, sans-serif"
+              boxShadow: theme.shadows.glowStrong
             }}
           >
             Back to Characters
@@ -286,19 +264,20 @@ const TemplateGallery = ({ onSelectTemplate, onClose }) => {
       left: 0,
       width: '100%',
       height: '100%',
-      background: '#0A0F1A',
+      background: theme.colors.background.canvas,
       overflowY: 'auto',
-      fontFamily: "'Inter', system-ui, sans-serif"
+      fontFamily: theme.typography.fonts.body
     }}>
       {/* Header */}
       <div style={{
         position: 'sticky',
         top: 0,
-        background: 'rgba(10, 15, 26, 0.95)',
+        background: theme.colors.background.surface,
         backdropFilter: 'blur(10px)',
-        borderBottom: '1px solid rgba(99, 102, 241, 0.3)',
-        padding: '1rem 2rem',
-        zIndex: 100
+        borderBottom: `1px solid ${theme.colors.border.medium}`,
+        padding: `${theme.spacing.md} ${theme.spacing.xl}`,
+        zIndex: 100,
+        boxShadow: theme.shadows.elevation01
       }}>
         <div style={{
           display: 'flex',
@@ -309,19 +288,18 @@ const TemplateGallery = ({ onSelectTemplate, onClose }) => {
         }}>
           <div>
             <h1 style={{
-              color: '#F5F5DC',
-              fontSize: '1.8rem',
-              fontFamily: "'Syne', sans-serif",
-              margin: '0 0 0.5rem 0',
-              letterSpacing: '1px',
-              fontWeight: 700
+              color: theme.colors.brand.ivory,
+              fontSize: theme.typography.sizes.h2,
+              fontFamily: theme.typography.fonts.display,
+              margin: `0 0 ${theme.spacing.sm} 0`,
+              fontWeight: theme.typography.weights.bold
             }}>
               Character Templates
             </h1>
             <p style={{
-              color: '#94A3B8',
+              color: theme.colors.text.secondary,
               margin: 0,
-              fontSize: '0.9rem'
+              fontSize: theme.typography.sizes.bodySmall
             }}>
               Choose a template to start creating your character ({templates.length} available)
             </p>
@@ -329,24 +307,23 @@ const TemplateGallery = ({ onSelectTemplate, onClose }) => {
           <button
             onClick={onClose}
             style={{
-              background: 'rgba(28, 38, 64, 0.8)',
-              border: '1px solid rgba(148, 163, 184, 0.3)',
-              borderRadius: '8px',
-              color: '#F1F5F9',
-              fontSize: '0.9rem',
-              fontWeight: 600,
-              padding: '0.5rem 1rem',
+              background: theme.colors.background.interactive,
+              border: `1px solid ${theme.colors.border.medium}`,
+              borderRadius: theme.borderRadius.md,
+              color: theme.colors.text.secondary,
+              fontSize: theme.typography.sizes.bodySmall,
+              fontWeight: theme.typography.weights.semibold,
+              padding: `${theme.spacing.sm} ${theme.spacing.md}`,
               cursor: 'pointer',
-              transition: 'all 0.3s ease',
-              fontFamily: "'Inter', system-ui, sans-serif"
+              transition: theme.transitions.normal
             }}
             onMouseEnter={(e) => {
-              e.currentTarget.style.background = 'rgba(36, 49, 82, 0.8)';
-              e.currentTarget.style.borderColor = 'rgba(99, 102, 241, 0.5)';
+              e.currentTarget.style.background = theme.colors.background.peak;
+              e.currentTarget.style.color = theme.colors.text.primary;
             }}
             onMouseLeave={(e) => {
-              e.currentTarget.style.background = 'rgba(28, 38, 64, 0.8)';
-              e.currentTarget.style.borderColor = 'rgba(148, 163, 184, 0.3)';
+              e.currentTarget.style.background = theme.colors.background.interactive;
+              e.currentTarget.style.color = theme.colors.text.secondary;
             }}
           >
             × Close
@@ -357,14 +334,17 @@ const TemplateGallery = ({ onSelectTemplate, onClose }) => {
       {/* Error Banner */}
       {error && (
         <div style={{
-          background: 'rgba(255, 107, 107, 0.1)',
-          border: '1px solid rgba(255, 107, 107, 0.3)',
-          borderRadius: '8px',
-          padding: '1rem',
-          margin: '1rem 2rem',
-          color: '#ff6b6b',
-          fontSize: '0.9rem',
-          textAlign: 'center'
+          background: 'rgba(239, 68, 68, 0.1)',
+          border: `1px solid rgba(239, 68, 68, 0.3)`,
+          borderRadius: theme.borderRadius.md,
+          padding: theme.spacing.md,
+          margin: theme.spacing.md,
+          color: theme.colors.semantic.error,
+          fontSize: theme.typography.sizes.bodySmall,
+          textAlign: 'center',
+          maxWidth: '1200px',
+          marginLeft: 'auto',
+          marginRight: 'auto'
         }}>
           {error}
         </div>
@@ -372,60 +352,47 @@ const TemplateGallery = ({ onSelectTemplate, onClose }) => {
 
       {/* Filter Bar */}
       <div style={{
-        padding: '1rem 2rem',
-        background: 'rgba(255, 255, 255, 0.02)',
-        borderBottom: '1px solid rgba(99, 102, 241, 0.1)'
+        padding: `${theme.spacing.md} ${theme.spacing.xl}`,
+        background: theme.colors.background.canvas,
+        borderBottom: `1px solid ${theme.colors.border.subtle}`
       }}>
         <div style={{
           maxWidth: '1200px',
           margin: '0 auto',
           display: 'flex',
           alignItems: 'center',
-          gap: '1rem',
+          gap: theme.spacing.md,
           flexWrap: 'wrap'
         }}>
           <span style={{
-            color: 'rgba(99, 102, 241, 0.8)',
-            fontSize: '0.9rem',
-            fontWeight: 600
+            color: theme.colors.text.secondary,
+            fontSize: theme.typography.sizes.bodySmall,
+            fontWeight: theme.typography.weights.semibold
           }}>
             Filter by type ({archetypes.length - 1} categories):
           </span>
           
-          <div style={{ display: 'flex', gap: '0.5rem', flexWrap: 'wrap' }}>
+          <div style={{ display: 'flex', gap: theme.spacing.sm, flexWrap: 'wrap' }}>
             {archetypes.map(archetype => (
               <button
                 key={archetype}
                 onClick={() => setSelectedArchetype(archetype)}
                 style={{
                   background: selectedArchetype === archetype 
-                    ? 'radial-gradient(circle at top left, rgba(79, 70, 229, 0.7), rgba(15, 23, 42, 0.95))' 
-                    : '#141B2E',
+                    ? `linear-gradient(135deg, ${theme.colors.accent.primary}, #4f46e5)` 
+                    : theme.colors.background.surface,
                   border: selectedArchetype === archetype 
-                    ? '1px solid #6366F1' 
-                    : '1px solid rgba(148, 163, 184, 0.3)',
-                  borderRadius: '20px',
-                  color: selectedArchetype === archetype ? '#F1F5F9' : '#94A3B8',
-                  fontSize: '0.8rem',
-                  fontWeight: 600,
-                  padding: '0.4rem 0.8rem',
+                    ? 'none' 
+                    : `1px solid ${theme.colors.border.medium}`,
+                  borderRadius: theme.borderRadius.full,
+                  color: selectedArchetype === archetype ? theme.colors.text.primary : theme.colors.accent.primary,
+                  fontSize: theme.typography.sizes.caption,
+                  fontWeight: theme.typography.weights.semibold,
+                  padding: `${theme.spacing.sm} ${theme.spacing.md}`,
                   cursor: 'pointer',
-                  transition: 'all 0.3s ease',
+                  transition: theme.transitions.normal,
                   textTransform: 'capitalize',
-                  fontFamily: "'Inter', system-ui, sans-serif",
-                  boxShadow: selectedArchetype === archetype ? '0 4px 14px rgba(99, 102, 241, 0.5)' : 'none'
-                }}
-                onMouseEnter={(e) => {
-                  if (selectedArchetype !== archetype) {
-                    e.currentTarget.style.borderColor = '#6366F1';
-                    e.currentTarget.style.color = '#F1F5F9';
-                  }
-                }}
-                onMouseLeave={(e) => {
-                  if (selectedArchetype !== archetype) {
-                    e.currentTarget.style.borderColor = 'rgba(148, 163, 184, 0.3)';
-                    e.currentTarget.style.color = '#94A3B8';
-                  }
+                  boxShadow: selectedArchetype === archetype ? theme.shadows.glow : 'none'
                 }}
               >
                 {archetype} {archetype !== 'all' && templateGroups[archetype] ? `(${templateGroups[archetype].length})` : ''}
@@ -437,30 +404,39 @@ const TemplateGallery = ({ onSelectTemplate, onClose }) => {
 
       {/* Templates Grid */}
       <div style={{
-        padding: '2rem',
+        padding: theme.spacing.xl,
         maxWidth: '1200px',
         margin: '0 auto'
       }}>
         {filteredTemplates.length === 0 ? (
           <div style={{
             textAlign: 'center',
-            padding: '4rem 2rem',
-            color: '#94A3B8'
+            padding: `${theme.spacing.xxl} ${theme.spacing.xl}`,
+            color: theme.colors.text.secondary
           }}>
-            <p style={{ fontSize: '1.1rem', margin: '0 0 1rem 0' }}>
+            <p style={{ 
+              fontSize: theme.typography.sizes.body,
+              margin: `0 0 ${theme.spacing.md} 0` 
+            }}>
               No templates found for "{selectedArchetype}"
             </p>
             <button
               onClick={() => setSelectedArchetype('all')}
               style={{
-                background: 'rgba(99, 102, 241, 0.1)',
-                border: '1px solid rgba(99, 102, 241, 0.3)',
-                borderRadius: '8px',
-                color: '#6366F1',
-                fontSize: '0.9rem',
-                padding: '0.5rem 1rem',
+                background: theme.colors.background.surface,
+                border: `1px solid ${theme.colors.border.medium}`,
+                borderRadius: theme.borderRadius.md,
+                color: theme.colors.accent.primary,
+                fontSize: theme.typography.sizes.bodySmall,
+                padding: `${theme.spacing.sm} ${theme.spacing.md}`,
                 cursor: 'pointer',
-                fontFamily: "'Inter', system-ui, sans-serif"
+                transition: theme.transitions.normal
+              }}
+              onMouseEnter={(e) => {
+                e.currentTarget.style.background = theme.colors.background.interactive;
+              }}
+              onMouseLeave={(e) => {
+                e.currentTarget.style.background = theme.colors.background.surface;
               }}
             >
               View All Templates
@@ -470,7 +446,7 @@ const TemplateGallery = ({ onSelectTemplate, onClose }) => {
           <div style={{
             display: 'grid',
             gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))',
-            gap: '1.5rem'
+            gap: theme.spacing.lg
           }}>
             {filteredTemplates.map((template) => (
               <div
@@ -478,33 +454,34 @@ const TemplateGallery = ({ onSelectTemplate, onClose }) => {
                 onClick={() => handleTemplateSelect(template)}
                 style={{
                   background: selectedTemplate?.id === template.id 
-                    ? 'rgba(99, 102, 241, 0.1)' 
-                    : '#141B2E',
+                    ? theme.colors.background.interactive 
+                    : theme.colors.background.surface,
                   border: selectedTemplate?.id === template.id 
-                    ? '2px solid rgba(99, 102, 241, 0.6)' 
-                    : '1px solid rgba(148, 163, 184, 0.2)',
-                  borderRadius: '16px',
-                  padding: '1.5rem',
+                    ? `2px solid ${theme.colors.accent.primary}` 
+                    : `1px solid ${theme.colors.border.medium}`,
+                  borderRadius: theme.borderRadius.lg,
+                  padding: theme.spacing.lg,
                   cursor: 'pointer',
-                  transition: 'all 0.3s ease',
+                  transition: theme.transitions.normal,
                   backdropFilter: 'blur(5px)',
+                  boxShadow: selectedTemplate?.id === template.id 
+                    ? theme.shadows.elevation03 
+                    : theme.shadows.elevation02,
                   position: 'relative',
                   overflow: 'hidden'
                 }}
                 onMouseEnter={(e) => {
                   if (selectedTemplate?.id !== template.id) {
-                    e.currentTarget.style.borderColor = 'rgba(99, 102, 241, 0.4)';
-                    e.currentTarget.style.background = '#1C2640';
-                    e.currentTarget.style.transform = 'translateY(-4px)';
-                    e.currentTarget.style.boxShadow = '0 4px 16px -4px rgba(0, 0, 0, 0.15), 0 8px 24px -8px rgba(99, 102, 241, 0.15)';
+                    e.currentTarget.style.borderColor = theme.colors.accent.primary;
+                    e.currentTarget.style.background = theme.colors.background.interactive;
+                    e.currentTarget.style.boxShadow = theme.shadows.elevation03;
                   }
                 }}
                 onMouseLeave={(e) => {
                   if (selectedTemplate?.id !== template.id) {
-                    e.currentTarget.style.borderColor = 'rgba(148, 163, 184, 0.2)';
-                    e.currentTarget.style.background = '#141B2E';
-                    e.currentTarget.style.transform = 'translateY(0)';
-                    e.currentTarget.style.boxShadow = 'none';
+                    e.currentTarget.style.borderColor = theme.colors.border.medium;
+                    e.currentTarget.style.background = theme.colors.background.surface;
+                    e.currentTarget.style.boxShadow = theme.shadows.elevation02;
                   }
                 }}
               >
@@ -515,7 +492,7 @@ const TemplateGallery = ({ onSelectTemplate, onClose }) => {
                   left: 0,
                   right: 0,
                   bottom: 0,
-                  background: 'radial-gradient(circle at top, rgba(79, 70, 229, 0.35), transparent 55%)',
+                  background: `radial-gradient(circle at top, ${theme.colors.accent.glow}, transparent 55%)`,
                   opacity: 0.7,
                   pointerEvents: 'none'
                 }} />
@@ -525,27 +502,32 @@ const TemplateGallery = ({ onSelectTemplate, onClose }) => {
                   display: 'flex',
                   justifyContent: 'space-between',
                   alignItems: 'flex-start',
-                  marginBottom: '1rem',
+                  marginBottom: theme.spacing.md,
                   position: 'relative',
                   zIndex: 1
                 }}>
                   <div style={{ flex: 1 }}>
-                    <div style={{
-                      display: 'flex',
-                      gap: '0.5rem',
-                      marginBottom: '0.5rem',
-                      flexWrap: 'wrap'
+                    <h3 style={{
+                      color: theme.colors.text.primary,
+                      fontSize: theme.typography.sizes.bodyLarge,
+                      fontWeight: theme.typography.weights.semibold,
+                      margin: `0 0 ${theme.spacing.sm} 0`,
+                      fontFamily: theme.typography.fonts.display
                     }}>
+                      {template.name}
+                    </h3>
+                    
+                    <div style={{ display: 'flex', gap: theme.spacing.sm, marginBottom: theme.spacing.sm }}>
                       {template.personality_archetype && (
                         <span style={{
-                          background: 'rgba(37, 99, 235, 0.18)',
-                          border: '1px solid rgba(99, 102, 241, 0.3)',
-                          borderRadius: '12px',
-                          color: '#bfdbfe',
-                          fontSize: '0.7rem',
-                          padding: '0.2rem 0.5rem',
+                          background: 'rgba(99, 102, 241, 0.2)',
+                          border: `1px solid ${theme.colors.accent.glow}`,
+                          borderRadius: theme.borderRadius.full,
+                          color: theme.colors.accent.primary,
+                          fontSize: theme.typography.sizes.caption,
+                          padding: `${theme.spacing.xs} ${theme.spacing.sm}`,
                           textTransform: 'capitalize',
-                          letterSpacing: '0.5px'
+                          fontWeight: theme.typography.weights.medium
                         }}>
                           {template.personality_archetype}
                         </span>
@@ -553,53 +535,43 @@ const TemplateGallery = ({ onSelectTemplate, onClose }) => {
                       
                       {template.historical_period && (
                         <span style={{
-                          background: getEraBadgeColor(template.historical_period),
-                          border: '1px solid rgba(255, 255, 255, 0.2)',
-                          borderRadius: '12px',
-                          color: '#F1F5F9',
-                          fontSize: '0.7rem',
-                          padding: '0.2rem 0.5rem',
-                          fontWeight: 600
+                          background: theme.colors.background.interactive,
+                          border: `1px solid ${theme.colors.border.medium}`,
+                          borderRadius: theme.borderRadius.full,
+                          color: theme.colors.text.secondary,
+                          fontSize: theme.typography.sizes.caption,
+                          padding: `${theme.spacing.xs} ${theme.spacing.sm}`,
+                          fontWeight: theme.typography.weights.medium
                         }}>
-                          {formatEraName(template.historical_period)}
+                          {template.historical_period}
                         </span>
                       )}
                     </div>
-                    
-                    <h3 style={{
-                      color: '#F1F5F9',
-                      fontSize: '1.1rem',
-                      fontWeight: 700,
-                      margin: '0 0 0.5rem 0',
-                      letterSpacing: '0.5px',
-                      fontFamily: "'Syne', sans-serif"
-                    }}>
-                      {template.name}
-                    </h3>
                   </div>
                   
                   {template.usage_count !== undefined && (
                     <div style={{
-                      background: 'rgba(0, 255, 136, 0.1)',
-                      border: '1px solid rgba(0, 255, 136, 0.3)',
-                      borderRadius: '8px',
-                      color: 'rgba(0, 255, 136, 0.9)',
-                      fontSize: '0.7rem',
-                      padding: '0.3rem 0.5rem',
+                      background: 'rgba(16, 185, 129, 0.1)',
+                      border: `1px solid rgba(16, 185, 129, 0.3)`,
+                      borderRadius: theme.borderRadius.md,
+                      color: theme.colors.semantic.success,
+                      fontSize: theme.typography.sizes.caption,
+                      padding: `${theme.spacing.xs} ${theme.spacing.sm}`,
                       textAlign: 'center',
-                      minWidth: '60px'
+                      minWidth: '60px',
+                      fontWeight: theme.typography.weights.medium
                     }}>
                       {template.usage_count} uses
                     </div>
                   )}
                 </div>
-                
+
                 {/* Template Description */}
                 <p style={{
-                  color: '#94A3B8',
-                  fontSize: '0.9rem',
+                  color: theme.colors.text.secondary,
+                  fontSize: theme.typography.sizes.bodySmall,
                   lineHeight: 1.5,
-                  margin: '0 0 1rem 0',
+                  margin: `0 0 ${theme.spacing.md} 0`,
                   position: 'relative',
                   zIndex: 1
                 }}>
@@ -611,61 +583,27 @@ const TemplateGallery = ({ onSelectTemplate, onClose }) => {
                   <div style={{
                     display: 'flex',
                     alignItems: 'center',
-                    gap: '0.5rem',
-                    marginBottom: '1rem',
+                    gap: theme.spacing.sm,
+                    marginBottom: theme.spacing.md,
                     position: 'relative',
                     zIndex: 1
                   }}>
                     <span style={{
-                      color: '#64748B',
-                      fontSize: '0.8rem',
-                      fontWeight: 500
+                      color: theme.colors.text.tertiary,
+                      fontSize: theme.typography.sizes.caption,
+                      fontWeight: theme.typography.weights.medium
                     }}>
                       Expertise:
                     </span>
                     <span style={{
-                      color: '#6366F1',
-                      fontSize: '0.8rem',
-                      fontWeight: 600
+                      color: theme.colors.accent.primary,
+                      fontSize: theme.typography.sizes.caption,
+                      fontWeight: theme.typography.weights.semibold
                     }}>
                       {template.expertise_domain}
                     </span>
                   </div>
                 )}
-
-                {/* Use Template Button */}
-                <button
-                  style={{
-                    width: '100%',
-                    padding: '0.7rem 1.1rem',
-                    background: 'linear-gradient(135deg, #6366F1, #4f46e5)',
-                    color: 'white',
-                    border: 'none',
-                    borderRadius: '999px',
-                    fontSize: '0.88rem',
-                    fontWeight: 500,
-                    cursor: 'pointer',
-                    display: 'inline-flex',
-                    alignItems: 'center',
-                    justifyContent: 'center',
-                    gap: '0.5rem',
-                    boxShadow: '0 8px 24px rgba(79, 70, 229, 0.7)',
-                    transition: 'all 0.2s ease',
-                    position: 'relative',
-                    zIndex: 1,
-                    fontFamily: "'Inter', system-ui, sans-serif"
-                  }}
-                  onMouseEnter={(e) => {
-                    e.currentTarget.style.transform = 'translateY(-2px)';
-                    e.currentTarget.style.boxShadow = '0 14px 30px rgba(79, 70, 229, 0.85)';
-                  }}
-                  onMouseLeave={(e) => {
-                    e.currentTarget.style.transform = 'translateY(0)';
-                    e.currentTarget.style.boxShadow = '0 8px 24px rgba(79, 70, 229, 0.7)';
-                  }}
-                >
-                  Use Template
-                </button>
               </div>
             ))}
           </div>
@@ -679,11 +617,12 @@ const TemplateGallery = ({ onSelectTemplate, onClose }) => {
           bottom: 0,
           left: 0,
           right: 0,
-          background: 'rgba(10, 15, 26, 0.95)',
+          background: theme.colors.background.surface,
           backdropFilter: 'blur(10px)',
-          borderTop: '1px solid rgba(99, 102, 241, 0.3)',
-          padding: '1rem 2rem',
-          zIndex: 100
+          borderTop: `1px solid ${theme.colors.border.medium}`,
+          padding: `${theme.spacing.md} ${theme.spacing.xl}`,
+          zIndex: 100,
+          boxShadow: theme.shadows.elevation03
         }}>
           <div style={{
             maxWidth: '1200px',
@@ -694,45 +633,43 @@ const TemplateGallery = ({ onSelectTemplate, onClose }) => {
           }}>
             <div>
               <p style={{
-                color: '#6366F1',
-                fontSize: '0.9rem',
-                fontWeight: 600,
-                margin: '0 0 0.25rem 0',
-                fontFamily: "'Syne', sans-serif"
+                color: theme.colors.accent.primary,
+                fontSize: theme.typography.sizes.bodySmall,
+                fontWeight: theme.typography.weights.semibold,
+                margin: `0 0 ${theme.spacing.xs} 0`
               }}>
                 Selected: {selectedTemplate.name}
               </p>
               <p style={{
-                color: '#94A3B8',
-                fontSize: '0.8rem',
+                color: theme.colors.text.secondary,
+                fontSize: theme.typography.sizes.caption,
                 margin: 0
               }}>
                 Ready to customize this template for your character
               </p>
             </div>
             
-            <div style={{ display: 'flex', gap: '1rem' }}>
+            <div style={{ display: 'flex', gap: theme.spacing.md }}>
               <button
                 onClick={() => setSelectedTemplate(null)}
                 style={{
-                  background: 'rgba(28, 38, 64, 0.8)',
-                  border: '1px solid rgba(148, 163, 184, 0.3)',
-                  borderRadius: '8px',
-                  color: '#F1F5F9',
-                  fontSize: '0.9rem',
-                  fontWeight: 600,
-                  padding: '0.75rem 1.5rem',
+                  background: theme.colors.background.interactive,
+                  border: `1px solid ${theme.colors.border.medium}`,
+                  borderRadius: theme.borderRadius.md,
+                  color: theme.colors.text.secondary,
+                  fontSize: theme.typography.sizes.bodySmall,
+                  fontWeight: theme.typography.weights.semibold,
+                  padding: `${theme.spacing.md} ${theme.spacing.lg}`,
                   cursor: 'pointer',
-                  transition: 'all 0.3s ease',
-                  fontFamily: "'Inter', system-ui, sans-serif"
+                  transition: theme.transitions.normal
                 }}
                 onMouseEnter={(e) => {
-                  e.currentTarget.style.background = 'rgba(36, 49, 82, 0.8)';
-                  e.currentTarget.style.borderColor = 'rgba(99, 102, 241, 0.5)';
+                  e.currentTarget.style.background = theme.colors.background.peak;
+                  e.currentTarget.style.color = theme.colors.text.primary;
                 }}
                 onMouseLeave={(e) => {
-                  e.currentTarget.style.background = 'rgba(28, 38, 64, 0.8)';
-                  e.currentTarget.style.borderColor = 'rgba(148, 163, 184, 0.3)';
+                  e.currentTarget.style.background = theme.colors.background.interactive;
+                  e.currentTarget.style.color = theme.colors.text.secondary;
                 }}
               >
                 Cancel
@@ -743,30 +680,29 @@ const TemplateGallery = ({ onSelectTemplate, onClose }) => {
                 disabled={!selectedTemplate?.id}
                 style={{
                   background: selectedTemplate?.id 
-                    ? 'linear-gradient(135deg, #6366F1, #4f46e5)'
-                    : 'rgba(128, 128, 128, 0.3)',
+                    ? `linear-gradient(135deg, ${theme.colors.accent.primary}, #4f46e5)`
+                    : theme.colors.background.interactive,
                   border: 'none',
-                  borderRadius: '8px',
-                  color: selectedTemplate?.id ? '#fff' : 'rgba(255, 255, 255, 0.5)',
-                  fontSize: '0.9rem',
-                  fontWeight: 700,
-                  padding: '0.75rem 1.5rem',
+                  borderRadius: theme.borderRadius.md,
+                  color: selectedTemplate?.id ? theme.colors.text.primary : theme.colors.text.tertiary,
+                  fontSize: theme.typography.sizes.bodySmall,
+                  fontWeight: theme.typography.weights.bold,
+                  padding: `${theme.spacing.md} ${theme.spacing.lg}`,
                   cursor: selectedTemplate?.id ? 'pointer' : 'not-allowed',
-                  transition: 'all 0.3s ease',
-                  boxShadow: selectedTemplate?.id ? '0 4px 15px rgba(99, 102, 241, 0.3)' : 'none',
-                  opacity: selectedTemplate?.id ? 1 : 0.6,
-                  fontFamily: "'Inter', system-ui, sans-serif"
+                  transition: theme.transitions.normal,
+                  boxShadow: selectedTemplate?.id ? theme.shadows.glowStrong : 'none',
+                  opacity: selectedTemplate?.id ? 1 : 0.6
                 }}
                 onMouseEnter={(e) => {
                   if (selectedTemplate?.id) {
-                    e.currentTarget.style.transform = 'translateY(-2px)';
-                    e.currentTarget.style.boxShadow = '0 10px 26px rgba(79, 70, 229, 0.9)';
+                    e.currentTarget.style.transform = 'translateY(-1px)';
+                    e.currentTarget.style.boxShadow = theme.shadows.elevation04;
                   }
                 }}
                 onMouseLeave={(e) => {
                   if (selectedTemplate?.id) {
                     e.currentTarget.style.transform = 'translateY(0)';
-                    e.currentTarget.style.boxShadow = '0 4px 15px rgba(99, 102, 241, 0.3)';
+                    e.currentTarget.style.boxShadow = theme.shadows.glowStrong;
                   }
                 }}
               >
