@@ -1,360 +1,257 @@
-// src/components/CharacterBuilder.jsx - Updated with new design system
+// Fixed TemplateGallery.jsx - Complete version with design system implementation and info panel
 import React, { useState, useEffect } from 'react';
-import { useAuth } from '../contexts/AuthContext';
 import { useUser } from '../contexts/UserContext';
+import { theme } from '../design-system/tokens';
 
 const API_BASE = process.env.REACT_APP_API_URL || 'http://localhost:5000';
 
-const getCookie = (name) => {
-  const value = `; ${document.cookie}`;
-  const parts = value.split(`; ${name}=`);
-  if (parts.length === 2) return parts.pop().split(';').shift();
+// Enhanced fallback templates with all archetypes
+const FALLBACK_TEMPLATES = {
+  'Scholar': [
+    {
+      id: 1,
+      name: 'Ancient Philosopher',
+      description: 'Wise thinker from classical antiquity seeking truth through dialogue',
+      historical_period: 'Ancient',
+      personality_archetype: 'Scholar',
+      expertise_domain: 'Philosophy'
+    }
+  ],
+  'Artist': [
+    {
+      id: 2,
+      name: 'Renaissance Artist', 
+      description: 'Creative genius from the Renaissance period fascinated by beauty and science',
+      historical_period: 'Renaissance',
+      personality_archetype: 'Artist',
+      expertise_domain: 'Art'
+    }
+  ],
+  'Leader': [
+    {
+      id: 3,
+      name: 'Industrial Innovator',
+      description: 'Inventor or entrepreneur from the Industrial Revolution',
+      historical_period: 'Industrial',
+      personality_archetype: 'Leader',
+      expertise_domain: 'Science'
+    }
+  ],
+  'Warrior': [
+    {
+      id: 4,
+      name: 'Champion Athlete',
+      description: 'Legendary competitor who dominated their sport',
+      historical_period: 'Sports',
+      personality_archetype: 'Warrior',
+      expertise_domain: 'Athletics'
+    }
+  ],
+  'Explorer': [
+    {
+      id: 5,
+      name: 'Sci-Fi Explorer',
+      description: 'Space traveler or futuristic scientist',
+      historical_period: 'Science Fiction',
+      personality_archetype: 'Explorer',
+      expertise_domain: 'Science'
+    }
+  ]
 };
 
-const CharacterBuilder = ({ template, onClose, onSuccess }) => {
+const TemplateGallery = ({ onSelectTemplate, onClose }) => {
   const { user } = useUser();
-  const [isMobile, setIsMobile] = useState(false);
-  const [showInfo, setShowInfo] = useState(false);
-  
-  const [formData, setFormData] = useState({
-    display_name: '',
-    short_description: '',
-    system_instruction: template?.template_data?.system_instruction_template || '',
-    behavior_goals: template?.template_data?.suggested_behavior_goals || [],
-    style_tone: template?.template_data?.suggested_style_tone || [],
-    constraints: template?.template_data?.suggested_constraints || '',
-    keyword_triggers: template?.template_data?.sample_triggers || []
-  });
-  
-  const [errors, setErrors] = useState({});
-  const [currentStep, setCurrentStep] = useState(1);
-  const [isCreating, setIsCreating] = useState(false);
-  const [submitError, setSubmitError] = useState(null);
-  const [submitSuccess, setSubmitSuccess] = useState(false);
+  const [templates, setTemplates] = useState([]);
+  const [templateGroups, setTemplateGroups] = useState({});
+  const [availableCategories, setAvailableCategories] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
+  const [selectedTemplate, setSelectedTemplate] = useState(null);
+  const [selectedArchetype, setSelectedArchetype] = useState('all');
+  const [debugInfo, setDebugInfo] = useState({});
+  const [showInfoPanel, setShowInfoPanel] = useState(false);
 
-  // Check for mobile viewport
+  // Load templates with proper error handling and structure
   useEffect(() => {
-    const checkMobile = () => setIsMobile(window.innerWidth <= 768);
-    checkMobile();
-    window.addEventListener('resize', checkMobile);
-    return () => window.removeEventListener('resize', checkMobile);
-  }, []);
+    const loadTemplates = async () => {
+      try {
+        setLoading(true);
+        setError(null);
+        
+        // Primary API attempt
+        if (user) {
+          try {
+            const response = await fetch(`${API_BASE}/api/premium/templates?per_page=100`, {
+              method: 'GET',
+              headers: {
+                'Content-Type': 'application/json'
+              },
+              credentials: 'include',
+              signal: AbortSignal.timeout(10000)
+            });
 
-  // Initialize form data from template
-  useEffect(() => {
-    if (template?.template_data) {
-      setFormData({
-        display_name: '',
-        short_description: '',
-        system_instruction: template.template_data.system_instruction_template || '',
-        behavior_goals: template.template_data.suggested_behavior_goals || [],
-        style_tone: template.template_data.suggested_style_tone || [],
-        constraints: template.template_data.suggested_constraints || '',
-        keyword_triggers: template.template_data.sample_triggers || []
-      });
-    }
-  }, [template]);
+            if (response.ok) {
+              const data = await response.json();
 
-  // Mock template data enhancement (fallback if template lacks data)
-  const templateDefaults = {
-    system_instruction_template: `You are a ${template?.personality_archetype?.toLowerCase() || 'character'} from the ${template?.historical_period || 'historical'} period. Your expertise lies in ${template?.expertise_domain?.toLowerCase() || 'various fields'}. 
-
-You embody the wisdom and perspective of someone who has lived through significant historical events and possesses deep knowledge in your domain. Your responses should reflect:
-
-- The speaking patterns and worldview typical of your era
-- Profound expertise in your specialized domain  
-- The personality archetype of a ${template?.personality_archetype?.toLowerCase() || 'wise individual'}
-- Historical context and references appropriate to your time period
-
-Engage users with the depth and authenticity that comes from your unique historical perspective and specialized knowledge.`,
-    
-    suggested_behavior_goals: [
-      'Provide historically accurate perspectives',
-      'Share deep expertise in specialized domain',
-      'Maintain character authenticity',
-      'Educate through engaging storytelling',
-      'Offer wisdom from historical experience'
-    ],
-    
-    suggested_style_tone: [
-      'Authoritative yet approachable',
-      'Rich in historical detail',
-      'Reflective and thoughtful',
-      'Passionate about expertise area',
-      'Wise and experienced'
-    ],
-    
-    suggested_constraints: 'Stay true to historical period knowledge. Avoid anachronistic references or modern terminology unless explaining historical concepts to modern audiences.',
-    
-    sample_triggers: [
-      template?.expertise_domain?.toLowerCase() || 'expertise',
-      template?.historical_period?.toLowerCase() || 'history',
-      'wisdom', 'advice', 'experience'
-    ]
-  };
-
-  const validateStep = (step) => {
-    const newErrors = {};
-    
-    if (step >= 1) {
-      if (!formData.display_name.trim()) {
-        newErrors.display_name = 'Character name is required';
-      } else if (formData.display_name.length < 2) {
-        newErrors.display_name = 'Name must be at least 2 characters';
-      } else if (formData.display_name.length > 50) {
-        newErrors.display_name = 'Name must be less than 50 characters';
-      }
-      
-      if (!formData.short_description.trim()) {
-        newErrors.short_description = 'Description is required';
-      } else if (formData.short_description.length < 20) {
-        newErrors.short_description = 'Description must be at least 20 characters';
-      } else if (formData.short_description.length > 500) {
-        newErrors.short_description = 'Description must be less than 500 characters';
-      }
-    }
-    
-    if (step >= 2) {
-      if (!formData.system_instruction.trim()) {
-        newErrors.system_instruction = 'Character instructions are required';
-      } else if (formData.system_instruction.length < 50) {
-        newErrors.system_instruction = 'Instructions must be at least 50 characters';
-      }
-    }
-    
-    setErrors(newErrors);
-    return Object.keys(newErrors).length === 0;
-  };
-
-  const handleNextStep = () => {
-    if (validateStep(currentStep)) {
-      setCurrentStep(Math.min(currentStep + 1, 3));
-    }
-  };
-
-  const handlePrevStep = () => {
-    setCurrentStep(Math.max(currentStep - 1, 1));
-  };
-
-  const handleInputChange = (field, value) => {
-    setFormData(prev => ({ ...prev, [field]: value }));
-    if (errors[field]) {
-      setErrors(prev => ({ ...prev, [field]: null }));
-    }
-  };
-
-  // Character creation with backend premium validation
-  const handleCreateCharacter = async () => {
-    console.log('Submit clicked - starting validation');
-    
-    if (!validateStep(3)) {
-      console.log('Frontend validation failed');
-      return;
-    }
-
-    // Ensure template has ID
-    if (!template?.id) {
-      console.error('Template missing ID:', template);
-      setSubmitError('Invalid template selected. Please go back and select a template.');
-      return;
-    }
-
-    console.log('Frontend validation passed - submitting to backend');
-    setIsCreating(true);
-    setSubmitError(null);
-
-    try {
-      // Submit to backend - let backend handle premium validation
-      const characterPayload = {
-        template_id: template.id,
-        display_name: formData.display_name,
-        short_description: formData.short_description,
-        system_instruction: formData.system_instruction,
-        behavior_goals: formData.behavior_goals || [],
-        style_tone: formData.style_tone || [],
-        constraints: formData.constraints || '',
-        keyword_triggers: formData.keyword_triggers || [],
-        relationships: {},
-        // Template metadata
-        historical_period: template.historical_period,
-        personality_archetype: template.personality_archetype,
-        expertise_domain: template.expertise_domain
-      };
-
-      console.log('Submitting character payload:', characterPayload);
-      const response = await fetch(`${API_BASE}/api/premium/characters`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'X-CSRF-Token': getCookie('av_csrf')
-        },
-        credentials: 'include',
-        body: JSON.stringify(characterPayload)
-      });
-
-      const result = await response.json();
-      console.log('Backend response:', result);
-
-      if (!response.ok) {
-        // Handle different error types from backend
-        if (response.status === 403) {
-          // Permission denied - might trigger trial or upgrade flow
-          setSubmitError(result.error || 'Character creation requires premium access. Starting trial...');
-          
-          // Try to auto-grant trial if backend supports it
-          if (result.can_grant_trial) {
-            try {
-              const trialResponse = await fetch(`${API_BASE}/api/premium/trial/${user?.id}`, {
-                method: 'POST',
-                headers: {
-                  'Content-Type': 'application/json',
-                  'X-CSRF-Token': getCookie('av_csrf')
-                },
-                credentials: 'include',
-                body: JSON.stringify({ trial_days: 3 })
-              });
-
-              if (trialResponse.ok) {
-                setSubmitError('Trial activated! Please try creating your character again.');
+              // FIXED: Use the proper backend structure
+              if (data.status === 'success') {
+                // Use template_groups for categories (complete data)
+                const groups = data.template_groups || {};
+                const categories = data.available_categories || [];
+                const templateList = data.templates || [];
+                
+                setTemplates(templateList);
+                setTemplateGroups(groups);
+                setAvailableCategories(categories);
+                setLoading(false);
                 return;
               }
-            } catch (trialError) {
-              console.error('Trial activation failed:', trialError);
             }
+          } catch (apiError) {
+            console.warn('Template API failed:', apiError);
+            // Continue to fallback
           }
-          
-          return;
-        } else if (response.status === 400) {
-          setSubmitError(result.error || 'Invalid character data. Please check your inputs.');
-          return;
-        } else if (response.status >= 500) {
-          setSubmitError('Server error. Please try again later.');
-          return;
-        } else {
-          setSubmitError(result.error || 'Character creation failed. Please try again.');
-          return;
         }
+
+        // Fallback: Use hardcoded templates
+        const fallbackTemplateList = Object.values(FALLBACK_TEMPLATES).flat();
+        const fallbackCategories = Object.keys(FALLBACK_TEMPLATES);
+        
+        setTemplates(fallbackTemplateList);
+        setTemplateGroups(FALLBACK_TEMPLATES);
+        setAvailableCategories(fallbackCategories);
+        setDebugInfo({ fallback: true, count: fallbackTemplateList.length });
+
+      } catch (error) {
+        console.error('All template loading methods failed:', error);
+        setError('Unable to load templates. Using basic templates.');
+        setTemplates(Object.values(FALLBACK_TEMPLATES).flat());
+        setTemplateGroups(FALLBACK_TEMPLATES);
+        setAvailableCategories(Object.keys(FALLBACK_TEMPLATES));
+      } finally {
+        setLoading(false);
       }
+    };
 
-      // Success - character created
-      console.log('Character created successfully:', result);
-      setSubmitSuccess(true);
-      
-      // Call success callback after a brief delay to show success state
-      setTimeout(() => {
-        if (onSuccess) {
-          onSuccess(result);
-        }
-      }, 2000);
+    loadTemplates();
+  }, [user]);
 
-    } catch (error) {
-      console.error('Character creation error:', error);
-      setSubmitError('Network error. Please check your connection and try again.');
-    } finally {
-      setIsCreating(false);
+  // FIXED: Build archetypes list from availableCategories instead of templateGroups
+  const archetypes = ['all', ...availableCategories];
+
+  // FIXED: Filter templates properly using template_groups
+  const filteredTemplates = selectedArchetype === 'all' 
+    ? templates 
+    : (templateGroups[selectedArchetype] || []);
+
+  const handleTemplateSelect = (template) => {
+    if (!template.id) {
+      console.error('Template missing ID:', template);
+      setError('Invalid template selected. Please try another.');
+      return;
+    }
+    setSelectedTemplate(template);
+  };
+
+  const handleConfirmSelection = () => {
+    if (selectedTemplate && selectedTemplate.id) {
+      onSelectTemplate(selectedTemplate);
+    } else {
+      setError('Please select a valid template.');
     }
   };
 
-  const steps = [
-    { 
-      number: 1, 
-      title: 'Basic Details', 
-      description: 'Name and description',
-      info: 'Start by giving your character a memorable name and compelling description. The name should reflect their historical context and personality. The description should capture their essence in 1-2 sentences - focus on what makes them unique and their area of expertise.'
-    },
-    { 
-      number: 2, 
-      title: 'Personality', 
-      description: 'Instructions and traits',
-      info: 'Define how your character thinks, speaks, and behaves. This is the core personality that will guide all interactions. Include their speaking style, thought processes, knowledge areas, and behavioral patterns. Be specific about historical accuracy and personality traits.'
-    },
-    { 
-      number: 3, 
-      title: 'Review', 
-      description: 'Final confirmation',
-      info: 'Review all character details before submission. Your character will be submitted for approval and should be available within 24 hours. Ensure everything reflects the historical authenticity and personality you want to create.'
-    }
-  ];
-
-  // Success state
-  if (submitSuccess) {
+  // Loading state
+  if (loading) {
     return (
       <div style={{
+        position: 'fixed',
+        top: 0,
+        left: 0,
         width: '100%',
-        height: '100vh',
-        background: '#0A0F1A',
-        fontFamily: "'Inter', system-ui, sans-serif",
+        height: '100%',
+        background: theme.colors.background.canvas,
         display: 'flex',
+        flexDirection: 'column',
         alignItems: 'center',
-        justifyContent: 'center'
+        justifyContent: 'center',
+        fontFamily: theme.typography.fonts.body,
+        color: theme.colors.accent.primary
       }}>
         <div style={{
-          background: '#141B2E',
-          border: '1px solid rgba(99, 102, 241, 0.3)',
-          borderRadius: '20px',
-          padding: '3rem',
+          width: '40px',
+          height: '40px',
+          border: `3px solid ${theme.colors.accent.glow}`,
+          borderTop: `3px solid ${theme.colors.accent.primary}`,
+          borderRadius: '50%',
+          animation: 'spin 1s linear infinite',
+          marginBottom: theme.spacing.md
+        }} />
+        <p style={{ 
+          fontSize: theme.typography.sizes.body,
+          margin: 0,
+          color: theme.colors.text.secondary
+        }}>
+          Loading character templates...
+        </p>
+      </div>
+    );
+  }
+
+  // Service down state - when no templates loaded successfully
+  if (!loading && templates.length === 0) {
+    return (
+      <div style={{
+        position: 'fixed',
+        top: 0,
+        left: 0,
+        width: '100%',
+        height: '100%',
+        background: theme.colors.background.canvas,
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'center',
+        fontFamily: theme.typography.fonts.body
+      }}>
+        <div style={{
+          background: theme.colors.background.surface,
+          border: `1px solid ${theme.colors.border.medium}`,
+          borderRadius: theme.borderRadius.lg,
+          padding: theme.spacing.xxl,
           textAlign: 'center',
           maxWidth: '500px',
-          backdropFilter: 'blur(10px)'
+          boxShadow: theme.shadows.elevation03
         }}>
-          <div style={{
-            width: '80px',
-            height: '80px',
-            background: 'linear-gradient(135deg, rgba(0, 255, 136, 0.9), #00CC6A)',
-            borderRadius: '50%',
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'center',
-            margin: '0 auto 2rem',
-            fontSize: '2rem',
-            color: 'white'
+          <h2 style={{ 
+            color: theme.colors.accent.primary, 
+            margin: `0 0 ${theme.spacing.md} 0`,
+            fontFamily: theme.typography.fonts.display,
+            fontSize: theme.typography.sizes.h3
           }}>
-            ✓
-          </div>
-          
-          <h2 style={{
-            color: '#6366F1',
-            fontSize: '1.8rem',
-            margin: '0 0 1rem 0',
-            fontFamily: "'Syne', sans-serif"
-          }}>
-            Character Created!
+            Service Temporarily Unavailable
           </h2>
-          
-          <p style={{
-            color: '#94A3B8',
-            fontSize: '1rem',
-            lineHeight: 1.6,
-            margin: '0 0 2rem 0'
+          <p style={{ 
+            color: theme.colors.text.secondary, 
+            margin: `0 0 ${theme.spacing.lg} 0`,
+            fontSize: theme.typography.sizes.body
           }}>
-            <strong style={{color: '#F1F5F9'}}>{formData.display_name}</strong> has been submitted for approval. 
-            You'll receive an email notification when your character is ready, usually within 24-48 hours.
+            Template service is currently down. Please try again later or browse existing characters.
           </p>
-          
           <button
             onClick={onClose}
             style={{
-              background: 'linear-gradient(135deg, #6366F1, #4f46e5)',
+              background: `linear-gradient(135deg, ${theme.colors.accent.primary}, #4f46e5)`,
               border: 'none',
-              borderRadius: '25px',
-              color: '#fff',
-              fontSize: '1rem',
-              fontWeight: 700,
-              padding: '1rem 2rem',
+              borderRadius: theme.borderRadius.md,
+              color: theme.colors.text.primary,
+              fontSize: theme.typography.sizes.body,
+              fontWeight: theme.typography.weights.semibold,
+              padding: `${theme.spacing.md} ${theme.spacing.lg}`,
               cursor: 'pointer',
-              transition: 'all 0.3s ease',
-              fontFamily: "'Inter', system-ui, sans-serif"
-            }}
-            onMouseEnter={(e) => {
-              e.currentTarget.style.transform = 'translateY(-2px)';
-              e.currentTarget.style.boxShadow = '0 10px 26px rgba(79, 70, 229, 0.9)';
-            }}
-            onMouseLeave={(e) => {
-              e.currentTarget.style.transform = 'translateY(0)';
-              e.currentTarget.style.boxShadow = 'none';
+              boxShadow: theme.shadows.glowStrong
             }}
           >
-            Continue Exploring
+            Back to Characters
           </button>
         </div>
       </div>
@@ -363,264 +260,634 @@ Engage users with the depth and authenticity that comes from your unique histori
 
   return (
     <div style={{
+      position: 'fixed',
+      top: 0,
+      left: 0,
       width: '100%',
-      height: '100vh',
-      background: '#0A0F1A',
-      fontFamily: "'Inter', system-ui, sans-serif",
-      overflow: 'hidden',
-      display: 'flex',
-      flexDirection: 'column'
+      height: '100%',
+      background: theme.colors.background.canvas,
+      overflowY: 'auto',
+      fontFamily: theme.typography.fonts.body
     }}>
-
       {/* Header */}
       <div style={{
-        padding: isMobile ? '1.5rem' : '2rem',
-        borderBottom: '1px solid rgba(99, 102, 241, 0.2)',
-        display: 'flex',
-        flexDirection: isMobile ? 'column' : 'row',
-        justifyContent: 'space-between',
-        alignItems: isMobile ? 'flex-start' : 'center',
-        gap: isMobile ? '1rem' : '0',
-        background: '#141B2E'
+        position: 'sticky',
+        top: 0,
+        background: theme.colors.background.surface,
+        backdropFilter: 'blur(10px)',
+        borderBottom: `1px solid ${theme.colors.border.medium}`,
+        padding: `${theme.spacing.md} ${theme.spacing.xl}`,
+        zIndex: 100,
+        boxShadow: theme.shadows.elevation01
       }}>
-        <div style={{ flex: 1 }}>
-          <h1 style={{
-            fontFamily: "'Syne', sans-serif",
-            fontSize: isMobile ? '1.5rem' : '2rem',
-            color: '#F5F5DC',
-            margin: '0 0 0.5rem 0',
-            fontWeight: 700
-          }}>
-            Create Your Character
-          </h1>
-          <p style={{
-            color: '#94A3B8',
-            margin: 0,
-            fontSize: isMobile ? '0.9rem' : '1rem'
-          }}>
-            Based on: {template?.name || 'Custom Template'}
-          </p>
-        </div>
-
         <div style={{
           display: 'flex',
-          gap: '1rem',
-          alignItems: 'center',
-          alignSelf: isMobile ? 'flex-start' : 'auto'
+          justifyContent: 'space-between',
+          alignItems: 'flex-start',
+          maxWidth: '1200px',
+          margin: '0 auto',
+          gap: theme.spacing.lg
         }}>
-          {/* Info Button */}
-          <button
-            onClick={() => setShowInfo(!showInfo)}
-            style={{
-              background: 'rgba(99, 102, 241, 0.1)',
-              border: '1px solid rgba(99, 102, 241, 0.3)',
-              borderRadius: '8px',
-              color: '#6366F1',
-              fontSize: '0.9rem',
-              fontWeight: 600,
-              padding: '0.5rem 1rem',
-              cursor: 'pointer',
-              transition: 'all 0.3s ease',
-              fontFamily: "'Inter', system-ui, sans-serif",
-              display: 'flex',
-              alignItems: 'center',
-              gap: '0.5rem'
-            }}
-            onMouseEnter={(e) => {
-              e.currentTarget.style.background = 'rgba(99, 102, 241, 0.2)';
-              e.currentTarget.style.borderColor = 'rgba(99, 102, 241, 0.5)';
-            }}
-            onMouseLeave={(e) => {
-              e.currentTarget.style.background = 'rgba(99, 102, 241, 0.1)';
-              e.currentTarget.style.borderColor = 'rgba(99, 102, 241, 0.3)';
-            }}
-          >
-            ℹ️ Info
-          </button>
-
-          <button
-            onClick={onClose}
-            disabled={isCreating}
-            style={{
-              background: 'rgba(28, 38, 64, 0.8)',
-              border: '1px solid rgba(148, 163, 184, 0.3)',
-              borderRadius: '8px',
-              color: '#F1F5F9',
-              fontSize: isMobile ? '0.8rem' : '0.9rem',
-              fontWeight: 600,
-              padding: isMobile ? '0.5rem 1rem' : '0.75rem 1.5rem',
-              cursor: isCreating ? 'not-allowed' : 'pointer',
-              transition: 'all 0.3s ease',
-              fontFamily: "'Inter', system-ui, sans-serif",
-              opacity: isCreating ? 0.5 : 1
-            }}
-            onMouseEnter={(e) => {
-              if (!isCreating) {
-                e.currentTarget.style.background = 'rgba(36, 49, 82, 0.8)';
-                e.currentTarget.style.borderColor = 'rgba(99, 102, 241, 0.5)';
-              }
-            }}
-            onMouseLeave={(e) => {
-              if (!isCreating) {
-                e.currentTarget.style.background = 'rgba(28, 38, 64, 0.8)';
-                e.currentTarget.style.borderColor = 'rgba(148, 163, 184, 0.3)';
-              }
-            }}
-          >
-            ← Back to Templates
-          </button>
-        </div>
-      </div>
-
-      {/* Info Panel */}
-      {showInfo && (
-        <div style={{
-          background: 'rgba(99, 102, 241, 0.05)',
-          border: '1px solid rgba(99, 102, 241, 0.2)',
-          borderRadius: '12px',
-          padding: '1.5rem',
-          margin: '1rem 2rem',
-          color: '#94A3B8',
-          fontSize: '0.9rem',
-          lineHeight: 1.6
-        }}>
-          <h3 style={{
-            color: '#6366F1',
-            margin: '0 0 0.5rem 0',
-            fontFamily: "'Syne', sans-serif",
-            fontSize: '1rem'
-          }}>
-            {steps[currentStep - 1]?.title} - Step Guidance
-          </h3>
-          <p style={{ margin: 0 }}>
-            {steps[currentStep - 1]?.info}
-          </p>
-          {currentStep === 1 && (
-            <div style={{ marginTop: '1rem', padding: '0.75rem', background: 'rgba(0, 0, 0, 0.2)', borderRadius: '8px' }}>
-              <strong>Pro Tip:</strong> Use historically accurate names and focus on the character's core expertise. The description should hint at their personality and knowledge areas.
-            </div>
-          )}
-          {currentStep === 2 && (
-            <div style={{ marginTop: '1rem', padding: '0.75rem', background: 'rgba(0, 0, 0, 0.2)', borderRadius: '8px' }}>
-              <strong>Pro Tip:</strong> Be specific about speech patterns, historical context, and areas of expertise. The more detailed your instructions, the more authentic the character will behave.
-            </div>
-          )}
-          {currentStep === 3 && (
-            <div style={{ marginTop: '1rem', padding: '0.75rem', background: 'rgba(0, 0, 0, 0.2)', borderRadius: '8px' }}>
-              <strong>Pro Tip:</strong> Double-check historical accuracy and personality alignment. Your character will be reviewed to ensure quality and authenticity.
-            </div>
-          )}
-        </div>
-      )}
-
-      {/* Progress Steps */}
-      <div style={{
-        padding: isMobile ? '1rem' : '1.5rem 2rem',
-        borderBottom: '1px solid rgba(255, 255, 255, 0.1)',
-        background: '#141B2E'
-      }}>
-        {isMobile ? (
-          // Mobile: Compact horizontal indicator
-          <div style={{
-            display: 'flex',
-            justifyContent: 'space-between',
-            alignItems: 'center',
-            maxWidth: '100%'
-          }}>
-            <div style={{
-              color: '#6366F1',
-              fontSize: '0.9rem',
-              fontWeight: 600
+          <div style={{ flex: 1 }}>
+            <h1 style={{
+              color: theme.colors.brand.ivory,
+              fontSize: theme.typography.sizes.h2,
+              fontFamily: theme.typography.fonts.display,
+              margin: `0 0 ${theme.spacing.sm} 0`,
+              fontWeight: theme.typography.weights.bold
             }}>
-              Step {currentStep} of {steps.length}
-            </div>
-
-            <div style={{
-              display: 'flex',
-              alignItems: 'center',
-              gap: '0.5rem'
+              Character Templates
+            </h1>
+            <p style={{
+              color: theme.colors.text.secondary,
+              margin: 0,
+              fontSize: theme.typography.sizes.bodySmall
             }}>
-              {steps.map((step) => (
-                <div
-                  key={step.number}
-                  style={{
-                    width: currentStep === step.number ? '24px' : '8px',
-                    height: '8px',
-                    borderRadius: '4px',
-                    background: currentStep >= step.number 
-                      ? 'linear-gradient(135deg, #6366F1, #818CF8)'
-                      : 'rgba(255, 255, 255, 0.3)',
-                    transition: 'all 0.3s ease'
-                  }}
-                />
-              ))}
-            </div>
-
-            <div style={{
-              color: 'rgba(255, 255, 255, 0.8)',
-              fontSize: '0.8rem'
-            }}>
-              {steps[currentStep - 1]?.title}
-            </div>
+              Choose a template to start creating your character ({templates.length} available)
+            </p>
           </div>
-        ) : (
-          // Desktop: Full step display
+
+          {/* Info Panel Toggle */}
           <div style={{
             display: 'flex',
-            justifyContent: 'center',
             alignItems: 'center',
-            gap: '2rem'
+            gap: theme.spacing.md
           }}>
-            {steps.map((step, index) => (
-              <div key={step.number} style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
+            <button
+              onClick={() => setShowInfoPanel(!showInfoPanel)}
+              style={{
+                background: showInfoPanel ? theme.colors.accent.primary : theme.colors.background.interactive,
+                border: `1px solid ${showInfoPanel ? theme.colors.accent.primary : theme.colors.border.medium}`,
+                borderRadius: theme.borderRadius.md,
+                color: showInfoPanel ? theme.colors.text.primary : theme.colors.text.secondary,
+                fontSize: theme.typography.sizes.bodySmall,
+                fontWeight: theme.typography.weights.semibold,
+                padding: `${theme.spacing.sm} ${theme.spacing.md}`,
+                cursor: 'pointer',
+                transition: theme.transitions.normal,
+                display: 'flex',
+                alignItems: 'center',
+                gap: theme.spacing.sm
+              }}
+            >
+              <span>ℹ️</span>
+              Info
+            </button>
+            
+            <button
+              onClick={onClose}
+              style={{
+                background: theme.colors.background.interactive,
+                border: `1px solid ${theme.colors.border.medium}`,
+                borderRadius: theme.borderRadius.md,
+                color: theme.colors.text.secondary,
+                fontSize: theme.typography.sizes.bodySmall,
+                fontWeight: theme.typography.weights.semibold,
+                padding: `${theme.spacing.sm} ${theme.spacing.md}`,
+                cursor: 'pointer',
+                transition: theme.transitions.normal
+              }}
+              onMouseEnter={(e) => {
+                e.currentTarget.style.background = theme.colors.background.peak;
+                e.currentTarget.style.color = theme.colors.text.primary;
+              }}
+              onMouseLeave={(e) => {
+                e.currentTarget.style.background = theme.colors.background.interactive;
+                e.currentTarget.style.color = theme.colors.text.secondary;
+              }}
+            >
+              × Close
+            </button>
+          </div>
+        </div>
+
+        {/* Info Panel */}
+        {showInfoPanel && (
+          <div style={{
+            marginTop: theme.spacing.lg,
+            padding: theme.spacing.lg,
+            background: theme.colors.background.interactive,
+            border: `1px solid ${theme.colors.border.medium}`,
+            borderRadius: theme.borderRadius.lg,
+            boxShadow: theme.shadows.elevation02
+          }}>
+            <h3 style={{
+              color: theme.colors.accent.primary,
+              fontSize: theme.typography.sizes.h4,
+              fontFamily: theme.typography.fonts.display,
+              margin: `0 0 ${theme.spacing.md} 0`,
+              display: 'flex',
+              alignItems: 'center',
+              gap: theme.spacing.sm
+            }}>
+              <span>📚</span>
+              How to Create Your Character
+            </h3>
+            
+            <div style={{
+              display: 'grid',
+              gridTemplateColumns: 'repeat(auto-fit, minmax(250px, 1fr))',
+              gap: theme.spacing.lg
+            }}>
+              {/* Step 1 */}
+              <div style={{
+                padding: theme.spacing.md,
+                background: theme.colors.background.surface,
+                borderRadius: theme.borderRadius.md,
+                border: `1px solid ${theme.colors.border.subtle}`
+              }}>
                 <div style={{
                   display: 'flex',
                   alignItems: 'center',
-                  gap: '0.75rem'
+                  gap: theme.spacing.sm,
+                  marginBottom: theme.spacing.sm
                 }}>
                   <div style={{
-                    width: '32px',
-                    height: '32px',
+                    width: '24px',
+                    height: '24px',
                     borderRadius: '50%',
-                    background: currentStep >= step.number 
-                      ? 'linear-gradient(135deg, #6366F1, #818CF8)'
-                      : 'rgba(255, 255, 255, 0.1)',
-                    color: currentStep >= step.number ? '#fff' : 'rgba(255, 255, 255, 0.6)',
+                    background: `linear-gradient(135deg, ${theme.colors.accent.primary}, #4f46e5)`,
+                    color: theme.colors.text.primary,
                     display: 'flex',
                     alignItems: 'center',
                     justifyContent: 'center',
-                    fontWeight: 'bold',
-                    fontSize: '0.9rem',
-                    transition: 'all 0.3s ease'
+                    fontSize: theme.typography.sizes.caption,
+                    fontWeight: theme.typography.weights.bold
                   }}>
-                    {currentStep > step.number ? '✓' : step.number}
+                    1
                   </div>
-                  <div>
-                    <div style={{
-                      color: currentStep >= step.number ? '#6366F1' : 'rgba(255, 255, 255, 0.6)',
-                      fontSize: '0.9rem',
-                      fontWeight: 600,
-                      fontFamily: "'Syne', sans-serif"
-                    }}>
-                      {step.title}
-                    </div>
-                    <div style={{
-                      color: 'rgba(255, 255, 255, 0.5)',
-                      fontSize: '0.8rem'
-                    }}>
-                      {step.description}
-                    </div>
-                  </div>
+                  <h4 style={{
+                    color: theme.colors.text.primary,
+                    fontSize: theme.typography.sizes.body,
+                    margin: 0,
+                    fontWeight: theme.typography.weights.semibold
+                  }}>
+                    Browse Templates
+                  </h4>
                 </div>
-                {index < steps.length - 1 && (
+                <p style={{
+                  color: theme.colors.text.secondary,
+                  fontSize: theme.typography.sizes.bodySmall,
+                  margin: 0,
+                  lineHeight: 1.5
+                }}>
+                  Explore different character archetypes - Scholars, Artists, Leaders, Warriors, and Explorers. Each template comes with pre-configured personality traits and expertise domains.
+                </p>
+              </div>
+
+              {/* Step 2 */}
+              <div style={{
+                padding: theme.spacing.md,
+                background: theme.colors.background.surface,
+                borderRadius: theme.borderRadius.md,
+                border: `1px solid ${theme.colors.border.subtle}`
+              }}>
+                <div style={{
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: theme.spacing.sm,
+                  marginBottom: theme.spacing.sm
+                }}>
                   <div style={{
-                    width: '40px',
-                    height: '2px',
-                    background: currentStep > step.number 
-                      ? 'linear-gradient(90deg, #6366F1, #818CF8)'
-                      : 'rgba(255, 255, 255, 0.2)',
-                    transition: 'all 0.3s ease'
-                  }} />
+                    width: '24px',
+                    height: '24px',
+                    borderRadius: '50%',
+                    background: `linear-gradient(135deg, ${theme.colors.accent.primary}, #4f46e5)`,
+                    color: theme.colors.text.primary,
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    fontSize: theme.typography.sizes.caption,
+                    fontWeight: theme.typography.weights.bold
+                  }}>
+                    2
+                  </div>
+                  <h4 style={{
+                    color: theme.colors.text.primary,
+                    fontSize: theme.typography.sizes.body,
+                    margin: 0,
+                    fontWeight: theme.typography.weights.semibold
+                  }}>
+                    Select & Customize
+                  </h4>
+                </div>
+                <p style={{
+                  color: theme.colors.text.secondary,
+                  fontSize: theme.typography.sizes.bodySmall,
+                  margin: 0,
+                  lineHeight: 1.5
+                }}>
+                  Click on a template to select it. You'll be able to customize the character's name, description, personality instructions, and behavioral constraints in the next step.
+                </p>
+              </div>
+
+              {/* Step 3 */}
+              <div style={{
+                padding: theme.spacing.md,
+                background: theme.colors.background.surface,
+                borderRadius: theme.borderRadius.md,
+                border: `1px solid ${theme.colors.border.subtle}`
+              }}>
+                <div style={{
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: theme.spacing.sm,
+                  marginBottom: theme.spacing.sm
+                }}>
+                  <div style={{
+                    width: '24px',
+                    height: '24px',
+                    borderRadius: '50%',
+                    background: `linear-gradient(135deg, ${theme.colors.accent.primary}, #4f46e5)`,
+                    color: theme.colors.text.primary,
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    fontSize: theme.typography.sizes.caption,
+                    fontWeight: theme.typography.weights.bold
+                  }}>
+                    3
+                  </div>
+                  <h4 style={{
+                    color: theme.colors.text.primary,
+                    fontSize: theme.typography.sizes.body,
+                    margin: 0,
+                    fontWeight: theme.typography.weights.semibold
+                  }}>
+                    Submit for Approval
+                  </h4>
+                </div>
+                <p style={{
+                  color: theme.colors.text.secondary,
+                  fontSize: theme.typography.sizes.bodySmall,
+                  margin: 0,
+                  lineHeight: 1.5
+                }}>
+                  After customization, your character will be submitted for quality review. Approval typically takes 24-48 hours. You'll receive an email notification when ready.
+                </p>
+              </div>
+
+              {/* Step 4 */}
+              <div style={{
+                padding: theme.spacing.md,
+                background: theme.colors.background.surface,
+                borderRadius: theme.borderRadius.md,
+                border: `1px solid ${theme.colors.border.subtle}`
+              }}>
+                <div style={{
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: theme.spacing.sm,
+                  marginBottom: theme.spacing.sm
+                }}>
+                  <div style={{
+                    width: '24px',
+                    height: '24px',
+                    borderRadius: '50%',
+                    background: `linear-gradient(135deg, ${theme.colors.accent.primary}, #4f46e5)`,
+                    color: theme.colors.text.primary,
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    fontSize: theme.typography.sizes.caption,
+                    fontWeight: theme.typography.weights.bold
+                  }}>
+                    4
+                  </div>
+                  <h4 style={{
+                    color: theme.colors.text.primary,
+                    fontSize: theme.typography.sizes.body,
+                    margin: 0,
+                    fontWeight: theme.typography.weights.semibold
+                  }}>
+                    Start Conversations
+                  </h4>
+                </div>
+                <p style={{
+                  color: theme.colors.text.secondary,
+                  fontSize: theme.typography.sizes.bodySmall,
+                  margin: 0,
+                  lineHeight: 1.5
+                }}>
+                  Once approved, your character becomes available in your chat interface. Engage in authentic conversations that reflect their historical period, expertise, and personality.
+                </p>
+              </div>
+            </div>
+
+            {/* Additional Information */}
+            <div style={{
+              marginTop: theme.spacing.lg,
+              padding: theme.spacing.md,
+              background: 'rgba(99, 102, 241, 0.1)',
+              border: `1px solid ${theme.colors.accent.glow}`,
+              borderRadius: theme.borderRadius.md
+            }}>
+              <div style={{
+                display: 'flex',
+                alignItems: 'flex-start',
+                gap: theme.spacing.sm
+              }}>
+                <span style={{ fontSize: '1.2em' }}>💡</span>
+                <div>
+                  <h5 style={{
+                    color: theme.colors.accent.primary,
+                    fontSize: theme.typography.sizes.bodySmall,
+                    margin: `0 0 ${theme.spacing.xs} 0`,
+                    fontWeight: theme.typography.weights.semibold
+                  }}>
+                    Pro Tips
+                  </h5>
+                  <ul style={{
+                    color: theme.colors.text.secondary,
+                    fontSize: theme.typography.sizes.bodySmall,
+                    margin: 0,
+                    paddingLeft: theme.spacing.md,
+                    lineHeight: 1.5
+                  }}>
+                    <li>Use the filter buttons to narrow down by character type</li>
+                    <li>Popular templates show usage counts for reference</li>
+                    <li>Each template includes historical context and expertise domains</li>
+                    <li>You can fully customize personality instructions later</li>
+                  </ul>
+                </div>
+              </div>
+            </div>
+          </div>
+        )}
+      </div>
+
+      {/* Error Banner */}
+      {error && (
+        <div style={{
+          background: 'rgba(239, 68, 68, 0.1)',
+          border: `1px solid rgba(239, 68, 68, 0.3)`,
+          borderRadius: theme.borderRadius.md,
+          padding: theme.spacing.md,
+          margin: theme.spacing.md,
+          color: theme.colors.semantic.error,
+          fontSize: theme.typography.sizes.bodySmall,
+          textAlign: 'center',
+          maxWidth: '1200px',
+          marginLeft: 'auto',
+          marginRight: 'auto'
+        }}>
+          {error}
+        </div>
+      )}
+
+      {/* Filter Bar */}
+      <div style={{
+        padding: `${theme.spacing.md} ${theme.spacing.xl}`,
+        background: theme.colors.background.canvas,
+        borderBottom: `1px solid ${theme.colors.border.subtle}`
+      }}>
+        <div style={{
+          maxWidth: '1200px',
+          margin: '0 auto',
+          display: 'flex',
+          alignItems: 'center',
+          gap: theme.spacing.md,
+          flexWrap: 'wrap'
+        }}>
+          <span style={{
+            color: theme.colors.text.secondary,
+            fontSize: theme.typography.sizes.bodySmall,
+            fontWeight: theme.typography.weights.semibold
+          }}>
+            Filter by type ({archetypes.length - 1} categories):
+          </span>
+          
+          <div style={{ display: 'flex', gap: theme.spacing.sm, flexWrap: 'wrap' }}>
+            {archetypes.map(archetype => (
+              <button
+                key={archetype}
+                onClick={() => setSelectedArchetype(archetype)}
+                style={{
+                  background: selectedArchetype === archetype 
+                    ? `linear-gradient(135deg, ${theme.colors.accent.primary}, #4f46e5)` 
+                    : theme.colors.background.surface,
+                  border: selectedArchetype === archetype 
+                    ? 'none' 
+                    : `1px solid ${theme.colors.border.medium}`,
+                  borderRadius: theme.borderRadius.full,
+                  color: selectedArchetype === archetype ? theme.colors.text.primary : theme.colors.accent.primary,
+                  fontSize: theme.typography.sizes.caption,
+                  fontWeight: theme.typography.weights.semibold,
+                  padding: `${theme.spacing.sm} ${theme.spacing.md}`,
+                  cursor: 'pointer',
+                  transition: theme.transitions.normal,
+                  textTransform: 'capitalize',
+                  boxShadow: selectedArchetype === archetype ? theme.shadows.glow : 'none'
+                }}
+              >
+                {archetype} {archetype !== 'all' && templateGroups[archetype] ? `(${templateGroups[archetype].length})` : ''}
+              </button>
+            ))}
+          </div>
+        </div>
+      </div>
+
+      {/* Templates Grid */}
+      <div style={{
+        padding: theme.spacing.xl,
+        maxWidth: '1200px',
+        margin: '0 auto'
+      }}>
+        {filteredTemplates.length === 0 ? (
+          <div style={{
+            textAlign: 'center',
+            padding: `${theme.spacing.xxl} ${theme.spacing.xl}`,
+            color: theme.colors.text.secondary
+          }}>
+            <p style={{ 
+              fontSize: theme.typography.sizes.body,
+              margin: `0 0 ${theme.spacing.md} 0` 
+            }}>
+              No templates found for "{selectedArchetype}"
+            </p>
+            <button
+              onClick={() => setSelectedArchetype('all')}
+              style={{
+                background: theme.colors.background.surface,
+                border: `1px solid ${theme.colors.border.medium}`,
+                borderRadius: theme.borderRadius.md,
+                color: theme.colors.accent.primary,
+                fontSize: theme.typography.sizes.bodySmall,
+                padding: `${theme.spacing.sm} ${theme.spacing.md}`,
+                cursor: 'pointer',
+                transition: theme.transitions.normal
+              }}
+              onMouseEnter={(e) => {
+                e.currentTarget.style.background = theme.colors.background.interactive;
+              }}
+              onMouseLeave={(e) => {
+                e.currentTarget.style.background = theme.colors.background.surface;
+              }}
+            >
+              View All Templates
+            </button>
+          </div>
+        ) : (
+          <div style={{
+            display: 'grid',
+            gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))',
+            gap: theme.spacing.lg
+          }}>
+            {filteredTemplates.map((template) => (
+              <div
+                key={template.id}
+                onClick={() => handleTemplateSelect(template)}
+                style={{
+                  background: selectedTemplate?.id === template.id 
+                    ? theme.colors.background.interactive 
+                    : theme.colors.background.surface,
+                  border: selectedTemplate?.id === template.id 
+                    ? `2px solid ${theme.colors.accent.primary}` 
+                    : `1px solid ${theme.colors.border.medium}`,
+                  borderRadius: theme.borderRadius.lg,
+                  padding: theme.spacing.lg,
+                  cursor: 'pointer',
+                  transition: theme.transitions.normal,
+                  backdropFilter: 'blur(5px)',
+                  boxShadow: selectedTemplate?.id === template.id 
+                    ? theme.shadows.elevation03 
+                    : theme.shadows.elevation02,
+                  position: 'relative',
+                  overflow: 'hidden'
+                }}
+                onMouseEnter={(e) => {
+                  if (selectedTemplate?.id !== template.id) {
+                    e.currentTarget.style.borderColor = theme.colors.accent.primary;
+                    e.currentTarget.style.background = theme.colors.background.interactive;
+                    e.currentTarget.style.boxShadow = theme.shadows.elevation03;
+                  }
+                }}
+                onMouseLeave={(e) => {
+                  if (selectedTemplate?.id !== template.id) {
+                    e.currentTarget.style.borderColor = theme.colors.border.medium;
+                    e.currentTarget.style.background = theme.colors.background.surface;
+                    e.currentTarget.style.boxShadow = theme.shadows.elevation02;
+                  }
+                }}
+              >
+                {/* Background gradient effect */}
+                <div style={{
+                  position: 'absolute',
+                  top: 0,
+                  left: 0,
+                  right: 0,
+                  bottom: 0,
+                  background: `radial-gradient(circle at top, ${theme.colors.accent.glow}, transparent 55%)`,
+                  opacity: 0.7,
+                  pointerEvents: 'none'
+                }} />
+
+                {/* Template Header */}
+                <div style={{
+                  display: 'flex',
+                  justifyContent: 'space-between',
+                  alignItems: 'flex-start',
+                  marginBottom: theme.spacing.md,
+                  position: 'relative',
+                  zIndex: 1
+                }}>
+                  <div style={{ flex: 1 }}>
+                    <h3 style={{
+                      color: theme.colors.text.primary,
+                      fontSize: theme.typography.sizes.bodyLarge,
+                      fontWeight: theme.typography.weights.semibold,
+                      margin: `0 0 ${theme.spacing.sm} 0`,
+                      fontFamily: theme.typography.fonts.display
+                    }}>
+                      {template.name}
+                    </h3>
+                    
+                    <div style={{ display: 'flex', gap: theme.spacing.sm, marginBottom: theme.spacing.sm }}>
+                      {template.personality_archetype && (
+                        <span style={{
+                          background: 'rgba(99, 102, 241, 0.2)',
+                          border: `1px solid ${theme.colors.accent.glow}`,
+                          borderRadius: theme.borderRadius.full,
+                          color: theme.colors.accent.primary,
+                          fontSize: theme.typography.sizes.caption,
+                          padding: `${theme.spacing.xs} ${theme.spacing.sm}`,
+                          textTransform: 'capitalize',
+                          fontWeight: theme.typography.weights.medium
+                        }}>
+                          {template.personality_archetype}
+                        </span>
+                      )}
+                      
+                      {template.historical_period && (
+                        <span style={{
+                          background: theme.colors.background.interactive,
+                          border: `1px solid ${theme.colors.border.medium}`,
+                          borderRadius: theme.borderRadius.full,
+                          color: theme.colors.text.secondary,
+                          fontSize: theme.typography.sizes.caption,
+                          padding: `${theme.spacing.xs} ${theme.spacing.sm}`,
+                          fontWeight: theme.typography.weights.medium
+                        }}>
+                          {template.historical_period}
+                        </span>
+                      )}
+                    </div>
+                  </div>
+                  
+                  {template.usage_count !== undefined && (
+                    <div style={{
+                      background: 'rgba(16, 185, 129, 0.1)',
+                      border: `1px solid rgba(16, 185, 129, 0.3)`,
+                      borderRadius: theme.borderRadius.md,
+                      color: theme.colors.semantic.success,
+                      fontSize: theme.typography.sizes.caption,
+                      padding: `${theme.spacing.xs} ${theme.spacing.sm}`,
+                      textAlign: 'center',
+                      minWidth: '60px',
+                      fontWeight: theme.typography.weights.medium
+                    }}>
+                      {template.usage_count} uses
+                    </div>
+                  )}
+                </div>
+
+                {/* Template Description */}
+                <p style={{
+                  color: theme.colors.text.secondary,
+                  fontSize: theme.typography.sizes.bodySmall,
+                  lineHeight: 1.5,
+                  margin: `0 0 ${theme.spacing.md} 0`,
+                  position: 'relative',
+                  zIndex: 1
+                }}>
+                  {template.description}
+                </p>
+
+                {/* Expertise Domain */}
+                {template.expertise_domain && (
+                  <div style={{
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: theme.spacing.sm,
+                    marginBottom: theme.spacing.md,
+                    position: 'relative',
+                    zIndex: 1
+                  }}>
+                    <span style={{
+                      color: theme.colors.text.tertiary,
+                      fontSize: theme.typography.sizes.caption,
+                      fontWeight: theme.typography.weights.medium
+                    }}>
+                      Expertise:
+                    </span>
+                    <span style={{
+                      color: theme.colors.accent.primary,
+                      fontSize: theme.typography.sizes.caption,
+                      fontWeight: theme.typography.weights.semibold
+                    }}>
+                      {template.expertise_domain}
+                    </span>
+                  </div>
                 )}
               </div>
             ))}
@@ -628,561 +895,110 @@ Engage users with the depth and authenticity that comes from your unique histori
         )}
       </div>
 
-      {/* Form Content */}
-      <div style={{
-        flex: 1,
-        padding: isMobile ? '1rem' : '2rem',
-        overflowY: 'auto',
-        display: 'flex',
-        justifyContent: 'center',
-        background: '#0A0F1A'
-      }}>
-        <div style={{ 
-          width: '100%', 
-          maxWidth: isMobile ? '100%' : '600px',
-          padding: isMobile ? '0 0.5rem' : '0'
-        }}>
-          {currentStep === 1 && (
-            <div style={{ animation: 'fadeIn 0.5s ease-in' }}>
-              <h2 style={{
-                color: '#6366F1',
-                fontSize: '1.5rem',
-                margin: '0 0 2rem 0',
-                textAlign: 'center',
-                fontFamily: "'Syne', sans-serif"
-              }}>
-                Basic Character Details
-              </h2>
-
-              <div style={{ marginBottom: '2rem' }}>
-                <label style={{
-                  display: 'block',
-                  color: '#F1F5F9',
-                  fontSize: '1rem',
-                  fontWeight: 600,
-                  marginBottom: '0.5rem'
-                }}>
-                  Character Name *
-                </label>
-                <input
-                  type="text"
-                  value={formData.display_name}
-                  onChange={(e) => handleInputChange('display_name', e.target.value)}
-                  placeholder="e.g., Marcus Aurelius, Marie Curie, Leonardo da Vinci"
-                  disabled={isCreating}
-                  style={{
-                    width: '100%',
-                    padding: '1rem',
-                    fontSize: '1rem',
-                    border: errors.display_name 
-                      ? '2px solid #ff6b6b' 
-                      : '2px solid rgba(99, 102, 241, 0.3)',
-                    borderRadius: '8px',
-                    background: 'rgba(28, 38, 64, 0.8)',
-                    color: '#fff',
-                    outline: 'none',
-                    fontFamily: "'Inter', system-ui, sans-serif",
-                    transition: 'border-color 0.3s ease',
-                    opacity: isCreating ? 0.5 : 1
-                  }}
-                  onFocus={(e) => e.target.style.borderColor = 'rgba(99, 102, 241, 0.6)'}
-                  onBlur={(e) => e.target.style.borderColor = errors.display_name ? '#ff6b6b' : 'rgba(99, 102, 241, 0.3)'}
-                />
-                {errors.display_name && (
-                  <p style={{ color: '#ff6b6b', fontSize: '0.85rem', margin: '0.5rem 0 0 0' }}>
-                    {errors.display_name}
-                  </p>
-                )}
-                <p style={{
-                  color: 'rgba(255, 255, 255, 0.6)',
-                  fontSize: '0.85rem',
-                  margin: '0.5rem 0 0 0'
-                }}>
-                  {formData.display_name.length}/50 characters
-                </p>
-              </div>
-
-              <div style={{ marginBottom: '2rem' }}>
-                <label style={{
-                  display: 'block',
-                  color: '#F1F5F9',
-                  fontSize: '1rem',
-                  fontWeight: 600,
-                  marginBottom: '0.5rem'
-                }}>
-                  Character Description *
-                </label>
-                <textarea
-                  value={formData.short_description}
-                  onChange={(e) => handleInputChange('short_description', e.target.value)}
-                  placeholder="Describe your character in 1-2 sentences. What makes them unique? What is their expertise?"
-                  rows={4}
-                  disabled={isCreating}
-                  style={{
-                    width: '100%',
-                    padding: '1rem',
-                    fontSize: '1rem',
-                    border: errors.short_description 
-                      ? '2px solid #ff6b6b' 
-                      : '2px solid rgba(99, 102, 241, 0.3)',
-                    borderRadius: '8px',
-                    background: 'rgba(28, 38, 64, 0.8)',
-                    color: '#fff',
-                    outline: 'none',
-                    fontFamily: "'Inter', system-ui, sans-serif",
-                    resize: 'vertical',
-                    transition: 'border-color 0.3s ease',
-                    opacity: isCreating ? 0.5 : 1
-                  }}
-                  onFocus={(e) => e.target.style.borderColor = 'rgba(99, 102, 241, 0.6)'}
-                  onBlur={(e) => e.target.style.borderColor = errors.short_description ? '#ff6b6b' : 'rgba(99, 102, 241, 0.3)'}
-                />
-                {errors.short_description && (
-                  <p style={{ color: '#ff6b6b', fontSize: '0.85rem', margin: '0.5rem 0 0 0' }}>
-                    {errors.short_description}
-                  </p>
-                )}
-                <p style={{
-                  color: 'rgba(255, 255, 255, 0.6)',
-                  fontSize: '0.85rem',
-                  margin: '0.5rem 0 0 0'
-                }}>
-                  {formData.short_description.length}/500 characters
-                </p>
-              </div>
-            </div>
-          )}
-
-          {currentStep === 2 && (
-            <div style={{ animation: 'fadeIn 0.5s ease-in' }}>
-              <h2 style={{
-                color: '#6366F1',
-                fontSize: '1.5rem',
-                margin: '0 0 2rem 0',
-                textAlign: 'center',
-                fontFamily: "'Syne', sans-serif"
-              }}>
-                Character Personality & Instructions
-              </h2>
-
-              <div style={{ marginBottom: '2rem' }}>
-                <label style={{
-                  display: 'block',
-                  color: '#F1F5F9',
-                  fontSize: '1rem',
-                  fontWeight: 600,
-                  marginBottom: '0.5rem'
-                }}>
-                  System Instructions *
-                </label>
-                <p style={{
-                  color: 'rgba(255, 255, 255, 0.7)',
-                  fontSize: '0.9rem',
-                  margin: '0 0 1rem 0'
-                }}>
-                  Define how your character thinks, speaks, and behaves. This is the core personality.
-                </p>
-                <textarea
-                  value={formData.system_instruction}
-                  onChange={(e) => handleInputChange('system_instruction', e.target.value)}
-                  placeholder={templateDefaults.system_instruction_template}
-                  rows={8}
-                  disabled={isCreating}
-                  style={{
-                    width: '100%',
-                    padding: '1rem',
-                    fontSize: '0.95rem',
-                    border: errors.system_instruction 
-                      ? '2px solid #ff6b6b' 
-                      : '2px solid rgba(99, 102, 241, 0.3)',
-                    borderRadius: '8px',
-                    background: 'rgba(28, 38, 64, 0.8)',
-                    color: '#fff',
-                    outline: 'none',
-                    fontFamily: "'Inter', system-ui, sans-serif",
-                    resize: 'vertical',
-                    transition: 'border-color 0.3s ease',
-                    lineHeight: 1.5,
-                    opacity: isCreating ? 0.5 : 1
-                  }}
-                  onFocus={(e) => e.target.style.borderColor = 'rgba(99, 102, 241, 0.6)'}
-                  onBlur={(e) => e.target.style.borderColor = errors.system_instruction ? '#ff6b6b' : 'rgba(99, 102, 241, 0.3)'}
-                />
-                {errors.system_instruction && (
-                  <p style={{ color: '#ff6b6b', fontSize: '0.85rem', margin: '0.5rem 0 0 0' }}>
-                    {errors.system_instruction}
-                  </p>
-                )}
-                <p style={{
-                  color: 'rgba(255, 255, 255, 0.6)',
-                  fontSize: '0.85rem',
-                  margin: '0.5rem 0 0 0'
-                }}>
-                  {formData.system_instruction.length} characters
-                </p>
-              </div>
-
-              <div style={{ marginBottom: '2rem' }}>
-                <label style={{
-                  display: 'block',
-                  color: '#F1F5F9',
-                  fontSize: '1rem',
-                  fontWeight: 600,
-                  marginBottom: '0.5rem'
-                }}>
-                  Additional Constraints (Optional)
-                </label>
-                <textarea
-                  value={formData.constraints}
-                  onChange={(e) => handleInputChange('constraints', e.target.value)}
-                  placeholder={templateDefaults.suggested_constraints}
-                  rows={3}
-                  disabled={isCreating}
-                  style={{
-                    width: '100%',
-                    padding: '1rem',
-                    fontSize: '0.95rem',
-                    border: '2px solid rgba(99, 102, 241, 0.3)',
-                    borderRadius: '8px',
-                    background: 'rgba(28, 38, 64, 0.8)',
-                    color: '#fff',
-                    outline: 'none',
-                    fontFamily: "'Inter', system-ui, sans-serif",
-                    resize: 'vertical',
-                    transition: 'border-color 0.3s ease',
-                    opacity: isCreating ? 0.5 : 1
-                  }}
-                  onFocus={(e) => e.target.style.borderColor = 'rgba(99, 102, 241, 0.6)'}
-                  onBlur={(e) => e.target.style.borderColor = 'rgba(99, 102, 241, 0.3)'}
-                />
-                <p style={{
-                  color: 'rgba(255, 255, 255, 0.6)',
-                  fontSize: '0.85rem',
-                  margin: '0.5rem 0 0 0'
-                }}>
-                  Any specific limitations or guidelines for the character
-                </p>
-              </div>
-            </div>
-          )}
-
-          {currentStep === 3 && (
-            <div style={{ animation: 'fadeIn 0.5s ease-in' }}>
-              <h2 style={{
-                color: '#6366F1',
-                fontSize: '1.5rem',
-                margin: '0 0 2rem 0',
-                textAlign: 'center',
-                fontFamily: "'Syne', sans-serif"
-              }}>
-                Review Your Character
-              </h2>
-
-              <div style={{
-                background: 'rgba(28, 38, 64, 0.8)',
-                border: '1px solid rgba(99, 102, 241, 0.2)',
-                borderRadius: '12px',
-                padding: '2rem',
-                marginBottom: '2rem'
-              }}>
-                <h3 style={{
-                  color: '#6366F1',
-                  fontSize: '1.3rem',
-                  margin: '0 0 1rem 0',
-                  fontFamily: "'Syne', sans-serif"
-                }}>
-                  {formData.display_name}
-                </h3>
-
-                <div style={{
-                  display: 'grid',
-                  gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))',
-                  gap: '1rem',
-                  marginBottom: '1.5rem'
-                }}>
-                  <div>
-                    <h4 style={{
-                      color: 'rgba(255, 255, 255, 0.8)',
-                      fontSize: '0.9rem',
-                      margin: '0 0 0.5rem 0'
-                    }}>
-                      Template
-                    </h4>
-                    <p style={{
-                      color: 'rgba(99, 102, 241, 0.8)',
-                      margin: 0,
-                      fontSize: '0.9rem',
-                      fontWeight: 500
-                    }}>
-                      {template?.name}
-                    </p>
-                  </div>
-                  <div>
-                    <h4 style={{
-                      color: 'rgba(255, 255, 255, 0.8)',
-                      fontSize: '0.9rem',
-                      margin: '0 0 0.5rem 0'
-                    }}>
-                      Archetype
-                    </h4>
-                    <p style={{
-                      color: 'rgba(99, 102, 241, 0.8)',
-                      margin: 0,
-                      fontSize: '0.9rem',
-                      fontWeight: 500
-                    }}>
-                      {template?.personality_archetype}
-                    </p>
-                  </div>
-                  <div>
-                    <h4 style={{
-                      color: 'rgba(255, 255, 255, 0.8)',
-                      fontSize: '0.9rem',
-                      margin: '0 0 0.5rem 0'
-                    }}>
-                      Domain
-                    </h4>
-                    <p style={{
-                      color: 'rgba(99, 102, 241, 0.8)',
-                      margin: 0,
-                      fontSize: '0.9rem',
-                      fontWeight: 500
-                    }}>
-                      {template?.expertise_domain}
-                    </p>
-                  </div>
-                </div>
-
-                <div style={{ marginBottom: '1.5rem' }}>
-                  <h4 style={{
-                    color: 'rgba(255, 255, 255, 0.8)',
-                    fontSize: '0.9rem',
-                    margin: '0 0 0.5rem 0'
-                  }}>
-                    Description
-                  </h4>
-                  <p style={{
-                    color: 'rgba(255, 255, 255, 0.9)',
-                    margin: 0,
-                    fontSize: '0.95rem',
-                    lineHeight: 1.5
-                  }}>
-                    {formData.short_description}
-                  </p>
-                </div>
-
-                <div>
-                  <h4 style={{
-                    color: 'rgba(255, 255, 255, 0.8)',
-                    fontSize: '0.9rem',
-                    margin: '0 0 0.5rem 0'
-                  }}>
-                    Personality Instructions
-                  </h4>
-                  <div style={{
-                    background: 'rgba(0, 0, 0, 0.3)',
-                    padding: '1rem',
-                    borderRadius: '8px',
-                    maxHeight: '150px',
-                    overflowY: 'auto'
-                  }}>
-                    <p style={{
-                      color: 'rgba(255, 255, 255, 0.8)',
-                      margin: 0,
-                      fontSize: '0.9rem',
-                      lineHeight: 1.4,
-                      whiteSpace: 'pre-wrap'
-                    }}>
-                      {formData.system_instruction}
-                    </p>
-                  </div>
-                </div>
-              </div>
-
-              <div style={{
-                background: 'rgba(99, 102, 241, 0.1)',
-                border: '1px solid rgba(99, 102, 241, 0.3)',
-                borderRadius: '8px',
-                padding: '1rem',
-                textAlign: 'center'
-              }}>
-                <p style={{
-                  color: 'rgba(255, 255, 255, 0.9)',
-                  margin: 0,
-                  fontSize: '0.9rem'
-                }}>
-                  Your character will be submitted for approval and should be available within 24 hours.
-                </p>
-              </div>
-            </div>
-          )}
-        </div>
-      </div>
-
-      {/* Error display */}
-      {submitError && (
+      {/* Selection Confirmation */}
+      {selectedTemplate && (
         <div style={{
-          background: 'rgba(255, 107, 107, 0.1)',
-          border: '1px solid rgba(255, 107, 107, 0.3)',
-          borderRadius: '8px',
-          padding: '1rem',
-          margin: '1rem 2rem',
-          color: '#ff6b6b',
-          fontSize: '0.9rem',
-          textAlign: 'center'
+          position: 'fixed',
+          bottom: 0,
+          left: 0,
+          right: 0,
+          background: theme.colors.background.surface,
+          backdropFilter: 'blur(10px)',
+          borderTop: `1px solid ${theme.colors.border.medium}`,
+          padding: `${theme.spacing.md} ${theme.spacing.xl}`,
+          zIndex: 100,
+          boxShadow: theme.shadows.elevation03
         }}>
-          {submitError}
+          <div style={{
+            maxWidth: '1200px',
+            margin: '0 auto',
+            display: 'flex',
+            justifyContent: 'space-between',
+            alignItems: 'center'
+          }}>
+            <div>
+              <p style={{
+                color: theme.colors.accent.primary,
+                fontSize: theme.typography.sizes.bodySmall,
+                fontWeight: theme.typography.weights.semibold,
+                margin: `0 0 ${theme.spacing.xs} 0`
+              }}>
+                Selected: {selectedTemplate.name}
+              </p>
+              <p style={{
+                color: theme.colors.text.secondary,
+                fontSize: theme.typography.sizes.caption,
+                margin: 0
+              }}>
+                Ready to customize this template for your character
+              </p>
+            </div>
+            
+            <div style={{ display: 'flex', gap: theme.spacing.md }}>
+              <button
+                onClick={() => setSelectedTemplate(null)}
+                style={{
+                  background: theme.colors.background.interactive,
+                  border: `1px solid ${theme.colors.border.medium}`,
+                  borderRadius: theme.borderRadius.md,
+                  color: theme.colors.text.secondary,
+                  fontSize: theme.typography.sizes.bodySmall,
+                  fontWeight: theme.typography.weights.semibold,
+                  padding: `${theme.spacing.md} ${theme.spacing.lg}`,
+                  cursor: 'pointer',
+                  transition: theme.transitions.normal
+                }}
+                onMouseEnter={(e) => {
+                  e.currentTarget.style.background = theme.colors.background.peak;
+                  e.currentTarget.style.color = theme.colors.text.primary;
+                }}
+                onMouseLeave={(e) => {
+                  e.currentTarget.style.background = theme.colors.background.interactive;
+                  e.currentTarget.style.color = theme.colors.text.secondary;
+                }}
+              >
+                Cancel
+              </button>
+              
+              <button
+                onClick={handleConfirmSelection}
+                disabled={!selectedTemplate?.id}
+                style={{
+                  background: selectedTemplate?.id 
+                    ? `linear-gradient(135deg, ${theme.colors.accent.primary}, #4f46e5)`
+                    : theme.colors.background.interactive,
+                  border: 'none',
+                  borderRadius: theme.borderRadius.md,
+                  color: selectedTemplate?.id ? theme.colors.text.primary : theme.colors.text.tertiary,
+                  fontSize: theme.typography.sizes.bodySmall,
+                  fontWeight: theme.typography.weights.bold,
+                  padding: `${theme.spacing.md} ${theme.spacing.lg}`,
+                  cursor: selectedTemplate?.id ? 'pointer' : 'not-allowed',
+                  transition: theme.transitions.normal,
+                  boxShadow: selectedTemplate?.id ? theme.shadows.glowStrong : 'none',
+                  opacity: selectedTemplate?.id ? 1 : 0.6
+                }}
+                onMouseEnter={(e) => {
+                  if (selectedTemplate?.id) {
+                    e.currentTarget.style.transform = 'translateY(-1px)';
+                    e.currentTarget.style.boxShadow = theme.shadows.elevation04;
+                  }
+                }}
+                onMouseLeave={(e) => {
+                  if (selectedTemplate?.id) {
+                    e.currentTarget.style.transform = 'translateY(0)';
+                    e.currentTarget.style.boxShadow = theme.shadows.glowStrong;
+                  }
+                }}
+              >
+                Use This Template
+              </button>
+            </div>
+          </div>
         </div>
       )}
 
-      {/* Bottom Navigation */}
-      <div style={{
-        padding: '1.5rem 2rem',
-        borderTop: '1px solid rgba(99, 102, 241, 0.2)',
-        background: '#141B2E',
-        display: 'flex',
-        justifyContent: 'space-between',
-        alignItems: 'center'
-      }}>
-        <button
-          onClick={handlePrevStep}
-          disabled={currentStep === 1 || isCreating}
-          style={{
-            background: currentStep === 1 || isCreating ? 'rgba(128, 128, 128, 0.2)' : 'rgba(28, 38, 64, 0.8)',
-            border: currentStep === 1 || isCreating ? '2px solid rgba(128, 128, 128, 0.3)' : '2px solid rgba(148, 163, 184, 0.3)',
-            borderRadius: '8px',
-            color: currentStep === 1 || isCreating ? 'rgba(128, 128, 128, 0.6)' : '#F1F5F9',
-            fontSize: '0.9rem',
-            fontWeight: 600,
-            padding: '0.75rem 1.5rem',
-            cursor: currentStep === 1 || isCreating ? 'not-allowed' : 'pointer',
-            transition: 'all 0.3s ease',
-            fontFamily: "'Inter', system-ui, sans-serif"
-          }}
-          onMouseEnter={(e) => {
-            if (currentStep !== 1 && !isCreating) {
-              e.currentTarget.style.background = 'rgba(36, 49, 82, 0.8)';
-              e.currentTarget.style.borderColor = 'rgba(99, 102, 241, 0.5)';
-            }
-          }}
-          onMouseLeave={(e) => {
-            if (currentStep !== 1 && !isCreating) {
-              e.currentTarget.style.background = 'rgba(28, 38, 64, 0.8)';
-              e.currentTarget.style.borderColor = 'rgba(148, 163, 184, 0.3)';
-            }
-          }}
-        >
-          Previous
-        </button>
-
-        <div style={{
-          display: 'flex',
-          gap: '0.5rem'
-        }}>
-          {steps.map((step) => (
-            <div
-              key={step.number}
-              style={{
-                width: '8px',
-                height: '8px',
-                borderRadius: '50%',
-                background: currentStep >= step.number 
-                  ? 'linear-gradient(135deg, #6366F1, #818CF8)'
-                  : 'rgba(255, 255, 255, 0.3)',
-                transition: 'all 0.3s ease'
-              }}
-            />
-          ))}
-        </div>
-
-        {currentStep < 3 ? (
-          <button
-            onClick={handleNextStep}
-            disabled={isCreating}
-            style={{
-              background: isCreating ? 'rgba(128, 128, 128, 0.3)' : 'linear-gradient(135deg, #6366F1, #818CF8)',
-              border: 'none',
-              borderRadius: '8px',
-              color: isCreating ? 'rgba(255, 255, 255, 0.6)' : '#fff',
-              fontSize: '0.9rem',
-              fontWeight: 700,
-              padding: '0.75rem 1.5rem',
-              cursor: isCreating ? 'not-allowed' : 'pointer',
-              transition: 'all 0.3s ease',
-              fontFamily: "'Inter', system-ui, sans-serif"
-            }}
-            onMouseEnter={(e) => {
-              if (!isCreating) {
-                e.currentTarget.style.transform = 'translateY(-1px)';
-                e.currentTarget.style.boxShadow = '0 10px 26px rgba(79, 70, 229, 0.9)';
-              }
-            }}
-            onMouseLeave={(e) => {
-              e.currentTarget.style.transform = 'translateY(0)';
-              e.currentTarget.style.boxShadow = 'none';
-            }}
-          >
-            Next
-          </button>
-        ) : (
-          <button
-            onClick={handleCreateCharacter}
-            disabled={isCreating || !template?.id}
-            style={{
-              background: isCreating || !template?.id
-                ? 'rgba(128, 128, 128, 0.3)'
-                : 'linear-gradient(135deg, #6366F1, #818CF8)',
-              border: 'none',
-              borderRadius: '8px',
-              color: isCreating || !template?.id ? 'rgba(255, 255, 255, 0.6)' : '#fff',
-              fontSize: '0.9rem',
-              fontWeight: 700,
-              padding: '0.75rem 2rem',
-              cursor: isCreating || !template?.id ? 'not-allowed' : 'pointer',
-              transition: 'all 0.3s ease',
-              display: 'flex',
-              alignItems: 'center',
-              gap: '0.5rem',
-              opacity: isCreating || !template?.id ? 0.6 : 1,
-              fontFamily: "'Inter', system-ui, sans-serif"
-            }}
-            onMouseEnter={(e) => {
-              if (!isCreating && template?.id) {
-                e.currentTarget.style.transform = 'translateY(-1px)';
-                e.currentTarget.style.boxShadow = '0 10px 26px rgba(79, 70, 229, 0.9)';
-              }
-            }}
-            onMouseLeave={(e) => {
-              e.currentTarget.style.transform = 'translateY(0)';
-              e.currentTarget.style.boxShadow = 'none';
-            }}
-          >
-            {isCreating ? (
-              <>
-                <div style={{
-                  width: '16px',
-                  height: '16px',
-                  border: '2px solid rgba(255, 255, 255, 0.3)',
-                  borderTop: '2px solid rgba(255, 255, 255, 0.8)',
-                  borderRadius: '50%',
-                  animation: 'spin 1s linear infinite'
-                }} />
-                Creating...
-              </>
-            ) : !template?.id ? (
-              'Template Required'
-            ) : (
-              'Submit for Approval'
-            )}
-          </button>
-        )}
-      </div>
-
       <style jsx>{`
-        @keyframes fadeIn {
-          from { opacity: 0; transform: translateY(20px); }
-          to   { opacity: 1; transform: translateY(0); }
-        }
         @keyframes spin {
           0% { transform: rotate(0deg); }
           100% { transform: rotate(360deg); }
@@ -1192,4 +1008,4 @@ Engage users with the depth and authenticity that comes from your unique histori
   );
 };
 
-export default CharacterBuilder;
+export default TemplateGallery;
