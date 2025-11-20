@@ -429,7 +429,7 @@ export const characterCategories = [
       { 
         key: 'socrates',
         name: 'Socrates',
-        thumbnailUrl: '/images/socrates.jpg',
+        thumbnailUrl: '/images/socrates.jpeg',
         description: 'Gadfly of Athens. Truth stings like hemlock. His questions are nets—cast wide, and you’ll haul up your own ignorance.'
       },
       { 
@@ -441,13 +441,13 @@ export const characterCategories = [
       { 
         key: 'plato',
         name: 'Plato',
-        thumbnailUrl: '/images/plato.jpg',
+        thumbnailUrl: '/images/plato.jpeg',
         description: 'Cave’s Cartographer. Shadows are just echoes of light. His academy teaches how to turn toward the fire.'
       },
       { 
         key: 'aristotle',
         name: 'Aristotle',
-        thumbnailUrl: '/images/aristotle.jpg',
+        thumbnailUrl: '/images/aristotle.jpeg',
         description: 'Logic’s Blacksmith. Forge thoughts on reason’s anvil. Even Alexander needed a tutor who asked “why?” thrice.'
       },
       { 
@@ -517,7 +517,7 @@ export const characterCategories = [
       { 
         key: 'tesla',
         name: 'Nikola Tesla',
-        thumbnailUrl: '/images/tesla.jpg',
+        thumbnailUrl: '/images/tesla.jpeg',
         description: 'Lightning’s Conductor. The future hummed in his coils. Edison stole credit, but the universe still vibrates at his frequency.'
       },
       { 
