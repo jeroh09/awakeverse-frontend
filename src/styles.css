@@ -1598,3 +1598,20 @@ body.theme-awakeverse {
   overflow-wrap: break-word !important;
   word-break: break-word !important;
 }
+/* Global text transform fix - EXCLUDE form inputs */
+*:not(input):not(textarea):not([contenteditable="true"]) {
+  text-transform: none !important;
+}
+
+/* Specifically ensure inputs maintain normal text transform */
+input, textarea, [contenteditable="true"] {
+  text-transform: none !important;
+  font-family: var(--font-body) !important;
+}
+
+/* Additional safeguard for CharacterBuilder inputs */
+.character-builder input,
+.character-builder textarea {
+  text-transform: none !important;
+  font-family: var(--font-body) !important;
+}
