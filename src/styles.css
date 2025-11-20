@@ -1615,3 +1615,41 @@ input, textarea, [contenteditable="true"] {
   text-transform: none !important;
   font-family: var(--font-body) !important;
 }
+/* Replace gold with indigo across the app */
+.chat-history::-webkit-scrollbar-thumb {
+  background: #6366F1 !important;
+  box-shadow: 0 0 4px rgba(99, 102, 241, 0.5) !important;
+}
+
+.chat-window .chat-header button,
+.chat-window .edit-button,
+.chat-window .retry-button,
+.chat-window .stop-button,
+.chat-window .chat-input button,
+.chat-window .send-button,
+.chat-window .cancel-button {
+  border-color: #6366F1 !important;
+}
+
+.chat-textarea,
+.auth-form,
+.auth-form input,
+.message-icon,
+.invite-button-with-avatar,
+.edit-textarea {
+  border-color: #6366F1 !important;
+}
+
+.message-icon {
+  box-shadow: 0 0 8px rgba(99, 102, 241, 0.3) !important;
+}
+
+/* Also fix any gold text colors */
+.chat-title,
+.chat-textarea,
+.auth-form h2,
+.auth-form label,
+.auth-form a,
+.invite-button-with-avatar {
+  color: #6366F1 !important;
+}
