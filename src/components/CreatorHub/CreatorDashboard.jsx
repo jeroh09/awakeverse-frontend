@@ -1,5 +1,5 @@
 // src/components/CreatorHub/CreatorDashboard.jsx
-// PRODUCTION-READY REFACTORED VERSION - Design System Aligned
+// PRODUCTION-READY WITH MODAL CREATION FLOW
 
 import React, { useState, useEffect, useCallback } from 'react';
 import { useUser } from '../../contexts/UserContext';
@@ -7,10 +7,15 @@ import { useAppView } from '../../contexts/AppViewContext';
 import api from '../../api';
 import { 
   Eye, Heart, Bookmark, Share2, MessageCircle, 
-  TrendingUp, Calendar, Users, Zap, Crown,
-  BarChart3, Sparkles, Target, Filter,
-  ArrowLeft, Plus
+  TrendingUp, Calendar, Users, BarChart3, 
+  Sparkles, BookOpen, Zap, Crown
 } from 'lucide-react';
+
+// Import modal components
+import TemplateGallery from '../TemplateGallery';
+import CharacterBuilder from '../CharacterBuilder';
+import CharacterCreationSuccess from '../CharacterCreationSuccess';
+
 import PaymentRouter from '../../services/PaymentRouter';
 import './CreatorDashboard.css';
 
@@ -18,13 +23,21 @@ const CreatorDashboard = () => {
   const { user } = useUser();
   const { switchView, VIEW_STATES } = useAppView();
   
+  // Dashboard state
   const [dashboardData, setDashboardData] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [selectedCharacter, setSelectedCharacter] = useState(null);
-  const [showEducationalModal, setShowEducationalModal] = useState(false);
   const [requiresUpgrade, setRequiresUpgrade] = useState(false);
-  const [activeTab, setActiveTab] = useState('overview');
+  
+  // Character creation modal state
+  const [showTemplates, setShowTemplates] = useState(false);
+  const [showBuilder, setShowBuilder] = useState(false);
+  const [showSuccess, setShowSuccess] = useState(false);
+  const [selectedTemplate, setSelectedTemplate] = useState(null);
+  
+  // Educational modal state
+  const [showEducationalModal, setShowEducationalModal] = useState(false);
   
   const [isMobile, setIsMobile] = useState(window.innerWidth <= 768);
   
@@ -89,11 +102,58 @@ const CreatorDashboard = () => {
     loadDashboardData();
   }, [loadDashboardData]);
 
+  // ============================================================================
+  // CHARACTER CREATION HANDLERS (Modal Flow)
+  // ============================================================================
+
+  const handleCreateCharacter = () => {
+    setShowTemplates(true);
+  };
+
+  const handleTemplateSelect = useCallback((template) => {
+    setSelectedTemplate(template);
+    setShowTemplates(false);
+    setShowBuilder(true);
+  }, []);
+
+  const handleCharacterCreationComplete = useCallback(() => {
+    setShowBuilder(false);
+    setShowSuccess(true);
+    // Reload dashboard data to show new character
+    loadDashboardData();
+  }, [loadDashboardData]);
+
+  const handleCloseCreationFlow = useCallback(() => {
+    setShowTemplates(false);
+    setShowBuilder(false);
+    setShowSuccess(false);
+    setSelectedTemplate(null);
+  }, []);
+
+  // ============================================================================
+  // VIEW SWITCHING HANDLERS
+  // ============================================================================
+
+  const handleCreateStory = () => {
+    switchView(VIEW_STATES.STORY_MODE);
+  };
+
+  const handleCreateScenario = () => {
+    switchView(VIEW_STATES.SCENARIOS);
+  };
+
+  const handleViewMarketHub = () => {
+    switchView(VIEW_STATES.MARKET_HUB);
+  };
+
   const handleGoToCharacters = () => {
     switchView(VIEW_STATES.CHAT);
   };
 
-  // Payment handlers - PRESERVED EXACTLY
+  // ============================================================================
+  // PAYMENT HANDLERS
+  // ============================================================================
+
   const handleUpgradeWithStripe = async () => {
     try {
       await PaymentRouter.redirectToCheckout({
@@ -128,16 +188,68 @@ const CreatorDashboard = () => {
     window.open(`/market-hub?character=${characterKey}`, '_blank');
   };
 
-  const handleCreateCharacter = () => {
-    switchView(VIEW_STATES.CHARACTER_BUILDER);
-  };
+  // ============================================================================
+  // CHARACTER CREATION MODALS (Overlay Flow)
+  // ============================================================================
 
-  const handleViewMarketHub = () => {
-    switchView(VIEW_STATES.MARKET_HUB);
-  };
+  if (showSuccess) {
+    return (
+      <div style={{
+        position: 'fixed',
+        top: 0,
+        left: 0,
+        width: '100%',
+        height: '100%',
+        zIndex: 4000,
+        background: 'rgba(0, 0, 0, 0.95)'
+      }}>
+        <CharacterCreationSuccess onClose={handleCloseCreationFlow} />
+      </div>
+    );
+  }
+
+  if (showTemplates) {
+    return (
+      <div style={{
+        position: 'fixed',
+        top: 0,
+        left: 0,
+        width: '100%',
+        height: '100%',
+        zIndex: 3000,
+        background: 'rgba(0, 0, 0, 0.95)',
+        overflowY: 'auto'
+      }}>
+        <TemplateGallery 
+          onSelectTemplate={handleTemplateSelect}
+          onClose={handleCloseCreationFlow}
+        />
+      </div>
+    );
+  }
+
+  if (showBuilder && selectedTemplate) {
+    return (
+      <div style={{
+        position: 'fixed',
+        top: 0,
+        left: 0,
+        width: '100%',
+        height: '100%',
+        zIndex: 3000,
+        background: 'rgba(0, 0, 0, 0.95)'
+      }}>
+        <CharacterBuilder 
+          template={selectedTemplate}
+          onClose={handleCloseCreationFlow}
+          onSuccess={handleCharacterCreationComplete}
+        />
+      </div>
+    );
+  }
 
   // ============================================================================
-  // RENDER LOGIC - PRESERVED EXISTING FLOW
+  // MAIN DASHBOARD RENDER
   // ============================================================================
 
   if (loading) {
@@ -204,10 +316,6 @@ const CreatorDashboard = () => {
   }
 
   const { summary, characters, engagement_trends, recent_achievements, creator_info } = dashboardData;
-
-  // ============================================================================
-  // NEW DESIGN LAYOUT
-  // ============================================================================
 
   return (
     <div className="creator-dashboard">
@@ -280,7 +388,7 @@ const CreatorDashboard = () => {
       <div className="dashboard-content">
         {/* ========= MAIN CONTENT AREA ========= */}
         <main className="main-content">
-          {/* CHARACTERS GRID - TAKES MOST SPACE */}
+          {/* CHARACTERS GRID */}
           <section className="characters-section">
             <div className="section-header">
               <h2>Your Characters</h2>
@@ -327,16 +435,16 @@ const CreatorDashboard = () => {
               {/* SECONDARY: CREATE STORY */}
               <button 
                 className="action-btn secondary" 
-                onClick={() => switchView(VIEW_STATES.STORY_MODE)}
+                onClick={handleCreateStory}
               >
-                <BookOpen size={16} />  {/* Changed icon to distinguish from Character */}
+                <BookOpen size={16} />
                 Create Story
               </button>
 
               {/* SECONDARY: CREATE SCENARIO */}
               <button 
                 className="action-btn secondary" 
-                onClick={() => switchView(VIEW_STATES.SCENARIOS)}
+                onClick={handleCreateScenario}
               >
                 <Users size={16} />
                 Create Scenario
@@ -396,7 +504,7 @@ const CreatorDashboard = () => {
         </aside>
       </div>
 
-      {/* ========= MODALS - PRESERVED EXISTING ========= */}
+      {/* ========= MODALS ========= */}
       {selectedCharacter && (
         <CharacterDetailModal
           character={selectedCharacter}
@@ -518,7 +626,7 @@ const EngagementChart = ({ data }) => (
   </div>
 );
 
-// ========= EXISTING SUBCOMPONENTS - PRESERVED EXACTLY =========
+// ========= EXISTING SUBCOMPONENTS =========
 
 const UpgradeRequiredState = ({ onLearnMore, onUpgradeWithStripe, onUpgradeWithPayPal }) => (
   <div className="upgrade-required-state">
@@ -609,14 +717,12 @@ const EmptyDashboardState = ({ onLearnMore, onGoToCharacters, onCreateCharacter 
           onClick={onCreateCharacter}
           className="create-character-button"
         >
-          <Plus size={16} />
           Create Character
         </button>
         <button 
           onClick={onGoToCharacters}
           className="learn-more-button"
         >
-          <ArrowLeft size={16} />
           My Characters
         </button>
         <button 
@@ -630,9 +736,9 @@ const EmptyDashboardState = ({ onLearnMore, onGoToCharacters, onCreateCharacter 
   </div>
 );
 
-// KEEP ALL YOUR EXISTING MODAL COMPONENTS EXACTLY AS THEY ARE
 const CharacterDetailModal = ({ character, onClose, onViewInHub }) => {
-  // ... your existing CharacterDetailModal implementation
+  const engagement = character.engagement || {};
+  
   return (
     <div className="modal-overlay" onClick={onClose}>
       <div className="modal-content" onClick={(e) => e.stopPropagation()}>
@@ -649,8 +755,60 @@ const CharacterDetailModal = ({ character, onClose, onViewInHub }) => {
           </div>
         </div>
 
-        {/* ... rest of your existing modal content */}
-        
+        <div className="modal-stats">
+          <h3>Engagement Breakdown</h3>
+          
+          <div className="stats-grid-modal">
+            <div className="stat-item">
+              <Eye size={20} />
+              <div>
+                <div className="stat-number">{engagement.total_views || 0}</div>
+                <div className="stat-label">Total Views</div>
+              </div>
+            </div>
+            
+            <div className="stat-item">
+              <Heart size={20} />
+              <div>
+                <div className="stat-number">{engagement.total_likes || 0}</div>
+                <div className="stat-label">Total Likes</div>
+              </div>
+            </div>
+            
+            <div className="stat-item">
+              <Bookmark size={20} />
+              <div>
+                <div className="stat-number">{engagement.total_bookmarks || 0}</div>
+                <div className="stat-label">Total Bookmarks</div>
+              </div>
+            </div>
+            
+            <div className="stat-item">
+              <Share2 size={20} />
+              <div>
+                <div className="stat-number">{engagement.total_shares || 0}</div>
+                <div className="stat-label">Total Shares</div>
+              </div>
+            </div>
+            
+            <div className="stat-item">
+              <MessageCircle size={20} />
+              <div>
+                <div className="stat-number">{engagement.chat_sessions || 0}</div>
+                <div className="stat-label">Chat Sessions</div>
+              </div>
+            </div>
+          </div>
+
+          <div className="engagement-rate-display">
+            <TrendingUp size={24} />
+            <div>
+              <div className="rate-number">{engagement.engagement_rate || 0}%</div>
+              <div className="rate-label">Engagement Rate</div>
+            </div>
+          </div>
+        </div>
+
         <button 
           className="view-hub-button" 
           onClick={() => onViewInHub(character.character_key)}
@@ -665,11 +823,107 @@ const CharacterDetailModal = ({ character, onClose, onViewInHub }) => {
 const EducationalUpgradeModal = ({ isOpen, onClose, onUpgradeWithStripe, onUpgradeWithPayPal, onComparePlans }) => {
   if (!isOpen) return null;
 
-  // ... your existing EducationalUpgradeModal implementation
+  const unlimitedFeatures = [
+    {
+      icon: '💎',
+      title: 'Full Creator Hub Access',
+      description: 'Publish unlimited characters and track detailed analytics'
+    },
+    {
+      icon: '📊',
+      title: 'Advanced Analytics',
+      description: 'Real-time engagement metrics and performance insights'
+    },
+    {
+      icon: '💰',
+      title: 'Earn Monthly Payouts',
+      description: 'Get paid based on your characters\' popularity and usage'
+    },
+    {
+      icon: '🚀',
+      title: 'Priority Featuring',
+      description: 'Your characters get promoted in Market Hub'
+    },
+    {
+      icon: '🎭',
+      title: 'Scenarios Hub',
+      description: 'Create multi-AI conversations and dynamic storylines'
+    },
+    {
+      icon: '⚡',
+      title: 'Unlimited Everything',
+      description: 'No limits on characters, messages, or features'
+    }
+  ];
+
   return (
     <div className="modal-overlay" onClick={onClose}>
       <div className="modal-content educational-modal" onClick={(e) => e.stopPropagation()}>
-        {/* ... your existing modal content */}
+        <button className="modal-close" onClick={onClose}>×</button>
+        
+        <div className="educational-header">
+          <div className="educational-icon">🚀</div>
+          <h2>Choose your plan and pay securely with Stripe or PayPal</h2>
+          <p className="educational-subtitle">
+            Upgrade to Professional tier and get access to powerful creator tools
+          </p>
+        </div>
+
+        <div className="educational-features">
+          {unlimitedFeatures.map((feature, index) => (
+            <div key={index} className="feature-row">
+              <div className="feature-icon">{feature.icon}</div>
+              <div className="feature-text">
+                <h4>{feature.title}</h4>
+                <p>{feature.description}</p>
+              </div>
+            </div>
+          ))}
+        </div>
+
+        <div className="pricing-card">
+          <div className="pricing-header">
+            <h3>Professional Plan</h3>
+            <div className="price">
+              <span className="amount">£11.99</span>
+              <span className="period">/month</span>
+            </div>
+          </div>
+          
+          <div className="pricing-features">
+            <div className="pricing-feature">✓ Unlimited Characters</div>
+            <div className="pricing-feature">✓ Unlimited Messages</div>
+            <div className="pricing-feature">✓ Creator Hub Pro Tools</div>
+            <div className="pricing-feature">✓ All Premium Templates</div>
+            <div className="pricing-feature">✓ VIP Support</div>
+            <div className="pricing-feature">✓ All Hub Access</div>
+          </div>
+
+          <div className="pricing-actions">
+            <button 
+              onClick={onUpgradeWithStripe}
+              className="upgrade-now-button"
+            >
+              Pay with Stripe - £11.99/month
+            </button>
+            <button 
+              onClick={onUpgradeWithPayPal}
+              className="upgrade-now-button secondary"
+            >
+              Pay with PayPal - £11.99/month
+            </button>
+            <button 
+              className="compare-plans-button"
+              onClick={onComparePlans}
+            >
+              Compare All Plans
+            </button>
+          </div>
+        </div>
+
+        <div className="educational-footer">
+          <p>⭐ <strong>Secured by Stripe</strong> · 🅿️ <strong>PayPal Secure</strong> · Cancel anytime</p>
+        </div>
       </div>
     </div>
   );
