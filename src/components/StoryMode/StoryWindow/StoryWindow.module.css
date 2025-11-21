@@ -1,5 +1,5 @@
 /* src/components/StoryMode/StoryWindow/StoryWindow.module.css */
-/* OVERLAY PANEL APPROACH - Clean Implementation */
+/* STEP 4: BACKDROP BLUR + ANIMATION POLISH */
 
 /* ========== STORY WINDOW SHELL ========== */
 
@@ -230,13 +230,18 @@
   font-size: 12px;
   font-family: var(--font-body, 'Inter', system-ui, sans-serif);
   cursor: pointer;
-  transition: all 0.15s ease;
+  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
 .objectiveStatusPill:hover {
   background: rgba(30, 64, 175, 0.9);
   border-color: var(--accent-primary, #6366F1);
   transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgba(99, 102, 241, 0.3);
+}
+
+.objectiveStatusPill:active {
+  transform: translateY(0);
 }
 
 .objectiveStatusPill span:first-child {
@@ -607,7 +612,28 @@
 }
 
 /* ============================================================================
-   OBJECTIVES PANEL - FLOATING OVERLAY
+   PANEL BACKDROP (BLUR EFFECT)
+   ============================================================================ */
+
+.panelBackdrop {
+  position: absolute;
+  inset: 0;
+  background: rgba(2, 6, 23, 0.6);
+  backdrop-filter: blur(3px);
+  -webkit-backdrop-filter: blur(3px);
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+  z-index: 5;
+}
+
+.panelBackdrop.visible {
+  opacity: 1;
+  pointer-events: auto;
+}
+
+/* ============================================================================
+   OBJECTIVES PANEL - FLOATING OVERLAY WITH ENHANCED ANIMATIONS
    ============================================================================ */
 
 .objectivesPanel {
@@ -626,15 +652,17 @@
   display: flex;
   flex-direction: column;
   opacity: 0;
-  transform: translateX(16px);
+  transform: translateX(20px) scale(0.98);
   pointer-events: none;
-  transition: opacity 0.2s ease, transform 0.2s ease;
+  transition: 
+    opacity 0.25s cubic-bezier(0.4, 0, 0.2, 1),
+    transform 0.25s cubic-bezier(0.4, 0, 0.2, 1);
   z-index: 10;
 }
 
 .objectivesPanel.open {
   opacity: 1;
-  transform: translateX(0);
+  transform: translateX(0) scale(1);
   pointer-events: auto;
 }
 
@@ -666,12 +694,16 @@
   font-family: var(--font-body, 'Inter', system-ui, sans-serif);
   padding: 4px 8px;
   border-radius: 6px;
-  transition: all 0.15s ease;
+  transition: all 0.15s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
 .panelClose:hover {
   background: rgba(148, 163, 184, 0.1);
   color: var(--text-primary, #F1F5F9);
+}
+
+.panelClose:active {
+  transform: scale(0.95);
 }
 
 /* Main objective section */
@@ -681,6 +713,7 @@
   font-family: var(--font-body, 'Inter', system-ui, sans-serif);
   line-height: 1.5;
   color: var(--text-primary, #F1F5F9);
+  animation: fadeInUp 0.3s cubic-bezier(0.4, 0, 0.2, 1) 0.05s backwards;
 }
 
 .panelMainObjective strong {
@@ -700,6 +733,7 @@
   background: rgba(15, 23, 42, 0.6);
   border: 1px solid rgba(148, 163, 184, 0.2);
   border-radius: 12px;
+  animation: fadeInUp 0.3s cubic-bezier(0.4, 0, 0.2, 1) 0.1s backwards;
 }
 
 .panelActLine {
@@ -743,7 +777,8 @@
   inset: 0;
   background: linear-gradient(90deg, var(--accent-primary, #6366F1), var(--accent-hover, #818CF8));
   border-radius: inherit;
-  transition: width 0.3s ease;
+  transition: width 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+  box-shadow: 0 0 10px rgba(99, 102, 241, 0.4);
 }
 
 .panelMetaRow {
@@ -773,6 +808,7 @@
   letter-spacing: 0.12em;
   color: var(--text-secondary, #94A3B8);
   margin-bottom: 8px;
+  animation: fadeInUp 0.3s cubic-bezier(0.4, 0, 0.2, 1) 0.15s backwards;
 }
 
 .milestonesList {
@@ -783,6 +819,72 @@
   flex-direction: column;
   gap: 8px;
   padding-right: 4px;
+  animation: fadeInUp 0.3s cubic-bezier(0.4, 0, 0.2, 1) 0.2s backwards;
+}
+
+/* Smooth scrollbar for panel */
+.milestonesList::-webkit-scrollbar {
+  width: 6px;
+}
+
+.milestonesList::-webkit-scrollbar-track {
+  background: rgba(15, 23, 42, 0.5);
+  border-radius: 3px;
+}
+
+.milestonesList::-webkit-scrollbar-thumb {
+  background: rgba(99, 102, 241, 0.5);
+  border-radius: 3px;
+}
+
+.milestonesList::-webkit-scrollbar-thumb:hover {
+  background: rgba(99, 102, 241, 0.7);
+}
+
+/* Fade in up animation */
+@keyframes fadeInUp {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* Loading indicator */
+.loadingIndicator {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-top: 12px;
+  padding: 8px 12px;
+  background: rgba(59, 130, 246, 0.1);
+  border: 1px solid var(--semantic-info, #3B82F6);
+  border-radius: 8px;
+  font-size: 12px;
+  font-family: var(--font-body, 'Inter', system-ui, sans-serif);
+  color: var(--text-secondary, #94A3B8);
+}
+
+.loadingDot {
+  width: 8px;
+  height: 8px;
+  background: var(--semantic-info, #3B82F6);
+  border-radius: 999px;
+  animation: pulse 1.5s ease-in-out infinite;
+}
+
+@keyframes pulse {
+  0%, 100% {
+    opacity: 1;
+    transform: scale(1);
+  }
+  50% {
+    opacity: 0.5;
+    transform: scale(0.8);
+  }
 }
 
 /* ============================================================================
@@ -832,6 +934,12 @@
     max-width: 94%;
   }
 
+  /* Backdrop on mobile */
+  .panelBackdrop {
+    backdrop-filter: blur(2px);
+    -webkit-backdrop-filter: blur(2px);
+  }
+
   /* Panel becomes bottom sheet on mobile */
   .objectivesPanel {
     top: auto;
@@ -839,8 +947,9 @@
     right: 0;
     bottom: 0;
     width: auto;
-    border-radius: 16px 16px 0 0;
-    padding: 14px 16px 10px;
+    max-height: 80vh;
+    border-radius: 20px 20px 0 0;
+    padding: 16px;
     transform: translateY(100%);
   }
 
@@ -863,13 +972,23 @@
 
 @media (prefers-reduced-motion: reduce) {
   .loadingSpinner,
-  .sendingSpinner {
+  .sendingSpinner,
+  .loadingDot {
     animation-duration: 1.6s;
   }
 
   .objectivesPanel,
-  .objectiveStatusPill {
+  .panelBackdrop,
+  .objectiveStatusPill,
+  .panelClose {
     transition: none;
+  }
+
+  .panelMainObjective,
+  .panelProgressSection,
+  .milestonesHeader,
+  .milestonesList {
+    animation: none;
   }
 
   .messageText,

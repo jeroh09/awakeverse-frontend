@@ -1,4 +1,4 @@
-// src/components/StoryMode/StoryWindow/index.jsx - OVERLAY PANEL IMPLEMENTATION
+// src/components/StoryMode/StoryWindow/index.jsx - STEP 3: Persistence + Keyboard Shortcuts
 import React, { useState, useEffect, useRef } from 'react';
 import { characterCategories } from '../../../data/characterCategories';
 import StoryMessages from './StoryMessages';
@@ -62,13 +62,26 @@ const ACT_LABELS = {
   }
 };
 
+// LocalStorage key for panel preference
+const PANEL_PREFERENCE_KEY = 'awakeverse_story_panel_open';
+
 export default function StoryWindow({ story, onClose }) {
   const [messages, setMessages] = useState([]);
   const [openingBanner, setOpeningBanner] = useState(null);
   const [isStreaming, setIsStreaming] = useState(false);
   const [progressData, setProgressData] = useState(null);
   const [isLoadingProgress, setIsLoadingProgress] = useState(false);
-  const [isPanelOpen, setIsPanelOpen] = useState(false);
+  
+  // Initialize panel state from localStorage (default: false)
+  const [isPanelOpen, setIsPanelOpen] = useState(() => {
+    try {
+      const saved = localStorage.getItem(PANEL_PREFERENCE_KEY);
+      return saved === 'true';
+    } catch (e) {
+      console.warn('localStorage unavailable:', e);
+      return false;
+    }
+  });
 
   const abortRef = useRef(null);
 
@@ -81,6 +94,35 @@ export default function StoryWindow({ story, onClose }) {
     loading,
     error
   } = useStoryApi();
+
+  // Persist panel state to localStorage
+  useEffect(() => {
+    try {
+      localStorage.setItem(PANEL_PREFERENCE_KEY, isPanelOpen.toString());
+    } catch (e) {
+      console.warn('Failed to save panel preference:', e);
+    }
+  }, [isPanelOpen]);
+
+  // Keyboard shortcuts
+  useEffect(() => {
+    const handleKeyDown = (e) => {
+      // Esc to close panel
+      if (e.key === 'Escape' && isPanelOpen) {
+        setIsPanelOpen(false);
+        e.preventDefault();
+      }
+
+      // Cmd/Ctrl + P to toggle panel
+      if ((e.metaKey || e.ctrlKey) && e.key === 'p') {
+        setIsPanelOpen(!isPanelOpen);
+        e.preventDefault();
+      }
+    };
+
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [isPanelOpen]);
 
   // Fetch progress data
   const fetchProgressData = async (storyId) => {
@@ -369,6 +411,7 @@ export default function StoryWindow({ story, onClose }) {
                 className={styles.objectiveStatusPill}
                 onClick={togglePanel}
                 aria-label="Open objectives panel"
+                title="Click to view progress (Cmd/Ctrl+P)"
               >
                 <span>{actMeta.title.split('·')[0].trim()}</span>
                 {progressSource !== 'estimated' && (
@@ -407,6 +450,15 @@ export default function StoryWindow({ story, onClose }) {
             />
           </div>
 
+          {/* ===== BACKDROP (when panel open) ===== */}
+          {isPanelOpen && (
+            <div 
+              className={styles.panelBackdrop}
+              onClick={() => setIsPanelOpen(false)}
+              aria-hidden="true"
+            />
+          )}
+
           {/* ===== OBJECTIVES PANEL (FLOATING OVERLAY) ===== */}
           <aside 
             className={`${styles.objectivesPanel} ${isPanelOpen ? styles.open : ''}`}
@@ -419,6 +471,7 @@ export default function StoryWindow({ story, onClose }) {
                 className={styles.panelClose}
                 onClick={() => setIsPanelOpen(false)}
                 aria-label="Close objectives panel"
+                title="Close (Esc)"
               >
                 Close ✕
               </button>
