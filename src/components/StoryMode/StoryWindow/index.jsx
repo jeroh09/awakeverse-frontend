@@ -190,20 +190,27 @@ export default function StoryWindow({ story, onClose }) {
   // Fetch progress data
   const fetchProgressData = async (storyId) => {
     if (!storyId) return;
-    
+
     setIsLoadingProgress(true);
     try {
-      // Assuming useStoryApi has a getStoryProgress method
       const response = await fetch(`/api/stories/${storyId}/progress`, {
-        credentials: 'include'
+        credentials: 'include',
+        headers: {
+          'Accept': 'application/json',
+          'Content-Type': 'application/json',
+        }
       });
-      
+
       if (response.ok) {
         const data = await response.json();
         setProgressData(data);
+      } else {
+        console.warn('⚠️ Progress endpoint returned error:', response.status);
+        // Gracefully fall back to estimated progress - don't set progressData
       }
     } catch (err) {
-      console.error('❌ Failed to fetch progress data:', err);
+      console.warn('⚠️ Progress endpoint unavailable:', err.message);
+      // This is normal if there are server-side import issues
     } finally {
       setIsLoadingProgress(false);
     }
