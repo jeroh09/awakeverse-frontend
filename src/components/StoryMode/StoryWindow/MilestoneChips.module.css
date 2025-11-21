@@ -1,26 +1,30 @@
 /* src/components/StoryMode/StoryWindow/MilestoneChips.module.css */
-/* Uses AwakeVerse Design System tokens */
+/* Uses AwakeVerse-style tokens & colours */
 
 .milestonesContainer {
-  margin-top: var(--spacing-md, 16px);
-  padding-top: var(--spacing-md, 16px);
-  border-top: 1px solid var(--border-subtle, rgba(148, 163, 184, 0.1));
+  margin-top: 0.75rem;
+  padding-top: 0.65rem;
+  border-top: 1px solid rgba(148, 163, 184, 0.2);
 }
 
 .milestonesLabel {
-  font-size: var(--font-size-caption, 12px);
-  font-family: var(--font-body, 'Inter', system-ui, sans-serif);
-  font-weight: var(--font-weight-semibold, 600);
+  font-size: 0.7rem;
+  font-family: 'Inter', system-ui, sans-serif;
+  font-weight: 600;
   text-transform: uppercase;
-  letter-spacing: 0.05em;
-  color: var(--text-secondary, #94A3B8);
-  margin-bottom: var(--spacing-sm, 8px);
+  letter-spacing: 0.08em;
+  color: #94a3b8;
+  margin-bottom: 0.35rem;
 }
 
+/* IMPORTANT: this is what stops the header from taking over the window */
 .milestonesList {
   display: flex;
   flex-direction: column;
-  gap: var(--spacing-sm, 8px);
+  gap: 0.45rem;
+  max-height: 140px;            /* 👈 clamp */
+  overflow-y: auto;             /* scroll inside the header */
+  padding-right: 0.15rem;
 }
 
 /* ============================================================================
@@ -28,53 +32,45 @@
    ============================================================================ */
 
 .milestoneChip {
-  background: var(--bg-surface, #141B2E);
-  border: 1px solid var(--border-subtle, rgba(148, 163, 184, 0.1));
-  border-radius: var(--border-radius-sm, 8px);
-  padding: var(--spacing-sm, 8px) var(--spacing-md, 16px);
+  background: rgba(15, 23, 42, 0.96);
+  border: 1px solid rgba(148, 163, 184, 0.35);
+  border-radius: 10px;
+  padding: 0.45rem 0.75rem;
   cursor: pointer;
-  transition: var(--transition-normal, all 0.3s cubic-bezier(0.4, 0, 0.2, 1));
+  transition: background 0.18s ease, border-color 0.18s ease, box-shadow 0.18s ease, transform 0.18s ease;
 }
 
 .milestoneChip:hover {
-  background: var(--bg-interactive, #1C2640);
-  border-color: var(--border-medium, rgba(148, 163, 184, 0.2));
+  background: radial-gradient(circle at top left, #020617 0%, #020617 90%);
+  border-color: rgba(148, 163, 184, 0.6);
   transform: translateY(-1px);
-  box-shadow: var(--shadow-elevation02, 0 2px 8px -2px rgba(0, 0, 0, 0.1));
+  box-shadow: 0 8px 20px rgba(15, 23, 42, 0.7);
 }
 
 /* Current milestone highlight */
 .milestoneChip.current {
-  background: var(--bg-peak, #243152);
-  border-color: var(--accent-primary, #6366F1);
-  box-shadow: var(--shadow-glow, 0 0 20px -5px rgba(99, 102, 241, 0.2));
-}
-
-.milestoneChip.current:hover {
-  box-shadow: var(--shadow-glow-strong, 0 0 24px -4px rgba(99, 102, 241, 0.3));
+  background: radial-gradient(circle at top left, #020617 0%, #020617 90%);
+  border-color: #6366f1;
+  box-shadow: 0 0 24px rgba(99, 102, 241, 0.4);
 }
 
 /* Status-specific styling */
 .milestoneChip.complete {
-  background: rgba(16, 185, 129, 0.05); /* semantic.success with low opacity */
-  border-color: var(--semantic-success, #10B981);
-}
-
-.milestoneChip.complete:hover {
-  background: rgba(16, 185, 129, 0.1);
+  background: rgba(16, 185, 129, 0.08);
+  border-color: #10b981;
 }
 
 .milestoneChip.in_progress {
-  border-color: var(--semantic-info, #3B82F6);
+  border-color: #3b82f6;
 }
 
 .milestoneChip.not_started {
-  opacity: 0.6;
+  opacity: 0.65;
 }
 
 .milestoneChip.adapted {
-  border-color: var(--semantic-warning, #F59E0B);
-  background: rgba(245, 158, 11, 0.05);
+  border-color: #f59e0b;
+  background: rgba(245, 158, 11, 0.08);
 }
 
 /* ============================================================================
@@ -84,149 +80,110 @@
 .chipHeader {
   display: flex;
   align-items: center;
-  gap: var(--spacing-sm, 8px);
-  margin-bottom: var(--spacing-xs, 4px);
+  gap: 0.4rem;
+  margin-bottom: 0.2rem;
 }
 
 .chipIcon {
-  font-size: 20px;
+  font-size: 1.1rem;
   line-height: 1;
 }
 
 .chipNumber {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  min-width: 24px;
-  height: 24px;
-  background: var(--bg-interactive, #1C2640);
-  border: 1px solid var(--border-medium, rgba(148, 163, 184, 0.2));
-  border-radius: var(--border-radius-full, 9999px);
-  font-size: var(--font-size-caption, 12px);
-  font-family: var(--font-body, 'Inter', system-ui, sans-serif);
-  font-weight: var(--font-weight-bold, 700);
-  color: var(--text-primary, #F1F5F9);
+  font-size: 0.8rem;
+  font-family: 'Syne', system-ui, sans-serif;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: #e5e7eb;
 }
 
 .currentBadge {
   margin-left: auto;
-  padding: 2px var(--spacing-sm, 8px);
-  background: var(--accent-glow, rgba(99, 102, 241, 0.2));
-  border: 1px solid var(--accent-primary, #6366F1);
-  border-radius: var(--border-radius-sm, 8px);
-  font-size: 10px;
-  font-family: var(--font-body, 'Inter', system-ui, sans-serif);
-  font-weight: var(--font-weight-semibold, 600);
+  padding: 0.15rem 0.5rem;
+  border-radius: 999px;
+  border: 1px solid rgba(56, 189, 248, 0.8);
+  background: rgba(56, 189, 248, 0.18);
+  font-size: 0.64rem;
+  font-family: 'Inter', system-ui, sans-serif;
   text-transform: uppercase;
-  letter-spacing: 0.05em;
-  color: var(--text-primary, #F1F5F9);
+  letter-spacing: 0.08em;
+  color: #e0f2fe;
 }
 
 /* ============================================================================
-   CHIP CONTENT
+   CHIP BODY
    ============================================================================ */
 
 .chipTitle {
-  font-size: var(--font-size-body-small, 14px);
-  font-family: var(--font-body, 'Inter', system-ui, sans-serif);
-  line-height: 1.4;
-  color: var(--text-primary, #F1F5F9);
-  margin-bottom: var(--spacing-xs, 4px);
+  font-size: 0.8rem;
+  font-family: 'Inter', system-ui, sans-serif;
+  line-height: 1.5;
+  color: #cbd5f5;
 }
+
+/* Progress bar inside chip (for in-progress milestones) */
 
 .chipProgress {
   display: flex;
   align-items: center;
-  gap: var(--spacing-sm, 8px);
-  margin-top: var(--spacing-xs, 4px);
+  gap: 0.4rem;
+  margin-top: 0.3rem;
 }
 
 .progressBar {
   flex: 1;
   height: 4px;
-  background: var(--bg-surface, #141B2E);
-  border: 1px solid var(--border-subtle, rgba(148, 163, 184, 0.1));
-  border-radius: 2px;
+  border-radius: 999px;
+  background: rgba(15, 23, 42, 0.9);
   overflow: hidden;
 }
 
 .progressFill {
   height: 100%;
-  background: linear-gradient(90deg, var(--accent-primary, #6366F1), var(--accent-hover, #818CF8));
-  border-radius: 2px;
-  transition: var(--transition-normal, all 0.3s cubic-bezier(0.4, 0, 0.2, 1));
+  width: 0%;
+  border-radius: inherit;
+  background: linear-gradient(90deg, #6366f1, #22d3ee);
+  transition: width 0.25s ease-out;
 }
 
 .progressText {
-  font-size: var(--font-size-caption, 12px);
-  font-family: var(--font-body, 'Inter', system-ui, sans-serif);
-  font-weight: var(--font-weight-semibold, 600);
-  color: var(--text-secondary, #94A3B8);
-  min-width: 3ch;
-  text-align: right;
+  font-size: 0.7rem;
+  font-family: 'Inter', system-ui, sans-serif;
+  color: #a5b4fc;
 }
 
-/* ============================================================================
-   EXPANDED DETAILS
-   ============================================================================ */
+/* Expanded details */
 
 .chipDetails {
-  margin-top: var(--spacing-sm, 8px);
-  padding-top: var(--spacing-sm, 8px);
-  border-top: 1px solid var(--border-subtle, rgba(148, 163, 184, 0.1));
-  font-size: var(--font-size-body-small, 14px);
-  font-family: var(--font-body, 'Inter', system-ui, sans-serif);
+  margin-top: 0.35rem;
+  padding-top: 0.3rem;
+  border-top: 1px dashed rgba(148, 163, 184, 0.45);
+  font-size: 0.75rem;
+  font-family: 'Inter', system-ui, sans-serif;
+  color: #e2e8f0;
 }
 
-.detailRow {
-  margin-bottom: var(--spacing-xs, 4px);
-  color: var(--text-secondary, #94A3B8);
-  line-height: 1.4;
-}
-
-.detailRow strong {
-  color: var(--text-primary, #F1F5F9);
-  font-weight: var(--font-weight-semibold, 600);
-  margin-right: 4px;
+.detailRow + .detailRow {
+  margin-top: 0.2rem;
 }
 
 .adaptedNote {
-  margin-top: var(--spacing-xs, 4px);
-  padding: var(--spacing-xs, 4px) var(--spacing-sm, 8px);
-  background: rgba(245, 158, 11, 0.1); /* semantic.warning with low opacity */
-  border: 1px solid var(--semantic-warning, #F59E0B);
-  border-radius: var(--border-radius-sm, 8px);
-  font-size: var(--font-size-caption, 12px);
-  color: var(--text-primary, #F1F5F9);
+  margin-top: 0.25rem;
+  padding: 0.25rem 0.45rem;
+  border-radius: 999px;
+  background: rgba(245, 158, 11, 0.14);
+  color: #fed7aa;
+  font-size: 0.7rem;
 }
 
-/* ============================================================================
-   RESPONSIVE
-   ============================================================================ */
+/* Small-screen tweaks */
 
-@media (max-width: 640px) {
-  .milestoneChip {
-    padding: 6px var(--spacing-sm, 8px);
+@media (max-width: 768px) {
+  .milestonesList {
+    max-height: 120px;
   }
 
   .chipTitle {
-    font-size: 13px;
-  }
-
-  .chipIcon {
-    font-size: 18px;
-  }
-
-  .currentBadge {
-    font-size: 9px;
-    padding: 2px 6px;
-  }
-
-  .chipProgress {
-    gap: 6px;
-  }
-
-  .progressText {
-    font-size: 11px;
+    font-size: 0.78rem;
   }
 }
