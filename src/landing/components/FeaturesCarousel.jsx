@@ -1,5 +1,6 @@
 // src/landing/components/FeaturesCarousel.jsx
 import React, { useState, useEffect } from 'react';
+import { Link } from 'react-router-dom';
 import '../styles/features.css';
 
 const features = [
@@ -9,8 +10,7 @@ const features = [
     subtitle: 'Create Custom Conversation Experiences',
     description: 'Design multi-character scenarios for specific goals - debate panels, expert consultations, historical councils, and more.',
     image: '/images/carousel-scenarios.jpeg',
-    cta: 'Explore Scenarios',
-    link: '/scenarios'
+    cta: 'Explore Scenarios'
   },
   {
     id: 'stories',
@@ -18,8 +18,7 @@ const features = [
     subtitle: 'Structured Narrative Adventures',
     description: 'Immersive story-driven experiences where your choices shape the narrative alongside historical characters.',
     image: '/images/carousel-stories.jpeg',
-    cta: 'Start a Story',
-    link: '/stories'
+    cta: 'Start a Story'
   },
   {
     id: 'markethub',
@@ -27,8 +26,7 @@ const features = [
     subtitle: 'Discover & Publish Characters',
     description: 'Browse thousands of AI characters created by the community. Publish your own and earn based on engagement.',
     image: '/images/carousel-markethub.jpeg',
-    cta: 'Visit Market Hub',
-    link: '/market'
+    cta: 'Visit Market Hub'
   }
 ];
 
@@ -89,10 +87,10 @@ export default function FeaturesCarousel() {
             <p className="feature-subtitle">{currentFeature.subtitle}</p>
             <p className="feature-description">{currentFeature.description}</p>
             
-            <a href={currentFeature.link} className="feature-cta">
+            <Link to="/register" className="feature-cta">
               {currentFeature.cta}
               <span aria-hidden="true">→</span>
-            </a>
+            </Link>
           </div>
 
           {/* Navigation Dots */}

@@ -1,67 +1,156 @@
+/* ============================================================================
+   STORY HOME BUTTON - AWAKEVERSE DESIGN SYSTEM
+   Using design tokens from variables.css
+   Desktop: Top-left | Mobile: Bottom-left (thumb-friendly)
+   ============================================================================ */
+
 .story-home-button {
   position: fixed;
-  top: 1rem;
-  left: 1rem;
-  width: 44px;
-  height: 44px;
   display: flex;
   align-items: center;
   justify-content: center;
+  
+  /* Design System Colors */
   background: transparent;
-  border: 1px solid rgba(207,174,92,.3);
-  border-radius: 12px;
-  color: rgba(207,174,92,.8);
+  border: 1px solid var(--border-medium);
+  color: var(--text-secondary);
+  
+  /* Design System Spacing & Radius */
+  border-radius: var(--border-radius-md);
+  
+  /* Design System Transition */
+  transition: var(--transition-normal);
+  
+  /* Interactive */
   cursor: pointer;
-  z-index: 1000;
-  transition: all .25s ease;
   box-shadow: none;
+  
+  /* Desktop positioning - Top-left */
+  top: var(--spacing-lg);
+  left: var(--spacing-lg);
+  width: 44px;
+  height: 44px;
+  z-index: 2000; /* Above story content */
 }
 
 .story-home-button:hover {
-  background: rgba(207,174,92,.15);
-  border-color: rgba(207,174,92,.45);
-  color: #CFAE5C;
-  box-shadow: 0 2px 12px rgba(207,174,92,.25);
+  /* Indigo glow on hover */
+  background: var(--accent-glow);
+  border-color: var(--accent-primary);
+  color: var(--accent-hover);
+  box-shadow: var(--shadow-glow);
 }
 
 .story-home-button:active {
   transform: translateY(1px);
+  background: var(--accent-glow-strong);
 }
+
+.story-home-button:focus-visible {
+  outline: 2px solid var(--accent-primary);
+  outline-offset: 3px;
+}
+
+/* Icon sizing */
+.story-home-button svg {
+  width: 20px;
+  height: 20px;
+  transition: var(--transition-fast);
+}
+
+.story-home-button:hover svg {
+  transform: scale(1.1);
+}
+
+/* ============================================================================
+   MOBILE RESPONSIVE - BOTTOM-LEFT POSITIONING
+   ============================================================================ */
 
 @media (max-width: 768px) {
   .story-home-button {
-    width: 38px;
-    height: 38px;
-    top: .75rem;
-    left: .75rem;
+    /* Switch to bottom-left for thumb reach */
+    top: auto;
+    bottom: 5.5rem; /* Above input area */
+    left: var(--spacing-md);
+    width: 42px;
+    height: 42px;
+    
+    /* Slightly larger touch target */
+    padding: 2px;
+    
+    /* Ensure visibility above input */
+    z-index: 2100;
   }
+  
   .story-home-button svg {
     width: 18px;
     height: 18px;
   }
 }
-.story-home-button {
-  position: fixed;
-  top: 1.25rem;
-  left: 1.1rem;
-  z-index: 2000;
-  width: 44px;
-  height: 44px;
-  border-radius: 999px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  /* …existing background/box-shadow… */
+
+/* Very small screens - extra safety margin */
+@media (max-width: 480px) {
+  .story-home-button {
+    bottom: 5rem;
+    left: var(--spacing-sm);
+    width: 40px;
+    height: 40px;
+  }
+  
+  .story-home-button svg {
+    width: 16px;
+    height: 16px;
+  }
 }
 
-/* Make sure it's NOT hidden on small screens */
-@media (max-width: 768px) {
+/* Landscape mobile - adjust positioning */
+@media (max-height: 500px) and (orientation: landscape) {
   .story-home-button {
-    top: 0.85rem;
-    left: 0.8rem;
+    bottom: 4.5rem;
     width: 36px;
     height: 36px;
-    /* slightly smaller icon inside if needed */
-    font-size: 0.9rem;
+  }
+}
+
+/* ============================================================================
+   ACCESSIBILITY & REDUCED MOTION
+   ============================================================================ */
+
+@media (prefers-reduced-motion: reduce) {
+  .story-home-button,
+  .story-home-button svg {
+    transition: none;
+  }
+  
+  .story-home-button:hover {
+    transform: none;
+  }
+  
+  .story-home-button:active {
+    transform: none;
+  }
+}
+
+/* High contrast mode support */
+@media (prefers-contrast: high) {
+  .story-home-button {
+    border-width: 2px;
+    border-color: var(--border-strong);
+  }
+  
+  .story-home-button:hover {
+    border-color: var(--accent-primary);
+    background: var(--accent-glow-strong);
+  }
+}
+
+/* ============================================================================
+   DARK MODE OPTIMIZATION (if needed in future)
+   ============================================================================ */
+
+@media (prefers-color-scheme: dark) {
+  .story-home-button {
+    /* Already optimized for dark mode via design tokens */
+    /* Tokens automatically handle theme switching */
   }
 }

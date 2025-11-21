@@ -5,6 +5,7 @@ import StoryMessages from './StoryMessages';
 import StoryInput from './StoryInput';
 import useStoryApi from '../../../hooks/useStoryApi';
 import MilestoneChips from './MilestoneChips';
+import StoryHomeButton from './StoryHomeButton';
 import styles from './StoryWindow.module.css';
 
 // Helper: map char key → name/thumbnail
@@ -370,6 +371,7 @@ export default function StoryWindow({ story, onClose }) {
     <div className={styles.storyWindow}>
       <div className={styles.storyContainer}>
         <div className={styles.storyInner}>
+          <StoryHomeButton onClick={onClose} />
           {/* ===== HEADER WITH COMPACT OBJECTIVE CHIP ===== */}
           <header className={styles.storyHeader}>
             {/* Left side: Title + badges */}

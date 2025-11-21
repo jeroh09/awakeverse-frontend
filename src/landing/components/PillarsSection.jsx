@@ -1,5 +1,6 @@
 // src/landing/components/PillarsSection.jsx
 import React from 'react';
+import { Link } from 'react-router-dom';
 import '../styles/pillars.css';
 
 const pillars = [
@@ -15,8 +16,7 @@ const pillars = [
       'Multi-expert discussions'
     ],
     image: '/images/pillar-learn.jpeg',
-    cta: 'Explore Characters',
-    link: '/characters'
+    cta: 'Explore Characters'
   },
   {
     id: 'create',
@@ -30,8 +30,7 @@ const pillars = [
       'Bring your vision to life'
     ],
     image: '/images/pillar-create.jpeg',
-    cta: 'Start Creating',
-    link: '/create'
+    cta: 'Start Creating'
   },
   {
     id: 'build',
@@ -45,8 +44,7 @@ const pillars = [
       'Test assumptions with experts'
     ],
     image: '/images/pillar-build.jpeg',
-    cta: 'Create a Scenario',
-    link: '/scenarios'
+    cta: 'Create a Scenario'
   },
   {
     id: 'earn',
@@ -60,8 +58,7 @@ const pillars = [
       'Track analytics & growth'
     ],
     image: '/images/pillar-earn.jpeg',
-    cta: 'Become a Creator',
-    link: '/market'
+    cta: 'Become a Creator'
   }
 ];
 
@@ -112,10 +109,10 @@ export default function PillarsSection() {
                   ))}
                 </ul>
 
-                <a href={pillar.link} className="pillar-cta">
+                <Link to="/register" className="pillar-cta">
                   {pillar.cta}
                   <span aria-hidden="true">→</span>
-                </a>
+                </Link>
               </div>
 
             </article>

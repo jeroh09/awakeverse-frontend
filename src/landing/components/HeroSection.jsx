@@ -1,5 +1,6 @@
 // src/landing/components/HeroSection.jsx
 import React, { useState, useEffect } from 'react';
+import { Link } from 'react-router-dom';
 import { useIntersectionObserver } from '../hooks/useIntersectionObserver';
 import '../styles/hero.css';
 
@@ -83,9 +84,9 @@ export default function HeroSection() {
                 aria-label="Chat input preview"
               />
               <span className="typing-cursor">|</span>
-              <a href="/chat" className="start-chat-button">
+              <Link to="/register" className="start-chat-button">
                 Start Chat
-              </a>
+              </Link>
             </div>
           </div>
         </div>
@@ -96,10 +97,10 @@ export default function HeroSection() {
           <p className="hero-subtitle">
             Create, chat, collaborate, and earn with iconic minds
           </p>
-          <a href="/chat" className="hero-cta">
+          <Link to="/register" className="hero-cta">
             Start Your First Conversation
             <span aria-hidden="true">→</span>
-          </a>
+          </Link>
         </div>
 
       </div>

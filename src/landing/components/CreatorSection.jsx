@@ -1,5 +1,6 @@
 // src/landing/components/CreatorSection.jsx
 import React, { useState, useEffect } from 'react';
+import { Link } from 'react-router-dom';
 import '../styles/creator.css';
 
 const creators = [
@@ -170,14 +171,14 @@ export default function CreatorSection() {
 
         {/* CTA Buttons */}
         <div className="creator-ctas">
-          <a href="/chat" className="creator-cta primary">
+          <Link to="/register" className="creator-cta primary">
              Chat
             <span>→</span>
-          </a>
-          <a href="/create" className="creator-cta secondary">
+          </Link>
+          <Link to="/register" className="creator-cta secondary">
             Create
             <span>→</span>
-          </a>
+          </Link>
         </div>
 
       </div>
