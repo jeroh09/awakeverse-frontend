@@ -1,5 +1,4 @@
 /* src/components/StoryMode/StoryWindow/StoryWindow.module.css */
-/* SIDE PANEL IMPLEMENTATION */
 
 /* ========== STORY WINDOW SHELL ========== */
 
@@ -158,7 +157,6 @@
   display: flex;
   flex-wrap: wrap;
   gap: 0.5rem;
-  align-items: center;
 }
 
 .eraBadge,
@@ -185,56 +183,325 @@
   opacity: 0.9;
 }
 
-/* ========== PROGRESS TOGGLE BUTTON (IN HEADER) ========== */
+/* ============================================================================
+   OBJECTIVE STRIP - COLLAPSIBLE PROGRESSIVE DISCLOSURE
+   ============================================================================ */
 
-.progressToggle {
-  margin-left: auto;
+.objectiveStrip {
+  position: relative;
+  flex-shrink: 0;
+  padding: var(--spacing-md, 16px);
+  background: var(--bg-surface, #141B2E);
+  border-bottom: 1px solid var(--border-subtle, rgba(148, 163, 184, 0.1));
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-md, 16px);
+  transition: var(--transition-normal, all 0.3s cubic-bezier(0.4, 0, 0.2, 1));
+}
+
+/* Compact header (always visible) */
+.objectiveHeader {
+  display: flex;
+  align-items: flex-start;
+  gap: var(--spacing-md, 16px);
+}
+
+.objectiveTextBlock {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-xs, 4px);
+}
+
+.objectiveLabel {
+  font-size: var(--font-size-caption, 12px);
+  font-family: var(--font-body, 'Inter', system-ui, sans-serif);
+  font-weight: var(--font-weight-semibold, 600);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: var(--text-secondary, #94A3B8);
+}
+
+.objectiveText {
+  font-size: var(--font-size-body, 16px);
+  font-family: var(--font-body, 'Inter', system-ui, sans-serif);
+  font-weight: var(--font-weight-medium, 500);
+  line-height: 1.5;
+  color: var(--text-primary, #F1F5F9);
+}
+
+/* Compact progress summary (always visible) */
+.compactProgress {
+  flex-shrink: 0;
   display: flex;
   align-items: center;
-  gap: 6px;
+  gap: var(--spacing-sm, 8px);
+}
+
+.progressBadgeCompact {
+  display: inline-flex;
+  align-items: center;
   padding: 6px 12px;
+  background: var(--accent-glow, rgba(99, 102, 241, 0.2));
+  border: 1px solid var(--accent-primary, #6366F1);
+  border-radius: var(--border-radius-sm, 8px);
+  font-size: var(--font-size-body-small, 14px);
+  font-family: var(--font-body, 'Inter', system-ui, sans-serif);
+  font-weight: var(--font-weight-bold, 700);
+  color: var(--text-primary, #F1F5F9);
+  letter-spacing: 0.025em;
+  white-space: nowrap;
+}
+
+/* Toggle button */
+.toggleButton {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--spacing-sm, 8px);
+  padding: 8px 16px;
   background: var(--bg-interactive, #1C2640);
   border: 1px solid var(--border-medium, rgba(148, 163, 184, 0.2));
   border-radius: var(--border-radius-sm, 8px);
   color: var(--text-secondary, #94A3B8);
-  font-size: 13px;
+  font-size: var(--font-size-body-small, 14px);
   font-family: var(--font-body, 'Inter', system-ui, sans-serif);
   font-weight: var(--font-weight-semibold, 600);
   cursor: pointer;
   transition: var(--transition-fast, all 0.15s cubic-bezier(0.4, 0, 0.2, 1));
-  white-space: nowrap;
 }
 
-.progressToggle:hover {
+.toggleButton:hover {
   background: var(--bg-peak, #243152);
   border-color: var(--accent-primary, #6366F1);
   color: var(--text-primary, #F1F5F9);
 }
 
-.progressToggle svg {
-  flex-shrink: 0;
+.toggleButton svg {
+  transition: var(--transition-fast, all 0.15s cubic-bezier(0.4, 0, 0.2, 1));
+}
+
+.toggleButton.expanded svg {
+  transform: rotate(180deg);
+}
+
+/* Expandable details section */
+.objectiveDetails {
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-md, 16px);
+  max-height: 0;
+  overflow: hidden;
+  opacity: 0;
+  transition: max-height 0.3s cubic-bezier(0.4, 0, 0.2, 1), 
+              opacity 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.objectiveDetails.expanded {
+  max-height: 600px;
+  opacity: 1;
+}
+
+/* Act information block */
+.objectiveMetaBlock {
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-sm, 8px);
+  padding: var(--spacing-md, 16px);
+  background: var(--bg-interactive, #1C2640);
+  border: 1px solid var(--border-subtle, rgba(148, 163, 184, 0.1));
+  border-radius: var(--border-radius-md, 12px);
+}
+
+.actLine {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--spacing-sm, 8px);
+}
+
+.actTitle {
+  font-size: var(--font-size-body-small, 14px);
+  font-family: var(--font-display, 'Syne', sans-serif);
+  font-weight: var(--font-weight-semibold, 600);
+  color: var(--text-primary, #F1F5F9);
+}
+
+.actBadgeMini {
+  display: inline-flex;
+  align-items: center;
+  padding: 2px var(--spacing-sm, 8px);
+  background: var(--bg-surface, #141B2E);
+  border: 1px solid var(--border-medium, rgba(148, 163, 184, 0.2));
+  border-radius: var(--border-radius-sm, 8px);
+  font-size: 10px;
+  font-family: var(--font-body, 'Inter', system-ui, sans-serif);
+  font-weight: var(--font-weight-semibold, 600);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: var(--text-secondary, #94A3B8);
+}
+
+.actSummary {
+  font-size: var(--font-size-body-small, 14px);
+  font-family: var(--font-body, 'Inter', system-ui, sans-serif);
+  line-height: 1.5;
+  color: var(--text-tertiary, #64748B);
+  margin: 0;
+}
+
+.progressTrack {
+  position: relative;
+  width: 100%;
+  height: 6px;
+  background: var(--bg-surface, #141B2E);
+  border: 1px solid var(--border-subtle, rgba(148, 163, 184, 0.1));
+  border-radius: 3px;
+  overflow: hidden;
+}
+
+.progressFill {
+  position: absolute;
+  top: 0;
+  left: 0;
+  height: 100%;
+  background: linear-gradient(90deg, var(--accent-primary, #6366F1), var(--accent-hover, #818CF8));
+  border-radius: 3px;
+  transition: var(--transition-normal, all 0.3s cubic-bezier(0.4, 0, 0.2, 1));
+}
+
+/* Progress metadata row */
+.progressMeta {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-top: var(--spacing-sm, 8px);
+  gap: var(--spacing-sm, 8px);
+}
+
+.progressBadge {
+  display: inline-flex;
+  align-items: center;
+  padding: 2px var(--spacing-sm, 8px);
+  background: var(--accent-glow, rgba(99, 102, 241, 0.2));
+  border: 1px solid var(--accent-primary, #6366F1);
+  border-radius: var(--border-radius-sm, 8px);
+  font-size: var(--font-size-caption, 12px);
+  font-family: var(--font-body, 'Inter', system-ui, sans-serif);
+  font-weight: var(--font-weight-semibold, 600);
+  color: var(--text-primary, #F1F5F9);
+  letter-spacing: 0.025em;
+}
+
+.turnHint {
+  display: inline-flex;
+  align-items: center;
+  font-size: var(--font-size-caption, 12px);
+  font-family: var(--font-body, 'Inter', system-ui, sans-serif);
+  font-weight: var(--font-weight-medium, 500);
+  color: var(--text-secondary, #94A3B8);
+}
+
+/* Loading indicator */
+.loadingIndicator {
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-sm, 8px);
+  margin-top: var(--spacing-sm, 8px);
+  padding: var(--spacing-sm, 8px) var(--spacing-md, 16px);
+  background: rgba(59, 130, 246, 0.1);
+  border: 1px solid var(--semantic-info, #3B82F6);
+  border-radius: var(--border-radius-sm, 8px);
+  font-size: var(--font-size-caption, 12px);
+  font-family: var(--font-body, 'Inter', system-ui, sans-serif);
+  color: var(--text-secondary, #94A3B8);
+}
+
+.loadingDot {
+  width: 8px;
+  height: 8px;
+  background: var(--semantic-info, #3B82F6);
+  border-radius: var(--border-radius-full, 9999px);
+  animation: pulse 1.5s ease-in-out infinite;
+}
+
+@keyframes pulse {
+  0%, 100% {
+    opacity: 1;
+    transform: scale(1);
+  }
+  50% {
+    opacity: 0.5;
+    transform: scale(0.8);
+  }
 }
 
 /* ============================================================================
-   MAIN CONTENT AREA - SPLIT LAYOUT
+   RESPONSIVE - MOBILE
    ============================================================================ */
 
-.contentArea {
-  position: relative;
-  flex: 1;
-  display: flex;
-  gap: 0;
-  overflow: hidden;
-  min-height: 0;
-}
+@media (max-width: 640px) {
+  .objectiveStrip {
+    padding: var(--spacing-sm, 8px) var(--spacing-md, 16px);
+    gap: var(--spacing-sm, 8px);
+  }
 
-/* Messages column (left side) */
-.messagesColumn {
-  flex: 1;
-  display: flex;
-  flex-direction: column;
-  min-width: 0;
-  overflow: hidden;
+  .objectiveHeader {
+    flex-direction: column;
+    gap: var(--spacing-sm, 8px);
+  }
+
+  .objectiveText {
+    font-size: var(--font-size-body-small, 14px);
+  }
+
+  .compactProgress {
+    align-self: flex-start;
+  }
+
+  .progressBadgeCompact {
+    font-size: 13px;
+    padding: 4px 10px;
+  }
+
+  .toggleButton {
+    font-size: 13px;
+    padding: 6px 12px;
+  }
+
+  .actTitle {
+    font-size: 13px;
+  }
+
+  .actBadgeMini {
+    font-size: 9px;
+    padding: 2px 6px;
+  }
+
+  .actSummary {
+    font-size: 13px;
+  }
+
+  .progressMeta {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: var(--spacing-xs, 4px);
+  }
+
+  .progressBadge {
+    font-size: 11px;
+    padding: 2px 6px;
+  }
+
+  .turnHint {
+    font-size: 11px;
+  }
+
+  .loadingIndicator {
+    font-size: 11px;
+    padding: 6px var(--spacing-sm, 8px);
+  }
 }
 
 /* ========== MESSAGE AREA ========== */
@@ -358,6 +625,22 @@
   }
   51%, 100% {
     opacity: 0;
+  }
+}
+
+/* Mobile tweaks */
+@media (max-width: 768px) {
+  .messageWrapper {
+    padding: 0.25rem 0.15rem;
+  }
+
+  .userMessage,
+  .characterMessage {
+    max-width: 94%;
+  }
+
+  .storyTitle {
+    font-size: 1.2rem;
   }
 }
 
@@ -575,308 +858,13 @@
   flex-shrink: 0;
 }
 
-/* ============================================================================
-   PROGRESS SIDE PANEL
-   ============================================================================ */
-
-/* Desktop: Slide in from right */
-.progressPanel {
-  position: relative;
-  width: 320px;
-  flex-shrink: 0;
-  display: flex;
-  flex-direction: column;
-  background: var(--bg-surface, #141B2E);
-  border-left: 1px solid var(--border-subtle, rgba(148, 163, 184, 0.1));
-  overflow-y: auto;
-  overflow-x: hidden;
-  transform: translateX(0);
-  transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-}
-
-.progressPanel.hidden {
-  transform: translateX(100%);
-  pointer-events: none;
-}
-
-/* Panel header */
-.panelHeader {
-  position: sticky;
-  top: 0;
-  z-index: 10;
-  padding: 16px;
-  background: var(--bg-interactive, #1C2640);
-  border-bottom: 1px solid var(--border-subtle, rgba(148, 163, 184, 0.1));
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-}
-
-.panelTitle {
-  font-size: var(--font-size-body, 16px);
-  font-family: var(--font-display, 'Syne', sans-serif);
-  font-weight: var(--font-weight-bold, 700);
-  color: var(--text-primary, #F1F5F9);
-  display: flex;
-  align-items: center;
-  gap: 8px;
-}
-
-.panelCloseButton {
-  width: 32px;
-  height: 32px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  background: transparent;
-  border: 1px solid var(--border-medium, rgba(148, 163, 184, 0.2));
-  border-radius: var(--border-radius-sm, 8px);
-  color: var(--text-secondary, #94A3B8);
-  cursor: pointer;
-  transition: var(--transition-fast, all 0.15s cubic-bezier(0.4, 0, 0.2, 1));
-}
-
-.panelCloseButton:hover {
-  background: var(--bg-peak, #243152);
-  border-color: var(--accent-primary, #6366F1);
-  color: var(--text-primary, #F1F5F9);
-}
-
-/* Panel content */
-.panelContent {
-  flex: 1;
-  padding: 16px;
-  display: flex;
-  flex-direction: column;
-  gap: 20px;
-}
-
-/* Objective section */
-.objectiveSection {
-  display: flex;
-  flex-direction: column;
-  gap: 8px;
-}
-
-.objectiveLabel {
-  font-size: var(--font-size-caption, 12px);
-  font-family: var(--font-body, 'Inter', system-ui, sans-serif);
-  font-weight: var(--font-weight-semibold, 600);
-  text-transform: uppercase;
-  letter-spacing: 0.05em;
-  color: var(--text-secondary, #94A3B8);
-}
-
-.objectiveText {
-  font-size: var(--font-size-body-small, 14px);
-  font-family: var(--font-body, 'Inter', system-ui, sans-serif);
-  font-weight: var(--font-weight-medium, 500);
-  line-height: 1.5;
-  color: var(--text-primary, #F1F5F9);
-}
-
-/* Act section */
-.actSection {
-  display: flex;
-  flex-direction: column;
-  gap: 12px;
-  padding: 16px;
-  background: var(--bg-interactive, #1C2640);
-  border: 1px solid var(--border-subtle, rgba(148, 163, 184, 0.1));
-  border-radius: var(--border-radius-md, 12px);
-}
-
-.actLine {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 8px;
-}
-
-.actTitle {
-  font-size: var(--font-size-body-small, 14px);
-  font-family: var(--font-display, 'Syne', sans-serif);
-  font-weight: var(--font-weight-semibold, 600);
-  color: var(--text-primary, #F1F5F9);
-}
-
-.actBadgeMini {
-  display: inline-flex;
-  align-items: center;
-  padding: 2px 8px;
-  background: var(--bg-surface, #141B2E);
-  border: 1px solid var(--border-medium, rgba(148, 163, 184, 0.2));
-  border-radius: var(--border-radius-sm, 8px);
-  font-size: 10px;
-  font-family: var(--font-body, 'Inter', system-ui, sans-serif);
-  font-weight: var(--font-weight-semibold, 600);
-  text-transform: uppercase;
-  letter-spacing: 0.05em;
-  color: var(--text-secondary, #94A3B8);
-}
-
-.actSummary {
-  font-size: var(--font-size-body-small, 14px);
-  font-family: var(--font-body, 'Inter', system-ui, sans-serif);
-  line-height: 1.5;
-  color: var(--text-tertiary, #64748B);
-  margin: 0;
-}
-
-.progressTrack {
-  position: relative;
-  width: 100%;
-  height: 6px;
-  background: var(--bg-surface, #141B2E);
-  border: 1px solid var(--border-subtle, rgba(148, 163, 184, 0.1));
-  border-radius: 3px;
-  overflow: hidden;
-}
-
-.progressFill {
-  position: absolute;
-  top: 0;
-  left: 0;
-  height: 100%;
-  background: linear-gradient(90deg, var(--accent-primary, #6366F1), var(--accent-hover, #818CF8));
-  border-radius: 3px;
-  transition: var(--transition-normal, all 0.3s cubic-bezier(0.4, 0, 0.2, 1));
-}
-
-.progressMeta {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  margin-top: 8px;
-  gap: 8px;
-  flex-wrap: wrap;
-}
-
-.progressBadge {
-  display: inline-flex;
-  align-items: center;
-  padding: 2px 8px;
-  background: var(--accent-glow, rgba(99, 102, 241, 0.2));
-  border: 1px solid var(--accent-primary, #6366F1);
-  border-radius: var(--border-radius-sm, 8px);
-  font-size: var(--font-size-caption, 12px);
-  font-family: var(--font-body, 'Inter', system-ui, sans-serif);
-  font-weight: var(--font-weight-semibold, 600);
-  color: var(--text-primary, #F1F5F9);
-  letter-spacing: 0.025em;
-}
-
-.turnHint {
-  display: inline-flex;
-  align-items: center;
-  font-size: var(--font-size-caption, 12px);
-  font-family: var(--font-body, 'Inter', system-ui, sans-serif);
-  font-weight: var(--font-weight-medium, 500);
-  color: var(--text-secondary, #94A3B8);
-}
-
-.loadingIndicator {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  margin-top: 8px;
-  padding: 8px 12px;
-  background: rgba(59, 130, 246, 0.1);
-  border: 1px solid var(--semantic-info, #3B82F6);
-  border-radius: var(--border-radius-sm, 8px);
-  font-size: var(--font-size-caption, 12px);
-  font-family: var(--font-body, 'Inter', system-ui, sans-serif);
-  color: var(--text-secondary, #94A3B8);
-}
-
-.loadingDot {
-  width: 8px;
-  height: 8px;
-  background: var(--semantic-info, #3B82F6);
-  border-radius: var(--border-radius-full, 9999px);
-  animation: pulse 1.5s ease-in-out infinite;
-}
-
-@keyframes pulse {
-  0%, 100% {
-    opacity: 1;
-    transform: scale(1);
-  }
-  50% {
-    opacity: 0.5;
-    transform: scale(0.8);
-  }
-}
-
-/* Milestones section */
-.milestonesSection {
-  border-top: 1px solid var(--border-subtle, rgba(148, 163, 184, 0.1));
-  padding-top: 16px;
-}
-
-/* ============================================================================
-   MOBILE: BOTTOM SHEET OVERLAY
-   ============================================================================ */
-
-@media (max-width: 768px) {
-  /* Backdrop overlay */
-  .panelBackdrop {
-    display: none;
-    position: fixed;
-    inset: 0;
-    background: rgba(0, 0, 0, 0.6);
-    z-index: 999;
-    opacity: 0;
-    transition: opacity 0.3s ease;
-  }
-
-  .panelBackdrop.visible {
-    display: block;
-    opacity: 1;
-  }
-
-  /* Panel slides from bottom on mobile */
-  .progressPanel {
-    position: fixed;
-    bottom: 0;
-    left: 0;
-    right: 0;
-    width: 100%;
-    max-height: 75vh;
-    border-left: none;
-    border-top: 1px solid var(--border-medium, rgba(148, 163, 184, 0.2));
-    border-radius: 20px 20px 0 0;
-    z-index: 1000;
-    transform: translateY(100%);
-    box-shadow: 0 -10px 40px rgba(0, 0, 0, 0.5);
-  }
-
-  .progressPanel.visible {
-    transform: translateY(0);
-  }
-
-  .storyTitle {
-    font-size: 1.2rem;
-  }
-
-  .messageWrapper {
-    padding: 0.25rem 0.15rem;
-  }
-
-  .userMessage,
-  .characterMessage {
-    max-width: 94%;
-  }
-}
-
 /* ========== ACCESSIBILITY & REDUCED MOTION ========== */
 
 .sendButton:focus-visible,
 .stopButton:focus-visible,
 .retryButton:focus-visible,
 .textInput:focus-visible,
-.progressToggle:focus-visible,
-.panelCloseButton:focus-visible {
+.toggleButton:focus-visible {
   outline: 2px solid #6366f1;
   outline-offset: 3px;
 }
@@ -888,13 +876,41 @@
     animation-duration: 1.6s;
   }
 
-  .progressPanel,
-  .panelBackdrop {
-    transition: none;
-  }
-
   .messageText,
-  .userMessage .messageContent {
+  .userMessage .messageContent,
+  .toggleButton svg {
     transition: none;
   }
+}
+/* ============================================================================
+   STORY OBJECTIVES & HEADER CONSTRAINTS
+   Keep the objectives + progress UI scoped inside the header on all screens.
+   ============================================================================ */
+
+/* Cap header height so it doesn't dominate the viewport on smaller laptops */
+.storyHeader {
+  max-height: 280px;
+  overflow-y: auto;
+}
+
+/* Slightly taller on large desktops for more breathing space */
+@media (min-height: 900px) {
+  .storyHeader {
+    max-height: 320px;
+  }
+}
+
+/* Optional: if you have a long-form objective line, clamp it visually */
+.objectiveText {
+  font-size: var(--font-size-body, 16px);
+  font-family: var(--font-body, 'Inter', system-ui, sans-serif);
+  font-weight: var(--font-weight-medium, 500);
+  line-height: 1.5;
+  color: var(--text-primary, #F1F5F9);
+
+  /* line clamp so objectives don't become a wall of text */
+  display: -webkit-box;
+  -webkit-line-clamp: 3;      /* change to 2 or 4 if you prefer */
+  -webkit-box-orient: vertical;
+  overflow: hidden;
 }
