@@ -1038,3 +1038,29 @@
     gap: 0.5rem;
   }
 }
+/* EMERGENCY FIX - Add to StoryWindow.module.css */
+.objectiveStrip {
+  background: rgba(15, 23, 42, 0.6);
+  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+  padding: 0.75rem 0;
+  margin: 0;
+  max-height: 200px; /* Prevent taking over entire screen */
+  overflow-y: auto; /* Scroll if content is too tall */
+}
+
+.storyContainer {
+  display: flex;
+  flex-direction: column;
+  height: 100vh; /* Use full viewport height */
+}
+
+/* Ensure messages area takes remaining space */
+.storyMessages {
+  flex: 1;
+  overflow-y: auto;
+}
+
+/* Ensure input stays at bottom */
+.storyInput {
+  flex-shrink: 0;
+}

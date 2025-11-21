@@ -188,34 +188,23 @@ export default function StoryWindow({ story, onClose }) {
   } = useStoryApi();
 
   // Fetch progress data
+    // Replace the fetchProgressData function with this:
   const fetchProgressData = async (storyId) => {
     if (!storyId) return;
 
     setIsLoadingProgress(true);
     try {
-      const response = await fetch(`/api/stories/${storyId}/progress`, {
-        credentials: 'include',
-        headers: {
-          'Accept': 'application/json',
-          'Content-Type': 'application/json',
-        }
-      });
-
-      if (response.ok) {
-        const data = await response.json();
-        setProgressData(data);
-      } else {
-        console.warn('⚠️ Progress endpoint returned error:', response.status);
-        // Gracefully fall back to estimated progress - don't set progressData
-      }
+      // Use the hook method instead of direct fetch
+      const data = await getStoryProgress(storyId);
+      setProgressData(data);
     } catch (err) {
       console.warn('⚠️ Progress endpoint unavailable:', err.message);
-      // This is normal if there are server-side import issues
+      // Don't set progressData - will use fallback
     } finally {
       setIsLoadingProgress(false);
     }
   };
-
+  
   // Initial load – fetch context from backend
   useEffect(() => {
     if (!story?.id) return;

@@ -12,6 +12,11 @@ export default function useStoryApi() {
     return match ? match[1] : '';
   }, []);
 
+  // Get story progress data
+  const getStoryProgress = useCallback(async (storyId) => {
+    return request(`${API_BASE}/api/stories/${storyId}/progress`);
+  }, [request]);
+
   // Generic API request handler
   const request = useCallback(async (url, options = {}) => {
     setLoading(true);
@@ -178,6 +183,7 @@ export default function useStoryApi() {
     createStory,
     getMyStories,
     getStory,
+    getStoryProgress, // ← ADD THIS
     getStoryContext,
     updateStory,
     deleteStory,
