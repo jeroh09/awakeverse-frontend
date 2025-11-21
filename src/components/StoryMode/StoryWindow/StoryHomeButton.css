@@ -1,7 +1,6 @@
 /* ============================================================================
    STORY HOME BUTTON - AWAKEVERSE DESIGN SYSTEM
-   Using design tokens from variables.css
-   Desktop: Top-left | Mobile: Bottom-left (thumb-friendly)
+   Desktop: Bottom-right (rounded) | Mobile: Bottom-left (rounded)
    ============================================================================ */
 
 .story-home-button {
@@ -15,8 +14,8 @@
   border: 1px solid var(--border-medium);
   color: var(--text-secondary);
   
-  /* Design System Spacing & Radius */
-  border-radius: var(--border-radius-md);
+  /* Fully Rounded Edges */
+  border-radius: var(--border-radius-full); /* 9999px - perfect circle */
   
   /* Design System Transition */
   transition: var(--transition-normal);
@@ -25,12 +24,18 @@
   cursor: pointer;
   box-shadow: none;
   
-  /* Desktop positioning - Top-left */
-  top: var(--spacing-lg);
-  left: var(--spacing-lg);
-  width: 44px;
-  height: 44px;
-  z-index: 2000; /* Above story content */
+  /* Desktop positioning - BOTTOM-RIGHT */
+  bottom: var(--spacing-lg);      /* 24px from bottom */
+  right: var(--spacing-lg);       /* 24px from right */
+  top: auto;                      /* Override any top value */
+  left: auto;                     /* Override any left value */
+  
+  /* Size */
+  width: 48px;
+  height: 48px;
+  
+  /* Layering */
+  z-index: 2000; /* Above story content, below modals */
 }
 
 .story-home-button:hover {
@@ -39,10 +44,11 @@
   border-color: var(--accent-primary);
   color: var(--accent-hover);
   box-shadow: var(--shadow-glow);
+  transform: translateY(-2px); /* Subtle lift effect */
 }
 
 .story-home-button:active {
-  transform: translateY(1px);
+  transform: translateY(0); /* Press down */
   background: var(--accent-glow-strong);
 }
 
@@ -53,8 +59,8 @@
 
 /* Icon sizing */
 .story-home-button svg {
-  width: 20px;
-  height: 20px;
+  width: 22px;
+  height: 22px;
   transition: var(--transition-fast);
 }
 
@@ -69,17 +75,37 @@
 @media (max-width: 768px) {
   .story-home-button {
     /* Switch to bottom-left for thumb reach */
-    top: auto;
     bottom: 5.5rem; /* Above input area */
-    left: var(--spacing-md);
-    width: 42px;
-    height: 42px;
+    left: var(--spacing-md); /* 16px from left */
+    right: auto; /* Reset desktop positioning */
     
-    /* Slightly larger touch target */
+    /* Slightly smaller on mobile */
+    width: 44px;
+    height: 44px;
+    
+    /* Maintain rounded appearance */
+    border-radius: var(--border-radius-full);
+    
+    /* Slightly larger touch target padding */
     padding: 2px;
     
     /* Ensure visibility above input */
     z-index: 2100;
+  }
+  
+  .story-home-button svg {
+    width: 20px;
+    height: 20px;
+  }
+}
+
+/* Very small screens - extra safety margin */
+@media (max-width: 480px) {
+  .story-home-button {
+    bottom: 5rem;
+    left: var(--spacing-sm); /* 8px from left */
+    width: 42px;
+    height: 42px;
   }
   
   .story-home-button svg {
@@ -88,27 +114,31 @@
   }
 }
 
-/* Very small screens - extra safety margin */
-@media (max-width: 480px) {
+/* Landscape mobile - adjust positioning */
+@media (max-height: 500px) and (orientation: landscape) {
   .story-home-button {
-    bottom: 5rem;
-    left: var(--spacing-sm);
+    bottom: 4.5rem;
     width: 40px;
     height: 40px;
   }
   
   .story-home-button svg {
-    width: 16px;
-    height: 16px;
+    width: 18px;
+    height: 18px;
   }
 }
 
-/* Landscape mobile - adjust positioning */
-@media (max-height: 500px) and (orientation: landscape) {
+/* ============================================================================
+   TABLET/MEDIUM SCREENS - TRANSITION ZONE
+   ============================================================================ */
+
+@media (min-width: 769px) and (max-width: 1024px) {
   .story-home-button {
-    bottom: 4.5rem;
-    width: 36px;
-    height: 36px;
+    /* Desktop positioning but slightly smaller */
+    width: 46px;
+    height: 46px;
+    bottom: var(--spacing-md); /* 16px */
+    right: var(--spacing-md);  /* 16px */
   }
 }
 
@@ -145,12 +175,11 @@
 }
 
 /* ============================================================================
-   DARK MODE OPTIMIZATION (if needed in future)
+   PRINT STYLES
    ============================================================================ */
 
-@media (prefers-color-scheme: dark) {
+@media print {
   .story-home-button {
-    /* Already optimized for dark mode via design tokens */
-    /* Tokens automatically handle theme switching */
+    display: none; /* Hide button when printing */
   }
 }
