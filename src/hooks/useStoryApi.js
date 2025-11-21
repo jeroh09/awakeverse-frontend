@@ -12,11 +12,6 @@ export default function useStoryApi() {
     return match ? match[1] : '';
   }, []);
 
-  // Get story progress data
-  const getStoryProgress = useCallback(async (storyId) => {
-    return request(`${API_BASE}/api/stories/${storyId}/progress`);
-  }, [request]);
-
   // Generic API request handler
   const request = useCallback(async (url, options = {}) => {
     setLoading(true);
@@ -80,6 +75,11 @@ export default function useStoryApi() {
     return request(`${API_BASE}/api/stories/${storyId}/context`);
   }, [request]);
 
+  // 🆕 NEW: Get story progress (objective + structure tracking)
+  const getStoryProgress = useCallback(async (storyId) => {
+    return request(`${API_BASE}/api/stories/${storyId}/progress`);
+  }, [request]);
+
   // Update story
   const updateStory = useCallback(async (storyId, updates) => {
     return request(`${API_BASE}/api/stories/${storyId}`, {
@@ -103,7 +103,7 @@ export default function useStoryApi() {
     });
   }, [request]);
 
-    // Send message with true streaming (NDJSON)
+  // Send message with true streaming (NDJSON)
   const sendMessageStream = useCallback(async (storyId, content, { onDelta, onDone, onError, signal } = {}) => {
     const params = new URLSearchParams({ stream: '1' });
 
@@ -160,7 +160,6 @@ export default function useStoryApi() {
     }
   }, [getCsrfToken]);
 
-
   // Invite character to story
   const inviteCharacter = useCallback(async (storyId, characterKey) => {
     return request(`${API_BASE}/api/stories/${storyId}/invite`, {
@@ -183,8 +182,8 @@ export default function useStoryApi() {
     createStory,
     getMyStories,
     getStory,
-    getStoryProgress, // ← ADD THIS
     getStoryContext,
+    getStoryProgress,  // 🆕 ADD THIS
     updateStory,
     deleteStory,
     sendMessage,

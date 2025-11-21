@@ -183,6 +183,7 @@ export default function StoryWindow({ story, onClose }) {
     sendMessageStream,
     inviteCharacter,
     getStoryContext,
+    getStoryProgress, 
     loading,
     error
   } = useStoryApi();
@@ -204,7 +205,7 @@ export default function StoryWindow({ story, onClose }) {
       setIsLoadingProgress(false);
     }
   };
-  
+
   // Initial load – fetch context from backend
   useEffect(() => {
     if (!story?.id) return;
