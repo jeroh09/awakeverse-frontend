@@ -1,10 +1,10 @@
-// src/components/StoryMode/StoryWindow/index.jsx - UPDATED WITH ENHANCED OBJECTIVE STRIP
+// src/components/StoryMode/StoryWindow/index.jsx - WITH COLLAPSIBLE OBJECTIVE STRIP
 import React, { useState, useEffect, useRef } from 'react';
+import { ChevronDown } from 'lucide-react';
 import { characterCategories } from '../../../data/characterCategories';
 import StoryHeader from './StoryHeader';
 import StoryMessages from './StoryMessages';
 import StoryInput from './StoryInput';
-import InviteSuggestion from './InviteSuggestion';
 import useStoryApi from '../../../hooks/useStoryApi';
 import MilestoneChips from './MilestoneChips';
 import styles from './StoryWindow.module.css';
@@ -41,7 +41,7 @@ const ACT_LABELS = {
 };
 
 /**
- * Enhanced objective + act strip with milestone tracking
+ * Collapsible objective strip with progressive disclosure
  * 
  * Props:
  * - story: Basic story info (always available)
@@ -49,6 +49,8 @@ const ACT_LABELS = {
  * - isLoading: Whether progress data is being fetched
  */
 function ObjectiveStrip({ story, progressData, isLoading }) {
+  const [isExpanded, setIsExpanded] = useState(false);
+
   if (!story) return null;
 
   // ============================================================================
@@ -103,66 +105,100 @@ function ObjectiveStrip({ story, progressData, isLoading }) {
   const turns = story.total_turns || 0;
 
   // ============================================================================
+  // TOGGLE HANDLER
+  // ============================================================================
+
+  const handleToggle = () => {
+    setIsExpanded(!isExpanded);
+  };
+
+  // ============================================================================
   // RENDER
   // ============================================================================
 
   return (
     <section className={styles.objectiveStrip}>
-      {/* Primary Objective */}
-      <div className={styles.objectiveTextBlock}>
-        <div className={styles.objectiveLabel}>Story Objective</div>
-        <div className={styles.objectiveText}>{primaryObjective}</div>
+      {/* ALWAYS VISIBLE: Compact header */}
+      <div className={styles.objectiveHeader}>
+        {/* Left: Objective text */}
+        <div className={styles.objectiveTextBlock}>
+          <div className={styles.objectiveLabel}>Story Objective</div>
+          <div className={styles.objectiveText}>{primaryObjective}</div>
+        </div>
+
+        {/* Right: Compact progress badge */}
+        <div className={styles.compactProgress}>
+          {progressSource !== 'estimated' && (
+            <span className={styles.progressBadgeCompact}>
+              {progressPercent}%
+            </span>
+          )}
+        </div>
       </div>
 
-      {/* Act & Progress */}
-      <div className={styles.objectiveMetaBlock}>
-        <div className={styles.actLine}>
-          <span className={styles.actTitle}>{actMeta.title}</span>
-          <span className={styles.actBadgeMini}>
-            Act {currentAct} / {totalActs}
-          </span>
-        </div>
-        <p className={styles.actSummary}>{actMeta.summary}</p>
+      {/* Toggle button */}
+      <button
+        className={`${styles.toggleButton} ${isExpanded ? styles.expanded : ''}`}
+        onClick={handleToggle}
+        aria-expanded={isExpanded}
+        aria-label={isExpanded ? 'Hide details' : 'View details'}
+      >
+        <span>{isExpanded ? 'Hide Details' : 'View Details'}</span>
+        <ChevronDown size={16} />
+      </button>
 
-        {/* Progress bar */}
-        <div className={styles.progressTrack} aria-label="Story progress">
-          <div
-            className={styles.progressFill}
-            style={{ width: `${progressPercent}%` }}
-          />
-        </div>
-
-        {/* Progress metadata */}
-        <div className={styles.progressMeta}>
-          {turns > 0 && (
-            <span className={styles.turnHint}>
-              💬 {turns} turn{turns === 1 ? '' : 's'} so far
+      {/* EXPANDABLE: Detailed information */}
+      <div className={`${styles.objectiveDetails} ${isExpanded ? styles.expanded : ''}`}>
+        {/* Act & Progress Details */}
+        <div className={styles.objectiveMetaBlock}>
+          <div className={styles.actLine}>
+            <span className={styles.actTitle}>{actMeta.title}</span>
+            <span className={styles.actBadgeMini}>
+              Act {currentAct} / {totalActs}
             </span>
-          )}
-          
-          {progressSource !== 'estimated' && (
-            <span className={styles.progressBadge}>
-              {progressPercent}% complete
-            </span>
-          )}
-        </div>
-
-        {/* Loading indicator */}
-        {isLoading && (
-          <div className={styles.loadingIndicator}>
-            <span className={styles.loadingDot} />
-            Updating progress...
           </div>
+          <p className={styles.actSummary}>{actMeta.summary}</p>
+
+          {/* Progress bar */}
+          <div className={styles.progressTrack} aria-label="Story progress">
+            <div
+              className={styles.progressFill}
+              style={{ width: `${progressPercent}%` }}
+            />
+          </div>
+
+          {/* Progress metadata */}
+          <div className={styles.progressMeta}>
+            {turns > 0 && (
+              <span className={styles.turnHint}>
+                💬 {turns} turn{turns === 1 ? '' : 's'} so far
+              </span>
+            )}
+            
+            {progressSource !== 'estimated' && (
+              <span className={styles.progressBadge}>
+                {progressPercent}% complete
+              </span>
+            )}
+          </div>
+
+          {/* Loading indicator */}
+          {isLoading && (
+            <div className={styles.loadingIndicator}>
+              <span className={styles.loadingDot} />
+              Updating progress...
+            </div>
+          )}
+        </div>
+
+        {/* Milestone Chips (if available) */}
+        {milestones && milestones.length > 0 && (
+          <MilestoneChips 
+            milestones={milestones}
+            currentMilestoneId={currentMilestoneId}
+          />
         )}
       </div>
-
-      {/* Milestone Chips (if available) */}
-      {milestones && milestones.length > 0 && (
-        <MilestoneChips 
-          milestones={milestones}
-          currentMilestoneId={currentMilestoneId}
-        />
-      )}
     </section>
   );
 }
@@ -170,8 +206,6 @@ function ObjectiveStrip({ story, progressData, isLoading }) {
 export default function StoryWindow({ story, onClose }) {
   const [messages, setMessages] = useState([]);
   const [openingBanner, setOpeningBanner] = useState(null);
-  const [showInviteSuggestion, setShowInviteSuggestion] = useState(false);
-  const [availableCharacters, setAvailableCharacters] = useState([]);
   const [isStreaming, setIsStreaming] = useState(false);
   const [progressData, setProgressData] = useState(null);
   const [isLoadingProgress, setIsLoadingProgress] = useState(false);
@@ -189,7 +223,6 @@ export default function StoryWindow({ story, onClose }) {
   } = useStoryApi();
 
   // Fetch progress data
-    // Replace the fetchProgressData function with this:
   const fetchProgressData = async (storyId) => {
     if (!storyId) return;
 
@@ -226,17 +259,6 @@ export default function StoryWindow({ story, onClose }) {
 
         // Fetch progress data
         fetchProgressData(story.id);
-
-        // TODO: Replace with real inviteable character set from backend
-        setAvailableCharacters([
-          { key: 'watson', name: 'Dr. Watson', description: 'Medical expert' },
-          { key: 'lestrade', name: 'Inspector Lestrade', description: 'Scotland Yard detective' }
-        ]);
-
-        // Show invite suggestion after a short delay
-        setTimeout(() => {
-          setShowInviteSuggestion(true);
-        }, 2000);
       } catch (err) {
         console.error('❌ Failed to initialize story:', err);
       }
@@ -341,26 +363,6 @@ export default function StoryWindow({ story, onClose }) {
     abortRef.current?.abort();
   };
 
-  // Invite character handler
-  const handleInviteCharacter = async (characterKey) => {
-    try {
-      const data = await inviteCharacter(story.id, characterKey);
-      console.log('✅ Character invite response:', data);
-
-      if (data.success) {
-        const systemMessage = {
-          role: 'system',
-          content: `${characterKey} has been invited to join the story.`,
-          timestamp: new Date().toISOString()
-        };
-        setMessages((prev) => [...prev, systemMessage]);
-        setShowInviteSuggestion(false);
-      }
-    } catch (err) {
-      console.error('❌ Character invite failed:', err);
-    }
-  };
-
   const handleClose = () => {
     console.log('📖 Closing story window');
     onClose?.();
@@ -411,7 +413,7 @@ export default function StoryWindow({ story, onClose }) {
         {/* Header: title, era, character, act, turns */}
         <StoryHeader story={story} onClose={handleClose} />
 
-        {/* ENHANCED: Objective + Act strip with milestone tracking */}
+        {/* COLLAPSIBLE: Objective + Act strip with milestone tracking */}
         <ObjectiveStrip 
           story={story} 
           progressData={progressData}
@@ -432,16 +434,6 @@ export default function StoryWindow({ story, onClose }) {
             <span>⚠️</span>
             <span>{error}</span>
           </div>
-        )}
-
-        {/* Invite suggestion */}
-        {showInviteSuggestion && availableCharacters.length > 0 && (
-          <InviteSuggestion
-            story={story}
-            availableCharacters={availableCharacters}
-            onInvite={handleInviteCharacter}
-            onDismiss={() => setShowInviteSuggestion(false)}
-          />
         )}
 
         {/* Input */}
