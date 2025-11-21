@@ -504,15 +504,27 @@
   flex: 1;
   min-height: 22px;
   max-height: 120px;
-  border: none;
-  outline: none;
-  background: transparent;
+  padding: 0;
+  margin: 0;
+  border: none !important;
+  outline: none !important;
+  background: transparent !important;
   color: #f9fafb;
   font-family: 'Inter', system-ui, -apple-system, BlinkMacSystemFont, sans-serif;
   font-size: 0.96rem;
   line-height: 1.5;
   resize: none;
   overflow-y: auto;
+  box-shadow: none !important;
+  -webkit-appearance: none !important;
+  appearance: none !important;
+}
+
+.textInput:focus {
+  border: none !important;
+  outline: none !important;
+  box-shadow: none !important;
+  background: transparent !important;
 }
 
 .textInput::placeholder {
