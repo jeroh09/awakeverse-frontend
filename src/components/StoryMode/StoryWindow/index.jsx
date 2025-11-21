@@ -1,6 +1,6 @@
-// src/components/StoryMode/StoryWindow/index.jsx - WITH COLLAPSIBLE OBJECTIVE STRIP
+// src/components/StoryMode/StoryWindow/index.jsx - SIDE PANEL IMPLEMENTATION
 import React, { useState, useEffect, useRef } from 'react';
-import { ChevronDown } from 'lucide-react';
+import { BarChart2, X } from 'lucide-react';
 import { characterCategories } from '../../../data/characterCategories';
 import StoryHeader from './StoryHeader';
 import StoryMessages from './StoryMessages';
@@ -41,16 +41,16 @@ const ACT_LABELS = {
 };
 
 /**
- * Collapsible objective strip with progressive disclosure
+ * Progress Side Panel Component
  * 
  * Props:
  * - story: Basic story info (always available)
  * - progressData: Rich tracking data from /progress endpoint (may be null initially)
  * - isLoading: Whether progress data is being fetched
+ * - isVisible: Whether panel is open
+ * - onClose: Close panel handler
  */
-function ObjectiveStrip({ story, progressData, isLoading }) {
-  const [isExpanded, setIsExpanded] = useState(false);
-
+function ProgressPanel({ story, progressData, isLoading, isVisible, onClose }) {
   if (!story) return null;
 
   // ============================================================================
@@ -105,101 +105,100 @@ function ObjectiveStrip({ story, progressData, isLoading }) {
   const turns = story.total_turns || 0;
 
   // ============================================================================
-  // TOGGLE HANDLER
-  // ============================================================================
-
-  const handleToggle = () => {
-    setIsExpanded(!isExpanded);
-  };
-
-  // ============================================================================
   // RENDER
   // ============================================================================
 
   return (
-    <section className={styles.objectiveStrip}>
-      {/* ALWAYS VISIBLE: Compact header */}
-      <div className={styles.objectiveHeader}>
-        {/* Left: Objective text */}
-        <div className={styles.objectiveTextBlock}>
-          <div className={styles.objectiveLabel}>Story Objective</div>
-          <div className={styles.objectiveText}>{primaryObjective}</div>
-        </div>
+    <>
+      {/* Mobile backdrop */}
+      <div 
+        className={`${styles.panelBackdrop} ${isVisible ? styles.visible : ''}`}
+        onClick={onClose}
+        aria-hidden="true"
+      />
 
-        {/* Right: Compact progress badge */}
-        <div className={styles.compactProgress}>
-          {progressSource !== 'estimated' && (
-            <span className={styles.progressBadgeCompact}>
-              {progressPercent}%
-            </span>
-          )}
-        </div>
-      </div>
-
-      {/* Toggle button */}
-      <button
-        className={`${styles.toggleButton} ${isExpanded ? styles.expanded : ''}`}
-        onClick={handleToggle}
-        aria-expanded={isExpanded}
-        aria-label={isExpanded ? 'Hide details' : 'View details'}
+      {/* Side panel */}
+      <aside 
+        className={`${styles.progressPanel} ${isVisible ? styles.visible : styles.hidden}`}
+        aria-label="Story progress panel"
       >
-        <span>{isExpanded ? 'Hide Details' : 'View Details'}</span>
-        <ChevronDown size={16} />
-      </button>
-
-      {/* EXPANDABLE: Detailed information */}
-      <div className={`${styles.objectiveDetails} ${isExpanded ? styles.expanded : ''}`}>
-        {/* Act & Progress Details */}
-        <div className={styles.objectiveMetaBlock}>
-          <div className={styles.actLine}>
-            <span className={styles.actTitle}>{actMeta.title}</span>
-            <span className={styles.actBadgeMini}>
-              Act {currentAct} / {totalActs}
-            </span>
-          </div>
-          <p className={styles.actSummary}>{actMeta.summary}</p>
-
-          {/* Progress bar */}
-          <div className={styles.progressTrack} aria-label="Story progress">
-            <div
-              className={styles.progressFill}
-              style={{ width: `${progressPercent}%` }}
-            />
-          </div>
-
-          {/* Progress metadata */}
-          <div className={styles.progressMeta}>
-            {turns > 0 && (
-              <span className={styles.turnHint}>
-                💬 {turns} turn{turns === 1 ? '' : 's'} so far
-              </span>
-            )}
-            
-            {progressSource !== 'estimated' && (
-              <span className={styles.progressBadge}>
-                {progressPercent}% complete
-              </span>
-            )}
-          </div>
-
-          {/* Loading indicator */}
-          {isLoading && (
-            <div className={styles.loadingIndicator}>
-              <span className={styles.loadingDot} />
-              Updating progress...
-            </div>
-          )}
+        {/* Panel header */}
+        <div className={styles.panelHeader}>
+          <h2 className={styles.panelTitle}>
+            <BarChart2 size={20} />
+            <span>Progress</span>
+          </h2>
+          <button
+            className={styles.panelCloseButton}
+            onClick={onClose}
+            aria-label="Close progress panel"
+          >
+            <X size={18} />
+          </button>
         </div>
 
-        {/* Milestone Chips (if available) */}
-        {milestones && milestones.length > 0 && (
-          <MilestoneChips 
-            milestones={milestones}
-            currentMilestoneId={currentMilestoneId}
-          />
-        )}
-      </div>
-    </section>
+        {/* Panel content */}
+        <div className={styles.panelContent}>
+          {/* Objective */}
+          <section className={styles.objectiveSection}>
+            <div className={styles.objectiveLabel}>Story Objective</div>
+            <div className={styles.objectiveText}>{primaryObjective}</div>
+          </section>
+
+          {/* Act & Progress */}
+          <section className={styles.actSection}>
+            <div className={styles.actLine}>
+              <span className={styles.actTitle}>{actMeta.title}</span>
+              <span className={styles.actBadgeMini}>
+                Act {currentAct} / {totalActs}
+              </span>
+            </div>
+            <p className={styles.actSummary}>{actMeta.summary}</p>
+
+            {/* Progress bar */}
+            <div className={styles.progressTrack} aria-label="Story progress">
+              <div
+                className={styles.progressFill}
+                style={{ width: `${progressPercent}%` }}
+              />
+            </div>
+
+            {/* Progress metadata */}
+            <div className={styles.progressMeta}>
+              {turns > 0 && (
+                <span className={styles.turnHint}>
+                  💬 {turns} turn{turns === 1 ? '' : 's'} so far
+                </span>
+              )}
+              
+              {progressSource !== 'estimated' && (
+                <span className={styles.progressBadge}>
+                  {progressPercent}% complete
+                </span>
+              )}
+            </div>
+
+            {/* Loading indicator */}
+            {isLoading && (
+              <div className={styles.loadingIndicator}>
+                <span className={styles.loadingDot} />
+                Updating progress...
+              </div>
+            )}
+          </section>
+
+          {/* Milestone Chips (if available) */}
+          {milestones && milestones.length > 0 && (
+            <section className={styles.milestonesSection}>
+              <MilestoneChips 
+                milestones={milestones}
+                currentMilestoneId={currentMilestoneId}
+              />
+            </section>
+          )}
+        </div>
+      </aside>
+    </>
   );
 }
 
@@ -209,6 +208,7 @@ export default function StoryWindow({ story, onClose }) {
   const [isStreaming, setIsStreaming] = useState(false);
   const [progressData, setProgressData] = useState(null);
   const [isLoadingProgress, setIsLoadingProgress] = useState(false);
+  const [isPanelOpen, setIsPanelOpen] = useState(false);
 
   const abortRef = useRef(null);
 
@@ -368,6 +368,10 @@ export default function StoryWindow({ story, onClose }) {
     onClose?.();
   };
 
+  const togglePanel = () => {
+    setIsPanelOpen(!isPanelOpen);
+  };
+
   // Loading state – full-frame
   if (loading && messages.length === 0) {
     return (
@@ -410,40 +414,85 @@ export default function StoryWindow({ story, onClose }) {
   return (
     <div className={styles.storyWindow}>
       <div className={styles.storyContainer}>
-        {/* Header: title, era, character, act, turns */}
-        <StoryHeader story={story} onClose={handleClose} />
+        {/* Header: title, era, character, act, turns + progress toggle */}
+        <header className={styles.storyHeader}>
+          <div className={styles.headerContent}>
+            <h1 className={styles.storyTitle}>
+              {story?.title || 'Untitled Story'}
+            </h1>
 
-        {/* COLLAPSIBLE: Objective + Act strip with milestone tracking */}
-        <ObjectiveStrip 
-          story={story} 
-          progressData={progressData}
-          isLoading={isLoadingProgress}
-        />
+            <div className={styles.storyMeta}>
+              <span className={styles.eraBadge}>
+                <span>📅</span> {story?.era || 'Modern'}
+              </span>
 
-        {/* Messages */}
-        <StoryMessages
-          messages={messages}
-          characterKey={story.main_character_key}
-          openingBanner={openingBanner}
-          getCharacterInfo={getCharacterInfo}
-        />
+              <span className={styles.characterBadge}>
+                <span>👤</span> {story?.main_character_key || 'Character'}
+              </span>
 
-        {/* Non-fatal error banner */}
-        {error && (
-          <div className={styles.errorBanner}>
-            <span>⚠️</span>
-            <span>{error}</span>
+              {Number.isFinite?.(story?.current_act) && (
+                <span className={styles.actBadge}>
+                  <span>🎭</span> Act {story.current_act}
+                </span>
+              )}
+
+              {Number.isFinite?.(story?.total_turns) && story.total_turns > 0 && (
+                <span className={styles.turnsBadge}>
+                  <span>💬</span> {story.total_turns} turns
+                </span>
+              )}
+
+              {/* Progress toggle button */}
+              <button
+                className={styles.progressToggle}
+                onClick={togglePanel}
+                aria-label={isPanelOpen ? 'Hide progress' : 'Show progress'}
+              >
+                <BarChart2 size={16} />
+                <span>{isPanelOpen ? 'Hide' : 'Progress'}</span>
+              </button>
+            </div>
           </div>
-        )}
+        </header>
 
-        {/* Input */}
-        <StoryInput
-          onSendMessage={handleSendMessage}
-          isSending={loading}
-          characterKey={story?.main_character_key}
-          isStreaming={isStreaming}
-          onCancelStreaming={handleStop}
-        />
+        {/* Content area: Messages + Progress Panel */}
+        <div className={styles.contentArea}>
+          {/* Messages column (left) */}
+          <div className={styles.messagesColumn}>
+            <StoryMessages
+              messages={messages}
+              characterKey={story.main_character_key}
+              openingBanner={openingBanner}
+              getCharacterInfo={getCharacterInfo}
+            />
+
+            {/* Non-fatal error banner */}
+            {error && (
+              <div className={styles.errorBanner}>
+                <span>⚠️</span>
+                <span>{error}</span>
+              </div>
+            )}
+
+            {/* Input */}
+            <StoryInput
+              onSendMessage={handleSendMessage}
+              isSending={loading}
+              characterKey={story?.main_character_key}
+              isStreaming={isStreaming}
+              onCancelStreaming={handleStop}
+            />
+          </div>
+
+          {/* Progress Panel (right side on desktop, bottom sheet on mobile) */}
+          <ProgressPanel
+            story={story}
+            progressData={progressData}
+            isLoading={isLoadingProgress}
+            isVisible={isPanelOpen}
+            onClose={() => setIsPanelOpen(false)}
+          />
+        </div>
       </div>
     </div>
   );
