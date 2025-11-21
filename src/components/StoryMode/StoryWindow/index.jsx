@@ -1,8 +1,6 @@
-// src/components/StoryMode/StoryWindow/index.jsx - WITH COLLAPSIBLE OBJECTIVE STRIP
+// src/components/StoryMode/StoryWindow/index.jsx - OVERLAY PANEL IMPLEMENTATION
 import React, { useState, useEffect, useRef } from 'react';
-import { ChevronDown } from 'lucide-react';
 import { characterCategories } from '../../../data/characterCategories';
-import StoryHeader from './StoryHeader';
 import StoryMessages from './StoryMessages';
 import StoryInput from './StoryInput';
 import useStoryApi from '../../../hooks/useStoryApi';
@@ -24,6 +22,30 @@ const getCharacterInfo = (charKey) => {
   return { name: pretty, thumbnailUrl: null };
 };
 
+// Helper: format era display name
+const formatEra = (era) => {
+  if (!era) return 'Modern';
+  const map = {
+    ancient: 'Ancient Times',
+    medieval: 'Medieval Era',
+    renaissance: 'Renaissance',
+    '1800s': '1800s',
+    '1890s': 'Victorian Era',
+    '1900s': 'Early 1900s',
+    '1950s': '1950s',
+    modern: 'Modern Day',
+    '2050s': 'Near Future',
+    far_future: 'Far Future'
+  };
+  const key = String(era || '').toLowerCase().trim();
+  return map[key] || era;
+};
+
+// Helper: get character display name
+const getDisplayNameFromKey = (charKey) => {
+  return getCharacterInfo(charKey).name;
+};
+
 // Small helper for act labels
 const ACT_LABELS = {
   1: {
@@ -40,175 +62,13 @@ const ACT_LABELS = {
   }
 };
 
-/**
- * Collapsible objective strip with progressive disclosure
- * 
- * Props:
- * - story: Basic story info (always available)
- * - progressData: Rich tracking data from /progress endpoint (may be null initially)
- * - isLoading: Whether progress data is being fetched
- */
-function ObjectiveStrip({ story, progressData, isLoading }) {
-  const [isExpanded, setIsExpanded] = useState(false);
-
-  if (!story) return null;
-
-  // ============================================================================
-  // DATA EXTRACTION
-  // ============================================================================
-
-  // Use progressData if available, otherwise fall back to story data
-  const objectiveStatus = progressData?.objective_status;
-  const structureStatus = progressData?.structure_status;
-
-  // Primary objective (from story or progressData)
-  const primaryObjective =
-    progressData?.primary_objective ||
-    story.primary_objective ||
-    'Follow the thread of the story toward a satisfying conclusion.';
-
-  // Act information
-  const currentAct = structureStatus?.current_act || story.current_act || 1;
-  const actName = structureStatus?.act_name || ACT_LABELS[currentAct]?.title.split('·')[1]?.trim() || 'Setup';
-  const totalActs = 3;
-
-  const actMeta = ACT_LABELS[currentAct] || {
-    title: `Act ${currentAct} · ${actName}`,
-    summary: 'Drama continues…'
-  };
-
-  // Progress calculation
-  let progressPercent = 0;
-  let progressSource = 'estimated';
-
-  if (objectiveStatus?.overall_progress != null) {
-    // Use real milestone progress (most accurate)
-    progressPercent = Math.round(objectiveStatus.overall_progress * 100);
-    progressSource = 'milestones';
-  } else if (structureStatus?.position_pct != null) {
-    // Use story structure progress (act/beat based)
-    progressPercent = Math.round(structureStatus.position_pct * 100);
-    progressSource = 'structure';
-  } else {
-    // Fallback: estimate from turns
-    const turns = story.total_turns || 0;
-    const estimatedTotal = 30;
-    progressPercent = turns ? Math.min(100, Math.round((turns / estimatedTotal) * 100)) : 0;
-    progressSource = 'estimated';
-  }
-
-  // Milestone data
-  const milestones = objectiveStatus?.milestones;
-  const currentMilestoneId = objectiveStatus?.current_milestone?.id;
-
-  // Turn count
-  const turns = story.total_turns || 0;
-
-  // ============================================================================
-  // TOGGLE HANDLER
-  // ============================================================================
-
-  const handleToggle = () => {
-    setIsExpanded(!isExpanded);
-  };
-
-  // ============================================================================
-  // RENDER
-  // ============================================================================
-
-  return (
-    <section className={styles.objectiveStrip}>
-      {/* ALWAYS VISIBLE: Compact header */}
-      <div className={styles.objectiveHeader}>
-        {/* Left: Objective text */}
-        <div className={styles.objectiveTextBlock}>
-          <div className={styles.objectiveLabel}>Story Objective</div>
-          <div className={styles.objectiveText}>{primaryObjective}</div>
-        </div>
-
-        {/* Right: Compact progress badge */}
-        <div className={styles.compactProgress}>
-          {progressSource !== 'estimated' && (
-            <span className={styles.progressBadgeCompact}>
-              {progressPercent}%
-            </span>
-          )}
-        </div>
-      </div>
-
-      {/* Toggle button */}
-      <button
-        className={`${styles.toggleButton} ${isExpanded ? styles.expanded : ''}`}
-        onClick={handleToggle}
-        aria-expanded={isExpanded}
-        aria-label={isExpanded ? 'Hide details' : 'View details'}
-      >
-        <span>{isExpanded ? 'Hide Details' : 'View Details'}</span>
-        <ChevronDown size={16} />
-      </button>
-
-      {/* EXPANDABLE: Detailed information */}
-      <div className={`${styles.objectiveDetails} ${isExpanded ? styles.expanded : ''}`}>
-        {/* Act & Progress Details */}
-        <div className={styles.objectiveMetaBlock}>
-          <div className={styles.actLine}>
-            <span className={styles.actTitle}>{actMeta.title}</span>
-            <span className={styles.actBadgeMini}>
-              Act {currentAct} / {totalActs}
-            </span>
-          </div>
-          <p className={styles.actSummary}>{actMeta.summary}</p>
-
-          {/* Progress bar */}
-          <div className={styles.progressTrack} aria-label="Story progress">
-            <div
-              className={styles.progressFill}
-              style={{ width: `${progressPercent}%` }}
-            />
-          </div>
-
-          {/* Progress metadata */}
-          <div className={styles.progressMeta}>
-            {turns > 0 && (
-              <span className={styles.turnHint}>
-                💬 {turns} turn{turns === 1 ? '' : 's'} so far
-              </span>
-            )}
-            
-            {progressSource !== 'estimated' && (
-              <span className={styles.progressBadge}>
-                {progressPercent}% complete
-              </span>
-            )}
-          </div>
-
-          {/* Loading indicator */}
-          {isLoading && (
-            <div className={styles.loadingIndicator}>
-              <span className={styles.loadingDot} />
-              Updating progress...
-            </div>
-          )}
-        </div>
-
-        {/* Milestone Chips (if available) */}
-        {milestones && milestones.length > 0 && (
-          <MilestoneChips 
-            milestones={milestones}
-            currentMilestoneId={currentMilestoneId}
-          />
-        )}
-      </div>
-    </section>
-  );
-}
-
 export default function StoryWindow({ story, onClose }) {
   const [messages, setMessages] = useState([]);
   const [openingBanner, setOpeningBanner] = useState(null);
   const [isStreaming, setIsStreaming] = useState(false);
   const [progressData, setProgressData] = useState(null);
   const [isLoadingProgress, setIsLoadingProgress] = useState(false);
+  const [isPanelOpen, setIsPanelOpen] = useState(false);
 
   const abortRef = useRef(null);
 
@@ -228,7 +88,6 @@ export default function StoryWindow({ story, onClose }) {
 
     setIsLoadingProgress(true);
     try {
-      // Use the hook method instead of direct fetch
       const data = await getStoryProgress(storyId);
       setProgressData(data);
     } catch (err) {
@@ -368,13 +227,70 @@ export default function StoryWindow({ story, onClose }) {
     onClose?.();
   };
 
+  const togglePanel = () => {
+    setIsPanelOpen(!isPanelOpen);
+  };
+
+  // ============================================================================
+  // DATA EXTRACTION FOR DISPLAY
+  // ============================================================================
+
+  // Use progressData if available, otherwise fall back to story data
+  const objectiveStatus = progressData?.objective_status;
+  const structureStatus = progressData?.structure_status;
+
+  // Primary objective (from story or progressData)
+  const primaryObjective =
+    progressData?.primary_objective ||
+    story?.primary_objective ||
+    'Follow the thread of the story toward a satisfying conclusion.';
+
+  // Act information
+  const currentAct = structureStatus?.current_act || story?.current_act || 1;
+  const actName = structureStatus?.act_name || ACT_LABELS[currentAct]?.title.split('·')[1]?.trim() || 'Setup';
+  const totalActs = 3;
+
+  const actMeta = ACT_LABELS[currentAct] || {
+    title: `Act ${currentAct} · ${actName}`,
+    summary: 'Drama continues…'
+  };
+
+  // Progress calculation
+  let progressPercent = 0;
+  let progressSource = 'estimated';
+
+  if (objectiveStatus?.overall_progress != null) {
+    // Use real milestone progress (most accurate)
+    progressPercent = Math.round(objectiveStatus.overall_progress * 100);
+    progressSource = 'milestones';
+  } else if (structureStatus?.position_pct != null) {
+    // Use story structure progress (act/beat based)
+    progressPercent = Math.round(structureStatus.position_pct * 100);
+    progressSource = 'structure';
+  } else {
+    // Fallback: estimate from turns
+    const turns = story?.total_turns || 0;
+    const estimatedTotal = 30;
+    progressPercent = turns ? Math.min(100, Math.round((turns / estimatedTotal) * 100)) : 0;
+    progressSource = 'estimated';
+  }
+
+  // Milestone data
+  const milestones = objectiveStatus?.milestones;
+  const currentMilestoneId = objectiveStatus?.current_milestone?.id;
+
+  // Turn count
+  const turns = story?.total_turns || 0;
+
+  // ============================================================================
+  // LOADING & ERROR STATES
+  // ============================================================================
+
   // Loading state – full-frame
   if (loading && messages.length === 0) {
     return (
       <div className={styles.storyWindow}>
         <div className={styles.storyContainer}>
-          <StoryHeader story={story} onClose={handleClose} />
-
           <div className={styles.loadingState}>
             <div className={styles.loadingSpinner} />
             <p>Loading story...</p>
@@ -389,8 +305,6 @@ export default function StoryWindow({ story, onClose }) {
     return (
       <div className={styles.storyWindow}>
         <div className={styles.storyContainer}>
-          <StoryHeader story={story} onClose={handleClose} />
-
           <div className={styles.errorState}>
             <h3>⚠️ Error Loading Story</h3>
             <p>{error}</p>
@@ -406,44 +320,170 @@ export default function StoryWindow({ story, onClose }) {
     );
   }
 
-  // Main story window
+  // ============================================================================
+  // MAIN RENDER
+  // ============================================================================
+
   return (
     <div className={styles.storyWindow}>
       <div className={styles.storyContainer}>
-        {/* Header: title, era, character, act, turns */}
-        <StoryHeader story={story} onClose={handleClose} />
+        <div className={styles.storyInner}>
+          {/* ===== HEADER WITH COMPACT OBJECTIVE CHIP ===== */}
+          <header className={styles.storyHeader}>
+            {/* Left side: Title + badges */}
+            <div className={styles.headerLeft}>
+              <h1 className={styles.storyTitle}>
+                {story?.title || 'Untitled Story'}
+              </h1>
 
-        {/* COLLAPSIBLE: Objective + Act strip with milestone tracking */}
-        <ObjectiveStrip 
-          story={story} 
-          progressData={progressData}
-          isLoading={isLoadingProgress}
-        />
+              <div className={styles.storyMeta}>
+                <span className={styles.eraBadge}>
+                  <span>📅</span> {formatEra(story?.era)}
+                </span>
 
-        {/* Messages */}
-        <StoryMessages
-          messages={messages}
-          characterKey={story.main_character_key}
-          openingBanner={openingBanner}
-          getCharacterInfo={getCharacterInfo}
-        />
+                <span className={styles.characterBadge}>
+                  <span>👤</span> {getDisplayNameFromKey(story?.main_character_key)}
+                </span>
 
-        {/* Non-fatal error banner */}
-        {error && (
-          <div className={styles.errorBanner}>
-            <span>⚠️</span>
-            <span>{error}</span>
+                {Number.isFinite?.(story?.current_act) && (
+                  <span className={styles.actBadge}>
+                    <span>🎭</span> Act {story.current_act}
+                  </span>
+                )}
+
+                {Number.isFinite?.(story?.total_turns) && story.total_turns > 0 && (
+                  <span className={styles.turnsBadge}>
+                    <span>💬</span> {story.total_turns} turns
+                  </span>
+                )}
+              </div>
+            </div>
+
+            {/* Right side: Compact objective chip */}
+            <div className={styles.objectiveChip}>
+              <div className={styles.objectiveMiniLabel}>Story Objective</div>
+              <div className={styles.objectiveSummary}>
+                {primaryObjective}
+              </div>
+              <button
+                className={styles.objectiveStatusPill}
+                onClick={togglePanel}
+                aria-label="Open objectives panel"
+              >
+                <span>{actMeta.title.split('·')[0].trim()}</span>
+                {progressSource !== 'estimated' && (
+                  <span className={styles.objectivePercentBadge}>
+                    {progressPercent}%
+                  </span>
+                )}
+              </button>
+            </div>
+          </header>
+
+          {/* ===== MAIN CONTENT: MESSAGES + INPUT (ALWAYS FULL WIDTH) ===== */}
+          <div className={styles.storyMain}>
+            <StoryMessages
+              messages={messages}
+              characterKey={story?.main_character_key}
+              openingBanner={openingBanner}
+              getCharacterInfo={getCharacterInfo}
+            />
+
+            {/* Non-fatal error banner */}
+            {error && (
+              <div className={styles.errorBanner}>
+                <span>⚠️</span>
+                <span>{error}</span>
+              </div>
+            )}
+
+            {/* Input */}
+            <StoryInput
+              onSendMessage={handleSendMessage}
+              isSending={loading}
+              characterKey={story?.main_character_key}
+              isStreaming={isStreaming}
+              onCancelStreaming={handleStop}
+            />
           </div>
-        )}
 
-        {/* Input */}
-        <StoryInput
-          onSendMessage={handleSendMessage}
-          isSending={loading}
-          characterKey={story?.main_character_key}
-          isStreaming={isStreaming}
-          onCancelStreaming={handleStop}
-        />
+          {/* ===== OBJECTIVES PANEL (FLOATING OVERLAY) ===== */}
+          <aside 
+            className={`${styles.objectivesPanel} ${isPanelOpen ? styles.open : ''}`}
+            aria-label="Story objectives panel"
+          >
+            {/* Panel header */}
+            <div className={styles.panelHeader}>
+              <div className={styles.panelTitle}>Objectives & Acts</div>
+              <button
+                className={styles.panelClose}
+                onClick={() => setIsPanelOpen(false)}
+                aria-label="Close objectives panel"
+              >
+                Close ✕
+              </button>
+            </div>
+
+            {/* Main objective */}
+            <div className={styles.panelMainObjective}>
+              <strong>Story Objective:</strong>
+              <br />
+              {primaryObjective}
+            </div>
+
+            {/* Progress section */}
+            <div className={styles.panelProgressSection}>
+              <div className={styles.panelActLine}>
+                <span className={styles.panelActTitle}>{actMeta.title}</span>
+                <span className={styles.panelActBadge}>
+                  Act {currentAct} / {totalActs}
+                </span>
+              </div>
+
+              {/* Progress track */}
+              <div className={styles.panelProgressTrack}>
+                <div
+                  className={styles.panelProgressFill}
+                  style={{ width: `${progressPercent}%` }}
+                />
+              </div>
+
+              {/* Meta row */}
+              <div className={styles.panelMetaRow}>
+                {turns > 0 && (
+                  <span>💬 {turns} turn{turns === 1 ? '' : 's'} so far</span>
+                )}
+                
+                {progressSource !== 'estimated' && (
+                  <span className={styles.panelMetaPill}>
+                    {progressPercent}% complete
+                  </span>
+                )}
+              </div>
+            </div>
+
+            {/* Milestones */}
+            {milestones && milestones.length > 0 && (
+              <>
+                <div className={styles.milestonesHeader}>Milestones</div>
+                <div className={styles.milestonesList}>
+                  <MilestoneChips 
+                    milestones={milestones}
+                    currentMilestoneId={currentMilestoneId}
+                  />
+                </div>
+              </>
+            )}
+
+            {/* Loading indicator */}
+            {isLoadingProgress && (
+              <div className={styles.loadingIndicator}>
+                <span className={styles.loadingDot} />
+                Updating progress...
+              </div>
+            )}
+          </aside>
+        </div>
       </div>
     </div>
   );

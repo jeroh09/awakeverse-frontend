@@ -1,4 +1,5 @@
 /* src/components/StoryMode/StoryWindow/StoryWindow.module.css */
+/* OVERLAY PANEL APPROACH - Clean Implementation */
 
 /* ========== STORY WINDOW SHELL ========== */
 
@@ -10,47 +11,46 @@
   justify-content: center;
   align-items: stretch;
   background: radial-gradient(circle at top, #020617 0%, #020617 45%, #020617 100%);
+  padding: 16px;
 }
 
-/* Mobile-first: full-screen card */
+/* Main card container */
 .storyContainer {
   position: relative;
   display: flex;
   flex-direction: column;
   width: 100%;
-  height: 100vh;
-  margin: 0;
-  padding: 0.75rem;
-  background: radial-gradient(circle at top left, #020617 0%, #020617 55%, #020617 100%);
-  border-radius: 0;
-  box-shadow: 0 0 0 rgba(0, 0, 0, 0);
+  max-width: 1120px;
+  margin: 0 auto;
+  padding: 20px 24px 16px;
+  background: radial-gradient(circle at top left, #020617 0%, #020617 60%, #020617 100%);
+  border-radius: 24px;
+  border: 1px solid rgba(148, 163, 184, 0.4);
+  box-shadow:
+    0 18px 70px rgba(15, 23, 42, 0.85),
+    0 0 0 1px rgba(15, 23, 42, 0.9);
   overflow: hidden;
 }
 
-/* Desktop: centered framed chat */
-@media (min-width: 768px) {
-  .storyContainer {
-    height: calc(100vh - 3rem);
-    max-width: 1120px;
-    margin: 1.5rem auto;
-    padding: 1.5rem 1.75rem 1.25rem;
-    border-radius: 24px;
-    border: 1px solid rgba(148, 163, 184, 0.4);
-    box-shadow:
-      0 18px 70px rgba(15, 23, 42, 0.85),
-      0 0 0 1px rgba(15, 23, 42, 0.9);
-  }
+.storyContainer::before {
+  content: "";
+  position: absolute;
+  inset: 14px 14px 90px;
+  border-radius: 18px;
+  border: 1px solid rgba(79, 70, 229, 0.35);
+  box-shadow: 0 0 40px rgba(15, 23, 42, 0.9);
+  pointer-events: none;
+  z-index: 0;
+}
 
-  .storyContainer::before {
-    /* subtle inner frame */
-    content: "";
-    position: absolute;
-    inset: 14px 14px 90px;
-    border-radius: 18px;
-    border: 1px solid rgba(79, 70, 229, 0.35);
-    box-shadow: 0 0 40px rgba(15, 23, 42, 0.9);
-    pointer-events: none;
-  }
+/* Inner wrapper for z-index layering */
+.storyInner {
+  position: relative;
+  z-index: 1;
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  min-height: 0;
 }
 
 /* ========== LOADING & ERROR FULL STATES ========== */
@@ -125,28 +125,30 @@
   }
 }
 
-/* ========== STORY HEADER ========== */
+/* ============================================================================
+   STORY HEADER - WITH COMPACT OBJECTIVE CHIP
+   ============================================================================ */
 
 .storyHeader {
   position: relative;
   z-index: 1;
   flex-shrink: 0;
-  padding: 0.75rem 0 0.75rem;
+  padding-bottom: 10px;
+  border-bottom: 1px solid rgba(30, 64, 175, 0.4);
   display: flex;
   align-items: flex-start;
-  border-bottom: 1px solid rgba(30, 64, 175, 0.4);
+  justify-content: space-between;
+  gap: 16px;
 }
 
-.headerContent {
-  display: flex;
-  flex-direction: column;
-  gap: 0.75rem;
-  width: 100%;
+.headerLeft {
+  flex: 1;
+  min-width: 0;
 }
 
 .storyTitle {
-  margin: 0;
-  font-family: 'Syne', system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+  margin: 0 0 8px;
+  font-family: var(--font-display, 'Syne', system-ui, sans-serif);
   font-weight: 700;
   font-size: 1.4rem;
   letter-spacing: 0.02em;
@@ -156,7 +158,8 @@
 .storyMeta {
   display: flex;
   flex-wrap: wrap;
-  gap: 0.5rem;
+  gap: 6px;
+  align-items: center;
 }
 
 .eraBadge,
@@ -183,325 +186,85 @@
   opacity: 0.9;
 }
 
-/* ============================================================================
-   OBJECTIVE STRIP - COLLAPSIBLE PROGRESSIVE DISCLOSURE
-   ============================================================================ */
-
-.objectiveStrip {
-  position: relative;
-  flex-shrink: 0;
-  padding: var(--spacing-md, 16px);
-  background: var(--bg-surface, #141B2E);
-  border-bottom: 1px solid var(--border-subtle, rgba(148, 163, 184, 0.1));
-  display: flex;
-  flex-direction: column;
-  gap: var(--spacing-md, 16px);
-  transition: var(--transition-normal, all 0.3s cubic-bezier(0.4, 0, 0.2, 1));
-}
-
-/* Compact header (always visible) */
-.objectiveHeader {
-  display: flex;
-  align-items: flex-start;
-  gap: var(--spacing-md, 16px);
-}
-
-.objectiveTextBlock {
-  flex: 1;
-  min-width: 0;
-  display: flex;
-  flex-direction: column;
-  gap: var(--spacing-xs, 4px);
-}
-
-.objectiveLabel {
-  font-size: var(--font-size-caption, 12px);
-  font-family: var(--font-body, 'Inter', system-ui, sans-serif);
-  font-weight: var(--font-weight-semibold, 600);
-  text-transform: uppercase;
-  letter-spacing: 0.05em;
-  color: var(--text-secondary, #94A3B8);
-}
-
-.objectiveText {
-  font-size: var(--font-size-body, 16px);
-  font-family: var(--font-body, 'Inter', system-ui, sans-serif);
-  font-weight: var(--font-weight-medium, 500);
-  line-height: 1.5;
-  color: var(--text-primary, #F1F5F9);
-}
-
-/* Compact progress summary (always visible) */
-.compactProgress {
+/* Compact objective chip (right side of header) */
+.objectiveChip {
   flex-shrink: 0;
   display: flex;
-  align-items: center;
-  gap: var(--spacing-sm, 8px);
-}
-
-.progressBadgeCompact {
-  display: inline-flex;
-  align-items: center;
-  padding: 6px 12px;
-  background: var(--accent-glow, rgba(99, 102, 241, 0.2));
-  border: 1px solid var(--accent-primary, #6366F1);
-  border-radius: var(--border-radius-sm, 8px);
-  font-size: var(--font-size-body-small, 14px);
-  font-family: var(--font-body, 'Inter', system-ui, sans-serif);
-  font-weight: var(--font-weight-bold, 700);
-  color: var(--text-primary, #F1F5F9);
-  letter-spacing: 0.025em;
-  white-space: nowrap;
-}
-
-/* Toggle button */
-.toggleButton {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: var(--spacing-sm, 8px);
-  padding: 8px 16px;
-  background: var(--bg-interactive, #1C2640);
-  border: 1px solid var(--border-medium, rgba(148, 163, 184, 0.2));
-  border-radius: var(--border-radius-sm, 8px);
-  color: var(--text-secondary, #94A3B8);
-  font-size: var(--font-size-body-small, 14px);
-  font-family: var(--font-body, 'Inter', system-ui, sans-serif);
-  font-weight: var(--font-weight-semibold, 600);
-  cursor: pointer;
-  transition: var(--transition-fast, all 0.15s cubic-bezier(0.4, 0, 0.2, 1));
-}
-
-.toggleButton:hover {
-  background: var(--bg-peak, #243152);
-  border-color: var(--accent-primary, #6366F1);
-  color: var(--text-primary, #F1F5F9);
-}
-
-.toggleButton svg {
-  transition: var(--transition-fast, all 0.15s cubic-bezier(0.4, 0, 0.2, 1));
-}
-
-.toggleButton.expanded svg {
-  transform: rotate(180deg);
-}
-
-/* Expandable details section */
-.objectiveDetails {
-  display: flex;
   flex-direction: column;
-  gap: var(--spacing-md, 16px);
-  max-height: 0;
-  overflow: hidden;
-  opacity: 0;
-  transition: max-height 0.3s cubic-bezier(0.4, 0, 0.2, 1), 
-              opacity 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  align-items: flex-end;
+  gap: 6px;
+  max-width: 280px;
 }
 
-.objectiveDetails.expanded {
-  max-height: 600px;
-  opacity: 1;
-}
-
-/* Act information block */
-.objectiveMetaBlock {
-  display: flex;
-  flex-direction: column;
-  gap: var(--spacing-sm, 8px);
-  padding: var(--spacing-md, 16px);
-  background: var(--bg-interactive, #1C2640);
-  border: 1px solid var(--border-subtle, rgba(148, 163, 184, 0.1));
-  border-radius: var(--border-radius-md, 12px);
-}
-
-.actLine {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: var(--spacing-sm, 8px);
-}
-
-.actTitle {
-  font-size: var(--font-size-body-small, 14px);
-  font-family: var(--font-display, 'Syne', sans-serif);
-  font-weight: var(--font-weight-semibold, 600);
-  color: var(--text-primary, #F1F5F9);
-}
-
-.actBadgeMini {
-  display: inline-flex;
-  align-items: center;
-  padding: 2px var(--spacing-sm, 8px);
-  background: var(--bg-surface, #141B2E);
-  border: 1px solid var(--border-medium, rgba(148, 163, 184, 0.2));
-  border-radius: var(--border-radius-sm, 8px);
+.objectiveMiniLabel {
   font-size: 10px;
   font-family: var(--font-body, 'Inter', system-ui, sans-serif);
-  font-weight: var(--font-weight-semibold, 600);
+  font-weight: 600;
   text-transform: uppercase;
-  letter-spacing: 0.05em;
+  letter-spacing: 0.12em;
   color: var(--text-secondary, #94A3B8);
 }
 
-.actSummary {
-  font-size: var(--font-size-body-small, 14px);
+.objectiveSummary {
+  font-size: 12px;
   font-family: var(--font-body, 'Inter', system-ui, sans-serif);
-  line-height: 1.5;
-  color: var(--text-tertiary, #64748B);
-  margin: 0;
-}
-
-.progressTrack {
-  position: relative;
-  width: 100%;
-  height: 6px;
-  background: var(--bg-surface, #141B2E);
-  border: 1px solid var(--border-subtle, rgba(148, 163, 184, 0.1));
-  border-radius: 3px;
-  overflow: hidden;
-}
-
-.progressFill {
-  position: absolute;
-  top: 0;
-  left: 0;
-  height: 100%;
-  background: linear-gradient(90deg, var(--accent-primary, #6366F1), var(--accent-hover, #818CF8));
-  border-radius: 3px;
-  transition: var(--transition-normal, all 0.3s cubic-bezier(0.4, 0, 0.2, 1));
-}
-
-/* Progress metadata row */
-.progressMeta {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  margin-top: var(--spacing-sm, 8px);
-  gap: var(--spacing-sm, 8px);
-}
-
-.progressBadge {
-  display: inline-flex;
-  align-items: center;
-  padding: 2px var(--spacing-sm, 8px);
-  background: var(--accent-glow, rgba(99, 102, 241, 0.2));
-  border: 1px solid var(--accent-primary, #6366F1);
-  border-radius: var(--border-radius-sm, 8px);
-  font-size: var(--font-size-caption, 12px);
-  font-family: var(--font-body, 'Inter', system-ui, sans-serif);
-  font-weight: var(--font-weight-semibold, 600);
+  text-align: right;
   color: var(--text-primary, #F1F5F9);
-  letter-spacing: 0.025em;
+  opacity: 0.9;
+  line-height: 1.4;
+  max-height: 2.8em;
+  overflow: hidden;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
 }
 
-.turnHint {
+.objectiveStatusPill {
   display: inline-flex;
   align-items: center;
-  font-size: var(--font-size-caption, 12px);
+  gap: 8px;
+  padding: 5px 12px;
+  border-radius: 999px;
+  background: rgba(15, 23, 42, 0.95);
+  border: 1px solid rgba(148, 163, 184, 0.6);
+  font-size: 12px;
   font-family: var(--font-body, 'Inter', system-ui, sans-serif);
-  font-weight: var(--font-weight-medium, 500);
-  color: var(--text-secondary, #94A3B8);
+  cursor: pointer;
+  transition: all 0.15s ease;
 }
 
-/* Loading indicator */
-.loadingIndicator {
-  display: flex;
-  align-items: center;
-  gap: var(--spacing-sm, 8px);
-  margin-top: var(--spacing-sm, 8px);
-  padding: var(--spacing-sm, 8px) var(--spacing-md, 16px);
-  background: rgba(59, 130, 246, 0.1);
-  border: 1px solid var(--semantic-info, #3B82F6);
-  border-radius: var(--border-radius-sm, 8px);
-  font-size: var(--font-size-caption, 12px);
-  font-family: var(--font-body, 'Inter', system-ui, sans-serif);
-  color: var(--text-secondary, #94A3B8);
+.objectiveStatusPill:hover {
+  background: rgba(30, 64, 175, 0.9);
+  border-color: var(--accent-primary, #6366F1);
+  transform: translateY(-1px);
 }
 
-.loadingDot {
-  width: 8px;
-  height: 8px;
-  background: var(--semantic-info, #3B82F6);
-  border-radius: var(--border-radius-full, 9999px);
-  animation: pulse 1.5s ease-in-out infinite;
+.objectiveStatusPill span:first-child {
+  font-weight: 600;
+  color: var(--text-primary, #F1F5F9);
 }
 
-@keyframes pulse {
-  0%, 100% {
-    opacity: 1;
-    transform: scale(1);
-  }
-  50% {
-    opacity: 0.5;
-    transform: scale(0.8);
-  }
+.objectivePercentBadge {
+  padding: 2px 8px;
+  border-radius: 999px;
+  background: rgba(99, 102, 241, 0.2);
+  border: 1px solid var(--accent-primary, #6366F1);
+  font-size: 11px;
+  font-weight: 700;
+  color: var(--text-primary, #F1F5F9);
 }
 
 /* ============================================================================
-   RESPONSIVE - MOBILE
+   MAIN CONTENT AREA - MESSAGES + INPUT (ALWAYS FULL WIDTH)
    ============================================================================ */
 
-@media (max-width: 640px) {
-  .objectiveStrip {
-    padding: var(--spacing-sm, 8px) var(--spacing-md, 16px);
-    gap: var(--spacing-sm, 8px);
-  }
-
-  .objectiveHeader {
-    flex-direction: column;
-    gap: var(--spacing-sm, 8px);
-  }
-
-  .objectiveText {
-    font-size: var(--font-size-body-small, 14px);
-  }
-
-  .compactProgress {
-    align-self: flex-start;
-  }
-
-  .progressBadgeCompact {
-    font-size: 13px;
-    padding: 4px 10px;
-  }
-
-  .toggleButton {
-    font-size: 13px;
-    padding: 6px 12px;
-  }
-
-  .actTitle {
-    font-size: 13px;
-  }
-
-  .actBadgeMini {
-    font-size: 9px;
-    padding: 2px 6px;
-  }
-
-  .actSummary {
-    font-size: 13px;
-  }
-
-  .progressMeta {
-    flex-direction: column;
-    align-items: flex-start;
-    gap: var(--spacing-xs, 4px);
-  }
-
-  .progressBadge {
-    font-size: 11px;
-    padding: 2px 6px;
-  }
-
-  .turnHint {
-    font-size: 11px;
-  }
-
-  .loadingIndicator {
-    font-size: 11px;
-    padding: 6px var(--spacing-sm, 8px);
-  }
+.storyMain {
+  position: relative;
+  flex: 1;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+  padding-top: 10px;
 }
 
 /* ========== MESSAGE AREA ========== */
@@ -509,8 +272,9 @@
 .messagesContainer {
   position: relative;
   flex: 1;
-  padding: 0.75rem 0;
-  overflow: hidden;
+  padding: 8px 4px;
+  overflow-y: auto;
+  overflow-x: hidden;
 }
 
 .messageWrapper {
@@ -522,7 +286,7 @@
 
 .userMessage {
   margin-left: auto;
-  max-width: 82%;
+  max-width: 70%;
   display: flex;
   justify-content: flex-end;
   margin-top: 0.25rem;
@@ -559,7 +323,7 @@
   display: flex;
   align-items: flex-start;
   gap: 0.75rem;
-  max-width: 82%;
+  max-width: 70%;
 }
 
 .characterAvatar {
@@ -625,22 +389,6 @@
   }
   51%, 100% {
     opacity: 0;
-  }
-}
-
-/* Mobile tweaks */
-@media (max-width: 768px) {
-  .messageWrapper {
-    padding: 0.25rem 0.15rem;
-  }
-
-  .userMessage,
-  .characterMessage {
-    max-width: 94%;
-  }
-
-  .storyTitle {
-    font-size: 1.2rem;
   }
 }
 
@@ -726,7 +474,7 @@
 .storyInputContainer {
   position: relative;
   flex-shrink: 0;
-  padding: 0.85rem 0 0.5rem;
+  padding-top: 10px;
   z-index: 2;
 }
 
@@ -858,135 +606,15 @@
   flex-shrink: 0;
 }
 
-/* ========== ACCESSIBILITY & REDUCED MOTION ========== */
-
-.sendButton:focus-visible,
-.stopButton:focus-visible,
-.retryButton:focus-visible,
-.textInput:focus-visible,
-.toggleButton:focus-visible {
-  outline: 2px solid #6366f1;
-  outline-offset: 3px;
-}
-
-@media (prefers-reduced-motion: reduce) {
-  .loadingSpinner,
-  .sendingSpinner,
-  .loadingDot {
-    animation-duration: 1.6s;
-  }
-
-  .messageText,
-  .userMessage .messageContent,
-  .toggleButton svg {
-    transition: none;
-  }
-}
 /* ============================================================================
-   OBJECTIVE SUMMARY CHIP (HEADER, COMPACT)
-   ============================================================================ */
-
-.headerContent {
-  display: flex;
-  flex-direction: column;
-  gap: 0.75rem;
-  flex: 1;
-  min-width: 0;
-}
-
-.storyTitle {
-  margin: 0;
-  font-family: 'Syne', system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI',
-    sans-serif;
-  font-weight: 700;
-  font-size: 1.35rem;
-  letter-spacing: 0.02em;
-  color: #f9fafb;
-}
-
-.storyMeta {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 0.5rem;
-}
-
-/* The compact objective section on the right of the header */
-.storyObjectiveChip {
-  flex-shrink: 0;
-  display: flex;
-  flex-direction: column;
-  align-items: flex-end;
-  gap: 0.25rem;
-  max-width: 260px;
-}
-
-.objectiveMini {
-  font-size: 0.7rem;
-  font-family: 'Inter', system-ui, sans-serif;
-  font-weight: 600;
-  text-transform: uppercase;
-  letter-spacing: 0.1em;
-  color: #94a3b8;
-}
-
-.objectiveSummary {
-  font-size: 0.88rem;
-  font-family: 'Inter', system-ui, sans-serif;
-  color: #e5e7eb;
-  opacity: 0.9;
-  text-align: right;
-}
-
-.objectiveSummary span {
-  display: -webkit-box;
-  -webkit-line-clamp: 2;
-  -webkit-box-orient: vertical;
-  overflow: hidden;
-}
-
-.objectiveStatusPill {
-  margin-top: 0.15rem;
-  display: inline-flex;
-  align-items: center;
-  gap: 0.5rem;
-  padding: 0.35rem 0.9rem;
-  border-radius: 999px;
-  background: rgba(15, 23, 42, 0.95);
-  border: 1px solid rgba(148, 163, 184, 0.6);
-  color: #e5e7eb;
-  font-size: 0.78rem;
-  font-family: 'Inter', system-ui, sans-serif;
-  font-weight: 600;
-  cursor: pointer;
-  transition: background 0.15s ease, border-color 0.15s ease,
-    transform 0.15s ease;
-}
-
-.objectiveStatusPill:hover {
-  background: rgba(30, 64, 175, 0.9);
-  border-color: #6366f1;
-  transform: translateY(-1px);
-}
-
-.objectivePercent {
-  padding: 0.15rem 0.55rem;
-  border-radius: 999px;
-  background: rgba(56, 189, 248, 0.16);
-  border: 1px solid rgba(56, 189, 248, 0.9);
-  font-size: 0.75rem;
-  font-weight: 700;
-  color: #e0f2fe;
-}
-
-/* ============================================================================
-   OBJECTIVES PANEL OVERLAY (SLIDE SHEET)
+   OBJECTIVES PANEL - FLOATING OVERLAY
    ============================================================================ */
 
 .objectivesPanel {
   position: absolute;
-  top: 5rem;            /* just under the header band */
-  bottom: 5rem;         /* leave room above the input bar */
-  right: 1.5rem;
+  top: 72px;
+  bottom: 72px;
+  right: 24px;
   width: 360px;
   border-radius: 18px;
   background: radial-gradient(circle at top left, #020617 0%, #020617 80%);
@@ -994,49 +622,110 @@
   box-shadow:
     0 20px 60px rgba(15, 23, 42, 0.95),
     0 0 40px rgba(79, 70, 229, 0.4);
-  padding: 14px 14px 12px;
+  padding: 14px;
   display: flex;
   flex-direction: column;
   opacity: 0;
   transform: translateX(16px);
   pointer-events: none;
   transition: opacity 0.2s ease, transform 0.2s ease;
-  z-index: 20;
+  z-index: 10;
 }
 
-.objectivesPanelOpen {
+.objectivesPanel.open {
   opacity: 1;
   transform: translateX(0);
   pointer-events: auto;
 }
 
-.objectivesPanelHeader {
+/* Panel header */
+.panelHeader {
   display: flex;
   align-items: center;
   justify-content: space-between;
+  margin-bottom: 12px;
+  padding-bottom: 8px;
+  border-bottom: 1px solid rgba(148, 163, 184, 0.2);
+}
+
+.panelTitle {
+  font-size: 13px;
+  font-family: var(--font-body, 'Inter', system-ui, sans-serif);
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.16em;
+  color: var(--text-secondary, #94A3B8);
+}
+
+.panelClose {
+  border: none;
+  background: transparent;
+  color: var(--text-secondary, #94A3B8);
+  cursor: pointer;
+  font-size: 13px;
+  font-family: var(--font-body, 'Inter', system-ui, sans-serif);
+  padding: 4px 8px;
+  border-radius: 6px;
+  transition: all 0.15s ease;
+}
+
+.panelClose:hover {
+  background: rgba(148, 163, 184, 0.1);
+  color: var(--text-primary, #F1F5F9);
+}
+
+/* Main objective section */
+.panelMainObjective {
+  margin-bottom: 16px;
+  font-size: 14px;
+  font-family: var(--font-body, 'Inter', system-ui, sans-serif);
+  line-height: 1.5;
+  color: var(--text-primary, #F1F5F9);
+}
+
+.panelMainObjective strong {
+  display: block;
+  font-size: 12px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: var(--text-secondary, #94A3B8);
+  margin-bottom: 6px;
+}
+
+/* Progress section */
+.panelProgressSection {
+  margin-bottom: 16px;
+  padding: 12px;
+  background: rgba(15, 23, 42, 0.6);
+  border: 1px solid rgba(148, 163, 184, 0.2);
+  border-radius: 12px;
+}
+
+.panelActLine {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
   margin-bottom: 8px;
 }
 
-.objectivesPanelTitle {
-  font-size: 0.75rem;
+.panelActTitle {
+  font-size: 13px;
+  font-family: var(--font-display, 'Syne', sans-serif);
+  font-weight: 600;
+  color: var(--text-primary, #F1F5F9);
+}
+
+.panelActBadge {
+  padding: 2px 8px;
+  border-radius: 6px;
+  background: rgba(15, 23, 42, 0.9);
+  border: 1px solid rgba(148, 163, 184, 0.3);
+  font-size: 10px;
+  font-weight: 600;
   text-transform: uppercase;
-  letter-spacing: 0.16em;
-  color: #94a3b8;
-}
-
-.objectivesPanelClose {
-  border: none;
-  background: transparent;
-  color: #94a3b8;
-  cursor: pointer;
-  font-size: 0.8rem;
-}
-
-.panelObjectiveText {
-  margin-bottom: 10px;
-  font-size: 0.9rem;
-  line-height: 1.6;
-  color: #e5e7eb;
+  letter-spacing: 0.05em;
+  color: var(--text-secondary, #94A3B8);
 }
 
 .panelProgressTrack {
@@ -1046,51 +735,104 @@
   border-radius: 999px;
   background: rgba(15, 23, 42, 0.95);
   overflow: hidden;
-  margin: 4px 0 6px;
+  margin: 8px 0;
 }
 
 .panelProgressFill {
   position: absolute;
   inset: 0;
+  background: linear-gradient(90deg, var(--accent-primary, #6366F1), var(--accent-hover, #818CF8));
   border-radius: inherit;
-  background: linear-gradient(90deg, #6366f1, #22d3ee);
+  transition: width 0.3s ease;
 }
 
 .panelMetaRow {
   display: flex;
-  align-items: center;
   justify-content: space-between;
-  font-size: 0.75rem;
-  color: #94a3b8;
-  margin-bottom: 8px;
+  align-items: center;
+  font-size: 11px;
+  color: var(--text-secondary, #94A3B8);
 }
 
 .panelMetaPill {
   padding: 3px 8px;
-  border-radius: 999px;
-  border: 1px solid rgba(56, 189, 248, 0.9);
-  background: rgba(56, 189, 248, 0.15);
-  color: #e0f2fe;
-  font-size: 0.75rem;
+  border-radius: 6px;
+  border: 1px solid var(--accent-primary, #6366F1);
+  background: rgba(99, 102, 241, 0.15);
+  color: var(--text-primary, #F1F5F9);
+  font-size: 11px;
   font-weight: 600;
 }
 
-.panelMilestonesHeader {
-  font-size: 0.7rem;
+/* Milestones section */
+.milestonesHeader {
+  font-size: 11px;
+  font-family: var(--font-body, 'Inter', system-ui, sans-serif);
+  font-weight: 600;
   text-transform: uppercase;
   letter-spacing: 0.12em;
-  color: #94a3b8;
-  margin-bottom: 4px;
+  color: var(--text-secondary, #94A3B8);
+  margin-bottom: 8px;
 }
 
-.panelMilestonesList {
+.milestonesList {
   flex: 1;
   min-height: 0;
   overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  padding-right: 4px;
 }
 
-/* Mobile: panel becomes a bottom sheet */
+/* ============================================================================
+   MOBILE ADJUSTMENTS
+   ============================================================================ */
+
 @media (max-width: 768px) {
+  .storyWindow {
+    padding: 4px;
+  }
+
+  .storyContainer {
+    border-radius: 0;
+    max-width: none;
+    padding: 16px 12px;
+  }
+
+  .storyContainer::before {
+    inset: 10px 10px 80px;
+  }
+
+  .storyTitle {
+    font-size: 1.2rem;
+  }
+
+  .storyHeader {
+    flex-direction: column;
+    gap: 8px;
+  }
+
+  .objectiveChip {
+    max-width: 100%;
+    width: 100%;
+    align-items: flex-start;
+  }
+
+  .objectiveSummary {
+    text-align: left;
+  }
+
+  .messageWrapper {
+    padding: 0.25rem 0.15rem;
+  }
+
+  .userMessage,
+  .characterMessage {
+    max-width: 94%;
+  }
+
+  /* Panel becomes bottom sheet on mobile */
   .objectivesPanel {
     top: auto;
     left: 0;
@@ -1102,11 +844,36 @@
     transform: translateY(100%);
   }
 
-  .objectivesPanelOpen {
+  .objectivesPanel.open {
     transform: translateY(0);
   }
+}
 
-  .storyObjectiveChip {
-    max-width: 200px;
+/* ========== ACCESSIBILITY & REDUCED MOTION ========== */
+
+.sendButton:focus-visible,
+.stopButton:focus-visible,
+.retryButton:focus-visible,
+.textInput:focus-visible,
+.objectiveStatusPill:focus-visible,
+.panelClose:focus-visible {
+  outline: 2px solid #6366f1;
+  outline-offset: 3px;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .loadingSpinner,
+  .sendingSpinner {
+    animation-duration: 1.6s;
+  }
+
+  .objectivesPanel,
+  .objectiveStatusPill {
+    transition: none;
+  }
+
+  .messageText,
+  .userMessage .messageContent {
+    transition: none;
   }
 }
