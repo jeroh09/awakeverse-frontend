@@ -1,10 +1,15 @@
+// src/components/ScenariosTab/ScenarioChatWindow/ChatInput/index.jsx
+// Updated with mobile keyboard handling
+
 import React, { useState, useRef, useEffect } from 'react';
 import StarterQuestions from './StarterQuestions';
 import { Send } from 'lucide-react';
+import useKeyboardHeight from '../../../../hooks/useKeyboardHeight'; // ✅ NEW IMPORT
 import './ChatInput.css';
 
 /**
  * ChatInput - Input container with starter questions
+ * NOW WITH KEYBOARD HANDLING
  * 
  * @param {Array} starterQuestions - Predefined questions to show as chips
  * @param {Function} onSend - (message: string) => void
@@ -19,6 +24,10 @@ export default function ChatInput({
 }) {
   const [inputText, setInputText] = useState('');
   const textareaRef = useRef(null);
+  const containerRef = useRef(null); // ✅ NEW: Container ref
+  
+  // ✅ NEW: Keyboard detection hook
+  const { keyboardHeight, isKeyboardVisible } = useKeyboardHeight();
 
   // Defensive: Guard against missing onSend
   if (!onSend || typeof onSend !== 'function') {
@@ -41,6 +50,33 @@ export default function ChatInput({
       }
     }
   }, [inputText]);
+
+  // ✅ NEW: Apply keyboard offset to container
+  useEffect(() => {
+    const container = containerRef.current;
+    if (!container) return;
+
+    if (isKeyboardVisible && keyboardHeight > 0) {
+      // Move input above keyboard
+      container.style.transform = `translateY(-${keyboardHeight}px)`;
+      container.style.transition = 'transform 0.3s cubic-bezier(0.4, 0, 0.2, 1)';
+      
+      console.log('⌨️ Keyboard visible, moving input up by', keyboardHeight);
+    } else {
+      // Reset position when keyboard hides
+      container.style.transform = 'translateY(0)';
+      
+      console.log('⌨️ Keyboard hidden, resetting input position');
+    }
+
+    // Cleanup
+    return () => {
+      if (container) {
+        container.style.transform = '';
+        container.style.transition = '';
+      }
+    };
+  }, [keyboardHeight, isKeyboardVisible]);
 
   const handleSend = () => {
     const trimmed = inputText.trim();
@@ -76,11 +112,18 @@ export default function ChatInput({
   console.log('💬 ChatInput rendering:', {
     starterQuestionsCount: starterQuestions.length,
     isSending,
-    hasText: inputText.length > 0
+    hasText: inputText.length > 0,
+    keyboardHeight, // ✅ NEW
+    isKeyboardVisible // ✅ NEW
   });
 
   return (
-    <div className={`chat-input-container theme-${theme}`}>
+    <div 
+      ref={containerRef} // ✅ NEW: Attach container ref
+      className={`chat-input-container theme-${theme}`}
+      // ✅ NEW: Add data attribute for debugging
+      data-keyboard-visible={isKeyboardVisible}
+    >
       {/* Starter Questions Bar */}
       {starterQuestions.length > 0 && (
         <StarterQuestions

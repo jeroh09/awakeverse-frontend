@@ -1,7 +1,10 @@
 // src/components/StoryMode/StoryWindow/StoryInput.jsx
+// Updated with mobile keyboard handling
+
 import React, { useState, useRef, useEffect, useCallback } from 'react';
 import { Send, Square } from 'lucide-react';
 import { getDisplayNameFromKey } from '../../../utils/characterUtils';
+import useKeyboardHeight from '../../../hooks/useKeyboardHeight'; // ✅ NEW IMPORT
 import styles from './StoryWindow.module.css';
 
 /**
@@ -23,6 +26,10 @@ export default function StoryInput({
 }) {
   const [inputText, setInputText] = useState('');
   const textareaRef = useRef(null);
+  const containerRef = useRef(null); // ✅ NEW: Container ref for keyboard handling
+  
+  // ✅ NEW: Keyboard detection hook
+  const { keyboardHeight, isKeyboardVisible } = useKeyboardHeight();
 
   // Derive a friendly placeholder
   const effectivePlaceholder =
@@ -45,6 +52,33 @@ export default function StoryInput({
   useEffect(() => {
     resize();
   }, [inputText, resize]);
+
+  // ✅ NEW: Apply keyboard offset to container
+  useEffect(() => {
+    const container = containerRef.current;
+    if (!container) return;
+
+    if (isKeyboardVisible && keyboardHeight > 0) {
+      // Move input above keyboard
+      container.style.transform = `translateY(-${keyboardHeight}px)`;
+      container.style.transition = 'transform 0.3s cubic-bezier(0.4, 0, 0.2, 1)';
+      
+      console.log('⌨️ StoryInput: Keyboard visible, moving up by', keyboardHeight);
+    } else {
+      // Reset position when keyboard hides
+      container.style.transform = 'translateY(0)';
+      
+      console.log('⌨️ StoryInput: Keyboard hidden, resetting position');
+    }
+
+    // Cleanup
+    return () => {
+      if (container) {
+        container.style.transform = '';
+        container.style.transition = '';
+      }
+    };
+  }, [keyboardHeight, isKeyboardVisible]);
 
   const resetTextarea = () => {
     const ta = textareaRef.current;
@@ -84,7 +118,12 @@ export default function StoryInput({
   };
 
   return (
-    <div className={styles.storyInputContainer}>
+    <div 
+      ref={containerRef} // ✅ NEW: Attach container ref
+      className={styles.storyInputContainer}
+      // ✅ NEW: Add data attribute for debugging
+      data-keyboard-visible={isKeyboardVisible}
+    >
       <div className={styles.inputArea}>
         <textarea
           ref={textareaRef}

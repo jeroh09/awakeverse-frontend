@@ -164,19 +164,23 @@
   height: 40px;
 
   border-radius: 0 999px 999px 0;
-  border: 1px solid rgba(148, 163, 184, 0.6);
+  border: 1px solid rgba(148, 163, 184, 0.4); /* More transparent border */
   border-left: none;
 
-  background:
-    radial-gradient(circle at 0 50%, rgba(129, 140, 248, 0.32), transparent 70%),
-    rgba(15, 23, 42, 0.98);
+  background: rgba(15, 23, 42, 0.85); /* More transparent background */
+  backdrop-filter: blur(8px); /* Add blur effect for glassmorphism */
 
   box-shadow:
-    0 10px 24px rgba(15, 23, 42, 0.9),
-    0 0 0 1px rgba(15, 23, 42, 1);
+    0 6px 16px rgba(15, 23, 42, 0.6), /* Lighter shadow */
+    0 0 0 1px rgba(15, 23, 42, 0.8);
 
   cursor: pointer;
-  transition: transform 0.25s ease-out, border-color 0.18s ease-out;
+  transition: all 0.25s ease-out;
+}
+
+.sidebarHandle:hover {
+  background: rgba(15, 23, 42, 0.92); /* Slightly more opaque on hover */
+  border-color: rgba(148, 163, 184, 0.6);
 }
 
 .handleBar {
@@ -184,6 +188,7 @@
   height: 2px;
   background-image: linear-gradient(to right, #6366f1, #818cf8);
   border-radius: 999px;
+  opacity: 0.9; /* Slightly transparent bars */
 }
 
 .handleBar + .handleBar {
@@ -192,6 +197,42 @@
 
 .sidebarHandleOpen {
   transform: translateX(var(--sidebar-width));
+  background: rgba(15, 23, 42, 0.95); /* More visible when sidebar is open */
+}
+
+/* ============================================
+   MOBILE OPTIMIZATIONS
+   ============================================ */
+
+@media (max-width: 768px) {
+  .sidebarHandle {
+    background: rgba(15, 23, 42, 0.75); /* Even more transparent on mobile */
+    backdrop-filter: blur(12px); /* Stronger blur on mobile */
+    border: 1px solid rgba(148, 163, 184, 0.3);
+    border-left: none;
+    box-shadow:
+      0 4px 12px rgba(15, 23, 42, 0.4),
+      0 0 0 1px rgba(15, 23, 42, 0.6);
+  }
+
+  .sidebarHandle:hover {
+    background: rgba(15, 23, 42, 0.85);
+  }
+
+  .handleBar {
+    opacity: 0.8; /* Even more transparent on mobile */
+  }
+}
+
+/* For very small screens */
+@media (max-width: 480px) {
+  .sidebarHandle {
+    top: 0.7rem;
+    left: 0.5rem;
+    width: 28px;
+    height: 36px;
+    background: rgba(15, 23, 42, 0.7); /* Maximum transparency */
+  }
 }
 
 /* ============================================
