@@ -153,6 +153,95 @@ const PublicCharacterPage = () => {
             {character.is_market_featured && (
               <div className={styles.featuredBadge}>⭐ Featured</div>
             )}
+            
+            {/* IP Certification Badge */}
+            {character.ip_certified && (
+              <div className={styles.ipCertSection}>
+                <div className={styles.ipBadge}>
+                  <span className={styles.badgeIcon}>🔒</span>
+                  <span className={styles.badgeText}>IP Certified</span>
+                </div>
+                {character.ip_certified_date && (
+                  <div className={styles.ipDetails}>
+                    <span className={styles.certDate}>
+                      Certified: {new Date(character.ip_certified_date).toLocaleDateString()}
+                    </span>
+                    <a 
+                      href={`/api/ip-certificates/download/${character.character_key}`}
+                      className={styles.downloadCertLink}
+                      download
+                    >
+                      Download Certificate
+                    </a>
+                  </div>
+                )}
+              </div>
+            )}
+
+            {/* Social Sharing Section */}
+            <div className={styles.socialShare}>
+              <span className={styles.shareLabel}>Share:</span>
+              {/* Twitter */}
+              <a 
+                href={`https://twitter.com/intent/tweet?text=Check out ${encodeURIComponent(character.display_name)} on AwakeVerse - IP certified AI character!&url=https://www.awakeverse.com/c/${character.character_key}`}
+                target="_blank"
+                rel="noopener noreferrer"
+                className={styles.socialButton}
+                title="Share on Twitter"
+              >
+                <TwitterIcon />
+              </a>
+              {/* Facebook */}
+              <a 
+                href={`https://www.facebook.com/sharer/sharer.php?u=https://www.awakeverse.com/c/${character.character_key}`}
+                target="_blank"
+                rel="noopener noreferrer"
+                className={styles.socialButton}
+                title="Share on Facebook"
+              >
+                <FacebookIcon />
+              </a>
+              {/* LinkedIn */}
+              <a 
+                href={`https://www.linkedin.com/sharing/share-offsite/?url=https://www.awakeverse.com/c/${character.character_key}`}
+                target="_blank"
+                rel="noopener noreferrer"
+                className={styles.socialButton}
+                title="Share on LinkedIn"
+              >
+                <LinkedInIcon />
+              </a>
+              {/* Reddit */}
+              <a 
+                href={`https://www.reddit.com/submit?url=https://www.awakeverse.com/c/${character.character_key}&title=${encodeURIComponent(character.display_name + ' - IP Certified AI Character on AwakeVerse')}`}
+                target="_blank"
+                rel="noopener noreferrer"
+                className={styles.socialButton}
+                title="Share on Reddit"
+              >
+                <RedditIcon />
+              </a>
+              {/* Discord */}
+              <a 
+                href={`https://discord.com/channels/@me?text=${encodeURIComponent(`Check out ${character.display_name} - an IP certified AI character on AwakeVerse: https://www.awakeverse.com/c/${character.character_key}`)}`}
+                target="_blank"
+                rel="noopener noreferrer"
+                className={styles.socialButton}
+                title="Share on Discord"
+              >
+                <DiscordIcon />
+              </a>
+              {/* Instagram */}
+              <a 
+                href={`https://www.instagram.com/?url=https://www.awakeverse.com/c/${character.character_key}`}
+                target="_blank"
+                rel="noopener noreferrer"
+                className={styles.socialButton}
+                title="Share on Instagram"
+              >
+                <InstagramIcon />
+              </a>
+            </div>
           </div>
 
           {/* Character Info */}

@@ -480,3 +480,103 @@
     margin-left: 0;
   }
 }
+/* IP Certification Badge */
+.ipCertSection {
+  margin-top: 1.5rem;
+  padding: 1rem 0;
+  border-top: 1px solid rgba(99, 102, 241, 0.15);
+  display: flex;
+  flex-direction: column;
+  gap: 0.8rem;
+}
+
+.ipBadge {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.6rem 1.2rem;
+  background: rgba(99, 102, 241, 0.15);
+  border: 1px solid rgba(99, 102, 241, 0.4);
+  border-radius: 12px;
+  width: fit-content;
+}
+
+.badgeIcon {
+  font-size: 1rem;
+}
+
+.badgeText {
+  color: #6366F1;
+  font-weight: 600;
+  font-size: 0.9rem;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.ipDetails {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  font-size: 0.85rem;
+}
+
+.certDate {
+  color: rgba(255, 255, 255, 0.6);
+}
+
+.downloadCertLink {
+  color: #818CF8;
+  text-decoration: none;
+  font-weight: 600;
+  transition: color 0.3s ease;
+}
+
+.downloadCertLink:hover {
+  color: #6366F1;
+  text-decoration: underline;
+}
+
+/* Social Sharing */
+.socialShare {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  margin-top: 1rem;
+  padding: 1rem 0;
+  border-top: 1px solid rgba(99, 102, 241, 0.1);
+}
+
+.shareLabel {
+  color: rgba(255, 255, 255, 0.7);
+  font-size: 0.9rem;
+  font-weight: 600;
+}
+
+.socialButton {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 40px;
+  height: 40px;
+  background: rgba(99, 102, 241, 0.1);
+  border: 1px solid rgba(99, 102, 241, 0.3);
+  border-radius: 50%;
+  transition: all 0.3s ease;
+  color: #6366F1;
+}
+
+.socialButton:hover {
+  background: rgba(99, 102, 241, 0.2);
+  border-color: #6366F1;
+  transform: translateY(-2px);
+}
+
+@media (max-width: 768px) {
+  .ipCertSection {
+    align-items: flex-start;
+  }
+  
+  .socialShare {
+    flex-wrap: wrap;
+  }
+}
