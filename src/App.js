@@ -29,6 +29,8 @@ import PaymentCancelled from './components/PaymentCancelled'; // Add this import
 import ErrorBoundary from './components/ErrorBoundary';
 import PublicCharacterPage from './pages/PublicCharacterPage';
 import PublicScenarioPage from './pages/PublicScenarioPage';
+import CreatorsCharterPage from './pages/CreatorsCharterPage';
+
 import './styles.css';
 
 // NEW: Wrapper component for protected routes that need view context
@@ -125,6 +127,8 @@ export default function App() {
       />
 
       {/* NOTE: No separate /hub route - all navigation happens within /app using view state */}
+      <Route path="/creators-charter" element={<CreatorsCharterPage />} />
+
 
       {/* Contact us */}
       <Route path="/contact-us" element={<ContactUs />} />
