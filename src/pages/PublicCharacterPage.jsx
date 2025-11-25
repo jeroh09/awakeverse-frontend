@@ -7,6 +7,14 @@ import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { useUser } from '../contexts/UserContext';
 import styles from './PublicCharacterPage.module.css';
+import { 
+  TwitterIcon, 
+  FacebookIcon, 
+  LinkedInIcon, 
+  RedditIcon, 
+  DiscordIcon, 
+  InstagramIcon 
+} from '../components/SocialIcons'; // Adjust the path as needed
 
 const PublicCharacterPage = () => {
   const { characterId } = useParams();
@@ -153,7 +161,7 @@ const PublicCharacterPage = () => {
             {character.is_market_featured && (
               <div className={styles.featuredBadge}>⭐ Featured</div>
             )}
-            
+
             {/* IP Certification Badge */}
             {character.ip_certified && (
               <div className={styles.ipCertSection}>
