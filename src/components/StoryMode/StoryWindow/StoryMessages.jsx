@@ -8,10 +8,11 @@ import {
   getCharacterThumbnailUrl,
   isCustomCharacterKey
 } from '../../../utils/characterUtils';
+import usePremiumCharacters from '../../../hooks/usePremiumCharacters'; // ADDED
 import styles from './StoryWindow.module.css';
 
-// Character lookup with graceful fallback to shared utils
-const getCharacterInfo = (charKey) => {
+// Character lookup with graceful fallback to shared utils - UPDATED
+const getCharacterInfo = (charKey, userCharacters = []) => {
   if (!charKey) {
     return {
       name: 'Assistant',
@@ -19,26 +20,39 @@ const getCharacterInfo = (charKey) => {
     };
   }
 
-  // 1) Try static character metadata first
+  // 1) Check for custom characters first - NEW LOGIC
+  const isCustom = isCustomCharacterKey(charKey);
+  if (isCustom) {
+    const customChar = userCharacters.find(c => c.character_key === charKey);
+    if (customChar) {
+      return {
+        name: customChar.display_name,
+        thumbnailUrl: customChar.avatar_url, // Use custom avatar URL
+        isCustom: true
+      };
+    }
+  }
+
+  // 2) Try static character metadata first
   for (const category of characterCategories) {
     const found = category.characters?.find((c) => c.key === charKey);
     if (found) {
       return {
         name: found.name,
-        thumbnailUrl:
-          found.thumbnailUrl || getCharacterThumbnailUrl(charKey, false)
+        thumbnailUrl: found.thumbnailUrl || getCharacterThumbnailUrl(charKey, false),
+        isCustom: false
       };
     }
   }
 
-  // 2) Fallback: use shared helpers (handles custom `user_45_imhotep` keys)
+  // 3) Fallback: use shared helpers (handles custom `user_45_imhotep` keys)
   const name = getDisplayNameFromKey(charKey);
   const thumbnailUrl = getCharacterThumbnailUrl(
     charKey,
     isCustomCharacterKey(charKey)
   );
 
-  return { name, thumbnailUrl };
+  return { name, thumbnailUrl, isCustom: isCustomCharacterKey(charKey) };
 };
 
 /**
@@ -51,7 +65,7 @@ const getCharacterInfo = (charKey) => {
  * - characterKey: string (fallback for assistant avatar/name)
  * - openingBanner?: string  // optional: shown when messages.length === 0
  */
-function MessageItem({ message, characterKey, style, onSizeChange }) {
+function MessageItem({ message, characterKey, userCharacters, style, onSizeChange }) {
   const containerRef = useRef(null);
 
   // Observe height and report to virtual list
@@ -97,7 +111,7 @@ function MessageItem({ message, characterKey, style, onSizeChange }) {
   // assistant / character
   const speakerKey =
     message.character_key || message.speaker || characterKey || 'assistant';
-  const { name: speakerName, thumbnailUrl } = getCharacterInfo(speakerKey);
+  const { name: speakerName, thumbnailUrl } = getCharacterInfo(speakerKey, userCharacters);
 
   return (
     <div style={style}>
@@ -140,6 +154,7 @@ export default function StoryMessages({
   characterKey,
   openingBanner
 }) {
+  const { userCharacters = [] } = usePremiumCharacters(); // ADDED HOOK
   const listRef = useRef(null);
   const sizeMapRef = useRef({});
 
@@ -211,6 +226,7 @@ export default function StoryMessages({
                 <MessageItem
                   message={message}
                   characterKey={characterKey}
+                  userCharacters={userCharacters} // PASS USER CHARACTERS
                   style={style}
                   onSizeChange={(h) => setItemSize(index, h)}
                 />

@@ -6,12 +6,13 @@ import {
   getCharacterThumbnailUrl,
   isCustomCharacterKey
 } from '../../../utils/characterUtils';
+import usePremiumCharacters from '../../../hooks/usePremiumCharacters'; // ADDED
 import styles from './MyStoriesPanel.module.css';
 
 const API_BASE = process.env.REACT_APP_API_URL || 'https://api.awakeverse.com';
 
-// Helper: resolve character name + thumbnail, with custom key support
-const getCharacterInfo = (charKey) => {
+// Helper: resolve character name + thumbnail, with custom key support - UPDATED
+const getCharacterInfo = (charKey, userCharacters = []) => {
   if (!charKey) {
     return {
       name: 'Your Character',
@@ -19,26 +20,39 @@ const getCharacterInfo = (charKey) => {
     };
   }
 
-  // 1) Try static character definitions
+  // 1) Check for custom characters first - NEW LOGIC
+  const isCustom = isCustomCharacterKey(charKey);
+  if (isCustom) {
+    const customChar = userCharacters.find(c => c.character_key === charKey);
+    if (customChar) {
+      return {
+        name: customChar.display_name,
+        thumbnailUrl: customChar.avatar_url, // Use custom avatar URL
+        isCustom: true
+      };
+    }
+  }
+
+  // 2) Try static character definitions
   for (const category of characterCategories) {
     const found = category.characters?.find((c) => c.key === charKey);
     if (found) {
       return {
         name: found.name,
-        thumbnailUrl:
-          found.thumbnailUrl || getCharacterThumbnailUrl(charKey, false)
+        thumbnailUrl: found.thumbnailUrl || getCharacterThumbnailUrl(charKey, false),
+        isCustom: false
       };
     }
   }
 
-  // 2) Fallback: use shared utils (handles user_45_imhotep, etc.)
+  // 3) Fallback: use shared utils (handles user_45_imhotep, etc.)
   const name = getDisplayNameFromKey(charKey);
   const thumbnailUrl = getCharacterThumbnailUrl(
     charKey,
     isCustomCharacterKey(charKey)
   );
 
-  return { name, thumbnailUrl };
+  return { name, thumbnailUrl, isCustom: isCustomCharacterKey(charKey) };
 };
 
 export default function StoryCard({
@@ -48,6 +62,8 @@ export default function StoryCard({
   onResume = () => {},
   isDeleting = false
 }) {
+  const { userCharacters = [] } = usePremiumCharacters(); // ADDED HOOK
+
   const handleOpen = () => {
     onOpen(story);
   };
@@ -124,7 +140,7 @@ export default function StoryCard({
 
   const characterKey = story.main_character_key || null;
   const { name: characterName, thumbnailUrl } = characterKey
-    ? getCharacterInfo(characterKey)
+    ? getCharacterInfo(characterKey, userCharacters) // UPDATED: pass userCharacters
     : { name: 'Your Character', thumbnailUrl: null };
 
   const eraBadgeColor = getEraBadgeColor(story.era);
@@ -134,7 +150,7 @@ export default function StoryCard({
   let cardImageUrl = null;
 
   if (scenicUrl) {
-    // You’re storing paths like /story-scenes/xxx.jpg in DB
+    // You're storing paths like /story-scenes/xxx.jpg in DB
     cardImageUrl = scenicUrl.startsWith('http') ? scenicUrl : scenicUrl;
   }
 

@@ -1,6 +1,12 @@
-// src/components/StoryMode/StoryWindow/index.jsx - STEP 3: Persistence + Keyboard Shortcuts
+// src/components/StoryMode/StoryWindow/index.jsx - STEP 3: Persistence + Keyboard Shortcuts + CUSTOM CHARACTER AVATARS
 import React, { useState, useEffect, useRef } from 'react';
 import { characterCategories } from '../../../data/characterCategories';
+import {
+  getDisplayNameFromKey,
+  getCharacterThumbnailUrl,
+  isCustomCharacterKey
+} from '../../../utils/characterUtils';
+import usePremiumCharacters from '../../../hooks/usePremiumCharacters'; // ADDED
 import StoryMessages from './StoryMessages';
 import StoryInput from './StoryInput';
 import useStoryApi from '../../../hooks/useStoryApi';
@@ -8,19 +14,52 @@ import MilestoneChips from './MilestoneChips';
 import StoryHomeButton from './StoryHomeButton';
 import styles from './StoryWindow.module.css';
 
-// Helper: map char key → name/thumbnail
-const getCharacterInfo = (charKey) => {
+// Helper: map char key → name/thumbnail - UPDATED WITH CUSTOM CHARACTER SUPPORT
+const getCharacterInfo = (charKey, userCharacters = []) => {
+  if (!charKey) {
+    return {
+      name: 'Unknown Character',
+      thumbnailUrl: null
+    };
+  }
+
+  // 1) Check for custom characters first - NEW LOGIC
+  const isCustom = isCustomCharacterKey(charKey);
+  if (isCustom) {
+    const customChar = userCharacters.find(c => c.character_key === charKey);
+    if (customChar) {
+      return {
+        name: customChar.display_name,
+        thumbnailUrl: customChar.avatar_url, // Use custom avatar URL
+        isCustom: true
+      };
+    }
+  }
+
+  // 2) Try static character definitions
   for (const category of characterCategories) {
     const found = category.characters?.find((c) => c.key === charKey);
-    if (found) return { name: found.name, thumbnailUrl: found.thumbnailUrl };
+    if (found) {
+      return {
+        name: found.name,
+        thumbnailUrl: found.thumbnailUrl || getCharacterThumbnailUrl(charKey, false),
+        isCustom: false
+      };
+    }
   }
-  // graceful fallback
-  const pretty =
-    (charKey || '')
-      .replace(/[_-]+/g, ' ')
-      .replace(/\b\w/g, (c) => c.toUpperCase()) || 'Unknown Character';
 
-  return { name: pretty, thumbnailUrl: null };
+  // 3) Graceful fallback - use the imported utility function
+  const name = getDisplayNameFromKey(charKey);
+  const thumbnailUrl = getCharacterThumbnailUrl(
+    charKey,
+    isCustomCharacterKey(charKey)
+  );
+
+  return { 
+    name, 
+    thumbnailUrl,
+    isCustom: isCustomCharacterKey(charKey)
+  };
 };
 
 // Helper: format era display name
@@ -40,11 +79,6 @@ const formatEra = (era) => {
   };
   const key = String(era || '').toLowerCase().trim();
   return map[key] || era;
-};
-
-// Helper: get character display name
-const getDisplayNameFromKey = (charKey) => {
-  return getCharacterInfo(charKey).name;
 };
 
 // Small helper for act labels
@@ -85,6 +119,7 @@ export default function StoryWindow({ story, onClose }) {
   });
 
   const abortRef = useRef(null);
+  const { userCharacters = [] } = usePremiumCharacters(); // ADDED HOOK
 
   const {
     sendMessage,
@@ -325,6 +360,9 @@ export default function StoryWindow({ story, onClose }) {
   // Turn count
   const turns = story?.total_turns || 0;
 
+  // Character display name with custom character support - FIXED: Use getCharacterInfo
+  const characterDisplayName = getCharacterInfo(story?.main_character_key, userCharacters).name;
+
   // ============================================================================
   // LOADING & ERROR STATES
   // ============================================================================
@@ -386,7 +424,7 @@ export default function StoryWindow({ story, onClose }) {
                 </span>
 
                 <span className={styles.characterBadge}>
-                  <span>👤</span> {getDisplayNameFromKey(story?.main_character_key)}
+                  <span>👤</span> {characterDisplayName} {/* UPDATED: Uses custom character name */}
                 </span>
 
                 {Number.isFinite?.(story?.current_act) && (
@@ -431,7 +469,7 @@ export default function StoryWindow({ story, onClose }) {
               messages={messages}
               characterKey={story?.main_character_key}
               openingBanner={openingBanner}
-              getCharacterInfo={getCharacterInfo}
+              userCharacters={userCharacters} // PASS USER CHARACTERS FOR CUSTOM AVATARS
             />
 
             {/* Non-fatal error banner */}
