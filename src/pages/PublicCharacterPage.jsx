@@ -1,4 +1,4 @@
-// PublicCharacterPage.jsx - UPDATED WITH NEW CARD DESIGN
+// PublicCharacterPage.jsx - UPDATED WITH ALL SOCIAL ICONS
 // Location: src/pages/PublicCharacterPage.jsx
 // Public character profile page for shared links
 
@@ -152,7 +152,7 @@ const PublicCharacterPage = () => {
               }}
             />
             
-            {/* Visual Overlay with Social Icons */}
+            {/* Visual Overlay with ALL Social Icons */}
             <div className={styles.visualOverlay}>
               <a 
                 href={`https://twitter.com/intent/tweet?text=Check out ${encodeURIComponent(character.display_name)} on AwakeVerse - IP certified AI character!&url=https://www.awakeverse.com/c/${character.character_key}`}
@@ -180,6 +180,33 @@ const PublicCharacterPage = () => {
                 title="Share on Facebook"
               >
                 f
+              </a>
+              <a 
+                href={`https://www.reddit.com/submit?url=https://www.awakeverse.com/c/${character.character_key}&title=${encodeURIComponent(character.display_name + ' - IP Certified AI Character on AwakeVerse')}`}
+                target="_blank"
+                rel="noopener noreferrer"
+                className={styles.socialIcon}
+                title="Share on Reddit"
+              >
+                <RedditIcon />
+              </a>
+              <a 
+                href={`https://discord.com/channels/@me?text=${encodeURIComponent(`Check out ${character.display_name} - an IP certified AI character on AwakeVerse: https://www.awakeverse.com/c/${character.character_key}`)}`}
+                target="_blank"
+                rel="noopener noreferrer"
+                className={styles.socialIcon}
+                title="Share on Discord"
+              >
+                <DiscordIcon />
+              </a>
+              <a 
+                href={`https://www.instagram.com/?url=https://www.awakeverse.com/c/${character.character_key}`}
+                target="_blank"
+                rel="noopener noreferrer"
+                className={styles.socialIcon}
+                title="Share on Instagram"
+              >
+                <InstagramIcon />
               </a>
             </div>
           </div>
@@ -294,6 +321,33 @@ const PublicCharacterPage = () => {
                 title="Share on LinkedIn"
               >
                 <LinkedInIcon />
+              </a>
+              <a 
+                href={`https://www.reddit.com/submit?url=https://www.awakeverse.com/c/${character.character_key}&title=${encodeURIComponent(character.display_name + ' - IP Certified AI Character on AwakeVerse')}`}
+                target="_blank"
+                rel="noopener noreferrer"
+                className={styles.socialButton}
+                title="Share on Reddit"
+              >
+                <RedditIcon />
+              </a>
+              <a 
+                href={`https://discord.com/channels/@me?text=${encodeURIComponent(`Check out ${character.display_name} - an IP certified AI character on AwakeVerse: https://www.awakeverse.com/c/${character.character_key}`)}`}
+                target="_blank"
+                rel="noopener noreferrer"
+                className={styles.socialButton}
+                title="Share on Discord"
+              >
+                <DiscordIcon />
+              </a>
+              <a 
+                href={`https://www.instagram.com/?url=https://www.awakeverse.com/c/${character.character_key}`}
+                target="_blank"
+                rel="noopener noreferrer"
+                className={styles.socialButton}
+                title="Share on Instagram"
+              >
+                <InstagramIcon />
               </a>
             </div>
           </div>

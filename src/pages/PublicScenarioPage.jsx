@@ -1,6 +1,5 @@
-// PublicScenarioPage.jsx - UPDATED WITH CARD DESIGN
+// PublicScenarioPage.jsx - UPDATED WITH FIRST PARTICIPANT AVATAR
 // Location: src/pages/PublicScenarioPage.jsx
-// Public scenario profile page for shared links
 
 import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
@@ -8,6 +7,14 @@ import { useUser } from '../contexts/UserContext';
 import { characterCategories } from '../data/characterCategories';
 import { isCustomCharacterKey, getDisplayNameFromKey } from '../utils/characterUtils';
 import styles from './PublicScenarioPage.module.css';
+import { 
+  TwitterIcon, 
+  FacebookIcon, 
+  LinkedInIcon, 
+  RedditIcon, 
+  DiscordIcon, 
+  InstagramIcon 
+} from '../components/SocialIcons';
 
 const PublicScenarioPage = () => {
   const { scenarioId } = useParams();
@@ -102,6 +109,18 @@ const PublicScenarioPage = () => {
     }
   };
 
+  // Get first participant for the main visual
+  const getFirstParticipant = () => {
+    if (!scenario?.character_keys || !Array.isArray(scenario.character_keys) || scenario.character_keys.length === 0) {
+      return {
+        name: 'Unknown Character',
+        thumbnailUrl: '/images/default-character.jpg',
+        isCustom: false
+      };
+    }
+    return getCharacterInfo(scenario.character_keys[0]);
+  };
+
   const handleStartDebate = () => {
     if (!scenario || !scenarioId) {
       console.error('Scenario data incomplete');
@@ -162,6 +181,8 @@ const PublicScenarioPage = () => {
     return null;
   }
 
+  const firstParticipant = getFirstParticipant();
+
   return (
     <div className={styles.publicScenarioPage}>
       {/* Header with branding */}
@@ -185,15 +206,78 @@ const PublicScenarioPage = () => {
       <div className={styles.cardContainer}>
         <article className={styles.scenarioCard}>
           
-          {/* Card Visual Section */}
+          {/* Card Visual Section - Using First Participant Avatar */}
           <div className={styles.cardVisual}>
-            <div className={styles.scenarioIcon}>🎭</div>
+            <img
+              src={firstParticipant.thumbnailUrl}
+              alt={firstParticipant.name}
+              className={styles.characterImg}
+              onError={(e) => {
+                e.target.src = '/images/default-character.jpg';
+              }}
+            />
             
-            {/* Visual Overlay with Social Icons */}
+            {/* Scenario Badge Overlay */}
+            <div className={styles.scenarioBadge}>
+              🎭 Scenario
+            </div>
+            
+            {/* Visual Overlay with ALL Social Icons */}
             <div className={styles.visualOverlay}>
-              <div className={styles.socialIcon}>𝕏</div>
-              <div className={styles.socialIcon}>in</div>
-              <div className={styles.socialIcon}>f</div>
+              <a 
+                href={`https://twitter.com/intent/tweet?text=Check out "${encodeURIComponent(scenario.title)}" scenario on AwakeVerse!&url=https://www.awakeverse.com/s/${scenarioId}`}
+                target="_blank"
+                rel="noopener noreferrer"
+                className={styles.socialIcon}
+                title="Share on Twitter"
+              >
+                𝕏
+              </a>
+              <a 
+                href={`https://www.linkedin.com/sharing/share-offsite/?url=https://www.awakeverse.com/s/${scenarioId}`}
+                target="_blank"
+                rel="noopener noreferrer"
+                className={styles.socialIcon}
+                title="Share on LinkedIn"
+              >
+                in
+              </a>
+              <a 
+                href={`https://www.facebook.com/sharer/sharer.php?u=https://www.awakeverse.com/s/${scenarioId}`}
+                target="_blank"
+                rel="noopener noreferrer"
+                className={styles.socialIcon}
+                title="Share on Facebook"
+              >
+                f
+              </a>
+              <a 
+                href={`https://www.reddit.com/submit?url=https://www.awakeverse.com/s/${scenarioId}&title=${encodeURIComponent(scenario.title + ' - AI Debate Scenario on AwakeVerse')}`}
+                target="_blank"
+                rel="noopener noreferrer"
+                className={styles.socialIcon}
+                title="Share on Reddit"
+              >
+                <RedditIcon />
+              </a>
+              <a 
+                href={`https://discord.com/channels/@me?text=${encodeURIComponent(`Check out "${scenario.title}" - an AI debate scenario on AwakeVerse: https://www.awakeverse.com/s/${scenarioId}`)}`}
+                target="_blank"
+                rel="noopener noreferrer"
+                className={styles.socialIcon}
+                title="Share on Discord"
+              >
+                <DiscordIcon />
+              </a>
+              <a 
+                href={`https://www.instagram.com/?url=https://www.awakeverse.com/s/${scenarioId}`}
+                target="_blank"
+                rel="noopener noreferrer"
+                className={styles.socialIcon}
+                title="Share on Instagram"
+              >
+                <InstagramIcon />
+              </a>
             </div>
           </div>
 
