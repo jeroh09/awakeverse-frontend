@@ -415,7 +415,7 @@ const CreatorsCharterPage = () => {
                 <span className={styles.bonusAmount}>£20 BONUS</span>
               </div>
               <p className={styles.bonusText}>
-                Limited offer: £20 bonus for first 100 certified characters
+                Limited offer: £20 bonus for first 500 certified characters
               </p>
               <button 
                 className={styles.infoButton}

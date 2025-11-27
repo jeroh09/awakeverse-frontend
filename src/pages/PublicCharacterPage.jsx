@@ -1,7 +1,6 @@
-// PublicCharacterPage.jsx
+// PublicCharacterPage.jsx - UPDATED WITH NEW CARD DESIGN
 // Location: src/pages/PublicCharacterPage.jsx
 // Public character profile page for shared links
-// UPDATED: Using CSS Modules for proper style scoping
 
 import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
@@ -14,7 +13,7 @@ import {
   RedditIcon, 
   DiscordIcon, 
   InstagramIcon 
-} from '../components/SocialIcons'; // Adjust the path as needed
+} from '../components/SocialIcons';
 
 const PublicCharacterPage = () => {
   const { characterId } = useParams();
@@ -46,7 +45,6 @@ const PublicCharacterPage = () => {
 
       const data = await response.json();
       
-      // DEFENSIVE: Validate response structure
       if (data.status === 'success' && data.data) {
         setCharacter(data.data);
       } else {
@@ -61,17 +59,14 @@ const PublicCharacterPage = () => {
   };
 
   const handleStartChat = () => {
-    // DEFENSIVE: Ensure character exists and has character_key
     if (!character || !character.character_key) {
       console.error('Character data incomplete');
       return;
     }
 
     if (user) {
-      // User is logged in - go to chat
       navigate(`/chat/${character.character_key}`);
     } else {
-      // User not logged in - redirect to register with return URL
       navigate(`/register?redirect=/chat/${character.character_key}`);
     }
   };
@@ -81,7 +76,6 @@ const PublicCharacterPage = () => {
   };
 
   const formatNumber = (num) => {
-    // DEFENSIVE: Handle invalid inputs
     if (typeof num !== 'number' || isNaN(num)) return '0';
     
     if (num >= 1000000) return `${(num / 1000000).toFixed(1)}M`;
@@ -89,7 +83,6 @@ const PublicCharacterPage = () => {
     return num.toString();
   };
 
-  // DEFENSIVE: Safe access to nested engagement data
   const getEngagementValue = (field) => {
     try {
       return character?.engagement_30d?.[field] || 0;
@@ -121,7 +114,6 @@ const PublicCharacterPage = () => {
     );
   }
 
-  // DEFENSIVE: Don't render if no character data
   if (!character) {
     return null;
   }
@@ -145,51 +137,137 @@ const PublicCharacterPage = () => {
         )}
       </header>
 
-      {/* Character Profile Section */}
-      <div className={styles.characterProfile}>
-        <div className={styles.profileContent}>
-          {/* Avatar */}
-          <div className={styles.avatarSection}>
+      {/* NEW CARD DESIGN IMPLEMENTATION */}
+      <div className={styles.cardContainer}>
+        <article className={styles.characterCard}>
+          
+          {/* Card Visual Section */}
+          <div className={styles.cardVisual}>
             <img
               src={character.avatar_url || '/images/default-character.jpg'}
               alt={character.display_name || 'Character'}
-              className={styles.characterAvatar}
+              className={styles.characterImg}
               onError={(e) => {
                 e.target.src = '/images/default-character.jpg';
               }}
             />
-            {character.is_market_featured && (
-              <div className={styles.featuredBadge}>⭐ Featured</div>
-            )}
+            
+            {/* Visual Overlay with Social Icons */}
+            <div className={styles.visualOverlay}>
+              <a 
+                href={`https://twitter.com/intent/tweet?text=Check out ${encodeURIComponent(character.display_name)} on AwakeVerse - IP certified AI character!&url=https://www.awakeverse.com/c/${character.character_key}`}
+                target="_blank"
+                rel="noopener noreferrer"
+                className={styles.socialIcon}
+                title="Share on Twitter"
+              >
+                𝕏
+              </a>
+              <a 
+                href={`https://www.linkedin.com/sharing/share-offsite/?url=https://www.awakeverse.com/c/${character.character_key}`}
+                target="_blank"
+                rel="noopener noreferrer"
+                className={styles.socialIcon}
+                title="Share on LinkedIn"
+              >
+                in
+              </a>
+              <a 
+                href={`https://www.facebook.com/sharer/sharer.php?u=https://www.awakeverse.com/c/${character.character_key}`}
+                target="_blank"
+                rel="noopener noreferrer"
+                className={styles.socialIcon}
+                title="Share on Facebook"
+              >
+                f
+              </a>
+            </div>
+          </div>
 
-            {/* IP Certification Badge */}
+          {/* Card Content Section */}
+          <div className={styles.cardContent}>
+            
+            {/* IP Badge */}
             {character.ip_certified && (
-              <div className={styles.ipCertSection}>
-                <div className={styles.ipBadge}>
-                  <span className={styles.badgeIcon}>🔒</span>
-                  <span className={styles.badgeText}>IP Certified</span>
-                </div>
-                {character.ip_certified_date && (
-                  <div className={styles.ipDetails}>
-                    <span className={styles.certDate}>
-                      Certified: {new Date(character.ip_certified_date).toLocaleDateString()}
-                    </span>
-                    <a 
-                      href={`/api/ip-certificates/download/${character.character_key}`}
-                      className={styles.downloadCertLink}
-                      download
-                    >
-                      Download Certificate
-                    </a>
-                  </div>
-                )}
+              <div className={styles.ipBadge}>
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor">
+                  <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 15l-5-5 1.41-1.41L10 14.17l7.59-7.59L19 8l-9 9z"/>
+                </svg>
+                <span>IP Certified</span>
               </div>
             )}
 
-            {/* Social Sharing Section */}
+            {/* Header Section */}
+            <div className={styles.headerSection}>
+              <h1 className={styles.characterName}>
+                {character.display_name || 'Unknown Character'}
+              </h1>
+              <div className={styles.metaTags}>
+                {character.historical_period && (
+                  <span className={styles.metaTag}>{character.historical_period}</span>
+                )}
+                {character.personality_archetype && (
+                  <>
+                    <span style={{ color: 'var(--text-tertiary)' }}>•</span>
+                    <span className={styles.metaTag}>{character.personality_archetype}</span>
+                  </>
+                )}
+                {character.expertise_domain && (
+                  <>
+                    <span style={{ color: 'var(--text-tertiary)' }}>•</span>
+                    <span className={styles.metaTag}>{character.expertise_domain}</span>
+                  </>
+                )}
+              </div>
+            </div>
+
+            {/* Bio/Description */}
+            <p className={styles.bio}>
+              {character.short_description || character.description || 'No description available'}
+            </p>
+
+            {/* Stats Row */}
+            <div className={styles.statsRow}>
+              <div className={styles.statItem}>
+                <span className={styles.statValue}>
+                  {formatNumber(getEngagementValue('total_views'))}
+                </span>
+                <span className={styles.statLabel}>Views</span>
+              </div>
+              <div className={styles.statItem}>
+                <span className={styles.statValue}>
+                  {formatNumber(getEngagementValue('total_chats'))}
+                </span>
+                <span className={styles.statLabel}>Chats</span>
+              </div>
+              <div className={styles.statItem}>
+                <span className={styles.statValue}>
+                  {formatNumber(getEngagementValue('average_rating') || 4.9)}
+                </span>
+                <span className={styles.statLabel}>Rating</span>
+              </div>
+            </div>
+
+            {/* Action Buttons */}
+            <div className={styles.actionRow}>
+              <button onClick={handleStartChat} className={`${styles.btn} ${styles.btnPrimary}`}>
+                {user ? 'Start Chatting' : 'Sign Up to Chat'}
+              </button>
+              <button onClick={handleExploreMore} className={`${styles.btn} ${styles.btnGhost}`}>
+                Explore More
+              </button>
+            </div>
+
+            {/* Creator Info */}
+            {character.creator && (
+              <div className={styles.creatorLine}>
+                Created by <span>{character.creator.display_name || 'Anonymous'}</span>
+              </div>
+            )}
+
+            {/* Additional Social Sharing */}
             <div className={styles.socialShare}>
-              <span className={styles.shareLabel}>Share:</span>
-              {/* Twitter */}
+              <span className={styles.shareLabel}>Share on:</span>
               <a 
                 href={`https://twitter.com/intent/tweet?text=Check out ${encodeURIComponent(character.display_name)} on AwakeVerse - IP certified AI character!&url=https://www.awakeverse.com/c/${character.character_key}`}
                 target="_blank"
@@ -199,7 +277,6 @@ const PublicCharacterPage = () => {
               >
                 <TwitterIcon />
               </a>
-              {/* Facebook */}
               <a 
                 href={`https://www.facebook.com/sharer/sharer.php?u=https://www.awakeverse.com/c/${character.character_key}`}
                 target="_blank"
@@ -209,7 +286,6 @@ const PublicCharacterPage = () => {
               >
                 <FacebookIcon />
               </a>
-              {/* LinkedIn */}
               <a 
                 href={`https://www.linkedin.com/sharing/share-offsite/?url=https://www.awakeverse.com/c/${character.character_key}`}
                 target="_blank"
@@ -219,121 +295,9 @@ const PublicCharacterPage = () => {
               >
                 <LinkedInIcon />
               </a>
-              {/* Reddit */}
-              <a 
-                href={`https://www.reddit.com/submit?url=https://www.awakeverse.com/c/${character.character_key}&title=${encodeURIComponent(character.display_name + ' - IP Certified AI Character on AwakeVerse')}`}
-                target="_blank"
-                rel="noopener noreferrer"
-                className={styles.socialButton}
-                title="Share on Reddit"
-              >
-                <RedditIcon />
-              </a>
-              {/* Discord */}
-              <a 
-                href={`https://discord.com/channels/@me?text=${encodeURIComponent(`Check out ${character.display_name} - an IP certified AI character on AwakeVerse: https://www.awakeverse.com/c/${character.character_key}`)}`}
-                target="_blank"
-                rel="noopener noreferrer"
-                className={styles.socialButton}
-                title="Share on Discord"
-              >
-                <DiscordIcon />
-              </a>
-              {/* Instagram */}
-              <a 
-                href={`https://www.instagram.com/?url=https://www.awakeverse.com/c/${character.character_key}`}
-                target="_blank"
-                rel="noopener noreferrer"
-                className={styles.socialButton}
-                title="Share on Instagram"
-              >
-                <InstagramIcon />
-              </a>
             </div>
           </div>
-
-          {/* Character Info */}
-          <div className={styles.infoSection}>
-            <h1 className={styles.characterName}>
-              {character.display_name || 'Unknown Character'}
-            </h1>
-            
-            {character.expertise_domain && (
-              <div className={styles.domainBadge}>{character.expertise_domain}</div>
-            )}
-
-            <p className={styles.characterDescription}>
-              {character.short_description || 'No description available'}
-            </p>
-
-            {/* Character Details */}
-            <div className={styles.characterDetails}>
-              {character.historical_period && (
-                <div className={styles.detailItem}>
-                  <span className={styles.detailLabel}>Period:</span>
-                  <span className={styles.detailValue}>{character.historical_period}</span>
-                </div>
-              )}
-              {character.personality_archetype && (
-                <div className={styles.detailItem}>
-                  <span className={styles.detailLabel}>Archetype:</span>
-                  <span className={styles.detailValue}>{character.personality_archetype}</span>
-                </div>
-              )}
-            </div>
-
-            {/* Creator Info */}
-            {character.creator && (
-              <div className={styles.creatorInfo}>
-                <span className={styles.createdBy}>Created by </span>
-                <span className={styles.creatorName}>
-                  {character.creator.display_name || 'Anonymous'}
-                </span>
-                <span className={styles.creatorLevel}>
-                  • {character.creator.creator_level || 'creator'}
-                </span>
-              </div>
-            )}
-
-            {/* Engagement Stats */}
-            <div className={styles.engagementStats}>
-              <div className={styles.stat}>
-                <span className={styles.statValue}>
-                  {formatNumber(getEngagementValue('total_views'))}
-                </span>
-                <span className={styles.statLabel}>Views</span>
-              </div>
-              <div className={styles.stat}>
-                <span className={styles.statValue}>
-                  {formatNumber(getEngagementValue('total_likes'))}
-                </span>
-                <span className={styles.statLabel}>Likes</span>
-              </div>
-              <div className={styles.stat}>
-                <span className={styles.statValue}>
-                  {formatNumber(getEngagementValue('total_chats'))}
-                </span>
-                <span className={styles.statLabel}>Chats</span>
-              </div>
-              <div className={styles.stat}>
-                <span className={styles.statValue}>
-                  {formatNumber(getEngagementValue('unique_users'))}
-                </span>
-                <span className={styles.statLabel}>Users</span>
-              </div>
-            </div>
-
-            {/* Call to Action */}
-            <div className={styles.ctaSection}>
-              <button onClick={handleStartChat} className={styles.startChatBtn}>
-                {user ? '💬 Start Chatting' : '🚀 Sign Up to Chat'}
-              </button>
-              <button onClick={handleExploreMore} className={styles.exploreBtn}>
-                Explore More Characters
-              </button>
-            </div>
-          </div>
-        </div>
+        </article>
       </div>
 
       {/* Footer */}
