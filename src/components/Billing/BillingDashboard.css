@@ -1095,3 +1095,28 @@
     width: 100%;
   }
 }
+/* Add to BillingDashboard.css - NEW CLASSES */
+
+/* Payment options within upgrade cards */
+.payment-options {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  margin-top: 1rem;
+}
+
+/* Adjust upgrade button for dual payment options */
+.upgrade-card .upgrade-button {
+  margin-top: 0;
+}
+
+.upgrade-card .upgrade-button.secondary {
+  background: rgba(99, 102, 241, 0.08);
+  border-color: rgba(99, 102, 241, 0.3);
+  color: var(--accent-primary, #6366F1);
+}
+
+.upgrade-card .upgrade-button.secondary:hover {
+  background: rgba(99, 102, 241, 0.12);
+  border-color: rgba(99, 102, 241, 0.5);
+}

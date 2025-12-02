@@ -1,18 +1,16 @@
-// src/components/Billing/BillingDashboard.jsx - UPDATED
+// src/components/Billing/BillingDashboard.jsx - FIXED
 import React, { useState, useEffect, useCallback } from 'react';
 import { useUser } from '../../contexts/UserContext';
-import api from '../../api';
 import { 
   CreditCard, Calendar, TrendingUp, Download, 
   AlertCircle, CheckCircle, XCircle, 
   RefreshCw, Receipt, Shield, Zap,
-  ChevronRight, Eye, DollarSign, Clock,
-  Crown, Sparkles, ArrowUpRight
+  Clock, Crown, Sparkles, ArrowUpRight
 } from 'lucide-react';
 
 // Custom hook from your provided useBilling.js
 import useBilling from '../../hooks/useBilling';
-import PaymentRouter from '../../services/PaymentRouter'; // <-- ADD THIS
+import PaymentRouter from '../../services/PaymentRouter';
 import './BillingDashboard.css';
 
 const BillingDashboard = () => {
@@ -115,7 +113,7 @@ const BillingDashboard = () => {
     }
   };
 
-  // Other handlers remain the same
+  // Other handlers
   const handleUpdatePayment = async () => {
     try {
       const result = await billing.getPaymentUpdateUrl();
@@ -290,7 +288,7 @@ const BillingDashboard = () => {
             <div className="usage-stats">
               <div className="stat-card">
                 <div className="stat-icon">
-                  <DollarSign size={20} />
+                  <TrendingUp size={20} />
                 </div>
                 <div className="stat-value">
                   {currentTier === 'free' ? '£0' :
@@ -302,7 +300,7 @@ const BillingDashboard = () => {
               
               <div className="stat-card">
                 <div className="stat-icon">
-                  <TrendingUp size={20} />
+                  <CreditCard size={20} />
                 </div>
                 <div className="stat-value">
                   {subscription?.messages_used?.toLocaleString() || '0'}
@@ -312,7 +310,7 @@ const BillingDashboard = () => {
               
               <div className="stat-card">
                 <div className="stat-icon">
-                  <Eye size={20} />
+                  <Shield size={20} />
                 </div>
                 <div className="stat-value">
                   {isUnlimited ? 'Unlimited' : 
@@ -476,7 +474,7 @@ const BillingDashboard = () => {
                                 onClick={() => handleViewReceipt(txn.transaction_id)}
                                 className="receipt-button"
                               >
-                                <Eye size={14} />
+                                <Download size={14} />
                                 View
                               </button>
                             )}
