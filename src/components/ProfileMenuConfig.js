@@ -1,4 +1,4 @@
-// src/components/ProfileMenuConfig.js - UPDATED
+// src/components/ProfileMenuConfig.js - FIXED VERSION
 import {
   LogIn,
   UserPlus,
@@ -7,9 +7,7 @@ import {
   Mail,
   Moon,
   LogOut,
-  CreditCard, // <-- Add this import
-  Crown,      // <-- Optional: for pro badge in icon
-  Zap         // <-- Optional: for unlimited tier
+  CreditCard, // Standard billing icon
 } from 'lucide-react';
 
 export const defaultProfileMenu = [
@@ -18,28 +16,23 @@ export const defaultProfileMenu = [
 
   { type: 'separator' },
 
-  // Billing link - only for logged-in users
+  // FIXED: Icon is now always CreditCard component, label changes dynamically
   { 
     type: 'link',   
     label: (darkMode, user) => {
       // Dynamic label based on subscription tier
       const tier = user?.subscription_tier || 'free';
       if (tier === 'free') return 'Billing';
-      if (tier === 'starter') return 'Billing (Starter)';
-      if (tier === 'pro') return 'Billing • Pro';
-      if (tier === 'unlimited') return 'Billing • Unlimited';
+      if (tier === 'starter') return 'Billing • Explorer';
+      if (tier === 'pro') return 'Billing • Creator';
+      if (tier === 'unlimited') return 'Billing • Professional';
       return 'Billing';
     },          
     to: '/billing',       
-    icon: (darkMode, user) => {
-      // Dynamic icon based on subscription tier
-      const tier = user?.subscription_tier || 'free';
-      if (tier === 'pro') return Crown;        // Crown for Pro
-      if (tier === 'unlimited') return Zap;    // Zap for Unlimited
-      return CreditCard;                       // CreditCard for Free/Starter
-    },   
+    icon: CreditCard,  // ✅ FIXED: Always a component, not a function
     visible: user => !!user  // Only show for logged-in users
   },
+  
   { type: 'link',   label: 'Profile Settings', to: '/settings',       icon: Settings,   visible: user => !!user },
   { type: 'link',   label: 'Upload Avatar',    to: '/upload-avatar', icon: ImagePlus, visible: user => !!user },
 
