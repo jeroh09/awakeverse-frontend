@@ -27,17 +27,17 @@ const substantialStyles = {
   // TYPOGRAPHY
   typography: {
     heading: {
-      color: '#F5F5DC',
-      fontFamily: "'Playfair Display', serif",
+      color: theme.colors.text.primary, // #F1F5F9
+      fontFamily: theme.typography.fonts.display, // 'Syne', sans-serif
       textShadow: '0 2px 4px rgba(0, 0, 0, 0.5)'
     },
     body: {
-      color: 'rgba(245, 245, 220, 0.9)',
-      fontFamily: "'Georgia', serif"
+      color: theme.colors.text.secondary, // #94A3B8
+      fontFamily: theme.typography.fonts.body // 'Inter', sans-serif
     },
     subtle: {
-      color: '#C0C0C0',
-      fontFamily: "'Georgia', serif"
+      color: theme.colors.text.tertiary, // #64748B
+      fontFamily: theme.typography.fonts.body // 'Inter', sans-serif
     }
   },
 

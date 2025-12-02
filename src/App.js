@@ -30,6 +30,8 @@ import ErrorBoundary from './components/ErrorBoundary';
 import PublicCharacterPage from './pages/PublicCharacterPage';
 import PublicScenarioPage from './pages/PublicScenarioPage';
 import CreatorsCharterPage from './pages/CreatorsCharterPage';
+import BillingDashboard from './components/Billing/BillingDashboard';
+
 
 import './styles.css';
 
@@ -122,6 +124,16 @@ export default function App() {
         element={
           <ProtectedRoute>
             <UploadAvatar />
+          </ProtectedRoute>
+        }
+      />
+
+      {/* billingsss */}
+      <Route
+        path="/billing"
+        element={
+          <ProtectedRoute>
+            <BillingDashboard />
           </ProtectedRoute>
         }
       />

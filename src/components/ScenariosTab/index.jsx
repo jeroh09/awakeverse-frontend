@@ -347,7 +347,7 @@ const ScenariosUpgradeRequired = ({ onLearnMore, onUpgradeWithStripe, onUpgradeW
       </div>
 
       <div className="upgrade-footer">
-        <p>⭐ <strong>14-day money-back guarantee</strong> · Cancel anytime</p>
+        <p>⭐ <strong>Secure payments</strong> · Cancel anytime</p>
       </div>
     </div>
   </div>
@@ -456,7 +456,7 @@ const EducationalUpgradeModal = ({ isOpen, onClose, onUpgradeWithStripe, onUpgra
         </div>
 
         <div className="educational-footer">
-          <p>⭐ <strong>14-day money-back guarantee</strong> · Cancel anytime</p>
+          <p>⭐ <strong>Payment secured by Stripe.Paypal</strong> · Cancel anytime</p>
         </div>
       </div>
     </div>
