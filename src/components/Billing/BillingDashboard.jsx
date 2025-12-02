@@ -29,7 +29,7 @@ const BillingDashboard = () => {
   const showDebug = window.location.search.includes('debug=true');
   
   // Core state
-  const [loading, setLoading] = useState(true);
+  const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
   const [subscription, setSubscription] = useState(null);
   const [transactions, setTransactions] = useState([]);
