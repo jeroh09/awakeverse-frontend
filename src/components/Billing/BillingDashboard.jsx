@@ -1,10 +1,11 @@
-// src/components/Billing/BillingDashboard.jsx - PRODUCTION READY v1.1
+// src/components/Billing/BillingDashboard.jsx - PRODUCTION READY v1.2
 // Complete billing & subscription management dashboard
-// Includes: Provider selection, pagination, cancel flow, error handling, responsive design
+// Includes: Debug panel integration, clean production code
 
 import React, { useState, useEffect, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useUser } from '../../contexts/UserContext';
+import BillingDebugPanel from './BillingDebugPanel';
 import { 
   CreditCard, Calendar, TrendingUp, Download, 
   AlertCircle, CheckCircle, XCircle, 
@@ -18,31 +19,14 @@ import PaymentRouter from '../../services/PaymentRouter';
 import './BillingDashboard.css';
 
 // ============================================================================
-// DEBUGGING UTILITIES (Production-safe)
-// ============================================================================
-
-const DEBUG_MODE = process.env.NODE_ENV === 'development';
-
-const debugLog = (label, data) => {
-  if (DEBUG_MODE) {
-    console.log(`🔍 [BillingDashboard] ${label}:`, data);
-  }
-  // Always log errors to console.error for production debugging
-  if (label.includes('ERROR') || label.includes('FAILED')) {
-    console.error(`❌ [BillingDashboard] ${label}:`, data);
-  }
-};
-
-// ============================================================================
 // MAIN COMPONENT
 // ============================================================================
 
 const BillingDashboard = () => {
-  debugLog('🎬 COMPONENT RENDERING START');
-  
   const navigate = useNavigate();
   const { user } = useUser();
   const billing = useBilling();
+  const showDebug = window.location.search.includes('debug=true');
   
   // Core state
   const [loading, setLoading] = useState(true);
@@ -74,26 +58,22 @@ const BillingDashboard = () => {
   // ============================================================================
   
   const loadBillingData = useCallback(async () => {
-    debugLog('🔄 loadBillingData CALLED', { user: user?.id, loading });
+    if (!user) {
+      navigate('/login');
+      return;
+    }
     
     // DEFENSIVE: Prevent multiple simultaneous fetches
-    if (loading && !DEBUG_MODE) {
-      debugLog('⏸️ Already loading, skipping...', {});
+    if (loading) {
       return;
     }
     
     try {
       setLoading(true);
       setError(null);
-      debugLog('📡 Starting API requests', { user: user?.id });
       
       // Load subscription details and upgrade options
       const detailsResult = await billing.fetchBillingDetails();
-      debugLog('📋 Subscription details result', { 
-        success: detailsResult.success,
-        hasSubscription: !!detailsResult.subscription,
-        fallbackMode: detailsResult.fallback_mode 
-      });
       
       if (detailsResult.success) {
         setSubscription(detailsResult.subscription);
@@ -103,33 +83,17 @@ const BillingDashboard = () => {
       } else {
         // Fallback mode - show degraded UI
         setSubscription(detailsResult.subscription);
-        debugLog('⚠️ Using fallback subscription data', detailsResult.subscription);
       }
       
       // Load transaction history
       const historyResult = await billing.fetchBillingHistory({ limit: transactionLimit });
-      debugLog('📜 Transaction history result', { 
-        success: historyResult.success,
-        count: historyResult.count || 0,
-        fallbackMode: historyResult.fallback_mode 
-      });
       
       if (historyResult.success) {
         setTransactions(historyResult.history || []);
-      } else {
-        debugLog('⚠️ Failed to load transaction history', historyResult.error);
-        // Continue without transaction history - non-critical
       }
-      
-      debugLog('✅ Data loading completed successfully', {
-        subscriptionSet: !!subscription,
-        transactionsCount: transactions.length,
-        upgradeOptionsCount: upgradeOptions.length
-      });
       
     } catch (err) {
       const errorMsg = err.message || 'Failed to load billing information';
-      debugLog('❌ Error loading billing data', { error: errorMsg, stack: err.stack });
       setError(errorMsg);
       
       // Set minimal fallback data for UI
@@ -144,44 +108,23 @@ const BillingDashboard = () => {
         billing_cycle_end: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString()
       };
       
-      debugLog('🔄 Setting fallback subscription', fallbackSubscription);
       setSubscription(fallbackSubscription);
       setTransactions([]);
       setUpgradeOptions([]);
       
     } finally {
-      debugLog('🏁 Loading complete, setting loading to false');
       setLoading(false);
     }
-  }, [user, billing, transactionLimit]); // Removed loading from dependencies
+  }, [user, billing, transactionLimit, navigate]);
 
   // ============================================================================
   // USE EFFECT - INITIAL LOAD
   // ============================================================================
   
   useEffect(() => {
-    debugLog('🚀 BillingDashboard MOUNTED - useEffect running', { 
-      userId: user?.id,
-      timestamp: new Date().toISOString() 
-    });
-    
-    // Store debug info globally for troubleshooting
-    window._billingDashboardDebug = {
-      mountedAt: new Date().toISOString(),
-      userId: user?.id,
-      userEmail: user?.email,
-      component: 'BillingDashboard',
-      version: '1.1'
-    };
-    
     loadBillingData();
-    
-    // Cleanup function
-    return () => {
-      debugLog('🧹 BillingDashboard UNMOUNTING', {});
-    };
-  }, []); // Empty dependency array - run once on mount
-  
+  }, []);
+
   // ============================================================================
   // LOAD MORE TRANSACTIONS
   // ============================================================================
@@ -191,20 +134,15 @@ const BillingDashboard = () => {
     
     try {
       setLoadingMore(true);
-      debugLog('📥 Loading more transactions', { currentLimit: transactionLimit });
-      
       const newLimit = Math.min(transactionLimit + 50, 200);
-      const historyResult = await billing.fetchBillingHistory({ limit: newLimit });
       
+      const historyResult = await billing.fetchBillingHistory({ limit: newLimit });
       if (historyResult.success) {
         setTransactions(historyResult.history || []);
         setTransactionLimit(newLimit);
-        debugLog('✅ Loaded more transactions', { newLimit, count: historyResult.history?.length });
-      } else {
-        debugLog('⚠️ Failed to load more transactions', historyResult.error);
       }
     } catch (err) {
-      debugLog('❌ Error loading more transactions', err);
+      // Silently fail for load more
     } finally {
       setLoadingMore(false);
     }
@@ -215,8 +153,6 @@ const BillingDashboard = () => {
   // ============================================================================
 
   const handleUpgrade = async (tierName) => {
-    debugLog('⬆️ Upgrade initiated', { tier: tierName, provider: selectedProvider });
-    
     try {
       await PaymentRouter.redirectToCheckout({
         tier: tierName,
@@ -227,9 +163,7 @@ const BillingDashboard = () => {
           upgrade_date: new Date().toISOString()
         }
       });
-      debugLog('✅ Upgrade redirect successful', { tier: tierName });
     } catch (error) {
-      debugLog('❌ Payment redirect failed', error);
       alert(`Unable to redirect to ${selectedProvider === 'stripe' ? 'Stripe' : 'PayPal'} payment page. Please try again or contact support.`);
     }
   };
@@ -237,32 +171,20 @@ const BillingDashboard = () => {
   const handleUpdatePayment = async () => {
     if (updatingPayment) return;
     
-    debugLog('💳 Update payment initiated', {});
-    
     try {
       setUpdatingPayment(true);
       const result = await billing.getPaymentUpdateUrl();
       
-      debugLog('💳 Update payment result', { 
-        success: result.success,
-        hasUrl: !!result.update_url,
-        externalUpdate: result.external_update 
-      });
-      
       if (result.success) {
         if (result.external_update) {
-          debugLog('🌐 Redirecting to external payment portal', { url: result.update_url });
           window.location.href = result.update_url;
         } else {
-          debugLog('ℹ️ Internal payment update', { message: result.message });
           alert(result.message || 'Please use your payment provider\'s dashboard to update payment methods.');
         }
       } else {
-        debugLog('❌ Update payment failed', result.error);
         alert(result.error || 'Unable to update payment method at this time.');
       }
     } catch (error) {
-      debugLog('❌ Update payment error', error);
       alert('Unable to process payment update request. Please try again or contact support.');
     } finally {
       setUpdatingPayment(false);
@@ -274,7 +196,6 @@ const BillingDashboard = () => {
   // ============================================================================
 
   const handleOpenCancelModal = () => {
-    debugLog('🗑️ Opening cancel modal', { subscriptionTier: subscription?.tier_name });
     setCancelReason('');
     setCancelFeedback('');
     setCancelImmediate(false);
@@ -283,7 +204,6 @@ const BillingDashboard = () => {
   };
 
   const handleCloseCancelModal = () => {
-    debugLog('❌ Closing cancel modal', {});
     setShowCancelModal(false);
     setCancelling(false);
     setCancelReason('');
@@ -297,8 +217,6 @@ const BillingDashboard = () => {
       return;
     }
     
-    debugLog('✅ Confirm cancellation', { reason: cancelReason, immediate: cancelImmediate });
-    
     try {
       setCancelling(true);
       
@@ -308,28 +226,19 @@ const BillingDashboard = () => {
         immediate: cancelImmediate
       });
       
-      debugLog('📊 Cancel subscription result', { 
-        success: result.success,
-        action: result.action,
-        cancelledTier: result.cancelled_tier 
-      });
-      
       if (result.success) {
         setCancelSuccess(result);
         
         // Reload billing data after 2 seconds
         setTimeout(() => {
-          debugLog('🔄 Reloading billing data after cancellation');
           handleCloseCancelModal();
           loadBillingData();
         }, 3000);
       } else {
-        debugLog('❌ Cancel subscription failed', result.error);
         alert(result.error || 'Failed to cancel subscription. Please try again or contact support.');
         setCancelling(false);
       }
     } catch (error) {
-      debugLog('❌ Cancel subscription error', error);
       alert('Unable to process cancellation request. Please try again or contact support.');
       setCancelling(false);
     }
@@ -340,9 +249,9 @@ const BillingDashboard = () => {
   // ============================================================================
 
   if (loading) {
-    debugLog('⏳ Rendering loading state', {});
     return (
       <div className="billing-container">
+        {showDebug && <BillingDebugPanel user={user} billing={billing} />}
         <div className="billing-header">
           <button onClick={() => navigate(-1)} className="back-button">
             <ArrowLeft size={18} />
@@ -353,7 +262,6 @@ const BillingDashboard = () => {
           <div className="loading-state">
             <RefreshCw size={48} className="loading-spinner" />
             <p>Loading billing information...</p>
-            <p className="loading-subtext">This may take a moment</p>
           </div>
         </div>
       </div>
@@ -365,9 +273,9 @@ const BillingDashboard = () => {
   // ============================================================================
 
   if (error && !subscription) {
-    debugLog('🚨 Rendering error state', { error });
     return (
       <div className="billing-container">
+        {showDebug && <BillingDebugPanel user={user} billing={billing} />}
         <div className="billing-header">
           <button onClick={() => navigate(-1)} className="back-button">
             <ArrowLeft size={18} />
@@ -383,9 +291,6 @@ const BillingDashboard = () => {
               <RefreshCw size={18} />
               Try Again
             </button>
-            <p className="error-help">
-              If this persists, please contact support@awakeverse.com
-            </p>
           </div>
         </div>
       </div>
@@ -395,13 +300,6 @@ const BillingDashboard = () => {
   // ============================================================================
   // MAIN RENDER
   // ============================================================================
-
-  debugLog('🎨 Rendering main dashboard', {
-    hasSubscription: !!subscription,
-    isFree: subscription?.tier_name === 'free',
-    transactionCount: transactions.length,
-    upgradeOptionsCount: upgradeOptions.length
-  });
   
   const isFree = subscription?.tier_name === 'free';
   const isActive = subscription?.status === 'active';
@@ -410,6 +308,8 @@ const BillingDashboard = () => {
 
   return (
     <div className="billing-container">
+      {showDebug && <BillingDebugPanel user={user} billing={billing} />}
+      
       {/* Header */}
       <div className="billing-header">
         <div className="header-content">
