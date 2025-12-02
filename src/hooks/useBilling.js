@@ -4,6 +4,9 @@
 
 import { useState, useCallback, useEffect } from 'react';
 
+// API base URL configuration (matches useStoryApi.js pattern)
+const API_BASE = process.env.REACT_APP_API_URL || 'https://api.awakeverse.com';
+
 /**
  * Custom hook for billing operations
  * 
@@ -104,7 +107,7 @@ const useBilling = () => {
         params.append('environment', environment);
       }
 
-      const data = await apiRequest(`/api/billing/history?${params.toString()}`);
+      const data = await apiRequest(`${API_BASE}/api/billing/history?${params.toString()}`);
       
       if (data.success) {
         setBillingHistory(data.history || []);
@@ -144,7 +147,7 @@ const useBilling = () => {
     setError(null);
 
     try {
-      const data = await apiRequest('/api/billing/details');
+      const data = await apiRequest(`${API_BASE}/api/billing/details`);
       
       if (data.success) {
         setSubscriptionDetails(data.subscription);
@@ -202,7 +205,7 @@ const useBilling = () => {
     setError(null);
 
     try {
-      const data = await apiRequest('/api/billing/cancel', {
+      const data = await apiRequest(`${API_BASE}/api/billing/cancel`, {
         method: 'POST',
         body: JSON.stringify({
           reason,
@@ -250,7 +253,7 @@ const useBilling = () => {
     setError(null);
 
     try {
-      const data = await apiRequest('/api/billing/update-payment');
+      const data = await apiRequest(`${API_BASE}/api/billing/update-payment`);
       
       if (data.success) {
         return {
@@ -283,7 +286,7 @@ const useBilling = () => {
   
   const getReceiptUrl = useCallback((transactionId) => {
     // Returns URL for opening receipt in new tab/iframe
-    return `/api/billing/receipts/${transactionId}`;
+    return `${API_BASE}/api/billing/receipts/${transactionId}`;
   }, []);
 
   // ============================================================================
