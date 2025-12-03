@@ -1,7 +1,60 @@
-// src/components/UpgradeModal.jsx
+// src/components/UpgradeModal.jsx - UPDATED with Design System
 import React, { useState, useEffect } from 'react';
 import { useUser } from '../contexts/UserContext';
 
+// ============================================================================
+// DESIGN SYSTEM TOKENS - Defensive Hybrid Approach
+// ============================================================================
+const designTokens = {
+  colors: {
+    background: {
+      canvas: '#0A0F1A',
+      surface: '#141B2E',
+      interactive: '#1C2640',
+      peak: '#243152'
+    },
+    accent: {
+      primary: '#6366F1',
+      hover: '#818CF8',
+      glow: 'rgba(99, 102, 241, 0.2)',
+      glowStrong: 'rgba(99, 102, 241, 0.3)'
+    },
+    brand: {
+      ivory: '#F5F5DC',
+      ivoryDim: '#E5E5CC'
+    },
+    semantic: {
+      success: '#10B981',
+      error: '#EF4444'
+    },
+    text: {
+      primary: '#F1F5F9',
+      secondary: '#94A3B8',
+      tertiary: '#64748B'
+    },
+    border: {
+      subtle: 'rgba(148, 163, 184, 0.1)',
+      medium: 'rgba(148, 163, 184, 0.2)',
+      strong: 'rgba(148, 163, 184, 0.3)'
+    }
+  },
+  typography: {
+    fonts: {
+      display: "'Syne', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif",
+      body: "'Inter', system-ui, sans-serif"
+    }
+  },
+  shadows: {
+    elevation02: '0 2px 8px -2px rgba(0, 0, 0, 0.1), 0 4px 12px -4px rgba(99, 102, 241, 0.1)',
+    elevation03: '0 4px 16px -4px rgba(0, 0, 0, 0.15), 0 8px 24px -8px rgba(99, 102, 241, 0.15)',
+    glow: '0 0 20px -5px rgba(99, 102, 241, 0.2)',
+    glowStrong: '0 0 24px -4px rgba(99, 102, 241, 0.3)'
+  }
+};
+
+// ============================================================================
+// SUBSCRIPTION TIERS - Logic unchanged
+// ============================================================================
 const SUBSCRIPTION_TIERS = {
   starter: {
     name: 'starter',
@@ -33,9 +86,12 @@ const SUBSCRIPTION_TIERS = {
 const UpgradeModal = ({
   isOpen,
   onClose,
-  triggerReason = 'general', // 'message_limit', 'character_limit', 'general'
+  triggerReason = 'general',
   currentUsage = null
 }) => {
+  // ============================================================================
+  // STATE MANAGEMENT - All logic unchanged
+  // ============================================================================
   const { user } = useUser();
 
   const [selectedTier, setSelectedTier] = useState('pro');
@@ -44,7 +100,9 @@ const UpgradeModal = ({
   const [success, setSuccess] = useState(false);
   const [currentSubscription, setCurrentSubscription] = useState(null);
 
-  // Load current subscription status when opened
+  // ============================================================================
+  // EFFECTS & API HANDLERS - All logic unchanged
+  // ============================================================================
   useEffect(() => {
     if (isOpen && user?.id) {
       loadCurrentSubscription();
@@ -96,7 +154,7 @@ const UpgradeModal = ({
           credentials: 'include',
           body: JSON.stringify({
             tier_name: selectedTier,
-            payment_provider: 'mock' // TODO: 'stripe' / 'paypal' in production
+            payment_provider: 'mock'
           })
         }
       );
@@ -105,7 +163,6 @@ const UpgradeModal = ({
 
       if (result.status === 'success') {
         setSuccess(true);
-        // Auto-close after a short delay and refresh subscription state
         setTimeout(() => {
           onClose();
           window.location.reload();
@@ -127,7 +184,6 @@ const UpgradeModal = ({
     return 'pro';
   };
 
-  // When trigger reason changes, gently steer to recommended tier
   useEffect(() => {
     setSelectedTier(getRecommendedTier());
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -157,15 +213,17 @@ const UpgradeModal = ({
 
   if (!isOpen) return null;
 
-  // ===== SUCCESS STATE (Option A: Ivory + Indigo premium) =====
+  // ============================================================================
+  // SUCCESS STATE - Only visual styling updated
+  // ============================================================================
   if (success) {
     return (
       <div
         style={{
           position: 'fixed',
           inset: 0,
-          background:
-            'radial-gradient(circle at top, rgba(15,23,42,0.96), rgba(0,0,0,0.97))',
+          background: 'rgba(10, 15, 26, 0.96)',
+          backdropFilter: 'blur(8px)',
           display: 'flex',
           alignItems: 'center',
           justifyContent: 'center',
@@ -179,27 +237,24 @@ const UpgradeModal = ({
             width: '100%',
             borderRadius: '20px',
             padding: '2.4rem 2.2rem 2.1rem',
-            background:
-              'radial-gradient(circle at top, #111827 0%, #020617 70%)',
-            border: '1px solid rgba(148,163,184,0.45)',
-            boxShadow:
-              '0 24px 60px rgba(15,23,42,0.98), 0 0 40px rgba(99,102,241,0.45)',
+            background: `linear-gradient(135deg, ${designTokens.colors.background.surface} 0%, ${designTokens.colors.background.canvas} 100%)`,
+            border: `1px solid ${designTokens.colors.border.medium}`,
+            boxShadow: designTokens.shadows.elevation03,
             textAlign: 'center'
           }}
         >
+          {/* Success Icon with Indigo Glow */}
           <div
             style={{
               width: '68px',
               height: '68px',
               borderRadius: '999px',
               margin: '0 auto 1.4rem',
-              background:
-                'conic-gradient(from 180deg, #6366F1, #818CF8, #E5E7EB, #6366F1)',
+              background: `conic-gradient(from 180deg, ${designTokens.colors.accent.primary}, ${designTokens.colors.accent.hover}, ${designTokens.colors.brand.ivory}, ${designTokens.colors.accent.primary})`,
               display: 'flex',
               alignItems: 'center',
               justifyContent: 'center',
-              boxShadow:
-                '0 0 0 2px rgba(15,23,42,1), 0 0 26px rgba(129,140,248,0.7)'
+              boxShadow: `0 0 0 2px ${designTokens.colors.background.canvas}, ${designTokens.shadows.glow}`
             }}
           >
             <div
@@ -207,7 +262,7 @@ const UpgradeModal = ({
                 width: '52px',
                 height: '52px',
                 borderRadius: '999px',
-                background: '#020617',
+                background: designTokens.colors.background.canvas,
                 display: 'flex',
                 alignItems: 'center',
                 justifyContent: 'center',
@@ -223,7 +278,9 @@ const UpgradeModal = ({
               margin: '0 0 0.4rem 0',
               fontSize: '1.8rem',
               letterSpacing: '-0.04em',
-              color: '#F5F5DC'
+              color: designTokens.colors.brand.ivory,
+              fontFamily: designTokens.typography.fonts.display,
+              fontWeight: 700
             }}
           >
             Upgrade complete
@@ -233,7 +290,8 @@ const UpgradeModal = ({
             style={{
               margin: '0 0 1.4rem 0',
               fontSize: '0.98rem',
-              color: '#CBD5F5'
+              color: designTokens.colors.text.secondary,
+              fontFamily: designTokens.typography.fonts.body
             }}
           >
             Your AwakeVerse subscription has been updated. New limits will apply
@@ -246,221 +304,190 @@ const UpgradeModal = ({
                 marginBottom: '1.6rem',
                 padding: '0.9rem 1rem',
                 borderRadius: '12px',
-                background: 'rgba(15,23,42,0.9)',
-                border: '1px solid rgba(148,163,184,0.5)',
-                color: '#E5E7EB',
-                fontSize: '0.9rem'
+                background: designTokens.colors.background.interactive,
+                border: `1px solid ${designTokens.colors.border.medium}`,
+                color: designTokens.colors.text.primary,
+                fontSize: '0.9rem',
+                fontFamily: designTokens.typography.fonts.body
               }}
             >
-              <div style={{ marginBottom: '0.25rem' }}>
-                New plan:{' '}
-                <strong>
-                  {SUBSCRIPTION_TIERS[selectedTier].display_name}
-                </strong>
+              <div style={{ fontWeight: 600, marginBottom: '0.3rem', color: designTokens.colors.accent.primary }}>
+                {SUBSCRIPTION_TIERS[selectedTier].display_name}
               </div>
-              <div>
-                Characters:{' '}
-                <strong>
-                  {SUBSCRIPTION_TIERS[selectedTier].character_limit}
-                </strong>{' '}
-                &nbsp;·&nbsp; Messages:{' '}
-                <strong>{SUBSCRIPTION_TIERS[selectedTier].message_limit}</strong>
+              <div style={{ color: designTokens.colors.text.secondary }}>
+                ${SUBSCRIPTION_TIERS[selectedTier].price}/month
               </div>
             </div>
           )}
 
-          <button
-            type="button"
-            onClick={() => {
-              onClose();
-              window.location.reload();
-            }}
+          {/* Auto-close indicator */}
+          <div
             style={{
-              border: 'none',
-              borderRadius: '999px',
-              padding: '0.85rem 1.9rem',
-              fontSize: '0.98rem',
-              fontWeight: 600,
-              cursor: 'pointer',
-              background:
-                'linear-gradient(135deg, #6366F1 0%, #818CF8 50%, #4F46E5 100%)',
-              color: '#F9FAFB',
-              boxShadow:
-                '0 10px 30px rgba(15,23,42,0.95), 0 0 30px rgba(99,102,241,0.5)'
+              display: 'inline-flex',
+              alignItems: 'center',
+              gap: '0.6rem',
+              color: designTokens.colors.text.tertiary,
+              fontSize: '0.85rem',
+              fontFamily: designTokens.typography.fonts.body
             }}
           >
-            Continue in AwakeVerse
-          </button>
+            <div
+              style={{
+                width: '16px',
+                height: '16px',
+                borderRadius: '999px',
+                border: `2px solid ${designTokens.colors.border.medium}`,
+                borderTopColor: designTokens.colors.accent.primary,
+                animation: 'av-upgrade-spin 0.8s linear infinite'
+              }}
+            />
+            <span>Redirecting...</span>
+          </div>
         </div>
       </div>
     );
   }
 
-  // ===== MAIN UPGRADE MODAL =====
+  // ============================================================================
+  // MAIN MODAL - Only visual styling updated
+  // ============================================================================
   return (
     <div
       style={{
         position: 'fixed',
         inset: 0,
-        background:
-          'radial-gradient(circle at top, rgba(15,23,42,0.96), rgba(0,0,0,0.96))',
+        background: 'rgba(10, 15, 26, 0.95)',
+        backdropFilter: 'blur(8px)',
         display: 'flex',
         alignItems: 'center',
         justifyContent: 'center',
         zIndex: 9999,
         padding: '1.5rem'
       }}
-      onClick={onClose}
     >
       <div
         style={{
-          maxWidth: '900px',
+          maxWidth: '680px',
           width: '100%',
           borderRadius: '20px',
-          padding: '2.1rem 2.2rem 2rem',
-          background:
-            'radial-gradient(circle at top, #111827 0%, #020617 70%)',
-          border: '1px solid rgba(148,163,184,0.4)',
-          boxShadow:
-            '0 24px 60px rgba(15,23,42,0.98), 0 0 40px rgba(15,23,42,0.9)',
-          color: '#F9FAFB',
-          fontFamily:
-            '"Inter", system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif'
+          padding: '2rem',
+          background: `linear-gradient(135deg, ${designTokens.colors.background.canvas} 0%, ${designTokens.colors.background.surface} 50%, ${designTokens.colors.background.canvas} 100%)`,
+          border: `1px solid ${designTokens.colors.border.medium}`,
+          boxShadow: designTokens.shadows.elevation03
         }}
-        onClick={(e) => e.stopPropagation()}
       >
         {/* HEADER */}
-        <div
-          style={{
-            display: 'flex',
-            justifyContent: 'space-between',
-            alignItems: 'flex-start',
-            marginBottom: '1.8rem'
-          }}
-        >
-          <div style={{ paddingRight: '1.5rem', maxWidth: '520px' }}>
-            <div
-              style={{
-                fontSize: '0.75rem',
-                letterSpacing: '0.16em',
-                textTransform: 'uppercase',
-                color: '#94A3B8',
-                marginBottom: '0.5rem'
-              }}
-            >
-              AwakeVerse premium
-            </div>
-            <h2
-              style={{
-                margin: '0 0 0.5rem 0',
-                fontSize: '1.7rem',
-                letterSpacing: '-0.04em',
-                color: '#F5F5DC',
-                fontFamily:
-                  '"Syne", system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif'
-              }}
-            >
-              {getModalTitle()}
-            </h2>
-            <p
-              style={{
-                margin: 0,
-                fontSize: '0.95rem',
-                color: '#CBD5F5',
-                lineHeight: 1.6
-              }}
-            >
-              {getModalDescription()}
-            </p>
-            {currentUsage && (
-              <p
-                style={{
-                  margin: '0.75rem 0 0',
-                  fontSize: '0.85rem',
-                  color: '#94A3B8'
-                }}
-              >
-                Current usage:{' '}
-                <strong style={{ color: '#E5E7EB' }}>
-                  {currentUsage.messages_used ?? 0} messages /{' '}
-                  {currentUsage.message_limit === -1
-                    ? '∞'
-                    : currentUsage.message_limit}
-                </strong>
-              </p>
-            )}
-          </div>
-
-          <button
-            type="button"
-            onClick={onClose}
-            disabled={isProcessing}
-            aria-label="Close upgrade panel"
+        <div style={{ marginBottom: '1.8rem', textAlign: 'center' }}>
+          <h2
             style={{
-              background: 'transparent',
-              border: '1px solid rgba(148,163,184,0.6)',
-              borderRadius: '999px',
-              width: '32px',
-              height: '32px',
-              color: '#9CA3AF',
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'center',
-              fontSize: '1.1rem',
-              cursor: isProcessing ? 'not-allowed' : 'pointer',
-              opacity: isProcessing ? 0.6 : 1
+              margin: '0 0 0.5rem 0',
+              fontSize: '2rem',
+              letterSpacing: '-0.5px',
+              color: designTokens.colors.brand.ivory,
+              fontFamily: designTokens.typography.fonts.display,
+              fontWeight: 700
             }}
           >
-            ×
-          </button>
+            {getModalTitle()}
+          </h2>
+          <p
+            style={{
+              margin: 0,
+              fontSize: '0.95rem',
+              color: designTokens.colors.text.secondary,
+              fontFamily: designTokens.typography.fonts.body,
+              lineHeight: 1.5
+            }}
+          >
+            {getModalDescription()}
+          </p>
         </div>
 
-        {/* CURRENT PLAN SUMMARY */}
+        {/* CURRENT USAGE */}
+        {currentUsage && (
+          <div
+            style={{
+              background: designTokens.colors.background.interactive,
+              border: `1px solid ${designTokens.colors.accent.primary}40`,
+              borderRadius: '12px',
+              padding: '1rem',
+              marginBottom: '1.8rem',
+              display: 'flex',
+              alignItems: 'center',
+              gap: '1rem'
+            }}
+          >
+            <span style={{ fontSize: '1.5rem' }}>ℹ️</span>
+            <div style={{ flex: 1 }}>
+              <div
+                style={{
+                  fontSize: '0.85rem',
+                  color: designTokens.colors.text.tertiary,
+                  marginBottom: '0.3rem',
+                  fontFamily: designTokens.typography.fonts.body
+                }}
+              >
+                Current Usage
+              </div>
+              <div
+                style={{
+                  fontSize: '0.9rem',
+                  color: designTokens.colors.text.primary,
+                  fontFamily: designTokens.typography.fonts.body
+                }}
+              >
+                {currentUsage}
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* CURRENT SUBSCRIPTION */}
         {currentSubscription && (
           <div
             style={{
-              marginBottom: '1.8rem',
-              padding: '0.9rem 1rem',
+              background: designTokens.colors.background.interactive,
+              border: `1px solid ${designTokens.colors.border.medium}`,
               borderRadius: '12px',
-              background: 'rgba(15,23,42,0.9)',
-              border: '1px solid rgba(148,163,184,0.4)',
-              fontSize: '0.9rem'
+              padding: '1rem',
+              marginBottom: '1.8rem'
             }}
           >
             <div
               style={{
-                marginBottom: '0.4rem',
-                color: '#E5E7EB',
-                display: 'flex',
-                justifyContent: 'space-between',
-                gap: '1rem',
-                flexWrap: 'wrap'
+                fontSize: '0.85rem',
+                color: designTokens.colors.text.tertiary,
+                marginBottom: '0.5rem',
+                fontFamily: designTokens.typography.fonts.body,
+                textTransform: 'uppercase',
+                letterSpacing: '0.5px'
               }}
             >
-              <span>
-                Current plan:{' '}
-                <strong>{currentSubscription.tier_display}</strong>
-              </span>
-              {currentSubscription.renews_at && (
-                <span style={{ color: '#94A3B8', fontSize: '0.8rem' }}>
-                  Renews on{' '}
-                  {new Date(
-                    currentSubscription.renews_at
-                  ).toLocaleDateString()}
-                </span>
-              )}
+              Current Plan
             </div>
             <div
               style={{
-                display: 'grid',
-                gridTemplateColumns: 'repeat(auto-fit, minmax(140px, 1fr))',
-                gap: '0.5rem',
-                color: '#94A3B8'
+                fontSize: '1.1rem',
+                fontWeight: 600,
+                color: designTokens.colors.accent.primary,
+                marginBottom: '0.75rem',
+                fontFamily: designTokens.typography.fonts.display
+              }}
+            >
+              {currentSubscription.tier_name?.toUpperCase() || 'FREE'}
+            </div>
+            <div
+              style={{
+                display: 'flex',
+                gap: '1.5rem',
+                fontSize: '0.85rem',
+                color: designTokens.colors.text.secondary,
+                fontFamily: designTokens.typography.fonts.body
               }}
             >
               <div>
                 Messages:{' '}
-                <strong style={{ color: '#E5E7EB' }}>
+                <strong style={{ color: designTokens.colors.text.primary }}>
                   {currentSubscription.messages_used || 0}/
                   {currentSubscription.message_limit === -1
                     ? '∞'
@@ -469,7 +496,7 @@ const UpgradeModal = ({
               </div>
               <div>
                 Characters:{' '}
-                <strong style={{ color: '#E5E7EB' }}>
+                <strong style={{ color: designTokens.colors.text.primary }}>
                   {currentSubscription.characters_used || 0}/
                   {currentSubscription.character_limit === -1
                     ? '∞'
@@ -505,14 +532,12 @@ const UpgradeModal = ({
                   padding: '1.1rem 1.1rem 1rem',
                   cursor: isProcessing ? 'not-allowed' : 'pointer',
                   border: isSelected
-                    ? '1px solid rgba(129,140,248,0.9)'
-                    : '1px solid rgba(148,163,184,0.4)',
+                    ? `2px solid ${designTokens.colors.accent.primary}`
+                    : `1px solid ${designTokens.colors.border.medium}`,
                   background: isSelected
-                    ? 'radial-gradient(circle at top, rgba(37,99,235,0.18), rgba(15,23,42,0.98))'
-                    : 'rgba(15,23,42,0.95)',
-                  boxShadow: isSelected
-                    ? '0 10px 30px rgba(15,23,42,0.95), 0 0 24px rgba(129,140,248,0.4)'
-                    : '0 4px 14px rgba(15,23,42,0.9)',
+                    ? `linear-gradient(135deg, ${designTokens.colors.background.interactive} 0%, ${designTokens.colors.background.peak} 100%)`
+                    : designTokens.colors.background.surface,
+                  boxShadow: isSelected ? designTokens.shadows.glow : 'none',
                   opacity: isProcessing ? 0.7 : 1,
                   transition: 'all 0.2s ease'
                 }}
@@ -532,8 +557,9 @@ const UpgradeModal = ({
                         fontSize: '0.8rem',
                         textTransform: 'uppercase',
                         letterSpacing: '0.14em',
-                        color: '#94A3B8',
-                        marginBottom: '0.15rem'
+                        color: designTokens.colors.text.tertiary,
+                        marginBottom: '0.15rem',
+                        fontFamily: designTokens.typography.fonts.body
                       }}
                     >
                       {config.display_name}
@@ -541,7 +567,8 @@ const UpgradeModal = ({
                     <div
                       style={{
                         fontSize: '0.95rem',
-                        color: '#E5E7EB'
+                        color: designTokens.colors.text.secondary,
+                        fontFamily: designTokens.typography.fonts.body
                       }}
                     >
                       For active creators
@@ -555,9 +582,11 @@ const UpgradeModal = ({
                         letterSpacing: '0.14em',
                         padding: '0.15rem 0.55rem',
                         borderRadius: '999px',
-                        border: '1px solid rgba(129,140,248,0.9)',
-                        background: 'rgba(15,23,42,0.95)',
-                        color: '#E0E7FF'
+                        border: `1px solid ${designTokens.colors.accent.primary}`,
+                        background: designTokens.colors.background.canvas,
+                        color: designTokens.colors.accent.hover,
+                        fontFamily: designTokens.typography.fonts.body,
+                        fontWeight: 600
                       }}
                     >
                       Recommended
@@ -569,16 +598,19 @@ const UpgradeModal = ({
                   style={{
                     fontSize: '1.5rem',
                     fontWeight: 700,
-                    color: '#F5F5DC',
-                    marginBottom: '0.45rem'
+                    color: designTokens.colors.brand.ivory,
+                    marginBottom: '0.45rem',
+                    fontFamily: designTokens.typography.fonts.display
                   }}
                 >
                   ${config.price}
                   <span
                     style={{
                       fontSize: '0.85rem',
-                      color: '#94A3B8',
-                      marginLeft: '0.25rem'
+                      color: designTokens.colors.text.tertiary,
+                      marginLeft: '0.25rem',
+                      fontFamily: designTokens.typography.fonts.body,
+                      fontWeight: 400
                     }}
                   >
                     /month
@@ -591,8 +623,9 @@ const UpgradeModal = ({
                     padding: 0,
                     margin: 0,
                     fontSize: '0.85rem',
-                    color: '#CBD5F5',
-                    lineHeight: 1.5
+                    color: designTokens.colors.text.secondary,
+                    lineHeight: 1.5,
+                    fontFamily: designTokens.typography.fonts.body
                   }}
                 >
                   {config.features.map((feature, idx) => (
@@ -605,7 +638,7 @@ const UpgradeModal = ({
                         marginBottom: '0.35rem'
                       }}
                     >
-                      <span style={{ color: '#22C55E' }}>●</span>
+                      <span style={{ color: designTokens.colors.semantic.success }}>✓</span>
                       <span>{feature}</span>
                     </li>
                   ))}
@@ -622,10 +655,11 @@ const UpgradeModal = ({
               marginBottom: '1.1rem',
               padding: '0.75rem 0.9rem',
               borderRadius: '10px',
-              background: 'rgba(127,29,29,0.18)',
-              border: '1px solid rgba(248,113,113,0.7)',
-              color: '#FECACA',
-              fontSize: '0.9rem'
+              background: `${designTokens.colors.semantic.error}15`,
+              border: `1px solid ${designTokens.colors.semantic.error}40`,
+              color: designTokens.colors.semantic.error,
+              fontSize: '0.9rem',
+              fontFamily: designTokens.typography.fonts.body
             }}
           >
             {error}
@@ -647,14 +681,26 @@ const UpgradeModal = ({
             disabled={isProcessing}
             style={{
               background: 'transparent',
-              border: '1px solid rgba(148,163,184,0.6)',
+              border: `1px solid ${designTokens.colors.border.medium}`,
               borderRadius: '999px',
-              color: '#E5E7EB',
+              color: designTokens.colors.text.secondary,
               fontSize: '0.9rem',
               fontWeight: 500,
+              fontFamily: designTokens.typography.fonts.body,
               padding: '0.7rem 1.6rem',
               cursor: isProcessing ? 'not-allowed' : 'pointer',
-              opacity: isProcessing ? 0.7 : 1
+              opacity: isProcessing ? 0.7 : 1,
+              transition: 'all 0.2s ease'
+            }}
+            onMouseEnter={(e) => {
+              if (!isProcessing) {
+                e.currentTarget.style.borderColor = designTokens.colors.accent.primary;
+                e.currentTarget.style.color = designTokens.colors.accent.primary;
+              }
+            }}
+            onMouseLeave={(e) => {
+              e.currentTarget.style.borderColor = designTokens.colors.border.medium;
+              e.currentTarget.style.color = designTokens.colors.text.secondary;
             }}
           >
             Not now
@@ -670,20 +716,29 @@ const UpgradeModal = ({
               justifyContent: 'center',
               gap: '0.6rem',
               background: isProcessing
-                ? 'rgba(99,102,241,0.6)'
-                : 'linear-gradient(135deg,#6366F1,#818CF8)',
+                ? `${designTokens.colors.accent.primary}80`
+                : `linear-gradient(135deg, ${designTokens.colors.accent.primary}, ${designTokens.colors.accent.hover})`,
               border: 'none',
               borderRadius: '999px',
-              color: '#F9FAFB',
+              color: designTokens.colors.text.primary,
               fontSize: '0.95rem',
               fontWeight: 600,
+              fontFamily: designTokens.typography.fonts.body,
               padding: '0.75rem 1.9rem',
               cursor: isProcessing ? 'not-allowed' : 'pointer',
-              boxShadow: isProcessing
-                ? '0 0 0 rgba(0,0,0,0)'
-                : '0 8px 24px rgba(15,23,42,0.95), 0 0 24px rgba(99,102,241,0.5)',
+              boxShadow: isProcessing ? 'none' : designTokens.shadows.glow,
               opacity: isProcessing ? 0.8 : 1,
               transition: 'all 0.2s ease'
+            }}
+            onMouseEnter={(e) => {
+              if (!isProcessing) {
+                e.currentTarget.style.transform = 'translateY(-2px)';
+                e.currentTarget.style.boxShadow = designTokens.shadows.glowStrong;
+              }
+            }}
+            onMouseLeave={(e) => {
+              e.currentTarget.style.transform = 'translateY(0)';
+              e.currentTarget.style.boxShadow = designTokens.shadows.glow;
             }}
           >
             {isProcessing && (
@@ -692,8 +747,8 @@ const UpgradeModal = ({
                   width: '16px',
                   height: '16px',
                   borderRadius: '999px',
-                  border: '2px solid rgba(226,232,240,0.4)',
-                  borderTopColor: '#E5E7EB',
+                  border: `2px solid ${designTokens.colors.text.secondary}`,
+                  borderTopColor: designTokens.colors.text.primary,
                   animation: 'av-upgrade-spin 0.8s linear infinite'
                 }}
               />

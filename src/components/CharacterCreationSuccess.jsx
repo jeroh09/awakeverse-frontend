@@ -1,21 +1,75 @@
-// src/components/CharacterCreationSuccess.jsx - Fixed for decentralized flow
+// src/components/CharacterCreationSuccess.jsx - Updated with Design System
 import React, { useState, useEffect, useRef } from 'react';
 import useCharacterCreationFlow from '../hooks/useCharacterCreationFlow';
 
+// ============================================================================
+// DESIGN SYSTEM TOKENS - Defensive Hybrid Approach
+// ============================================================================
+const designTokens = {
+  colors: {
+    background: {
+      canvas: '#0A0F1A',
+      surface: '#141B2E',
+      interactive: '#1C2640',
+      peak: '#243152'
+    },
+    accent: {
+      primary: '#6366F1',
+      hover: '#818CF8',
+      glow: 'rgba(99, 102, 241, 0.2)',
+      glowStrong: 'rgba(99, 102, 241, 0.3)'
+    },
+    brand: {
+      ivory: '#F5F5DC',
+      ivoryDim: '#E5E5CC'
+    },
+    semantic: {
+      success: '#10B981',
+      warning: '#F59E0B',
+      error: '#EF4444'
+    },
+    text: {
+      primary: '#F1F5F9',
+      secondary: '#94A3B8',
+      tertiary: '#64748B',
+      muted: '#475569'
+    },
+    border: {
+      subtle: 'rgba(148, 163, 184, 0.1)',
+      medium: 'rgba(148, 163, 184, 0.2)',
+      strong: 'rgba(148, 163, 184, 0.3)'
+    }
+  },
+  typography: {
+    fonts: {
+      display: "'Syne', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif",
+      body: "'Inter', system-ui, sans-serif"
+    }
+  },
+  shadows: {
+    elevation03: '0 4px 16px -4px rgba(0, 0, 0, 0.15), 0 8px 24px -8px rgba(99, 102, 241, 0.15)',
+    glow: '0 0 20px -5px rgba(99, 102, 241, 0.2)',
+    glowStrong: '0 0 24px -4px rgba(99, 102, 241, 0.3)'
+  }
+};
+
 const CharacterCreationSuccess = ({ onClose, characterData }) => {
+  // ============================================================================
+  // STATE & REFS - All logic unchanged
+  // ============================================================================
   const { createdCharacter, closeFlow } = useCharacterCreationFlow();
   const [redirectTimer, setRedirectTimer] = useState(5);
   const [isMobile, setIsMobile] = useState(false);
   const [hasUserInteracted, setHasUserInteracted] = useState(false);
   
-  // Refs for cleanup
   const timerRef = useRef(null);
   const isMountedRef = useRef(true);
 
-  // Use createdCharacter from flow or fallback to prop
   const characterInfo = createdCharacter || characterData;
 
-  // Check for mobile viewport
+  // ============================================================================
+  // EFFECTS - All logic unchanged
+  // ============================================================================
   useEffect(() => {
     const checkMobile = () => setIsMobile(window.innerWidth <= 768);
     checkMobile();
@@ -23,7 +77,6 @@ const CharacterCreationSuccess = ({ onClose, characterData }) => {
     return () => window.removeEventListener('resize', checkMobile);
   }, []);
 
-  // Countdown timer with proper cleanup
   useEffect(() => {
     isMountedRef.current = true;
 
@@ -33,7 +86,6 @@ const CharacterCreationSuccess = ({ onClose, characterData }) => {
       setRedirectTimer(prev => {
         const newValue = prev - 1;
         if (newValue <= 0 && !hasUserInteracted) {
-          // Auto-close and return to launcher
           handleManualReturn();
         }
         return Math.max(0, newValue);
@@ -50,29 +102,31 @@ const CharacterCreationSuccess = ({ onClose, characterData }) => {
     };
   }, [hasUserInteracted]);
 
-  // Handle manual navigation
+  // ============================================================================
+  // HANDLERS - All logic unchanged
+  // ============================================================================
   const handleManualReturn = () => {
     setHasUserInteracted(true);
     
-    // Clear timer
     if (timerRef.current) {
       clearInterval(timerRef.current);
     }
     
-    // Close the flow and return to launcher
     closeFlow();
     if (onClose) onClose();
   };
 
-  // Safety check for missing character name
   const displayName = characterInfo?.display_name || characterData?.display_name || 'Your Character';
 
+  // ============================================================================
+  // RENDER - Only visual styling updated
+  // ============================================================================
   return (
     <div style={{
       width: '100%',
       height: '100vh',
-      background: 'linear-gradient(135deg, #0B1426 0%, #1A2B47 25%, #2C1810 50%, #0F1A2E 75%, #0B1426 100%)',
-      fontFamily: "'Playfair Display', serif",
+      background: `linear-gradient(135deg, ${designTokens.colors.background.canvas} 0%, ${designTokens.colors.background.surface} 25%, ${designTokens.colors.background.interactive} 50%, ${designTokens.colors.background.surface} 75%, ${designTokens.colors.background.canvas} 100%)`,
+      fontFamily: designTokens.typography.fonts.body,
       display: 'flex',
       flexDirection: 'column',
       alignItems: 'center',
@@ -81,14 +135,14 @@ const CharacterCreationSuccess = ({ onClose, characterData }) => {
       position: 'relative',
       overflow: 'hidden'
     }}>
-      {/* Animated background elements */}
+      {/* Animated background elements - Updated to indigo */}
       <div style={{
         position: 'absolute',
         top: '10%',
         left: '10%',
         width: '100px',
         height: '100px',
-        background: 'radial-gradient(circle, rgba(255, 215, 0, 0.1) 0%, transparent 70%)',
+        background: `radial-gradient(circle, ${designTokens.colors.accent.glow} 0%, transparent 70%)`,
         borderRadius: '50%',
         animation: 'pulse 4s ease-in-out infinite'
       }} />
@@ -98,82 +152,89 @@ const CharacterCreationSuccess = ({ onClose, characterData }) => {
         right: '15%',
         width: '60px',
         height: '60px',
-        background: 'radial-gradient(circle, rgba(255, 215, 0, 0.08) 0%, transparent 70%)',
+        background: `radial-gradient(circle, ${designTokens.colors.accent.glow} 0%, transparent 70%)`,
         borderRadius: '50%',
         animation: 'pulse 3s ease-in-out infinite 1s'
       }} />
 
       <div style={{
-        background: 'rgba(255, 255, 255, 0.1)',
-        border: '2px solid rgba(255, 215, 0, 0.4)',
+        background: `${designTokens.colors.background.surface}CC`,
+        border: `2px solid ${designTokens.colors.accent.primary}60`,
         borderRadius: '20px',
         padding: isMobile ? '2rem' : '3rem',
         textAlign: 'center',
         maxWidth: isMobile ? '350px' : '500px',
         width: '100%',
-        backdropFilter: 'blur(10px)',
+        backdropFilter: 'blur(20px)',
         animation: 'fadeInScale 0.6s ease-out',
         position: 'relative',
-        zIndex: 1
+        zIndex: 1,
+        boxShadow: designTokens.shadows.elevation03
       }}>
-        {/* Success Icon */}
+        {/* Success Icon - Updated styling */}
         <div style={{
           fontSize: isMobile ? '3rem' : '4rem',
           marginBottom: '1rem',
-          color: '#FFD700',
-          textShadow: '0 0 20px rgba(255, 215, 0, 0.5)',
+          filter: `drop-shadow(0 0 20px ${designTokens.colors.accent.primary}80)`,
           animation: 'bounce 2s ease-in-out infinite'
         }}>
           ✨
         </div>
         
-        {/* Success Message */}
+        {/* Success Message - Updated colors and fonts */}
         <h2 style={{
-          color: '#FFD700',
+          color: designTokens.colors.brand.ivory,
           fontSize: isMobile ? '1.5rem' : '1.8rem',
           margin: '0 0 1rem 0',
-          textShadow: '0 0 20px rgba(255, 215, 0, 0.5)',
-          letterSpacing: '1px',
-          fontWeight: 700
+          fontFamily: designTokens.typography.fonts.display,
+          fontWeight: 700,
+          letterSpacing: '-0.5px'
         }}>
           Character Submitted Successfully!
         </h2>
         
-        {/* Character Name */}
+        {/* Character Name - Updated colors */}
         <p style={{
-          color: 'rgba(255, 255, 255, 0.9)',
+          color: designTokens.colors.text.primary,
           fontSize: isMobile ? '1rem' : '1.1rem',
           lineHeight: 1.6,
-          margin: '0 0 1.5rem 0'
+          margin: '0 0 1.5rem 0',
+          fontFamily: designTokens.typography.fonts.body
         }}>
-          <strong style={{ color: '#FFD700' }}>{displayName}</strong> has been submitted for approval. 
+          <strong style={{ 
+            color: designTokens.colors.accent.primary,
+            fontWeight: 600
+          }}>
+            {displayName}
+          </strong> has been submitted for approval. 
           You'll receive an email notification when your character is ready to chat.
         </p>
         
-        {/* Message Limit Information - Updated for decentralized approach */}
+        {/* Message Limit Information - Updated to indigo theme */}
         <div style={{
-          background: 'rgba(255, 215, 0, 0.1)',
-          border: '1px solid rgba(255, 215, 0, 0.3)',
-          borderRadius: '10px',
+          background: `${designTokens.colors.accent.primary}15`,
+          border: `1px solid ${designTokens.colors.accent.primary}40`,
+          borderRadius: '12px',
           padding: isMobile ? '0.8rem' : '1rem',
           margin: '0 0 2rem 0'
         }}>
           <p style={{
-            color: 'rgba(255, 215, 0, 0.9)',
+            color: designTokens.colors.accent.hover,
             fontSize: isMobile ? '0.85rem' : '0.9rem',
             margin: 0,
             display: 'flex',
             alignItems: 'center',
             justifyContent: 'center',
             gap: '0.5rem',
-            flexWrap: 'wrap'
+            flexWrap: 'wrap',
+            fontFamily: designTokens.typography.fonts.body
           }}>
             <span style={{ fontSize: '1.2rem' }}>🎉</span>
             Your character comes with 150 free messages per month
           </p>
         </div>
         
-        {/* Action Buttons */}
+        {/* Action Button - Updated to indigo gradient */}
         <div style={{
           display: 'flex',
           flexDirection: isMobile ? 'column' : 'row',
@@ -185,55 +246,57 @@ const CharacterCreationSuccess = ({ onClose, characterData }) => {
           <button
             onClick={handleManualReturn}
             style={{
-              background: 'linear-gradient(135deg, #FFD700, #FFA500)',
+              background: `linear-gradient(135deg, ${designTokens.colors.accent.primary}, ${designTokens.colors.accent.hover})`,
               border: 'none',
-              borderRadius: '10px',
-              color: '#000',
+              borderRadius: '12px',
+              color: designTokens.colors.text.primary,
               fontSize: isMobile ? '0.9rem' : '1rem',
               fontWeight: 600,
+              fontFamily: designTokens.typography.fonts.body,
               padding: isMobile ? '0.7rem 1.5rem' : '0.8rem 2rem',
               cursor: 'pointer',
               transition: 'all 0.3s ease',
-              boxShadow: '0 4px 15px rgba(255, 215, 0, 0.3)',
+              boxShadow: designTokens.shadows.glow,
               width: isMobile ? '100%' : 'auto',
               minWidth: '150px'
             }}
             onMouseEnter={(e) => {
               e.currentTarget.style.transform = 'translateY(-2px)';
-              e.currentTarget.style.boxShadow = '0 6px 20px rgba(255, 215, 0, 0.4)';
+              e.currentTarget.style.boxShadow = designTokens.shadows.glowStrong;
             }}
             onMouseLeave={(e) => {
               e.currentTarget.style.transform = 'translateY(0)';
-              e.currentTarget.style.boxShadow = '0 4px 15px rgba(255, 215, 0, 0.3)';
+              e.currentTarget.style.boxShadow = designTokens.shadows.glow;
             }}
           >
             Return to Characters
           </button>
         </div>
 
-        {/* Auto-redirect notice */}
+        {/* Auto-redirect notice - Updated colors */}
         {!hasUserInteracted && redirectTimer > 0 && (
           <div style={{
-            background: 'rgba(0, 0, 0, 0.2)',
+            background: designTokens.colors.background.interactive,
             borderRadius: '8px',
             padding: '0.8rem',
-            border: '1px solid rgba(255, 255, 255, 0.1)'
+            border: `1px solid ${designTokens.colors.border.medium}`
           }}>
             <p style={{
-              color: 'rgba(255, 255, 255, 0.7)',
+              color: designTokens.colors.text.secondary,
               fontSize: isMobile ? '0.75rem' : '0.8rem',
               margin: 0,
               display: 'flex',
               alignItems: 'center',
               justifyContent: 'center',
-              gap: '0.5rem'
+              gap: '0.5rem',
+              fontFamily: designTokens.typography.fonts.body
             }}>
               <span style={{
                 display: 'inline-block',
                 width: '12px',
                 height: '12px',
-                border: '2px solid rgba(255, 215, 0, 0.3)',
-                borderTop: '2px solid #FFD700',
+                border: `2px solid ${designTokens.colors.accent.primary}40`,
+                borderTop: `2px solid ${designTokens.colors.accent.primary}`,
                 borderRadius: '50%',
                 animation: 'spin 1s linear infinite'
               }} />
@@ -244,11 +307,12 @@ const CharacterCreationSuccess = ({ onClose, characterData }) => {
               style={{
                 background: 'none',
                 border: 'none',
-                color: 'rgba(255, 215, 0, 0.8)',
+                color: designTokens.colors.accent.hover,
                 fontSize: '0.7rem',
                 cursor: 'pointer',
                 textDecoration: 'underline',
-                marginTop: '0.5rem'
+                marginTop: '0.5rem',
+                fontFamily: designTokens.typography.fonts.body
               }}
             >
               Cancel auto-redirect

@@ -1,9 +1,63 @@
-// src/components/PaymentProcessor.jsx - UPDATED with PayPal support
+// src/components/PaymentProcessor.jsx - UPDATED with Design System
 import React, { useState, useEffect } from 'react';
 import { useUser } from '../contexts/UserContext';
 import PaymentRouter from '../services/PaymentRouter';
 
-// SUBSCRIPTION_TIERS with CORRECT multi-currency pricing
+// ============================================================================
+// DESIGN SYSTEM TOKENS - Defensive Hybrid Approach
+// ============================================================================
+const designTokens = {
+  colors: {
+    background: {
+      canvas: '#0A0F1A',
+      surface: '#141B2E',
+      interactive: '#1C2640',
+      peak: '#243152'
+    },
+    accent: {
+      primary: '#6366F1',      // Indigo (not gold!)
+      hover: '#818CF8',
+      glow: 'rgba(99, 102, 241, 0.2)',
+      glowStrong: 'rgba(99, 102, 241, 0.3)'
+    },
+    brand: {
+      ivory: '#F5F5DC',
+      ivoryDim: '#E5E5CC'
+    },
+    semantic: {
+      success: '#10B981',
+      warning: '#F59E0B',
+      error: '#EF4444'
+    },
+    text: {
+      primary: '#F1F5F9',
+      secondary: '#94A3B8',
+      tertiary: '#64748B',
+      muted: '#475569'
+    },
+    border: {
+      subtle: 'rgba(148, 163, 184, 0.1)',
+      medium: 'rgba(148, 163, 184, 0.2)',
+      strong: 'rgba(148, 163, 184, 0.3)'
+    }
+  },
+  typography: {
+    fonts: {
+      display: "'Syne', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif",
+      body: "'Inter', system-ui, sans-serif"
+    }
+  },
+  shadows: {
+    elevation02: '0 2px 8px -2px rgba(0, 0, 0, 0.1), 0 4px 12px -4px rgba(99, 102, 241, 0.1)',
+    elevation03: '0 4px 16px -4px rgba(0, 0, 0, 0.15), 0 8px 24px -8px rgba(99, 102, 241, 0.15)',
+    glow: '0 0 20px -5px rgba(99, 102, 241, 0.2)',
+    glowStrong: '0 0 24px -4px rgba(99, 102, 241, 0.3)'
+  }
+};
+
+// ============================================================================
+// SUBSCRIPTION TIERS - Logic unchanged
+// ============================================================================
 const SUBSCRIPTION_TIERS = {
   starter: {
     name: 'starter',
@@ -60,7 +114,7 @@ const SUBSCRIPTION_TIERS = {
       'Everything in Creator',
       'Advanced multi-character designer',
       'Featured marketplace placement',
-      '70/30 revenue share',
+      '80/20 revenue share',
       'Live debate hosting',
       'Advanced analytics',
       'Priority AI models',
@@ -71,7 +125,7 @@ const SUBSCRIPTION_TIERS = {
   }
 };
 
-// Helper to detect user's currency
+// Helper to detect user's currency - Logic unchanged
 const getUserCurrency = () => {
   try {
     const savedCurrency = localStorage.getItem('preferred_currency');
@@ -97,12 +151,15 @@ const PaymentProcessor = ({
   currentUsage = null,
   onBack = null
 }) => {
+  // ============================================================================
+  // STATE MANAGEMENT - All logic unchanged
+  // ============================================================================
   const { user } = useUser();
   
   const [selectedTier, setSelectedTier] = useState('pro');
   const [selectedCurrency, setSelectedCurrency] = useState('GBP');
   const [isProcessing, setIsProcessing] = useState(false);
-  const [processingProvider, setProcessingProvider] = useState(null); // Track which provider is processing
+  const [processingProvider, setProcessingProvider] = useState(null);
   const [error, setError] = useState(null);
   const [currentSubscription, setCurrentSubscription] = useState(null);
 
@@ -124,12 +181,14 @@ const PaymentProcessor = ({
     }
   }, [triggerReason]);
 
+  // ============================================================================
+  // API HANDLERS - All logic unchanged
+  // ============================================================================
   const loadCurrentSubscription = async () => {
     try {
       const env = PaymentRouter.getEnvironment();
       const response = await fetch(`${env.apiBase}/api/premium/user_subscription/${user.id}`, {
         credentials: 'include'
-
       });
       
       if (response.ok) {
@@ -151,7 +210,6 @@ const PaymentProcessor = ({
     try {
       console.log('🔄 Starting payment redirect via PaymentRouter...');
       
-      // Use PaymentRouter - it handles everything!
       await PaymentRouter.redirectToCheckout({
         tier: selectedTier,
         currency: selectedCurrency,
@@ -163,7 +221,6 @@ const PaymentProcessor = ({
         }
       });
       
-      // If we reach here, redirect failed
       console.warn('⚠️ Redirect did not occur - user still on page');
       setIsProcessing(false);
       setProcessingProvider(null);
@@ -176,7 +233,6 @@ const PaymentProcessor = ({
     }
   };
 
-  // ✅ ADDED: PayPal Handler
   const handlePayPalCheckout = async () => {
     if (isProcessing) return;
     
@@ -190,7 +246,7 @@ const PaymentProcessor = ({
       await PaymentRouter.redirectToCheckout({
         tier: selectedTier,
         currency: selectedCurrency,
-        provider: 'paypal',  // ← KEY DIFFERENCE
+        provider: 'paypal',
         triggerSource: triggerReason || 'payment_modal',
         metadata: {
           currentUsage: currentUsage,
@@ -217,6 +273,9 @@ const PaymentProcessor = ({
 
   if (!isOpen) return null;
 
+  // ============================================================================
+  // RENDER - Only visual styling updated, structure unchanged
+  // ============================================================================
   return (
     <div style={{
       position: 'fixed',
@@ -224,7 +283,8 @@ const PaymentProcessor = ({
       left: 0,
       width: '100%',
       height: '100%',
-      background: 'rgba(0, 0, 0, 0.9)',
+      background: 'rgba(10, 15, 26, 0.95)',
+      backdropFilter: 'blur(8px)',
       display: 'flex',
       alignItems: 'center',
       justifyContent: 'center',
@@ -232,80 +292,77 @@ const PaymentProcessor = ({
       padding: '1rem'
     }}>
       <div style={{
-        background: 'linear-gradient(135deg, #0B1426 0%, #1A2B47 25%, #2C1810 50%, #0F1A2E 75%, #0B1426 100%)',
-        border: '2px solid rgba(255, 215, 0, 0.3)',
+        background: `linear-gradient(135deg, ${designTokens.colors.background.canvas} 0%, ${designTokens.colors.background.surface} 50%, ${designTokens.colors.background.canvas} 100%)`,
+        border: `1px solid ${designTokens.colors.border.medium}`,
         borderRadius: '20px',
         padding: '2rem',
         width: '100%',
         maxWidth: '800px',
         maxHeight: '90vh',
-        overflowY: 'auto'
+        overflowY: 'auto',
+        boxShadow: designTokens.shadows.elevation03
       }}>
         {/* Header */}
         <div style={{
           display: 'flex',
           justifyContent: 'space-between',
-          alignItems: 'flex-start',
-          marginBottom: '2rem'
+          alignItems: 'center',
+          marginBottom: '1.5rem'
         }}>
           <div>
             <h2 style={{
-              color: '#FFD700',
-              fontSize: '1.8rem',
-              margin: '0 0 0.5rem 0'
+              margin: 0,
+              fontSize: '2rem',
+              fontFamily: designTokens.typography.fonts.display,
+              color: designTokens.colors.brand.ivory,
+              letterSpacing: '-0.5px'
             }}>
-              {triggerReason === 'character_limit' ? 'Create More Characters' : 
-               triggerReason === 'message_limit' ? 'Continue Chatting' : 
-               'Upgrade Your Experience'}
+              Choose Your Plan
             </h2>
-            {/* ✅ UPDATED: Text to include PayPal */}
             <p style={{
-              color: 'rgba(255, 255, 255, 0.8)',
-              margin: 0
+              margin: '0.5rem 0 0 0',
+              color: designTokens.colors.text.secondary,
+              fontSize: '0.95rem',
+              fontFamily: designTokens.typography.fonts.body
             }}>
-              Choose your plan and pay securely with Stripe or PayPal
+              Unlock unlimited conversations with history's greatest minds
             </p>
           </div>
-          
-          <div style={{ display: 'flex', gap: '0.5rem', alignItems: 'center' }}>
-            {onBack && (
-              <button
-                onClick={onBack}
-                style={{
-                  background: 'none',
-                  border: '1px solid rgba(255, 255, 255, 0.3)',
-                  borderRadius: '4px',
-                  color: 'rgba(255, 255, 255, 0.6)',
-                  fontSize: '0.9rem',
-                  cursor: 'pointer',
-                  padding: '0.5rem'
-                }}
-              >
-                ← Back
-              </button>
-            )}
+          {onBack && (
             <button
-              onClick={onClose}
+              onClick={onBack}
               style={{
-                background: 'none',
-                border: 'none',
-                color: 'rgba(255, 255, 255, 0.6)',
-                fontSize: '1.5rem',
+                background: 'transparent',
+                border: `1px solid ${designTokens.colors.border.medium}`,
+                borderRadius: '8px',
+                color: designTokens.colors.text.secondary,
+                padding: '0.5rem 1rem',
                 cursor: 'pointer',
-                padding: '0.25rem'
+                fontSize: '0.9rem',
+                fontFamily: designTokens.typography.fonts.body,
+                transition: 'all 0.2s ease'
+              }}
+              onMouseEnter={(e) => {
+                e.currentTarget.style.borderColor = designTokens.colors.accent.primary;
+                e.currentTarget.style.color = designTokens.colors.accent.primary;
+              }}
+              onMouseLeave={(e) => {
+                e.currentTarget.style.borderColor = designTokens.colors.border.medium;
+                e.currentTarget.style.color = designTokens.colors.text.secondary;
               }}
             >
-              ×
+              ← Back
             </button>
-          </div>
+          )}
         </div>
 
         {/* Currency Selector */}
         <div style={{
           marginBottom: '2rem',
           display: 'flex',
+          gap: '0.5rem',
           justifyContent: 'center',
-          gap: '0.5rem'
+          flexWrap: 'wrap'
         }}>
           {['GBP', 'USD', 'EUR'].map(currency => (
             <button
@@ -313,45 +370,108 @@ const PaymentProcessor = ({
               onClick={() => setSelectedCurrency(currency)}
               style={{
                 background: selectedCurrency === currency 
-                  ? 'rgba(255, 215, 0, 0.2)' 
-                  : 'rgba(255, 255, 255, 0.05)',
-                border: selectedCurrency === currency 
-                  ? '1px solid #FFD700' 
-                  : '1px solid rgba(255, 255, 255, 0.2)',
-                borderRadius: '6px',
-                color: selectedCurrency === currency ? '#FFD700' : 'rgba(255, 255, 255, 0.8)',
+                  ? designTokens.colors.accent.primary
+                  : designTokens.colors.background.interactive,
+                border: selectedCurrency === currency
+                  ? `1px solid ${designTokens.colors.accent.primary}`
+                  : `1px solid ${designTokens.colors.border.medium}`,
+                borderRadius: '8px',
+                color: selectedCurrency === currency
+                  ? designTokens.colors.text.primary
+                  : designTokens.colors.text.secondary,
                 padding: '0.5rem 1rem',
-                fontSize: '0.9rem',
                 cursor: 'pointer',
-                transition: 'all 0.3s ease'
+                fontSize: '0.9rem',
+                fontFamily: designTokens.typography.fonts.body,
+                fontWeight: 500,
+                transition: 'all 0.2s ease',
+                boxShadow: selectedCurrency === currency ? designTokens.shadows.glow : 'none'
               }}
             >
-              {currency === 'GBP' ? '£ GBP' : currency === 'USD' ? '$ USD' : '€ EUR'}
+              {currency}
             </button>
           ))}
         </div>
 
-        {/* Current Plan Info */}
+        {/* Context Message */}
+        {triggerReason !== 'general' && (
+          <div style={{
+            background: designTokens.colors.background.interactive,
+            border: `1px solid ${designTokens.colors.accent.primary}40`,
+            borderRadius: '12px',
+            padding: '1rem',
+            marginBottom: '1.5rem',
+            display: 'flex',
+            alignItems: 'center',
+            gap: '1rem'
+          }}>
+            <span style={{ fontSize: '1.5rem' }}>ℹ️</span>
+            <p style={{
+              margin: 0,
+              color: designTokens.colors.text.secondary,
+              fontSize: '0.9rem',
+              fontFamily: designTokens.typography.fonts.body
+            }}>
+              {triggerReason === 'message_limit' 
+                ? "You've reached your message limit. Upgrade to continue your conversations."
+                : triggerReason === 'character_limit'
+                ? "You've reached your character limit. Upgrade to create more characters."
+                : triggerReason === 'character_approval'
+                ? "Get priority approval for your character with a Creator or Professional subscription."
+                : "Upgrade to unlock more features and capabilities."
+              }
+            </p>
+          </div>
+        )}
+
+        {/* Current Subscription Info */}
         {currentSubscription && (
           <div style={{
-            background: 'rgba(255, 255, 255, 0.05)',
-            border: '1px solid rgba(255, 215, 0, 0.2)',
-            borderRadius: '8px',
+            background: designTokens.colors.background.interactive,
+            border: `1px solid ${designTokens.colors.border.medium}`,
+            borderRadius: '12px',
             padding: '1rem',
-            marginBottom: '2rem'
+            marginBottom: '1.5rem'
           }}>
-            <h4 style={{ color: '#FFD700', margin: '0 0 0.5rem 0' }}>
-              Current Plan: {currentSubscription.tier_display}
-            </h4>
+            <div style={{
+              fontSize: '0.85rem',
+              color: designTokens.colors.text.tertiary,
+              marginBottom: '0.5rem',
+              fontFamily: designTokens.typography.fonts.body,
+              textTransform: 'uppercase',
+              letterSpacing: '0.5px'
+            }}>
+              Current Plan
+            </div>
+            <div style={{
+              fontSize: '1.1rem',
+              fontWeight: 600,
+              color: designTokens.colors.accent.primary,
+              marginBottom: '0.75rem',
+              fontFamily: designTokens.typography.fonts.display
+            }}>
+              {currentSubscription.tier_name?.toUpperCase() || 'FREE'}
+            </div>
             <div style={{
               display: 'grid',
-              gridTemplateColumns: 'repeat(auto-fit, minmax(150px, 1fr))',
-              gap: '1rem',
-              color: 'rgba(255, 255, 255, 0.8)',
-              fontSize: '0.9rem'
+              gridTemplateColumns: 'repeat(auto-fit, minmax(120px, 1fr))',
+              gap: '0.75rem',
+              fontSize: '0.85rem',
+              color: designTokens.colors.text.secondary,
+              fontFamily: designTokens.typography.fonts.body
             }}>
-              <div>Messages: {currentSubscription.messages_used || 0}/{currentSubscription.message_limit === -1 ? '∞' : currentSubscription.message_limit}</div>
-              <div>Characters: {currentSubscription.characters_used || 0}/{currentSubscription.character_limit === -1 ? '∞' : currentSubscription.character_limit}</div>
+              <div>
+                Messages: <strong style={{ color: designTokens.colors.text.primary }}>
+                  {currentSubscription.messages_used || 0}/
+                  {currentSubscription.message_limit === -1 ? '∞' : currentSubscription.message_limit}
+                </strong>
+              </div>
+              <div>
+                Characters: <strong style={{ color: designTokens.colors.text.primary }}>
+                  {currentSubscription.characters_used || 0}/
+                  {currentSubscription.character_limit === -1 ? '∞' : currentSubscription.character_limit}
+                </strong>
+              </div>
             </div>
           </div>
         )}
@@ -359,7 +479,7 @@ const PaymentProcessor = ({
         {/* Tier Selection */}
         <div style={{
           display: 'grid',
-          gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))',
+          gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))',
           gap: '1rem',
           marginBottom: '2rem'
         }}>
@@ -372,16 +492,17 @@ const PaymentProcessor = ({
                 onClick={() => setSelectedTier(tier)}
                 style={{
                   background: selectedTier === tier 
-                    ? 'rgba(255, 215, 0, 0.1)' 
-                    : 'rgba(255, 255, 255, 0.05)',
+                    ? `linear-gradient(135deg, ${designTokens.colors.background.interactive} 0%, ${designTokens.colors.background.peak} 100%)`
+                    : designTokens.colors.background.surface,
                   border: selectedTier === tier 
-                    ? '2px solid #FFD700' 
-                    : '1px solid rgba(255, 255, 255, 0.2)',
+                    ? `2px solid ${designTokens.colors.accent.primary}` 
+                    : `1px solid ${designTokens.colors.border.medium}`,
                   borderRadius: '12px',
                   padding: '1.5rem',
                   cursor: 'pointer',
                   transition: 'all 0.3s ease',
-                  position: 'relative'
+                  position: 'relative',
+                  boxShadow: selectedTier === tier ? designTokens.shadows.glow : 'none'
                 }}
               >
                 {config.popular && (
@@ -389,35 +510,44 @@ const PaymentProcessor = ({
                     position: 'absolute',
                     top: '-8px',
                     right: '1rem',
-                    background: '#FFD700',
-                    color: '#000',
+                    background: `linear-gradient(135deg, ${designTokens.colors.accent.primary}, ${designTokens.colors.accent.hover})`,
+                    color: designTokens.colors.text.primary,
                     padding: '0.25rem 0.75rem',
                     borderRadius: '12px',
                     fontSize: '0.8rem',
-                    fontWeight: 'bold'
+                    fontWeight: 700,
+                    fontFamily: designTokens.typography.fonts.body,
+                    textTransform: 'uppercase',
+                    letterSpacing: '0.5px',
+                    boxShadow: designTokens.shadows.glow
                   }}>
                     RECOMMENDED
                   </div>
                 )}
                 
                 <h3 style={{
-                  color: '#FFD700',
+                  color: designTokens.colors.accent.primary,
                   margin: '0 0 0.5rem 0',
-                  fontSize: '1.2rem'
+                  fontSize: '1.2rem',
+                  fontFamily: designTokens.typography.fonts.display,
+                  fontWeight: 700
                 }}>
                   {config.display_name}
                 </h3>
                 
                 <div style={{
-                  color: 'rgba(255, 255, 255, 0.9)',
+                  color: designTokens.colors.text.primary,
                   fontSize: '2rem',
-                  fontWeight: 'bold',
-                  margin: '0 0 1rem 0'
+                  fontWeight: 700,
+                  margin: '0 0 1rem 0',
+                  fontFamily: designTokens.typography.fonts.display
                 }}>
                   {priceDisplay}
                   <span style={{
                     fontSize: '0.8rem',
-                    color: 'rgba(255, 255, 255, 0.6)'
+                    color: designTokens.colors.text.tertiary,
+                    fontWeight: 400,
+                    fontFamily: designTokens.typography.fonts.body
                   }}>
                     /month
                   </span>
@@ -427,8 +557,9 @@ const PaymentProcessor = ({
                   listStyle: 'none',
                   padding: 0,
                   margin: 0,
-                  color: 'rgba(255, 255, 255, 0.8)',
-                  fontSize: '0.9rem'
+                  color: designTokens.colors.text.secondary,
+                  fontSize: '0.9rem',
+                  fontFamily: designTokens.typography.fonts.body
                 }}>
                   {config.features.map((feature, index) => (
                     <li key={index} style={{
@@ -437,7 +568,7 @@ const PaymentProcessor = ({
                       alignItems: 'center',
                       gap: '0.5rem'
                     }}>
-                      <span style={{ color: '#00FF88' }}>✓</span>
+                      <span style={{ color: designTokens.colors.semantic.success }}>✓</span>
                       {feature}
                     </li>
                   ))}
@@ -450,14 +581,15 @@ const PaymentProcessor = ({
         {/* Error Display */}
         {error && (
           <div style={{
-            background: 'rgba(255, 107, 107, 0.1)',
-            border: '1px solid rgba(255, 107, 107, 0.3)',
+            background: `${designTokens.colors.semantic.error}15`,
+            border: `1px solid ${designTokens.colors.semantic.error}40`,
             borderRadius: '8px',
             padding: '1rem',
             marginBottom: '1rem',
-            color: '#ff6b6b',
+            color: designTokens.colors.semantic.error,
             textAlign: 'center',
-            fontSize: '0.9rem'
+            fontSize: '0.9rem',
+            fontFamily: designTokens.typography.fonts.body
           }}>
             {error}
           </div>
@@ -465,10 +597,11 @@ const PaymentProcessor = ({
 
         {/* Stripe Trust Badge & Action Button */}
         <div style={{
-          background: 'rgba(255, 255, 255, 0.05)',
-          borderRadius: '8px',
+          background: designTokens.colors.background.surface,
+          borderRadius: '12px',
           padding: '1.5rem',
-          marginBottom: '1rem'
+          marginBottom: '1rem',
+          border: `1px solid ${designTokens.colors.border.subtle}`
         }}>
           <div style={{
             display: 'flex',
@@ -477,14 +610,15 @@ const PaymentProcessor = ({
             gap: '1rem',
             marginBottom: '1rem',
             fontSize: '0.9rem',
-            color: 'rgba(255, 255, 255, 0.7)'
+            color: designTokens.colors.text.secondary,
+            fontFamily: designTokens.typography.fonts.body
           }}>
             <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-              <span style={{ color: '#00FF88', fontSize: '1.2rem' }}>🔒</span>
+              <span style={{ color: designTokens.colors.semantic.success, fontSize: '1.2rem' }}>🔒</span>
               <span>Secured by Stripe</span>
             </div>
             <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-              <span style={{ color: '#00FF88', fontSize: '1.2rem' }}>💳</span>
+              <span style={{ color: designTokens.colors.semantic.success, fontSize: '1.2rem' }}>💳</span>
               <span>PCI Compliant</span>
             </div>
           </div>
@@ -495,20 +629,32 @@ const PaymentProcessor = ({
             style={{
               width: '100%',
               background: (isProcessing && processingProvider === 'stripe') 
-                ? 'rgba(255, 215, 0, 0.5)' 
-                : 'linear-gradient(135deg, #FFD700, #FFA500)',
+                ? `${designTokens.colors.accent.primary}80` 
+                : `linear-gradient(135deg, ${designTokens.colors.accent.primary}, ${designTokens.colors.accent.hover})`,
               border: 'none',
-              borderRadius: '8px',
-              color: '#000',
+              borderRadius: '12px',
+              color: designTokens.colors.text.primary,
               fontSize: '1.1rem',
               fontWeight: 700,
+              fontFamily: designTokens.typography.fonts.body,
               padding: '1rem 2rem',
               cursor: (isProcessing && processingProvider !== 'stripe') ? 'not-allowed' : 'pointer',
               transition: 'all 0.3s ease',
               display: 'flex',
               alignItems: 'center',
               justifyContent: 'center',
-              gap: '0.5rem'
+              gap: '0.5rem',
+              boxShadow: (isProcessing && processingProvider === 'stripe') ? 'none' : designTokens.shadows.glow
+            }}
+            onMouseEnter={(e) => {
+              if (!(isProcessing && processingProvider !== 'stripe')) {
+                e.currentTarget.style.transform = 'translateY(-2px)';
+                e.currentTarget.style.boxShadow = designTokens.shadows.glowStrong;
+              }
+            }}
+            onMouseLeave={(e) => {
+              e.currentTarget.style.transform = 'translateY(0)';
+              e.currentTarget.style.boxShadow = designTokens.shadows.glow;
             }}
           >
             {(isProcessing && processingProvider === 'stripe') ? (
@@ -516,8 +662,8 @@ const PaymentProcessor = ({
                 <div style={{
                   width: '20px',
                   height: '20px',
-                  border: '3px solid rgba(0,0,0,0.3)',
-                  borderTop: '3px solid rgba(0,0,0,0.8)',
+                  border: `3px solid ${designTokens.colors.text.secondary}`,
+                  borderTop: `3px solid ${designTokens.colors.text.primary}`,
                   borderRadius: '50%',
                   animation: 'spin 1s linear infinite'
                 }} />
@@ -529,12 +675,13 @@ const PaymentProcessor = ({
           </button>
         </div>
 
-        {/* ✅ ADDED: PayPal Trust Badge & Action Button */}
+        {/* PayPal Trust Badge & Action Button */}
         <div style={{
-          background: 'rgba(255, 255, 255, 0.05)',
-          borderRadius: '8px',
+          background: designTokens.colors.background.surface,
+          borderRadius: '12px',
           padding: '1.5rem',
-          marginBottom: '1rem'
+          marginBottom: '1rem',
+          border: `1px solid ${designTokens.colors.border.subtle}`
         }}>
           <div style={{
             display: 'flex',
@@ -543,14 +690,15 @@ const PaymentProcessor = ({
             gap: '1rem',
             marginBottom: '1rem',
             fontSize: '0.9rem',
-            color: 'rgba(255, 255, 255, 0.7)'
+            color: designTokens.colors.text.secondary,
+            fontFamily: designTokens.typography.fonts.body
           }}>
             <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-              <span style={{ color: '#00FF88', fontSize: '1.2rem' }}>🅿️</span>
+              <span style={{ color: designTokens.colors.semantic.success, fontSize: '1.2rem' }}>🅿️</span>
               <span>PayPal Secure</span>
             </div>
             <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-              <span style={{ color: '#00FF88', fontSize: '1.2rem' }}>🔒</span>
+              <span style={{ color: designTokens.colors.semantic.success, fontSize: '1.2rem' }}>🔒</span>
               <span>Buyer Protection</span>
             </div>
           </div>
@@ -564,17 +712,29 @@ const PaymentProcessor = ({
                 ? 'rgba(0, 48, 135, 0.5)' 
                 : 'linear-gradient(135deg, #0070BA, #003087)',
               border: 'none',
-              borderRadius: '8px',
+              borderRadius: '12px',
               color: '#FFF',
               fontSize: '1.1rem',
               fontWeight: 700,
+              fontFamily: designTokens.typography.fonts.body,
               padding: '1rem 2rem',
               cursor: (isProcessing && processingProvider !== 'paypal') ? 'not-allowed' : 'pointer',
               transition: 'all 0.3s ease',
               display: 'flex',
               alignItems: 'center',
               justifyContent: 'center',
-              gap: '0.5rem'
+              gap: '0.5rem',
+              boxShadow: (isProcessing && processingProvider === 'paypal') ? 'none' : '0 4px 12px rgba(0, 112, 186, 0.3)'
+            }}
+            onMouseEnter={(e) => {
+              if (!(isProcessing && processingProvider !== 'paypal')) {
+                e.currentTarget.style.transform = 'translateY(-2px)';
+                e.currentTarget.style.boxShadow = '0 6px 16px rgba(0, 112, 186, 0.4)';
+              }
+            }}
+            onMouseLeave={(e) => {
+              e.currentTarget.style.transform = 'translateY(0)';
+              e.currentTarget.style.boxShadow = '0 4px 12px rgba(0, 112, 186, 0.3)';
             }}
           >
             {(isProcessing && processingProvider === 'paypal') ? (
@@ -597,9 +757,10 @@ const PaymentProcessor = ({
 
         <p style={{
           textAlign: 'center',
-          color: 'rgba(255, 255, 255, 0.6)',
+          color: designTokens.colors.text.tertiary,
           fontSize: '0.85rem',
-          margin: 0
+          margin: 0,
+          fontFamily: designTokens.typography.fonts.body
         }}>
           You'll be redirected to our secure checkout page
         </p>

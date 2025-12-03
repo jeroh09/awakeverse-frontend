@@ -1,20 +1,73 @@
-// components/CharacterStatusModal.jsx - Fixed with proper subscription integration
+// components/CharacterStatusModal.jsx - UPDATED with Design System
 import React, { useState } from 'react';
 import PaymentProcessor from './PaymentProcessor';
 
+// ============================================================================
+// DESIGN SYSTEM TOKENS - Defensive Hybrid Approach
+// ============================================================================
+const designTokens = {
+  colors: {
+    background: {
+      canvas: '#0A0F1A',
+      surface: '#141B2E',
+      interactive: '#1C2640',
+      peak: '#243152'
+    },
+    accent: {
+      primary: '#6366F1',
+      hover: '#818CF8',
+      glow: 'rgba(99, 102, 241, 0.2)'
+    },
+    brand: {
+      ivory: '#F5F5DC'
+    },
+    semantic: {
+      success: '#10B981',
+      warning: '#F59E0B',
+      error: '#EF4444'
+    },
+    text: {
+      primary: '#F1F5F9',
+      secondary: '#94A3B8',
+      tertiary: '#64748B'
+    },
+    border: {
+      subtle: 'rgba(148, 163, 184, 0.1)',
+      medium: 'rgba(148, 163, 184, 0.2)',
+      strong: 'rgba(148, 163, 184, 0.3)'
+    }
+  },
+  typography: {
+    fonts: {
+      display: "'Syne', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif",
+      body: "'Inter', system-ui, sans-serif"
+    }
+  },
+  shadows: {
+    elevation02: '0 2px 8px -2px rgba(0, 0, 0, 0.1), 0 4px 12px -4px rgba(99, 102, 241, 0.1)',
+    glow: '0 0 20px -5px rgba(99, 102, 241, 0.2)'
+  }
+};
+
 const CharacterStatusModal = ({ character, onClose, onCreateNew }) => {
+  // ============================================================================
+  // STATE MANAGEMENT - All logic unchanged
+  // ============================================================================
   const [isMobile, setIsMobile] = useState(window.innerWidth <= 768);
   const [showPaymentProcessor, setShowPaymentProcessor] = useState(false);
 
+  // ============================================================================
+  // STATUS CONFIGURATION - Logic unchanged, visual styling updated
+  // ============================================================================
   const getStatusConfig = () => {
     switch (character.status) {
       case 'pending':
         return {
           icon: '⏳',
           title: 'Character Under Review',
-          color: '#FFA500',
-          bgColor: 'rgba(255, 165, 0, 0.1)',
-          borderColor: 'rgba(255, 165, 0, 0.3)',
+          color: designTokens.colors.semantic.warning,
+          bgColor: `${designTokens.colors.semantic.warning}15`,
+          borderColor: `${designTokens.colors.semantic.warning}40`,
           message: `${character.display_name} is being reviewed by our team. You'll receive an email notification when approved.`,
           estimatedTime: 'Usually takes 24-48 hours',
           primaryAction: 'Get Priority Approval',
@@ -24,9 +77,9 @@ const CharacterStatusModal = ({ character, onClose, onCreateNew }) => {
         return {
           icon: '❌',
           title: 'Character Needs Revision',
-          color: '#ff6b6b',
-          bgColor: 'rgba(255, 107, 107, 0.1)',
-          borderColor: 'rgba(255, 107, 107, 0.3)',
+          color: designTokens.colors.semantic.error,
+          bgColor: `${designTokens.colors.semantic.error}15`,
+          borderColor: `${designTokens.colors.semantic.error}40`,
           message: character.rejection_reason || 'Your character submission needs adjustments before approval.',
           estimatedTime: 'Create a new character addressing the feedback',
           primaryAction: 'Create New Character',
@@ -36,9 +89,9 @@ const CharacterStatusModal = ({ character, onClose, onCreateNew }) => {
         return {
           icon: '⚠️',
           title: 'Character Unavailable',
-          color: '#6c757d',
-          bgColor: 'rgba(108, 117, 125, 0.1)',
-          borderColor: 'rgba(108, 117, 125, 0.3)',
+          color: designTokens.colors.text.tertiary,
+          bgColor: `${designTokens.colors.text.tertiary}15`,
+          borderColor: `${designTokens.colors.text.tertiary}40`,
           message: 'This character is not available for chat.',
           estimatedTime: '',
           primaryAction: 'Browse Characters',
@@ -49,29 +102,30 @@ const CharacterStatusModal = ({ character, onClose, onCreateNew }) => {
 
   const config = getStatusConfig();
 
+  // ============================================================================
+  // EVENT HANDLERS - All logic unchanged
+  // ============================================================================
   const handlePrimaryAction = () => {
     if (character.status === 'pending') {
-      // Open payment processor for priority approval
       setShowPaymentProcessor(true);
     } else if (character.status === 'rejected') {
-      // Start new character creation
       onCreateNew();
     } else {
-      // Default close action
       onClose();
     }
   };
 
   const handlePaymentClose = () => {
     setShowPaymentProcessor(false);
-    // Optionally refresh the character status after payment
-    // You might want to call a refresh function here
   };
 
   const handlePaymentBack = () => {
     setShowPaymentProcessor(false);
   };
 
+  // ============================================================================
+  // UPGRADE OPTIONS - Logic unchanged, visual styling updated
+  // ============================================================================
   const upgradeOptions = [
     {
       tier: 'Creator',
@@ -97,6 +151,9 @@ const CharacterStatusModal = ({ character, onClose, onCreateNew }) => {
     }
   ];
 
+  // ============================================================================
+  // RENDER - Only visual styling updated, structure unchanged
+  // ============================================================================
   return (
     <>
       {/* Payment Processor Modal */}
@@ -114,7 +171,7 @@ const CharacterStatusModal = ({ character, onClose, onCreateNew }) => {
         left: 0,
         width: '100%',
         height: '100%',
-        background: 'rgba(11, 20, 38, 0.95)',
+        background: 'rgba(10, 15, 26, 0.95)',
         backdropFilter: 'blur(10px)',
         zIndex: 2000,
         display: 'flex',
@@ -123,8 +180,8 @@ const CharacterStatusModal = ({ character, onClose, onCreateNew }) => {
         padding: isMobile ? '1rem' : '2rem'
       }}>
         <div style={{
-          background: 'rgba(255, 255, 255, 0.1)',
-          border: `2px solid ${config.borderColor}`,
+          background: `linear-gradient(135deg, ${designTokens.colors.background.surface} 0%, ${designTokens.colors.background.canvas} 100%)`,
+          border: `1px solid ${config.borderColor}`,
           borderRadius: isMobile ? '16px' : '20px',
           padding: isMobile ? '1.5rem' : '2rem',
           width: '100%',
@@ -132,7 +189,8 @@ const CharacterStatusModal = ({ character, onClose, onCreateNew }) => {
           backdropFilter: 'blur(20px)',
           textAlign: 'center',
           maxHeight: '80vh',
-          overflowY: 'auto'
+          overflowY: 'auto',
+          boxShadow: designTokens.shadows.elevation02
         }}>
           {/* Status Icon */}
           <div style={{
@@ -147,9 +205,10 @@ const CharacterStatusModal = ({ character, onClose, onCreateNew }) => {
           <h2 style={{
             color: config.color,
             fontSize: isMobile ? '1.3rem' : '1.5rem',
-            fontWeight: 600,
+            fontWeight: 700,
             margin: '0 0 1rem 0',
-            letterSpacing: '1px'
+            letterSpacing: '-0.02em',
+            fontFamily: designTokens.typography.fonts.display
           }}>
             {config.title}
           </h2>
@@ -163,26 +222,30 @@ const CharacterStatusModal = ({ character, onClose, onCreateNew }) => {
             margin: '0 0 1.5rem 0'
           }}>
             <h3 style={{
-              color: '#FFD700',
+              color: designTokens.colors.accent.primary,
               fontSize: '1.1rem',
-              margin: '0 0 0.5rem 0'
+              margin: '0 0 0.5rem 0',
+              fontFamily: designTokens.typography.fonts.display,
+              fontWeight: 600
             }}>
               {character.display_name}
             </h3>
             <p style={{
-              color: 'rgba(255, 255, 255, 0.9)',
+              color: designTokens.colors.text.secondary,
               fontSize: '0.9rem',
               margin: 0,
-              lineHeight: 1.5
+              lineHeight: 1.5,
+              fontFamily: designTokens.typography.fonts.body
             }}>
               {config.message}
             </p>
             {config.estimatedTime && (
               <p style={{
-                color: 'rgba(255, 255, 255, 0.7)',
+                color: designTokens.colors.text.tertiary,
                 fontSize: '0.8rem',
                 margin: '0.5rem 0 0 0',
-                fontStyle: 'italic'
+                fontStyle: 'italic',
+                fontFamily: designTokens.typography.fonts.body
               }}>
                 {config.estimatedTime}
               </p>
@@ -193,33 +256,43 @@ const CharacterStatusModal = ({ character, onClose, onCreateNew }) => {
           {character.status === 'pending' && (
             <div style={{ marginBottom: '1.5rem' }}>
               <h3 style={{
-                color: '#FFD700',
+                color: designTokens.colors.brand.ivory,
                 fontSize: '1.1rem',
-                margin: '0 0 1rem 0'
+                margin: '0 0 1rem 0',
+                fontFamily: designTokens.typography.fonts.display,
+                fontWeight: 600
               }}>
                 Skip the Wait
               </h3>
               
               {upgradeOptions.map((option, index) => (
                 <div key={index} style={{
-                  background: option.recommended ? 'rgba(255, 215, 0, 0.1)' : 'rgba(255, 255, 255, 0.05)',
-                  border: option.recommended ? '2px solid #FFD700' : '1px solid rgba(255,255,255,0.2)',
+                  background: option.recommended 
+                    ? `linear-gradient(135deg, ${designTokens.colors.background.interactive}, ${designTokens.colors.background.peak})`
+                    : designTokens.colors.background.surface,
+                  border: option.recommended 
+                    ? `2px solid ${designTokens.colors.accent.primary}` 
+                    : `1px solid ${designTokens.colors.border.medium}`,
                   padding: '1rem',
-                  borderRadius: '8px',
+                  borderRadius: '12px',
                   marginBottom: '0.5rem',
-                  position: 'relative'
+                  position: 'relative',
+                  boxShadow: option.recommended ? designTokens.shadows.glow : 'none'
                 }}>
                   {option.recommended && (
                     <div style={{
                       position: 'absolute',
                       top: '-8px',
                       right: '10px',
-                      background: '#FFD700',
-                      color: '#000',
+                      background: `linear-gradient(135deg, ${designTokens.colors.accent.primary}, ${designTokens.colors.accent.hover})`,
+                      color: designTokens.colors.text.primary,
                       padding: '2px 8px',
-                      borderRadius: '4px',
+                      borderRadius: '6px',
                       fontSize: '0.7rem',
-                      fontWeight: 'bold'
+                      fontWeight: 700,
+                      fontFamily: designTokens.typography.fonts.body,
+                      textTransform: 'uppercase',
+                      letterSpacing: '0.5px'
                     }}>
                       RECOMMENDED
                     </div>
@@ -233,15 +306,17 @@ const CharacterStatusModal = ({ character, onClose, onCreateNew }) => {
                   }}>
                     <div>
                       <div style={{ 
-                        fontWeight: 'bold', 
-                        color: '#FFD700',
-                        fontSize: '1rem'
+                        fontWeight: 700, 
+                        color: designTokens.colors.accent.primary,
+                        fontSize: '1rem',
+                        fontFamily: designTokens.typography.fonts.display
                       }}>
                         {option.tier}
                       </div>
                       <div style={{ 
                         fontSize: '0.9rem', 
-                        color: 'rgba(255, 255, 255, 0.8)' 
+                        color: designTokens.colors.text.secondary,
+                        fontFamily: designTokens.typography.fonts.body
                       }}>
                         {option.price}
                       </div>
@@ -252,14 +327,15 @@ const CharacterStatusModal = ({ character, onClose, onCreateNew }) => {
                     margin: '0.5rem 0', 
                     fontSize: '0.8rem',
                     textAlign: 'left',
-                    paddingLeft: '1rem'
+                    paddingLeft: '1rem',
+                    fontFamily: designTokens.typography.fonts.body
                   }}>
                     {option.benefits.map((benefit, i) => (
                       <li key={i} style={{ 
-                        color: 'rgba(255, 255, 255, 0.9)',
+                        color: designTokens.colors.text.secondary,
                         marginBottom: '0.3rem'
                       }}>
-                        {benefit}
+                        <span style={{ color: designTokens.colors.semantic.success }}>✓</span> {benefit}
                       </li>
                     ))}
                   </ul>
@@ -271,25 +347,28 @@ const CharacterStatusModal = ({ character, onClose, onCreateNew }) => {
           {/* Rejection Details */}
           {character.status === 'rejected' && character.rejection_reason && (
             <div style={{
-              background: 'rgba(255, 107, 107, 0.1)',
-              border: '1px solid rgba(255, 107, 107, 0.3)',
-              borderRadius: '8px',
+              background: `${designTokens.colors.semantic.error}15`,
+              border: `1px solid ${designTokens.colors.semantic.error}40`,
+              borderRadius: '12px',
               padding: '1rem',
               margin: '0 0 1.5rem 0',
               textAlign: 'left'
             }}>
               <h4 style={{
-                color: '#ff6b6b',
+                color: designTokens.colors.semantic.error,
                 fontSize: '0.9rem',
-                margin: '0 0 0.5rem 0'
+                margin: '0 0 0.5rem 0',
+                fontFamily: designTokens.typography.fonts.display,
+                fontWeight: 600
               }}>
                 Feedback for Improvement:
               </h4>
               <p style={{
-                color: 'rgba(255, 255, 255, 0.9)',
+                color: designTokens.colors.text.secondary,
                 fontSize: '0.85rem',
                 margin: 0,
-                lineHeight: 1.4
+                lineHeight: 1.4,
+                fontFamily: designTokens.typography.fonts.body
               }}>
                 {character.rejection_reason}
               </p>
@@ -307,27 +386,33 @@ const CharacterStatusModal = ({ character, onClose, onCreateNew }) => {
               onClick={handlePrimaryAction}
               style={{
                 background: character.status === 'pending' 
-                  ? 'linear-gradient(135deg, #FFD700, #FFA500)'
+                  ? `linear-gradient(135deg, ${designTokens.colors.accent.primary}, ${designTokens.colors.accent.hover})`
                   : character.status === 'rejected'
-                  ? 'linear-gradient(135deg, #4CAF50, #45a049)'
-                  : 'linear-gradient(135deg, #6c757d, #5a6268)',
+                  ? `linear-gradient(135deg, ${designTokens.colors.semantic.success}, #059669)`
+                  : designTokens.colors.background.interactive,
                 border: 'none',
-                borderRadius: '8px',
-                color: character.status === 'pending' ? '#000' : '#fff',
+                borderRadius: '12px',
+                color: designTokens.colors.text.primary,
                 fontSize: isMobile ? '0.9rem' : '1rem',
                 fontWeight: 600,
+                fontFamily: designTokens.typography.fonts.body,
                 padding: isMobile ? '0.8rem 1.5rem' : '0.75rem 1.5rem',
                 cursor: 'pointer',
                 transition: 'all 0.3s ease',
-                flex: 1
+                flex: 1,
+                boxShadow: character.status === 'pending' ? designTokens.shadows.glow : 'none'
               }}
               onMouseEnter={(e) => {
                 e.currentTarget.style.transform = 'translateY(-2px)';
-                e.currentTarget.style.boxShadow = '0 4px 15px rgba(0,0,0,0.3)';
+                e.currentTarget.style.boxShadow = character.status === 'pending' 
+                  ? '0 6px 20px rgba(99, 102, 241, 0.4)'
+                  : '0 4px 15px rgba(0,0,0,0.3)';
               }}
               onMouseLeave={(e) => {
                 e.currentTarget.style.transform = 'translateY(0)';
-                e.currentTarget.style.boxShadow = 'none';
+                e.currentTarget.style.boxShadow = character.status === 'pending' 
+                  ? designTokens.shadows.glow 
+                  : 'none';
               }}
             >
               {config.primaryAction}
@@ -336,24 +421,25 @@ const CharacterStatusModal = ({ character, onClose, onCreateNew }) => {
             <button
               onClick={onClose}
               style={{
-                background: 'rgba(255, 255, 255, 0.1)',
-                border: '2px solid rgba(255, 255, 255, 0.3)',
-                borderRadius: '8px',
-                color: 'rgba(255, 255, 255, 0.8)',
+                background: 'transparent',
+                border: `1px solid ${designTokens.colors.border.medium}`,
+                borderRadius: '12px',
+                color: designTokens.colors.text.secondary,
                 fontSize: isMobile ? '0.9rem' : '1rem',
                 fontWeight: 600,
+                fontFamily: designTokens.typography.fonts.body,
                 padding: isMobile ? '0.8rem 1.5rem' : '0.75rem 1.5rem',
                 cursor: 'pointer',
                 transition: 'all 0.3s ease',
                 flex: 1
               }}
               onMouseEnter={(e) => {
-                e.currentTarget.style.background = 'rgba(255, 255, 255, 0.2)';
-                e.currentTarget.style.borderColor = 'rgba(255, 255, 255, 0.5)';
+                e.currentTarget.style.borderColor = designTokens.colors.accent.primary;
+                e.currentTarget.style.color = designTokens.colors.accent.primary;
               }}
               onMouseLeave={(e) => {
-                e.currentTarget.style.background = 'rgba(255, 255, 255, 0.1)';
-                e.currentTarget.style.borderColor = 'rgba(255, 255, 255, 0.3)';
+                e.currentTarget.style.borderColor = designTokens.colors.border.medium;
+                e.currentTarget.style.color = designTokens.colors.text.secondary;
               }}
             >
               {config.secondaryAction}
@@ -362,10 +448,11 @@ const CharacterStatusModal = ({ character, onClose, onCreateNew }) => {
 
           {/* Helper Text */}
           <p style={{
-            color: 'rgba(255, 255, 255, 0.6)',
+            color: designTokens.colors.text.tertiary,
             fontSize: '0.75rem',
             margin: '1rem 0 0 0',
-            fontStyle: 'italic'
+            fontStyle: 'italic',
+            fontFamily: designTokens.typography.fonts.body
           }}>
             {character.status === 'pending' 
               ? 'While you wait, explore our existing character library'
