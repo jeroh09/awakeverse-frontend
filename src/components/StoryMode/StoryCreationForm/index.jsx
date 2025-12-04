@@ -1,8 +1,9 @@
 // src/components/StoryMode/StoryCreationForm/index.jsx
-// Complete Creation Form with Scene Style support
+// Complete Creation Form with Scene Style AND Milestone support
 import React, { useState, useEffect } from 'react';
 import useStoryApi from '../../../hooks/useStoryApi';
 import CharacterSelector from './CharacterSelector';
+import MilestoneInput from '../StoryCreation/MilestoneInput'; // NEW IMPORT
 import { getDisplayNameFromKey } from '../../../utils/characterUtils';
 import styles from './StoryCreationForm.module.css';
 
@@ -12,7 +13,7 @@ export default function StoryCreationForm({
   onClose = () => {},
   onSuccess = () => {},
 }) {
-  const [step, setStep] = useState(1); // 1: Character, 2: Details
+  const [step, setStep] = useState(1); // 1: Character, 2: Details, 3: Milestones
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
 
@@ -20,8 +21,11 @@ export default function StoryCreationForm({
   const [selectedCharacter, setSelectedCharacter] = useState(null);
   const [title, setTitle] = useState('');
   const [startingSituation, setStartingSituation] = useState('');
+  const [primaryObjective, setPrimaryObjective] = useState(''); // NEW: For milestones
   const [customEra, setCustomEra] = useState('');
-  const [sceneStyle, setSceneStyle] = useState(''); // NEW: scene prompt text
+  const [sceneStyle, setSceneStyle] = useState('');
+  const [milestones, setMilestones] = useState([]); // NEW: Milestone state
+  const [milestoneValidation, setMilestoneValidation] = useState({ valid: false, message: '' });
 
   const { createStory } = useStoryApi();
 
@@ -30,27 +34,71 @@ export default function StoryCreationForm({
     if (template && isOpen) {
       setTitle(template.title || '');
       setStartingSituation(template.preset_situation || '');
+      setPrimaryObjective(template.preset_objective || ''); // NEW
       setCustomEra(template.preset_era || '');
       setSelectedCharacter(template.preset_character_key || null);
       setSceneStyle(template.scene_prompt || '');
+      setMilestones(template.preset_milestones || []); // NEW
     }
 
     if (!template && isOpen) {
       // Blank create: clear fields
       setTitle('');
       setStartingSituation('');
+      setPrimaryObjective(''); // NEW
       setCustomEra('');
       setSelectedCharacter(null);
       setSceneStyle('');
+      setMilestones([]); // NEW
     }
   }, [template, isOpen]);
 
+  // Validate milestones for step 3
+  useEffect(() => {
+    if (step === 3) {
+      const validateMilestones = () => {
+        if (milestones.length < 2) {
+          return { valid: false, message: 'Minimum 2 milestones required' };
+        }
+        if (milestones.length > 5) {
+          return { valid: false, message: 'Maximum 5 milestones allowed' };
+        }
+        
+        // Check each milestone has content
+        const emptyMilestones = milestones.filter(m => !m.trim());
+        if (emptyMilestones.length > 0) {
+          return { valid: false, message: 'All milestones must have content' };
+        }
+        
+        // Check word count
+        const invalidWordCount = milestones.filter(m => {
+          const wordCount = m.trim().split(/\s+/).length;
+          return wordCount < 5 || wordCount > 20;
+        });
+        
+        if (invalidWordCount.length > 0) {
+          return { valid: false, message: 'Milestones must be 5-20 words' };
+        }
+        
+        return { valid: true, message: `${milestones.length} milestones ready` };
+      };
+      
+      setMilestoneValidation(validateMilestones());
+    }
+  }, [milestones, step]);
+
   // Validation
   const canProceedToStep2 = selectedCharacter !== null;
-  const canSave =
+  const canProceedToStep3 = 
     canProceedToStep2 &&
     title.trim().length > 0 &&
-    startingSituation.trim().length > 0;
+    startingSituation.trim().length > 0 &&
+    primaryObjective.trim().length > 10; // NEW: Require objective for milestones
+
+  // Updated save validation to include milestones
+  const canSave =
+    canProceedToStep3 &&
+    milestoneValidation.valid;
 
   // Character selection
   const handleCharacterSelect = (characterKey) => {
@@ -64,15 +112,18 @@ export default function StoryCreationForm({
     setSelectedCharacter(null);
     setTitle('');
     setStartingSituation('');
+    setPrimaryObjective(''); // NEW
     setCustomEra('');
     setSceneStyle('');
+    setMilestones([]); // NEW
+    setMilestoneValidation({ valid: false, message: '' });
     onClose();
   };
 
   // Save / create story
   const handleSave = async () => {
     if (!canSave) {
-      setError('Please complete all required fields');
+      setError('Please complete all required fields and ensure milestones are valid');
       return;
     }
 
@@ -80,24 +131,23 @@ export default function StoryCreationForm({
       setLoading(true);
       setError(null);
 
-      const scenePromptTrimmed = sceneStyle.trim();
-
       const storyData = {
         title: title.trim(),
         character_key: selectedCharacter,
         starting_situation: startingSituation.trim(),
+        primary_objective: primaryObjective.trim(), // NEW
         template_id: template?.id || null,
         custom_era: customEra || null,
-        // NEW: scene prompt sent to backend
-        scene_prompt: scenePromptTrimmed || null,
+        scene_prompt: sceneStyle.trim() || null,
+        custom_milestones: milestones // NEW: Include milestones
       };
 
-      console.log('📖 Creating story:', storyData);
+      console.log('📖 Creating story with milestones:', storyData);
 
       const result = await createStory(storyData);
 
       if (result.success) {
-        console.log('✅ Story created:', result.story);
+        console.log('✅ Story created with milestones:', result.story);
         onSuccess(result.story);
         handleClose();
       } else {
@@ -158,6 +208,14 @@ export default function StoryCreationForm({
             <div className={styles.stepNumber}>2</div>
             <div className={styles.stepLabel}>Story Details</div>
           </div>
+          <div
+            className={`${styles.step} ${
+              step >= 3 ? styles.active : ''
+            }`}
+          >
+            <div className={styles.stepNumber}>3</div>
+            <div className={styles.stepLabel}>Milestones</div>
+          </div>
         </div>
 
         {/* Content */}
@@ -197,7 +255,7 @@ export default function StoryCreationForm({
             <div className={styles.stepContent}>
               <h3>Story Details</h3>
               <p className={styles.stepDescription}>
-                Customize your story title, opening scene, and era.
+                Customize your story title, opening scene, and objective.
               </p>
 
               {/* Title */}
@@ -232,6 +290,26 @@ export default function StoryCreationForm({
                 </div>
               </div>
 
+              {/* NEW: Primary Objective */}
+              <div className={styles.formGroup}>
+                <label htmlFor="primary-objective">Primary Objective *</label>
+                <textarea
+                  id="primary-objective"
+                  value={primaryObjective}
+                  onChange={(e) => setPrimaryObjective(e.target.value)}
+                  placeholder="What is the main goal of this story? (required for milestone generation)"
+                  maxLength={300}
+                  rows={3}
+                  className={styles.formTextarea}
+                />
+                <div className={styles.charCount}>
+                  {primaryObjective.length}/300
+                  <span className={styles.hintText}>
+                    {primaryObjective.trim().length < 10 ? ' (10+ characters to generate milestones)' : ''}
+                  </span>
+                </div>
+              </div>
+
               {/* Era */}
               <div className={styles.formGroup}>
                 <label htmlFor="custom-era">Era (Optional)</label>
@@ -255,7 +333,7 @@ export default function StoryCreationForm({
                 </select>
               </div>
 
-              {/* NEW: Scene Style */}
+              {/* Scene Style */}
               <div className={styles.formGroup}>
                 <label htmlFor="scene-style">
                   Scene Style (optional){' '}
@@ -290,7 +368,83 @@ export default function StoryCreationForm({
               )}
             </div>
           )}
+
+          {/* Step 3: Milestones */}
+          {step === 3 && (
+            <div className={styles.stepContent}>
+              <h3>Story Milestones</h3>
+              <p className={styles.stepDescription}>
+                Milestones guide your story's progression. They auto-generate from your objective but can be edited.
+              </p>
+
+              {/* Objective Summary */}
+              <div className={styles.objectiveSummary}>
+                <div className={styles.summaryLabel}>Based on your objective:</div>
+                <div className={styles.summaryText}>
+                  "{primaryObjective.length > 80 ? primaryObjective.substring(0, 80) + '...' : primaryObjective}"
+                </div>
+              </div>
+
+              {/* Milestone Input Component */}
+              <MilestoneInput
+                objective={primaryObjective}
+                startingSituation={startingSituation}
+                era={customEra || 'modern'}
+                characterKey={selectedCharacter}
+                onMilestonesChange={setMilestones}
+                initialMilestones={milestones}
+              />
+
+              {/* Milestone Validation Status */}
+              {milestones.length > 0 && (
+                <div className={`${styles.validationStatus} ${milestoneValidation.valid ? styles.valid : styles.invalid}`}>
+                  <span className={styles.statusIcon}>
+                    {milestoneValidation.valid ? '✓' : '⚠️'}
+                  </span>
+                  <span className={styles.statusText}>
+                    {milestoneValidation.message}
+                  </span>
+                </div>
+              )}
+
+              {/* Help Text */}
+              <div className={styles.milestoneHelp}>
+                <div className={styles.helpItem}>
+                  <span className={styles.helpIcon}>💡</span>
+                  <span>Milestones adapt as your story progresses</span>
+                </div>
+                <div className={styles.helpItem}>
+                  <span className={styles.helpIcon}>⚡</span>
+                  <span>Edit any milestone to match your vision</span>
+                </div>
+                <div className={styles.helpItem}>
+                  <span className={styles.helpIcon}>🔧</span>
+                  <span>2-5 milestones recommended for best pacing</span>
+                </div>
+              </div>
+
+              {/* Selected Character Reminder */}
+              {selectedCharacter && (
+                <div className={styles.characterReminder}>
+                  <span className={styles.reminderLabel}>
+                    Story Details:
+                  </span>
+                  <span className={styles.reminderValue}>
+                    {getDisplayNameFromKey(selectedCharacter)} · {title}
+                  </span>
+                </div>
+              )}
+            </div>
+          )}
         </div>
+
+        {/* Error Display */}
+        {error && (
+          <div className={styles.errorDisplay}>
+            <span className={styles.errorIcon}>⚠️</span>
+            <span className={styles.errorText}>{error}</span>
+          </div>
+        )}
 
         {/* Footer */}
         <div className={styles.modalFooter}>
@@ -317,12 +471,16 @@ export default function StoryCreationForm({
               Cancel
             </button>
 
-            {step === 1 ? (
+            {step < 3 ? (
               <button
                 type="button"
                 onClick={() => goToStep(step + 1)}
                 className={styles.navButtonPrimary}
-                disabled={!canProceedToStep2 || loading}
+                disabled={
+                  (step === 1 && !canProceedToStep2) ||
+                  (step === 2 && !canProceedToStep3) ||
+                  loading
+                }
               >
                 Next →
               </button>
