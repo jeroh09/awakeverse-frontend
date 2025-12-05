@@ -1,6 +1,6 @@
 // src/components/StoryMode/StoryCreation/MilestoneInput.jsx
 import React, { useState, useEffect } from 'react';
-import useStoryApi from '../hooks/useStoryApi';  // 🆕 ADD THIS IMPORT
+import useStoryApi from '../../../hooks/useStoryApi';
 import styles from './MilestoneInput.module.css';
 
 /**
