@@ -75,7 +75,7 @@ export default function useStoryApi() {
     return request(`${API_BASE}/api/stories/${storyId}/context`);
   }, [request]);
 
-  // 🆕 NEW: Get story progress (objective + structure tracking)
+  // Get story progress (objective + structure tracking)
   const getStoryProgress = useCallback(async (storyId) => {
     return request(`${API_BASE}/api/stories/${storyId}/progress`);
   }, [request]);
@@ -175,6 +175,14 @@ export default function useStoryApi() {
     });
   }, [request]);
 
+  // 🆕 NEW: Suggest milestones for story objective
+  const suggestMilestones = useCallback(async (milestoneData) => {
+    return request(`${API_BASE}/api/stories/suggest-milestones`, {
+      method: 'POST',
+      body: JSON.stringify(milestoneData)
+    });
+  }, [request]);
+
   return {
     loading,
     error,
@@ -183,12 +191,13 @@ export default function useStoryApi() {
     getMyStories,
     getStory,
     getStoryContext,
-    getStoryProgress,  // 🆕 ADD THIS
+    getStoryProgress,
     updateStory,
     deleteStory,
     sendMessage,
     sendMessageStream,
     inviteCharacter,
-    resumeStory
+    resumeStory,
+    suggestMilestones  // 🆕 ADD THIS
   };
 }

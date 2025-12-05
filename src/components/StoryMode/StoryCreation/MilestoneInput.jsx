@@ -1,5 +1,6 @@
 // src/components/StoryMode/StoryCreation/MilestoneInput.jsx
 import React, { useState, useEffect } from 'react';
+import useStoryApi from '../hooks/useStoryApi';  // 🆕 ADD THIS IMPORT
 import styles from './MilestoneInput.module.css';
 
 /**
@@ -11,6 +12,8 @@ import styles from './MilestoneInput.module.css';
  * - Validates count (2-5) and length (5-20 words)
  * - Mobile-responsive with collapsed view
  * - No skip button - always generates milestones
+ * 
+ * 🆕 REFACTORED: Now uses useStoryApi hook for centralized API handling
  */
 export default function MilestoneInput({ 
   objective,
@@ -26,6 +29,9 @@ export default function MilestoneInput({
   const [generationError, setGenerationError] = useState(null);
   const [expandedMobile, setExpandedMobile] = useState(false);
   const [isMobile, setIsMobile] = useState(false);
+
+  // 🆕 USE THE HOOK
+  const { suggestMilestones } = useStoryApi();
 
   // Detect mobile
   useEffect(() => {
@@ -52,6 +58,7 @@ export default function MilestoneInput({
     }
   }, [milestones, onMilestonesChange]);
 
+  // 🆕 REFACTORED: Now uses the hook instead of direct fetch
   const generateMilestones = async () => {
     if (!objective || objective.trim().length < 10) {
       return;
@@ -61,38 +68,28 @@ export default function MilestoneInput({
     setGenerationError(null);
 
     try {
-      const response = await fetch('/api/stories/suggest-milestones', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        credentials: 'include',
-        body: JSON.stringify({
-          objective: objective.trim(),
-          starting_situation: startingSituation?.trim() || '',
-          era: era || 'modern',
-          character_key: characterKey || ''
-        })
+      // Use the centralized API method
+      const data = await suggestMilestones({
+        objective: objective.trim(),
+        starting_situation: startingSituation?.trim() || '',
+        era: era || 'modern',
+        character_key: characterKey || ''
       });
 
-      if (!response.ok) {
-        throw new Error('Failed to generate milestones');
-      }
-
-      const data = await response.json();
-      
+      // Handle response
       if (data.success && data.milestones && data.milestones.length > 0) {
         setMilestones(data.milestones);
         setHasGenerated(true);
+        console.log('✅ Milestones generated via', data.method);
       } else {
         throw new Error('Invalid response from server');
       }
 
     } catch (error) {
-      console.error('Milestone generation failed:', error);
+      console.error('❌ Milestone generation failed:', error);
       setGenerationError('Could not generate milestones');
       
-      // Use fallback milestones
+      // 🛡️ DEFENSIVE: Use fallback milestones
       const fallbackMilestones = [
         `Establish the current situation for ${objective.toLowerCase()}`,
         `Take first meaningful action toward ${objective.toLowerCase()}`,
@@ -134,12 +131,6 @@ export default function MilestoneInput({
     }
     setMilestones([...milestones, '']);
   };
-
-  // Get CSRF token from cookie
-  function getCsrfToken() {
-    const match = document.cookie.match(/av_csrf=([^;]+)/);
-    return match ? match[1] : '';
-  }
 
   // Validation helper
   const getMilestoneValidation = (milestone) => {
