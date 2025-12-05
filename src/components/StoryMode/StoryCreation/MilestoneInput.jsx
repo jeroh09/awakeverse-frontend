@@ -65,7 +65,6 @@ export default function MilestoneInput({
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
-          'X-CSRF-Token': getCsrfToken()
         },
         credentials: 'include',
         body: JSON.stringify({
