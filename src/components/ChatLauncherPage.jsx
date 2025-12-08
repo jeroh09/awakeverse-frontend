@@ -707,7 +707,7 @@ const ChatLauncherPage = ({ onStartChat, discoveredCharacters = [] }) => {
         }}>
           <PremiumOracleSearch
             value={inputValue}
-            onChange={(e) => setInputValue(e.target.value)}
+            onChange={(e) => handleInputChange(e.target.value)}  // ← Change this line
             onFocus={() => inputValue.length >= 2 && setShowResults(true)}
             onBlur={() => {
               setTimeout(() => setShowResults(false), 200);
@@ -1033,7 +1033,7 @@ const ChatLauncherPage = ({ onStartChat, discoveredCharacters = [] }) => {
         <div style={{ width: '100%', maxWidth: '400px', position: 'relative', marginBottom: '1rem' }}>
           <PremiumOracleSearch
             value={inputValue}
-            onChange={(e) => setInputValue(e.target.value)}
+            onChange={(e) => handleInputChange(e.target.value)}  // ← Change this line
             onFocus={() => inputValue.length >= 2 && setShowResults(true)}
             onBlur={() => {
               setTimeout(() => setShowResults(false), 200);
