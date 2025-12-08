@@ -723,12 +723,13 @@ const ChatLauncherPage = ({ onStartChat, discoveredCharacters = [] }) => {
               right: 0,
               maxHeight: '300px',
               overflowY: 'auto',
-              background: 'rgba(11, 20, 38, 0.95)',
-              border: '1px solid rgba(255, 215, 0, 0.3)',
-              borderRadius: '15px',
+              background: theme.colors.background.surface,
+              border: `1px solid ${theme.colors.accent.primary}33`, // 20% opacity
+              borderRadius: theme.borderRadius.lg,
               backdropFilter: 'blur(20px)',
-              padding: '1rem',
-              marginTop: '0.5rem',
+              padding: theme.spacing.md,
+              marginTop: theme.spacing.sm,
+              boxShadow: theme.shadows.elevation04,
               zIndex: 999
             }}>
               {searchResults.map((character, index) => (
@@ -757,7 +758,11 @@ const ChatLauncherPage = ({ onStartChat, discoveredCharacters = [] }) => {
                       height: '40px',
                       borderRadius: '50%',
                       objectFit: 'cover',
-                      border: '2px solid rgba(255, 215, 0, 0.3)',
+                      border: `2px solid ${
+                        character.source === 'market_hub' 
+                          ? theme.colors.accent.primary 
+                          : theme.colors.border.medium
+                      }`,
                       opacity: character.status === 'rejected' ? 0.6 : 1
                     }}
                     onError={(e) => { 
@@ -785,12 +790,13 @@ const ChatLauncherPage = ({ onStartChat, discoveredCharacters = [] }) => {
                       {/* NEW: Source indicator */}
                       {character.source === 'market_hub' && (
                         <span style={{
-                          marginLeft: '0.5rem',
-                          fontSize: '0.7rem',
-                          background: 'rgba(255, 215, 0, 0.2)',
+                          fontSize: theme.typography.sizes.caption,
+                          background: theme.colors.accent.glow,
                           padding: '0.1rem 0.4rem',
-                          borderRadius: '6px',
-                          color: 'rgba(255, 215, 0, 0.9)'
+                          borderRadius: theme.borderRadius.sm,
+                          color: theme.colors.accent.primary,
+                          fontWeight: theme.typography.weights.semibold,
+                          fontFamily: theme.typography.fonts.body
                         }}>
                           ✨ Discovered
                         </span>
@@ -1009,22 +1015,42 @@ const ChatLauncherPage = ({ onStartChat, discoveredCharacters = [] }) => {
             {currentPlaceholder}
           </p>
 
-          {/* NEW: Show discovered count if any */}
+          {/* Show discovered count if any */}
           {discoveredCharacters.length > 0 && (
             <div style={{
-              marginTop: '1rem',
-              padding: '0.5rem 1rem',
-              background: 'rgba(255, 215, 0, 0.1)',
-              border: '1px solid rgba(255, 215, 0, 0.3)',
-              borderRadius: '15px',
-              fontSize: '0.9rem',
-              color: 'rgba(255, 215, 0, 0.9)',
+              marginTop: theme.spacing.md,
+              padding: `${theme.spacing.sm} ${theme.spacing.md}`,
+              background: `linear-gradient(135deg, ${theme.colors.accent.glow} 0%, rgba(99, 102, 241, 0.15) 100%)`,
+              border: `1px solid ${theme.colors.accent.primary}40`,
+              borderRadius: theme.borderRadius.lg,
+              fontSize: theme.typography.sizes.bodySmall,
+              color: theme.colors.accent.primary,
               display: 'inline-flex',
               alignItems: 'center',
-              gap: '0.5rem',
-              backdropFilter: 'blur(10px)'
+              gap: theme.spacing.sm,
+              backdropFilter: 'blur(10px)',
+              fontFamily: theme.typography.fonts.body,
+              fontWeight: theme.typography.weights.semibold,
+              boxShadow: theme.shadows.elevation02,
+              transition: theme.transitions.normal,
+              cursor: 'default'
+            }}
+            onMouseEnter={(e) => {
+              e.currentTarget.style.boxShadow = `${theme.shadows.elevation03}, ${theme.shadows.glow}`;
+              e.currentTarget.style.borderColor = theme.colors.accent.primary;
+            }}
+            onMouseLeave={(e) => {
+              e.currentTarget.style.boxShadow = theme.shadows.elevation02;
+              e.currentTarget.style.borderColor = `${theme.colors.accent.primary}40`;
             }}>
-              ✨ {discoveredCharacters.length} character{discoveredCharacters.length !== 1 ? 's' : ''} discovered from Market Hub
+              <span style={{ 
+                fontSize: '1.1rem',
+                animation: 'pulse 2s infinite',
+                filter: 'drop-shadow(0 0 6px rgba(99, 102, 241, 0.4))'
+              }}>
+                ✨
+              </span>
+              {discoveredCharacters.length} character{discoveredCharacters.length !== 1 ? 's' : ''} discovered from Market Hub
             </div>
           )}
         </div>
@@ -1048,13 +1074,14 @@ const ChatLauncherPage = ({ onStartChat, discoveredCharacters = [] }) => {
               right: 0,
               maxHeight: '300px',
               overflowY: 'auto',
-              background: 'rgba(11, 20, 38, 0.95)',
-              border: '1px solid rgba(255, 215, 0, 0.3)',
-              borderRadius: '15px',
+              background: theme.colors.background.surface,
+              border: `1px solid ${theme.colors.accent.primary}33`, // 20% opacity
+              borderRadius: theme.borderRadius.lg,
               backdropFilter: 'blur(20px)',
-              padding: '1rem',
-              marginTop: '0.5rem',
-              zIndex: 1000
+              padding: theme.spacing.md,
+              marginTop: theme.spacing.sm,
+              zIndex: 1000,
+              boxShadow: theme.shadows.elevation04
             }}>
               {searchResults.map((character, index) => (
                 <div
@@ -1063,23 +1090,25 @@ const ChatLauncherPage = ({ onStartChat, discoveredCharacters = [] }) => {
                   style={{
                     display: 'flex',
                     alignItems: 'center',
-                    gap: '1rem',
-                    padding: '0.75rem',
-                    background: 'rgba(255, 255, 255, 0.05)',
-                    border: '1px solid rgba(255, 215, 0, 0.2)',
-                    borderRadius: '10px',
+                    gap: theme.spacing.md,
+                    padding: theme.spacing.md,
+                    background: theme.colors.background.interactive,
+                    border: `1px solid ${theme.colors.border.medium}`,
+                    borderRadius: theme.borderRadius.md,
                     cursor: 'pointer',
-                    transition: 'all 0.3s ease',
-                    marginBottom: index < searchResults.length - 1 ? '0.5rem' : 0,
+                    transition: theme.transitions.normal,
+                    marginBottom: index < searchResults.length - 1 ? theme.spacing.sm : 0,
                     position: 'relative'
                   }}
                   onMouseEnter={(e) => {
-                    e.currentTarget.style.background = 'rgba(255, 215, 0, 0.1)';
-                    e.currentTarget.style.borderColor = 'rgba(255, 215, 0, 0.5)';
+                    e.currentTarget.style.background = theme.colors.background.peak;
+                    e.currentTarget.style.borderColor = theme.colors.accent.primary;
+                    e.currentTarget.style.boxShadow = theme.shadows.elevation03;
                   }}
                   onMouseLeave={(e) => {
-                    e.currentTarget.style.background = 'rgba(255, 255, 255, 0.05)';
-                    e.currentTarget.style.borderColor = 'rgba(255, 215, 0, 0.2)';
+                    e.currentTarget.style.background = theme.colors.background.interactive;
+                    e.currentTarget.style.borderColor = theme.colors.border.medium;
+                    e.currentTarget.style.boxShadow = 'none';
                   }}
                 >
                   <img
@@ -1109,32 +1138,56 @@ const ChatLauncherPage = ({ onStartChat, discoveredCharacters = [] }) => {
                   />
                   <div style={{ flex: 1, minWidth: 0 }}>
                     <div style={{ 
-                      fontSize: '0.9rem', 
-                      fontWeight: 600, 
-                      color: character.status === 'approved' ? '#FFD700' : '#FFA500', 
+                      fontSize: theme.typography.sizes.body,
+                      fontWeight: theme.typography.weights.semibold,
+                      color: character.status === 'approved' 
+                        ? theme.colors.accent.primary  // Approved = indigo
+                        : character.status === 'pending'
+                          ? theme.colors.semantic.warning  // Pending = amber
+                          : theme.colors.text.primary,  // Default = white
                       marginBottom: '0.25rem',
                       display: 'flex',
                       alignItems: 'center',
                       gap: '0.5rem'
                     }}>
                       {character.name}
-                      {/* NEW: Source indicator */}
+                      {/* Source indicator */}
                       {character.source === 'market_hub' && (
                         <span style={{
-                          fontSize: '0.7rem',
-                          background: 'rgba(255, 215, 0, 0.2)',
-                          padding: '0.1rem 0.4rem',
-                          borderRadius: '6px',
-                          color: 'rgba(255, 215, 0, 0.9)'
+                          fontSize: theme.typography.sizes.caption, // 12px
+                          background: theme.colors.accent.glow, // rgba(99, 102, 241, 0.2)
+                          padding: `${theme.spacing.xs} ${theme.spacing.sm}`, // 4px 8px
+                          borderRadius: theme.borderRadius.sm, // 8px
+                          color: theme.colors.accent.primary, // #6366F1
+                          fontWeight: theme.typography.weights.semibold, // 600
+                          fontFamily: theme.typography.fonts.body, // 'Inter'
+                          display: 'inline-flex',
+                          alignItems: 'center',
+                          gap: '3px',
+                          marginLeft: theme.spacing.xs // 4px
                         }}>
-                          ✨ Discovered
+                          <span style={{ 
+                            fontSize: '0.8rem',
+                            animation: 'pulse 2s infinite'
+                          }}>
+                            ✨
+                          </span>
+                          Discovered
                         </span>
                       )}
                     </div>
-                    <div style={{
-                      fontSize: '0.75rem',
-                      color: 'rgba(255, 215, 0, 0.7)',
-                      letterSpacing: '0.5px'
+                    <div style={{ 
+                      fontSize: theme.typography.sizes.body,
+                      fontWeight: theme.typography.weights.semibold,
+                      color: character.status === 'approved' 
+                        ? theme.colors.accent.primary  // Approved = indigo
+                        : character.status === 'pending'
+                          ? theme.colors.semantic.warning  // Pending = amber
+                          : theme.colors.text.primary,  // Default = white
+                      marginBottom: '0.25rem',
+                      display: 'flex',
+                      alignItems: 'center',
+                      gap: '0.5rem'
                     }}>
                       {character.category}
                       {character.expertise_domain && character.source === 'market_hub' && (
@@ -1158,23 +1211,29 @@ const ChatLauncherPage = ({ onStartChat, discoveredCharacters = [] }) => {
               top: '100%',
               left: 0,
               right: 0,
-              background: 'rgba(11, 20, 38, 0.95)',
-              border: '1px solid rgba(255, 215, 0, 0.3)',
-              borderRadius: '15px',
+              background: theme.colors.background.surface,
+              border: `1px solid ${theme.colors.border.medium}`,
+              borderRadius: theme.borderRadius.lg,
               backdropFilter: 'blur(20px)',
-              padding: '1rem',
-              marginTop: '0.5rem',
+              padding: theme.spacing.md,
+              marginTop: theme.spacing.sm,
               textAlign: 'center',
-              zIndex: 999
+              zIndex: 999,
+              boxShadow: theme.shadows.elevation03
             }}>
               <p style={{
-                color: 'rgba(255, 215, 0, 0.8)',
-                margin: '0 0 0.5rem 0',
-                fontSize: '1rem'
+                color: theme.colors.text.primary,
+                margin: `0 0 ${theme.spacing.sm} 0`,
+                fontSize: theme.typography.sizes.body,
+                fontFamily: theme.typography.fonts.body
               }}>
                 No matches for "{inputValue}"
               </p>
-              <small style={{ color: 'rgba(255, 255, 255, 0.6)', fontSize: '0.85rem' }}>
+              <small style={{
+                color: theme.colors.text.secondary,
+                fontSize: theme.typography.sizes.caption,
+                fontFamily: theme.typography.fonts.body
+              }}>
                 Try searching for character names or themes
               </small>
             </div>
