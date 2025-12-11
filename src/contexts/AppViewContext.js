@@ -11,7 +11,8 @@ export const VIEW_STATES = {
   MARKET_HUB: 'market_hub',
   CREATOR_DASHBOARD: 'creator_dashboard',
   SCENARIOS: 'scenarios',
-  STORY_MODE: 'story_mode'  // NEW
+  STORY_MODE: 'story_mode',  // NEW
+  VERSE_STUDIO: 'verse_studio'  // 🔹 Workspace / Verse Studio tab
 };
 
 const STORAGE_KEY = 'awakeverse_discovered_characters';
@@ -126,6 +127,8 @@ const VIEW_TO_HASH_MAP = {
   [VIEW_STATES.CREATOR_DASHBOARD]: 'create',
   [VIEW_STATES.SCENARIOS]: 'scenarios',
   [VIEW_STATES.STORY_MODE]: 'stories',
+  [VIEW_STATES.VERSE_STUDIO]: 'workspace'  // 🔹 URL: #workspace
+
   
 };
 
@@ -143,20 +146,26 @@ function getViewFromHash(hashString) {
   const baseView = hashView.split('/')[0];
   
   // Map to view state
-  const HASH_TO_VIEW_MAP = {
+    const HASH_TO_VIEW_MAP = {
     'chat': VIEW_STATES.CHAT,
     'launcher': VIEW_STATES.CHAT, // Alias
+
     'discover': VIEW_STATES.MARKET_HUB,
     'market_hub': VIEW_STATES.MARKET_HUB, // Alias
+
     'create': VIEW_STATES.CREATOR_DASHBOARD,
     'creator_dashboard': VIEW_STATES.CREATOR_DASHBOARD, // Alias
+
     'scenarios': VIEW_STATES.SCENARIOS,
-    'stories': VIEW_STATES.STORY_MODE
-    
+    'stories': VIEW_STATES.STORY_MODE,
+
+    // 🔹 Workspace / Verse Studio aliases
+    'workspace': VIEW_STATES.VERSE_STUDIO,
+    'verse': VIEW_STATES.VERSE_STUDIO
   };
-  
   return HASH_TO_VIEW_MAP[baseView] || VIEW_STATES.CHAT;
 }
+
 
 // ============================================================================
 // MAIN PROVIDER COMPONENT

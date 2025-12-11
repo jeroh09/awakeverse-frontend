@@ -1,0 +1,553 @@
+/* src/components/VerseStudio/VerseStudioTab.module.css */
+
+/* Root container */
+.verseStudioTab {
+  --vs-bg-primary: #0A0F1A;           /* colors.background.canvas */
+  --vs-bg-surface: #141B2E;           /* colors.background.surface */
+  --vs-bg-card: #1C2640;              /* colors.background.interactive */
+  --vs-bg-peak: #243152;              /* colors.background.peak */
+
+  --vs-text-primary: #F1F5F9;         /* text.primary */
+  --vs-text-secondary: #94A3B8;       /* text.secondary */
+  --vs-text-muted: #64748B;           /* text.muted */
+  --vs-text-ivory: #F5F5DC;           /* brand ivory */
+
+  --vs-border-subtle: rgba(148, 163, 184, 0.18);
+  --vs-border-medium: rgba(148, 163, 184, 0.32);
+
+  --vs-accent-primary: #6366F1;       /* accent.primary */
+  --vs-accent-hover: #818CF8;         /* accent.hover */
+  --vs-accent-glow: rgba(99, 102, 241, 0.35);
+
+  --vs-shadow-soft: 0 2px 8px -2px rgba(0, 0, 0, 0.4),
+                    0 18px 50px -24px rgba(15, 23, 42, 0.9);
+
+  min-height: 100vh;
+  box-sizing: border-box;
+  padding: 16px 20px 24px;
+  background:
+    radial-gradient(circle at top left, rgba(99, 102, 241, 0.18), transparent 45%),
+    radial-gradient(circle at bottom right, rgba(148, 163, 184, 0.18), transparent 45%),
+    var(--vs-bg-primary);
+  color: var(--vs-text-primary);
+  font-family: "Inter", system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+}
+
+/* ===== HEADER ===== */
+.pageHeader {
+  max-width: 1280px;
+  margin: 0 auto 18px auto;
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 16px;
+}
+
+.titleBlock {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.eyebrow {
+  font-size: 11px;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--vs-text-secondary);
+}
+
+.titleRow {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+
+.pageTitle {
+  margin: 0;
+  font-family: "Syne", system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+  font-size: 26px;
+  font-weight: 600;
+  letter-spacing: 0.03em;
+  color: var(--vs-text-ivory);
+}
+
+.titlePill {
+  font-size: 11px;
+  text-transform: uppercase;
+  letter-spacing: 0.16em;
+  padding: 3px 10px;
+  border-radius: 999px;
+  border: 1px solid var(--vs-border-medium);
+  background: radial-gradient(circle at 0 0, var(--vs-accent-glow), transparent 55%);
+  color: var(--vs-text-secondary);
+}
+
+.subtitle {
+  margin: 0;
+  max-width: 520px;
+  font-size: 14px;
+  color: var(--vs-text-secondary);
+}
+
+/* Usage pill */
+.usagePill {
+  display: inline-flex;
+  flex-shrink: 0;
+  align-items: center;
+  gap: 10px;
+  padding: 10px 14px;
+  border-radius: 999px;
+  background: rgba(15, 23, 42, 0.92);
+  border: 1px solid var(--vs-border-medium);
+  box-shadow: 0 0 0 1px rgba(15, 23, 42, 0.9);
+  font-size: 12px;
+  color: var(--vs-text-secondary);
+}
+
+.usageDot {
+  width: 9px;
+  height: 9px;
+  border-radius: 999px;
+  background: var(--vs-accent-primary);
+  box-shadow: 0 0 14px rgba(99, 102, 241, 0.9);
+}
+
+.usageText strong {
+  color: var(--vs-text-primary);
+}
+
+.usageBar {
+  width: 90px;
+  height: 4px;
+  border-radius: 999px;
+  background: rgba(15, 23, 42, 0.7);
+  overflow: hidden;
+  position: relative;
+}
+
+.usageFill {
+  position: absolute;
+  inset: 0;
+  transform-origin: left;
+  transform: scaleX(0);
+  background: linear-gradient(90deg, var(--vs-accent-primary), var(--vs-accent-hover));
+  box-shadow: 0 0 12px rgba(99, 102, 241, 0.85);
+  transition: transform 0.22s ease-out;
+}
+
+.usageStatus {
+  font-size: 11px;
+  color: #fecaca;
+}
+
+/* ===== ERROR BANNER ===== */
+.errorBanner {
+  max-width: 1280px;
+  margin: 0 auto 12px auto;
+  padding: 10px 12px;
+  border-radius: 12px;
+  border: 1px solid rgba(248, 113, 113, 0.6);
+  background: rgba(127, 29, 29, 0.2);
+  color: #fee2e2;
+  font-size: 12px;
+}
+
+.errorTitle {
+  font-weight: 600;
+  margin-bottom: 2px;
+}
+
+.errorBody {
+  margin: 0;
+}
+
+/* ===== MAIN GRID ===== */
+.mainGrid {
+  max-width: 1280px;
+  margin: 0 auto;
+  display: grid;
+  grid-template-columns: 1.4fr 1fr;
+  gap: 16px;
+}
+
+/* Columns */
+.templatesColumn,
+.tasksColumn {
+  background: radial-gradient(circle at top right, rgba(99, 102, 241, 0.12), transparent 55%),
+              rgba(20, 27, 46, 0.96);
+  border-radius: 18px;
+  border: 1px solid var(--vs-border-subtle);
+  padding: 14px 14px 12px;
+  box-shadow: var(--vs-shadow-soft);
+  display: flex;
+  flex-direction: column;
+}
+
+.columnHeader {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  margin-bottom: 10px;
+}
+
+.columnTitle {
+  margin: 0;
+  font-family: "Syne", system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+  font-size: 16px;
+  font-weight: 600;
+  color: var(--vs-text-primary);
+}
+
+.columnSubtitle {
+  margin: 2px 0 0 0;
+  font-size: 12px;
+  color: var(--vs-text-secondary);
+}
+
+/* ===== LOADING & EMPTY STATES ===== */
+.loadingBox {
+  margin-top: 12px;
+  padding: 16px 10px;
+  border-radius: 12px;
+  border: 1px solid var(--vs-border-subtle);
+  background: rgba(15, 23, 42, 0.96);
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.loadingSpinner {
+  width: 16px;
+  height: 16px;
+  border-radius: 999px;
+  border: 2px solid rgba(148, 163, 184, 0.4);
+  border-top-color: var(--vs-accent-primary);
+  animation: vs-spin 0.9s linear infinite;
+}
+
+.loadingText {
+  font-size: 12px;
+  color: var(--vs-text-secondary);
+}
+
+@keyframes vs-spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+.emptyTemplates,
+.emptyTasks {
+  margin-top: 12px;
+  padding: 14px 12px;
+  border-radius: 12px;
+  border: 1px dashed var(--vs-border-subtle);
+  background: rgba(15, 23, 42, 0.96);
+}
+
+.emptyTitle {
+  font-size: 14px;
+  font-weight: 500;
+  color: var(--vs-text-ivory);
+}
+
+.emptyBody {
+  margin: 4px 0 0 0;
+  font-size: 12px;
+  color: var(--vs-text-secondary);
+}
+
+/* ===== TEMPLATES GRID ===== */
+.templatesGrid {
+  margin-top: 6px;
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 10px;
+}
+
+.templateCard {
+  position: relative;
+  border-radius: 14px;
+  padding: 10px 10px 12px;
+  background: linear-gradient(145deg, rgba(20, 27, 46, 0.98), rgba(10, 15, 26, 0.98));
+  border: 1px solid var(--vs-border-subtle);
+  box-shadow: 0 0 0 1px rgba(10, 15, 26, 0.96);
+  overflow: hidden;
+  transition: all 0.18s ease-out;
+}
+
+.templateCard::before {
+  content: "";
+  position: absolute;
+  inset: -40%;
+  opacity: 0;
+  background: radial-gradient(circle at 0 0, var(--vs-accent-glow), transparent 55%);
+  transition: opacity 0.18s ease-out;
+}
+
+.templateCard:hover {
+  border-color: var(--vs-accent-primary);
+  box-shadow: 0 0 0 1px rgba(99, 102, 241, 0.6),
+              0 18px 42px -18px rgba(15, 23, 42, 0.92);
+  transform: translateY(-1px);
+}
+
+.templateCard:hover::before {
+  opacity: 1;
+}
+
+.templateTagRow {
+  display: flex;
+  gap: 6px;
+  align-items: center;
+  margin-bottom: 4px;
+}
+
+.templateTag,
+.templateTagSecondary {
+  font-size: 10px;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  padding: 3px 8px;
+  border-radius: 999px;
+  border: 1px solid var(--vs-border-subtle);
+  background: rgba(15, 23, 42, 0.96);
+  color: var(--vs-text-secondary);
+}
+
+.templateTagSecondary {
+  border-color: rgba(99, 102, 241, 0.7);
+}
+
+.templateTitle {
+  margin: 0;
+  font-size: 15px;
+  font-weight: 500;
+  color: var(--vs-text-ivory);
+  font-family: "Syne", system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+}
+
+.templateDesc {
+  margin: 4px 0 0 0;
+  font-size: 12px;
+  color: var(--vs-text-secondary);
+  line-height: 1.4;
+}
+
+.templateRoles {
+  margin-top: 8px;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+.rolePill {
+  font-size: 11px;
+  padding: 3px 8px;
+  border-radius: 999px;
+  border: 1px solid var(--vs-border-subtle);
+  background: rgba(15, 23, 42, 0.96);
+  color: var(--vs-text-secondary);
+}
+
+.roleMore {
+  font-size: 11px;
+  color: var(--vs-text-secondary);
+}
+
+/* Use template CTA */
+.useTemplateButton {
+  margin-top: 8px;
+  width: 100%;
+  padding: 7px 10px;
+  border-radius: 999px;
+  border: 1px solid var(--vs-accent-primary);
+  background: radial-gradient(circle at 0 0, var(--vs-accent-glow), transparent 55%),
+              rgba(15, 23, 42, 0.98);
+  color: var(--vs-text-ivory);
+  font-size: 12px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.18s ease-out;
+  box-shadow: 0 0 0 1px rgba(10, 15, 26, 0.95);
+}
+
+.useTemplateButton:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 14px 30px rgba(99, 102, 241, 0.6);
+}
+
+.useTemplateButtonLocked {
+  border-color: var(--vs-border-medium);
+  background: rgba(15, 23, 42, 0.96);
+  color: var(--vs-text-muted);
+  cursor: not-allowed;
+  box-shadow: none;
+}
+
+/* ===== TASKS LIST ===== */
+.tasksList {
+  margin-top: 8px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.taskCard {
+  padding: 9px 10px;
+  border-radius: 12px;
+  background: linear-gradient(145deg, rgba(15, 23, 42, 0.98), rgba(10, 15, 26, 0.98));
+  border: 1px solid var(--vs-border-subtle);
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  gap: 10px;
+  align-items: center;
+}
+
+.taskMeta {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+}
+
+.taskName {
+  font-size: 14px;
+  font-weight: 500;
+  color: var(--vs-text-ivory);
+}
+
+.taskSub {
+  font-size: 11px;
+  color: var(--vs-text-secondary);
+}
+
+.taskActions {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+}
+
+.taskButton {
+  font-size: 11px;
+  padding: 5px 9px;
+  border-radius: 999px;
+  border: 1px solid var(--vs-border-medium);
+  background: rgba(15, 23, 42, 0.96);
+  color: var(--vs-text-secondary);
+  cursor: pointer;
+}
+
+.taskButtonDisabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+/* Trial banner */
+.trialBanner {
+  margin-top: 10px;
+  padding: 8px 10px;
+  border-radius: 10px;
+  border: 1px solid rgba(248, 113, 113, 0.7);
+  background: rgba(127, 29, 29, 0.24);
+  display: flex;
+  gap: 8px;
+  align-items: center;
+  font-size: 11px;
+  color: #fee2e2;
+}
+
+.trialDot {
+  width: 8px;
+  height: 8px;
+  border-radius: 999px;
+  background: #f97373;
+  box-shadow: 0 0 10px rgba(248, 113, 113, 0.9);
+}
+
+.trialText {
+  flex: 1;
+}
+
+/* ===== UPGRADE MODAL ===== */
+.upgradeOverlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(15, 23, 42, 0.75);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1400;
+}
+
+.upgradeModal {
+  width: 100%;
+  max-width: 420px;
+  padding: 20px 18px 16px;
+  border-radius: 18px;
+  background: linear-gradient(145deg, rgba(15, 23, 42, 0.98), rgba(10, 15, 26, 0.98));
+  border: 1px solid var(--vs-border-medium);
+  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.7);
+}
+
+.upgradeTitle {
+  margin: 0 0 6px 0;
+  font-size: 16px;
+  font-weight: 600;
+  color: var(--vs-text-ivory);
+}
+
+.upgradeBody {
+  margin: 0 0 12px 0;
+  font-size: 13px;
+  color: var(--vs-text-secondary);
+}
+
+.upgradeActions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 8px;
+}
+
+.upgradePrimary,
+.upgradeSecondary {
+  border-radius: 999px;
+  border: 1px solid transparent;
+  padding: 6px 10px;
+  font-size: 12px;
+  cursor: pointer;
+}
+
+.upgradePrimary {
+  background: var(--vs-accent-primary);
+  border-color: var(--vs-accent-primary);
+  color: #f9fafb;
+}
+
+.upgradeSecondary {
+  background: transparent;
+  border-color: var(--vs-border-medium);
+  color: var(--vs-text-secondary);
+}
+
+/* ===== RESPONSIVE ===== */
+@media (max-width: 960px) {
+  .verseStudioTab {
+    padding: 12px;
+  }
+
+  .pageHeader {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 10px;
+  }
+
+  .mainGrid {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .templatesGrid {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}

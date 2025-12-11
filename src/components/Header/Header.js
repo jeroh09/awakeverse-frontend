@@ -1,4 +1,4 @@
-// src/components/Header/Header.js – FIXED VERSION
+// src/components/Header/Header.js – UPDATED WITH VERSE STUDIO NAV
 import React, { useState, useEffect } from 'react';
 import styles from './Header.module.css';
 import { useUser } from '../../contexts/UserContext';
@@ -187,6 +187,80 @@ const CreateIcon = ({ className }) => (
   </svg>
 );
 
+/**
+ * VerseStudioIcon – unique thumbnail for Verse Studio
+ * 3-node constellation / orbit to signal multi-LLM collaboration
+ */
+const VerseStudioIcon = ({ className }) => (
+  <svg
+    className={className}
+    width="20"
+    height="20"
+    viewBox="0 0 24 24"
+    fill="none"
+    xmlns="http://www.w3.org/2000/svg"
+  >
+    <defs>
+      <filter id="verseGlow" x="-50%" y="-50%" width="200%" height="200%">
+        <feDropShadow
+          dx="0"
+          dy="0"
+          stdDeviation="2.2"
+          floodColor="#6366f1"
+          floodOpacity="0.65"
+        />
+      </filter>
+    </defs>
+    {/* Outer orbit */}
+    <circle
+      cx="12"
+      cy="12"
+      r="7"
+      stroke="currentColor"
+      strokeWidth="1.8"
+      opacity="0.7"
+      filter="url(#verseGlow)"
+    />
+    {/* Node 1 */}
+    <circle
+      cx="9"
+      cy="9"
+      r="1.7"
+      fill="currentColor"
+      opacity="0.95"
+      filter="url(#verseGlow)"
+    />
+    {/* Node 2 */}
+    <circle
+      cx="15"
+      cy="10"
+      r="1.5"
+      fill="currentColor"
+      opacity="0.85"
+      filter="url(#verseGlow)"
+    />
+    {/* Node 3 */}
+    <circle
+      cx="11"
+      cy="15"
+      r="1.4"
+      fill="currentColor"
+      opacity="0.85"
+      filter="url(#verseGlow)"
+    />
+    {/* Connecting paths */}
+    <path
+      d="M9 9L15 10L11 15Z"
+      stroke="currentColor"
+      strokeWidth="1.6"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      opacity="0.85"
+      filter="url(#verseGlow)"
+    />
+  </svg>
+);
+
 export default function Header() {
   const { user, getSubscriptionInfo } = useUser();
   const { isAuthenticated } = useAuth();
@@ -211,7 +285,7 @@ export default function Header() {
     return () => clearTimeout(timer);
   }, [isHeaderVisible, isAuthenticated]);
 
-  // --- Build nav items & groups (FROM WORKING VERSION) ---
+  // --- Build nav items & groups ---
   const navItems = !showNavigation
     ? []
     : [
@@ -245,6 +319,12 @@ export default function Header() {
           icon: ScenariosIcon,
           viewState: viewContext.VIEW_STATES.SCENARIOS,
         },
+        {
+          key: 'verseStudio',
+          label: 'Workspace',           // 🔹 sidebar label
+          icon: VerseStudioIcon,
+          viewState: viewContext.VIEW_STATES.VERSE_STUDIO,
+        },
       ];
 
   const itemsByKey = Object.fromEntries(navItems.map((item) => [item.key, item]));
@@ -263,7 +343,7 @@ export default function Header() {
     {
       key: 'productivity',
       label: 'Productivity',
-      items: ['create', 'scenarios'],
+      items: ['create', 'scenarios', 'verseStudio'],
     },
   ];
 
@@ -395,7 +475,7 @@ export default function Header() {
               </div>
             </div>
 
-            {/* ✅ FIXED: Nav groups (FROM WORKING VERSION) */}
+            {/* Nav groups */}
             <nav className={styles.sidebarNav}>
               {navGroups.map((group) => {
                 const groupItems = group.items
