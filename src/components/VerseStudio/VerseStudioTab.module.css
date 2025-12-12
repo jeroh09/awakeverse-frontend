@@ -285,6 +285,7 @@
   opacity: 0;
   background: radial-gradient(circle at 0 0, var(--vs-accent-glow), transparent 55%);
   transition: opacity 0.18s ease-out;
+  pointer-events: none;
 }
 
 .templateCard:hover {
@@ -372,6 +373,9 @@
   cursor: pointer;
   transition: all 0.18s ease-out;
   box-shadow: 0 0 0 1px rgba(10, 15, 26, 0.95);
+  position: relative;
+  z-index: 2;
+  pointer-events: auto; /* explicit, in case anything inherited weirdness */
 }
 
 .useTemplateButton:hover {
