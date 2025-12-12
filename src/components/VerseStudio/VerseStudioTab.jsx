@@ -6,19 +6,8 @@ import styles from './VerseStudioTab.module.css';
 
 const API_BASE = process.env.REACT_APP_API_URL || 'https://api.awakeverse.com';
 
-/**
- * VerseStudioTab
- *
- * Main Verse Studio landing:
- * - Left: Templates column (quick start from template)
- * - Right: My Tasks column (list of existing tasks, trial status)
- * - Full-page TaskChatWindow when a task is active
- *
- * NOTE (honest): Resuming *existing* tasks via the new chat shell will need
- * a future enhancement in useVerseStudio (a loadTask-style action).
- * For now, "Open task" is visually present but disabled.
- */
 export default function VerseStudioTab() {
+  // 🔹 Hook is actually called here
   const verseStudio = useVerseStudio();
 
   // Data state
@@ -33,17 +22,17 @@ export default function VerseStudioTab() {
   const [creatingTemplateId, setCreatingTemplateId] = useState(null);
   const [isUpgradeModalOpen, setIsUpgradeModalOpen] = useState(false);
 
-  // ---------------------------------------------------------------------------
-  // INITIAL LOAD: templates, tasks, token/trial state
-  // ---------------------------------------------------------------------------
+  // ───────────────────────────────────────────────────────────
+  // INITIAL LOAD: tasks, templates, tokens
+  // ───────────────────────────────────────────────────────────
   useEffect(() => {
     let isMounted = true;
 
-    const load = async () => {
-      setLoading(true);
-      setError(null);
-
+    async function load() {
       try {
+        setLoading(true);
+        setError(null);
+
         const [tasksRes, templatesRes, tokensRes] = await Promise.all([
           fetch(`${API_BASE}/api/verse-studio/tasks`, {
             method: 'GET',
@@ -81,14 +70,14 @@ export default function VerseStudioTab() {
         setTasks(tasksJson.tasks || []);
         setTemplates(templatesJson.templates || []);
         setTokensState(tokensJson || null);
-      } catch (e) {
+      } catch (err) {
         if (!isMounted) return;
-        console.error('❌ VerseStudioTab load error:', e);
-        setError(e.message || 'Failed to load Verse Studio');
+        console.error('❌ VerseWorkspace load error:', err);
+        setError(err.message || 'Failed to load Verse Workspace');
       } finally {
         if (isMounted) setLoading(false);
       }
-    };
+    }
 
     load();
 
@@ -97,9 +86,9 @@ export default function VerseStudioTab() {
     };
   }, []);
 
-  // ---------------------------------------------------------------------------
-  // DERIVED TRIAL STATE
-  // ---------------------------------------------------------------------------
+  // ───────────────────────────────────────────────────────────
+  // TRIAL INFO (3 tasks max)
+  // ───────────────────────────────────────────────────────────
   const trialInfo = useMemo(() => {
     if (!tokensState) {
       return {
@@ -130,13 +119,13 @@ export default function VerseStudioTab() {
 
   const trialLimitReached = trialInfo.used >= 3 || trialInfo.remaining <= 0;
 
-  // ---------------------------------------------------------------------------
+  // ───────────────────────────────────────────────────────────
   // TEMPLATE → CREATE TASK
-  // ---------------------------------------------------------------------------
+  // ───────────────────────────────────────────────────────────
   const handleTemplateClick = useCallback(
     async (template) => {
       if (!verseStudio || !verseStudio.createTask) {
-        console.warn('useVerseStudio not ready yet');
+        console.warn('⚠️ useVerseStudio not ready, createTask missing');
         return;
       }
 
@@ -146,36 +135,37 @@ export default function VerseStudioTab() {
       }
 
       try {
-        setCreatingTemplateId(template.id || template.template_id || template.slug || template.name);
-        const baseName =
-          template.display_name ||
-          template.name ||
-          template.title ||
-          'Verse Studio Task';
-
-        const description =
-          template.description ||
-          template.subtitle ||
-          'A new Verse Studio task based on this template.';
-
         const templateId = template.template_id || template.id || template.slug;
 
         if (!templateId) {
           throw new Error('Template is missing template_id / id');
         }
 
+        setCreatingTemplateId(templateId);
+
+        const baseName =
+          template.display_name ||
+          template.name ||
+          template.title ||
+          'Verse Workspace task';
+
+        const description =
+          template.description ||
+          template.subtitle ||
+          'A new Verse Workspace task based on this template.';
+
+        // 🔹 This calls the hook, which POSTs to /api/verse-studio/task
         const newTaskId = await verseStudio.createTask({
           name: baseName,
           description,
           template_id: templateId
-          // LLM assignments will be added later via a TaskCreator flow
+          // LLM assignments can be added later
         });
 
         if (!newTaskId) {
           throw new Error('Task created but no task_id returned');
         }
 
-        // Create a minimal local task object for the new session
         const newTask = {
           id: newTaskId,
           task_id: newTaskId,
@@ -191,7 +181,7 @@ export default function VerseStudioTab() {
         setTasks((prev) => [newTask, ...prev]);
         setActiveTask(newTask);
 
-        // Refresh token state so the trial counter stays accurate
+        // Refresh tokens so the 3-task counter updates
         try {
           const tokensRes = await fetch(`${API_BASE}/api/verse-studio/tokens`, {
             method: 'GET',
@@ -202,12 +192,12 @@ export default function VerseStudioTab() {
             const tokensJson = await tokensRes.json();
             setTokensState(tokensJson);
           }
-        } catch (innerError) {
-          console.warn('Could not refresh Verse Studio token state:', innerError);
+        } catch (innerErr) {
+          console.warn('Could not refresh Verse Workspace token state:', innerErr);
         }
-      } catch (e) {
-        console.error('❌ Failed to create Verse Studio task:', e);
-        setError(e.message || 'Failed to create task');
+      } catch (err) {
+        console.error('❌ Failed to create Verse Workspace task:', err);
+        setError(err.message || 'Failed to create task');
       } finally {
         setCreatingTemplateId(null);
       }
@@ -215,9 +205,9 @@ export default function VerseStudioTab() {
     [verseStudio, trialLimitReached]
   );
 
-  // ---------------------------------------------------------------------------
+  // ───────────────────────────────────────────────────────────
   // BACK FROM CHAT WINDOW
-  // ---------------------------------------------------------------------------
+  // ───────────────────────────────────────────────────────────
   const handleBackFromChat = useCallback(() => {
     setActiveTask(null);
     if (verseStudio && verseStudio.resetTask) {
@@ -225,9 +215,9 @@ export default function VerseStudioTab() {
     }
   }, [verseStudio]);
 
-  // ---------------------------------------------------------------------------
+  // ───────────────────────────────────────────────────────────
   // RENDER: Full-screen chat if a task is active
-  // ---------------------------------------------------------------------------
+  // ───────────────────────────────────────────────────────────
   if (activeTask) {
     return (
       <TaskChatWindow
@@ -238,9 +228,9 @@ export default function VerseStudioTab() {
     );
   }
 
-  // ---------------------------------------------------------------------------
-  // RENDER: Verse Studio main tab
-  // ---------------------------------------------------------------------------
+  // ───────────────────────────────────────────────────────────
+  // RENDER: Verse Workspace main tab
+  // ───────────────────────────────────────────────────────────
   return (
     <div className={styles.verseStudioTab}>
       <header className={styles.pageHeader}>
@@ -248,13 +238,11 @@ export default function VerseStudioTab() {
           <div className={styles.eyebrow}>Verse Workspace</div>
           <div className={styles.titleRow}>
             <h1 className={styles.pageTitle}>Verse Workspace</h1>
-            <span className={styles.titlePill}>
-              Trial · 3 free tasks
-            </span>
+            <span className={styles.titlePill}>Trial · 3 free tasks</span>
           </div>
           <p className={styles.subtitle}>
             Orchestrate a small team of specialist LLMs to plan, code, review,
-            and document your projects — all in one AwakeVerse canvas.
+            and document your projects — all in one AwakeVerse workspace.
           </p>
         </div>
 
@@ -271,26 +259,26 @@ export default function VerseStudioTab() {
             />
           </div>
           {trialLimitReached && (
-            <span className={styles.usageStatus}>
-              Limit reached
-            </span>
+            <span className={styles.usageStatus}>Limit reached</span>
           )}
         </div>
       </header>
 
       {error && (
         <div className={styles.errorBanner}>
-          <div className={styles.errorTitle}>Verse Workspace is feeling a bit moody.</div>
+          <div className={styles.errorTitle}>
+            Verse Workspace is feeling a bit moody.
+          </div>
           <p className={styles.errorBody}>{error}</p>
         </div>
       )}
 
       <main className={styles.mainGrid}>
-        {/* ========== TEMPLATES COLUMN ========== */}
+        {/* Templates column */}
         <section className={styles.templatesColumn}>
           <div className={styles.columnHeader}>
             <div>
-              <h2 className={styles.columnTitle}>Verse Studio templates</h2>
+              <h2 className={styles.columnTitle}>Verse Workspace templates</h2>
               <p className={styles.columnSubtitle}>
                 Start with a ready-made team for landing pages, APIs, docs, and more.
               </p>
@@ -307,7 +295,7 @@ export default function VerseStudioTab() {
               <div className={styles.emptyTitle}>No templates found.</div>
               <p className={styles.emptyBody}>
                 Once templates are configured on the backend, they will appear here
-                as quick starting points for new Verse Studio tasks.
+                as quick starting points for new Verse Workspace tasks.
               </p>
             </div>
           ) : (
@@ -326,19 +314,14 @@ export default function VerseStudioTab() {
                 const description =
                   template.description ||
                   template.subtitle ||
-                  'Use this Verse Studio template to get started quickly.';
+                  'Use this Verse Workspace template to get started quickly.';
 
                 const roles = template.roles || template.team_roles || [];
 
                 return (
-                  <article
-                    key={templateId}
-                    className={styles.templateCard}
-                  >
+                  <article key={templateId} className={styles.templateCard}>
                     <div className={styles.templateTagRow}>
-                      <span className={styles.templateTag}>
-                        Verse Workspace
-                      </span>
+                      <span className={styles.templateTag}>Verse Workspace</span>
                       {template.category && (
                         <span className={styles.templateTagSecondary}>
                           {template.category}
@@ -390,11 +373,11 @@ export default function VerseStudioTab() {
           )}
         </section>
 
-        {/* ========== MY TASKS COLUMN ========== */}
+        {/* Tasks column */}
         <section className={styles.tasksColumn}>
           <div className={styles.columnHeader}>
             <div>
-              <h2 className={styles.columnTitle}>My Verse Studio tasks</h2>
+              <h2 className={styles.columnTitle}>My Verse Workspace tasks</h2>
               <p className={styles.columnSubtitle}>
                 Pick up where your LLM team left off.
               </p>
@@ -408,7 +391,7 @@ export default function VerseStudioTab() {
             </div>
           ) : tasks.length === 0 ? (
             <div className={styles.emptyTasks}>
-              <div className={styles.emptyTitle}>No Verse Studio tasks yet.</div>
+              <div className={styles.emptyTitle}>No Verse Workspace tasks yet.</div>
               <p className={styles.emptyBody}>
                 Choose a template on the left to create your first multi-LLM task.
               </p>
@@ -423,14 +406,10 @@ export default function VerseStudioTab() {
                   task.template_name ||
                   task.template_id ||
                   'Template';
-                const updated =
-                  task.updated_at || task.created_at || null;
+                const updated = task.updated_at || task.created_at || null;
 
                 return (
-                  <article
-                    key={id}
-                    className={styles.taskCard}
-                  >
+                  <article key={id} className={styles.taskCard}>
                     <div className={styles.taskMeta}>
                       <div className={styles.taskName}>{name}</div>
                       <div className={styles.taskSub}>
@@ -442,12 +421,11 @@ export default function VerseStudioTab() {
                     </div>
 
                     <div className={styles.taskActions}>
-                      {/* Honest: resume wiring will come when we extend useVerseStudio */}
                       <button
                         type="button"
                         className={`${styles.taskButton} ${styles.taskButtonDisabled}`}
                         disabled
-                        title="Resume chat will be wired once Verse Studio loadTask is added."
+                        title="Resume wiring will be added next."
                       >
                         Resume (soon)
                       </button>
@@ -462,7 +440,7 @@ export default function VerseStudioTab() {
             <div className={styles.trialBanner}>
               <div className={styles.trialDot} />
               <div className={styles.trialText}>
-                You’ve used your 3 free Verse Studio tasks. Upgrade to unlock
+                You’ve used your 3 free Verse Workspace tasks. Upgrade to unlock
                 unlimited tasks and extended token limits.
               </div>
             </div>
@@ -470,13 +448,14 @@ export default function VerseStudioTab() {
         </section>
       </main>
 
-      {/* Simple upgrade modal shell – you can hook your real premium flow here */}
       {isUpgradeModalOpen && (
         <div className={styles.upgradeOverlay}>
           <div className={styles.upgradeModal}>
-            <h3 className={styles.upgradeTitle}>Verse Studio trial limit reached</h3>
+            <h3 className={styles.upgradeTitle}>
+              Verse Workspace trial limit reached
+            </h3>
             <p className={styles.upgradeBody}>
-              You’ve created the maximum of 3 free Verse Studio tasks on this
+              You’ve created the maximum of 3 free Verse Workspace tasks on this
               account. Upgrade your AwakeVerse plan to keep creating tasks and
               unlock higher token limits.
             </p>
@@ -492,7 +471,6 @@ export default function VerseStudioTab() {
                 type="button"
                 className={styles.upgradeSecondary}
                 onClick={() => {
-                  // TODO: Hook into your real subscription route
                   window.open('/pricing', '_blank', 'noopener,noreferrer');
                 }}
               >
