@@ -109,12 +109,12 @@ export default function useVerseStudio() {
       }
 
       const data = await response.json();
-      const newTaskId = data.task_id;
+      const newTaskId = data.task?.task_id;
 
       if (!newTaskId) {
         throw new Error('No task_id returned from server');
       }
-
+      
       setTaskId(newTaskId);
       setTeam(data.team || []);
       setMessages([]);
