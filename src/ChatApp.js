@@ -21,6 +21,7 @@ import ScenariosTab from './components/ScenariosTab/index';
 import StoryModeTab from './components/StoryMode/index';
 import { useSearchParams } from 'react-router-dom';
 import StripeSuccessHandler from './components/StripeSuccessHandler';
+import VerseStudioTab from './components/VerseStudio/VerseStudioTab';
 import './styles.css';
 
 function useMediaQuery(maxWidth) {
@@ -433,6 +434,13 @@ export default function ChatApp() {
           <StoryModeTab />
         </div>
       )}
+      {/* Verse Workspace (Verse Studio) view */}
+      {currentView === VIEW_STATES.VERSE_STUDIO && (
+        <div className="verse-workspace-view-container">
+          <VerseStudioTab />
+        </div>
+      )}
+
       {previewCharacterKey && (
         <CharacterDetailPanel
           character={
