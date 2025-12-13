@@ -171,16 +171,58 @@ export default function useVerseStudio() {
         const csrf =
           document.cookie.match(/(?:^|;\s*)av_csrf=([^;]+)/)?.[1] || '';
 
-        console.log('🎯 Creating task:', taskData.name);
+        // ----------------------------
+        // Normalize payload for backend
+        // ----------------------------
+        const payload = {
+          name: taskData?.name,
+          description: taskData?.description || '',
+        };
+
+        // Template-based
+        if (taskData?.template_id) {
+          payload.template_id = taskData.template_id;
+
+          // Prefer llm_preferences (2–3 models), but accept a few caller variants safely
+          const prefs =
+            taskData.llm_preferences ||
+            taskData.llm_ids ||
+            taskData.models ||
+            taskData.selected_models ||
+            [];
+
+          if (Array.isArray(prefs) && prefs.length) {
+            payload.llm_preferences = prefs;
+            // harmless alias (backend ignores if not used)
+            payload.llm_ids = prefs;
+          }
+
+          // Optional per-role overrides (future: UI swaps per role)
+          if (taskData.llm_swaps && typeof taskData.llm_swaps === 'object') {
+            payload.llm_swaps = taskData.llm_swaps;
+          }
+        }
+
+        // Custom team-based (existing behavior)
+        if (taskData?.llm_assignments && typeof taskData.llm_assignments === 'object') {
+          payload.llm_assignments = taskData.llm_assignments;
+        }
+
+        // Clean undefined/null keys (keeps JSON tidy)
+        Object.keys(payload).forEach((k) => {
+          if (payload[k] === undefined || payload[k] === null) delete payload[k];
+        });
+
+        console.log('🎯 Creating task:', payload.name, payload);
 
         const response = await fetch(`${API_BASE}/api/verse-studio/task`, {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json',
-            'X-CSRF-Token': csrf
+            'X-CSRF-Token': csrf,
           },
           credentials: 'include',
-          body: JSON.stringify(taskData)
+          body: JSON.stringify(payload),
         });
 
         if (!response.ok) {
@@ -213,7 +255,7 @@ export default function useVerseStudio() {
         setCircuitBreakerState((prev) => ({
           errorCount: prev.errorCount + 1,
           lastError: error.message,
-          status: prev.errorCount >= 2 ? 'tripped' : 'warning'
+          status: prev.errorCount >= 2 ? 'tripped' : 'warning',
         }));
 
         throw error;
@@ -221,6 +263,7 @@ export default function useVerseStudio() {
     },
     [fetchUsage]
   );
+
 
     // ========================================================================
   // LOAD TASK (Resume)
