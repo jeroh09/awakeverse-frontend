@@ -3,15 +3,8 @@ import React, { useCallback, useMemo, useRef, useState } from "react";
 import styles from "./TaskChatWindow.module.css";
 
 function PanelToggleIcon({ collapsed }) {
-  // Simple “panel” icon (no arrows). Collapsed = narrow panel.
   return (
-    <svg
-      width="18"
-      height="18"
-      viewBox="0 0 24 24"
-      aria-hidden="true"
-      focusable="false"
-    >
+    <svg width="18" height="18" viewBox="0 0 24 24" aria-hidden="true" focusable="false">
       <rect x="3" y="4" width="18" height="16" rx="3" ry="3" fill="none" stroke="currentColor" strokeWidth="1.8" />
       {collapsed ? (
         <>
@@ -48,35 +41,34 @@ export default function TaskChatWindow({ task, verseStudio, onBack }) {
 
   const [inputText, setInputText] = useState("");
   const [isArtifactsCollapsed, setIsArtifactsCollapsed] = useState(false);
-
   const textareaRef = useRef(null);
 
   const heroTitle = task?.name || "Verse Workspace Task";
   const heroSubtitle =
-    task?.description ||
-    "Describe your goal and let your Verse Workspace team collaborate.";
+    task?.description || "Describe your goal and let your Verse Workspace team collaborate.";
   const heroImageUrl = task?.heroImageUrl || null;
 
   const layoutClassName = isArtifactsCollapsed
     ? `${styles.layout} ${styles.layoutArtifactsCollapsed}`
     : styles.layout;
 
+  const hasMessages = useMemo(() => Array.isArray(messages) && messages.length > 0, [messages]);
+
   const handleAutoGrow = useCallback(() => {
     const el = textareaRef.current;
     if (!el) return;
-    // Reset then grow
     el.style.height = "0px";
-    const next = Math.min(el.scrollHeight, 140); // cap growth
+    const next = Math.min(el.scrollHeight, 140);
     el.style.height = `${Math.max(next, 48)}px`;
   }, []);
 
   const handleSend = useCallback(() => {
     const trimmed = inputText.trim();
     if (!trimmed || !sendMessage) return;
+
     sendMessage(trimmed);
     setInputText("");
 
-    // reset textarea height after send
     requestAnimationFrame(() => {
       const el = textareaRef.current;
       if (el) el.style.height = "48px";
@@ -94,12 +86,10 @@ export default function TaskChatWindow({ task, verseStudio, onBack }) {
     if (stopStream) stopStream();
   };
 
-  const hasMessages = useMemo(() => Array.isArray(messages) && messages.length > 0, [messages]);
-
   return (
     <div className={styles.taskWindow}>
       <div className={layoutClassName}>
-        {/* LEFT: WORKSPACE DETAILS / PARTICIPANTS */}
+        {/* LEFT */}
         <aside className={styles.navSection}>
           <div className={styles.userProfile}>
             <div className={styles.userAvatar}>
@@ -123,11 +113,8 @@ export default function TaskChatWindow({ task, verseStudio, onBack }) {
             <div className={styles.navTitle}>Team roles</div>
             <div className={styles.navTeamList}>
               {team.length === 0 && (
-                <div className={styles.navEmpty}>
-                  Team will appear here once the task starts.
-                </div>
+                <div className={styles.navEmpty}>Team will appear here once the task starts.</div>
               )}
-
               {team.map((role) => (
                 <div
                   key={role.role_id || role.id}
@@ -152,10 +139,10 @@ export default function TaskChatWindow({ task, verseStudio, onBack }) {
           </button>
         </aside>
 
-        {/* CENTER: CHAT */}
+        {/* CENTER */}
         <section className={styles.chatSection}>
-          {/* THIN HEADER (name + description only) */}
-          <div className={styles.chatHeader}>
+          {/* Thin header restored */}
+          <header className={styles.chatHeader}>
             {heroImageUrl && (
               <div className={styles.heroImageBackdrop} aria-hidden="true">
                 <img src={heroImageUrl} alt="" />
@@ -167,10 +154,10 @@ export default function TaskChatWindow({ task, verseStudio, onBack }) {
               <h1 className={styles.headerTitle}>{heroTitle}</h1>
               <p className={styles.headerSubtitle}>{heroSubtitle}</p>
             </div>
-          </div>
+          </header>
 
-          {/* MESSAGES (scrollable) */}
-          <div className={styles.messagesContainer}>
+          {/* The ONLY scroll container */}
+          <div className={styles.messagesScroll}>
             {!hasMessages && (
               <div className={styles.emptyState}>
                 <div className={styles.emptyTitle}>Your Verse Workspace team is ready.</div>
@@ -198,32 +185,32 @@ export default function TaskChatWindow({ task, verseStudio, onBack }) {
                 <div className={styles.messageBody}>{message.text}</div>
               </div>
             ))}
+
+            {/* Handoff lives INSIDE scroll region (won’t break layout) */}
+            {showHandoffPrompt && handoffSuggestion && (
+              <div className={styles.handoffPrompt}>
+                <div className={styles.handoffText}>
+                  💡{" "}
+                  {handoffSuggestion.message ||
+                    `Switch to ${handoffSuggestion.to_role_name || "another role"} for the next step?`}
+                </div>
+                <div className={styles.handoffActions}>
+                  {confirmHandoff && (
+                    <button type="button" className={styles.handoffPrimary} onClick={confirmHandoff}>
+                      Continue
+                    </button>
+                  )}
+                  {cancelHandoff && (
+                    <button type="button" className={styles.handoffSecondary} onClick={cancelHandoff}>
+                      Later
+                    </button>
+                  )}
+                </div>
+              </div>
+            )}
           </div>
 
-          {/* HANDOFF PROMPT (stays above composer) */}
-          {showHandoffPrompt && handoffSuggestion && (
-            <div className={styles.handoffPrompt}>
-              <div className={styles.handoffText}>
-                💡{" "}
-                {handoffSuggestion.message ||
-                  `Switch to ${handoffSuggestion.to_role_name || "another role"} for the next step?`}
-              </div>
-              <div className={styles.handoffActions}>
-                {confirmHandoff && (
-                  <button type="button" className={styles.handoffPrimary} onClick={confirmHandoff}>
-                    Continue
-                  </button>
-                )}
-                {cancelHandoff && (
-                  <button type="button" className={styles.handoffSecondary} onClick={cancelHandoff}>
-                    Later
-                  </button>
-                )}
-              </div>
-            </div>
-          )}
-
-          {/* DEDICATED COMPOSER (bottom bar, not cropped) */}
+          {/* Dedicated composer (no big square block) */}
           <div className={styles.composerBar}>
             <div className={styles.composerInner}>
               <textarea
@@ -265,14 +252,10 @@ export default function TaskChatWindow({ task, verseStudio, onBack }) {
                 </button>
               </div>
             </div>
-
-            <div className={styles.composerHint}>
-              Tip: press <span className={styles.hintKey}>Shift</span>+<span className={styles.hintKey}>Enter</span> for a new line.
-            </div>
           </div>
         </section>
 
-        {/* RIGHT: ARTIFACTS (COLLAPSIBLE) */}
+        {/* RIGHT */}
         <aside
           className={
             isArtifactsCollapsed
