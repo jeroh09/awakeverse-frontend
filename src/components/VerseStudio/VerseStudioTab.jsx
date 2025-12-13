@@ -16,7 +16,6 @@ export default function VerseStudioTab() {
   const [tokensState, setTokensState] = useState(null);
   const [resumingTaskId, setResumingTaskId] = useState(null);
 
-
   // UI
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
@@ -183,7 +182,7 @@ export default function VerseStudioTab() {
     }
   }, [trialLimitReached, verseStudio]);
 
-    const handleResumeTask = useCallback(async (task) => {
+  const handleResumeTask = useCallback(async (task) => {
     const id = task?.id || task?.task_id;
     if (!id) return;
 
@@ -202,7 +201,6 @@ export default function VerseStudioTab() {
       setResumingTaskId(null);
     }
   }, [verseStudio]);
-
 
   // -----------------------------------------------------------------------
   // Back from chat
@@ -323,56 +321,79 @@ export default function VerseStudioTab() {
           )}
         </section>
 
-        {/* Tasks */}
+        {/* Tasks column - UPDATED */}
         <section className={styles.tasksColumn}>
           <div className={styles.columnHeader}>
             <div>
-              <h2 className={styles.columnTitle}>My Verse Workspace tasks</h2>
-              <p className={styles.columnSubtitle}>Pick up where your LLM team left off.</p>
+              <h2 className={styles.columnTitle}>My workspaces</h2>
+              <p className={styles.columnSubtitle}>
+                Resume an active workspace or start a new one from a template.
+              </p>
             </div>
           </div>
 
           {loading && !tasks.length ? (
             <div className={styles.loadingBox}>
               <div className={styles.loadingSpinner} />
-              <div className={styles.loadingText}>Loading tasks…</div>
+              <div className={styles.loadingText}>Loading your workspaces…</div>
             </div>
           ) : tasks.length === 0 ? (
             <div className={styles.emptyTasks}>
-              <div className={styles.emptyTitle}>No Verse Workspace tasks yet.</div>
+              <div className={styles.emptyTitle}>No workspaces yet.</div>
               <p className={styles.emptyBody}>
-                Choose a template on the left to create your first multi-LLM task.
+                Pick a template on the left to create your first Verse Workspace task.
               </p>
             </div>
           ) : (
             <div className={styles.tasksList}>
-              {tasks.map((task) => {
-                const id = task.id || task.task_id;
-                const name = task.name || 'Untitled task';
-                const updated = task.updated_at || task.created_at || null;
+              {tasks.map((t) => {
+                const taskId = t.task_id || t.id;
+                const title = t.name || 'Untitled workspace';
+                const desc = t.description || '';
+
+                // Best-effort role preview (backend may return team later; safe fallback)
+                const team = t.team || t.llm_team || [];
 
                 return (
-                  <article key={id} className={styles.taskCard}>
-                    <div className={styles.taskMeta}>
-                      <div className={styles.taskName}>{name}</div>
-                      <div className={styles.taskSub}>
-                        {updated ? `Updated ${new Date(updated).toLocaleString()}` : 'New task'}
+                  <button
+                    key={taskId}
+                    type="button"
+                    className={styles.taskCard}
+                    onClick={() => handleResumeTask(t)}
+                    title="Open workspace"
+                  >
+                    <div className={styles.taskCardTop}>
+                      <div className={styles.taskTitleRow}>
+                        <div className={styles.taskTitle}>{title}</div>
+                        <span className={styles.taskStatusPill}>
+                          {(t.status || 'active').toUpperCase()}
+                        </span>
                       </div>
+
+                      {desc ? <div className={styles.taskDescription}>{desc}</div> : null}
                     </div>
 
-                    <div className={styles.taskActions}>
-                      <button
-                        type="button"
-                        className={styles.taskButton}
-                        onClick={() => handleResumeTask(task)}
-                        disabled={resumingTaskId === (task.id || task.task_id)}
-                        title="Open this workspace task"
-                      >
-                        {resumingTaskId === (task.id || task.task_id) ? 'Opening…' : 'Resume'}
-                      </button>
+                    <div className={styles.taskMetaRow}>
+                      {team?.length ? (
+                        <div className={styles.roleChips}>
+                          {team.slice(0, 3).map((m, idx) => (
+                            <span key={`${taskId}_${m.role_id || idx}`} className={styles.roleChip}>
+                              {m.role_icon || '🤖'} {m.role_name || m.role_id || 'Role'}
+                            </span>
+                          ))}
+                          {team.length > 3 ? (
+                            <span className={styles.roleChipMuted}>+{team.length - 3} more</span>
+                          ) : null}
+                        </div>
+                      ) : (
+                        <div className={styles.roleChips}>
+                          <span className={styles.roleChipMuted}>Team loads on open</span>
+                        </div>
+                      )}
 
+                      <span className={styles.taskCta}>Open →</span>
                     </div>
-                  </article>
+                  </button>
                 );
               })}
             </div>
@@ -401,7 +422,7 @@ export default function VerseStudioTab() {
               Verse Workspace trial limit reached
             </h3>
             <p className={styles.upgradeBody}>
-              You’ve created the maximum of 3 free Verse Workspace tasks on this
+              You've created the maximum of 3 free Verse Workspace tasks on this
               account. Upgrade your AwakeVerse plan to keep creating tasks and
               unlock higher token limits.
             </p>

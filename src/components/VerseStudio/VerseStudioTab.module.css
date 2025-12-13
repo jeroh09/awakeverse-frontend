@@ -555,3 +555,182 @@
     grid-template-columns: minmax(0, 1fr);
   }
 }
+/* ============================================================
+   Verse Workspace — My Tasks Column (APPEND ONLY)
+   ============================================================ */
+
+.tasksColumn {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+.columnHeader {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 1rem;
+}
+
+.columnTitle {
+  font-family: var(--font-display);
+  font-size: 1.05rem;
+  color: var(--text-primary);
+  margin: 0;
+}
+
+.columnSubtitle {
+  font-size: 0.75rem;
+  color: var(--text-muted);
+  margin-top: 0.15rem;
+}
+
+/* ---------- Task list ---------- */
+
+.tasksList {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+
+/* ---------- Task card ---------- */
+
+.taskCard {
+  all: unset;
+  cursor: pointer;
+  display: flex;
+  flex-direction: column;
+  gap: 0.6rem;
+
+  padding: 0.75rem 0.85rem;
+  border-radius: 12px;
+
+  background: var(--bg-surface);
+  border: 1px solid var(--border-subtle);
+
+  transition: background 0.15s ease, border-color 0.15s ease;
+}
+
+.taskCard:hover {
+  background: var(--bg-surface-hover);
+  border-color: var(--border-emphasis);
+}
+
+.taskCardTop {
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+}
+
+.taskTitleRow {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.taskTitle {
+  font-family: var(--font-display);
+  font-size: 0.85rem;
+  color: var(--text-primary);
+  line-height: 1.2;
+}
+
+.taskDescription {
+  font-size: 0.7rem;
+  color: var(--text-muted);
+  line-height: 1.35;
+}
+
+/* ---------- Status pill ---------- */
+
+.taskStatusPill {
+  font-size: 0.6rem;
+  padding: 0.2rem 0.45rem;
+  border-radius: 999px;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+
+  background: var(--bg-muted);
+  color: var(--text-muted);
+}
+
+/* ---------- Meta row ---------- */
+
+.taskMetaRow {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+/* ---------- Role chips ---------- */
+
+.roleChips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.35rem;
+}
+
+.roleChip {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.3rem;
+
+  font-size: 0.6rem;
+  padding: 0.2rem 0.45rem;
+  border-radius: 999px;
+
+  background: var(--bg-muted);
+  color: var(--text-primary);
+}
+
+.roleChipMuted {
+  font-size: 0.6rem;
+  padding: 0.2rem 0.45rem;
+  border-radius: 999px;
+
+  background: transparent;
+  border: 1px dashed var(--border-subtle);
+  color: var(--text-muted);
+}
+
+/* ---------- CTA ---------- */
+
+.taskCta {
+  font-size: 0.65rem;
+  color: var(--accent-primary);
+  white-space: nowrap;
+}
+
+/* ---------- Empty & loading ---------- */
+
+.emptyTasks {
+  padding: 2rem 1rem;
+  text-align: center;
+  color: var(--text-muted);
+}
+
+.emptyTitle {
+  font-family: var(--font-display);
+  font-size: 0.9rem;
+  color: var(--text-primary);
+  margin-bottom: 0.25rem;
+}
+
+.emptyBody {
+  font-size: 0.75rem;
+}
+
+.loadingBox {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.75rem;
+  padding: 2rem 1rem;
+}
+
+.loadingText {
+  font-size: 0.75rem;
+  color: var(--text-muted);
+}
