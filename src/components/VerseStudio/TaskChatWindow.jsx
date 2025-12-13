@@ -3,9 +3,20 @@ import React, { useCallback, useMemo, useRef, useState } from "react";
 import styles from "./TaskChatWindow.module.css";
 
 function PanelToggleIcon({ collapsed }) {
+  // “Panel” icon (no arrows)
   return (
     <svg width="18" height="18" viewBox="0 0 24 24" aria-hidden="true" focusable="false">
-      <rect x="3" y="4" width="18" height="16" rx="3" ry="3" fill="none" stroke="currentColor" strokeWidth="1.8" />
+      <rect
+        x="3"
+        y="4"
+        width="18"
+        height="16"
+        rx="3"
+        ry="3"
+        fill="none"
+        stroke="currentColor"
+        strokeWidth="1.8"
+      />
       {collapsed ? (
         <>
           <line x1="17" y1="6" x2="17" y2="18" stroke="currentColor" strokeWidth="1.8" />
@@ -41,6 +52,7 @@ export default function TaskChatWindow({ task, verseStudio, onBack }) {
 
   const [inputText, setInputText] = useState("");
   const [isArtifactsCollapsed, setIsArtifactsCollapsed] = useState(false);
+
   const textareaRef = useRef(null);
 
   const heroTitle = task?.name || "Verse Workspace Task";
@@ -52,7 +64,10 @@ export default function TaskChatWindow({ task, verseStudio, onBack }) {
     ? `${styles.layout} ${styles.layoutArtifactsCollapsed}`
     : styles.layout;
 
-  const hasMessages = useMemo(() => Array.isArray(messages) && messages.length > 0, [messages]);
+  const hasMessages = useMemo(
+    () => Array.isArray(messages) && messages.length > 0,
+    [messages]
+  );
 
   const handleAutoGrow = useCallback(() => {
     const el = textareaRef.current;
@@ -115,6 +130,7 @@ export default function TaskChatWindow({ task, verseStudio, onBack }) {
               {team.length === 0 && (
                 <div className={styles.navEmpty}>Team will appear here once the task starts.</div>
               )}
+
               {team.map((role) => (
                 <div
                   key={role.role_id || role.id}
@@ -141,7 +157,7 @@ export default function TaskChatWindow({ task, verseStudio, onBack }) {
 
         {/* CENTER */}
         <section className={styles.chatSection}>
-          {/* Thin header restored */}
+          {/* Header — do not touch */}
           <header className={styles.chatHeader}>
             {heroImageUrl && (
               <div className={styles.heroImageBackdrop} aria-hidden="true">
@@ -186,7 +202,7 @@ export default function TaskChatWindow({ task, verseStudio, onBack }) {
               </div>
             ))}
 
-            {/* Handoff lives INSIDE scroll region (won’t break layout) */}
+            {/* Handoff stays inside scroll region */}
             {showHandoffPrompt && handoffSuggestion && (
               <div className={styles.handoffPrompt}>
                 <div className={styles.handoffText}>
@@ -210,8 +226,9 @@ export default function TaskChatWindow({ task, verseStudio, onBack }) {
             )}
           </div>
 
-          {/* Dedicated composer (no big square block) */}
-          <div className={styles.composerBar}>
+          {/* OPTION B: Overlay fade + overlay composer */}
+          <div className={styles.composerFade} aria-hidden="true" />
+          <div className={styles.composerOverlay} role="region" aria-label="Message composer">
             <div className={styles.composerInner}>
               <textarea
                 ref={textareaRef}
