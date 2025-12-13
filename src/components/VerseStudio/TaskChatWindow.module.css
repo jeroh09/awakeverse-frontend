@@ -574,3 +574,44 @@
     min-height: clamp(120px, 16vh, 180px);
   }
 }
+/* ================================
+   Step 2c — Full-width HERO inside center panel
+   (fixes width not covering header)
+================================== */
+
+/* Ensure the chat section does NOT constrain the header width */
+.chatSection{
+  padding: 0 !important; /* header will manage its own padding */
+}
+
+/* Header becomes full-bleed inside center panel */
+.chatHeader{
+  position: relative;
+  width: 100%;
+  border-radius: 0 !important; /* avoid rounded clipping */
+  overflow: hidden;
+}
+
+/* Re-apply padding ONLY to header text, not the image */
+.headerContent{
+  left: 0;
+  right: 0;
+  bottom: 0;
+  padding-left: 24px !important;
+  padding-right: 24px !important;
+}
+
+/* Ensure image truly spans edge-to-edge of center panel */
+.heroImageBackdrop,
+.heroImageBackdrop img,
+.heroImageOverlay{
+  left: 0 !important;
+  right: 0 !important;
+  width: 100% !important;
+}
+
+/* Restore inner padding for the rest of the chat (messages) */
+.messagesScroll{
+  padding-left: 16px;
+  padding-right: 16px;
+}
