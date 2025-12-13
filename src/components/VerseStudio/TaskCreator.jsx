@@ -117,26 +117,30 @@ export default function TaskCreator({
           </button>
         </div>
 
-        {template && (
-          <div className={styles.templateSummary}>
-            <div className={styles.templateSummaryHeader}>
-              <span className={styles.templatePill}>{templateTag}</span>
-              <span className={styles.templateRoleCount}>
-                {Array.isArray(roles)
-                  ? `${roles.length} roles`
-                  : `${Object.keys(roles || {}).length} roles`}
-              </span>
-            </div>
-            <div className={styles.templateSummaryBody}>
-              <div className={styles.templateTitle}>
-                {template.display_name || template.name || template.title || 'Verse template'}
+        <div className={styles.body}>
+          {template && (
+            <div className={styles.templateSummary}>
+              <div className={styles.templateSummaryHeader}>
+                <span className={styles.templatePill}>{templateTag}</span>
+                <span className={styles.templateRoleCount}>
+                  {Array.isArray(roles)
+                    ? `${roles.length} roles`
+                    : `${Object.keys(roles || {}).length} roles`}
+                </span>
               </div>
-              {template.description && (
-                <p className={styles.templateDescription}>{template.description}</p>
-              )}
+
+              <div className={styles.templateSummaryBody}>
+                <div className={styles.templateTitle}>
+                  {template.display_name || template.name || template.title || 'Verse template'}
+                </div>
+                {template.description && (
+                  <p className={styles.templateDescription}>{template.description}</p>
+                )}
+              </div>
             </div>
-          </div>
-        )}
+          )}
+        </div>
+        
 
         <form className={styles.form} onSubmit={handleSubmit}>
           <div className={styles.formMainColumn}>

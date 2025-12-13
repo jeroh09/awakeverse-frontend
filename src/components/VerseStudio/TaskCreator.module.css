@@ -48,6 +48,7 @@
     0 0 0 1px rgba(15, 23, 42, 0.95);
   display: flex;
   flex-direction: column;
+  overflow: hidden;
   color: var(--vw-text-primary);
 }
 
@@ -311,4 +312,23 @@
   .headerTitle {
     font-size: 16px;
   }
+}
+/* ✅ New: scroll container between header and footer */
+.body {
+  flex: 1;
+  min-height: 0;              /* critical for flex scroll containers */
+  overflow-y: auto;
+  padding-right: 4px;         /* keeps scrollbar from touching content */
+}
+
+/* Optional: subtle scrollbar styling */
+.body::-webkit-scrollbar {
+  width: 8px;
+}
+.body::-webkit-scrollbar-thumb {
+  background: rgba(148, 163, 184, 0.25);
+  border-radius: 999px;
+}
+.body::-webkit-scrollbar-track {
+  background: transparent;
 }
