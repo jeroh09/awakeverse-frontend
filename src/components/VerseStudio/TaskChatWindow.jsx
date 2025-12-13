@@ -1,50 +1,90 @@
 // src/components/VerseStudio/TaskChatWindow.jsx
-import React, { useState, useMemo, useCallback } from 'react';
-import styles from './TaskChatWindow.module.css';
+import React, { useCallback, useMemo, useRef, useState } from "react";
+import styles from "./TaskChatWindow.module.css";
 
-/**
- * TaskChatWindow
- *
- * Full-page 3-column Verse Studio chat layout:
- * - Left: Workspace details / participants (scaffolding for later)
- * - Middle: Task chat (messages + input + handoff prompt)
- * - Right: Artifacts & documents (collapsible)
- *
- * Mobile: chat-only (side panels not rendered via CSS)
- */
-export default function TaskChatWindow({
-  task,
-  verseStudio,
-  onBack
-}) {
+function PanelToggleIcon({ collapsed }) {
+  // Simple “panel” icon (no arrows). Collapsed = narrow panel.
+  return (
+    <svg
+      width="18"
+      height="18"
+      viewBox="0 0 24 24"
+      aria-hidden="true"
+      focusable="false"
+    >
+      <rect x="3" y="4" width="18" height="16" rx="3" ry="3" fill="none" stroke="currentColor" strokeWidth="1.8" />
+      {collapsed ? (
+        <>
+          <line x1="17" y1="6" x2="17" y2="18" stroke="currentColor" strokeWidth="1.8" />
+          <line x1="6.5" y1="9" x2="13.5" y2="9" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" />
+          <line x1="6.5" y1="12" x2="13.5" y2="12" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" />
+          <line x1="6.5" y1="15" x2="13.5" y2="15" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" />
+        </>
+      ) : (
+        <>
+          <line x1="14" y1="6" x2="14" y2="18" stroke="currentColor" strokeWidth="1.8" />
+          <line x1="16.5" y1="9" x2="19" y2="9" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" />
+          <line x1="16.5" y1="12" x2="19" y2="12" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" />
+          <line x1="16.5" y1="15" x2="19" y2="15" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" />
+        </>
+      )}
+    </svg>
+  );
+}
+
+export default function TaskChatWindow({ task, verseStudio, onBack }) {
   const {
     team = [],
     messages = [],
     isSending = false,
     activeRole = null,
-    usageData,
     handoffSuggestion,
     showHandoffPrompt,
     sendMessage,
     stopStream,
     confirmHandoff,
-    switchToRole,
     cancelHandoff
   } = verseStudio || {};
 
-  const [inputText, setInputText] = useState('');
+  const [inputText, setInputText] = useState("");
   const [isArtifactsCollapsed, setIsArtifactsCollapsed] = useState(false);
+
+  const textareaRef = useRef(null);
+
+  const heroTitle = task?.name || "Verse Workspace Task";
+  const heroSubtitle =
+    task?.description ||
+    "Describe your goal and let your Verse Workspace team collaborate.";
+  const heroImageUrl = task?.heroImageUrl || null;
+
+  const layoutClassName = isArtifactsCollapsed
+    ? `${styles.layout} ${styles.layoutArtifactsCollapsed}`
+    : styles.layout;
+
+  const handleAutoGrow = useCallback(() => {
+    const el = textareaRef.current;
+    if (!el) return;
+    // Reset then grow
+    el.style.height = "0px";
+    const next = Math.min(el.scrollHeight, 140); // cap growth
+    el.style.height = `${Math.max(next, 48)}px`;
+  }, []);
 
   const handleSend = useCallback(() => {
     const trimmed = inputText.trim();
     if (!trimmed || !sendMessage) return;
-
     sendMessage(trimmed);
-    setInputText('');
+    setInputText("");
+
+    // reset textarea height after send
+    requestAnimationFrame(() => {
+      const el = textareaRef.current;
+      if (el) el.style.height = "48px";
+    });
   }, [inputText, sendMessage]);
 
   const handleKeyDown = (event) => {
-    if (event.key === 'Enter' && !event.shiftKey) {
+    if (event.key === "Enter" && !event.shiftKey) {
       event.preventDefault();
       handleSend();
     }
@@ -54,41 +94,17 @@ export default function TaskChatWindow({
     if (stopStream) stopStream();
   };
 
-  const usageSummary = useMemo(() => {
-    if (!usageData) return null;
-
-    const { messagesUsed, messagesLimit, tokensUsed, tokensLimit } = usageData;
-
-    return {
-      messages: messagesLimit
-        ? `${messagesUsed} / ${messagesLimit} messages`
-        : `${messagesUsed} messages`,
-      tokens: tokensLimit
-        ? `${tokensUsed} / ${tokensLimit} tokens`
-        : `${tokensUsed} tokens`
-    };
-  }, [usageData]);
-
-  const heroTitle = task?.name || 'Verse Workspace Task';
-  const heroSubtitle =
-    task?.description ||
-    'Describe your goal and let your Verse Workspace team collaborate.';
-  const heroTemplateLabel = task?.templateName || 'Verse Studio Template';
-  const heroImageUrl = task?.heroImageUrl || null;
-
-  const layoutClassName = isArtifactsCollapsed
-    ? `${styles.layout} ${styles.layoutArtifactsCollapsed}`
-    : styles.layout;
+  const hasMessages = useMemo(() => Array.isArray(messages) && messages.length > 0, [messages]);
 
   return (
     <div className={styles.taskWindow}>
       <div className={layoutClassName}>
-        {/* ========== LEFT: WORKSPACE DETAILS / PARTICIPANTS ========== */}
+        {/* LEFT: WORKSPACE DETAILS / PARTICIPANTS */}
         <aside className={styles.navSection}>
           <div className={styles.userProfile}>
             <div className={styles.userAvatar}>
               <span className={styles.userInitial}>
-                {heroTitle ? heroTitle.charAt(0).toUpperCase() : 'V'}
+                {heroTitle ? heroTitle.charAt(0).toUpperCase() : "V"}
               </span>
             </div>
             <div className={styles.userMeta}>
@@ -100,20 +116,7 @@ export default function TaskChatWindow({
           <div className={styles.navBlock}>
             <div className={styles.navTitle}>Task overview</div>
             <div className={styles.navTaskName}>{heroTitle}</div>
-            <div className={styles.navTaskTemplate}>Template: {heroTemplateLabel}</div>
-
-            {usageSummary && (
-              <div className={styles.navUsage}>
-                <div className={styles.navUsageRow}>
-                  <span>Messages</span>
-                  <span>{usageSummary.messages}</span>
-                </div>
-                <div className={styles.navUsageRow}>
-                  <span>Tokens</span>
-                  <span>{usageSummary.tokens}</span>
-                </div>
-              </div>
-            )}
+            {heroSubtitle && <div className={styles.navTaskTemplate}>{heroSubtitle}</div>}
           </div>
 
           <div className={styles.navBlock}>
@@ -134,7 +137,7 @@ export default function TaskChatWindow({
                       : styles.navRoleItem
                   }
                 >
-                  <div className={styles.navRoleIcon}>{role.role_icon || '⚙️'}</div>
+                  <div className={styles.navRoleIcon}>{role.role_icon || "⚙️"}</div>
                   <div className={styles.navRoleText}>
                     <div className={styles.navRoleName}>{role.role_name || role.name}</div>
                     {role.llm_name && <div className={styles.navRoleLlm}>{role.llm_name}</div>}
@@ -149,66 +152,31 @@ export default function TaskChatWindow({
           </button>
         </aside>
 
-        {/* ========== CENTER: CHAT ========== */}
+        {/* CENTER: CHAT */}
         <section className={styles.chatSection}>
-          {team.length > 0 && (
-            <div className={styles.floatingAvatars}>
-              {team.map((role) => (
-                <div
-                  key={role.role_id || role.id}
-                  className={
-                    activeRole === role.role_id
-                      ? `${styles.floatingAvatar} ${styles.floatingAvatarActive}`
-                      : styles.floatingAvatar
-                  }
-                >
-                  <div className={styles.floatingAvatarInner}>
-                    <span className={styles.floatingAvatarEmoji}>{role.role_icon || '✨'}</span>
-                  </div>
-                  {activeRole === role.role_id && <div className={styles.speakingDot} />}
-                </div>
-              ))}
-            </div>
-          )}
-
+          {/* THIN HEADER (name + description only) */}
           <div className={styles.chatHeader}>
             {heroImageUrl && (
-              <div className={styles.heroImageBackdrop}>
-                <img src={heroImageUrl} alt={heroTitle} />
+              <div className={styles.heroImageBackdrop} aria-hidden="true">
+                <img src={heroImageUrl} alt="" />
                 <div className={styles.heroImageOverlay} />
               </div>
             )}
 
             <div className={styles.headerContent}>
-              <div className={styles.headerBadgeRow}>
-                <span className={styles.headerBadge}>Verse Workspace · Task</span>
-                {heroTemplateLabel && (
-                  <span className={styles.headerBadgeSecondary}>{heroTemplateLabel}</span>
-                )}
-              </div>
-
-              <div className={styles.headerTitles}>
-                <h1 className={styles.headerTitle}>{heroTitle}</h1>
-                <p className={styles.headerSubtitle}>{heroSubtitle}</p>
-              </div>
-
-              {usageSummary && (
-                <div className={styles.headerUsage}>
-                  <span>{usageSummary.messages}</span>
-                  <span className={styles.headerUsageDivider}>·</span>
-                  <span>{usageSummary.tokens}</span>
-                </div>
-              )}
+              <h1 className={styles.headerTitle}>{heroTitle}</h1>
+              <p className={styles.headerSubtitle}>{heroSubtitle}</p>
             </div>
           </div>
 
+          {/* MESSAGES (scrollable) */}
           <div className={styles.messagesContainer}>
-            {messages.length === 0 && (
+            {!hasMessages && (
               <div className={styles.emptyState}>
                 <div className={styles.emptyTitle}>Your Verse Workspace team is ready.</div>
                 <p className={styles.emptyBody}>
-                  Describe your goal, paste a brief, or drop in a snippet of code. Your selected roles
-                  will collaborate in this space.
+                  Describe your goal, paste a brief, or drop in a snippet of code. Your roles will
+                  collaborate in this space.
                 </p>
               </div>
             )}
@@ -224,7 +192,7 @@ export default function TaskChatWindow({
               >
                 <div className={styles.messageMeta}>
                   <span className={styles.messageRole}>
-                    {message.user ? 'You' : message.role_name || 'Assistant'}
+                    {message.user ? "You" : message.role_name || "Assistant"}
                   </span>
                 </div>
                 <div className={styles.messageBody}>{message.text}</div>
@@ -232,12 +200,13 @@ export default function TaskChatWindow({
             ))}
           </div>
 
+          {/* HANDOFF PROMPT (stays above composer) */}
           {showHandoffPrompt && handoffSuggestion && (
             <div className={styles.handoffPrompt}>
               <div className={styles.handoffText}>
-                💡{' '}
+                💡{" "}
                 {handoffSuggestion.message ||
-                  `Switch to ${handoffSuggestion.to_role_name || 'another role'} for the next step?`}
+                  `Switch to ${handoffSuggestion.to_role_name || "another role"} for the next step?`}
               </div>
               <div className={styles.handoffActions}>
                 {confirmHandoff && (
@@ -254,40 +223,56 @@ export default function TaskChatWindow({
             </div>
           )}
 
-          <div className={styles.inputContainer}>
-            <div className={styles.inputWrapper}>
+          {/* DEDICATED COMPOSER (bottom bar, not cropped) */}
+          <div className={styles.composerBar}>
+            <div className={styles.composerInner}>
               <textarea
-                className={styles.input}
-                placeholder="Type your next instruction… You can mention roles later with @Code Reviewer, @Docs, etc."
+                ref={textareaRef}
+                className={styles.composerInput}
+                placeholder="Type your next instruction… (Enter to send, Shift+Enter for new line)"
                 value={inputText}
-                onChange={(e) => setInputText(e.target.value)}
+                onChange={(e) => {
+                  setInputText(e.target.value);
+                  handleAutoGrow();
+                }}
+                onInput={handleAutoGrow}
                 onKeyDown={handleKeyDown}
                 rows={1}
               />
-              <div className={styles.inputControls}>
+
+              <div className={styles.composerActions}>
                 {isSending && stopStream && (
                   <button
                     type="button"
-                    className={`${styles.iconButton} ${styles.iconButtonStop}`}
+                    className={`${styles.composerButton} ${styles.composerStop}`}
                     onClick={handleStopStreaming}
+                    title="Stop"
+                    aria-label="Stop"
                   >
                     ■
                   </button>
                 )}
+
                 <button
                   type="button"
-                  className={styles.iconButton}
+                  className={styles.composerButton}
                   onClick={handleSend}
                   disabled={!inputText.trim() || !sendMessage}
+                  title="Send"
+                  aria-label="Send"
                 >
                   ➤
                 </button>
               </div>
             </div>
+
+            <div className={styles.composerHint}>
+              Tip: press <span className={styles.hintKey}>Shift</span>+<span className={styles.hintKey}>Enter</span> for a new line.
+            </div>
           </div>
         </section>
 
-        {/* ========== RIGHT: ARTIFACTS (COLLAPSIBLE) ========== */}
+        {/* RIGHT: ARTIFACTS (COLLAPSIBLE) */}
         <aside
           className={
             isArtifactsCollapsed
@@ -315,10 +300,10 @@ export default function TaskChatWindow({
                 type="button"
                 className={styles.artifactsToggle}
                 onClick={() => setIsArtifactsCollapsed((v) => !v)}
-                aria-label={isArtifactsCollapsed ? 'Expand artifacts panel' : 'Collapse artifacts panel'}
-                title={isArtifactsCollapsed ? 'Expand panel' : 'Collapse panel'}
+                aria-label={isArtifactsCollapsed ? "Expand artifacts panel" : "Collapse artifacts panel"}
+                title={isArtifactsCollapsed ? "Expand panel" : "Collapse panel"}
               >
-                {isArtifactsCollapsed ? '⟨' : '⟩'}
+                <PanelToggleIcon collapsed={isArtifactsCollapsed} />
               </button>
             </div>
           </div>
@@ -332,8 +317,7 @@ export default function TaskChatWindow({
               <div className={styles.artifactsEmpty}>
                 <div className={styles.artifactsEmptyTitle}>Your task artifacts will appear here.</div>
                 <p className={styles.artifactsEmptyBody}>
-                  As your Verse Workspace team generates code, summaries, and documents, we’ll collect
-                  them in this panel so you can revisit and reuse them.
+                  As your team generates code, summaries, and documents, we’ll collect them in this panel.
                 </p>
               </div>
             </div>

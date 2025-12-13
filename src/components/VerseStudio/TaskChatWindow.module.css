@@ -1,12 +1,10 @@
 /* src/components/VerseStudio/TaskChatWindow.module.css */
 
-/* ===== ROOT LAYOUT ===== */
 .taskWindow {
   position: fixed;
   inset: 0;
   z-index: 1100;
 
-  /* Full-page takeover: no “tab box” container, viewport is the canvas */
   background:
     radial-gradient(circle at top left, var(--accent-glow), transparent 45%),
     radial-gradient(circle at bottom right, rgba(148, 163, 184, 0.14), transparent 45%),
@@ -30,12 +28,11 @@
   box-sizing: border-box;
 }
 
-/* Retractable artifacts panel: collapse into slim rail */
 .layoutArtifactsCollapsed {
   grid-template-columns: 320px minmax(0, 1fr) 56px;
 }
 
-/* ===== NAV SECTION (LEFT) ===== */
+/* ===== LEFT ===== */
 .navSection {
   background: var(--bg-surface);
   border-radius: var(--border-radius-xl);
@@ -47,7 +44,6 @@
   overflow-y: auto;
 }
 
-/* User profile block */
 .userProfile {
   display: flex;
   align-items: center;
@@ -94,7 +90,6 @@
   color: var(--text-secondary);
 }
 
-/* Generic nav block */
 .navBlock {
   padding: 12px;
   background: color-mix(in srgb, var(--bg-surface) 92%, transparent);
@@ -115,7 +110,7 @@
 .navTaskName {
   font-family: var(--font-display);
   font-size: 14px;
-  font-weight: 500;
+  font-weight: 600;
   color: var(--brand-ivory);
 }
 
@@ -124,23 +119,6 @@
   color: #E5E7EB;
 }
 
-.navUsage {
-  margin-top: 4px;
-  padding-top: 6px;
-  border-top: 1px dashed rgba(148, 163, 184, 0.32);
-  display: flex;
-  flex-direction: column;
-  gap: 4px;
-}
-
-.navUsageRow {
-  display: flex;
-  justify-content: space-between;
-  font-size: 11px;
-  color: var(--text-secondary);
-}
-
-/* Team list */
 .navTeamList {
   display: flex;
   flex-direction: column;
@@ -197,7 +175,6 @@
   color: var(--text-secondary);
 }
 
-/* Back button */
 .backButton {
   margin-top: auto;
   font-size: 12px;
@@ -216,75 +193,22 @@
   box-shadow: 0 0 0 1px rgba(99, 102, 241, 0.6);
 }
 
-/* ===== CHAT SECTION (CENTER) ===== */
+/* ===== CENTER (CHAT) ===== */
 .chatSection {
   position: relative;
   background: var(--bg-surface);
   border-radius: var(--border-radius-xl);
   border: 1px solid var(--border-subtle);
-  display: flex;
-  flex-direction: column;
+  display: grid;
+  grid-template-rows: auto minmax(0, 1fr) auto; /* header / messages / composer */
   overflow: hidden;
 }
 
-/* Floating avatars row */
-.floatingAvatars {
-  position: absolute;
-  top: 14px;
-  left: 32px;
-  display: flex;
-  gap: -10px;
-  z-index: 10;
-}
-
-.floatingAvatar {
-  width: 52px;
-  height: 52px;
-  border-radius: 999px;
-  border: 3px solid var(--bg-surface);
-  overflow: hidden;
-  background: radial-gradient(circle at 0 0, rgba(99, 102, 241, 0.5), transparent 55%);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  transition: transform 0.2s ease-out, box-shadow 0.2s ease-out;
-  position: relative;
-}
-
-.floatingAvatarInner {
-  width: 100%;
-  height: 100%;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  background: rgba(15, 23, 42, 0.9);
-}
-
-.floatingAvatarEmoji {
-  font-size: 22px;
-}
-
-.floatingAvatarActive {
-  transform: translateY(-6px);
-  box-shadow: 0 18px 40px rgba(99, 102, 241, 0.6);
-}
-
-.speakingDot {
-  position: absolute;
-  bottom: 4px;
-  right: 4px;
-  width: 10px;
-  height: 10px;
-  border-radius: 999px;
-  background: #22C55E;
-  box-shadow: 0 0 10px rgba(34, 197, 94, 0.9);
-}
-
-/* Chat header with hero image */
+/* THIN HEADER */
 .chatHeader {
   position: relative;
   overflow: hidden;
-  padding-top: 56px; /* space for avatars */
+  min-height: 88px; /* thinner */
 }
 
 .heroImageBackdrop {
@@ -297,7 +221,7 @@
   width: 100%;
   height: 100%;
   object-fit: cover;
-  filter: saturate(1.1) contrast(1.1) brightness(0.7);
+  filter: saturate(1.1) contrast(1.1) brightness(0.72);
 }
 
 .heroImageOverlay {
@@ -305,45 +229,16 @@
   inset: 0;
   background: linear-gradient(
     180deg,
-    rgba(15, 23, 42, 0.4) 0%,
-    rgba(15, 23, 42, 0.85) 55%,
-    rgba(15, 23, 42, 0.98) 100%
+    rgba(15, 23, 42, 0.35) 0%,
+    rgba(15, 23, 42, 0.78) 60%,
+    rgba(15, 23, 42, 0.95) 100%
   );
 }
 
-/* Header content on top of hero */
 .headerContent {
   position: relative;
   z-index: 1;
-  padding: 24px 26px 18px;
-  display: flex;
-  flex-direction: column;
-  gap: 10px;
-}
-
-.headerBadgeRow {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 8px;
-}
-
-.headerBadge,
-.headerBadgeSecondary {
-  font-size: 11px;
-  letter-spacing: 0.16em;
-  text-transform: uppercase;
-  padding: 4px 10px;
-  border-radius: 999px;
-  border: 1px solid rgba(148, 163, 184, 0.4);
-  background: rgba(15, 23, 42, 0.75);
-  color: #E5E7EB;
-}
-
-.headerBadgeSecondary {
-  border-color: rgba(99, 102, 241, 0.7);
-}
-
-.headerTitles {
+  padding: 14px 18px 12px; /* slimmer */
   display: flex;
   flex-direction: column;
   gap: 4px;
@@ -352,35 +247,21 @@
 .headerTitle {
   margin: 0;
   font-family: var(--font-display);
-  font-size: 24px;
-  font-weight: 600;
-  letter-spacing: 0.03em;
+  font-size: 20px;
+  font-weight: 650;
+  letter-spacing: 0.02em;
   color: var(--brand-ivory);
 }
 
 .headerSubtitle {
   margin: 0;
-  font-size: 14px;
+  font-size: 13px;
   color: #CBD5F5;
 }
 
-.headerUsage {
-  margin-top: 4px;
-  font-size: 12px;
-  color: #E5E7EB;
-  display: flex;
-  gap: 6px;
-  align-items: center;
-}
-
-.headerUsageDivider {
-  opacity: 0.4;
-}
-
-/* Messages */
+/* MESSAGES */
 .messagesContainer {
-  flex: 1;
-  padding: 14px 18px 10px;
+  padding: 12px 16px 12px;
   display: flex;
   flex-direction: column;
   gap: 8px;
@@ -388,7 +269,7 @@
 }
 
 .emptyState {
-  margin-top: 12px;
+  margin-top: 8px;
   padding: 16px 14px;
   border-radius: 12px;
   border: 1px dashed rgba(148, 163, 184, 0.5);
@@ -407,9 +288,8 @@
   color: #CBD5F5;
 }
 
-/* Message bubbles */
 .message {
-  max-width: 80%;
+  max-width: 82%;
   border-radius: 14px;
   padding: 8px 11px;
   font-size: 13px;
@@ -417,26 +297,15 @@
   box-shadow: 0 8px 20px rgba(0, 0, 0, 0.45);
 }
 
-.messageMeta {
-  margin-bottom: 4px;
-}
+.messageMeta { margin-bottom: 4px; }
 
-.messageRole {
-  font-size: 11px;
-  color: var(--text-secondary);
-}
+.messageRole { font-size: 11px; color: var(--text-secondary); }
 
-.messageBody {
-  white-space: pre-wrap;
-}
+.messageBody { white-space: pre-wrap; }
 
 .messageAi {
   align-self: flex-start;
-  background: linear-gradient(
-    135deg,
-    rgba(15, 23, 42, 0.98),
-    rgba(99, 102, 241, 0.5)
-  );
+  background: linear-gradient(135deg, rgba(15, 23, 42, 0.98), rgba(99, 102, 241, 0.5));
   border: 1px solid rgba(129, 140, 248, 0.7);
 }
 
@@ -446,10 +315,10 @@
   border: 1px solid rgba(148, 163, 184, 0.5);
 }
 
-/* Handoff prompt */
+/* HANDOFF PROMPT */
 .handoffPrompt {
-  margin: 4px auto 8px;
-  max-width: 560px;
+  margin: 4px auto 6px;
+  max-width: 680px;
   padding: 8px 10px;
   border-radius: 999px;
   background: linear-gradient(135deg, #6366F1, #818CF8);
@@ -475,74 +344,101 @@
 }
 
 .handoffPrimary { background: #F9FAFB; color: #111827; }
-
 .handoffSecondary { background: rgba(15, 23, 42, 0.3); color: #F9FAFB; }
 
-/* Input (preps for “floating composer” in Step 3; no logic change) */
-.inputContainer {
-  padding: 8px var(--spacing-md) var(--spacing-md);
+/* ===== DEDICATED COMPOSER BAR (FIXES CROPPING) ===== */
+.composerBar {
   border-top: 1px solid var(--border-subtle);
-  background: radial-gradient(circle at top, rgba(15, 23, 42, 0.96), rgba(15, 23, 42, 0.98));
+  padding: 10px 12px 12px;
+  background:
+    radial-gradient(circle at top, rgba(15, 23, 42, 0.96), rgba(10, 15, 26, 0.96));
 }
 
-.inputWrapper {
-  border-radius: 999px;
-  border: 1px solid rgba(129, 140, 248, 0.6);
+.composerInner {
+  width: 100%;
+  max-width: 920px;           /* modern standard */
+  margin: 0 auto;
+  border-radius: 18px;
+  border: 1px solid rgba(129, 140, 248, 0.55);
   background: rgba(10, 15, 26, 0.55);
   backdrop-filter: blur(10px);
   display: flex;
-  align-items: center;
-  padding: 4px 4px 4px 12px;
-  gap: 8px;
+  align-items: flex-end;
+  gap: 10px;
+  padding: 10px 10px 10px 14px;
+  box-shadow: 0 18px 40px rgba(0, 0, 0, 0.35);
 }
 
-.input {
+.composerInput {
   flex: 1;
   border: none;
   outline: none;
   resize: none;
-  min-height: 32px;
-  max-height: 96px;
-  padding: 4px 0;
-  font-size: 13px;
-  line-height: 1.4;
   background: transparent;
   color: #F9FAFB;
+  font-size: 14px;
+  line-height: 1.45;
+  min-height: 48px;  /* key fix */
+  max-height: 140px;
+  padding: 0;
 }
 
-.input::placeholder { color: var(--text-tertiary); }
+.composerInput::placeholder { color: var(--text-tertiary); }
 
-.inputControls { display: flex; gap: 4px; align-items: center; }
+.composerActions {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+  padding-bottom: 4px;
+}
 
-.iconButton {
-  width: 32px;
-  height: 32px;
+.composerButton {
+  width: 40px;
+  height: 40px;
   border-radius: 999px;
   border: none;
   background: linear-gradient(135deg, var(--accent-primary), var(--accent-hover));
   color: #F9FAFB;
   cursor: pointer;
-  display: flex;
+  display: inline-flex;
   align-items: center;
   justify-content: center;
-  font-size: 15px;
-  box-shadow: 0 10px 24px rgba(99, 102, 241, 0.5);
+  font-size: 16px;
+  box-shadow: 0 14px 30px rgba(99, 102, 241, 0.55);
   transition: var(--transition-fast);
 }
 
-.iconButton[disabled] { opacity: 0.5; cursor: not-allowed; box-shadow: none; }
+.composerButton[disabled] { opacity: 0.5; cursor: not-allowed; box-shadow: none; }
 
-.iconButton:hover:not([disabled]) {
+.composerButton:hover:not([disabled]) {
   transform: translateY(-1px);
-  box-shadow: 0 14px 30px rgba(99, 102, 241, 0.7);
+  box-shadow: 0 18px 40px rgba(99, 102, 241, 0.7);
 }
 
-.iconButtonStop {
+.composerStop {
   background: #DC2626;
-  box-shadow: 0 10px 24px rgba(220, 38, 38, 0.6);
+  box-shadow: 0 14px 30px rgba(220, 38, 38, 0.6);
 }
 
-/* ===== ARTIFACTS (RIGHT) ===== */
+.composerHint {
+  max-width: 920px;
+  margin: 8px auto 0;
+  font-size: 11px;
+  color: var(--text-tertiary);
+  opacity: 0.9;
+}
+
+.hintKey {
+  display: inline-block;
+  padding: 1px 6px;
+  border-radius: 999px;
+  border: 1px solid var(--border-medium);
+  background: rgba(15, 23, 42, 0.7);
+  color: #E5E7EB;
+  margin: 0 2px;
+}
+
+/* ===== RIGHT (ARTIFACTS) ===== */
 .artifactsSection {
   background: var(--bg-surface);
   border-radius: var(--border-radius-xl);
@@ -550,10 +446,6 @@
   display: flex;
   flex-direction: column;
   overflow: hidden;
-}
-
-.artifactsSectionCollapsed {
-  border-radius: var(--border-radius-xl);
 }
 
 .artifactsHeader {
@@ -576,8 +468,8 @@
 }
 
 .artifactsToggle {
-  width: 34px;
-  height: 34px;
+  width: 40px;
+  height: 40px;
   border-radius: 999px;
   border: 1px solid var(--border-medium);
   background: rgba(10, 15, 26, 0.55);
@@ -597,7 +489,7 @@
 .artifactsTab {
   border: none;
   border-radius: 999px;
-  padding: 5px 10px;
+  padding: 6px 10px;
   font-size: 11px;
   color: var(--text-secondary);
   background: transparent;
@@ -665,5 +557,7 @@
     display: none;
   }
 
-  .floatingAvatars { left: 20px; }
+  .composerInner {
+    max-width: 100%;
+  }
 }
