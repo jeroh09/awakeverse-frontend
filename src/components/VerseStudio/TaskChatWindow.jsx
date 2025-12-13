@@ -6,34 +6,11 @@ import styles from './TaskChatWindow.module.css';
  * TaskChatWindow
  *
  * Full-page 3-column Verse Studio chat layout:
- * - Left: User / VerseStudio overview (scaffolding for later)
+ * - Left: Workspace details / participants (scaffolding for later)
  * - Middle: Task chat (messages + input + handoff prompt)
- * - Right: Artifacts & documents (scaffolding for later)
+ * - Right: Artifacts & documents (collapsible)
  *
- * Props:
- * - task: {
- *     id,
- *     name,
- *     description,
- *     templateName?,
- *     heroImageUrl?   // scenic / template image for header (you will provide)
- *   }
- * - verseStudio: result of useVerseStudio(), e.g.:
- *   {
- *     team,
- *     messages,
- *     isSending,
- *     activeRole,
- *     usageData,
- *     handoffSuggestion,
- *     showHandoffPrompt,
- *     sendMessage,
- *     stopStream,
- *     confirmHandoff,
- *     switchToRole,
- *     cancelHandoff
- *   }
- * - onBack: () => void    // navigate back to VerseStudioTab / tasks list
+ * Mobile: chat-only (side panels not rendered via CSS)
  */
 export default function TaskChatWindow({
   task,
@@ -56,13 +33,12 @@ export default function TaskChatWindow({
   } = verseStudio || {};
 
   const [inputText, setInputText] = useState('');
+  const [isArtifactsCollapsed, setIsArtifactsCollapsed] = useState(false);
 
   const handleSend = useCallback(() => {
     const trimmed = inputText.trim();
     if (!trimmed || !sendMessage) return;
 
-    // For now we just send plain text.
-    // When @mention support is wired, we can parse mentions here.
     sendMessage(trimmed);
     setInputText('');
   }, [inputText, sendMessage]);
@@ -75,20 +51,13 @@ export default function TaskChatWindow({
   };
 
   const handleStopStreaming = () => {
-    if (stopStream) {
-      stopStream();
-    }
+    if (stopStream) stopStream();
   };
 
   const usageSummary = useMemo(() => {
     if (!usageData) return null;
 
-    const {
-      messagesUsed,
-      messagesLimit,
-      tokensUsed,
-      tokensLimit
-    } = usageData;
+    const { messagesUsed, messagesLimit, tokensUsed, tokensLimit } = usageData;
 
     return {
       messages: messagesLimit
@@ -104,15 +73,17 @@ export default function TaskChatWindow({
   const heroSubtitle =
     task?.description ||
     'Describe your goal and let your Verse Workspace team collaborate.';
-
   const heroTemplateLabel = task?.templateName || 'Verse Studio Template';
-
   const heroImageUrl = task?.heroImageUrl || null;
+
+  const layoutClassName = isArtifactsCollapsed
+    ? `${styles.layout} ${styles.layoutArtifactsCollapsed}`
+    : styles.layout;
 
   return (
     <div className={styles.taskWindow}>
-      <div className={styles.layout}>
-        {/* ========== LEFT: USER / VERSE OVERVIEW ========== */}
+      <div className={layoutClassName}>
+        {/* ========== LEFT: WORKSPACE DETAILS / PARTICIPANTS ========== */}
         <aside className={styles.navSection}>
           <div className={styles.userProfile}>
             <div className={styles.userAvatar}>
@@ -122,18 +93,14 @@ export default function TaskChatWindow({
             </div>
             <div className={styles.userMeta}>
               <div className={styles.userName}>Verse Studio</div>
-              <div className={styles.userTier}>
-                Task workspace
-              </div>
+              <div className={styles.userTier}>Task workspace</div>
             </div>
           </div>
 
           <div className={styles.navBlock}>
             <div className={styles.navTitle}>Task overview</div>
             <div className={styles.navTaskName}>{heroTitle}</div>
-            <div className={styles.navTaskTemplate}>
-              Template: {heroTemplateLabel}
-            </div>
+            <div className={styles.navTaskTemplate}>Template: {heroTemplateLabel}</div>
 
             {usageSummary && (
               <div className={styles.navUsage}>
@@ -157,6 +124,7 @@ export default function TaskChatWindow({
                   Team will appear here once the task starts.
                 </div>
               )}
+
               {team.map((role) => (
                 <div
                   key={role.role_id || role.id}
@@ -166,36 +134,23 @@ export default function TaskChatWindow({
                       : styles.navRoleItem
                   }
                 >
-                  <div className={styles.navRoleIcon}>
-                    {role.role_icon || '⚙️'}
-                  </div>
+                  <div className={styles.navRoleIcon}>{role.role_icon || '⚙️'}</div>
                   <div className={styles.navRoleText}>
-                    <div className={styles.navRoleName}>
-                      {role.role_name || role.name}
-                    </div>
-                    {role.llm_name && (
-                      <div className={styles.navRoleLlm}>
-                        {role.llm_name}
-                      </div>
-                    )}
+                    <div className={styles.navRoleName}>{role.role_name || role.name}</div>
+                    {role.llm_name && <div className={styles.navRoleLlm}>{role.llm_name}</div>}
                   </div>
                 </div>
               ))}
             </div>
           </div>
 
-          <button
-            type="button"
-            className={styles.backButton}
-            onClick={onBack}
-          >
+          <button type="button" className={styles.backButton} onClick={onBack}>
             ← Back to Verse Workspace
           </button>
         </aside>
 
-        {/* ========== MIDDLE: CHAT SECTION ========== */}
+        {/* ========== CENTER: CHAT ========== */}
         <section className={styles.chatSection}>
-          {/* Floating avatars across the top, one per role */}
           {team.length > 0 && (
             <div className={styles.floatingAvatars}>
               {team.map((role) => (
@@ -207,21 +162,15 @@ export default function TaskChatWindow({
                       : styles.floatingAvatar
                   }
                 >
-                  {/* When you have real images per template/role, swap this span for <img src=... /> */}
                   <div className={styles.floatingAvatarInner}>
-                    <span className={styles.floatingAvatarEmoji}>
-                      {role.role_icon || '✨'}
-                    </span>
+                    <span className={styles.floatingAvatarEmoji}>{role.role_icon || '✨'}</span>
                   </div>
-                  {activeRole === role.role_id && (
-                    <div className={styles.speakingDot} />
-                  )}
+                  {activeRole === role.role_id && <div className={styles.speakingDot} />}
                 </div>
               ))}
             </div>
           )}
 
-          {/* Header with scenic image + task summary */}
           <div className={styles.chatHeader}>
             {heroImageUrl && (
               <div className={styles.heroImageBackdrop}>
@@ -232,13 +181,9 @@ export default function TaskChatWindow({
 
             <div className={styles.headerContent}>
               <div className={styles.headerBadgeRow}>
-                <span className={styles.headerBadge}>
-                  Verse Workspace · Task
-                </span>
+                <span className={styles.headerBadge}>Verse Workspace · Task</span>
                 {heroTemplateLabel && (
-                  <span className={styles.headerBadgeSecondary}>
-                    {heroTemplateLabel}
-                  </span>
+                  <span className={styles.headerBadgeSecondary}>{heroTemplateLabel}</span>
                 )}
               </div>
 
@@ -257,16 +202,13 @@ export default function TaskChatWindow({
             </div>
           </div>
 
-          {/* Messages */}
           <div className={styles.messagesContainer}>
             {messages.length === 0 && (
               <div className={styles.emptyState}>
-                <div className={styles.emptyTitle}>
-                  Your Verse Workspace team is ready.
-                </div>
+                <div className={styles.emptyTitle}>Your Verse Workspace team is ready.</div>
                 <p className={styles.emptyBody}>
-                  Describe your goal, paste a brief, or drop in a snippet of
-                  code. Your selected roles will collaborate in this space.
+                  Describe your goal, paste a brief, or drop in a snippet of code. Your selected roles
+                  will collaborate in this space.
                 </p>
               </div>
             )}
@@ -285,14 +227,11 @@ export default function TaskChatWindow({
                     {message.user ? 'You' : message.role_name || 'Assistant'}
                   </span>
                 </div>
-                <div className={styles.messageBody}>
-                  {message.text}
-                </div>
+                <div className={styles.messageBody}>{message.text}</div>
               </div>
             ))}
           </div>
 
-          {/* Handoff prompt */}
           {showHandoffPrompt && handoffSuggestion && (
             <div className={styles.handoffPrompt}>
               <div className={styles.handoffText}>
@@ -302,20 +241,12 @@ export default function TaskChatWindow({
               </div>
               <div className={styles.handoffActions}>
                 {confirmHandoff && (
-                  <button
-                    type="button"
-                    className={styles.handoffPrimary}
-                    onClick={confirmHandoff}
-                  >
+                  <button type="button" className={styles.handoffPrimary} onClick={confirmHandoff}>
                     Continue
                   </button>
                 )}
                 {cancelHandoff && (
-                  <button
-                    type="button"
-                    className={styles.handoffSecondary}
-                    onClick={cancelHandoff}
-                  >
+                  <button type="button" className={styles.handoffSecondary} onClick={cancelHandoff}>
                     Later
                   </button>
                 )}
@@ -323,7 +254,6 @@ export default function TaskChatWindow({
             </div>
           )}
 
-          {/* Input */}
           <div className={styles.inputContainer}>
             <div className={styles.inputWrapper}>
               <textarea
@@ -357,43 +287,57 @@ export default function TaskChatWindow({
           </div>
         </section>
 
-        {/* ========== RIGHT: ARTIFACTS & DOCUMENTS ========== */}
-        <aside className={styles.artifactsSection}>
+        {/* ========== RIGHT: ARTIFACTS (COLLAPSIBLE) ========== */}
+        <aside
+          className={
+            isArtifactsCollapsed
+              ? `${styles.artifactsSection} ${styles.artifactsSectionCollapsed}`
+              : styles.artifactsSection
+          }
+        >
           <div className={styles.artifactsHeader}>
-            <div className={styles.artifactsTabs}>
+            <div className={styles.artifactsHeaderRow}>
+              {!isArtifactsCollapsed && (
+                <div className={styles.artifactsTabs}>
+                  <button type="button" className={`${styles.artifactsTab} ${styles.artifactsTabActive}`}>
+                    Artifacts
+                  </button>
+                  <button type="button" className={styles.artifactsTab}>
+                    Docs
+                  </button>
+                  <button type="button" className={styles.artifactsTab}>
+                    Resources
+                  </button>
+                </div>
+              )}
+
               <button
                 type="button"
-                className={`${styles.artifactsTab} ${styles.artifactsTabActive}`}
+                className={styles.artifactsToggle}
+                onClick={() => setIsArtifactsCollapsed((v) => !v)}
+                aria-label={isArtifactsCollapsed ? 'Expand artifacts panel' : 'Collapse artifacts panel'}
+                title={isArtifactsCollapsed ? 'Expand panel' : 'Collapse panel'}
               >
-                Artifacts
-              </button>
-              <button
-                type="button"
-                className={styles.artifactsTab}
-              >
-                Docs
-              </button>
-              <button
-                type="button"
-                className={styles.artifactsTab}
-              >
-                Resources
+                {isArtifactsCollapsed ? '⟨' : '⟩'}
               </button>
             </div>
           </div>
 
-          <div className={styles.artifactsContent}>
-            <div className={styles.artifactsEmpty}>
-              <div className={styles.artifactsEmptyTitle}>
-                Your task artifacts will appear here.
-              </div>
-              <p className={styles.artifactsEmptyBody}>
-                As your Verse Workspace team generates code, summaries, and
-                documents, we’ll collect them in this panel so you can
-                revisit and reuse them.
-              </p>
+          {isArtifactsCollapsed ? (
+            <div className={styles.artifactsRail}>
+              <div className={styles.artifactsRailLabel}>Artifacts</div>
             </div>
-          </div>
+          ) : (
+            <div className={styles.artifactsContent}>
+              <div className={styles.artifactsEmpty}>
+                <div className={styles.artifactsEmptyTitle}>Your task artifacts will appear here.</div>
+                <p className={styles.artifactsEmptyBody}>
+                  As your Verse Workspace team generates code, summaries, and documents, we’ll collect
+                  them in this panel so you can revisit and reuse them.
+                </p>
+              </div>
+            </div>
+          )}
         </aside>
       </div>
     </div>
