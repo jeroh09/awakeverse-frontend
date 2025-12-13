@@ -808,3 +808,68 @@
   color: var(--accent-primary);
   font-weight: 600;
 }
+/* ============================================================
+   Step 2: Free-form Create Workspace entry point
+   ============================================================ */
+
+.createWorkspaceButton {
+  all: unset;
+  cursor: pointer;
+
+  display: inline-flex;
+  align-items: center;
+  gap: 0.6rem;
+
+  padding: 0.65rem 0.75rem;
+  border-radius: 12px;
+
+  background: var(--bg-surface);
+  border: 1px solid var(--border-subtle);
+
+  transition: background 0.15s ease, border-color 0.15s ease, transform 0.12s ease;
+}
+
+.createWorkspaceButton:hover {
+  background: var(--bg-surface-hover);
+  border-color: var(--border-emphasis);
+}
+
+.createWorkspaceButton:active {
+  transform: translateY(1px);
+}
+
+.createWorkspaceButton:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.createWorkspaceIcon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+
+  width: 26px;
+  height: 26px;
+  border-radius: 10px;
+
+  background: var(--bg-muted);
+  color: var(--text-primary);
+  font-size: 1rem;
+  line-height: 1;
+}
+
+.createWorkspaceText {
+  display: flex;
+  flex-direction: column;
+  gap: 0.1rem;
+
+  font-family: var(--font-display);
+  font-size: 0.78rem;
+  color: var(--text-primary);
+}
+
+.createWorkspaceHint {
+  font-family: var(--font-body);
+  font-size: 0.68rem;
+  color: var(--text-muted);
+}

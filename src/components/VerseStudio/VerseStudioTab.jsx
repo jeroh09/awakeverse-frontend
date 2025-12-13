@@ -330,6 +330,21 @@ export default function VerseStudioTab() {
                 Resume an active workspace or start a new one from a template.
               </p>
             </div>
+            
+            {/* ✅ Add Create Workspace Button to Header */}
+            <button
+              type="button"
+              className={styles.createWorkspaceButton}
+              onClick={() => openCreator(null)}
+              disabled={loading || isCreating}
+              title="Create a new workspace"
+            >
+              <span className={styles.createWorkspaceIcon}>＋</span>
+              <span className={styles.createWorkspaceText}>
+                Create workspace
+                <span className={styles.createWorkspaceHint}>Start from scratch</span>
+              </span>
+            </button>
           </div>
 
           {loading && !tasks.length ? (
@@ -343,6 +358,20 @@ export default function VerseStudioTab() {
               <p className={styles.emptyBody}>
                 Pick a template on the left to create your first Verse Workspace task.
               </p>
+              
+              {/* ✅ Add Create Workspace Button to Empty State */}
+              <button
+                type="button"
+                className={styles.createWorkspaceButton}
+                onClick={() => openCreator(null)}
+                disabled={loading || isCreating}
+              >
+                <span className={styles.createWorkspaceIcon}>＋</span>
+                <span className={styles.createWorkspaceText}>
+                  Create workspace
+                  <span className={styles.createWorkspaceHint}>Start from scratch</span>
+                </span>
+              </button>
             </div>
           ) : (
             <div className={styles.tasksList}>
