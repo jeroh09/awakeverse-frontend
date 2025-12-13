@@ -14,6 +14,8 @@ export default function VerseStudioTab() {
   const [templates, setTemplates] = useState([]);
   const [tasks, setTasks] = useState([]);
   const [tokensState, setTokensState] = useState(null);
+  const [resumingTaskId, setResumingTaskId] = useState(null);
+
 
   // UI
   const [loading, setLoading] = useState(true);
@@ -181,6 +183,27 @@ export default function VerseStudioTab() {
     }
   }, [trialLimitReached, verseStudio]);
 
+    const handleResumeTask = useCallback(async (task) => {
+    const id = task?.id || task?.task_id;
+    if (!id) return;
+
+    try {
+      setResumingTaskId(id);
+      setError(null);
+
+      await verseStudio.loadTask(id);
+
+      // Open fullscreen chat window
+      setActiveTask(task);
+    } catch (err) {
+      console.error('❌ Resume failed:', err);
+      setError(err.message || 'Failed to resume task');
+    } finally {
+      setResumingTaskId(null);
+    }
+  }, [verseStudio]);
+
+
   // -----------------------------------------------------------------------
   // Back from chat
   // -----------------------------------------------------------------------
@@ -346,6 +369,16 @@ export default function VerseStudioTab() {
                       >
                         Resume (soon)
                       </button>
+                      <button
+                        type="button"
+                        className={styles.taskButton}
+                        onClick={() => handleResumeTask(task)}
+                        disabled={resumingTaskId === (task.id || task.task_id)}
+                        title="Open this workspace task"
+                      >
+                        {resumingTaskId === (task.id || task.task_id) ? 'Opening…' : 'Resume'}
+                      </button>
+
                     </div>
                   </article>
                 );

@@ -222,6 +222,83 @@ export default function useVerseStudio() {
     [fetchUsage]
   );
 
+    // ========================================================================
+  // LOAD TASK (Resume)
+  // ========================================================================
+  const loadTask = useCallback(
+    async (taskIdToLoad) => {
+      if (!taskIdToLoad) throw new Error('Missing task id');
+
+      try {
+        const response = await fetch(`${API_BASE}/api/verse-studio/task/${taskIdToLoad}`, {
+          method: 'GET',
+          headers: { 'Content-Type': 'application/json' },
+          credentials: 'include'
+        });
+
+        if (!response.ok) {
+          const err = await response.json().catch(() => ({}));
+          throw new Error(err.error || `Failed to load task (${response.status})`);
+        }
+
+        const data = await response.json();
+
+        const loadedTaskId = data?.task?.task_id || data?.task_id || taskIdToLoad;
+
+        // Team + messages may be at top-level or inside context payload
+        const loadedTeam = data?.team || [];
+        const loadedMessages =
+          data?.messages ||
+          data?.context?.messages ||
+          data?.history ||
+          [];
+
+        // Normalize messages shape: ensure every message has an id
+        const normalizedMessages = Array.isArray(loadedMessages)
+          ? loadedMessages.map((m, idx) => ({
+              id: m.id ?? idx,
+              user: m.user ?? m.is_user ?? m.role === 'user',
+              role_id: m.role_id ?? m.speaker_id ?? m.role ?? (m.user ? 'user' : 'assistant'),
+              role_name: m.role_name ?? m.speaker_name ?? (m.user ? 'You' : 'Assistant'),
+              text: m.text ?? m.content ?? '',
+              timestamp: m.timestamp ?? m.created_at ?? Date.now()
+            }))
+          : [];
+
+        setTaskId(loadedTaskId);
+        setTeam(loadedTeam);
+        setMessages(normalizedMessages);
+
+        // Reset counter so new messages get unique ids above existing list
+        messageIdCounter.current = normalizedMessages.length
+          ? normalizedMessages.length + 1
+          : 0;
+
+        // Load usage from response if present, else fetch usage endpoint
+        if (data?.usage) {
+          setUsageData({
+            messages_count: data.usage.messages_count || 0,
+            tokens_used: data.usage.tokens_used || 0,
+            tier: data.usage.tier || 'free',
+            limit: data.usage.limit || 150,
+            remaining: data.usage.remaining ?? 0,
+            limitReached: data.usage.limit_reached || false
+          });
+        } else {
+          await fetchUsage(loadedTaskId);
+        }
+
+        console.log('✅ Task loaded:', loadedTaskId);
+        return loadedTaskId;
+      } catch (error) {
+        console.error('❌ Failed to load task:', error);
+        throw error;
+      }
+    },
+    [fetchUsage]
+  );
+
+
   // ========================================================================
   // SEND MESSAGE (SSE Streaming)
   // ========================================================================
@@ -560,6 +637,7 @@ export default function useVerseStudio() {
     sendMessage,
     stopStream,
     resetTask,
+    loadTask,
 
     // Handoff actions
     confirmHandoff,
