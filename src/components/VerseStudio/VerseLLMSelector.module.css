@@ -1,0 +1,265 @@
+/* src/components/VerseWorkspace/VerseLLMSelector.module.css */
+
+.selectorRoot {
+  --vw-bg-primary: #0A0F1A;          /* colors.background.canvas */
+  --vw-bg-surface: #141B2E;          /* colors.background.surface */
+  --vw-bg-card: #1C2640;             /* colors.background.interactive */
+  --vw-bg-peak: #243152;             /* colors.background.peak */
+
+  --vw-text-primary: #F1F5F9;        /* text.primary */
+  --vw-text-secondary: #94A3B8;      /* text.secondary */
+  --vw-text-muted: #64748B;          /* text.muted */
+  --vw-text-ivory: #F5F5DC;          /* brand ivory */
+
+  --vw-border-subtle: rgba(148, 163, 184, 0.2);
+  --vw-border-strong: rgba(148, 163, 184, 0.4);
+
+  --vw-accent-primary: #6366F1;      /* accent.primary */
+  --vw-accent-hover: #818CF8;        /* accent.hover */
+  --vw-accent-glow: rgba(99, 102, 241, 0.2);
+
+  --vw-radius-md: 12px;
+  --vw-radius-lg: 16px;
+  --vw-radius-full: 999px;
+
+  --vw-shadow-soft: 0 2px 10px rgba(15, 23, 42, 0.6);
+
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+
+/* Header */
+.selectorHeader {
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: 0.75rem;
+}
+
+.selectorTitleBlock {
+  display: flex;
+  flex-direction: column;
+  gap: 0.18rem;
+}
+
+.selectorEyebrow {
+  font-size: 11px;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--vw-text-secondary);
+}
+
+.selectorTitle {
+  margin: 0;
+  font-family: "Syne", system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+  font-size: 15px;
+  font-weight: 600;
+  letter-spacing: 0.05em;
+  color: var(--vw-text-ivory);
+}
+
+.selectorMeta {
+  font-size: 11px;
+  color: var(--vw-text-secondary);
+}
+
+.selectorCount {
+  padding: 3px 9px;
+  border-radius: var(--vw-radius-full);
+  border: 1px solid var(--vw-border-subtle);
+  background: rgba(15, 23, 42, 0.9);
+}
+
+/* Hint / helper text */
+.selectorHint {
+  margin: 0;
+  font-size: 12px;
+  color: var(--vw-text-secondary);
+}
+
+.selectorHintWarn {
+  color: #fecaca;
+}
+
+/* Empty state */
+.selectorEmpty {
+  margin-top: 0.65rem;
+  padding: 0.9rem 0.85rem;
+  border-radius: var(--vw-radius-lg);
+  border: 1px dashed var(--vw-border-subtle);
+  background: rgba(15, 23, 42, 0.96);
+}
+
+.emptyTitle {
+  font-size: 13px;
+  font-weight: 500;
+  color: var(--vw-text-ivory);
+}
+
+.emptyBody {
+  margin: 3px 0 0 0;
+  font-size: 12px;
+  color: var(--vw-text-secondary);
+}
+
+/* Options grid */
+.optionsGrid {
+  margin-top: 0.4rem;
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 8px;
+}
+
+/* Card */
+.optionCard {
+  position: relative;
+  text-align: left;
+  border-radius: var(--vw-radius-lg);
+  padding: 9px 9px 8px;
+  border: 1px solid var(--vw-border-subtle);
+  background: linear-gradient(145deg, rgba(20, 27, 46, 0.96), rgba(10, 15, 26, 0.96));
+  box-shadow: var(--vw-shadow-soft);
+  cursor: pointer;
+  outline: none;
+  transition: transform 0.16s ease-out, box-shadow 0.16s ease-out, border-color 0.16s ease-out, background 0.16s ease-out;
+  color: var(--vw-text-primary);
+}
+
+.optionCard::before {
+  content: "";
+  position: absolute;
+  inset: -40%;
+  opacity: 0;
+  background: radial-gradient(circle at 0 0, var(--vw-accent-glow), transparent 55%);
+  transition: opacity 0.18s ease-out;
+  pointer-events: none;
+}
+
+.optionCard:hover {
+  transform: translateY(-1px);
+  border-color: var(--vw-accent-primary);
+  box-shadow: 0 14px 30px rgba(15, 23, 42, 0.9);
+}
+
+.optionCard:hover::before {
+  opacity: 1;
+}
+
+/* Selected state */
+.optionSelected {
+  border-color: var(--vw-accent-primary);
+  box-shadow: 0 0 0 1px rgba(99, 102, 241, 0.7), 0 18px 40px rgba(15, 23, 42, 0.95);
+  background: radial-gradient(circle at 0 0, rgba(99, 102, 241, 0.22), transparent 55%),
+              linear-gradient(145deg, rgba(15, 23, 42, 0.98), rgba(10, 15, 26, 0.98));
+}
+
+/* Disabled because max reached */
+.optionDisabled {
+  opacity: 0.52;
+  cursor: not-allowed;
+}
+
+/* Card content */
+.optionHeaderRow {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  gap: 4px;
+  margin-bottom: 2px;
+}
+
+.optionName {
+  font-size: 13px;
+  font-weight: 500;
+  color: var(--vw-text-ivory);
+}
+
+.optionProvider {
+  font-size: 11px;
+  color: var(--vw-text-secondary);
+}
+
+.optionDescription {
+  margin: 0;
+  margin-bottom: 5px;
+  font-size: 11px;
+  color: var(--vw-text-secondary);
+}
+
+/* Footer row: tags + check */
+.optionFooterRow {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-end;
+  gap: 6px;
+}
+
+.optionTags {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px;
+}
+
+.optionTag {
+  font-size: 10px;
+  padding: 3px 6px;
+  border-radius: 999px;
+  border: 1px solid rgba(148, 163, 184, 0.35);
+  background: rgba(15, 23, 42, 0.96);
+  color: var(--vw-text-secondary);
+}
+
+.optionTagMore {
+  font-size: 10px;
+  color: var(--vw-text-secondary);
+}
+
+.optionTier {
+  font-size: 10px;
+  padding: 3px 6px;
+  border-radius: 999px;
+  border: 1px solid rgba(234, 179, 8, 0.7);
+  background: rgba(63, 46, 15, 0.9);
+  color: #facc15;
+}
+
+/* Selection check */
+.optionCheckShell {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 3px;
+}
+
+.optionCheckDot {
+  width: 10px;
+  height: 10px;
+  border-radius: 999px;
+  border: 1px solid var(--vw-border-strong);
+  background: rgba(15, 23, 42, 0.95);
+}
+
+.optionCheckDotActive {
+  border-color: var(--vw-accent-primary);
+  background: var(--vw-accent-primary);
+  box-shadow: 0 0 0 1px rgba(99, 102, 241, 0.9);
+}
+
+.optionCheckLabel {
+  font-size: 10px;
+  color: var(--vw-text-secondary);
+}
+
+/* Responsive */
+@media (max-width: 960px) {
+  .optionsGrid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+@media (max-width: 640px) {
+  .optionsGrid {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}

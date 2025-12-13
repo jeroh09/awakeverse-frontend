@@ -1,23 +1,62 @@
-// src/hooks/useVerseStudio.js - Verse Studio Hook with Handoff Detection
+// src/hooks/useVerseStudio.js - Verse Studio Hook with Handoff Detection + LLM Options
 import { useState, useCallback, useRef } from 'react';
 
 const API_BASE = process.env.REACT_APP_API_URL || 'https://api.awakeverse.com';
 
+// Safe UI fallback if backend endpoint doesn't exist yet
+const FALLBACK_LLM_OPTIONS = [
+  {
+    id: 'gpt-4o',
+    label: 'GPT-4o',
+    provider: 'OpenAI',
+    tier: 'pro',
+    capabilities: ['Generalist', 'Reasoning'],
+    description: 'Balanced reasoning + speed.'
+  },
+  {
+    id: 'gpt-4o-mini',
+    label: 'GPT-4o mini',
+    provider: 'OpenAI',
+    tier: 'free',
+    capabilities: ['Fast', 'Affordable'],
+    description: 'Quick drafts and iterations.'
+  },
+  {
+    id: 'claude-3.5-sonnet',
+    label: 'Claude 3.5 Sonnet',
+    provider: 'Anthropic',
+    tier: 'pro',
+    capabilities: ['Writing', 'Analysis'],
+    description: 'Strong writing and structured thinking.'
+  },
+  {
+    id: 'llama-3.1-70b',
+    label: 'Llama 3.1 70B',
+    provider: 'Open',
+    tier: 'lab',
+    capabilities: ['Open', 'Generalist'],
+    description: 'Great general-purpose open model.'
+  }
+];
+
 export default function useVerseStudio() {
-  
   // Task state
   const [taskId, setTaskId] = useState(null);
   const [team, setTeam] = useState([]);
   const [messages, setMessages] = useState([]);
-  
+
+  // LLM options (for TaskCreator / selection UX)
+  const [llmOptions, setLlmOptions] = useState([]);
+  const [llmOptionsLoading, setLlmOptionsLoading] = useState(false);
+
   // Streaming state
   const [isSending, setIsSending] = useState(false);
   const [activeRole, setActiveRole] = useState(null);
-  
-  // ✅ NEW: Handoff suggestion state
+
+  // Handoff suggestion state
   const [handoffSuggestion, setHandoffSuggestion] = useState(null);
   const [showHandoffPrompt, setShowHandoffPrompt] = useState(false);
-  
+
   // Usage tracking
   const [usageData, setUsageData] = useState({
     messages_count: 0,
@@ -28,7 +67,7 @@ export default function useVerseStudio() {
     limitReached: false
   });
   const [usageLoading, setUsageLoading] = useState(false);
-  
+
   // Circuit breaker
   const [circuitBreakerState, setCircuitBreakerState] = useState({
     errorCount: 0,
@@ -46,14 +85,53 @@ export default function useVerseStudio() {
   }, []);
 
   // ========================================================================
+  // LLM OPTIONS (tries backend first, falls back to static list)
+  // ========================================================================
+  const refreshLLMOptions = useCallback(async () => {
+    if (llmOptionsLoading) return;
+
+    try {
+      setLlmOptionsLoading(true);
+
+      // If you later add a backend route, this will start working automatically.
+      // Suggested future endpoint: GET /api/verse-studio/llms
+      const res = await fetch(`${API_BASE}/api/verse-studio/llms`, {
+        method: 'GET',
+        headers: { 'Content-Type': 'application/json' },
+        credentials: 'include'
+      });
+
+      if (res.ok) {
+        const data = await res.json();
+        const options = data.llms || data.models || data.options || [];
+
+        if (Array.isArray(options) && options.length) {
+          setLlmOptions(options);
+          return options;
+        }
+      }
+
+      // If endpoint missing or returns empty
+      setLlmOptions(FALLBACK_LLM_OPTIONS);
+      return FALLBACK_LLM_OPTIONS;
+    } catch (e) {
+      console.warn('⚠️ LLM options endpoint unavailable; using fallback list.');
+      setLlmOptions(FALLBACK_LLM_OPTIONS);
+      return FALLBACK_LLM_OPTIONS;
+    } finally {
+      setLlmOptionsLoading(false);
+    }
+  }, [llmOptionsLoading]);
+
+  // ========================================================================
   // FETCH USAGE
   // ========================================================================
   const fetchUsage = useCallback(async (taskIdToFetch) => {
     if (!taskIdToFetch) return;
-    
+
     try {
       setUsageLoading(true);
-      
+
       const response = await fetch(
         `${API_BASE}/api/verse-studio/task/${taskIdToFetch}/usage`,
         {
@@ -65,7 +143,7 @@ export default function useVerseStudio() {
 
       if (response.ok) {
         const data = await response.json();
-        
+
         setUsageData({
           messages_count: data.messages_count || 0,
           tokens_used: data.tokens_used || 0,
@@ -87,316 +165,322 @@ export default function useVerseStudio() {
   // ========================================================================
   // CREATE TASK
   // ========================================================================
-  const createTask = useCallback(async (taskData) => {
-    try {
-      const csrf = document.cookie.match(/(?:^|;\s*)av_csrf=([^;]+)/)?.[1] || '';
-      
-      console.log('🎯 Creating task:', taskData.name);
-      
-      const response = await fetch(`${API_BASE}/api/verse-studio/task`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'X-CSRF-Token': csrf
-        },
-        credentials: 'include',
-        body: JSON.stringify(taskData)
-      });
+  const createTask = useCallback(
+    async (taskData) => {
+      try {
+        const csrf =
+          document.cookie.match(/(?:^|;\s*)av_csrf=([^;]+)/)?.[1] || '';
 
-      if (!response.ok) {
-        const error = await response.json().catch(() => ({}));
-        throw new Error(error.error || `Failed to create task: ${response.status}`);
-      }
+        console.log('🎯 Creating task:', taskData.name);
 
-      const data = await response.json();
-      const newTaskId = data.task?.task_id;
-
-      if (!newTaskId) {
-        throw new Error('No task_id returned from server');
-      }
-      
-      setTaskId(newTaskId);
-      setTeam(data.team || []);
-      setMessages([]);
-      messageIdCounter.current = 0;
-
-      console.log('✅ Task created:', newTaskId);
-
-      await fetchUsage(newTaskId);
-
-      return newTaskId;
-
-    } catch (error) {
-      console.error('❌ Failed to create task:', error);
-      
-      setCircuitBreakerState(prev => ({
-        errorCount: prev.errorCount + 1,
-        lastError: error.message,
-        status: prev.errorCount >= 2 ? 'tripped' : 'warning'
-      }));
-
-      throw error;
-    }
-  }, [fetchUsage]);
-
-  // ========================================================================
-  // SEND MESSAGE (SSE Streaming)
-  // ========================================================================
-  const sendMessage = useCallback(async (messageText, mention = null) => {
-    if (!taskId || !messageText.trim()) {
-      console.error('❌ sendMessage: Missing required params');
-      return;
-    }
-
-    if (circuitBreakerState.status === 'tripped') {
-      throw new Error('Circuit breaker tripped. Too many errors. Please refresh.');
-    }
-
-    if (usageData.limitReached) {
-      throw new Error('MESSAGE_LIMIT_REACHED');
-    }
-
-    const controller = new AbortController();
-    controllerRef.current = controller;
-    setIsSending(true);
-
-    // Clear previous handoff suggestion
-    setHandoffSuggestion(null);
-    setShowHandoffPrompt(false);
-
-    try {
-      // Add user message
-      const userMessageId = generateMessageId();
-      const userMessage = {
-        id: userMessageId,
-        user: true,
-        text: messageText,
-        timestamp: Date.now()
-      };
-      
-      setMessages(prev => [...prev, userMessage]);
-      console.log('📤 Sending message:', { id: userMessageId, text: messageText });
-
-      // Send to API
-      const csrf = document.cookie.match(/(?:^|;\s*)av_csrf=([^;]+)/)?.[1] || '';
-      const response = await fetch(
-        `${API_BASE}/api/verse-studio/task/${taskId}/message`,
-        {
+        const response = await fetch(`${API_BASE}/api/verse-studio/task`, {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json',
             'X-CSRF-Token': csrf
           },
           credentials: 'include',
-          body: JSON.stringify({
-            content: messageText,
-            mention: mention  // Direct @mention if specified
-          }),
-          signal: controller.signal
+          body: JSON.stringify(taskData)
+        });
+
+        if (!response.ok) {
+          const error = await response.json().catch(() => ({}));
+          throw new Error(error.error || `Failed to create task: ${response.status}`);
         }
-      );
 
-      if (!response.ok || !response.body) {
-        throw new Error(`API failed: ${response.status} ${response.statusText}`);
-      }
+        const data = await response.json();
 
-      // Parse SSE stream
-      const reader = response.body.getReader();
-      const decoder = new TextDecoder();
-      
-      let currentRole = null;
-      let currentMessageId = null;
-      let currentBuffer = '';
+        // ✅ backend returns { task: { task_id: ... }, team: ... }
+        const newTaskId = data?.task?.task_id || data?.task_id;
 
-      while (true) {
-        const { done, value } = await reader.read();
-        if (done) break;
-
-        const chunk = decoder.decode(value);
-        const lines = chunk.split('\n\n').filter(line => line.startsWith('data:'));
-
-        for (const line of lines) {
-          try {
-            const jsonStr = line.replace('data: ', '');
-            const data = JSON.parse(jsonStr);
-            
-            const { type } = data;
-
-            // Response start - new role speaking
-            if (type === 'response_start') {
-              const { role_id, role_name } = data;
-              
-              currentRole = role_id;
-              currentMessageId = generateMessageId();
-              currentBuffer = '';
-              
-              setActiveRole(role_id);
-
-              setMessages(prev => [...prev, {
-                id: currentMessageId,
-                user: false,
-                role_id: role_id,
-                role_name: role_name,
-                text: '',
-                timestamp: Date.now()
-              }]);
-
-              console.log(`🎤 ${role_name} started speaking`);
-            }
-
-            // Token - stream content
-            else if (type === 'token' && currentMessageId !== null) {
-              const { content } = data;
-              currentBuffer += content;
-
-              setMessages(prev => {
-                const copy = [...prev];
-                const msgIndex = copy.findIndex(m => m.id === currentMessageId);
-                
-                if (msgIndex !== -1) {
-                  copy[msgIndex] = {
-                    ...copy[msgIndex],
-                    text: currentBuffer
-                  };
-                }
-                
-                return copy;
-              });
-            }
-
-            // Response complete
-            else if (type === 'response_complete') {
-              const { role_id, tokens_used } = data;
-              
-              console.log(`✅ ${role_id} completed (${tokens_used} tokens)`);
-              
-              setActiveRole(null);
-              currentRole = null;
-              currentMessageId = null;
-              currentBuffer = '';
-            }
-
-            // ✅ NEW: Done event with handoff suggestion
-            else if (type === 'done') {
-              const { warnings, suggested_next } = data;
-              
-              console.log('✅ Stream complete');
-              
-              // Handle warnings
-              if (warnings && warnings.length > 0) {
-                console.warn('⚠️ Warnings:', warnings);
-              }
-              
-              // ✅ Handle handoff suggestion
-              if (suggested_next) {
-                console.log('💡 Handoff suggestion:', suggested_next);
-                
-                setHandoffSuggestion(suggested_next);
-                
-                // Only show prompt for explicit handoffs (not sequential)
-                if (suggested_next.source === 'handoff') {
-                  setShowHandoffPrompt(true);
-                }
-              }
-            }
-
-            // Error
-            else if (type === 'error') {
-              console.error('❌ Backend error:', data.error);
-              throw new Error(data.error);
-            }
-
-          } catch (parseError) {
-            console.warn('⚠️ JSON parse error:', parseError);
-          }
+        if (!newTaskId) {
+          throw new Error('No task_id returned from server');
         }
-      }
 
-      // Update usage
-      setUsageData(prev => ({
-        ...prev,
-        messages_count: prev.messages_count + 1,
-        remaining: Math.max(0, prev.limit - prev.messages_count - 1),
-        limitReached: (prev.messages_count + 1) >= prev.limit
-      }));
+        setTaskId(newTaskId);
+        setTeam(data.team || []);
+        setMessages([]);
+        messageIdCounter.current = 0;
 
-      await fetchUsage(taskId);
+        console.log('✅ Task created:', newTaskId);
 
-      setCircuitBreakerState({
-        errorCount: 0,
-        lastError: null,
-        status: 'healthy'
-      });
+        await fetchUsage(newTaskId);
 
-      console.log('✅ Message complete');
+        return newTaskId;
+      } catch (error) {
+        console.error('❌ Failed to create task:', error);
 
-    } catch (error) {
-      console.error('❌ Send message failed:', error);
-
-      if (error.message !== 'MESSAGE_LIMIT_REACHED') {
-        setCircuitBreakerState(prev => ({
+        setCircuitBreakerState((prev) => ({
           errorCount: prev.errorCount + 1,
           lastError: error.message,
           status: prev.errorCount >= 2 ? 'tripped' : 'warning'
         }));
 
-        const errorMessageId = generateMessageId();
-        setMessages(prev => [...prev, {
-          id: errorMessageId,
-          user: false,
-          role_id: 'system',
-          role_name: 'System',
-          text: `Error: ${error.message}`,
-          timestamp: Date.now(),
-          error: true
-        }]);
+        throw error;
+      }
+    },
+    [fetchUsage]
+  );
+
+  // ========================================================================
+  // SEND MESSAGE (SSE Streaming)
+  // ========================================================================
+  const sendMessage = useCallback(
+    async (messageText, mention = null) => {
+      if (!taskId || !messageText.trim()) {
+        // Note: we still allow empty sends for mention handoffs elsewhere.
+        if (!taskId) {
+          console.error('❌ sendMessage: Missing taskId');
+          return;
+        }
       }
 
-      throw error;
+      if (circuitBreakerState.status === 'tripped') {
+        throw new Error('Circuit breaker tripped. Too many errors. Please refresh.');
+      }
 
-    } finally {
-      setIsSending(false);
-      setActiveRole(null);
-      controllerRef.current = null;
-    }
-  }, [taskId, circuitBreakerState.status, usageData, fetchUsage, generateMessageId]);
+      if (usageData.limitReached) {
+        throw new Error('MESSAGE_LIMIT_REACHED');
+      }
+
+      const controller = new AbortController();
+      controllerRef.current = controller;
+      setIsSending(true);
+
+      // Clear previous handoff suggestion
+      setHandoffSuggestion(null);
+      setShowHandoffPrompt(false);
+
+      try {
+        // Add user message (only if there is actual content)
+        if (messageText && messageText.trim()) {
+          const userMessageId = generateMessageId();
+          const userMessage = {
+            id: userMessageId,
+            user: true,
+            text: messageText,
+            timestamp: Date.now()
+          };
+
+          setMessages((prev) => [...prev, userMessage]);
+          console.log('📤 Sending message:', { id: userMessageId, text: messageText });
+        }
+
+        // Send to API
+        const csrf =
+          document.cookie.match(/(?:^|;\s*)av_csrf=([^;]+)/)?.[1] || '';
+        const response = await fetch(
+          `${API_BASE}/api/verse-studio/task/${taskId}/message`,
+          {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+              'X-CSRF-Token': csrf
+            },
+            credentials: 'include',
+            body: JSON.stringify({
+              content: messageText,
+              mention: mention // Direct @mention if specified
+            }),
+            signal: controller.signal
+          }
+        );
+
+        if (!response.ok || !response.body) {
+          throw new Error(`API failed: ${response.status} ${response.statusText}`);
+        }
+
+        // Parse SSE stream
+        const reader = response.body.getReader();
+        const decoder = new TextDecoder();
+
+        let currentMessageId = null;
+        let currentBuffer = '';
+
+        while (true) {
+          const { done, value } = await reader.read();
+          if (done) break;
+
+          const chunk = decoder.decode(value);
+          const lines = chunk
+            .split('\n\n')
+            .filter((line) => line.startsWith('data:'));
+
+          for (const line of lines) {
+            try {
+              const jsonStr = line.replace('data: ', '');
+              const data = JSON.parse(jsonStr);
+
+              const { type } = data;
+
+              // Response start - new role speaking
+              if (type === 'response_start') {
+                const { role_id, role_name } = data;
+
+                currentMessageId = generateMessageId();
+                currentBuffer = '';
+
+                setActiveRole(role_id);
+
+                setMessages((prev) => [
+                  ...prev,
+                  {
+                    id: currentMessageId,
+                    user: false,
+                    role_id: role_id,
+                    role_name: role_name,
+                    text: '',
+                    timestamp: Date.now()
+                  }
+                ]);
+
+                console.log(`🎤 ${role_name} started speaking`);
+              }
+
+              // Token - stream content
+              else if (type === 'token' && currentMessageId !== null) {
+                const { content } = data;
+                currentBuffer += content;
+
+                setMessages((prev) => {
+                  const copy = [...prev];
+                  const msgIndex = copy.findIndex((m) => m.id === currentMessageId);
+
+                  if (msgIndex !== -1) {
+                    copy[msgIndex] = {
+                      ...copy[msgIndex],
+                      text: currentBuffer
+                    };
+                  }
+
+                  return copy;
+                });
+              }
+
+              // Response complete
+              else if (type === 'response_complete') {
+                const { role_id, tokens_used } = data;
+
+                console.log(`✅ ${role_id} completed (${tokens_used} tokens)`);
+
+                setActiveRole(null);
+                currentMessageId = null;
+                currentBuffer = '';
+              }
+
+              // Done event with handoff suggestion
+              else if (type === 'done') {
+                const { warnings, suggested_next } = data;
+
+                console.log('✅ Stream complete');
+
+                if (warnings && warnings.length > 0) {
+                  console.warn('⚠️ Warnings:', warnings);
+                }
+
+                if (suggested_next) {
+                  console.log('💡 Handoff suggestion:', suggested_next);
+
+                  setHandoffSuggestion(suggested_next);
+
+                  if (suggested_next.source === 'handoff') {
+                    setShowHandoffPrompt(true);
+                  }
+                }
+              }
+
+              // Error
+              else if (type === 'error') {
+                console.error('❌ Backend error:', data.error);
+                throw new Error(data.error);
+              }
+            } catch (parseError) {
+              console.warn('⚠️ JSON parse error:', parseError);
+            }
+          }
+        }
+
+        // Update usage (optimistic)
+        setUsageData((prev) => ({
+          ...prev,
+          messages_count: prev.messages_count + 1,
+          remaining: Math.max(0, prev.limit - prev.messages_count - 1),
+          limitReached: prev.messages_count + 1 >= prev.limit
+        }));
+
+        await fetchUsage(taskId);
+
+        setCircuitBreakerState({
+          errorCount: 0,
+          lastError: null,
+          status: 'healthy'
+        });
+
+        console.log('✅ Message complete');
+      } catch (error) {
+        console.error('❌ Send message failed:', error);
+
+        if (error.message !== 'MESSAGE_LIMIT_REACHED') {
+          setCircuitBreakerState((prev) => ({
+            errorCount: prev.errorCount + 1,
+            lastError: error.message,
+            status: prev.errorCount >= 2 ? 'tripped' : 'warning'
+          }));
+
+          const errorMessageId = generateMessageId();
+          setMessages((prev) => [
+            ...prev,
+            {
+              id: errorMessageId,
+              user: false,
+              role_id: 'system',
+              role_name: 'System',
+              text: `Error: ${error.message}`,
+              timestamp: Date.now(),
+              error: true
+            }
+          ]);
+        }
+
+        throw error;
+      } finally {
+        setIsSending(false);
+        setActiveRole(null);
+        controllerRef.current = null;
+      }
+    },
+    [taskId, circuitBreakerState.status, usageData, fetchUsage, generateMessageId]
+  );
 
   // ========================================================================
-  // ✅ NEW: HANDOFF ACTIONS
+  // HANDOFF ACTIONS
   // ========================================================================
-  
-  // Confirm handoff - send empty message with mention
   const confirmHandoff = useCallback(() => {
     if (!handoffSuggestion) return;
-    
+
     console.log('✅ User confirmed handoff to:', handoffSuggestion.to_role_id);
-    
-    // Send empty message with mention (triggers next role)
+
     sendMessage('', handoffSuggestion.to_role_id);
-    
-    // Clear suggestion
+
     setHandoffSuggestion(null);
     setShowHandoffPrompt(false);
   }, [handoffSuggestion, sendMessage]);
 
-  // Switch to different role
-  const switchToRole = useCallback((roleId) => {
-    console.log('🔄 User switching to:', roleId);
-    
-    // Send empty message with different mention
-    sendMessage('', roleId);
-    
-    // Clear suggestion
-    setHandoffSuggestion(null);
-    setShowHandoffPrompt(false);
-  }, [sendMessage]);
+  const switchToRole = useCallback(
+    (roleId) => {
+      console.log('🔄 User switching to:', roleId);
 
-  // Cancel handoff - just hide prompt
+      sendMessage('', roleId);
+
+      setHandoffSuggestion(null);
+      setShowHandoffPrompt(false);
+    },
+    [sendMessage]
+  );
+
   const cancelHandoff = useCallback(() => {
     console.log('❌ User canceled handoff');
-    
     setShowHandoffPrompt(false);
-    // Keep suggestion in state in case user changes mind
   }, []);
 
   // ========================================================================
@@ -407,12 +491,12 @@ export default function useVerseStudio() {
       controllerRef.current.abort();
       controllerRef.current = null;
     }
-    
+
     if (animationIntervalRef.current) {
       clearInterval(animationIntervalRef.current);
       animationIntervalRef.current = null;
     }
-    
+
     setIsSending(false);
     setActiveRole(null);
     console.log('⏸️ Streaming stopped');
@@ -450,29 +534,34 @@ export default function useVerseStudio() {
     taskId,
     team,
     messages,
-    
+
+    // LLM options
+    llmOptions,
+    llmOptionsLoading,
+    refreshLLMOptions,
+
     // Streaming state
     isSending,
     activeRole,
-    
-    // ✅ NEW: Handoff state
+
+    // Handoff state
     handoffSuggestion,
     showHandoffPrompt,
-    
+
     // Usage
     usageData,
     usageLoading,
-    
+
     // Circuit breaker
     circuitBreakerState,
-    
+
     // Actions
     createTask,
     sendMessage,
     stopStream,
     resetTask,
-    
-    // ✅ NEW: Handoff actions
+
+    // Handoff actions
     confirmHandoff,
     switchToRole,
     cancelHandoff

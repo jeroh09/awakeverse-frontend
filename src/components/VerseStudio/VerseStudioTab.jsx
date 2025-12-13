@@ -1,30 +1,37 @@
 // src/components/VerseStudio/VerseStudioTab.jsx
-import React, { useEffect, useMemo, useState, useCallback } from 'react';
+import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import useVerseStudio from '../../hooks/useVerseStudio';
 import TaskChatWindow from './TaskChatWindow';
+import TaskCreator from './TaskCreator';
 import styles from './VerseStudioTab.module.css';
 
 const API_BASE = process.env.REACT_APP_API_URL || 'https://api.awakeverse.com';
 
 export default function VerseStudioTab() {
-  // 🔹 Hook is actually called here
   const verseStudio = useVerseStudio();
 
-  // Data state
+  // Data
   const [templates, setTemplates] = useState([]);
   const [tasks, setTasks] = useState([]);
   const [tokensState, setTokensState] = useState(null);
 
-  // UI state
+  // UI
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [activeTask, setActiveTask] = useState(null);
-  const [creatingTemplateId, setCreatingTemplateId] = useState(null);
+
+  // ✅ Restore Upgrade modal
   const [isUpgradeModalOpen, setIsUpgradeModalOpen] = useState(false);
 
-  // ───────────────────────────────────────────────────────────
+  // Task Creator modal
+  const [isCreatorOpen, setIsCreatorOpen] = useState(false);
+  const [creatorTemplate, setCreatorTemplate] = useState(null);
+  const [creatorError, setCreatorError] = useState(null);
+  const [isCreating, setIsCreating] = useState(false);
+
+  // -----------------------------------------------------------------------
   // INITIAL LOAD: tasks, templates, tokens
-  // ───────────────────────────────────────────────────────────
+  // -----------------------------------------------------------------------
   useEffect(() => {
     let isMounted = true;
 
@@ -51,15 +58,9 @@ export default function VerseStudioTab() {
           })
         ]);
 
-        if (!tasksRes.ok) {
-          throw new Error(`Failed to load tasks (${tasksRes.status})`);
-        }
-        if (!templatesRes.ok) {
-          throw new Error(`Failed to load templates (${templatesRes.status})`);
-        }
-        if (!tokensRes.ok) {
-          throw new Error(`Failed to load token state (${tokensRes.status})`);
-        }
+        if (!tasksRes.ok) throw new Error(`Failed to load tasks (${tasksRes.status})`);
+        if (!templatesRes.ok) throw new Error(`Failed to load templates (${templatesRes.status})`);
+        if (!tokensRes.ok) throw new Error(`Failed to load token state (${tokensRes.status})`);
 
         const tasksJson = await tasksRes.json();
         const templatesJson = await templatesRes.json();
@@ -72,7 +73,7 @@ export default function VerseStudioTab() {
         setTokensState(tokensJson || null);
       } catch (err) {
         if (!isMounted) return;
-        console.error('❌ VerseWorkspace load error:', err);
+        console.error('❌ Verse Workspace load error:', err);
         setError(err.message || 'Failed to load Verse Workspace');
       } finally {
         if (isMounted) setLoading(false);
@@ -80,144 +81,117 @@ export default function VerseStudioTab() {
     }
 
     load();
-
-    return () => {
-      isMounted = false;
-    };
+    return () => { isMounted = false; };
   }, []);
 
-  // ───────────────────────────────────────────────────────────
-  // TRIAL INFO (3 tasks max)
-  // ───────────────────────────────────────────────────────────
+  // -----------------------------------------------------------------------
+  // TRIAL: only 3 free tasks
+  // -----------------------------------------------------------------------
   const trialInfo = useMemo(() => {
-    if (!tokensState) {
-      return {
-        used: 0,
-        remaining: 3,
-        total: 3,
-        tier: 'free'
-      };
-    }
-
-    const used = tokensState.trial_tasks_used ?? 0;
-    const remaining = tokensState.trial_tasks_remaining ?? Math.max(3 - used, 0);
-    const total = used + remaining || 3;
-
-    return {
-      used,
-      remaining,
-      total,
-      tier: tokensState.tier || 'free'
-    };
+    const used = tokensState?.trial_tasks_used ?? 0;
+    const remaining = tokensState?.trial_tasks_remaining ?? Math.max(3 - used, 0);
+    const total = 3;
+    return { used, remaining, total };
   }, [tokensState]);
-
-  const trialProgress = useMemo(() => {
-    if (!trialInfo.total) return 0;
-    const value = trialInfo.used / trialInfo.total;
-    return Math.max(0, Math.min(1, value));
-  }, [trialInfo]);
 
   const trialLimitReached = trialInfo.used >= 3 || trialInfo.remaining <= 0;
 
-  // ───────────────────────────────────────────────────────────
-  // TEMPLATE → CREATE TASK
-  // ───────────────────────────────────────────────────────────
-  const handleTemplateClick = useCallback(
-    async (template) => {
-      if (!verseStudio || !verseStudio.createTask) {
-        console.warn('⚠️ useVerseStudio not ready, createTask missing');
-        return;
-      }
+  // -----------------------------------------------------------------------
+  // Open TaskCreator (but gate with Upgrade modal)
+  // -----------------------------------------------------------------------
+  const openCreator = useCallback(async (template) => {
+    // ✅ Premium gating: show upgrade modal (not TaskCreator)
+    if (trialLimitReached) {
+      setIsUpgradeModalOpen(true);
+      return;
+    }
 
-      if (trialLimitReached) {
-        setIsUpgradeModalOpen(true);
-        return;
-      }
+    setCreatorError(null);
+    setCreatorTemplate(template);
+    setIsCreatorOpen(true);
 
+    // Load llm options (safe fallback inside hook)
+    try {
+      await verseStudio.refreshLLMOptions();
+    } catch (e) {
+      // hook already falls back; no need to block UI
+    }
+  }, [trialLimitReached, verseStudio]);
+
+  const closeCreator = useCallback(() => {
+    if (isCreating) return;
+    setIsCreatorOpen(false);
+    setCreatorTemplate(null);
+    setCreatorError(null);
+  }, [isCreating]);
+
+  // -----------------------------------------------------------------------
+  // CREATE (from TaskCreator)
+  // -----------------------------------------------------------------------
+  const handleCreateFromCreator = useCallback(async (payload) => {
+    if (trialLimitReached) {
+      // ✅ In case token state changes while modal open
+      setIsCreatorOpen(false);
+      setCreatorTemplate(null);
+      setCreatorError(null);
+      setIsUpgradeModalOpen(true);
+      return;
+    }
+
+    try {
+      setIsCreating(true);
+      setCreatorError(null);
+
+      const newTaskId = await verseStudio.createTask(payload);
+
+      const newTask = {
+        id: newTaskId,
+        task_id: newTaskId,
+        name: payload.name,
+        description: payload.description,
+        template_id: payload.template_id,
+        status: 'active',
+        created_at: new Date().toISOString(),
+        updated_at: new Date().toISOString()
+      };
+
+      setTasks((prev) => [newTask, ...prev]);
+      setActiveTask(newTask);
+      setIsCreatorOpen(false);
+
+      // Refresh token state so counter updates
       try {
-        const templateId = template.template_id || template.id || template.slug;
-
-        if (!templateId) {
-          throw new Error('Template is missing template_id / id');
-        }
-
-        setCreatingTemplateId(templateId);
-
-        const baseName =
-          template.display_name ||
-          template.name ||
-          template.title ||
-          'Verse Workspace task';
-
-        const description =
-          template.description ||
-          template.subtitle ||
-          'A new Verse Workspace task based on this template.';
-
-        // 🔹 This calls the hook, which POSTs to /api/verse-studio/task
-        const newTaskId = await verseStudio.createTask({
-          name: baseName,
-          description,
-          template_id: templateId
-          // LLM assignments can be added later
+        const tokensRes = await fetch(`${API_BASE}/api/verse-studio/tokens`, {
+          method: 'GET',
+          headers: { 'Content-Type': 'application/json' },
+          credentials: 'include'
         });
-
-        if (!newTaskId) {
-          throw new Error('Task created but no task_id returned');
+        if (tokensRes.ok) {
+          const tokensJson = await tokensRes.json();
+          setTokensState(tokensJson);
         }
-
-        const newTask = {
-          id: newTaskId,
-          task_id: newTaskId,
-          name: baseName,
-          description,
-          template_id: templateId,
-          templateName: baseName,
-          status: 'active',
-          created_at: new Date().toISOString(),
-          updated_at: new Date().toISOString()
-        };
-
-        setTasks((prev) => [newTask, ...prev]);
-        setActiveTask(newTask);
-
-        // Refresh tokens so the 3-task counter updates
-        try {
-          const tokensRes = await fetch(`${API_BASE}/api/verse-studio/tokens`, {
-            method: 'GET',
-            headers: { 'Content-Type': 'application/json' },
-            credentials: 'include'
-          });
-          if (tokensRes.ok) {
-            const tokensJson = await tokensRes.json();
-            setTokensState(tokensJson);
-          }
-        } catch (innerErr) {
-          console.warn('Could not refresh Verse Workspace token state:', innerErr);
-        }
-      } catch (err) {
-        console.error('❌ Failed to create Verse Workspace task:', err);
-        setError(err.message || 'Failed to create task');
-      } finally {
-        setCreatingTemplateId(null);
+      } catch (innerErr) {
+        console.warn('Could not refresh Verse Workspace token state:', innerErr);
       }
-    },
-    [verseStudio, trialLimitReached]
-  );
+    } catch (err) {
+      console.error('❌ Failed to create Verse Workspace task:', err);
+      setCreatorError(err.message || 'Failed to create task');
+    } finally {
+      setIsCreating(false);
+    }
+  }, [trialLimitReached, verseStudio]);
 
-  // ───────────────────────────────────────────────────────────
-  // BACK FROM CHAT WINDOW
-  // ───────────────────────────────────────────────────────────
+  // -----------------------------------------------------------------------
+  // Back from chat
+  // -----------------------------------------------------------------------
   const handleBackFromChat = useCallback(() => {
     setActiveTask(null);
-    if (verseStudio && verseStudio.resetTask) {
-      verseStudio.resetTask();
-    }
+    verseStudio.resetTask && verseStudio.resetTask();
   }, [verseStudio]);
 
-  // ───────────────────────────────────────────────────────────
-  // RENDER: Full-screen chat if a task is active
-  // ───────────────────────────────────────────────────────────
+  // -----------------------------------------------------------------------
+  // Full screen chat
+  // -----------------------------------------------------------------------
   if (activeTask) {
     return (
       <TaskChatWindow
@@ -228,9 +202,9 @@ export default function VerseStudioTab() {
     );
   }
 
-  // ───────────────────────────────────────────────────────────
-  // RENDER: Verse Workspace main tab
-  // ───────────────────────────────────────────────────────────
+  // -----------------------------------------------------------------------
+  // Main workspace tab
+  // -----------------------------------------------------------------------
   return (
     <div className={styles.verseStudioTab}>
       <header className={styles.pageHeader}>
@@ -249,32 +223,20 @@ export default function VerseStudioTab() {
         <div className={styles.usagePill}>
           <span className={styles.usageDot} />
           <div className={styles.usageText}>
-            <strong>{trialInfo.used}</strong> / <strong>{trialInfo.total}</strong>{' '}
-            free tasks used
+            <strong>{trialInfo.used}</strong> / <strong>{trialInfo.total}</strong> free tasks used
           </div>
-          <div className={styles.usageBar}>
-            <div
-              className={styles.usageFill}
-              style={{ transform: `scaleX(${trialProgress})` }}
-            />
-          </div>
-          {trialLimitReached && (
-            <span className={styles.usageStatus}>Limit reached</span>
-          )}
         </div>
       </header>
 
       {error && (
         <div className={styles.errorBanner}>
-          <div className={styles.errorTitle}>
-            Verse Workspace is feeling a bit moody.
-          </div>
+          <div className={styles.errorTitle}>Verse Workspace is feeling a bit moody.</div>
           <p className={styles.errorBody}>{error}</p>
         </div>
       )}
 
       <main className={styles.mainGrid}>
-        {/* Templates column */}
+        {/* Templates */}
         <section className={styles.templatesColumn}>
           <div className={styles.columnHeader}>
             <div>
@@ -294,61 +256,30 @@ export default function VerseStudioTab() {
             <div className={styles.emptyTemplates}>
               <div className={styles.emptyTitle}>No templates found.</div>
               <p className={styles.emptyBody}>
-                Once templates are configured on the backend, they will appear here
-                as quick starting points for new Verse Workspace tasks.
+                Once templates are configured on the backend, they will appear here.
               </p>
             </div>
           ) : (
             <div className={styles.templatesGrid}>
               {templates.map((template) => {
-                const templateId =
-                  template.template_id || template.id || template.slug;
-                const isCreating = creatingTemplateId === templateId;
-
-                const title =
-                  template.display_name ||
-                  template.name ||
-                  template.title ||
-                  templateId;
-
+                const templateId = template.template_id || template.id || template.slug;
+                const title = template.display_name || template.name || template.title || templateId;
                 const description =
                   template.description ||
                   template.subtitle ||
                   'Use this Verse Workspace template to get started quickly.';
-
-                const roles = template.roles || template.team_roles || [];
 
                 return (
                   <article key={templateId} className={styles.templateCard}>
                     <div className={styles.templateTagRow}>
                       <span className={styles.templateTag}>Verse Workspace</span>
                       {template.category && (
-                        <span className={styles.templateTagSecondary}>
-                          {template.category}
-                        </span>
+                        <span className={styles.templateTagSecondary}>{template.category}</span>
                       )}
                     </div>
+
                     <h3 className={styles.templateTitle}>{title}</h3>
                     <p className={styles.templateDesc}>{description}</p>
-
-                    {roles.length > 0 && (
-                      <div className={styles.templateRoles}>
-                        {roles.slice(0, 3).map((role) => (
-                          <span
-                            key={role.role_id || role.id || role.name}
-                            className={styles.rolePill}
-                          >
-                            {role.icon || '⚙️'}{' '}
-                            {role.name || role.role_name || 'Role'}
-                          </span>
-                        ))}
-                        {roles.length > 3 && (
-                          <span className={styles.roleMore}>
-                            +{roles.length - 3} more
-                          </span>
-                        )}
-                      </div>
-                    )}
 
                     <button
                       type="button"
@@ -357,14 +288,10 @@ export default function VerseStudioTab() {
                           ? `${styles.useTemplateButton} ${styles.useTemplateButtonLocked}`
                           : styles.useTemplateButton
                       }
-                      onClick={() => handleTemplateClick(template)}
-                      disabled={trialLimitReached || isCreating}
+                      onClick={() => openCreator(template)}
+                      disabled={false /* allow click so upgrade modal can open */}
                     >
-                      {trialLimitReached
-                        ? 'Upgrade to create more tasks'
-                        : isCreating
-                        ? 'Creating…'
-                        : 'Use this template'}
+                      {trialLimitReached ? 'Upgrade to create more tasks' : 'Use this template'}
                     </button>
                   </article>
                 );
@@ -373,14 +300,12 @@ export default function VerseStudioTab() {
           )}
         </section>
 
-        {/* Tasks column */}
+        {/* Tasks */}
         <section className={styles.tasksColumn}>
           <div className={styles.columnHeader}>
             <div>
               <h2 className={styles.columnTitle}>My Verse Workspace tasks</h2>
-              <p className={styles.columnSubtitle}>
-                Pick up where your LLM team left off.
-              </p>
+              <p className={styles.columnSubtitle}>Pick up where your LLM team left off.</p>
             </div>
           </div>
 
@@ -401,11 +326,6 @@ export default function VerseStudioTab() {
               {tasks.map((task) => {
                 const id = task.id || task.task_id;
                 const name = task.name || 'Untitled task';
-                const templateName =
-                  task.templateName ||
-                  task.template_name ||
-                  task.template_id ||
-                  'Template';
                 const updated = task.updated_at || task.created_at || null;
 
                 return (
@@ -413,10 +333,7 @@ export default function VerseStudioTab() {
                     <div className={styles.taskMeta}>
                       <div className={styles.taskName}>{name}</div>
                       <div className={styles.taskSub}>
-                        {templateName} ·{' '}
-                        {updated
-                          ? `Updated ${new Date(updated).toLocaleString()}`
-                          : 'New task'}
+                        {updated ? `Updated ${new Date(updated).toLocaleString()}` : 'New task'}
                       </div>
                     </div>
 
@@ -425,7 +342,7 @@ export default function VerseStudioTab() {
                         type="button"
                         className={`${styles.taskButton} ${styles.taskButtonDisabled}`}
                         disabled
-                        title="Resume wiring will be added next."
+                        title="Resume wiring is next."
                       >
                         Resume (soon)
                       </button>
@@ -435,19 +352,23 @@ export default function VerseStudioTab() {
               })}
             </div>
           )}
-
-          {trialLimitReached && (
-            <div className={styles.trialBanner}>
-              <div className={styles.trialDot} />
-              <div className={styles.trialText}>
-                You’ve used your 3 free Verse Workspace tasks. Upgrade to unlock
-                unlimited tasks and extended token limits.
-              </div>
-            </div>
-          )}
         </section>
       </main>
 
+      {/* TaskCreator modal */}
+      <TaskCreator
+        isOpen={isCreatorOpen}
+        template={creatorTemplate}
+        llmOptions={verseStudio.llmOptions}
+        minModels={2}
+        maxModels={3}
+        isCreating={isCreating}
+        errorMessage={creatorError}
+        onCancel={closeCreator}
+        onCreate={handleCreateFromCreator}
+      />
+
+      {/* ✅ Restore Upgrade modal overlay (from your 460-line version pattern) */}
       {isUpgradeModalOpen && (
         <div className={styles.upgradeOverlay}>
           <div className={styles.upgradeModal}>
