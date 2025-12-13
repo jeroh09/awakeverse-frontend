@@ -359,6 +359,7 @@ export default function VerseStudioTab() {
                     key={taskId}
                     type="button"
                     className={styles.taskCard}
+                    aria-busy={resumingTaskId === taskId}
                     onClick={() => handleResumeTask(t)}
                     title="Open workspace"
                   >
@@ -368,6 +369,9 @@ export default function VerseStudioTab() {
                         <span className={styles.taskStatusPill}>
                           {(t.status || 'active').toUpperCase()}
                         </span>
+                      </div>
+                      <div className={styles.taskMetaTime}>
+                        Created {new Date(t.created_at).toLocaleDateString()}
                       </div>
 
                       {desc ? <div className={styles.taskDescription}>{desc}</div> : null}
@@ -390,8 +394,10 @@ export default function VerseStudioTab() {
                           <span className={styles.roleChipMuted}>Team loads on open</span>
                         </div>
                       )}
+                      <span className={styles.taskCta}>
+                        {resumingTaskId === taskId ? 'Opening…' : 'Open →'}
+                      </span>
 
-                      <span className={styles.taskCta}>Open →</span>
                     </div>
                   </button>
                 );
