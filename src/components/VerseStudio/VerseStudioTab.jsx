@@ -7,6 +7,28 @@ import styles from './VerseStudioTab.module.css';
 
 const API_BASE = process.env.REACT_APP_API_URL || 'https://api.awakeverse.com';
 
+/**
+ * Step 2 — Template header images (Task window header background)
+ * We map by task.template_id -> /public/images/verse-workspace/templates/*.jpeg
+ */
+const TEMPLATE_HEADER_IMAGES = {
+  coding_team: "/images/verse-workspace/templates/coding_team.jpeg",
+  creative_team: "/images/verse-workspace/templates/creative_team.jpeg",
+  research_team: "/images/verse-workspace/templates/research_team.jpeg",
+  business_team: "/images/verse-workspace/templates/business_team.jpeg",
+  writing_team: "/images/verse-workspace/templates/writing_team.jpeg",
+  strategy_team: "/images/verse-workspace/templates/strategy_team.jpeg",
+};
+
+function withHeroImage(task) {
+  if (!task) return task;
+  const templateId = task.template_id;
+  const heroImageUrl = templateId ? (TEMPLATE_HEADER_IMAGES[templateId] || null) : null;
+
+  // Frontend-only enrichment; backend contract unchanged.
+  return { ...task, heroImageUrl };
+}
+
 export default function VerseStudioTab() {
   const verseStudio = useVerseStudio();
 
@@ -156,8 +178,12 @@ export default function VerseStudioTab() {
         updated_at: new Date().toISOString()
       };
 
+      // store raw task list item (optional; doesn’t matter)
       setTasks((prev) => [newTask, ...prev]);
-      setActiveTask(newTask);
+
+      // ✅ Open chat with enriched heroImageUrl
+      setActiveTask(withHeroImage(newTask));
+
       setIsCreatorOpen(false);
 
       // Refresh token state so counter updates
@@ -192,8 +218,8 @@ export default function VerseStudioTab() {
 
       await verseStudio.loadTask(id);
 
-      // Open fullscreen chat window
-      setActiveTask(task);
+      // ✅ Open fullscreen chat window with enriched heroImageUrl
+      setActiveTask(withHeroImage(task));
     } catch (err) {
       console.error('❌ Resume failed:', err);
       setError(err.message || 'Failed to resume task');
@@ -321,7 +347,7 @@ export default function VerseStudioTab() {
           )}
         </section>
 
-        {/* Tasks column - UPDATED */}
+        {/* Tasks */}
         <section className={styles.tasksColumn}>
           <div className={styles.columnHeader}>
             <div>
@@ -330,8 +356,7 @@ export default function VerseStudioTab() {
                 Resume an active workspace or start a new one from a template.
               </p>
             </div>
-            
-            {/* ✅ Add Create Workspace Button to Header */}
+
             <button
               type="button"
               className={styles.createWorkspaceButton}
@@ -358,8 +383,7 @@ export default function VerseStudioTab() {
               <p className={styles.emptyBody}>
                 Pick a template on the left to create your first Verse Workspace task.
               </p>
-              
-              {/* ✅ Add Create Workspace Button to Empty State */}
+
               <button
                 type="button"
                 className={styles.createWorkspaceButton}
@@ -379,8 +403,6 @@ export default function VerseStudioTab() {
                 const taskId = t.task_id || t.id;
                 const title = t.name || 'Untitled workspace';
                 const desc = t.description || '';
-
-                // Best-effort role preview (backend may return team later; safe fallback)
                 const team = t.team || t.llm_team || [];
 
                 return (
@@ -423,10 +445,10 @@ export default function VerseStudioTab() {
                           <span className={styles.roleChipMuted}>Team loads on open</span>
                         </div>
                       )}
+
                       <span className={styles.taskCta}>
                         {resumingTaskId === taskId ? 'Opening…' : 'Open →'}
                       </span>
-
                     </div>
                   </button>
                 );
@@ -449,7 +471,7 @@ export default function VerseStudioTab() {
         onCreate={handleCreateFromCreator}
       />
 
-      {/* ✅ Restore Upgrade modal overlay (from your 460-line version pattern) */}
+      {/* Upgrade modal */}
       {isUpgradeModalOpen && (
         <div className={styles.upgradeOverlay}>
           <div className={styles.upgradeModal}>
