@@ -253,18 +253,42 @@ export default function useVerseStudio() {
           data?.history ||
           [];
 
-        // Normalize messages shape: ensure every message has an id
-        const normalizedMessages = Array.isArray(loadedMessages)
-          ? loadedMessages.map((m, idx) => ({
-              id: m.id ?? idx,
-              user: m.user ?? m.is_user ?? m.role === 'user',
-              role_id: m.role_id ?? m.speaker_id ?? m.role ?? (m.user ? 'user' : 'assistant'),
-              role_name: m.role_name ?? m.speaker_name ?? (m.user ? 'You' : 'Assistant'),
-              text: m.text ?? m.content ?? '',
-              timestamp: m.timestamp ?? m.created_at ?? Date.now()
-            }))
-          : [];
+        // ✅ map role_id -> role_name from team
+        const teamRoleNameById = {};
+        (loadedTeam || []).forEach((r) => {
+          const rid = r.role_id || r.id || r.key;
+          const rname = r.role_name || r.name || r.display_name;
+          if (rid && rname) teamRoleNameById[rid] = rname;
+        });
 
+        const normalizedMessages = Array.isArray(loadedMessages)
+          ? loadedMessages.map((m, idx) => {
+              const roleId =
+                m.role_id ??
+                m.speaker_id ??
+                m.agent_id ??
+                m.from_role_id ??
+                m.role ??
+                (m.user || m.is_user ? 'user' : 'assistant');
+
+              const isUser = m.user ?? m.is_user ?? m.role === 'user';
+
+              const roleName =
+                m.role_name ??
+                m.speaker_name ??
+                teamRoleNameById[roleId] ??
+                (isUser ? 'You' : 'Assistant');
+
+              return {
+                id: m.id ?? idx,
+                user: isUser,
+                role_id: roleId,
+                role_name: roleName,
+                text: m.text ?? m.content ?? '',
+                timestamp: m.timestamp ?? m.created_at ?? Date.now()
+              };
+            })
+          : [];
         setTaskId(loadedTaskId);
         setTeam(loadedTeam);
         setMessages(normalizedMessages);

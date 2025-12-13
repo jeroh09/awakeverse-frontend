@@ -363,14 +363,6 @@ export default function VerseStudioTab() {
                     <div className={styles.taskActions}>
                       <button
                         type="button"
-                        className={`${styles.taskButton} ${styles.taskButtonDisabled}`}
-                        disabled
-                        title="Resume wiring is next."
-                      >
-                        Resume (soon)
-                      </button>
-                      <button
-                        type="button"
                         className={styles.taskButton}
                         onClick={() => handleResumeTask(task)}
                         disabled={resumingTaskId === (task.id || task.task_id)}
