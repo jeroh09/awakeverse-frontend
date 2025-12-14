@@ -10,7 +10,7 @@ const API_BASE = process.env.REACT_APP_API_URL || "https://api.awakeverse.com";
 
 /**
  * Template images for:
- * - Task window hero (already working via task.heroImageUrl)
+ * - Task window hero (task.heroImageUrl)
  * - Template cards full-background (Upgrade C)
  */
 const TEMPLATE_HEADER_IMAGES = {
@@ -28,6 +28,16 @@ function withHeroImage(task) {
   const templateId = task.template_id;
   const heroImageUrl = templateId ? TEMPLATE_HEADER_IMAGES[templateId] || null : null;
   return { ...task, heroImageUrl };
+}
+
+function InfoIcon() {
+  return (
+    <svg width="16" height="16" viewBox="0 0 24 24" aria-hidden="true" focusable="false">
+      <circle cx="12" cy="12" r="9" fill="none" stroke="currentColor" strokeWidth="1.8" />
+      <path d="M12 10.7v6.2" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" />
+      <circle cx="12" cy="7.5" r="1" fill="currentColor" />
+    </svg>
+  );
 }
 
 export default function VerseStudioTab() {
@@ -48,6 +58,20 @@ export default function VerseStudioTab() {
   const [creatorTemplate, setCreatorTemplate] = useState(null);
   const [creatorError, setCreatorError] = useState(null);
   const [isCreating, setIsCreating] = useState(false);
+
+  // ✅ NEW: Info modal
+  const [isInfoOpen, setIsInfoOpen] = useState(false);
+
+  // Close info modal on Escape
+  useEffect(() => {
+    if (!isInfoOpen) return;
+
+    const onKey = (e) => {
+      if (e.key === "Escape") setIsInfoOpen(false);
+    };
+    window.addEventListener("keydown", onKey);
+    return () => window.removeEventListener("keydown", onKey);
+  }, [isInfoOpen]);
 
   // -----------------------------------------------------------------------
   // INITIAL LOAD
@@ -180,7 +204,6 @@ export default function VerseStudioTab() {
 
         setTasks((prev) => [newTask, ...prev]);
 
-        // Open fullscreen chat with hero image enrichment
         setActiveTask(withHeroImage(newTask));
         setIsCreatorOpen(false);
 
@@ -252,10 +275,25 @@ export default function VerseStudioTab() {
       <header className={styles.pageHeader}>
         <div className={styles.titleBlock}>
           <div className={styles.eyebrow}>Verse Workspace</div>
+
           <div className={styles.titleRow}>
             <h1 className={styles.pageTitle}>Verse Workspace</h1>
+
             <span className={styles.titlePill}>Trial · 3 free tasks</span>
+
+            {/* ✅ NEW: Info button */}
+            <button
+              type="button"
+              className={styles.infoButton}
+              onClick={() => setIsInfoOpen(true)}
+              aria-label="Verse Workspace info"
+              title="How to use Verse Workspace"
+            >
+              <InfoIcon />
+              <span className={styles.infoLabel}>Info</span>
+            </button>
           </div>
+
           <p className={styles.subtitle}>
             Orchestrate a small team of specialist LLMs to plan, code, review, and document your projects — all in one
             AwakeVerse workspace.
@@ -444,6 +482,127 @@ export default function VerseStudioTab() {
               <button
                 type="button"
                 className={styles.upgradeSecondary}
+                onClick={() => window.open("/pricing", "_blank", "noopener,noreferrer")}
+              >
+                View plans
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* ✅ NEW: Info modal */}
+      {isInfoOpen && (
+        <div
+          className={styles.infoOverlay}
+          role="dialog"
+          aria-modal="true"
+          aria-label="Verse Workspace info"
+          onMouseDown={(e) => {
+            if (e.target === e.currentTarget) setIsInfoOpen(false);
+          }}
+        >
+          <div className={styles.infoModal}>
+            <div className={styles.infoHeader}>
+              <div>
+                <div className={styles.infoTitle}>How to use Verse Workspace</div>
+                <div className={styles.infoSubtitle}>
+                  A quick guide to templates, roles, artifacts, tokens, and documents.
+                </div>
+              </div>
+
+              <button type="button" className={styles.infoClose} onClick={() => setIsInfoOpen(false)} aria-label="Close">
+                ✕
+              </button>
+            </div>
+
+            <div className={styles.infoBody}>
+              <div className={styles.infoSection}>
+                <div className={styles.infoSectionTitle}>1) Start a workspace</div>
+                <ul className={styles.infoList}>
+                  <li>
+                    Choose a <strong>template</strong> (Coding / Research / Business…) to load a role team, or create a
+                    workspace from scratch.
+                  </li>
+                  <li>
+                    A workspace is a <strong>task</strong> with a <strong>task_id</strong> and a team of specialist roles.
+                  </li>
+                </ul>
+              </div>
+
+              <div className={styles.infoSection}>
+                <div className={styles.infoSectionTitle}>2) Chat like a workspace</div>
+                <ul className={styles.infoList}>
+                  <li>
+                    Write your goal clearly, paste code, or describe what you want built. The team collaborates inside
+                    one thread.
+                  </li>
+                  <li>
+                    Use <strong>@role mentions</strong> (where supported) to direct a specialist: e.g. <code>@critic</code>{" "}
+                    or <code>@researcher</code>.
+                  </li>
+                  <li>
+                    Responses support <strong>Markdown</strong> (lists, tables, code blocks). Code blocks include a{" "}
+                    <strong>Copy</strong> button.
+                  </li>
+                </ul>
+              </div>
+
+              <div className={styles.infoSection}>
+                <div className={styles.infoSectionTitle}>3) Artifacts panel (right side)</div>
+                <ul className={styles.infoList}>
+                  <li>
+                    The system can collect outputs (like code blocks) as <strong>Artifacts</strong> so you can copy or
+                    download them later.
+                  </li>
+                  <li>
+                    Artifacts are different from tokens: <strong>tokens</strong> measure usage/limits;{" "}
+                    <strong>artifacts</strong> are saved content blocks.
+                  </li>
+                  <li>
+                    You can collapse the panel to widen the chat when reading long outputs.
+                  </li>
+                </ul>
+              </div>
+
+              <div className={styles.infoSection}>
+                <div className={styles.infoSectionTitle}>4) Trial limits & tokens</div>
+                <ul className={styles.infoList}>
+                  <li>
+                    Trial accounts can create up to <strong>3 tasks</strong>. After that, you’ll see an upgrade prompt.
+                  </li>
+                  <li>
+                    Each workspace consumes tokens as the team responds. If tokens are exhausted, sending may be limited.
+                  </li>
+                </ul>
+              </div>
+
+              <div className={styles.infoSection}>
+                <div className={styles.infoSectionTitle}>5) Documents (upload)</div>
+                <ul className={styles.infoList}>
+                  <li>
+                    You’ll be able to upload documents (PDF / DOCX / TXT / MD) into a workspace, and the team can work
+                    from their contents.
+                  </li>
+                  <li>
+                    If a document is too large or unsupported, you’ll see a friendly error and can try a smaller file.
+                  </li>
+                </ul>
+              </div>
+
+              <div className={styles.infoCallout}>
+                Tip: For best results, start with a template, paste your brief, then ask for a plan → implementation →
+                review. Use the artifacts panel to collect final outputs.
+              </div>
+            </div>
+
+            <div className={styles.infoFooter}>
+              <button type="button" className={styles.infoPrimary} onClick={() => setIsInfoOpen(false)}>
+                Got it
+              </button>
+              <button
+                type="button"
+                className={styles.infoSecondary}
                 onClick={() => window.open("/pricing", "_blank", "noopener,noreferrer")}
               >
                 View plans
