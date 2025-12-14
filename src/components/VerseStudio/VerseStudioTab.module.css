@@ -1084,48 +1084,56 @@
   box-shadow: 0 0 0 1px rgba(99, 102, 241, 0.25);
   transform: translateY(-1px);
 }
-/* ===== Upgrade Split Button (Option A) ===== */
-.upgradeSplitWrap {
-  position: relative;
+/* ===== Upgrade Actions: 3-pill row (Upgrade · Provider · Close) ===== */
+.upgradeActionsTernary{
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 10px; /* ensures the provider pill isn't an appendage */
+}
+
+/* Provider breadcrumb pill */
+.providerPill{
   display: inline-flex;
-  align-items: stretch;
-  gap: 0;
+  align-items: center;
+  gap: 8px;
+
+  padding: 6px 10px;
+  border-radius: 999px;
+  border: 1px solid var(--vs-border-medium);
+  background: rgba(15, 23, 42, 0.55);
+  color: var(--vs-text-secondary);
+
+  box-shadow: 0 0 0 1px rgba(10, 15, 26, 0.55);
 }
 
-.upgradeSplitCaret {
-  border: 1px solid rgba(207, 174, 92, 0.55);
-  border-left: none;
-  background: rgba(12, 20, 38, 0.65);
-  color: #F2E8D5;
-  padding: 0 12px;
-  border-radius: 0 12px 12px 0;
-  cursor: pointer;
-}
-
-.upgradeMiniMenu {
-  position: absolute;
-  right: 0;
-  top: calc(100% + 8px);
-  min-width: 200px;
-  background: rgba(10, 16, 30, 0.95);
-  border: 1px solid rgba(207, 174, 92, 0.35);
-  border-radius: 14px;
-  box-shadow: 0 14px 40px rgba(0, 0, 0, 0.45);
-  padding: 6px;
-  z-index: 50;
-}
-
-.upgradeMiniItem {
-  width: 100%;
-  text-align: left;
-  background: transparent;
+/* clickable breadcrumb options */
+.providerOption{
+  appearance: none;
   border: none;
-  color: #F2E8D5;
-  padding: 10px 10px;
-  border-radius: 10px;
+  background: transparent;
+  color: var(--vs-text-secondary);
+  font-size: 12px;
+  font-weight: 600;
   cursor: pointer;
+  padding: 2px 6px;
+  border-radius: 999px;
+  transition: all 0.15s ease;
 }
 
-.upgradeMiniItem:hover {
-  background: rgba(207, 174, 92, 0.12);
+.providerOption:hover{
+  color: var(--vs-text-ivory);
+  background: rgba(99, 102, 241, 0.12);
+}
+
+.providerOptionActive{
+  color: var(--vs-text-ivory);
+  background: rgba(99, 102, 241, 0.18);
+  box-shadow: 0 0 0 1px rgba(99, 102, 241, 0.28);
+}
+
+.providerDivider{
+  opacity: 0.55;
+  font-size: 12px;
+  line-height: 1;
 }

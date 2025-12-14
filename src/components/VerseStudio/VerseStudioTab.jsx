@@ -12,11 +12,6 @@ import styles from "./VerseStudioTab.module.css";
 
 const API_BASE = process.env.REACT_APP_API_URL || "https://api.awakeverse.com";
 
-/**
- * Template images for:
- * - Task window hero (task.heroImageUrl)
- * - Template cards full-background
- */
 const TEMPLATE_HEADER_IMAGES = {
   coding_team: "/images/verse-workspace/templates/coding_team.jpeg",
   creative_team: "/images/verse-workspace/templates/creative_team.jpeg",
@@ -67,8 +62,8 @@ export default function VerseStudioTab() {
   const [isUpgradeModalOpen, setIsUpgradeModalOpen] = useState(false);
   const [upgradeError, setUpgradeError] = useState(null);
 
-  // ✅ Option A: minimal provider picker
-  const [showUpgradeMenu, setShowUpgradeMenu] = useState(false);
+  // ✅ Provider chooser (breadcrumb pill) — Stripe default
+  const [selectedProvider, setSelectedProvider] = useState("stripe"); // "stripe" | "paypal"
 
   // Info
   const [isInfoOpen, setIsInfoOpen] = useState(false);
@@ -86,14 +81,6 @@ export default function VerseStudioTab() {
     window.addEventListener("keydown", onKey);
     return () => window.removeEventListener("keydown", onKey);
   }, [isInfoOpen]);
-
-  // Close upgrade menu on outside click
-  useEffect(() => {
-    if (!showUpgradeMenu) return;
-    const onDown = () => setShowUpgradeMenu(false);
-    window.addEventListener("mousedown", onDown);
-    return () => window.removeEventListener("mousedown", onDown);
-  }, [showUpgradeMenu]);
 
   // -----------------------------------------------------------------------
   // INITIAL LOAD: tasks + templates + tokens
@@ -181,10 +168,7 @@ export default function VerseStudioTab() {
   const trialInfo = useMemo(() => {
     const used = tokensState?.trial_tasks_used ?? 0;
     const total = 3;
-    const remaining =
-      tokensState?.trial_tasks_remaining ??
-      Math.max(total - used, 0);
-
+    const remaining = tokensState?.trial_tasks_remaining ?? Math.max(total - used, 0);
     return { used, remaining, total };
   }, [tokensState]);
 
@@ -199,7 +183,6 @@ export default function VerseStudioTab() {
   const openCreator = useCallback(
     async (template) => {
       setUpgradeError(null);
-      setShowUpgradeMenu(false);
 
       if (!canCreateNewTask) {
         setIsUpgradeModalOpen(true);
@@ -213,7 +196,7 @@ export default function VerseStudioTab() {
       try {
         await verseStudio.refreshLLMOptions?.();
       } catch {
-        // no-op (hook fallback is fine)
+        // no-op
       }
     },
     [canCreateNewTask, verseStudio]
@@ -227,23 +210,21 @@ export default function VerseStudioTab() {
   }, [isCreating]);
 
   // -----------------------------------------------------------------------
-  // UPGRADE (Option A: Split button => Stripe default + menu PayPal)
+  // UPGRADE (Stripe/PayPal via breadcrumb pill)
   // -----------------------------------------------------------------------
-  const handleUpgrade = useCallback(async (provider = "stripe") => {
+  const handleUpgrade = useCallback(async () => {
     setUpgradeError(null);
 
     const result = await PaymentRouter.redirectToCheckout({
       tier: "unlimited",
-      provider, // ✅ "stripe" | "paypal"
+      provider: selectedProvider, // "stripe" | "paypal"
       triggerSource: "verse_studio_create_task",
     });
 
-    // If redirect succeeds, the browser navigates away.
-    // If it fails, show a friendly error.
     if (result && result.success === false) {
       setUpgradeError(result.error?.userMessage || "Upgrade failed. Please try again.");
     }
-  }, []);
+  }, [selectedProvider]);
 
   // -----------------------------------------------------------------------
   // CREATE TASK (gated)
@@ -251,7 +232,6 @@ export default function VerseStudioTab() {
   const handleCreateFromCreator = useCallback(
     async (payload) => {
       setUpgradeError(null);
-      setShowUpgradeMenu(false);
 
       if (!canCreateNewTask) {
         setIsCreatorOpen(false);
@@ -354,7 +334,6 @@ export default function VerseStudioTab() {
 
           <div className={styles.titleRow}>
             <h1 className={styles.pageTitle}>Verse Workspace</h1>
-
             <span className={styles.titlePill}>Trial · 3 free tasks</span>
 
             <button
@@ -396,7 +375,9 @@ export default function VerseStudioTab() {
           <div className={styles.columnHeader}>
             <div>
               <h2 className={styles.columnTitle}>Verse Workspace templates</h2>
-              <p className={styles.columnSubtitle}>Start with a ready-made team for landing pages, APIs, docs, and more.</p>
+              <p className={styles.columnSubtitle}>
+                Start with a ready-made team for landing pages, APIs, docs, and more.
+              </p>
             </div>
           </div>
 
@@ -438,7 +419,6 @@ export default function VerseStudioTab() {
               <p className={styles.columnSubtitle}>Resume an active workspace or start a new one from a template.</p>
             </div>
 
-            {/* Create from scratch (gated) */}
             <button
               type="button"
               className={styles.createWorkspaceButton}
@@ -523,9 +503,7 @@ export default function VerseStudioTab() {
                         </div>
                       )}
 
-                      <span className={styles.taskCta}>
-                        {resumingTaskId === taskId ? "Opening…" : "Open →"}
-                      </span>
+                      <span className={styles.taskCta}>{resumingTaskId === taskId ? "Opening…" : "Open →"}</span>
                     </div>
                   </button>
                 );
@@ -548,7 +526,7 @@ export default function VerseStudioTab() {
         onCreate={handleCreateFromCreator}
       />
 
-      {/* Upgrade modal (kept light; Option A picker is inline) */}
+      {/* Upgrade modal */}
       {isUpgradeModalOpen && (
         <div className={styles.upgradeOverlay}>
           <div className={styles.upgradeModal}>
@@ -560,54 +538,46 @@ export default function VerseStudioTab() {
 
             {upgradeError && <div className={styles.upgradeError}>{upgradeError}</div>}
 
-            <div className={styles.upgradeActions}>
-              {/* ✅ Option A: split button */}
-              <div
-                className={styles.upgradeSplitWrap}
-                onMouseDown={(e) => e.stopPropagation()}
-              >
+            <div className={styles.upgradeActionsTernary}>
+              <button type="button" className={styles.upgradePrimary} onClick={handleUpgrade} title="Upgrade">
+                Upgrade
+              </button>
+
+              {/* ✅ Breadcrumb pill: Stripe | PayPal */}
+              <div className={styles.providerPill} role="radiogroup" aria-label="Payment provider">
                 <button
                   type="button"
-                  className={styles.upgradePrimary}
-                  onClick={() => handleUpgrade("stripe")}
-                  title="Upgrade with Stripe"
+                  className={
+                    selectedProvider === "stripe"
+                      ? `${styles.providerOption} ${styles.providerOptionActive}`
+                      : styles.providerOption
+                  }
+                  onClick={() => setSelectedProvider("stripe")}
+                  role="radio"
+                  aria-checked={selectedProvider === "stripe"}
+                  title="Pay with Stripe"
                 >
-                  Upgrade
+                  Stripe
                 </button>
+
+                <span className={styles.providerDivider} aria-hidden="true">
+                  |
+                </span>
 
                 <button
                   type="button"
-                  className={styles.upgradeSplitCaret}
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    setShowUpgradeMenu((v) => !v);
-                  }}
-                  aria-label="Choose payment method"
-                  title="Choose payment method"
+                  className={
+                    selectedProvider === "paypal"
+                      ? `${styles.providerOption} ${styles.providerOptionActive}`
+                      : styles.providerOption
+                  }
+                  onClick={() => setSelectedProvider("paypal")}
+                  role="radio"
+                  aria-checked={selectedProvider === "paypal"}
+                  title="Pay with PayPal"
                 >
-                  ▾
+                  PayPal
                 </button>
-
-                {showUpgradeMenu && (
-                  <div className={styles.upgradeMiniMenu} role="menu">
-                    <button
-                      type="button"
-                      className={styles.upgradeMiniItem}
-                      onClick={() => handleUpgrade("stripe")}
-                      role="menuitem"
-                    >
-                      Pay with Stripe
-                    </button>
-                    <button
-                      type="button"
-                      className={styles.upgradeMiniItem}
-                      onClick={() => handleUpgrade("paypal")}
-                      role="menuitem"
-                    >
-                      Pay with PayPal
-                    </button>
-                  </div>
-                )}
               </div>
 
               <button
@@ -615,7 +585,6 @@ export default function VerseStudioTab() {
                 className={styles.upgradeSecondary}
                 onClick={() => {
                   setUpgradeError(null);
-                  setShowUpgradeMenu(false);
                   setIsUpgradeModalOpen(false);
                 }}
               >
@@ -626,7 +595,7 @@ export default function VerseStudioTab() {
         </div>
       )}
 
-      {/* Info modal (kept as-is) */}
+      {/* Info modal (unchanged) */}
       {isInfoOpen && (
         <div
           className={styles.infoOverlay}
@@ -657,6 +626,7 @@ export default function VerseStudioTab() {
             </div>
 
             <div className={styles.infoBody}>
+              {/* keep your existing sections as-is */}
               <div className={styles.infoSection}>
                 <div className={styles.infoSectionTitle}>1) Start a workspace</div>
                 <ul className={styles.infoList}>
