@@ -532,8 +532,8 @@ export default function VerseStudioTab() {
           <div className={styles.upgradeModal}>
             <h3 className={styles.upgradeTitle}>Verse Workspace trial limit reached</h3>
             <p className={styles.upgradeBody}>
-              You've created the maximum of 3 free Verse Workspace tasks on this account. Upgrade to Unlimited to keep
-              creating tasks and unlock higher limits.
+              You've reached the limit of 3 free Verse Workspace tasks.
+              Select a payment method below, then click Upgrade to unlock Unlimited access and continue creating tasks.
             </p>
 
             {upgradeError && <div className={styles.upgradeError}>{upgradeError}</div>}

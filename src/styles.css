@@ -8,6 +8,12 @@ html, body {
   padding: 0;
   height: 100%;
 }
+:root {
+  --accent-primary: #6366f1;          /* Indigo */
+  --accent-primary-soft: rgba(99,102,241,0.18);
+  --accent-primary-strong: rgba(99,102,241,0.35);
+}
+
 
 /* Replace your existing font imports in styles.css with these: */
 
@@ -1652,4 +1658,57 @@ input, textarea, [contenteditable="true"] {
 .auth-form a,
 .invite-button-with-avatar {
   color: #6366F1 !important;
+}
+/* =========================================================
+   GLOBAL THEME OVERRIDE — REMOVE LEGACY GOLD HIGHLIGHTS
+   ========================================================= */
+
+/* Scrollbars */
+* {
+  scrollbar-color: var(--accent-primary) transparent !important;
+}
+
+*::-webkit-scrollbar-thumb {
+  background-color: var(--accent-primary) !important;
+  box-shadow: none !important;
+  border-left: none !important;
+}
+
+/* Focus & accessibility rings */
+button:focus,
+button:focus-visible,
+textarea:focus,
+input:focus,
+select:focus {
+  outline: 2px solid var(--accent-primary-soft) !important;
+  outline-offset: 2px;
+}
+
+/* Borders that were hard-coded gold */
+button,
+input,
+textarea,
+.chat-textarea,
+.auth-input,
+.auth-button {
+  border-color: var(--accent-primary-strong) !important;
+}
+
+/* Text accents */
+strong,
+.message-content strong,
+.highlight,
+.accent {
+  color: var(--accent-primary) !important;
+}
+
+/* Remove gold shadows/glows */
+* {
+  box-shadow: none;
+}
+
+/* Scenarios / legacy theme bleed */
+body.theme-awakeverse {
+  --scenarios-accent-primary: var(--accent-primary);
+  --scenarios-border-primary: var(--accent-primary-strong);
 }
