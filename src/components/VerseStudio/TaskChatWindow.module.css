@@ -1018,3 +1018,80 @@
 .uploadChipError{
   border-color: rgba(248, 113, 113, 0.45);
 }
+.hiddenFileInput{
+  display: none;
+}
+
+.composerPlus{
+  width: 40px;
+  height: 40px;
+  border-radius: 999px;
+  border: 1px solid rgba(148, 163, 184, 0.22);
+  background: rgba(15, 23, 42, 0.55);
+  color: rgba(241, 245, 249, 0.92);
+  font-size: 20px;
+  line-height: 1;
+  cursor: pointer;
+  transition: var(--transition-fast);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.composerPlus:hover{
+  border-color: rgba(99, 102, 241, 0.55);
+  box-shadow: 0 0 0 1px rgba(99, 102, 241, 0.25);
+  transform: translateY(-1px);
+}
+
+.attachmentsRow{
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-top: 10px;
+}
+
+.attachmentChip{
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 6px 10px;
+  border-radius: 999px;
+  border: 1px solid rgba(148, 163, 184, 0.18);
+  background: rgba(10, 15, 26, 0.50);
+  color: rgba(241, 245, 249, 0.92);
+  font-size: 12px;
+}
+
+.attachmentName{
+  max-width: 220px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.attachmentStatusUploading{
+  color: rgba(148, 163, 184, 0.95);
+}
+
+.attachmentStatusReady{
+  color: rgba(134, 239, 172, 0.95);
+}
+
+.attachmentStatusError{
+  color: rgba(252, 165, 165, 0.95);
+}
+
+.attachmentRemove{
+  border: none;
+  background: transparent;
+  color: rgba(241, 245, 249, 0.75);
+  cursor: pointer;
+  font-size: 16px;
+  line-height: 1;
+  padding: 0 2px;
+}
+
+.attachmentRemove:hover{
+  color: rgba(241, 245, 249, 0.95);
+}

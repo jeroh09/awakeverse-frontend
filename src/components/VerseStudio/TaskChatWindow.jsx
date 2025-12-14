@@ -191,7 +191,10 @@ export default function TaskChatWindow({ task, verseStudio, onBack }) {
   const [showAllArtifacts, setShowAllArtifacts] = useState(false);
   const [expandedIds, setExpandedIds] = useState(() => new Set());
 
-  // ✅ NEW: upload state
+  // ✅ NEW: attachments persist in the composer until Send
+  const [attachments, setAttachments] = useState([]); // { localId, name, size, status, documentId, error }
+
+  // ✅ NEW: upload state (legacy/global chip; preserved)
   const [uploadState, setUploadState] = useState({
     status: "idle", // idle | uploading | success | error
     filename: "",
@@ -236,8 +239,6 @@ export default function TaskChatWindow({ task, verseStudio, onBack }) {
     return lang ? `${type} · ${lang} · #${n}` : `${type} · #${n}`;
   };
 
-  const artifactContent = (a) => String(a?.content || a?.text || a?.body || "");
-
   const artifactDownloadUrl = (a) => {
     const id = a?.id || a?.artifact_id;
     if (!taskId || !id) return null;
@@ -252,16 +253,41 @@ export default function TaskChatWindow({ task, verseStudio, onBack }) {
     el.style.height = `${Math.max(next, 48)}px`;
   }, []);
 
+  // ✅ UPDATED: keep attachments until send, then clear
   const handleSend = useCallback(() => {
     const trimmed = inputText.trim();
-    if (!trimmed || !sendMessage) return;
-    sendMessage(trimmed);
+
+    // block sending if no text AND no attachments
+    if ((!trimmed && attachments.length === 0) || !sendMessage) return;
+
+    // block sending while any uploads are still in progress
+    const stillUploading = attachments.some((a) => a.status === "uploading");
+    if (stillUploading) return;
+
+    const readyDocs = attachments.filter((a) => a.status === "ready");
+    const erroredDocs = attachments.filter((a) => a.status === "error");
+
+    let composed = trimmed;
+
+    if (readyDocs.length) {
+      const lines = readyDocs.map((d) => (d.documentId ? `- ${d.name} (id: ${d.documentId})` : `- ${d.name}`));
+      composed = `${composed || "Please use the attached documents."}\n\nAttached documents:\n${lines.join("\n")}`;
+    }
+
+    if (erroredDocs.length) {
+      const lines = erroredDocs.map((d) => `- ${d.name}: ${d.error || "upload failed"}`);
+      composed = `${composed || ""}\n\nUpload errors:\n${lines.join("\n")}`.trim();
+    }
+
+    sendMessage(composed);
     setInputText("");
+    setAttachments([]); // ✅ clear only after user sends
+
     requestAnimationFrame(() => {
       const el = textareaRef.current;
       if (el) el.style.height = "48px";
     });
-  }, [inputText, sendMessage]);
+  }, [inputText, attachments, sendMessage]);
 
   const handleKeyDown = (event) => {
     if (event.key === "Enter" && !event.shiftKey) {
@@ -279,14 +305,8 @@ export default function TaskChatWindow({ task, verseStudio, onBack }) {
     await refreshArtifacts(taskId);
   };
 
-  // ✅ NEW: uploader
-  const openFilePicker = () => {
-    if (!taskId) {
-      setUploadState({ status: "error", filename: "", message: "Open a workspace before uploading." });
-      return;
-    }
-    fileInputRef.current?.click();
-  };
+  // ✅ NEW: uploader (kept + extended) — attachments persist until Send
+  const openFilePicker = () => fileInputRef.current?.click();
 
   const validateFile = (file) => {
     if (!file) return "No file selected.";
@@ -297,55 +317,75 @@ export default function TaskChatWindow({ task, verseStudio, onBack }) {
   };
 
   const uploadDocument = async (file) => {
-    const error = validateFile(file);
-    if (error) {
-      setUploadState({ status: "error", filename: file?.name || "", message: error });
+    if (!taskId) {
+      // keep legacy chip for global error messaging
+      setUploadState({ status: "error", filename: "", message: "Open a workspace before uploading." });
       return;
     }
 
-    const csrf = document.cookie.match(/(?:^|;\s*)av_csrf=([^;]+)/)?.[1] || "";
-    const form = new FormData();
-    form.append("file", file);
+    const validationError = validateFile(file);
+    const localId = `${Date.now()}_${Math.random().toString(16).slice(2)}`;
 
-    setUploadState({ status: "uploading", filename: file.name, message: "Uploading…" });
+    // Persist chip immediately (even if validation fails)
+    setAttachments((prev) => [
+      ...prev,
+      {
+        localId,
+        name: file?.name || "document",
+        size: file?.size || 0,
+        status: validationError ? "error" : "uploading", // uploading | ready | error
+        documentId: null,
+        error: validationError || null,
+      },
+    ]);
+
+    if (validationError) {
+      return;
+    }
 
     try {
+      const csrf = document.cookie.match(/(?:^|;\s*)av_csrf=([^;]+)/)?.[1] || "";
+      const form = new FormData();
+      form.append("file", file);
+
       const res = await fetch(`${API_BASE}/api/verse-studio/task/${taskId}/document`, {
         method: "POST",
-        headers: {
-          "X-CSRF-Token": csrf,
-        },
         credentials: "include",
+        headers: csrf ? { "X-CSRF-Token": csrf } : undefined,
         body: form,
       });
 
       const data = await res.json().catch(() => ({}));
-      if (!res.ok) throw new Error(data?.error || `Upload failed (${res.status})`);
+      if (!res.ok) {
+        throw new Error(data.error || `Upload failed (${res.status})`);
+      }
 
-      const charCount = data?.extraction?.char_count ?? 0;
-      setUploadState({
-        status: "success",
-        filename: file.name,
-        message: charCount ? `Uploaded · ${charCount.toLocaleString()} chars extracted` : "Uploaded",
-      });
+      const docId = data.document_id || data.id || data.doc_id || null;
 
-      // after upload, refresh artifacts (and later docs panel)
+      setAttachments((prev) =>
+        prev.map((a) => (a.localId === localId ? { ...a, status: "ready", documentId: docId, error: null } : a))
+      );
+
+      // keep existing behavior: refresh artifacts after successful upload
       if (refreshArtifacts) await refreshArtifacts(taskId);
-
-      // auto-clear success chip after a moment
-      window.setTimeout(() => {
-        setUploadState((prev) => (prev.status === "success" ? { status: "idle", filename: "", message: "" } : prev));
-      }, 2200);
     } catch (e) {
-      setUploadState({ status: "error", filename: file.name, message: e.message || "Upload failed." });
+      setAttachments((prev) =>
+        prev.map((a) => (a.localId === localId ? { ...a, status: "error", error: e.message || "Upload failed" } : a))
+      );
+    } finally {
+      // allow re-selecting same file later
+      if (fileInputRef.current) fileInputRef.current.value = "";
     }
   };
 
-  const onFileChange = async (e) => {
+  const onFileSelected = (e) => {
     const file = e.target.files?.[0];
-    // reset input so same file can be picked again
-    e.target.value = "";
-    if (file) await uploadDocument(file);
+    if (!file) return;
+    uploadDocument(file);
+  };
+
+  const removeAttachment = (localId) => {
+    setAttachments((prev) => prev.filter((a) => a.localId !== localId));
   };
 
   return (
@@ -472,7 +512,7 @@ export default function TaskChatWindow({ task, verseStudio, onBack }) {
           {/* Composer */}
           <div className={styles.composerFade} aria-hidden="true" />
           <div className={styles.composerOverlay} role="region" aria-label="Message composer">
-            {/* ✅ Upload chip */}
+            {/* ✅ Legacy upload chip preserved (now used mainly for global errors like missing taskId) */}
             {uploadState.status !== "idle" && (
               <div
                 className={
@@ -502,13 +542,13 @@ export default function TaskChatWindow({ task, verseStudio, onBack }) {
             )}
 
             <div className={styles.composerInner}>
-              {/* hidden file input */}
+              {/* Hidden file input (attachments persist until Send) */}
               <input
                 ref={fileInputRef}
                 type="file"
                 className={styles.hiddenFileInput}
+                onChange={onFileSelected}
                 accept=".pdf,.docx,.txt,.md"
-                onChange={onFileChange}
               />
 
               <textarea
@@ -525,17 +565,97 @@ export default function TaskChatWindow({ task, verseStudio, onBack }) {
                 rows={1}
               />
 
+              {/* Attachments chips */}
+              {attachments.length > 0 && (
+                <div
+                  className={styles.attachmentsRow}
+                  style={{
+                    display: "flex",
+                    flexWrap: "wrap",
+                    gap: "8px",
+                    margin: "10px 0 0",
+                  }}
+                >
+                  {attachments.map((a) => (
+                    <div
+                      key={a.localId}
+                      className={styles.attachmentChip}
+                      style={{
+                        display: "inline-flex",
+                        alignItems: "center",
+                        gap: "8px",
+                        padding: "8px 10px",
+                        borderRadius: "999px",
+                        border: "1px solid rgba(207,174,92,.35)",
+                        background: "rgba(12,20,38,.72)",
+                        color: "#F2E8D5",
+                        maxWidth: "100%",
+                      }}
+                    >
+                      <span
+                        className={styles.attachmentName}
+                        style={{
+                          overflow: "hidden",
+                          textOverflow: "ellipsis",
+                          whiteSpace: "nowrap",
+                          maxWidth: "360px",
+                        }}
+                        title={a.name}
+                      >
+                        {a.name}
+                      </span>
+
+                      <span
+                        className={
+                          a.status === "uploading"
+                            ? styles.attachmentStatusUploading
+                            : a.status === "ready"
+                            ? styles.attachmentStatusReady
+                            : styles.attachmentStatusError
+                        }
+                        style={{
+                          fontSize: "12px",
+                          opacity: 0.9,
+                        }}
+                      >
+                        {a.status === "uploading" ? "Uploading…" : a.status === "ready" ? "Ready" : "Error"}
+                      </span>
+
+                      <button
+                        type="button"
+                        className={styles.attachmentRemove}
+                        onClick={() => removeAttachment(a.localId)}
+                        aria-label={`Remove ${a.name}`}
+                        title="Remove"
+                        style={{
+                          border: "none",
+                          background: "transparent",
+                          color: "rgba(207,174,92,.85)",
+                          cursor: "pointer",
+                          fontSize: "16px",
+                          lineHeight: 1,
+                          padding: "0 2px",
+                        }}
+                      >
+                        ×
+                      </button>
+                    </div>
+                  ))}
+                </div>
+              )}
+
               <div className={styles.composerActions}>
-                {/* ✅ attachment button */}
+                {/* + Attach button (no pin icon) */}
                 <button
                   type="button"
-                  className={`${styles.composerButton} ${styles.composerAttach}`}
+                  className={styles.composerPlus || styles.composerButton}
                   onClick={openFilePicker}
-                  title="Upload document"
-                  aria-label="Upload document"
-                  disabled={uploadState.status === "uploading" || !taskId}
+                  title="Attach document"
+                  aria-label="Attach document"
+                  disabled={!taskId}
+                  style={!styles.composerPlus ? { fontSize: "20px", lineHeight: 1 } : undefined}
                 >
-                  📎
+                  +
                 </button>
 
                 {isSending && stopStream && (
@@ -554,7 +674,11 @@ export default function TaskChatWindow({ task, verseStudio, onBack }) {
                   type="button"
                   className={styles.composerButton}
                   onClick={handleSend}
-                  disabled={!inputText.trim() || !sendMessage}
+                  disabled={
+                    (!inputText.trim() && attachments.length === 0) ||
+                    attachments.some((a) => a.status === "uploading") ||
+                    !sendMessage
+                  }
                   title="Send"
                   aria-label="Send"
                 >
