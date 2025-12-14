@@ -1084,3 +1084,48 @@
   box-shadow: 0 0 0 1px rgba(99, 102, 241, 0.25);
   transform: translateY(-1px);
 }
+/* ===== Upgrade Split Button (Option A) ===== */
+.upgradeSplitWrap {
+  position: relative;
+  display: inline-flex;
+  align-items: stretch;
+  gap: 0;
+}
+
+.upgradeSplitCaret {
+  border: 1px solid rgba(207, 174, 92, 0.55);
+  border-left: none;
+  background: rgba(12, 20, 38, 0.65);
+  color: #F2E8D5;
+  padding: 0 12px;
+  border-radius: 0 12px 12px 0;
+  cursor: pointer;
+}
+
+.upgradeMiniMenu {
+  position: absolute;
+  right: 0;
+  top: calc(100% + 8px);
+  min-width: 200px;
+  background: rgba(10, 16, 30, 0.95);
+  border: 1px solid rgba(207, 174, 92, 0.35);
+  border-radius: 14px;
+  box-shadow: 0 14px 40px rgba(0, 0, 0, 0.45);
+  padding: 6px;
+  z-index: 50;
+}
+
+.upgradeMiniItem {
+  width: 100%;
+  text-align: left;
+  background: transparent;
+  border: none;
+  color: #F2E8D5;
+  padding: 10px 10px;
+  border-radius: 10px;
+  cursor: pointer;
+}
+
+.upgradeMiniItem:hover {
+  background: rgba(207, 174, 92, 0.12);
+}

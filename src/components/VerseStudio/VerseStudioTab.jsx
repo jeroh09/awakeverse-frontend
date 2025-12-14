@@ -4,6 +4,7 @@ import useVerseStudio from "../../hooks/useVerseStudio";
 import { useUser } from "../../contexts/UserContext";
 import SubscriptionService from "../../services/SubscriptionService";
 import PaymentRouter from "../../services/PaymentRouter";
+
 import TaskChatWindow from "./TaskChatWindow";
 import TaskCreator from "./TaskCreator";
 import VerseWorkspaceTemplateCard from "./VerseWorkspaceTemplateCard";
@@ -14,7 +15,7 @@ const API_BASE = process.env.REACT_APP_API_URL || "https://api.awakeverse.com";
 /**
  * Template images for:
  * - Task window hero (task.heroImageUrl)
- * - Template cards full-background (Upgrade C)
+ * - Template cards full-background
  */
 const TEMPLATE_HEADER_IMAGES = {
   coding_team: "/images/verse-workspace/templates/coding_team.jpeg",
@@ -28,7 +29,7 @@ const TEMPLATE_HEADER_IMAGES = {
 
 function withHeroImage(task) {
   if (!task) return task;
-  const templateId = task.template_id;
+  const templateId = task.template_id || task.templateId || task.template_key;
   const heroImageUrl = templateId ? TEMPLATE_HEADER_IMAGES[templateId] || null : null;
   return { ...task, heroImageUrl };
 }
@@ -50,31 +51,35 @@ export default function VerseStudioTab() {
   const [templates, setTemplates] = useState([]);
   const [tasks, setTasks] = useState([]);
   const [tokensState, setTokensState] = useState(null);
-  const [resumingTaskId, setResumingTaskId] = useState(null);
 
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [activeTask, setActiveTask] = useState(null);
+  const [resumingTaskId, setResumingTaskId] = useState(null);
 
-  const [isUpgradeModalOpen, setIsUpgradeModalOpen] = useState(false);
-  const [upgradeError, setUpgradeError] = useState(null);
-
-  // Subscription gate: only Unlimited can create beyond trial (existing tasks remain accessible)
-  const [subscriptionTier, setSubscriptionTier] = useState(null);
-  const isUnlimited = subscriptionTier === "unlimited";
-
+  // Creator
   const [isCreatorOpen, setIsCreatorOpen] = useState(false);
   const [creatorTemplate, setCreatorTemplate] = useState(null);
   const [creatorError, setCreatorError] = useState(null);
   const [isCreating, setIsCreating] = useState(false);
 
-  // ✅ NEW: Info modal
+  // Upgrade
+  const [isUpgradeModalOpen, setIsUpgradeModalOpen] = useState(false);
+  const [upgradeError, setUpgradeError] = useState(null);
+
+  // ✅ Option A: minimal provider picker
+  const [showUpgradeMenu, setShowUpgradeMenu] = useState(false);
+
+  // Info
   const [isInfoOpen, setIsInfoOpen] = useState(false);
+
+  // Subscription: only Unlimited can create beyond trial
+  const [subscriptionTier, setSubscriptionTier] = useState(null);
+  const isUnlimited = subscriptionTier === "unlimited";
 
   // Close info modal on Escape
   useEffect(() => {
     if (!isInfoOpen) return;
-
     const onKey = (e) => {
       if (e.key === "Escape") setIsInfoOpen(false);
     };
@@ -82,8 +87,16 @@ export default function VerseStudioTab() {
     return () => window.removeEventListener("keydown", onKey);
   }, [isInfoOpen]);
 
+  // Close upgrade menu on outside click
+  useEffect(() => {
+    if (!showUpgradeMenu) return;
+    const onDown = () => setShowUpgradeMenu(false);
+    window.addEventListener("mousedown", onDown);
+    return () => window.removeEventListener("mousedown", onDown);
+  }, [showUpgradeMenu]);
+
   // -----------------------------------------------------------------------
-  // INITIAL LOAD
+  // INITIAL LOAD: tasks + templates + tokens
   // -----------------------------------------------------------------------
   useEffect(() => {
     let isMounted = true;
@@ -140,7 +153,7 @@ export default function VerseStudioTab() {
   }, []);
 
   // -----------------------------------------------------------------------
-  // SUBSCRIPTION LOAD (for create gating only)
+  // SUBSCRIPTION LOAD (create gating only)
   // -----------------------------------------------------------------------
   useEffect(() => {
     let isMounted = true;
@@ -151,8 +164,7 @@ export default function VerseStudioTab() {
         const res = await SubscriptionService.getUserSubscriptionStatus(user.id);
         const tier = res?.subscription?.tier || "free";
         if (isMounted) setSubscriptionTier(tier);
-      } catch (e) {
-        // SubscriptionService is defensive and returns fallback, but keep extra guard
+      } catch {
         if (isMounted) setSubscriptionTier("free");
       }
     }
@@ -168,12 +180,17 @@ export default function VerseStudioTab() {
   // -----------------------------------------------------------------------
   const trialInfo = useMemo(() => {
     const used = tokensState?.trial_tasks_used ?? 0;
-    const remaining = tokensState?.trial_tasks_remaining ?? Math.max(3 - used, 0);
     const total = 3;
+    const remaining =
+      tokensState?.trial_tasks_remaining ??
+      Math.max(total - used, 0);
+
     return { used, remaining, total };
   }, [tokensState]);
 
   const trialLimitReached = trialInfo.used >= 3 || trialInfo.remaining <= 0;
+
+  // ✅ rule: create is allowed if unlimited OR still in trial allowance
   const canCreateNewTask = isUnlimited || !trialLimitReached;
 
   // -----------------------------------------------------------------------
@@ -182,19 +199,21 @@ export default function VerseStudioTab() {
   const openCreator = useCallback(
     async (template) => {
       setUpgradeError(null);
+      setShowUpgradeMenu(false);
+
       if (!canCreateNewTask) {
         setIsUpgradeModalOpen(true);
         return;
       }
 
       setCreatorError(null);
-      setCreatorTemplate(template);
+      setCreatorTemplate(template || null);
       setIsCreatorOpen(true);
 
       try {
-        await verseStudio.refreshLLMOptions();
+        await verseStudio.refreshLLMOptions?.();
       } catch {
-        // hook fallback is fine
+        // no-op (hook fallback is fine)
       }
     },
     [canCreateNewTask, verseStudio]
@@ -208,27 +227,32 @@ export default function VerseStudioTab() {
   }, [isCreating]);
 
   // -----------------------------------------------------------------------
-  // UPGRADE (single tier: unlimited)
+  // UPGRADE (Option A: Split button => Stripe default + menu PayPal)
   // -----------------------------------------------------------------------
-  const handleUpgrade = useCallback(async () => {
+  const handleUpgrade = useCallback(async (provider = "stripe") => {
     setUpgradeError(null);
+
     const result = await PaymentRouter.redirectToCheckout({
       tier: "unlimited",
+      provider, // ✅ "stripe" | "paypal"
       triggerSource: "verse_studio_create_task",
     });
 
-    // If redirect succeeds, browser navigates away. If not, show a friendly error.
+    // If redirect succeeds, the browser navigates away.
+    // If it fails, show a friendly error.
     if (result && result.success === false) {
       setUpgradeError(result.error?.userMessage || "Upgrade failed. Please try again.");
     }
   }, []);
 
   // -----------------------------------------------------------------------
-  // CREATE TASK
+  // CREATE TASK (gated)
   // -----------------------------------------------------------------------
   const handleCreateFromCreator = useCallback(
     async (payload) => {
       setUpgradeError(null);
+      setShowUpgradeMenu(false);
+
       if (!canCreateNewTask) {
         setIsCreatorOpen(false);
         setCreatorTemplate(null);
@@ -259,7 +283,7 @@ export default function VerseStudioTab() {
         setActiveTask(withHeroImage(newTask));
         setIsCreatorOpen(false);
 
-        // Refresh token state
+        // Refresh token state (trial counters)
         try {
           const tokensRes = await fetch(`${API_BASE}/api/verse-studio/tokens`, {
             method: "GET",
@@ -284,7 +308,7 @@ export default function VerseStudioTab() {
   );
 
   // -----------------------------------------------------------------------
-  // RESUME TASK
+  // RESUME TASK (never gated)
   // -----------------------------------------------------------------------
   const handleResumeTask = useCallback(
     async (task) => {
@@ -309,7 +333,7 @@ export default function VerseStudioTab() {
 
   const handleBackFromChat = useCallback(() => {
     setActiveTask(null);
-    verseStudio.resetTask && verseStudio.resetTask();
+    verseStudio.resetTask?.();
   }, [verseStudio]);
 
   // -----------------------------------------------------------------------
@@ -333,7 +357,6 @@ export default function VerseStudioTab() {
 
             <span className={styles.titlePill}>Trial · 3 free tasks</span>
 
-            {/* ✅ NEW: Info button */}
             <button
               type="button"
               className={styles.infoButton}
@@ -415,6 +438,7 @@ export default function VerseStudioTab() {
               <p className={styles.columnSubtitle}>Resume an active workspace or start a new one from a template.</p>
             </div>
 
+            {/* Create from scratch (gated) */}
             <button
               type="button"
               className={styles.createWorkspaceButton}
@@ -475,7 +499,11 @@ export default function VerseStudioTab() {
                         <div className={styles.taskTitle}>{title}</div>
                         <span className={styles.taskStatusPill}>{(t.status || "active").toUpperCase()}</span>
                       </div>
-                      <div className={styles.taskMetaTime}>Created {new Date(t.created_at).toLocaleDateString()}</div>
+
+                      <div className={styles.taskMetaTime}>
+                        Created {t.created_at ? new Date(t.created_at).toLocaleDateString() : "—"}
+                      </div>
+
                       {desc ? <div className={styles.taskDescription}>{desc}</div> : null}
                     </div>
 
@@ -495,7 +523,9 @@ export default function VerseStudioTab() {
                         </div>
                       )}
 
-                      <span className={styles.taskCta}>{resumingTaskId === taskId ? "Opening…" : "Open →"}</span>
+                      <span className={styles.taskCta}>
+                        {resumingTaskId === taskId ? "Opening…" : "Open →"}
+                      </span>
                     </div>
                   </button>
                 );
@@ -518,25 +548,74 @@ export default function VerseStudioTab() {
         onCreate={handleCreateFromCreator}
       />
 
-      {/* Upgrade modal */}
+      {/* Upgrade modal (kept light; Option A picker is inline) */}
       {isUpgradeModalOpen && (
         <div className={styles.upgradeOverlay}>
           <div className={styles.upgradeModal}>
             <h3 className={styles.upgradeTitle}>Verse Workspace trial limit reached</h3>
             <p className={styles.upgradeBody}>
-              You've created the maximum of 3 free Verse Workspace tasks on this account. Upgrade your AwakeVerse plan to
-              keep creating tasks and unlock higher token limits.
+              You've created the maximum of 3 free Verse Workspace tasks on this account. Upgrade to Unlimited to keep
+              creating tasks and unlock higher limits.
             </p>
+
             {upgradeError && <div className={styles.upgradeError}>{upgradeError}</div>}
+
             <div className={styles.upgradeActions}>
-              <button type="button" className={styles.upgradePrimary} onClick={handleUpgrade}>
-                Upgrade
-              </button>
+              {/* ✅ Option A: split button */}
+              <div
+                className={styles.upgradeSplitWrap}
+                onMouseDown={(e) => e.stopPropagation()}
+              >
+                <button
+                  type="button"
+                  className={styles.upgradePrimary}
+                  onClick={() => handleUpgrade("stripe")}
+                  title="Upgrade with Stripe"
+                >
+                  Upgrade
+                </button>
+
+                <button
+                  type="button"
+                  className={styles.upgradeSplitCaret}
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    setShowUpgradeMenu((v) => !v);
+                  }}
+                  aria-label="Choose payment method"
+                  title="Choose payment method"
+                >
+                  ▾
+                </button>
+
+                {showUpgradeMenu && (
+                  <div className={styles.upgradeMiniMenu} role="menu">
+                    <button
+                      type="button"
+                      className={styles.upgradeMiniItem}
+                      onClick={() => handleUpgrade("stripe")}
+                      role="menuitem"
+                    >
+                      Pay with Stripe
+                    </button>
+                    <button
+                      type="button"
+                      className={styles.upgradeMiniItem}
+                      onClick={() => handleUpgrade("paypal")}
+                      role="menuitem"
+                    >
+                      Pay with PayPal
+                    </button>
+                  </div>
+                )}
+              </div>
+
               <button
                 type="button"
                 className={styles.upgradeSecondary}
                 onClick={() => {
                   setUpgradeError(null);
+                  setShowUpgradeMenu(false);
                   setIsUpgradeModalOpen(false);
                 }}
               >
@@ -547,7 +626,7 @@ export default function VerseStudioTab() {
         </div>
       )}
 
-      {/* ✅ NEW: Info modal */}
+      {/* Info modal (kept as-is) */}
       {isInfoOpen && (
         <div
           className={styles.infoOverlay}
@@ -567,7 +646,12 @@ export default function VerseStudioTab() {
                 </div>
               </div>
 
-              <button type="button" className={styles.infoClose} onClick={() => setIsInfoOpen(false)} aria-label="Close">
+              <button
+                type="button"
+                className={styles.infoClose}
+                onClick={() => setIsInfoOpen(false)}
+                aria-label="Close"
+              >
                 ✕
               </button>
             </div>
@@ -594,10 +678,6 @@ export default function VerseStudioTab() {
                     one thread.
                   </li>
                   <li>
-                    Use <strong>@role mentions</strong> (where supported) to direct a specialist: e.g. <code>@critic</code>{" "}
-                    or <code>@researcher</code>.
-                  </li>
-                  <li>
                     Responses support <strong>Markdown</strong> (lists, tables, code blocks). Code blocks include a{" "}
                     <strong>Copy</strong> button.
                   </li>
@@ -605,44 +685,30 @@ export default function VerseStudioTab() {
               </div>
 
               <div className={styles.infoSection}>
-                <div className={styles.infoSectionTitle}>3) Artifacts panel (right side)</div>
+                <div className={styles.infoSectionTitle}>3) Artifacts panel</div>
                 <ul className={styles.infoList}>
                   <li>
                     The system can collect outputs (like code blocks) as <strong>Artifacts</strong> so you can copy or
                     download them later.
                   </li>
                   <li>
-                    Artifacts are different from tokens: <strong>tokens</strong> measure usage/limits;{" "}
-                    <strong>artifacts</strong> are saved content blocks.
+                    <strong>Tokens</strong> measure usage/limits; <strong>Artifacts</strong> are saved content blocks.
                   </li>
-                  <li>You can collapse the panel to widen the chat when reading long outputs.</li>
                 </ul>
               </div>
 
               <div className={styles.infoSection}>
-                <div className={styles.infoSectionTitle}>4) Trial limits & tokens</div>
+                <div className={styles.infoSectionTitle}>4) Trial limits</div>
                 <ul className={styles.infoList}>
                   <li>
                     Trial accounts can create up to <strong>3 tasks</strong>. After that, you’ll see an upgrade prompt.
                   </li>
-                  <li>Each workspace consumes tokens as the team responds. If tokens are exhausted, sending may be limited.</li>
-                </ul>
-              </div>
-
-              <div className={styles.infoSection}>
-                <div className={styles.infoSectionTitle}>5) Documents (upload)</div>
-                <ul className={styles.infoList}>
-                  <li>
-                    You’ll be able to upload documents (PDF / DOCX / TXT / MD) into a workspace, and the team can work
-                    from their contents.
-                  </li>
-                  <li>If a document is too large or unsupported, you’ll see a friendly error and can try a smaller file.</li>
+                  <li>Existing tasks remain accessible even after you hit the create limit.</li>
                 </ul>
               </div>
 
               <div className={styles.infoCallout}>
-                Tip: For best results, start with a template, paste your brief, then ask for a plan → implementation →
-                review. Use the artifacts panel to collect final outputs.
+                Tip: Ask for a plan → implementation → review. Use the artifacts panel to collect final outputs.
               </div>
             </div>
 
