@@ -1,6 +1,9 @@
 // src/components/VerseStudio/VerseStudioTab.jsx
 import React, { useCallback, useEffect, useMemo, useState } from "react";
 import useVerseStudio from "../../hooks/useVerseStudio";
+import { useUser } from "../../contexts/UserContext";
+import SubscriptionService from "../../services/SubscriptionService";
+import PaymentRouter from "../../services/PaymentRouter";
 import TaskChatWindow from "./TaskChatWindow";
 import TaskCreator from "./TaskCreator";
 import VerseWorkspaceTemplateCard from "./VerseWorkspaceTemplateCard";
@@ -41,6 +44,7 @@ function InfoIcon() {
 }
 
 export default function VerseStudioTab() {
+  const { user } = useUser();
   const verseStudio = useVerseStudio();
 
   const [templates, setTemplates] = useState([]);
@@ -53,6 +57,11 @@ export default function VerseStudioTab() {
   const [activeTask, setActiveTask] = useState(null);
 
   const [isUpgradeModalOpen, setIsUpgradeModalOpen] = useState(false);
+  const [upgradeError, setUpgradeError] = useState(null);
+
+  // Subscription gate: only Unlimited can create beyond trial (existing tasks remain accessible)
+  const [subscriptionTier, setSubscriptionTier] = useState(null);
+  const isUnlimited = subscriptionTier === "unlimited";
 
   const [isCreatorOpen, setIsCreatorOpen] = useState(false);
   const [creatorTemplate, setCreatorTemplate] = useState(null);
@@ -131,6 +140,30 @@ export default function VerseStudioTab() {
   }, []);
 
   // -----------------------------------------------------------------------
+  // SUBSCRIPTION LOAD (for create gating only)
+  // -----------------------------------------------------------------------
+  useEffect(() => {
+    let isMounted = true;
+
+    async function loadSubscription() {
+      if (!user?.id) return;
+      try {
+        const res = await SubscriptionService.getUserSubscriptionStatus(user.id);
+        const tier = res?.subscription?.tier || "free";
+        if (isMounted) setSubscriptionTier(tier);
+      } catch (e) {
+        // SubscriptionService is defensive and returns fallback, but keep extra guard
+        if (isMounted) setSubscriptionTier("free");
+      }
+    }
+
+    loadSubscription();
+    return () => {
+      isMounted = false;
+    };
+  }, [user?.id]);
+
+  // -----------------------------------------------------------------------
   // TRIAL LIMIT
   // -----------------------------------------------------------------------
   const trialInfo = useMemo(() => {
@@ -141,13 +174,15 @@ export default function VerseStudioTab() {
   }, [tokensState]);
 
   const trialLimitReached = trialInfo.used >= 3 || trialInfo.remaining <= 0;
+  const canCreateNewTask = isUnlimited || !trialLimitReached;
 
   // -----------------------------------------------------------------------
   // OPEN CREATOR (gated)
   // -----------------------------------------------------------------------
   const openCreator = useCallback(
     async (template) => {
-      if (trialLimitReached) {
+      setUpgradeError(null);
+      if (!canCreateNewTask) {
         setIsUpgradeModalOpen(true);
         return;
       }
@@ -162,7 +197,7 @@ export default function VerseStudioTab() {
         // hook fallback is fine
       }
     },
-    [trialLimitReached, verseStudio]
+    [canCreateNewTask, verseStudio]
   );
 
   const closeCreator = useCallback(() => {
@@ -173,11 +208,28 @@ export default function VerseStudioTab() {
   }, [isCreating]);
 
   // -----------------------------------------------------------------------
+  // UPGRADE (single tier: unlimited)
+  // -----------------------------------------------------------------------
+  const handleUpgrade = useCallback(async () => {
+    setUpgradeError(null);
+    const result = await PaymentRouter.redirectToCheckout({
+      tier: "unlimited",
+      triggerSource: "verse_studio_create_task",
+    });
+
+    // If redirect succeeds, browser navigates away. If not, show a friendly error.
+    if (result && result.success === false) {
+      setUpgradeError(result.error?.userMessage || "Upgrade failed. Please try again.");
+    }
+  }, []);
+
+  // -----------------------------------------------------------------------
   // CREATE TASK
   // -----------------------------------------------------------------------
   const handleCreateFromCreator = useCallback(
     async (payload) => {
-      if (trialLimitReached) {
+      setUpgradeError(null);
+      if (!canCreateNewTask) {
         setIsCreatorOpen(false);
         setCreatorTemplate(null);
         setCreatorError(null);
@@ -228,7 +280,7 @@ export default function VerseStudioTab() {
         setIsCreating(false);
       }
     },
-    [trialLimitReached, verseStudio]
+    [canCreateNewTask, verseStudio]
   );
 
   // -----------------------------------------------------------------------
@@ -346,7 +398,7 @@ export default function VerseStudioTab() {
                     key={templateId}
                     template={template}
                     imageUrl={imageUrl}
-                    locked={trialLimitReached}
+                    locked={!canCreateNewTask}
                     onUse={openCreator}
                   />
                 );
@@ -475,16 +527,20 @@ export default function VerseStudioTab() {
               You've created the maximum of 3 free Verse Workspace tasks on this account. Upgrade your AwakeVerse plan to
               keep creating tasks and unlock higher token limits.
             </p>
+            {upgradeError && <div className={styles.upgradeError}>{upgradeError}</div>}
             <div className={styles.upgradeActions}>
-              <button type="button" className={styles.upgradePrimary} onClick={() => setIsUpgradeModalOpen(false)}>
-                Close
+              <button type="button" className={styles.upgradePrimary} onClick={handleUpgrade}>
+                Upgrade
               </button>
               <button
                 type="button"
                 className={styles.upgradeSecondary}
-                onClick={() => window.open("/pricing", "_blank", "noopener,noreferrer")}
+                onClick={() => {
+                  setUpgradeError(null);
+                  setIsUpgradeModalOpen(false);
+                }}
               >
-                View plans
+                Close
               </button>
             </div>
           </div>
@@ -559,9 +615,7 @@ export default function VerseStudioTab() {
                     Artifacts are different from tokens: <strong>tokens</strong> measure usage/limits;{" "}
                     <strong>artifacts</strong> are saved content blocks.
                   </li>
-                  <li>
-                    You can collapse the panel to widen the chat when reading long outputs.
-                  </li>
+                  <li>You can collapse the panel to widen the chat when reading long outputs.</li>
                 </ul>
               </div>
 
@@ -571,9 +625,7 @@ export default function VerseStudioTab() {
                   <li>
                     Trial accounts can create up to <strong>3 tasks</strong>. After that, you’ll see an upgrade prompt.
                   </li>
-                  <li>
-                    Each workspace consumes tokens as the team responds. If tokens are exhausted, sending may be limited.
-                  </li>
+                  <li>Each workspace consumes tokens as the team responds. If tokens are exhausted, sending may be limited.</li>
                 </ul>
               </div>
 
@@ -584,9 +636,7 @@ export default function VerseStudioTab() {
                     You’ll be able to upload documents (PDF / DOCX / TXT / MD) into a workspace, and the team can work
                     from their contents.
                   </li>
-                  <li>
-                    If a document is too large or unsupported, you’ll see a friendly error and can try a smaller file.
-                  </li>
+                  <li>If a document is too large or unsupported, you’ll see a friendly error and can try a smaller file.</li>
                 </ul>
               </div>
 
