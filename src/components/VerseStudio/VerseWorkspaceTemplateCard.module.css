@@ -139,3 +139,72 @@
   color: var(--vs-text-muted);
   box-shadow: none;
 }
+/* ===== Polish: premium hover + focus ===== */
+
+.card{
+  transform: translateZ(0);
+}
+
+.card::before{
+  /* subtle shine sweep */
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(
+    120deg,
+    rgba(255,255,255,0) 0%,
+    rgba(255,255,255,0.08) 18%,
+    rgba(255,255,255,0) 36%
+  );
+  transform: translateX(-120%);
+  transition: transform 0.6s ease-out;
+  z-index: 1;
+  pointer-events: none;
+  mix-blend-mode: overlay;
+}
+
+.card:hover::before{
+  transform: translateX(120%);
+}
+
+.card[data-has-image="true"]{
+  /* allow a subtle zoom by animating background-size */
+  background-size: 102%;
+  transition:
+    transform 0.18s ease-out,
+    box-shadow 0.18s ease-out,
+    border-color 0.18s ease-out,
+    background-size 0.35s ease-out;
+}
+
+.card[data-has-image="true"]:hover{
+  background-size: 108%;
+}
+
+.card:focus-within{
+  border-color: var(--vs-accent-primary);
+  box-shadow:
+    0 0 0 1px rgba(99, 102, 241, 0.7),
+    0 18px 42px -18px rgba(15, 23, 42, 0.92);
+}
+
+.cta:focus-visible{
+  outline: none;
+  box-shadow:
+    0 0 0 2px rgba(99, 102, 241, 0.45),
+    0 14px 30px rgba(99, 102, 241, 0.35);
+}
+
+/* Locked state feels intentional */
+.ctaLocked{
+  position: relative;
+}
+
+.ctaLocked::after{
+  content: "🔒";
+  position: absolute;
+  right: 12px;
+  top: 50%;
+  transform: translateY(-50%);
+  opacity: 0.85;
+}

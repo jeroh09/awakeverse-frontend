@@ -20,6 +20,7 @@ const TEMPLATE_HEADER_IMAGES = {
   business_team: "/images/verse-workspace/templates/business_team.jpeg",
   writing_team: "/images/verse-workspace/templates/writing_team.jpeg",
   strategy_team: "/images/verse-workspace/templates/strategy_team.jpeg",
+  education_team: "/images/verse-workspace/templates/education_team.jpeg",
 };
 
 function withHeroImage(task) {
