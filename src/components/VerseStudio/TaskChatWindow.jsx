@@ -81,15 +81,6 @@ function slugify(raw) {
 // import remarkMath from "remark-math";
 // import rehypeKatex from "rehype-katex";
 
-function slugify(raw) {
-  return String(raw || "")
-    .toLowerCase()
-    .trim()
-    .replace(/[`~!@#$%^&*()+={}\[\]|\\:;"'<>,.?/]/g, "")
-    .replace(/\s+/g, "-")
-    .replace(/-+/g, "-");
-}
-
 /**
  * MarkdownMessage
  * - variant="chat": fast, compact, bubble-safe markdown
