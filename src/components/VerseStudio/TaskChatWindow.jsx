@@ -2,6 +2,8 @@
 import React, { useCallback, useMemo, useRef, useState } from "react";
 import ReactMarkdown from "react-markdown";
 import remarkGfm from "remark-gfm";
+import remarkMath from "remark-math";
+import rehypeKatex from "rehype-katex";
 import styles from "./TaskChatWindow.module.css";
 
 const API_BASE = process.env.REACT_APP_API_URL || "https://api.awakeverse.com";
@@ -52,76 +54,239 @@ function CopyButton({ getText, label = "Copy" }) {
   );
 }
 
-function MarkdownMessage({ text }) {
+
+// --- helpers ---
+function normalizeCodeText(children) {
+  const raw = Array.isArray(children) ? children.join("") : String(children ?? "");
+  return raw.replace(/\n$/, "");
+}
+
+function slugify(raw) {
+  return String(raw || "")
+    .toLowerCase()
+    .trim()
+    .replace(/[`~!@#$%^&*()+={}\[\]|\\:;"'<>,.?/]/g, "")
+    .replace(/\s+/g, "-")
+    .replace(/-+/g, "-");
+}
+
+/**
+ * MarkdownMessage
+ * - variant="chat": simple markdown for chat bubbles (fast)
+ * - variant="doc": rich markdown for artifacts/docs (TOC, math, anchors, callouts)
+ *
+ * NOTE: If you want TOC UI, render `toc` returned below in your artifact panel.
+ */
+// ✅ Markdown renderer (Artifacts/docs get richer formatting; chat stays lightweight)
+// Requires these imports at top of TaskChatWindow.jsx:
+// import React, { useMemo, useRef } from "react";
+// import ReactMarkdown from "react-markdown";
+// import remarkGfm from "remark-gfm";
+// import remarkMath from "remark-math";
+// import rehypeKatex from "rehype-katex";
+
+function normalizeCodeText(children) {
+  const raw = Array.isArray(children) ? children.join("") : String(children ?? "");
+  return raw.replace(/\n$/, "");
+}
+
+function slugify(raw) {
+  return String(raw || "")
+    .toLowerCase()
+    .trim()
+    .replace(/[`~!@#$%^&*()+={}\[\]|\\:;"'<>,.?/]/g, "")
+    .replace(/\s+/g, "-")
+    .replace(/-+/g, "-");
+}
+
+/**
+ * MarkdownMessage
+ * - variant="chat": fast, compact, bubble-safe markdown
+ * - variant="doc": richer docs markdown (TOC + math + anchors + callouts)
+ *
+ * IMPORTANT: This wraps content in mdChatContainer / mdDocContainer so your
+ * CSS modules can enforce fonts, sizes, and wrapping reliably.
+ */
+export function MarkdownMessage({ text, variant = "chat", onToc }) {
+  const isDoc = variant === "doc";
+
+  // Light normalization to avoid “blob” output for docs
+  const normalized = useMemo(() => {
+    if (!text) return "";
+    let s = String(text);
+
+    if (isDoc) {
+      // headings breathe
+      s = s
+        .replace(/\n(#{1,6}\s)/g, "\n\n$1")
+        .replace(/(#{1,6} .+)\n(?!\n)/g, "$1\n\n")
+        .replace(/\n\n{3,}/g, "\n\n");
+    }
+
+    return s;
+  }, [text, isDoc]);
+
+  // Simple TOC for docs variant
+  const toc = useMemo(() => {
+    if (!isDoc) return [];
+    const lines = normalized.split("\n");
+    const counts = new Map();
+    const out = [];
+
+    for (const line of lines) {
+      const m = line.match(/^(#{1,6})\s+(.+)\s*$/);
+      if (!m) continue;
+      const level = m[1].length;
+      const title = m[2].replace(/\s+#\s*$/, "").trim();
+      const base = slugify(title);
+      const n = (counts.get(base) || 0) + 1;
+      counts.set(base, n);
+      const id = n === 1 ? base : `${base}-${n}`;
+      out.push({ level, title, id });
+    }
+    return out;
+  }, [normalized, isDoc]);
+
+  // Provide TOC to parent if requested (Artifacts panel might want it)
+  const lastTocRef = useRef(null);
+  if (isDoc && onToc && toc !== lastTocRef.current) {
+    lastTocRef.current = toc;
+    onToc(toc);
+  }
+
+  // Docs-style callouts via blockquote: > **Note:** ...
+  const getCalloutType = (children) => {
+    const raw = Array.isArray(children) ? children.map(String).join("\n") : String(children ?? "");
+    const firstLine = raw.split("\n")[0] || "";
+    const m = firstLine.match(/\*\*(Note|Tip|Warning|Danger|Info)\*\*:/i);
+    return m ? m[1].toLowerCase() : null;
+  };
+
+  // Heading renderer with stable IDs aligned to TOC
+  const makeHeading = (Tag) => {
+    return ({ children }) => {
+      const textOnly = Array.isArray(children) ? children.join("") : String(children ?? "");
+      const base = slugify(textOnly);
+
+      // Best-effort match: find first toc entry for this base (or base-n)
+      const found = toc.find((h) => h.id === base || h.id.startsWith(`${base}-`));
+      const id = found?.id || base;
+
+      return (
+        <Tag id={id} className={styles[`md${Tag.toUpperCase()}`] || styles.mdH2}>
+          {/* anchor only in doc mode */}
+          {isDoc && (
+            <a className={styles.headingAnchor} href={`#${id}`} aria-label="Link to section">
+              #
+            </a>
+          )}
+          {children}
+        </Tag>
+      );
+    };
+  };
+
+  const remarkPlugins = isDoc ? [remarkGfm, remarkMath] : [remarkGfm];
+  const rehypePlugins = isDoc ? [rehypeKatex] : [];
+
   return (
-    <ReactMarkdown
-      remarkPlugins={[remarkGfm]}
-      skipHtml={true}
-      linkTarget="_blank"
-      components={{
-        p({ children }) {
-          return <p className={styles.mdP}>{children}</p>;
-        },
-        ul({ children }) {
-          return <ul className={styles.mdUl}>{children}</ul>;
-        },
-        ol({ children }) {
-          return <ol className={styles.mdOl}>{children}</ol>;
-        },
-        li({ children }) {
-          return <li className={styles.mdLi}>{children}</li>;
-        },
-        a({ href, children }) {
-          return (
+    <div className={isDoc ? styles.mdDocContainer : styles.mdChatContainer}>
+      {/* TOC only for docs; show at 3+ headings */}
+      {isDoc && toc.length >= 3 && (
+        <div className={styles.mdToc}>
+          <div className={styles.mdTocTitle}>Contents</div>
+          <nav className={styles.mdTocNav}>
+            {toc.map((h) => (
+              <a
+                key={h.id}
+                href={`#${h.id}`}
+                className={styles.mdTocLink}
+                style={{ paddingLeft: `${(h.level - 1) * 12}px` }}
+              >
+                {h.title}
+              </a>
+            ))}
+          </nav>
+        </div>
+      )}
+
+      <ReactMarkdown
+        remarkPlugins={remarkPlugins}
+        rehypePlugins={rehypePlugins}
+        skipHtml={true}
+        linkTarget="_blank"
+        components={{
+          // Headings: doc gets proper h1/h2/h3 with anchors; chat keeps simple hierarchy
+          h1: isDoc ? makeHeading("h1") : ({ children }) => <div className={styles.mdStrongTitle}>{children}</div>,
+          h2: isDoc ? makeHeading("h2") : ({ children }) => <div className={styles.mdStrongSubtitle}>{children}</div>,
+          h3: isDoc ? makeHeading("h3") : ({ children }) => <div className={styles.mdStrongSubtitle}>{children}</div>,
+          h4: isDoc ? makeHeading("h4") : ({ children }) => <div className={styles.mdStrongSubtitle}>{children}</div>,
+
+          // Paragraphs / lists: wrapping controlled by mdChatContainer/mdDocContainer
+          p: ({ children }) => <p className={styles.mdP}>{children}</p>,
+          ul: ({ children }) => <ul className={styles.mdUl}>{children}</ul>,
+          ol: ({ children }) => <ol className={styles.mdOl}>{children}</ol>,
+          li: ({ children }) => <li className={styles.mdLi}>{children}</li>,
+
+          // Links wrap safely (long URLs)
+          a: ({ href, children }) => (
             <a className={styles.mdLink} href={href} rel="noopener noreferrer" target="_blank">
               {children}
             </a>
-          );
-        },
-        blockquote({ children }) {
-          return <blockquote className={styles.mdQuote}>{children}</blockquote>;
-        },
-        table({ children }) {
-          return (
+          ),
+
+          // Callouts in docs via blockquote convention
+          blockquote: ({ children }) => {
+            const t = isDoc ? getCalloutType(children) : null;
+            if (t) {
+              return (
+                <div className={`${styles.mdCallout} ${styles[`mdCallout_${t}`] || ""}`}>
+                  {children}
+                </div>
+              );
+            }
+            return <blockquote className={styles.mdQuote}>{children}</blockquote>;
+          },
+
+          // Tables (scroll container)
+          table: ({ children }) => (
             <div className={styles.mdTableWrap}>
               <table className={styles.mdTable}>{children}</table>
             </div>
-          );
-        },
-        th({ children }) {
-          return <th className={styles.mdTh}>{children}</th>;
-        },
-        td({ children }) {
-          return <td className={styles.mdTd}>{children}</td>;
-        },
-        hr() {
-          return <hr className={styles.mdHr} />;
-        },
-        code({ inline, className, children }) {
-          const codeText = normalizeCodeText(children);
-          const match = /language-(\w+)/.exec(className || "");
-          const lang = match?.[1] || "";
+          ),
+          th: ({ children }) => <th className={styles.mdTh}>{children}</th>,
+          td: ({ children }) => <td className={styles.mdTd}>{children}</td>,
 
-          if (inline) return <code className={styles.mdInlineCode}>{children}</code>;
+          hr: () => <hr className={styles.mdHr} />,
 
-          return (
-            <div className={styles.codeBlock}>
-              <div className={styles.codeHeader}>
-                <div className={styles.codeLang}>{lang || "code"}</div>
-                <CopyButton getText={() => codeText} label="Copy" />
+          // Code: inline wraps naturally; blocks scroll horizontally
+          code({ inline, className, children }) {
+            const codeText = normalizeCodeText(children);
+            const match = /language-(\w+)/.exec(className || "");
+            const lang = match?.[1] || "";
+
+            if (inline) return <code className={styles.mdInlineCode}>{children}</code>;
+
+            return (
+              <div className={styles.codeBlock}>
+                <div className={styles.codeHeader}>
+                  <div className={styles.codeLang}>{lang || "code"}</div>
+                  <CopyButton getText={() => codeText} label="Copy" />
+                </div>
+                <pre className={styles.mdPre}>
+                  <code className={styles.mdCode}>{codeText}</code>
+                </pre>
               </div>
-              <pre className={styles.mdPre}>
-                <code className={styles.mdCode}>{codeText}</code>
-              </pre>
-            </div>
-          );
-        },
-      }}
-    >
-      {text || ""}
-    </ReactMarkdown>
+            );
+          },
+        }}
+      >
+        {normalized}
+      </ReactMarkdown>
+    </div>
   );
 }
+
 
 function PanelToggleIcon({ collapsed }) {
   return (

@@ -1095,3 +1095,129 @@
 .attachmentRemove:hover{
   color: rgba(241, 245, 249, 0.95);
 }
+/* Artifacts/docs markdown wrapper */
+.mdDocContainer { max-width: 96ch; }
+
+/* TOC */
+.mdToc{
+  border: 1px solid rgba(148,163,184,0.14);
+  background: rgba(10,15,26,0.45);
+  border-radius: 14px;
+  padding: 10px 12px;
+  margin: 0 0 12px 0;
+}
+.mdTocTitle{
+  font-size: 12px;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: rgba(148,163,184,0.95);
+  margin-bottom: 8px;
+}
+.mdTocNav{ display: flex; flex-direction: column; gap: 6px; }
+.mdTocLink{ color: rgba(241,245,249,0.92); text-decoration: none; font-size: 13px; }
+.mdTocLink:hover{ text-decoration: underline; text-underline-offset: 3px; }
+
+/* Headings anchors */
+.headingAnchor{
+  opacity: 0.45;
+  margin-right: 8px;
+  text-decoration: none;
+  color: rgba(148,163,184,0.95);
+}
+.headingAnchor:hover{ opacity: 0.9; }
+
+/* KaTeX minimal scoping */
+.mdDocContainer :global(.katex){ font-size: 1em; }
+.mdDocContainer :global(.katex-display){
+  margin: 10px 0 12px 0;
+  overflow-x: auto;
+  overflow-y: hidden;
+}
+/* =========================
+   Typography foundation
+========================= */
+
+/* Chat bubble content baseline */
+.messageBody,
+.mdChatContainer {
+  font-family: var(--font-body);
+  font-size: var(--font-size-body);
+  font-weight: var(--font-weight-regular);
+  line-height: 1.65;
+  color: rgba(241, 245, 249, 0.92);
+
+  /* Wrapping rules for normal prose */
+  overflow-wrap: anywhere;
+  word-break: normal;
+  hyphens: auto;
+}
+
+/* Keep readable line length inside bubbles */
+.mdChatContainer .mdP,
+.mdChatContainer .mdUl,
+.mdChatContainer .mdOl,
+.mdChatContainer .mdQuote {
+  max-width: 76ch;
+}
+
+/* Links can be long — ensure they wrap */
+.mdLink {
+  overflow-wrap: anywhere;
+}
+
+/* Docs/Artifacts container */
+.mdDocContainer {
+  font-family: var(--font-body);
+  font-size: var(--font-size-body);
+  line-height: 1.7;
+  color: rgba(241, 245, 249, 0.92);
+  overflow-wrap: anywhere;
+  hyphens: auto;
+  max-width: 92ch;
+}
+
+/* Docs headings use your display font + token sizes */
+.mdDocContainer h1,
+.mdDocContainer h2,
+.mdDocContainer h3,
+.mdDocContainer h4 {
+  font-family: var(--font-display);
+  font-weight: var(--font-weight-semibold);
+  color: rgba(245, 245, 220, 0.96);
+  letter-spacing: 0.01em;
+}
+
+/* If you're using mdH1/mdH2 classes, set them to token sizes */
+.mdH1 { font-size: var(--font-size-h1); margin: 0 0 12px 0; line-height: 1.18; }
+.mdH2 { font-size: var(--font-size-h2); margin: 16px 0 10px 0; line-height: 1.22; }
+.mdH3 { font-size: var(--font-size-h3); margin: 14px 0 8px 0; line-height: 1.25; }
+.mdH4 { font-size: var(--font-size-h4); margin: 12px 0 6px 0; line-height: 1.28; }
+
+/* Paragraph/list sizing consistent */
+.mdP { margin: 0 0 12px 0; font-size: var(--font-size-body); }
+.mdUl, .mdOl { margin: 0 0 12px 18px; }
+.mdLi { margin: 6px 0; }
+
+/* Code: do NOT wrap; scroll horizontally */
+.mdPre,
+.artifactPreview {
+  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
+  font-size: var(--font-size-body-small);
+  line-height: 1.55;
+  white-space: pre;
+  overflow-x: auto;
+  overflow-y: hidden;
+}
+
+/* Inline code stays readable + consistent */
+.mdInlineCode {
+  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
+  font-size: 0.92em;
+}
+@media (max-width: 720px) {
+  .messageBody,
+  .mdChatContainer,
+  .mdDocContainer {
+    font-size: var(--font-size-body-small);
+  }
+}
