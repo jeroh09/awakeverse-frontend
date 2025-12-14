@@ -1,22 +1,13 @@
 // src/components/VerseStudio/TaskChatWindow.jsx
 import React, { useCallback, useMemo, useRef, useState } from "react";
+import ReactMarkdown from "react-markdown";
+import remarkGfm from "remark-gfm";
 import styles from "./TaskChatWindow.module.css";
 
 function PanelToggleIcon({ collapsed }) {
-  // “Panel” icon (no arrows)
   return (
     <svg width="18" height="18" viewBox="0 0 24 24" aria-hidden="true" focusable="false">
-      <rect
-        x="3"
-        y="4"
-        width="18"
-        height="16"
-        rx="3"
-        ry="3"
-        fill="none"
-        stroke="currentColor"
-        strokeWidth="1.8"
-      />
+      <rect x="3" y="4" width="18" height="16" rx="3" ry="3" fill="none" stroke="currentColor" strokeWidth="1.8" />
       {collapsed ? (
         <>
           <line x1="17" y1="6" x2="17" y2="18" stroke="currentColor" strokeWidth="1.8" />
@@ -36,6 +27,124 @@ function PanelToggleIcon({ collapsed }) {
   );
 }
 
+function normalizeCodeText(children) {
+  // react-markdown often passes code as array of strings/nodes
+  const raw = Array.isArray(children) ? children.join("") : String(children ?? "");
+  // remove trailing newline that markdown code blocks often include
+  return raw.replace(/\n$/, "");
+}
+
+function CopyButton({ getText, label = "Copy" }) {
+  const [copied, setCopied] = useState(false);
+
+  const onCopy = async () => {
+    try {
+      const text = getText();
+      await navigator.clipboard.writeText(text);
+      setCopied(true);
+      window.setTimeout(() => setCopied(false), 900);
+    } catch {
+      // Fallback: best effort
+      try {
+        const text = getText();
+        const ta = document.createElement("textarea");
+        ta.value = text;
+        document.body.appendChild(ta);
+        ta.select();
+        document.execCommand("copy");
+        document.body.removeChild(ta);
+        setCopied(true);
+        window.setTimeout(() => setCopied(false), 900);
+      } catch {
+        // ignore
+      }
+    }
+  };
+
+  return (
+    <button
+      type="button"
+      className={styles.copyCrumb}
+      onClick={onCopy}
+      aria-label={copied ? "Copied" : label}
+      title={copied ? "Copied" : label}
+    >
+      {copied ? "Copied" : label}
+    </button>
+  );
+}
+
+function MarkdownMessage({ text }) {
+  return (
+    <ReactMarkdown
+      remarkPlugins={[remarkGfm]}
+      // Security: do NOT allow raw HTML from the model
+      skipHtml={true}
+      linkTarget="_blank"
+      components={{
+        // Better list spacing / indentation is CSS-driven
+        p({ children }) {
+          return <p className={styles.mdP}>{children}</p>;
+        },
+        ul({ children }) {
+          return <ul className={styles.mdUl}>{children}</ul>;
+        },
+        ol({ children }) {
+          return <ol className={styles.mdOl}>{children}</ol>;
+        },
+        li({ children }) {
+          return <li className={styles.mdLi}>{children}</li>;
+        },
+        a({ href, children }) {
+          return (
+            <a className={styles.mdLink} href={href} rel="noopener noreferrer" target="_blank">
+              {children}
+            </a>
+          );
+        },
+        blockquote({ children }) {
+          return <blockquote className={styles.mdQuote}>{children}</blockquote>;
+        },
+        table({ children }) {
+          return <div className={styles.mdTableWrap}><table className={styles.mdTable}>{children}</table></div>;
+        },
+        th({ children }) {
+          return <th className={styles.mdTh}>{children}</th>;
+        },
+        td({ children }) {
+          return <td className={styles.mdTd}>{children}</td>;
+        },
+        hr() {
+          return <hr className={styles.mdHr} />;
+        },
+        code({ inline, className, children }) {
+          const codeText = normalizeCodeText(children);
+          const match = /language-(\w+)/.exec(className || "");
+          const lang = match?.[1] || "";
+
+          if (inline) {
+            return <code className={styles.mdInlineCode}>{children}</code>;
+          }
+
+          return (
+            <div className={styles.codeBlock}>
+              <div className={styles.codeHeader}>
+                <div className={styles.codeLang}>{lang || "code"}</div>
+                <CopyButton getText={() => codeText} label="Copy" />
+              </div>
+              <pre className={styles.mdPre}>
+                <code className={styles.mdCode}>{codeText}</code>
+              </pre>
+            </div>
+          );
+        }
+      }}
+    >
+      {text || ""}
+    </ReactMarkdown>
+  );
+}
+
 export default function TaskChatWindow({ task, verseStudio, onBack }) {
   const {
     team = [],
@@ -52,7 +161,6 @@ export default function TaskChatWindow({ task, verseStudio, onBack }) {
 
   const [inputText, setInputText] = useState("");
   const [isArtifactsCollapsed, setIsArtifactsCollapsed] = useState(false);
-
   const textareaRef = useRef(null);
 
   const heroTitle = task?.name || "Verse Workspace Task";
@@ -64,10 +172,7 @@ export default function TaskChatWindow({ task, verseStudio, onBack }) {
     ? `${styles.layout} ${styles.layoutArtifactsCollapsed}`
     : styles.layout;
 
-  const hasMessages = useMemo(
-    () => Array.isArray(messages) && messages.length > 0,
-    [messages]
-  );
+  const hasMessages = useMemo(() => Array.isArray(messages) && messages.length > 0, [messages]);
 
   const handleAutoGrow = useCallback(() => {
     const el = textareaRef.current;
@@ -130,7 +235,6 @@ export default function TaskChatWindow({ task, verseStudio, onBack }) {
               {team.length === 0 && (
                 <div className={styles.navEmpty}>Team will appear here once the task starts.</div>
               )}
-
               {team.map((role) => (
                 <div
                   key={role.role_id || role.id}
@@ -157,7 +261,6 @@ export default function TaskChatWindow({ task, verseStudio, onBack }) {
 
         {/* CENTER */}
         <section className={styles.chatSection}>
-          {/* Header — do not touch */}
           <header className={styles.chatHeader}>
             {heroImageUrl && (
               <div className={styles.heroImageBackdrop} aria-hidden="true">
@@ -165,14 +268,12 @@ export default function TaskChatWindow({ task, verseStudio, onBack }) {
                 <div className={styles.heroImageOverlay} />
               </div>
             )}
-
             <div className={styles.headerContent}>
               <h1 className={styles.headerTitle}>{heroTitle}</h1>
               <p className={styles.headerSubtitle}>{heroSubtitle}</p>
             </div>
           </header>
 
-          {/* The ONLY scroll container */}
           <div className={styles.messagesScroll}>
             {!hasMessages && (
               <div className={styles.emptyState}>
@@ -197,12 +298,22 @@ export default function TaskChatWindow({ task, verseStudio, onBack }) {
                   <span className={styles.messageRole}>
                     {message.user ? "You" : message.role_name || "Assistant"}
                   </span>
+
+                  {/* Optional: copy whole message (handy for long outputs) */}
+                  {!message.user && (
+                    <CopyButton
+                      getText={() => String(message.text || "")}
+                      label="Copy message"
+                    />
+                  )}
                 </div>
-                <div className={styles.messageBody}>{message.text}</div>
+
+                <div className={styles.messageBody}>
+                  <MarkdownMessage text={message.text} />
+                </div>
               </div>
             ))}
 
-            {/* Handoff stays inside scroll region */}
             {showHandoffPrompt && handoffSuggestion && (
               <div className={styles.handoffPrompt}>
                 <div className={styles.handoffText}>
@@ -226,7 +337,7 @@ export default function TaskChatWindow({ task, verseStudio, onBack }) {
             )}
           </div>
 
-          {/* OPTION B: Overlay fade + overlay composer */}
+          {/* Fade + overlay composer (as you approved) */}
           <div className={styles.composerFade} aria-hidden="true" />
           <div className={styles.composerOverlay} role="region" aria-label="Message composer">
             <div className={styles.composerInner}>

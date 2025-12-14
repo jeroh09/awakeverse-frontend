@@ -615,3 +615,197 @@
   padding-left: 16px;
   padding-right: 16px;
 }
+/* ===== Fix: remove double border in composer pill ===== */
+
+/* Keep ONLY the single border on the pill container */
+.composerInner {
+  box-shadow: none !important; /* kills “inner ring” look if shadow reads as border */
+}
+
+/* Ensure textarea itself never draws a border/ring */
+.composerInput {
+  border: none !important;
+  outline: none !important;
+  box-shadow: none !important;
+}
+
+/* If any focus styling is creating a second ring, keep it subtle and on the same border */
+.composerInner:focus-within {
+  /* Optional: either nothing… */
+  /* box-shadow: none !important; */
+
+  /* …or a single soft glow (NOT a second border) */
+  box-shadow: 0 18px 40px rgba(99, 102, 241, 0.35) !important;
+}
+/* ================================
+   Markdown rendering + Copy blocks
+================================== */
+
+/* Fix: remove “double border” feeling in composer pill */
+.composerInner {
+  /* keep a single border; remove any ring-like shadow */
+  box-shadow: 0 24px 60px rgba(0, 0, 0, 0.45) !important;
+}
+.composerInput {
+  border: none !important;
+  outline: none !important;
+  box-shadow: none !important;
+}
+.composerInner:focus-within {
+  /* single glow, not a second border ring */
+  box-shadow:
+    0 24px 60px rgba(0, 0, 0, 0.45),
+    0 0 0 0 rgba(0,0,0,0) !important;
+}
+
+/* Message body markdown base */
+.messageBody {
+  /* ensure markdown inherits bubble typography nicely */
+  color: inherit;
+}
+
+/* Paragraph spacing */
+.mdP {
+  margin: 0 0 8px;
+}
+.mdP:last-child {
+  margin-bottom: 0;
+}
+
+/* Lists */
+.mdUl,
+.mdOl {
+  margin: 6px 0 10px;
+  padding-left: 1.15rem; /* good indentation */
+}
+.mdLi {
+  margin: 3px 0;
+}
+.mdLi > .mdUl,
+.mdLi > .mdOl {
+  margin-top: 6px;
+}
+
+/* Inline code */
+.mdInlineCode {
+  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
+  font-size: 0.92em;
+  padding: 0.12em 0.38em;
+  border-radius: 8px;
+  border: 1px solid rgba(148, 163, 184, 0.25);
+  background: rgba(10, 15, 26, 0.45);
+}
+
+/* Blockquotes */
+.mdQuote {
+  margin: 8px 0;
+  padding: 10px 12px;
+  border-left: 3px solid rgba(129, 140, 248, 0.65);
+  border-radius: 12px;
+  background: rgba(10, 15, 26, 0.40);
+  color: rgba(241, 245, 249, 0.92);
+}
+
+/* Tables (GFM) */
+.mdTableWrap {
+  overflow-x: auto;
+  margin: 10px 0;
+  border-radius: 12px;
+  border: 1px solid rgba(148, 163, 184, 0.18);
+  background: rgba(10, 15, 26, 0.35);
+}
+.mdTable {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 12px;
+}
+.mdTh, .mdTd {
+  padding: 10px 10px;
+  border-bottom: 1px solid rgba(148, 163, 184, 0.14);
+}
+.mdTh {
+  text-align: left;
+  color: rgba(245, 245, 220, 0.95);
+  font-weight: 600;
+}
+.mdTd {
+  color: rgba(241, 245, 249, 0.90);
+}
+
+/* Horizontal rule */
+.mdHr {
+  border: none;
+  height: 1px;
+  background: rgba(148, 163, 184, 0.18);
+  margin: 12px 0;
+}
+
+/* Code block container with “copy breadcrumb” */
+.codeBlock {
+  margin: 10px 0 12px;
+  border-radius: 14px;
+  border: 1px solid rgba(129, 140, 248, 0.28);
+  background: rgba(10, 15, 26, 0.55);
+  overflow: hidden;
+}
+
+/* Code “breadcrumb” header */
+.codeHeader {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+
+  padding: 8px 10px;
+  border-bottom: 1px solid rgba(148, 163, 184, 0.16);
+  background: linear-gradient(180deg, rgba(20,27,46,0.45), rgba(10,15,26,0.35));
+}
+
+.codeLang {
+  font-size: 11px;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: rgba(148, 163, 184, 0.95);
+}
+
+/* Breadcrumb copy button */
+.copyCrumb {
+  border: 1px solid rgba(148, 163, 184, 0.22);
+  background: rgba(15, 23, 42, 0.50);
+  color: rgba(241, 245, 249, 0.92);
+  border-radius: 999px;
+  padding: 6px 10px;
+  font-size: 11px;
+  cursor: pointer;
+  transition: var(--transition-fast);
+  white-space: nowrap;
+}
+.copyCrumb:hover {
+  border-color: rgba(129, 140, 248, 0.55);
+  box-shadow: 0 0 0 1px rgba(99, 102, 241, 0.25);
+}
+.copyCrumb:active {
+  transform: translateY(1px);
+}
+
+/* Code text */
+.mdPre {
+  margin: 0;
+  padding: 12px 12px 14px;
+  overflow-x: auto;
+}
+.mdCode {
+  display: block;
+  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
+  font-size: 12.5px;
+  line-height: 1.55;
+  color: rgba(241, 245, 249, 0.95);
+}
+
+/* Optional: tighten meta row now that we have copy controls */
+.messageMeta {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+}

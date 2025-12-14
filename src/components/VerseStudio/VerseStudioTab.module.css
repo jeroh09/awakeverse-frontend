@@ -873,3 +873,30 @@
   font-size: 0.68rem;
   color: var(--text-muted);
 }
+/* src/components/VerseStudio/VerseStudioTab.module.css */
+
+/* keep all your existing styles as-is — only the grid/card-related bits are adjusted */
+
+.verseStudioTab{
+  width: 100%;
+}
+
+/* (Everything above stays whatever you already have in your file) */
+
+/* ===== TEMPLATES GRID ===== */
+/* Make grid align better for full-background cards */
+.templatesGrid{
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 12px;
+}
+
+/* If you previously had .templateCard/.templateTitle/.templateDesc styles,
+   you can leave them (harmless), but they’re now unused. */
+
+/* Responsive */
+@media (max-width: 980px){
+  .templatesGrid{
+    grid-template-columns: 1fr;
+  }
+}

@@ -25,6 +25,7 @@
     "react-textarea-autosize": "^8.5.9",
     "react-virtualized-auto-sizer": "^1.0.26",
     "react-window": "^1.8.11",
+    "remark-gfm": "^4.0.1",
     "socket.io-client": "^4.8.1",
     "web-vitals": "^2.1.4"
   },
