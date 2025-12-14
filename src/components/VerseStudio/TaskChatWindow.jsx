@@ -56,10 +56,6 @@ function CopyButton({ getText, label = "Copy" }) {
 
 
 // --- helpers ---
-function normalizeCodeText(children) {
-  const raw = Array.isArray(children) ? children.join("") : String(children ?? "");
-  return raw.replace(/\n$/, "");
-}
 
 function slugify(raw) {
   return String(raw || "")
@@ -84,11 +80,6 @@ function slugify(raw) {
 // import remarkGfm from "remark-gfm";
 // import remarkMath from "remark-math";
 // import rehypeKatex from "rehype-katex";
-
-function normalizeCodeText(children) {
-  const raw = Array.isArray(children) ? children.join("") : String(children ?? "");
-  return raw.replace(/\n$/, "");
-}
 
 function slugify(raw) {
   return String(raw || "")
