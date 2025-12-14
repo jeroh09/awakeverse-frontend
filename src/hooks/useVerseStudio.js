@@ -45,6 +45,9 @@ export default function useVerseStudio() {
   const [team, setTeam] = useState([]);
   const [messages, setMessages] = useState([]);
 
+  // ✅ NEW: Artifacts state (backend-owned)
+  const [artifacts, setArtifacts] = useState([]);
+
   // LLM options (for TaskCreator / selection UX)
   const [llmOptions, setLlmOptions] = useState([]);
   const [llmOptionsLoading, setLlmOptionsLoading] = useState(false);
@@ -93,8 +96,6 @@ export default function useVerseStudio() {
     try {
       setLlmOptionsLoading(true);
 
-      // If you later add a backend route, this will start working automatically.
-      // Suggested future endpoint: GET /api/verse-studio/llms
       const res = await fetch(`${API_BASE}/api/verse-studio/llms`, {
         method: 'GET',
         headers: { 'Content-Type': 'application/json' },
@@ -111,7 +112,6 @@ export default function useVerseStudio() {
         }
       }
 
-      // If endpoint missing or returns empty
       setLlmOptions(FALLBACK_LLM_OPTIONS);
       return FALLBACK_LLM_OPTIONS;
     } catch (e) {
@@ -163,6 +163,45 @@ export default function useVerseStudio() {
   }, []);
 
   // ========================================================================
+  // ✅ REFRESH ARTIFACTS ONLY (safe; does not overwrite chat state)
+  // ========================================================================
+  const refreshArtifacts = useCallback(async (taskIdToFetch) => {
+    if (!taskIdToFetch) return [];
+
+    try {
+      const res = await fetch(`${API_BASE}/api/verse-studio/task/${taskIdToFetch}`, {
+        method: 'GET',
+        headers: { 'Content-Type': 'application/json' },
+        credentials: 'include'
+      });
+
+      if (!res.ok) {
+        const err = await res.json().catch(() => ({}));
+        throw new Error(err.error || `Failed to refresh artifacts (${res.status})`);
+      }
+
+      const data = await res.json();
+
+      // Backend may return artifacts at data.artifacts or data.task.artifacts
+      const nextArtifacts =
+        data?.artifacts ||
+        data?.task?.artifacts ||
+        [];
+
+      if (Array.isArray(nextArtifacts)) {
+        setArtifacts(nextArtifacts);
+        return nextArtifacts;
+      }
+
+      setArtifacts([]);
+      return [];
+    } catch (e) {
+      console.warn('⚠️ refreshArtifacts failed:', e);
+      return [];
+    }
+  }, []);
+
+  // ========================================================================
   // CREATE TASK
   // ========================================================================
   const createTask = useCallback(
@@ -171,19 +210,14 @@ export default function useVerseStudio() {
         const csrf =
           document.cookie.match(/(?:^|;\s*)av_csrf=([^;]+)/)?.[1] || '';
 
-        // ----------------------------
-        // Normalize payload for backend
-        // ----------------------------
         const payload = {
           name: taskData?.name,
           description: taskData?.description || '',
         };
 
-        // Template-based
         if (taskData?.template_id) {
           payload.template_id = taskData.template_id;
 
-          // Prefer llm_preferences (2–3 models), but accept a few caller variants safely
           const prefs =
             taskData.llm_preferences ||
             taskData.llm_ids ||
@@ -193,22 +227,18 @@ export default function useVerseStudio() {
 
           if (Array.isArray(prefs) && prefs.length) {
             payload.llm_preferences = prefs;
-            // harmless alias (backend ignores if not used)
             payload.llm_ids = prefs;
           }
 
-          // Optional per-role overrides (future: UI swaps per role)
           if (taskData.llm_swaps && typeof taskData.llm_swaps === 'object') {
             payload.llm_swaps = taskData.llm_swaps;
           }
         }
 
-        // Custom team-based (existing behavior)
         if (taskData?.llm_assignments && typeof taskData.llm_assignments === 'object') {
           payload.llm_assignments = taskData.llm_assignments;
         }
 
-        // Clean undefined/null keys (keeps JSON tidy)
         Object.keys(payload).forEach((k) => {
           if (payload[k] === undefined || payload[k] === null) delete payload[k];
         });
@@ -232,7 +262,6 @@ export default function useVerseStudio() {
 
         const data = await response.json();
 
-        // ✅ backend returns { task: { task_id: ... }, team: ... }
         const newTaskId = data?.task?.task_id || data?.task_id;
 
         if (!newTaskId) {
@@ -242,6 +271,7 @@ export default function useVerseStudio() {
         setTaskId(newTaskId);
         setTeam(data.team || []);
         setMessages([]);
+        setArtifacts([]); // ✅ reset artifacts
         messageIdCounter.current = 0;
 
         console.log('✅ Task created:', newTaskId);
@@ -264,8 +294,7 @@ export default function useVerseStudio() {
     [fetchUsage]
   );
 
-
-    // ========================================================================
+  // ========================================================================
   // LOAD TASK (Resume)
   // ========================================================================
   const loadTask = useCallback(
@@ -288,7 +317,6 @@ export default function useVerseStudio() {
 
         const loadedTaskId = data?.task?.task_id || data?.task_id || taskIdToLoad;
 
-        // Team + messages may be at top-level or inside context payload
         const loadedTeam = data?.team || [];
         const loadedMessages =
           data?.messages ||
@@ -296,7 +324,12 @@ export default function useVerseStudio() {
           data?.history ||
           [];
 
-        // ✅ map role_id -> role_name from team
+        // ✅ NEW: artifacts from backend
+        const loadedArtifacts =
+          data?.artifacts ||
+          data?.task?.artifacts ||
+          [];
+
         const teamRoleNameById = {};
         (loadedTeam || []).forEach((r) => {
           const rid = r.role_id || r.id || r.key;
@@ -332,16 +365,16 @@ export default function useVerseStudio() {
               };
             })
           : [];
+
         setTaskId(loadedTaskId);
         setTeam(loadedTeam);
         setMessages(normalizedMessages);
+        setArtifacts(Array.isArray(loadedArtifacts) ? loadedArtifacts : []);
 
-        // Reset counter so new messages get unique ids above existing list
         messageIdCounter.current = normalizedMessages.length
           ? normalizedMessages.length + 1
           : 0;
 
-        // Load usage from response if present, else fetch usage endpoint
         if (data?.usage) {
           setUsageData({
             messages_count: data.usage.messages_count || 0,
@@ -365,14 +398,12 @@ export default function useVerseStudio() {
     [fetchUsage]
   );
 
-
   // ========================================================================
   // SEND MESSAGE (SSE Streaming)
   // ========================================================================
   const sendMessage = useCallback(
     async (messageText, mention = null) => {
       if (!taskId || !messageText.trim()) {
-        // Note: we still allow empty sends for mention handoffs elsewhere.
         if (!taskId) {
           console.error('❌ sendMessage: Missing taskId');
           return;
@@ -391,12 +422,10 @@ export default function useVerseStudio() {
       controllerRef.current = controller;
       setIsSending(true);
 
-      // Clear previous handoff suggestion
       setHandoffSuggestion(null);
       setShowHandoffPrompt(false);
 
       try {
-        // Add user message (only if there is actual content)
         if (messageText && messageText.trim()) {
           const userMessageId = generateMessageId();
           const userMessage = {
@@ -410,7 +439,6 @@ export default function useVerseStudio() {
           console.log('📤 Sending message:', { id: userMessageId, text: messageText });
         }
 
-        // Send to API
         const csrf =
           document.cookie.match(/(?:^|;\s*)av_csrf=([^;]+)/)?.[1] || '';
         const response = await fetch(
@@ -424,7 +452,7 @@ export default function useVerseStudio() {
             credentials: 'include',
             body: JSON.stringify({
               content: messageText,
-              mention: mention // Direct @mention if specified
+              mention: mention
             }),
             signal: controller.signal
           }
@@ -434,7 +462,6 @@ export default function useVerseStudio() {
           throw new Error(`API failed: ${response.status} ${response.statusText}`);
         }
 
-        // Parse SSE stream
         const reader = response.body.getReader();
         const decoder = new TextDecoder();
 
@@ -457,7 +484,6 @@ export default function useVerseStudio() {
 
               const { type } = data;
 
-              // Response start - new role speaking
               if (type === 'response_start') {
                 const { role_id, role_name } = data;
 
@@ -477,12 +503,7 @@ export default function useVerseStudio() {
                     timestamp: Date.now()
                   }
                 ]);
-
-                console.log(`🎤 ${role_name} started speaking`);
-              }
-
-              // Token - stream content
-              else if (type === 'token' && currentMessageId !== null) {
+              } else if (type === 'token' && currentMessageId !== null) {
                 const { content } = data;
                 currentBuffer += content;
 
@@ -499,43 +520,24 @@ export default function useVerseStudio() {
 
                   return copy;
                 });
-              }
-
-              // Response complete
-              else if (type === 'response_complete') {
-                const { role_id, tokens_used } = data;
-
-                console.log(`✅ ${role_id} completed (${tokens_used} tokens)`);
-
+              } else if (type === 'response_complete') {
                 setActiveRole(null);
                 currentMessageId = null;
                 currentBuffer = '';
-              }
-
-              // Done event with handoff suggestion
-              else if (type === 'done') {
+              } else if (type === 'done') {
                 const { warnings, suggested_next } = data;
-
-                console.log('✅ Stream complete');
 
                 if (warnings && warnings.length > 0) {
                   console.warn('⚠️ Warnings:', warnings);
                 }
 
                 if (suggested_next) {
-                  console.log('💡 Handoff suggestion:', suggested_next);
-
                   setHandoffSuggestion(suggested_next);
-
                   if (suggested_next.source === 'handoff') {
                     setShowHandoffPrompt(true);
                   }
                 }
-              }
-
-              // Error
-              else if (type === 'error') {
-                console.error('❌ Backend error:', data.error);
+              } else if (type === 'error') {
                 throw new Error(data.error);
               }
             } catch (parseError) {
@@ -544,7 +546,6 @@ export default function useVerseStudio() {
           }
         }
 
-        // Update usage (optimistic)
         setUsageData((prev) => ({
           ...prev,
           messages_count: prev.messages_count + 1,
@@ -553,6 +554,9 @@ export default function useVerseStudio() {
         }));
 
         await fetchUsage(taskId);
+
+        // ✅ NEW: refresh artifacts only after the response is fully created
+        await refreshArtifacts(taskId);
 
         setCircuitBreakerState({
           errorCount: 0,
@@ -593,7 +597,7 @@ export default function useVerseStudio() {
         controllerRef.current = null;
       }
     },
-    [taskId, circuitBreakerState.status, usageData, fetchUsage, generateMessageId]
+    [taskId, circuitBreakerState.status, usageData, fetchUsage, generateMessageId, refreshArtifacts]
   );
 
   // ========================================================================
@@ -601,8 +605,6 @@ export default function useVerseStudio() {
   // ========================================================================
   const confirmHandoff = useCallback(() => {
     if (!handoffSuggestion) return;
-
-    console.log('✅ User confirmed handoff to:', handoffSuggestion.to_role_id);
 
     sendMessage('', handoffSuggestion.to_role_id);
 
@@ -612,8 +614,6 @@ export default function useVerseStudio() {
 
   const switchToRole = useCallback(
     (roleId) => {
-      console.log('🔄 User switching to:', roleId);
-
       sendMessage('', roleId);
 
       setHandoffSuggestion(null);
@@ -623,7 +623,6 @@ export default function useVerseStudio() {
   );
 
   const cancelHandoff = useCallback(() => {
-    console.log('❌ User canceled handoff');
     setShowHandoffPrompt(false);
   }, []);
 
@@ -654,6 +653,7 @@ export default function useVerseStudio() {
     setTaskId(null);
     setTeam([]);
     setMessages([]);
+    setArtifacts([]); // ✅ reset artifacts
     messageIdCounter.current = 0;
     setHandoffSuggestion(null);
     setShowHandoffPrompt(false);
@@ -678,6 +678,7 @@ export default function useVerseStudio() {
     taskId,
     team,
     messages,
+    artifacts, // ✅ expose artifacts
 
     // LLM options
     llmOptions,
@@ -705,6 +706,9 @@ export default function useVerseStudio() {
     stopStream,
     resetTask,
     loadTask,
+
+    // ✅ NEW
+    refreshArtifacts,
 
     // Handoff actions
     confirmHandoff,
