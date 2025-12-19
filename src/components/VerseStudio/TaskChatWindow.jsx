@@ -5,6 +5,7 @@ import remarkGfm from "remark-gfm";
 import remarkMath from "remark-math";
 import rehypeKatex from "rehype-katex";
 import styles from "./TaskChatWindow.module.css";
+import IntelligenceTab from "./IntelligenceTab"; // NEW
 
 const API_BASE = process.env.REACT_APP_API_URL || "https://api.awakeverse.com";
 const MAX_UPLOAD_BYTES = 5 * 1024 * 1024; // 5MB
@@ -337,6 +338,7 @@ export default function TaskChatWindow({ task, verseStudio, onBack }) {
   const [isArtifactsCollapsed, setIsArtifactsCollapsed] = useState(false);
   const [showAllArtifacts, setShowAllArtifacts] = useState(false);
   const [expandedIds, setExpandedIds] = useState(() => new Set());
+  const [activeArtifactTab, setActiveArtifactTab] = useState('artifacts');
 
   // ✅ NEW: attachments persist in the composer until Send
   const [attachments, setAttachments] = useState([]); // { localId, name, size, status, documentId, error }
@@ -836,7 +838,7 @@ export default function TaskChatWindow({ task, verseStudio, onBack }) {
           </div>
         </section>
 
-        {/* RIGHT */}
+      {/* RIGHT */}
         <aside
           className={
             isArtifactsCollapsed
@@ -848,14 +850,38 @@ export default function TaskChatWindow({ task, verseStudio, onBack }) {
             <div className={styles.artifactsHeaderRow}>
               {!isArtifactsCollapsed && (
                 <div className={styles.artifactsTabs}>
-                  <button type="button" className={`${styles.artifactsTab} ${styles.artifactsTabActive}`}>
+                  <button 
+                    type="button" 
+                    className={`${styles.artifactsTab} ${activeArtifactTab === 'artifacts' ? styles.artifactsTabActive : ''}`}
+                    onClick={() => setActiveArtifactTab('artifacts')}
+                  >
                     Artifacts
                   </button>
-                  <button type="button" className={styles.artifactsTab}>
+                  <button 
+                    type="button" 
+                    className={`${styles.artifactsTab} ${activeArtifactTab === 'docs' ? styles.artifactsTabActive : ''}`}
+                    onClick={() => setActiveArtifactTab('docs')}
+                  >
                     Docs
                   </button>
-                  <button type="button" className={styles.artifactsTab}>
+                  <button 
+                    type="button" 
+                    className={`${styles.artifactsTab} ${activeArtifactTab === 'resources' ? styles.artifactsTabActive : ''}`}
+                    onClick={() => setActiveArtifactTab('resources')}
+                  >
                     Resources
+                  </button>
+                  <button 
+                    type="button" 
+                    className={`${styles.artifactsTab} ${activeArtifactTab === 'intelligence' ? styles.artifactsTabActive : ''}`}
+                    onClick={() => setActiveArtifactTab('intelligence')}
+                  >
+                    Intelligence
+                    {verseStudio?.constitutionalDecisions?.length > 0 && (
+                      <span className={styles.intelligenceBadge}>
+                        {verseStudio.constitutionalDecisions.length}
+                      </span>
+                    )}
                   </button>
                 </div>
               )}
@@ -871,7 +897,7 @@ export default function TaskChatWindow({ task, verseStudio, onBack }) {
               </button>
             </div>
 
-            {!isArtifactsCollapsed && (
+            {!isArtifactsCollapsed && activeArtifactTab === 'artifacts' && (
               <div className={styles.artifactsControls}>
                 <label className={styles.artifactsToggleRow}>
                   <input
@@ -895,54 +921,85 @@ export default function TaskChatWindow({ task, verseStudio, onBack }) {
             </div>
           ) : (
             <div className={styles.artifactsContent}>
-              {visibleArtifacts.length === 0 ? (
-                <div className={styles.artifactsEmpty}>
-                  <div className={styles.artifactsEmptyTitle}>No file-worthy artifacts yet.</div>
-                  <p className={styles.artifactsEmptyBody}>
-                    When the team produces larger “page” outputs (files, plans, docs), they’ll appear here. Toggle
-                    <strong> Show all</strong> to view everything.
-                  </p>
-                </div>
-              ) : (
-                <div className={styles.artifactsList}>
-                  {visibleArtifacts.map((a, idx) => {
-                    const id = a?.id || a?.artifact_id || `${idx}`;
-                    const label = artifactLabel(a, idx);
-                    const content = String(a?.content || a?.text || a?.body || "");
-                    const expanded = expandedIds.has(id);
-                    const dl = artifactDownloadUrl(a);
+              {activeArtifactTab === 'artifacts' && (
+                <>
+                  {visibleArtifacts.length === 0 ? (
+                    <div className={styles.artifactsEmpty}>
+                      <div className={styles.artifactsEmptyTitle}>No file-worthy artifacts yet.</div>
+                      <p className={styles.artifactsEmptyBody}>
+                        When the team produces larger "page" outputs (files, plans, docs), they'll appear here. Toggle
+                        <strong> Show all</strong> to view everything.
+                      </p>
+                    </div>
+                  ) : (
+                    <div className={styles.artifactsList}>
+                      {visibleArtifacts.map((a, idx) => {
+                        const id = a?.id || a?.artifact_id || `${idx}`;
+                        const label = artifactLabel(a, idx);
+                        const content = String(a?.content || a?.text || a?.body || "");
+                        const expanded = expandedIds.has(id);
+                        const dl = artifactDownloadUrl(a);
 
-                    return (
-                      <div key={id} className={styles.artifactCard}>
-                        <div className={styles.artifactTop}>
-                          <button
-                            type="button"
-                            className={styles.artifactTitle}
-                            onClick={() => toggleExpanded(id)}
-                            title={expanded ? "Collapse" : "Expand"}
-                          >
-                            {label}
-                          </button>
+                        return (
+                          <div key={id} className={styles.artifactCard}>
+                            <div className={styles.artifactTop}>
+                              <button
+                                type="button"
+                                className={styles.artifactTitle}
+                                onClick={() => toggleExpanded(id)}
+                                title={expanded ? "Collapse" : "Expand"}
+                              >
+                                {label}
+                              </button>
 
-                          <div className={styles.artifactActions}>
-                            <CopyButton getText={() => content} label="Copy" />
-                            {dl && (
-                              <a className={styles.artifactDownload} href={dl} target="_blank" rel="noreferrer">
-                                Download
-                              </a>
+                              <div className={styles.artifactActions}>
+                                <CopyButton getText={() => content} label="Copy" />
+                                {dl && (
+                                  <a className={styles.artifactDownload} href={dl} target="_blank" rel="noreferrer">
+                                    Download
+                                  </a>
+                                )}
+                              </div>
+                            </div>
+
+                            {expanded && (
+                              <pre className={styles.artifactPreview}>
+                                <code>{content}</code>
+                              </pre>
                             )}
                           </div>
-                        </div>
+                        );
+                      })}
+                    </div>
+                  )}
+                </>
+              )}
 
-                        {expanded && (
-                          <pre className={styles.artifactPreview}>
-                            <code>{content}</code>
-                          </pre>
-                        )}
-                      </div>
-                    );
-                  })}
+              {activeArtifactTab === 'docs' && (
+                <div className={styles.artifactsEmpty}>
+                  <div className={styles.artifactsEmptyTitle}>Documentation</div>
+                  <p className={styles.artifactsEmptyBody}>
+                    Generated documentation from your workspace will appear here.
+                  </p>
                 </div>
+              )}
+
+              {activeArtifactTab === 'resources' && (
+                <div className={styles.artifactsEmpty}>
+                  <div className={styles.artifactsEmptyTitle}>Resources</div>
+                  <p className={styles.artifactsEmptyBody}>
+                    Reference materials, links, and resources will appear here.
+                  </p>
+                </div>
+              )}
+
+              {activeArtifactTab === 'intelligence' && (
+                <IntelligenceTab
+                  constitutionalDecisions={verseStudio?.constitutionalDecisions || []}
+                  semanticStats={verseStudio?.semanticStats}
+                  intelligenceStats={verseStudio?.intelligenceStats}
+                  isLoading={verseStudio?.constitutionalLoading || verseStudio?.intelligenceStatsLoading}
+                />
               )}
             </div>
           )}

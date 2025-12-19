@@ -1221,3 +1221,40 @@
     font-size: var(--font-size-body-small);
   }
 }
+/* Add to the existing styles for artifacts tabs */
+.artifactsTabs {
+  display: inline-flex;
+  background: rgba(15, 23, 42, 0.98);
+  border-radius: 999px;
+  padding: 2px;
+  overflow-x: auto;
+  max-width: 100%;
+}
+
+.artifactsTab {
+  border: none;
+  border-radius: 999px;
+  padding: 6px 10px;
+  font-size: 11px;
+  color: var(--text-secondary);
+  background: transparent;
+  cursor: pointer;
+  white-space: nowrap;
+  flex-shrink: 0;
+}
+
+.artifactsTabActive {
+  background: rgba(15, 23, 42, 0.98);
+  color: var(--text-primary);
+  box-shadow: 0 0 0 1px rgba(99, 102, 241, 0.6);
+}
+
+/* Intelligence tab specific */
+.intelligenceBadge {
+  margin-left: 4px;
+  font-size: 9px;
+  padding: 1px 4px;
+  border-radius: 999px;
+  background: rgba(99, 102, 241, 0.2);
+  color: rgba(99, 102, 241, 0.9);
+}

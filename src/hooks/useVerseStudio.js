@@ -71,6 +71,21 @@ export default function useVerseStudio() {
   });
   const [usageLoading, setUsageLoading] = useState(false);
 
+  // Intelligence Stack state
+  const [constitutionalDecisions, setConstitutionalDecisions] = useState([]);
+  const [constitutionalLoading, setConstitutionalLoading] = useState(false);
+  
+  const [semanticStats, setSemanticStats] = useState({
+    indexed_messages: 0,
+    total_messages: 0,
+    search_enabled: false,
+    average_savings: 0
+  });
+  const [semanticStatsLoading, setSemanticStatsLoading] = useState(false);
+  
+  const [intelligenceStats, setIntelligenceStats] = useState(null);
+  const [intelligenceStatsLoading, setIntelligenceStatsLoading] = useState(false);
+
   // Circuit breaker
   const [circuitBreakerState, setCircuitBreakerState] = useState({
     errorCount: 0,
@@ -159,6 +174,110 @@ export default function useVerseStudio() {
       console.error('⚠️ Failed to fetch usage:', error);
     } finally {
       setUsageLoading(false);
+    }
+  }, []);
+
+  // ========================================================================
+  // INTELLIGENCE STACK: FETCH CONSTITUTIONAL DECISIONS
+  // ========================================================================
+  const fetchConstitutionalDecisions = useCallback(async (taskIdToFetch) => {
+    if (!taskIdToFetch) return;
+
+    try {
+      setConstitutionalLoading(true);
+
+      const response = await fetch(
+        `${API_BASE}/api/verse-studio/task/${taskIdToFetch}/constitutional-decisions`,
+        {
+          method: 'GET',
+          headers: { 'Content-Type': 'application/json' },
+          credentials: 'include'
+        }
+      );
+
+      if (response.ok) {
+        const data = await response.json();
+        setConstitutionalDecisions(data.decisions || []);
+        console.log('📜 Constitutional decisions loaded:', data.decisions?.length || 0);
+      } else {
+        // Graceful degradation - route might not exist yet
+        console.warn('⚠️ Constitutional decisions endpoint unavailable');
+        setConstitutionalDecisions([]);
+      }
+    } catch (error) {
+      console.warn('⚠️ Failed to fetch constitutional decisions:', error);
+      setConstitutionalDecisions([]);
+    } finally {
+      setConstitutionalLoading(false);
+    }
+  }, []);
+
+  // ========================================================================
+  // INTELLIGENCE STACK: FETCH SEMANTIC SEARCH STATS
+  // ========================================================================
+  const fetchSemanticStats = useCallback(async (taskIdToFetch) => {
+    if (!taskIdToFetch) return;
+
+    try {
+      setSemanticStatsLoading(true);
+
+      const response = await fetch(
+        `${API_BASE}/api/verse-studio/task/${taskIdToFetch}/semantic-stats`,
+        {
+          method: 'GET',
+          headers: { 'Content-Type': 'application/json' },
+          credentials: 'include'
+        }
+      );
+
+      if (response.ok) {
+        const data = await response.json();
+        setSemanticStats(data.stats || {
+          indexed_messages: 0,
+          total_messages: 0,
+          search_enabled: false,
+          average_savings: 0
+        });
+        console.log('🔍 Semantic stats loaded:', data.stats);
+      } else {
+        console.warn('⚠️ Semantic stats endpoint unavailable');
+      }
+    } catch (error) {
+      console.warn('⚠️ Failed to fetch semantic stats:', error);
+    } finally {
+      setSemanticStatsLoading(false);
+    }
+  }, []);
+
+  // ========================================================================
+  // INTELLIGENCE STACK: FETCH INTELLIGENCE STATS
+  // ========================================================================
+  const fetchIntelligenceStats = useCallback(async (taskIdToFetch) => {
+    if (!taskIdToFetch) return;
+
+    try {
+      setIntelligenceStatsLoading(true);
+
+      const response = await fetch(
+        `${API_BASE}/api/verse-studio/task/${taskIdToFetch}/intelligence-stats`,
+        {
+          method: 'GET',
+          headers: { 'Content-Type': 'application/json' },
+          credentials: 'include'
+        }
+      );
+
+      if (response.ok) {
+        const data = await response.json();
+        setIntelligenceStats(data);
+        console.log('📊 Intelligence stats loaded:', data);
+      } else {
+        console.warn('⚠️ Intelligence stats endpoint unavailable');
+      }
+    } catch (error) {
+      console.warn('⚠️ Failed to fetch intelligence stats:', error);
+    } finally {
+      setIntelligenceStatsLoading(false);
     }
   }, []);
 
@@ -388,6 +507,13 @@ export default function useVerseStudio() {
           await fetchUsage(loadedTaskId);
         }
 
+        // ✅ INTELLIGENCE STACK: Fetch all intelligence data
+        await Promise.all([
+          fetchConstitutionalDecisions(loadedTaskId),
+          fetchSemanticStats(loadedTaskId),
+          fetchIntelligenceStats(loadedTaskId)
+        ]);
+
         console.log('✅ Task loaded:', loadedTaskId);
         return loadedTaskId;
       } catch (error) {
@@ -395,7 +521,7 @@ export default function useVerseStudio() {
         throw error;
       }
     },
-    [fetchUsage]
+    [fetchUsage, fetchConstitutionalDecisions, fetchSemanticStats, fetchIntelligenceStats]
   );
 
   // ========================================================================
@@ -558,6 +684,13 @@ export default function useVerseStudio() {
         // ✅ NEW: refresh artifacts only after the response is fully created
         await refreshArtifacts(taskId);
 
+        // ✅ INTELLIGENCE STACK: Refresh intelligence data after message
+        await Promise.all([
+          fetchConstitutionalDecisions(taskId),
+          fetchSemanticStats(taskId),
+          fetchIntelligenceStats(taskId)
+        ]);
+
         setCircuitBreakerState({
           errorCount: 0,
           lastError: null,
@@ -597,7 +730,7 @@ export default function useVerseStudio() {
         controllerRef.current = null;
       }
     },
-    [taskId, circuitBreakerState.status, usageData, fetchUsage, generateMessageId, refreshArtifacts]
+    [taskId, circuitBreakerState.status, usageData, fetchUsage, generateMessageId, refreshArtifacts, fetchConstitutionalDecisions, fetchSemanticStats, fetchIntelligenceStats]
   );
 
   // ========================================================================
@@ -665,6 +798,15 @@ export default function useVerseStudio() {
       remaining: 150,
       limitReached: false
     });
+    // ✅ INTELLIGENCE STACK: Reset all intelligence state
+    setConstitutionalDecisions([]);
+    setSemanticStats({
+      indexed_messages: 0,
+      total_messages: 0,
+      search_enabled: false,
+      average_savings: 0
+    });
+    setIntelligenceStats(null);
     setCircuitBreakerState({
       errorCount: 0,
       lastError: null,
@@ -696,6 +838,17 @@ export default function useVerseStudio() {
     // Usage
     usageData,
     usageLoading,
+
+    // Intelligence Stack
+    constitutionalDecisions,
+    constitutionalLoading,
+    fetchConstitutionalDecisions,
+    semanticStats,
+    semanticStatsLoading,
+    fetchSemanticStats,
+    intelligenceStats,
+    intelligenceStatsLoading,
+    fetchIntelligenceStats,
 
     // Circuit breaker
     circuitBreakerState,

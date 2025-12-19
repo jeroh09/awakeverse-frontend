@@ -332,3 +332,50 @@
 .body::-webkit-scrollbar-track {
   background: transparent;
 }
+/* Add to existing styles */
+
+.footerButtonGroup {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.buttonDivider {
+  font-size: 11px;
+  color: var(--vw-text-muted);
+  padding: 0 4px;
+}
+
+.roleAssignmentButton {
+  border-radius: var(--vw-radius-full);
+  padding: 6px 12px;
+  font-size: 12px;
+  border: 1px solid var(--vw-border-subtle);
+  background: rgba(15, 23, 42, 0.96);
+  color: var(--vw-text-secondary);
+  cursor: pointer;
+  white-space: nowrap;
+  transition: all 0.15s ease;
+}
+
+.roleAssignmentButton:hover:not(:disabled) {
+  border-color: rgba(99, 102, 241, 0.5);
+  color: rgba(99, 102, 241, 0.9);
+  background: rgba(15, 23, 42, 0.98);
+}
+
+.roleAssignmentButton:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+@media (max-width: 640px) {
+  .footerButtonGroup {
+    flex-direction: column;
+    gap: 6px;
+  }
+  
+  .buttonDivider {
+    display: none;
+  }
+}

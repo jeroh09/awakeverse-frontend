@@ -1,7 +1,7 @@
-// src/components/VerseStudio/TaskCreator.jsx
 import React, { useEffect, useMemo, useState } from 'react';
 import styles from './TaskCreator.module.css';
 import VerseLLMSelector from './VerseLLMSelector';
+import RoleAssignmentStep from './RoleAssignmentStep'; // NEW
 
 export default function TaskCreator({
   isOpen,
@@ -19,6 +19,8 @@ export default function TaskCreator({
   const [name, setName] = useState(initialName);
   const [description, setDescription] = useState(initialDescription);
   const [selectedLlms, setSelectedLlms] = useState([]);
+  const [roleAssignments, setRoleAssignments] = useState([]); // NEW
+  const [showRoleAssignment, setShowRoleAssignment] = useState(false); // NEW
   const [touched, setTouched] = useState(false);
 
   // ✅ IMPORTANT: keep hooks stable regardless of isOpen
@@ -58,6 +60,8 @@ export default function TaskCreator({
       setSelectedLlms([]);
     }
 
+    setRoleAssignments([]); // NEW: Reset role assignments
+    setShowRoleAssignment(false); // NEW: Reset to LLM selection view
     setTouched(false);
   }, [isOpen, template, llmOptions, initialName, initialDescription, minModels, maxModels]);
 
@@ -70,17 +74,45 @@ export default function TaskCreator({
   const showNameError = touched && !name.trim();
   const showLlmError = touched && selectedLlms.length > 0 && selectedLlms.length < minModels;
 
-  const canSubmit =
+  // ✅ PRESERVED ORIGINAL LOGIC
+  const canSubmitDirect =
     name.trim().length > 0 &&
     selectedLlms.length >= minModels &&
     selectedLlms.length <= maxModels &&
     !isCreating;
 
-  const handleSubmit = (e) => {
+  // Check if ready for role assignment
+  const canProceedToRoles = 
+    name.trim().length > 0 &&
+    selectedLlms.length >= minModels &&
+    selectedLlms.length <= maxModels;
+
+  const handleLlmsSelected = (ids) => {
+    setSelectedLlms(ids);
+    setTouched(true);
+    
+    // Clear role assignments when LLMs change
+    if (ids.length !== selectedLlms.length || !ids.every(id => selectedLlms.includes(id))) {
+      setRoleAssignments([]);
+    }
+  };
+
+  const handleProceedToRoleAssignment = () => {
+    if (canProceedToRoles) {
+      setShowRoleAssignment(true);
+    }
+  };
+
+  const handleBackFromRoleAssignment = () => {
+    setShowRoleAssignment(false);
+  };
+
+  // ✅ PRESERVED ORIGINAL SUBMIT (for direct creation)
+  const handleSubmitDirect = (e) => {
     e.preventDefault();
     setTouched(true);
 
-    if (!canSubmit) return;
+    if (!canSubmitDirect) return;
 
     onCreate?.({
       name: name.trim(),
@@ -90,12 +122,52 @@ export default function TaskCreator({
     });
   };
 
+  // ✅ NEW: Submit with role assignments
+  const handleSubmitWithRoles = () => {
+    setTouched(true);
+
+    if (!canProceedToRoles || roleAssignments.length === 0) return;
+
+    // Transform assignments to backend format
+    const custom_roles = roleAssignments.map(assignment => ({
+      role_name: assignment.role_name,
+      llm_id: assignment.llm_id
+    }));
+
+    onCreate?.({
+      name: name.trim(),
+      description: description.trim(),
+      template_id: templateId,
+      llm_preferences: selectedLlms,
+      custom_roles: custom_roles,
+    });
+  };
+
   const templateTag =
     template?.category ||
     template?.use_case ||
     template?.tagline ||
     'Verse Workspace template';
 
+  // If showing role assignment, render that instead
+  if (showRoleAssignment) {
+    return (
+      <div className={styles.overlay} role="dialog" aria-modal="true">
+        <div className={styles.modal}>
+          <RoleAssignmentStep
+            selectedLlms={selectedLlms}
+            llmOptions={llmOptions}
+            initialAssignments={roleAssignments}
+            onAssignmentsChange={setRoleAssignments}
+            onBack={handleBackFromRoleAssignment}
+            onSubmit={handleSubmitWithRoles}
+          />
+        </div>
+      </div>
+    );
+  }
+
+  // ✅ ORIGINAL TaskCreator form (preserved)
   return (
     <div className={styles.overlay} role="dialog" aria-modal="true">
       <div className={styles.modal}>
@@ -142,7 +214,8 @@ export default function TaskCreator({
         </div>
         
 
-        <form className={styles.form} onSubmit={handleSubmit}>
+        {/* ✅ PRESERVED ORIGINAL FORM - with option to go to role assignment */}
+        <form className={styles.form} onSubmit={handleSubmitDirect}>
           <div className={styles.formMainColumn}>
             <label className={styles.field}>
               <span className={styles.fieldLabel}>Task name</span>
@@ -188,10 +261,7 @@ export default function TaskCreator({
             <VerseLLMSelector
               llmOptions={llmOptions}
               selectedIds={selectedLlms}
-              onChange={(ids) => {
-                setSelectedLlms(ids);
-                setTouched(true);
-              }}
+              onChange={handleLlmsSelected}
               minSelection={minModels}
               maxSelection={maxModels}
             />
@@ -201,6 +271,9 @@ export default function TaskCreator({
               </div>
             )}
           </div>
+
+          {/* Hidden submit button for Enter key */}
+          <button type="submit" style={{ display: 'none' }} />
         </form>
 
         <div className={styles.footer}>
@@ -211,14 +284,31 @@ export default function TaskCreator({
             <button type="button" className={styles.secondaryButton} onClick={onCancel}>
               Cancel
             </button>
-            <button
-              type="button"
-              className={`${styles.primaryButton} ${!canSubmit ? styles.primaryButtonDisabled : ''}`}
-              onClick={handleSubmit}
-              disabled={!canSubmit}
-            >
-              {isCreating ? 'Creating workspace…' : 'Create workspace'}
-            </button>
+            
+            {/* ✅ DUAL BUTTON OPTIONS: Quick create OR role assignment */}
+            <div className={styles.footerButtonGroup}>
+              <button
+                type="button"
+                className={`${styles.primaryButton} ${!canSubmitDirect ? styles.primaryButtonDisabled : ''}`}
+                onClick={handleSubmitDirect}
+                disabled={!canSubmitDirect}
+                title="Create with default role assignments"
+              >
+                {isCreating ? 'Creating workspace…' : 'Create workspace'}
+              </button>
+              
+              <div className={styles.buttonDivider}>or</div>
+              
+              <button
+                type="button"
+                className={styles.roleAssignmentButton}
+                onClick={handleProceedToRoleAssignment}
+                disabled={!canProceedToRoles}
+                title="Assign custom roles to each LLM"
+              >
+                Assign roles →
+              </button>
+            </div>
           </div>
         </div>
       </div>
