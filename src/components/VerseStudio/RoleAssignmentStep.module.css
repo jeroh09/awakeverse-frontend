@@ -256,3 +256,54 @@
   color: rgba(59, 130, 246, 0.9);
   border: 1px solid rgba(59, 130, 246, 0.3);
 }
+/* Make RoleAssignmentStep scrollable too */
+.roleAssignmentStep {
+  display: flex;
+  flex-direction: column;
+  max-height: calc(100vh - 40px);
+  overflow: hidden;
+}
+
+.header {
+  flex-shrink: 0;
+}
+
+.assignmentsGrid {
+  flex: 1;
+  overflow-y: auto;
+  min-height: 0;
+  margin: 12px 0;
+  padding-right: 4px;
+}
+
+.assignmentsGrid::-webkit-scrollbar {
+  width: 6px;
+}
+
+.assignmentsGrid::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.assignmentsGrid::-webkit-scrollbar-thumb {
+  background: rgba(148, 163, 184, 0.2);
+  border-radius: 999px;
+}
+
+.footer {
+  flex-shrink: 0;
+  margin-top: auto;
+  padding-top: 12px;
+  border-top: 1px solid rgba(148, 163, 184, 0.15);
+}
+
+/* Responsive for small screens */
+@media (max-height: 700px) {
+  .assignmentCard {
+    padding: 10px;
+    gap: 12px;
+  }
+  
+  .llmDescription {
+    display: none; /* Hide description on very small screens */
+  }
+}

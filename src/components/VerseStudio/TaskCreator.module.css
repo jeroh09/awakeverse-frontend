@@ -379,3 +379,123 @@
     display: none;
   }
 }
+/* Add/update these styles in your existing TaskCreator.module.css */
+
+/* Make modal a flex container */
+.modal {
+  display: flex;
+  flex-direction: column;
+  max-height: calc(100vh - 40px);
+  overflow: hidden;
+}
+
+/* Header fixed */
+.header {
+  flex-shrink: 0;
+}
+
+/* Scrollable body */
+.body {
+  flex: 1;
+  overflow-y: auto;
+  min-height: 0; /* Critical for flex scroll */
+  padding-right: 8px;
+  margin-bottom: 8px;
+}
+
+/* Custom scrollbar */
+.body::-webkit-scrollbar {
+  width: 8px;
+}
+
+.body::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.body::-webkit-scrollbar-thumb {
+  background: rgba(148, 163, 184, 0.25);
+  border-radius: 999px;
+}
+
+.body::-webkit-scrollbar-thumb:hover {
+  background: rgba(148, 163, 184, 0.35);
+}
+
+/* Footer fixed at bottom */
+.footer {
+  flex-shrink: 0;
+  margin-top: auto;
+  padding-top: 12px;
+  border-top: 1px solid rgba(15, 23, 42, 0.9);
+  background: rgba(10, 15, 26, 0.98);
+}
+
+/* Form styling */
+.form {
+  display: grid;
+  grid-template-columns: minmax(0, 1.1fr) minmax(0, 0.9fr);
+  gap: 10px;
+  margin-top: 4px;
+}
+
+/* Footer button group */
+.footerButtonGroup {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.buttonDivider {
+  font-size: 11px;
+  color: var(--vw-text-muted);
+  padding: 0 4px;
+}
+
+.roleAssignmentButton {
+  border-radius: var(--vw-radius-full);
+  padding: 6px 12px;
+  font-size: 12px;
+  border: 1px solid var(--vw-border-subtle);
+  background: rgba(15, 23, 42, 0.96);
+  color: var(--vw-text-secondary);
+  cursor: pointer;
+  white-space: nowrap;
+  transition: all 0.15s ease;
+}
+
+.roleAssignmentButton:hover:not(:disabled) {
+  border-color: rgba(99, 102, 241, 0.5);
+  color: rgba(99, 102, 241, 0.9);
+  background: rgba(15, 23, 42, 0.98);
+}
+
+.roleAssignmentButton:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+/* Responsive */
+@media (max-width: 900px) {
+  .form {
+    grid-template-columns: minmax(0, 1fr);
+  }
+  
+  .footerButtonGroup {
+    flex-direction: column;
+    gap: 6px;
+  }
+  
+  .buttonDivider {
+    display: none;
+  }
+}
+
+@media (max-width: 640px) {
+  .modal {
+    padding: 12px 10px 10px;
+  }
+  
+  .headerTitle {
+    font-size: 16px;
+  }
+}
