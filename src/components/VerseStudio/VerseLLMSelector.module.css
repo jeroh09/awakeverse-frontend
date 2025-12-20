@@ -1,265 +1,336 @@
-/* src/components/VerseWorkspace/VerseLLMSelector.module.css */
+/* src/components/VerseStudio/VerseLLMSelector.module.css */
 
+/* Import design system variables */
+@import '../../design-system/variables.css';
+
+/* ============================================================================
+   SELECTOR ROOT
+   ============================================================================ */
 .selectorRoot {
-  --vw-bg-primary: #0A0F1A;          /* colors.background.canvas */
-  --vw-bg-surface: #141B2E;          /* colors.background.surface */
-  --vw-bg-card: #1C2640;             /* colors.background.interactive */
-  --vw-bg-peak: #243152;             /* colors.background.peak */
-
-  --vw-text-primary: #F1F5F9;        /* text.primary */
-  --vw-text-secondary: #94A3B8;      /* text.secondary */
-  --vw-text-muted: #64748B;          /* text.muted */
-  --vw-text-ivory: #F5F5DC;          /* brand ivory */
-
-  --vw-border-subtle: rgba(148, 163, 184, 0.2);
-  --vw-border-strong: rgba(148, 163, 184, 0.4);
-
-  --vw-accent-primary: #6366F1;      /* accent.primary */
-  --vw-accent-hover: #818CF8;        /* accent.hover */
-  --vw-accent-glow: rgba(99, 102, 241, 0.2);
-
-  --vw-radius-md: 12px;
-  --vw-radius-lg: 16px;
-  --vw-radius-full: 999px;
-
-  --vw-shadow-soft: 0 2px 10px rgba(15, 23, 42, 0.6);
-
-  display: flex;
-  flex-direction: column;
-  gap: 0.75rem;
+    background: var(--bg-surface);
+    border: 1px solid var(--border-subtle);
+    border-radius: var(--border-radius-lg);
+    padding: var(--spacing-lg);
+    box-shadow: var(--shadow-elevation02);
+    transition: var(--transition-normal);
 }
 
-/* Header */
+.selectorRoot:hover {
+    box-shadow: var(--shadow-elevation03);
+}
+
+/* ============================================================================
+   SELECTOR HEADER
+   ============================================================================ */
 .selectorHeader {
-  display: flex;
-  align-items: flex-end;
-  justify-content: space-between;
-  gap: 0.75rem;
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    margin-bottom: var(--spacing-md);
+    padding-bottom: var(--spacing-md);
+    border-bottom: 1px solid var(--border-subtle);
 }
 
 .selectorTitleBlock {
-  display: flex;
-  flex-direction: column;
-  gap: 0.18rem;
+    flex: 1;
 }
 
 .selectorEyebrow {
-  font-size: 11px;
-  letter-spacing: 0.14em;
-  text-transform: uppercase;
-  color: var(--vw-text-secondary);
+    font-family: var(--font-body);
+    font-size: var(--font-size-caption);
+    font-weight: var(--font-weight-semibold);
+    color: var(--brand-ivory-dim);
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    margin-bottom: var(--spacing-xs);
+    display: inline-flex;
+    align-items: center;
+    gap: var(--spacing-xs);
+}
+
+.selectorEyebrow::before {
+    content: '';
+    width: 4px;
+    height: 4px;
+    border-radius: 50%;
+    background: var(--accent-primary);
+    display: inline-block;
 }
 
 .selectorTitle {
-  margin: 0;
-  font-family: "Syne", system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
-  font-size: 15px;
-  font-weight: 600;
-  letter-spacing: 0.05em;
-  color: var(--vw-text-ivory);
+    font-family: var(--font-display);
+    font-size: var(--font-size-h4);
+    font-weight: var(--font-weight-semibold);
+    color: var(--text-primary);
+    margin: 0;
+    line-height: var(--line-height-h4);
 }
 
 .selectorMeta {
-  font-size: 11px;
-  color: var(--vw-text-secondary);
+    display: flex;
+    align-items: center;
 }
 
 .selectorCount {
-  padding: 3px 9px;
-  border-radius: var(--vw-radius-full);
-  border: 1px solid var(--vw-border-subtle);
-  background: rgba(15, 23, 42, 0.9);
+    font-family: var(--font-body);
+    font-size: var(--font-size-body-small);
+    font-weight: var(--font-weight-semibold);
+    color: var(--accent-primary);
+    background: rgba(99, 102, 241, 0.1);
+    padding: var(--spacing-xs) var(--spacing-sm);
+    border-radius: var(--border-radius-full);
+    border: 1px solid rgba(99, 102, 241, 0.2);
 }
 
-/* Hint / helper text */
+/* ============================================================================
+   SELECTOR HINT
+   ============================================================================ */
 .selectorHint {
-  margin: 0;
-  font-size: 12px;
-  color: var(--vw-text-secondary);
+    font-family: var(--font-body);
+    font-size: var(--font-size-body-small);
+    color: var(--text-secondary);
+    line-height: var(--line-height-body-small);
+    margin: 0 0 var(--spacing-lg) 0;
+    padding: var(--spacing-md);
+    background: rgba(99, 102, 241, 0.05);
+    border-radius: var(--border-radius-md);
+    border-left: 3px solid var(--accent-primary);
 }
 
 .selectorHintWarn {
-  color: #fecaca;
+    background: rgba(245, 158, 11, 0.05);
+    border-left-color: var(--semantic-warning);
+    color: var(--semantic-warning);
 }
 
-/* Empty state */
-.selectorEmpty {
-  margin-top: 0.65rem;
-  padding: 0.9rem 0.85rem;
-  border-radius: var(--vw-radius-lg);
-  border: 1px dashed var(--vw-border-subtle);
-  background: rgba(15, 23, 42, 0.96);
-}
-
-.emptyTitle {
-  font-size: 13px;
-  font-weight: 500;
-  color: var(--vw-text-ivory);
-}
-
-.emptyBody {
-  margin: 3px 0 0 0;
-  font-size: 12px;
-  color: var(--vw-text-secondary);
-}
-
-/* Options grid */
+/* ============================================================================
+   OPTIONS GRID
+   ============================================================================ */
 .optionsGrid {
-  margin-top: 0.4rem;
-  display: grid;
-  grid-template-columns: repeat(3, minmax(0, 1fr));
-  gap: 8px;
+    display: flex;
+    flex-direction: column;
+    gap: var(--spacing-md);
 }
 
-/* Card */
+/* ============================================================================
+   OPTION CARD
+   ============================================================================ */
 .optionCard {
-  position: relative;
-  text-align: left;
-  border-radius: var(--vw-radius-lg);
-  padding: 9px 9px 8px;
-  border: 1px solid var(--vw-border-subtle);
-  background: linear-gradient(145deg, rgba(20, 27, 46, 0.96), rgba(10, 15, 26, 0.96));
-  box-shadow: var(--vw-shadow-soft);
-  cursor: pointer;
-  outline: none;
-  transition: transform 0.16s ease-out, box-shadow 0.16s ease-out, border-color 0.16s ease-out, background 0.16s ease-out;
-  color: var(--vw-text-primary);
+    background: var(--bg-interactive);
+    border: 1px solid var(--border-subtle);
+    border-radius: var(--border-radius-md);
+    padding: var(--spacing-md);
+    cursor: pointer;
+    transition: var(--transition-fast);
+    text-align: left;
+    display: flex;
+    flex-direction: column;
+    gap: var(--spacing-sm);
+    position: relative;
+    overflow: hidden;
 }
 
-.optionCard::before {
-  content: "";
-  position: absolute;
-  inset: -40%;
-  opacity: 0;
-  background: radial-gradient(circle at 0 0, var(--vw-accent-glow), transparent 55%);
-  transition: opacity 0.18s ease-out;
-  pointer-events: none;
+.optionCard:hover:not(.optionDisabled) {
+    background: var(--bg-peak);
+    border-color: var(--border-medium);
+    transform: translateY(-2px);
+    box-shadow: var(--shadow-elevation02);
 }
 
-.optionCard:hover {
-  transform: translateY(-1px);
-  border-color: var(--vw-accent-primary);
-  box-shadow: 0 14px 30px rgba(15, 23, 42, 0.9);
-}
-
-.optionCard:hover::before {
-  opacity: 1;
-}
-
-/* Selected state */
 .optionSelected {
-  border-color: var(--vw-accent-primary);
-  box-shadow: 0 0 0 1px rgba(99, 102, 241, 0.7), 0 18px 40px rgba(15, 23, 42, 0.95);
-  background: radial-gradient(circle at 0 0, rgba(99, 102, 241, 0.22), transparent 55%),
-              linear-gradient(145deg, rgba(15, 23, 42, 0.98), rgba(10, 15, 26, 0.98));
+    background: rgba(99, 102, 241, 0.1) !important;
+    border-color: var(--accent-primary) !important;
+    box-shadow: var(--shadow-glow) !important;
 }
 
-/* Disabled because max reached */
+.optionSelected::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: 2px;
+    background: linear-gradient(90deg, var(--accent-primary) 0%, var(--accent-hover) 100%);
+}
+
 .optionDisabled {
-  opacity: 0.52;
-  cursor: not-allowed;
+    opacity: 0.5;
+    cursor: not-allowed;
+    filter: grayscale(0.5);
 }
 
-/* Card content */
+/* ============================================================================
+   OPTION CONTENT
+   ============================================================================ */
 .optionHeaderRow {
-  display: flex;
-  justify-content: space-between;
-  align-items: baseline;
-  gap: 4px;
-  margin-bottom: 2px;
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    margin-bottom: var(--spacing-xs);
 }
 
 .optionName {
-  font-size: 13px;
-  font-weight: 500;
-  color: var(--vw-text-ivory);
+    font-family: var(--font-body);
+    font-size: var(--font-size-body);
+    font-weight: var(--font-weight-semibold);
+    color: var(--text-primary);
+    line-height: var(--line-height-body);
 }
 
 .optionProvider {
-  font-size: 11px;
-  color: var(--vw-text-secondary);
+    font-family: var(--font-body);
+    font-size: var(--font-size-caption);
+    font-weight: var(--font-weight-medium);
+    color: var(--text-secondary);
+    background: var(--bg-surface);
+    padding: 2px 8px;
+    border-radius: var(--border-radius-full);
+    border: 1px solid var(--border-subtle);
 }
 
 .optionDescription {
-  margin: 0;
-  margin-bottom: 5px;
-  font-size: 11px;
-  color: var(--vw-text-secondary);
+    font-family: var(--font-body);
+    font-size: var(--font-size-body-small);
+    color: var(--text-secondary);
+    line-height: var(--line-height-body-small);
+    margin: 0;
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
 }
 
-/* Footer row: tags + check */
+/* ============================================================================
+   OPTION TAGS
+   ============================================================================ */
 .optionFooterRow {
-  display: flex;
-  justify-content: space-between;
-  align-items: flex-end;
-  gap: 6px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-top: var(--spacing-xs);
 }
 
 .optionTags {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 4px;
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--spacing-xs);
+    align-items: center;
 }
 
 .optionTag {
-  font-size: 10px;
-  padding: 3px 6px;
-  border-radius: 999px;
-  border: 1px solid rgba(148, 163, 184, 0.35);
-  background: rgba(15, 23, 42, 0.96);
-  color: var(--vw-text-secondary);
+    font-family: var(--font-body);
+    font-size: 11px;
+    font-weight: var(--font-weight-medium);
+    color: var(--accent-primary);
+    background: rgba(99, 102, 241, 0.1);
+    padding: 3px 8px;
+    border-radius: var(--border-radius-full);
+    border: 1px solid rgba(99, 102, 241, 0.2);
+    text-transform: uppercase;
+    letter-spacing: 0.3px;
 }
 
 .optionTagMore {
-  font-size: 10px;
-  color: var(--vw-text-secondary);
+    font-family: var(--font-body);
+    font-size: 11px;
+    color: var(--text-muted);
+    font-style: italic;
 }
 
 .optionTier {
-  font-size: 10px;
-  padding: 3px 6px;
-  border-radius: 999px;
-  border: 1px solid rgba(234, 179, 8, 0.7);
-  background: rgba(63, 46, 15, 0.9);
-  color: #facc15;
+    font-family: var(--font-body);
+    font-size: 11px;
+    font-weight: var(--font-weight-semibold);
+    color: var(--semantic-success);
+    background: rgba(16, 185, 129, 0.1);
+    padding: 3px 8px;
+    border-radius: var(--border-radius-full);
+    border: 1px solid rgba(16, 185, 129, 0.2);
+    margin-left: var(--spacing-xs);
 }
 
-/* Selection check */
+/* ============================================================================
+   SELECTION INDICATOR
+   ============================================================================ */
 .optionCheckShell {
-  display: flex;
-  flex-direction: column;
-  align-items: flex-end;
-  gap: 3px;
+    display: flex;
+    align-items: center;
+    gap: var(--spacing-xs);
 }
 
 .optionCheckDot {
-  width: 10px;
-  height: 10px;
-  border-radius: 999px;
-  border: 1px solid var(--vw-border-strong);
-  background: rgba(15, 23, 42, 0.95);
+    width: 12px;
+    height: 12px;
+    border-radius: 50%;
+    background: var(--bg-surface);
+    border: 2px solid var(--border-medium);
+    transition: var(--transition-fast);
 }
 
 .optionCheckDotActive {
-  border-color: var(--vw-accent-primary);
-  background: var(--vw-accent-primary);
-  box-shadow: 0 0 0 1px rgba(99, 102, 241, 0.9);
+    background: var(--accent-primary);
+    border-color: var(--accent-primary);
+    box-shadow: 0 0 0 3px var(--accent-glow);
 }
 
 .optionCheckLabel {
-  font-size: 10px;
-  color: var(--vw-text-secondary);
+    font-family: var(--font-body);
+    font-size: var(--font-size-caption);
+    font-weight: var(--font-weight-medium);
+    color: var(--text-secondary);
+    white-space: nowrap;
 }
 
-/* Responsive */
-@media (max-width: 960px) {
-  .optionsGrid {
-    grid-template-columns: repeat(2, minmax(0, 1fr));
-  }
+.optionSelected .optionCheckLabel {
+    color: var(--accent-primary);
 }
 
-@media (max-width: 640px) {
-  .optionsGrid {
-    grid-template-columns: minmax(0, 1fr);
-  }
+/* ============================================================================
+   EMPTY STATE
+   ============================================================================ */
+.selectorEmpty {
+    padding: var(--spacing-xl) 0;
+    text-align: center;
+}
+
+.emptyTitle {
+    font-family: var(--font-body);
+    font-size: var(--font-size-body);
+    font-weight: var(--font-weight-semibold);
+    color: var(--text-secondary);
+    margin-bottom: var(--spacing-sm);
+}
+
+.emptyBody {
+    font-family: var(--font-body);
+    font-size: var(--font-size-body-small);
+    color: var(--text-tertiary);
+    line-height: var(--line-height-body-small);
+    max-width: 400px;
+    margin: 0 auto;
+}
+
+/* ============================================================================
+   RESPONSIVE
+   ============================================================================ */
+@media (max-width: 768px) {
+    .selectorRoot {
+        padding: var(--spacing-md);
+    }
+    
+    .optionHeaderRow {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: var(--spacing-xs);
+    }
+    
+    .optionFooterRow {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: var(--spacing-sm);
+    }
+    
+    .optionCheckShell {
+        align-self: flex-end;
+    }
 }
