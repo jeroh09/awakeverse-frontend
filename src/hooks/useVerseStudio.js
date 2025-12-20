@@ -119,20 +119,101 @@ export default function useVerseStudio() {
 
       if (res.ok) {
         const data = await res.json();
-        const options = data.llms || data.models || data.options || [];
 
-        if (Array.isArray(options) && options.length) {
+        if (data.success && Array.isArray(data.llms) && data.llms.length) {
+          // Transform backend format to frontend format
+          const options = data.llms.map(llm => ({
+            id: llm.id,
+            label: llm.label || llm.display_name,
+            provider: llm.provider || 'Groq',
+            tier: llm.tier || 'free',
+            capabilities: Array.isArray(llm.capabilities) 
+              ? llm.capabilities 
+              : [llm.primary_specialty || 'General'],
+            description: llm.description || '',
+            cost_per_1m_tokens: llm.cost_per_1m_tokens || 0.0,
+            languages: Array.isArray(llm.languages) ? llm.languages : [],
+            speed: llm.speed || 'medium',
+            quality_score: llm.quality_score || 0.5,
+            personality: llm.personality || {},
+            avatar_url: llm.avatar_url,
+            best_for: Array.isArray(llm.best_for) ? llm.best_for : [],
+            limitations: Array.isArray(llm.limitations) ? llm.limitations : []
+          }));
+
           setLlmOptions(options);
           return options;
         }
       }
 
-      setLlmOptions(FALLBACK_LLM_OPTIONS);
-      return FALLBACK_LLM_OPTIONS;
+      // Fallback to your 3 free LLMs if backend fails
+      const freeLLMs = [
+        {
+          id: 'deepseek_coder',
+          label: 'DeepSeek Coder',
+          provider: 'Groq',
+          tier: 'free',
+          capabilities: ['Code Generation', 'Debugging'],
+          description: 'Lightning-fast code generation specialist',
+          cost_per_1m_tokens: 0.0,
+          personality: { emoji: '🔧', tagline: 'I build it fast and build it right' }
+        },
+        {
+          id: 'llama_70b',
+          label: 'Llama 70B',
+          provider: 'Groq',
+          tier: 'free',
+          capabilities: ['Code Review', 'Debugging'],
+          description: 'The best free code reviewer',
+          cost_per_1m_tokens: 0.0,
+          personality: { emoji: '🔍', tagline: 'I catch bugs before they bite' }
+        },
+        {
+          id: 'llama_8b',
+          label: 'Llama 8B',
+          provider: 'Groq',
+          tier: 'free',
+          capabilities: ['Documentation', 'Teaching'],
+          description: 'Fast, friendly documenter',
+          cost_per_1m_tokens: 0.0,
+          personality: { emoji: '📚', tagline: 'I make code easy to understand' }
+        }
+      ];
+
+      setLlmOptions(freeLLMs);
+      return freeLLMs;
     } catch (e) {
-      console.warn('⚠️ LLM options endpoint unavailable; using fallback list.');
-      setLlmOptions(FALLBACK_LLM_OPTIONS);
-      return FALLBACK_LLM_OPTIONS;
+      console.warn('⚠️ LLM options endpoint unavailable; using 3 free LLMs.');
+
+      const freeLLMs = [
+        {
+          id: 'deepseek_coder',
+          label: 'DeepSeek Coder',
+          provider: 'Groq',
+          tier: 'free',
+          capabilities: ['Code Generation'],
+          description: 'Code generation specialist'
+        },
+        {
+          id: 'llama_70b',
+          label: 'Llama 70B',
+          provider: 'Groq',
+          tier: 'free',
+          capabilities: ['Code Review'],
+          description: 'Code reviewer and debugger'
+        },
+        {
+          id: 'llama_8b',
+          label: 'Llama 8B',
+          provider: 'Groq',
+          tier: 'free',
+          capabilities: ['Documentation'],
+          description: 'Documentation specialist'
+        }
+      ];
+
+      setLlmOptions(freeLLMs);
+      return freeLLMs;
     } finally {
       setLlmOptionsLoading(false);
     }
