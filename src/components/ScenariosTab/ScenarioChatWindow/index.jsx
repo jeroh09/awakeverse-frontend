@@ -6,7 +6,7 @@ import { useUser } from '../../../contexts/UserContext';
 import SubscriptionService from '../../../services/SubscriptionService';
 import SpeakerIndicator from './ChatMessages/SpeakerIndicator';
 import ParticipantAvatars from './ParticipantAvatars'; // KEEP
-import HomeButton from '../FloatingControls/HomeButton';
+import HomeButton from './FloatingControls/HomeButton';
 import { Home } from 'lucide-react';
 import './ScenarioChatWindow.css';
 
