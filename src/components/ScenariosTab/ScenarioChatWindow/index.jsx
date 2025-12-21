@@ -1,28 +1,29 @@
-// src/components/ScenariosTab/ScenarioChatWindow/index.jsx - UPDATED WITH TWO-PANEL DESIGN
+// src/components/ScenariosTab/ScenarioChatWindow/index.jsx - COMPLETE TWO-PANEL WITH AVATARS
 import React, { useState, useEffect, useRef, useCallback } from 'react';
 import usePremiumCharacters from '../../../hooks/usePremiumCharacters';
 import useScenarioChat from '../../../hooks/useScenarioChat';
 import { useUser } from '../../../contexts/UserContext';
 import SubscriptionService from '../../../services/SubscriptionService';
 import SpeakerIndicator from './ChatMessages/SpeakerIndicator';
+import ParticipantAvatars from './ParticipantAvatars'; // KEEP
 import HomeButton from '../FloatingControls/HomeButton';
 import { Home } from 'lucide-react';
 import './ScenarioChatWindow.css';
 
 export default function ScenarioChatWindow({
   scenario,
-  scenarios = [], // Added: all user's scenarios for sidebar
+  scenarios = [], // All user scenarios for the sidebar
   onBack,
-  onSwitchScenario, // Added: callback to switch between scenarios
-  onCreateScenario, // Added: callback to create new scenario
+  onSwitchScenario,
+  onCreateScenario,
   theme = 'awakeverse'
 }) {
+  const [inputText, setInputText] = useState('');
   const [isMobile, setIsMobile] = useState(window.innerWidth <= 768);
   const [isInitialized, setIsInitialized] = useState(false);
   const [initError, setInitError] = useState(null);
   const [showUpgradeModal, setShowUpgradeModal] = useState(false);
   const [userTier, setUserTier] = useState('free');
-  const [inputText, setInputText] = useState('');
 
   const { user } = useUser();
   const { userCharacters = [] } = usePremiumCharacters();
@@ -144,7 +145,7 @@ export default function ScenarioChatWindow({
   const isUnlimited = userTier === 'unlimited';
 
   // Handle send message
-  const handleSend = async (messageText) => {
+  const handleSend = useCallback(async (messageText) => {
     if (!messageText.trim() || isSending) return;
 
     // Check circuit breaker
@@ -176,7 +177,7 @@ export default function ScenarioChatWindow({
         setShowUpgradeModal(true);
       }
     }
-  };
+  }, [isSending, circuitBreakerState, usageData, sendMessage]);
 
   // Handle key press
   const handleKeyPress = (e) => {
@@ -264,53 +265,73 @@ export default function ScenarioChatWindow({
 
   return (
     <div className={`scenario-chat-window two-panel-layout theme-${theme}`}>
+      <HomeButton onClick={handleBack} theme={theme} />
+
       <div className="chat-layout-grid">
         {/* LEFT PANEL: CHAT AREA */}
         <main className="chat-section">
           {/* Chat Header */}
-          <div className="chat-header">
-            <div className="chat-header-content">
-              <h1 className="scenario-title">{title}</h1>
-              {description && (
-                <p className="scenario-description">{description}</p>
-              )}
-              
-              {/* Usage Indicator - ONLY for non-unlimited users */}
-              {!isUnlimited && usageData.limit !== null && (
-                <div className="usage-indicator">
-                  <span className="usage-icon">💬</span>
-                  <span className="usage-text">
-                    {usageData.remaining} of {usageData.limit} questions remaining
-                  </span>
-                  {usageData.limitReached && (
-                    <span className="usage-limit-badge">Limit Reached</span>
-                  )}
-                </div>
-              )}
-            </div>
-          </div>
+          <header className="chat-header">
+            <h1 className="scenario-title">{title}</h1>
+            {description && (
+              <p className="scenario-description">{description}</p>
+            )}
+            
+            {/* Usage Indicator - ONLY for non-unlimited users */}
+            {!isUnlimited && usageData.limit !== null && (
+              <div className="usage-indicator">
+                <span className="usage-icon">💬</span>
+                <span className="usage-text">
+                  {usageData.remaining} of {usageData.limit} questions remaining
+                </span>
+                {usageData.limitReached && (
+                  <span className="usage-limit-badge">Limit Reached</span>
+                )}
+              </div>
+            )}
+            
+            {/* Debug info - only in development */}
+            {process.env.NODE_ENV === 'development' && (
+              <div className="debug-info">
+                <small>
+                  Debate ID: {debateId} | Active: {activeSpeakers.join(', ') || 'none'} | 
+                  Queued: {queuedSpeakers.join(', ') || 'none'} | 
+                  Circuit: {circuitBreakerState.status} |
+                  Tier: {userTier} | Usage: {usageData.questionsAsked}/{usageData.limit}
+                </small>
+              </div>
+            )}
+          </header>
 
           {/* Messages Container */}
           <div className="messages-scroll">
             {messages.length === 0 ? (
               <div className="empty-chat">
                 <span className="empty-icon">💭</span>
-                <p>Start the debate by asking a question</p>
+                <p>Start the debate by asking a question below</p>
               </div>
             ) : (
               <>
-                {messages.map((msg, index) => (
+                {messages.map((msg) => (
                   <ChatMessage
-                    key={msg.id || `msg-${index}`}
+                    key={msg.id || `fallback-${Math.random()}`}
                     message={msg}
                     userCharacters={userCharacters}
                     theme={theme}
                   />
                 ))}
-                {isSending && <TypingIndicator theme={theme} />}
-                <div ref={messagesEndRef} />
+                
+                {isSending && (
+                  <div className="typing-indicator" role="status" aria-label="AI is responding">
+                    <div className="typing-dot" />
+                    <div className="typing-dot" />
+                    <div className="typing-dot" />
+                  </div>
+                )}
               </>
             )}
+            
+            <div ref={messagesEndRef} />
           </div>
 
           {/* FLOATING CHAT INPUT (Verse Studio Style) */}
@@ -343,50 +364,83 @@ export default function ScenarioChatWindow({
           </div>
         </main>
 
-        {/* RIGHT PANEL: SCENARIOS SIDEBAR */}
+        {/* RIGHT PANEL: SCENARIOS & PARTICIPANTS SIDEBAR */}
         <aside className="scenarios-side-panel">
-          {/* Enhanced Home Button */}
-          <div className="side-panel-header">
-            <button
-              className="enhanced-home-button"
-              onClick={handleBack}
-              aria-label="Return to Scenario Hub"
-            >
-              <Home size={20} className="home-icon" />
-              <span>Return to Scenario Hub</span>
-            </button>
+          {/* Enhanced Home Button (Mobile) - hidden on desktop since we have floating HomeButton */}
+          {isMobile && (
+            <div className="side-panel-header">
+              <button
+                className="enhanced-home-button"
+                onClick={handleBack}
+                aria-label="Return to Scenario Hub"
+              >
+                <Home size={20} className="home-icon" />
+                <span>Return to Scenario Hub</span>
+              </button>
+            </div>
+          )}
+
+          {/* PARTICIPANT AVATARS SECTION - ORIGINAL LOCATION */}
+          <div className="avatars-section">
+            <ParticipantAvatars
+              participants={character_keys}
+              userCharacters={userCharacters}
+              activeSpeaker={currentActiveSpeaker}
+              queuedSpeakers={queuedSpeakers}
+              isMobile={isMobile}
+              theme={theme}
+            />
           </div>
 
-          {/* Scenarios List */}
-          <div className="scenarios-list-container">
-            {scenarios.length === 0 ? (
-              <div className="empty-scenarios-sidebar">
-                <p>No scenarios yet</p>
-                <p className="hint">Create your first scenario</p>
+          {/* Scenarios List Section */}
+          <div className="scenarios-list-section">
+            <div className="section-header">
+              <h3 className="section-title">Your Scenarios</h3>
+              <div className="scenario-counter">
+                {scenarios.filter(s => s).length}/5 scenarios
               </div>
-            ) : (
-              scenarios.map(scenarioItem => (
-                <ScenarioCard
-                  key={scenarioItem.id}
-                  scenario={scenarioItem}
-                  isActive={scenarioItem.id === scenario.id}
-                  onClick={() => onSwitchScenario?.(scenarioItem.id)}
-                  userCharacters={userCharacters}
-                />
-              ))
-            )}
-          </div>
+            </div>
 
-          {/* Create Scenario Button */}
-          <div className="side-panel-create-section">
-            <button
-              className="create-scenario-button"
-              onClick={onCreateScenario}
-              aria-label="Create new scenario"
-            >
-              <span className="plus-icon">+</span>
-              <span>Create New Scenario</span>
-            </button>
+            <div className="scenarios-list-container">
+              {scenarios.length === 0 ? (
+                <div className="empty-scenarios-sidebar">
+                  <p>No scenarios yet</p>
+                  <p className="hint">Create your first scenario</p>
+                </div>
+              ) : (
+                scenarios.map(scenarioItem => (
+                  <ScenarioCard
+                    key={scenarioItem.id}
+                    scenario={scenarioItem}
+                    isActive={scenarioItem.id === scenario.id}
+                    onClick={() => onSwitchScenario?.(scenarioItem.id)}
+                    userCharacters={userCharacters}
+                  />
+                ))
+              )}
+            </div>
+
+            {/* Create Scenario Button */}
+            {scenarios.length < 5 && (
+              <div className="side-panel-create-section">
+                <button
+                  className="create-scenario-button"
+                  onClick={onCreateScenario}
+                  aria-label="Create new scenario"
+                >
+                  <span className="plus-icon">+</span>
+                  <span>Create New Scenario</span>
+                </button>
+              </div>
+            )}
+
+            {/* Max scenarios reached message */}
+            {scenarios.length >= 5 && (
+              <div className="max-scenarios-message">
+                <p>🚫 Maximum of 5 scenarios reached</p>
+                <p className="hint">Delete a scenario to create a new one</p>
+              </div>
+            )}
           </div>
         </aside>
       </div>
@@ -432,17 +486,6 @@ function ChatMessage({ message, userCharacters, theme }) {
       <div className="message-bubble character-message">
         <div className="message-text">{text}</div>
       </div>
-    </div>
-  );
-}
-
-// Typing Indicator
-function TypingIndicator({ theme }) {
-  return (
-    <div className="typing-indicator">
-      <div className="typing-dot" />
-      <div className="typing-dot" />
-      <div className="typing-dot" />
     </div>
   );
 }
@@ -530,7 +573,7 @@ function MiniAvatar({ characterKey, userCharacters }) {
   );
 }
 
-// Upgrade Modal Component
+// Upgrade Modal Component (unchanged)
 function UpgradeModal({ onClose, theme, questionsUsed, limit }) {
   return (
     <div className="modal-overlay" onClick={onClose}>
