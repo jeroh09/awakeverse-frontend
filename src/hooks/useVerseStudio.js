@@ -633,6 +633,7 @@ export default function useVerseStudio() {
       setShowHandoffPrompt(false);
 
       try {
+        // In useVerseStudio.js, replace lines 635-647
         if (messageText && messageText.trim()) {
           const userMessageId = generateMessageId();
           const userMessage = {
@@ -642,10 +643,29 @@ export default function useVerseStudio() {
             timestamp: Date.now()
           };
 
-          setMessages((prev) => [...prev, userMessage]);
-          console.log('📤 Sending message:', { id: userMessageId, text: messageText });
-        }
+          // ✅ DEFENSIVE: Prevent duplicate user messages
+          setMessages((prev) => {
+            // Check for duplicate message in last 2 seconds
+            const isDuplicate = prev.some(m => 
+              m.user && 
+              m.text === messageText && 
+              (Date.now() - (m.timestamp || 0)) < 2000
+            );
 
+            if (isDuplicate) {
+              console.error('🚨 DUPLICATE MESSAGE PREVENTED:', {
+                text: messageText.substring(0, 50),
+                timestamp: Date.now(),
+                stackTrace: new Error().stack // ✅ This shows WHERE the duplicate came from
+              });
+              return prev; // Don't add duplicate
+            }
+
+            console.log('✅ Adding user message:', { id: userMessageId, text: messageText.substring(0, 50) });
+            return [...prev, userMessage];
+          });
+        }
+        
         const csrf =
           document.cookie.match(/(?:^|;\s*)av_csrf=([^;]+)/)?.[1] || '';
         const response = await fetch(

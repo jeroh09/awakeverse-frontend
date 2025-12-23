@@ -404,14 +404,17 @@ export default function TaskChatWindow({ task, verseStudio, onBack }) {
 
   // ✅ UPDATED: keep attachments until send, then clear
   const handleSend = useCallback(() => {
+    console.log('🔵 handleSend called at:', Date.now());
     const trimmed = inputText.trim();
 
     // block sending if no text AND no attachments
     if ((!trimmed && attachments.length === 0) || !sendMessage) return;
+      console.log('⚠️ handleSend blocked: no content or no sendMessage');
 
     // block sending while any uploads are still in progress
     const stillUploading = attachments.some((a) => a.status === "uploading");
     if (stillUploading) return;
+      
 
     const readyDocs = attachments.filter((a) => a.status === "ready");
     const erroredDocs = attachments.filter((a) => a.status === "error");
@@ -427,7 +430,8 @@ export default function TaskChatWindow({ task, verseStudio, onBack }) {
       const lines = erroredDocs.map((d) => `- ${d.name}: ${d.error || "upload failed"}`);
       composed = `${composed || ""}\n\nUpload errors:\n${lines.join("\n")}`.trim();
     }
-
+    console.log('📤 handleSend calling sendMessage with:', composed.substring(0, 50));
+    
     sendMessage(composed);
     setInputText("");
     setAttachments([]); // ✅ clear only after user sends

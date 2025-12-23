@@ -225,24 +225,11 @@ export default function ScenariosTab({
   }
 
   // IF CHAT WINDOW IS ACTIVE, SHOW IT FULLSCREEN (TOP LEVEL)
-    // In ScenariosTab/index.jsx, update the ScenarioChatWindow usage:
-
   if (activeScenario) {
     return (
       <ScenarioChatWindow
         scenario={activeScenario}
-        scenarios={myScenarios} // Pass all scenarios
-        activeScenarioId={activeScenario.id}
         onBack={handleCloseChatWindow}
-        onSwitchScenario={(scenarioId) => {
-          // Handle switching to another scenario
-          const newScenario = myScenarios.find(s => s.id === scenarioId);
-          if (newScenario) setActiveScenario(newScenario);
-        }}
-        onCreateScenario={() => {
-          // Handle creating new scenario
-          setShowBlankCreator(true);
-        }}
         theme={currentTheme}
       />
     );
