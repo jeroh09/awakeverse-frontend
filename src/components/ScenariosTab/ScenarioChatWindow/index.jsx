@@ -1,17 +1,39 @@
-// src/components/ScenariosTab/ScenarioChatWindow/index.jsx - WITH USAGE LIMITS
+// src/components/ScenariosTab/ScenarioChatWindow/index.jsx
+// PHASE 2: Two-Panel Layout Refactor
+// Steps 3-4: New layout structure with panel collapse state
+
 import React, { useState, useEffect } from 'react';
 import usePremiumCharacters from '../../../hooks/usePremiumCharacters';
 import useScenarioChat from '../../../hooks/useScenarioChat';
 import { useUser } from '../../../contexts/UserContext';
 import SubscriptionService from '../../../services/SubscriptionService';
-import ParticipantAvatars from './ParticipantAvatars';
+
+// Existing components - keeping for now
+// import ChatInput from './ChatInput'; // OLD - deprecated
 import ChatMessages from './ChatMessages';
-import ChatInput from './ChatInput';
-import HomeButton from './FloatingControls/HomeButton';
-import './ScenarioChatWindow.css';
+import HomeButton from './FloatingControls/HomeButton'; // Keep for compatibility if needed
+
+// NEW: AvatarsColumn (Phase 3)
+import AvatarsColumn from './AvatarsColumn';
+
+// NEW: InfoPanel (Phase 4)
+import InfoPanel from './InfoPanel';
+
+// NEW: FloatingChatInput (Phase 5)
+import FloatingChatInput from './FloatingChatInput';
+
+// NEW: MobileBackButton (Phase 7)
+import MobileBackButton from './MobileBackButton';
+
+// Hooks
+import useKeyboardHeight from '../../../hooks/useKeyboardHeight'; // NEW: Mobile keyboard handling
+
+// Styles
+import styles from './ScenarioChatWindow.module.css'; // New layout styles
 
 export default function ScenarioChatWindow({
   scenario,
+  scenarios = [], // NEW: List of all user scenarios for info panel
   onBack,
   theme = 'light'
 }) {
@@ -20,6 +42,12 @@ export default function ScenarioChatWindow({
   const [initError, setInitError] = useState(null);
   const [showUpgradeModal, setShowUpgradeModal] = useState(false);
   const [userTier, setUserTier] = useState('free');
+  
+  // ✅ NEW: Info panel collapse state
+  const [infoPanelCollapsed, setInfoPanelCollapsed] = useState(false);
+
+  // ✅ NEW: Mobile keyboard handling
+  const { keyboardHeight, isKeyboardVisible } = useKeyboardHeight();
 
   const { user } = useUser();
   const { userCharacters = [] } = usePremiumCharacters();
@@ -52,7 +80,8 @@ export default function ScenarioChatWindow({
     theme,
     debateId,
     initialized: isInitialized,
-    usageData
+    usageData,
+    infoPanelCollapsed // ✅ NEW
   });
 
   // Fetch user's tier on mount
@@ -79,10 +108,19 @@ export default function ScenarioChatWindow({
 
   // Responsive handler
   useEffect(() => {
-    const handleResize = () => setIsMobile(window.innerWidth <= 768);
+    const handleResize = () => {
+      const newIsMobile = window.innerWidth <= 768;
+      setIsMobile(newIsMobile);
+      
+      // ✅ DEFENSIVE: Auto-collapse info panel on mobile
+      if (newIsMobile && !infoPanelCollapsed) {
+        setInfoPanelCollapsed(true);
+      }
+    };
+    
     window.addEventListener('resize', handleResize);
     return () => window.removeEventListener('resize', handleResize);
-  }, []);
+  }, [infoPanelCollapsed]);
 
   // Auto-start scenario on mount
   useEffect(() => {
@@ -116,6 +154,12 @@ export default function ScenarioChatWindow({
     };
   }, [resetScenario]);
 
+  // ✅ NEW: Toggle info panel
+  const handleToggleInfoPanel = () => {
+    setInfoPanelCollapsed(prev => !prev);
+    console.log('🔄 Info panel toggled:', !infoPanelCollapsed);
+  };
+
   // Determine active speaker
   const currentActiveSpeaker = activeSpeakers.length > 0 ? activeSpeakers[0] : null;
 
@@ -132,7 +176,7 @@ export default function ScenarioChatWindow({
       return;
     }
 
-    // ✅ Check usage limit (freemium enforcement)
+    // Check usage limit (freemium enforcement)
     if (usageData.limitReached) {
       console.log('❌ Message limit reached, showing upgrade modal');
       setShowUpgradeModal(true);
@@ -144,7 +188,7 @@ export default function ScenarioChatWindow({
     } catch (error) {
       console.error('❌ Failed to send message:', error);
 
-      // ✅ Check if error was due to limit
+      // Check if error was due to limit
       if (error.message === 'MESSAGE_LIMIT_REACHED') {
         setShowUpgradeModal(true);
       }
@@ -162,23 +206,40 @@ export default function ScenarioChatWindow({
     onBack();
   };
 
+  // ✅ NEW: Handle scenario switch
+  // Defensive: Just navigate back and let parent handle scenario selection
+  const handleScenarioSwitch = (scenarioId) => {
+    if (scenarioId === scenario.id) {
+      console.log('📋 Already viewing this scenario');
+      return; // Already on this scenario
+    }
+
+    if (isSending) {
+      const confirm = window.confirm('A message is being sent. Switch scenarios anyway?');
+      if (!confirm) return;
+    }
+
+    console.log('📋 Switching scenario:', scenarioId);
+    
+    // Defensive: Navigate back to let parent component handle the switch
+    // This prevents complex state management within chat window
+    resetScenario();
+    onBack();
+  };
+
   // Show initialization error
   if (initError) {
     return (
-      <div className={`scenario-chat-window theme-${theme}`}>
-        <HomeButton onClick={handleBack} theme={theme} />
-        
-        <div className="chat-layout-grid">
-          <main className="chat-section">
-            <div className="init-error-state">
-              <span className="error-icon">⚠️</span>
-              <h3>Failed to Start Scenario</h3>
-              <p>{initError}</p>
-              <button onClick={handleBack} className="back-button">
-                Go Back
-              </button>
-            </div>
-          </main>
+      <div className={`${styles.container}`}>
+        <div className={styles.chatPanel}>
+          <div className="init-error-state">
+            <span className="error-icon">⚠️</span>
+            <h3>Failed to Start Scenario</h3>
+            <p>{initError}</p>
+            <button onClick={handleBack} className="back-button">
+              Go Back
+            </button>
+          </div>
         </div>
       </div>
     );
@@ -187,16 +248,12 @@ export default function ScenarioChatWindow({
   // Show loading state while initializing
   if (!isInitialized || usageLoading) {
     return (
-      <div className={`scenario-chat-window theme-${theme}`}>
-        <HomeButton onClick={handleBack} theme={theme} />
-        
-        <div className="chat-layout-grid">
-          <main className="chat-section">
-            <div className="init-loading-state">
-              <div className="loading-spinner"></div>
-              <p>Preparing scenario...</p>
-            </div>
-          </main>
+      <div className={`${styles.container}`}>
+        <div className={styles.chatPanel}>
+          <div className="init-loading-state">
+            <div className="loading-spinner"></div>
+            <p>Preparing scenario...</p>
+          </div>
         </div>
       </div>
     );
@@ -205,34 +262,53 @@ export default function ScenarioChatWindow({
   // Show circuit breaker tripped state
   if (circuitBreakerState.status === 'tripped') {
     return (
-      <div className={`scenario-chat-window theme-${theme}`}>
-        <HomeButton onClick={handleBack} theme={theme} />
-        
-        <div className="chat-layout-grid">
-          <main className="chat-section">
-            <div className="circuit-breaker-state">
-              <span className="error-icon">🔌</span>
-              <h3>Scenario Paused</h3>
-              <p>Too many errors occurred. The scenario has been paused for stability.</p>
-              <p className="error-detail">{circuitBreakerState.lastError}</p>
-              <button onClick={handleBack} className="back-button">
-                Return to My Scenarios
-              </button>
-            </div>
-          </main>
+      <div className={`${styles.container}`}>
+        <div className={styles.chatPanel}>
+          <div className="circuit-breaker-state">
+            <span className="error-icon">🔌</span>
+            <h3>Scenario Paused</h3>
+            <p>Too many errors occurred. The scenario has been paused for stability.</p>
+            <p className="error-detail">{circuitBreakerState.lastError}</p>
+            <button onClick={handleBack} className="back-button">
+              Return to My Scenarios
+            </button>
+          </div>
         </div>
       </div>
     );
   }
 
+  // ===== MAIN RENDER: TWO-PANEL LAYOUT =====
   return (
-    <div className={`scenario-chat-window theme-${theme}`}>
-      <HomeButton onClick={handleBack} theme={theme} />
+    <div className={`${styles.container}`}>
+      {/* Breadcrumb Toggle (Desktop Only) */}
+      {!isMobile && (
+        <div 
+          className={`${styles.breadcrumb} ${infoPanelCollapsed ? styles.collapsed : ''}`}
+          onClick={handleToggleInfoPanel}
+          data-tooltip={infoPanelCollapsed ? 'Show Info Panel' : 'Hide Info Panel'}
+          role="button"
+          aria-label={infoPanelCollapsed ? 'Show Info Panel' : 'Hide Info Panel'}
+          tabIndex={0}
+          onKeyPress={(e) => {
+            if (e.key === 'Enter' || e.key === ' ') {
+              handleToggleInfoPanel();
+            }
+          }}
+        >
+          <span className={styles.breadcrumbIcon}>
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+              <polyline points={infoPanelCollapsed ? "9 18 15 12 9 6" : "15 18 9 12 15 6"} />
+            </svg>
+          </span>
+        </div>
+      )}
 
-      <div className="chat-layout-grid">
-        {/* LEFT: Participant Avatars */}
-        <aside className="avatars-section">
-          <ParticipantAvatars
+      {/* LEFT PANEL: Chat Panel */}
+      <div className={`${styles.chatPanel} ${infoPanelCollapsed ? styles.expanded : ''}`}>
+        <div className={styles.chatPanelInner}>
+          {/* LEFT: Avatars Column */}
+          <AvatarsColumn
             participants={scenario.character_keys || []}
             userCharacters={userCharacters}
             activeSpeaker={currentActiveSpeaker}
@@ -240,56 +316,79 @@ export default function ScenarioChatWindow({
             isMobile={isMobile}
             theme={theme}
           />
-        </aside>
 
-        {/* CENTER: Chat Area */}
-        <main className="chat-section">
-          <header className="chat-header">
-            <h1 className="scenario-title">{scenario.title}</h1>
-            {scenario.description && (
-              <p className="scenario-description">{scenario.description}</p>
+          {/* RIGHT: Chat Content */}
+          <div 
+            className={styles.chatContent}
+            style={isMobile && isKeyboardVisible ? {
+              transform: `translateY(-${keyboardHeight}px)`,
+              transition: 'transform 0.2s ease-out'
+            } : {}}
+          >
+            {/* Mobile Back Button */}
+            {isMobile && (
+              <MobileBackButton onClick={handleBack} />
             )}
-            
-            {/* Usage Indicator - ONLY for non-unlimited users */}
-            {!isUnlimited && usageData.limit !== null && (
-              <div className="usage-indicator">
-                <span className="usage-icon">💬</span>
-                <span className="usage-text">
-                  {usageData.remaining} of {usageData.limit} questions remaining
-                </span>
-                {usageData.limitReached && (
-                  <span className="usage-limit-badge">Limit Reached</span>
-                )}
-              </div>
-            )}
-            
-            {/* Debug info - only in development */}
-            {process.env.NODE_ENV === 'development' && (
-              <div className="debug-info">
-                <small>
-                  Debate ID: {debateId} | Active: {activeSpeakers.join(', ') || 'none'} | 
-                  Queued: {queuedSpeakers.join(', ') || 'none'} | 
-                  Circuit: {circuitBreakerState.status} |
-                  Tier: {userTier} | Usage: {usageData.questionsAsked}/{usageData.limit}
-                </small>
-              </div>
-            )}
-          </header>
 
-          <ChatMessages
-            messages={messages}
-            userCharacters={userCharacters}
-            isSending={isSending}
-            theme={theme}
-          />
+            {/* Chat Header */}
+            <header className="chat-header">
+              <h1 className="scenario-title">{scenario.title}</h1>
+              {scenario.description && (
+                <p className="scenario-description">{scenario.description}</p>
+              )}
+              
+              {/* Usage Indicator - ONLY for non-unlimited users */}
+              {!isUnlimited && usageData.limit !== null && (
+                <div className="usage-indicator">
+                  <span className="usage-icon">💬</span>
+                  <span className="usage-text">
+                    {usageData.remaining} of {usageData.limit} questions remaining
+                  </span>
+                  {usageData.limitReached && (
+                    <span className="usage-limit-badge">Limit Reached</span>
+                  )}
+                </div>
+              )}
+              
+              {/* Debug info - only in development */}
+              {process.env.NODE_ENV === 'development' && (
+                <div className="debug-info">
+                  <small>
+                    Debate ID: {debateId} | Active: {activeSpeakers.join(', ') || 'none'} | 
+                    Queued: {queuedSpeakers.join(', ') || 'none'} | 
+                    Circuit: {circuitBreakerState.status} |
+                    Tier: {userTier} | Usage: {usageData.questionsAsked}/{usageData.limit} |
+                    Panel: {infoPanelCollapsed ? 'collapsed' : 'expanded'} |
+                    Keyboard: {isKeyboardVisible ? `${keyboardHeight}px` : 'hidden'}
+                  </small>
+                </div>
+              )}
+            </header>
 
-          <ChatInput
-            starterQuestions={scenario.starter_questions || []}
-            onSend={handleSend}
-            isSending={isSending || (!isUnlimited && usageData.limitReached)}
-            theme={theme}
-          />
-        </main>
+            <ChatMessages
+              messages={messages}
+              userCharacters={userCharacters}
+              isSending={isSending}
+              theme={theme}
+            />
+
+            <FloatingChatInput
+              starterQuestions={scenario.starter_questions || []}
+              onSend={handleSend}
+              isSending={isSending || (!isUnlimited && usageData.limitReached)}
+            />
+          </div>
+        </div>
+      </div>
+
+      {/* RIGHT PANEL: Info Panel */}
+      <div className={`${styles.infoPanel} ${infoPanelCollapsed ? styles.collapsed : ''}`}>
+        <InfoPanel
+          scenarios={scenarios}
+          currentScenarioId={scenario.id}
+          onScenarioSelect={handleScenarioSwitch}
+          onHomeClick={handleBack}
+        />
       </div>
 
       {/* Upgrade Modal */}
@@ -305,7 +404,7 @@ export default function ScenarioChatWindow({
   );
 }
 
-// Upgrade Modal Component
+// Upgrade Modal Component (unchanged)
 function UpgradeModal({ onClose, theme, questionsUsed, limit }) {
   return (
     <div className="modal-overlay" onClick={onClose}>

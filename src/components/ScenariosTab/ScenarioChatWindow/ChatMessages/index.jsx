@@ -1,10 +1,18 @@
 // src/components/ScenariosTab/ScenarioChatWindow/ChatMessages/index.jsx
-// FIX: Use message.id as React key instead of array index
+// PHASE 6: Updated messages container with design tokens
 
-import React, { useRef, useEffect } from 'react';
+import React, { useEffect, useRef } from 'react';
 import MessageBubble from './MessageBubble';
-import './ChatMessages.css';
+import styles from './ChatMessages.module.css';
 
+/**
+ * ChatMessages - Container for all messages with auto-scroll
+ * 
+ * @param {Array} messages - Array of message objects
+ * @param {Array} userCharacters - Array of custom characters
+ * @param {boolean} isSending - Whether a message is currently being sent
+ * @param {string} theme - Theme (kept for compatibility, not used in new design)
+ */
 export default function ChatMessages({
   messages = [],
   userCharacters = [],
@@ -12,52 +20,58 @@ export default function ChatMessages({
   theme = 'light'
 }) {
   const messagesEndRef = useRef(null);
+  const containerRef = useRef(null);
 
+  // Auto-scroll to bottom when new messages arrive
   useEffect(() => {
-    messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
+    if (messagesEndRef.current) {
+      messagesEndRef.current.scrollIntoView({ behavior: 'smooth', block: 'end' });
+    }
   }, [messages, isSending]);
 
-  if (!Array.isArray(messages)) {
-    console.error('ChatMessages: messages must be an array');
-    return null;
+  // Observable logging
+  console.log('💬 ChatMessages rendering:', {
+    messageCount: messages.length,
+    isSending
+  });
+
+  // Empty state
+  if (messages.length === 0 && !isSending) {
+    return (
+      <div className={styles.messagesContainer} ref={containerRef}>
+        <div className={styles.emptyState}>
+          <div className={styles.emptyIcon}>🎭</div>
+          <p className={styles.emptyText}>Start the conversation</p>
+          <p className={styles.emptySubtext}>Ask a question or choose a starter below</p>
+        </div>
+      </div>
+    );
   }
 
   return (
-    <div 
-      className={`chat-messages-container theme-${theme}`}
-      role="log"
-      aria-live="polite"
-      aria-label="Conversation messages"
-    >
-      {messages.length === 0 ? (
-        <div className="empty-chat">
-          <span className="empty-icon">💭</span>
-          <p>Start the debate by asking a question below</p>
+    <div className={styles.messagesContainer} ref={containerRef}>
+      {/* Render all messages */}
+      {messages.map((message, index) => (
+        <MessageBubble
+          key={message.id || index}
+          message={message}
+          userCharacters={userCharacters}
+        />
+      ))}
+
+      {/* Typing indicator while sending */}
+      {isSending && (
+        <div className={styles.typingIndicator}>
+          <div className={styles.typingAvatar} />
+          <div className={styles.typingBubble}>
+            <div className={styles.typingDot} />
+            <div className={styles.typingDot} />
+            <div className={styles.typingDot} />
+          </div>
         </div>
-      ) : (
-        <>
-          {messages.map((msg) => (
-            <MessageBubble
-              key={msg.id || `fallback-${Math.random()}`} 
-              /* CRITICAL: Use msg.id as key, NOT array index
-                 This ensures each message gets its own bubble
-                 even if the same speaker responds multiple times */
-              message={msg}
-              userCharacters={userCharacters}
-              theme={theme}
-            />
-          ))}
-          
-          {isSending && (
-            <div className="typing-indicator" role="status" aria-label="AI is responding">
-              <div className="typing-dot" />
-              <div className="typing-dot" />
-              <div className="typing-dot" />
-            </div>
-          )}
-        </>
       )}
-      
+
+      {/* Scroll anchor */}
       <div ref={messagesEndRef} />
     </div>
   );

@@ -229,6 +229,7 @@ export default function ScenariosTab({
     return (
       <ScenarioChatWindow
         scenario={activeScenario}
+        scenarios={myScenarios}  // ✅✅✅ ADDED: Full scenarios list for InfoPanel ✅✅✅
         onBack={handleCloseChatWindow}
         theme={currentTheme}
       />

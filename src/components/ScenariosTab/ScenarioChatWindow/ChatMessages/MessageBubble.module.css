@@ -1,0 +1,284 @@
+/* MessageBubble.module.css */
+/* Modern chat bubbles with design tokens */
+
+/* ===== MESSAGE BUBBLE CONTAINER ===== */
+.messageBubble {
+  display: flex;
+  gap: var(--spacing-md);
+  align-items: flex-start;
+  animation: fadeInSlide 0.3s ease-out;
+  transition: var(--transition-fast);
+}
+
+/* User messages - right-aligned */
+.userMessage {
+  flex-direction: row-reverse;
+  justify-content: flex-start;
+  margin-left: auto;
+  max-width: 80%;
+}
+
+/* Character messages - left-aligned */
+.characterMessage {
+  flex-direction: row;
+  justify-content: flex-start;
+  margin-right: auto;
+  max-width: 80%;
+}
+
+/* Mobile: Wider bubbles */
+@media (max-width: 768px) {
+  .userMessage,
+  .characterMessage {
+    max-width: 85%;
+  }
+}
+
+/* Hover effect */
+.messageBubble:hover .messageContent {
+  box-shadow: var(--shadow-elevation03);
+}
+
+/* ===== AVATAR ===== */
+.avatar {
+  width: 36px;
+  height: 36px;
+  min-width: 36px;
+  min-height: 36px;
+  border-radius: var(--border-radius-full);
+  overflow: hidden;
+  position: relative;
+  background: linear-gradient(135deg, var(--accent-primary), var(--accent-hover));
+  box-shadow: var(--shadow-elevation01);
+}
+
+.avatarImage {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.avatarFallback {
+  width: 100%;
+  height: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 16px;
+  font-weight: var(--font-weight-semibold);
+  color: white;
+  font-family: var(--font-display);
+}
+
+/* ===== MESSAGE CONTENT ===== */
+.messageContent {
+  flex: 1;
+  min-width: 0; /* Allow text wrapping */
+  transition: var(--transition-fast);
+}
+
+/* User message content - indigo gradient */
+.userMessage .messageContent {
+  background: linear-gradient(135deg, var(--accent-primary), var(--accent-hover));
+  border-radius: var(--border-radius-md);
+  border-bottom-right-radius: 4px; /* Corner cut on inside edge */
+  padding: var(--spacing-md) var(--spacing-lg);
+  box-shadow: var(--shadow-elevation02);
+}
+
+/* Character message content - dark surface */
+.characterMessage .messageContent {
+  background: var(--bg-interactive);
+  border-radius: var(--border-radius-md);
+  border-bottom-left-radius: 4px; /* Corner cut on inside edge */
+  padding: var(--spacing-md) var(--spacing-lg);
+  border: 1px solid var(--border-subtle);
+  box-shadow: var(--shadow-elevation02);
+}
+
+/* ===== AUTHOR NAME ===== */
+.authorName {
+  font-size: var(--font-size-caption);
+  font-weight: var(--font-weight-semibold);
+  color: var(--text-tertiary);
+  margin-bottom: var(--spacing-xs);
+  font-family: var(--font-display);
+}
+
+/* ===== MESSAGE TEXT ===== */
+.messageText {
+  font-size: var(--font-size-body);
+  line-height: var(--line-height-body);
+  word-wrap: break-word;
+  overflow-wrap: break-word;
+}
+
+/* User messages - white text */
+.userMessage .messageText {
+  color: white;
+}
+
+/* Character messages - primary text */
+.characterMessage .messageText {
+  color: var(--text-primary);
+}
+
+/* ===== MARKDOWN ELEMENTS ===== */
+
+.paragraph {
+  margin: 0 0 var(--spacing-sm) 0;
+}
+
+.paragraph:last-child {
+  margin-bottom: 0;
+}
+
+.bold {
+  font-weight: var(--font-weight-semibold);
+}
+
+.italic {
+  font-style: italic;
+}
+
+.inlineCode {
+  padding: 2px 6px;
+  border-radius: var(--border-radius-sm);
+  font-family: 'Consolas', 'Monaco', monospace;
+  font-size: 0.9em;
+}
+
+/* User messages - inline code */
+.userMessage .inlineCode {
+  background: rgba(255, 255, 255, 0.2);
+  color: white;
+}
+
+/* Character messages - inline code */
+.characterMessage .inlineCode {
+  background: var(--bg-peak);
+  color: var(--accent-primary);
+}
+
+.codeBlock {
+  padding: var(--spacing-md);
+  border-radius: var(--border-radius-sm);
+  overflow-x: auto;
+  margin: var(--spacing-sm) 0;
+  font-family: 'Consolas', 'Monaco', monospace;
+  font-size: 0.9em;
+  line-height: 1.5;
+}
+
+/* User messages - code block */
+.userMessage .codeBlock {
+  background: rgba(255, 255, 255, 0.15);
+  color: white;
+}
+
+/* Character messages - code block */
+.characterMessage .codeBlock {
+  background: var(--bg-surface);
+  color: var(--text-primary);
+  border: 1px solid var(--border-subtle);
+}
+
+.list,
+.orderedList {
+  margin: var(--spacing-sm) 0;
+  padding-left: var(--spacing-lg);
+}
+
+.listItem {
+  margin: var(--spacing-xs) 0;
+}
+
+.blockquote {
+  margin: var(--spacing-sm) 0;
+  padding-left: var(--spacing-md);
+  border-left: 3px solid currentColor;
+  font-style: italic;
+  opacity: 0.9;
+}
+
+.link {
+  color: inherit;
+  text-decoration: underline;
+  transition: var(--transition-fast);
+}
+
+.link:hover {
+  opacity: 0.8;
+}
+
+/* User messages - link */
+.userMessage .link {
+  color: white;
+  font-weight: var(--font-weight-medium);
+}
+
+/* Character messages - link */
+.characterMessage .link {
+  color: var(--accent-primary);
+  font-weight: var(--font-weight-medium);
+}
+
+/* ===== ANIMATIONS ===== */
+
+@keyframes fadeInSlide {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* ===== ACCESSIBILITY ===== */
+
+/* Reduce motion */
+@media (prefers-reduced-motion: reduce) {
+  .messageBubble {
+    animation: none;
+  }
+  
+  .messageBubble:hover .messageContent {
+    transform: none;
+  }
+}
+
+/* High contrast mode */
+@media (prefers-contrast: high) {
+  .characterMessage .messageContent {
+    border-width: 2px;
+  }
+  
+  .userMessage .messageContent {
+    outline: 2px solid white;
+  }
+}
+
+/* ===== DEFENSIVE FALLBACKS ===== */
+
+/* Ensure long words don't break layout */
+.messageText {
+  hyphens: auto;
+  -webkit-hyphens: auto;
+  -moz-hyphens: auto;
+}
+
+/* Ensure images in markdown don't overflow */
+.messageText img {
+  max-width: 100%;
+  height: auto;
+  border-radius: var(--border-radius-sm);
+}
+
+/* Ensure tables in markdown are scrollable */
+.messageText table {
+  max-width: 100%;
+  overflow-x: auto;
+  display: block;
+}

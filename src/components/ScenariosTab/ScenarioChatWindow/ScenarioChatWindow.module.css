@@ -1,0 +1,221 @@
+/* ScenarioChatWindow.module.css */
+/* Phase 2: Two-Panel Layout with Design Tokens */
+
+/* Import design tokens - LOCAL to ScenarioChatWindow only */
+@import '../../../design-system/variabless.css';  /* ✅ Correct - 3 levels up */
+
+/* ===== MAIN CONTAINER ===== */
+.container {
+  display: flex;
+  gap: var(--spacing-lg);
+  height: 100vh;
+  padding: var(--spacing-lg);
+  background: var(--bg-canvas);
+  position: relative;
+  overflow: hidden;
+}
+
+/* Mobile: No padding, no gap */
+@media (max-width: 768px) {
+  .container {
+    padding: 0;
+    gap: 0;
+  }
+}
+
+/* ===== LEFT PANEL: CHAT PANEL ===== */
+.chatPanel {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  background: var(--bg-surface);
+  border-radius: var(--border-radius-xl);
+  overflow: hidden;
+  box-shadow: var(--shadow-elevation03);
+  transition: var(--transition-normal);
+  position: relative;
+}
+
+/* When info panel is collapsed, chat panel stays same (flex: 1 handles it) */
+.chatPanel.expanded {
+  /* Optional: Could add subtle animation/glow when expanded */
+}
+
+/* Mobile: Full width, no border-radius */
+@media (max-width: 768px) {
+  .chatPanel {
+    border-radius: 0;
+    box-shadow: none;
+  }
+}
+
+/* ===== RIGHT PANEL: INFO PANEL ===== */
+.infoPanel {
+  width: 320px;
+  min-width: 320px;
+  background: var(--bg-surface);
+  border-radius: var(--border-radius-xl);
+  display: flex;
+  flex-direction: column;
+  box-shadow: var(--shadow-elevation03);
+  transition: var(--transition-normal);
+  position: relative;
+  overflow: hidden;
+}
+
+/* Collapsed state - hidden */
+.infoPanel.collapsed {
+  width: 0;
+  min-width: 0;
+  opacity: 0;
+  pointer-events: none;
+  overflow: hidden;
+}
+
+/* Mobile: Completely hidden */
+@media (max-width: 768px) {
+  .infoPanel {
+    display: none !important;
+  }
+}
+
+/* ===== BREADCRUMB TOGGLE ===== */
+.breadcrumb {
+  position: absolute;
+  top: var(--spacing-lg);
+  right: var(--spacing-lg);
+  width: 44px;
+  height: 44px;
+  background: var(--bg-interactive);
+  border-radius: var(--border-radius-full);
+  border: 1px solid var(--border-subtle);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1020; /* --z-sticky equivalent */
+  cursor: pointer;
+  transition: var(--transition-fast);
+}
+
+.breadcrumb:hover {
+  background: var(--bg-peak);
+  border-color: var(--accent-primary);
+  box-shadow: var(--shadow-glow);
+}
+
+.breadcrumb:active {
+  transform: scale(0.95);
+}
+
+.breadcrumbIcon {
+  color: var(--text-secondary);
+  transition: var(--transition-fast);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.breadcrumb:hover .breadcrumbIcon {
+  color: var(--accent-primary);
+}
+
+.breadcrumb.collapsed .breadcrumbIcon {
+  transform: rotate(180deg);
+}
+
+/* Tooltip */
+.breadcrumb::after {
+  content: attr(data-tooltip);
+  position: absolute;
+  top: 100%;
+  right: 0;
+  margin-top: var(--spacing-sm);
+  padding: var(--spacing-sm) var(--spacing-md);
+  background: var(--bg-peak);
+  border: 1px solid var(--border-medium);
+  border-radius: var(--border-radius-sm);
+  color: var(--text-primary);
+  font-size: var(--font-size-caption);
+  font-weight: var(--font-weight-medium);
+  white-space: nowrap;
+  opacity: 0;
+  pointer-events: none;
+  transition: var(--transition-fast);
+  box-shadow: var(--shadow-elevation02);
+  z-index: 1070; /* --z-tooltip equivalent */
+}
+
+.breadcrumb:hover::after {
+  opacity: 1;
+}
+
+/* Mobile: Hide breadcrumb */
+@media (max-width: 768px) {
+  .breadcrumb {
+    display: none !important;
+  }
+}
+
+/* ===== CHAT PANEL INNER LAYOUT ===== */
+/* Two-column layout: Avatars on left, Chat content on right */
+
+.chatPanelInner {
+  display: flex;
+  width: 100%;
+  height: 100%;
+}
+
+/* Left column for avatars (handled by AvatarsColumn component) */
+/* Right column for chat content */
+.chatContent {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  min-width: 0; /* Allows flex item to shrink properly */
+  position: relative; /* For floating input absolute positioning */
+  overflow: hidden; /* Prevent content overflow */
+}
+
+/* ===== TEMPORARY PLACEHOLDERS (for existing components) ===== */
+/* These will be replaced in subsequent phases */
+
+.chatPanelContent {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  position: relative;
+}
+
+.infoPanelContent {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  overflow-y: auto;
+}
+
+/* ===== DEFENSIVE FALLBACKS ===== */
+
+/* If CSS variables aren't loaded, provide fallbacks */
+@supports not (color: var(--bg-canvas)) {
+  .container {
+    background: #0A0F1A;
+  }
+  
+  .chatPanel,
+  .infoPanel {
+    background: #141B2E;
+    border-radius: 20px;
+  }
+}
+
+/* Ensure container never breaks layout */
+.container * {
+  box-sizing: border-box;
+}
+
+/* Prevent overflow issues */
+.chatPanel,
+.infoPanel {
+  min-width: 0; /* Allows flex items to shrink below content size */
+  min-height: 0;
+}

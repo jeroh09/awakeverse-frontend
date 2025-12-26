@@ -1,16 +1,18 @@
-// src/components/ScenariosTab/ScenarioChatWindow/ParticipantAvatars/ParticipantOrb.jsx - WITH QUEUED
+// src/components/ScenariosTab/ScenarioChatWindow/AvatarsColumn/ParticipantOrb.jsx
+// Individual participant orb with avatar, ring, and label
+
 import React, { useState } from 'react';
 import EmotionRing from './EmotionRing';
 import { characterCategories } from '../../../../data/characterCategories';
 import { getDisplayNameFromKey, isCustomCharacterKey } from '../../../../utils/characterUtils';
+import styles from './AvatarsColumn.module.css';
 
 export default function ParticipantOrb({
   characterKey,
   userCharacters = [],
   isActive = false,
   isQueued = false,
-  index = 0,
-  theme = 'light'
+  index = 0
 }) {
   const [imageError, setImageError] = useState(false);
 
@@ -65,9 +67,9 @@ export default function ParticipantOrb({
 
   // Build className with state
   const orbClassName = [
-    'participant-orb',
-    isActive && 'active',
-    isQueued && 'queued'
+    styles.participantOrb,
+    isActive && styles.active,
+    isQueued && styles.queued
   ].filter(Boolean).join(' ');
 
   // Determine aria-label
@@ -82,41 +84,36 @@ export default function ParticipantOrb({
       role="listitem"
       aria-label={ariaLabel}
     >
-      <div className="orb-ring-wrapper">
+      <div className={styles.orbRingWrapper}>
         <EmotionRing
-          color={isActive || isQueued ? '#FFD700' : '#3498db'}
-          intensity={isActive ? 0.9 : isQueued ? 0.75 : 0.6}
-          breathingSpeed={isActive ? 2 : isQueued ? 1.5 : 1}
-          breathingScale={isActive ? 1.08 : isQueued ? 1.05 : 1.03}
           isActive={isActive}
           isQueued={isQueued}
-          onClick={() => {}}
         />
         
-        <div className="orb-avatar">
+        <div className={styles.orbAvatar}>
           {charInfo.thumbnailUrl && !imageError ? (
             <img
               src={charInfo.thumbnailUrl}
               alt={charInfo.name}
-              className="orb-image"
+              className={styles.orbImage}
               onError={() => setImageError(true)}
             />
           ) : (
-            <div className="orb-initial">{initial}</div>
+            <div className={styles.orbInitial}>{initial}</div>
           )}
         </div>
 
         {/* Speaking indicator dot - ONLY for active, not queued */}
         {isActive && (
           <div 
-            className="speaking-indicator"
+            className={styles.speakingIndicator}
             role="status"
             aria-label="Speaking"
           />
         )}
       </div>
 
-      <div className="orb-label">{charInfo.name}</div>
+      <div className={styles.orbLabel}>{charInfo.name}</div>
     </div>
   );
 }
