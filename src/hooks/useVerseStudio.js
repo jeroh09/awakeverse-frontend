@@ -435,8 +435,9 @@ export default function useVerseStudio() {
           }
         }
 
-        if (taskData?.llm_assignments && typeof taskData.llm_assignments === 'object') {
-          payload.llm_assignments = taskData.llm_assignments;
+        // ✅ FIXED: Pass through custom_roles for custom tasks
+        if (taskData?.custom_roles && Array.isArray(taskData.custom_roles)) {
+          payload.custom_roles = taskData.custom_roles;
         }
 
         Object.keys(payload).forEach((k) => {

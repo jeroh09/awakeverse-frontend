@@ -379,7 +379,7 @@ export default function TaskChatWindow({ task, verseStudio, onBack }) {
   };
 
   const artifactLabel = (a, idx) => {
-    const title = a?.title || a?.name;
+    const title = a?.filename || a?.title || a?.name;
     if (title) return String(title);
 
     const type = String(a?.type || a?.artifact_type || "Artifact");
