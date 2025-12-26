@@ -29,7 +29,6 @@ import MobileBackButton from './MobileBackButton';
 import useKeyboardHeight from '../../../hooks/useKeyboardHeight'; // NEW: Mobile keyboard handling
 
 // Styles
-import './ScenarioChatWindow.css'; // Old styles - keep as fallback
 import styles from './ScenarioChatWindow.module.css'; // New layout styles
 
 export default function ScenarioChatWindow({
