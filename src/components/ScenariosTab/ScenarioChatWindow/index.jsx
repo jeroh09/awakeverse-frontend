@@ -7,6 +7,7 @@ import usePremiumCharacters from '../../../hooks/usePremiumCharacters';
 import useScenarioChat from '../../../hooks/useScenarioChat';
 import { useUser } from '../../../contexts/UserContext';
 import SubscriptionService from '../../../services/SubscriptionService';
+import { ArrowLeft, ChevronRight } from 'lucide-react';
 
 // Existing components - keeping for now
 // import ChatInput from './ChatInput'; // OLD - deprecated
