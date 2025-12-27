@@ -331,7 +331,18 @@ export default function ScenarioChatWindow({
             )}
 
             {/* Chat Header */}
+            {/* Chat Header */}
             <header className="chat-header">
+              {/* Mobile back button - icon only */}
+              {isMobile && (
+                <button 
+                  onClick={handleBack}
+                  className={styles.headerBackButton}
+                  aria-label="Go back"
+                >
+                  <ArrowLeft size={20} />
+                </button>
+              )}
               <h1 className="scenario-title">{scenario.title}</h1>
               {scenario.description && (
                 <p className="scenario-description">{scenario.description}</p>

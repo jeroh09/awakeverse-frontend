@@ -14,6 +14,7 @@ export default function MyScenariosPanel({
   scenarios = [],
   onRefresh = () => {},
   onCreateNew = () => {},
+  onStartDebate = () => {},  // ✅ ADD THIS
   theme = 'light'
 }) {
   const { user } = useUser();
@@ -30,20 +31,10 @@ export default function MyScenariosPanel({
   const { userCharacters = [] } = usePremiumCharacters();
 
   // Handle starting a debate
+// Handle starting a debate - CALL PARENT CALLBACK
   const handleStartDebate = async (scenarioId) => {
-    try {
-      const scenario = scenarios.find(s => s.id === scenarioId);
-      if (!scenario) {
-        throw new Error('Scenario not found');
-      }
-      
-      setActiveScenario(scenario);
-    } catch (error) {
-      console.error('❌ Failed to start debate:', error);
-      alert('Failed to start debate. Please try again.');
-    }
+    onStartDebate(scenarioId);  // ✅ Just call parent, don't render window here
   };
-
   // Handle closing chat window
   const handleCloseChatWindow = () => {
     setActiveScenario(null);
@@ -162,15 +153,15 @@ export default function MyScenariosPanel({
   };
 
   // If chat window is active, show it fullscreen
-  if (activeScenario) {
-    return (
-      <ScenarioChatWindow
-        scenario={activeScenario}
-        onBack={handleCloseChatWindow}
-        theme={theme}
-      />
-    );
-  }
+  //if (activeScenario) {
+    //return (
+      //<ScenarioChatWindow
+        //scenario={activeScenario}
+        //onBack={handleCloseChatWindow}
+        //theme={theme}
+      ///>
+    //);
+ // }
 
   // Show empty state if no scenarios
   if (scenarios.length === 0) {

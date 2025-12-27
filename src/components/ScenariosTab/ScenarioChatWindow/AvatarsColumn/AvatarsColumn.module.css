@@ -364,3 +364,40 @@
   font-style: italic;
   text-align: center;
 }
+/* Mobile: Hide vertical column */
+@media (max-width: 768px) {
+  .avatarsColumn {
+    display: none;
+  }
+}
+
+/* Mobile: Horizontal avatars */
+.avatarsHorizontal {
+  display: none; /* Hidden on desktop */
+}
+
+@media (max-width: 768px) {
+  .avatarsHorizontal {
+    display: flex;
+    flex-direction: row;
+    gap: var(--spacing-sm);
+    padding: var(--spacing-sm) var(--spacing-md);
+    overflow-x: auto;
+    background: var(--bg-interactive);
+    border-bottom: 1px solid var(--border-subtle);
+  }
+  
+  .avatarsHorizontal .participantOrb {
+    min-width: 48px;
+    flex-direction: column;
+  }
+  
+  .avatarsHorizontal .orbContainer {
+    width: 40px;
+    height: 40px;
+  }
+  
+  .avatarsHorizontal .participantName {
+    display: none; /* Hide names on mobile */
+  }
+}
