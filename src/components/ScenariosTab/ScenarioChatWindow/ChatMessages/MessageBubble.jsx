@@ -1,4 +1,7 @@
-// MessageBubble.jsx - Works with existing backend format
+// src/components/ScenariosTab/ScenarioChatWindow/ChatMessages/MessageBubble.jsx
+// MessageBubble - Works with existing backend format
+// Handles both: { user: true, text: '...' } and { speaker: 'user', text: '...', display_name: '...' }
+
 import React from 'react';
 import ReactMarkdown from 'react-markdown';
 import { getDisplayNameFromKey, isCustomCharacterKey } from '../../../../utils/characterUtils';
@@ -7,20 +10,27 @@ import styles from './MessageBubble.module.css';
 
 export default function MessageBubble({ message, userCharacters = [] }) {
   // Defensive: Validate message object
-  if (!message || !message.speaker || !message.text) {
+  if (!message || !message.text) {
     console.error('❌ MessageBubble: Invalid message object', message);
     return null;
   }
 
-  const { speaker, text, display_name } = message;
-  const isUser = speaker === 'user';
+  // Destructure - handles both message formats
+  const { user, text, speaker, display_name } = message;
+  
+  // Check if user message - handles both formats:
+  // Format 1: { user: true, text: '...' }
+  // Format 2: { speaker: 'user', text: '...' }
+  const isUser = user === true || speaker === 'user';
 
   // Get character info for non-user messages
   const getCharacterInfo = () => {
     if (isUser) return null;
 
-    // Use display_name if provided, otherwise parse from speaker
+    // Use speaker as character key
     const characterKey = speaker;
+    
+    // Check if custom character
     const isCustom = isCustomCharacterKey(characterKey);
 
     if (isCustom) {
@@ -46,7 +56,7 @@ export default function MessageBubble({ message, userCharacters = [] }) {
       }
     }
 
-    // Fallback: parse from speaker key
+    // Fallback: parse from speaker key or use display_name
     return {
       name: display_name || getDisplayNameFromKey(characterKey),
       avatarUrl: `/images/${characterKey}.jpg`
@@ -55,6 +65,7 @@ export default function MessageBubble({ message, userCharacters = [] }) {
 
   const characterInfo = getCharacterInfo();
 
+  // Build className based on user/character
   const bubbleClassName = [
     styles.messageBubble,
     isUser ? styles.userMessage : styles.characterMessage
