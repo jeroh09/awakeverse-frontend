@@ -2,7 +2,7 @@
 /* Phase 2: Two-Panel Layout with Design Tokens */
 
 /* Import design tokens - LOCAL to ScenarioChatWindow only */
-@import '../../design-system/variabless.css';
+@import '../../../design-system/variabless.css';
 
 /* ===== MAIN CONTAINER ===== */
 .container {
