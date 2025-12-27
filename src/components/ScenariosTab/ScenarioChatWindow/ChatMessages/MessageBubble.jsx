@@ -1,74 +1,60 @@
-// src/components/ScenariosTab/ScenarioChatWindow/ChatMessages/MessageBubble.jsx
-// PHASE 6: Modern chat bubbles with design tokens
-// User messages: Indigo gradient, right-aligned
-// Character messages: Dark surface, left-aligned
-
+// MessageBubble.jsx - Works with existing backend format
 import React from 'react';
 import ReactMarkdown from 'react-markdown';
 import { getDisplayNameFromKey, isCustomCharacterKey } from '../../../../utils/characterUtils';
 import { characterCategories } from '../../../../data/characterCategories';
 import styles from './MessageBubble.module.css';
 
-/**
- * MessageBubble - Individual message with author info and markdown content
- * 
- * @param {Object} message - Message object { role, content, metadata }
- * @param {Array} userCharacters - Array of custom characters
- */
 export default function MessageBubble({ message, userCharacters = [] }) {
   // Defensive: Validate message object
-  if (!message || !message.role || !message.content) {
+  if (!message || !message.speaker || !message.text) {
     console.error('❌ MessageBubble: Invalid message object', message);
     return null;
   }
 
-  const { role, content, metadata = {} } = message;
-  const isUser = role === 'user';
+  const { speaker, text, display_name } = message;
+  const isUser = speaker === 'user';
 
-  // Get character info for assistant messages
+  // Get character info for non-user messages
   const getCharacterInfo = () => {
     if (isUser) return null;
 
-    const characterKey = metadata.character_key;
-    if (!characterKey) return { name: 'Assistant', avatarUrl: null };
-
+    // Use display_name if provided, otherwise parse from speaker
+    const characterKey = speaker;
     const isCustom = isCustomCharacterKey(characterKey);
 
     if (isCustom) {
       const customChar = userCharacters.find(c => c.character_key === characterKey);
       if (customChar) {
         return {
-          name: customChar.display_name,
+          name: customChar.display_name || display_name,
           avatarUrl: customChar.avatar_url
         };
       }
-      return {
-        name: getDisplayNameFromKey(characterKey),
-        avatarUrl: `/images/${characterKey}.jpg`
-      };
-    } else {
-      // Static character
-      for (const category of characterCategories) {
-        if (category.characters) {
-          const found = category.characters.find(c => c.key === characterKey);
-          if (found) {
-            return {
-              name: found.name,
-              avatarUrl: found.thumbnailUrl
-            };
-          }
+    }
+
+    // Static character lookup
+    for (const category of characterCategories) {
+      if (category.characters) {
+        const found = category.characters.find(c => c.key === characterKey);
+        if (found) {
+          return {
+            name: found.name,
+            avatarUrl: found.thumbnailUrl
+          };
         }
       }
-      return {
-        name: characterKey,
-        avatarUrl: `/images/${characterKey}.jpg`
-      };
     }
+
+    // Fallback: parse from speaker key
+    return {
+      name: display_name || getDisplayNameFromKey(characterKey),
+      avatarUrl: `/images/${characterKey}.jpg`
+    };
   };
 
   const characterInfo = getCharacterInfo();
 
-  // Build className based on role
   const bubbleClassName = [
     styles.messageBubble,
     isUser ? styles.userMessage : styles.characterMessage
@@ -110,7 +96,6 @@ export default function MessageBubble({ message, userCharacters = [] }) {
         <div className={styles.messageText}>
           <ReactMarkdown
             components={{
-              // Style markdown elements
               p: ({ children }) => <p className={styles.paragraph}>{children}</p>,
               strong: ({ children }) => <strong className={styles.bold}>{children}</strong>,
               em: ({ children }) => <em className={styles.italic}>{children}</em>,
@@ -133,7 +118,7 @@ export default function MessageBubble({ message, userCharacters = [] }) {
               )
             }}
           >
-            {content}
+            {text}
           </ReactMarkdown>
         </div>
       </div>
