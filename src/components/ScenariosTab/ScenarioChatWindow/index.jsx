@@ -220,11 +220,18 @@ export default function ScenarioChatWindow({
     }
 
     console.log('📋 Switching scenario:', scenarioId);
+     // Find the scenario in the list
+    const newScenario = scenarios.find(s => s.id === scenarioId);
+
+    if (!newScenario) {
+      console.error('❌ Scenario not found:', scenarioId);
+      return;
+    }
     
     // Defensive: Navigate back to let parent component handle the switch
     // This prevents complex state management within chat window
     resetScenario();
-    onBack();
+    onBack(newScenario); 
   };
 
   // Show initialization error

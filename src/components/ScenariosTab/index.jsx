@@ -136,8 +136,14 @@ export default function ScenariosTab({
   }, [myScenarios]);
 
   // Handle closing chat window
-  const handleCloseChatWindow = useCallback(() => {
-    setActiveScenario(null);
+  const handleCloseChatWindow = useCallback((nextScenario = null) => {
+    if (nextScenario) {
+    // Switch to new scenario immediately
+      setActiveScenario(nextScenario);
+    } else {
+    // Just close
+      setActiveScenario(null);
+    }
     // ✅ If this was a Market Hub scenario, notify parent to clear it
     if (marketHubScenario && onMarketHubScenarioClosed) {
       console.log('🔄 Notifying ChatApp to clear Market Hub scenario');
