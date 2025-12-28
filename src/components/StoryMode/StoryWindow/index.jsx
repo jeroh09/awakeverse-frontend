@@ -1,583 +1,173 @@
-// src/components/StoryMode/StoryWindow/index.jsx - STEP 3: Persistence + Keyboard Shortcuts + CUSTOM CHARACTER AVATARS
-import React, { useState, useEffect, useRef } from 'react';
-import { characterCategories } from '../../../data/characterCategories';
-import {
-  getDisplayNameFromKey,
-  getCharacterThumbnailUrl,
-  isCustomCharacterKey
-} from '../../../utils/characterUtils';
-import usePremiumCharacters from '../../../hooks/usePremiumCharacters'; // ADDED
-import StoryMessages from './StoryMessages';
-import StoryInput from './StoryInput';
+// src/components/StoryMode/StoryWindow/index.jsx
+// Updated to use new two-panel layout with separated rounded panels
+
+import React, { useState, useCallback, useEffect, useRef } from 'react';
+import { useUser } from '../../../contexts/UserContext';
 import useStoryApi from '../../../hooks/useStoryApi';
-import MilestoneChips from './MilestoneChips';
-import StoryHomeButton from './StoryHomeButton';
+import DefensiveStoryWrapper from '../DefensiveStoryWrapper';
+import StoryWindowLayout from './StoryWindowLayout';
 import styles from './StoryWindow.module.css';
 
-// Helper: map char key → name/thumbnail - UPDATED WITH CUSTOM CHARACTER SUPPORT
-const getCharacterInfo = (charKey, userCharacters = []) => {
-  if (!charKey) {
-    return {
-      name: 'Unknown Character',
-      thumbnailUrl: null
-    };
-  }
-
-  // 1) Check for custom characters first - NEW LOGIC
-  const isCustom = isCustomCharacterKey(charKey);
-  if (isCustom) {
-    const customChar = userCharacters.find(c => c.character_key === charKey);
-    if (customChar) {
-      return {
-        name: customChar.display_name,
-        thumbnailUrl: customChar.avatar_url, // Use custom avatar URL
-        isCustom: true
-      };
-    }
-  }
-
-  // 2) Try static character definitions
-  for (const category of characterCategories) {
-    const found = category.characters?.find((c) => c.key === charKey);
-    if (found) {
-      return {
-        name: found.name,
-        thumbnailUrl: found.thumbnailUrl || getCharacterThumbnailUrl(charKey, false),
-        isCustom: false
-      };
-    }
-  }
-
-  // 3) Graceful fallback - use the imported utility function
-  const name = getDisplayNameFromKey(charKey);
-  const thumbnailUrl = getCharacterThumbnailUrl(
-    charKey,
-    isCustomCharacterKey(charKey)
-  );
-
-  return { 
-    name, 
-    thumbnailUrl,
-    isCustom: isCustomCharacterKey(charKey)
-  };
-};
-
-// Helper: format era display name
-const formatEra = (era) => {
-  if (!era) return 'Modern';
-  const map = {
-    ancient: 'Ancient Times',
-    medieval: 'Medieval Era',
-    renaissance: 'Renaissance',
-    '1800s': '1800s',
-    '1890s': 'Victorian Era',
-    '1900s': 'Early 1900s',
-    '1950s': '1950s',
-    modern: 'Modern Day',
-    '2050s': 'Near Future',
-    far_future: 'Far Future'
-  };
-  const key = String(era || '').toLowerCase().trim();
-  return map[key] || era;
-};
-
-// Small helper for act labels
-const ACT_LABELS = {
-  1: {
-    title: 'Act I · Setup',
-    summary: 'Establish the world, stakes, and the inciting incident.'
-  },
-  2: {
-    title: 'Act II · Confrontation',
-    summary: 'Complications, rising tension, and hard choices.'
-  },
-  3: {
-    title: 'Act III · Resolution',
-    summary: 'Climax, consequences, and a new equilibrium.'
-  }
-};
-
-// LocalStorage key for panel preference
-const PANEL_PREFERENCE_KEY = 'awakeverse_story_panel_open';
-
+/**
+ * StoryWindow - Main story chat interface
+ * 
+ * Props:
+ * - story: Story object with metadata
+ * - onClose: Callback to return to story list
+ */
 export default function StoryWindow({ story, onClose }) {
-  const [messages, setMessages] = useState([]);
-  const [openingBanner, setOpeningBanner] = useState(null);
-  const [isStreaming, setIsStreaming] = useState(false);
-  const [progressData, setProgressData] = useState(null);
-  const [isLoadingProgress, setIsLoadingProgress] = useState(false);
+  const { user } = useUser();
+  const { sendMessageStream } = useStoryApi();
   
-  // Initialize panel state from localStorage (default: false)
-  const [isPanelOpen, setIsPanelOpen] = useState(() => {
-    try {
-      const saved = localStorage.getItem(PANEL_PREFERENCE_KEY);
-      return saved === 'true';
-    } catch (e) {
-      console.warn('localStorage unavailable:', e);
-      return false;
-    }
-  });
+  // State for messages
+  const [messages, setMessages] = useState(story?.messages || []);
+  const [streamingMessage, setStreamingMessage] = useState('');
+  const [isStreaming, setIsStreaming] = useState(false);
+  const [isSending, setIsSending] = useState(false);
+  
+  // Abort controller for streaming
+  const abortControllerRef = useRef(null);
 
-  const abortRef = useRef(null);
-  const { userCharacters = [] } = usePremiumCharacters(); // ADDED HOOK
-
-  const {
-    sendMessage,
-    sendMessageStream,
-    inviteCharacter,
-    getStoryContext,
-    getStoryProgress, 
-    loading,
-    error
-  } = useStoryApi();
-
-  // Persist panel state to localStorage
+  // Update messages when story changes
   useEffect(() => {
-    try {
-      localStorage.setItem(PANEL_PREFERENCE_KEY, isPanelOpen.toString());
-    } catch (e) {
-      console.warn('Failed to save panel preference:', e);
+    if (story?.messages) {
+      setMessages(story.messages);
     }
-  }, [isPanelOpen]);
+  }, [story?.messages]);
 
-  // Keyboard shortcuts
-  useEffect(() => {
-    const handleKeyDown = (e) => {
-      // Esc to close panel
-      if (e.key === 'Escape' && isPanelOpen) {
-        setIsPanelOpen(false);
-        e.preventDefault();
-      }
+  // Handle send message
+  const handleSendMessage = useCallback(async (content) => {
+    if (!content.trim() || !story?.id || isSending || isStreaming) return;
 
-      // Cmd/Ctrl + P to toggle panel
-      if ((e.metaKey || e.ctrlKey) && e.key === 'p') {
-        setIsPanelOpen(!isPanelOpen);
-        e.preventDefault();
-      }
+    // Create user message
+    const userMessage = {
+      id: `temp-${Date.now()}`,
+      role: 'user',
+      content: content.trim(),
+      timestamp: new Date().toISOString()
     };
 
-    window.addEventListener('keydown', handleKeyDown);
-    return () => window.removeEventListener('keydown', handleKeyDown);
-  }, [isPanelOpen]);
-
-  // Fetch progress data
-  const fetchProgressData = async (storyId) => {
-    if (!storyId) return;
-
-    setIsLoadingProgress(true);
-    try {
-      const data = await getStoryProgress(storyId);
-      setProgressData(data);
-    } catch (err) {
-      console.warn('⚠️ Progress endpoint unavailable:', err.message);
-      // Don't set progressData - will use fallback
-    } finally {
-      setIsLoadingProgress(false);
-    }
-  };
-
-  // Initial load – fetch context from backend
-  useEffect(() => {
-    if (!story?.id) return;
-
-    const initializeStory = async () => {
-      try {
-        console.log('📖 Loading story context:', story.id);
-        const data = await getStoryContext(story.id);
-
-        const msgs = data.messages || [];
-        setMessages(msgs);
-
-        const banner =
-          data.story?.starting_situation ||
-          data.story?.current_situation ||
-          null;
-        setOpeningBanner(banner);
-
-        // Fetch progress data
-        fetchProgressData(story.id);
-      } catch (err) {
-        console.error('❌ Failed to initialize story:', err);
-      }
-    };
-
-    initializeStory();
-  }, [story?.id, getStoryContext]);
-
-  // Refresh progress after each message
-  useEffect(() => {
-    if (messages.length > 0 && story?.id) {
-      // Debounce progress refresh to avoid too many requests
-      const timeoutId = setTimeout(() => {
-        fetchProgressData(story.id);
-      }, 500);
-      
-      return () => clearTimeout(timeoutId);
-    }
-  }, [messages.length, story?.id]);
-
-  // Streaming send handler
-  const handleSendMessage = async (inputValue) => {
-    if (!inputValue.trim() || isStreaming) return;
-
-    const userText = inputValue.trim();
-
-    // 1) Append user message immediately
-    const userId = `u_${Date.now()}`;
-    setMessages((prev) => [
-      ...prev,
-      {
-        id: userId,
-        role: 'user',
-        content: userText,
-        timestamp: new Date().toISOString()
-      }
-    ]);
-
-    // 2) Append placeholder assistant bubble that we stream into
-    const liveId = `a_${Date.now()}`;
-    setMessages((prev) => [
-      ...prev,
-      {
-        id: liveId,
-        role: 'assistant',
-        content: '',
-        isLive: true,
-        timestamp: new Date().toISOString()
-      }
-    ]);
-
-    // 3) Kick off stream
+    // Add user message immediately
+    setMessages(prev => [...prev, userMessage]);
+    setIsSending(true);
     setIsStreaming(true);
-    abortRef.current = new AbortController();
+    setStreamingMessage('');
+
+    // Create abort controller for this stream
+    abortControllerRef.current = new AbortController();
 
     try {
-      await sendMessageStream(story.id, userText, {
-        onDelta: (accumText) => {
-          // Update live assistant bubble
-          setMessages((prev) => {
-            const next = [...prev];
-            const idx = next.findIndex((m) => m.id === liveId);
-            if (idx >= 0) {
-              next[idx] = { ...next[idx], content: accumText };
-            }
-            return next;
-          });
-        },
-        onDone: (finalObj, fullText) => {
-          setIsStreaming(false);
-          abortRef.current = null;
+      await sendMessageStream(
+        story.id,
+        content.trim(),
+        {
+          onDelta: (fullText) => {
+            setStreamingMessage(fullText);
+          },
+          onDone: (response, fullText) => {
+            console.log('✅ Stream complete:', { fullText, response });
+            
+            // Create assistant message
+            const assistantMessage = {
+              id: response.message_id || `assistant-${Date.now()}`,
+              role: 'assistant',
+              content: fullText,
+              character_key: story.main_character_key,
+              timestamp: new Date().toISOString()
+            };
 
-          // Refresh progress data when stream completes
-          fetchProgressData(story.id);
+            // Add to messages
+            setMessages(prev => [...prev, assistantMessage]);
+            setStreamingMessage('');
+            setIsStreaming(false);
+            setIsSending(false);
 
-          console.log('✅ Story stream completed:', finalObj);
-        },
-        onError: (msg) => {
-          setIsStreaming(false);
-          abortRef.current = null;
-          setMessages((prev) => {
-            const next = [...prev];
-            const idx = next.findIndex((m) => m.id === liveId);
-            if (idx >= 0) {
-              next[idx] = {
-                ...next[idx],
-                content: '⚠️ Stream failed: ' + msg
-              };
+            // Update story state if provided
+            if (response.story_state) {
+              // TODO: Update parent story state
+              console.log('📊 Story state updated:', response.story_state);
             }
-            return next;
-          });
-        },
-        signal: abortRef.current.signal
-      });
-    } catch (e) {
-      // onError already handled UI surface
-      console.error('❌ Streaming send failed:', e);
+          },
+          onError: (error) => {
+            console.error('❌ Stream error:', error);
+            setStreamingMessage('');
+            setIsStreaming(false);
+            setIsSending(false);
+            
+            // Show error message
+            const errorMessage = {
+              id: `error-${Date.now()}`,
+              role: 'system',
+              content: 'Sorry, there was an error processing your message. Please try again.',
+              timestamp: new Date().toISOString()
+            };
+            setMessages(prev => [...prev, errorMessage]);
+          },
+          signal: abortControllerRef.current?.signal
+        }
+      );
+    } catch (error) {
+      console.error('❌ Failed to send message:', error);
+      setStreamingMessage('');
+      setIsStreaming(false);
+      setIsSending(false);
     }
-  };
+  }, [story?.id, story?.main_character_key, isSending, isStreaming, sendMessageStream]);
 
-  const handleStop = () => {
-    abortRef.current?.abort();
-  };
+  // Handle cancel streaming
+  const handleCancelStreaming = useCallback(() => {
+    if (abortControllerRef.current) {
+      abortControllerRef.current.abort();
+      abortControllerRef.current = null;
+    }
+    setStreamingMessage('');
+    setIsStreaming(false);
+    setIsSending(false);
+  }, []);
 
-  const handleClose = () => {
-    console.log('📖 Closing story window');
-    onClose?.();
-  };
+  // Cleanup on unmount
+  useEffect(() => {
+    return () => {
+      if (abortControllerRef.current) {
+        abortControllerRef.current.abort();
+      }
+    };
+  }, []);
 
-  const togglePanel = () => {
-    setIsPanelOpen(!isPanelOpen);
-  };
+  // Prepare messages with live streaming
+  const displayMessages = React.useMemo(() => {
+    const msgs = [...messages];
+    
+    // Add streaming message if active
+    if (isStreaming && streamingMessage) {
+      msgs.push({
+        id: 'streaming',
+        role: 'assistant',
+        content: streamingMessage,
+        character_key: story?.main_character_key,
+        isLive: true
+      });
+    }
+    
+    return msgs;
+  }, [messages, isStreaming, streamingMessage, story?.main_character_key]);
 
-  // ============================================================================
-  // DATA EXTRACTION FOR DISPLAY
-  // ============================================================================
-
-  // Use progressData if available, otherwise fall back to story data
-  const objectiveStatus = progressData?.objective_status;
-  const structureStatus = progressData?.structure_status;
-
-  // Primary objective (from story or progressData)
-  const primaryObjective =
-    progressData?.primary_objective ||
-    story?.primary_objective ||
-    'Follow the thread of the story toward a satisfying conclusion.';
-
-  // Act information
-  const currentAct = structureStatus?.current_act || story?.current_act || 1;
-  const actName = structureStatus?.act_name || ACT_LABELS[currentAct]?.title.split('·')[1]?.trim() || 'Setup';
-  const totalActs = 3;
-
-  const actMeta = ACT_LABELS[currentAct] || {
-    title: `Act ${currentAct} · ${actName}`,
-    summary: 'Drama continues…'
-  };
-
-  // Progress calculation
-  let progressPercent = 0;
-  let progressSource = 'estimated';
-
-  if (objectiveStatus?.overall_progress != null) {
-    // Use real milestone progress (most accurate)
-    progressPercent = Math.round(objectiveStatus.overall_progress * 100);
-    progressSource = 'milestones';
-  } else if (structureStatus?.position_pct != null) {
-    // Use story structure progress (act/beat based)
-    progressPercent = Math.round(structureStatus.position_pct * 100);
-    progressSource = 'structure';
-  } else {
-    // Fallback: estimate from turns
-    const turns = story?.total_turns || 0;
-    const estimatedTotal = 30;
-    progressPercent = turns ? Math.min(100, Math.round((turns / estimatedTotal) * 100)) : 0;
-    progressSource = 'estimated';
-  }
-
-  // Milestone data
-  const milestones = objectiveStatus?.milestones;
-  const currentMilestoneId = objectiveStatus?.current_milestone?.id;
-
-  // Turn count
-  const turns = story?.total_turns || 0;
-
-  // Character display name with custom character support - FIXED: Use getCharacterInfo
-  const characterDisplayName = getCharacterInfo(story?.main_character_key, userCharacters).name;
-
-  // ============================================================================
-  // LOADING & ERROR STATES
-  // ============================================================================
-
-  // Loading state – full-frame
-  if (loading && messages.length === 0) {
-    return (
-      <div className={styles.storyWindow}>
-        <div className={styles.storyContainer}>
-          <div className={styles.loadingState}>
-            <div className={styles.loadingSpinner} />
-            <p>Loading story...</p>
-          </div>
-        </div>
-      </div>
-    );
-  }
-
-  // Error state – full-frame
-  if (error && messages.length === 0) {
-    return (
-      <div className={styles.storyWindow}>
-        <div className={styles.storyContainer}>
-          <div className={styles.errorState}>
-            <h3>⚠️ Error Loading Story</h3>
-            <p>{error}</p>
-            <button
-              onClick={() => window.location.reload()}
-              className={styles.retryButton}
-            >
-              Reload Page
-            </button>
-          </div>
-        </div>
-      </div>
-    );
-  }
-
-  // ============================================================================
-  // MAIN RENDER
-  // ============================================================================
+  // Prepare story object with messages
+  const enhancedStory = React.useMemo(() => ({
+    ...story,
+    messages: displayMessages
+  }), [story, displayMessages]);
 
   return (
-    <div className={styles.storyWindow}>
-      <div className={styles.storyContainer}>
-        <div className={styles.storyInner}>
-          <StoryHomeButton onClick={onClose} />
-          {/* ===== HEADER WITH COMPACT OBJECTIVE CHIP ===== */}
-          <header className={styles.storyHeader}>
-            {/* Left side: Title + badges */}
-            <div className={styles.headerLeft}>
-              <h1 className={styles.storyTitle}>
-                {story?.title || 'Untitled Story'}
-              </h1>
-
-              <div className={styles.storyMeta}>
-                <span className={styles.eraBadge}>
-                  <span>📅</span> {formatEra(story?.era)}
-                </span>
-
-                <span className={styles.characterBadge}>
-                  <span>👤</span> {characterDisplayName} {/* UPDATED: Uses custom character name */}
-                </span>
-
-                {Number.isFinite?.(story?.current_act) && (
-                  <span className={styles.actBadge}>
-                    <span>🎭</span> Act {story.current_act}
-                  </span>
-                )}
-
-                {Number.isFinite?.(story?.total_turns) && story.total_turns > 0 && (
-                  <span className={styles.turnsBadge}>
-                    <span>💬</span> {story.total_turns} turns
-                  </span>
-                )}
-              </div>
-            </div>
-
-            {/* Right side: Compact objective chip */}
-            <div className={styles.objectiveChip}>
-              <div className={styles.objectiveMiniLabel}>Story Objective</div>
-              <div className={styles.objectiveSummary}>
-                {primaryObjective}
-              </div>
-              <button
-                className={styles.objectiveStatusPill}
-                onClick={togglePanel}
-                aria-label="Open objectives panel"
-                title="Click to view progress (Cmd/Ctrl+P)"
-              >
-                <span>{actMeta.title.split('·')[0].trim()}</span>
-                {progressSource !== 'estimated' && (
-                  <span className={styles.objectivePercentBadge}>
-                    {progressPercent}%
-                  </span>
-                )}
-              </button>
-            </div>
-          </header>
-
-          {/* ===== MAIN CONTENT: MESSAGES + INPUT (ALWAYS FULL WIDTH) ===== */}
-          <div className={styles.storyMain}>
-            <StoryMessages
-              messages={messages}
-              characterKey={story?.main_character_key}
-              openingBanner={openingBanner}
-              userCharacters={userCharacters} // PASS USER CHARACTERS FOR CUSTOM AVATARS
-            />
-
-            {/* Non-fatal error banner */}
-            {error && (
-              <div className={styles.errorBanner}>
-                <span>⚠️</span>
-                <span>{error}</span>
-              </div>
-            )}
-
-            {/* Input */}
-            <StoryInput
-              onSendMessage={handleSendMessage}
-              isSending={loading}
-              characterKey={story?.main_character_key}
-              isStreaming={isStreaming}
-              onCancelStreaming={handleStop}
-            />
-          </div>
-
-          {/* ===== BACKDROP (when panel open) ===== */}
-          {isPanelOpen && (
-            <div 
-              className={styles.panelBackdrop}
-              onClick={() => setIsPanelOpen(false)}
-              aria-hidden="true"
-            />
-          )}
-
-          {/* ===== OBJECTIVES PANEL (FLOATING OVERLAY) ===== */}
-          <aside 
-            className={`${styles.objectivesPanel} ${isPanelOpen ? styles.open : ''}`}
-            aria-label="Story objectives panel"
-          >
-            {/* Panel header */}
-            <div className={styles.panelHeader}>
-              <div className={styles.panelTitle}>Objectives & Acts</div>
-              <button
-                className={styles.panelClose}
-                onClick={() => setIsPanelOpen(false)}
-                aria-label="Close objectives panel"
-                title="Close (Esc)"
-              >
-                Close ✕
-              </button>
-            </div>
-
-            {/* Main objective */}
-            <div className={styles.panelMainObjective}>
-              <strong>Story Objective:</strong>
-              <br />
-              {primaryObjective}
-            </div>
-
-            {/* Progress section */}
-            <div className={styles.panelProgressSection}>
-              <div className={styles.panelActLine}>
-                <span className={styles.panelActTitle}>{actMeta.title}</span>
-                <span className={styles.panelActBadge}>
-                  Act {currentAct} / {totalActs}
-                </span>
-              </div>
-
-              {/* Progress track */}
-              <div className={styles.panelProgressTrack}>
-                <div
-                  className={styles.panelProgressFill}
-                  style={{ width: `${progressPercent}%` }}
-                />
-              </div>
-
-              {/* Meta row */}
-              <div className={styles.panelMetaRow}>
-                {turns > 0 && (
-                  <span>💬 {turns} turn{turns === 1 ? '' : 's'} so far</span>
-                )}
-                
-                {progressSource !== 'estimated' && (
-                  <span className={styles.panelMetaPill}>
-                    {progressPercent}% complete
-                  </span>
-                )}
-              </div>
-            </div>
-
-            {/* Milestones */}
-            {milestones && milestones.length > 0 && (
-              <>
-                <div className={styles.milestonesHeader}>Milestones</div>
-                <div className={styles.milestonesList}>
-                  <MilestoneChips 
-                    milestones={milestones}
-                    currentMilestoneId={currentMilestoneId}
-                  />
-                </div>
-              </>
-            )}
-
-            {/* Loading indicator */}
-            {isLoadingProgress && (
-              <div className={styles.loadingIndicator}>
-                <span className={styles.loadingDot} />
-                Updating progress...
-              </div>
-            )}
-          </aside>
-        </div>
-      </div>
-    </div>
+    <DefensiveStoryWrapper>
+      <StoryWindowLayout
+        story={enhancedStory}
+        onClose={onClose}
+        onSendMessage={handleSendMessage}
+        isSending={isSending}
+        isStreaming={isStreaming}
+        onCancelStreaming={handleCancelStreaming}
+      />
+    </DefensiveStoryWrapper>
   );
 }
