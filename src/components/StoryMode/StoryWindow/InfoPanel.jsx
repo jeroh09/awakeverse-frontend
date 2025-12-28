@@ -20,11 +20,10 @@ export default function InfoPanel({ story, collapsed, onToggle, onClose }) {
   const currentMilestoneId = story?.current_milestone_id;
 
   return (
-    <aside className={`${styles.infoPanel} ${collapsed ? styles.collapsed : ''}`}>
-      
-      {/* Breadcrumb Toggle Button */}
+    <>
+      {/* Breadcrumb Toggle Button - Always visible, positioned outside panel */}
       <button 
-        className={styles.infoPanelToggle}
+        className={`${styles.infoPanelToggle} ${collapsed ? styles.toggleCollapsed : ''}`}
         onClick={onToggle}
         title={collapsed ? 'Show info panel' : 'Hide info panel'}
         aria-label={collapsed ? 'Show info panel' : 'Hide info panel'}
@@ -40,99 +39,103 @@ export default function InfoPanel({ story, collapsed, onToggle, onClose }) {
           <polyline points="9 18 15 12 9 6" />
         </svg>
       </button>
-      
-      {/* Panel Header */}
-      <div className={styles.infoPanelHeader}>
-        <h3 className={styles.infoPanelTitle}>Story Details</h3>
+
+      {/* Info Panel */}
+      <aside className={`${styles.infoPanel} ${collapsed ? styles.collapsed : ''}`}>
         
-        {/* Home Button */}
-        <button className={styles.infoHomeButton} onClick={onClose}>
-          <Home size={18} />
-          Return to Stories
-        </button>
-      </div>
-      
-      {/* Panel Content */}
-      <div className={styles.infoPanelContent}>
+        {/* Panel Header */}
+        <div className={styles.infoPanelHeader}>
+          <h3 className={styles.infoPanelTitle}>Story Details</h3>
+          
+          {/* Home Button */}
+          <button className={styles.infoHomeButton} onClick={onClose}>
+            <Home size={18} />
+            Return to Stories
+          </button>
+        </div>
         
-        {/* Acts Section */}
-        {acts.length > 0 && (
-          <div className={styles.infoSection}>
-            <div className={styles.infoSectionTitle}>Story Acts</div>
-            
-            {acts.map((act, index) => {
-              const actNumber = index + 1;
-              const isActive = actNumber === currentAct;
-              const isComplete = actNumber < currentAct;
+        {/* Panel Content */}
+        <div className={styles.infoPanelContent}>
+          
+          {/* Acts Section */}
+          {acts.length > 0 && (
+            <div className={styles.infoSection}>
+              <div className={styles.infoSectionTitle}>Story Acts</div>
               
-              return (
-                <div 
-                  key={act.id || actNumber}
-                  className={`${styles.actCard} ${isActive ? styles.active : ''}`}
-                >
-                  <div className={styles.actNumber}>Act {actNumber}</div>
-                  <div className={styles.actTitle}>{act.title || `Act ${actNumber}`}</div>
-                  <div className={styles.actProgress}>
-                    {isComplete ? 'Complete' : isActive ? 'In Progress' : 'Not Started'}
-                    {act.turns > 0 && ` • ${act.turns} turns`}
+              {acts.map((act, index) => {
+                const actNumber = index + 1;
+                const isActive = actNumber === currentAct;
+                const isComplete = actNumber < currentAct;
+                
+                return (
+                  <div 
+                    key={act.id || actNumber}
+                    className={`${styles.actCard} ${isActive ? styles.active : ''}`}
+                  >
+                    <div className={styles.actNumber}>Act {actNumber}</div>
+                    <div className={styles.actTitle}>{act.title || `Act ${actNumber}`}</div>
+                    <div className={styles.actProgress}>
+                      {isComplete ? 'Complete' : isActive ? 'In Progress' : 'Not Started'}
+                      {act.turns > 0 && ` • ${act.turns} turns`}
+                    </div>
                   </div>
-                </div>
-              );
-            })}
-          </div>
-        )}
-        
-        {/* Milestones Section */}
-        {milestones.length > 0 && (
-          <div className={styles.infoSection}>
-            <div className={styles.infoSectionTitle}>Current Milestones</div>
-            
-            {milestones.map((milestone) => {
-              const isCurrent = milestone.id === currentMilestoneId;
-              const status = milestone.status || 'not_started';
+                );
+              })}
+            </div>
+          )}
+          
+          {/* Milestones Section */}
+          {milestones.length > 0 && (
+            <div className={styles.infoSection}>
+              <div className={styles.infoSectionTitle}>Current Milestones</div>
               
-              // Status icons
-              const statusIcon = {
-                complete: '✅',
-                in_progress: '🔄',
-                not_started: '⏸️',
-                adapted: '🔀'
-              }[status] || '⏸️';
-              
-              // Status labels
-              const statusLabel = {
-                complete: 'Complete',
-                in_progress: 'Current',
-                not_started: 'Upcoming',
-                adapted: 'Adapted'
-              }[status] || 'Upcoming';
-              
-              return (
-                <div 
-                  key={milestone.id}
-                  className={`${styles.milestoneItem} ${isCurrent ? styles.current : ''}`}
-                >
-                  <div className={styles.milestoneHeader}>
-                    <span className={styles.milestoneIcon}>{statusIcon}</span>
-                    <span className={styles.milestoneTitle}>
-                      {milestone.description || `Milestone ${milestone.id}`}
-                    </span>
-                    <span className={styles.milestoneStatus}>{statusLabel}</span>
+              {milestones.map((milestone) => {
+                const isCurrent = milestone.id === currentMilestoneId;
+                const status = milestone.status || 'not_started';
+                
+                // Status icons
+                const statusIcon = {
+                  complete: '✅',
+                  in_progress: '🔄',
+                  not_started: '⏸️',
+                  adapted: '🔀'
+                }[status] || '⏸️';
+                
+                // Status labels
+                const statusLabel = {
+                  complete: 'Complete',
+                  in_progress: 'Current',
+                  not_started: 'Upcoming',
+                  adapted: 'Adapted'
+                }[status] || 'Upcoming';
+                
+                return (
+                  <div 
+                    key={milestone.id}
+                    className={`${styles.milestoneItem} ${isCurrent ? styles.current : ''}`}
+                  >
+                    <div className={styles.milestoneHeader}>
+                      <span className={styles.milestoneIcon}>{statusIcon}</span>
+                      <span className={styles.milestoneTitle}>
+                        {milestone.description || `Milestone ${milestone.id}`}
+                      </span>
+                      <span className={styles.milestoneStatus}>{statusLabel}</span>
+                    </div>
                   </div>
-                </div>
-              );
-            })}
-          </div>
-        )}
-        
-        {/* Empty state if no acts/milestones */}
-        {acts.length === 0 && milestones.length === 0 && (
-          <div className={styles.emptyState}>
-            <p>No story structure defined yet.</p>
-          </div>
-        )}
-        
-      </div>
-    </aside>
+                );
+              })}
+            </div>
+          )}
+          
+          {/* Empty state if no acts/milestones */}
+          {acts.length === 0 && milestones.length === 0 && (
+            <div className={styles.emptyState}>
+              <p>No story structure defined yet.</p>
+            </div>
+          )}
+          
+        </div>
+      </aside>
+    </>
   );
 }

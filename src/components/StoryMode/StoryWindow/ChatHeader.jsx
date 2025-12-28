@@ -36,10 +36,25 @@ export default function ChatHeader({ story, backgroundImage }) {
   const characterName = getDisplayNameFromKey(story?.main_character_key);
   const eraDisplay = formatEra(story?.era);
 
+  // Debug logging
+  React.useEffect(() => {
+    console.log('📸 ChatHeader - Background Image:', {
+      url: backgroundImage,
+      story: story?.title,
+      sceneUrl: story?.scene_url,
+      sceneUrlAlt: story?.sceneUrl
+    });
+  }, [backgroundImage, story]);
+
+  // Build style object for background
+  const headerStyle = backgroundImage 
+    ? { backgroundImage: `url("${backgroundImage}")` }
+    : { backgroundColor: 'var(--bg-interactive)' };
+
   return (
     <header 
       className={styles.chatHeader}
-      style={backgroundImage ? { backgroundImage: `url(${backgroundImage})` } : {}}
+      style={headerStyle}
     >
       {/* Gradient overlay for readability */}
       <div className={styles.chatHeaderOverlay} />
