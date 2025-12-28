@@ -1,5 +1,5 @@
 // src/components/StoryMode/StoryWindow/index.jsx
-// Updated to use new two-panel layout with separated rounded panels
+// Updated to use new two-panel layout with progress data integration
 
 import React, { useState, useCallback, useEffect, useRef } from 'react';
 import { useUser } from '../../../contexts/UserContext';
@@ -17,13 +17,17 @@ import styles from './StoryWindow.module.css';
  */
 export default function StoryWindow({ story, onClose }) {
   const { user } = useUser();
-  const { sendMessageStream } = useStoryApi();
+  const { sendMessageStream, getStoryProgress } = useStoryApi();
   
   // State for messages
   const [messages, setMessages] = useState(story?.messages || []);
   const [streamingMessage, setStreamingMessage] = useState('');
   const [isStreaming, setIsStreaming] = useState(false);
   const [isSending, setIsSending] = useState(false);
+  
+  // State for progress data
+  const [progressData, setProgressData] = useState(null);
+  const [isLoadingProgress, setIsLoadingProgress] = useState(false);
   
   // Abort controller for streaming
   const abortControllerRef = useRef(null);
@@ -34,6 +38,42 @@ export default function StoryWindow({ story, onClose }) {
       setMessages(story.messages);
     }
   }, [story?.messages]);
+
+  // Fetch progress data
+  const fetchProgressData = useCallback(async (storyId) => {
+    if (!storyId) return;
+
+    setIsLoadingProgress(true);
+    try {
+      const data = await getStoryProgress(storyId);
+      console.log('📊 Progress data loaded:', data);
+      setProgressData(data);
+    } catch (err) {
+      console.warn('⚠️ Progress endpoint unavailable:', err.message);
+      // Don't set progressData - will use fallback
+    } finally {
+      setIsLoadingProgress(false);
+    }
+  }, [getStoryProgress]);
+
+  // Initial load - fetch progress data
+  useEffect(() => {
+    if (story?.id) {
+      fetchProgressData(story.id);
+    }
+  }, [story?.id, fetchProgressData]);
+
+  // Refresh progress after each message
+  useEffect(() => {
+    if (messages.length > 0 && story?.id) {
+      // Debounce progress refresh to avoid too many requests
+      const timeoutId = setTimeout(() => {
+        fetchProgressData(story.id);
+      }, 500);
+      
+      return () => clearTimeout(timeoutId);
+    }
+  }, [messages.length, story?.id, fetchProgressData]);
 
   // Handle send message
   const handleSendMessage = useCallback(async (content) => {
@@ -84,7 +124,6 @@ export default function StoryWindow({ story, onClose }) {
 
             // Update story state if provided
             if (response.story_state) {
-              // TODO: Update parent story state
               console.log('📊 Story state updated:', response.story_state);
             }
           },
@@ -152,11 +191,29 @@ export default function StoryWindow({ story, onClose }) {
     return msgs;
   }, [messages, isStreaming, streamingMessage, story?.main_character_key]);
 
-  // Prepare story object with messages
-  const enhancedStory = React.useMemo(() => ({
-    ...story,
-    messages: displayMessages
-  }), [story, displayMessages]);
+  // Prepare story object with messages AND progress data
+  const enhancedStory = React.useMemo(() => {
+    const base = {
+      ...story,
+      messages: displayMessages
+    };
+    
+    // Merge progress data if available
+    if (progressData?.objective_status) {
+      base.primary_objective = progressData.objective_status.primary_objective;
+      base.overall_progress = progressData.objective_status.overall_progress;
+      base.milestones = progressData.objective_status.milestones || [];
+      base.current_milestone_id = progressData.objective_status.current_milestone?.id;
+      base.act_mapping = progressData.objective_status.act_mapping;
+      
+      // Override current_act from progress data if available (more accurate)
+      if (progressData.current_act) {
+        base.current_act = progressData.current_act;
+      }
+    }
+    
+    return base;
+  }, [story, displayMessages, progressData]);
 
   return (
     <DefensiveStoryWrapper>

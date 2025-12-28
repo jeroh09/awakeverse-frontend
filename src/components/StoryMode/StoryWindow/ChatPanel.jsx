@@ -16,6 +16,20 @@ export default function ChatPanel({ story, onClose }) {
   // Get background image with proper fallback logic
   const headerImageUrl = getStoryBackgroundUrl(story);
 
+  // Debug logging
+  React.useEffect(() => {
+    console.log('🎨 ChatPanel - Background Debug:', {
+      url: headerImageUrl,
+      storyTitle: story?.title,
+      storyId: story?.id,
+      sceneUrl: story?.scene_url,
+      sceneUrlAlt: story?.sceneUrl,
+      imageUrl: story?.image_url,
+      templateImageUrl: story?.template_image_url,
+      fullStoryObject: story
+    });
+  }, [headerImageUrl, story]);
+
   return (
     <div className={styles.chatPanel}>
       {/* Header with Background Image */}

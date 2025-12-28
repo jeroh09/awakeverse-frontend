@@ -4,29 +4,15 @@
 /**
  * Default background image for custom stories (not from templates)
  * This is used when a user creates a story from scratch
+ * 
+ * NOTE: You need to add this file to your public/static folder
+ * OR use a real URL from your assets
  */
-export const DEFAULT_STORY_BACKGROUND = '/static/story-backgrounds/default-story.jpg';
-
-/**
- * Fallback backgrounds by era (optional enhancement)
- * Used when template doesn't have a scene_url but has an era defined
- */
-export const ERA_BACKGROUNDS = {
-  ancient: '/static/story-backgrounds/ancient-era.jpg',
-  medieval: '/static/story-backgrounds/medieval-era.jpg',
-  renaissance: '/static/story-backgrounds/renaissance-era.jpg',
-  '1800s': '/static/story-backgrounds/1800s-era.jpg',
-  '1890s': '/static/story-backgrounds/victorian-era.jpg',
-  '1900s': '/static/story-backgrounds/early-1900s-era.jpg',
-  '1950s': '/static/story-backgrounds/1950s-era.jpg',
-  modern: '/static/story-backgrounds/modern-era.jpg',
-  '2050s': '/static/story-backgrounds/near-future-era.jpg',
-  far_future: '/static/story-backgrounds/far-future-era.jpg'
-};
+export const DEFAULT_STORY_BACKGROUND = 'https://images.unsplash.com/photo-1528459801416-a9e53bbf4e17?w=1600&q=80';
 
 /**
  * Get background image URL for a story
- * Priority: template scene_url > era background > default
+ * Priority: template scene_url > template image_url > default
  * 
  * @param {Object} story - Story object
  * @returns {string} Background image URL
@@ -35,6 +21,7 @@ export function getStoryBackgroundUrl(story) {
   // Priority 1: Template-specific scene URL
   if (story?.scene_url || story?.sceneUrl) {
     const sceneUrl = story.scene_url || story.sceneUrl;
+    
     // If it's a relative path, make it absolute
     if (sceneUrl.startsWith('/')) {
       return `${window.location.protocol}//www.awakeverse.com${sceneUrl}`;
@@ -47,12 +34,7 @@ export function getStoryBackgroundUrl(story) {
     return story.template_image_url || story.image_url;
   }
 
-  // Priority 3: Era-based background (optional)
-  if (story?.era && ERA_BACKGROUNDS[story.era.toLowerCase()]) {
-    return ERA_BACKGROUNDS[story.era.toLowerCase()];
-  }
-
-  // Priority 4: Default background
+  // Priority 3: Default background (Unsplash fallback)
   return DEFAULT_STORY_BACKGROUND;
 }
 

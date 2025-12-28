@@ -4,19 +4,31 @@ import { Home } from 'lucide-react';
 import styles from './InfoPanel.module.css';
 
 /**
- * InfoPanel - Retractable right panel with story metadata
+ * InfoPanel - Retractable right panel with story metadata and progress
  * 
  * Props:
- * - story: Story object with acts, milestones
+ * - story: Story object with metadata, progress data, milestones
  * - collapsed: Boolean indicating panel state
  * - onToggle: Callback to toggle panel
  * - onClose: Callback to return to story list
  */
 export default function InfoPanel({ story, collapsed, onToggle, onClose }) {
-  // Extract acts and milestones
-  const acts = story?.acts || [];
-  const milestones = story?.milestones || [];
+  // Extract progress data (from progressData merged into story object)
+  const primaryObjective = story?.primary_objective || "Navigate the unfolding story";
   const currentAct = story?.current_act || 1;
+  const totalActs = 3;
+  const overallProgress = story?.overall_progress || 0;
+  const progressPercent = Math.round(overallProgress * 100);
+  const turns = story?.total_turns || 0;
+  
+  // Extract act mapping
+  const actMapping = story?.act_mapping || {};
+  const currentActData = actMapping[currentAct.toString()] || {};
+  const actName = currentActData.name || 'Unknown';
+  const actTitle = `Act ${currentAct} · ${actName}`;
+  
+  // Extract milestones
+  const milestones = story?.milestones || [];
   const currentMilestoneId = story?.current_milestone_id;
 
   return (
@@ -25,8 +37,8 @@ export default function InfoPanel({ story, collapsed, onToggle, onClose }) {
       <button 
         className={`${styles.infoPanelToggle} ${collapsed ? styles.toggleCollapsed : ''}`}
         onClick={onToggle}
-        title={collapsed ? 'Show info panel' : 'Hide info panel'}
-        aria-label={collapsed ? 'Show info panel' : 'Hide info panel'}
+        title={collapsed ? 'Show objectives panel' : 'Hide objectives panel'}
+        aria-label={collapsed ? 'Show objectives panel' : 'Hide objectives panel'}
       >
         <svg 
           className={styles.breadcrumbIcon}
@@ -45,93 +57,128 @@ export default function InfoPanel({ story, collapsed, onToggle, onClose }) {
         
         {/* Panel Header */}
         <div className={styles.infoPanelHeader}>
-          <h3 className={styles.infoPanelTitle}>Story Details</h3>
+          <h3 className={styles.infoPanelTitle}>Objectives & Acts</h3>
           
           {/* Home Button */}
           <button className={styles.infoHomeButton} onClick={onClose}>
             <Home size={18} />
-            Return to Stories
+            <span>Home</span>
           </button>
         </div>
         
         {/* Panel Content */}
         <div className={styles.infoPanelContent}>
           
-          {/* Acts Section */}
-          {acts.length > 0 && (
-            <div className={styles.infoSection}>
-              <div className={styles.infoSectionTitle}>Story Acts</div>
-              
-              {acts.map((act, index) => {
-                const actNumber = index + 1;
-                const isActive = actNumber === currentAct;
-                const isComplete = actNumber < currentAct;
-                
-                return (
-                  <div 
-                    key={act.id || actNumber}
-                    className={`${styles.actCard} ${isActive ? styles.active : ''}`}
-                  >
-                    <div className={styles.actNumber}>Act {actNumber}</div>
-                    <div className={styles.actTitle}>{act.title || `Act ${actNumber}`}</div>
-                    <div className={styles.actProgress}>
-                      {isComplete ? 'Complete' : isActive ? 'In Progress' : 'Not Started'}
-                      {act.turns > 0 && ` • ${act.turns} turns`}
-                    </div>
-                  </div>
-                );
-              })}
-            </div>
-          )}
+          {/* PRIMARY OBJECTIVE SECTION */}
+          <div className={styles.panelMainObjective}>
+            <strong>Story Objective:</strong>
+            <br />
+            {primaryObjective}
+          </div>
           
-          {/* Milestones Section */}
-          {milestones.length > 0 && (
-            <div className={styles.infoSection}>
-              <div className={styles.infoSectionTitle}>Current Milestones</div>
+          {/* ACT PROGRESS SECTION */}
+          <div className={styles.panelProgressSection}>
+            {/* Act header line */}
+            <div className={styles.panelActLine}>
+              <span className={styles.panelActTitle}>{actTitle}</span>
+              <span className={styles.panelActBadge}>
+                Act {currentAct} / {totalActs}
+              </span>
+            </div>
+            
+            {/* Progress track */}
+            <div className={styles.panelProgressTrack}>
+              <div
+                className={styles.panelProgressFill}
+                style={{ width: `${progressPercent}%` }}
+              />
+            </div>
+            
+            {/* Meta row - turn counter and % complete */}
+            <div className={styles.panelMetaRow}>
+              {turns > 0 && (
+                <span>💬 {turns} turn{turns === 1 ? '' : 's'} so far</span>
+              )}
               
-              {milestones.map((milestone) => {
-                const isCurrent = milestone.id === currentMilestoneId;
-                const status = milestone.status || 'not_started';
-                
-                // Status icons
-                const statusIcon = {
-                  complete: '✅',
-                  in_progress: '🔄',
-                  not_started: '⏸️',
-                  adapted: '🔀'
-                }[status] || '⏸️';
-                
-                // Status labels
-                const statusLabel = {
-                  complete: 'Complete',
-                  in_progress: 'Current',
-                  not_started: 'Upcoming',
-                  adapted: 'Adapted'
-                }[status] || 'Upcoming';
-                
-                return (
-                  <div 
-                    key={milestone.id}
-                    className={`${styles.milestoneItem} ${isCurrent ? styles.current : ''}`}
-                  >
-                    <div className={styles.milestoneHeader}>
-                      <span className={styles.milestoneIcon}>{statusIcon}</span>
-                      <span className={styles.milestoneTitle}>
-                        {milestone.description || `Milestone ${milestone.id}`}
-                      </span>
-                      <span className={styles.milestoneStatus}>{statusLabel}</span>
-                    </div>
-                  </div>
-                );
-              })}
+              {progressPercent > 0 && (
+                <span className={styles.panelMetaPill}>
+                  {progressPercent}% complete
+                </span>
+              )}
             </div>
-          )}
+          </div>
           
-          {/* Empty state if no acts/milestones */}
-          {acts.length === 0 && milestones.length === 0 && (
-            <div className={styles.emptyState}>
-              <p>No story structure defined yet.</p>
-            </div>
+          {/* MILESTONES SECTION */}
+          {milestones && milestones.length > 0 && (
+            <>
+              <div className={styles.milestonesHeader}>Milestones</div>
+              <div className={styles.milestonesList}>
+                {milestones.map((milestone) => {
+                  const isCurrent = milestone.id === currentMilestoneId;
+                  const status = milestone.status || 'not_started';
+                  
+                  // Status icons
+                  const statusIcon = {
+                    complete: '✅',
+                    in_progress: '🔄',
+                    not_started: '⏸️',
+                    adapted: '🔀'
+                  }[status] || '⏸️';
+                  
+                  // Status labels
+                  const statusLabel = {
+                    complete: 'Complete',
+                    in_progress: 'Current',
+                    not_started: 'Upcoming',
+                    adapted: 'Adapted'
+                  }[status] || 'Upcoming';
+                  
+                  // Progress percentage for this milestone
+                  const milestoneProgress = milestone.progress || 0;
+                  const milestoneProgressPct = Math.round(milestoneProgress * 100);
+                  
+                  return (
+                    <div 
+                      key={milestone.id}
+                      className={`${styles.milestoneCard} ${isCurrent ? styles.current : ''} ${styles[status]}`}
+                    >
+                      <div className={styles.milestoneHeader}>
+                        <span className={styles.milestoneIcon}>{statusIcon}</span>
+                        <span className={styles.milestoneDescription}>
+                          {milestone.description}
+                        </span>
+                      </div>
+                      
+                      <div className={styles.milestoneFooter}>
+                        <span className={styles.milestoneStatus}>{statusLabel}</span>
+                        
+                        {milestoneProgress > 0 && milestoneProgress < 1 && (
+                          <span className={styles.milestoneProgress}>
+                            {milestoneProgressPct}%
+                          </span>
+                        )}
+                        
+                        {milestone.estimated_turns > 0 && status !== 'complete' && (
+                          <span className={styles.milestoneTurns}>
+                            ~{milestone.estimated_turns} turns
+                          </span>
+                        )}
+                      </div>
+                      
+                      {/* Progress bar for in-progress milestones */}
+                      {status === 'in_progress' && milestoneProgress > 0 && (
+                        <div className={styles.milestoneProgressBar}>
+                          <div 
+                            className={styles.milestoneProgressFill}
+                            style={{ width: `${milestoneProgressPct}%` }}
+                          />
+                        </div>
+                      )}
+                    </div>
+                  );
+                })}
+              </div>
+            </>
           )}
           
         </div>

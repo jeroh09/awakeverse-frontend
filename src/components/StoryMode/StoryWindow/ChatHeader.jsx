@@ -36,20 +36,28 @@ export default function ChatHeader({ story, backgroundImage }) {
   const characterName = getDisplayNameFromKey(story?.main_character_key);
   const eraDisplay = formatEra(story?.era);
 
+  // Fallback test image if no background provided
+  const testBackgroundUrl = 'https://images.unsplash.com/photo-1528459801416-a9e53bbf4e17?w=1600&q=80';
+  const effectiveBackground = backgroundImage || testBackgroundUrl;
+
   // Debug logging
   React.useEffect(() => {
-    console.log('📸 ChatHeader - Background Image:', {
-      url: backgroundImage,
+    console.log('📸 ChatHeader - Render Debug:', {
+      backgroundImage: backgroundImage,
+      effectiveBackground: effectiveBackground,
+      usingFallback: !backgroundImage,
       story: story?.title,
-      sceneUrl: story?.scene_url,
-      sceneUrlAlt: story?.sceneUrl
+      cssWillApply: effectiveBackground ? `url("${effectiveBackground}")` : 'none'
     });
-  }, [backgroundImage, story]);
+  }, [backgroundImage, effectiveBackground, story]);
 
   // Build style object for background
-  const headerStyle = backgroundImage 
-    ? { backgroundImage: `url("${backgroundImage}")` }
-    : { backgroundColor: 'var(--bg-interactive)' };
+  const headerStyle = {
+    backgroundImage: `url("${effectiveBackground}")`,
+    backgroundSize: 'cover',
+    backgroundPosition: 'center',
+    backgroundRepeat: 'no-repeat'
+  };
 
   return (
     <header 

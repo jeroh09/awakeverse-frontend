@@ -81,10 +81,14 @@
 }
 
 /* ============================================================================
-   INFO PANEL HEADER
+   INFO PANEL HEADER - MATCH CHAT HEADER HEIGHT
    ============================================================================ */
 .infoPanelHeader {
   padding: 1.5rem;
+  min-height: 180px; /* Match chat header height */
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-end; /* Align content to bottom like chat header */
   border-bottom: 1px solid var(--border-medium);
   background: var(--bg-surface);
 }
@@ -134,6 +138,221 @@
   flex: 1;
   overflow-y: auto;
   padding: 1.5rem;
+}
+
+/* ============================================================================
+   PRIMARY OBJECTIVE SECTION
+   ============================================================================ */
+.panelMainObjective {
+  margin-bottom: 16px;
+  font-size: 14px;
+  font-family: var(--font-body, 'Inter', system-ui, sans-serif);
+  line-height: 1.5;
+  color: var(--text-primary, #F1F5F9);
+}
+
+.panelMainObjective strong {
+  display: block;
+  font-size: 12px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: var(--text-secondary, #94A3B8);
+  margin-bottom: 6px;
+}
+
+/* ============================================================================
+   ACT PROGRESS SECTION
+   ============================================================================ */
+.panelProgressSection {
+  margin-bottom: 16px;
+  padding: 12px;
+  background: rgba(15, 23, 42, 0.6);
+  border: 1px solid rgba(148, 163, 184, 0.2);
+  border-radius: 12px;
+}
+
+.panelActLine {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 8px;
+}
+
+.panelActTitle {
+  font-size: 13px;
+  font-family: var(--font-display, 'Syne', sans-serif);
+  font-weight: 600;
+  color: var(--text-primary, #F1F5F9);
+}
+
+.panelActBadge {
+  padding: 2px 8px;
+  border-radius: 6px;
+  background: rgba(15, 23, 42, 0.9);
+  border: 1px solid rgba(148, 163, 184, 0.3);
+  font-size: 10px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: var(--text-secondary, #94A3B8);
+}
+
+.panelProgressTrack {
+  position: relative;
+  width: 100%;
+  height: 6px;
+  border-radius: 999px;
+  background: rgba(15, 23, 42, 0.95);
+  overflow: hidden;
+  margin: 8px 0;
+}
+
+.panelProgressFill {
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(90deg, var(--accent-primary, #6366F1), var(--accent-hover, #818CF8));
+  border-radius: inherit;
+  transition: width 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+  box-shadow: 0 0 10px rgba(99, 102, 241, 0.4);
+}
+
+.panelMetaRow {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  font-size: 11px;
+  color: var(--text-secondary, #94A3B8);
+}
+
+.panelMetaPill {
+  padding: 3px 8px;
+  border-radius: 6px;
+  border: 1px solid var(--accent-primary, #6366F1);
+  background: rgba(99, 102, 241, 0.15);
+  color: var(--text-primary, #F1F5F9);
+  font-size: 11px;
+  font-weight: 600;
+}
+
+/* ============================================================================
+   MILESTONES SECTION
+   ============================================================================ */
+.milestonesHeader {
+  font-size: 11px;
+  font-family: var(--font-body, 'Inter', system-ui, sans-serif);
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.12em;
+  color: var(--text-secondary, #94A3B8);
+  margin-bottom: 8px;
+}
+
+.milestonesList {
+  flex: 1;
+  min-height: 0;
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  padding-right: 4px;
+}
+
+/* Smooth scrollbar for milestones */
+.milestonesList::-webkit-scrollbar {
+  width: 6px;
+}
+
+.milestonesList::-webkit-scrollbar-track {
+  background: rgba(15, 23, 42, 0.5);
+  border-radius: 3px;
+}
+
+.milestonesList::-webkit-scrollbar-thumb {
+  background: rgba(99, 102, 241, 0.5);
+  border-radius: 3px;
+}
+
+.milestonesList::-webkit-scrollbar-thumb:hover {
+  background: rgba(99, 102, 241, 0.7);
+}
+
+.milestoneCard {
+  padding: 12px;
+  background: rgba(15, 23, 42, 0.6);
+  border: 1px solid rgba(148, 163, 184, 0.2);
+  border-radius: 8px;
+  transition: all 0.2s ease;
+}
+
+.milestoneCard.current {
+  border-color: var(--accent-primary, #6366F1);
+  background: rgba(99, 102, 241, 0.1);
+  box-shadow: 0 0 12px rgba(99, 102, 241, 0.2);
+}
+
+.milestoneCard.complete {
+  opacity: 0.7;
+}
+
+.milestoneHeader {
+  display: flex;
+  align-items: flex-start;
+  gap: 8px;
+  margin-bottom: 8px;
+}
+
+.milestoneIcon {
+  font-size: 14px;
+  line-height: 1;
+  flex-shrink: 0;
+}
+
+.milestoneDescription {
+  flex: 1;
+  font-size: 13px;
+  line-height: 1.4;
+  color: var(--text-primary, #F1F5F9);
+}
+
+.milestoneFooter {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 11px;
+}
+
+.milestoneStatus {
+  padding: 2px 6px;
+  border-radius: 4px;
+  background: rgba(15, 23, 42, 0.9);
+  color: var(--text-secondary, #94A3B8);
+  font-weight: 500;
+}
+
+.milestoneProgress {
+  margin-left: auto;
+  color: var(--accent-primary, #6366F1);
+  font-weight: 600;
+}
+
+.milestoneTurns {
+  color: var(--text-muted, #64748B);
+}
+
+.milestoneProgressBar {
+  margin-top: 8px;
+  height: 4px;
+  background: rgba(15, 23, 42, 0.95);
+  border-radius: 999px;
+  overflow: hidden;
+}
+
+.milestoneProgressFill {
+  height: 100%;
+  background: linear-gradient(90deg, var(--accent-primary, #6366F1), var(--accent-hover, #818CF8));
+  border-radius: inherit;
+  transition: width 0.4s ease;
 }
 
 .infoSection {
