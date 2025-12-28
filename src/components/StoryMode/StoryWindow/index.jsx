@@ -3,7 +3,7 @@
 
 import React, { useState, useCallback, useEffect, useRef } from 'react';
 import { useUser } from '../../../contexts/UserContext';
-import useStoryApi from '../hooks/useStoryApi';
+import useStoryApi from '../../../hooks/useStoryApi';
 import DefensiveStoryWrapper from '../DefensiveStoryWrapper';
 import StoryWindowLayout from './StoryWindowLayout';
 
