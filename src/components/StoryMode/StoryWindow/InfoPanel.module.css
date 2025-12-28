@@ -81,6 +81,27 @@
 }
 
 /* ============================================================================
+   MOBILE RESPONSIVE - TOGGLE BUTTON
+   ============================================================================ */
+@media (max-width: 768px) {
+  .infoPanelToggle {
+    right: 1rem; /* Always on right edge on mobile */
+    width: 48px; /* Larger touch target */
+    height: 48px;
+    z-index: 200; /* Higher z-index on mobile to prevent overlap */
+  }
+  
+  .infoPanelToggle.toggleCollapsed {
+    right: 1rem; /* Same position on mobile */
+  }
+  
+  .breadcrumbIcon {
+    width: 24px;
+    height: 24px;
+  }
+}
+
+/* ============================================================================
    INFO PANEL HEADER - MATCH CHAT HEADER HEIGHT
    ============================================================================ */
 .infoPanelHeader {

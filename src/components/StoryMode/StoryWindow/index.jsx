@@ -3,10 +3,9 @@
 
 import React, { useState, useCallback, useEffect, useRef } from 'react';
 import { useUser } from '../../../contexts/UserContext';
-import useStoryApi from '../../../hooks/useStoryApi';
+import useStoryApi from '../hooks/useStoryApi';
 import DefensiveStoryWrapper from '../DefensiveStoryWrapper';
 import StoryWindowLayout from './StoryWindowLayout';
-import styles from './StoryWindow.module.css';
 
 /**
  * StoryWindow - Main story chat interface
@@ -17,10 +16,11 @@ import styles from './StoryWindow.module.css';
  */
 export default function StoryWindow({ story, onClose }) {
   const { user } = useUser();
-  const { sendMessageStream, getStoryProgress } = useStoryApi();
+  const { sendMessageStream, getStoryProgress, getStoryContext } = useStoryApi();
   
   // State for messages
-  const [messages, setMessages] = useState(story?.messages || []);
+  const [messages, setMessages] = useState([]);
+  const [openingBanner, setOpeningBanner] = useState(null);
   const [streamingMessage, setStreamingMessage] = useState('');
   const [isStreaming, setIsStreaming] = useState(false);
   const [isSending, setIsSending] = useState(false);
@@ -32,12 +32,39 @@ export default function StoryWindow({ story, onClose }) {
   // Abort controller for streaming
   const abortControllerRef = useRef(null);
 
-  // Update messages when story changes
+  // Initial load - fetch story context (messages + opening banner)
   useEffect(() => {
-    if (story?.messages) {
-      setMessages(story.messages);
-    }
-  }, [story?.messages]);
+    if (!story?.id) return;
+
+    const initializeStory = async () => {
+      try {
+        console.log('📖 Loading story context:', story.id);
+        const data = await getStoryContext(story.id);
+
+        // Set messages from API
+        const msgs = data.messages || [];
+        setMessages(msgs);
+
+        // Set opening banner from starting_situation or current_situation
+        const banner =
+          data.story?.starting_situation ||
+          data.story?.current_situation ||
+          story?.starting_situation ||
+          story?.current_situation ||
+          null;
+        setOpeningBanner(banner);
+
+        console.log('✅ Story initialized:', {
+          messages: msgs.length,
+          banner: banner ? 'Present' : 'None'
+        });
+      } catch (err) {
+        console.error('❌ Failed to initialize story:', err);
+      }
+    };
+
+    initializeStory();
+  }, [story?.id, getStoryContext]);
 
   // Fetch progress data
   const fetchProgressData = useCallback(async (storyId) => {
@@ -195,7 +222,8 @@ export default function StoryWindow({ story, onClose }) {
   const enhancedStory = React.useMemo(() => {
     const base = {
       ...story,
-      messages: displayMessages
+      messages: displayMessages,
+      opening_banner: openingBanner  // Add opening banner from state
     };
     
     // Merge progress data if available
@@ -213,7 +241,7 @@ export default function StoryWindow({ story, onClose }) {
     }
     
     return base;
-  }, [story, displayMessages, progressData]);
+  }, [story, displayMessages, openingBanner, progressData]);
 
   return (
     <DefensiveStoryWrapper>
