@@ -184,21 +184,13 @@
 }
 
 /* Responsive visibility helpers */
-.desktopOnly {
-  display: flex;
-}
-
 .mobileOnly {
   display: none;
 }
 
 @media (max-width: 768px) {
-  .desktopOnly {
-    display: none; /* Hide desktop home button */
-  }
-  
   .mobileOnly {
-    display: flex; /* Show mobile close button */
+    display: flex; /* Show mobile close (X) button */
   }
   
   .infoPanelHeader {
@@ -206,6 +198,27 @@
     top: 0;
     z-index: 10;
     min-height: 120px; /* Smaller on mobile */
+    padding-right: 60px; /* Make room for X button */
+  }
+  
+  /* Make Home button more compact on mobile */
+  .infoHomeButton {
+    padding: 0.6rem 0.85rem;
+    font-size: 0.85rem;
+    gap: 0.4rem;
+  }
+  
+  /* Optionally hide "Home" text on very small screens */
+  @media (max-width: 400px) {
+    .homeButtonText {
+      display: none; /* Icon-only on very small screens */
+    }
+    
+    .infoHomeButton {
+      width: auto;
+      padding: 0.6rem;
+      justify-content: center;
+    }
   }
 }
 
