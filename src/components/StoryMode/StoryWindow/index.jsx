@@ -24,6 +24,7 @@ export default function StoryWindow({ story, onClose }) {
   const [streamingMessage, setStreamingMessage] = useState('');
   const [isStreaming, setIsStreaming] = useState(false);
   const [isSending, setIsSending] = useState(false);
+  const [showPulsingCursor, setShowPulsingCursor] = useState(false);
   
   // State for progress data
   const [progressData, setProgressData] = useState(null);
@@ -31,6 +32,11 @@ export default function StoryWindow({ story, onClose }) {
   
   // Abort controller for streaming
   const abortControllerRef = useRef(null);
+  
+  // Streaming control refs
+  const streamBufferRef = useRef('');
+  const displayedWordsRef = useRef(0);
+  const streamTimerRef = useRef(null);
 
   // Initial load - fetch story context (messages + opening banner)
   useEffect(() => {
@@ -129,10 +135,16 @@ export default function StoryWindow({ story, onClose }) {
         content.trim(),
         {
           onDelta: (fullText) => {
-            setStreamingMessage(fullText);
+            // Use controlled word-by-word reveal
+            startWordReveal(fullText);
           },
           onDone: (response, fullText) => {
             console.log('✅ Stream complete:', { fullText, response });
+            
+            // Clear streaming timer
+            if (streamTimerRef.current) {
+              clearInterval(streamTimerRef.current);
+            }
             
             // Create assistant message
             const assistantMessage = {
@@ -148,6 +160,7 @@ export default function StoryWindow({ story, onClose }) {
             setStreamingMessage('');
             setIsStreaming(false);
             setIsSending(false);
+            setShowPulsingCursor(false);
 
             // Update story state if provided
             if (response.story_state) {
@@ -197,7 +210,45 @@ export default function StoryWindow({ story, onClose }) {
       if (abortControllerRef.current) {
         abortControllerRef.current.abort();
       }
+      if (streamTimerRef.current) {
+        clearInterval(streamTimerRef.current);
+      }
     };
+  }, []);
+
+  // Word-by-word streaming reveal (3-5 words at a time)
+  const startWordReveal = useCallback((fullText) => {
+    // Clear any existing timer
+    if (streamTimerRef.current) {
+      clearInterval(streamTimerRef.current);
+    }
+
+    // Split into words
+    const words = fullText.split(/\s+/).filter(w => w.length > 0);
+    displayedWordsRef.current = 0;
+    streamBufferRef.current = fullText;
+    setShowPulsingCursor(false);
+
+    // Reveal 3-5 words at a time
+    const revealNextChunk = () => {
+      const wordsPerChunk = Math.floor(Math.random() * 3) + 3; // 3-5 words randomly
+      const nextWordIndex = displayedWordsRef.current + wordsPerChunk;
+      
+      if (displayedWordsRef.current >= words.length) {
+        // Streaming complete - show pulsing cursor
+        clearInterval(streamTimerRef.current);
+        setShowPulsingCursor(true);
+        return;
+      }
+
+      // Display words up to nextWordIndex
+      const displayWords = words.slice(0, Math.min(nextWordIndex, words.length));
+      setStreamingMessage(displayWords.join(' '));
+      displayedWordsRef.current = Math.min(nextWordIndex, words.length);
+    };
+
+    // Start interval - reveal every 200ms (slower, readable pace)
+    streamTimerRef.current = setInterval(revealNextChunk, 200);
   }, []);
 
   // Prepare messages with live streaming
@@ -211,12 +262,13 @@ export default function StoryWindow({ story, onClose }) {
         role: 'assistant',
         content: streamingMessage,
         character_key: story?.main_character_key,
-        isLive: true
+        isLive: true,
+        showPulsingCursor: showPulsingCursor  // Add pulsing cursor state
       });
     }
     
     return msgs;
-  }, [messages, isStreaming, streamingMessage, story?.main_character_key]);
+  }, [messages, isStreaming, streamingMessage, showPulsingCursor, story?.main_character_key]);
 
   // Prepare story object with messages AND progress data
   const enhancedStory = React.useMemo(() => {

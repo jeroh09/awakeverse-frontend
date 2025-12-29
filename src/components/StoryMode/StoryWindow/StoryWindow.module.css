@@ -258,6 +258,26 @@
   50%, 100% { opacity: 0; }
 }
 
+/* Pulsing cursor for end of stream */
+.pulsingCursor {
+  display: inline-block;
+  margin-left: 4px;
+  color: var(--accent-primary, #6366F1);
+  font-weight: 600;
+  animation: pulse 1.5s ease-in-out infinite;
+}
+
+@keyframes pulse {
+  0%, 100% { 
+    opacity: 1; 
+    transform: scale(1);
+  }
+  50% { 
+    opacity: 0.4;
+    transform: scale(1.1);
+  }
+}
+
 /* System messages */
 .systemMessage {
   text-align: center;

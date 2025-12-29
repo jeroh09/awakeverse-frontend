@@ -140,7 +140,11 @@ function MessageItem({ message, characterKey, userCharacters, style, onSizeChang
             <div className={styles.speakerName}>{speakerName}</div>
             <div className={styles.messageText}>
               {message.content}
-              {message.isLive && <span className={styles.caretBlink}>▍</span>}
+              {message.showPulsingCursor ? (
+                <span className={styles.pulsingCursor}> |</span>
+              ) : message.isLive ? (
+                <span className={styles.caretBlink}>▍</span>
+              ) : null}
             </div>
           </div>
         </div>

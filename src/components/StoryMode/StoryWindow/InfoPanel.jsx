@@ -59,10 +59,18 @@ export default function InfoPanel({ story, collapsed, onToggle, onClose }) {
         <div className={styles.infoPanelHeader}>
           <h3 className={styles.infoPanelTitle}>Objectives & Acts</h3>
           
-          {/* Home Button */}
-          <button className={styles.infoHomeButton} onClick={onClose}>
+          {/* Desktop Home Button */}
+          <button className={`${styles.infoHomeButton} ${styles.desktopOnly}`} onClick={onClose}>
             <Home size={18} />
             <span>Home</span>
+          </button>
+          
+          {/* Mobile Close Button */}
+          <button className={`${styles.mobileCloseButton} ${styles.mobileOnly}`} onClick={onClose} aria-label="Close objectives panel">
+            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+              <line x1="18" y1="6" x2="6" y2="18"></line>
+              <line x1="6" y1="6" x2="18" y2="18"></line>
+            </svg>
           </button>
         </div>
         

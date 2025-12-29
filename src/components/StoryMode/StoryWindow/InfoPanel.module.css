@@ -152,6 +152,63 @@
   outline-offset: 2px;
 }
 
+/* Mobile Close Button (X icon) */
+.mobileCloseButton {
+  position: absolute;
+  top: 1rem;
+  right: 1rem;
+  width: 48px;
+  height: 48px;
+  background: var(--bg-surface);
+  border: 2px solid var(--border-medium);
+  border-radius: 50%;
+  color: var(--text-secondary);
+  cursor: pointer;
+  display: none; /* Hidden by default */
+  align-items: center;
+  justify-content: center;
+  transition: all 0.3s ease;
+  z-index: 10;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
+}
+
+.mobileCloseButton:hover {
+  background: var(--bg-interactive);
+  border-color: var(--accent-primary);
+  color: var(--accent-hover);
+  transform: scale(1.05);
+}
+
+.mobileCloseButton:active {
+  transform: scale(0.95);
+}
+
+/* Responsive visibility helpers */
+.desktopOnly {
+  display: flex;
+}
+
+.mobileOnly {
+  display: none;
+}
+
+@media (max-width: 768px) {
+  .desktopOnly {
+    display: none; /* Hide desktop home button */
+  }
+  
+  .mobileOnly {
+    display: flex; /* Show mobile close button */
+  }
+  
+  .infoPanelHeader {
+    position: sticky;
+    top: 0;
+    z-index: 10;
+    min-height: 120px; /* Smaller on mobile */
+  }
+}
+
 /* ============================================================================
    INFO PANEL CONTENT
    ============================================================================ */
