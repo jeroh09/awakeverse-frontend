@@ -63,15 +63,40 @@
 .inputTextarea {
   flex: 1;
   background: transparent;
+  
+  /* Comprehensive border removal */
   border: none;
+  border: 0;
+  box-shadow: none;
   outline: none;
+  
+  /* Remove browser default styling */
+  -webkit-appearance: none;
+  -moz-appearance: none;
+  appearance: none;
+  
+  /* Text styling */
   color: var(--text-primary);
   font-family: var(--font-body);
   font-size: 1rem;
+  line-height: 1.5;
+  
+  /* Sizing */
   resize: none;
   min-height: 24px;
   max-height: 120px;
-  line-height: 1.5;
+  padding: 0;
+  margin: 0;
+  
+  /* Scroll behavior */
+  overflow-y: auto;
+}
+
+/* Ensure no borders on focus */
+.inputTextarea:focus {
+  border: none;
+  outline: none;
+  box-shadow: none;
 }
 
 .inputTextarea::placeholder {
