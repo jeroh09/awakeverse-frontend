@@ -33,10 +33,11 @@ export default function StoryWindow({ story, onClose }) {
   // Abort controller for streaming
   const abortControllerRef = useRef(null);
   
-  // Streaming control refs
-  const streamBufferRef = useRef('');
-  const displayedWordsRef = useRef(0);
-  const streamTimerRef = useRef(null);
+  // Streaming control refs - FIXED BUFFER APPROACH
+  const wordBufferRef = useRef([]);           // Buffer of ALL words (grows as chunks arrive)
+  const displayedIndexRef = useRef(0);        // How many words we've displayed so far
+  const streamTimerRef = useRef(null);        // Display timer (runs independently)
+  const isStreamCompleteRef = useRef(false);  // Track if stream finished
 
   // Initial load - fetch story context (messages + opening banner)
   useEffect(() => {
@@ -125,6 +126,12 @@ export default function StoryWindow({ story, onClose }) {
     setIsSending(true);
     setIsStreaming(true);
     setStreamingMessage('');
+    
+    // Reset streaming refs for new message
+    wordBufferRef.current = [];
+    displayedIndexRef.current = 0;
+    isStreamCompleteRef.current = false;
+    setShowPulsingCursor(false);
 
     // Create abort controller for this stream
     abortControllerRef.current = new AbortController();
@@ -135,43 +142,64 @@ export default function StoryWindow({ story, onClose }) {
         content.trim(),
         {
           onDelta: (fullText) => {
-            // Use controlled word-by-word reveal
-            startWordReveal(fullText);
+            // Just update buffer - don't restart timer!
+            updateWordBuffer(fullText);
           },
           onDone: (response, fullText) => {
             console.log('✅ Stream complete:', { fullText, response });
             
-            // Clear streaming timer
-            if (streamTimerRef.current) {
-              clearInterval(streamTimerRef.current);
-            }
+            // Mark stream as complete
+            isStreamCompleteRef.current = true;
             
-            // Create assistant message
-            const assistantMessage = {
-              id: response.message_id || `assistant-${Date.now()}`,
-              role: 'assistant',
-              content: fullText,
-              character_key: story.main_character_key,
-              timestamp: new Date().toISOString()
-            };
+            // Update buffer one final time with complete text
+            updateWordBuffer(fullText);
+            
+            // Timer will stop itself when it catches up
+            // (see startRevealLoop logic)
+            
+            // Wait a bit for reveal to finish, then finalize
+            setTimeout(() => {
+              // Clear timer if still running
+              if (streamTimerRef.current) {
+                clearInterval(streamTimerRef.current);
+                streamTimerRef.current = null;
+              }
+              
+              // Create assistant message
+              const assistantMessage = {
+                id: response.message_id || `assistant-${Date.now()}`,
+                role: 'assistant',
+                content: fullText,
+                character_key: story.main_character_key,
+                timestamp: new Date().toISOString()
+              };
 
-            // Add to messages
-            setMessages(prev => [...prev, assistantMessage]);
-            setStreamingMessage('');
-            setIsStreaming(false);
-            setIsSending(false);
-            setShowPulsingCursor(false);
+              // Add to messages
+              setMessages(prev => [...prev, assistantMessage]);
+              setStreamingMessage('');
+              setIsStreaming(false);
+              setIsSending(false);
+              setShowPulsingCursor(false);
 
-            // Update story state if provided
-            if (response.story_state) {
-              console.log('📊 Story state updated:', response.story_state);
-            }
+              // Update story state if provided
+              if (response.story_state) {
+                console.log('📊 Story state updated:', response.story_state);
+              }
+            }, 500); // Wait 500ms for reveal to finish
           },
           onError: (error) => {
             console.error('❌ Stream error:', error);
+            
+            // Clean up streaming state
+            if (streamTimerRef.current) {
+              clearInterval(streamTimerRef.current);
+              streamTimerRef.current = null;
+            }
+            
             setStreamingMessage('');
             setIsStreaming(false);
             setIsSending(false);
+            isStreamCompleteRef.current = false;
             
             // Show error message
             const errorMessage = {
@@ -187,11 +215,19 @@ export default function StoryWindow({ story, onClose }) {
       );
     } catch (error) {
       console.error('❌ Failed to send message:', error);
+      
+      // Clean up on error
+      if (streamTimerRef.current) {
+        clearInterval(streamTimerRef.current);
+        streamTimerRef.current = null;
+      }
+      
       setStreamingMessage('');
       setIsStreaming(false);
       setIsSending(false);
+      isStreamCompleteRef.current = false;
     }
-  }, [story?.id, story?.main_character_key, isSending, isStreaming, sendMessageStream]);
+  }, [story?.id, story?.main_character_key, isSending, isStreaming, sendMessageStream, updateWordBuffer]);
 
   // Handle cancel streaming
   const handleCancelStreaming = useCallback(() => {
@@ -199,9 +235,21 @@ export default function StoryWindow({ story, onClose }) {
       abortControllerRef.current.abort();
       abortControllerRef.current = null;
     }
+    
+    // Clean up streaming timer and refs
+    if (streamTimerRef.current) {
+      clearInterval(streamTimerRef.current);
+      streamTimerRef.current = null;
+    }
+    
+    wordBufferRef.current = [];
+    displayedIndexRef.current = 0;
+    isStreamCompleteRef.current = false;
+    
     setStreamingMessage('');
     setIsStreaming(false);
     setIsSending(false);
+    setShowPulsingCursor(false);
   }, []);
 
   // Cleanup on unmount
@@ -216,40 +264,52 @@ export default function StoryWindow({ story, onClose }) {
     };
   }, []);
 
-  // Word-by-word streaming reveal (3-5 words at a time)
-  const startWordReveal = useCallback((fullText) => {
-    // Clear any existing timer
-    if (streamTimerRef.current) {
-      clearInterval(streamTimerRef.current);
-    }
-
-    // Split into words
-    const words = fullText.split(/\s+/).filter(w => w.length > 0);
-    displayedWordsRef.current = 0;
-    streamBufferRef.current = fullText;
-    setShowPulsingCursor(false);
-
-    // Reveal 3-5 words at a time
-    const revealNextChunk = () => {
-      const wordsPerChunk = Math.floor(Math.random() * 3) + 3; // 3-5 words randomly
-      const nextWordIndex = displayedWordsRef.current + wordsPerChunk;
+  // Start the reveal loop (called ONCE at stream start)
+  const startRevealLoop = useCallback(() => {
+    if (streamTimerRef.current) return; // Already running
+    
+    console.log('🎬 Starting reveal loop');
+    
+    streamTimerRef.current = setInterval(() => {
+      const totalWords = wordBufferRef.current.length;
+      const currentIndex = displayedIndexRef.current;
       
-      if (displayedWordsRef.current >= words.length) {
-        // Streaming complete - show pulsing cursor
-        clearInterval(streamTimerRef.current);
-        setShowPulsingCursor(true);
+      // Check if we're caught up with buffer
+      if (currentIndex >= totalWords) {
+        // If stream is complete and we've shown everything, stop
+        if (isStreamCompleteRef.current) {
+          console.log('✅ Reveal complete - stopping timer');
+          clearInterval(streamTimerRef.current);
+          streamTimerRef.current = null;
+          setShowPulsingCursor(true);
+        }
+        // Otherwise keep timer running, waiting for more chunks
         return;
       }
-
-      // Display words up to nextWordIndex
-      const displayWords = words.slice(0, Math.min(nextWordIndex, words.length));
-      setStreamingMessage(displayWords.join(' '));
-      displayedWordsRef.current = Math.min(nextWordIndex, words.length);
-    };
-
-    // Start interval - reveal every 200ms (slower, readable pace)
-    streamTimerRef.current = setInterval(revealNextChunk, 200);
+      
+      // Reveal next 3-5 words
+      const chunkSize = Math.floor(Math.random() * 3) + 3; // 3-5 words
+      const nextIndex = Math.min(currentIndex + chunkSize, totalWords);
+      
+      // Get words to display
+      const wordsToShow = wordBufferRef.current.slice(0, nextIndex);
+      setStreamingMessage(wordsToShow.join(' '));
+      displayedIndexRef.current = nextIndex;
+      
+    }, 200); // 200ms between chunks = natural reading pace
   }, []);
+
+  // Update word buffer (called by onDelta as chunks arrive)
+  const updateWordBuffer = useCallback((fullText) => {
+    // Split into words and update buffer
+    const words = fullText.split(/\s+/).filter(w => w.length > 0);
+    wordBufferRef.current = words;
+    
+    // Start reveal loop if not already running
+    if (!streamTimerRef.current && !isStreamCompleteRef.current) {
+      startRevealLoop();
+    }
+  }, [startRevealLoop]);
 
   // Prepare messages with live streaming
   const displayMessages = React.useMemo(() => {
