@@ -109,6 +109,54 @@ export default function StoryWindow({ story, onClose }) {
     }
   }, [messages.length, story?.id, fetchProgressData]);
 
+  // Start the reveal loop (called ONCE at stream start)
+  // Regular function - no useCallback needed since it only uses refs
+  const startRevealLoop = () => {
+    if (streamTimerRef.current) return; // Already running
+    
+    console.log('🎬 Starting reveal loop');
+    
+    streamTimerRef.current = setInterval(() => {
+      const totalWords = wordBufferRef.current.length;
+      const currentIndex = displayedIndexRef.current;
+      
+      // Check if we're caught up with buffer
+      if (currentIndex >= totalWords) {
+        // If stream is complete and we've shown everything, stop
+        if (isStreamCompleteRef.current) {
+          console.log('✅ Reveal complete - stopping timer');
+          clearInterval(streamTimerRef.current);
+          streamTimerRef.current = null;
+          setShowPulsingCursor(true);
+        }
+        // Otherwise keep timer running, waiting for more chunks
+        return;
+      }
+      
+      // Reveal next 3-5 words
+      const chunkSize = Math.floor(Math.random() * 3) + 3; // 3-5 words
+      const nextIndex = Math.min(currentIndex + chunkSize, totalWords);
+      
+      // Get words to display
+      const wordsToShow = wordBufferRef.current.slice(0, nextIndex);
+      setStreamingMessage(wordsToShow.join(' '));
+      displayedIndexRef.current = nextIndex;
+      
+    }, 200); // 200ms between chunks = natural reading pace
+  };
+
+  // Update word buffer (called by onDelta as chunks arrive)
+  const updateWordBuffer = useCallback((fullText) => {
+    // Split into words and update buffer
+    const words = fullText.split(/\s+/).filter(w => w.length > 0);
+    wordBufferRef.current = words;
+    
+    // Start reveal loop if not already running
+    if (!streamTimerRef.current && !isStreamCompleteRef.current) {
+      startRevealLoop();
+    }
+  }, []); // Empty deps - startRevealLoop is regular function, uses only refs
+
   // Handle send message
   const handleSendMessage = useCallback(async (content) => {
     if (!content.trim() || !story?.id || isSending || isStreaming) return;
@@ -227,7 +275,7 @@ export default function StoryWindow({ story, onClose }) {
       setIsSending(false);
       isStreamCompleteRef.current = false;
     }
-  }, [story?.id, story?.main_character_key, isSending, isStreaming, sendMessageStream, updateWordBuffer]);
+  }, [story?.id, story?.main_character_key, isSending, isStreaming, sendMessageStream]); // Removed updateWordBuffer - it's stable (empty deps, only uses refs)
 
   // Handle cancel streaming
   const handleCancelStreaming = useCallback(() => {
@@ -265,52 +313,6 @@ export default function StoryWindow({ story, onClose }) {
   }, []);
 
   // Start the reveal loop (called ONCE at stream start)
-  // Regular function - no useCallback needed since it only uses refs
-  const startRevealLoop = () => {
-    if (streamTimerRef.current) return; // Already running
-    
-    console.log('🎬 Starting reveal loop');
-    
-    streamTimerRef.current = setInterval(() => {
-      const totalWords = wordBufferRef.current.length;
-      const currentIndex = displayedIndexRef.current;
-      
-      // Check if we're caught up with buffer
-      if (currentIndex >= totalWords) {
-        // If stream is complete and we've shown everything, stop
-        if (isStreamCompleteRef.current) {
-          console.log('✅ Reveal complete - stopping timer');
-          clearInterval(streamTimerRef.current);
-          streamTimerRef.current = null;
-          setShowPulsingCursor(true);
-        }
-        // Otherwise keep timer running, waiting for more chunks
-        return;
-      }
-      
-      // Reveal next 3-5 words
-      const chunkSize = Math.floor(Math.random() * 3) + 3; // 3-5 words
-      const nextIndex = Math.min(currentIndex + chunkSize, totalWords);
-      
-      // Get words to display
-      const wordsToShow = wordBufferRef.current.slice(0, nextIndex);
-      setStreamingMessage(wordsToShow.join(' '));
-      displayedIndexRef.current = nextIndex;
-      
-    }, 200); // 200ms between chunks = natural reading pace
-  };
-
-  // Update word buffer (called by onDelta as chunks arrive)
-  const updateWordBuffer = useCallback((fullText) => {
-    // Split into words and update buffer
-    const words = fullText.split(/\s+/).filter(w => w.length > 0);
-    wordBufferRef.current = words;
-    
-    // Start reveal loop if not already running
-    if (!streamTimerRef.current && !isStreamCompleteRef.current) {
-      startRevealLoop();
-    }
-  }, []); // Empty deps - startRevealLoop is regular function, uses only refs
 
   // Prepare messages with live streaming
   const displayMessages = React.useMemo(() => {
