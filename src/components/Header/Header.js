@@ -449,7 +449,7 @@ export default function Header() {
                   aria-label="Hide header"
                   title="Hide header"
                 >
-                  âŒƒ
+                  ⌃
                 </button>
               </>
             )}
