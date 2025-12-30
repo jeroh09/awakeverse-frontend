@@ -1,7 +1,8 @@
 /* ==========================================================
    AwakeVerse Header + Sidebar Navigation (FIXED LAYOUT)
-   ✅ Uses the working flexbox structure from your previous version
-   ✅ Keeps the current visual styling
+   âœ… Uses the working flexbox structure from your previous version
+   âœ… Keeps the current visual styling
+   âœ… UPDATED: Minimal hamburger with varying bar lengths
    ========================================================== */
 
 /* Fonts */
@@ -113,6 +114,7 @@
 
 /* ============================================
    SHOW HEADER BUTTON (when header hidden)
+   âœ… RESPONSIVE: Text on desktop, icon on mobile
    ============================================ */
 
 .showButton {
@@ -121,6 +123,11 @@
   left: 50%;
   transform: translateX(-50%);
   z-index: 39;
+
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.3rem;
 
   padding: 0.25rem 0.9rem;
   border-radius: 999px;
@@ -135,6 +142,8 @@
   color: #f5f5dc;
 
   cursor: pointer;
+  transition: all 0.2s ease-out;
+
   box-shadow:
     0 6px 20px rgba(15, 23, 42, 0.95),
     0 0 0 1px rgba(15, 23, 42, 1);
@@ -142,62 +151,94 @@
 
 .showButton:hover {
   border-color: rgba(129, 140, 248, 0.9);
+  box-shadow:
+    0 6px 24px rgba(15, 23, 42, 0.98),
+    0 0 0 1px rgba(99, 102, 241, 0.3);
+}
+
+/* Desktop: Show text, hide icon */
+.showButtonText {
+  display: inline;
+}
+
+.showButtonIcon {
+  display: none;
+  width: 20px;
+  height: 20px;
+  color: #f5f5dc;
+}
+
+/* Mobile: Hide text, show icon */
+@media (max-width: 768px) {
+  .showButton {
+    padding: 0.4rem;
+    width: 40px;
+    height: 40px;
+  }
+
+  .showButtonText {
+    display: none;
+  }
+
+  .showButtonIcon {
+    display: block;
+  }
 }
 
 /* ============================================
-   HAMBURGER – SUBTLE PILL (HTML STYLE)
+   HAMBURGER â€" MINIMAL FLOATING BARS (OPTION A)
    ============================================ */
 
 .sidebarHandle {
   position: fixed;
-  top: 0.85rem;
+  top: 1rem;
   left: 0.75rem;
   z-index: 45;
 
   display: flex;
   flex-direction: column;
-  align-items: center;
+  align-items: flex-start;
   justify-content: center;
+  gap: 4px;
 
-  padding: 0.35rem 0.4rem;
-  width: 32px;
-  height: 40px;
-
-  border-radius: 0 999px 999px 0;
-  border: 1px solid rgba(148, 163, 184, 0.4); /* More transparent border */
-  border-left: none;
-
-  background: rgba(15, 23, 42, 0.85); /* More transparent background */
-  backdrop-filter: blur(8px); /* Add blur effect for glassmorphism */
-
-  box-shadow:
-    0 6px 16px rgba(15, 23, 42, 0.6), /* Lighter shadow */
-    0 0 0 1px rgba(15, 23, 42, 0.8);
+  padding: 0.4rem 0.3rem;
+  background: transparent;
+  border: none;
 
   cursor: pointer;
   transition: all 0.25s ease-out;
 }
 
-.sidebarHandle:hover {
-  background: rgba(15, 23, 42, 0.92); /* Slightly more opaque on hover */
-  border-color: rgba(148, 163, 184, 0.6);
+.sidebarHandle:hover .handleBar {
+  filter: drop-shadow(0 0 4px rgba(99, 102, 241, 0.8));
 }
 
 .handleBar {
-  width: 14px;
-  height: 2px;
-  background-image: linear-gradient(to right, #6366f1, #818cf8);
+  height: 2.5px;
+  background: linear-gradient(to right, #6366f1, #818cf8);
   border-radius: 999px;
-  opacity: 0.9; /* Slightly transparent bars */
+  transition: all 0.25s ease-out;
 }
 
-.handleBar + .handleBar {
-  margin-top: 3px;
+/* Varying bar lengths for visual interest */
+.handleBar:nth-child(1) {
+  width: 18px;
+}
+
+.handleBar:nth-child(2) {
+  width: 14px;
+}
+
+.handleBar:nth-child(3) {
+  width: 16px;
 }
 
 .sidebarHandleOpen {
   transform: translateX(var(--sidebar-width));
-  background: rgba(15, 23, 42, 0.95); /* More visible when sidebar is open */
+}
+
+.sidebarHandleOpen .handleBar {
+  filter: drop-shadow(0 0 6px rgba(99, 102, 241, 0.9));
 }
 
 /* ============================================
@@ -206,32 +247,29 @@
 
 @media (max-width: 768px) {
   .sidebarHandle {
-    background: rgba(15, 23, 42, 0.75); /* Even more transparent on mobile */
-    backdrop-filter: blur(12px); /* Stronger blur on mobile */
-    border: 1px solid rgba(148, 163, 184, 0.3);
-    border-left: none;
-    box-shadow:
-      0 4px 12px rgba(15, 23, 42, 0.4),
-      0 0 0 1px rgba(15, 23, 42, 0.6);
+    top: 0.9rem;
+    left: 0.6rem;
+    padding: 0.35rem 0.25rem;
   }
 
-  .sidebarHandle:hover {
-    background: rgba(15, 23, 42, 0.85);
+  .handleBar:nth-child(1) {
+    width: 16px;
   }
 
-  .handleBar {
-    opacity: 0.8; /* Even more transparent on mobile */
+  .handleBar:nth-child(2) {
+    width: 12px;
+  }
+
+  .handleBar:nth-child(3) {
+    width: 14px;
   }
 }
 
 /* For very small screens */
 @media (max-width: 480px) {
   .sidebarHandle {
-    top: 0.7rem;
+    top: 0.8rem;
     left: 0.5rem;
-    width: 28px;
-    height: 36px;
-    background: rgba(15, 23, 42, 0.7); /* Maximum transparency */
   }
 }
 
@@ -265,7 +303,7 @@
   z-index: 42;
 
   display: flex;
-  flex-direction: column; /* ✅ CRITICAL: This was missing */
+  flex-direction: column; /* âœ… CRITICAL: This was missing */
 
   background: #020617;
   border-right: 1px solid rgba(148, 163, 184, 0.35);
@@ -283,7 +321,7 @@
 }
 
 /* ============================================
-   ✅ FIXED: SIDEBAR HEADER (WORKING STRUCTURE)
+   âœ… FIXED: SIDEBAR HEADER (WORKING STRUCTURE)
    ============================================ */
 
 .sidebarHeader {
@@ -313,11 +351,11 @@
 }
 
 /* ============================================
-   ✅ FIXED: SIDEBAR NAVIGATION (WORKING STRUCTURE)
+   âœ… FIXED: SIDEBAR NAVIGATION (WORKING STRUCTURE)
    ============================================ */
 
 .sidebarNav {
-  flex: 1; /* ✅ CRITICAL: This allows proper expansion */
+  flex: 1; /* âœ… CRITICAL: This allows proper expansion */
   padding: 0.75rem 0.9rem 0.9rem;
   overflow-y: auto;
 }
@@ -390,7 +428,7 @@
 }
 
 /* ============================================
-   ✅ FIXED: SIDEBAR FOOTER (WORKING STRUCTURE)
+   âœ… FIXED: SIDEBAR FOOTER (WORKING STRUCTURE)
    ============================================ */
 
 .sidebarFooter {

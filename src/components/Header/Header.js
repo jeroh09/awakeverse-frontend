@@ -1,4 +1,4 @@
-// src/components/Header/Header.js – UPDATED WITH VERSE STUDIO NAV
+// src/components/Header/Header.js â€" UPDATED WITH VERSE STUDIO NAV + RESPONSIVE SHOW BUTTON
 import React, { useState, useEffect } from 'react';
 import styles from './Header.module.css';
 import { useUser } from '../../contexts/UserContext';
@@ -188,7 +188,7 @@ const CreateIcon = ({ className }) => (
 );
 
 /**
- * VerseStudioIcon – unique thumbnail for Verse Studio
+ * VerseStudioIcon â€" unique thumbnail for Verse Studio
  * 3-node constellation / orbit to signal multi-LLM collaboration
  */
 const VerseStudioIcon = ({ className }) => (
@@ -261,6 +261,40 @@ const VerseStudioIcon = ({ className }) => (
   </svg>
 );
 
+/**
+ * ChevronDownIcon â€" for mobile "show header" button
+ */
+const ChevronDownIcon = ({ className }) => (
+  <svg
+    className={className}
+    width="20"
+    height="20"
+    viewBox="0 0 24 24"
+    fill="none"
+    xmlns="http://www.w3.org/2000/svg"
+  >
+    <defs>
+      <filter id="chevronGlow" x="-50%" y="-50%" width="200%" height="200%">
+        <feDropShadow
+          dx="0"
+          dy="0"
+          stdDeviation="2"
+          floodColor="#6366f1"
+          floodOpacity="0.6"
+        />
+      </filter>
+    </defs>
+    <path
+      d="M6 9l6 6 6-6"
+      stroke="currentColor"
+      strokeWidth="2.5"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      filter="url(#chevronGlow)"
+    />
+  </svg>
+);
+
 export default function Header() {
   const { user, getSubscriptionInfo } = useUser();
   const { isAuthenticated } = useAuth();
@@ -321,7 +355,7 @@ export default function Header() {
         },
         {
           key: 'verseStudio',
-          label: 'Workspace',           // 🔹 sidebar label
+          label: 'Workspace',
           icon: VerseStudioIcon,
           viewState: viewContext.VIEW_STATES.VERSE_STUDIO,
         },
@@ -382,7 +416,7 @@ export default function Header() {
 
   return (
     <>
-      {/* Top brand bar – fully removed when not visible */}
+      {/* Top brand bar â€" fully removed when not visible */}
       {isHeaderVisible && (
         <header className={styles.header}>
           <div className={styles.brandShell}>
@@ -415,7 +449,7 @@ export default function Header() {
                   aria-label="Hide header"
                   title="Hide header"
                 >
-                  ⌃
+                  âŒƒ
                 </button>
               </>
             )}
@@ -423,14 +457,15 @@ export default function Header() {
         </header>
       )}
 
-      {/* Pill to show header again */}
+      {/* Responsive show header button: text on desktop, icon on mobile */}
       {!isHeaderVisible && (
         <button
           className={styles.showButton}
           onClick={() => setIsHeaderVisible(true)}
           aria-label="Show header"
         >
-          AwakeVerse
+          <span className={styles.showButtonText}>AwakeVerse</span>
+          <ChevronDownIcon className={styles.showButtonIcon} />
         </button>
       )}
 
@@ -510,7 +545,7 @@ export default function Header() {
               })}
             </nav>
 
-            {/* Sidebar footer – user + subscription */}
+            {/* Sidebar footer â€" user + subscription */}
             {isAuthenticated && (
               <footer className={styles.sidebarFooter}>
                 <div className={styles.userMeta}>
