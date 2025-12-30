@@ -265,7 +265,8 @@ export default function StoryWindow({ story, onClose }) {
   }, []);
 
   // Start the reveal loop (called ONCE at stream start)
-  const startRevealLoop = useCallback(() => {
+  // Regular function - no useCallback needed since it only uses refs
+  const startRevealLoop = () => {
     if (streamTimerRef.current) return; // Already running
     
     console.log('🎬 Starting reveal loop');
@@ -297,7 +298,7 @@ export default function StoryWindow({ story, onClose }) {
       displayedIndexRef.current = nextIndex;
       
     }, 200); // 200ms between chunks = natural reading pace
-  }, []);
+  };
 
   // Update word buffer (called by onDelta as chunks arrive)
   const updateWordBuffer = useCallback((fullText) => {
@@ -309,7 +310,7 @@ export default function StoryWindow({ story, onClose }) {
     if (!streamTimerRef.current && !isStreamCompleteRef.current) {
       startRevealLoop();
     }
-  }, [startRevealLoop]);
+  }, []); // Empty deps - startRevealLoop is regular function, uses only refs
 
   // Prepare messages with live streaming
   const displayMessages = React.useMemo(() => {
