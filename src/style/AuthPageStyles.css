@@ -629,3 +629,137 @@
     width: 100%;
   }
 }
+/* ============================================================================
+   REGISTER PAGE ONLY - SCALE TO 80% (Add to end of AuthPageStyles.css)
+   ============================================================================ */
+
+/* Scale down Register form container */
+.register-page .auth-form-container {
+  width: 228px; /* 80% of 285px */
+  margin-right: -114px; /* Half of 228px */
+}
+
+/* Scale down all form content */
+.register-page .auth-form {
+  padding: 11px 19px; /* 80% of var(--space-md) var(--space-lg) */
+}
+
+/* Scale form groups */
+.register-page .form-group {
+  margin-bottom: 6px; /* 80% of 8px */
+}
+
+/* Scale labels */
+.register-page .form-group label {
+  font-size: 0.72rem; /* 80% of 0.9rem */
+  margin-bottom: 5px;
+}
+
+/* Scale inputs */
+.register-page .auth-form input {
+  padding: 8px 10px; /* 80% of 10px 12px */
+  font-size: 0.72rem; /* 80% of 0.9rem */
+}
+
+/* Scale buttons */
+.register-page .auth-form button[type="submit"],
+.register-page .google-oauth-button {
+  padding: 8px; /* 80% of 10px */
+  font-size: 0.72rem; /* 80% of 0.9rem */
+}
+
+/* Scale Google logo in button */
+.register-page .google-oauth-button svg {
+  width: 14px; /* 80% of 18px */
+  height: 14px;
+}
+
+/* Scale OR divider */
+.register-page .oauth-divider {
+  margin: 11px 0; /* 80% of var(--space-md) */
+  gap: 10px;
+}
+
+.register-page .oauth-divider span {
+  font-size: 0.6rem; /* 80% of 0.75rem */
+}
+
+/* Scale password requirements */
+.register-page .password-requirements {
+  margin-top: 4px;
+  margin-bottom: 6px;
+}
+
+.register-page .password-requirements small {
+  font-size: 0.64rem; /* 80% of 0.8rem */
+  line-height: 1.2;
+}
+
+/* Scale auth links */
+.register-page .auth-links {
+  margin-top: 6px; /* 80% of 8px */
+  font-size: 0.64rem; /* 80% of 0.8rem */
+}
+
+/* Scale legal text */
+.register-page .auth-legal-text {
+  margin-top: 10px; /* 80% of var(--space-md) */
+}
+
+.register-page .auth-legal-text p {
+  font-size: 0.56rem; /* 80% of 0.7rem */
+  line-height: 1.3;
+}
+
+/* Scale error/success messages */
+.register-page .error-text,
+.register-page .success-text {
+  padding: 10px; /* 80% of var(--space-md) */
+  font-size: 0.72rem; /* 80% of 0.9rem */
+  margin-bottom: 10px;
+}
+
+/* Mobile - Keep normal size on mobile */
+@media (max-width: 768px) {
+  .register-page .auth-form-container {
+    width: 100%;
+    max-width: 360px;
+    margin-right: 0;
+  }
+  
+  .register-page .auth-form {
+    padding: var(--space-md) var(--space-lg);
+  }
+  
+  /* Reset all scaled elements on mobile */
+  .register-page .form-group label {
+    font-size: 0.9rem;
+  }
+  
+  .register-page .auth-form input {
+    padding: 10px 12px;
+    font-size: 0.9rem;
+  }
+  
+  .register-page .auth-form button {
+    padding: 10px;
+    font-size: 0.9rem;
+  }
+  
+  .register-page .google-oauth-button svg {
+    width: 18px;
+    height: 18px;
+  }
+  
+  .register-page .password-requirements small {
+    font-size: 0.8rem;
+  }
+  
+  .register-page .auth-links {
+    font-size: 0.8rem;
+  }
+  
+  .register-page .auth-legal-text p {
+    font-size: 0.7rem;
+  }
+}
