@@ -1,5 +1,5 @@
-// src/pages/Register.jsx - WITH GOOGLE OAUTH BUTTON
-import React, { useState, useEffect } from 'react';
+// src/pages/Register.jsx - TRADITIONAL SIGNUP ONLY (OAuth on Login page)
+import React, { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import '../style/AuthPageStyles.css';
 
@@ -13,31 +13,8 @@ export default function Register() {
   const [loading, setLoading] = useState(false);
   const [registrationStep, setRegistrationStep] = useState('form');
   const [successMessage, setSuccessMessage] = useState('');
-  const [oauthAvailable, setOauthAvailable] = useState(false);
   
   const navigate = useNavigate();
-
-  // Check OAuth availability
-  useEffect(() => {
-    const checkOAuth = async () => {
-      try {
-        const res = await fetch(`${API}/api/auth/oauth/health`);
-        const data = await res.json();
-        setOauthAvailable(data.google?.available || false);
-      } catch (err) {
-        setOauthAvailable(false);
-      }
-    };
-    checkOAuth();
-  }, []);
-
-  // Handle Google OAuth
-  const handleGoogleSignup = () => {
-    setLoading(true);
-    setError('');
-    // Redirect to backend OAuth endpoint
-    window.location.href = `${API}/api/auth/google`;
-  };
 
   // KEEP YOUR EXISTING REGISTRATION FLOW
   const registerUser = async (userData) => {
@@ -244,88 +221,10 @@ export default function Register() {
           }}
         ></div>
         
-        {/* FLOATING AUTH FORM */}
+        {/* FLOATING AUTH FORM - NO OAUTH */}
         <div className="auth-form-container">
           <form className="auth-form" onSubmit={handleSubmit}>
             {error && <div className="error-text">{error}</div>}
-            
-            {/* GOOGLE OAUTH BUTTON */}
-            {oauthAvailable && (
-              <>
-                <button
-                  type="button"
-                  onClick={handleGoogleSignup}
-                  disabled={loading}
-                  className="google-oauth-button"
-                  style={{
-                    width: '100%',
-                    padding: '10px',
-                    background: 'rgba(255, 255, 255, 0.95)',
-                    border: '1px solid rgba(255, 255, 255, 0.2)',
-                    borderRadius: 'var(--radius-md)',
-                    color: '#1f1f1f',
-                    fontFamily: 'var(--font-body)',
-                    fontWeight: 600,
-                    fontSize: '0.9rem',
-                    cursor: loading ? 'not-allowed' : 'pointer',
-                    transition: 'all var(--transition-base)',
-                    display: 'flex',
-                    alignItems: 'center',
-                    justifyContent: 'center',
-                    gap: '8px',
-                    marginBottom: 'var(--space-md)',
-                    opacity: loading ? 0.6 : 1
-                  }}
-                  onMouseEnter={(e) => {
-                    if (!loading) {
-                      e.target.style.background = 'rgba(255, 255, 255, 1)';
-                      e.target.style.transform = 'translateY(-1px)';
-                      e.target.style.boxShadow = '0 4px 12px rgba(0, 0, 0, 0.15)';
-                    }
-                  }}
-                  onMouseLeave={(e) => {
-                    e.target.style.background = 'rgba(255, 255, 255, 0.95)';
-                    e.target.style.transform = 'translateY(0)';
-                    e.target.style.boxShadow = 'none';
-                  }}
-                >
-                  <svg width="18" height="18" viewBox="0 0 18 18" xmlns="http://www.w3.org/2000/svg">
-                    <path d="M17.64 9.2c0-.637-.057-1.251-.164-1.84H9v3.481h4.844c-.209 1.125-.843 2.078-1.796 2.717v2.258h2.908c1.702-1.567 2.684-3.874 2.684-6.615z" fill="#4285F4"/>
-                    <path d="M9.003 18c2.43 0 4.467-.806 5.956-2.18L12.05 13.56c-.806.54-1.836.86-3.047.86-2.344 0-4.328-1.584-5.036-3.711H.96v2.332C2.44 15.983 5.485 18 9.003 18z" fill="#34A853"/>
-                    <path d="M3.964 10.712c-.18-.54-.282-1.117-.282-1.71 0-.593.102-1.17.282-1.71V4.96H.957C.347 6.175 0 7.55 0 9.002c0 1.452.348 2.827.957 4.042l3.007-2.332z" fill="#FBBC05"/>
-                    <path d="M9.003 3.58c1.321 0 2.508.454 3.44 1.345l2.582-2.58C13.464.891 11.426 0 9.003 0 5.485 0 2.44 2.017.96 4.958L3.967 7.29c.708-2.127 2.692-3.71 5.036-3.71z" fill="#EA4335"/>
-                  </svg>
-                  Sign up with Google
-                </button>
-                
-                {/* OR DIVIDER */}
-                <div style={{
-                  display: 'flex',
-                  alignItems: 'center',
-                  margin: 'var(--space-md) 0',
-                  gap: '12px'
-                }}>
-                  <div style={{
-                    flex: 1,
-                    height: '1px',
-                    background: 'var(--border-medium)'
-                  }}></div>
-                  <span style={{
-                    fontSize: '0.75rem',
-                    color: 'var(--text-tertiary)',
-                    fontFamily: 'var(--font-body)',
-                    fontWeight: 500,
-                    textTransform: 'uppercase',
-                    letterSpacing: '0.5px'
-                  }}>or</span>
-                  <div style={{
-                    flex: 1,
-                    height: '1px',
-                    background: 'var(--border-medium)'
-                  }}></div>
-                </div>
-              </>
-            )}
             
             <div className="form-group">
               <label htmlFor="displayName">Display Name</label>
@@ -380,6 +279,35 @@ export default function Register() {
             
             <div className="auth-links">
               <Link to="/login">Already have an account?</Link>
+            </div>
+            
+            {/* ✅ ADD GOOGLE SIGNUP HINT */}
+            <div style={{
+              marginTop: 'var(--space-md)',
+              padding: 'var(--space-sm)',
+              background: 'rgba(99, 102, 241, 0.1)',
+              border: '1px solid rgba(99, 102, 241, 0.2)',
+              borderRadius: 'var(--radius-md)',
+              textAlign: 'center'
+            }}>
+              <p style={{
+                margin: 0,
+                fontSize: '0.75rem',
+                color: 'var(--text-secondary)',
+                fontFamily: 'var(--font-body)'
+              }}>
+                Want to use Google?{' '}
+                <Link 
+                  to="/login"
+                  style={{
+                    color: 'var(--accent-primary)',
+                    textDecoration: 'none',
+                    fontWeight: 600
+                  }}
+                >
+                  Sign in with Google
+                </Link>
+              </p>
             </div>
             
             <div className="auth-legal-text">
