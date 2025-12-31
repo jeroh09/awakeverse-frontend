@@ -661,6 +661,11 @@
   font-size: 0.72rem; /* 80% of 0.9rem */
 }
 
+/* Scale placeholder text - reduce by 20% for readability */
+.register-page .auth-form input::placeholder {
+  font-size: 0.64rem; /* 80% of 0.8rem - smaller than input text */
+}
+
 /* Scale buttons */
 .register-page .auth-form button[type="submit"],
 .register-page .google-oauth-button {
@@ -739,6 +744,10 @@
   .register-page .auth-form input {
     padding: 10px 12px;
     font-size: 0.9rem;
+  }
+  
+  .register-page .auth-form input::placeholder {
+    font-size: 0.8rem; /* Normal size on mobile */
   }
   
   .register-page .auth-form button {
