@@ -622,22 +622,37 @@ export default function TaskChatWindow({ task, verseStudio, onBack }) {
                 </p>
               </div>
             )}
+            
+            {messages.map((message, index) => {
+              // ✅ FIX: Force re-render during streaming for live markdown
+              const isStreaming = message.streaming || message.is_streaming || false;
+              const messageKey = isStreaming 
+                ? `${message.id}-${message.text?.length || 0}` 
+                : message.id;
 
-            {messages.map((message) => (
-              <div
-                key={message.id}
-                className={message.user ? `${styles.message} ${styles.messageUser}` : `${styles.message} ${styles.messageAi}`}
-              >
-                <div className={styles.messageMeta}>
-                  <span className={styles.messageRole}>{message.user ? "You" : message.role_name || "Assistant"}</span>
-                  {!message.user && <CopyButton getText={() => String(message.text || "")} label="Copy message" />}
-                </div>
+              return (
+                <div
+                  key={messageKey}
+                  className={message.user ? `${styles.message} ${styles.messageUser}` : `${styles.message} ${styles.messageAi}`}
+                >
+                  <div className={styles.messageMeta}>
+                    <span className={styles.messageRole}>
+                      {message.user ? "You" : message.role_name || "Assistant"}
+                      {isStreaming && <span style={{ opacity: 0.6 }}> ⋯</span>}
+                    </span>
+                    {!message.user && <CopyButton getText={() => String(message.text || "")} label="Copy message" />}
+                  </div>
 
-                <div className={styles.messageBody}>
-                  <MarkdownMessage text={message.text} />
+                  <div className={styles.messageBody}>
+                    {/* ✅ Force markdown re-render with key */}
+                    <MarkdownMessage 
+                      key={`md-${messageKey}`}
+                      text={message.text} 
+                    />
+                  </div>
                 </div>
-              </div>
-            ))}
+              );
+            })}
 
             {showHandoffPrompt && handoffSuggestion && (
               <div className={styles.handoffPrompt}>
