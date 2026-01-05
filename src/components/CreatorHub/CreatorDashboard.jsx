@@ -647,7 +647,7 @@ const InteractiveLockedDashboard = ({ onUpgradeWithStripe, onUpgradeWithPayPal }
     payouts: {
       title: "Monthly Payouts",
       description: "With Pro: Earn from every chat session, track revenue in real-time, and get monthly payouts via Stripe or PayPal.",
-      image: null // No image for payouts
+      image: "/images/creatorhub/payouts_earnings_dashboard.jpg"  // NEW!
     }
   };
 
