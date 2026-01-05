@@ -647,7 +647,7 @@ const InteractiveLockedDashboard = ({ onUpgradeWithStripe, onUpgradeWithPayPal }
     payouts: {
       title: "Monthly Payouts",
       description: "With Pro: Earn from every chat session, track revenue in real-time, and get monthly payouts via Stripe or PayPal.",
-      image: "/images/creatorhub/payouts_earnings_dashboard.jpg"
+      image: "/images/creatorhub/payouts_earnings_dashboard.jpg"  // NEW!
     }
   };
 
@@ -718,21 +718,16 @@ const InteractiveLockedDashboard = ({ onUpgradeWithStripe, onUpgradeWithPayPal }
                         e.target.src = '/images/default-dashboard-preview.jpg';
                       }}
                     />
-                    {/* UPDATED: Image description with corner accents */}
                     <div className="image-description-overlay">
-                      <h3 className="image-description-title">{currentPreview.title}</h3>
-                      <div className="locked-feature-card">
-                        <div className="feature-corner-tl"></div>
-                        <div className="feature-corner-br"></div>
-                        <div className="feature-reveal-label">🔓 PRO FEATURE</div>
-                        <p className="feature-reveal-text">
-                          <span className="feature-reveal-highlight">With Pro:</span> {currentPreview.description}
-                        </p>
+                      <h3>{currentPreview.title}</h3>
+                      <div className="image-description">
+                        <h4>What you'll unlock:</h4>
+                        <p>{currentPreview.description}</p>
                       </div>
                     </div>
                   </>
                 ) : (
-                  // Payouts preview fallback
+                  // Payouts preview (no image)
                   <div style={{ 
                     padding: 'var(--spacing-xl)',
                     display: 'flex',
@@ -760,20 +755,23 @@ const InteractiveLockedDashboard = ({ onUpgradeWithStripe, onUpgradeWithPayPal }
                     }}>
                       £248.50
                     </div>
-                    <div className="locked-feature-card" style={{ maxWidth: '400px', marginTop: 'var(--spacing-lg)' }}>
-                      <div className="feature-corner-tl"></div>
-                      <div className="feature-corner-br"></div>
-                      <div className="feature-reveal-label">🔓 PRO FEATURE</div>
-                      <p className="feature-reveal-text">
-                        <span className="feature-reveal-highlight">With Pro:</span> {currentPreview.description}
-                      </p>
+                    <div style={{ 
+                      color: 'var(--text-secondary)',
+                      fontSize: 'var(--font-size-body-small)',
+                      textAlign: 'center',
+                      marginBottom: 'var(--spacing-lg)'
+                    }}>
+                      Estimated Monthly Earnings
+                    </div>
+                    <div className="image-description" style={{ maxWidth: '400px' }}>
+                      <p>{currentPreview.description}</p>
                     </div>
                   </div>
                 )}
               </div>
             </div>
 
-            {/* Mini Panels (updated with corner accents) */}
+            {/* Mini Panels */}
             <div className="locked-mini-panels">
               <div 
                 className={`locked-mini-panel ${selectedPreview === 'engagement' ? 'active' : ''}`}
@@ -889,6 +887,45 @@ const InteractiveLockedDashboard = ({ onUpgradeWithStripe, onUpgradeWithPayPal }
     </div>
   );
 };
+
+const EmptyDashboardState = ({ onLearnMore, onGoToCharacters, onCreateCharacter }) => (
+  <div className="empty-state">
+    <div className="empty-state-content">
+      <span className="empty-state-icon">🎨</span>
+      <h2>Welcome to Creator Hub!</h2>
+      <p>You haven't published any characters to the Market Hub yet.</p>
+      <div className="empty-state-steps">
+        <h3>Get Started:</h3>
+        <ol>
+          <li>Create an amazing character in Character Builder</li>
+          <li>Get it approved by our team</li>
+          <li>Publish to Market Hub (Professional tier required)</li>
+          <li>Track performance and earn recognition!</li>
+        </ol>
+      </div>
+      <div className="empty-state-actions">
+        <button 
+          onClick={onCreateCharacter}
+          className="create-character-button"
+        >
+          Create Character
+        </button>
+        <button 
+          onClick={onGoToCharacters}
+          className="learn-more-button"
+        >
+          My Characters
+        </button>
+        <button 
+          onClick={onLearnMore}
+          className="learn-more-button secondary"
+        >
+          Learn About Professional Features
+        </button>
+      </div>
+    </div>
+  </div>
+);
 
 const CharacterDetailModal = ({ character, onClose, onViewInHub }) => {
   const engagement = character.engagement || {};
