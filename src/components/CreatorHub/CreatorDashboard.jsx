@@ -266,8 +266,7 @@ const CreatorDashboard = () => {
   if (requiresUpgrade) {
     return (
       <div className="creator-dashboard">
-        <UpgradeRequiredState 
-          onLearnMore={() => setShowEducationalModal(true)}
+        <InteractiveLockedDashboard 
           onUpgradeWithStripe={handleUpgradeWithStripe}
           onUpgradeWithPayPal={handleUpgradeWithPayPal}
         />
@@ -627,75 +626,267 @@ const EngagementChart = ({ data }) => (
 );
 
 // ========= EXISTING SUBCOMPONENTS =========
+// ========= INTERACTIVE LOCKED DASHBOARD =========
 
-const UpgradeRequiredState = ({ onLearnMore, onUpgradeWithStripe, onUpgradeWithPayPal }) => (
-  <div className="upgrade-required-state">
-    <div className="upgrade-required-content">
-      <span className="upgrade-icon">💎</span>
-      <h2>Unlock Creator Hub</h2>
-      <p>Upgrade to professional tier to access powerful creator analytics and publishing tools</p>
-      
-      <div className="upgrade-features-preview">
-        <h3>With Professional Tier You Get:</h3>
-        <div className="preview-features">
-          <div className="preview-feature">
-            <TrendingUp size={20} />
-            <span>Real-time Analytics</span>
+const InteractiveLockedDashboard = ({ onUpgradeWithStripe, onUpgradeWithPayPal }) => {
+  const [selectedPreview, setSelectedPreview] = useState('engagement');
+  const [selectedPayment, setSelectedPayment] = useState('stripe');
+  const [isLocked, setIsLocked] = useState(true);
+
+  const previewData = {
+    engagement: {
+      title: "Engagement Analytics",
+      description: "With Pro: Track real-time engagement, user demographics, and conversation trends to optimize your characters.",
+      image: "/images/creatorhub/engagement_analytics.jpg"
+    },
+    marketHub: {
+      title: "Market Hub Featuring",
+      description: "With Pro: Get featured in prime slots, reach 10x more users, and get priority in search results.",
+      image: "/images/creatorhub/market_hub_featuring.jpg"
+    },
+    payouts: {
+      title: "Monthly Payouts",
+      description: "With Pro: Earn from every chat session, track revenue in real-time, and get monthly payouts via Stripe or PayPal.",
+      image: null // No image for payouts
+    }
+  };
+
+  const handlePreviewSelect = (preview) => {
+    setSelectedPreview(preview);
+    if (isLocked) {
+      setIsLocked(false);
+    }
+  };
+
+  const handleUpgrade = () => {
+    if (selectedPayment === 'stripe') {
+      onUpgradeWithStripe();
+    } else {
+      onUpgradeWithPayPal();
+    }
+  };
+
+  const currentPreview = previewData[selectedPreview];
+
+  return (
+    <div className="locked-dashboard-preview">
+      <div className="locked-dashboard-container">
+        {/* Header */}
+        <div className="locked-dashboard-header">
+          <button 
+            className="locked-close-button"
+            onClick={() => window.history.back()}
+          >
+            ×
+          </button>
+          <h1>Creator Hub Pro Dashboard Preview</h1>
+          <p>See what you're missing. Upgrade to unlock powerful analytics, higher earnings, and priority featuring.</p>
+        </div>
+
+        {/* Main Content */}
+        <div className="locked-dashboard-content">
+          {/* Left: Interactive Preview */}
+          <div className="locked-preview-section">
+            <div className="locked-preview-header">
+              <h2>Locked Dashboard Preview</h2>
+              <div className="locked-feature-tag">
+                <span>🔒</span>
+                <span>Click panels to preview</span>
+              </div>
+            </div>
+
+            {/* Main Preview Panel */}
+            <div className="locked-main-preview">
+              {isLocked ? (
+                <div className="preview-overlay">
+                  <div className="locked-lock-icon">🔒</div>
+                  <div className="locked-unlock-text">Pro Features Locked</div>
+                  <p className="locked-preview-subtext">
+                    Click on the panels below to preview what you'll unlock with Creator Hub Pro
+                  </p>
+                </div>
+              ) : null}
+
+              <div className="preview-image-container">
+                {currentPreview.image ? (
+                  <>
+                    <img 
+                      src={currentPreview.image} 
+                      alt={currentPreview.title}
+                      className="preview-image"
+                      onError={(e) => {
+                        e.target.src = '/images/default-dashboard-preview.jpg';
+                      }}
+                    />
+                    <div className="image-description-overlay">
+                      <h3>{currentPreview.title}</h3>
+                      <div className="image-description">
+                        <h4>What you'll unlock:</h4>
+                        <p>{currentPreview.description}</p>
+                      </div>
+                    </div>
+                  </>
+                ) : (
+                  // Payouts preview (no image)
+                  <div style={{ 
+                    padding: 'var(--spacing-xl)',
+                    display: 'flex',
+                    flexDirection: 'column',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    height: '100%',
+                    background: 'linear-gradient(135deg, var(--bg-peak), var(--bg-interactive))'
+                  }}>
+                    <div style={{ fontSize: '48px', marginBottom: 'var(--spacing-lg)' }}>💰</div>
+                    <div style={{ 
+                      fontFamily: 'var(--font-display)',
+                      fontSize: 'var(--font-size-h3)',
+                      color: 'var(--brand-ivory)',
+                      marginBottom: 'var(--spacing-sm)',
+                      textAlign: 'center'
+                    }}>
+                      Monthly Payouts
+                    </div>
+                    <div style={{ 
+                      fontSize: 'var(--font-size-h2)',
+                      color: 'var(--text-primary)',
+                      marginBottom: 'var(--spacing-md)',
+                      textAlign: 'center'
+                    }}>
+                      £248.50
+                    </div>
+                    <div style={{ 
+                      color: 'var(--text-secondary)',
+                      fontSize: 'var(--font-size-body-small)',
+                      textAlign: 'center',
+                      marginBottom: 'var(--spacing-lg)'
+                    }}>
+                      Estimated Monthly Earnings
+                    </div>
+                    <div className="image-description" style={{ maxWidth: '400px' }}>
+                      <p>{currentPreview.description}</p>
+                    </div>
+                  </div>
+                )}
+              </div>
+            </div>
+
+            {/* Mini Panels */}
+            <div className="locked-mini-panels">
+              <div 
+                className={`locked-mini-panel ${selectedPreview === 'engagement' ? 'active' : ''}`}
+                onClick={() => handlePreviewSelect('engagement')}
+              >
+                <div className="panel-header">
+                  <div className="panel-icon">📊</div>
+                  <div className="panel-title">Engagement Analytics</div>
+                </div>
+                <p className="panel-description">Real-time views, likes, and chat session tracking with detailed breakdowns</p>
+              </div>
+
+              <div 
+                className={`locked-mini-panel ${selectedPreview === 'marketHub' ? 'active' : ''}`}
+                onClick={() => handlePreviewSelect('marketHub')}
+              >
+                <div className="panel-header">
+                  <div className="panel-icon">🚀</div>
+                  <div className="panel-title">Market Hub Featuring</div>
+                </div>
+                <p className="panel-description">Get promoted in prime slots and reach 10x more users</p>
+              </div>
+
+              <div 
+                className={`locked-mini-panel ${selectedPreview === 'payouts' ? 'active' : ''}`}
+                onClick={() => handlePreviewSelect('payouts')}
+              >
+                <div className="panel-header">
+                  <div className="panel-icon">💰</div>
+                  <div className="panel-title">Monthly Payouts</div>
+                </div>
+                <p className="panel-description">Earn from character usage with transparent revenue tracking</p>
+              </div>
+            </div>
           </div>
-          <div className="preview-feature">
-            <Eye size={20} />
-            <span>Engagement Tracking</span>
-          </div>
-          <div className="preview-feature">
-            <Heart size={20} />
-            <span>Performance Metrics</span>
-          </div>
-          <div className="preview-feature">
-            <MessageCircle size={20} />
-            <span>Chat Session Insights</span>
-          </div>
-          <div className="preview-feature">
-            <Bookmark size={20} />
-            <span>Bookmark & Share Analytics</span>
-          </div>
-          <div className="preview-feature">
-            <Share2 size={20} />
-            <span>Character Publishing</span>
+
+          {/* Right: Upgrade Section */}
+          <div className="locked-upgrade-section">
+            <div className="locked-pricing-header">
+              <h3>Unlock Everything</h3>
+              <div className="locked-pricing">
+                <span className="locked-price-amount">£11.99</span>
+                <span className="locked-price-period">/month</span>
+              </div>
+              <p className="locked-pricing-description">Cancel anytime. All features included.</p>
+            </div>
+
+            {/* Payment Options */}
+            <div className="locked-payment-options">
+              <div 
+                className={`locked-payment-option ${selectedPayment === 'stripe' ? 'selected' : ''}`}
+                onClick={() => setSelectedPayment('stripe')}
+              >
+                <div className="payment-icon">💳</div>
+                <div className="payment-details">
+                  <div className="payment-name">Pay with Stripe</div>
+                  <div className="payment-security">
+                    <span>⭐</span>
+                    <span>Secured & Encrypted</span>
+                  </div>
+                </div>
+              </div>
+
+              <div 
+                className={`locked-payment-option ${selectedPayment === 'paypal' ? 'selected' : ''}`}
+                onClick={() => setSelectedPayment('paypal')}
+              >
+                <div className="payment-icon">🅿️</div>
+                <div className="payment-details">
+                  <div className="payment-name">Pay with PayPal</div>
+                  <div className="payment-security">
+                    <span>🛡️</span>
+                    <span>Buyer Protection</span>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            {/* CTA */}
+            <div className="locked-upgrade-cta">
+              <button 
+                className="locked-upgrade-button"
+                onClick={handleUpgrade}
+              >
+                <span>🔓</span>
+                <span>Unlock Creator Hub Pro</span>
+              </button>
+            </div>
           </div>
         </div>
-      </div>
 
-      <div className="upgrade-actions">
-        <div className="upgrade-payment-options">
-          <button 
-            className="upgrade-button primary-upgrade"
-            onClick={onUpgradeWithStripe}
-          >
-            💳 Upgrade with Stripe - £11.99/month
-          </button>
-
-          <button 
-            className="upgrade-button secondary-upgrade"
-            onClick={onUpgradeWithPayPal}
-          >
-            🅿️ Pay with PayPal
-          </button>
+        {/* Footer */}
+        <div className="locked-dashboard-footer">
+          <div className="locked-security-badges">
+            <div className="locked-security-badge">
+              <span>⭐</span>
+              <span>Stripe Secure</span>
+            </div>
+            <div className="locked-security-badge">
+              <span>🅿️</span>
+              <span>PayPal Protected</span>
+            </div>
+            <div className="locked-security-badge">
+              <span>🔒</span>
+              <span>SSL Encrypted</span>
+            </div>
+          </div>
+          <div className="locked-cancel-info">
+            Cancel anytime · 7-day support included
+          </div>
         </div>
-
-        <button 
-          onClick={onLearnMore}
-          className="learn-features-button"
-        >
-          Learn About All Features
-        </button>
-      </div>
-
-      <div className="upgrade-footer">
-        <p>⭐<strong>Secured by Stripe</strong> · 🅿️<strong>PayPal Secure</strong> · Cancel anytime</p>
       </div>
     </div>
-  </div>
-);
+  );
+};
 
 const EmptyDashboardState = ({ onLearnMore, onGoToCharacters, onCreateCharacter }) => (
   <div className="empty-state">
