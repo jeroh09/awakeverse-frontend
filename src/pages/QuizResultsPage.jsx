@@ -4,6 +4,7 @@
  * Shows persona badge, match breakdown, and "Create Character" CTA
  * Gateway to auth → character creation flow
  * Updated: Using Lucide icons instead of SVG files
+ * FIXED: Defensive sessionId handling to prevent silent navigation failures
  */
 
 import React, { useState, useEffect } from 'react';
@@ -43,7 +44,15 @@ const QuizResultsPage = () => {
         
         // Get session ID for character creation
         const sessionData = getSessionData();
-        setSessionId(sessionData?.quiz_session_id);
+        const quizSessionId = sessionData?.quiz_session_id;
+        
+        if (!quizSessionId) {
+          console.error('❌ Quiz session ID missing from sessionData:', sessionData);
+        } else {
+          console.log('✅ Quiz session loaded:', quizSessionId);
+        }
+        
+        setSessionId(quizSessionId);
       } catch (error) {
         console.error('Failed to load results:', error);
         // Redirect back to quiz if no results
@@ -57,12 +66,47 @@ const QuizResultsPage = () => {
   }, [navigate]);
 
   const handleCreateCharacter = () => {
+    // Defensive check: Ensure sessionId exists before navigation
+    if (!sessionId) {
+      console.error('❌ Quiz session ID missing - cannot generate template');
+      
+      // Fallback: Try to get from localStorage directly
+      const sessionData = getSessionData();
+      const fallbackSessionId = sessionData?.quiz_session_id;
+      
+      if (!fallbackSessionId) {
+        console.error('❌ Fallback also failed. Session data:', sessionData);
+        alert('Quiz session expired. Please retake the quiz to generate your character.');
+        navigate('/quiz');
+        return;
+      }
+      
+      console.log('✅ Using fallback sessionId:', fallbackSessionId);
+      
+      // Use fallback sessionId
+      if (isAuthenticated) {
+        console.log('🔐 User authenticated, navigating to /app');
+        navigate(`/app?quiz_session=${fallbackSessionId}&view=create`);
+      } else {
+        console.log('🔓 User not authenticated, navigating to /register');
+        navigate(`/register?redirect=/app&quiz_session=${fallbackSessionId}&view=create`);
+      }
+      return;
+    }
+
+    console.log('✅ SessionId present:', sessionId);
+    console.log('🔐 Authenticated:', isAuthenticated);
+
     if (isAuthenticated) {
       // Already authenticated → go straight to character builder
-      navigate(`/app?quiz_session=${sessionId}&view=create`);
+      const targetUrl = `/app?quiz_session=${sessionId}&view=create`;
+      console.log('→ Navigating to:', targetUrl);
+      navigate(targetUrl);
     } else {
       // Not authenticated → redirect to register with quiz session
-      navigate(`/register?redirect=/app&quiz_session=${sessionId}&view=create`);
+      const targetUrl = `/register?redirect=/app&quiz_session=${sessionId}&view=create`;
+      console.log('→ Navigating to:', targetUrl);
+      navigate(targetUrl);
     }
   };
 
