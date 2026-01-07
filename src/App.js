@@ -31,6 +31,8 @@ import PublicCharacterPage from './pages/PublicCharacterPage';
 import PublicScenarioPage from './pages/PublicScenarioPage';
 import CreatorsCharterPage from './pages/CreatorsCharterPage';
 import BillingDashboard from './components/Billing/BillingDashboard';
+import QuizPage from './pages/QuizPage';
+import QuizResultsPage from './pages/QuizResultsPage';
 
 
 import './styles.css';
@@ -140,6 +142,9 @@ export default function App() {
 
       {/* NOTE: No separate /hub route - all navigation happens within /app using view state */}
       <Route path="/creators-charter" element={<CreatorsCharterPage />} />
+      {/*Add routes (before fallback */}
+      <Route path="/quiz" element={<QuizPage />} />
+      <Route path="/quiz/results" element={<QuizResultsPage />} />
 
 
       {/* Contact us */}
