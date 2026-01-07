@@ -11,19 +11,40 @@ const getCookie = (name) => {
   if (parts.length === 2) return parts.pop().split(';').shift();
 };
 
+
 const CharacterBuilder = ({ template, onClose, onSuccess }) => {
   const { user } = useUser();
   const [isMobile, setIsMobile] = useState(false);
   const [showInfo, setShowInfo] = useState(false);
+
+
+    // Helper: Read template fields from both flat (quiz) and nested (old) structures
+  const getTemplateField = (template, flatKey, nestedPath) => {
+    if (!template) return null;
+
+    // Try flat structure first (quiz templates)
+    if (template[flatKey] !== undefined) {
+      return template[flatKey];
+    }
+
+    // Fall back to nested structure (old templates)
+    if (template.template_data && nestedPath) {
+      return template.template_data[nestedPath];
+    }
+
+    return null;
+  };
   
+
   const [formData, setFormData] = useState({
-    display_name: '',
-    short_description: '',
-    system_instruction: template?.template_data?.system_instruction_template || '',
-    behavior_goals: template?.template_data?.suggested_behavior_goals || [],
-    style_tone: template?.template_data?.suggested_style_tone || [],
-    constraints: template?.template_data?.suggested_constraints || '',
-    keyword_triggers: template?.template_data?.sample_triggers || []
+    // ✅ Support BOTH flat (quiz) and nested (old) template structures
+    display_name: template?.name || '',  // Quiz templates have .name
+    short_description: template?.description || '',  // Quiz templates have .description
+    system_instruction: template?.system_instruction || template?.template_data?.system_instruction_template || '',
+    behavior_goals: template?.behavior_goals || template?.template_data?.suggested_behavior_goals || [],
+    style_tone: template?.style_tone || template?.template_data?.suggested_style_tone || [],
+    constraints: template?.constraints || template?.template_data?.suggested_constraints || '',
+    keyword_triggers: template?.keyword_triggers || template?.template_data?.sample_triggers || []
   });
   
   const [errors, setErrors] = useState({});
@@ -40,17 +61,18 @@ const CharacterBuilder = ({ template, onClose, onSuccess }) => {
     return () => window.removeEventListener('resize', checkMobile);
   }, []);
 
-  // Initialize form data from template
+    // Initialize form data from template (supports both quiz and old templates)
   useEffect(() => {
-    if (template?.template_data) {
+    if (template) {
       setFormData({
-        display_name: '',
-        short_description: '',
-        system_instruction: template.template_data.system_instruction_template || '',
-        behavior_goals: template.template_data.suggested_behavior_goals || [],
-        style_tone: template.template_data.suggested_style_tone || [],
-        constraints: template.template_data.suggested_constraints || '',
-        keyword_triggers: template.template_data.sample_triggers || []
+        // ✅ Read from flat structure (quiz) OR nested structure (old templates)
+        display_name: template.name || '',
+        short_description: template.description || '',
+        system_instruction: template.system_instruction || template.template_data?.system_instruction_template || '',
+        behavior_goals: template.behavior_goals || template.template_data?.suggested_behavior_goals || [],
+        style_tone: template.style_tone || template.template_data?.suggested_style_tone || [],
+        constraints: template.constraints || template.template_data?.suggested_constraints || '',
+        keyword_triggers: template.keyword_triggers || template.template_data?.sample_triggers || []
       });
     }
   }, [template]);
