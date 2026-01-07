@@ -1,6 +1,7 @@
 // src/pages/ChatLauncherPage.jsx - PRODUCTION READY
 import React, { useState, useEffect, useMemo, useCallback } from 'react';
 import { useUser } from '../contexts/UserContext';
+import { useSearchParams } from 'react-router-dom'; // ✨ QUIZ INTEGRATION
 import useInteractedCharacters from '../hooks/useInteractedCharacters';
 import CharacterDetailPanel from '../components/CharacterDetailPanel/CharacterDetailPanel';
 import TemplateGallery from '../components/TemplateGallery';
@@ -15,6 +16,7 @@ import { useAppView, VIEW_STATES } from '../contexts/AppViewContext';
 import PremiumCharacterCard from '../components/PremiumCharacterCard';
 import theme from '../design-system/tokens';
 import ScrollShell from '../components/ScrollShell';
+
 
 
 // Import helper components
@@ -258,6 +260,11 @@ const ChatLauncherPage = ({ onStartChat, discoveredCharacters = [] }) => {
   const [showSuccess, setShowSuccess] = useState(false);
   const [selectedTemplate, setSelectedTemplate] = useState(null);
 
+  // ✨ QUIZ: URL params and loading state
+  const [searchParams, setSearchParams] = useSearchParams();
+  const [isLoadingQuizTemplate, setIsLoadingQuizTemplate] = useState(false);
+  const [quizTemplateError, setQuizTemplateError] = useState(null);
+
   // Premium character state management
   const [userCharacters, setUserCharacters] = useState([]);
   const [charactersLoading, setCharactersLoading] = useState(false);
@@ -354,6 +361,65 @@ const ChatLauncherPage = ({ onStartChat, discoveredCharacters = [] }) => {
     loadUserCharacters();
   }, [loadUserCharacters]);
 
+  // ✨ QUIZ INTEGRATION: Auto-load template from quiz session
+  useEffect(() => {
+    const handleQuizRedirect = async () => {
+      const quizSessionId = searchParams.get('quiz_session');
+      const view = searchParams.get('view');
+
+      if (!quizSessionId || view !== 'create') {
+        return;
+      }
+
+      console.log('🎭 Quiz session detected:', quizSessionId);
+      setIsLoadingQuizTemplate(true);
+      setQuizTemplateError(null);
+
+      try {
+        const API_BASE = process.env.REACT_APP_API_URL || 'https://api.awakeverse.com';
+
+        const response = await fetch(
+          `${API_BASE}/api/quiz/generate-template?session_id=${quizSessionId}`,
+          {
+            method: 'GET',
+            credentials: 'include',
+            headers: { 'Content-Type': 'application/json' }
+          }
+        );
+
+        if (response.ok) {
+          const data = await response.json();
+
+          if (data.status === 'success' && data.template) {
+            console.log('✅ Quiz template loaded:', data.template.name);
+
+            setSelectedTemplate(data.template);
+            setShowBuilder(true);
+
+            searchParams.delete('quiz_session');
+            searchParams.delete('view');
+            setSearchParams(searchParams, { replace: true });
+          } else {
+            throw new Error('Invalid template response');
+          }
+        } else {
+          throw new Error(`Template fetch failed: ${response.status}`);
+        }
+      } catch (error) {
+        console.error('❌ Failed to load quiz template:', error);
+        setQuizTemplateError(error.message);
+
+        setTimeout(() => {
+          setShowTemplates(true);
+          setQuizTemplateError(null);
+        }, 2000);
+      } finally {
+        setIsLoadingQuizTemplate(false);
+      }
+    };
+
+    handleQuizRedirect();
+  }, [searchParams, setSearchParams]);
   // NEW: Enhanced categories with user characters AND discovered characters
   const enhancedCategories = useMemo(() => {    
     const baseCategories = [...characterCategories];
@@ -580,6 +646,115 @@ const ChatLauncherPage = ({ onStartChat, discoveredCharacters = [] }) => {
   }, []);
 
   const currentPlaceholder = ORACLE_PROMPTS[placeholderIndex];
+
+  // ✨ QUIZ: Loading state
+  if (isLoadingQuizTemplate) {
+    return (
+      <div style={{
+        position: 'fixed',
+        top: 0,
+        left: 0,
+        width: '100%',
+        height: '100%',
+        zIndex: 9999,
+        background: theme.colors.background.canvas,
+        display: 'flex',
+        flexDirection: 'column',
+        alignItems: 'center',
+        justifyContent: 'center',
+        fontFamily: theme.typography.fonts.body
+      }}>
+        <div style={{
+          fontSize: '80px',
+          marginBottom: '24px',
+          animation: 'bounce 1s ease-in-out infinite'
+        }}>
+          🎭
+        </div>
+
+        <h2 style={{
+          fontFamily: theme.typography.fonts.display,
+          fontSize: theme.typography.sizes.h2,
+          fontWeight: theme.typography.weights.bold,
+          color: theme.colors.text.primary,
+          margin: '0 0 8px 0'
+        }}>
+          Creating Your Character
+        </h2>
+
+        <p style={{
+          fontSize: theme.typography.sizes.body,
+          color: theme.colors.text.secondary,
+          margin: '0 0 24px 0'
+        }}>
+          Loading your quiz results...
+        </p>
+
+        <div style={{
+          width: '40px',
+          height: '40px',
+          border: `3px solid ${theme.colors.background.surface}`,
+          borderTop: `3px solid ${theme.colors.accent.primary}`,
+          borderRadius: '50%',
+          animation: 'spin 1s linear infinite'
+        }} />
+
+        <style>{`
+          @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+          }
+          @keyframes bounce {
+            0%, 100% { transform: translateY(0); }
+            50% { transform: translateY(-20px); }
+          }
+        `}</style>
+      </div>
+    );
+  }
+
+  // ✨ QUIZ: Error state
+  if (quizTemplateError) {
+    return (
+      <div style={{
+        position: 'fixed',
+        top: 0,
+        left: 0,
+        width: '100%',
+        height: '100%',
+        zIndex: 9999,
+        background: theme.colors.background.canvas,
+        display: 'flex',
+        flexDirection: 'column',
+        alignItems: 'center',
+        justifyContent: 'center',
+        fontFamily: theme.typography.fonts.body,
+        padding: '20px'
+      }}>
+        <div style={{ fontSize: '64px', marginBottom: '16px' }}>⚠️</div>
+
+        <h2 style={{
+          fontFamily: theme.typography.fonts.display,
+          fontSize: theme.typography.sizes.h3,
+          fontWeight: theme.typography.weights.bold,
+          color: theme.colors.semantic.warning,
+          margin: '0 0 8px 0'
+        }}>
+          Quiz Session Expired
+        </h2>
+
+        <p style={{
+          fontSize: theme.typography.sizes.body,
+          color: theme.colors.text.secondary,
+          margin: '0 0 16px 0',
+          textAlign: 'center',
+          maxWidth: '400px'
+        }}>
+          Your quiz session has expired. Opening template gallery...
+        </p>
+      </div>
+    );
+  }
 
   // Character Creation Flow Modals
   if (showSuccess) {
