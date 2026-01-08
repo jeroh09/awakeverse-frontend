@@ -1,4 +1,4 @@
-// src/pages/EmailVerification.jsx - FIXED WITH COOKIE VERIFICATION
+// src/pages/EmailVerification.jsx - COMPREHENSIVE QUIZ FIX
 import React, { useState, useEffect } from 'react';
 import { Link, useNavigate, useSearchParams } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
@@ -40,28 +40,49 @@ export default function EmailVerification() {
   const waitForCookies = async (maxAttempts = 5, delayMs = 500) => {
     for (let attempt = 1; attempt <= maxAttempts; attempt++) {
       if (checkCookiesSet()) {
-        console.log(`✅ Cookies verified on attempt ${attempt}`);
         return true;
       }
-      
-      console.log(`⏳ Waiting for cookies... attempt ${attempt}/${maxAttempts}`);
       await new Promise(resolve => setTimeout(resolve, delayMs));
     }
-    
-    console.warn('⚠️ Cookies not detected after max attempts');
     return false;
   };
 
-  // ENHANCED VERIFICATION FLOW WITH COOKIE VERIFICATION
+  // ============================================================================
+  // ENHANCED: Get quiz session from multiple sources
+  // ============================================================================
+  const getQuizSession = () => {
+    // Priority 1: sessionStorage (survives page reloads during verification)
+    const sessionQuiz = sessionStorage.getItem('pending_quiz_session');
+    if (sessionQuiz) {
+      return sessionQuiz;
+    }
+
+    // Priority 2: localStorage (from quiz completion)
+    try {
+      const quizData = localStorage.getItem('awakeverse_quiz_session');
+      if (quizData) {
+        const parsed = JSON.parse(quizData);
+        return parsed.quiz_session_id;
+      }
+    } catch (e) {
+      console.warn('Failed to parse quiz session from localStorage:', e);
+    }
+
+    return null;
+  };
+
+  // ============================================================================
+  // ENHANCED VERIFICATION FLOW WITH QUIZ SUPPORT
+  // ============================================================================
   const handleEmailVerification = async (verificationToken) => {
     setVerificationStatus('processing');
 
     try {
-      // Call API directly to get quiz_session_id from response
+      // Call API directly
       const res = await fetch(`${API}/api/auth/verify-email`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        credentials: 'include',  // Important for session cookies
+        credentials: 'include',
         body: JSON.stringify({ token: verificationToken })
       });
 
@@ -70,22 +91,38 @@ export default function EmailVerification() {
       if (res.ok && result.status === 'success') {
         setVerificationStatus('success');
 
-        // ✅ NEW: Wait for cookies to be set before navigating
-        console.log('Email verified successfully, waiting for cookies...');
-        
+        // ✅ ENHANCED: Get quiz session from multiple sources
+        let quizSessionId = null;
+
+        // Priority 1: Backend response (most reliable for new users)
+        if (result.quiz_session_id) {
+          quizSessionId = result.quiz_session_id;
+          // Store in sessionStorage for fallback
+          sessionStorage.setItem('pending_quiz_session', quizSessionId);
+        }
+
+        // Priority 2: Fallback to localStorage/sessionStorage
+        if (!quizSessionId) {
+          quizSessionId = getQuizSession();
+        }
+
+        // Wait for cookies before navigating
         const cookiesSet = await waitForCookies();
         
         if (!cookiesSet) {
-          console.warn('Cookies not detected, but proceeding with navigation...');
+          console.warn('⚠️ Cookies not detected, but proceeding with navigation...');
         }
 
-        // Navigate after cookies are confirmed
-        if (result.quiz_session_id) {
-          console.log('✅ Redirecting to template with quiz:', result.quiz_session_id);
-          navigate(`/app?quiz_session=${result.quiz_session_id}&view=create`);
+        // ✅ ENHANCED: Navigate with quiz session if available
+        if (quizSessionId) {
+          // Clear from sessionStorage once used
+          sessionStorage.removeItem('pending_quiz_session');
+          
+          navigate(`/app?quiz_session=${quizSessionId}&view=create`, {
+            replace: true // Replace history to prevent back button issues
+          });
         } else {
-          console.log('✅ Normal redirect to app');
-          navigate('/app');
+          navigate('/app', { replace: true });
         }
       } else {
         setVerificationStatus('error');
@@ -121,7 +158,6 @@ export default function EmailVerification() {
     }
   };
 
-  // KEEPING YOUR STATUS HANDLING FLOW
   const getTitle = () => {
     switch (verificationStatus) {
       case 'processing':
@@ -186,7 +222,6 @@ export default function EmailVerification() {
           <div className="error-text">{error}</div>
         )}
         
-        {/* KEEPING YOUR PROCESSING STATE */}
         {verificationStatus === 'processing' && (
           <div className="verification-progress">
             <div className="spinner"></div>
@@ -194,7 +229,6 @@ export default function EmailVerification() {
           </div>
         )}
         
-        {/* KEEPING YOUR SUCCESS STATE */}
         {verificationStatus === 'success' && (
           <div className="verification-actions">
             <Link to="/app" className="primary-button">
@@ -206,7 +240,6 @@ export default function EmailVerification() {
           </div>
         )}
         
-        {/* KEEPING YOUR EXPIRED/ERROR STATE */}
         {(verificationStatus === 'expired' || verificationStatus === 'error') && (
           <div className="verification-recovery">
             <div className="resend-section">
@@ -251,7 +284,6 @@ export default function EmailVerification() {
           </div>
         )}
         
-        {/* KEEPING YOUR RESENT STATE */}
         {verificationStatus === 'resent' && (
           <div className="verification-actions">
             <Link to="/login" className="primary-button">

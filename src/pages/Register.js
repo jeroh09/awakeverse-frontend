@@ -1,4 +1,4 @@
-// src/pages/Register.jsx - WITH SCALED FORM (80%) + WHITE GOOGLE BUTTON
+// src/pages/Register.jsx - WITH OAUTH QUIZ SUPPORT
 import React, { useState, useEffect } from 'react';
 import { Link, useNavigate, useSearchParams } from 'react-router-dom';
 import '../style/AuthPageStyles.css';
@@ -32,14 +32,40 @@ export default function Register() {
     checkOAuth();
   }, []);
 
-  // Handle Google OAuth
+  // ============================================================================
+  // ENHANCED: Save quiz session before OAuth redirect
+  // ============================================================================
   const handleGoogleSignup = () => {
     setLoading(true);
     setError('');
+    
+    // Get quiz session from URL or localStorage
+    const quizSessionFromUrl = searchParams.get('quiz_session');
+    let quizSessionId = quizSessionFromUrl;
+    
+    if (!quizSessionId) {
+      // Try to get from localStorage (quiz completion)
+      try {
+        const quizData = localStorage.getItem('awakeverse_quiz_session');
+        if (quizData) {
+          const parsed = JSON.parse(quizData);
+          quizSessionId = parsed.quiz_session_id;
+        }
+      } catch (e) {
+        console.warn('Failed to parse quiz session:', e);
+      }
+    }
+    
+    // Save quiz session to sessionStorage before OAuth redirect
+    if (quizSessionId) {
+      sessionStorage.setItem('oauth_quiz_session', quizSessionId);
+    }
+    
+    // Redirect to OAuth (backend will check sessionStorage alternative via state param)
+    // For now, we rely on backend checking database after OAuth completes
     window.location.href = `${API}/api/auth/google`;
   };
 
-  // AFTER:
   const registerUser = async (userData) => {
     try {
       // Capture quiz_session from URL if present
@@ -52,7 +78,7 @@ export default function Register() {
           username: userData.email, 
           password: userData.password, 
           display_name: userData.displayName,
-          quiz_session_id: quizSessionId  // ← NEW
+          quiz_session_id: quizSessionId  // ← Existing
         }),
       });
 
@@ -217,7 +243,7 @@ export default function Register() {
   }
 
   return (
-    <div className="auth-page register-page"> {/* ✅ ADDED register-page className */}
+    <div className="auth-page register-page">
       <div style={{
         position: 'absolute',
         top: 'var(--space-xl)',
