@@ -29,18 +29,31 @@ export default function EmailVerification() {
   // KEEPING YOUR VERIFICATION FLOW
   const handleEmailVerification = async (verificationToken) => {
     setVerificationStatus('processing');
-    
+
     try {
-      const result = await verifyEmail(verificationToken);
-      
-      if (result.success) {
+      // Call API directly to get quiz_session_id from response
+      const res = await fetch(`${API}/api/auth/verify-email`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        credentials: 'include',  // Important for session cookies
+        body: JSON.stringify({ token: verificationToken })
+      });
+
+      const result = await res.json();
+
+      if (res.ok && result.status === 'success') {
         setVerificationStatus('success');
-        
-        if (result.access_token) {
-          setTimeout(() => {
+
+        setTimeout(() => {
+          // Check if user has pending quiz from registration
+          if (result.quiz_session_id) {
+            console.log('✅ Redirecting to template with quiz:', result.quiz_session_id);
+            navigate(`/app?quiz_session=${result.quiz_session_id}&view=create`);
+          } else {
+            console.log('✅ Normal redirect to app');
             navigate('/app');
-          }, 2000);
-        }
+          }
+        }, 2000);
       } else {
         setVerificationStatus('error');
         setError(result.error || 'Email verification failed');

@@ -1,6 +1,6 @@
 // src/pages/Register.jsx - WITH SCALED FORM (80%) + WHITE GOOGLE BUTTON
 import React, { useState, useEffect } from 'react';
-import { Link, useNavigate } from 'react-router-dom';
+import { Link, useNavigate, useSearchParams } from 'react-router-dom';
 import '../style/AuthPageStyles.css';
 
 const API = process.env.REACT_APP_API_URL || "https://api.awakeverse.com";
@@ -16,6 +16,7 @@ export default function Register() {
   const [oauthAvailable, setOauthAvailable] = useState(false);
   
   const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
 
   // Check OAuth availability
   useEffect(() => {
@@ -38,15 +39,20 @@ export default function Register() {
     window.location.href = `${API}/api/auth/google`;
   };
 
+  // AFTER:
   const registerUser = async (userData) => {
     try {
+      // Capture quiz_session from URL if present
+      const quizSessionId = searchParams.get('quiz_session');
+
       const res = await fetch(`${API}/api/auth/register`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ 
           username: userData.email, 
           password: userData.password, 
-          display_name: userData.displayName 
+          display_name: userData.displayName,
+          quiz_session_id: quizSessionId  // ← NEW
         }),
       });
 
