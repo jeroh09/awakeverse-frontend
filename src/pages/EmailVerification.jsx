@@ -1,4 +1,4 @@
-// src/pages/EmailVerification.jsx - PREMIUM GLASSMORPHISM REDESIGN
+// src/pages/EmailVerification.jsx - FIXED WITH COOKIE VERIFICATION
 import React, { useState, useEffect } from 'react';
 import { Link, useNavigate, useSearchParams } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
@@ -12,7 +12,7 @@ export default function EmailVerification() {
   const [loading, setLoading] = useState(false);
   const [email, setEmail] = useState('');
   const [searchParams] = useSearchParams();
-  const { verifyEmail, resendVerification } = useAuth();
+  const { resendVerification } = useAuth();
   const navigate = useNavigate();
 
   const token = searchParams.get('token');
@@ -26,7 +26,33 @@ export default function EmailVerification() {
     }
   }, [token]);
 
-  // KEEPING YOUR VERIFICATION FLOW
+  // Helper function to check if cookies are set
+  const checkCookiesSet = () => {
+    const cookies = document.cookie;
+    const hasAccessToken = cookies.includes('av_sid=');
+    const hasRefreshToken = cookies.includes('av_rid=');
+    const hasCsrfToken = cookies.includes('av_csrf=');
+    
+    return hasAccessToken && hasRefreshToken && hasCsrfToken;
+  };
+
+  // Helper function to wait for cookies with retry
+  const waitForCookies = async (maxAttempts = 5, delayMs = 500) => {
+    for (let attempt = 1; attempt <= maxAttempts; attempt++) {
+      if (checkCookiesSet()) {
+        console.log(`✅ Cookies verified on attempt ${attempt}`);
+        return true;
+      }
+      
+      console.log(`⏳ Waiting for cookies... attempt ${attempt}/${maxAttempts}`);
+      await new Promise(resolve => setTimeout(resolve, delayMs));
+    }
+    
+    console.warn('⚠️ Cookies not detected after max attempts');
+    return false;
+  };
+
+  // ENHANCED VERIFICATION FLOW WITH COOKIE VERIFICATION
   const handleEmailVerification = async (verificationToken) => {
     setVerificationStatus('processing');
 
@@ -44,16 +70,23 @@ export default function EmailVerification() {
       if (res.ok && result.status === 'success') {
         setVerificationStatus('success');
 
-        setTimeout(() => {
-          // Check if user has pending quiz from registration
-          if (result.quiz_session_id) {
-            console.log('✅ Redirecting to template with quiz:', result.quiz_session_id);
-            navigate(`/app?quiz_session=${result.quiz_session_id}&view=create`);
-          } else {
-            console.log('✅ Normal redirect to app');
-            navigate('/app');
-          }
-        }, 2000);
+        // ✅ NEW: Wait for cookies to be set before navigating
+        console.log('Email verified successfully, waiting for cookies...');
+        
+        const cookiesSet = await waitForCookies();
+        
+        if (!cookiesSet) {
+          console.warn('Cookies not detected, but proceeding with navigation...');
+        }
+
+        // Navigate after cookies are confirmed
+        if (result.quiz_session_id) {
+          console.log('✅ Redirecting to template with quiz:', result.quiz_session_id);
+          navigate(`/app?quiz_session=${result.quiz_session_id}&view=create`);
+        } else {
+          console.log('✅ Normal redirect to app');
+          navigate('/app');
+        }
       } else {
         setVerificationStatus('error');
         setError(result.error || 'Email verification failed');
@@ -126,7 +159,7 @@ export default function EmailVerification() {
       case 'processing':
         return 'Please wait while we verify your email address...';
       case 'success':
-        return 'Your email has been verified! You can now access AwakeVerse.';
+        return 'Your email has been verified! Redirecting you now...';
       case 'expired':
         return 'Your verification link has expired. Please request a new verification email.';
       case 'resent':
