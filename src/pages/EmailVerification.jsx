@@ -1,5 +1,5 @@
-// src/pages/EmailVerification.jsx - COMPREHENSIVE QUIZ FIX
-import React, { useState, useEffect } from 'react';
+// src/pages/EmailVerification.jsx - FIX DOUBLE VERIFICATION
+import React, { useState, useEffect, useRef } from 'react';
 import { Link, useNavigate, useSearchParams } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
 import '../style/AuthPageStyles.css';
@@ -14,13 +14,18 @@ export default function EmailVerification() {
   const [searchParams] = useSearchParams();
   const { resendVerification } = useAuth();
   const navigate = useNavigate();
+  
+  // ✅ FIX: Prevent double verification
+  const verificationAttempted = useRef(false);
 
   const token = searchParams.get('token');
 
   useEffect(() => {
-    if (token) {
+    // ✅ FIX: Only verify once
+    if (token && !verificationAttempted.current) {
+      verificationAttempted.current = true;
       handleEmailVerification(token);
-    } else {
+    } else if (!token) {
       setVerificationStatus('error');
       setError('Invalid verification link. No token provided.');
     }
@@ -47,17 +52,15 @@ export default function EmailVerification() {
     return false;
   };
 
-  // ============================================================================
-  // ENHANCED: Get quiz session from multiple sources
-  // ============================================================================
+  // Get quiz session from multiple sources
   const getQuizSession = () => {
-    // Priority 1: sessionStorage (survives page reloads during verification)
+    // Priority 1: sessionStorage
     const sessionQuiz = sessionStorage.getItem('pending_quiz_session');
     if (sessionQuiz) {
       return sessionQuiz;
     }
 
-    // Priority 2: localStorage (from quiz completion)
+    // Priority 2: localStorage
     try {
       const quizData = localStorage.getItem('awakeverse_quiz_session');
       if (quizData) {
@@ -71,14 +74,10 @@ export default function EmailVerification() {
     return null;
   };
 
-  // ============================================================================
-  // ENHANCED VERIFICATION FLOW WITH QUIZ SUPPORT
-  // ============================================================================
   const handleEmailVerification = async (verificationToken) => {
     setVerificationStatus('processing');
 
     try {
-      // Call API directly
       const res = await fetch(`${API}/api/auth/verify-email`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -91,13 +90,12 @@ export default function EmailVerification() {
       if (res.ok && result.status === 'success') {
         setVerificationStatus('success');
 
-        // ✅ ENHANCED: Get quiz session from multiple sources
+        // Get quiz session from multiple sources
         let quizSessionId = null;
 
-        // Priority 1: Backend response (most reliable for new users)
+        // Priority 1: Backend response
         if (result.quiz_session_id) {
           quizSessionId = result.quiz_session_id;
-          // Store in sessionStorage for fallback
           sessionStorage.setItem('pending_quiz_session', quizSessionId);
         }
 
@@ -113,20 +111,45 @@ export default function EmailVerification() {
           console.warn('⚠️ Cookies not detected, but proceeding with navigation...');
         }
 
-        // ✅ ENHANCED: Navigate with quiz session if available
+        // Navigate with quiz session if available
         if (quizSessionId) {
-          // Clear from sessionStorage once used
           sessionStorage.removeItem('pending_quiz_session');
-          
           navigate(`/app?quiz_session=${quizSessionId}&view=create`, {
-            replace: true // Replace history to prevent back button issues
+            replace: true
           });
         } else {
           navigate('/app', { replace: true });
         }
       } else {
-        setVerificationStatus('error');
-        setError(result.error || 'Email verification failed');
+        // ✅ FIX: Handle specific error cases
+        if (res.status === 400) {
+          // Token already used or invalid
+          if (result.error && result.error.includes('already verified')) {
+            setVerificationStatus('success');
+            setError('Your email is already verified! Redirecting...');
+            
+            // Check if already logged in
+            const checkAuth = await fetch(`${API}/api/auth/me`, {
+              credentials: 'include'
+            });
+            
+            if (checkAuth.ok) {
+              // Already authenticated, go to app
+              setTimeout(() => navigate('/app', { replace: true }), 1500);
+            } else {
+              // Not authenticated, go to login
+              setTimeout(() => navigate('/login', {
+                state: { message: 'Email already verified. Please sign in.' }
+              }), 1500);
+            }
+          } else {
+            setVerificationStatus('error');
+            setError(result.error || 'Invalid or expired verification token');
+          }
+        } else {
+          setVerificationStatus('error');
+          setError(result.error || 'Email verification failed');
+        }
       }
     } catch (err) {
       if (err.message.includes('expired')) {
@@ -208,7 +231,6 @@ export default function EmailVerification() {
 
   return (
     <div className="auth-page">
-      {/* GLASSMORPHISM VERIFICATION CARD */}
       <div className="auth-form verification-pending">
         <h2>{getTitle()}</h2>
         
