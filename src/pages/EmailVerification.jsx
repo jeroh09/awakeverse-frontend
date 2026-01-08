@@ -1,4 +1,4 @@
-// src/pages/EmailVerification.jsx - FIX DOUBLE VERIFICATION
+// src/pages/EmailVerification.jsx - TRUST BACKEND (LIKE OAUTH)
 import React, { useState, useEffect, useRef } from 'react';
 import { Link, useNavigate, useSearchParams } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
@@ -15,13 +15,12 @@ export default function EmailVerification() {
   const { resendVerification } = useAuth();
   const navigate = useNavigate();
   
-  // ✅ FIX: Prevent double verification
+  // Prevent double verification
   const verificationAttempted = useRef(false);
 
   const token = searchParams.get('token');
 
   useEffect(() => {
-    // ✅ FIX: Only verify once
     if (token && !verificationAttempted.current) {
       verificationAttempted.current = true;
       handleEmailVerification(token);
@@ -31,49 +30,6 @@ export default function EmailVerification() {
     }
   }, [token]);
 
-  // Helper function to check if cookies are set
-  const checkCookiesSet = () => {
-    const cookies = document.cookie;
-    const hasAccessToken = cookies.includes('av_sid=');
-    const hasRefreshToken = cookies.includes('av_rid=');
-    const hasCsrfToken = cookies.includes('av_csrf=');
-    
-    return hasAccessToken && hasRefreshToken && hasCsrfToken;
-  };
-
-  // Helper function to wait for cookies with retry
-  const waitForCookies = async (maxAttempts = 5, delayMs = 500) => {
-    for (let attempt = 1; attempt <= maxAttempts; attempt++) {
-      if (checkCookiesSet()) {
-        return true;
-      }
-      await new Promise(resolve => setTimeout(resolve, delayMs));
-    }
-    return false;
-  };
-
-  // Get quiz session from multiple sources
-  const getQuizSession = () => {
-    // Priority 1: sessionStorage
-    const sessionQuiz = sessionStorage.getItem('pending_quiz_session');
-    if (sessionQuiz) {
-      return sessionQuiz;
-    }
-
-    // Priority 2: localStorage
-    try {
-      const quizData = localStorage.getItem('awakeverse_quiz_session');
-      if (quizData) {
-        const parsed = JSON.parse(quizData);
-        return parsed.quiz_session_id;
-      }
-    } catch (e) {
-      console.warn('Failed to parse quiz session from localStorage:', e);
-    }
-
-    return null;
-  };
-
   const handleEmailVerification = async (verificationToken) => {
     setVerificationStatus('processing');
 
@@ -81,7 +37,7 @@ export default function EmailVerification() {
       const res = await fetch(`${API}/api/auth/verify-email`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        credentials: 'include',
+        credentials: 'include',  // Important!
         body: JSON.stringify({ token: verificationToken })
       });
 
@@ -90,66 +46,27 @@ export default function EmailVerification() {
       if (res.ok && result.status === 'success') {
         setVerificationStatus('success');
 
-        // Get quiz session from multiple sources
-        let quizSessionId = null;
-
-        // Priority 1: Backend response
-        if (result.quiz_session_id) {
-          quizSessionId = result.quiz_session_id;
-          sessionStorage.setItem('pending_quiz_session', quizSessionId);
-        }
-
-        // Priority 2: Fallback to localStorage/sessionStorage
-        if (!quizSessionId) {
-          quizSessionId = getQuizSession();
-        }
-
-        // Wait for cookies before navigating
-        const cookiesSet = await waitForCookies();
+        // ✅ SIMPLE: Just navigate after success (like OAuth does)
+        // Backend already set cookies, browser will include them automatically
         
-        if (!cookiesSet) {
-          console.warn('⚠️ Cookies not detected, but proceeding with navigation...');
-        }
-
-        // Navigate with quiz session if available
-        if (quizSessionId) {
-          sessionStorage.removeItem('pending_quiz_session');
-          navigate(`/app?quiz_session=${quizSessionId}&view=create`, {
+        if (result.quiz_session_id) {
+          // User has pending quiz - go to template
+          navigate(`/app?quiz_session=${result.quiz_session_id}&view=create`, {
             replace: true
           });
         } else {
+          // Normal user - go to app
           navigate('/app', { replace: true });
         }
+        
+      } else if (res.status === 400) {
+        // Token already used or invalid
+        setVerificationStatus('error');
+        setError(result.error || 'Invalid or expired verification token');
+        
       } else {
-        // ✅ FIX: Handle specific error cases
-        if (res.status === 400) {
-          // Token already used or invalid
-          if (result.error && result.error.includes('already verified')) {
-            setVerificationStatus('success');
-            setError('Your email is already verified! Redirecting...');
-            
-            // Check if already logged in
-            const checkAuth = await fetch(`${API}/api/auth/me`, {
-              credentials: 'include'
-            });
-            
-            if (checkAuth.ok) {
-              // Already authenticated, go to app
-              setTimeout(() => navigate('/app', { replace: true }), 1500);
-            } else {
-              // Not authenticated, go to login
-              setTimeout(() => navigate('/login', {
-                state: { message: 'Email already verified. Please sign in.' }
-              }), 1500);
-            }
-          } else {
-            setVerificationStatus('error');
-            setError(result.error || 'Invalid or expired verification token');
-          }
-        } else {
-          setVerificationStatus('error');
-          setError(result.error || 'Email verification failed');
-        }
+        setVerificationStatus('error');
+        setError(result.error || 'Email verification failed');
       }
     } catch (err) {
       if (err.message.includes('expired')) {
