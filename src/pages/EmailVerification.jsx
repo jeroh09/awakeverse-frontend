@@ -1,4 +1,4 @@
-// src/pages/EmailVerification.jsx - CLEAR OLD AUTH STATE
+// src/pages/EmailVerification.jsx - REDIRECT TO LOGIN (SECURITY-FIRST)
 import React, { useState, useEffect, useRef } from 'react';
 import { Link, useNavigate, useSearchParams } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
@@ -12,7 +12,7 @@ export default function EmailVerification() {
   const [loading, setLoading] = useState(false);
   const [email, setEmail] = useState('');
   const [searchParams] = useSearchParams();
-  const { resendVerification, logout } = useAuth();
+  const { resendVerification } = useAuth();
   const navigate = useNavigate();
   
   // Prevent double verification
@@ -23,45 +23,17 @@ export default function EmailVerification() {
   useEffect(() => {
     if (token && !verificationAttempted.current) {
       verificationAttempted.current = true;
-      handleEmailVerificationWithCleanup(token);
+      handleEmailVerification(token);
     } else if (!token) {
       setVerificationStatus('error');
       setError('Invalid verification link. No token provided.');
     }
   }, [token]);
 
-  // ============================================================================
-  // CLEAR OLD AUTH STATE BEFORE VERIFICATION
-  // ============================================================================
-  const handleEmailVerificationWithCleanup = async (verificationToken) => {
-    try {
-      // ✅ CRITICAL: Logout first to clear old cookies
-      console.log('🧹 Clearing old auth state before verification...');
-      try {
-        await logout(); // This clears old cookies
-      } catch (e) {
-        console.log('No old session to clear, continuing...');
-      }
-      
-      // Small delay to let cookies clear
-      await new Promise(resolve => setTimeout(resolve, 500));
-      
-      // Now verify email (will set fresh cookies)
-      await handleEmailVerification(verificationToken);
-      
-    } catch (err) {
-      console.error('Verification error:', err);
-      setVerificationStatus('error');
-      setError(err.message || 'Email verification failed');
-    }
-  };
-
   const handleEmailVerification = async (verificationToken) => {
     setVerificationStatus('processing');
 
     try {
-      console.log('🔄 Verifying email...');
-      
       const res = await fetch(`${API}/api/auth/verify-email`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -72,37 +44,32 @@ export default function EmailVerification() {
       const result = await res.json();
 
       if (res.ok && result.status === 'success') {
-        console.log('✅ Email verification succeeded');
         setVerificationStatus('success');
 
-        // ✅ CRITICAL: Wait 2 seconds for NEW cookies to be set
-        console.log('⏳ Waiting 2s for cookies to propagate...');
-        await new Promise(resolve => setTimeout(resolve, 2000));
+        // ✅ SECURITY-FIRST: Redirect to login instead of auto-login
+        // This is more secure and matches user expectations
         
-        // Navigate - App route will verify auth with FRESH cookies
-        if (result.quiz_session_id) {
-          console.log(`🎯 Navigating to template with quiz: ${result.quiz_session_id}`);
-          navigate(`/app?quiz_session=${result.quiz_session_id}&view=create`, {
-            replace: true
-          });
-        } else {
-          console.log('🎯 Navigating to app');
-          navigate('/app', { replace: true });
-        }
+        setTimeout(() => {
+          if (result.quiz_session_id) {
+            // Pass quiz_session to login via URL params
+            navigate(`/login?quiz_session=${result.quiz_session_id}&verified=true`, {
+              replace: true
+            });
+          } else {
+            navigate('/login?verified=true', {
+              replace: true
+            });
+          }
+        }, 2000); // 2 second delay to show success message
         
       } else if (res.status === 400) {
-        console.log('❌ Verification failed:', result.error);
         setVerificationStatus('error');
         setError(result.error || 'Invalid or expired verification token');
-        
       } else {
-        console.log('❌ Verification failed');
         setVerificationStatus('error');
         setError(result.error || 'Email verification failed');
       }
     } catch (err) {
-      console.error('❌ Verification error:', err);
-      
       if (err.message.includes('expired')) {
         setVerificationStatus('expired');
         setError('Verification link has expired. Please request a new one.');
@@ -169,7 +136,7 @@ export default function EmailVerification() {
       case 'processing':
         return 'Please wait while we verify your email address...';
       case 'success':
-        return 'Your email has been verified! Redirecting you now...';
+        return 'Your email has been verified! Redirecting you to login...';
       case 'expired':
         return 'Your verification link has expired. Please request a new verification email.';
       case 'resent':
@@ -204,11 +171,8 @@ export default function EmailVerification() {
         
         {verificationStatus === 'success' && (
           <div className="verification-actions">
-            <Link to="/app" className="primary-button">
-              Enter AwakeVerse
-            </Link>
-            <Link to="/login" className="secondary-button">
-              Go to Login
+            <Link to="/login" className="primary-button">
+              Continue to Login
             </Link>
           </div>
         )}
