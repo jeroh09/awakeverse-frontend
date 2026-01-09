@@ -74,6 +74,22 @@ export default function Login() {
     }
   }, [searchParams]);
 
+  // ✅ NEW: Check for verified email and quiz session
+  useEffect(() => {
+    const verified = searchParams.get('verified');
+    const quizSession = searchParams.get('quiz_session');
+    
+    if (verified === 'true') {
+      setSuccessMessage('✅ Email verified! Please sign in to continue.');
+    }
+    
+    // Store quiz_session for use after login
+    if (quizSession) {
+      sessionStorage.setItem('pending_quiz_after_login', quizSession);
+      console.log('📝 Stored quiz session for post-login:', quizSession);
+    }
+  }, [searchParams]);
+
   // Check for email verification token in URL
   useEffect(() => {
     const token = searchParams.get('token');
@@ -124,7 +140,7 @@ export default function Login() {
     window.location.href = `${API}/api/auth/google`;
   };
 
-  // Enhanced submit handler
+  // Enhanced submit handler with quiz redirect
   const handleSubmit = async (e) => {
     e.preventDefault();
     
@@ -144,7 +160,21 @@ export default function Login() {
 
     try {
       await login({ email, password });
-      navigate('/app');
+      
+      // ✅ NEW: Check for pending quiz from URL or backend
+      const pendingQuizFromUrl = sessionStorage.getItem('pending_quiz_after_login');
+      sessionStorage.removeItem('pending_quiz_after_login'); // Clear it
+      
+      // Backend might also return quiz_session_id (we'll add this)
+      // For now, use URL param
+      
+      if (pendingQuizFromUrl) {
+        console.log(`🎯 Redirecting to template with quiz: ${pendingQuizFromUrl}`);
+        navigate(`/app?quiz_session=${pendingQuizFromUrl}&view=create`);
+      } else {
+        navigate('/app');
+      }
+      
     } catch (err) {
       console.error('Login error:', err);
       

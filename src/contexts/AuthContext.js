@@ -263,14 +263,17 @@ export function AuthProvider({ children }) {
         if (userRes.ok) {
           const userData = await userRes.json();
           setUser({
-            id: userData.id,
-            username: userData.username,
-            displayName: userData.display_name,
-            tier: userData.tier,
-            emailVerified: true
-          });
+          id: userData.id,
+          username: userData.username,
+          displayName: userData.display_name,
+          tier: userData.tier,
+          emailVerified: true
+        });
 
-          navigateToAppWithHistoryManagement();
+        // ✅ NEW: Don't navigate here - let Login.js handle navigation
+        // Login.js will check for quiz and navigate appropriately
+        // navigateToAppWithHistoryManagement();  // COMMENTED OUT
+        return;
         }
       }
 
