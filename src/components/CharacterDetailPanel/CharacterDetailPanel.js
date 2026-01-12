@@ -1,6 +1,8 @@
-// src/components/CharacterDetailPanel/CharacterDetailPanel.js - FIXED VERSION
-import React, { useState } from 'react';
+// src/components/CharacterDetailPanel/CharacterDetailPanel.js - COMPLETE UPDATED VERSION
+import React, { useState, useEffect } from 'react';
 import floatingGlassStyles from './CharacterDetailPanel.module.css';
+import metadataStyles from './CharacterMetadata.module.css';
+import { extractCharacterMetadata } from '../../utils/characterExtractor';
 
 const CharacterDetailPanel = ({ 
   character, 
@@ -10,7 +12,11 @@ const CharacterDetailPanel = ({
   showDiscoverAction
 }) => {
   const [useOrganicBlob, setUseOrganicBlob] = useState(false);
+  const [activeTooltip, setActiveTooltip] = useState(null);
+  const [extractedMetadata, setExtractedMetadata] = useState(null);
+  
   const styles = floatingGlassStyles;
+  const metaStyles = metadataStyles;
 
   if (!character) return null;
 
@@ -19,6 +25,17 @@ const CharacterDetailPanel = ({
   const description = character.description || character.short_description || 'No description available.';
   const imageUrl = character.thumbnailUrl || character.avatar_url || `/images/${character.character_key || character.key}.jpg`;
   const characterKey = character.key || character.character_key;
+
+  // ✅ NEW: Extract metadata when character or description changes
+  useEffect(() => {
+    if (character && description) {
+      const metadata = extractCharacterMetadata({
+        ...character,
+        description: description
+      });
+      setExtractedMetadata(metadata);
+    }
+  }, [character, description]);
 
   // ✅ NEW: Helper function to handle both discover + chat
   const handleStartChatWithDiscover = () => {
@@ -31,13 +48,156 @@ const CharacterDetailPanel = ({
     onStartChat(character);
   };
 
+  // ✅ NEW: Tooltip handlers
+  const handleShowTooltip = (type, content) => {
+    setActiveTooltip({ type, content });
+  };
+
+  const handleHideTooltip = () => {
+    setActiveTooltip(null);
+  };
+
+  // ✅ NEW: Render metadata section function
+  const renderMetadataSection = () => {
+    if (!extractedMetadata || !extractedMetadata.hasExtractedMetadata) {
+      return null;
+    }
+
+    return (
+      <div className={metaStyles.metadataSection}>
+        <div className={metaStyles.sectionTitle}>
+          <span>🔍</span> Extracted Insights
+        </div>
+        
+        <div className={metaStyles.metadataGrid}>
+          {/* Era Card */}
+          <div 
+            className={metaStyles.metadataCard}
+            onClick={() => handleShowTooltip('era', extractedMetadata.extractedEra)}
+            onMouseLeave={handleHideTooltip}
+            onMouseEnter={() => handleShowTooltip('era', extractedMetadata.extractedEra)}
+          >
+            <div className={metaStyles.metadataLabel}>Historical Era</div>
+            <div className={metaStyles.metadataValue}>{extractedMetadata.extractedEra}</div>
+            <div className={metaStyles.eraTag}>
+              Auto-detected
+            </div>
+          </div>
+          
+          {/* Character Type Card */}
+          <div 
+            className={metaStyles.metadataCard}
+            onClick={() => handleShowTooltip('type', extractedMetadata.extractedType)}
+            onMouseLeave={handleHideTooltip}
+            onMouseEnter={() => handleShowTooltip('type', extractedMetadata.extractedType)}
+          >
+            <div className={metaStyles.metadataLabel}>Character Type</div>
+            <div className={metaStyles.metadataValue}>{extractedMetadata.extractedType}</div>
+          </div>
+        </div>
+        
+        {/* Personality Traits */}
+        {extractedMetadata.extractedTraits.length > 0 && (
+          <div className={metaStyles.metadataSection}>
+            <div className={metaStyles.sectionTitle}>
+              <span>🧠</span> Personality Traits
+            </div>
+            <div className={metaStyles.traitsContainer}>
+              {extractedMetadata.extractedTraits.map((trait, index) => (
+                <div 
+                  key={index}
+                  className={`${metaStyles.traitChip} ${metaStyles.tooltip}`}
+                  onClick={() => handleShowTooltip('trait', trait)}
+                  onMouseLeave={handleHideTooltip}
+                  onMouseEnter={() => handleShowTooltip('trait', trait)}
+                >
+                  {trait}
+                  <div className={metaStyles.tooltipContent}>
+                    Extracted from description
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
+        
+        {/* Locations */}
+        {extractedMetadata.extractedLocations.length > 0 && (
+          <div className={metaStyles.metadataSection}>
+            <div className={metaStyles.sectionTitle}>
+              <span>📍</span> Mentioned Locations
+            </div>
+            <div className={metaStyles.locationsContainer}>
+              {extractedMetadata.extractedLocations.map((location, index) => (
+                <div key={index} className={metaStyles.locationChip}>
+                  {location}
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
+        
+        {/* Confidence Indicator */}
+        <div className={metaStyles.confidenceBadge}>
+          <span>Extraction Confidence:</span>
+          <div className={metaStyles.confidenceBar}>
+            <div 
+              className={metaStyles.confidenceFill}
+              style={{ width: `${extractedMetadata.extractionConfidence}%` }}
+            />
+          </div>
+          <span>{extractedMetadata.extractionConfidence}%</span>
+        </div>
+      </div>
+    );
+  };
+
+  // ✅ NEW: Render tooltip function
+  const renderTooltip = () => {
+    if (!activeTooltip) return null;
+    
+    return (
+      <div className={metaStyles.tooltipContent} style={{
+        position: 'fixed',
+        left: '50%',
+        bottom: '100px',
+        transform: 'translateX(-50%)',
+        zIndex: 1003
+      }}>
+        {activeTooltip.type === 'era' && (
+          <>
+            <strong>Era:</strong> {activeTooltip.content}<br/>
+            <small>Detected from keywords in description</small>
+          </>
+        )}
+        {activeTooltip.type === 'trait' && (
+          <>
+            <strong>Trait:</strong> {activeTooltip.content}<br/>
+            <small>Based on personality descriptors</small>
+          </>
+        )}
+        {activeTooltip.type === 'type' && (
+          <>
+            <strong>Type:</strong> {activeTooltip.content}<br/>
+            <small>Identified from character role keywords</small>
+          </>
+        )}
+      </div>
+    );
+  };
+
   // Check if we should show the discover button
   const shouldShowDiscoverButton = showDiscoverAction && onCharacterSelect;
 
   return (
     <>
-      <div className={styles.overlay} onClick={onClose} />
-      <aside className={styles.panel} role="dialog" aria-modal="true">
+      <div className={styles.overlay} onClick={onClose} onMouseEnter={handleHideTooltip} />
+      <aside 
+        className={styles.panel} 
+        role="dialog" 
+        aria-modal="true"
+        onMouseLeave={handleHideTooltip}
+      >
         {/* Development toggle - remove in production */}
         {process.env.NODE_ENV === 'development' && (
           <button
@@ -79,6 +239,9 @@ const CharacterDetailPanel = ({
         
         <div className={styles.content}>
           <p className={styles.description}>{description}</p>
+          
+          {/* ✅ NEW: Extracted Metadata Section */}
+          {renderMetadataSection()}
         </div>
         
         <div className={styles.footer}>
@@ -97,11 +260,15 @@ const CharacterDetailPanel = ({
               onClick={handleStartChatWithDiscover}
               aria-label="Add to Discovered & Chat"
               title="Add to Discovered & Start Chat"
+              onMouseEnter={handleHideTooltip}
             >
               +
             </button>
           )}
         </div>
+        
+        {/* ✅ NEW: Tooltip Display */}
+        {renderTooltip()}
       </aside>
     </>
   );
