@@ -326,16 +326,16 @@ export default function ContactUs() {
 
               <div className="info">
                 <h4>Office (by appointment)</h4>
-                <p>AwakeVerse Ltd<br/>Oxford Road, Manchester M13 9PL<br/>United Kingdom</p>
-                <p style={{ marginTop: 8 }}>Company No: 00000000</p>
+                <p>AwakeVerse Ltd<br/>Astley Brook, Bolton BL1<br/>United Kingdom</p>
+                <p style={{ marginTop: 8 }}>Company No: 16791906</p>
               </div>
 
               <div className="info">
                 <h4>Social</h4>
                 <p>Follow updates and launch news:</p>
                 <div className="social">
-                  <a href="https://twitter.com/awakeverse" target="_blank" rel="noreferrer">X/Twitter</a>
-                  <a href="https://instagram.com/awakeverse" target="_blank" rel="noreferrer">Instagram</a>
+                  <a href="https://twitter.com/av.ai" target="_blank" rel="noreferrer">X/Twitter</a>
+                  <a href="https://instagram.com/awakeverse.ai" target="_blank" rel="noreferrer">Instagram</a>
                   <a href="https://linkedin.com/company/awakeverse" target="_blank" rel="noreferrer">LinkedIn</a>
                 </div>
               </div>
@@ -371,7 +371,7 @@ export default function ContactUs() {
           </div>
           <div className="note">
             <h4>Privacy</h4>
-            <p>We only use your details to respond to your enquiry. For more, see our Privacy Policy and Data Retention Guide (links to be added).</p>
+            <p>We only use your details to respond to your enquiry. For more, see our Privacy Policy and Data Retention Guide.</p>
           </div>
         </section>
       </div>
