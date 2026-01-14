@@ -1,6 +1,6 @@
 // src/components/ScenariosTab/ScenarioChatWindow/ChatMessages/MessageBubble.jsx
-// MessageBubble - Works with existing backend format
-// Handles both: { user: true, text: '...' } and { speaker: 'user', text: '...', display_name: '...' }
+// MessageBubble - Complete with continue button functionality
+// Works with existing backend format and includes markdown support
 
 import React from 'react';
 import ReactMarkdown from 'react-markdown';
@@ -8,7 +8,13 @@ import { getDisplayNameFromKey, isCustomCharacterKey } from '../../../../utils/c
 import { characterCategories } from '../../../../data/characterCategories';
 import styles from './MessageBubble.module.css';
 
-export default function MessageBubble({ message, userCharacters = [] }) {
+export default function MessageBubble({ 
+  message, 
+  userCharacters = [],
+  onContinue,      // Handler for continue button clicks
+  isSending,       // Whether a message is currently being sent
+  isLastMessage    // Whether this is the last message from this speaker
+}) {
   // Defensive: Validate message object
   if (!message || !message.text) {
     console.error('❌ MessageBubble: Invalid message object', message);
@@ -71,6 +77,21 @@ export default function MessageBubble({ message, userCharacters = [] }) {
     isUser ? styles.userMessage : styles.characterMessage
   ].filter(Boolean).join(' ');
 
+  // ===== CONTINUE BUTTON LOGIC =====
+  const showContinueButton = 
+    !isUser &&             // Only on AI messages
+    !message.error &&      // Not on error messages
+    isLastMessage &&       // Only on the last message from this character
+    !isSending &&          // Hide during streaming
+    onContinue;            // Only if handler is provided
+
+  const handleContinue = () => {
+    if (onContinue && speaker) {
+      console.log('🔄 Continue clicked:', speaker);
+      onContinue(speaker);
+    }
+  };
+
   return (
     <div className={bubbleClassName}>
       {/* Avatar - only for character messages */}
@@ -132,6 +153,22 @@ export default function MessageBubble({ message, userCharacters = [] }) {
             {text}
           </ReactMarkdown>
         </div>
+
+        {/* Continue Button - only on AI messages */}
+        {showContinueButton && (
+          <div className={styles.continueButtonContainer}>
+            <button
+              className={styles.continueButton}
+              onClick={handleContinue}
+              disabled={isSending}
+              aria-label="Continue conversation"
+              title="Continue conversation"
+            >
+              <span className={styles.continueIcon}>››</span>
+              <span className={styles.continueTooltip}>Continue</span>
+            </button>
+          </div>
+        )}
       </div>
     </div>
   );

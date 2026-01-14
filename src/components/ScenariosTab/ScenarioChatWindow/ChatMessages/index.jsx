@@ -11,12 +11,14 @@ import styles from './ChatMessages.module.css';
  * @param {Array} messages - Array of message objects
  * @param {Array} userCharacters - Array of custom characters
  * @param {boolean} isSending - Whether a message is currently being sent
+ * @param {Function} onContinue - Handler for continue button clicks
  * @param {string} theme - Theme (kept for compatibility, not used in new design)
  */
 export default function ChatMessages({
   messages = [],
   userCharacters = [],
   isSending = false,
+  onContinue,        // ✅ NEW
   theme = 'light'
 }) {
   const messagesEndRef = useRef(null);
@@ -33,6 +35,14 @@ export default function ChatMessages({
   console.log('💬 ChatMessages rendering:', {
     messageCount: messages.length,
     isSending
+  });
+
+  // Track last message from each speaker for continue button
+  const lastMessageBySpeaker = {};
+  messages.forEach((msg, index) => {
+    if (!msg.user && msg.speaker) {
+      lastMessageBySpeaker[msg.speaker] = index;
+    }
   });
 
   // Empty state
@@ -56,6 +66,12 @@ export default function ChatMessages({
           key={message.id || index}
           message={message}
           userCharacters={userCharacters}
+          onContinue={onContinue}                    // ✅ NEW
+          isSending={isSending}                      // ✅ NEW
+          isLastMessage={                            // ✅ NEW
+            !message.user && 
+            lastMessageBySpeaker[message.speaker] === index
+          }
         />
       ))}
 

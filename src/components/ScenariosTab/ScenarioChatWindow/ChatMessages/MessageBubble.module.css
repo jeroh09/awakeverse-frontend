@@ -115,7 +115,7 @@
 
 /* User messages - white text */
 .userMessage .messageText {
-  color: white;
+  color: #FFF9E6;  /* Light cream - perfect contrast */
 }
 
 /* Character messages - primary text */
@@ -282,3 +282,167 @@
   overflow-x: auto;
   display: block;
 }
+/* =============================================================================
+ * APPEND TO END OF: MessageBubble.module.css
+ * ADD THESE STYLES AFTER THE EXISTING STYLES (after line ~268)
+ * =============================================================================
+ */
+
+/* ===== CONTINUE BUTTON STYLES ===== */
+/* Add these at the very end of your MessageBubble.module.css file */
+
+/* Continue button container */
+.continueButtonContainer {
+  display: flex;
+  justify-content: flex-end;
+  margin-top: var(--spacing-sm);
+  opacity: 0;
+  transform: translateY(-4px);
+  transition: var(--transition-fast);
+}
+
+/* Show on hover (desktop) */
+.messageBubble:hover .continueButtonContainer {
+  opacity: 1;
+  transform: translateY(0);
+}
+
+/* Always show on mobile (no hover state) */
+@media (max-width: 768px) {
+  .continueButtonContainer {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* Continue button */
+.continueButton {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--spacing-xs);
+  padding: var(--spacing-xs) var(--spacing-md);
+  background: var(--bg-interactive);
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--border-radius-md);
+  color: var(--text-secondary);
+  font-size: var(--font-size-caption);
+  font-weight: var(--font-weight-medium);
+  cursor: pointer;
+  transition: var(--transition-fast);
+  user-select: none;
+  -webkit-user-select: none;
+}
+
+/* Hover state */
+.continueButton:hover:not(:disabled) {
+  background: var(--bg-peak);
+  border-color: var(--accent-primary);
+  color: var(--accent-primary);
+  box-shadow: var(--shadow-glow);
+  transform: translateX(2px);
+}
+
+/* Active/pressed state */
+.continueButton:active:not(:disabled) {
+  transform: translateX(4px) scale(0.98);
+}
+
+/* Disabled state */
+.continueButton:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+/* Focus visible (keyboard navigation) */
+.continueButton:focus-visible {
+  outline: 2px solid var(--accent-primary);
+  outline-offset: 2px;
+}
+
+/* Continue icon (››) */
+.continueIcon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 14px;
+  line-height: 1;
+  transition: var(--transition-fast);
+}
+
+/* Icon moves on hover */
+.continueButton:hover:not(:disabled) .continueIcon {
+  transform: translateX(2px);
+}
+
+/* Tooltip text */
+.continueTooltip {
+  font-size: var(--font-size-caption);
+  white-space: nowrap;
+}
+
+/* Hide tooltip text on very small screens */
+@media (max-width: 480px) {
+  .continueTooltip {
+    display: none;
+  }
+  
+  .continueButton {
+    padding: var(--spacing-xs);
+  }
+}
+
+/* ===== ACCESSIBILITY ENHANCEMENTS ===== */
+
+/* Reduce motion for continue button */
+@media (prefers-reduced-motion: reduce) {
+  .continueButtonContainer,
+  .continueButton,
+  .continueIcon {
+    transition: none !important;
+  }
+  
+  .continueButton:hover:not(:disabled),
+  .continueButton:active:not(:disabled) {
+    transform: none !important;
+  }
+  
+  .continueButton:hover:not(:disabled) .continueIcon {
+    transform: none !important;
+  }
+}
+
+/* High contrast mode */
+@media (prefers-contrast: high) {
+  .continueButton {
+    border-width: 2px;
+  }
+  
+  .continueButton:hover:not(:disabled) {
+    border-width: 2px;
+  }
+}
+
+/* ===== DEFENSIVE FALLBACKS ===== */
+
+/* Ensure button never breaks layout */
+.continueButton {
+  max-width: 100%;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+/* Prevent text selection on button */
+.continueButton,
+.continueIcon,
+.continueTooltip {
+  user-select: none;
+  -webkit-user-select: none;
+}
+
+/* Ensure proper stacking */
+.continueButtonContainer {
+  position: relative;
+  z-index: 1;
+}
+
+/* ===== END OF CONTINUE BUTTON STYLES ===== */

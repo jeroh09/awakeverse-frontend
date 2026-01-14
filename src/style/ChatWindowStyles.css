@@ -236,6 +236,15 @@
   padding: 0;
 }
 
+/* Better paragraph spacing in AI messages */
+.ai-message .message-content p {
+  margin-bottom: 1em !important;  /* Increased from 0.75em */
+}
+
+.ai-message .message-content p:last-child {
+  margin-bottom: 0 !important;  /* No extra space after last paragraph */
+}
+
 /* =======================
    CHAT INPUT AREA - INDIGO BORDER ONLY
    ======================= */

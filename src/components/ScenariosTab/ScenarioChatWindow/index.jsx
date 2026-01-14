@@ -64,6 +64,7 @@ export default function ScenarioChatWindow({
     usageData,
     usageLoading,
     startScenario,
+    continueConversation,  // ✅ ADD THIS LINE
     sendMessage,
     resetScenario
   } = useScenarioChat();
@@ -388,6 +389,7 @@ export default function ScenarioChatWindow({
               messages={messages}
               userCharacters={userCharacters}
               isSending={isSending}
+              onContinue={continueConversation}  // ✅ ADD THIS LINE
               theme={theme}
             />
 

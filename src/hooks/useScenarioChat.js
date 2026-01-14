@@ -373,6 +373,239 @@ export default function useScenarioChat() {
     }
   }, [debateId, circuitBreakerState.status, usageData, scenarioId, fetchUsage, generateMessageId]);
 
+// =============================================================================
+// ADD TO: useScenarioChat.js
+// LOCATION: After the sendMessage function, before stopStream
+// =============================================================================
+
+  const continueConversation = useCallback(async (lastSpeaker) => {
+    if (!debateId || !scenarioId || isSending) {
+      console.warn('⚠️ continueConversation: Invalid state', { 
+        debateId, 
+        scenarioId, 
+        isSending 
+      });
+      return;
+    }
+
+    if (circuitBreakerState.status === 'tripped') {
+      throw new Error('Circuit breaker tripped. Too many errors. Please refresh and try again.');
+    }
+
+    const controller = new AbortController();
+    controllerRef.current = controller;
+    setIsSending(true);
+
+    try {
+      console.log('🔄 Continue conversation:', { lastSpeaker, debateId });
+
+      const csrf = document.cookie.match(/(?:^|;\s*)av_csrf=([^;]+)/)?.[1] || '';
+      const response = await fetch(`${API_BASE}/api/scenarios/${scenarioId}/continue`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'X-CSRF-Token': csrf
+        },
+        credentials: 'include',
+        body: JSON.stringify({ 
+          debate_id: debateId,
+          last_speaker: lastSpeaker 
+        }),
+        signal: controller.signal
+      });
+
+      if (!response.ok || !response.body) {
+        throw new Error(`Continue API failed: ${response.status} ${response.statusText}`);
+      }
+
+      const reader = response.body.getReader();
+      const decoder = new TextDecoder();
+      
+      const speakerBuffers = new Map();
+      const completedSpeakers = new Set();
+      let nextSpeaker = null;
+      let decisionReason = null;
+
+      while (true) {
+        const { done, value } = await reader.read();
+        if (done) break;
+
+        const chunk = decoder.decode(value);
+        const lines = chunk.trim().split('\n').filter(Boolean);
+
+        for (const line of lines) {
+          try {
+            const data = JSON.parse(line);
+            
+            const { type, speaker, content, display_name, decision } = data;
+
+            if (type === 'error') {
+              console.error('❌ Backend error:', data.error);
+              continue;
+            }
+
+            if (type === 'complete') {
+              console.log('✅ Continue complete:', { speaker, decision });
+              nextSpeaker = speaker;
+              decisionReason = decision;
+              break;
+            }
+
+            if (type === 'response' && speaker && content) {
+              // Same streaming logic as sendMessage
+              if (!speakerBuffers.has(speaker)) {
+                const messageId = generateMessageId();
+                
+                speakerBuffers.set(speaker, {
+                  fullText: content,
+                  displayedText: '',
+                  messageId: messageId,
+                  displayName: display_name || speaker
+                });
+
+                setActiveSpeakers(prev => new Set([...prev, speaker]));
+
+                setMessages(prev => [...prev, {
+                  id: messageId,
+                  user: false,
+                  speaker: speaker,
+                  display_name: display_name || speaker,
+                  text: '',
+                  timestamp: Date.now()
+                }]);
+
+                animateResponse(speaker, content, speakerBuffers, completedSpeakers);
+              }
+            }
+
+          } catch (parseError) {
+            console.warn('⚠️ JSON parse error:', parseError);
+          }
+        }
+      }
+
+      await waitForAnimations(speakerBuffers);
+
+      // 📊 Log decision for analytics
+      console.log('📊 Continue decision:', { nextSpeaker, decisionReason, lastSpeaker });
+
+      setCircuitBreakerState({
+        errorCount: 0,
+        lastError: null,
+        status: 'healthy'
+      });
+
+      console.log('✅ Continue complete');
+
+    } catch (error) {
+      console.error('❌ Continue conversation failed:', error);
+
+      setCircuitBreakerState(prev => ({
+        errorCount: prev.errorCount + 1,
+        lastError: error.message,
+        status: prev.errorCount >= 2 ? 'tripped' : 'warning'
+      }));
+
+      const errorMessageId = generateMessageId();
+      setMessages(prev => [...prev, {
+        id: errorMessageId,
+        user: false,
+        speaker: 'system',
+        text: `Failed to continue: ${error.message}`,
+        timestamp: Date.now(),
+        error: true
+      }]);
+
+      throw error;
+
+    } finally {
+      setIsSending(false);
+      setActiveSpeakers(new Set());
+      setQueuedSpeakers(new Set());
+      controllerRef.current = null;
+    }
+
+    // ⚠️ IMPORTANT: These helper functions must be accessible
+    // Either define them here or ensure they're shared with sendMessage
+    function animateResponse(speaker, fullText, buffers, completed) {
+      const words = fullText.split(' ');
+      let wordIndex = 0;
+      const WORDS_PER_TICK = 2;
+      const DELAY_MS = 100;
+
+      const interval = setInterval(() => {
+        if (wordIndex >= words.length) {
+          clearInterval(interval);
+          animationIntervalsRef.current.delete(interval);
+          completed.add(speaker);
+          
+          setActiveSpeakers(prev => {
+            const next = new Set(prev);
+            next.delete(speaker);
+            return next;
+          });
+          
+          console.log(`✅ ${speaker} animation complete`);
+          return;
+        }
+
+        const batch = words.slice(wordIndex, wordIndex + WORDS_PER_TICK).join(' ');
+        wordIndex += WORDS_PER_TICK;
+
+        const buffer = buffers.get(speaker);
+        if (buffer) {
+          buffer.displayedText += (buffer.displayedText ? ' ' : '') + batch;
+
+          setMessages(prev => {
+            const copy = [...prev];
+            const msgIndex = copy.findIndex(m => m.id === buffer.messageId);
+            
+            if (msgIndex !== -1) {
+              copy[msgIndex] = {
+                ...copy[msgIndex],
+                text: buffer.displayedText
+              };
+            }
+            
+            return copy;
+          });
+        }
+      }, DELAY_MS);
+
+      animationIntervalsRef.current.add(interval);
+
+      if (buffers.has(speaker)) {
+        buffers.get(speaker).interval = interval;
+      }
+    }
+
+    async function waitForAnimations(buffers) {
+      return new Promise((resolve) => {
+        const checkInterval = setInterval(() => {
+          let allComplete = true;
+          
+          for (const [speaker, buffer] of buffers.entries()) {
+            if (buffer.displayedText !== buffer.fullText) {
+              allComplete = false;
+              break;
+            }
+          }
+
+          if (allComplete) {
+            clearInterval(checkInterval);
+            resolve();
+          }
+        }, 100);
+
+        setTimeout(() => {
+          clearInterval(checkInterval);
+          resolve();
+        }, 30000);
+      });
+    }
+  }, [debateId, scenarioId, circuitBreakerState.status, isSending, generateMessageId]);
+
+
   const stopStream = useCallback(() => {
     if (controllerRef.current) {
       controllerRef.current.abort();
@@ -419,6 +652,7 @@ export default function useScenarioChat() {
     usageData,
     usageLoading,
     startScenario,
+    continueConversation,  // ✅ ADD THIS
     sendMessage,
     stopStream,
     resetScenario
