@@ -478,10 +478,11 @@
 }
 
 .indicator.active {
-  width: 24px;
-  border-radius: 999px;
+  width: 8px; /* ✅ Keep as dot, not pill */
+  border-radius: 50%;
   background: linear-gradient(to right, #6366f1, #818cf8);
   box-shadow: 0 2px 8px rgba(99, 102, 241, 0.5);
+  transform: scale(1.3); /* Slightly larger but still circular */
 }
 
 /* =========================================
