@@ -282,3 +282,280 @@
   overflow-x: auto;
   display: block;
 }
+/* =============================================================================
+ * ENHANCED CONTINUE BUTTON STYLES
+ * Replace the existing continue button section in MessageBubble.module.css
+ * (Lines after /* ===== CONTINUE BUTTON STYLES ===== */)
+ * =============================================================================
+ */
+
+/* ===== CONTINUE BUTTON STYLES - ENHANCED ===== */
+
+/* Continue button container */
+.continueButtonContainer {
+  display: flex;
+  justify-content: flex-end;
+  align-items: center;
+  margin-top: var(--spacing-md);
+  opacity: 0;
+  transform: translateY(-8px);
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+/* Show on hover (desktop) with smooth fade */
+.messageBubble:hover .continueButtonContainer {
+  opacity: 1;
+  transform: translateY(0);
+}
+
+/* Always show on mobile (no hover state) */
+@media (max-width: 768px) {
+  .continueButtonContainer {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* Continue button - Premium design */
+.continueButton {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  gap: var(--spacing-sm);
+  padding: var(--spacing-sm) var(--spacing-lg);
+  background: linear-gradient(135deg, 
+    rgba(99, 102, 241, 0.08) 0%,
+    rgba(79, 70, 229, 0.12) 100%
+  );
+  border: 1.5px solid rgba(99, 102, 241, 0.2);
+  border-radius: var(--border-radius-full);
+  color: var(--accent-primary);
+  font-size: var(--font-size-caption);
+  font-weight: var(--font-weight-semibold);
+  cursor: pointer;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  user-select: none;
+  -webkit-user-select: none;
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+  overflow: hidden;
+}
+
+/* Shimmer effect background */
+.continueButton::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: -100%;
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(
+    90deg,
+    transparent,
+    rgba(255, 255, 255, 0.1),
+    transparent
+  );
+  transition: left 0.5s ease;
+}
+
+/* Hover state - Elevated and glowing */
+.continueButton:hover:not(:disabled) {
+  background: linear-gradient(135deg, 
+    rgba(99, 102, 241, 0.15) 0%,
+    rgba(79, 70, 229, 0.25) 100%
+  );
+  border-color: rgba(99, 102, 241, 0.5);
+  box-shadow: 
+    0 0 0 3px rgba(99, 102, 241, 0.1),
+    0 4px 12px rgba(99, 102, 241, 0.2),
+    0 2px 4px rgba(0, 0, 0, 0.1);
+  transform: translateY(-2px) scale(1.02);
+}
+
+/* Shimmer on hover */
+.continueButton:hover:not(:disabled)::before {
+  left: 100%;
+}
+
+/* Active/pressed state */
+.continueButton:active:not(:disabled) {
+  transform: translateY(0) scale(0.98);
+  box-shadow: 
+    0 0 0 2px rgba(99, 102, 241, 0.15),
+    0 2px 4px rgba(99, 102, 241, 0.15);
+}
+
+/* Disabled state */
+.continueButton:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+  background: var(--bg-interactive);
+  border-color: var(--border-subtle);
+  color: var(--text-muted);
+}
+
+/* Focus visible (keyboard navigation) */
+.continueButton:focus-visible {
+  outline: none;
+  box-shadow: 
+    0 0 0 3px rgba(99, 102, 241, 0.3),
+    0 4px 12px rgba(99, 102, 241, 0.2);
+}
+
+/* Continue icon (››) - Premium styling */
+.continueIcon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 16px;
+  font-weight: var(--font-weight-bold);
+  line-height: 1;
+  transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  letter-spacing: -1px;
+}
+
+/* Icon slides on hover */
+.continueButton:hover:not(:disabled) .continueIcon {
+  transform: translateX(3px);
+  animation: pulse 1s ease-in-out infinite;
+}
+
+@keyframes pulse {
+  0%, 100% {
+    transform: translateX(3px) scale(1);
+  }
+  50% {
+    transform: translateX(3px) scale(1.1);
+  }
+}
+
+/* Tooltip text - Premium badge style */
+.continueTooltip {
+  font-size: var(--font-size-caption);
+  font-weight: var(--font-weight-semibold);
+  white-space: nowrap;
+  letter-spacing: 0.3px;
+  text-transform: uppercase;
+  opacity: 0.9;
+}
+
+/* Hide tooltip text on very small screens */
+@media (max-width: 480px) {
+  .continueTooltip {
+    display: none;
+  }
+  
+  .continueButton {
+    padding: var(--spacing-sm);
+    gap: 0;
+  }
+  
+  .continueIcon {
+    font-size: 18px;
+  }
+}
+
+/* ===== MOBILE ENHANCEMENTS ===== */
+
+/* Larger tap target on mobile */
+@media (max-width: 768px) {
+  .continueButton {
+    min-height: 44px;
+    min-width: 44px;
+    padding: var(--spacing-sm) var(--spacing-md);
+  }
+}
+
+/* ===== ACCESSIBILITY ENHANCEMENTS ===== */
+
+/* Reduce motion for users who prefer it */
+@media (prefers-reduced-motion: reduce) {
+  .continueButtonContainer,
+  .continueButton,
+  .continueIcon,
+  .continueButton::before {
+    transition: none !important;
+    animation: none !important;
+  }
+  
+  .continueButton:hover:not(:disabled),
+  .continueButton:active:not(:disabled) {
+    transform: none !important;
+  }
+  
+  .continueButton:hover:not(:disabled) .continueIcon {
+    transform: none !important;
+  }
+}
+
+/* High contrast mode - Enhanced borders */
+@media (prefers-contrast: high) {
+  .continueButton {
+    border-width: 2px;
+    background: transparent;
+  }
+  
+  .continueButton:hover:not(:disabled) {
+    border-width: 2px;
+    background: var(--accent-primary);
+    color: white;
+  }
+}
+
+/* Dark mode optimizations (if you have dark mode) */
+@media (prefers-color-scheme: dark) {
+  .continueButton {
+    background: linear-gradient(135deg, 
+      rgba(99, 102, 241, 0.12) 0%,
+      rgba(79, 70, 229, 0.18) 100%
+    );
+    border-color: rgba(99, 102, 241, 0.3);
+  }
+  
+  .continueButton:hover:not(:disabled) {
+    background: linear-gradient(135deg, 
+      rgba(99, 102, 241, 0.2) 0%,
+      rgba(79, 70, 229, 0.3) 100%
+    );
+    border-color: rgba(99, 102, 241, 0.6);
+  }
+}
+
+/* ===== LOADING STATE (when sending) ===== */
+
+.continueButton:disabled::after {
+  content: '';
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: 12px;
+  height: 12px;
+  margin: -6px 0 0 -6px;
+  border: 2px solid transparent;
+  border-top-color: var(--text-muted);
+  border-radius: 50%;
+  animation: spin 0.6s linear infinite;
+}
+
+@keyframes spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+/* ===== CONTEXTUAL STYLING ===== */
+
+/* Slightly different style for character messages vs user messages */
+.characterMessage .continueButton {
+  /* Character messages use the default premium style */
+}
+
+/* Position absolute version (if you want it to overlay the bubble edge) */
+.continueButtonContainer.overlay {
+  position: absolute;
+  bottom: var(--spacing-sm);
+  right: var(--spacing-sm);
+  margin-top: 0;
+}
+
+/* ===== END OF ENHANCED CONTINUE BUTTON STYLES ===== */
