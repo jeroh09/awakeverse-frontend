@@ -309,24 +309,6 @@ span, label {
   transition: all 0.2s ease;
 }
 
-.user-message .message-content {
-  color: var(--text-primary, #F1F5F9) !important;
-  font-family: var(--font-body, 'Inter', system-ui, sans-serif) !important;
-  font-size: 0.95rem !important;
-  font-weight: 450 !important;
-  line-height: 1.6 !important;
-  text-shadow: none !important;
-  letter-spacing: 0.01em;
-}
-
-.ai-message {
-  background: transparent !important;
-  backdrop-filter: none !important;
-  border: none !important;
-  box-shadow: none !important;
-  padding: 8px 12px !important;
-}
-
 .ai-message .message-content {
   color: var(--text-primary, #F1F5F9) !important;
   font-family: var(--font-body, 'Inter', system-ui, sans-serif) !important;
@@ -1342,29 +1324,6 @@ textarea:focus,
   border: none !important;
   box-shadow: none !important;
 }
-
-/* If it's a wrapper around the message */
-.user-message-container, .userMessageContainer {
-  background: none !important;
-  backdrop-filter: none !important;
-  -webkit-backdrop-filter: none !important;
-  border: none !important;
-  box-shadow: none !important;
-}
-/* 🔧 HIDE "YOU:" LABEL FROM USER MESSAGES */
-.user-message .speakerLabel,
-.userMessage .speakerLabel {
-  display: none !important;
-}
-
-/* Alternative - if the above doesn't work, try this broader approach */
-.user-message .speaker-label,
-.userMessage .speaker-label,
-.user-message strong:first-child,
-.userMessage strong:first-child {
-  display: none !important;
-}
-/* 🔧 REMOVE THE NUCLEAR OPTION FIRST, then add this: */
 
 /* Fix user message container alignment */
 .user-message {
