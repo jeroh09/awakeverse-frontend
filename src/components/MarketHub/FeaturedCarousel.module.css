@@ -113,12 +113,12 @@
   inset: 0;
   background-size: cover;
   background-position: center;
-  opacity: 0.35;
+  opacity: 0.6; /* ✅ Increased from 0.35 - more prominent */
   transition: all 0.3s ease;
 }
 
 .card:hover .cardBackground {
-  opacity: 0.45;
+  opacity: 0.75; /* ✅ Increased from 0.45 - even more visible on hover */
   transform: scale(1.05);
 }
 
@@ -127,9 +127,9 @@
   inset: 0;
   background: linear-gradient(
     to bottom,
-    rgba(10, 15, 26, 0.75) 0%,
-    rgba(10, 15, 26, 0.88) 50%,
-    rgba(10, 15, 26, 0.95) 100%
+    rgba(10, 15, 26, 0.5) 0%,     /* ✅ Lightened from 0.75 */
+    rgba(10, 15, 26, 0.65) 50%,   /* ✅ Lightened from 0.88 */
+    rgba(10, 15, 26, 0.8) 100%    /* ✅ Lightened from 0.95 */
   );
 }
 
@@ -619,6 +619,11 @@
 
   .nextButton {
     right: -12px;
+  }
+
+  /* ✅ Hide indicators on mobile - auto-advance only */
+  .indicators {
+    display: none;
   }
 }
 
