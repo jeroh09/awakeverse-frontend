@@ -1,6 +1,6 @@
 /* ===================================================================
    CHAT WINDOW STYLES - DEDICATED MODULE
-   Location: src/styles/ChatWindowStyles.css
+   Location: src/style/ChatWindowStyles.css
    Import this in ChatWindow.js
    =================================================================== */
 
@@ -137,8 +137,10 @@
   word-break: break-word;
   overflow-wrap: break-word;
   min-width: 0;
-  background: transparent !important; /* Force no background on content */
-  border: none !important; /* Force no border on content */
+  background: transparent !important; /* ✅ Force no background on content */
+  border: none !important; /* ✅ Force no border on content */
+  box-shadow: none !important; /* ✅ Force no shadow on content */
+  backdrop-filter: none !important; /* ✅ Force no blur on content */
 }
 
 /* User message text */
@@ -150,6 +152,9 @@
   line-height: 1.6 !important;
   text-shadow: none !important;
   letter-spacing: 0.01em;
+  background: transparent !important; /* ✅ No inner bubble */
+  border: none !important; /* ✅ No inner bubble */
+  box-shadow: none !important; /* ✅ No inner bubble */
 }
 
 /* AI message text */
@@ -180,7 +185,7 @@
 }
 
 .user-message .message-content strong {
-  color: var(--accent-hover, #818CF8) !important;
+  display: none !important; /* ✅ Hide "You:" label - avatar is enough */
 }
 
 /* =======================
