@@ -156,16 +156,66 @@ export default function MessageBubble({
 
         {/* Continue Button - only on AI messages */}
         {showContinueButton && (
-          <div className={styles.continueButtonContainer}>
+          <div style={{
+            display: 'flex',
+            justifyContent: 'flex-end',
+            marginTop: '8px',
+            opacity: 0,
+            transform: 'translateY(-4px)',
+            transition: 'var(--transition-fast)'
+          }}>
             <button
-              className={styles.continueButton}
               onClick={handleContinue}
               disabled={isSending}
               aria-label="Continue conversation"
               title="Continue conversation"
+              style={{
+                display: 'inline-flex',
+                alignItems: 'center',
+                gap: 'var(--spacing-xs)',
+                padding: 'var(--spacing-xs) var(--spacing-md)',
+                background: 'var(--bg-interactive)',
+                border: '1px solid var(--border-subtle)',
+                borderRadius: 'var(--border-radius-md)',
+                color: 'var(--text-secondary)',
+                fontSize: 'var(--font-size-caption)',
+                fontWeight: 'var(--font-weight-medium)',
+                cursor: 'pointer',
+                transition: 'var(--transition-fast)',
+                userSelect: 'none',
+                WebkitUserSelect: 'none'
+              }}
+              onMouseEnter={(e) => {
+                e.currentTarget.style.background = 'var(--bg-peak)';
+                e.currentTarget.style.borderColor = 'var(--accent-primary)';
+                e.currentTarget.style.color = 'var(--accent-primary)';
+                e.currentTarget.style.boxShadow = 'var(--shadow-glow)';
+                e.currentTarget.style.transform = 'translateX(2px)';
+                e.currentTarget.parentElement.style.opacity = '1';
+                e.currentTarget.parentElement.style.transform = 'translateY(0)';
+              }}
+              onMouseLeave={(e) => {
+                e.currentTarget.style.background = 'var(--bg-interactive)';
+                e.currentTarget.style.borderColor = 'var(--border-subtle)';
+                e.currentTarget.style.color = 'var(--text-secondary)';
+                e.currentTarget.style.boxShadow = 'none';
+                e.currentTarget.style.transform = 'translateX(0)';
+                e.currentTarget.parentElement.style.opacity = '0';
+                e.currentTarget.parentElement.style.transform = 'translateY(-4px)';
+              }}
             >
-              <span className={styles.continueIcon}>››</span>
-              <span className={styles.continueTooltip}>Continue</span>
+              <span style={{
+                display: 'inline-flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                fontSize: '14px',
+                lineHeight: '1',
+                transition: 'var(--transition-fast)'
+              }}>››</span>
+              <span style={{
+                fontSize: 'var(--font-size-caption)',
+                whiteSpace: 'nowrap'
+              }}>Continue</span>
             </button>
           </div>
         )}
