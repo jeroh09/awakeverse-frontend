@@ -377,7 +377,7 @@ span, label {
 .chat-textarea {
   flex: 1;
   background: rgba(40, 30, 70, 0.6);
-  border: 1px solid rgba(200, 180, 50, 0.8);
+  border: 1px solid rgba(99, 102, 241, 0.8) !important; /* Indigo */
   color: gold;
   border-radius: 12px;
   padding: 6px 10px;

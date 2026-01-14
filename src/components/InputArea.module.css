@@ -4,7 +4,7 @@
   align-items: flex-end;
   width: 100%;
   /* Outer golden border and rounded corners */
-  border: 2px solid gold;
+  border: 2px solid rgba(99, 102, 241, 0.8);  /* ✅ Indigo */
   border-radius: 12px;
   padding: 1.5rem;
   background: rgba(10,10,20,0.8);
@@ -41,7 +41,7 @@
 
 .sendButton {
   margin-left: 0.5rem;
-  background: gold;
+  background: linear-gradient(135deg, #6366F1, #818CF8);
   border: none;
   border-radius: 8px;
   padding: 0.5rem;
