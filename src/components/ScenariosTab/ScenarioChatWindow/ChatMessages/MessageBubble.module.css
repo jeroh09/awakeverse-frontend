@@ -282,28 +282,3 @@
   overflow-x: auto;
   display: block;
 }
-/* ===== MESSAGE SPACING ===== */
-.messageBubble {
-  margin-bottom: 20px; /* Space between message bubbles */
-}
-
-.messageBubble:last-child {
-  margin-bottom: 0;
-}
-
-@media (max-width: 768px) {
-  .messageBubble {
-    margin-bottom: 16px;
-  }
-}
-
-/* Ensure content doesn't get too narrow */
-.messageContent {
-  min-width: 200px;
-}
-
-@media (max-width: 480px) {
-  .messageContent {
-    min-width: 150px;
-  }
-}

@@ -31,12 +31,17 @@ export default function ChatMessages({
     }
   }, [messages, isSending]);
 
+  // Observable logging
+  console.log('💬 ChatMessages rendering:', {
+    messageCount: messages.length,
+    isSending
+  });
+
   // Track last message from each speaker for continue button
   const lastMessageBySpeaker = {};
   messages.forEach((msg, index) => {
-    // Check if this is an assistant message with a speaker
-    if (msg.role === 'assistant' && msg.metadata?.character_key) {
-      lastMessageBySpeaker[msg.metadata.character_key] = index;
+    if (!msg.user && msg.speaker) {
+      lastMessageBySpeaker[msg.speaker] = index;
     }
   });
 
@@ -64,9 +69,8 @@ export default function ChatMessages({
           onContinue={onContinue}                    // ✅ NEW
           isSending={isSending}                      // ✅ NEW
           isLastMessage={                            // ✅ NEW
-            message.role === 'assistant' && 
-            message.metadata?.character_key &&
-            lastMessageBySpeaker[message.metadata.character_key] === index
+            !message.user && 
+            lastMessageBySpeaker[message.speaker] === index
           }
         />
       ))}

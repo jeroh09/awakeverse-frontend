@@ -1,7 +1,6 @@
 // src/components/ScenariosTab/ScenarioChatWindow/ChatMessages/MessageBubble.jsx
-// PHASE 6: Modern chat bubbles with design tokens
-// User messages: Indigo gradient, right-aligned
-// Character messages: Dark surface, left-aligned
+// MessageBubble - Complete with continue button functionality
+// Works with existing backend format and includes markdown support
 
 import React from 'react';
 import ReactMarkdown from 'react-markdown';
@@ -9,75 +8,70 @@ import { getDisplayNameFromKey, isCustomCharacterKey } from '../../../../utils/c
 import { characterCategories } from '../../../../data/characterCategories';
 import styles from './MessageBubble.module.css';
 
-/**
- * MessageBubble - Individual message with author info and markdown content
- * 
- * @param {Object} message - Message object { role, content, metadata }
- * @param {Array} userCharacters - Array of custom characters
- * @param {Function} onContinue - Handler for continue button clicks
- * @param {boolean} isSending - Whether a message is currently being sent
- * @param {boolean} isLastMessage - Whether this is the last message from this speaker
- */
 export default function MessageBubble({ 
   message, 
   userCharacters = [],
-  onContinue,
-  isSending,
-  isLastMessage
+  onContinue,      // Handler for continue button clicks
+  isSending,       // Whether a message is currently being sent
+  isLastMessage    // Whether this is the last message from this speaker
 }) {
   // Defensive: Validate message object
-  if (!message || !message.role || !message.content) {
+  if (!message || !message.text) {
     console.error('❌ MessageBubble: Invalid message object', message);
     return null;
   }
 
-  const { role, content, metadata = {} } = message;
-  const isUser = role === 'user';
+  // Destructure - handles both message formats
+  const { user, text, speaker, display_name } = message;
+  
+  // Check if user message - handles both formats:
+  // Format 1: { user: true, text: '...' }
+  // Format 2: { speaker: 'user', text: '...' }
+  const isUser = user === true || speaker === 'user';
 
-  // Get character info for assistant messages
+  // Get character info for non-user messages
   const getCharacterInfo = () => {
     if (isUser) return null;
 
-    const characterKey = metadata.character_key;
-    if (!characterKey) return { name: 'Assistant', avatarUrl: null };
-
+    // Use speaker as character key
+    const characterKey = speaker;
+    
+    // Check if custom character
     const isCustom = isCustomCharacterKey(characterKey);
 
     if (isCustom) {
       const customChar = userCharacters.find(c => c.character_key === characterKey);
       if (customChar) {
         return {
-          name: customChar.display_name,
+          name: customChar.display_name || display_name,
           avatarUrl: customChar.avatar_url
         };
       }
-      return {
-        name: getDisplayNameFromKey(characterKey),
-        avatarUrl: `/images/${characterKey}.jpg`
-      };
-    } else {
-      // Static character
-      for (const category of characterCategories) {
-        if (category.characters) {
-          const found = category.characters.find(c => c.key === characterKey);
-          if (found) {
-            return {
-              name: found.name,
-              avatarUrl: found.thumbnailUrl
-            };
-          }
+    }
+
+    // Static character lookup
+    for (const category of characterCategories) {
+      if (category.characters) {
+        const found = category.characters.find(c => c.key === characterKey);
+        if (found) {
+          return {
+            name: found.name,
+            avatarUrl: found.thumbnailUrl
+          };
         }
       }
-      return {
-        name: characterKey,
-        avatarUrl: `/images/${characterKey}.jpg`
-      };
     }
+
+    // Fallback: parse from speaker key or use display_name
+    return {
+      name: display_name || getDisplayNameFromKey(characterKey),
+      avatarUrl: `/images/${characterKey}.jpg`
+    };
   };
 
   const characterInfo = getCharacterInfo();
 
-  // Build className based on role
+  // Build className based on user/character
   const bubbleClassName = [
     styles.messageBubble,
     isUser ? styles.userMessage : styles.characterMessage
@@ -86,15 +80,15 @@ export default function MessageBubble({
   // ===== CONTINUE BUTTON LOGIC =====
   const showContinueButton = 
     !isUser &&             // Only on AI messages
+    !message.error &&      // Not on error messages
     isLastMessage &&       // Only on the last message from this character
     !isSending &&          // Hide during streaming
-    onContinue &&          // Only if handler is provided
-    metadata?.character_key; // Need character key to continue
+    onContinue;            // Only if handler is provided
 
   const handleContinue = () => {
-    if (onContinue && metadata?.character_key) {
-      console.log('🔄 Continue clicked:', metadata.character_key);
-      onContinue(metadata.character_key);
+    if (onContinue && speaker) {
+      console.log('🔄 Continue clicked:', speaker);
+      onContinue(speaker);
     }
   };
 
@@ -156,72 +150,22 @@ export default function MessageBubble({
               )
             }}
           >
-            {content}
+            {text}
           </ReactMarkdown>
         </div>
 
         {/* Continue Button - only on AI messages */}
         {showContinueButton && (
-          <div style={{
-            display: 'flex',
-            justifyContent: 'flex-end',
-            marginTop: '8px',
-            opacity: 0,
-            transform: 'translateY(-4px)',
-            transition: 'opacity 0.2s ease, transform 0.2s ease'
-          }}>
+          <div className={styles.continueButtonContainer}>
             <button
+              className={styles.continueButton}
               onClick={handleContinue}
               disabled={isSending}
               aria-label="Continue conversation"
               title="Continue conversation"
-              style={{
-                display: 'inline-flex',
-                alignItems: 'center',
-                gap: '4px',
-                padding: '4px 12px',
-                background: 'var(--bg-interactive)',
-                border: '1px solid var(--border-subtle)',
-                borderRadius: 'var(--border-radius-md)',
-                color: 'var(--text-secondary)',
-                fontSize: '12px',
-                fontWeight: '500',
-                cursor: 'pointer',
-                transition: 'all 0.2s ease',
-                userSelect: 'none',
-                WebkitUserSelect: 'none'
-              }}
-              onMouseEnter={(e) => {
-                e.currentTarget.style.background = 'var(--bg-peak)';
-                e.currentTarget.style.borderColor = 'var(--accent-primary)';
-                e.currentTarget.style.color = 'var(--accent-primary)';
-                e.currentTarget.style.boxShadow = '0 0 0 1px var(--accent-primary)';
-                e.currentTarget.style.transform = 'translateX(2px)';
-                e.currentTarget.parentElement.style.opacity = '1';
-                e.currentTarget.parentElement.style.transform = 'translateY(0)';
-              }}
-              onMouseLeave={(e) => {
-                e.currentTarget.style.background = 'var(--bg-interactive)';
-                e.currentTarget.style.borderColor = 'var(--border-subtle)';
-                e.currentTarget.style.color = 'var(--text-secondary)';
-                e.currentTarget.style.boxShadow = 'none';
-                e.currentTarget.style.transform = 'translateX(0)';
-                e.currentTarget.parentElement.style.opacity = '0';
-                e.currentTarget.parentElement.style.transform = 'translateY(-4px)';
-              }}
             >
-              <span style={{
-                display: 'inline-flex',
-                alignItems: 'center',
-                justifyContent: 'center',
-                fontSize: '14px',
-                lineHeight: '1',
-                transition: 'transform 0.2s ease'
-              }}>››</span>
-              <span style={{
-                fontSize: '12px',
-                whiteSpace: 'nowrap'
-              }}>Continue</span>
+              <span className={styles.continueIcon}>››</span>
+              <span className={styles.continueTooltip}>Continue</span>
             </button>
           </div>
         )}
