@@ -57,7 +57,15 @@ export default function InfoPanel({ story, collapsed, onToggle, onClose }) {
         
         {/* Panel Header */}
         <div className={styles.infoPanelHeader}>
-          <h3 className={styles.infoPanelTitle}>Objectives & Acts</h3>
+          <div className={styles.headerTopRow}>
+            <h3 className={styles.infoPanelTitle}>Objectives & Acts</h3>
+            
+            {/* Compact Home Button - beside title */}
+            <button className={styles.infoHomeButton} onClick={onClose}>
+              <Home size={16} />
+              <span className={styles.homeButtonText}>Home</span>
+            </button>
+          </div>
           
           {/* Mobile Close Button - Toggles panel back to chat */}
           <button 
@@ -69,12 +77,6 @@ export default function InfoPanel({ story, collapsed, onToggle, onClose }) {
               <line x1="18" y1="6" x2="6" y2="18"></line>
               <line x1="6" y1="6" x2="18" y2="18"></line>
             </svg>
-          </button>
-          
-          {/* Home Button - Exits to story list (visible on both mobile and desktop) */}
-          <button className={styles.infoHomeButton} onClick={onClose}>
-            <Home size={18} />
-            <span className={styles.homeButtonText}>Home</span>
           </button>
         </div>
         
