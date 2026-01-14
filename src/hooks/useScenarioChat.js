@@ -400,7 +400,7 @@ export default function useScenarioChat() {
       console.log('🔄 Continue conversation:', { lastSpeaker, debateId });
 
       const csrf = document.cookie.match(/(?:^|;\s*)av_csrf=([^;]+)/)?.[1] || '';
-      const response = await fetch(`${API_BASE}/api/scenarios/${scenarioId}/continue`, {
+      const response = await fetch(`${API_BASE}/api/debate/${debateId}/continue`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
