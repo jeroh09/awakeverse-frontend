@@ -21,6 +21,8 @@ import DefensiveChatInputWrapper from './DefensiveChatInputWrapper';
 import DualPathUpgradeSystem from '../components/DualPathUpgradeSystem';
 import '../styles.css';
 import '../style/InviteStyles.css';
+import '../style/ChatWindowStyles.css';  // ✅ ADD THIS LINE
+
 
 const API = process.env.REACT_APP_API_BASE_URL || 'https://api.awakeverse.com';
 
