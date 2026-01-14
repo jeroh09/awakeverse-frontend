@@ -1,6 +1,7 @@
 // src/components/ScenariosTab/ScenarioChatWindow/ChatMessages/MessageBubble.jsx
-// MessageBubble - Complete with continue button functionality
-// Works with existing backend format and includes markdown support
+// PHASE 6: Modern chat bubbles with design tokens
+// User messages: Indigo gradient, right-aligned
+// Character messages: Dark surface, left-aligned
 
 import React from 'react';
 import ReactMarkdown from 'react-markdown';
@@ -8,70 +9,75 @@ import { getDisplayNameFromKey, isCustomCharacterKey } from '../../../../utils/c
 import { characterCategories } from '../../../../data/characterCategories';
 import styles from './MessageBubble.module.css';
 
+/**
+ * MessageBubble - Individual message with author info and markdown content
+ * 
+ * @param {Object} message - Message object { role, content, metadata }
+ * @param {Array} userCharacters - Array of custom characters
+ * @param {Function} onContinue - Handler for continue button clicks
+ * @param {boolean} isSending - Whether a message is currently being sent
+ * @param {boolean} isLastMessage - Whether this is the last message from this speaker
+ */
 export default function MessageBubble({ 
   message, 
   userCharacters = [],
-  onContinue,      // Handler for continue button clicks
-  isSending,       // Whether a message is currently being sent
-  isLastMessage    // Whether this is the last message from this speaker
+  onContinue,
+  isSending,
+  isLastMessage
 }) {
   // Defensive: Validate message object
-  if (!message || !message.text) {
+  if (!message || !message.role || !message.content) {
     console.error('❌ MessageBubble: Invalid message object', message);
     return null;
   }
 
-  // Destructure - handles both message formats
-  const { user, text, speaker, display_name } = message;
-  
-  // Check if user message - handles both formats:
-  // Format 1: { user: true, text: '...' }
-  // Format 2: { speaker: 'user', text: '...' }
-  const isUser = user === true || speaker === 'user';
+  const { role, content, metadata = {} } = message;
+  const isUser = role === 'user';
 
-  // Get character info for non-user messages
+  // Get character info for assistant messages
   const getCharacterInfo = () => {
     if (isUser) return null;
 
-    // Use speaker as character key
-    const characterKey = speaker;
-    
-    // Check if custom character
+    const characterKey = metadata.character_key;
+    if (!characterKey) return { name: 'Assistant', avatarUrl: null };
+
     const isCustom = isCustomCharacterKey(characterKey);
 
     if (isCustom) {
       const customChar = userCharacters.find(c => c.character_key === characterKey);
       if (customChar) {
         return {
-          name: customChar.display_name || display_name,
+          name: customChar.display_name,
           avatarUrl: customChar.avatar_url
         };
       }
-    }
-
-    // Static character lookup
-    for (const category of characterCategories) {
-      if (category.characters) {
-        const found = category.characters.find(c => c.key === characterKey);
-        if (found) {
-          return {
-            name: found.name,
-            avatarUrl: found.thumbnailUrl
-          };
+      return {
+        name: getDisplayNameFromKey(characterKey),
+        avatarUrl: `/images/${characterKey}.jpg`
+      };
+    } else {
+      // Static character
+      for (const category of characterCategories) {
+        if (category.characters) {
+          const found = category.characters.find(c => c.key === characterKey);
+          if (found) {
+            return {
+              name: found.name,
+              avatarUrl: found.thumbnailUrl
+            };
+          }
         }
       }
+      return {
+        name: characterKey,
+        avatarUrl: `/images/${characterKey}.jpg`
+      };
     }
-
-    // Fallback: parse from speaker key or use display_name
-    return {
-      name: display_name || getDisplayNameFromKey(characterKey),
-      avatarUrl: `/images/${characterKey}.jpg`
-    };
   };
 
   const characterInfo = getCharacterInfo();
 
-  // Build className based on user/character
+  // Build className based on role
   const bubbleClassName = [
     styles.messageBubble,
     isUser ? styles.userMessage : styles.characterMessage
@@ -80,15 +86,15 @@ export default function MessageBubble({
   // ===== CONTINUE BUTTON LOGIC =====
   const showContinueButton = 
     !isUser &&             // Only on AI messages
-    !message.error &&      // Not on error messages
     isLastMessage &&       // Only on the last message from this character
     !isSending &&          // Hide during streaming
-    onContinue;            // Only if handler is provided
+    onContinue &&          // Only if handler is provided
+    metadata?.character_key; // Need character key to continue
 
   const handleContinue = () => {
-    if (onContinue && speaker) {
-      console.log('🔄 Continue clicked:', speaker);
-      onContinue(speaker);
+    if (onContinue && metadata?.character_key) {
+      console.log('🔄 Continue clicked:', metadata.character_key);
+      onContinue(metadata.character_key);
     }
   };
 
@@ -150,7 +156,7 @@ export default function MessageBubble({
               )
             }}
           >
-            {text}
+            {content}
           </ReactMarkdown>
         </div>
 
@@ -162,7 +168,7 @@ export default function MessageBubble({
             marginTop: '8px',
             opacity: 0,
             transform: 'translateY(-4px)',
-            transition: 'var(--transition-fast)'
+            transition: 'opacity 0.2s ease, transform 0.2s ease'
           }}>
             <button
               onClick={handleContinue}
@@ -172,16 +178,16 @@ export default function MessageBubble({
               style={{
                 display: 'inline-flex',
                 alignItems: 'center',
-                gap: 'var(--spacing-xs)',
-                padding: 'var(--spacing-xs) var(--spacing-md)',
+                gap: '4px',
+                padding: '4px 12px',
                 background: 'var(--bg-interactive)',
                 border: '1px solid var(--border-subtle)',
                 borderRadius: 'var(--border-radius-md)',
                 color: 'var(--text-secondary)',
-                fontSize: 'var(--font-size-caption)',
-                fontWeight: 'var(--font-weight-medium)',
+                fontSize: '12px',
+                fontWeight: '500',
                 cursor: 'pointer',
-                transition: 'var(--transition-fast)',
+                transition: 'all 0.2s ease',
                 userSelect: 'none',
                 WebkitUserSelect: 'none'
               }}
@@ -189,7 +195,7 @@ export default function MessageBubble({
                 e.currentTarget.style.background = 'var(--bg-peak)';
                 e.currentTarget.style.borderColor = 'var(--accent-primary)';
                 e.currentTarget.style.color = 'var(--accent-primary)';
-                e.currentTarget.style.boxShadow = 'var(--shadow-glow)';
+                e.currentTarget.style.boxShadow = '0 0 0 1px var(--accent-primary)';
                 e.currentTarget.style.transform = 'translateX(2px)';
                 e.currentTarget.parentElement.style.opacity = '1';
                 e.currentTarget.parentElement.style.transform = 'translateY(0)';
@@ -210,10 +216,10 @@ export default function MessageBubble({
                 justifyContent: 'center',
                 fontSize: '14px',
                 lineHeight: '1',
-                transition: 'var(--transition-fast)'
+                transition: 'transform 0.2s ease'
               }}>››</span>
               <span style={{
-                fontSize: 'var(--font-size-caption)',
+                fontSize: '12px',
                 whiteSpace: 'nowrap'
               }}>Continue</span>
             </button>
