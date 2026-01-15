@@ -156,7 +156,7 @@ export default function TemplateDetailModal({
               className={`use-template-button ${!isUnlimited ? 'upgrade' : ''}`}
               onClick={handleUseTemplate}
             >
-              {isUnlimited ? 'Create Scenario' : 'Upgrade to Create'}
+              {isUnlimited ? 'Create Dialogue' : 'Upgrade to Create'}
             </button>
           </div>
         </div>

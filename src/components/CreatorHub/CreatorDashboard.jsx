@@ -446,7 +446,7 @@ const CreatorDashboard = () => {
                 onClick={handleCreateScenario}
               >
                 <Users size={16} />
-                Create Scenario
+                Create Dialogue
               </button>
 
               {/* SECONDARY: MARKET HUB */}

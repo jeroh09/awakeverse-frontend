@@ -290,79 +290,375 @@ export default function ScenariosTab({
   );
 }
 
-// UPGRADE REQUIRED COMPONENT - Updated with payment options
-const ScenariosUpgradeRequired = ({ onLearnMore, onUpgradeWithStripe, onUpgradeWithPayPal }) => (
-  <div className="upgrade-required-state">
-    <div className="upgrade-required-content">
-      <span className="upgrade-icon">🎭</span>
-      <h2>Unlock Verse Dialogues</h2>
-      <p>Upgrade to Unlimited tier to access multi-character debates and Dialogue templates</p>
-      
-      <div className="upgrade-features-preview">
-        <h3>With Unlimited Tier You Get:</h3>
-        <div className="preview-features">
-          <div className="preview-feature">
-            <span className="feature-emoji">📚</span>
-            <span>20+ Dialogue Templates</span>
-          </div>
-          <div className="preview-feature">
-            <span className="feature-emoji">👥</span>
-            <span>Multi-Character Debates</span>
-          </div>
-          <div className="preview-feature">
-            <span className="feature-emoji">💬</span>
-            <span>Unlimited Questions</span>
-          </div>
-          <div className="preview-feature">
-            <span className="feature-emoji">🎨</span>
-            <span>Custom Scenario Creation</span>
-          </div>
-          <div className="preview-feature">
-            <span className="feature-emoji">🚀</span>
-            <span>Priority Access to New Features</span>
-          </div>
-          <div className="preview-feature">
-            <span className="feature-emoji">💎</span>
-            <span>All Creator Hub Features</span>
-          </div>
-        </div>
-      </div>
+// ============================================================================
+// UPDATED UPGRADE REQUIRED COMPONENT - Replace lines 294-361 in index.jsx
+// Market Hub Pattern with Light/Dark Mode
+// ============================================================================
 
-      <div className="upgrade-actions">
-        <div className="upgrade-payment-options">
-          <button 
-            onClick={onUpgradeWithStripe}
-            className="upgrade-button primary-upgrade"
-          >
-            💳 Upgrade with Stripe - £11.99/month
+const ScenariosUpgradeRequired = ({ onLearnMore, onUpgradeWithStripe, onUpgradeWithPayPal }) => {
+  // Dark mode as default
+  const [isDark, setIsDark] = React.useState(true);
+
+  // Load saved theme preference
+  React.useEffect(() => {
+    const savedTheme = localStorage.getItem('dialogueTheme');
+    if (savedTheme === 'light') {
+      setIsDark(false);
+    }
+  }, []);
+
+  // Toggle theme and save preference
+  const toggleTheme = () => {
+    const newTheme = !isDark;
+    setIsDark(newTheme);
+    localStorage.setItem('dialogueTheme', newTheme ? 'dark' : 'light');
+  };
+
+  // Scroll to pricing section
+  const scrollToPricing = () => {
+    const pricingSection = document.getElementById('dialogue-pricing-section');
+    if (pricingSection) {
+      pricingSection.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    }
+  };
+
+  return (
+    <div className={`dialogue-upgrade-container ${isDark ? 'theme-dark' : 'theme-light'}`}>
+      <div className="dialogue-content-wrapper">
+
+        {/* STICKY HEADER */}
+        <header className="dialogue-page-header">
+          <a href="#" className="dialogue-back-button" onClick={(e) => { e.preventDefault(); window.history.back(); }}>
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+              <path d="M19 12H5M12 19l-7-7 7-7"/>
+            </svg>
+            Back to Hub
+          </a>
+
+          <button className="dialogue-theme-toggle" onClick={toggleTheme}>
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+              {isDark ? (
+                <>
+                  <circle cx="12" cy="12" r="5"/>
+                  <line x1="12" y1="1" x2="12" y2="3"/>
+                  <line x1="12" y1="21" x2="12" y2="23"/>
+                  <line x1="4.22" y1="4.22" x2="5.64" y2="5.64"/>
+                  <line x1="18.36" y1="18.36" x2="19.78" y2="19.78"/>
+                  <line x1="1" y1="12" x2="3" y2="12"/>
+                  <line x1="21" y1="12" x2="23" y2="12"/>
+                  <line x1="4.22" y1="19.78" x2="5.64" y2="18.36"/>
+                  <line x1="18.36" y1="5.64" x2="19.78" y2="4.22"/>
+                </>
+              ) : (
+                <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/>
+              )}
+            </svg>
+            <span>{isDark ? 'Dark Mode' : 'Light Mode'}</span>
+          </button>
+        </header>
+
+        {/* HERO SECTION */}
+        <section className="dialogue-hero-section">
+          <div className="dialogue-hero-content">
+            <h1 className="dialogue-hero-title">Unlock Dialogue Hub</h1>
+            <p className="dialogue-hero-subtitle">
+              Create multi-character debates between historical figures, philosophers, and AI personalities. 
+              Access 20+ curated templates and unlimited custom scenarios.
+            </p>
+
+            {/* Scroll to pricing button */}
+            <button 
+              className="dialogue-scroll-to-pricing" 
+              onClick={scrollToPricing}
+              aria-label="Scroll to pricing"
+            >
+              <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                <polyline points="6 9 12 15 18 9"/>
+              </svg>
+            </button>
+          </div>
+
+          {/* Hero Image */}
+          <div className="dialogue-hero-image-container">
+            <img 
+              src="/images/upgrade-dialogues-hero.jpg" 
+              alt="Dialogue Hub Preview" 
+              className="dialogue-hero-image"
+              onError={(e) => {
+                e.target.style.display = 'none';
+                e.target.nextSibling.style.display = 'flex';
+              }}
+            />
+            <div className="dialogue-hero-image-fallback">
+              Preview: Multi-character debates & scenarios
+            </div>
+          </div>
+        </section>
+
+        {/* KEY FEATURES */}
+        <section className="dialogue-features-section">
+          <h2 className="dialogue-section-title">Powerful Dialogue Features</h2>
+          <div className="dialogue-features-grid">
+            
+            <div className="dialogue-feature-card">
+              <span className="dialogue-feature-icon">👥</span>
+              <h3 className="dialogue-feature-title">Multi-Character Debates</h3>
+              <p className="dialogue-feature-description">
+                Orchestrate conversations between 2-5 AI characters simultaneously. Watch them debate, 
+                challenge ideas, and build on each other's arguments.
+              </p>
+            </div>
+
+            <div className="dialogue-feature-card">
+              <span className="dialogue-feature-icon">📚</span>
+              <h3 className="dialogue-feature-title">Curated Templates</h3>
+              <p className="dialogue-feature-description">
+                Choose from 20+ expertly crafted templates spanning philosophy, ethics, business, 
+                science, and politics. Start debates instantly.
+              </p>
+            </div>
+
+            <div className="dialogue-feature-card">
+              <span className="dialogue-feature-icon">🎨</span>
+              <h3 className="dialogue-feature-title">Custom Scenarios</h3>
+              <p className="dialogue-feature-description">
+                Build your own dialogue scenarios from scratch. Choose characters, set the context, 
+                and define debate objectives.
+              </p>
+            </div>
+
+            <div className="dialogue-feature-card">
+              <span className="dialogue-feature-icon">🧠</span>
+              <h3 className="dialogue-feature-title">Intelligent Moderation</h3>
+              <p className="dialogue-feature-description">
+                AI-powered facilitation keeps debates on track, ensures balanced participation, 
+                and maintains philosophical depth.
+              </p>
+            </div>
+
+            <div className="dialogue-feature-card">
+              <span className="dialogue-feature-icon">💾</span>
+              <h3 className="dialogue-feature-title">Save & Continue</h3>
+              <p className="dialogue-feature-description">
+                Pause debates anytime and pick up where you left off. Build a library of ongoing 
+                philosophical conversations.
+              </p>
+            </div>
+
+            <div className="dialogue-feature-card">
+              <span className="dialogue-feature-icon">🚀</span>
+              <h3 className="dialogue-feature-title">Priority Access</h3>
+              <p className="dialogue-feature-description">
+                Get early access to new debate formats, exclusive templates, and experimental 
+                multi-AI features.
+              </p>
+            </div>
+
+          </div>
+        </section>
+
+        {/* TEMPLATE PREVIEW GALLERY */}
+        <section className="dialogue-preview-section">
+          <h2 className="dialogue-section-title">Featured Dialogue Templates</h2>
+          <div className="dialogue-preview-grid">
+            
+            <div className="dialogue-preview-card">
+              <div className="dialogue-preview-image-wrapper">
+                <img 
+                  src="/images/template-philosophy.jpg" 
+                  alt="Philosophy Template" 
+                  className="dialogue-preview-image"
+                  onError={(e) => {
+                    e.target.style.display = 'none';
+                    e.target.nextSibling.style.display = 'flex';
+                  }}
+                />
+                <div className="dialogue-preview-image-fallback">
+                  Philosophy Summit
+                </div>
+              </div>
+              <div className="dialogue-preview-content">
+                <h3 className="dialogue-preview-title">Philosophy Summit</h3>
+                <p className="dialogue-preview-description">
+                  Socrates, Nietzsche, and Confucius debate the nature of truth and virtue.
+                </p>
+                <span className="dialogue-preview-badge">3 Characters</span>
+              </div>
+            </div>
+
+            <div className="dialogue-preview-card">
+              <div className="dialogue-preview-image-wrapper">
+                <img 
+                  src="/images/template-business.jpg" 
+                  alt="Business Template" 
+                  className="dialogue-preview-image"
+                  onError={(e) => {
+                    e.target.style.display = 'none';
+                    e.target.nextSibling.style.display = 'flex';
+                  }}
+                />
+                <div className="dialogue-preview-image-fallback">
+                  Tech Titans
+                </div>
+              </div>
+              <div className="dialogue-preview-content">
+                <h3 className="dialogue-preview-title">Tech Titans Debate</h3>
+                <p className="dialogue-preview-description">
+                  Steve Jobs, Elon Musk, and Bill Gates discuss innovation strategy.
+                </p>
+                <span className="dialogue-preview-badge">3 Characters</span>
+              </div>
+            </div>
+
+            <div className="dialogue-preview-card">
+              <div className="dialogue-preview-image-wrapper">
+                <img 
+                  src="/images/template-ethics.jpg" 
+                  alt="Ethics Template" 
+                  className="dialogue-preview-image"
+                  onError={(e) => {
+                    e.target.style.display = 'none';
+                    e.target.nextSibling.style.display = 'flex';
+                  }}
+                />
+                <div className="dialogue-preview-image-fallback">
+                  Ethics Council
+                </div>
+              </div>
+              <div className="dialogue-preview-content">
+                <h3 className="dialogue-preview-title">Ethics Council</h3>
+                <p className="dialogue-preview-description">
+                  Kant, Bentham, and Aristotle examine modern moral dilemmas.
+                </p>
+                <span className="dialogue-preview-badge">3 Characters</span>
+              </div>
+            </div>
+
+            <div className="dialogue-preview-card">
+              <div className="dialogue-preview-image-wrapper">
+                <img 
+                  src="/images/template-science.jpg" 
+                  alt="Science Template" 
+                  className="dialogue-preview-image"
+                  onError={(e) => {
+                    e.target.style.display = 'none';
+                    e.target.nextSibling.style.display = 'flex';
+                  }}
+                />
+                <div className="dialogue-preview-image-fallback">
+                  Science Symposium
+                </div>
+              </div>
+              <div className="dialogue-preview-content">
+                <h3 className="dialogue-preview-title">Science Symposium</h3>
+                <p className="dialogue-preview-description">
+                  Einstein, Hawking, and Curie discuss quantum mechanics and reality.
+                </p>
+                <span className="dialogue-preview-badge">3 Characters</span>
+              </div>
+            </div>
+
+          </div>
+        </section>
+
+        {/* BENEFITS LIST */}
+        <section className="dialogue-benefits-section">
+          <h2 className="dialogue-section-title">Everything Included</h2>
+          <div className="dialogue-benefits-grid">
+            <div className="dialogue-benefit-item">
+              <span className="dialogue-benefit-icon">✓</span>
+              <span className="dialogue-benefit-text">Unlimited Dialogue Scenarios</span>
+            </div>
+            <div className="dialogue-benefit-item">
+              <span className="dialogue-benefit-icon">✓</span>
+              <span className="dialogue-benefit-text">20+ Curated Templates</span>
+            </div>
+            <div className="dialogue-benefit-item">
+              <span className="dialogue-benefit-icon">✓</span>
+              <span className="dialogue-benefit-text">Multi-Character Debates (2-5)</span>
+            </div>
+            <div className="dialogue-benefit-item">
+              <span className="dialogue-benefit-icon">✓</span>
+              <span className="dialogue-benefit-text">Custom Scenario Builder</span>
+            </div>
+            <div className="dialogue-benefit-item">
+              <span className="dialogue-benefit-icon">✓</span>
+              <span className="dialogue-benefit-text">Save & Resume Conversations</span>
+            </div>
+            <div className="dialogue-benefit-item">
+              <span className="dialogue-benefit-icon">✓</span>
+              <span className="dialogue-benefit-text">AI-Powered Moderation</span>
+            </div>
+            <div className="dialogue-benefit-item">
+              <span className="dialogue-benefit-icon">✓</span>
+              <span className="dialogue-benefit-text">Priority Feature Access</span>
+            </div>
+            <div className="dialogue-benefit-item">
+              <span className="dialogue-benefit-icon">✓</span>
+              <span className="dialogue-benefit-text">Creator Hub Pro Access</span>
+            </div>
+          </div>
+        </section>
+
+        {/* PRICING & CTA */}
+        <section className="dialogue-pricing-section" id="dialogue-pricing-section">
+          <span className="dialogue-pricing-badge">Professional Tier</span>
+          <h2 className="dialogue-pricing-title">Full Access to Dialogue Hub</h2>
+          
+          <div className="dialogue-pricing-amount">
+            <span className="dialogue-price-value">£11.99</span>
+            <span className="dialogue-price-period">/month</span>
+          </div>
+
+          <div className="dialogue-cta-buttons">
+            <button className="dialogue-cta-button-primary" onClick={onUpgradeWithStripe}>
+              💳 Upgrade with Stripe
+            </button>
+            <button className="dialogue-cta-button-secondary" onClick={onUpgradeWithPayPal}>
+              🅿️ Pay with PayPal
+            </button>
+          </div>
+
+          <button className="dialogue-cta-button-tertiary" onClick={onLearnMore}>
+            Learn About All Features
           </button>
 
-          <button 
-            onClick={onUpgradeWithPayPal}
-            className="upgrade-button secondary-upgrade"
-          >
-            🅿️ Pay with PayPal
-          </button>
-        </div>
+          <div className="dialogue-pricing-footer">
+            <p>⭐ <strong>Secure payments</strong> · Cancel anytime · 30-day guarantee</p>
+          </div>
+        </section>
 
-        <button 
-          onClick={onLearnMore}
-          className="learn-features-button"
-        >
-          Learn About All Features
-        </button>
-      </div>
+        {/* TESTIMONIAL */}
+        <section className="dialogue-testimonial-section">
+          <p className="dialogue-testimonial-quote">
+            "The Dialogue Hub transformed how I approach philosophical inquiry. Seeing Kant and Mill 
+            debate in real-time helped me understand ethical frameworks in ways textbooks never could."
+          </p>
+          <p className="dialogue-testimonial-author">— Alexandra Uzor, Salford University</p>
+        </section>
 
-      <div className="upgrade-footer">
-        <p>⭐ <strong>Secure payments</strong> · Cancel anytime</p>
       </div>
     </div>
-  </div>
-);
+  );
+};
 
-// EDUCATIONAL MODAL - Updated with payment options
+// ============================================================================
+// UPDATED EDUCATIONAL UPGRADE MODAL - Replace lines 363-471 in index.jsx
+// Market Hub Pattern with Light/Dark Mode
+// ============================================================================
+
 const EducationalUpgradeModal = ({ isOpen, onClose, onUpgradeWithStripe, onUpgradeWithPayPal }) => {
   if (!isOpen) return null;
+
+  // Get theme from parent container
+  const [isDark, setIsDark] = React.useState(true);
+
+  React.useEffect(() => {
+    const savedTheme = localStorage.getItem('dialogueTheme');
+    if (savedTheme === 'light') {
+      setIsDark(false);
+    }
+  }, []);
 
   const unlimitedFeatures = [
     {
@@ -398,23 +694,34 @@ const EducationalUpgradeModal = ({ isOpen, onClose, onUpgradeWithStripe, onUpgra
   ];
 
   return (
-    <div className="modal-overlay" onClick={onClose}>
-      <div className="modal-content educational-modal" onClick={(e) => e.stopPropagation()}>
-        <button className="modal-close" onClick={onClose}>×</button>
+    <div className="dialogue-modal-overlay" onClick={onClose}>
+      <div 
+        className={`dialogue-modal-content ${isDark ? 'theme-dark' : 'theme-light'}`}
+        onClick={(e) => e.stopPropagation()}
+      >
+        {/* Close Button */}
+        <button className="dialogue-modal-close" onClick={onClose}>
+          <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+            <line x1="18" y1="6" x2="6" y2="18"/>
+            <line x1="6" y1="6" x2="18" y2="18"/>
+          </svg>
+        </button>
         
-        <div className="educational-header">
-          <div className="educational-icon">🚀</div>
-          <h2>Unlock Advanced AI Conversations</h2>
-          <p className="educational-subtitle">
-            Upgrade to Unlimited tier and create dynamic multi-character debates
+        {/* Modal Header */}
+        <div className="dialogue-modal-header">
+          <div className="dialogue-modal-icon">🚀</div>
+          <h2 className="dialogue-modal-title">Unlock Advanced AI Conversations</h2>
+          <p className="dialogue-modal-subtitle">
+            Upgrade to Professional tier and create dynamic multi-character debates
           </p>
         </div>
 
-        <div className="educational-features">
+        {/* Features Grid */}
+        <div className="dialogue-modal-features">
           {unlimitedFeatures.map((feature, index) => (
-            <div key={index} className="feature-row">
-              <div className="feature-icon">{feature.icon}</div>
-              <div className="feature-text">
+            <div key={index} className="dialogue-modal-feature-row">
+              <div className="dialogue-modal-feature-icon">{feature.icon}</div>
+              <div className="dialogue-modal-feature-text">
                 <h4>{feature.title}</h4>
                 <p>{feature.description}</p>
               </div>
@@ -422,39 +729,40 @@ const EducationalUpgradeModal = ({ isOpen, onClose, onUpgradeWithStripe, onUpgra
           ))}
         </div>
 
-        <div className="pricing-card">
-          <div className="pricing-header">
-            <h3>Unlimited Plan</h3>
-            <div className="price">
-              <span className="amount">£11.99</span>
-              <span className="period">/month</span>
+        {/* Pricing Card */}
+        <div className="dialogue-modal-pricing-card">
+          <div className="dialogue-modal-pricing-header">
+            <span className="dialogue-modal-pricing-badge">Professional Plan</span>
+            <div className="dialogue-modal-price">
+              <span className="dialogue-modal-price-amount">£11.99</span>
+              <span className="dialogue-modal-price-period">/month</span>
             </div>
           </div>
           
-          <div className="pricing-features">
-            <div className="pricing-feature">✓ Unlimited Dialogues</div>
-            <div className="pricing-feature">✓ Multi-Character Debates</div>
-            <div className="pricing-feature">✓ 20+ Dialogue Templates</div>
-            <div className="pricing-feature">✓ Creator Hub Pro Tools</div>
-            <div className="pricing-feature">✓ All Premium Features</div>
-            <div className="pricing-feature">✓ VIP Support</div>
+          <div className="dialogue-modal-pricing-features">
+            <div className="dialogue-modal-pricing-feature">✓ Unlimited Dialogues</div>
+            <div className="dialogue-modal-pricing-feature">✓ Multi-Character Debates</div>
+            <div className="dialogue-modal-pricing-feature">✓ 20+ Dialogue Templates</div>
+            <div className="dialogue-modal-pricing-feature">✓ Creator Hub Pro Tools</div>
+            <div className="dialogue-modal-pricing-feature">✓ All Premium Features</div>
+            <div className="dialogue-modal-pricing-feature">✓ VIP Support</div>
           </div>
 
-          <div className="pricing-actions">
+          <div className="dialogue-modal-pricing-actions">
             <button 
-              className="upgrade-cta-button"
+              className="dialogue-modal-cta-button primary"
               onClick={onUpgradeWithStripe}
             >
-              Upgrade with Stripe - £11.99/month
+              💳 Upgrade with Stripe - £11.99/month
             </button>
             <button 
-              className="upgrade-cta-button secondary"
+              className="dialogue-modal-cta-button secondary"
               onClick={onUpgradeWithPayPal}
             >
-              Pay with PayPal - £11.99/month
+              🅿️ Pay with PayPal - £11.99/month
             </button>
             <button 
-              className="compare-plans-button"
+              className="dialogue-modal-compare-button"
               onClick={() => window.open('/pricing', '_blank')}
             >
               Compare All Plans
@@ -462,8 +770,9 @@ const EducationalUpgradeModal = ({ isOpen, onClose, onUpgradeWithStripe, onUpgra
           </div>
         </div>
 
-        <div className="educational-footer">
-          <p>⭐ <strong>Payment secured by Stripe.Paypal</strong> · Cancel anytime</p>
+        {/* Modal Footer */}
+        <div className="dialogue-modal-footer">
+          <p>⭐ <strong>Payment secured by Stripe & PayPal</strong> · Cancel anytime</p>
         </div>
       </div>
     </div>
