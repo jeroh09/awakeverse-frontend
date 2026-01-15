@@ -14,14 +14,14 @@ export default function UpgradeModal({ isOpen, onClose, reason, currentTier }) {
         </div>
         
         <div className="upgrade-content">
-          <p>Verse scenarios require an Unlimited subscription.</p>
+          <p>Verse Dialogues require an Unlimited subscription.</p>
           <p>Current tier: <strong>{currentTier}</strong></p>
           
           <div className="upgrade-features">
             <h4>Professional tier includes:</h4>
             <ul>
               <li>Multi-character debates</li>
-              <li>20+ scenario templates</li>
+              <li>20+ Dialogue templates</li>
               <li>Unlimited questions</li>
               <li>Priority access to new features</li>
             </ul>
