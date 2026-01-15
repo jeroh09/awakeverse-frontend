@@ -175,7 +175,7 @@ export default function MessageBubble({
                 onClick={handleContinue}
                 disabled={isSending}
                 aria-label="Continue conversation"
-                title="Smart continuation (resonance-based)"
+                title="Smart continuation"
               >
                 <span className={styles.continueIcon}>››</span>
                 <span className={styles.continueTooltip}>Continue</span>
@@ -189,7 +189,7 @@ export default function MessageBubble({
                 onClick={handleNextSpeaker}
                 disabled={isSending}
                 aria-label="Next speaker"
-                title="Force next speaker (different character)"
+                title=" next character speaks"
               >
                 <span className={styles.nextSpeakerIcon}>+</span>
                 <span className={styles.nextSpeakerTooltip}>Next</span>

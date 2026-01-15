@@ -519,7 +519,7 @@ Engage users with the depth and authenticity that comes from your unique histori
           </p>
           {currentStep === 1 && (
             <div style={{ marginTop: '1rem', padding: '0.75rem', background: 'rgba(0, 0, 0, 0.2)', borderRadius: '8px' }}>
-              <strong>Pro Tip:</strong> Use historically accurate names and focus on the character's core expertise. The description should hint at their personality and knowledge areas.
+              <strong>Pro Tip:</strong> Use accurate names and focus on the character's core expertise. The description should hint at their personality and knowledge areas. It also helps in generating acurate avatars.
             </div>
           )}
           {currentStep === 2 && (

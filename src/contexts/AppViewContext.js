@@ -1,5 +1,6 @@
 // src/contexts/AppViewContext.jsx - FIXED: Proper hash parsing in popstate
 // DEFENSIVE: Fixes browser back button, navigation state loss, and Stripe redirect issues
+// ENHANCED: Added activeStory and activeChatCharacter state management for show button hiding
 
 import React, { createContext, useContext, useState, useEffect, useCallback, useRef } from 'react';
 import api from '../api';
@@ -187,6 +188,12 @@ export const AppViewProvider = ({ children }) => {
   const [activeDebate, setActiveDebate] = useState(null);
   const [myScenarios, setMyScenarios] = useState([]);
 
+  // ✅ NEW: Story Mode state (following activeScenario pattern)
+  const [activeStory, setActiveStory] = useState(null);
+
+  // ✅ NEW: Chat Mode state (following activeScenario pattern)
+  const [activeChatCharacter, setActiveChatCharacter] = useState(null);
+
   // ============================================================================
   // LOCALSTORAGE CACHE LAYER (Instant load, offline support)
   // ============================================================================
@@ -263,6 +270,7 @@ export const AppViewProvider = ({ children }) => {
       return backendCharacters;
     } catch (error) {
       console.warn('Backend sync failed, using localStorage cache:', error);
+      // DEFENSIVE: On sync failure, keep using localStorage cache
       return discoveredCharacters;
     } finally {
       setIsSyncing(false);
@@ -270,46 +278,34 @@ export const AppViewProvider = ({ children }) => {
   }, [isSyncing, discoveredCharacters, saveToLocalStorage]);
 
   // ============================================================================
-  // STEP 2: ENHANCED VIEW SWITCHING WITH BROWSER HISTORY
+  // VIEW SWITCHING
   // ============================================================================
 
-  /**
-   * Switch to a new view with proper browser history integration
-   * DEFENSIVE: This fixes the browser back button issue
-   */
   const switchView = useCallback((newView, options = {}) => {
-    const { 
-      skipHistory = false,  // Don't add to history stack
-      replace = false,      // Replace current history entry
-      params = {}           // Optional query params
-    } = options;
-
+    const { params = {}, replace = false, skipHistory = false } = options;
+    
     try {
-      // DEFENSIVE: Validate view
+      // Validate view
       if (!Object.values(VIEW_STATES).includes(newView)) {
         console.warn(`❌ Invalid view state: ${newView}`);
         return false;
       }
-
+      
       // Update React state
       setCurrentView(newView);
       
-      // Build hash URL
-      const hashName = VIEW_TO_HASH_MAP[newView] || 'chat';
-      const fullHash = buildHashUrl(hashName, params);
-      const fullUrl = `/app${fullHash}`;
+      // Build hash with params if provided
+      const fullHash = VIEW_TO_HASH_MAP[newView] || 'chat';
+      const fullUrl = `/app#${fullHash}${
+        Object.keys(params).length > 0 
+          ? '?' + new URLSearchParams(params).toString() 
+          : ''
+      }`;
       
-      // CRITICAL: Use pushState (not replaceState) for browser back button to work
-      // This adds the navigation to browser history
-      const historyMethod = replace ? 'replaceState' : 'pushState';
-      
-      window.history[historyMethod](
-        { 
-          isAppRoot: true, 
-          view: newView,
-          timestamp: Date.now(),
-          params
-        },
+      // Update browser history
+      const method = replace ? 'replaceState' : 'pushState';
+      window.history[method](
+        { isAppRoot: true, view: newView, timestamp: Date.now() },
         '',
         fullUrl
       );
@@ -501,6 +497,24 @@ export const AppViewProvider = ({ children }) => {
   }, []);
 
   // ============================================================================
+  // ✅ NEW: STORY MODE MANAGEMENT (following scenario pattern)
+  // ============================================================================
+
+  const setActiveStoryData = useCallback((story) => {
+    console.log('📖 Setting active story:', story?.id);
+    setActiveStory(story);
+  }, []);
+
+  // ============================================================================
+  // ✅ NEW: CHAT MODE MANAGEMENT (following scenario pattern)
+  // ============================================================================
+
+  const setActiveChatCharacterData = useCallback((characterKey) => {
+    console.log('💬 Setting active chat character:', characterKey);
+    setActiveChatCharacter(characterKey);
+  }, []);
+
+  // ============================================================================
   // MANUAL SYNC (for pull-to-refresh or settings)
   // ============================================================================
 
@@ -543,7 +557,15 @@ export const AppViewProvider = ({ children }) => {
     activeDebate,
     setActiveDebate: setActiveDebateData,
     myScenarios,
-    updateMyScenarios
+    updateMyScenarios,
+
+    // ✅ NEW: Story Mode context values
+    activeStory,
+    setActiveStory: setActiveStoryData,
+
+    // ✅ NEW: Chat Mode context values
+    activeChatCharacter,
+    setActiveChatCharacter: setActiveChatCharacterData
   };
 
   return (
