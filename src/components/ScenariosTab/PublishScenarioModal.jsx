@@ -86,10 +86,10 @@ export default function PublishScenarioModal({
                 </>
               ) : (
                 <>
-                  <strong>Publishing this scenario will:</strong>
+                  <strong>Publishing this Dialogue will:</strong>
                   <ul>
                     <li>Make it visible to all users in Market Hub</li>
-                    <li>Allow others to start debates with your scenario</li>
+                    <li>Allow others to start debates with your Dialogue</li>
                     <li>Track engagement and credit you as creator</li>
                   </ul>
                 </>
@@ -126,7 +126,7 @@ export default function PublishScenarioModal({
               </>
             ) : (
               <>
-                {isUnpublishing ? 'Unpublish Scenario' : 'Publish to Market Hub'}
+                {isUnpublishing ? 'Unpublish Dialogue' : 'Publish to Market Hub'}
               </>
             )}
           </button>

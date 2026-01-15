@@ -417,7 +417,7 @@ const UnifiedContentCard = ({
               </div>
             </div>
             <div className={`${styles.badge} ${styles.scenarioBadge}`}>
-              Scenario
+              Dialogue
             </div>
           </div>
 
@@ -465,7 +465,7 @@ const UnifiedContentCard = ({
                 copySuccess ? styles.shareSuccess : ''
               }`}
               onClick={handleShareClick}
-              title={copySuccess ? 'Link copied!' : 'Share scenario'}
+              title={copySuccess ? 'Link copied!' : 'Share dialogue'}
             >
               {copySuccess ? '✓ Copied' : (
                 <>

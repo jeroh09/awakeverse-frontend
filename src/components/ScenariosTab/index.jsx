@@ -204,7 +204,7 @@ export default function ScenariosTab({
       <div className="scenarios-tab-container">
         <div className="scenarios-loading-state">
           <div className="loading-spinner-large"></div>
-          <p>Loading Verse Scenarios...</p>
+          <p>Loading Verse Dialogues...</p>
         </div>
       </div>
     );
@@ -295,15 +295,15 @@ const ScenariosUpgradeRequired = ({ onLearnMore, onUpgradeWithStripe, onUpgradeW
   <div className="upgrade-required-state">
     <div className="upgrade-required-content">
       <span className="upgrade-icon">🎭</span>
-      <h2>Unlock Verse Scenarios</h2>
-      <p>Upgrade to Unlimited tier to access multi-character debates and scenario templates</p>
+      <h2>Unlock Verse Dialogues</h2>
+      <p>Upgrade to Unlimited tier to access multi-character debates and Dialogue templates</p>
       
       <div className="upgrade-features-preview">
         <h3>With Unlimited Tier You Get:</h3>
         <div className="preview-features">
           <div className="preview-feature">
             <span className="feature-emoji">📚</span>
-            <span>20+ Scenario Templates</span>
+            <span>20+ Dialogue Templates</span>
           </div>
           <div className="preview-feature">
             <span className="feature-emoji">👥</span>
@@ -367,8 +367,8 @@ const EducationalUpgradeModal = ({ isOpen, onClose, onUpgradeWithStripe, onUpgra
   const unlimitedFeatures = [
     {
       icon: '🎭',
-      title: 'Verse Scenarios Hub',
-      description: 'Full access to multi-character debates and 20+ scenario templates'
+      title: 'Verse Dialogue Hub',
+      description: 'Full access to multi-character debates and 20+ Dialogue templates'
     },
     {
       icon: '👥',
@@ -388,12 +388,12 @@ const EducationalUpgradeModal = ({ isOpen, onClose, onUpgradeWithStripe, onUpgra
     {
       icon: '🚀',
       title: 'Priority Featuring',
-      description: 'Your scenarios get promoted in discovery'
+      description: 'Your Dialogues get promoted in discovery'
     },
     {
       icon: '⚡',
       title: 'Unlimited Everything',
-      description: 'No limits on scenarios, characters, or messages'
+      description: 'No limits on Dialogues, characters, or messages'
     }
   ];
 
@@ -432,9 +432,9 @@ const EducationalUpgradeModal = ({ isOpen, onClose, onUpgradeWithStripe, onUpgra
           </div>
           
           <div className="pricing-features">
-            <div className="pricing-feature">✓ Unlimited Scenarios</div>
+            <div className="pricing-feature">✓ Unlimited Dialogues</div>
             <div className="pricing-feature">✓ Multi-Character Debates</div>
-            <div className="pricing-feature">✓ 20+ Scenario Templates</div>
+            <div className="pricing-feature">✓ 20+ Dialogue Templates</div>
             <div className="pricing-feature">✓ Creator Hub Pro Tools</div>
             <div className="pricing-feature">✓ All Premium Features</div>
             <div className="pricing-feature">✓ VIP Support</div>

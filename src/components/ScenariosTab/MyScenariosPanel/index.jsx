@@ -168,7 +168,7 @@ export default function MyScenariosPanel({
     return (
       <div className="my-scenarios-panel">
         <div className="panel-header">
-          <h3>My Scenarios</h3>
+          <h3>My Dialogues</h3>
           <div className="scenario-counter">0/5 scenarios</div>
         </div>
         
@@ -189,9 +189,9 @@ export default function MyScenariosPanel({
   return (
     <div className="my-scenarios-panel">
       <div className="panel-header">
-        <h3>My Scenarios</h3>
+        <h3>My Dialogues</h3>
         <div className="scenario-counter">
-          {scenarios.length}/5 scenarios
+          {scenarios.length}/5 Dialogues
         </div>
       </div>
 
@@ -233,8 +233,8 @@ export default function MyScenariosPanel({
       {/* Max scenarios reached message */}
       {scenarios.length >= 5 && (
         <div className="max-scenarios-message">
-          <p>🚫 Maximum of 5 scenarios reached</p>
-          <p className="hint">Delete a scenario to create a new one</p>
+          <p>🚫 Maximum of 5 Dialogues reached</p>
+          <p className="hint">Delete a Dialogue to create a new one</p>
         </div>
       )}
 
