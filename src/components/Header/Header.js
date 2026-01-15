@@ -1,4 +1,5 @@
-// src/components/Header/Header.js â€" UPDATED WITH VERSE STUDIO NAV + RESPONSIVE SHOW BUTTON
+// src/components/Header/Header.js – UPDATED WITH VERSE STUDIO NAV + RESPONSIVE SHOW BUTTON
+// ✅ PHASE 4 STEP 7: Added mobile detection and conditional button hiding for active chat/story
 import React, { useState, useEffect } from 'react';
 import styles from './Header.module.css';
 import { useUser } from '../../contexts/UserContext';
@@ -188,7 +189,7 @@ const CreateIcon = ({ className }) => (
 );
 
 /**
- * VerseStudioIcon â€" unique thumbnail for Verse Studio
+ * VerseStudioIcon – unique thumbnail for Verse Studio
  * 3-node constellation / orbit to signal multi-LLM collaboration
  */
 const VerseStudioIcon = ({ className }) => (
@@ -262,7 +263,7 @@ const VerseStudioIcon = ({ className }) => (
 );
 
 /**
- * ChevronDownIcon â€" for mobile "show header" button
+ * ChevronDownIcon – for mobile "show header" button
  */
 const ChevronDownIcon = ({ className }) => (
   <svg
@@ -310,6 +311,19 @@ export default function Header() {
   const [isHeaderVisible, setIsHeaderVisible] = useState(true);
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
 
+  // ✅ NEW: Mobile detection (≤768px)
+  const [isMobile, setIsMobile] = useState(window.innerWidth <= 768);
+
+  // ✅ NEW: Mobile detection effect
+  useEffect(() => {
+    const handleResize = () => {
+      setIsMobile(window.innerWidth <= 768);
+    };
+    
+    window.addEventListener('resize', handleResize);
+    return () => window.removeEventListener('resize', handleResize);
+  }, []);
+
   const showNavigation = isAuthenticated && !!viewContext;
 
   // Auto-hide header after 6s
@@ -349,7 +363,7 @@ export default function Header() {
         },
         {
           key: 'scenarios',
-          label: 'Scenarios',
+          label: 'Dialogue', // ✅ CHANGED: 'Scenarios' → 'Dialogue' for UX
           icon: ScenariosIcon,
           viewState: viewContext.VIEW_STATES.SCENARIOS,
         },
@@ -414,9 +428,17 @@ export default function Header() {
   const subscriptionLabel = subscriptionInfo?.display_name || 'Free';
   const subscriptionActive = subscriptionInfo?.is_active || false;
 
+  // ✅ NEW: Determine if button should be hidden
+  // Hide on mobile when in active chat window OR active story window
+  const isInActiveChatWindow = viewContext?.activeChatCharacter !== null && 
+                                viewContext?.activeChatCharacter !== undefined;
+  const isInActiveStoryWindow = viewContext?.activeStory !== null && 
+                                 viewContext?.activeStory !== undefined;
+  const shouldHideButton = isMobile && (isInActiveChatWindow || isInActiveStoryWindow);
+
   return (
     <>
-      {/* Top brand bar â€" fully removed when not visible */}
+      {/* Top brand bar – fully removed when not visible */}
       {isHeaderVisible && (
         <header className={styles.header}>
           <div className={styles.brandShell}>
@@ -458,7 +480,8 @@ export default function Header() {
       )}
 
       {/* Responsive show header button: text on desktop, icon on mobile */}
-      {!isHeaderVisible && (
+      {/* ✅ UPDATED: Now conditionally hidden on mobile when in active chat/story */}
+      {!isHeaderVisible && !shouldHideButton && (
         <button
           className={styles.showButton}
           onClick={() => setIsHeaderVisible(true)}
@@ -545,7 +568,7 @@ export default function Header() {
               })}
             </nav>
 
-            {/* Sidebar footer â€" user + subscription */}
+            {/* Sidebar footer – user + subscription */}
             {isAuthenticated && (
               <footer className={styles.sidebarFooter}>
                 <div className={styles.userMeta}>

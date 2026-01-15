@@ -1,4 +1,5 @@
 // src/ChatApp.js - Enhanced with Stripe Success Handler (No Reload)
+// ✅ PHASE 3 STEP 5: Syncs selectedCharacterKey to AppViewContext.activeChatCharacter
 import React, { useState, useEffect, useCallback, useMemo } from 'react';
 import { useSocket } from './contexts/WebSocketContext';
 import { useCharacter } from './contexts/CharacterContext';
@@ -40,12 +41,15 @@ function useMediaQuery(maxWidth) {
 
 export default function ChatApp() {
   // Get view context
+  // ✅ NEW: Added activeChatCharacter and setActiveChatCharacter
   const { 
     currentView, 
     VIEW_STATES, 
     switchView, 
     addDiscoveredCharacter,
-    discoveredCharacters 
+    discoveredCharacters,
+    activeChatCharacter,
+    setActiveChatCharacter
   } = useAppView();
 
   const {
@@ -72,6 +76,20 @@ export default function ChatApp() {
   const [isHubVisible, setIsHubVisible] = useState(true);
   const [prestigeHubVisible, setPrestigeHubVisible] = useState(false);
   const [marketHubScenario, setMarketHubScenario] = useState(null);
+
+  // ✅ NEW: Sync selectedCharacterKey to AppViewContext
+  // This allows Header and other components to know when we're in an active chat
+  useEffect(() => {
+    // Sync character selection to context
+    setActiveChatCharacter(selectedCharacterKey);
+    
+    // Log for debugging
+    if (selectedCharacterKey) {
+      console.log('💬 Active chat character set:', selectedCharacterKey);
+    } else {
+      console.log('💬 Returned to chat launcher (no active character)');
+    }
+  }, [selectedCharacterKey, setActiveChatCharacter]);
 
   // History-safe back navigation
   const handleBackToLauncher = useCallback(() => {
