@@ -1635,9 +1635,10 @@ html {
 }
 
 /* ===== PREVIEW GALLERY ===== */
+/* ===== PREVIEW GALLERY - UPDATED FOR 2x2 GRID ===== */
 .dialogue-preview-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+  grid-template-columns: repeat(2, 1fr); /* 2 columns = 2x2 grid with 4 cards */
   gap: 20px;
 }
 
@@ -1712,7 +1713,6 @@ html {
   font-size: 0.75rem;
   font-weight: 600;
 }
-
 /* ===== BENEFITS SECTION ===== */
 .dialogue-benefits-section {
   padding: 40px;

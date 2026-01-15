@@ -360,7 +360,7 @@ const ScenariosUpgradeRequired = ({ onLearnMore, onUpgradeWithStripe, onUpgradeW
         {/* HERO SECTION */}
         <section className="dialogue-hero-section">
           <div className="dialogue-hero-content">
-            <h1 className="dialogue-hero-title">Unlock Dialogue Hub</h1>
+            <h1 className="dialogue-hero-title">Unlock Verse Dialogue</h1>
             <p className="dialogue-hero-subtitle">
               Create multi-character debates between historical figures, philosophers, and AI personalities. 
               Access 20+ curated templates and unlimited custom scenarios.
@@ -438,7 +438,7 @@ const ScenariosUpgradeRequired = ({ onLearnMore, onUpgradeWithStripe, onUpgradeW
 
             <div className="dialogue-feature-card">
               <span className="dialogue-feature-icon">💾</span>
-              <h3 className="dialogue-feature-title">Save & Continue</h3>
+              <h3 className="dialogue-feature-title">Continue Anytime</h3>
               <p className="dialogue-feature-description">
                 Pause debates anytime and pick up where you left off. Build a library of ongoing 
                 philosophical conversations.
