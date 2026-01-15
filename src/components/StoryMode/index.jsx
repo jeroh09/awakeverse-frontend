@@ -1,6 +1,8 @@
 // src/components/StoryMode/index.jsx - Updated with creation form integration
+// ✅ PHASE 2 STEP 3: Now uses AppViewContext for activeStory state management
 import React, { useState, useEffect, useCallback } from 'react';
 import { useUser } from '../../contexts/UserContext';
+import { useAppView } from '../../contexts/AppViewContext'; // ✅ NEW: Import context hook
 import SubscriptionService from '../../services/SubscriptionService';
 import DefensiveStoryWrapper from './DefensiveStoryWrapper';
 import TemplatesGallery from './TemplatesGallery';
@@ -12,13 +14,16 @@ import styles from './StoryMode.module.css';
 export default function StoryModeTab() {
   const { user } = useUser();
   
+  // ✅ NEW: Get activeStory from context instead of local state
+  const { activeStory, setActiveStory } = useAppView();
+  
   // Subscription state
   const [subscriptionData, setSubscriptionData] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   
-  // Active story state
-  const [activeStory, setActiveStory] = useState(null);
+  // ❌ REMOVED: Local activeStory state (now from context)
+  // const [activeStory, setActiveStory] = useState(null);
   
   // Stories refresh trigger
   const [storiesRefreshKey, setStoriesRefreshKey] = useState(0);
@@ -74,17 +79,19 @@ export default function StoryModeTab() {
   }, [loadSubscriptionData]);
 
   // Handle story opened
+  // ✅ UNCHANGED: Still works identically, now uses context setter
   const handleStoryOpen = useCallback((story) => {
     console.log('📖 Opening story:', story.id);
     setActiveStory(story);
-  }, []);
+  }, [setActiveStory]);
 
   // Handle story closed
+  // ✅ UNCHANGED: Still works identically, now uses context setter
   const handleStoryClose = useCallback(() => {
     console.log('📖 Closing story');
     setActiveStory(null);
     setStoriesRefreshKey(prev => prev + 1);
-  }, []);
+  }, [setActiveStory]);
 
   // Handle story created from templates
   const handleStoryCreated = useCallback((newStory) => {
@@ -164,6 +171,7 @@ export default function StoryModeTab() {
   }
 
   // Full-screen story window
+  // ✅ UNCHANGED: Still checks activeStory, now from context
   if (activeStory) {
     return (
       <DefensiveStoryWrapper>
