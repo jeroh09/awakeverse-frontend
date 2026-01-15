@@ -119,7 +119,7 @@ export default function TemplatesGallery({
     <div className="templates-gallery">
       {/* ORIGINAL HEADER - KEEP INTACT */}
       <div className="gallery-header">
-        <h2 className="gallery-title">Verse Scenarios</h2>
+        <h2 className="gallery-title">Verse Dialogues</h2>
         <p className="gallery-subtitle">
           Multi-character debates powered by AI • {isUnlimited ? 'Unlimited access' : 'Upgrade required'}
         </p>
