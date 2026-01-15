@@ -603,7 +603,7 @@ const ScenariosUpgradeRequired = ({ onLearnMore, onUpgradeWithStripe, onUpgradeW
         {/* PRICING & CTA */}
         <section className="dialogue-pricing-section" id="dialogue-pricing-section">
           <span className="dialogue-pricing-badge">Professional Tier</span>
-          <h2 className="dialogue-pricing-title">Full Access to Dialogue Hub</h2>
+          <h2 className="dialogue-pricing-title">Full Access to Verse Dialogues</h2>
           
           <div className="dialogue-pricing-amount">
             <span className="dialogue-price-value">£11.99</span>
