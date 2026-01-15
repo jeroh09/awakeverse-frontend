@@ -605,6 +605,221 @@ export default function useScenarioChat() {
     }
   }, [debateId, scenarioId, circuitBreakerState.status, isSending, generateMessageId]);
 
+//=============================================================================
+//ADD TO: useScenarioChat.js
+// LOCATION: After continueConversation function (around line 480)
+//=============================================================================
+
+  const nextSpeaker = useCallback(async (currentSpeaker) => {
+    if (!debateId || !scenarioId || isSending) {
+      console.warn('⚠️ nextSpeaker: Invalid state', { 
+        debateId, 
+        scenarioId, 
+        isSending 
+      });
+      return;
+    }
+
+    if (circuitBreakerState.status === 'tripped') {
+      throw new Error('Circuit breaker tripped. Too many errors. Please refresh and try again.');
+    }
+
+    const controller = new AbortController();
+    controllerRef.current = controller;
+    setIsSending(true);
+
+    try {
+      console.log('➕ Next speaker:', { currentSpeaker, debateId });
+
+      const csrf = document.cookie.match(/(?:^|;\s*)av_csrf=([^;]+)/)?.[1] || '';
+      const response = await fetch(`${API_BASE}/api/debate/${debateId}/next-speaker`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'X-CSRF-Token': csrf
+        },
+        credentials: 'include',
+        body: JSON.stringify({ 
+          current_speaker: currentSpeaker 
+        }),
+        signal: controller.signal
+      });
+
+      if (!response.ok || !response.body) {
+        throw new Error(`Next Speaker API failed: ${response.status} ${response.statusText}`);
+      }
+
+      const reader = response.body.getReader();
+      const decoder = new TextDecoder();
+      
+      const speakerBuffers = new Map();
+      const completedSpeakers = new Set();
+      let selectedSpeaker = null;
+      let decisionReason = null;
+
+      while (true) {
+        const { done, value } = await reader.read();
+        if (done) break;
+
+        const chunk = decoder.decode(value);
+        const lines = chunk.trim().split('\n').filter(Boolean);
+
+        for (const line of lines) {
+          try {
+            const data = JSON.parse(line);
+            
+            const { type, speaker, content, display_name, decision, excluded } = data;
+
+            if (type === 'error') {
+              console.error('❌ Backend error:', data.error);
+              continue;
+            }
+
+            if (type === 'complete') {
+              console.log('✅ Next speaker complete:', { speaker, decision, excluded });
+              selectedSpeaker = speaker;
+              decisionReason = decision;
+              console.log('📊 Next speaker decision:', { 
+                nextSpeaker: speaker, 
+                decisionReason: decision,
+                excluded: excluded
+              });
+              continue;
+            }
+
+            if (type === 'response' && speaker && content) {
+              if (!speakerBuffers.has(speaker)) {
+                const messageId = generateMessageId();
+                
+                speakerBuffers.set(speaker, {
+                  fullText: content,
+                  displayedText: '',
+                  messageId: messageId,
+                  displayName: display_name || speaker
+                });
+
+                setActiveSpeakers(prev => new Set([...prev, speaker]));
+
+                setMessages(prev => [...prev, {
+                  id: messageId,
+                  user: false,
+                  speaker: speaker,
+                  display_name: display_name || speaker,
+                  text: '',
+                  timestamp: Date.now()
+                }]);
+
+                animateResponse(speaker, content, speakerBuffers, completedSpeakers);
+              }
+            }
+
+          } catch (parseError) {
+            console.warn('⚠️ JSON parse error:', parseError);
+          }
+        }
+      }
+
+      await waitForAnimations(speakerBuffers);
+
+      setCircuitBreakerState({
+        errorCount: 0,
+        lastError: null,
+        status: 'healthy'
+      });
+
+      console.log('✅ Next speaker message complete');
+
+    } catch (error) {
+      console.error('❌ Next speaker failed:', error);
+
+      setCircuitBreakerState(prev => ({
+        errorCount: prev.errorCount + 1,
+        lastError: error.message,
+        status: prev.errorCount >= 2 ? 'tripped' : 'warning'
+      }));
+
+      const errorMessageId = generateMessageId();
+      setMessages(prev => [...prev, {
+        id: errorMessageId,
+        user: false,
+        speaker: 'system',
+        text: `Failed to get next speaker: ${error.message}`,
+        timestamp: Date.now(),
+        error: true
+      }]);
+
+      throw error;
+
+    } finally {
+      setIsSending(false);
+      setActiveSpeakers(new Set());
+      setQueuedSpeakers(new Set());
+      controllerRef.current = null;
+    }
+
+    // Reuse the same animation helper functions
+    function animateResponse(speaker, fullText, buffers, completed) {
+      const words = fullText.split(' ');
+      let wordIndex = 0;
+      const WORDS_PER_TICK = 2;
+      const DELAY_MS = 100;
+
+      const interval = setInterval(() => {
+        if (wordIndex >= words.length) {
+          clearInterval(interval);
+          animationIntervalsRef.current.delete(interval);
+          completed.add(speaker);
+          
+          setActiveSpeakers(prev => {
+            const next = new Set(prev);
+            next.delete(speaker);
+            return next;
+          });
+          
+          console.log(`✅ ${speaker} animation complete`);
+          return;
+        }
+
+        const batch = words.slice(wordIndex, wordIndex + WORDS_PER_TICK).join(' ');
+        wordIndex += WORDS_PER_TICK;
+
+        const buffer = buffers.get(speaker);
+        if (buffer) {
+          buffer.displayedText += (buffer.displayedText ? ' ' : '') + batch;
+          
+          setMessages(prev => prev.map(msg =>
+            msg.id === buffer.messageId
+              ? { ...msg, text: buffer.displayedText }
+              : msg
+          ));
+        }
+      }, DELAY_MS);
+
+      animationIntervalsRef.current.add(interval);
+    }
+
+    async function waitForAnimations(buffers) {
+      const checkComplete = () => {
+        for (const interval of animationIntervalsRef.current) {
+          clearInterval(interval);
+        }
+        animationIntervalsRef.current.clear();
+        
+        setMessages(prev => prev.map(msg => {
+          for (const [speaker, buffer] of buffers.entries()) {
+            if (msg.id === buffer.messageId) {
+              return { ...msg, text: buffer.fullText };
+            }
+          }
+          return msg;
+        }));
+      };
+
+      await new Promise(resolve => setTimeout(resolve, 500));
+      checkComplete();
+    }
+  }, [debateId, scenarioId, isSending, circuitBreakerState.status, generateMessageId]);
+
 
   const stopStream = useCallback(() => {
     if (controllerRef.current) {
@@ -652,7 +867,8 @@ export default function useScenarioChat() {
     usageData,
     usageLoading,
     startScenario,
-    continueConversation,  // ✅ ADD THIS
+    continueConversation,
+    nextSpeaker,   // ✅ ADD THIS
     sendMessage,
     stopStream,
     resetScenario

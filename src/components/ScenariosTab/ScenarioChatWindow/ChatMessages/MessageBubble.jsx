@@ -1,5 +1,5 @@
 // src/components/ScenariosTab/ScenarioChatWindow/ChatMessages/MessageBubble.jsx
-// MessageBubble - Complete with continue button functionality
+// MessageBubble - Complete with BOTH Continue (››) and Next Speaker (+) buttons
 // Works with existing backend format and includes markdown support
 
 import React from 'react';
@@ -11,7 +11,8 @@ import styles from './MessageBubble.module.css';
 export default function MessageBubble({ 
   message, 
   userCharacters = [],
-  onContinue,      // Handler for continue button clicks
+  onContinue,      // Handler for continue button (smart decision)
+  onNextSpeaker,   // Handler for next speaker button (force rotation)
   isSending,       // Whether a message is currently being sent
   isLastMessage    // Whether this is the last message from this speaker
 }) {
@@ -77,18 +78,28 @@ export default function MessageBubble({
     isUser ? styles.userMessage : styles.characterMessage
   ].filter(Boolean).join(' ');
 
-  // ===== CONTINUE BUTTON LOGIC =====
-  const showContinueButton = 
+  // ===== CONTINUE & NEXT SPEAKER BUTTON LOGIC =====
+  // Show buttons only on AI messages that are the last from their speaker
+  const showButtons = 
     !isUser &&             // Only on AI messages
     !message.error &&      // Not on error messages
     isLastMessage &&       // Only on the last message from this character
-    !isSending &&          // Hide during streaming
-    onContinue;            // Only if handler is provided
+    !isSending;            // Hide during streaming
+
+  const showContinueButton = showButtons && onContinue;
+  const showNextSpeakerButton = showButtons && onNextSpeaker;
 
   const handleContinue = () => {
     if (onContinue && speaker) {
       console.log('🔄 Continue clicked:', speaker);
       onContinue(speaker);
+    }
+  };
+
+  const handleNextSpeaker = () => {
+    if (onNextSpeaker && speaker) {
+      console.log('➕ Next Speaker clicked:', speaker);
+      onNextSpeaker(speaker);
     }
   };
 
@@ -154,19 +165,36 @@ export default function MessageBubble({
           </ReactMarkdown>
         </div>
 
-        {/* Continue Button - only on AI messages */}
-        {showContinueButton && (
-          <div className={styles.continueButtonContainer}>
-            <button
-              className={styles.continueButton}
-              onClick={handleContinue}
-              disabled={isSending}
-              aria-label="Continue conversation"
-              title="Continue conversation"
-            >
-              <span className={styles.continueIcon}>››</span>
-              <span className={styles.continueTooltip}>Continue</span>
-            </button>
+        {/* Action Buttons - Continue and/or Next Speaker */}
+        {(showContinueButton || showNextSpeakerButton) && (
+          <div className={styles.actionButtonsContainer}>
+            {/* Continue Button (››) - Smart continuation */}
+            {showContinueButton && (
+              <button
+                className={styles.continueButton}
+                onClick={handleContinue}
+                disabled={isSending}
+                aria-label="Continue conversation"
+                title="Smart continuation (resonance-based)"
+              >
+                <span className={styles.continueIcon}>››</span>
+                <span className={styles.continueTooltip}>Continue</span>
+              </button>
+            )}
+
+            {/* Next Speaker Button (+) - Force rotation */}
+            {showNextSpeakerButton && (
+              <button
+                className={styles.nextSpeakerButton}
+                onClick={handleNextSpeaker}
+                disabled={isSending}
+                aria-label="Next speaker"
+                title="Force next speaker (different character)"
+              >
+                <span className={styles.nextSpeakerIcon}>+</span>
+                <span className={styles.nextSpeakerTooltip}>Next</span>
+              </button>
+            )}
           </div>
         )}
       </div>

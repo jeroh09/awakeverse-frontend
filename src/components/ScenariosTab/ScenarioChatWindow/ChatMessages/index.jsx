@@ -1,5 +1,5 @@
 // src/components/ScenariosTab/ScenarioChatWindow/ChatMessages/index.jsx
-// PHASE 6: Updated messages container with design tokens
+// COMPLETE - Updated to pass both Continue and Next Speaker handlers
 
 import React, { useEffect, useRef } from 'react';
 import MessageBubble from './MessageBubble';
@@ -11,14 +11,16 @@ import styles from './ChatMessages.module.css';
  * @param {Array} messages - Array of message objects
  * @param {Array} userCharacters - Array of custom characters
  * @param {boolean} isSending - Whether a message is currently being sent
- * @param {Function} onContinue - Handler for continue button clicks
+ * @param {Function} onContinue - Handler for continue button clicks (smart decision)
+ * @param {Function} onNextSpeaker - Handler for next speaker button clicks (force rotation)
  * @param {string} theme - Theme (kept for compatibility, not used in new design)
  */
 export default function ChatMessages({
   messages = [],
   userCharacters = [],
   isSending = false,
-  onContinue,        // ✅ NEW
+  onContinue,        // ✅ Continue button handler
+  onNextSpeaker,     // ✅ Next Speaker button handler
   theme = 'light'
 }) {
   const messagesEndRef = useRef(null);
@@ -34,10 +36,12 @@ export default function ChatMessages({
   // Observable logging
   console.log('💬 ChatMessages rendering:', {
     messageCount: messages.length,
-    isSending
+    isSending,
+    hasContinue: !!onContinue,
+    hasNextSpeaker: !!onNextSpeaker
   });
 
-  // Track last message from each speaker for continue button
+  // Track last message from each speaker for button visibility
   const lastMessageBySpeaker = {};
   messages.forEach((msg, index) => {
     if (!msg.user && msg.speaker) {
@@ -66,9 +70,10 @@ export default function ChatMessages({
           key={message.id || index}
           message={message}
           userCharacters={userCharacters}
-          onContinue={onContinue}                    // ✅ NEW
-          isSending={isSending}                      // ✅ NEW
-          isLastMessage={                            // ✅ NEW
+          onContinue={onContinue}                    // ✅ Pass continue handler
+          onNextSpeaker={onNextSpeaker}              // ✅ Pass next speaker handler
+          isSending={isSending}
+          isLastMessage={
             !message.user && 
             lastMessageBySpeaker[message.speaker] === index
           }

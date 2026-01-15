@@ -282,49 +282,50 @@
   overflow-x: auto;
   display: block;
 }
+/* =============================================================================
+ * DUAL BUTTON STYLES - Continue (››) and Next Speaker (+)
+ * REPLACE the continue button section in MessageBubble.module.css
+ * =============================================================================
+ */
 
+/* ===== ACTION BUTTONS CONTAINER ===== */
 
-/* ===== CONTINUE BUTTON STYLES - ENHANCED ===== */
-
-/* Continue button container */
-.continueButtonContainer {
+.actionButtonsContainer {
   display: flex;
   justify-content: flex-end;
   align-items: center;
+  gap: var(--spacing-sm);
   margin-top: var(--spacing-md);
   opacity: 0;
   transform: translateY(-8px);
   transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
-/* Show on hover (desktop) with smooth fade */
-.messageBubble:hover .continueButtonContainer {
+/* Show on hover (desktop) */
+.messageBubble:hover .actionButtonsContainer {
   opacity: 1;
   transform: translateY(0);
 }
 
-/* Always show on mobile (no hover state) */
+/* Always show on mobile */
 @media (max-width: 768px) {
-  .continueButtonContainer {
+  .actionButtonsContainer {
     opacity: 1;
     transform: translateY(0);
   }
 }
 
-/* Continue button - Premium design */
-.continueButton {
+/* ===== SHARED BUTTON STYLES ===== */
+
+.continueButton,
+.nextSpeakerButton {
   position: relative;
   display: inline-flex;
   align-items: center;
   gap: var(--spacing-sm);
   padding: var(--spacing-sm) var(--spacing-lg);
-  background: linear-gradient(135deg, 
-    rgba(99, 102, 241, 0.08) 0%,
-    rgba(79, 70, 229, 0.12) 100%
-  );
-  border: 1.5px solid rgba(99, 102, 241, 0.2);
+  border: 1.5px solid;
   border-radius: var(--border-radius-full);
-  color: var(--accent-primary);
   font-size: var(--font-size-caption);
   font-weight: var(--font-weight-semibold);
   cursor: pointer;
@@ -336,8 +337,9 @@
   overflow: hidden;
 }
 
-/* Shimmer effect background */
-.continueButton::before {
+/* Shimmer effect */
+.continueButton::before,
+.nextSpeakerButton::before {
   content: '';
   position: absolute;
   top: 0;
@@ -353,7 +355,22 @@
   transition: left 0.5s ease;
 }
 
-/* Hover state - Elevated and glowing */
+.continueButton:hover:not(:disabled)::before,
+.nextSpeakerButton:hover:not(:disabled)::before {
+  left: 100%;
+}
+
+/* ===== CONTINUE BUTTON (››) - INDIGO ===== */
+
+.continueButton {
+  background: linear-gradient(135deg, 
+    rgba(99, 102, 241, 0.08) 0%,
+    rgba(79, 70, 229, 0.12) 100%
+  );
+  border-color: rgba(99, 102, 241, 0.2);
+  color: var(--accent-primary);
+}
+
 .continueButton:hover:not(:disabled) {
   background: linear-gradient(135deg, 
     rgba(99, 102, 241, 0.15) 0%,
@@ -362,26 +379,56 @@
   border-color: rgba(99, 102, 241, 0.5);
   box-shadow: 
     0 0 0 3px rgba(99, 102, 241, 0.1),
-    0 4px 12px rgba(99, 102, 241, 0.2),
-    0 2px 4px rgba(0, 0, 0, 0.1);
+    0 4px 12px rgba(99, 102, 241, 0.2);
   transform: translateY(-2px) scale(1.02);
 }
 
-/* Shimmer on hover */
-.continueButton:hover:not(:disabled)::before {
-  left: 100%;
+/* ===== NEXT SPEAKER BUTTON (+) - GREEN ===== */
+
+.nextSpeakerButton {
+  background: linear-gradient(135deg, 
+    rgba(34, 197, 94, 0.08) 0%,
+    rgba(22, 163, 74, 0.12) 100%
+  );
+  border-color: rgba(34, 197, 94, 0.2);
+  color: rgb(34, 197, 94); /* Green-500 */
 }
 
-/* Active/pressed state */
-.continueButton:active:not(:disabled) {
+.nextSpeakerButton:hover:not(:disabled) {
+  background: linear-gradient(135deg, 
+    rgba(34, 197, 94, 0.15) 0%,
+    rgba(22, 163, 74, 0.25) 100%
+  );
+  border-color: rgba(34, 197, 94, 0.5);
+  box-shadow: 
+    0 0 0 3px rgba(34, 197, 94, 0.1),
+    0 4px 12px rgba(34, 197, 94, 0.2);
+  transform: translateY(-2px) scale(1.02);
+}
+
+/* ===== ACTIVE STATES ===== */
+
+.continueButton:active:not(:disabled),
+.nextSpeakerButton:active:not(:disabled) {
   transform: translateY(0) scale(0.98);
+}
+
+.continueButton:active:not(:disabled) {
   box-shadow: 
     0 0 0 2px rgba(99, 102, 241, 0.15),
     0 2px 4px rgba(99, 102, 241, 0.15);
 }
 
-/* Disabled state */
-.continueButton:disabled {
+.nextSpeakerButton:active:not(:disabled) {
+  box-shadow: 
+    0 0 0 2px rgba(34, 197, 94, 0.15),
+    0 2px 4px rgba(34, 197, 94, 0.15);
+}
+
+/* ===== DISABLED STATES ===== */
+
+.continueButton:disabled,
+.nextSpeakerButton:disabled {
   opacity: 0.4;
   cursor: not-allowed;
   background: var(--bg-interactive);
@@ -389,7 +436,8 @@
   color: var(--text-muted);
 }
 
-/* Focus visible (keyboard navigation) */
+/* ===== FOCUS STATES ===== */
+
 .continueButton:focus-visible {
   outline: none;
   box-shadow: 
@@ -397,8 +445,17 @@
     0 4px 12px rgba(99, 102, 241, 0.2);
 }
 
-/* Continue icon (››) - Premium styling */
-.continueIcon {
+.nextSpeakerButton:focus-visible {
+  outline: none;
+  box-shadow: 
+    0 0 0 3px rgba(34, 197, 94, 0.3),
+    0 4px 12px rgba(34, 197, 94, 0.2);
+}
+
+/* ===== ICONS ===== */
+
+.continueIcon,
+.nextSpeakerIcon {
   display: inline-flex;
   align-items: center;
   justify-content: center;
@@ -406,13 +463,24 @@
   font-weight: var(--font-weight-bold);
   line-height: 1;
   transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.continueIcon {
   letter-spacing: -1px;
 }
 
-/* Icon slides on hover */
+.nextSpeakerIcon {
+  font-size: 18px;
+}
+
+/* Icon animations on hover */
 .continueButton:hover:not(:disabled) .continueIcon {
   transform: translateX(3px);
   animation: pulse 1s ease-in-out infinite;
+}
+
+.nextSpeakerButton:hover:not(:disabled) .nextSpeakerIcon {
+  transform: rotate(90deg) scale(1.1);
 }
 
 @keyframes pulse {
@@ -424,8 +492,10 @@
   }
 }
 
-/* Tooltip text - Premium badge style */
-.continueTooltip {
+/* ===== TOOLTIPS ===== */
+
+.continueTooltip,
+.nextSpeakerTooltip {
   font-size: var(--font-size-caption);
   font-weight: var(--font-weight-semibold);
   white-space: nowrap;
@@ -434,13 +504,17 @@
   opacity: 0.9;
 }
 
-/* Hide tooltip text on very small screens */
+/* ===== MOBILE OPTIMIZATIONS ===== */
+
+/* Hide tooltips on small screens */
 @media (max-width: 480px) {
-  .continueTooltip {
+  .continueTooltip,
+  .nextSpeakerTooltip {
     display: none;
   }
   
-  .continueButton {
+  .continueButton,
+  .nextSpeakerButton {
     padding: var(--spacing-sm);
     gap: 0;
   }
@@ -448,77 +522,68 @@
   .continueIcon {
     font-size: 18px;
   }
+  
+  .nextSpeakerIcon {
+    font-size: 20px;
+  }
 }
 
-/* ===== MOBILE ENHANCEMENTS ===== */
-
-/* Larger tap target on mobile */
+/* Larger tap targets on mobile */
 @media (max-width: 768px) {
-  .continueButton {
+  .continueButton,
+  .nextSpeakerButton {
     min-height: 44px;
     min-width: 44px;
     padding: var(--spacing-sm) var(--spacing-md);
   }
 }
 
-/* ===== ACCESSIBILITY ENHANCEMENTS ===== */
+/* ===== ACCESSIBILITY ===== */
 
-/* Reduce motion for users who prefer it */
+/* Reduce motion */
 @media (prefers-reduced-motion: reduce) {
-  .continueButtonContainer,
+  .actionButtonsContainer,
   .continueButton,
+  .nextSpeakerButton,
   .continueIcon,
-  .continueButton::before {
+  .nextSpeakerIcon,
+  .continueButton::before,
+  .nextSpeakerButton::before {
     transition: none !important;
     animation: none !important;
   }
   
   .continueButton:hover:not(:disabled),
-  .continueButton:active:not(:disabled) {
-    transform: none !important;
-  }
-  
-  .continueButton:hover:not(:disabled) .continueIcon {
+  .nextSpeakerButton:hover:not(:disabled),
+  .continueButton:active:not(:disabled),
+  .nextSpeakerButton:active:not(:disabled) {
     transform: none !important;
   }
 }
 
-/* High contrast mode - Enhanced borders */
+/* High contrast mode */
 @media (prefers-contrast: high) {
-  .continueButton {
+  .continueButton,
+  .nextSpeakerButton {
     border-width: 2px;
     background: transparent;
   }
   
   .continueButton:hover:not(:disabled) {
-    border-width: 2px;
     background: var(--accent-primary);
+    color: white;
+  }
+  
+  .nextSpeakerButton:hover:not(:disabled) {
+    background: rgb(34, 197, 94);
     color: white;
   }
 }
 
-/* Dark mode optimizations (if you have dark mode) */
-@media (prefers-color-scheme: dark) {
-  .continueButton {
-    background: linear-gradient(135deg, 
-      rgba(99, 102, 241, 0.12) 0%,
-      rgba(79, 70, 229, 0.18) 100%
-    );
-    border-color: rgba(99, 102, 241, 0.3);
-  }
-  
-  .continueButton:hover:not(:disabled) {
-    background: linear-gradient(135deg, 
-      rgba(99, 102, 241, 0.2) 0%,
-      rgba(79, 70, 229, 0.3) 100%
-    );
-    border-color: rgba(99, 102, 241, 0.6);
-  }
-}
+/* ===== LOADING STATES ===== */
 
-/* ===== LOADING STATE (when sending) ===== */
-
-.continueButton:disabled::after {
+.continueButton:disabled::after,
+.nextSpeakerButton:disabled::after {
   content: '';
   position: absolute;
   top: 50%;
@@ -538,19 +603,4 @@
   }
 }
 
-/* ===== CONTEXTUAL STYLING ===== */
-
-/* Slightly different style for character messages vs user messages */
-.characterMessage .continueButton {
-  /* Character messages use the default premium style */
-}
-
-/* Position absolute version (if you want it to overlay the bubble edge) */
-.continueButtonContainer.overlay {
-  position: absolute;
-  bottom: var(--spacing-sm);
-  right: var(--spacing-sm);
-  margin-top: 0;
-}
-
-/* ===== END OF ENHANCED CONTINUE BUTTON STYLES ===== */
+/* ===== END OF DUAL BUTTON STYLES ===== */
