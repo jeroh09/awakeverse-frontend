@@ -73,15 +73,16 @@
 }
 /* ===== LAYOUT & CONTENT STYLES ===== */
 /* ============================================================================
-   SIDE-BY-SIDE LAYOUT - TEMPLATES (2 COL) + MY DIALOGUES (1 COL SIDEBAR)
+   SIDE-BY-SIDE LAYOUT - TEMPLATES (2 COL) + MY DIALOGUES (1 COL)
    ============================================================================ */
 .scenarios-content {
   display: grid;
   grid-template-columns: 1fr 400px; /* Templates expand, Dialogues fixed width */
-  gap: 2rem;
+  gap: 3rem; /* Increased gap for separator */
   max-width: 1600px;
   margin: 0 auto;
   padding-top: 1rem;
+  align-items: start; /* FIXED: Start at same height */
 }
 
 /* Templates Section (Left - 2 columns) */
@@ -89,13 +90,28 @@
   min-width: 0; /* Prevent overflow */
 }
 
-/* My Dialogues Section (Right - Sidebar) */
+/* My Dialogues Section (Right - Single Column) */
 .scenarios-section {
-  position: sticky;
-  top: 2rem;
-  align-self: start;
-  max-height: calc(100vh - 4rem);
-  overflow-y: auto;
+  min-width: 0; /* Prevent overflow */
+  /* REMOVED: position: sticky, max-height, overflow-y */
+  /* Now scrolls with page naturally */
+  position: relative; /* For separator positioning */
+}
+
+/* SEPARATOR LINE - Visual divider between sections */
+.scenarios-section::before {
+  content: '';
+  position: absolute;
+  left: -1.5rem; /* Half of gap (3rem / 2) */
+  top: 0;
+  bottom: 0;
+  width: 1px;
+  background: var(--scenarios-border-color);
+}
+
+/* Dark theme separator */
+.scenarios-tab-container.theme-awakeverse .scenarios-section::before {
+  background: rgba(255, 215, 0, 0.2);
 }
 
 /* Custom scrollbar for My Dialogues sidebar */
@@ -732,6 +748,7 @@ html {
   transform: translateY(-2px);
 }
 
+
 /* ============================================================================
    RESPONSIVE BREAKPOINTS FOR INTERNAL PAGES
    ============================================================================ */
@@ -743,9 +760,9 @@ html {
     gap: 3rem;
   }
   
-  .scenarios-section {
-    position: static;
-    max-height: none;
+  /* Remove separator on mobile */
+  .scenarios-section::before {
+    display: none;
   }
 }
 

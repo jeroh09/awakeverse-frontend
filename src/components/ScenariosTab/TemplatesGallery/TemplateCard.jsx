@@ -1,4 +1,4 @@
-// src/components/ScenariosTab/TemplatesGallery/TemplateCard.jsx - UPDATED WITH PREVIEW CARD DESIGN
+// src/components/ScenariosTab/TemplatesGallery/TemplateCard.jsx - WITH USE TEMPLATE BUTTON
 import React from 'react';
 import { characterCategories } from '../../../data/characterCategories';
 import './TemplateCard.css';
@@ -91,15 +91,12 @@ export default function TemplateCard({ template, isUnlimited, onSelect, onUpgrad
   const questionCount = template.starter_questions?.length || 7;
 
   return (
-    <div 
-      className={`template-preview-card ${!isUnlimited ? 'locked' : ''}`}
-      onClick={handleClick}
-    >
+    <div className={`template-preview-card ${!isUnlimited ? 'locked' : ''}`}>
       {/* Lock indicator for non-unlimited users */}
       {!isUnlimited && <div className="template-lock-indicator">🔒</div>}
 
       {/* Template Image */}
-      <div className="template-preview-image-wrapper">
+      <div className="template-preview-image-wrapper" onClick={handleClick}>
         <img 
           src={templateImage}
           alt={template.title}
@@ -152,6 +149,14 @@ export default function TemplateCard({ template, isUnlimited, onSelect, onUpgrad
         <div className="template-preview-badge">
           💬 {questionCount} starter question{questionCount !== 1 ? 's' : ''}
         </div>
+
+        {/* USE TEMPLATE BUTTON - ADDED BACK */}
+        <button 
+          className={`template-use-button ${!isUnlimited ? 'upgrade' : ''}`}
+          onClick={handleClick}
+        >
+          {isUnlimited ? '🎭 Use Template' : '🔒 Upgrade to Use'}
+        </button>
       </div>
     </div>
   );
