@@ -1,59 +1,126 @@
-/* src/components/ScenariosTab/TemplatesGallery/TemplateCard.css */
-.template-card {
+/* src/components/ScenariosTab/TemplatesGallery/TemplateCard.css - UPDATED WITH PREVIEW CARD DESIGN */
+
+/* ============================================================================
+   TEMPLATE PREVIEW CARD - Based on dialogue-preview-card design
+   ============================================================================ */
+.template-preview-card {
+  border-radius: 16px;
+  overflow: hidden;
   background: var(--scenarios-bg-card);
   border: 1px solid var(--scenarios-border-color);
-  border-radius: 12px;
-  padding: 1.5rem;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+  transition: all 0.18s ease-out;
   cursor: pointer;
-  transition: all 0.3s ease;
   position: relative;
   display: flex;
   flex-direction: column;
   height: 100%;
 }
 
-.template-card:hover {
+.template-preview-card:hover {
   transform: translateY(-4px);
+  box-shadow: 0 12px 32px var(--scenarios-shadow);
   border-color: var(--scenarios-accent-primary);
-  box-shadow: 0 8px 24px var(--scenarios-shadow);
 }
 
-.template-card.locked {
-  opacity: 0.8;
+.template-preview-card.locked {
+  opacity: 0.85;
 }
 
-.lock-indicator {
+/* Lock Indicator */
+.template-lock-indicator {
   position: absolute;
   top: 1rem;
   right: 1rem;
-  font-size: 1.25rem;
+  font-size: 1.5rem;
+  z-index: 2;
+  background: rgba(0, 0, 0, 0.6);
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  backdrop-filter: blur(4px);
 }
 
-.category-badge {
+/* ============================================================================
+   IMAGE SECTION
+   ============================================================================ */
+.template-preview-image-wrapper {
+  position: relative;
+  width: 100%;
+  height: 200px;
+  overflow: hidden;
+  background: linear-gradient(135deg, var(--scenarios-accent-primary), var(--scenarios-accent-secondary));
+}
+
+.template-preview-image {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+  transition: transform 0.3s ease;
+}
+
+.template-preview-card:hover .template-preview-image {
+  transform: scale(1.05);
+}
+
+.template-preview-image-fallback {
+  width: 100%;
+  height: 100%;
+  display: none;
+  align-items: center;
+  justify-content: center;
+  background: linear-gradient(135deg, var(--scenarios-accent-primary), var(--scenarios-accent-secondary));
+  color: white;
+  font-size: 1rem;
+  font-weight: 600;
+  text-align: center;
+  padding: 20px;
+}
+
+/* ============================================================================
+   CONTENT SECTION
+   ============================================================================ */
+.template-preview-content {
+  padding: 16px;
+  display: flex;
+  flex-direction: column;
+  flex-grow: 1;
+}
+
+/* Category Badge */
+.template-category-badge {
   display: inline-block;
-  padding: 0.5rem 1rem;
+  padding: 4px 12px;
+  margin-bottom: 12px;
+  border-radius: 9999px;
   background: var(--scenarios-accent-light);
   color: var(--scenarios-accent-primary);
-  border-radius: 16px;
-  font-size: 0.8rem;
+  font-size: 0.75rem;
   font-weight: 600;
-  margin-bottom: 1rem;
   align-self: flex-start;
+  text-transform: capitalize;
 }
 
-.template-title {
-  font-size: 1.25rem;
-  color: var(--scenarios-text-primary);
-  margin-bottom: 0.75rem;
+/* Title */
+.template-preview-title {
+  margin: 0 0 8px;
+  font-family: 'Syne', system-ui, sans-serif;
+  font-size: 1.1rem;
   font-weight: 600;
+  color: var(--scenarios-text-primary);
   line-height: 1.3;
 }
 
-.template-description {
+/* Description */
+.template-preview-description {
+  margin: 0 0 12px;
+  font-size: 0.85rem;
   color: var(--scenarios-text-secondary);
-  font-size: 0.9rem;
-  margin-bottom: 1.5rem;
-  line-height: 1.5;
+  line-height: 1.4;
   display: -webkit-box;
   -webkit-line-clamp: 2;
   -webkit-box-orient: vertical;
@@ -61,61 +128,100 @@
   flex-grow: 1;
 }
 
-.character-avatars {
+/* ============================================================================
+   CHARACTER AVATARS ROW
+   ============================================================================ */
+.template-character-avatars {
   display: flex;
-  gap: 0.5rem;
-  margin-bottom: 1rem;
+  gap: 6px;
+  margin-bottom: 12px;
+  flex-wrap: wrap;
 }
 
-.avatar-circle {
-  width: 40px;
-  height: 40px;
+.template-avatar-circle {
+  width: 32px;
+  height: 32px;
   border-radius: 50%;
-  background: linear-gradient(135deg, var(--scenarios-accent-primary), var(--scenarios-accent-secondary));
   display: flex;
   align-items: center;
   justify-content: center;
-  font-size: 0.9rem;
+  font-size: 0.75rem;
   font-weight: bold;
   color: white;
   box-shadow: 0 2px 4px var(--scenarios-shadow);
-}
-
-.avatar-circle.more {
-  background: var(--scenarios-text-secondary);
-  font-size: 0.8rem;
-}
-
-.starter-questions-preview {
-  color: var(--scenarios-text-secondary);
-  font-size: 0.85rem;
-  margin-bottom: 1.5rem;
-}
-
-.use-button {
-  width: 100%;
-  padding: 0.75rem;
+  position: relative;
+  overflow: hidden;
+  border: 2px solid var(--scenarios-border-color);
   background: linear-gradient(135deg, var(--scenarios-accent-primary), var(--scenarios-accent-secondary));
-  border: none;
+}
+
+/* Avatar initial text (shows as fallback) */
+.template-avatar-initial {
+  position: absolute;
+  z-index: 1;
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.5);
+  pointer-events: none;
+}
+
+/* Hide initial when background image is present */
+.template-avatar-circle[style*="background-image"]:not([style*="background-image: url();"]) .template-avatar-initial {
+  display: none;
+}
+
+.template-avatar-circle.more {
+  background: var(--scenarios-text-secondary);
+  font-size: 0.65rem;
+}
+
+/* ============================================================================
+   STARTER QUESTIONS BADGE
+   ============================================================================ */
+.template-preview-badge {
+  display: inline-block;
+  padding: 8px 12px;
   border-radius: 8px;
-  color: white;
-  font-weight: 600;
-  cursor: pointer;
-  transition: all 0.3s ease;
-  font-size: 0.9rem;
-}
-
-.use-button:hover {
-  transform: scale(1.02);
-  box-shadow: 0 4px 16px var(--scenarios-shadow);
-}
-
-.use-button.upgrade {
   background: var(--scenarios-bg-secondary);
-  color: var(--scenarios-accent-primary);
-  border: 2px solid var(--scenarios-accent-primary);
+  color: var(--scenarios-text-secondary);
+  font-size: 0.8rem;
+  font-weight: 500;
+  border: 1px solid var(--scenarios-border-color);
+  align-self: flex-start;
 }
 
-.use-button.upgrade:hover {
-  background: var(--scenarios-accent-light);
+/* ============================================================================
+   DARK THEME OVERRIDES
+   ============================================================================ */
+.scenarios-tab-container.theme-awakeverse .template-preview-card {
+  background: 
+    radial-gradient(circle at top left, rgba(255, 215, 0, 0.05), transparent 60%),
+    var(--scenarios-bg-card);
+}
+
+.scenarios-tab-container.theme-awakeverse .template-preview-card:hover {
+  box-shadow: 0 12px 32px rgba(255, 215, 0, 0.2);
+}
+
+.scenarios-tab-container.theme-awakeverse .template-preview-image-wrapper {
+  background: linear-gradient(135deg, rgba(255, 215, 0, 0.3), rgba(255, 165, 0, 0.3));
+}
+
+.scenarios-tab-container.theme-awakeverse .template-preview-image-fallback {
+  background: linear-gradient(135deg, rgba(255, 215, 0, 0.3), rgba(255, 165, 0, 0.3));
+}
+
+/* ============================================================================
+   RESPONSIVE
+   ============================================================================ */
+@media (max-width: 768px) {
+  .template-preview-image-wrapper {
+    height: 160px;
+  }
+
+  .template-preview-title {
+    font-size: 1rem;
+  }
+
+  .template-preview-description {
+    font-size: 0.8rem;
+  }
 }

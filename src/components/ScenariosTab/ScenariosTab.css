@@ -14,9 +14,13 @@
   --scenarios-shadow: rgba(0, 0, 0, 0.1);
   
   /* Apply background to container */
+  
+  /* Updated layout */
   background: var(--scenarios-bg-primary);
   color: var(--scenarios-text-primary);
   min-height: 100vh;
+  padding: 2rem 1.5rem;
+  position: relative;
   transition: all 0.3s ease;
   font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
 }
@@ -33,24 +37,90 @@
   --scenarios-accent-secondary: #FFA500;
   --scenarios-accent-light: rgba(255, 215, 0, 0.1);
   --scenarios-shadow: rgba(255, 215, 0, 0.2);
+    /* Add this gradient background */
+  background: 
+    radial-gradient(circle at top left, rgba(255, 215, 0, 0.05), transparent 50%),
+    radial-gradient(circle at bottom right, rgba(15, 23, 42, 0.9), transparent 60%),
+    var(--scenarios-bg-primary);
 }
 
+/* ============================================================================
+   THEME TOGGLE BUTTON
+   ============================================================================ */
+.scenarios-theme-toggle {
+  position: absolute;
+  top: 1.5rem;
+  right: 1.5rem;
+  z-index: 10;
+}
+
+.scenarios-theme-toggle button {
+  padding: 0.5rem 1rem;
+  background: var(--scenarios-bg-card);
+  border: 1px solid var(--scenarios-border-color);
+  border-radius: 20px;
+  color: var(--scenarios-text-primary);
+  cursor: pointer;
+  font-size: 0.9rem;
+  font-weight: 500;
+  transition: all 0.3s ease;
+}
+
+.scenarios-theme-toggle button:hover {
+  border-color: var(--scenarios-accent-primary);
+  color: var(--scenarios-accent-primary);
+  transform: translateY(-2px);
+}
 /* ===== LAYOUT & CONTENT STYLES ===== */
+/* ============================================================================
+   SIDE-BY-SIDE LAYOUT - TEMPLATES (2 COL) + MY DIALOGUES (1 COL SIDEBAR)
+   ============================================================================ */
 .scenarios-content {
-  max-width: 1400px;
+  display: grid;
+  grid-template-columns: 1fr 400px; /* Templates expand, Dialogues fixed width */
+  gap: 2rem;
+  max-width: 1600px;
   margin: 0 auto;
-  padding: 2rem;
+  padding-top: 1rem;
 }
 
-/* Section Containers */
-.gallery-section,
-.scenarios-section {
-  margin-bottom: 3rem;
-}
-
+/* Templates Section (Left - 2 columns) */
 .gallery-section {
-  border-bottom: 1px solid var(--scenarios-border-color);
-  padding-bottom: 3rem;
+  min-width: 0; /* Prevent overflow */
+}
+
+/* My Dialogues Section (Right - Sidebar) */
+.scenarios-section {
+  position: sticky;
+  top: 2rem;
+  align-self: start;
+  max-height: calc(100vh - 4rem);
+  overflow-y: auto;
+}
+
+/* Custom scrollbar for My Dialogues sidebar */
+.scenarios-section::-webkit-scrollbar {
+  width: 6px;
+}
+
+.scenarios-section::-webkit-scrollbar-track {
+  background: var(--scenarios-bg-secondary);
+  border-radius: 3px;
+}
+
+.scenarios-section::-webkit-scrollbar-thumb {
+  background: var(--scenarios-border-color);
+  border-radius: 3px;
+}
+
+.scenarios-section::-webkit-scrollbar-thumb:hover {
+  background: var(--scenarios-accent-primary);
+}
+
+/* Firefox scrollbar */
+.scenarios-section {
+  scrollbar-width: thin;
+  scrollbar-color: var(--scenarios-border-color) var(--scenarios-bg-secondary);
 }
 
 /* ===== STATE STYLES (Loading, Error, Critical) ===== */
@@ -660,6 +730,39 @@ html {
   background: rgba(255, 215, 0, 0.2);
   border-color: rgba(255, 215, 0, 0.6);
   transform: translateY(-2px);
+}
+
+/* ============================================================================
+   RESPONSIVE BREAKPOINTS FOR INTERNAL PAGES
+   ============================================================================ */
+
+/* Tablet - Stack vertically */
+@media (max-width: 1024px) {
+  .scenarios-content {
+    grid-template-columns: 1fr;
+    gap: 3rem;
+  }
+  
+  .scenarios-section {
+    position: static;
+    max-height: none;
+  }
+}
+
+/* Mobile */
+@media (max-width: 768px) {
+  .scenarios-tab-container {
+    padding: 1rem;
+  }
+  
+  .scenarios-theme-toggle {
+    top: 1rem;
+    right: 1rem;
+  }
+  
+  .scenarios-content {
+    gap: 2rem;
+  }
 }
 
 /* ===== FORCE DARK THEME FOR UPGRADE STATES ===== */

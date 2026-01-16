@@ -1,32 +1,42 @@
-/* src/components/ScenariosTab/TemplatesGallery/TemplatesGallery.css */
+/* src/components/ScenariosTab/TemplatesGallery/TemplatesGallery.css - UPDATED WITH 2-COLUMN GRID */
+
 .templates-gallery {
-  padding: 2rem 0;
+  padding: 0;
 }
 
+/* ============================================================================
+   GALLERY HEADER
+   ============================================================================ */
 .gallery-header {
   margin-bottom: 2rem;
-  text-align: center;
 }
 
 .gallery-title {
-  font-size: 2rem;
-  color: var(--scenarios-accent-primary);
+  font-size: 1.8rem;
+  color: var(--scenarios-text-primary);
   margin-bottom: 0.5rem;
-  font-weight: 600;
+  font-weight: 700;
+  font-family: 'Syne', system-ui, sans-serif;
 }
 
 .gallery-subtitle {
   color: var(--scenarios-text-secondary);
-  font-size: 1rem;
+  font-size: 0.95rem;
 }
 
+/* ============================================================================
+   TEMPLATE GRID - 2 COLUMNS
+   ============================================================================ */
 .template-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+  grid-template-columns: repeat(2, 1fr); /* Fixed 2 columns */
   gap: 1.5rem;
   margin-top: 2rem;
 }
 
+/* ============================================================================
+   LOADING & ERROR STATES
+   ============================================================================ */
 .gallery-loading,
 .gallery-error,
 .empty-state {
@@ -53,6 +63,11 @@
   100% { transform: rotate(360deg); }
 }
 
+.gallery-error p,
+.empty-state p {
+  color: var(--scenarios-text-secondary);
+}
+
 .retry-button {
   padding: 0.75rem 1.5rem;
   background: var(--scenarios-accent-primary);
@@ -61,86 +76,18 @@
   border-radius: 8px;
   cursor: pointer;
   margin-top: 1rem;
+  font-weight: 600;
+  transition: all 0.3s ease;
 }
 
 .retry-button:hover {
   background: var(--scenarios-accent-secondary);
+  transform: translateY(-2px);
 }
 
-@media (max-width: 768px) {
-  .template-grid {
-    grid-template-columns: 1fr;
-  }
-  
-  .gallery-title {
-    font-size: 1.5rem;
-  }
-}
-.avatar-circle {
-  width: 40px;
-  height: 40px;
-  border-radius: 50%;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  font-size: 0.9rem;
-  font-weight: bold;
-  color: white;
-  box-shadow: 0 2px 4px var(--scenarios-shadow);
-  position: relative;
-  overflow: hidden;
-  border: 2px solid var(--scenarios-border-color);
-  background: linear-gradient(135deg, var(--scenarios-accent-primary), var(--scenarios-accent-secondary));
-}
-
-/* Avatar initial text (shows as fallback) */
-.avatar-initial {
-  position: absolute;
-  z-index: 1;
-  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.5);
-  pointer-events: none;
-}
-
-/* Hide initial when background image is present */
-.avatar-circle[style*="background-image"]:not([style*="background-image: url();"]) .avatar-initial {
-  display: none;
-}
-
-.avatar-circle.more {
-  background: var(--scenarios-text-secondary);
-  font-size: 0.8rem;
-}
-.character-avatar-small {
-  width: 32px;
-  height: 32px;
-  border-radius: 50%;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  font-size: 0.8rem;
-  font-weight: bold;
-  color: white;
-  position: relative;
-  overflow: hidden;
-  border: 2px solid var(--scenarios-border-color);
-  background: linear-gradient(135deg, var(--scenarios-accent-primary), var(--scenarios-accent-secondary));
-}
-
-/* Avatar initial text (shows as fallback) */
-.avatar-initial-small {
-  position: absolute;
-  z-index: 1;
-  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.5);
-  pointer-events: none;
-}
-
-/* Hide initial when background image is present */
-.character-avatar-small[style*="background-image"]:not([style*="background-image: url();"]) .avatar-initial-small {
-  display: none;
-}
-/* Add to src/components/ScenariosTab/TemplatesGallery/TemplatesGallery.css */
-
-/* Show More CTA Styles */
+/* ============================================================================
+   SHOW MORE CTA
+   ============================================================================ */
 .show-more-cta {
   width: 100%;
   padding: 1.25rem;
@@ -181,7 +128,13 @@
   font-weight: 600;
 }
 
-/* Dark theme specific overrides */
+/* ============================================================================
+   DARK THEME OVERRIDES
+   ============================================================================ */
+.scenarios-tab-container.theme-awakeverse .gallery-title {
+  color: var(--scenarios-accent-primary);
+}
+
 .scenarios-tab-container.theme-awakeverse .show-more-cta {
   background: rgba(255, 215, 0, 0.05);
   border-color: rgba(255, 215, 0, 0.3);
@@ -194,8 +147,27 @@
   box-shadow: 0 4px 12px rgba(255, 215, 0, 0.2);
 }
 
-/* Mobile responsive */
+/* ============================================================================
+   RESPONSIVE
+   ============================================================================ */
+
+/* Tablet - Single column */
+@media (max-width: 1024px) {
+  .template-grid {
+    grid-template-columns: repeat(2, 1fr); /* Keep 2 columns on tablet */
+  }
+}
+
+/* Mobile - Single column */
 @media (max-width: 768px) {
+  .template-grid {
+    grid-template-columns: 1fr; /* 1 column on mobile */
+  }
+  
+  .gallery-title {
+    font-size: 1.5rem;
+  }
+  
   .show-more-cta {
     padding: 1rem;
     font-size: 0.9rem;
@@ -206,80 +178,29 @@
   }
 }
 
-/* Ensure template grid shows 2 rows of 4 on desktop */
-.template-grid {
-  display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
-  gap: 1.5rem;
-  margin-top: 2rem;
-}
-
-/* On larger screens, ensure we get the 2x4 layout */
-@media (min-width: 1200px) {
-  .template-grid {
-    grid-template-columns: repeat(3, 1fr);
-  }
-}
-/* Add to src/components/ScenariosTab/TemplatesGallery/TemplatesGallery.css */
-
-/* Custom navy blue scrollbars for Template Gallery */
+/* ============================================================================
+   SCROLLBAR STYLING
+   ============================================================================ */
 .templates-gallery ::-webkit-scrollbar {
   width: 8px;
 }
 
 .templates-gallery ::-webkit-scrollbar-track {
-  background: #0f172a; /* Navy blue background */
+  background: var(--scenarios-bg-secondary);
   border-radius: 4px;
 }
 
 .templates-gallery ::-webkit-scrollbar-thumb {
-  background: #1e3a8a; /* Medium navy blue */
+  background: var(--scenarios-border-color);
   border-radius: 4px;
-  border: 1px solid #0f172a;
 }
 
 .templates-gallery ::-webkit-scrollbar-thumb:hover {
-  background: #2563eb; /* Brighter blue on hover */
+  background: var(--scenarios-accent-primary);
 }
 
-.templates-gallery ::-webkit-scrollbar-thumb:active {
-  background: #3b82f6; /* Even brighter when active */
-}
-
-/* For Firefox */
+/* Firefox scrollbar */
 .templates-gallery {
   scrollbar-width: thin;
-  scrollbar-color: #1e3a8a #0f172a;
-}
-
-/* Specific targeting for template grid */
-.template-grid::-webkit-scrollbar {
-  width: 8px;
-}
-
-.template-grid::-webkit-scrollbar-track {
-  background: #0f172a;
-  border-radius: 4px;
-}
-
-.template-grid::-webkit-scrollbar-thumb {
-  background: #1e3a8a;
-  border-radius: 4px;
-}
-
-.template-grid::-webkit-scrollbar-thumb:hover {
-  background: #2563eb;
-}
-
-/* For Firefox template grid */
-.template-grid {
-  scrollbar-width: thin;
-  scrollbar-color: #1e3a8a #0f172a;
-}
-
-/* If you're using the side-by-side layout */
-.templates-panel .template-grid {
-  max-height: 600px;
-  overflow-y: auto;
-  padding-right: 8px;
+  scrollbar-color: var(--scenarios-border-color) var(--scenarios-bg-secondary);
 }

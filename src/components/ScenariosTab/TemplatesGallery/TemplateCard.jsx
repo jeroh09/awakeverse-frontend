@@ -1,4 +1,4 @@
-// src/components/ScenariosTab/TemplatesGallery/TemplateCard.jsx - WITH characterCategories
+// src/components/ScenariosTab/TemplatesGallery/TemplateCard.jsx - UPDATED WITH PREVIEW CARD DESIGN
 import React from 'react';
 import { characterCategories } from '../../../data/characterCategories';
 import './TemplateCard.css';
@@ -19,11 +19,6 @@ export default function TemplateCard({ template, isUnlimited, onSelect, onUpgrad
       if (category.characters && Array.isArray(category.characters)) {
         const found = category.characters.find(c => c.key === charKey);
         if (found) {
-          console.log('🎭 TemplateCard - Found character:', {
-            key: charKey,
-            name: found.name,
-            thumbnail: found.thumbnailUrl
-          });
           return {
             name: found.name,
             thumbnailUrl: found.thumbnailUrl
@@ -32,7 +27,6 @@ export default function TemplateCard({ template, isUnlimited, onSelect, onUpgrad
       }
     }
     
-    console.warn('⚠️ TemplateCard - Character not found:', charKey);
     // Fallback
     return {
       name: charKey.charAt(0).toUpperCase() + charKey.slice(1),
@@ -46,14 +40,6 @@ export default function TemplateCard({ template, isUnlimited, onSelect, onUpgrad
     .map((charKey, index) => {
       const charInfo = getCharacterInfo(charKey);
       const initial = charInfo.name.charAt(0).toUpperCase();
-      
-      console.log('🖼️ TemplateCard - Rendering avatar:', {
-        index,
-        charKey,
-        name: charInfo.name,
-        thumbnail: charInfo.thumbnailUrl,
-        hasThumbnail: !!charInfo.thumbnailUrl
-      });
       
       return {
         key: charKey,
@@ -73,50 +59,100 @@ export default function TemplateCard({ template, isUnlimited, onSelect, onUpgrad
     );
   }
 
+  // Get template image path based on template ID or category
+  const getTemplateImagePath = () => {
+    // Map template to image file
+    const templateImageMap = {
+      'philosophy': '/images/template-philosophy.jpg',
+      'business': '/images/template-business.jpg',
+      'ethics': '/images/template-ethics.jpg',
+      'science': '/images/template-science.jpg',
+      'technology': '/images/template-technology.jpg',
+      'relationships': '/images/template-relationships.jpg',
+      'fiction': '/images/template-fiction.jpg',
+      'warfare': '/images/template-warfare.jpg'
+    };
+
+    // Try to get by category first
+    if (template.category && templateImageMap[template.category]) {
+      return templateImageMap[template.category];
+    }
+
+    // Try by template ID if it has a specific mapping
+    if (template.id && templateImageMap[template.id]) {
+      return templateImageMap[template.id];
+    }
+
+    // Default fallback
+    return '/images/template-default.jpg';
+  };
+
+  const templateImage = getTemplateImagePath();
+  const questionCount = template.starter_questions?.length || 7;
+
   return (
-    <div className={`template-card ${!isUnlimited ? 'locked' : ''}`}>
-      {!isUnlimited && <div className="lock-indicator">🔒</div>}
-      
-      <span className="category-badge">
-        {template.category?.charAt(0).toUpperCase() + template.category?.slice(1) || 'General'}
-      </span>
-      
-      <h3 className="template-title">{template.title}</h3>
-      <p className="template-description">{template.description}</p>
-      
-      <div className="character-avatars">
-        {characterAvatars.map((char, index) => (
-          <div 
-            key={index} 
-            className="avatar-circle"
-            title={char.name}
-            style={char.thumbnailUrl ? {
-              backgroundImage: `url(${char.thumbnailUrl})`,
-              backgroundSize: 'cover',
-              backgroundPosition: 'center'
-            } : {}}
-          >
-            {/* Show initial as fallback */}
-            <span className="avatar-initial">{char.initial}</span>
-          </div>
-        ))}
-        {template.suggested_characters?.length > 4 && (
-          <div className="avatar-circle more" title={`+${template.suggested_characters.length - 4} more`}>
-            +{template.suggested_characters.length - 4}
-          </div>
-        )}
+    <div 
+      className={`template-preview-card ${!isUnlimited ? 'locked' : ''}`}
+      onClick={handleClick}
+    >
+      {/* Lock indicator for non-unlimited users */}
+      {!isUnlimited && <div className="template-lock-indicator">🔒</div>}
+
+      {/* Template Image */}
+      <div className="template-preview-image-wrapper">
+        <img 
+          src={templateImage}
+          alt={template.title}
+          className="template-preview-image"
+          onError={(e) => {
+            e.target.style.display = 'none';
+            e.target.nextSibling.style.display = 'flex';
+          }}
+        />
+        <div className="template-preview-image-fallback">
+          {template.title}
+        </div>
       </div>
-      
-      <div className="starter-questions-preview">
-        {template.starter_questions?.length || 7} starter questions included
+
+      {/* Template Content */}
+      <div className="template-preview-content">
+        {/* Category Badge */}
+        <span className="template-category-badge">
+          {template.category?.charAt(0).toUpperCase() + template.category?.slice(1) || 'General'}
+        </span>
+
+        <h3 className="template-preview-title">{template.title}</h3>
+        <p className="template-preview-description">{template.description}</p>
+
+        {/* Character Avatars Row */}
+        <div className="template-character-avatars">
+          {characterAvatars.map((char, index) => (
+            <div 
+              key={index} 
+              className="template-avatar-circle"
+              title={char.name}
+              style={char.thumbnailUrl ? {
+                backgroundImage: `url(${char.thumbnailUrl})`,
+                backgroundSize: 'cover',
+                backgroundPosition: 'center'
+              } : {}}
+            >
+              {/* Show initial as fallback */}
+              <span className="template-avatar-initial">{char.initial}</span>
+            </div>
+          ))}
+          {template.suggested_characters?.length > 4 && (
+            <div className="template-avatar-circle more" title={`+${template.suggested_characters.length - 4} more`}>
+              +{template.suggested_characters.length - 4}
+            </div>
+          )}
+        </div>
+
+        {/* Starter Questions Badge */}
+        <div className="template-preview-badge">
+          💬 {questionCount} starter question{questionCount !== 1 ? 's' : ''}
+        </div>
       </div>
-      
-      <button 
-        className={`use-button ${!isUnlimited ? 'upgrade' : ''}`}
-        onClick={handleClick}
-      >
-        {isUnlimited ? 'Use Template' : 'Upgrade to Use'}
-      </button>
     </div>
   );
 }
