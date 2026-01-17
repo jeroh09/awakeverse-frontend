@@ -1,48 +1,177 @@
-/* src/components/ScenariosTab/TemplatesGallery/CategoryFilter.css */
+/* src/components/ScenariosTab/TemplatesGallery/CategoryFilter.css - SLEEK REDESIGN */
+
+/* ============================================================================
+   CATEGORY FILTER - SLEEK PILL DESIGN
+   ============================================================================ */
 .category-filter {
   display: flex;
+  justify-content: center; /* ✅ Center the filter chips */
   gap: 0.75rem;
-  margin-bottom: 2rem;
+  margin-bottom: 2.5rem;
   overflow-x: auto;
-  padding-bottom: 0.5rem;
+  padding: 0.5rem;
+  
+  /* Hide scrollbar but keep functionality */
+  scrollbar-width: none; /* Firefox */
+  -ms-overflow-style: none; /* IE/Edge */
 }
 
+.category-filter::-webkit-scrollbar {
+  display: none; /* Chrome/Safari */
+}
+
+/* ============================================================================
+   CATEGORY CHIPS - PILL STYLE
+   ============================================================================ */
 .category-chip {
-  padding: 0.75rem 1.25rem;
+  padding: 0.75rem 1.5rem;
   background: var(--scenarios-bg-card);
   border: 1px solid var(--scenarios-border-color);
-  border-radius: 24px;
+  border-radius: 9999px; /* ✅ Fully rounded pill */
   cursor: pointer;
   white-space: nowrap;
   transition: all 0.3s ease;
   color: var(--scenarios-text-secondary);
+  
   display: flex;
   align-items: center;
   gap: 0.5rem;
+  
   font-size: 0.9rem;
+  font-weight: 500;
+  
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
 }
 
 .category-chip:hover {
   border-color: var(--scenarios-accent-primary);
-  background: var(--scenarios-accent-light);
-}
-
-.category-chip.active {
-  background: var(--scenarios-accent-light);
-  border-color: var(--scenarios-accent-primary);
+  background: var(--scenarios-bg-interactive, var(--scenarios-bg-secondary));
+  transform: translateY(-2px);
+  box-shadow: 0 4px 8px var(--scenarios-shadow);
   color: var(--scenarios-accent-primary);
-  font-weight: 600;
 }
 
-.category-count {
+.category-chip:active {
+  transform: translateY(0);
+}
+
+/* Active State */
+.category-chip.active {
   background: var(--scenarios-accent-primary);
+  border-color: var(--scenarios-accent-primary);
   color: white;
-  border-radius: 12px;
-  padding: 0.25rem 0.5rem;
+  font-weight: 600;
+  box-shadow: 0 4px 12px var(--scenarios-shadow);
+}
+
+.category-chip.active:hover {
+  background: var(--scenarios-accent-secondary);
+  border-color: var(--scenarios-accent-secondary);
+  transform: translateY(-2px);
+}
+
+/* ============================================================================
+   CATEGORY COUNT BADGE
+   ============================================================================ */
+.category-count {
+  background: rgba(255, 255, 255, 0.2);
+  color: var(--scenarios-text-primary);
+  border-radius: 9999px; /* ✅ Fully rounded */
+  padding: 0.25rem 0.6rem;
   font-size: 0.75rem;
   font-weight: 600;
+  min-width: 24px;
+  text-align: center;
+  
+  /* Subtle border for definition */
+  border: 1px solid rgba(0, 0, 0, 0.1);
+}
+
+.category-chip:hover .category-count {
+  background: var(--scenarios-accent-primary);
+  color: white;
+  border-color: transparent;
 }
 
 .category-chip.active .category-count {
-  background: var(--scenarios-accent-secondary);
+  background: rgba(255, 255, 255, 0.25);
+  color: white;
+  border-color: rgba(255, 255, 255, 0.3);
+}
+
+/* ============================================================================
+   DARK THEME OVERRIDES - MATCHING THEME TOGGLE
+   ============================================================================ */
+.scenarios-tab-container.theme-awakeverse .category-chip {
+  background: rgba(20, 27, 46, 0.8);
+  backdrop-filter: blur(10px);
+  border-color: rgba(99, 102, 241, 0.3);
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+  color: #94A3B8;
+}
+
+.scenarios-tab-container.theme-awakeverse .category-chip:hover {
+  background: rgba(36, 49, 82, 0.9);
+  border-color: #6366F1;
+  box-shadow: 0 4px 8px rgba(99, 102, 241, 0.3);
+  color: #818CF8;
+}
+
+.scenarios-tab-container.theme-awakeverse .category-chip.active {
+  background: #6366F1;
+  border-color: #818CF8;
+  box-shadow: 0 4px 12px rgba(99, 102, 241, 0.4);
+}
+
+.scenarios-tab-container.theme-awakeverse .category-chip.active:hover {
+  background: #818CF8;
+  border-color: #818CF8;
+}
+
+.scenarios-tab-container.theme-awakeverse .category-count {
+  background: rgba(99, 102, 241, 0.2);
+  color: #E2E8F0;
+  border-color: rgba(99, 102, 241, 0.3);
+}
+
+.scenarios-tab-container.theme-awakeverse .category-chip:hover .category-count {
+  background: #6366F1;
+  color: white;
+  border-color: transparent;
+}
+
+.scenarios-tab-container.theme-awakeverse .category-chip.active .category-count {
+  background: rgba(255, 255, 255, 0.25);
+  color: white;
+  border-color: rgba(255, 255, 255, 0.3);
+}
+
+/* ============================================================================
+   RESPONSIVE
+   ============================================================================ */
+@media (max-width: 768px) {
+  .category-filter {
+    justify-content: flex-start; /* Left align on mobile */
+    gap: 0.6rem;
+    margin-bottom: 2rem;
+  }
+  
+  .category-chip {
+    padding: 0.6rem 1.25rem;
+    font-size: 0.85rem;
+  }
+  
+  .category-count {
+    padding: 0.2rem 0.5rem;
+    font-size: 0.7rem;
+    min-width: 20px;
+  }
+}
+
+/* Very small screens */
+@media (max-width: 480px) {
+  .category-chip {
+    padding: 0.5rem 1rem;
+    font-size: 0.8rem;
+  }
 }
