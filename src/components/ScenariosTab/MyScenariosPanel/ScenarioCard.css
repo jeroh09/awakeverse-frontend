@@ -6,6 +6,51 @@
   padding: 1.5rem;
   transition: all 0.3s ease;
   position: relative;
+  overflow: hidden; /* ✅ UPDATED: Allow background to show */
+}
+
+/* ✅ NEW: Card Background Image */
+.scenario-card-background {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-size: cover;
+  background-position: center;
+  background-repeat: no-repeat;
+  opacity: 0.15; /* Subtle background */
+  transition: all 0.3s ease;
+  z-index: 0;
+}
+
+.scenario-card:hover .scenario-card-background {
+  opacity: 0.25; /* Slightly more visible on hover */
+  transform: scale(1.05); /* Subtle zoom effect */
+}
+
+/* ✅ NEW: Dark overlay for readability */
+.scenario-card-overlay {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: linear-gradient(
+    135deg,
+    rgba(0, 0, 0, 0.3) 0%,
+    rgba(0, 0, 0, 0.1) 100%
+  );
+  z-index: 1;
+}
+
+/* ✅ NEW: Card content wrapper (sits above background) */
+.scenario-card-content {
+  position: relative;
+  z-index: 2;
+  display: flex;
+  flex-direction: column;
+  height: 100%;
 }
 
 .scenario-card:hover:not(.deleting) {
@@ -232,6 +277,24 @@
 /* Dark Theme Overrides */
 .scenarios-tab-container.theme-awakeverse .scenario-card {
   background: var(--scenarios-bg-card);
+}
+
+/* ✅ NEW: Dark theme background - slightly more visible */
+.scenarios-tab-container.theme-awakeverse .scenario-card-background {
+  opacity: 0.2; /* More visible in dark theme */
+}
+
+.scenarios-tab-container.theme-awakeverse .scenario-card:hover .scenario-card-background {
+  opacity: 0.3;
+}
+
+/* ✅ NEW: Dark theme overlay - stronger gradient for readability */
+.scenarios-tab-container.theme-awakeverse .scenario-card-overlay {
+  background: linear-gradient(
+    135deg,
+    rgba(10, 15, 26, 0.6) 0%,
+    rgba(10, 15, 26, 0.3) 100%
+  );
 }
 
 .scenarios-tab-container.theme-awakeverse .scenario-card:hover:not(.deleting) {

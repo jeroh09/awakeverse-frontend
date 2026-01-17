@@ -8,135 +8,63 @@
   --scenarios-text-primary: #2c3e50;
   --scenarios-text-secondary: #6c757d;
   --scenarios-border-color: #dee2e6;
-  --scenarios-accent-primary: #3498db;
-  --scenarios-accent-secondary: #2980b9;
-  --scenarios-accent-light: rgba(52, 152, 219, 0.1);
+  --scenarios-accent-primary: #6366F1;    /* Indigo - matching dark theme */
+  --scenarios-accent-secondary: #818CF8;  /* Lighter indigo */
+  --scenarios-accent-light: rgba(99, 102, 241, 0.1);
   --scenarios-shadow: rgba(0, 0, 0, 0.1);
   
   /* Apply background to container */
-  
-  /* Updated layout */
   background: var(--scenarios-bg-primary);
   color: var(--scenarios-text-primary);
   min-height: 100vh;
-  padding: 2rem 1.5rem;
-  position: relative;
   transition: all 0.3s ease;
   font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
 }
 
 /* Dark theme class applied to scenarios container */
 .scenarios-tab-container.theme-awakeverse {
-  --scenarios-bg-primary: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%);
-  --scenarios-bg-secondary: rgba(0, 0, 0, 0.4);
-  --scenarios-bg-card: rgba(30, 30, 46, 0.8);
-  --scenarios-text-primary: #e0e0e0;
-  --scenarios-text-secondary: #aaa;
-  --scenarios-border-color: rgba(255, 215, 0, 0.2);
-  --scenarios-accent-primary: #FFD700;
-  --scenarios-accent-secondary: #FFA500;
-  --scenarios-accent-light: rgba(255, 215, 0, 0.1);
-  --scenarios-shadow: rgba(255, 215, 0, 0.2);
-    /* Add this gradient background */
-  background: 
-    radial-gradient(circle at top left, rgba(255, 215, 0, 0.05), transparent 50%),
-    radial-gradient(circle at bottom right, rgba(15, 23, 42, 0.9), transparent 60%),
-    var(--scenarios-bg-primary);
+  /* Backgrounds - Match tokens.js exactly */
+  --scenarios-bg-primary: #0A0F1A;        /* bg-canvas */
+  --scenarios-bg-secondary: #141B2E;      /* bg-surface */
+  --scenarios-bg-card: #141B2E;           /* bg-surface for cards */
+  --scenarios-bg-interactive: #1C2640;    /* bg-interactive for hover */
+  --scenarios-bg-peak: #243152;           /* bg-peak for active */
+  
+  /* Text Colors - Match tokens.js */
+  --scenarios-text-primary: #F1F5F9;      /* text-primary */
+  --scenarios-text-secondary: #94A3B8;    /* text-secondary */
+  --scenarios-text-tertiary: #64748B;     /* text-tertiary */
+  --scenarios-text-muted: #475569;        /* text-muted */
+  
+  /* Borders - Match tokens.js */
+  --scenarios-border-color: rgba(148, 163, 184, 0.2);  /* border-medium */
+  --scenarios-border-subtle: rgba(148, 163, 184, 0.1); /* border-subtle */
+  --scenarios-border-strong: rgba(148, 163, 184, 0.3); /* border-strong */
+  
+  /* Accents - Indigo instead of Gold */
+  --scenarios-accent-primary: #6366F1;    /* accent-primary */
+  --scenarios-accent-secondary: #818CF8;  /* accent-hover */
+  --scenarios-accent-light: rgba(99, 102, 241, 0.1);
+  --scenarios-accent-glow: rgba(99, 102, 241, 0.2);
+  --scenarios-shadow: rgba(99, 102, 241, 0.15);
 }
 
-/* ============================================================================
-   THEME TOGGLE BUTTON
-   ============================================================================ */
-.scenarios-theme-toggle {
-  position: absolute;
-  top: 1.5rem;
-  right: 1.5rem;
-  z-index: 10;
-}
-
-.scenarios-theme-toggle button {
-  padding: 0.5rem 1rem;
-  background: var(--scenarios-bg-card);
-  border: 1px solid var(--scenarios-border-color);
-  border-radius: 20px;
-  color: var(--scenarios-text-primary);
-  cursor: pointer;
-  font-size: 0.9rem;
-  font-weight: 500;
-  transition: all 0.3s ease;
-}
-
-.scenarios-theme-toggle button:hover {
-  border-color: var(--scenarios-accent-primary);
-  color: var(--scenarios-accent-primary);
-  transform: translateY(-2px);
-}
 /* ===== LAYOUT & CONTENT STYLES ===== */
-/* ============================================================================
-   SIDE-BY-SIDE LAYOUT - TEMPLATES (2 COL) + MY DIALOGUES (1 COL)
-   ============================================================================ */
 .scenarios-content {
-  display: grid;
-  grid-template-columns: 1fr 400px; /* Templates expand, Dialogues fixed width */
-  gap: 3rem; /* Increased gap for separator */
-  max-width: 1600px;
+  max-width: 1400px;
   margin: 0 auto;
-  padding-top: 1rem;
-  align-items: start; /* FIXED: Start at same height */
+  padding: 2rem;
 }
 
-/* Templates Section (Left - 2 columns) */
+/* Section Containers */
+.gallery-section,
+.scenarios-section {
+  margin-bottom: 3rem;
+}
+
 .gallery-section {
-  min-width: 0; /* Prevent overflow */
-}
-
-/* My Dialogues Section (Right - Single Column) */
-.scenarios-section {
-  min-width: 0; /* Prevent overflow */
-  /* REMOVED: position: sticky, max-height, overflow-y */
-  /* Now scrolls with page naturally */
-  position: relative; /* For separator positioning */
-}
-
-/* SEPARATOR LINE - Visual divider between sections */
-.scenarios-section::before {
-  content: '';
-  position: absolute;
-  left: -1.5rem; /* Half of gap (3rem / 2) */
-  top: 0;
-  bottom: 0;
-  width: 1px;
-  background: var(--scenarios-border-color);
-}
-
-/* Dark theme separator */
-.scenarios-tab-container.theme-awakeverse .scenarios-section::before {
-  background: rgba(255, 215, 0, 0.2);
-}
-
-/* Custom scrollbar for My Dialogues sidebar */
-.scenarios-section::-webkit-scrollbar {
-  width: 6px;
-}
-
-.scenarios-section::-webkit-scrollbar-track {
-  background: var(--scenarios-bg-secondary);
-  border-radius: 3px;
-}
-
-.scenarios-section::-webkit-scrollbar-thumb {
-  background: var(--scenarios-border-color);
-  border-radius: 3px;
-}
-
-.scenarios-section::-webkit-scrollbar-thumb:hover {
-  background: var(--scenarios-accent-primary);
-}
-
-/* Firefox scrollbar */
-.scenarios-section {
-  scrollbar-width: thin;
-  scrollbar-color: var(--scenarios-border-color) var(--scenarios-bg-secondary);
+  border-bottom: 1px solid var(--scenarios-border-color);
+  padding-bottom: 3rem;
 }
 
 /* ===== STATE STYLES (Loading, Error, Critical) ===== */
@@ -703,14 +631,14 @@ html {
 }
 
 .primary-upgrade {
-  background: linear-gradient(135deg, #FFD700, #FFA500);
+  background: linear-gradient(135deg, #6366F1, #818CF8);
   color: #000;
-  box-shadow: 0 4px 12px rgba(255, 215, 0, 0.3);
+  box-shadow: 0 4px 12px rgba(99, 102, 241, 0.3);
 }
 
 .primary-upgrade:hover {
   transform: translateY(-2px);
-  box-shadow: 0 6px 16px rgba(255, 215, 0, 0.4);
+  box-shadow: 0 6px 16px rgba(99, 102, 241, 0.4);
 }
 
 .secondary-upgrade {
@@ -723,7 +651,7 @@ html {
 .learn-features-button {
   background: transparent;
   border: none;
-  color: rgba(255, 215, 0, 0.8);
+  color: rgba(99, 102, 241, 0.8);
   font-size: 14px;
   cursor: pointer;
   text-decoration: underline;
@@ -731,72 +659,38 @@ html {
 }
 
 .learn-features-button:hover {
-  color: #FFD700;
+  color: #6366F1;
 }
 
 /* PayPal button styles for educational modal */
 .pricing-actions .upgrade-now-button.secondary {
-  background: rgba(255, 215, 0, 0.1);
-  border: 2px solid rgba(255, 215, 0, 0.4);
-  color: #FFD700;
+  background: rgba(99, 102, 241, 0.1);
+  border: 2px solid rgba(99, 102, 241, 0.4);
+  color: #6366F1;
   margin-top: 0.5rem;
 }
 
 .pricing-actions .upgrade-now-button.secondary:hover {
-  background: rgba(255, 215, 0, 0.2);
-  border-color: rgba(255, 215, 0, 0.6);
+  background: rgba(99, 102, 241, 0.2);
+  border-color: rgba(99, 102, 241, 0.6);
   transform: translateY(-2px);
-}
-
-
-/* ============================================================================
-   RESPONSIVE BREAKPOINTS FOR INTERNAL PAGES
-   ============================================================================ */
-
-/* Tablet - Stack vertically */
-@media (max-width: 1024px) {
-  .scenarios-content {
-    grid-template-columns: 1fr;
-    gap: 3rem;
-  }
-  
-  /* Remove separator on mobile */
-  .scenarios-section::before {
-    display: none;
-  }
-}
-
-/* Mobile */
-@media (max-width: 768px) {
-  .scenarios-tab-container {
-    padding: 1rem;
-  }
-  
-  .scenarios-theme-toggle {
-    top: 1rem;
-    right: 1rem;
-  }
-  
-  .scenarios-content {
-    gap: 2rem;
-  }
 }
 
 /* ===== FORCE DARK THEME FOR UPGRADE STATES ===== */
 /* This ensures unauthorized users always see dark theme in upgrade modals */
 .upgrade-required-state,
 .modal-overlay {
-  /* Override light theme variables with dark theme values */
-  --scenarios-bg-primary: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%) !important;
-  --scenarios-bg-secondary: rgba(0, 0, 0, 0.4) !important;
-  --scenarios-bg-card: rgba(30, 30, 46, 0.8) !important;
-  --scenarios-text-primary: #e0e0e0 !important;
-  --scenarios-text-secondary: #aaa !important;
-  --scenarios-border-color: rgba(255, 215, 0, 0.2) !important;
-  --scenarios-accent-primary: #FFD700 !important;
-  --scenarios-accent-secondary: #FFA500 !important;
-  --scenarios-accent-light: rgba(255, 215, 0, 0.1) !important;
-  --scenarios-shadow: rgba(255, 215, 0, 0.2) !important;
+  /* Override light theme variables with dark theme values - Match tokens.js */
+  --scenarios-bg-primary: #0A0F1A !important;        /* bg-canvas */
+  --scenarios-bg-secondary: #141B2E !important;      /* bg-surface */
+  --scenarios-bg-card: #141B2E !important;           /* bg-surface */
+  --scenarios-text-primary: #F1F5F9 !important;      /* text-primary */
+  --scenarios-text-secondary: #94A3B8 !important;    /* text-secondary */
+  --scenarios-border-color: rgba(148, 163, 184, 0.2) !important;
+  --scenarios-accent-primary: #6366F1 !important;
+  --scenarios-accent-secondary: #818CF8 !important;
+  --scenarios-accent-light: rgba(99, 102, 241, 0.1) !important;
+  --scenarios-shadow: rgba(99, 102, 241, 0.2) !important;
 }
 
 /* Ensure the upgrade content uses dark theme */
@@ -818,9 +712,9 @@ html {
 }
 
 .upgrade-payment-options .secondary-upgrade:hover {
-  background: rgba(255, 215, 0, 0.1) !important;
-  border-color: rgba(255, 215, 0, 0.6) !important;
-  color: #FFD700 !important;
+  background: rgba(99, 102, 241, 0.1) !important;
+  border-color: rgba(99, 102, 241, 0.6) !important;
+  color: #6366F1 !important;
 }
 
 /* Ensure all text in upgrade states is visible */

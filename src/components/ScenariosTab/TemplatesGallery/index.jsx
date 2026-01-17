@@ -4,6 +4,7 @@ import { getTemplates, getCategories } from '../../../api';
 import CategoryFilter from './CategoryFilter';
 import TemplateCard from './TemplateCard';
 import TemplateDetailModal from './TemplateDetailModal';
+import ScrollToMyDialogues from './ScrollToMyDialogues';
 import './TemplatesGallery.css';
 
 export default function TemplatesGallery({ 
@@ -18,7 +19,7 @@ export default function TemplatesGallery({
   const [selectedTemplate, setSelectedTemplate] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
-  const [visibleCount, setVisibleCount] = useState(6); // Show 8 templates (2 rows of 4)
+  const [visibleCount, setVisibleCount] = useState(6); // Show 6 templates initially (3 rows of 2)
 
   // Load templates and categories on mount
   useEffect(() => {
@@ -64,7 +65,7 @@ export default function TemplatesGallery({
 
   const handleCategorySelect = (category) => {
     setSelectedCategory(category === 'all' ? null : category);
-    setVisibleCount(6); // Reset to 8 when category changes
+    setVisibleCount(6); // Reset to 6 when category changes
   };
 
   const handleTemplateSelect = (template) => {
@@ -85,7 +86,7 @@ export default function TemplatesGallery({
   };
 
   const handleShowMore = () => {
-    setVisibleCount(prev => prev + 6); // Show 8 more templates
+    setVisibleCount(prev => prev + 6); // Show 6 more templates
   };
 
   const visibleTemplates = templates.slice(0, visibleCount);
@@ -157,6 +158,9 @@ export default function TemplatesGallery({
           <span className="cta-text">+{templates.length - visibleCount} more templates</span>
         </button>
       )}
+
+      {/* NEW: Scroll to My Dialogues Arrow */}
+      <ScrollToMyDialogues />
 
       {selectedTemplate && (
         <TemplateDetailModal

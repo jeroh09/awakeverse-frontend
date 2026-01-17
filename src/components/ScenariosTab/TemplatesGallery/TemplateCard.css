@@ -193,20 +193,20 @@
    ============================================================================ */
 .scenarios-tab-container.theme-awakeverse .template-preview-card {
   background: 
-    radial-gradient(circle at top left, rgba(255, 215, 0, 0.05), transparent 60%),
+    radial-gradient(circle at top left, rgba(99, 102, 241, 0.05), transparent 60%),
     var(--scenarios-bg-card);
 }
 
 .scenarios-tab-container.theme-awakeverse .template-preview-card:hover {
-  box-shadow: 0 12px 32px rgba(255, 215, 0, 0.2);
+  box-shadow: 0 12px 32px rgba(99, 102, 241, 0.2);
 }
 
 .scenarios-tab-container.theme-awakeverse .template-preview-image-wrapper {
-  background: linear-gradient(135deg, rgba(255, 215, 0, 0.3), rgba(255, 165, 0, 0.3));
+  background: linear-gradient(135deg, rgba(99, 102, 241, 0.3), rgba(129, 140, 248, 0.3));
 }
 
 .scenarios-tab-container.theme-awakeverse .template-preview-image-fallback {
-  background: linear-gradient(135deg, rgba(255, 215, 0, 0.3), rgba(255, 165, 0, 0.3));
+  background: linear-gradient(135deg, rgba(99, 102, 241, 0.3), rgba(129, 140, 248, 0.3));
 }
 
 /* ============================================================================
@@ -224,65 +224,4 @@
   .template-preview-description {
     font-size: 0.8rem;
   }
-}
-/* ============================================================================
-   ADD TO TemplateCard.css - USE TEMPLATE BUTTON STYLES
-   ============================================================================ */
-
-/* Add this section at the end of your TemplateCard.css file */
-
-/* ============================================================================
-   USE TEMPLATE BUTTON
-   ============================================================================ */
-.template-use-button {
-  width: 100%;
-  padding: 12px;
-  margin-top: 12px;
-  border: none;
-  border-radius: 10px;
-  font-weight: 600;
-  font-size: 0.95rem;
-  cursor: pointer;
-  transition: all 0.18s ease-out;
-  background: linear-gradient(135deg, var(--scenarios-accent-primary), var(--scenarios-accent-secondary));
-  color: white;
-  box-shadow: 0 2px 8px var(--scenarios-shadow);
-}
-
-.template-use-button:hover {
-  transform: translateY(-2px);
-  box-shadow: 0 4px 16px var(--scenarios-shadow);
-}
-
-.template-use-button.upgrade {
-  background: var(--scenarios-bg-secondary);
-  color: var(--scenarios-accent-primary);
-  border: 2px solid var(--scenarios-accent-primary);
-}
-
-.template-use-button.upgrade:hover {
-  background: var(--scenarios-accent-light);
-}
-
-/* Dark theme button override */
-.scenarios-tab-container.theme-awakeverse .template-use-button {
-  background: linear-gradient(135deg, rgba(255, 215, 0, 0.8), rgba(255, 165, 0, 0.8));
-  color: #0A0F1A;
-  font-weight: 700;
-}
-
-.scenarios-tab-container.theme-awakeverse .template-use-button:hover {
-  background: linear-gradient(135deg, rgba(255, 215, 0, 1), rgba(255, 165, 0, 1));
-  box-shadow: 0 4px 16px rgba(255, 215, 0, 0.3);
-}
-
-.scenarios-tab-container.theme-awakeverse .template-use-button.upgrade {
-  background: rgba(255, 215, 0, 0.1);
-  color: #FFD700;
-  border-color: rgba(255, 215, 0, 0.6);
-}
-
-.scenarios-tab-container.theme-awakeverse .template-use-button.upgrade:hover {
-  background: rgba(255, 215, 0, 0.2);
-  border-color: #FFD700;
 }

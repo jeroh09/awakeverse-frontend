@@ -1,4 +1,4 @@
-// src/components/ScenariosTab/MyScenariosPanel/ScenarioCard.jsx - UPDATED
+// src/components/ScenariosTab/MyScenariosPanel/ScenarioCard.jsx - UPDATED WITH IMAGE BACKGROUNDS
 import React from 'react';
 import { characterCategories } from '../../../data/characterCategories';
 import { getDisplayNameFromKey, isCustomCharacterKey } from '../../../utils/characterUtils';
@@ -75,7 +75,41 @@ export default function ScenarioCard({
     }
   };
 
+  // ✅ NEW: Get card background image
+  const getCardBackgroundImage = () => {
+    // Option 1: If scenario was created from a template, use template category image
+    if (scenario.category) {
+      const templateImageMap = {
+        'philosophy': '/images/template-philosophy.jpg',
+        'business': '/images/template-business.jpg',
+        'ethics': '/images/template-ethics.jpg',
+        'science': '/images/template-science.jpg',
+        'technology': '/images/template-technology.jpg',
+        'relationships': '/images/template-relationships.jpg',
+        'fiction': '/images/template-fiction.jpg',
+        'warfare': '/images/template-warfare.jpg'
+      };
+      
+      if (templateImageMap[scenario.category]) {
+        return templateImageMap[scenario.category];
+      }
+    }
+    
+    // Option 2: Custom scenario - use first character's image
+    const characterKeys = scenario.character_keys || scenario.characters || [];
+    if (characterKeys.length > 0) {
+      const firstCharInfo = getCharacterInfo(characterKeys[0]);
+      if (firstCharInfo.thumbnailUrl) {
+        return firstCharInfo.thumbnailUrl;
+      }
+    }
+    
+    // Fallback: Default image
+    return '/images/template-default.jpg';
+  };
+
   const characterKeys = scenario.character_keys || scenario.characters || [];
+  const cardBackgroundImage = getCardBackgroundImage();
   
   // Generate thumbnails
   const characterThumbnails = characterKeys.slice(0, 4).map((charKey, index) => {
@@ -111,82 +145,96 @@ export default function ScenarioCard({
 
   return (
     <div className={`scenario-card ${isDeleting ? 'deleting' : ''}`}>
-      <div className="scenario-header">
-        <h4 className="scenario-title">{scenario.title}</h4>
-        <div className="scenario-actions">
-          {/* Publish/Unpublish Button - UPDATED WITH CONFETTI */}
-          <button 
-            className={`action-button publish ${isPublished ? 'published' : ''}`}
-            onClick={handlePublishClick}
-            disabled={isDeleting || isPublishing}
-            title={
-              isPublishing 
-                ? 'Processing...' 
-                : isPublished 
-                  ? 'Published to Market Hub • Click to unpublish' 
-                  : 'Publish to Market Hub'
-            }
-          >
-            {isPublishing ? '⏳' : isPublished ? '🌐' : '🌍'}
-          </button>
-          
-          <button 
-            className="action-button edit" 
-            onClick={handleEdit}
-            disabled={isDeleting}
-            title="Edit scenario"
-          >
-            ✏️
-          </button>
-          <button 
-            className="action-button delete" 
-            onClick={handleDelete}
-            disabled={isDeleting}
-            title="Delete scenario"
-          >
-            {isDeleting ? '⏳' : '🗑️'}
-          </button>
-        </div>
-      </div>
-
-      {/* Published Badge */}
-      {isPublished && (
-        <div className="published-badge">
-          <span className="badge-icon">🌐</span>
-          <span className="badge-text">Published</span>
-        </div>
-      )}
-      
-      <p className="scenario-description">{scenario.description}</p>
-      
-      <div className="scenario-meta">
-        <div className="character-thumbnails">
-          {characterThumbnails}
-          {characterKeys.length > 4 && (
-            <div className="character-thumbnail more">
-              +{characterKeys.length - 4}
-            </div>
-          )}
-        </div>
-        
-        <div className="question-count">
-          💬 {questionCount} question{questionCount !== 1 ? 's' : ''}
-        </div>
-      </div>
-
-      {scenario.category && (
-        <div className="scenario-category">
-          📂 {scenario.category.charAt(0).toUpperCase() + scenario.category.slice(1)}
-        </div>
-      )}
-      
-      <button 
-        className="start-debate-button" 
-        onClick={handleStartDebate}
-        disabled={isDeleting}
+      {/* ✅ NEW: Card Background Image */}
+      <div 
+        className="scenario-card-background"
+        style={{
+          backgroundImage: `url(${cardBackgroundImage})`
+        }}
       >
-        🎭 Start Debate
-      </button>
+        {/* Dark overlay for readability */}
+        <div className="scenario-card-overlay"></div>
+      </div>
+
+      {/* Card Content */}
+      <div className="scenario-card-content">
+        <div className="scenario-header">
+          <h4 className="scenario-title">{scenario.title}</h4>
+          <div className="scenario-actions">
+            {/* Publish/Unpublish Button */}
+            <button 
+              className={`action-button publish ${isPublished ? 'published' : ''}`}
+              onClick={handlePublishClick}
+              disabled={isDeleting || isPublishing}
+              title={
+                isPublishing 
+                  ? 'Processing...' 
+                  : isPublished 
+                    ? 'Published to Market Hub • Click to unpublish' 
+                    : 'Publish to Market Hub'
+              }
+            >
+              {isPublishing ? '⏳' : isPublished ? '🌍' : '🌍'}
+            </button>
+            
+            <button 
+              className="action-button edit" 
+              onClick={handleEdit}
+              disabled={isDeleting}
+              title="Edit scenario"
+            >
+              ✏️
+            </button>
+            <button 
+              className="action-button delete" 
+              onClick={handleDelete}
+              disabled={isDeleting}
+              title="Delete scenario"
+            >
+              {isDeleting ? '⏳' : '🗑️'}
+            </button>
+          </div>
+        </div>
+
+        {/* Published Badge */}
+        {isPublished && (
+          <div className="published-badge">
+            <span className="badge-icon">🌍</span>
+            <span className="badge-text">Published</span>
+          </div>
+        )}
+        
+        <p className="scenario-description">{scenario.description}</p>
+        
+        <div className="scenario-meta">
+          <div className="character-thumbnails">
+            {characterThumbnails}
+            {characterKeys.length > 4 && (
+              <div className="character-thumbnail more">
+                +{characterKeys.length - 4}
+              </div>
+            )}
+          </div>
+          
+          <div className="question-count">
+            💬 {questionCount} question{questionCount !== 1 ? 's' : ''}
+          </div>
+        </div>
+
+        {scenario.category && (
+          <div className="scenario-category">
+            📂 {scenario.category.charAt(0).toUpperCase() + scenario.category.slice(1)}
+          </div>
+        )}
+        
+        <button 
+          className="start-debate-button" 
+          onClick={handleStartDebate}
+          disabled={isDeleting}
+        >
+          🎭 Start Debate
+        </button>
+      </div>
     </div>
   );
 }
