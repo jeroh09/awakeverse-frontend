@@ -20,7 +20,7 @@ export default function ScenariosTab({
   const [loading, setLoading] = useState(true);
   const [requiresUpgrade, setRequiresUpgrade] = useState(false);
   const [showEducationalModal, setShowEducationalModal] = useState(false);
-  const [currentTheme, setCurrentTheme] = useState('light');
+  const [currentTheme, setCurrentTheme] = useState('awakeverse');  // ✅ Dark mode default
   const [myScenarios, setMyScenarios] = useState([]);
   const [showBlankCreator, setShowBlankCreator] = useState(false);
   const [activeScenario, setActiveScenario] = useState(null);
