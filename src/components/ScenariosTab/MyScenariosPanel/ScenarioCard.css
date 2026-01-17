@@ -19,13 +19,13 @@
   background-size: cover;
   background-position: center;
   background-repeat: no-repeat;
-  opacity: 0.15; /* Subtle background */
+  opacity: 0.35; /* Subtle background */
   transition: all 0.3s ease;
   z-index: 0;
 }
 
 .scenario-card:hover .scenario-card-background {
-  opacity: 0.25; /* Slightly more visible on hover */
+  opacity: 0.55; /* Slightly more visible on hover */
   transform: scale(1.05); /* Subtle zoom effect */
 }
 
@@ -281,11 +281,11 @@
 
 /* ✅ NEW: Dark theme background - slightly more visible */
 .scenarios-tab-container.theme-awakeverse .scenario-card-background {
-  opacity: 0.2; /* More visible in dark theme */
+  opacity: 0.45; /* More visible in dark theme */
 }
 
 .scenarios-tab-container.theme-awakeverse .scenario-card:hover .scenario-card-background {
-  opacity: 0.3;
+  opacity: 0.5;
 }
 
 /* ✅ NEW: Dark theme overlay - stronger gradient for readability */

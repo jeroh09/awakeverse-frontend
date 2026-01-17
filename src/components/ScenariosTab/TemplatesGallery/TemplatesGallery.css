@@ -29,7 +29,7 @@
    ============================================================================ */
 .template-grid {
   display: grid;
-  grid-template-columns: repeat(2, 1fr); /* Fixed 2 columns */
+  grid-template-columns: repeat(3, 1fr); /* Fixed 2 columns */
   gap: 1.5rem;
   margin-top: 2rem;
 }
@@ -154,7 +154,7 @@
 /* Tablet - Single column */
 @media (max-width: 1024px) {
   .template-grid {
-    grid-template-columns: repeat(2, 1fr); /* Keep 2 columns on tablet */
+    grid-template-columns: repeat(3, 1fr); /* Keep 2 columns on tablet */
   }
 }
 
