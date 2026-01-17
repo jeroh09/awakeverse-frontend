@@ -154,7 +154,7 @@ export default function TemplatesGallery({
       {/* NEW: Show More CTA */}
       {hasMoreTemplates && (
         <button className="show-more-cta" onClick={handleShowMore}>
-          <span className="cta-icon">+</span>
+          <span className="cta-icon"></span>
           <span className="cta-text">+{templates.length - visibleCount} more templates</span>
         </button>
       )}

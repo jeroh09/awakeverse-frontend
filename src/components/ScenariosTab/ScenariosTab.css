@@ -59,12 +59,12 @@
 /* Section Containers */
 .gallery-section,
 .scenarios-section {
-  margin-bottom: 3rem;
+  margin-bottom: 0rem;
 }
 
 .gallery-section {
   border-bottom: 1px solid var(--scenarios-border-color);
-  padding-bottom: 3rem;
+  padding-bottom: 0rem;
 }
 
 /* ===== STATE STYLES (Loading, Error, Critical) ===== */

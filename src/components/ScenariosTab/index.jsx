@@ -8,6 +8,8 @@ import MyScenariosPanel from './MyScenariosPanel';
 import ScenarioCreator from './ScenarioCreator';
 import ScenarioChatWindow from './ScenarioChatWindow';
 import './ScenariosTab.css';
+import UseCaseCarousel from './UseCaseCarousel';
+import ThemeToggle from './ThemeToggle';
 
 export default function ScenariosTab({ 
   marketHubScenario = null,
@@ -245,12 +247,11 @@ export default function ScenariosTab({
   // MAIN CONTENT - User has unlimited access OR is using Market Hub scenario
   return (
     <div className={`scenarios-tab-container ${currentTheme === 'awakeverse' ? 'theme-awakeverse' : ''}`}>
-      {/* Theme toggle button */}
-      <div className="scenarios-theme-toggle">
-        <button onClick={toggleTheme}>
-          {currentTheme === 'light' ? '🌙 Dark' : '☀️ Light'}
-        </button>
-      </div>
+      {/* ✅ NEW: Theme toggle with SVG icons */}
+      <ThemeToggle 
+        currentTheme={currentTheme}
+        onToggle={toggleTheme}
+      />
       
       <div className="scenarios-content">
         {/* Templates Gallery - User has access */}
@@ -262,6 +263,8 @@ export default function ScenariosTab({
             onScenarioCreated={handleScenarioCreated}
           />
         </div>
+        {/* ✅✅✅ ADD CAROUSEL HERE - BETWEEN THESE TWO SECTIONS ✅✅✅ */}
+        <UseCaseCarousel />
 
         {/* My Scenarios Panel - User has access */}
         <div className="scenarios-section">
