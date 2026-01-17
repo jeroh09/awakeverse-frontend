@@ -29,7 +29,7 @@
    ============================================================================ */
 .template-grid {
   display: grid;
-  grid-template-columns: repeat(3, 1fr); /* Fixed 2 columns */
+  grid-template-columns: repeat(2, 1fr); /* Fixed 2 columns */
   gap: 1.5rem;
   margin-top: 2rem;
 }
@@ -136,15 +136,15 @@
 }
 
 .scenarios-tab-container.theme-awakeverse .show-more-cta {
-  background: rgba(255, 215, 0, 0.05);
-  border-color: rgba(255, 215, 0, 0.3);
-  color: #FFD700;
+  background: rgba(99, 102, 241, 0.05);  /* ✅ INDIGO */
+  border-color: rgba(99, 102, 241, 0.3); /* ✅ INDIGO */
+  color: #818CF8;                        /* ✅ INDIGO */
 }
 
 .scenarios-tab-container.theme-awakeverse .show-more-cta:hover {
-  background: rgba(255, 215, 0, 0.1);
-  border-color: #FFD700;
-  box-shadow: 0 4px 12px rgba(255, 215, 0, 0.2);
+  background: rgba(99, 102, 241, 0.1);   /* ✅ INDIGO */
+  border-color: #6366F1;                 /* ✅ INDIGO */
+  box-shadow: 0 4px 12px rgba(99, 102, 241, 0.2); /* ✅ INDIGO */
 }
 
 /* ============================================================================
@@ -154,7 +154,7 @@
 /* Tablet - Single column */
 @media (max-width: 1024px) {
   .template-grid {
-    grid-template-columns: repeat(3, 1fr); /* Keep 2 columns on tablet */
+    grid-template-columns: repeat(2, 1fr); /* Keep 2 columns on tablet */
   }
 }
 
