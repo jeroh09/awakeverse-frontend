@@ -382,7 +382,7 @@
   }
 }
 /* =========================================================================
-   COMPLETE FIX - Background ONLY inside textarea
+   UNIFIED NIGHT BLUE INPUT - Entire area, no separate sections
    REPLACE the entire fix section at the end of FloatingChatInput.module.css
    ========================================================================= */
 
@@ -394,14 +394,14 @@
   padding: 0 !important;
 }
 
-/* FIX 2: Remove wrapper gradient - completely transparent */
+/* FIX 2: Remove wrapper gradient - transparent */
 .floatingInputWrapper {
   background: transparent !important;
 }
 
-/* FIX 3: Input container - transparent, only border visible */
+/* FIX 3: Input container - ENTIRE AREA night blue (matches page background) */
 .inputContainer {
-  background: transparent !important;
+  background: var(--bg-surface) !important;  /* #141B2E - same as chat panel */
   border: 1px solid var(--border-medium) !important;
   border-radius: var(--border-radius-xl);
   padding: var(--spacing-sm);
@@ -409,29 +409,28 @@
   box-shadow: none !important;
 }
 
-/* Mobile: Same - transparent container */
+/* Mobile: Same unified background */
 @media (max-width: 768px) {
   .inputContainer {
-    background: transparent !important;
+    background: var(--bg-surface) !important;
     border-radius: var(--border-radius-lg);
     box-shadow: none !important;
   }
 }
 
-/* FIX 4: Focus state - only border changes */
+/* FIX 4: Focus state - keep same background, only border changes */
 .inputContainer:focus-within {
-  border-color: var(--accent-primary) !important;
+  border-color: var(--accent-primary) !important;  /* Indigo border */
   box-shadow: none !important;
   outline: none !important;
-  background: transparent !important;
+  background: var(--bg-surface) !important;  /* Keep same night blue */
 }
 
-/* FIX 5: Textarea - NIGHT BLUE BACKGROUND (the typing area) */
+/* FIX 5: Textarea - TRANSPARENT (shows container background through) */
 .textarea {
-  background: var(--bg-surface) !important;  /* #141B2E - night blue */
+  background: transparent !important;  /* No separate background */
   border: none;
   outline: none;
-  border-radius: var(--border-radius-sm);  /* Subtle rounding */
   padding: var(--spacing-sm);
 }
 
@@ -440,7 +439,7 @@
 .textarea:focus-visible {
   outline: none !important;
   border: none !important;
-  background: var(--bg-surface) !important;  /* Keep night blue on focus */
+  background: transparent !important;  /* Stay transparent */
 }
 
 /* FIX 6: Force indigo border, never gold */
@@ -448,8 +447,8 @@
 .inputContainer:focus-within,
 .inputContainer:active {
   border-color: var(--accent-primary) !important;
-  background: transparent !important;
+  background: var(--bg-surface) !important;
   box-shadow: none !important;
 }
 
-/* END OF COMPLETE FIX */
+/* END OF UNIFIED NIGHT BLUE FIX */
