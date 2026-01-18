@@ -45,7 +45,8 @@
    FLOATING INPUT WRAPPER (Gets keyboard offset)
    ============================================================================ */
 .floatingInputWrapper {
-  max-width: 800px;
+  width: 80%;        /* ← 3x wider, responsive */
+  max-width: none;
   margin: 0 auto;
   pointer-events: all; /* Re-enable clicks for input */
   transition: transform 0.2s ease-out; /* Smooth keyboard offset */
