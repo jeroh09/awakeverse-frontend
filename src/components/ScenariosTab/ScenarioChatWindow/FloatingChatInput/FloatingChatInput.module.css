@@ -382,14 +382,11 @@
   }
 }
 /* =========================================================================
-   UPDATED CSS FIX - Removes ALL dark backgrounds
-   Paste this at the END of FloatingChatInput.module.css
-   Fixes: 1) No dark rectangle around starters
-          2) No dark background in input area
-          3) Single border only (indigo)
+   ZERO BACKGROUND FIX - Only border lines, no backgrounds anywhere
+   REPLACE the entire fix section at the end of FloatingChatInput.module.css
    ========================================================================= */
 
-/* FIX 1: Remove dark rectangle from starter questions area */
+/* FIX 1: Remove dark rectangle from starter questions */
 .starterSection {
   background: transparent !important;
   border: none !important;
@@ -397,35 +394,41 @@
   padding: 0 !important;
 }
 
-/* FIX 2: Remove dark background from input area - make it transparent/clean */
+/* FIX 2: Remove wrapper gradient - make it completely transparent */
+.floatingInputWrapper {
+  background: transparent !important;  /* NO gradient, NO background */
+}
+
+/* FIX 3: Input container - ZERO background, only border */
 .inputContainer {
-  background: transparent !important;  /* Was: var(--bg-surface) - dark! */
-  border: 1px solid var(--border-medium) !important;
+  background: transparent !important;  /* Completely transparent */
+  border: 1px solid var(--border-medium) !important;  /* ONLY the border */
   border-radius: var(--border-radius-xl);
   padding: var(--spacing-sm);
   gap: var(--spacing-sm);
-  box-shadow: var(--shadow-elevation03);
+  box-shadow: none !important;  /* Remove shadow too */
 }
 
-/* Mobile: Same transparent background */
+/* Mobile: Same - zero background */
 @media (max-width: 768px) {
   .inputContainer {
     background: transparent !important;
     border-radius: var(--border-radius-lg);
+    box-shadow: none !important;
   }
 }
 
-/* FIX 3: Single border on focus (indigo only, no gold) */
+/* FIX 4: Focus state - only change border color, no background */
 .inputContainer:focus-within {
-  border-color: var(--accent-primary) !important;
-  box-shadow: var(--shadow-glow) !important;
+  border-color: var(--accent-primary) !important;  /* Indigo border */
+  box-shadow: none !important;  /* No glow, no shadow */
   outline: none !important;
-  background: transparent !important;  /* Keep transparent even on focus */
+  background: transparent !important;  /* Stay transparent */
 }
 
-/* FIX 4: Ensure textarea never shows its own border or background */
+/* FIX 5: Textarea - transparent */
 .textarea {
-  background: transparent !important;  /* Already transparent, but enforce it */
+  background: transparent !important;
 }
 
 .textarea:focus,
@@ -436,19 +439,19 @@
   background: transparent !important;
 }
 
-/* FIX 5: Force indigo color, never gold */
+/* FIX 6: Force indigo border, never gold */
 .inputContainer:focus,
 .inputContainer:focus-within,
 .inputContainer:active {
   border-color: var(--accent-primary) !important;
   background: transparent !important;
+  box-shadow: none !important;
 }
 
-/* FIX 6: Send/Stop button - ensure it stays visible against transparent background */
+/* FIX 7: Send/Stop button - keep visible with gradient */
 .sendButton,
 .stopButton {
-  /* Button has its own gradient background, so it stays visible */
-  /* No changes needed, but keeping this comment for clarity */
+  /* Buttons keep their gradient backgrounds - they need to be visible! */
 }
 
-/* END OF FIXES */
+/* END OF ZERO BACKGROUND FIX */
