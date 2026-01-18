@@ -4,7 +4,7 @@
 
 import React, { useState, useRef, useEffect } from 'react';
 import { ArrowRight, X, Square } from 'lucide-react';
-import useKeyboardHeight from '../../../hooks/useKeyboardHeight'; // ✅ Use existing hook
+import useKeyboardHeight from '../../../../hooks/useKeyboardHeight'; // ✅ Use existing hook
 import styles from './FloatingChatInput.module.css';
 
 /**
