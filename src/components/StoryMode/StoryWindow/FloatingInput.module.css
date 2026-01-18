@@ -1,185 +1,225 @@
 /* src/components/StoryMode/StoryWindow/FloatingInput.module.css */
-/* Floating Input - Modern floating input with gradient fade */
+/* REFACTORED: Modern floating input matching ScenarioChatWindow design */
 
 @import '../styles/story-variables.css';
 
 /* ============================================================================
-   FLOATING INPUT CONTAINER
+   FLOATING INPUT CONTAINER (Transparent wrapper with gradient)
    ============================================================================ */
 .floatingInputContainer {
-  position: fixed;
+  position: absolute;
   bottom: 0;
-  left: 1.5rem;
-  right: calc(320px + 3rem); /* Panel width + gaps */
-  padding: 1.5rem 0 2rem;
-  background: linear-gradient(
-    to top,
-    var(--bg-canvas) 0%,
-    var(--bg-canvas) 70%,
-    transparent 100%
-  );
+  left: 0;
+  right: 320px; /* Info panel width */
   z-index: 50;
-  transition: right 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  padding: var(--spacing-xl, 2rem) var(--spacing-lg, 1.5rem);
+  
+  /* Transparent gradient fade - doesn't obscure messages */
+  background: transparent;
+  
   pointer-events: none; /* Allow clicks through gradient */
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-md, 1rem);
 }
 
 /* When info panel is collapsed - extend to right edge */
 .floatingInputContainer.infoCollapsed {
-  right: 1.5rem;
+  right: 0;
 }
 
+/* Mobile: Full width, no right offset */
+@media (max-width: 768px) {
+  .floatingInputContainer {
+    right: 0;
+    padding: var(--spacing-md, 1rem);
+    gap: var(--spacing-sm, 0.5rem);
+  }
+  
+  .floatingInputContainer.infoCollapsed {
+    right: 0;
+  }
+}
+
+/* ============================================================================
+   FLOATING INPUT WRAPPER (Gets keyboard offset)
+   ============================================================================ */
 .floatingInputWrapper {
   max-width: 800px;
   margin: 0 auto;
-  pointer-events: auto; /* Enable clicks on input */
+  pointer-events: all; /* Re-enable clicks for input */
+  transition: transform 0.2s ease-out; /* Smooth keyboard offset */
 }
 
 /* ============================================================================
-   FLOATING INPUT
+   FLOATING INPUT (Unified night blue background)
    ============================================================================ */
 .floatingInput {
+  background: var(--bg-surface) !important; /* #141B2E - unified night blue */
+  border: 1px solid var(--border-medium) !important;
+  border-radius: var(--radius-xl, 1.25rem);
   display: flex;
   align-items: flex-end;
-  gap: 0.75rem;
-  background: var(--bg-surface);
-  border: 1px solid var(--border-medium);
-  border-radius: var(--radius-lg, 1rem);
-  padding: 0.85rem 1rem;
-  box-shadow: 0 4px 16px -4px rgba(0, 0, 0, 0.15), 
-              0 8px 24px -8px rgba(99, 102, 241, 0.15);
-  transition: all 0.3s ease;
+  gap: var(--spacing-sm, 0.75rem);
+  padding: var(--spacing-sm, 0.85rem);
+  transition: var(--transition-fast, all 0.15s ease);
+  box-shadow: none !important;
 }
 
 .floatingInput:focus-within {
-  border-color: var(--accent-primary);
-  box-shadow: 0 4px 16px -4px rgba(0, 0, 0, 0.15), 
-              0 8px 24px -8px rgba(99, 102, 241, 0.15),
-              0 0 20px -5px rgba(99, 102, 241, 0.2);
+  border-color: var(--accent-primary) !important;
+  box-shadow: none !important;
+  outline: none !important;
+  background: var(--bg-surface) !important; /* Keep night blue on focus */
+}
+
+/* Mobile: Smaller border-radius */
+@media (max-width: 768px) {
+  .floatingInput {
+    border-radius: var(--radius-lg, 1rem);
+    padding: var(--spacing-sm, 0.75rem);
+  }
 }
 
 /* ============================================================================
-   TEXTAREA
+   TEXTAREA (Transparent - shows container background)
    ============================================================================ */
 .inputTextarea {
   flex: 1;
-  background: transparent;
-  
-  /* Comprehensive border removal */
+  background: transparent !important;
   border: none;
-  border: 0;
-  box-shadow: none;
   outline: none;
+  resize: none;
+  font-family: var(--font-body);
+  font-size: var(--font-size-body, 1rem);
+  line-height: var(--line-height-body, 1.5);
+  color: var(--text-primary);
+  padding: var(--spacing-sm, 0.5rem);
+  min-height: 24px;
+  max-height: 120px;
+  overflow-y: auto;
+  scrollbar-width: thin;
   
-  /* Remove browser default styling */
+  /* Remove all browser defaults */
   -webkit-appearance: none;
   -moz-appearance: none;
   appearance: none;
-  
-  /* Text styling */
-  color: var(--text-primary);
-  font-family: var(--font-body);
-  font-size: 1rem;
-  line-height: 1.5;
-  
-  /* Sizing */
-  resize: none;
-  min-height: 24px;
-  max-height: 120px;
-  padding: 0;
   margin: 0;
-  
-  /* Scroll behavior */
-  overflow-y: auto;
-}
-
-/* Ensure no borders on focus */
-.inputTextarea:focus {
-  border: none;
-  outline: none;
-  box-shadow: none;
 }
 
 .inputTextarea::placeholder {
-  color: var(--text-muted);
-  font-family: var(--font-body);
+  color: var(--text-tertiary);
 }
 
 .inputTextarea:disabled {
-  opacity: 0.6;
+  opacity: 0.5;
   cursor: not-allowed;
+}
+
+.inputTextarea:focus,
+.inputTextarea:focus-within,
+.inputTextarea:focus-visible {
+  outline: none !important;
+  border: none !important;
+  background: transparent !important;
+}
+
+/* Textarea scrollbar */
+.inputTextarea::-webkit-scrollbar {
+  width: 4px;
+}
+
+.inputTextarea::-webkit-scrollbar-thumb {
+  background: var(--border-medium);
+  border-radius: var(--border-radius-sm, 0.5rem);
+}
+
+.inputTextarea::-webkit-scrollbar-thumb:hover {
+  background: var(--accent-primary);
+}
+
+/* Mobile: 16px font prevents iOS auto-zoom */
+@media (max-width: 768px) {
+  .inputTextarea {
+    font-size: 16px; /* Critical for iOS */
+    padding: 8px;
+  }
 }
 
 /* ============================================================================
-   SEND BUTTON
+   SEND BUTTON (Default State - Indigo Gradient)
    ============================================================================ */
 .sendButton {
-  width: 40px;
-  height: 40px;
-  background: var(--accent-primary);
+  width: 44px;
+  height: 44px;
+  min-width: 44px;
+  min-height: 44px;
+  border-radius: var(--border-radius-full, 50%);
+  background: linear-gradient(135deg, var(--accent-primary), var(--accent-hover));
   border: none;
-  border-radius: 50%;
   color: white;
-  cursor: pointer;
   display: flex;
   align-items: center;
   justify-content: center;
-  transition: all 0.3s ease;
-  flex-shrink: 0;
+  cursor: pointer;
+  transition: var(--transition-fast, all 0.15s ease);
+  box-shadow: var(--shadow-elevation02);
+  flex-shrink: 0; /* Prevent squishing */
+  padding: 0;
 }
 
 .sendButton:hover:not(:disabled) {
-  background: var(--accent-hover);
-  transform: translateY(-2px);
-  box-shadow: 0 0 20px -5px rgba(99, 102, 241, 0.2);
+  box-shadow: var(--shadow-glow);
+  transform: scale(1.05);
 }
 
 .sendButton:active:not(:disabled) {
-  transform: translateY(0);
+  transform: scale(0.95);
 }
 
 .sendButton:disabled {
-  background: var(--bg-interactive);
-  color: var(--text-muted);
+  opacity: 0.4;
   cursor: not-allowed;
-  transform: none;
+  background: var(--bg-peak);
 }
 
 .sendButton:focus-visible {
   outline: 2px solid var(--accent-primary);
-  outline-offset: 3px;
+  outline-offset: 2px;
+}
+
+/* Mobile: Maintain professional size, never squished */
+@media (max-width: 768px) {
+  .sendButton {
+    width: 42px;
+    height: 42px;
+    min-width: 42px;
+    min-height: 42px;
+  }
 }
 
 /* ============================================================================
-   STOP BUTTON (Streaming state)
+   STOP BUTTON (When isStreaming = true - Orange/Red Gradient)
    ============================================================================ */
 .stopButton {
-  width: 40px;
-  height: 40px;
-  background: #ef4444;
-  border: none;
-  border-radius: 50%;
-  color: white;
-  cursor: pointer;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  transition: all 0.3s ease;
-  flex-shrink: 0;
+  background: linear-gradient(135deg, #F59E0B, #EF4444) !important; /* Orange to Red */
 }
 
-.stopButton:hover {
-  background: #dc2626;
-  transform: translateY(-2px);
-  box-shadow: 0 0 20px -5px rgba(239, 68, 68, 0.3);
-}
-
-.stopButton:active {
-  transform: translateY(0);
+.stopButton:hover:not(:disabled) {
+  box-shadow: 0 0 20px -5px rgba(239, 68, 68, 0.3) !important; /* Red glow */
+  transform: scale(1.05);
 }
 
 .stopButton:focus-visible {
-  outline: 2px solid #ef4444;
-  outline-offset: 3px;
+  outline: 2px solid #EF4444;
+  outline-offset: 2px;
+}
+
+/* Stop button is never disabled (always clickable when streaming) */
+.stopButton:disabled {
+  opacity: 1;
+  cursor: pointer;
+  background: linear-gradient(135deg, #F59E0B, #EF4444) !important;
 }
 
 /* ============================================================================
@@ -199,74 +239,62 @@
 }
 
 /* ============================================================================
-   MOBILE RESPONSIVE
+   ACCESSIBILITY & REDUCED MOTION
    ============================================================================ */
-@media (max-width: 768px) {
-  .floatingInputContainer {
-    left: 0;
-    right: 0;
-    padding: 1rem;
-  }
-  
-  .floatingInputContainer.infoCollapsed {
-    right: 0;
-  }
-  
+@media (prefers-reduced-motion: reduce) {
   .floatingInputWrapper {
-    max-width: 100%;
+    transition: none !important;
   }
   
-  .floatingInput {
-    padding: 0.75rem;
+  .sendButton:hover:not(:disabled),
+  .sendButton:active:not(:disabled),
+  .stopButton:hover {
+    transform: none !important;
   }
   
-  /* Slightly smaller buttons on mobile */
-  .sendButton,
-  .stopButton {
-    width: 38px;
-    height: 38px;
+  .sendingSpinner {
+    animation: none;
   }
 }
 
-/* Very small screens */
-@media (max-width: 480px) {
-  .floatingInputContainer {
-    padding: 0.75rem;
-  }
-  
+/* High contrast mode */
+@media (prefers-contrast: high) {
   .floatingInput {
-    padding: 0.65rem 0.75rem;
+    border-width: 2px;
   }
   
   .sendButton,
   .stopButton {
-    width: 36px;
-    height: 36px;
-  }
-}
-
-/* Landscape mobile - adjust positioning */
-@media (max-height: 500px) and (orientation: landscape) {
-  .floatingInputContainer {
-    padding: 0.75rem;
+    border: 2px solid white;
   }
 }
 
 /* ============================================================================
-   ACCESSIBILITY & REDUCED MOTION
+   DEFENSIVE FALLBACKS
    ============================================================================ */
-@media (prefers-reduced-motion: reduce) {
-  .floatingInputContainer,
-  .floatingInput,
-  .sendButton,
-  .stopButton,
-  .sendingSpinner {
-    transition: none;
-    animation: none;
+
+/* Ensure proper box-sizing */
+.floatingInputContainer * {
+  box-sizing: border-box;
+}
+
+/* Prevent overflow issues */
+.floatingInput {
+  min-width: 0; /* Allows flex items to shrink properly */
+}
+
+/* Fallback if CSS variables aren't loaded */
+@supports not (color: var(--bg-canvas)) {
+  .floatingInput {
+    background: #141B2E !important;
+    border: 1px solid rgba(148, 163, 184, 0.2);
   }
   
-  .sendButton:hover:not(:disabled),
-  .stopButton:hover {
-    transform: none;
+  .sendButton {
+    background: linear-gradient(135deg, #6366F1, #818CF8);
+  }
+  
+  .stopButton {
+    background: linear-gradient(135deg, #F59E0B, #EF4444) !important;
   }
 }

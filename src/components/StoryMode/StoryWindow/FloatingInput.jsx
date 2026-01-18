@@ -1,12 +1,14 @@
 // src/components/StoryMode/StoryWindow/FloatingInput.jsx
+// REFACTORED: Modern floating input matching ScenarioChatWindow design
+
 import React, { useState, useRef, useEffect, useCallback } from 'react';
-import { Send, Square } from 'lucide-react';
+import { ArrowRight, Square } from 'lucide-react';
 import { getDisplayNameFromKey } from '../../../utils/characterUtils';
 import useKeyboardHeight from '../../../hooks/useKeyboardHeight';
 import styles from './FloatingInput.module.css';
 
 /**
- * FloatingInput - Floating input area with keyboard detection
+ * FloatingInput - Modern floating input with gradient fade
  * 
  * Props:
  * - onSendMessage: Callback for sending messages
@@ -26,9 +28,8 @@ export default function FloatingInput({
 }) {
   const [inputText, setInputText] = useState('');
   const textareaRef = useRef(null);
-  const containerRef = useRef(null);
   
-  // Keyboard detection hook (existing from your codebase)
+  // Keyboard detection hook
   const { keyboardHeight, isKeyboardVisible } = useKeyboardHeight();
 
   // Derive placeholder
@@ -49,29 +50,6 @@ export default function FloatingInput({
     resize();
   }, [inputText, resize]);
 
-  // Apply keyboard offset to container (mobile)
-  useEffect(() => {
-    const container = containerRef.current;
-    if (!container) return;
-
-    if (isKeyboardVisible && keyboardHeight > 0) {
-      // Move input above keyboard
-      container.style.transform = `translateY(-${keyboardHeight}px)`;
-      container.style.transition = 'transform 0.3s cubic-bezier(0.4, 0, 0.2, 1)';
-    } else {
-      // Reset position when keyboard hides
-      container.style.transform = 'translateY(0)';
-    }
-
-    // Cleanup
-    return () => {
-      if (container) {
-        container.style.transform = '';
-        container.style.transition = '';
-      }
-    };
-  }, [keyboardHeight, isKeyboardVisible]);
-
   const resetTextarea = () => {
     const ta = textareaRef.current;
     if (ta) ta.style.height = 'auto';
@@ -83,6 +61,10 @@ export default function FloatingInput({
     onSendMessage?.(text);
     setInputText('');
     resetTextarea();
+  };
+
+  const handleStop = () => {
+    onCancelStreaming?.();
   };
 
   // Check if mobile viewport
@@ -103,13 +85,19 @@ export default function FloatingInput({
     }
   };
 
+  // Apply keyboard offset via inline style (ONLY moves wrapper, not entire container)
+  const wrapperStyle = keyboardHeight > 0 
+    ? { transform: `translateY(-${keyboardHeight}px)` }
+    : {};
+
   return (
     <div 
-      ref={containerRef}
       className={`${styles.floatingInputContainer} ${infoPanelCollapsed ? styles.infoCollapsed : ''}`}
-      data-keyboard-visible={isKeyboardVisible}
     >
-      <div className={styles.floatingInputWrapper}>
+      <div 
+        className={styles.floatingInputWrapper}
+        style={wrapperStyle}
+      >
         <div className={styles.floatingInput}>
           <textarea
             ref={textareaRef}
@@ -124,31 +112,23 @@ export default function FloatingInput({
             spellCheck
           />
 
-          {isStreaming ? (
-            <button
-              className={styles.stopButton}
-              onClick={onCancelStreaming}
-              aria-label="Stop streaming"
-              type="button"
-            >
+          {/* Send/Stop Button - Icon swap based on streaming */}
+          <button
+            className={`${styles.sendButton} ${isStreaming ? styles.stopButton : ''}`}
+            onClick={isStreaming ? handleStop : send}
+            disabled={!isStreaming && (isSending || !inputText.trim())}
+            aria-label={isStreaming ? 'Stop streaming' : 'Send message'}
+            type="button"
+            title={isStreaming ? 'Stop streaming' : (inputText.trim() ? 'Send (Enter)' : 'Type a message')}
+          >
+            {isStreaming ? (
               <Square size={18} />
-            </button>
-          ) : (
-            <button
-              className={styles.sendButton}
-              onClick={send}
-              disabled={isSending || !inputText.trim()}
-              aria-label="Send message"
-              type="button"
-              title={inputText.trim() ? 'Send (Enter)' : 'Type a message'}
-            >
-              {isSending ? (
-                <div className={styles.sendingSpinner} />
-              ) : (
-                <Send size={18} />
-              )}
-            </button>
-          )}
+            ) : isSending ? (
+              <div className={styles.sendingSpinner} />
+            ) : (
+              <ArrowRight size={18} />
+            )}
+          </button>
         </div>
       </div>
     </div>
