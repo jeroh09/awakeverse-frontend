@@ -382,7 +382,7 @@
   }
 }
 /* =========================================================================
-   ZERO BACKGROUND FIX - Only border lines, no backgrounds anywhere
+   COMPLETE FIX - Background ONLY inside textarea
    REPLACE the entire fix section at the end of FloatingChatInput.module.css
    ========================================================================= */
 
@@ -394,22 +394,22 @@
   padding: 0 !important;
 }
 
-/* FIX 2: Remove wrapper gradient - make it completely transparent */
+/* FIX 2: Remove wrapper gradient - completely transparent */
 .floatingInputWrapper {
-  background: transparent !important;  /* NO gradient, NO background */
+  background: transparent !important;
 }
 
-/* FIX 3: Input container - ZERO background, only border */
+/* FIX 3: Input container - transparent, only border visible */
 .inputContainer {
-  background: transparent !important;  /* Completely transparent */
-  border: 1px solid var(--border-medium) !important;  /* ONLY the border */
+  background: transparent !important;
+  border: 1px solid var(--border-medium) !important;
   border-radius: var(--border-radius-xl);
   padding: var(--spacing-sm);
   gap: var(--spacing-sm);
-  box-shadow: none !important;  /* Remove shadow too */
+  box-shadow: none !important;
 }
 
-/* Mobile: Same - zero background */
+/* Mobile: Same - transparent container */
 @media (max-width: 768px) {
   .inputContainer {
     background: transparent !important;
@@ -418,17 +418,21 @@
   }
 }
 
-/* FIX 4: Focus state - only change border color, no background */
+/* FIX 4: Focus state - only border changes */
 .inputContainer:focus-within {
-  border-color: var(--accent-primary) !important;  /* Indigo border */
-  box-shadow: none !important;  /* No glow, no shadow */
+  border-color: var(--accent-primary) !important;
+  box-shadow: none !important;
   outline: none !important;
-  background: transparent !important;  /* Stay transparent */
+  background: transparent !important;
 }
 
-/* FIX 5: Textarea - transparent */
+/* FIX 5: Textarea - NIGHT BLUE BACKGROUND (the typing area) */
 .textarea {
-  background: transparent !important;
+  background: var(--bg-surface) !important;  /* #141B2E - night blue */
+  border: none;
+  outline: none;
+  border-radius: var(--border-radius-sm);  /* Subtle rounding */
+  padding: var(--spacing-sm);
 }
 
 .textarea:focus,
@@ -436,7 +440,7 @@
 .textarea:focus-visible {
   outline: none !important;
   border: none !important;
-  background: transparent !important;
+  background: var(--bg-surface) !important;  /* Keep night blue on focus */
 }
 
 /* FIX 6: Force indigo border, never gold */
@@ -448,10 +452,4 @@
   box-shadow: none !important;
 }
 
-/* FIX 7: Send/Stop button - keep visible with gradient */
-.sendButton,
-.stopButton {
-  /* Buttons keep their gradient backgrounds - they need to be visible! */
-}
-
-/* END OF ZERO BACKGROUND FIX */
+/* END OF COMPLETE FIX */
