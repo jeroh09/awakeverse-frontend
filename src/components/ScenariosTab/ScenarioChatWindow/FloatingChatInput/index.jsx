@@ -1,27 +1,32 @@
 // src/components/ScenariosTab/ScenarioChatWindow/FloatingChatInput/index.jsx
-// PHASE 5: Floating input area with gradient fade and auto-expanding textarea
+// REFACTORED: Modern floating input with Stop button and keyboard handling
+// USES: Existing useKeyboardHeight hook from src/hooks/useKeyboardHeight.js
 
 import React, { useState, useRef, useEffect } from 'react';
-import StarterQuestions from './StarterQuestions';
-import { Send } from 'lucide-react';
+import { ArrowRight, X, Square } from 'lucide-react';
+import useKeyboardHeight from '../../../hooks/useKeyboardHeight'; // ✅ Use existing hook
 import styles from './FloatingChatInput.module.css';
 
 /**
- * FloatingChatInput - Floating input area at bottom of chat with gradient fade
+ * FloatingChatInput - Modern floating input area with gradient fade
  * 
  * @param {Array} starterQuestions - Predefined questions to show as chips
  * @param {Function} onSend - (message: string) => void
- * @param {boolean} isSending - Disable input while sending
- * @param {boolean} showStarters - Whether to show starter questions (default: true on first render)
+ * @param {Function} onStop - () => void - Called when stop button clicked
+ * @param {boolean} isSending - Show stop button and disable input while sending
  */
 export default function FloatingChatInput({
   starterQuestions = [],
   onSend,
+  onStop,
   isSending = false
 }) {
   const [inputText, setInputText] = useState('');
-  const [showStarterQuestions, setShowStarterQuestions] = useState(true);
+  const [showStarters, setShowStarters] = useState(true);
   const textareaRef = useRef(null);
+  
+  // ✅ Get keyboard height using EXISTING hook (returns object with keyboardHeight + isKeyboardVisible)
+  const { keyboardHeight, isKeyboardVisible } = useKeyboardHeight();
 
   // Defensive: Guard against missing onSend
   if (!onSend || typeof onSend !== 'function') {
@@ -33,7 +38,7 @@ export default function FloatingChatInput({
   useEffect(() => {
     const textarea = textareaRef.current;
     if (textarea) {
-      // Reset height to auto to get the correct scrollHeight
+      // Reset height to auto to get correct scrollHeight
       textarea.style.height = 'auto';
       // Set height to scrollHeight (content height)
       textarea.style.height = `${textarea.scrollHeight}px`;
@@ -50,7 +55,7 @@ export default function FloatingChatInput({
     if (!trimmed || isSending) return;
 
     // Hide starter questions after first message
-    setShowStarterQuestions(false);
+    setShowStarters(false);
 
     onSend(trimmed);
     setInputText('');
@@ -58,6 +63,14 @@ export default function FloatingChatInput({
     // Reset textarea height after send
     if (textareaRef.current) {
       textareaRef.current.style.height = 'auto';
+    }
+  };
+
+  const handleStop = () => {
+    if (onStop && typeof onStop === 'function') {
+      onStop();
+    } else {
+      console.warn('⚠️ FloatingChatInput: onStop callback not provided');
     }
   };
 
@@ -70,9 +83,9 @@ export default function FloatingChatInput({
 
   const handleStarterClick = (question) => {
     setInputText(question);
-    setShowStarterQuestions(false);
+    setShowStarters(false);
     
-    // Focus the textarea when starter question is clicked
+    // Focus textarea after clicking starter
     setTimeout(() => {
       if (textareaRef.current) {
         textareaRef.current.focus();
@@ -80,25 +93,64 @@ export default function FloatingChatInput({
     }, 0);
   };
 
+  const handleCloseStarters = () => {
+    setShowStarters(false);
+  };
+
   // Observable: Log state
   console.log('💬 FloatingChatInput rendering:', {
     starterQuestionsCount: starterQuestions.length,
-    showStarterQuestions,
+    showStarters,
     isSending,
-    hasText: inputText.length > 0
+    hasText: inputText.length > 0,
+    keyboardHeight,
+    isKeyboardVisible
   });
 
+  // Limit starter questions to first 3 for cleaner UI
+  const displayStarters = starterQuestions.slice(0, 3);
+
+  // ✅ Apply keyboard offset via inline style (only moves input, not entire page)
+  const wrapperStyle = keyboardHeight > 0 
+    ? { transform: `translateY(-${keyboardHeight}px)` }
+    : {};
+
   return (
-    <div className={styles.floatingInputWrapper}>
-      {/* Starter Questions (hide after first message or if no questions) */}
-      {showStarterQuestions && starterQuestions.length > 0 && (
-        <StarterQuestions
-          questions={starterQuestions}
-          onQuestionClick={handleStarterClick}
-        />
+    <div 
+      className={styles.floatingInputWrapper}
+      style={wrapperStyle}
+    >
+      {/* Starter Questions Section (with X button) */}
+      {showStarters && displayStarters.length > 0 && (
+        <div className={styles.starterSection}>
+          <div className={styles.starterHeader}>
+            <div className={styles.starterLabel}>Suggested questions:</div>
+            <button
+              className={styles.closeStartersBtn}
+              onClick={handleCloseStarters}
+              aria-label="Close starter questions"
+              type="button"
+            >
+              <X size={14} />
+            </button>
+          </div>
+          <div className={styles.starterChips}>
+            {displayStarters.map((question, index) => (
+              <button
+                key={index}
+                className={styles.starterChip}
+                onClick={() => handleStarterClick(question)}
+                type="button"
+                aria-label={`Use starter question: ${question}`}
+              >
+                {question}
+              </button>
+            ))}
+          </div>
+        </div>
       )}
 
-      {/* Floating Input Container */}
+      {/* Input Container */}
       <div className={styles.inputContainer}>
         <textarea
           ref={textareaRef}
@@ -112,13 +164,18 @@ export default function FloatingChatInput({
           aria-label="Message input"
         />
         
+        {/* Send/Stop Button - Icon and color swap based on isSending */}
         <button
-          className={styles.sendButton}
-          onClick={handleSend}
-          disabled={isSending || !inputText.trim()}
-          aria-label="Send message"
+          className={`${styles.sendButton} ${isSending ? styles.stopButton : ''}`}
+          onClick={isSending ? handleStop : handleSend}
+          disabled={!isSending && !inputText.trim()}
+          aria-label={isSending ? 'Stop generating' : 'Send message'}
         >
-          <Send size={18} />
+          {isSending ? (
+            <Square size={18} />
+          ) : (
+            <ArrowRight size={18} />
+          )}
         </button>
       </div>
     </div>

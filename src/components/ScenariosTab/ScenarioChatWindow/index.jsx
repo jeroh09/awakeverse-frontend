@@ -198,6 +198,20 @@ export default function ScenarioChatWindow({
     }
   };
 
+    // ✅ NEW: Handle stop message generation
+  const handleStop = () => {
+    console.log('🛑 Stop button clicked - stopping message generation');
+
+    // OPTION A: If useScenarioChat has a stopGeneration method
+    // stopGeneration(); // Uncomment if available
+
+    // OPTION B: If using AbortController pattern (check useScenarioChat hook)
+    // The hook should expose a stop/cancel method
+    // For now, log a warning
+    console.warn('⚠️ handleStop called but no stop method available in useScenarioChat');
+    console.warn('⚠️ You may need to add AbortController pattern to useScenarioChat hook');
+  };
+
   // Handle back button
   const handleBack = () => {
     if (isSending) {
@@ -394,10 +408,11 @@ export default function ScenarioChatWindow({
               onNextSpeaker={nextSpeaker} 
               theme={theme}
             />
-
+            
             <FloatingChatInput
               starterQuestions={scenario.starter_questions || []}
               onSend={handleSend}
+              onStop={handleStop}  // ✅ NEW
               isSending={isSending || (!isUnlimited && usageData.limitReached)}
             />
           </div>
