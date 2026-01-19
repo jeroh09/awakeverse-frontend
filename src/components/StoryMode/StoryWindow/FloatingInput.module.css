@@ -45,8 +45,7 @@
    FLOATING INPUT WRAPPER (Gets keyboard offset)
    ============================================================================ */
 .floatingInputWrapper {
-  width: 80%;        /* ← 3x wider, responsive */
-  max-width: none;
+  max-width: 800px;
   margin: 0 auto;
   pointer-events: all; /* Re-enable clicks for input */
   transition: transform 0.2s ease-out; /* Smooth keyboard offset */
@@ -55,11 +54,10 @@
 /* ============================================================================
    FLOATING INPUT (Unified night blue background)
    ============================================================================ */
-/* FIX 1: Container - NO border, NO background */
 .floatingInput {
-  background: transparent !important;
-  border: none !important;  /* ← NO border on container */
-  border-radius: 0;
+  background: var(--bg-surface) !important; /* #141B2E - unified night blue */
+  border: 1px solid var(--border-medium) !important;
+  border-radius: var(--radius-xl, 1.25rem);
   display: flex;
   align-items: flex-end;
   gap: var(--spacing-sm, 0.75rem);
@@ -69,10 +67,10 @@
 }
 
 .floatingInput:focus-within {
-  border: none !important;  /* ← NO border on focus */
+  border-color: var(--accent-primary) !important;
   box-shadow: none !important;
   outline: none !important;
-  background: transparent !important;
+  background: var(--bg-surface) !important; /* Keep night blue on focus */
 }
 
 /* Mobile: Smaller border-radius */
@@ -86,12 +84,10 @@
 /* ============================================================================
    TEXTAREA (Transparent - shows container background)
    ============================================================================ */
-/* FIX 2: Textarea - HAS border */
 .inputTextarea {
   flex: 1;
-  background: var(--bg-surface) !important;  /* Night blue background */
-  border: 1px solid var(--border-medium) !important;  /* ← Border HERE */
-  border-radius: var(--radius-lg, 1rem) !important;
+  background: transparent !important;
+  border: none;
   outline: none;
   resize: none;
   font-family: var(--font-body);
@@ -103,21 +99,29 @@
   max-height: 120px;
   overflow-y: auto;
   scrollbar-width: thin;
+  
+  /* Remove all browser defaults */
+  -webkit-appearance: none;
+  -moz-appearance: none;
+  appearance: none;
+  margin: 0;
+}
+
+.inputTextarea::placeholder {
+  color: var(--text-tertiary);
+}
+
+.inputTextarea:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
 }
 
 .inputTextarea:focus,
-.inputTextarea:focus-within {
-  border-color: var(--accent-primary) !important;  /* ← Indigo on focus */
+.inputTextarea:focus-within,
+.inputTextarea:focus-visible {
   outline: none !important;
-  background: var(--bg-surface) !important;
-}
-
-/* Mobile: 16px font prevents iOS zoom */
-@media (max-width: 768px) {
-  .inputTextarea {
-    font-size: 16px;
-    padding: 8px;
-  }
+  border: none !important;
+  background: transparent !important;
 }
 
 /* Textarea scrollbar */
@@ -134,7 +138,13 @@
   background: var(--accent-primary);
 }
 
-
+/* Mobile: 16px font prevents iOS auto-zoom */
+@media (max-width: 768px) {
+  .inputTextarea {
+    font-size: 16px; /* Critical for iOS */
+    padding: 8px;
+  }
+}
 
 /* ============================================================================
    SEND BUTTON (Default State - Indigo Gradient)
@@ -274,16 +284,10 @@
 }
 
 /* Fallback if CSS variables aren't loaded */
-/* Fallback if CSS variables aren't loaded */
 @supports not (color: var(--bg-canvas)) {
   .floatingInput {
-    background: transparent !important;  /* Keep transparent */
-    border: none !important;  /* Keep no border */
-  }
-  
-  .inputTextarea {
-    background: #141B2E !important;  /* Night blue on textarea */
-    border: 1px solid rgba(148, 163, 184, 0.2);  /* Border on textarea */
+    background: #141B2E !important;
+    border: 1px solid rgba(148, 163, 184, 0.2);
   }
   
   .sendButton {

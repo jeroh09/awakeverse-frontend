@@ -1,20 +1,22 @@
-// src/components/StoryMode/index.jsx - Updated with creation form integration
+// src/components/StoryMode/index.jsx - Updated with creation form integration + Info Modal
 // ✅ PHASE 2 STEP 3: Now uses AppViewContext for activeStory state management
+// ✅ STEP 2 INTEGRATION: Auto-show CreateStoryHelpInfo on first visit
 import React, { useState, useEffect, useCallback } from 'react';
 import { useUser } from '../../contexts/UserContext';
-import { useAppView } from '../../contexts/AppViewContext'; // ✅ NEW: Import context hook
+import { useAppView } from '../../contexts/AppViewContext';
 import SubscriptionService from '../../services/SubscriptionService';
 import DefensiveStoryWrapper from './DefensiveStoryWrapper';
 import TemplatesGallery from './TemplatesGallery';
 import MyStoriesPanel from './MyStoriesPanel';
 import StoryWindow from './StoryWindow';
-import StoryCreationForm from './StoryCreationForm'; // Add this import
+import StoryCreationForm from './StoryCreationForm';
+import CreateStoryHelpInfo from './CreateStoryHelpInfo'; // ✅ NEW: Import info modal
 import styles from './StoryMode.module.css';
 
 export default function StoryModeTab() {
   const { user } = useUser();
   
-  // ✅ NEW: Get activeStory from context instead of local state
+  // ✅ Get activeStory from context instead of local state
   const { activeStory, setActiveStory } = useAppView();
   
   // Subscription state
@@ -22,15 +24,16 @@ export default function StoryModeTab() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   
-  // ❌ REMOVED: Local activeStory state (now from context)
-  // const [activeStory, setActiveStory] = useState(null);
-  
   // Stories refresh trigger
   const [storiesRefreshKey, setStoriesRefreshKey] = useState(0);
 
-  // NEW: Creation form state
+  // Creation form state
   const [showCreateForm, setShowCreateForm] = useState(false);
   const [activeTemplate, setActiveTemplate] = useState(null);
+
+  // ✅ NEW: Info modal state
+  const [showInfoModal, setShowInfoModal] = useState(false);
+  const [pendingBlankCreate, setPendingBlankCreate] = useState(false);
 
   // Fetch subscription data using SubscriptionService
   const loadSubscriptionData = useCallback(async () => {
@@ -40,7 +43,7 @@ export default function StoryModeTab() {
     }
 
     try {
-      console.log('🔍 Story Mode: Loading subscription data for user:', user.id);
+      console.log('📚 Story Mode: Loading subscription data for user:', user.id);
       
       const data = await SubscriptionService.getUserSubscriptionStatus(user.id);
       
@@ -79,14 +82,12 @@ export default function StoryModeTab() {
   }, [loadSubscriptionData]);
 
   // Handle story opened
-  // ✅ UNCHANGED: Still works identically, now uses context setter
   const handleStoryOpen = useCallback((story) => {
     console.log('📖 Opening story:', story.id);
     setActiveStory(story);
   }, [setActiveStory]);
 
   // Handle story closed
-  // ✅ UNCHANGED: Still works identically, now uses context setter
   const handleStoryClose = useCallback(() => {
     console.log('📖 Closing story');
     setActiveStory(null);
@@ -107,21 +108,64 @@ export default function StoryModeTab() {
     setStoriesRefreshKey(prev => prev + 1);
   }, []);
 
-  // NEW: Open creation form with template
+  // ✅ MODIFIED: Open creation form with template + info modal check
   const handleTemplateSelect = useCallback((template) => {
     console.log('📝 Opening creation form with template:', template?.title);
-    setActiveTemplate(template);
-    setShowCreateForm(true);
+    
+    // Check if user has seen info before
+    const hasSeenInfo = localStorage.getItem('awakeverse_story_mode_help_seen') === 'true';
+    
+    if (!hasSeenInfo) {
+      // First time - show info modal first
+      console.log('ℹ️ First visit - showing info modal before creation form');
+      setActiveTemplate(template);
+      setPendingBlankCreate(false);
+      setShowInfoModal(true);
+      // Form will open after user dismisses info
+    } else {
+      // User has seen it before - open form directly
+      console.log('📝 Returning user - opening creation form directly');
+      setActiveTemplate(template);
+      setShowCreateForm(true);
+    }
   }, []);
 
-  // NEW: Open blank creation form
+  // ✅ MODIFIED: Open blank creation form + info modal check
   const handleBlankCreate = useCallback(() => {
     console.log('📝 Opening blank creation form');
-    setActiveTemplate(null);
-    setShowCreateForm(true);
+    
+    // Check if user has seen info before
+    const hasSeenInfo = localStorage.getItem('awakeverse_story_mode_help_seen') === 'true';
+    
+    if (!hasSeenInfo) {
+      // First time - show info modal first
+      console.log('ℹ️ First visit - showing info modal before creation form');
+      setActiveTemplate(null);
+      setPendingBlankCreate(true);
+      setShowInfoModal(true);
+      // Form will open after user dismisses info
+    } else {
+      // User has seen it before - open form directly
+      console.log('📝 Returning user - opening creation form directly');
+      setActiveTemplate(null);
+      setShowCreateForm(true);
+    }
   }, []);
 
-  // NEW: Handle creation form success
+  // ✅ NEW: Handle info modal close
+  const handleInfoClose = useCallback(() => {
+    console.log('ℹ️ Info modal closed');
+    setShowInfoModal(false);
+    
+    // Now open the creation form
+    console.log('📝 Opening creation form after info dismissal');
+    setShowCreateForm(true);
+    
+    // Clear pending state
+    setPendingBlankCreate(false);
+  }, []);
+
+  // Handle creation form success
   const handleCreateSuccess = useCallback((newStory) => {
     console.log('✅ Story created successfully:', newStory);
     setShowCreateForm(false);
@@ -132,7 +176,7 @@ export default function StoryModeTab() {
     // setActiveStory(newStory);
   }, []);
 
-  // NEW: Handle creation form close
+  // Handle creation form close
   const handleCreateClose = useCallback(() => {
     console.log('📝 Creation form closed');
     setShowCreateForm(false);
@@ -171,7 +215,6 @@ export default function StoryModeTab() {
   }
 
   // Full-screen story window
-  // ✅ UNCHANGED: Still checks activeStory, now from context
   if (activeStory) {
     return (
       <DefensiveStoryWrapper>
@@ -192,7 +235,7 @@ export default function StoryModeTab() {
           <section className={styles.templatesSection}>
             <TemplatesGallery
               onStoryCreated={handleStoryCreated}
-              onTemplateSelect={handleTemplateSelect} // NEW: Pass template selection handler
+              onTemplateSelect={handleTemplateSelect}
             />
           </section>
 
@@ -202,13 +245,19 @@ export default function StoryModeTab() {
               refreshKey={storiesRefreshKey}
               onStoryOpen={handleStoryOpen}
               onStoryDeleted={handleStoryDeleted}
-              onCreateStory={handleBlankCreate} // NEW: Pass create story handler
+              onCreateStory={handleBlankCreate}
             />
           </section>
         </div>
       </div>
 
-      {/* NEW: Story Creation Form Modal */}
+      {/* ✅ NEW: Info Modal with auto-show logic */}
+      <CreateStoryHelpInfo
+        isOpen={showInfoModal}
+        onClose={handleInfoClose}
+      />
+
+      {/* Story Creation Form Modal */}
       <StoryCreationForm
         template={activeTemplate}
         isOpen={showCreateForm}

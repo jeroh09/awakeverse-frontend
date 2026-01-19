@@ -23,7 +23,7 @@
 .creationModal {
   width: 100%;
   max-width: 780px;
-  max-height: 90vh;
+  height: 100vh; /* ✅ STEP 3: Changed from max-height: 90vh to full viewport */
   margin: 0 auto;
   overflow-y: auto;
   display: flex;
