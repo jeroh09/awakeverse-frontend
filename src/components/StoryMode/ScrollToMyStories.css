@@ -4,14 +4,14 @@
    SCROLL TO MY STORIES - CENTERED INLINE BUTTON
    ============================================================================ */
 .scroll-to-stories {
-  /* ✅ CENTERED INLINE - Sits at bottom of Templates Gallery */
+  /* ✅ CENTERED INLINE - Sits RIGHT AFTER Templates Gallery */
   display: flex;
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  gap: 0.75rem;
-  margin: 3rem auto 2rem; /* Top margin, centered, bottom margin */
-  padding: 1.5rem 0;
+  gap: 0.5rem;
+  margin: 1.25rem auto 2rem; /* ✅ Minimal top margin - button stays visible */
+  padding: 0.75rem 0;
   cursor: pointer;
   transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
   max-width: 300px;
@@ -104,8 +104,8 @@
    ============================================================================ */
 @media (max-width: 768px) {
   .scroll-to-stories {
-    margin: 2rem auto 1.5rem;
-    padding: 1rem 0;
+    margin: 1rem auto 1.5rem; /* ✅ Tighter spacing on mobile */
+    padding: 0.5rem 0;
   }
 
   .scroll-arrow-icon {
@@ -121,7 +121,7 @@
 
 @media (max-width: 480px) {
   .scroll-to-stories {
-    margin: 1.5rem auto 1rem;
+    margin: 0.75rem auto 1rem; /* ✅ Even tighter on small mobile */
   }
 
   .scroll-arrow-icon {
