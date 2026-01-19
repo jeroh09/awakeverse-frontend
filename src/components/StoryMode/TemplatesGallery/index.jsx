@@ -4,7 +4,7 @@ import useStoryApi from '../../../hooks/useStoryApi';
 import StoryTemplateCard from './StoryTemplateCard';
 import StoryTemplateDetailModal from './StoryTemplateDetailModal';
 import styles from './TemplatesGallery.module.css';
-import ScrollToMyStories from '../ScrollToMyStories';
+import ScrollToMyStories from './ScrollToMyStories';
 
 export default function TemplatesGallery({ 
   onStoryCreated = () => {},
@@ -99,6 +99,8 @@ export default function TemplatesGallery({
           Create immersive narratives with AI characters • Era-based storytelling
         </p>
       </div>
+      {/* Scroll Button */}
+      <ScrollToMyStories />
 
       {/* Templates Grid */}
       <div className={styles.templateGrid}>
@@ -118,27 +120,15 @@ export default function TemplatesGallery({
         </div>
       )}
 
-      {/* Buttons Row - Side by Side */}
-      <div style={{
-        display: 'flex',
-        justifyContent: 'center',
-        alignItems: 'center',
-        gap: '1.5rem',
-        marginTop: '0.75rem'
-      }}>
-        {/* Show More Button */}
-        {hasMoreTemplates && (
-          <button className={styles.showMoreButton} onClick={handleShowMore}>
-            <span className={styles.buttonIcon}>+</span>
-            <span className={styles.buttonText}>
-              Show {Math.min(6, templates.length - visibleCount)} more templates
-            </span>
-          </button>
-        )}
-
-        {/* Scroll Button */}
-        <ScrollToMyStories />
-      </div>
+      {/* Show More Button */}
+      {hasMoreTemplates && (
+        <button className={styles.showMoreButton} onClick={handleShowMore}>
+          <span className={styles.buttonIcon}>+</span>
+          <span className={styles.buttonText}>
+            Show {Math.min(6, templates.length - visibleCount)} more templates
+          </span>
+        </button>
+      )}
 
       {/* Template Detail Modal */}
       {selectedTemplate && (
