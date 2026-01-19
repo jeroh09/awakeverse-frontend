@@ -1,0 +1,179 @@
+/* src/components/StoryMode/ScrollToMyStories.css */
+
+/* ============================================================================
+   SCROLL TO MY STORIES - CENTERED INLINE BUTTON
+   ============================================================================ */
+.scroll-to-stories {
+  /* ✅ CENTERED INLINE - Sits at bottom of Templates Gallery */
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 0.75rem;
+  margin: 3rem auto 2rem; /* Top margin, centered, bottom margin */
+  padding: 1.5rem 0;
+  cursor: pointer;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  max-width: 300px;
+}
+
+.scroll-to-stories:hover {
+  transform: translateY(-4px);
+}
+
+.scroll-to-stories:active {
+  transform: translateY(-2px);
+}
+
+/* Arrow Icon Button */
+.scroll-arrow-icon {
+  width: 56px;
+  height: 56px;
+  border-radius: 50%;
+  background: rgba(99, 102, 241, 0.15); /* Indigo glow */
+  border: 2px solid rgba(99, 102, 241, 0.5);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #6366F1; /* Indigo */
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  box-shadow: 
+    0 4px 12px rgba(99, 102, 241, 0.2),
+    0 0 20px rgba(99, 102, 241, 0.15);
+  backdrop-filter: blur(10px);
+}
+
+.scroll-to-stories:hover .scroll-arrow-icon {
+  background: #6366F1; /* Solid indigo */
+  border-color: #818CF8; /* Lighter indigo */
+  color: white;
+  box-shadow: 
+    0 8px 24px rgba(99, 102, 241, 0.4),
+    0 0 40px rgba(99, 102, 241, 0.3);
+  animation: bounce 1s ease-in-out infinite;
+}
+
+/* Bounce Animation */
+@keyframes bounce {
+  0%, 100% {
+    transform: translateY(0);
+  }
+  50% {
+    transform: translateY(-4px);
+  }
+}
+
+/* Text Label - Shows below button */
+.scroll-label {
+  font-family: 'Inter', system-ui, -apple-system, BlinkMacSystemFont, sans-serif;
+  font-size: 0.9rem;
+  font-weight: 600;
+  color: rgba(148, 163, 184, 0.95); /* Secondary text */
+  text-align: center;
+  padding: 0.5rem 1rem;
+  border-radius: 999px;
+  opacity: 0.7;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  white-space: nowrap;
+}
+
+.scroll-label.visible {
+  opacity: 1;
+  color: #6366F1; /* Indigo */
+}
+
+/* Divider line above button (optional visual separator) */
+.scroll-to-stories::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 120px;
+  height: 1px;
+  background: linear-gradient(
+    90deg,
+    transparent,
+    rgba(99, 102, 241, 0.3),
+    transparent
+  );
+}
+
+/* ============================================================================
+   RESPONSIVE - MOBILE
+   ============================================================================ */
+@media (max-width: 768px) {
+  .scroll-to-stories {
+    margin: 2rem auto 1.5rem;
+    padding: 1rem 0;
+  }
+
+  .scroll-arrow-icon {
+    width: 48px;
+    height: 48px;
+  }
+
+  .scroll-label {
+    font-size: 0.85rem;
+    padding: 0.4rem 0.8rem;
+  }
+}
+
+@media (max-width: 480px) {
+  .scroll-to-stories {
+    margin: 1.5rem auto 1rem;
+  }
+
+  .scroll-arrow-icon {
+    width: 44px;
+    height: 44px;
+  }
+
+  .scroll-label {
+    font-size: 0.8rem;
+    padding: 0.35rem 0.7rem;
+  }
+}
+
+/* ============================================================================
+   ACCESSIBILITY
+   ============================================================================ */
+.scroll-to-stories:focus {
+  outline: 2px solid #6366F1;
+  outline-offset: 4px;
+  border-radius: 50%;
+}
+
+.scroll-to-stories:focus:not(:focus-visible) {
+  outline: none;
+}
+
+/* Reduced Motion */
+@media (prefers-reduced-motion: reduce) {
+  .scroll-to-stories,
+  .scroll-arrow-icon,
+  .scroll-label {
+    transition: none;
+  }
+
+  .scroll-to-stories:hover .scroll-arrow-icon {
+    animation: none;
+  }
+}
+
+/* ============================================================================
+   DARK MODE ENHANCEMENTS (Optional - already dark by default)
+   ============================================================================ */
+@media (prefers-color-scheme: dark) {
+  .scroll-arrow-icon {
+    box-shadow: 
+      0 4px 12px rgba(99, 102, 241, 0.25),
+      0 0 25px rgba(99, 102, 241, 0.2);
+  }
+
+  .scroll-to-stories:hover .scroll-arrow-icon {
+    box-shadow: 
+      0 8px 24px rgba(99, 102, 241, 0.5),
+      0 0 50px rgba(99, 102, 241, 0.4);
+  }
+}
