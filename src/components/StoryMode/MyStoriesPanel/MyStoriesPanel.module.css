@@ -21,11 +21,23 @@
   margin: 0;
 }
 
+/* ✅ NEW: Unified pill container for header buttons */
+.headerActionsContainer {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.75rem;
+  padding: 0.5rem 0.85rem;
+  border-radius: 999px;
+  background: rgba(15, 23, 42, 0.55);
+  border: 1px solid rgba(148, 163, 184, 0.22);
+  box-shadow: 0 0 0 1px rgba(10, 15, 26, 0.55);
+}
+
 .storyCounter {
-  padding: 0.5rem 1rem;
+  padding: 0.35rem 0.85rem;
   border-radius: 999px;
   font-family: var(--font-body, 'Inter', system-ui, sans-serif);
-  font-size: 0.78rem;
+  font-size: 0.72rem;
   font-weight: 600;
   text-transform: uppercase;
   letter-spacing: 0.12em;
@@ -70,23 +82,29 @@
 }
 
 .retryButton {
-  padding: 0.75rem 1.5rem;
+  padding: 0.55rem 1.15rem;
   background: var(--accent-primary, #6366f1);
   color: #f9fafb;
   border: none;
   border-radius: 999px;
   font-weight: 600;
-  font-size: 0.9rem;
+  font-size: 0.82rem;
   cursor: pointer;
   transition: all 0.2s ease;
-  margin-top: 1rem;
   font-family: var(--font-body, 'Inter', system-ui, sans-serif);
+  line-height: 1;
+  white-space: nowrap;
 }
 
 .retryButton:hover {
   background: var(--accent-hover, #818cf8);
-  transform: translateY(-2px);
+  transform: translateY(-1px);
   box-shadow: 0 4px 14px rgba(99, 102, 241, 0.45);
+}
+
+.retryButton:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
 }
 
 /* ===== EMPTY STATE ===== */

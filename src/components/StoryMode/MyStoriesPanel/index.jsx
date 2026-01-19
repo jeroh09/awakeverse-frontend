@@ -223,13 +223,9 @@ export default function MyStoriesPanel({
       {/* Header with counter, Create Story CTA, and info button */}
       <div className={styles.panelHeader}>
         <h3>My Stories</h3>
-        <div
-          style={{
-            display: 'flex',
-            alignItems: 'center',
-            gap: '0.75rem',
-          }}
-        >
+        
+        {/* ✅ NEW: Unified pill container for all header actions */}
+        <div className={styles.headerActionsContainer}>
           <div className={styles.storyCounter}>{storyCountLabel}</div>
 
           {/* Create Story CTA re-uses retryButton styling (indigo button) */}
@@ -242,7 +238,7 @@ export default function MyStoriesPanel({
             + Create Story
           </button>
 
-          {/* Info "i" button on the far right */}
+          {/* Info "i" button */}
           <button
             type="button"
             onClick={openCreateInfo}
