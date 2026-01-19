@@ -123,8 +123,8 @@ export default function TemplatesGallery({
         display: 'flex',
         justifyContent: 'center',
         alignItems: 'center',
-        gap: '2rem',
-        marginTop: '2rem'
+        gap: '1.5rem',
+        marginTop: '0.75rem'
       }}>
         {/* Show More Button */}
         {hasMoreTemplates && (
