@@ -1,4 +1,5 @@
 // src/components/StoryMode/ScrollToMyStories.jsx
+// SIMPLE VERSION - Just scrolls to bottom of page
 import React, { useState } from 'react';
 import './ScrollToMyStories.css';
 
@@ -6,19 +7,13 @@ export default function ScrollToMyStories() {
   const [isHovered, setIsHovered] = useState(false);
 
   const handleScrollToStories = () => {
-    const myStoriesSection = document.querySelector('.myStoriesPanel');
+    // Simple: Just scroll to bottom of page
+    window.scrollTo({
+      top: document.documentElement.scrollHeight,
+      behavior: 'smooth'
+    });
     
-    if (myStoriesSection) {
-      // Smooth scroll to My Stories section
-      myStoriesSection.scrollIntoView({ 
-        behavior: 'smooth', 
-        block: 'start' 
-      });
-      
-      console.log('📚 Scrolled to My Stories section');
-    } else {
-      console.warn('⚠️ My Stories section not found');
-    }
+    console.log('📚 Scrolled to bottom (My Stories)');
   };
 
   return (
