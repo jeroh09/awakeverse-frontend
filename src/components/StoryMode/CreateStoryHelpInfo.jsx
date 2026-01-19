@@ -1,7 +1,8 @@
 // src/components/StoryMode/CreateStoryHelpInfo.jsx
 // ✅ OVERHAULED: Now matches VerseStudioTab pattern with auto-show logic
 import React, { useState, useEffect } from 'react';
-import styles from './StoryMode.module.css';
+// ✅ NEW
+import styles from './CreateStoryHelpInfo.module.css';
 
 /**
  * Story Mode Help Info Modal
@@ -90,11 +91,12 @@ export default function CreateStoryHelpInfo({
     return showTriggerButton ? (
       <button
         type="button"
-        className={styles.infoPill}
+        className={styles.infoButton}
         onClick={openInfo}
         aria-label="How to use Create Story"
       >
         <InfoIcon />
+        <span className={styles.infoLabel}>Help</span>
       </button>
     ) : null;
   }
