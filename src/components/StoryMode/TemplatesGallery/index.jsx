@@ -4,7 +4,7 @@ import useStoryApi from '../../../hooks/useStoryApi';
 import StoryTemplateCard from './StoryTemplateCard';
 import StoryTemplateDetailModal from './StoryTemplateDetailModal';
 import styles from './TemplatesGallery.module.css';
-import ScrollToMyStories from './ScrollToMyStories';
+import ScrollToMyStories from '../ScrollToMyStories';
 
 export default function TemplatesGallery({ 
   onStoryCreated = () => {},
