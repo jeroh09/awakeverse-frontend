@@ -12,7 +12,7 @@ import StoryWindow from './StoryWindow';
 import StoryCreationForm from './StoryCreationForm';
 import CreateStoryHelpInfo from './CreateStoryHelpInfo'; // ✅ NEW: Import info modal
 import styles from './StoryMode.module.css';
-import ScrollToMyStories from './ScrollToMyStories';
+
 
 export default function StoryModeTab() {
   const { user } = useUser();
@@ -238,8 +238,7 @@ export default function StoryModeTab() {
               onStoryCreated={handleStoryCreated}
               onTemplateSelect={handleTemplateSelect}
             />
-            {/* ✅ ADD HERE - After TemplatesGallery, still in templates section */}
-            <ScrollToMyStories />
+            
           </section>
 
           {/* My Stories Section */}

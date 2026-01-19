@@ -4,6 +4,7 @@ import useStoryApi from '../../../hooks/useStoryApi';
 import StoryTemplateCard from './StoryTemplateCard';
 import StoryTemplateDetailModal from './StoryTemplateDetailModal';
 import styles from './TemplatesGallery.module.css';
+import ScrollToMyStories from './ScrollToMyStories';
 
 export default function TemplatesGallery({ 
   onStoryCreated = () => {},
@@ -117,15 +118,27 @@ export default function TemplatesGallery({
         </div>
       )}
 
-      {/* Show More Button */}
-      {hasMoreTemplates && (
-        <button className={styles.showMoreButton} onClick={handleShowMore}>
-          <span className={styles.buttonIcon}>+</span>
-          <span className={styles.buttonText}>
-            Show {Math.min(6, templates.length - visibleCount)} more templates
-          </span>
-        </button>
-      )}
+      {/* Buttons Row - Side by Side */}
+      <div style={{
+        display: 'flex',
+        justifyContent: 'center',
+        alignItems: 'center',
+        gap: '2rem',
+        marginTop: '2rem'
+      }}>
+        {/* Show More Button */}
+        {hasMoreTemplates && (
+          <button className={styles.showMoreButton} onClick={handleShowMore}>
+            <span className={styles.buttonIcon}>+</span>
+            <span className={styles.buttonText}>
+              Show {Math.min(6, templates.length - visibleCount)} more templates
+            </span>
+          </button>
+        )}
+
+        {/* Scroll Button */}
+        <ScrollToMyStories />
+      </div>
 
       {/* Template Detail Modal */}
       {selectedTemplate && (
