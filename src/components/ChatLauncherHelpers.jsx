@@ -735,34 +735,6 @@ export const MyCharactersPanel = ({
               }}
             />
           </div>
-          <div style={{
-            width: isMobile ? '80px' : '100px',
-            height: isMobile ? '80px' : '100px',
-            borderRadius: '50%',
-            background: 'rgba(255, 255, 255, 0.1)',
-            border: substantialStyles.effects.borderThick,
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'center'
-          }}>
-            <span
-              aria-hidden="true"
-              style={{
-                fontFamily: "'Caveat', cursive",
-                fontStyle: 'italic',
-                fontWeight: 600,
-                lineHeight: 1,
-                letterSpacing: '0.5px',
-                fontSize: isMobile ? '26px' : '30px',
-                userSelect: 'none'
-              }}
-            >
-              <span style={{ color: theme.colors.accent.primary }}>y</span>
-              <span style={{ color: theme.colors.brand.ivory }}>our IP</span>
-            </span>
-          </div>
-
-
           <div>
             <h3 style={{
               ...substantialStyles.typography.heading,
