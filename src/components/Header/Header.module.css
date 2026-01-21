@@ -524,3 +524,22 @@
   text-transform: none;
   letter-spacing: normal;
 }
+/* === AwakeVerse Wordmark Size Boost (+15%) === */
+
+/* Base wordmark scale */
+.wordmark {
+  font-size: 1.15em; /* +15% */
+}
+
+/* Fine-tune specific contexts if needed */
+.title .wordmark {
+  font-size: 1.15em;
+}
+
+.showButtonText .wordmark {
+  font-size: 1.15em;
+}
+
+.sidebarTitle .wordmark {
+  font-size: 1.15em;
+}
