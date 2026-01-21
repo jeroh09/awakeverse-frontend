@@ -493,3 +493,34 @@
     width: min(320px, 90vw);
   }
 }
+/* ===== AwakeVerse Caveat Wordmark ===== */
+
+/* Add Caveat (if not already loaded globally) */
+@import url('https://fonts.googleapis.com/css2?family=Caveat:wght@500;600&display=swap');
+
+.wordmark,
+.wordmark * {
+  font-family: 'Caveat', cursive !important;
+  font-style: italic !important;
+  font-weight: 600 !important;
+
+  /* Override the existing uppercase / wide tracking styles used in title/showButton/sidebarTitle */
+  text-transform: none !important;
+  letter-spacing: 0.04em !important;
+  line-height: 1 !important;
+  white-space: nowrap;
+}
+
+/* Color splits */
+.wordmarkIvory {
+  color: #f5f5dc;
+}
+.wordmarkIndigo {
+  color: #6366f1;
+}
+
+/* Make sure the existing title container doesn’t force uppercase look */
+.title {
+  text-transform: none;
+  letter-spacing: normal;
+}

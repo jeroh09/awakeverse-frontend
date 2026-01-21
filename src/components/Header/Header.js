@@ -1,5 +1,6 @@
-// src/components/Header/Header.js – UPDATED WITH VERSE STUDIO NAV + RESPONSIVE SHOW BUTTON
-// ✅ PHASE 4 STEP 7: Added mobile detection and conditional button hiding for active chat/story
+// src/components/Header/Header.js – UPDATED: AwakeVerse Caveat Wordmark (A + V indigo)
+// Keeps all existing logic; only changes brand rendering + adds wordmark component.
+
 import React, { useState, useEffect } from 'react';
 import styles from './Header.module.css';
 import { useUser } from '../../contexts/UserContext';
@@ -10,23 +11,10 @@ import ProfileButton from '../ProfileButton';
 // === AwakeVerse Nav Icons (inline SVG, indigo glow) ===
 
 const ChatIcon = ({ className }) => (
-  <svg
-    className={className}
-    width="20"
-    height="20"
-    viewBox="0 0 24 24"
-    fill="none"
-    xmlns="http://www.w3.org/2000/svg"
-  >
+  <svg className={className} width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
     <defs>
       <filter id="chatGlow" x="-50%" y="-50%" width="200%" height="200%">
-        <feDropShadow
-          dx="0"
-          dy="0"
-          stdDeviation="2"
-          floodColor="#6366f1"
-          floodOpacity="0.55"
-        />
+        <feDropShadow dx="0" dy="0" stdDeviation="2" floodColor="#6366f1" floodOpacity="0.55" />
       </filter>
     </defs>
     <path
@@ -41,63 +29,22 @@ const ChatIcon = ({ className }) => (
 );
 
 const DiscoverIcon = ({ className }) => (
-  <svg
-    className={className}
-    width="20"
-    height="20"
-    viewBox="0 0 24 24"
-    fill="none"
-    xmlns="http://www.w3.org/2000/svg"
-  >
+  <svg className={className} width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
     <defs>
       <filter id="discoverGlow" x="-50%" y="-50%" width="200%" height="200%">
-        <feDropShadow
-          dx="0"
-          dy="0"
-          stdDeviation="2"
-          floodColor="#6366f1"
-          floodOpacity="0.55"
-        />
+        <feDropShadow dx="0" dy="0" stdDeviation="2" floodColor="#6366f1" floodOpacity="0.55" />
       </filter>
     </defs>
-    <rect
-      x="4"
-      y="4"
-      width="16"
-      height="16"
-      rx="4"
-      stroke="currentColor"
-      strokeWidth="2"
-      filter="url(#discoverGlow)"
-    />
-    <path
-      d="M9 15V12M12 15V9M15 15V11"
-      stroke="currentColor"
-      strokeWidth="2"
-      strokeLinecap="round"
-      filter="url(#discoverGlow)"
-    />
+    <rect x="4" y="4" width="16" height="16" rx="4" stroke="currentColor" strokeWidth="2" filter="url(#discoverGlow)" />
+    <path d="M9 15V12M12 15V9M15 15V11" stroke="currentColor" strokeWidth="2" strokeLinecap="round" filter="url(#discoverGlow)" />
   </svg>
 );
 
 const StoriesIcon = ({ className }) => (
-  <svg
-    className={className}
-    width="20"
-    height="20"
-    viewBox="0 0 24 24"
-    fill="none"
-    xmlns="http://www.w3.org/2000/svg"
-  >
+  <svg className={className} width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
     <defs>
       <filter id="storiesGlow" x="-50%" y="-50%" width="200%" height="200%">
-        <feDropShadow
-          dx="0"
-          dy="0"
-          stdDeviation="2"
-          floodColor="#6366f1"
-          floodOpacity="0.55"
-        />
+        <feDropShadow dx="0" dy="0" stdDeviation="2" floodColor="#6366f1" floodOpacity="0.55" />
       </filter>
     </defs>
     <path
@@ -112,23 +59,10 @@ const StoriesIcon = ({ className }) => (
 );
 
 const ScenariosIcon = ({ className }) => (
-  <svg
-    className={className}
-    width="20"
-    height="20"
-    viewBox="0 0 24 24"
-    fill="none"
-    xmlns="http://www.w3.org/2000/svg"
-  >
+  <svg className={className} width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
     <defs>
       <filter id="scenariosGlow" x="-50%" y="-50%" width="200%" height="200%">
-        <feDropShadow
-          dx="0"
-          dy="0"
-          stdDeviation="2"
-          floodColor="#6366f1"
-          floodOpacity="0.55"
-        />
+        <feDropShadow dx="0" dy="0" stdDeviation="2" floodColor="#6366f1" floodOpacity="0.55" />
       </filter>
     </defs>
     <path
@@ -149,107 +83,28 @@ const ScenariosIcon = ({ className }) => (
 );
 
 const CreateIcon = ({ className }) => (
-  <svg
-    className={className}
-    width="20"
-    height="20"
-    viewBox="0 0 24 24"
-    fill="none"
-    xmlns="http://www.w3.org/2000/svg"
-  >
+  <svg className={className} width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
     <defs>
       <filter id="createGlow" x="-50%" y="-50%" width="200%" height="200%">
-        <feDropShadow
-          dx="0"
-          dy="0"
-          stdDeviation="2"
-          floodColor="#6366f1"
-          floodOpacity="0.55"
-        />
+        <feDropShadow dx="0" dy="0" stdDeviation="2" floodColor="#6366f1" floodOpacity="0.55" />
       </filter>
     </defs>
-    <rect
-      x="5"
-      y="4"
-      width="14"
-      height="16"
-      rx="3"
-      stroke="currentColor"
-      strokeWidth="2"
-      filter="url(#createGlow)"
-    />
-    <path
-      d="M9 9h2 M12 12h3 M9 15h5"
-      stroke="currentColor"
-      strokeWidth="2"
-      strokeLinecap="round"
-      filter="url(#createGlow)"
-    />
+    <rect x="5" y="4" width="14" height="16" rx="3" stroke="currentColor" strokeWidth="2" filter="url(#createGlow)" />
+    <path d="M9 9h2 M12 12h3 M9 15h5" stroke="currentColor" strokeWidth="2" strokeLinecap="round" filter="url(#createGlow)" />
   </svg>
 );
 
-/**
- * VerseStudioIcon – unique thumbnail for Verse Studio
- * 3-node constellation / orbit to signal multi-LLM collaboration
- */
 const VerseStudioIcon = ({ className }) => (
-  <svg
-    className={className}
-    width="20"
-    height="20"
-    viewBox="0 0 24 24"
-    fill="none"
-    xmlns="http://www.w3.org/2000/svg"
-  >
+  <svg className={className} width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
     <defs>
       <filter id="verseGlow" x="-50%" y="-50%" width="200%" height="200%">
-        <feDropShadow
-          dx="0"
-          dy="0"
-          stdDeviation="2.2"
-          floodColor="#6366f1"
-          floodOpacity="0.65"
-        />
+        <feDropShadow dx="0" dy="0" stdDeviation="2.2" floodColor="#6366f1" floodOpacity="0.65" />
       </filter>
     </defs>
-    {/* Outer orbit */}
-    <circle
-      cx="12"
-      cy="12"
-      r="7"
-      stroke="currentColor"
-      strokeWidth="1.8"
-      opacity="0.7"
-      filter="url(#verseGlow)"
-    />
-    {/* Node 1 */}
-    <circle
-      cx="9"
-      cy="9"
-      r="1.7"
-      fill="currentColor"
-      opacity="0.95"
-      filter="url(#verseGlow)"
-    />
-    {/* Node 2 */}
-    <circle
-      cx="15"
-      cy="10"
-      r="1.5"
-      fill="currentColor"
-      opacity="0.85"
-      filter="url(#verseGlow)"
-    />
-    {/* Node 3 */}
-    <circle
-      cx="11"
-      cy="15"
-      r="1.4"
-      fill="currentColor"
-      opacity="0.85"
-      filter="url(#verseGlow)"
-    />
-    {/* Connecting paths */}
+    <circle cx="12" cy="12" r="7" stroke="currentColor" strokeWidth="1.8" opacity="0.7" filter="url(#verseGlow)" />
+    <circle cx="9" cy="9" r="1.7" fill="currentColor" opacity="0.95" filter="url(#verseGlow)" />
+    <circle cx="15" cy="10" r="1.5" fill="currentColor" opacity="0.85" filter="url(#verseGlow)" />
+    <circle cx="11" cy="15" r="1.4" fill="currentColor" opacity="0.85" filter="url(#verseGlow)" />
     <path
       d="M9 9L15 10L11 15Z"
       stroke="currentColor"
@@ -262,27 +117,11 @@ const VerseStudioIcon = ({ className }) => (
   </svg>
 );
 
-/**
- * ChevronDownIcon – for mobile "show header" button
- */
 const ChevronDownIcon = ({ className }) => (
-  <svg
-    className={className}
-    width="20"
-    height="20"
-    viewBox="0 0 24 24"
-    fill="none"
-    xmlns="http://www.w3.org/2000/svg"
-  >
+  <svg className={className} width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
     <defs>
       <filter id="chevronGlow" x="-50%" y="-50%" width="200%" height="200%">
-        <feDropShadow
-          dx="0"
-          dy="0"
-          stdDeviation="2"
-          floodColor="#6366f1"
-          floodOpacity="0.6"
-        />
+        <feDropShadow dx="0" dy="0" stdDeviation="2" floodColor="#6366f1" floodOpacity="0.6" />
       </filter>
     </defs>
     <path
@@ -294,6 +133,16 @@ const ChevronDownIcon = ({ className }) => (
       filter="url(#chevronGlow)"
     />
   </svg>
+);
+
+// ✅ New: AwakeVerse Caveat wordmark (A + V indigo)
+const AwakeVerseWordmark = ({ className }) => (
+  <span className={className} aria-label="AwakeVerse">
+    <span className={styles.wordmarkIndigo}>A</span>
+    <span className={styles.wordmarkIvory}>wake</span>
+    <span className={styles.wordmarkIndigo}>V</span>
+    <span className={styles.wordmarkIvory}>erse</span>
+  </span>
 );
 
 export default function Header() {
@@ -311,88 +160,39 @@ export default function Header() {
   const [isHeaderVisible, setIsHeaderVisible] = useState(true);
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
 
-  // ✅ NEW: Mobile detection (≤768px)
   const [isMobile, setIsMobile] = useState(window.innerWidth <= 768);
 
-  // ✅ NEW: Mobile detection effect
   useEffect(() => {
-    const handleResize = () => {
-      setIsMobile(window.innerWidth <= 768);
-    };
-    
+    const handleResize = () => setIsMobile(window.innerWidth <= 768);
     window.addEventListener('resize', handleResize);
     return () => window.removeEventListener('resize', handleResize);
   }, []);
 
   const showNavigation = isAuthenticated && !!viewContext;
 
-  // Auto-hide header after 6s
   useEffect(() => {
     if (!isHeaderVisible || !isAuthenticated) return;
     const timer = setTimeout(() => setIsHeaderVisible(false), 6000);
     return () => clearTimeout(timer);
   }, [isHeaderVisible, isAuthenticated]);
 
-  // --- Build nav items & groups ---
   const navItems = !showNavigation
     ? []
     : [
-        {
-          key: 'chat',
-          label: 'Chat',
-          icon: ChatIcon,
-          viewState: viewContext.VIEW_STATES.CHAT,
-        },
-        {
-          key: 'discover',
-          label: 'Discover',
-          icon: DiscoverIcon,
-          viewState: viewContext.VIEW_STATES.MARKET_HUB,
-        },
-        {
-          key: 'stories',
-          label: 'Story',
-          icon: StoriesIcon,
-          viewState: viewContext.VIEW_STATES.STORY_MODE,
-        },
-        {
-          key: 'create',
-          label: 'Create',
-          icon: CreateIcon,
-          viewState: viewContext.VIEW_STATES.CREATOR_DASHBOARD,
-        },
-        {
-          key: 'scenarios',
-          label: 'Dialogue', // ✅ CHANGED: 'Scenarios' → 'Dialogue' for UX
-          icon: ScenariosIcon,
-          viewState: viewContext.VIEW_STATES.SCENARIOS,
-        },
-        {
-          key: 'verseStudio',
-          label: 'Workspace',
-          icon: VerseStudioIcon,
-          viewState: viewContext.VIEW_STATES.VERSE_STUDIO,
-        },
+        { key: 'chat', label: 'Chat', icon: ChatIcon, viewState: viewContext.VIEW_STATES.CHAT },
+        { key: 'discover', label: 'Discover', icon: DiscoverIcon, viewState: viewContext.VIEW_STATES.MARKET_HUB },
+        { key: 'stories', label: 'Story', icon: StoriesIcon, viewState: viewContext.VIEW_STATES.STORY_MODE },
+        { key: 'create', label: 'Create', icon: CreateIcon, viewState: viewContext.VIEW_STATES.CREATOR_DASHBOARD },
+        { key: 'scenarios', label: 'Dialogue', icon: ScenariosIcon, viewState: viewContext.VIEW_STATES.SCENARIOS },
+        { key: 'verseStudio', label: 'Workspace', icon: VerseStudioIcon, viewState: viewContext.VIEW_STATES.VERSE_STUDIO },
       ];
 
   const itemsByKey = Object.fromEntries(navItems.map((item) => [item.key, item]));
 
   const navGroups = [
-    {
-      key: 'primary',
-      label: 'Primary',
-      items: ['chat', 'discover'],
-    },
-    {
-      key: 'storyWorld',
-      label: 'Story world',
-      items: ['stories'],
-    },
-    {
-      key: 'productivity',
-      label: 'Productivity',
-      items: ['create', 'scenarios', 'verseStudio'],
-    },
+    { key: 'primary', label: 'Primary', items: ['chat', 'discover'] },
+    { key: 'storyWorld', label: 'Story world', items: ['stories'] },
+    { key: 'productivity', label: 'Productivity', items: ['create', 'scenarios', 'verseStudio'] },
   ];
 
   const handleNavClick = (viewState) => {
@@ -408,7 +208,6 @@ export default function Header() {
 
   const closeSidebar = () => setIsSidebarOpen(false);
 
-  // Avatar
   const avatarUrlRaw = user?.avatarUrl || user?.avatar_url;
   const avatarUrl =
     avatarUrlRaw && typeof avatarUrlRaw === 'string'
@@ -428,21 +227,19 @@ export default function Header() {
   const subscriptionLabel = subscriptionInfo?.display_name || 'Free';
   const subscriptionActive = subscriptionInfo?.is_active || false;
 
-  // ✅ NEW: Determine if button should be hidden
-  // Hide on mobile when in active chat window OR active story window
-  const isInActiveChatWindow = viewContext?.activeChatCharacter !== null && 
-                                viewContext?.activeChatCharacter !== undefined;
-  const isInActiveStoryWindow = viewContext?.activeStory !== null && 
-                                 viewContext?.activeStory !== undefined;
+  const isInActiveChatWindow = viewContext?.activeChatCharacter !== null && viewContext?.activeChatCharacter !== undefined;
+  const isInActiveStoryWindow = viewContext?.activeStory !== null && viewContext?.activeStory !== undefined;
   const shouldHideButton = isMobile && (isInActiveChatWindow || isInActiveStoryWindow);
 
   return (
     <>
-      {/* Top brand bar – fully removed when not visible */}
       {isHeaderVisible && (
         <header className={styles.header}>
           <div className={styles.brandShell}>
-            <h1 className={styles.title}>AwakeVerse</h1>
+            {/* ✅ Updated brand title */}
+            <h1 className={styles.title}>
+              <AwakeVerseWordmark className={styles.wordmark} />
+            </h1>
           </div>
 
           <div className={styles.userSection}>
@@ -459,9 +256,7 @@ export default function Header() {
                       }}
                     />
                   ) : (
-                    <div className={styles.avatarFallback}>
-                      {userInitial.toUpperCase()}
-                    </div>
+                    <div className={styles.avatarFallback}>{userInitial.toUpperCase()}</div>
                   )}
                 </div>
                 <ProfileButton user={user} />
@@ -479,26 +274,20 @@ export default function Header() {
         </header>
       )}
 
-      {/* Responsive show header button: text on desktop, icon on mobile */}
-      {/* ✅ UPDATED: Now conditionally hidden on mobile when in active chat/story */}
       {!isHeaderVisible && !shouldHideButton && (
-        <button
-          className={styles.showButton}
-          onClick={() => setIsHeaderVisible(true)}
-          aria-label="Show header"
-        >
-          <span className={styles.showButtonText}>AwakeVerse</span>
+        <button className={styles.showButton} onClick={() => setIsHeaderVisible(true)} aria-label="Show header">
+          {/* ✅ Updated show button text (desktop only) */}
+          <span className={styles.showButtonText}>
+            <AwakeVerseWordmark className={styles.wordmark} />
+          </span>
           <ChevronDownIcon className={styles.showButtonIcon} />
         </button>
       )}
 
-      {/* Subtle pill-style hamburger (left edge) */}
       {showNavigation && (
         <button
           type="button"
-          className={`${styles.sidebarHandle} ${
-            isSidebarOpen ? styles.sidebarHandleOpen : ''
-          }`}
+          className={`${styles.sidebarHandle} ${isSidebarOpen ? styles.sidebarHandleOpen : ''}`}
           onClick={toggleSidebar}
           aria-label={isSidebarOpen ? 'Close menu' : 'Open menu'}
         >
@@ -508,53 +297,40 @@ export default function Header() {
         </button>
       )}
 
-      {/* Sidebar + overlay */}
       {showNavigation && (
         <div
-          className={`${styles.sidebarOverlay} ${
-            isSidebarOpen ? styles.sidebarOverlayOpen : ''
-          }`}
+          className={`${styles.sidebarOverlay} ${isSidebarOpen ? styles.sidebarOverlayOpen : ''}`}
           onClick={closeSidebar}
         >
           <aside
-            className={`${styles.sidebar} ${
-              isSidebarOpen ? styles.sidebarOpen : ''
-            }`}
+            className={`${styles.sidebar} ${isSidebarOpen ? styles.sidebarOpen : ''}`}
             onClick={(e) => e.stopPropagation()}
             aria-label="AwakeVerse navigation"
           >
-            {/* Sidebar header */}
             <div className={styles.sidebarHeader}>
               <div className={styles.sidebarTitleBlock}>
-                <span className={styles.sidebarTitle}>AwakeVerse</span>
-                <span className={styles.sidebarSubtitle}>
-                  Primary, story worlds, and productivity.
+                {/* ✅ Updated sidebar title */}
+                <span className={styles.sidebarTitle}>
+                  <AwakeVerseWordmark className={styles.wordmark} />
                 </span>
+                <span className={styles.sidebarSubtitle}>Primary, story worlds, and productivity.</span>
               </div>
             </div>
 
-            {/* Nav groups */}
             <nav className={styles.sidebarNav}>
               {navGroups.map((group) => {
-                const groupItems = group.items
-                  .map((key) => itemsByKey[key])
-                  .filter(Boolean);
-
+                const groupItems = group.items.map((key) => itemsByKey[key]).filter(Boolean);
                 if (groupItems.length === 0) return null;
 
                 return (
                   <div className={styles.sidebarSection} key={group.key}>
-                    <div className={styles.sidebarSectionLabel}>
-                      {group.label}
-                    </div>
+                    <div className={styles.sidebarSectionLabel}>{group.label}</div>
                     <div className={styles.sidebarSectionItems}>
                       {groupItems.map(({ key, label, icon: Icon, viewState }) => (
                         <button
                           key={key}
                           className={`${styles.sidebarNavItem} ${
-                            viewContext.currentView === viewState
-                              ? styles.sidebarNavItemActive
-                              : ''
+                            viewContext.currentView === viewState ? styles.sidebarNavItemActive : ''
                           }`}
                           onClick={() => handleNavClick(viewState)}
                         >
@@ -568,25 +344,15 @@ export default function Header() {
               })}
             </nav>
 
-            {/* Sidebar footer – user + subscription */}
             {isAuthenticated && (
               <footer className={styles.sidebarFooter}>
                 <div className={styles.userMeta}>
                   <div className={styles.userName}>
-                    {user?.display_name ||
-                      user?.displayName ||
-                      user?.name ||
-                      'AwakeVerse explorer'}
+                    {user?.display_name || user?.displayName || user?.name || 'AwakeVerse explorer'}
                   </div>
-                  {user?.username && (
-                    <div className={styles.userEmail}>{user.username}</div>
-                  )}
+                  {user?.username && <div className={styles.userEmail}>{user.username}</div>}
                 </div>
-                <div
-                  className={`${styles.subscriptionBadge} ${
-                    subscriptionActive ? styles.subscriptionActive : ''
-                  }`}
-                >
+                <div className={`${styles.subscriptionBadge} ${subscriptionActive ? styles.subscriptionActive : ''}`}>
                   {subscriptionLabel}
                 </div>
               </footer>
