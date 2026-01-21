@@ -613,70 +613,6 @@ export const PersonalizedSection = ({
   );
 };
 
-const YourIPMark = ({ isMobile }) => {
-  const indigo = theme.colors.accent.primary; // #6366F1
-  const ivory  = theme.colors.brand.ivory;    // #F5F5DC
-
-  return (
-    <svg
-      width={isMobile ? 68 : 82}
-      height={isMobile ? 48 : 56}
-      viewBox="0 0 150 70"
-      xmlns="http://www.w3.org/2000/svg"
-      aria-hidden="true"
-      style={{ display: 'block' }}
-    >
-      {/* Filled half-oval base (subtle, grounded) */}
-      <path
-        d="
-          M20 42
-          C 32 56, 58 56, 70 42
-          L 70 50
-          C 58 62, 32 62, 20 50
-          Z
-        "
-        fill={indigo}
-        opacity="0.9"
-      />
-
-      {/* Short vertical + 45° join + extended underline */}
-      <path
-        d="M68 18 L68 32 L74 38 L124 38"
-        fill="none"
-        stroke={indigo}
-        strokeWidth="5"
-        strokeLinecap="round"
-        strokeLinejoin="round"
-      />
-
-      {/* Tail easing + dot */}
-      <path
-        d="M124 38 C 134 38, 138 34, 138 30"
-        fill="none"
-        stroke={indigo}
-        strokeWidth="5"
-        strokeLinecap="round"
-        strokeLinejoin="round"
-      />
-      <circle cx="140" cy="30" r="3.8" fill={indigo} />
-
-      {/* “our IP” — Caveat (Ivory) */}
-      <text
-        x="82"
-        y="34"
-        fill={ivory}
-        fontFamily="'Caveat', cursive"
-        fontSize={isMobile ? 26 : 30}
-        fontWeight="600"
-        letterSpacing="0.2"
-      >
-        our IP
-      </text>
-    </svg>
-  );
-};
-
-
 /* ---------------------------- MyCharactersPanel ------------------------- */
 export const MyCharactersPanel = ({
   userCharacters = [],
@@ -771,8 +707,24 @@ export const MyCharactersPanel = ({
             alignItems: 'center',
             justifyContent: 'center'
           }}>
-            <YourIPMark isMobile={isMobile} />
+            <span
+              aria-hidden="true"
+              style={{
+                fontFamily: "'Caveat', cursive",
+                fontStyle: 'italic',
+                fontWeight: 600,
+                lineHeight: 1,
+                letterSpacing: '0.5px',
+                fontSize: isMobile ? '26px' : '30px',
+                userSelect: 'none'
+              }}
+            >
+              <span style={{ color: theme.colors.accent.primary }}>y</span>
+              <span style={{ color: theme.colors.brand.ivory }}>our IP</span>
+            </span>
           </div>
+
+
           <div>
             <h3 style={{
               ...substantialStyles.typography.heading,
