@@ -9,6 +9,15 @@ html, body {
   height: 100%;
 }
 
+/* Signature mark: force Caveat regardless of global font rules */
+.your-ip-mark,
+.your-ip-mark * {
+  font-family: 'Caveat', cursive !important;
+  font-style: italic !important;
+  font-weight: 600 !important;
+}
+
+
 /* Replace your existing font imports in styles.css with these: */
 
 @import url('https://fonts.googleapis.com/css2?family=Syne:wght@500;600;700;800&family=Inter:wght@400;500;600;700&family=Caveat:wght@500;600&display=swap');

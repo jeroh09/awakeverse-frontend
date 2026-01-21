@@ -698,6 +698,44 @@ export const MyCharactersPanel = ({
           gap: isMobile ? '1.5rem' : '2rem'
         }}>
           <div style={{
+            display: 'inline-flex',
+            flexDirection: 'column',
+            alignItems: 'flex-start',
+            gap: isMobile ? '8px' : '10px'
+          }}>
+            <span
+              className="your-ip-mark"
+              aria-hidden="true"
+              style={{
+                lineHeight: 1,
+                letterSpacing: '0.5px',
+                fontSize: isMobile ? '34px' : '44px',
+                userSelect: 'none',
+                whiteSpace: 'nowrap'
+              }}
+            >
+              <span style={{ color: theme.colors.accent.primary }}>y</span>
+              <span style={{ color: theme.colors.brand.ivory }}>our </span>
+              <span style={{ color: theme.colors.accent.primary }}>I</span>
+              <span style={{ color: theme.colors.brand.ivory }}>P</span>
+              <span style={{ color: theme.colors.accent.primary }}>.</span>
+            </span>
+
+            {/* Indigo → Ivory taper underline */}
+            <span
+              aria-hidden="true"
+              style={{
+                height: isMobile ? '3px' : '4px',
+                width: isMobile ? '140px' : '180px',
+                borderRadius: '999px',
+                background: `linear-gradient(90deg, ${theme.colors.accent.primary} 0%, ${theme.colors.brand.ivory} 85%)`,
+                opacity: 0.95,
+                /* taper effect: slim at the end */
+                clipPath: 'polygon(0 0, 100% 35%, 100% 65%, 0 100%)'
+              }}
+            />
+          </div>
+          <div style={{
             width: isMobile ? '80px' : '100px',
             height: isMobile ? '80px' : '100px',
             borderRadius: '50%',
