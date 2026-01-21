@@ -127,6 +127,29 @@ const ORACLE_PROMPTS = [
   "Find your mentor...",
 ];
 
+const PlusChevronIcon = ({ size = 18, className, style }) => (
+  <svg
+    width={size}
+    height={size}
+    viewBox="0 0 18 18"
+    fill="none"
+    xmlns="http://www.w3.org/2000/svg"
+    aria-hidden="true"
+    className={className}
+    style={{ display: 'block', ...style }}
+  >
+    <g stroke="currentColor" strokeWidth="1.6" strokeLinecap="round">
+      {/* base north (top-right-ish) */}
+      <path d="M12.6 4.7v2.8M11.2 6.1h2.8" />
+      {/* tip south (bottom-right-ish) */}
+      <path d="M12.6 10.5v2.8M11.2 11.9h2.8" />
+      {/* pointy edge (left point) */}
+      <path d="M4.9 7.6v2.8M3.5 9h2.8" />
+    </g>
+  </svg>
+);
+
+
 // ADD THE NEW CATEGORY CARD COMPONENT RIGHT HERE
 export const CategoryCard = (props) => {
   const { category, isMobile } = props;
@@ -855,22 +878,38 @@ const ChatLauncherPage = ({ onStartChat, discoveredCharacters = [] }) => {
           </p>
 
           {discoveredCharacters.length > 0 && (
-          <div style={{
-            marginTop: '1rem',
-            padding: '0.5rem 1rem',
-            background: theme.colors.brand.ivory + '1A', // 10% opacity hex
-            border: `1px solid ${theme.colors.brand.ivory}33`, // 20% opacity hex
-            borderRadius: '15px',
-            fontSize: '0.9rem',
-            color: theme.colors.brand.ivory,
-            display: 'inline-flex',
-            alignItems: 'center',
-            gap: '0.5rem',
-            backdropFilter: 'blur(10px)'
-          }}>
-            ✨ {discoveredCharacters.length} character{discoveredCharacters.length !== 1 ? 's' : ''} discovered from Market Hub
-          </div>
-        )}
+            <div
+              style={{
+                marginTop: '1rem',
+                padding: '0.5rem 1rem',
+                background: theme.colors.brand.ivory + '1A', // 10% opacity
+                border: `1px solid ${theme.colors.brand.ivory}33`, // 20% opacity
+                borderRadius: '15px',
+                fontSize: '0.9rem',
+                color: theme.colors.brand.ivory,
+                display: 'inline-flex',
+                alignItems: 'center',
+                gap: '0.5rem',
+                backdropFilter: 'blur(10px)'
+              }}
+            >
+              <span
+                style={{
+                  display: 'inline-flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  width: '18px',
+                  height: '18px',
+                  flex: '0 0 18px'
+                }}
+              >
+                <PlusChevronIcon size={18} />
+              </span>
+
+              {discoveredCharacters.length} character
+              {discoveredCharacters.length !== 1 ? 's' : ''} discovered from Market Hub
+            </div>
+          )}
         </div>
 
         {/* Search Section */}
@@ -964,16 +1003,33 @@ const ChatLauncherPage = ({ onStartChat, discoveredCharacters = [] }) => {
                       {character.name}
                       {/* NEW: Source indicator */}
                       {character.source === 'market_hub' && (
-                        <span style={{
-                          fontSize: theme.typography.sizes.caption,
-                          background: theme.colors.accent.glow,
-                          padding: '0.1rem 0.4rem',
-                          borderRadius: theme.borderRadius.sm,
-                          color: theme.colors.accent.primary,
-                          fontWeight: theme.typography.weights.semibold,
-                          fontFamily: theme.typography.fonts.body
-                        }}>
-                          ✨ Discovered
+                        <span
+                          style={{
+                            fontSize: theme.typography.sizes.caption,
+                            background: theme.colors.accent.glow,
+                            padding: '0.1rem 0.4rem',
+                            borderRadius: theme.borderRadius.sm,
+                            color: theme.colors.accent.primary,
+                            fontWeight: theme.typography.weights.semibold,
+                            fontFamily: theme.typography.fonts.body,
+                            display: 'inline-flex',
+                            alignItems: 'center',
+                            gap: '3px'
+                          }}
+                        >
+                          <span
+                            style={{
+                              display: 'inline-flex',
+                              alignItems: 'center',
+                              justifyContent: 'center',
+                              width: '12px',
+                              height: '12px',
+                              flex: '0 0 12px'
+                            }}
+                          >
+                            <PlusChevronIcon size={12} />
+                          </span>
+                          Discovered
                         </span>
                       )}
                     </div>
@@ -1218,12 +1274,19 @@ const ChatLauncherPage = ({ onStartChat, discoveredCharacters = [] }) => {
               e.currentTarget.style.boxShadow = theme.shadows.elevation02;
               e.currentTarget.style.borderColor = `${theme.colors.accent.primary}40`;
             }}>
-              <span style={{ 
-                fontSize: '1.1rem',
-                animation: 'pulse 2s infinite',
-                filter: 'drop-shadow(0 0 6px rgba(99, 102, 241, 0.4))'
-              }}>
-                ✨
+              <span
+                style={{
+                  display: 'inline-flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  width: '18px',
+                  height: '18px',
+                  flex: '0 0 18px',
+                  animation: 'pulse 2s infinite',
+                  filter: 'drop-shadow(0 0 6px rgba(99, 102, 241, 0.4))'
+                }}
+              >
+                <PlusChevronIcon size={18} />
               </span>
               {discoveredCharacters.length} character{discoveredCharacters.length !== 1 ? 's' : ''} discovered from Market Hub
             </div>
@@ -1328,24 +1391,33 @@ const ChatLauncherPage = ({ onStartChat, discoveredCharacters = [] }) => {
                       {character.name}
                       {/* Source indicator */}
                       {character.source === 'market_hub' && (
-                        <span style={{
-                          fontSize: theme.typography.sizes.caption, // 12px
-                          background: theme.colors.accent.glow, // rgba(99, 102, 241, 0.2)
-                          padding: `${theme.spacing.xs} ${theme.spacing.sm}`, // 4px 8px
-                          borderRadius: theme.borderRadius.sm, // 8px
-                          color: theme.colors.accent.primary, // #6366F1
-                          fontWeight: theme.typography.weights.semibold, // 600
-                          fontFamily: theme.typography.fonts.body, // 'Inter'
-                          display: 'inline-flex',
-                          alignItems: 'center',
-                          gap: '3px',
-                          marginLeft: theme.spacing.xs // 4px
-                        }}>
-                          <span style={{ 
-                            fontSize: '0.8rem',
-                            animation: 'pulse 2s infinite'
-                          }}>
-                            ✨
+                        <span
+                          style={{
+                            fontSize: theme.typography.sizes.caption, // 12px
+                            background: theme.colors.accent.glow, // rgba(99, 102, 241, 0.2)
+                            padding: `${theme.spacing.xs} ${theme.spacing.sm}`, // 4px 8px
+                            borderRadius: theme.borderRadius.sm, // 8px
+                            color: theme.colors.accent.primary, // #6366F1
+                            fontWeight: theme.typography.weights.semibold, // 600
+                            fontFamily: theme.typography.fonts.body, // 'Inter'
+                            display: 'inline-flex',
+                            alignItems: 'center',
+                            gap: '4px',
+                            marginLeft: theme.spacing.xs // 4px
+                          }}
+                        >
+                          <span
+                            style={{
+                              display: 'inline-flex',
+                              alignItems: 'center',
+                              justifyContent: 'center',
+                              width: '14px',
+                              height: '14px',
+                              flex: '0 0 14px',
+                              animation: 'pulse 2s infinite'
+                            }}
+                          >
+                            <PlusChevronIcon size={14} />
                           </span>
                           Discovered
                         </span>
