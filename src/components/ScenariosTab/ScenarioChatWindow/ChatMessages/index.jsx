@@ -1,5 +1,5 @@
 // src/components/ScenariosTab/ScenarioChatWindow/ChatMessages/index.jsx
-// COMPLETE - Updated to pass both Continue and Next Speaker handlers
+// COMPLETE - Updated to pass Continue, Next Speaker, and Video Generation handlers
 
 import React, { useEffect, useRef } from 'react';
 import MessageBubble from './MessageBubble';
@@ -13,14 +13,20 @@ import styles from './ChatMessages.module.css';
  * @param {boolean} isSending - Whether a message is currently being sent
  * @param {Function} onContinue - Handler for continue button clicks (smart decision)
  * @param {Function} onNextSpeaker - Handler for next speaker button clicks (force rotation)
+ * @param {Function} onGenerateVideo - Handler for video generation button clicks
+ * @param {boolean} isGeneratingVideo - Whether video is currently being generated
+ * @param {boolean} canGenerateVideo - Whether user can generate video (5+ messages + access)
  * @param {string} theme - Theme (kept for compatibility, not used in new design)
  */
 export default function ChatMessages({
   messages = [],
   userCharacters = [],
   isSending = false,
-  onContinue,        // ✅ Continue button handler
-  onNextSpeaker,     // ✅ Next Speaker button handler
+  onContinue,
+  onNextSpeaker,
+  onGenerateVideo,
+  isGeneratingVideo = false,
+  canGenerateVideo = false,
   theme = 'light'
 }) {
   const messagesEndRef = useRef(null);
@@ -38,7 +44,10 @@ export default function ChatMessages({
     messageCount: messages.length,
     isSending,
     hasContinue: !!onContinue,
-    hasNextSpeaker: !!onNextSpeaker
+    hasNextSpeaker: !!onNextSpeaker,
+    hasGenerateVideo: !!onGenerateVideo,
+    isGeneratingVideo,
+    canGenerateVideo
   });
 
   // Track last message from each speaker for button visibility
@@ -70,8 +79,11 @@ export default function ChatMessages({
           key={message.id || index}
           message={message}
           userCharacters={userCharacters}
-          onContinue={onContinue}                    // ✅ Pass continue handler
-          onNextSpeaker={onNextSpeaker}              // ✅ Pass next speaker handler
+          onContinue={onContinue}
+          onNextSpeaker={onNextSpeaker}
+          onGenerateVideo={onGenerateVideo}
+          isGeneratingVideo={isGeneratingVideo}
+          canGenerateVideo={canGenerateVideo}
           isSending={isSending}
           isLastMessage={
             !message.user && 

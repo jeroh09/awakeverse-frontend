@@ -1,10 +1,12 @@
 // src/components/ScenariosTab/ScenarioChatWindow/index.jsx
 // PHASE 2: Two-Panel Layout Refactor
 // Steps 3-4: New layout structure with panel collapse state
+// VIDEO GENERATION INTEGRATED
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo, useCallback } from 'react';
 import usePremiumCharacters from '../../../hooks/usePremiumCharacters';
 import useScenarioChat from '../../../hooks/useScenarioChat';
+import useVideoGeneration from '../../../hooks/useVideoGeneration';
 import { useUser } from '../../../contexts/UserContext';
 import SubscriptionService from '../../../services/SubscriptionService';
 import { ArrowLeft, ChevronRight } from 'lucide-react';
@@ -65,10 +67,13 @@ export default function ScenarioChatWindow({
     usageLoading,
     startScenario,
     continueConversation, 
-    nextSpeaker,  // ✅ ADD THIS LINE
+    nextSpeaker,
     sendMessage,
     resetScenario
   } = useScenarioChat();
+
+  // ===== VIDEO GENERATION HOOK =====
+  const videoGen = useVideoGeneration(scenario.id);
 
   // Defensive checks
   if (!scenario || !onBack) {
@@ -84,7 +89,9 @@ export default function ScenarioChatWindow({
     debateId,
     initialized: isInitialized,
     usageData,
-    infoPanelCollapsed // ✅ NEW
+    infoPanelCollapsed,
+    videoStatus: videoGen.state.status,
+    videoProgress: videoGen.state.progress
   });
 
   // Fetch user's tier on mount
@@ -198,7 +205,7 @@ export default function ScenarioChatWindow({
     }
   };
 
-    // ✅ NEW: Handle stop message generation
+  // ✅ NEW: Handle stop message generation
   const handleStop = () => {
     console.log('🛑 Stop button clicked - stopping message generation');
 
@@ -222,6 +229,34 @@ export default function ScenarioChatWindow({
     resetScenario();
     onBack();
   };
+
+  // ===== VIDEO GENERATION HANDLERS =====
+
+  // Handle video generation button click
+  const handleGenerateVideo = useCallback(async () => {
+    try {
+      console.log('🎬 User clicked Generate Video');
+      await videoGen.startGeneration();
+    } catch (error) {
+      console.error('❌ Failed to start video generation:', error);
+    }
+  }, [videoGen]);
+
+  // Handle video download
+  const handleDownloadVideo = useCallback(() => {
+    console.log('⬇️ User clicked Download Video');
+    videoGen.downloadVideo();
+  }, [videoGen]);
+
+  // Calculate if user can generate video
+  // Requirements: 5+ non-user messages AND user has access (user_id 44)
+  const canGenerateVideo = useMemo(() => {
+    const nonUserMessages = messages.filter(m => !m.user && m.speaker !== 'user');
+    const hasEnoughMessages = nonUserMessages.length >= 5;
+    const hasAccess = videoGen.canGenerateVideo;
+    
+    return hasEnoughMessages && hasAccess;
+  }, [messages, videoGen.canGenerateVideo]);
 
   // ✅ NEW: Handle scenario switch
   // Defensive: Just navigate back and let parent handle scenario selection
@@ -248,20 +283,23 @@ export default function ScenarioChatWindow({
     // Defensive: Navigate back to let parent component handle the switch
     // This prevents complex state management within chat window
     resetScenario();
-    onBack(newScenario); 
+    onBack(); // Let parent component handle the actual scenario switch
+    
+    // TODO: If parent needs to know which scenario to switch to,
+    // you might need to add onScenarioSwitch prop and call it here
   };
 
-  // Show initialization error
+  // Handle initialization errors
   if (initError) {
     return (
       <div className={`${styles.container}`}>
         <div className={styles.chatPanel}>
-          <div className="init-error-state">
-            <span className="error-icon">⚠️</span>
-            <h3>Failed to Start Scenario</h3>
+          <div className="error-state">
+            <span className="error-icon">❌</span>
+            <h3>Failed to Initialize Scenario</h3>
             <p>{initError}</p>
             <button onClick={handleBack} className="back-button">
-              Go Back
+              Return to My Scenarios
             </button>
           </div>
         </div>
@@ -269,21 +307,21 @@ export default function ScenarioChatWindow({
     );
   }
 
-  // Show loading state while initializing
-  if (!isInitialized || usageLoading) {
+  // Loading state during initialization
+  if (!isInitialized) {
     return (
       <div className={`${styles.container}`}>
         <div className={styles.chatPanel}>
-          <div className="init-loading-state">
+          <div className="loading-state">
             <div className="loading-spinner"></div>
-            <p>Preparing scenario...</p>
+            <p>Initializing scenario...</p>
           </div>
         </div>
       </div>
     );
   }
 
-  // Show circuit breaker tripped state
+  // Circuit breaker state
   if (circuitBreakerState.status === 'tripped') {
     return (
       <div className={`${styles.container}`}>
@@ -355,7 +393,6 @@ export default function ScenarioChatWindow({
             )}
 
             {/* Chat Header */}
-            {/* Chat Header */}
             <header className="chat-header">
               {/* Mobile back button - icon only */}
               {isMobile && (
@@ -394,7 +431,8 @@ export default function ScenarioChatWindow({
                     Circuit: {circuitBreakerState.status} |
                     Tier: {userTier} | Usage: {usageData.questionsAsked}/{usageData.limit} |
                     Panel: {infoPanelCollapsed ? 'collapsed' : 'expanded'} |
-                    Keyboard: {isKeyboardVisible ? `${keyboardHeight}px` : 'hidden'}
+                    Keyboard: {isKeyboardVisible ? `${keyboardHeight}px` : 'hidden'} |
+                    Video: {videoGen.state.status}
                   </small>
                 </div>
               )}
@@ -404,15 +442,18 @@ export default function ScenarioChatWindow({
               messages={messages}
               userCharacters={userCharacters}
               isSending={isSending}
-              onContinue={continueConversation}  // ✅ ADD THIS LINE
-              onNextSpeaker={nextSpeaker} 
+              onContinue={continueConversation}
+              onNextSpeaker={nextSpeaker}
+              onGenerateVideo={handleGenerateVideo}
+              isGeneratingVideo={videoGen.state.status === 'generating'}
+              canGenerateVideo={canGenerateVideo}
               theme={theme}
             />
             
             <FloatingChatInput
               starterQuestions={scenario.starter_questions || []}
               onSend={handleSend}
-              onStop={handleStop}  // ✅ NEW
+              onStop={handleStop}
               isSending={isSending || (!isUnlimited && usageData.limitReached)}
             />
           </div>
@@ -426,6 +467,8 @@ export default function ScenarioChatWindow({
           currentScenarioId={scenario.id}
           onScenarioSelect={handleScenarioSwitch}
           onHomeClick={handleBack}
+          videoState={videoGen.state}
+          onDownloadVideo={handleDownloadVideo}
         />
       </div>
 

@@ -604,3 +604,211 @@
 }
 
 /* ===== END OF DUAL BUTTON STYLES ===== */
+/* =============================================================================
+ * VIDEO GENERATION BUTTON - 🎬 Create Video
+ * ADD THIS TO THE END OF MessageBubble.module.css
+ * =============================================================================
+ */
+
+/* ===== VIDEO BUTTON - PURPLE/VIOLET ===== */
+
+.videoButton {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  gap: var(--spacing-sm);
+  padding: var(--spacing-sm) var(--spacing-lg);
+  border: 1.5px solid;
+  border-radius: var(--border-radius-full);
+  font-size: var(--font-size-caption);
+  font-weight: var(--font-weight-semibold);
+  cursor: pointer;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  user-select: none;
+  -webkit-user-select: none;
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+  overflow: hidden;
+  
+  /* Purple/Violet gradient */
+  background: linear-gradient(135deg, 
+    rgba(139, 92, 246, 0.08) 0%,
+    rgba(124, 58, 237, 0.12) 100%
+  );
+  border-color: rgba(139, 92, 246, 0.2);
+  color: rgb(139, 92, 246); /* Violet-500 */
+}
+
+/* Shimmer effect */
+.videoButton::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: -100%;
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(
+    90deg,
+    transparent,
+    rgba(255, 255, 255, 0.1),
+    transparent
+  );
+  transition: left 0.5s ease;
+}
+
+.videoButton:hover:not(:disabled)::before {
+  left: 100%;
+}
+
+/* Hover state */
+.videoButton:hover:not(:disabled) {
+  background: linear-gradient(135deg, 
+    rgba(139, 92, 246, 0.15) 0%,
+    rgba(124, 58, 237, 0.25) 100%
+  );
+  border-color: rgba(139, 92, 246, 0.5);
+  box-shadow: 
+    0 0 0 3px rgba(139, 92, 246, 0.1),
+    0 4px 12px rgba(139, 92, 246, 0.2);
+  transform: translateY(-2px) scale(1.02);
+}
+
+/* Active state */
+.videoButton:active:not(:disabled) {
+  transform: translateY(0) scale(0.98);
+  box-shadow: 
+    0 0 0 2px rgba(139, 92, 246, 0.15),
+    0 2px 4px rgba(139, 92, 246, 0.15);
+}
+
+/* Disabled state */
+.videoButton:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+  background: var(--bg-interactive);
+  border-color: var(--border-subtle);
+  color: var(--text-muted);
+}
+
+/* Focus state */
+.videoButton:focus-visible {
+  outline: none;
+  box-shadow: 
+    0 0 0 3px rgba(139, 92, 246, 0.3),
+    0 4px 12px rgba(139, 92, 246, 0.2);
+}
+
+/* ===== VIDEO BUTTON ICON & TEXT ===== */
+
+.videoIcon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 16px;
+  line-height: 1;
+  transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.videoTooltip {
+  font-size: var(--font-size-caption);
+  font-weight: var(--font-weight-semibold);
+  white-space: nowrap;
+  letter-spacing: 0.3px;
+  text-transform: uppercase;
+  opacity: 0.9;
+}
+
+/* Icon animation on hover */
+.videoButton:hover:not(:disabled) .videoIcon {
+  transform: scale(1.1);
+  animation: filmRoll 1s ease-in-out infinite;
+}
+
+@keyframes filmRoll {
+  0%, 100% {
+    transform: scale(1.1);
+  }
+  50% {
+    transform: scale(1.2) rotate(5deg);
+  }
+}
+
+/* ===== MOBILE OPTIMIZATIONS ===== */
+
+/* Hide tooltip on small screens */
+@media (max-width: 480px) {
+  .videoTooltip {
+    display: none;
+  }
+  
+  .videoButton {
+    padding: var(--spacing-sm);
+    gap: 0;
+  }
+  
+  .videoIcon {
+    font-size: 20px;
+  }
+}
+
+/* Larger tap targets on mobile */
+@media (max-width: 768px) {
+  .videoButton {
+    min-height: 44px;
+    min-width: 44px;
+    padding: var(--spacing-sm) var(--spacing-md);
+  }
+}
+
+/* ===== ACCESSIBILITY ===== */
+
+/* Reduce motion */
+@media (prefers-reduced-motion: reduce) {
+  .videoButton,
+  .videoIcon,
+  .videoButton::before {
+    transition: none !important;
+    animation: none !important;
+  }
+  
+  .videoButton:hover:not(:disabled),
+  .videoButton:active:not(:disabled) {
+    transform: none !important;
+  }
+}
+
+/* High contrast mode */
+@media (prefers-contrast: high) {
+  .videoButton {
+    border-width: 2px;
+    background: transparent;
+  }
+  
+  .videoButton:hover:not(:disabled) {
+    background: rgb(139, 92, 246);
+    color: white;
+  }
+}
+
+/* Loading state for disabled button */
+.videoButton:disabled::after {
+  content: '';
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: 12px;
+  height: 12px;
+  margin: -6px 0 0 -6px;
+  border: 2px solid transparent;
+  border-top-color: var(--text-muted);
+  border-radius: 50%;
+  animation: spin 0.6s linear infinite;
+}
+
+@keyframes spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+/* ===== END OF VIDEO BUTTON STYLES ===== */

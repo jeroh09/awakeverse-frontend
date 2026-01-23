@@ -1,5 +1,5 @@
 // src/components/ScenariosTab/ScenarioChatWindow/ChatMessages/MessageBubble.jsx
-// MessageBubble - Complete with BOTH Continue (››) and Next Speaker (+) buttons
+// MessageBubble - Complete with Continue (››), Next Speaker (+), and Video Generation (🎬) buttons
 // Works with existing backend format and includes markdown support
 
 import React from 'react';
@@ -11,10 +11,13 @@ import styles from './MessageBubble.module.css';
 export default function MessageBubble({ 
   message, 
   userCharacters = [],
-  onContinue,      // Handler for continue button (smart decision)
-  onNextSpeaker,   // Handler for next speaker button (force rotation)
-  isSending,       // Whether a message is currently being sent
-  isLastMessage    // Whether this is the last message from this speaker
+  onContinue,
+  onNextSpeaker,
+  onGenerateVideo,
+  isGeneratingVideo = false,
+  canGenerateVideo = false,
+  isSending,
+  isLastMessage
 }) {
   // Defensive: Validate message object
   if (!message || !message.text) {
@@ -78,7 +81,7 @@ export default function MessageBubble({
     isUser ? styles.userMessage : styles.characterMessage
   ].filter(Boolean).join(' ');
 
-  // ===== CONTINUE & NEXT SPEAKER BUTTON LOGIC =====
+  // ===== BUTTON VISIBILITY LOGIC =====
   // Show buttons only on AI messages that are the last from their speaker
   const showButtons = 
     !isUser &&             // Only on AI messages
@@ -88,6 +91,7 @@ export default function MessageBubble({
 
   const showContinueButton = showButtons && onContinue;
   const showNextSpeakerButton = showButtons && onNextSpeaker;
+  const showVideoButton = showButtons && canGenerateVideo && onGenerateVideo;
 
   const handleContinue = () => {
     if (onContinue && speaker) {
@@ -100,6 +104,13 @@ export default function MessageBubble({
     if (onNextSpeaker && speaker) {
       console.log('➕ Next Speaker clicked:', speaker);
       onNextSpeaker(speaker);
+    }
+  };
+
+  const handleGenerateVideo = () => {
+    if (onGenerateVideo) {
+      console.log('🎬 Generate Video clicked');
+      onGenerateVideo();
     }
   };
 
@@ -165,8 +176,8 @@ export default function MessageBubble({
           </ReactMarkdown>
         </div>
 
-        {/* Action Buttons - Continue and/or Next Speaker */}
-        {(showContinueButton || showNextSpeakerButton) && (
+        {/* Action Buttons - Continue, Next Speaker, and Generate Video */}
+        {(showContinueButton || showNextSpeakerButton || showVideoButton) && (
           <div className={styles.actionButtonsContainer}>
             {/* Continue Button (››) - Smart continuation */}
             {showContinueButton && (
@@ -189,10 +200,26 @@ export default function MessageBubble({
                 onClick={handleNextSpeaker}
                 disabled={isSending}
                 aria-label="Next speaker"
-                title=" next character speaks"
+                title="Next character speaks"
               >
                 <span className={styles.nextSpeakerIcon}>+</span>
                 <span className={styles.nextSpeakerTooltip}>Next</span>
+              </button>
+            )}
+
+            {/* Video Generation Button (🎬) - Create video */}
+            {showVideoButton && (
+              <button
+                className={styles.videoButton}
+                onClick={handleGenerateVideo}
+                disabled={isGeneratingVideo || isSending}
+                aria-label="Generate video from conversation"
+                title={isGeneratingVideo ? 'Generating video...' : 'Create video from this conversation'}
+              >
+                <span className={styles.videoIcon}>🎬</span>
+                <span className={styles.videoTooltip}>
+                  {isGeneratingVideo ? 'Generating...' : 'Create Video'}
+                </span>
               </button>
             )}
           </div>
