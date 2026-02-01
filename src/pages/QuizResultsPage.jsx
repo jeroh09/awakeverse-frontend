@@ -274,7 +274,6 @@ const QuizResultsPage = () => {
                 <div className={styles.shareCard}>
                   <h3 className={styles.shareTitle}>Share your verdict</h3>
                   <p className={styles.shareSub}>
-                    Kept one-screen by clamping the quote and putting actions in-row.
                   </p>
                 </div>
 
