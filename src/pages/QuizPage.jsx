@@ -1,21 +1,19 @@
 // src/pages/QuizPage.jsx
 /**
- * History's Verdict Quiz - One-screen Mobile (No Scroll)
- * - Fixed header + fixed footer
- * - Content fits into remaining viewport (100dvh)
- * - Reveal is an overlay (no layout shift)
+ * History's Verdict Quiz - Main Interface
+ * Tinder-style swipe interface for 8 historical figures
+ * Mobile-first, provocative but educational
  */
 
-import React, { useEffect, useMemo, useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import {
-  startQuizSession,
-  saveAnswer,
-  getSessionData,
-  extractCampaignData
+import { 
+  startQuizSession, 
+  saveAnswer, 
+  getSessionData, 
+  extractCampaignData 
 } from '../utils/quizSession';
 import theme from '../design-system/tokens';
-import styles from './QuizPage.module.css';
 
 // Historical figures data with nuanced reveals
 const HISTORICAL_FIGURES = [
@@ -111,27 +109,12 @@ const HISTORICAL_FIGURES = [
 
 const QuizPage = () => {
   const navigate = useNavigate();
-
   const [currentQuestion, setCurrentQuestion] = useState(0);
   const [answers, setAnswers] = useState([]);
   const [showReveal, setShowReveal] = useState(false);
-
   const [sessionId, setSessionId] = useState(null);
   const [isLoading, setIsLoading] = useState(true);
-
-  const [swipeDirection, setSwipeDirection] = useState(null); // "support" | "oppose" | null
-  const [pendingAnswer, setPendingAnswer] = useState(null);   // local copy for reveal accuracy
-
-  const figure = HISTORICAL_FIGURES[currentQuestion];
-
-  const progressPct = useMemo(() => {
-    return ((currentQuestion + 1) / HISTORICAL_FIGURES.length) * 100;
-  }, [currentQuestion]);
-
-  const scoreText = useMemo(() => {
-    const matches = answers.filter(a => a.match).length;
-    return `${matches}/${HISTORICAL_FIGURES.length}`;
-  }, [answers]);
+  const [swipeDirection, setSwipeDirection] = useState(null);
 
   // Initialize quiz session
   useEffect(() => {
@@ -139,12 +122,14 @@ const QuizPage = () => {
       try {
         const campaignData = extractCampaignData();
         const existingSession = getSessionData();
-
-        if (existingSession && existingSession.answers?.length > 0) {
+        
+        if (existingSession && existingSession.answers.length > 0) {
+          // Resume existing session
           setSessionId(existingSession.quiz_session_id);
           setAnswers(existingSession.answers);
           setCurrentQuestion(existingSession.answers.length);
         } else {
+          // Start new session
           const newSessionId = await startQuizSession(campaignData);
           setSessionId(newSessionId);
         }
@@ -158,10 +143,8 @@ const QuizPage = () => {
     initQuiz();
   }, []);
 
-  const handleAnswer = async (userChoice) => {
-    if (!figure) return;
-    if (showReveal) return;
-
+  const handleSwipe = async (userChoice) => {
+    const figure = HISTORICAL_FIGURES[currentQuestion];
     const isMatch = userChoice === figure.actual_stance;
 
     const answer = {
@@ -172,261 +155,374 @@ const QuizPage = () => {
       match: isMatch
     };
 
-    setPendingAnswer(answer);
-
-    // swipe micro-animation
+    // Animate swipe
     setSwipeDirection(userChoice);
-
-    // reveal after a beat
-    window.setTimeout(() => {
+    
+    // Show reveal after brief animation
+    setTimeout(() => {
       setShowReveal(true);
-    }, 220);
+    }, 300);
 
+    // Save answer to session
     try {
       await saveAnswer(answer);
-      setAnswers(prev => [...prev, answer]);
+      setAnswers([...answers, answer]);
     } catch (error) {
       console.error('Failed to save answer:', error);
-      // still proceed UX-wise
-      setAnswers(prev => [...prev, answer]);
     }
   };
 
   const handleContinue = () => {
     setShowReveal(false);
     setSwipeDirection(null);
-    setPendingAnswer(null);
 
     if (currentQuestion < HISTORICAL_FIGURES.length - 1) {
-      setCurrentQuestion(q => q + 1);
+      setCurrentQuestion(currentQuestion + 1);
     } else {
+      // Quiz complete - navigate to results
       navigate('/quiz/results');
     }
-  };
-
-  const handleRestart = () => {
-    localStorage.removeItem('awakeverse_quiz_session');
-    setAnswers([]);
-    setCurrentQuestion(0);
-    setShowReveal(false);
-    setSwipeDirection(null);
-    setPendingAnswer(null);
-    // re-init session silently
-    (async () => {
-      try {
-        const campaignData = extractCampaignData();
-        const newSessionId = await startQuizSession(campaignData);
-        setSessionId(newSessionId);
-      } catch (e) {
-        console.error('Restart failed:', e);
-      }
-    })();
-  };
-
-  const handleSkip = () => {
-    if (showReveal) return;
-    setSwipeDirection(null);
-    setPendingAnswer(null);
-
-    if (currentQuestion < HISTORICAL_FIGURES.length - 1) {
-      setCurrentQuestion(q => q + 1);
-    } else {
-      navigate('/quiz/results');
-    }
-  };
-
-  // Bind theme tokens -> CSS vars (scoped to page wrapper)
-  const cssVars = {
-    '--q-bg0': theme.colors.background.canvas,
-    '--q-surface': theme.colors.background.surface,
-    '--q-surface2': theme.colors.background.interactive,
-    '--q-line': theme.colors.border?.subtle || 'rgba(255,255,255,.12)',
-    '--q-ivory': theme.colors.brand?.ivory || theme.colors.text.primary,
-    '--q-muted': theme.colors.text.secondary,
-    '--q-gold': theme.colors.accent.primary,
-    '--q-gold2': theme.colors.accent.hover,
-    '--q-ok': theme.colors.semantic.success,
-    '--q-bad': theme.colors.semantic.error,
-    '--q-font': theme.typography.fonts.body,
-    '--q-display': theme.typography.fonts.display
   };
 
   if (isLoading) {
     return (
-      <div
-        className={styles.loading}
-        style={{
-          background: theme.colors.background.canvas,
+      <div style={{
+        minHeight: '100vh',
+        background: theme.colors.background.canvas,
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'center',
+        padding: '20px'
+      }}>
+        <div style={{
           color: theme.colors.text.primary,
+          fontSize: theme.typography.sizes.h3,
           fontFamily: theme.typography.fonts.display
-        }}
-      >
-        Loading quiz...
+        }}>
+          Loading quiz...
+        </div>
       </div>
     );
   }
 
-  if (!figure) {
-    return (
-      <div
-        className={styles.loading}
-        style={{
-          background: theme.colors.background.canvas,
-          color: theme.colors.text.primary,
-          fontFamily: theme.typography.fonts.display
-        }}
-      >
-        No questions available.
-      </div>
-    );
-  }
-
-  const revealAnswer = pendingAnswer || answers[currentQuestion];
+  const figure = HISTORICAL_FIGURES[currentQuestion];
+  const progress = ((currentQuestion + 1) / HISTORICAL_FIGURES.length) * 100;
 
   return (
-    <div className={styles.page} style={cssVars}>
-      <div className={styles.appFrame}>
-        {/* Header */}
-        <header className={styles.header}>
-          <div className={styles.headerRow}>
-            <div className={styles.brand}>
-              <h1 className={styles.h1}>HISTORY&apos;S VERDICT</h1>
-              <div className={styles.tag}>
-                Would Iconic Brits Support Small Boats Crossing the Channel?
-              </div>
-            </div>
+    <div style={{
+      minHeight: '100vh',
+      background: theme.colors.background.canvas,
+      padding: '20px',
+      fontFamily: theme.typography.fonts.body
+    }}>
+      {/* Header */}
+      <div style={{
+        maxWidth: '500px',
+        margin: '0 auto 24px',
+        textAlign: 'center'
+      }}>
+        <h1 style={{
+          fontFamily: theme.typography.fonts.display,
+          fontSize: theme.typography.sizes.h2,
+          fontWeight: theme.typography.weights.bold,
+          color: theme.colors.brand.ivory,
+          margin: '0 0 8px 0',
+          letterSpacing: '1px'
+        }}>
+          HISTORY'S VERDICT
+        </h1>
+        <p style={{
+          fontSize: theme.typography.sizes.bodySmall,
+          color: theme.colors.text.secondary,
+          margin: 0
+        }}>
+          Would Iconic Brits Support Small Boats Crossing the Channel?
+        </p>
+      </div>
 
-            <div className={styles.scorePill} title="Matches so far">
-              <span className={styles.dot} />
-              <span>{scoreText}</span>
+      {/* Progress Bar */}
+      <div style={{
+        maxWidth: '500px',
+        margin: '0 auto 32px',
+        height: '4px',
+        background: theme.colors.background.surface,
+        borderRadius: theme.borderRadius.full,
+        overflow: 'hidden'
+      }}>
+        <div style={{
+          height: '100%',
+          width: `${progress}%`,
+          background: `linear-gradient(90deg, ${theme.colors.accent.primary}, ${theme.colors.accent.hover})`,
+          transition: theme.transitions.normal
+        }} />
+      </div>
+
+      {/* Progress Dots */}
+      <div style={{
+        display: 'flex',
+        justifyContent: 'center',
+        gap: '8px',
+        marginBottom: '32px'
+      }}>
+        {HISTORICAL_FIGURES.map((_, index) => (
+          <div
+            key={index}
+            style={{
+              width: '8px',
+              height: '8px',
+              borderRadius: '50%',
+              background: index <= currentQuestion 
+                ? theme.colors.accent.primary
+                : theme.colors.text.muted,
+              transition: theme.transitions.fast,
+              boxShadow: index <= currentQuestion 
+                ? theme.shadows.glow
+                : 'none'
+            }}
+          />
+        ))}
+      </div>
+
+      {/* Question Card */}
+      {!showReveal ? (
+        <div style={{
+          maxWidth: '500px',
+          margin: '0 auto',
+          background: theme.colors.background.surface,
+          borderRadius: theme.borderRadius.xl,
+          border: `2px solid rgba(99, 102, 241, 0.3)`,
+          boxShadow: theme.shadows.elevation03,
+          overflow: 'hidden',
+          transform: swipeDirection 
+            ? `translateX(${swipeDirection === 'support' ? '100%' : '-100%'})` 
+            : 'translateX(0)',
+          opacity: swipeDirection ? 0 : 1,
+          transition: theme.transitions.normal
+        }}>
+          {/* Portrait */}
+          <div style={{
+            width: '100%',
+            height: '400px',
+            background: `url(${figure.image}) center/cover`,
+            position: 'relative'
+          }}>
+            <div style={{
+              position: 'absolute',
+              bottom: 0,
+              left: 0,
+              right: 0,
+              background: 'linear-gradient(to top, rgba(10, 15, 26, 0.95), transparent)',
+              padding: '60px 20px 20px'
+            }}>
+              <h2 style={{
+                fontFamily: theme.typography.fonts.display,
+                fontSize: theme.typography.sizes.h3,
+                fontWeight: theme.typography.weights.bold,
+                color: theme.colors.text.primary,
+                margin: '0 0 4px 0'
+              }}>
+                {figure.name}
+              </h2>
+              <p style={{
+                fontSize: theme.typography.sizes.caption,
+                color: theme.colors.text.secondary,
+                margin: '0 0 4px 0'
+              }}>
+                {figure.years}
+              </p>
+              <p style={{
+                fontSize: theme.typography.sizes.caption,
+                color: theme.colors.accent.hover,
+                margin: 0,
+                fontStyle: 'italic'
+              }}>
+                {figure.era}
+              </p>
             </div>
           </div>
 
-          <div className={styles.progressWrap} aria-label="Progress">
-            <div className={styles.progress} style={{ width: `${progressPct}%` }} />
-          </div>
-        </header>
+          {/* Question */}
+          <div style={{
+            padding: '24px'
+          }}>
+            <p style={{
+              fontSize: theme.typography.sizes.bodyLarge,
+              fontWeight: theme.typography.weights.semibold,
+              color: theme.colors.text.primary,
+              margin: '0 0 24px 0',
+              textAlign: 'center',
+              lineHeight: theme.typography.lineHeights.bodyLarge
+            }}>
+              {figure.question}
+            </p>
 
-        {/* Content */}
-        <main className={styles.content}>
-          <section
-            className={[
-              styles.card,
-              swipeDirection === 'support' ? styles.swipeRight : '',
-              swipeDirection === 'oppose' ? styles.swipeLeft : ''
-            ].join(' ')}
-          >
-            {/* Top meta */}
-            <div className={styles.meta}>
-              <div className={styles.who}>
-                <p className={styles.name}>{figure.name}</p>
-                <p className={styles.era}>{figure.era}</p>
-              </div>
-              <div className={styles.stamp}>
-                <div className={styles.years}>{figure.years}</div>
-                <div className={styles.qnum}>Q{currentQuestion + 1}</div>
-              </div>
-            </div>
-
-            {/* Media */}
-            <div className={styles.media}>
-              <div
-                className={styles.image}
-                style={{ backgroundImage: `url(${figure.image})` }}
-                aria-label={`${figure.name} portrait`}
-              />
-              <div className={styles.question}>
-                <h2 className={styles.questionText}>{figure.question}</h2>
-                <p className={styles.hint}>Tap one answer. You’ll get a short historical reveal.</p>
-              </div>
-            </div>
-
-            {/* Actions */}
-            <div className={styles.actions}>
+            {/* Swipe Buttons */}
+            <div style={{
+              display: 'flex',
+              gap: '16px'
+            }}>
               <button
-                className={[styles.btn, styles.btnNo].join(' ')}
-                onClick={() => handleAnswer('oppose')}
-                disabled={!!swipeDirection}
+                onClick={() => handleSwipe('oppose')}
+                style={{
+                  flex: 1,
+                  padding: '16px',
+                  background: 'rgba(239, 68, 68, 0.1)',
+                  border: `2px solid ${theme.colors.semantic.error}`,
+                  borderRadius: theme.borderRadius.md,
+                  color: theme.colors.semantic.error,
+                  fontSize: theme.typography.sizes.body,
+                  fontWeight: theme.typography.weights.bold,
+                  cursor: 'pointer',
+                  transition: theme.transitions.fast,
+                  fontFamily: theme.typography.fonts.body
+                }}
+                onMouseEnter={(e) => {
+                  e.currentTarget.style.background = 'rgba(239, 68, 68, 0.2)';
+                  e.currentTarget.style.transform = 'scale(1.02)';
+                }}
+                onMouseLeave={(e) => {
+                  e.currentTarget.style.background = 'rgba(239, 68, 68, 0.1)';
+                  e.currentTarget.style.transform = 'scale(1)';
+                }}
               >
-                <span className={styles.btnIcon}>❌</span>
+                <div style={{ fontSize: '24px', marginBottom: '4px' }}>❌</div>
                 OPPOSE
               </button>
 
               <button
-                className={[styles.btn, styles.btnYes].join(' ')}
-                onClick={() => handleAnswer('support')}
-                disabled={!!swipeDirection}
+                onClick={() => handleSwipe('support')}
+                style={{
+                  flex: 1,
+                  padding: '16px',
+                  background: 'rgba(16, 185, 129, 0.1)',
+                  border: `2px solid ${theme.colors.semantic.success}`,
+                  borderRadius: theme.borderRadius.md,
+                  color: theme.colors.semantic.success,
+                  fontSize: theme.typography.sizes.body,
+                  fontWeight: theme.typography.weights.bold,
+                  cursor: 'pointer',
+                  transition: theme.transitions.fast,
+                  fontFamily: theme.typography.fonts.body
+                }}
+                onMouseEnter={(e) => {
+                  e.currentTarget.style.background = 'rgba(16, 185, 129, 0.2)';
+                  e.currentTarget.style.transform = 'scale(1.02)';
+                }}
+                onMouseLeave={(e) => {
+                  e.currentTarget.style.background = 'rgba(16, 185, 129, 0.1)';
+                  e.currentTarget.style.transform = 'scale(1)';
+                }}
               >
-                <span className={styles.btnIcon}>✅</span>
+                <div style={{ fontSize: '24px', marginBottom: '4px' }}>✅</div>
                 SUPPORT
               </button>
             </div>
-          </section>
-
-          {/* Reveal Overlay */}
-          <div className={[styles.reveal, showReveal ? styles.revealOpen : ''].join(' ')}>
-            <div className={styles.revealCard} role="dialog" aria-modal="true" aria-label="Reveal">
-              <div className={styles.revealTop}>
-                <div
-                  className={[
-                    styles.badge,
-                    revealAnswer?.match ? styles.badgeOk : styles.badgeNo
-                  ].join(' ')}
-                >
-                  {revealAnswer?.match ? 'MATCH' : 'NO MATCH'}
-                </div>
-                <button className={styles.ghost} onClick={() => setShowReveal(false)}>
-                  Close
-                </button>
-              </div>
-
-              <div className={styles.revealBody}>
-                <h3 className={styles.revealTitle}>{figure.reveal_title}</h3>
-
-                <p className={styles.revealQuote}>
-                  {figure.reveal_text}
-                </p>
-
-                <div className={styles.revealMeta}>
-                  <span className={styles.revealMetaLabel}>You chose:</span>{' '}
-                  <strong className={styles.revealMetaValue}>
-                    {revealAnswer?.user_choice ? revealAnswer.user_choice.toUpperCase() : '—'}
-                  </strong>
-                </div>
-
-                <p className={styles.revealNote}>
-                  This quiz simplifies complex views that evolved over time. It’s a conversation starter — not a final judgement.
-                </p>
-              </div>
-
-              <div className={styles.revealBottom}>
-                <button className={styles.next} onClick={handleContinue}>
-                  {currentQuestion < HISTORICAL_FIGURES.length - 1 ? 'Next Question' : 'See My Results'}
-                </button>
-              </div>
-            </div>
           </div>
-        </main>
-
-        {/* Footer */}
-        <footer className={styles.footer}>
-          <div className={styles.footerLeft}>
-            <button className={styles.ghost} onClick={handleRestart}>
-              Restart
-            </button>
-            <div className={styles.tiny}>
-              Your verdict shapes your persona.
-            </div>
+        </div>
+      ) : (
+        /* Reveal Card */
+        <div style={{
+          maxWidth: '500px',
+          margin: '0 auto',
+          background: theme.colors.background.surface,
+          borderRadius: theme.borderRadius.xl,
+          border: `2px solid ${theme.colors.accent.primary}`,
+          boxShadow: theme.shadows.glowStrong,
+          padding: '32px',
+          textAlign: 'center',
+          animation: 'fadeIn 0.3s ease-in'
+        }}>
+          <div style={{
+            fontSize: '48px',
+            marginBottom: '16px'
+          }}>
+            {answers[currentQuestion]?.match ? '✅' : '❌'}
           </div>
 
-          <button className={styles.ghost} onClick={handleSkip}>
-            Skip
+          <h3 style={{
+            fontFamily: theme.typography.fonts.display,
+            fontSize: theme.typography.sizes.h3,
+            fontWeight: theme.typography.weights.bold,
+            color: theme.colors.text.primary,
+            margin: '0 0 8px 0'
+          }}>
+            You chose: {answers[currentQuestion]?.user_choice.toUpperCase()}
+          </h3>
+
+          <div style={{
+            background: theme.colors.background.interactive,
+            borderRadius: theme.borderRadius.md,
+            padding: '16px',
+            margin: '16px 0'
+          }}>
+            <p style={{
+              fontSize: theme.typography.sizes.bodySmall,
+              color: theme.colors.text.secondary,
+              margin: '0 0 8px 0'
+            }}>
+              Actual stance:
+            </p>
+            <p style={{
+              fontSize: theme.typography.sizes.h4,
+              fontWeight: theme.typography.weights.bold,
+              color: theme.colors.accent.primary,
+              margin: '0 0 4px 0'
+            }}>
+              {figure.reveal_title}
+            </p>
+          </div>
+
+          <p style={{
+            fontSize: theme.typography.sizes.body,
+            color: theme.colors.text.primary,
+            lineHeight: theme.typography.lineHeights.body,
+            margin: '0 0 24px 0'
+          }}>
+            "{figure.reveal_text}"
+          </p>
+
+          <button
+            onClick={handleContinue}
+            style={{
+              width: '100%',
+              padding: '16px 32px',
+              background: `linear-gradient(135deg, ${theme.colors.accent.primary}, ${theme.colors.accent.hover})`,
+              border: 'none',
+              borderRadius: theme.borderRadius.md,
+              color: theme.colors.text.primary,
+              fontSize: theme.typography.sizes.body,
+              fontWeight: theme.typography.weights.bold,
+              cursor: 'pointer',
+              transition: theme.transitions.fast,
+              boxShadow: theme.shadows.glow,
+              fontFamily: theme.typography.fonts.body
+            }}
+            onMouseEnter={(e) => {
+              e.currentTarget.style.transform = 'translateY(-2px)';
+              e.currentTarget.style.boxShadow = theme.shadows.glowStrong;
+            }}
+            onMouseLeave={(e) => {
+              e.currentTarget.style.transform = 'translateY(0)';
+              e.currentTarget.style.boxShadow = theme.shadows.glow;
+            }}
+          >
+            {currentQuestion < HISTORICAL_FIGURES.length - 1 ? 'Next Question' : 'See My Results'}
           </button>
-        </footer>
-      </div>
+        </div>
+      )}
 
-      {/* sessionId kept for future (analytics / debugging), not rendered */}
-      <div style={{ display: 'none' }}>{sessionId || ''}</div>
+      <style jsx>{`
+        @keyframes fadeIn {
+          from {
+            opacity: 0;
+            transform: scale(0.95);
+          }
+          to {
+            opacity: 1;
+            transform: scale(1);
+          }
+        }
+      `}</style>
     </div>
   );
 };
