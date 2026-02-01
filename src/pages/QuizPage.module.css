@@ -219,9 +219,11 @@
 }
 
 .image{
-  min-height:0;
+  min-height: 300px; /* ✅ Minimum height */
+  height: 100%;      /* ✅ Fill available space */
   background-size: cover;
   background-position: center;
+  background-repeat: no-repeat;
   filter: saturate(1.05) contrast(1.02);
 }
 
