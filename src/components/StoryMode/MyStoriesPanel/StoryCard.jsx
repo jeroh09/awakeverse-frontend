@@ -1,4 +1,4 @@
-// src/components/StoryMode/MyStoriesPanel/StoryCard.jsx - UPDATED
+// src/components/StoryMode/MyStoriesPanel/StoryCard.jsx
 import React from 'react';
 import { characterCategories } from '../../../data/characterCategories';
 import {
@@ -6,12 +6,12 @@ import {
   getCharacterThumbnailUrl,
   isCustomCharacterKey
 } from '../../../utils/characterUtils';
-import usePremiumCharacters from '../../../hooks/usePremiumCharacters';
+import usePremiumCharacters from '../../../hooks/usePremiumCharacters'; // ADDED
 import styles from './MyStoriesPanel.module.css';
 
 const API_BASE = process.env.REACT_APP_API_URL || 'https://api.awakeverse.com';
 
-// Helper: resolve character name + thumbnail, with custom key support
+// Helper: resolve character name + thumbnail, with custom key support - UPDATED
 const getCharacterInfo = (charKey, userCharacters = []) => {
   if (!charKey) {
     return {
@@ -20,14 +20,14 @@ const getCharacterInfo = (charKey, userCharacters = []) => {
     };
   }
 
-  // 1) Check for custom characters first
+  // 1) Check for custom characters first - NEW LOGIC
   const isCustom = isCustomCharacterKey(charKey);
   if (isCustom) {
     const customChar = userCharacters.find(c => c.character_key === charKey);
     if (customChar) {
       return {
         name: customChar.display_name,
-        thumbnailUrl: customChar.avatar_url,
+        thumbnailUrl: customChar.avatar_url, // Use custom avatar URL
         isCustom: true
       };
     }
@@ -45,7 +45,7 @@ const getCharacterInfo = (charKey, userCharacters = []) => {
     }
   }
 
-  // 3) Fallback: use shared utils
+  // 3) Fallback: use shared utils (handles user_45_imhotep, etc.)
   const name = getDisplayNameFromKey(charKey);
   const thumbnailUrl = getCharacterThumbnailUrl(
     charKey,
@@ -62,7 +62,7 @@ export default function StoryCard({
   onResume = () => {},
   isDeleting = false
 }) {
-  const { userCharacters = [] } = usePremiumCharacters();
+  const { userCharacters = [] } = usePremiumCharacters(); // ADDED HOOK
 
   const handleOpen = () => {
     onOpen(story);
@@ -140,64 +140,75 @@ export default function StoryCard({
 
   const characterKey = story.main_character_key || null;
   const { name: characterName, thumbnailUrl } = characterKey
-    ? getCharacterInfo(characterKey, userCharacters)
+    ? getCharacterInfo(characterKey, userCharacters) // UPDATED: pass userCharacters
     : { name: 'Your Character', thumbnailUrl: null };
 
   const eraBadgeColor = getEraBadgeColor(story.era);
 
+  // 🔹 Background image: use ONLY the scene_url (no character fallback)
+  const scenicUrl = story.scene_url || story.sceneUrl || null;
+  let cardImageUrl = null;
+
+  if (scenicUrl) {
+    // You're storing paths like /story-scenes/xxx.jpg in DB
+    cardImageUrl = scenicUrl.startsWith('http') ? scenicUrl : scenicUrl;
+  }
+
   return (
-    <div 
-      className={`${styles.storyCard} ${isPaused ? styles.paused : ''} ${isDeleting ? styles.deleting : ''}`}
-    >
-      {/* Status badge (only for paused stories) */}
-      {isPaused && <span className={styles.statusBadge}>Paused</span>}
+    <div className={`${styles.storyCard} ${isDeleting ? styles.deleting : ''}`}>
+      {/* Scenic cinematic background */}
+      {cardImageUrl && (
+        <div
+          className={styles.storyCardBackground}
+          style={{ backgroundImage: `url(${cardImageUrl})` }}
+        >
+          <div className={styles.storyCardGradient} />
+        </div>
+      )}
 
       {/* Inner content wrapper */}
-      <div className={styles.cardContent}>
-        {/* Header: title + actions */}
-        <div className={styles.storyHeader}>
-          <h4 className={styles.storyTitle}>{story.title}</h4>
-          
-          <div className={styles.storyActions}>
-            {isPaused && (
+      <div className={styles.storyCardInner}>
+        {/* Badges row (era + status) */}
+        <div className={styles.storyBadges}>
+          <span
+            className={styles.eraBadge}
+            style={{ backgroundColor: eraBadgeColor }}
+          >
+            {formatEraName(story.era)}
+          </span>
+
+          {isPaused && <span className={styles.statusBadge}>Paused</span>}
+        </div>
+
+        {/* Main content block */}
+        <div className={styles.storyContent}>
+          {/* Header: title + actions */}
+          <div className={styles.storyHeader}>
+            <h4 className={styles.storyTitle}>{story.title}</h4>
+
+            <div className={styles.storyActions}>
+              {isPaused && (
+                <button
+                  className={styles.actionButton}
+                  onClick={handleResume}
+                  title="Resume story"
+                  disabled={isDeleting}
+                >
+                  ▶️
+                </button>
+              )}
               <button
-                className={styles.actionButton}
-                onClick={handleResume}
-                title="Resume story"
+                className={`${styles.actionButton} ${styles.deleteButton}`}
+                onClick={handleDelete}
                 disabled={isDeleting}
+                title="Delete story"
               >
-                ▶️
+                {isDeleting ? '⏳' : '🗑️'}
               </button>
-            )}
-            <button
-              className={`${styles.actionButton} ${styles.deleteButton}`}
-              onClick={handleDelete}
-              disabled={isDeleting}
-              title="Delete story"
-            >
-              {isDeleting ? '⏳' : '🗑️'}
-            </button>
+            </div>
           </div>
-        </div>
 
-        {/* Metadata row */}
-        <div className={styles.metadataRow}>
-          <div className={styles.metaItem}>
-            <span className={styles.metaIcon}>📖</span>
-            <span>Act {story.current_act || 1}</span>
-          </div>
-          <div className={styles.metaItem}>
-            <span className={styles.metaIcon}>💬</span>
-            <span>{story.total_turns || 0} turns</span>
-          </div>
-          <div className={styles.metaItem}>
-            <span className={styles.metaIcon}>🕐</span>
-            <span>{formatTimeAgo(story.last_active || story.created_at)}</span>
-          </div>
-        </div>
-
-        {/* Character & Era row */}
-        <div className={styles.characterEraRow}>
+          {/* Character preview */}
           <div className={styles.characterPreview}>
             <div
               className={styles.characterAvatar}
@@ -218,24 +229,35 @@ export default function StoryCard({
               )}
             </div>
             <div className={styles.characterInfo}>
-              <span className={styles.characterLabel}>Character</span>
+              <span className={styles.characterLabel}>Main Character</span>
               <span className={styles.characterName}>{characterName}</span>
             </div>
           </div>
-          
-          <span
-            className={styles.eraBadge}
-            style={{ 
-              backgroundColor: `${eraBadgeColor}20`,
-              borderColor: `${eraBadgeColor}40`,
-              color: eraBadgeColor
-            }}
-          >
-            {formatEraName(story.era)}
-          </span>
+
+          {/* Meta row */}
+          <div className={styles.storyMeta}>
+            <div className={styles.metaItem}>
+              <span className={styles.metaIcon}>📖</span>
+              <span className={styles.metaText}>
+                Act {story.current_act || 1}
+              </span>
+            </div>
+            <div className={styles.metaItem}>
+              <span className={styles.metaIcon}>💬</span>
+              <span className={styles.metaText}>
+                {story.total_turns || 0} turns
+              </span>
+            </div>
+            <div className={styles.metaItem}>
+              <span className={styles.metaIcon}>🕐</span>
+              <span className={styles.metaText}>
+                {formatTimeAgo(story.last_active || story.created_at)}
+              </span>
+            </div>
+          </div>
         </div>
 
-        {/* Continue button */}
+        {/* CTA pinned towards bottom */}
         <button
           className={styles.continueButton}
           onClick={handleOpen}

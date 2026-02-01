@@ -1,4 +1,4 @@
-// src/components/StoryMode/MyStoriesPanel/index.jsx - Minor update
+// src/components/StoryMode/MyStoriesPanel/index.jsx - Enhanced with unified header + clean info modal
 import React, { useState, useEffect } from 'react';
 import useStoryApi from '../../../hooks/useStoryApi';
 import StoryCard from './StoryCard';
@@ -132,20 +132,10 @@ export default function MyStoriesPanel({
         
         <div className={styles.headerActionsContainer}>
           <div className={styles.storyCounter}>{storyCountLabel}</div>
-          <button 
-            type="button" 
-            className={styles.retryButton} 
-            onClick={handleCreateStoryClick} 
-            disabled={loading}
-          >
+          <button type="button" className={styles.retryButton} onClick={handleCreateStoryClick} disabled={loading}>
             + Create Story
           </button>
-          <button 
-            type="button" 
-            onClick={openCreateInfo} 
-            aria-label="How to use Create Story" 
-            className={styles.actionButton}
-          >
+          <button type="button" onClick={openCreateInfo} aria-label="How to use Create Story" className={styles.actionButton}>
             i
           </button>
         </div>
