@@ -1,4 +1,4 @@
-// src/pages/Login.jsx - WITH GOOGLE OAUTH BUToonn
+// src/pages/Login.jsx - WITH GOOGLE OAUTH BUTTON
 import React, { useState, useEffect } from 'react';
 import { Link, useNavigate, useLocation, useSearchParams } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
