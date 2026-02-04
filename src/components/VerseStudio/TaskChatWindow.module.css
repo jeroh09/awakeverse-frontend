@@ -1,15 +1,21 @@
 /* src/components/VerseStudio/TaskChatWindow.module.css */
+/* ✅ UPDATED: Collapsible nav + properly gated messages + full-width cards */
+
+/* ============================================================================
+   CRITICAL: Chat Message Gating
+   ============================================================================
+   Messages MUST be constrained to their grid column.
+   NO overflow into left nav or right artifacts.
+*/
 
 .taskWindow {
   position: fixed;
   inset: 0;
   z-index: 1100;
-
   background:
     radial-gradient(circle at top left, var(--accent-glow), transparent 45%),
     radial-gradient(circle at bottom right, rgba(148, 163, 184, 0.14), transparent 45%),
     var(--bg-canvas);
-
   display: flex;
   align-items: stretch;
   padding: 0;
@@ -18,21 +24,33 @@
   font-family: var(--font-body);
 }
 
+/* ============================================================================
+   LAYOUT GRID - Responsive to collapse states
+   ============================================================================ */
+
 .layout {
   width: 100%;
   height: 100%;
   display: grid;
-  grid-template-columns: 320px minmax(0, 1fr) 380px;
+  grid-template-columns: 280px minmax(0, 1fr) 380px; /* minmax(0, 1fr) CRITICAL for gating */
   gap: var(--spacing-md);
   padding: var(--spacing-md);
   box-sizing: border-box;
+  transition: grid-template-columns 0.3s ease;
 }
 
-.layoutArtifactsCollapsed {
-  grid-template-columns: 320px minmax(0, 1fr) 56px;
+.layoutNavCollapsed {
+  grid-template-columns: 56px minmax(0, 1fr) 380px;
 }
 
-/* ===== LEFT ===== */
+.layoutBothCollapsed {
+  grid-template-columns: 56px minmax(0, 1fr) 56px;
+}
+
+/* ============================================================================
+   LEFT NAV SECTION - Collapsible
+   ============================================================================ */
+
 .navSection {
   background: var(--bg-surface);
   border-radius: var(--border-radius-xl);
@@ -41,9 +59,111 @@
   display: flex;
   flex-direction: column;
   gap: var(--spacing-lg);
+  overflow: hidden; /* Prevent content overflow during collapse */
+  transition: all 0.3s ease;
+  position: relative;
+}
+
+.navSectionCollapsed {
+  padding: var(--spacing-sm);
+  width: 56px;
+}
+
+/* Collapse Toggle Button */
+.navCollapseToggle {
+  background: rgba(10, 15, 26, 0.6);
+  border: 1px solid var(--border-medium);
+  border-radius: 8px;
+  padding: 0.5rem;
+  font-size: 1.25rem;
+  color: #E5E7EB;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  align-self: flex-start;
+  margin-bottom: var(--spacing-sm);
+  flex-shrink: 0;
+}
+
+.navCollapseToggle:hover {
+  background: var(--bg-peak);
+  border-color: var(--accent-primary);
+  color: var(--accent-primary);
+}
+
+.navSectionCollapsed .navCollapseToggle {
+  align-self: center;
+  font-size: 1rem;
+  margin-bottom: 0;
+}
+
+/* Expanded Content */
+.navExpandedContent {
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-lg);
+  width: 100%;
+  min-height: 0; /* Allow flex shrink */
   overflow-y: auto;
 }
 
+.navSectionCollapsed .navExpandedContent {
+  display: none;
+}
+
+/* Collapsed Content */
+.navCollapsedContent {
+  display: none;
+}
+
+.navSectionCollapsed .navCollapsedContent {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 1rem;
+  width: 100%;
+  flex: 1;
+  padding-top: 1rem;
+}
+
+/* Vertical Task Name */
+.verticalTaskName {
+  writing-mode: vertical-lr;
+  transform: rotate(180deg);
+  font-family: var(--font-display);
+  font-size: 11px;
+  font-weight: 600;
+  color: var(--brand-ivory);
+  text-align: center;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  max-height: 200px;
+  flex: 1;
+}
+
+/* Vertical Back Button */
+.verticalBackButton {
+  writing-mode: vertical-lr;
+  transform: rotate(180deg);
+  background: rgba(10, 15, 26, 0.6);
+  border: 1px solid var(--border-medium);
+  border-radius: 999px;
+  padding: 0.75rem 0.5rem;
+  font-size: 1.25rem;
+  color: #E5E7EB;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  margin-top: auto;
+  flex-shrink: 0;
+}
+
+.verticalBackButton:hover {
+  background: var(--bg-peak);
+  border-color: var(--accent-primary);
+  color: var(--accent-primary);
+}
+
+/* Nav Content Blocks */
 .userProfile {
   display: flex;
   align-items: center;
@@ -52,6 +172,7 @@
   background: var(--bg-interactive);
   border-radius: var(--border-radius-lg);
   border: 1px solid var(--border-subtle);
+  flex-shrink: 0;
 }
 
 .userAvatar {
@@ -64,6 +185,7 @@
   display: flex;
   align-items: center;
   justify-content: center;
+  flex-shrink: 0;
 }
 
 .userInitial {
@@ -73,9 +195,26 @@
   color: var(--brand-ivory);
 }
 
-.userMeta { display: flex; flex-direction: column; gap: 2px; }
-.userName { font-size: 13px; font-weight: 500; color: var(--text-primary); }
-.userTier { font-size: 11px; color: var(--text-secondary); }
+.userMeta { 
+  display: flex; 
+  flex-direction: column; 
+  gap: 2px;
+  min-width: 0;
+}
+
+.userName { 
+  font-size: 13px; 
+  font-weight: 500; 
+  color: var(--text-primary);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.userTier { 
+  font-size: 11px; 
+  color: var(--text-secondary); 
+}
 
 .navBlock {
   padding: 12px;
@@ -85,6 +224,7 @@
   display: flex;
   flex-direction: column;
   gap: 10px;
+  flex-shrink: 0;
 }
 
 .navTitle {
@@ -99,12 +239,24 @@
   font-size: 14px;
   font-weight: 600;
   color: var(--brand-ivory);
+  word-wrap: break-word;
 }
 
-.navTaskTemplate { font-size: 12px; color: #E5E7EB; }
+.navTaskTemplate { 
+  font-size: 12px; 
+  color: #E5E7EB; 
+}
 
-.navTeamList { display: flex; flex-direction: column; gap: 8px; }
-.navEmpty { font-size: 12px; color: var(--text-tertiary); }
+.navTeamList { 
+  display: flex; 
+  flex-direction: column; 
+  gap: 8px; 
+}
+
+.navEmpty { 
+  font-size: 12px; 
+  color: var(--text-tertiary); 
+}
 
 .navRoleItem {
   display: flex;
@@ -118,14 +270,6 @@
   color: #E5E7EB;
 }
 
-.navRoleItemActive {
-  border-color: var(--accent-primary);
-  background:
-    radial-gradient(circle at 0 0, rgba(99, 102, 241, 0.28), transparent 55%),
-    rgba(15, 23, 42, 0.96);
-  box-shadow: 0 0 0 1px rgba(99, 102, 241, 0.5);
-}
-
 .navRoleIcon {
   width: 24px;
   height: 24px;
@@ -134,11 +278,28 @@
   display: flex;
   align-items: center;
   justify-content: center;
+  flex-shrink: 0;
 }
 
-.navRoleText { display: flex; flex-direction: column; gap: 2px; }
-.navRoleName { font-size: 12px; font-weight: 500; }
-.navRoleLlm { font-size: 11px; color: var(--text-secondary); }
+.navRoleText { 
+  display: flex; 
+  flex-direction: column; 
+  gap: 2px;
+  min-width: 0;
+}
+
+.navRoleName { 
+  font-size: 12px; 
+  font-weight: 500;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.navRoleLlm { 
+  font-size: 11px; 
+  color: var(--text-secondary); 
+}
 
 .backButton {
   margin-top: auto;
@@ -149,292 +310,399 @@
   background: rgba(10, 15, 26, 0.6);
   color: #E5E7EB;
   cursor: pointer;
-  transition: var(--transition-fast);
+  transition: all 0.2s ease;
+  flex-shrink: 0;
 }
 
 .backButton:hover {
+  background: var(--bg-peak);
   border-color: var(--accent-primary);
-  color: var(--brand-ivory);
-  box-shadow: 0 0 0 1px rgba(99, 102, 241, 0.6);
+  color: var(--accent-primary);
 }
 
-/* ===== CENTER (CHAT) ===== */
+/* ============================================================================
+   CENTER CHAT SECTION - PROPERLY GATED
+   ============================================================================ */
+
 .chatSection {
   background: var(--bg-surface);
   border-radius: var(--border-radius-xl);
   border: 1px solid var(--border-subtle);
-
-  /* Keep messages as the only scroller */
   display: flex;
   flex-direction: column;
-  min-height: 0;
-  overflow: hidden;
-
-  /* Needed for overlay composer */
-  position: relative;
+  overflow: hidden; /* ✅ CRITICAL: Prevents overflow */
+  min-width: 0; /* ✅ CRITICAL: Allows grid shrinking */
 }
 
-/* Header — keep as-is (do not change layout semantics) */
-.chatHeader {
-  position: relative;
-  overflow: hidden;
-  flex: 0 0 auto;
-  min-height: 84px;
-}
-
-.heroImageBackdrop {
-  position: absolute;
-  inset: 0;
-  overflow: hidden;
-}
-
-.heroImageBackdrop img {
-  width: 100%;
-  height: 100%;
-  object-fit: cover;
-  filter: saturate(1.1) contrast(1.1) brightness(0.72);
-}
-
-.heroImageOverlay {
-  position: absolute;
-  inset: 0;
-  background: linear-gradient(
-    180deg,
-    rgba(15, 23, 42, 0.35) 0%,
-    rgba(15, 23, 42, 0.78) 60%,
-    rgba(15, 23, 42, 0.95) 100%
-  );
-}
-
-.headerContent {
-  position: relative;
-  z-index: 1;
-  padding: 14px 18px 12px;
+/* Canvas - scrollable message area */
+.canvas {
+  flex: 1;
+  overflow-y: auto;
+  overflow-x: hidden; /* ✅ CRITICAL: No horizontal overflow */
+  padding: var(--spacing-lg);
   display: flex;
   flex-direction: column;
-  gap: 4px;
+  gap: var(--spacing-lg);
+  min-height: 0; /* Allow flex shrink */
 }
 
-.headerTitle {
-  margin: 0;
-  font-family: var(--font-display);
-  font-size: 20px;
-  font-weight: 650;
-  letter-spacing: 0.02em;
+/* Empty state */
+.emptyCanvas {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 1rem;
+  padding: 3rem 1rem;
+  text-align: center;
+  flex: 1;
+}
+
+.emptyIcon {
+  font-size: 3rem;
+  opacity: 0.5;
+}
+
+.emptyTitle {
+  font-size: 1.25rem;
+  font-weight: 600;
+  color: var(--text-primary);
+}
+
+.emptyText {
+  font-size: 0.9375rem;
+  color: var(--text-secondary);
+  max-width: 400px;
+  line-height: 1.5;
+}
+
+/* ============================================================================
+   MESSAGE CARDS - Full width within canvas, properly wrapped
+   ============================================================================ */
+
+/* User Message Card */
+.userMessageCard {
+  width: 100%; /* ✅ Full width of canvas */
+  max-width: 100%; /* ✅ Never exceed canvas */
+  background: rgba(99, 102, 241, 0.1);
+  border: 1px solid rgba(99, 102, 241, 0.3);
+  border-radius: var(--border-radius-lg);
+  padding: var(--spacing-md);
+  align-self: flex-end;
+  max-width: 80%; /* User messages slightly narrower */
+  box-sizing: border-box;
+}
+
+.userMessageText {
+  font-size: 0.95rem;
+  line-height: 1.5;
+  color: var(--text-primary);
+  word-wrap: break-word; /* ✅ Wrap long words */
+  overflow-wrap: break-word; /* ✅ Modern wrap */
+  hyphens: auto; /* ✅ Hyphenation support */
+}
+
+/* LLM Response Card */
+.responseCard {
+  width: 100%; /* ✅ Full width of canvas */
+  max-width: 100%; /* ✅ Never exceed canvas */
+  background: var(--bg-interactive);
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--border-radius-lg);
+  overflow: hidden;
+  transition: all 0.2s ease;
+  box-sizing: border-box;
+}
+
+.responseCard:hover {
+  border-color: var(--border-medium);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+}
+
+/* Card Header */
+.responseCardHeader {
+  background: var(--bg-surface);
+  border-bottom: 1px solid var(--border-subtle);
+  padding: var(--spacing-md);
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-sm);
+}
+
+.llmIcon {
+  font-size: 1.5rem;
+  flex-shrink: 0;
+}
+
+.llmInfo {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+  min-width: 0;
+}
+
+.llmRole {
+  font-size: 0.875rem;
+  font-weight: 600;
   color: var(--brand-ivory);
 }
 
-.headerSubtitle {
+.llmModel {
+  font-size: 0.75rem;
+  color: var(--text-secondary);
+}
+
+.streamingIndicator {
+  font-size: 0.75rem;
+  color: var(--accent-primary);
+  animation: pulse 1.5s infinite;
+  flex-shrink: 0;
+}
+
+@keyframes pulse {
+  0%, 100% { opacity: 0.5; }
+  50% { opacity: 1; }
+}
+
+/* Card Content */
+.responseCardContent {
+  padding: var(--spacing-lg);
+  font-size: 0.9375rem;
+  line-height: 1.6;
+  color: var(--text-primary);
+  word-wrap: break-word; /* ✅ Wrap text */
+  overflow-wrap: break-word; /* ✅ Modern wrap */
+}
+
+.discussionText {
+  margin-bottom: var(--spacing-md);
+  white-space: pre-wrap; /* Preserve formatting but wrap */
+}
+
+/* Code Blocks */
+.codeBlockWrapper {
+  margin: var(--spacing-md) 0;
+}
+
+.codeBlockLabel {
+  font-size: 0.75rem;
+  font-weight: 600;
+  color: var(--text-secondary);
+  margin-bottom: var(--spacing-xs);
+  font-family: var(--font-body);
+}
+
+.codeBlock {
+  background: #0f172a;
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--border-radius-md);
+  padding: var(--spacing-md);
+  overflow-x: auto; /* ✅ Horizontal scroll for long lines */
+  position: relative;
+  max-width: 100%; /* ✅ Never exceed card */
+}
+
+.codeBlock pre {
   margin: 0;
-  font-size: 13px;
-  color: #CBD5F5;
+  font-family: 'Monaco', 'Consolas', 'Courier New', monospace;
+  font-size: 0.8125rem;
+  line-height: 1.5;
+  color: #e2e8f0;
 }
 
-
-.emptyState {
-  margin-top: 8px;
-  padding: 16px 14px;
-  border-radius: 12px;
-  border: 1px dashed rgba(148, 163, 184, 0.5);
-  background: rgba(15, 23, 42, 0.95);
+.codeBlock code {
+  display: block;
+  white-space: pre; /* Don't wrap code */
 }
 
-.emptyTitle { font-size: 14px; font-weight: 500; color: #F5F5DC; }
-.emptyBody { margin-top: 4px; font-size: 12px; color: #CBD5F5; }
-
-/* ============================================
-   CSS FIXES for TaskChatWindow.module.css
-   ============================================ */
-
-/* FIX 1: Message Overflow (Replace line ~256) */
-.message {
-  /* ✅ FIX: Use pixel max-width to prevent overflow when sidebar retracts */
-  max-width: min(720px, calc(100% - 40px)); /* Never exceed container */
-  border-radius: 14px;
-  padding: 8px 11px;
-  font-size: 13px;
-  line-height: 1.45;
-  box-shadow: 0 8px 20px rgba(0, 0, 0, 0.45);
-  
-  /* ✅ Ensure text wraps properly */
-  word-wrap: break-word;
-  overflow-wrap: break-word;
+.codeBlockTruncated {
+  max-height: 600px; /* ~50 lines at 12px */
+  overflow: hidden;
 }
 
-/* FIX 2: Prevent Horizontal Scroll (Update line ~234) */
-.messagesScroll {
-  flex: 1 1 auto;
-  min-height: 0;
-  overflow-y: auto;
-  overflow-x: hidden; /* ✅ FIX: Prevent horizontal scroll */
-  padding: 12px 16px 210px;
+.codeBlockTruncated::after {
+  content: '';
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  height: 60px;
+  background: linear-gradient(transparent, #0f172a);
+  pointer-events: none;
+}
+
+.codeBlockExpanded {
+  max-height: none;
+}
+
+.showMoreButton {
+  margin-top: var(--spacing-sm);
+  padding: 0.5rem 1rem;
+  background: rgba(99, 102, 241, 0.1);
+  border: 1px solid rgba(99, 102, 241, 0.3);
+  border-radius: var(--border-radius-md);
+  color: var(--accent-primary);
+  font-size: 0.8125rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  width: 100%;
+}
+
+.showMoreButton:hover {
+  background: rgba(99, 102, 241, 0.2);
+  border-color: var(--accent-primary);
+}
+
+/* Card Actions Footer */
+.responseCardActions {
+  padding: var(--spacing-md);
+  border-top: 1px solid var(--border-subtle);
   display: flex;
-  flex-direction: column;
-  gap: 8px;
-  background: transparent;
+  flex-wrap: wrap;
+  gap: var(--spacing-sm);
+  background: var(--bg-surface);
 }
 
-/* OPTIONAL: Better markdown wrapping in chat bubbles */
-.mdChatContainer {
-  max-width: 100%;
-  overflow-wrap: break-word;
-  word-wrap: break-word;
-}
-
-.mdChatContainer pre,
-.mdChatContainer code {
-  max-width: 100%;
-  overflow-x: auto; /* Allow horizontal scroll only for code */
-}
-
-.messageMeta { margin-bottom: 4px; }
-.messageRole { font-size: 11px; color: var(--text-secondary); }
-.messageBody { white-space: pre-wrap; }
-
-.messageAi {
-  align-self: flex-start;
-  background: linear-gradient(135deg, rgba(15, 23, 42, 0.98), rgba(99, 102, 241, 0.5));
-  border: 1px solid rgba(129, 140, 248, 0.7);
-}
-
-.messageUser {
-  align-self: flex-end;
-  background: rgba(15, 23, 42, 0.98);
-  border: 1px solid rgba(148, 163, 184, 0.5);
-}
-
-/* Handoff prompt stays in scroll */
-.handoffPrompt {
-  margin: 6px auto 4px;
-  max-width: 680px;
-  padding: 8px 10px;
-  border-radius: 999px;
-  background: linear-gradient(135deg, #6366F1, #818CF8);
-  color: #F9FAFB;
+.copyCodeButton {
+  padding: 0.5rem 1rem;
+  background: rgba(99, 102, 241, 0.1);
+  border: 1px solid rgba(99, 102, 241, 0.3);
+  border-radius: var(--border-radius-md);
+  color: var(--accent-primary);
+  font-size: 0.8125rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s ease;
   display: flex;
   align-items: center;
-  justify-content: space-between;
-  gap: 8px;
-  font-size: 12px;
+  gap: 0.5rem;
+  white-space: nowrap;
 }
 
-.handoffText { flex: 1; }
-.handoffActions { display: flex; gap: 6px; }
-
-.handoffPrimary,
-.handoffSecondary {
-  border-radius: 999px;
-  border: none;
-  padding: 4px 10px;
-  font-size: 11px;
-  cursor: pointer;
+.copyCodeButton:hover {
+  background: rgba(99, 102, 241, 0.2);
+  border-color: var(--accent-primary);
 }
 
-.handoffPrimary { background: #F9FAFB; color: #111827; }
-.handoffSecondary { background: rgba(15, 23, 42, 0.3); color: #F9FAFB; }
-
-/* ===== OPTION B: Overlay composer ===== */
-.composerFade {
-  position: absolute;
-  left: 0;
-  right: 0;
-  bottom: 0;
-
-  height: 190px;
-  background: linear-gradient(
-    180deg,
-    rgba(20, 27, 46, 0) 0%,
-    rgba(10, 15, 26, 0.75) 70%,
-    rgba(10, 15, 26, 0.92) 100%
-  );
-
-  pointer-events: none;
-  z-index: 5;
+.copyCodeButton.copied {
+  background: rgba(34, 197, 94, 0.1);
+  border-color: rgba(34, 197, 94, 0.3);
+  color: #22c55e;
 }
 
-.composerOverlay {
-  position: absolute;
-  left: 0;
-  right: 0;
-  bottom: 0;
+/* ============================================================================
+   COMPOSER
+   ============================================================================ */
 
-  padding: 0 12px 14px;
-  pointer-events: none; /* scrolling remains natural */
-  z-index: 6;
+.composer {
+  border-top: 1px solid var(--border-subtle);
+  padding: var(--spacing-md);
+  background: var(--bg-surface);
+  flex-shrink: 0;
 }
 
-/* Pill */
 .composerInner {
-  pointer-events: auto; /* clickable */
-  width: 100%;
-  max-width: 920px;
-  margin: 0 auto;
-
-  border-radius: 18px;
-  border: 1px solid rgba(129, 140, 248, 0.55);
-  background: rgba(10, 15, 26, 0.55);
-  backdrop-filter: blur(10px);
-
   display: flex;
+  flex-direction: column;
+  gap: var(--spacing-sm);
+}
+
+.attachmentsList {
+  display: flex;
+  gap: 0.5rem;
+  flex-wrap: wrap;
+}
+
+.attachmentChip {
+  padding: 0.25rem 0.75rem;
+  background: rgba(99, 102, 241, 0.1);
+  border: 1px solid rgba(99, 102, 241, 0.3);
+  border-radius: 999px;
+  font-size: 0.75rem;
+  color: var(--accent-primary);
+}
+
+.composerRow {
+  display: flex;
+  gap: var(--spacing-sm);
   align-items: flex-end;
-  gap: 10px;
-  padding: 10px 10px 10px 14px;
-
-  box-shadow: 0 24px 60px rgba(0, 0, 0, 0.45);
 }
 
-.composerInput {
+.composerTextarea {
   flex: 1;
-  border: none;
-  outline: none;
-  resize: none;
-  background: transparent;
-  color: #F9FAFB;
-  font-size: 14px;
-  line-height: 1.45;
-  min-height: 48px;
-  max-height: 140px;
-  padding: 0;
+  background: var(--bg-interactive);
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--border-radius-md);
+  padding: 0.75rem 1rem;
+  font-family: var(--font-body);
+  font-size: 0.9375rem;
+  color: var(--text-primary);
+  resize: vertical;
+  min-height: 44px;
+  max-height: 200px;
+  transition: all 0.2s ease;
 }
 
-.composerInput::placeholder { color: var(--text-tertiary); }
+.composerTextarea:focus {
+  outline: none;
+  border-color: var(--accent-primary);
+  box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.1);
+}
+
+.composerTextarea:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
 
 .composerActions {
   display: flex;
-  gap: 8px;
-  align-items: center;
-  padding-bottom: 4px;
+  gap: 0.5rem;
 }
 
 .composerButton {
-  width: 40px;
-  height: 40px;
-  border-radius: 999px;
-  border: none;
-  background: linear-gradient(135deg, var(--accent-primary), var(--accent-hover));
-  color: #F9FAFB;
+  width: 44px;
+  height: 44px;
+  background: var(--bg-interactive);
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--border-radius-md);
+  color: var(--text-primary);
+  font-size: 1.25rem;
   cursor: pointer;
-  display: inline-flex;
+  transition: all 0.2s ease;
+  display: flex;
   align-items: center;
   justify-content: center;
-  font-size: 16px;
-  box-shadow: 0 14px 30px rgba(99, 102, 241, 0.55);
-  transition: var(--transition-fast);
+  flex-shrink: 0;
 }
 
-.composerButton[disabled] { opacity: 0.5; cursor: not-allowed; box-shadow: none; }
+.composerButton:hover:not(:disabled) {
+  background: var(--bg-peak);
+  border-color: var(--accent-primary);
+  color: var(--accent-primary);
+}
 
-.composerButton:hover:not([disabled]) {
-  transform: translateY(-1px);
-  box-shadow: 0 18px 40px rgba(99, 102, 241, 0.7);
+.composerButton:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
 }
 
 .composerStop {
-  background: #DC2626;
-  box-shadow: 0 14px 30px rgba(220, 38, 38, 0.6);
+  background: rgba(239, 68, 68, 0.1);
+  border-color: rgba(239, 68, 68, 0.3);
+  color: #ef4444;
 }
 
-/* ===== RIGHT ===== */
+.composerStop:hover {
+  background: rgba(239, 68, 68, 0.2);
+  border-color: #ef4444;
+}
+
+/* ============================================================================
+   RIGHT ARTIFACTS SECTION
+   ============================================================================ */
+
 .artifactsSection {
   background: var(--bg-surface);
   border-radius: var(--border-radius-xl);
@@ -442,844 +710,373 @@
   display: flex;
   flex-direction: column;
   overflow: hidden;
+  transition: all 0.3s ease;
+}
+
+.artifactsSectionCollapsed {
+  width: 56px;
 }
 
 .artifactsHeader {
-  padding: 10px 12px;
   border-bottom: 1px solid var(--border-subtle);
+  background: var(--bg-surface);
+  flex-shrink: 0;
 }
 
 .artifactsHeaderRow {
   display: flex;
-  align-items: center;
   justify-content: space-between;
-  gap: var(--spacing-sm);
+  align-items: center;
+  padding: var(--spacing-md);
 }
 
 .artifactsTabs {
-  display: inline-flex;
-  background: rgba(15, 23, 42, 0.98);
-  border-radius: 999px;
-  padding: 2px;
-}
-
-.artifactsToggle {
-  width: 40px;
-  height: 40px;
-  border-radius: 999px;
-  border: 1px solid var(--border-medium);
-  background: rgba(10, 15, 26, 0.55);
-  color: var(--text-primary);
-  cursor: pointer;
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  transition: var(--transition-fast);
-}
-
-.artifactsToggle:hover {
-  border-color: rgba(129, 140, 248, 0.6);
-  box-shadow: 0 0 0 1px rgba(99, 102, 241, 0.35);
+  display: flex;
+  gap: 0.5rem;
 }
 
 .artifactsTab {
-  border: none;
-  border-radius: 999px;
-  padding: 6px 10px;
-  font-size: 11px;
-  color: var(--text-secondary);
+  padding: 0.5rem 1rem;
   background: transparent;
+  border: none;
+  border-radius: var(--border-radius-md);
+  color: var(--text-secondary);
+  font-size: 0.8125rem;
+  font-weight: 600;
   cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.artifactsTab:hover {
+  background: var(--bg-interactive);
+  color: var(--text-primary);
 }
 
 .artifactsTabActive {
-  background: rgba(15, 23, 42, 0.98);
-  color: var(--text-primary);
-  box-shadow: 0 0 0 1px rgba(99, 102, 241, 0.6);
+  background: rgba(99, 102, 241, 0.1);
+  color: var(--accent-primary);
+}
+
+.artifactsToggle {
+  background: var(--bg-interactive);
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--border-radius-md);
+  padding: 0.5rem;
+  font-size: 1rem;
+  color: var(--text-secondary);
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.artifactsToggle:hover {
+  border-color: var(--accent-primary);
+  color: var(--accent-primary);
+}
+
+.artifactsControls {
+  padding: 0 var(--spacing-md) var(--spacing-md);
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.artifactsToggleRow {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-size: 0.8125rem;
+  color: var(--text-secondary);
+  cursor: pointer;
+}
+
+.artifactsMiniButton {
+  padding: 0.25rem 0.75rem;
+  background: var(--bg-interactive);
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--border-radius-md);
+  color: var(--text-secondary);
+  font-size: 0.75rem;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.artifactsMiniButton:hover {
+  border-color: var(--accent-primary);
+  color: var(--accent-primary);
+}
+
+.artifactsContent {
+  flex: 1;
+  overflow-y: auto;
+  padding: var(--spacing-md);
 }
 
 .artifactsRail {
   flex: 1;
   display: flex;
+  flex-direction: column;
   align-items: center;
-  justify-content: center;
-  padding: var(--spacing-sm);
+  padding-top: 1rem;
 }
 
 .artifactsRailLabel {
-  font-size: 11px;
-  letter-spacing: 0.18em;
-  text-transform: uppercase;
-  color: var(--text-secondary);
-  writing-mode: vertical-rl;
+  writing-mode: vertical-lr;
   transform: rotate(180deg);
-  user-select: none;
-}
-
-.artifactsContent {
-  flex: 1;
-  padding: 14px 14px 12px;
-  overflow-y: auto;
+  font-size: 1.25rem;
 }
 
 .artifactsEmpty {
-  padding: 14px 12px;
-  border-radius: var(--border-radius-lg);
-  border: 1px dashed var(--border-medium);
-  background: rgba(15, 23, 42, 0.96);
+  padding: 2rem 1rem;
+  text-align: center;
 }
 
-.artifactsEmptyTitle { font-size: 13px; font-weight: 500; color: var(--brand-ivory); }
-.artifactsEmptyBody { margin-top: 4px; font-size: 12px; color: var(--text-secondary); }
-
-/* ===== MOBILE ===== */
-@media (max-width: 900px) {
-  .layout {
-    grid-template-columns: minmax(0, 1fr);
-    padding: var(--spacing-sm);
-  }
-
-  .navSection,
-  .artifactsSection {
-    display: none;
-  }
-
-  .composerInner {
-    max-width: 100%;
-  }
-
-  .messagesScroll {
-    padding-bottom: 200px;
-  }
-}
-/* ================================
-   Step 2b — Center panel HERO header (image fills full header band)
-   Appended overrides (safe)
-================================== */
-
-/* Make the center chat header a real hero band (image reads as a banner) */
-.chatHeader {
-  /* keep existing behavior, just increase the header height */
-  min-height: clamp(140px, 18vh, 240px);
-}
-
-/* Ensure header text positions nicely within the hero band */
-.headerContent {
-  /* make the content fill the hero height so we can bottom-align text */
-  height: 100%;
-  justify-content: flex-end;
-  padding: 18px 18px 14px;
-}
-
-/* Make sure the backdrop truly fills the entire header area */
-.heroImageBackdrop {
-  inset: 0;
-}
-
-/* Keep image coverage cinematic */
-.heroImageBackdrop img {
-  width: 100%;
-  height: 100%;
-  object-fit: cover;
-}
-
-/* Slightly deepen the overlay so text stays readable on bright images */
-.heroImageOverlay {
-  background: linear-gradient(
-    180deg,
-    rgba(15, 23, 42, 0.22) 0%,
-    rgba(15, 23, 42, 0.72) 55%,
-    rgba(10, 15, 26, 0.95) 100%
-  );
-}
-
-/* Mobile: keep hero present but not too tall */
-@media (max-width: 900px) {
-  .chatHeader {
-    min-height: clamp(120px, 16vh, 180px);
-  }
-}
-/* ================================
-   Step 2c — Full-width HERO inside center panel
-   (fixes width not covering header)
-================================== */
-
-/* Ensure the chat section does NOT constrain the header width */
-.chatSection{
-  padding: 0 !important; /* header will manage its own padding */
-}
-
-/* Header becomes full-bleed inside center panel */
-.chatHeader{
-  position: relative;
-  width: 100%;
-  border-radius: 0 !important; /* avoid rounded clipping */
-  overflow: hidden;
-}
-
-/* Re-apply padding ONLY to header text, not the image */
-.headerContent{
-  left: 0;
-  right: 0;
-  bottom: 0;
-  padding-left: 24px !important;
-  padding-right: 24px !important;
-}
-
-/* Ensure image truly spans edge-to-edge of center panel */
-.heroImageBackdrop,
-.heroImageBackdrop img,
-.heroImageOverlay{
-  left: 0 !important;
-  right: 0 !important;
-  width: 100% !important;
-}
-
-/* Restore inner padding for the rest of the chat (messages) */
-.messagesScroll{
-  padding-left: 16px;
-  padding-right: 16px;
-}
-/* ===== Fix: remove double border in composer pill ===== */
-
-/* Keep ONLY the single border on the pill container */
-.composerInner {
-  box-shadow: none !important; /* kills “inner ring” look if shadow reads as border */
-}
-
-/* Ensure textarea itself never draws a border/ring */
-.composerInput {
-  border: none !important;
-  outline: none !important;
-  box-shadow: none !important;
-}
-
-/* If any focus styling is creating a second ring, keep it subtle and on the same border */
-.composerInner:focus-within {
-  /* Optional: either nothing… */
-  /* box-shadow: none !important; */
-
-  /* …or a single soft glow (NOT a second border) */
-  box-shadow: 0 18px 40px rgba(99, 102, 241, 0.35) !important;
-}
-/* ================================
-   Markdown rendering + Copy blocks
-================================== */
-
-/* Fix: remove “double border” feeling in composer pill */
-.composerInner {
-  /* keep a single border; remove any ring-like shadow */
-  box-shadow: 0 24px 60px rgba(0, 0, 0, 0.45) !important;
-}
-.composerInput {
-  border: none !important;
-  outline: none !important;
-  box-shadow: none !important;
-}
-.composerInner:focus-within {
-  /* single glow, not a second border ring */
-  box-shadow:
-    0 24px 60px rgba(0, 0, 0, 0.45),
-    0 0 0 0 rgba(0,0,0,0) !important;
-}
-
-/* Message body markdown base */
-.messageBody {
-  /* ensure markdown inherits bubble typography nicely */
-  color: inherit;
-}
-
-/* Paragraph spacing */
-.mdP {
-  margin: 0 0 8px;
-}
-.mdP:last-child {
-  margin-bottom: 0;
-}
-
-/* Lists */
-.mdUl,
-.mdOl {
-  margin: 6px 0 10px;
-  padding-left: 1.15rem; /* good indentation */
-}
-.mdLi {
-  margin: 3px 0;
-}
-.mdLi > .mdUl,
-.mdLi > .mdOl {
-  margin-top: 6px;
-}
-
-/* Inline code */
-.mdInlineCode {
-  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
-  font-size: 0.92em;
-  padding: 0.12em 0.38em;
-  border-radius: 8px;
-  border: 1px solid rgba(148, 163, 184, 0.25);
-  background: rgba(10, 15, 26, 0.45);
-}
-
-/* Blockquotes */
-.mdQuote {
-  margin: 8px 0;
-  padding: 10px 12px;
-  border-left: 3px solid rgba(129, 140, 248, 0.65);
-  border-radius: 12px;
-  background: rgba(10, 15, 26, 0.40);
-  color: rgba(241, 245, 249, 0.92);
-}
-
-/* Tables (GFM) */
-.mdTableWrap {
-  overflow-x: auto;
-  margin: 10px 0;
-  border-radius: 12px;
-  border: 1px solid rgba(148, 163, 184, 0.18);
-  background: rgba(10, 15, 26, 0.35);
-}
-.mdTable {
-  width: 100%;
-  border-collapse: collapse;
-  font-size: 12px;
-}
-.mdTh, .mdTd {
-  padding: 10px 10px;
-  border-bottom: 1px solid rgba(148, 163, 184, 0.14);
-}
-.mdTh {
-  text-align: left;
-  color: rgba(245, 245, 220, 0.95);
+.artifactsEmptyTitle {
+  font-size: 0.875rem;
   font-weight: 600;
-}
-.mdTd {
-  color: rgba(241, 245, 249, 0.90);
-}
-
-/* Horizontal rule */
-.mdHr {
-  border: none;
-  height: 1px;
-  background: rgba(148, 163, 184, 0.18);
-  margin: 12px 0;
+  color: var(--text-primary);
+  margin-bottom: 0.5rem;
 }
 
-/* Code block container with “copy breadcrumb” */
-.codeBlock {
-  margin: 10px 0 12px;
-  border-radius: 14px;
-  border: 1px solid rgba(129, 140, 248, 0.28);
-  background: rgba(10, 15, 26, 0.55);
-  overflow: hidden;
+.artifactsEmptyBody {
+  font-size: 0.8125rem;
+  color: var(--text-secondary);
+  line-height: 1.5;
 }
 
-/* Code “breadcrumb” header */
-.codeHeader {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 8px;
-
-  padding: 8px 10px;
-  border-bottom: 1px solid rgba(148, 163, 184, 0.16);
-  background: linear-gradient(180deg, rgba(20,27,46,0.45), rgba(10,15,26,0.35));
-}
-
-.codeLang {
-  font-size: 11px;
-  letter-spacing: 0.14em;
-  text-transform: uppercase;
-  color: rgba(148, 163, 184, 0.95);
-}
-
-/* Breadcrumb copy button */
-.copyCrumb {
-  border: 1px solid rgba(148, 163, 184, 0.22);
-  background: rgba(15, 23, 42, 0.50);
-  color: rgba(241, 245, 249, 0.92);
-  border-radius: 999px;
-  padding: 6px 10px;
-  font-size: 11px;
-  cursor: pointer;
-  transition: var(--transition-fast);
-  white-space: nowrap;
-}
-.copyCrumb:hover {
-  border-color: rgba(129, 140, 248, 0.55);
-  box-shadow: 0 0 0 1px rgba(99, 102, 241, 0.25);
-}
-.copyCrumb:active {
-  transform: translateY(1px);
-}
-
-/* Code text */
-.mdPre {
-  margin: 0;
-  padding: 12px 12px 14px;
-  overflow-x: auto;
-}
-.mdCode {
-  display: block;
-  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
-  font-size: 12.5px;
-  line-height: 1.55;
-  color: rgba(241, 245, 249, 0.95);
-}
-
-/* Optional: tighten meta row now that we have copy controls */
-.messageMeta {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 10px;
-}
-/* ================================
-   Artifacts panel: real blocks
-================================== */
-
-.artifactsControls{
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 10px;
-  padding: 10px 12px 12px;
-  border-top: 1px solid rgba(148, 163, 184, 0.12);
-}
-
-.artifactsToggleRow{
-  display: inline-flex;
-  align-items: center;
-  gap: 8px;
-  font-size: 12px;
-  color: rgba(241, 245, 249, 0.88);
-}
-
-.artifactsToggleRow input{
-  accent-color: rgba(99, 102, 241, 0.9);
-}
-
-.artifactsMiniButton{
-  border-radius: 999px;
-  border: 1px solid rgba(148, 163, 184, 0.22);
-  background: rgba(15, 23, 42, 0.55);
-  color: rgba(241, 245, 249, 0.92);
-  padding: 6px 10px;
-  cursor: pointer;
-  font-size: 12px;
-  transition: var(--transition-fast);
-}
-
-.artifactsMiniButton:hover{
-  border-color: rgba(99, 102, 241, 0.55);
-  box-shadow: 0 0 0 1px rgba(99, 102, 241, 0.25);
-  transform: translateY(-1px);
-}
-
-.artifactsList{
+.artifactsList {
   display: flex;
   flex-direction: column;
-  gap: 10px;
+  gap: var(--spacing-md);
 }
 
-.artifactCard{
-  border-radius: 14px;
-  border: 1px solid rgba(148, 163, 184, 0.16);
-  background: rgba(10, 15, 26, 0.40);
+.artifactCard {
+  background: var(--bg-interactive);
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--border-radius-md);
   overflow: hidden;
 }
 
-.artifactTop{
+.artifactTop {
+  padding: var(--spacing-md);
   display: flex;
-  align-items: center;
   justify-content: space-between;
-  gap: 10px;
-  padding: 10px 10px;
-  border-bottom: 1px solid rgba(148, 163, 184, 0.12);
+  align-items: center;
+  gap: 0.5rem;
 }
 
-.artifactTitle{
+.artifactTitle {
+  background: none;
   border: none;
-  background: transparent;
-  color: rgba(245, 245, 220, 0.95);
-  font-weight: 650;
-  font-size: 12px;
-  cursor: pointer;
+  color: var(--text-primary);
+  font-size: 0.8125rem;
+  font-weight: 600;
   text-align: left;
+  cursor: pointer;
+  flex: 1;
   padding: 0;
 }
 
-.artifactActions{
-  display: inline-flex;
-  align-items: center;
-  gap: 8px;
+.artifactTitle:hover {
+  color: var(--accent-primary);
 }
 
-.artifactDownload{
-  border-radius: 999px;
-  border: 1px solid rgba(99, 102, 241, 0.35);
-  background: rgba(15, 23, 42, 0.45);
-  color: rgba(241, 245, 249, 0.92);
-  padding: 6px 10px;
-  font-size: 11px;
-  text-decoration: none;
-  transition: var(--transition-fast);
-}
-
-.artifactDownload:hover{
-  border-color: rgba(99, 102, 241, 0.55);
-  box-shadow: 0 0 0 1px rgba(99, 102, 241, 0.25);
-  transform: translateY(-1px);
-}
-
-.artifactPreview{
-  margin: 0;
-  padding: 10px 10px 12px;
-  overflow-x: auto;
-  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
-  font-size: 12px;
-  line-height: 1.55;
-  color: rgba(241, 245, 249, 0.92);
-}
-/* ================================
-   Mobile back button (TaskChatWindow)
-================================== */
-
-.mobileBackBar{
-  display: none;
-  align-items: center;
-  justify-content: space-between;
-  gap: 10px;
-  padding: 10px 12px;
-  border-bottom: 1px solid rgba(148, 163, 184, 0.12);
-  background: rgba(10, 15, 26, 0.55);
-  backdrop-filter: blur(10px);
-}
-
-.mobileBackButton{
-  border-radius: 999px;
-  border: 1px solid rgba(148, 163, 184, 0.22);
-  background: rgba(15, 23, 42, 0.55);
-  color: rgba(241, 245, 249, 0.92);
-  padding: 7px 10px;
-  font-size: 12px;
-  font-weight: 650;
-  cursor: pointer;
-  transition: var(--transition-fast);
-}
-
-.mobileBackButton:hover{
-  border-color: rgba(99, 102, 241, 0.55);
-  box-shadow: 0 0 0 1px rgba(99, 102, 241, 0.25);
-  transform: translateY(-1px);
-}
-
-.mobileBackTitle{
-  font-size: 12px;
-  color: rgba(148, 163, 184, 0.95);
-  letter-spacing: 0.12em;
-  text-transform: uppercase;
-}
-
-@media (max-width: 960px){
-  .mobileBackBar{
-    display: flex;
-  }
-}
-
-/* ================================
-   Document upload chip + button
-================================== */
-
-.hiddenFileInput{
-  display: none;
-}
-
-.composerAttach{
-  opacity: 0.95;
-}
-
-.uploadChip{
+.artifactActions {
   display: flex;
-  align-items: flex-start;
-  gap: 10px;
-  padding: 10px 12px;
-  border-radius: 14px;
-  border: 1px solid rgba(148, 163, 184, 0.18);
-  background: rgba(10, 15, 26, 0.55);
-  margin-bottom: 10px;
+  gap: 0.5rem;
 }
 
-.uploadChipTitle{
-  font-size: 12px;
-  font-weight: 700;
-  color: rgba(245, 245, 220, 0.95);
-  white-space: nowrap;
-}
-
-.uploadChipMsg{
-  font-size: 12px;
-  color: rgba(241, 245, 249, 0.88);
-  line-height: 1.35;
-  flex: 1;
-}
-
-.uploadChipDismiss{
-  border: none;
-  background: transparent;
-  color: rgba(241, 245, 249, 0.75);
+.copyButton {
+  padding: 0.25rem 0.75rem;
+  background: rgba(99, 102, 241, 0.1);
+  border: 1px solid rgba(99, 102, 241, 0.3);
+  border-radius: var(--border-radius-md);
+  color: var(--accent-primary);
+  font-size: 0.75rem;
+  font-weight: 600;
   cursor: pointer;
-  padding: 0 2px;
+  transition: all 0.2s ease;
 }
 
-.uploadChipUploading{
-  border-color: rgba(99, 102, 241, 0.35);
+.copyButton:hover {
+  background: rgba(99, 102, 241, 0.2);
+  border-color: var(--accent-primary);
 }
 
-.uploadChipSuccess{
-  border-color: rgba(34, 197, 94, 0.35);
+.copyButton.copied {
+  background: rgba(34, 197, 94, 0.1);
+  border-color: rgba(34, 197, 94, 0.3);
+  color: #22c55e;
 }
 
-.uploadChipError{
-  border-color: rgba(248, 113, 113, 0.45);
-}
-.hiddenFileInput{
-  display: none;
-}
-
-.composerPlus{
-  width: 40px;
-  height: 40px;
-  border-radius: 999px;
-  border: 1px solid rgba(148, 163, 184, 0.22);
-  background: rgba(15, 23, 42, 0.55);
-  color: rgba(241, 245, 249, 0.92);
-  font-size: 20px;
-  line-height: 1;
-  cursor: pointer;
-  transition: var(--transition-fast);
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-}
-
-.composerPlus:hover{
-  border-color: rgba(99, 102, 241, 0.55);
-  box-shadow: 0 0 0 1px rgba(99, 102, 241, 0.25);
-  transform: translateY(-1px);
-}
-
-.attachmentsRow{
-  display: flex;
-  flex-wrap: wrap;
-  gap: 8px;
-  margin-top: 10px;
-}
-
-.attachmentChip{
-  display: inline-flex;
-  align-items: center;
-  gap: 8px;
-  padding: 6px 10px;
-  border-radius: 999px;
-  border: 1px solid rgba(148, 163, 184, 0.18);
-  background: rgba(10, 15, 26, 0.50);
-  color: rgba(241, 245, 249, 0.92);
-  font-size: 12px;
-}
-
-.attachmentName{
-  max-width: 220px;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-}
-
-.attachmentStatusUploading{
-  color: rgba(148, 163, 184, 0.95);
-}
-
-.attachmentStatusReady{
-  color: rgba(134, 239, 172, 0.95);
-}
-
-.attachmentStatusError{
-  color: rgba(252, 165, 165, 0.95);
-}
-
-.attachmentRemove{
-  border: none;
-  background: transparent;
-  color: rgba(241, 245, 249, 0.75);
-  cursor: pointer;
-  font-size: 16px;
-  line-height: 1;
-  padding: 0 2px;
-}
-
-.attachmentRemove:hover{
-  color: rgba(241, 245, 249, 0.95);
-}
-/* Artifacts/docs markdown wrapper */
-.mdDocContainer { max-width: 96ch; }
-
-/* TOC */
-.mdToc{
-  border: 1px solid rgba(148,163,184,0.14);
-  background: rgba(10,15,26,0.45);
-  border-radius: 14px;
-  padding: 10px 12px;
-  margin: 0 0 12px 0;
-}
-.mdTocTitle{
-  font-size: 12px;
-  letter-spacing: 0.14em;
-  text-transform: uppercase;
-  color: rgba(148,163,184,0.95);
-  margin-bottom: 8px;
-}
-.mdTocNav{ display: flex; flex-direction: column; gap: 6px; }
-.mdTocLink{ color: rgba(241,245,249,0.92); text-decoration: none; font-size: 13px; }
-.mdTocLink:hover{ text-decoration: underline; text-underline-offset: 3px; }
-
-/* Headings anchors */
-.headingAnchor{
-  opacity: 0.45;
-  margin-right: 8px;
-  text-decoration: none;
-  color: rgba(148,163,184,0.95);
-}
-.headingAnchor:hover{ opacity: 0.9; }
-
-/* KaTeX minimal scoping */
-.mdDocContainer :global(.katex){ font-size: 1em; }
-.mdDocContainer :global(.katex-display){
-  margin: 10px 0 12px 0;
-  overflow-x: auto;
-  overflow-y: hidden;
-}
-/* =========================
-   Typography foundation
-========================= */
-
-/* Chat bubble content baseline */
-.messageBody,
-.mdChatContainer {
-  font-family: var(--font-body);
-  font-size: var(--font-size-body);
-  font-weight: var(--font-weight-regular);
-  line-height: 1.65;
-  color: rgba(241, 245, 249, 0.92);
-
-  /* Wrapping rules for normal prose */
-  overflow-wrap: anywhere;
-  word-break: normal;
-  hyphens: auto;
-}
-
-/* Keep readable line length inside bubbles */
-.mdChatContainer .mdP,
-.mdChatContainer .mdUl,
-.mdChatContainer .mdOl,
-.mdChatContainer .mdQuote {
-  max-width: 76ch;
-}
-
-/* Links can be long — ensure they wrap */
-.mdLink {
-  overflow-wrap: anywhere;
-}
-
-/* Docs/Artifacts container */
-.mdDocContainer {
-  font-family: var(--font-body);
-  font-size: var(--font-size-body);
-  line-height: 1.7;
-  color: rgba(241, 245, 249, 0.92);
-  overflow-wrap: anywhere;
-  hyphens: auto;
-  max-width: 92ch;
-}
-
-/* Docs headings use your display font + token sizes */
-.mdDocContainer h1,
-.mdDocContainer h2,
-.mdDocContainer h3,
-.mdDocContainer h4 {
-  font-family: var(--font-display);
-  font-weight: var(--font-weight-semibold);
-  color: rgba(245, 245, 220, 0.96);
-  letter-spacing: 0.01em;
-}
-
-/* If you're using mdH1/mdH2 classes, set them to token sizes */
-.mdH1 { font-size: var(--font-size-h1); margin: 0 0 12px 0; line-height: 1.18; }
-.mdH2 { font-size: var(--font-size-h2); margin: 16px 0 10px 0; line-height: 1.22; }
-.mdH3 { font-size: var(--font-size-h3); margin: 14px 0 8px 0; line-height: 1.25; }
-.mdH4 { font-size: var(--font-size-h4); margin: 12px 0 6px 0; line-height: 1.28; }
-
-/* Paragraph/list sizing consistent */
-.mdP { margin: 0 0 12px 0; font-size: var(--font-size-body); }
-.mdUl, .mdOl { margin: 0 0 12px 18px; }
-.mdLi { margin: 6px 0; }
-
-/* Code: do NOT wrap; scroll horizontally */
-.mdPre,
-.artifactPreview {
-  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
-  font-size: var(--font-size-body-small);
-  line-height: 1.55;
-  white-space: pre;
-  overflow-x: auto;
-  overflow-y: hidden;
-}
-
-/* Inline code stays readable + consistent */
-.mdInlineCode {
-  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
-  font-size: 0.92em;
-}
-@media (max-width: 720px) {
-  .messageBody,
-  .mdChatContainer,
-  .mdDocContainer {
-    font-size: var(--font-size-body-small);
-  }
-}
-/* Add to the existing styles for artifacts tabs */
-.artifactsTabs {
-  display: inline-flex;
-  background: rgba(15, 23, 42, 0.98);
-  border-radius: 999px;
-  padding: 2px;
-  overflow-x: auto;
-  max-width: 100%;
-}
-
-.artifactsTab {
-  border: none;
-  border-radius: 999px;
-  padding: 6px 10px;
-  font-size: 11px;
+.artifactDownload {
+  padding: 0.25rem 0.75rem;
+  background: var(--bg-interactive);
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--border-radius-md);
   color: var(--text-secondary);
-  background: transparent;
+  font-size: 0.75rem;
+  font-weight: 600;
+  text-decoration: none;
   cursor: pointer;
-  white-space: nowrap;
+  transition: all 0.2s ease;
+}
+
+.artifactDownload:hover {
+  border-color: var(--accent-primary);
+  color: var(--accent-primary);
+}
+
+.artifactPreview {
+  padding: var(--spacing-md);
+  background: #0f172a;
+  border-top: 1px solid var(--border-subtle);
+  font-family: 'Monaco', 'Consolas', monospace;
+  font-size: 0.75rem;
+  color: #e2e8f0;
+  overflow-x: auto;
+  max-height: 400px;
+  overflow-y: auto;
+  margin: 0;
+}
+
+/* ============================================================================
+   TOAST NOTIFICATIONS
+   ============================================================================ */
+
+.toastContainer {
+  position: fixed;
+  top: 1rem;
+  right: 1rem;
+  z-index: 9999;
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  pointer-events: none;
+}
+
+.toast {
+  background: var(--bg-surface);
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--border-radius-md);
+  padding: 0.75rem 1rem;
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.3);
+  pointer-events: auto;
+  animation: slideInRight 0.3s ease;
+  min-width: 280px;
+}
+
+@keyframes slideInRight {
+  from {
+    transform: translateX(100%);
+    opacity: 0;
+  }
+  to {
+    transform: translateX(0);
+    opacity: 1;
+  }
+}
+
+.toastartifact {
+  border-color: var(--accent-primary);
+  background: rgba(99, 102, 241, 0.1);
+}
+
+.toastsuccess {
+  border-color: #22c55e;
+  background: rgba(34, 197, 94, 0.1);
+}
+
+.toasterror {
+  border-color: #ef4444;
+  background: rgba(239, 68, 68, 0.1);
+}
+
+.toastIcon {
+  font-size: 1.25rem;
   flex-shrink: 0;
 }
 
-.artifactsTabActive {
-  background: rgba(15, 23, 42, 0.98);
+.toastMessage {
+  font-size: 0.875rem;
   color: var(--text-primary);
-  box-shadow: 0 0 0 1px rgba(99, 102, 241, 0.6);
+  flex: 1;
 }
 
-/* Intelligence tab specific */
-.intelligenceBadge {
-  margin-left: 4px;
-  font-size: 9px;
-  padding: 1px 4px;
+.toastClose {
+  background: none;
+  border: none;
+  color: var(--text-secondary);
+  font-size: 1.25rem;
+  cursor: pointer;
+  padding: 0;
+  line-height: 1;
+  flex-shrink: 0;
+}
+
+.toastClose:hover {
+  color: var(--text-primary);
+}
+
+/* ============================================================================
+   RESPONSIVE DESIGN
+   ============================================================================ */
+
+@media (max-width: 1200px) {
+  .layout {
+    grid-template-columns: 56px minmax(0, 1fr) 56px;
+  }
+  
+  /* Force both panels collapsed on smaller screens */
+  .navSection,
+  .artifactsSection {
+    width: 56px;
+  }
+}
+
+@media (max-width: 768px) {
+  .layout {
+    gap: 0.5rem;
+    padding: 0.5rem;
+  }
+  
+  .canvas {
+    padding: var(--spacing-md);
+  }
+  
+  .userMessageCard {
+    max-width: 90%;
+  }
+}
+
+/* ============================================================================
+   SCROLLBAR STYLING
+   ============================================================================ */
+
+.canvas::-webkit-scrollbar,
+.navExpandedContent::-webkit-scrollbar,
+.artifactsContent::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+
+.canvas::-webkit-scrollbar-track,
+.navExpandedContent::-webkit-scrollbar-track,
+.artifactsContent::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.canvas::-webkit-scrollbar-thumb,
+.navExpandedContent::-webkit-scrollbar-thumb,
+.artifactsContent::-webkit-scrollbar-thumb {
+  background: rgba(148, 163, 184, 0.3);
   border-radius: 999px;
-  background: rgba(99, 102, 241, 0.2);
-  color: rgba(99, 102, 241, 0.9);
+}
+
+.canvas::-webkit-scrollbar-thumb:hover,
+.navExpandedContent::-webkit-scrollbar-thumb:hover,
+.artifactsContent::-webkit-scrollbar-thumb:hover {
+  background: rgba(148, 163, 184, 0.5);
 }
