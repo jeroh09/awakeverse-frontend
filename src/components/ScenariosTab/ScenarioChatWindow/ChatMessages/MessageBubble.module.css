@@ -79,9 +79,9 @@
 
 /* User message content - indigo gradient */
 .userMessage .messageContent {
-  background: linear-gradient(135deg, var(--accent-primary), var(--accent-hover));
+  background: linear-gradient(135deg, #4338ca, #3730a3); /* Indigo 700 → 800 */
   border-radius: var(--border-radius-md);
-  border-bottom-right-radius: 4px; /* Corner cut on inside edge */
+  border-bottom-right-radius: 4px;
   padding: var(--spacing-md) var(--spacing-lg);
   box-shadow: var(--shadow-elevation02);
 }
