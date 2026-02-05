@@ -55,7 +55,9 @@ function CopyButton({ getText, label = "Copy" }) {
   );
 }
 
+
 // --- helpers ---
+
 function slugify(raw) {
   return String(raw || "")
     .toLowerCase()
@@ -64,6 +66,21 @@ function slugify(raw) {
     .replace(/\s+/g, "-")
     .replace(/-+/g, "-");
 }
+
+/**
+ * MarkdownMessage
+ * - variant="chat": simple markdown for chat bubbles (fast)
+ * - variant="doc": rich markdown for artifacts/docs (TOC, math, anchors, callouts)
+ *
+ * NOTE: If you want TOC UI, render `toc` returned below in your artifact panel.
+ */
+// ✅ Markdown renderer (Artifacts/docs get richer formatting; chat stays lightweight)
+// Requires these imports at top of TaskChatWindow.jsx:
+// import React, { useMemo, useRef } from "react";
+// import ReactMarkdown from "react-markdown";
+// import remarkGfm from "remark-gfm";
+// import remarkMath from "remark-math";
+// import rehypeKatex from "rehype-katex";
 
 /**
  * MarkdownMessage
@@ -76,11 +93,13 @@ function slugify(raw) {
 export function MarkdownMessage({ text, variant = "chat", onToc }) {
   const isDoc = variant === "doc";
 
+  // Light normalization to avoid “blob” output for docs
   const normalized = useMemo(() => {
     if (!text) return "";
     let s = String(text);
 
     if (isDoc) {
+      // headings breathe
       s = s
         .replace(/\n(#{1,6}\s)/g, "\n\n$1")
         .replace(/(#{1,6} .+)\n(?!\n)/g, "$1\n\n")
@@ -90,6 +109,7 @@ export function MarkdownMessage({ text, variant = "chat", onToc }) {
     return s;
   }, [text, isDoc]);
 
+  // Simple TOC for docs variant
   const toc = useMemo(() => {
     if (!isDoc) return [];
     const lines = normalized.split("\n");
@@ -110,12 +130,14 @@ export function MarkdownMessage({ text, variant = "chat", onToc }) {
     return out;
   }, [normalized, isDoc]);
 
+  // Provide TOC to parent if requested (Artifacts panel might want it)
   const lastTocRef = useRef(null);
   if (isDoc && onToc && toc !== lastTocRef.current) {
     lastTocRef.current = toc;
     onToc(toc);
   }
 
+  // Docs-style callouts via blockquote: > **Note:** ...
   const getCalloutType = (children) => {
     const raw = Array.isArray(children) ? children.map(String).join("\n") : String(children ?? "");
     const firstLine = raw.split("\n")[0] || "";
@@ -123,15 +145,19 @@ export function MarkdownMessage({ text, variant = "chat", onToc }) {
     return m ? m[1].toLowerCase() : null;
   };
 
+  // Heading renderer with stable IDs aligned to TOC
   const makeHeading = (Tag) => {
     return ({ children }) => {
       const textOnly = Array.isArray(children) ? children.join("") : String(children ?? "");
       const base = slugify(textOnly);
+
+      // Best-effort match: find first toc entry for this base (or base-n)
       const found = toc.find((h) => h.id === base || h.id.startsWith(`${base}-`));
       const id = found?.id || base;
 
       return (
         <Tag id={id} className={styles[`md${Tag.toUpperCase()}`] || styles.mdH2}>
+          {/* anchor only in doc mode */}
           {isDoc && (
             <a className={styles.headingAnchor} href={`#${id}`} aria-label="Link to section">
               #
@@ -148,6 +174,7 @@ export function MarkdownMessage({ text, variant = "chat", onToc }) {
 
   return (
     <div className={isDoc ? styles.mdDocContainer : styles.mdChatContainer}>
+      {/* TOC only for docs; show at 3+ headings */}
       {isDoc && toc.length >= 3 && (
         <div className={styles.mdToc}>
           <div className={styles.mdTocTitle}>Contents</div>
@@ -172,30 +199,39 @@ export function MarkdownMessage({ text, variant = "chat", onToc }) {
         skipHtml={true}
         linkTarget="_blank"
         components={{
+          // Headings: doc gets proper h1/h2/h3 with anchors; chat keeps simple hierarchy
           h1: isDoc ? makeHeading("h1") : ({ children }) => <div className={styles.mdStrongTitle}>{children}</div>,
           h2: isDoc ? makeHeading("h2") : ({ children }) => <div className={styles.mdStrongSubtitle}>{children}</div>,
           h3: isDoc ? makeHeading("h3") : ({ children }) => <div className={styles.mdStrongSubtitle}>{children}</div>,
           h4: isDoc ? makeHeading("h4") : ({ children }) => <div className={styles.mdStrongSubtitle}>{children}</div>,
 
+          // Paragraphs / lists: wrapping controlled by mdChatContainer/mdDocContainer
           p: ({ children }) => <p className={styles.mdP}>{children}</p>,
           ul: ({ children }) => <ul className={styles.mdUl}>{children}</ul>,
           ol: ({ children }) => <ol className={styles.mdOl}>{children}</ol>,
           li: ({ children }) => <li className={styles.mdLi}>{children}</li>,
 
+          // Links wrap safely (long URLs)
           a: ({ href, children }) => (
             <a className={styles.mdLink} href={href} rel="noopener noreferrer" target="_blank">
               {children}
             </a>
           ),
 
+          // Callouts in docs via blockquote convention
           blockquote: ({ children }) => {
             const t = isDoc ? getCalloutType(children) : null;
             if (t) {
-              return <div className={`${styles.mdCallout} ${styles[`mdCallout_${t}`] || ""}`}>{children}</div>;
+              return (
+                <div className={`${styles.mdCallout} ${styles[`mdCallout_${t}`] || ""}`}>
+                  {children}
+                </div>
+              );
             }
             return <blockquote className={styles.mdQuote}>{children}</blockquote>;
           },
 
+          // Tables (scroll container)
           table: ({ children }) => (
             <div className={styles.mdTableWrap}>
               <table className={styles.mdTable}>{children}</table>
@@ -206,6 +242,7 @@ export function MarkdownMessage({ text, variant = "chat", onToc }) {
 
           hr: () => <hr className={styles.mdHr} />,
 
+          // Code: inline wraps naturally; blocks scroll horizontally
           code({ inline, className, children }) {
             const codeText = normalizeCodeText(children);
             const match = /language-(\w+)/.exec(className || "");
@@ -232,6 +269,7 @@ export function MarkdownMessage({ text, variant = "chat", onToc }) {
     </div>
   );
 }
+
 
 function PanelToggleIcon({ collapsed }) {
   return (
@@ -300,7 +338,7 @@ export default function TaskChatWindow({ task, verseStudio, onBack }) {
   const [isArtifactsCollapsed, setIsArtifactsCollapsed] = useState(false);
   const [showAllArtifacts, setShowAllArtifacts] = useState(false);
   const [expandedIds, setExpandedIds] = useState(() => new Set());
-  const [activeArtifactTab, setActiveArtifactTab] = useState("artifacts");
+  const [activeArtifactTab, setActiveArtifactTab] = useState('artifacts');
 
   // ✅ NEW: attachments persist in the composer until Send
   const [attachments, setAttachments] = useState([]); // { localId, name, size, status, documentId, error }
@@ -319,7 +357,9 @@ export default function TaskChatWindow({ task, verseStudio, onBack }) {
   const heroSubtitle = task?.description || "Describe your goal and let your Verse Workspace team collaborate.";
   const heroImageUrl = task?.heroImageUrl || null;
 
-  const layoutClassName = isArtifactsCollapsed ? `${styles.layout} ${styles.layoutArtifactsCollapsed}` : styles.layout;
+  const layoutClassName = isArtifactsCollapsed
+    ? `${styles.layout} ${styles.layoutArtifactsCollapsed}`
+    : styles.layout;
 
   const hasMessages = useMemo(() => Array.isArray(messages) && messages.length > 0, [messages]);
 
@@ -364,16 +404,17 @@ export default function TaskChatWindow({ task, verseStudio, onBack }) {
 
   // ✅ UPDATED: keep attachments until send, then clear
   const handleSend = useCallback(() => {
-    console.log("🔵 handleSend called at:", Date.now());
+    console.log('🔵 handleSend called at:', Date.now());
     const trimmed = inputText.trim();
 
     // block sending if no text AND no attachments
     if ((!trimmed && attachments.length === 0) || !sendMessage) return;
-    console.log("⚠️ handleSend blocked: no content or no sendMessage");
+      console.log('⚠️ handleSend blocked: no content or no sendMessage');
 
     // block sending while any uploads are still in progress
     const stillUploading = attachments.some((a) => a.status === "uploading");
     if (stillUploading) return;
+      
 
     const readyDocs = attachments.filter((a) => a.status === "ready");
     const erroredDocs = attachments.filter((a) => a.status === "error");
@@ -389,8 +430,8 @@ export default function TaskChatWindow({ task, verseStudio, onBack }) {
       const lines = erroredDocs.map((d) => `- ${d.name}: ${d.error || "upload failed"}`);
       composed = `${composed || ""}\n\nUpload errors:\n${lines.join("\n")}`.trim();
     }
-    console.log("📤 handleSend calling sendMessage with:", composed.substring(0, 50));
-
+    console.log('📤 handleSend calling sendMessage with:', composed.substring(0, 50));
+    
     sendMessage(composed);
     setInputText("");
     setAttachments([]); // ✅ clear only after user sends
@@ -430,6 +471,7 @@ export default function TaskChatWindow({ task, verseStudio, onBack }) {
 
   const uploadDocument = async (file) => {
     if (!taskId) {
+      // keep legacy chip for global error messaging
       setUploadState({ status: "error", filename: "", message: "Open a workspace before uploading." });
       return;
     }
@@ -437,19 +479,22 @@ export default function TaskChatWindow({ task, verseStudio, onBack }) {
     const validationError = validateFile(file);
     const localId = `${Date.now()}_${Math.random().toString(16).slice(2)}`;
 
+    // Persist chip immediately (even if validation fails)
     setAttachments((prev) => [
       ...prev,
       {
         localId,
         name: file?.name || "document",
         size: file?.size || 0,
-        status: validationError ? "error" : "uploading",
+        status: validationError ? "error" : "uploading", // uploading | ready | error
         documentId: null,
         error: validationError || null,
       },
     ]);
 
-    if (validationError) return;
+    if (validationError) {
+      return;
+    }
 
     try {
       const csrf = document.cookie.match(/(?:^|;\s*)av_csrf=([^;]+)/)?.[1] || "";
@@ -474,12 +519,14 @@ export default function TaskChatWindow({ task, verseStudio, onBack }) {
         prev.map((a) => (a.localId === localId ? { ...a, status: "ready", documentId: docId, error: null } : a))
       );
 
+      // keep existing behavior: refresh artifacts after successful upload
       if (refreshArtifacts) await refreshArtifacts(taskId);
     } catch (e) {
       setAttachments((prev) =>
         prev.map((a) => (a.localId === localId ? { ...a, status: "error", error: e.message || "Upload failed" } : a))
       );
     } finally {
+      // allow re-selecting same file later
       if (fileInputRef.current) fileInputRef.current.value = "";
     }
   };
@@ -545,6 +592,7 @@ export default function TaskChatWindow({ task, verseStudio, onBack }) {
 
         {/* CENTER */}
         <section className={styles.chatSection}>
+          {/* ✅ NEW: Mobile back bar */}
           <div className={styles.mobileBackBar}>
             <button type="button" className={styles.mobileBackButton} onClick={onBack} aria-label="Back">
               ← Back
@@ -574,34 +622,33 @@ export default function TaskChatWindow({ task, verseStudio, onBack }) {
                 </p>
               </div>
             )}
-
-            {messages.map((message) => {
+            
+            {messages.map((message, index) => {
+              // ✅ FIX: Force re-render during streaming for live markdown
               const isStreaming = message.streaming || message.is_streaming || false;
-              const messageKey = isStreaming ? `${message.id}-${message.text?.length || 0}` : message.id;
+              const messageKey = isStreaming 
+                ? `${message.id}-${message.text?.length || 0}` 
+                : message.id;
 
               return (
-                <div key={messageKey} className={styles.message}>
-                  <div
-                    className={
-                      message.user
-                        ? `${styles.messageCard} ${styles.messageCardUser}`
-                        : `${styles.messageCard} ${styles.messageCardAi}`
-                    }
-                    data-role={message.user ? "user" : "ai"}
-                  >
-                    <div className={styles.messageCardInner}>
-                      <div className={styles.messageMeta}>
-                        <span className={styles.messageRole}>
-                          {message.user ? "You" : message.role_name || "Assistant"}
-                          {isStreaming && <span style={{ opacity: 0.6 }}> ⋯</span>}
-                        </span>
-                        {!message.user && <CopyButton getText={() => String(message.text || "")} label="Copy message" />}
-                      </div>
+                <div
+                  key={messageKey}
+                  className={message.user ? `${styles.message} ${styles.messageUser}` : `${styles.message} ${styles.messageAi}`}
+                >
+                  <div className={styles.messageMeta}>
+                    <span className={styles.messageRole}>
+                      {message.user ? "You" : message.role_name || "Assistant"}
+                      {isStreaming && <span style={{ opacity: 0.6 }}> ⋯</span>}
+                    </span>
+                    {!message.user && <CopyButton getText={() => String(message.text || "")} label="Copy message" />}
+                  </div>
 
-                      <div className={styles.messageBody}>
-                        <MarkdownMessage key={`md-${messageKey}`} text={message.text} variant="chat" />
-                      </div>
-                    </div>
+                  <div className={styles.messageBody}>
+                    {/* ✅ Force markdown re-render with key */}
+                    <MarkdownMessage 
+                      key={`md-${messageKey}`}
+                      text={message.text} 
+                    />
                   </div>
                 </div>
               );
@@ -633,6 +680,7 @@ export default function TaskChatWindow({ task, verseStudio, onBack }) {
           {/* Composer */}
           <div className={styles.composerFade} aria-hidden="true" />
           <div className={styles.composerOverlay} role="region" aria-label="Message composer">
+            {/* ✅ Legacy upload chip preserved (now used mainly for global errors like missing taskId) */}
             {uploadState.status !== "idle" && (
               <div
                 className={
@@ -662,6 +710,7 @@ export default function TaskChatWindow({ task, verseStudio, onBack }) {
             )}
 
             <div className={styles.composerInner}>
+              {/* Hidden file input (attachments persist until Send) */}
               <input
                 ref={fileInputRef}
                 type="file"
@@ -684,7 +733,7 @@ export default function TaskChatWindow({ task, verseStudio, onBack }) {
                 rows={1}
               />
 
-              {/* Attachments chips (kept as-is to avoid breaking your upload UX) */}
+              {/* Attachments chips */}
               {attachments.length > 0 && (
                 <div
                   className={styles.attachmentsRow}
@@ -749,13 +798,14 @@ export default function TaskChatWindow({ task, verseStudio, onBack }) {
                         style={{
                           border: "none",
                           background: "transparent",
-                          color: "#CBD5F5",
+                          color: "rgba(207,174,92,.85)",
                           cursor: "pointer",
-                          padding: "2px 4px",
-                          borderRadius: "8px",
+                          fontSize: "16px",
+                          lineHeight: 1,
+                          padding: "0 2px",
                         }}
                       >
-                        ✕
+                        ×
                       </button>
                     </div>
                   ))}
@@ -763,84 +813,125 @@ export default function TaskChatWindow({ task, verseStudio, onBack }) {
               )}
 
               <div className={styles.composerActions}>
+                {/* + Attach button (no pin icon) */}
                 <button
                   type="button"
-                  className={styles.composerButton}
+                  className={styles.composerPlus || styles.composerButton}
                   onClick={openFilePicker}
-                  aria-label="Attach a document"
-                  title="Attach a document"
-                  disabled={isSending}
+                  title="Attach document"
+                  aria-label="Attach document"
+                  disabled={!taskId}
+                  style={!styles.composerPlus ? { fontSize: "20px", lineHeight: 1 } : undefined}
                 >
                   +
                 </button>
 
-                {!isSending ? (
-                  <button
-                    type="button"
-                    className={styles.composerButton}
-                    onClick={handleSend}
-                    aria-label="Send message"
-                    title="Send"
-                    disabled={isSending}
-                  >
-                    ➤
-                  </button>
-                ) : (
+                {isSending && stopStream && (
                   <button
                     type="button"
                     className={`${styles.composerButton} ${styles.composerStop}`}
                     onClick={handleStopStreaming}
-                    aria-label="Stop generating"
                     title="Stop"
+                    aria-label="Stop"
                   >
                     ■
                   </button>
                 )}
+
+                <button
+                  type="button"
+                  className={styles.composerButton}
+                  onClick={handleSend}
+                  disabled={
+                    (!inputText.trim() && attachments.length === 0) ||
+                    attachments.some((a) => a.status === "uploading") ||
+                    !sendMessage
+                  }
+                  title="Send"
+                  aria-label="Send"
+                >
+                  ➤
+                </button>
               </div>
             </div>
           </div>
         </section>
 
-        {/* RIGHT */}
-        <aside className={styles.artifactsSection}>
+      {/* RIGHT */}
+        <aside
+          className={
+            isArtifactsCollapsed
+              ? `${styles.artifactsSection} ${styles.artifactsSectionCollapsed}`
+              : styles.artifactsSection
+          }
+        >
           <div className={styles.artifactsHeader}>
             <div className={styles.artifactsHeaderRow}>
-              <div className={styles.artifactsTabs}>
-                <button
-                  type="button"
-                  className={
-                    activeArtifactTab === "artifacts"
-                      ? `${styles.artifactsTab} ${styles.artifactsTabActive}`
-                      : styles.artifactsTab
-                  }
-                  onClick={() => setActiveArtifactTab("artifacts")}
-                >
-                  Artifacts
-                </button>
-
-                <button
-                  type="button"
-                  className={
-                    activeArtifactTab === "intelligence"
-                      ? `${styles.artifactsTab} ${styles.artifactsTabActive}`
-                      : styles.artifactsTab
-                  }
-                  onClick={() => setActiveArtifactTab("intelligence")}
-                >
-                  Intelligence
-                </button>
-              </div>
+              {!isArtifactsCollapsed && (
+                <div className={styles.artifactsTabs}>
+                  <button 
+                    type="button" 
+                    className={`${styles.artifactsTab} ${activeArtifactTab === 'artifacts' ? styles.artifactsTabActive : ''}`}
+                    onClick={() => setActiveArtifactTab('artifacts')}
+                  >
+                    Artifacts
+                  </button>
+                  <button 
+                    type="button" 
+                    className={`${styles.artifactsTab} ${activeArtifactTab === 'docs' ? styles.artifactsTabActive : ''}`}
+                    onClick={() => setActiveArtifactTab('docs')}
+                  >
+                    Docs
+                  </button>
+                  <button 
+                    type="button" 
+                    className={`${styles.artifactsTab} ${activeArtifactTab === 'resources' ? styles.artifactsTabActive : ''}`}
+                    onClick={() => setActiveArtifactTab('resources')}
+                  >
+                    Resources
+                  </button>
+                  <button 
+                    type="button" 
+                    className={`${styles.artifactsTab} ${activeArtifactTab === 'intelligence' ? styles.artifactsTabActive : ''}`}
+                    onClick={() => setActiveArtifactTab('intelligence')}
+                  >
+                    Intelligence
+                    {verseStudio?.constitutionalDecisions?.length > 0 && (
+                      <span className={styles.intelligenceBadge}>
+                        {verseStudio.constitutionalDecisions.length}
+                      </span>
+                    )}
+                  </button>
+                </div>
+              )}
 
               <button
                 type="button"
                 className={styles.artifactsToggle}
                 onClick={() => setIsArtifactsCollapsed((v) => !v)}
                 aria-label={isArtifactsCollapsed ? "Expand artifacts panel" : "Collapse artifacts panel"}
-                title={isArtifactsCollapsed ? "Expand" : "Collapse"}
+                title={isArtifactsCollapsed ? "Expand panel" : "Collapse panel"}
               >
                 <PanelToggleIcon collapsed={isArtifactsCollapsed} />
               </button>
             </div>
+
+            {!isArtifactsCollapsed && activeArtifactTab === 'artifacts' && (
+              <div className={styles.artifactsControls}>
+                <label className={styles.artifactsToggleRow}>
+                  <input
+                    type="checkbox"
+                    checked={showAllArtifacts}
+                    onChange={(e) => setShowAllArtifacts(e.target.checked)}
+                  />
+                  <span>Show all</span>
+                </label>
+
+                <button type="button" className={styles.artifactsMiniButton} onClick={handleRefreshArtifacts}>
+                  Refresh
+                </button>
+              </div>
+            )}
           </div>
 
           {isArtifactsCollapsed ? (
@@ -849,75 +940,85 @@ export default function TaskChatWindow({ task, verseStudio, onBack }) {
             </div>
           ) : (
             <div className={styles.artifactsContent}>
-              {activeArtifactTab === "intelligence" ? (
-                <IntelligenceTab task={task} verseStudio={verseStudio} />
-              ) : (
+              {activeArtifactTab === 'artifacts' && (
                 <>
-                  <div className={styles.artifactsToolbar}>
-                    <div className={styles.artifactsToolbarLeft}>
-                      <button type="button" className={styles.refreshButton} onClick={handleRefreshArtifacts}>
-                        Refresh
-                      </button>
-
-                      <label className={styles.toggleRow}>
-                        <input
-                          type="checkbox"
-                          checked={showAllArtifacts}
-                          onChange={(e) => setShowAllArtifacts(e.target.checked)}
-                        />
-                        <span>Show all</span>
-                      </label>
+                  {visibleArtifacts.length === 0 ? (
+                    <div className={styles.artifactsEmpty}>
+                      <div className={styles.artifactsEmptyTitle}>No file-worthy artifacts yet.</div>
+                      <p className={styles.artifactsEmptyBody}>
+                        When the team produces larger "page" outputs (files, plans, docs), they'll appear here. Toggle
+                        <strong> Show all</strong> to view everything.
+                      </p>
                     </div>
-                  </div>
-
-                  <div className={styles.artifactsList}>
-                    {visibleArtifacts.length === 0 ? (
-                      <div className={styles.artifactsEmpty}>
-                        No file-worthy artifacts yet. Ask for a plan, a spec, or a code file.
-                      </div>
-                    ) : (
-                      visibleArtifacts.map((a, idx) => {
+                  ) : (
+                    <div className={styles.artifactsList}>
+                      {visibleArtifacts.map((a, idx) => {
                         const id = a?.id || a?.artifact_id || `${idx}`;
                         const label = artifactLabel(a, idx);
+                        const content = String(a?.content || a?.text || a?.body || "");
                         const expanded = expandedIds.has(id);
-                        const downloadUrl = artifactDownloadUrl(a);
-
-                        const content = a?.content || a?.text || a?.body || "";
+                        const dl = artifactDownloadUrl(a);
 
                         return (
-                          <div key={id} className={styles.artifactItem}>
-                            <button
-                              type="button"
-                              className={styles.artifactHeader}
-                              onClick={() => toggleExpanded(id)}
-                              aria-expanded={expanded}
-                            >
-                              <div className={styles.artifactTitle}>{label}</div>
-                              <div className={styles.artifactChevron}>{expanded ? "–" : "+"}</div>
-                            </button>
+                          <div key={id} className={styles.artifactCard}>
+                            <div className={styles.artifactTop}>
+                              <button
+                                type="button"
+                                className={styles.artifactTitle}
+                                onClick={() => toggleExpanded(id)}
+                                title={expanded ? "Collapse" : "Expand"}
+                              >
+                                {label}
+                              </button>
+
+                              <div className={styles.artifactActions}>
+                                <CopyButton getText={() => content} label="Copy" />
+                                {dl && (
+                                  <a className={styles.artifactDownload} href={dl} target="_blank" rel="noreferrer">
+                                    Download
+                                  </a>
+                                )}
+                              </div>
+                            </div>
 
                             {expanded && (
-                              <div className={styles.artifactBody}>
-                                <div className={styles.artifactActions}>
-                                  <CopyButton getText={() => String(content || "")} label="Copy" />
-                                  {downloadUrl && (
-                                    <a className={styles.downloadLink} href={downloadUrl} target="_blank" rel="noreferrer">
-                                      Download
-                                    </a>
-                                  )}
-                                </div>
-
-                                <div className={styles.artifactPreview}>
-                                  <MarkdownMessage text={String(content || "")} variant="doc" />
-                                </div>
-                              </div>
+                              <pre className={styles.artifactPreview}>
+                                <code>{content}</code>
+                              </pre>
                             )}
                           </div>
                         );
-                      })
-                    )}
-                  </div>
+                      })}
+                    </div>
+                  )}
                 </>
+              )}
+
+              {activeArtifactTab === 'docs' && (
+                <div className={styles.artifactsEmpty}>
+                  <div className={styles.artifactsEmptyTitle}>Documentation</div>
+                  <p className={styles.artifactsEmptyBody}>
+                    Generated documentation from your workspace will appear here.
+                  </p>
+                </div>
+              )}
+
+              {activeArtifactTab === 'resources' && (
+                <div className={styles.artifactsEmpty}>
+                  <div className={styles.artifactsEmptyTitle}>Resources</div>
+                  <p className={styles.artifactsEmptyBody}>
+                    Reference materials, links, and resources will appear here.
+                  </p>
+                </div>
+              )}
+
+              {activeArtifactTab === 'intelligence' && (
+                <IntelligenceTab
+                  constitutionalDecisions={verseStudio?.constitutionalDecisions || []}
+                  semanticStats={verseStudio?.semanticStats}
+                  intelligenceStats={verseStudio?.intelligenceStats}
+                  isLoading={verseStudio?.constitutionalLoading || verseStudio?.intelligenceStatsLoading}
+                />
               )}
             </div>
           )}
