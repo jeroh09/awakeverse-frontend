@@ -1269,7 +1269,12 @@
   background: rgba(99, 102, 241, 0.2);
   color: rgba(99, 102, 241, 0.9);
 }
-.chatRail{
+.chatRail {
+  display: flex;           /* ADD - makes it flex container */
+  flex-direction: column;  /* ADD - stacks children vertically */
+  overflow: hidden;        /* ADD - prevents overflow from rail */
+  
+  /* Keep all your existing properties */
   flex: 1 1 auto;
   min-height: 0;
   width: 100%;
