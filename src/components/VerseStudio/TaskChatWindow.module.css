@@ -333,35 +333,21 @@
 .handoffPrimary { background: #F9FAFB; color: #111827; }
 .handoffSecondary { background: rgba(15, 23, 42, 0.3); color: #F9FAFB; }
 
-/* ===== OPTION B: Overlay composer ===== */
-.composerFade {
-  position: absolute;
-  left: 0;
-  right: 0;
-  bottom: 0;
-
-  height: 190px;
-  background: linear-gradient(
-    180deg,
-    rgba(20, 27, 46, 0) 0%,
-    rgba(10, 15, 26, 0.75) 70%,
-    rgba(10, 15, 26, 0.92) 100%
-  );
-
-  pointer-events: none;
-  z-index: 5;
-}
-
 .composerOverlay {
   position: absolute;
   left: 0;
   right: 0;
   bottom: 0;
 
-  padding: 0 12px 14px;
-  pointer-events: none; /* scrolling remains natural */
+  padding: 12px 16px;
+  pointer-events: none;
   z-index: 6;
+
+  /* No transparency tricks */
+  background: var(--bg-surface);
+  border-top: 1px solid var(--border-subtle);
 }
+
 
 /* Pill */
 .composerInner {
@@ -1282,4 +1268,16 @@
   border-radius: 999px;
   background: rgba(99, 102, 241, 0.2);
   color: rgba(99, 102, 241, 0.9);
+}
+.chatRail{
+  width: 100%;
+  max-width: 100%;
+  margin: 0 auto;
+  padding: 0 28px;
+  box-sizing: border-box;
+  min-width: 0;
+}
+.messageCard {
+  width: 100%;
+  min-width: 0;
 }

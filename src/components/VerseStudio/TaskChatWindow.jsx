@@ -613,15 +613,16 @@ export default function TaskChatWindow({ task, verseStudio, onBack }) {
             </div>
           </header>
 
+        <div className={styles.chatRail}>
           <div className={styles.messagesScroll}>
             {!hasMessages && (
               <div className={styles.emptyState}>
                 <div className={styles.emptyTitle}>Your Verse Workspace team is ready.</div>
                 <p className={styles.emptyBody}>
-                  Describe your goal, paste a brief, or upload a document. Your roles will collaborate in this space.
+                  Describe your goals, paste a brief, or upload a document. Your roles will collaborate in this space.
                 </p>
               </div>
-            )}
+            )}     
             
             {messages.map((message, index) => {
               // ✅ FIX: Force re-render during streaming for live markdown
@@ -653,6 +654,7 @@ export default function TaskChatWindow({ task, verseStudio, onBack }) {
                 </div>
               );
             })}
+        </div>
 
             {showHandoffPrompt && handoffSuggestion && (
               <div className={styles.handoffPrompt}>
@@ -678,7 +680,6 @@ export default function TaskChatWindow({ task, verseStudio, onBack }) {
           </div>
 
           {/* Composer */}
-          <div className={styles.composerFade} aria-hidden="true" />
           <div className={styles.composerOverlay} role="region" aria-label="Message composer">
             {/* ✅ Legacy upload chip preserved (now used mainly for global errors like missing taskId) */}
             {uploadState.status !== "idle" && (
