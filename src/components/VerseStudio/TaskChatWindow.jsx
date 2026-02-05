@@ -1,21 +1,20 @@
 // src/components/VerseStudio/TaskChatWindow.jsx
-// ✅ UPDATED: Collapsible nav + properly gated chat messages + full-width cards
-
-import React, { useCallback, useMemo, useRef, useState, useEffect } from "react";
+import React, { useCallback, useMemo, useRef, useState } from "react";
 import ReactMarkdown from "react-markdown";
 import remarkGfm from "remark-gfm";
 import remarkMath from "remark-math";
 import rehypeKatex from "rehype-katex";
 import styles from "./TaskChatWindow.module.css";
-import IntelligenceTab from "./IntelligenceTab";
+import IntelligenceTab from "./IntelligenceTab"; // NEW
 
 const API_BASE = process.env.REACT_APP_API_URL || "https://api.awakeverse.com";
-const MAX_UPLOAD_BYTES = 5 * 1024 * 1024;
+const MAX_UPLOAD_BYTES = 5 * 1024 * 1024; // 5MB
 const ALLOWED_EXT = ["pdf", "docx", "txt", "md"];
 
-// ============================================================================
-// HELPER COMPONENTS
-// ============================================================================
+function normalizeCodeText(children) {
+  const raw = Array.isArray(children) ? children.join("") : String(children ?? "");
+  return raw.replace(/\n$/, "");
+}
 
 function CopyButton({ getText, label = "Copy" }) {
   const [copied, setCopied] = useState(false);
@@ -25,9 +24,8 @@ function CopyButton({ getText, label = "Copy" }) {
       const text = getText();
       await navigator.clipboard.writeText(text);
       setCopied(true);
-      setTimeout(() => setCopied(false), 2000);
+      window.setTimeout(() => setCopied(false), 900);
     } catch {
-      // Fallback for older browsers
       try {
         const text = getText();
         const ta = document.createElement("textarea");
@@ -37,9 +35,9 @@ function CopyButton({ getText, label = "Copy" }) {
         document.execCommand("copy");
         document.body.removeChild(ta);
         setCopied(true);
-        setTimeout(() => setCopied(false), 2000);
+        window.setTimeout(() => setCopied(false), 900);
       } catch {
-        console.error('Copy failed');
+        // ignore
       }
     }
   };
@@ -47,683 +45,879 @@ function CopyButton({ getText, label = "Copy" }) {
   return (
     <button
       type="button"
-      className={`${styles.copyButton} ${copied ? styles.copied : ''}`}
+      className={styles.copyCrumb}
       onClick={onCopy}
       aria-label={copied ? "Copied" : label}
       title={copied ? "Copied" : label}
     >
-      {copied ? "✓ Copied" : label}
+      {copied ? "Copied" : label}
     </button>
   );
 }
 
-function Toast({ message, type = 'artifact', onClose }) {
-  useEffect(() => {
-    const timer = setTimeout(onClose, 3000);
-    return () => clearTimeout(timer);
-  }, [onClose]);
+// --- helpers ---
+function slugify(raw) {
+  return String(raw || "")
+    .toLowerCase()
+    .trim()
+    .replace(/[`~!@#$%^&*()+={}\[\]|\\:;"'<>,.?/]/g, "")
+    .replace(/\s+/g, "-")
+    .replace(/-+/g, "-");
+}
+
+/**
+ * MarkdownMessage
+ * - variant="chat": fast, compact, bubble-safe markdown
+ * - variant="doc": richer docs markdown (TOC + math + anchors + callouts)
+ *
+ * IMPORTANT: This wraps content in mdChatContainer / mdDocContainer so your
+ * CSS modules can enforce fonts, sizes, and wrapping reliably.
+ */
+export function MarkdownMessage({ text, variant = "chat", onToc }) {
+  const isDoc = variant === "doc";
+
+  const normalized = useMemo(() => {
+    if (!text) return "";
+    let s = String(text);
+
+    if (isDoc) {
+      s = s
+        .replace(/\n(#{1,6}\s)/g, "\n\n$1")
+        .replace(/(#{1,6} .+)\n(?!\n)/g, "$1\n\n")
+        .replace(/\n\n{3,}/g, "\n\n");
+    }
+
+    return s;
+  }, [text, isDoc]);
+
+  const toc = useMemo(() => {
+    if (!isDoc) return [];
+    const lines = normalized.split("\n");
+    const counts = new Map();
+    const out = [];
+
+    for (const line of lines) {
+      const m = line.match(/^(#{1,6})\s+(.+)\s*$/);
+      if (!m) continue;
+      const level = m[1].length;
+      const title = m[2].replace(/\s+#\s*$/, "").trim();
+      const base = slugify(title);
+      const n = (counts.get(base) || 0) + 1;
+      counts.set(base, n);
+      const id = n === 1 ? base : `${base}-${n}`;
+      out.push({ level, title, id });
+    }
+    return out;
+  }, [normalized, isDoc]);
+
+  const lastTocRef = useRef(null);
+  if (isDoc && onToc && toc !== lastTocRef.current) {
+    lastTocRef.current = toc;
+    onToc(toc);
+  }
+
+  const getCalloutType = (children) => {
+    const raw = Array.isArray(children) ? children.map(String).join("\n") : String(children ?? "");
+    const firstLine = raw.split("\n")[0] || "";
+    const m = firstLine.match(/\*\*(Note|Tip|Warning|Danger|Info)\*\*:/i);
+    return m ? m[1].toLowerCase() : null;
+  };
+
+  const makeHeading = (Tag) => {
+    return ({ children }) => {
+      const textOnly = Array.isArray(children) ? children.join("") : String(children ?? "");
+      const base = slugify(textOnly);
+      const found = toc.find((h) => h.id === base || h.id.startsWith(`${base}-`));
+      const id = found?.id || base;
+
+      return (
+        <Tag id={id} className={styles[`md${Tag.toUpperCase()}`] || styles.mdH2}>
+          {isDoc && (
+            <a className={styles.headingAnchor} href={`#${id}`} aria-label="Link to section">
+              #
+            </a>
+          )}
+          {children}
+        </Tag>
+      );
+    };
+  };
+
+  const remarkPlugins = isDoc ? [remarkGfm, remarkMath] : [remarkGfm];
+  const rehypePlugins = isDoc ? [rehypeKatex] : [];
 
   return (
-    <div className={`${styles.toast} ${styles[`toast${type}`]}`}>
-      <span className={styles.toastIcon}>
-        {type === 'artifact' && '📦'}
-        {type === 'success' && '✓'}
-        {type === 'error' && '✗'}
-      </span>
-      <span className={styles.toastMessage}>{message}</span>
-      <button className={styles.toastClose} onClick={onClose}>×</button>
+    <div className={isDoc ? styles.mdDocContainer : styles.mdChatContainer}>
+      {isDoc && toc.length >= 3 && (
+        <div className={styles.mdToc}>
+          <div className={styles.mdTocTitle}>Contents</div>
+          <nav className={styles.mdTocNav}>
+            {toc.map((h) => (
+              <a
+                key={h.id}
+                href={`#${h.id}`}
+                className={styles.mdTocLink}
+                style={{ paddingLeft: `${(h.level - 1) * 12}px` }}
+              >
+                {h.title}
+              </a>
+            ))}
+          </nav>
+        </div>
+      )}
+
+      <ReactMarkdown
+        remarkPlugins={remarkPlugins}
+        rehypePlugins={rehypePlugins}
+        skipHtml={true}
+        linkTarget="_blank"
+        components={{
+          h1: isDoc ? makeHeading("h1") : ({ children }) => <div className={styles.mdStrongTitle}>{children}</div>,
+          h2: isDoc ? makeHeading("h2") : ({ children }) => <div className={styles.mdStrongSubtitle}>{children}</div>,
+          h3: isDoc ? makeHeading("h3") : ({ children }) => <div className={styles.mdStrongSubtitle}>{children}</div>,
+          h4: isDoc ? makeHeading("h4") : ({ children }) => <div className={styles.mdStrongSubtitle}>{children}</div>,
+
+          p: ({ children }) => <p className={styles.mdP}>{children}</p>,
+          ul: ({ children }) => <ul className={styles.mdUl}>{children}</ul>,
+          ol: ({ children }) => <ol className={styles.mdOl}>{children}</ol>,
+          li: ({ children }) => <li className={styles.mdLi}>{children}</li>,
+
+          a: ({ href, children }) => (
+            <a className={styles.mdLink} href={href} rel="noopener noreferrer" target="_blank">
+              {children}
+            </a>
+          ),
+
+          blockquote: ({ children }) => {
+            const t = isDoc ? getCalloutType(children) : null;
+            if (t) {
+              return <div className={`${styles.mdCallout} ${styles[`mdCallout_${t}`] || ""}`}>{children}</div>;
+            }
+            return <blockquote className={styles.mdQuote}>{children}</blockquote>;
+          },
+
+          table: ({ children }) => (
+            <div className={styles.mdTableWrap}>
+              <table className={styles.mdTable}>{children}</table>
+            </div>
+          ),
+          th: ({ children }) => <th className={styles.mdTh}>{children}</th>,
+          td: ({ children }) => <td className={styles.mdTd}>{children}</td>,
+
+          hr: () => <hr className={styles.mdHr} />,
+
+          code({ inline, className, children }) {
+            const codeText = normalizeCodeText(children);
+            const match = /language-(\w+)/.exec(className || "");
+            const lang = match?.[1] || "";
+
+            if (inline) return <code className={styles.mdInlineCode}>{children}</code>;
+
+            return (
+              <div className={styles.codeBlock}>
+                <div className={styles.codeHeader}>
+                  <div className={styles.codeLang}>{lang || "code"}</div>
+                  <CopyButton getText={() => codeText} label="Copy" />
+                </div>
+                <pre className={styles.mdPre}>
+                  <code className={styles.mdCode}>{codeText}</code>
+                </pre>
+              </div>
+            );
+          },
+        }}
+      >
+        {normalized}
+      </ReactMarkdown>
     </div>
   );
 }
 
 function PanelToggleIcon({ collapsed }) {
-  return collapsed ? '→' : '←';
-}
-
-// ============================================================================
-// MESSAGE CARD COMPONENTS
-// ============================================================================
-
-function UserMessageCard({ content }) {
   return (
-    <div className={styles.userMessageCard}>
-      <div className={styles.userMessageText}>{content}</div>
-    </div>
-  );
-}
-
-function ResponseCard({ 
-  llm, 
-  content, 
-  codeBlocks = [], 
-  isStreaming = false 
-}) {
-  const [expandedBlocks, setExpandedBlocks] = useState(new Set());
-  const [copiedIndex, setCopiedIndex] = useState(null);
-
-  const toggleExpanded = (index) => {
-    setExpandedBlocks(prev => {
-      const next = new Set(prev);
-      if (next.has(index)) {
-        next.delete(index);
-      } else {
-        next.add(index);
-      }
-      return next;
-    });
-  };
-
-  const handleCopyCode = async (index) => {
-    const block = codeBlocks[index];
-    if (!block) return;
-
-    try {
-      await navigator.clipboard.writeText(block.code);
-      setCopiedIndex(index);
-      setTimeout(() => setCopiedIndex(null), 2000);
-    } catch (err) {
-      console.error('Copy failed:', err);
-    }
-  };
-
-  return (
-    <div className={styles.responseCard}>
-      {/* Header */}
-      <div className={styles.responseCardHeader}>
-        <span className={styles.llmIcon}>{llm.icon || '🤖'}</span>
-        <div className={styles.llmInfo}>
-          <div className={styles.llmRole}>{llm.role || 'Assistant'}</div>
-          <div className={styles.llmModel}>{llm.model || 'AI Model'}</div>
-        </div>
-        {isStreaming && (
-          <div className={styles.streamingIndicator}>Streaming... ▋</div>
-        )}
-      </div>
-
-      {/* Content */}
-      <div className={styles.responseCardContent}>
-        {content && (
-          <div className={styles.discussionText}>{content}</div>
-        )}
-
-        {/* Code Blocks */}
-        {codeBlocks.map((block, idx) => {
-          const isExpanded = expandedBlocks.has(idx);
-          const isTruncated = block.lineCount > 50;
-
-          return (
-            <div key={idx} className={styles.codeBlockWrapper}>
-              {block.filename && (
-                <div className={styles.codeBlockLabel}>
-                  {block.filename}
-                </div>
-              )}
-              
-              <div className={
-                isTruncated && !isExpanded 
-                  ? `${styles.codeBlock} ${styles.codeBlockTruncated}`
-                  : `${styles.codeBlock} ${styles.codeBlockExpanded}`
-              }>
-                <pre><code className={`language-${block.language}`}>
-                  {block.code}
-                </code></pre>
-              </div>
-
-              {isTruncated && (
-                <button
-                  className={styles.showMoreButton}
-                  onClick={() => toggleExpanded(idx)}
-                >
-                  {isExpanded 
-                    ? `Show less` 
-                    : `Show ${block.lineCount - 50} more lines`
-                  }
-                </button>
-              )}
-            </div>
-          );
-        })}
-      </div>
-
-      {/* Actions */}
-      {codeBlocks.length > 0 && (
-        <div className={styles.responseCardActions}>
-          {codeBlocks.map((block, idx) => (
-            <button
-              key={idx}
-              className={`${styles.copyCodeButton} ${copiedIndex === idx ? styles.copied : ''}`}
-              onClick={() => handleCopyCode(idx)}
-            >
-              {copiedIndex === idx ? '✓ Copied' : '📋 Copy Code'}
-              {block.filename && ` (${block.filename})`}
-            </button>
-          ))}
-        </div>
+    <svg width="18" height="18" viewBox="0 0 24 24" aria-hidden="true" focusable="false">
+      <rect x="3" y="4" width="18" height="16" rx="3" ry="3" fill="none" stroke="currentColor" strokeWidth="1.8" />
+      {collapsed ? (
+        <>
+          <line x1="17" y1="6" x2="17" y2="18" stroke="currentColor" strokeWidth="1.8" />
+          <line x1="6.5" y1="9" x2="13.5" y2="9" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" />
+          <line x1="6.5" y1="12" x2="13.5" y2="12" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" />
+          <line x1="6.5" y1="15" x2="13.5" y2="15" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" />
+        </>
+      ) : (
+        <>
+          <line x1="14" y1="6" x2="14" y2="18" stroke="currentColor" strokeWidth="1.8" />
+          <line x1="16.5" y1="9" x2="19" y2="9" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" />
+          <line x1="16.5" y1="12" x2="19" y2="12" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" />
+          <line x1="16.5" y1="15" x2="19" y2="15" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" />
+        </>
       )}
-    </div>
+    </svg>
   );
 }
 
-// ============================================================================
-// MAIN COMPONENT
-// ============================================================================
+/**
+ * File-worthy heuristic for default view (display-only; backend remains source of truth)
+ */
+function isFileWorthyArtifact(a) {
+  const type = String(a?.type || a?.artifact_type || "").toLowerCase();
+  const content = String(a?.content || a?.text || a?.body || "");
+  const lang = String(a?.language || a?.lang || "").toLowerCase();
+  const title = String(a?.title || a?.name || "");
 
-export default function TaskChatWindow({
-  taskId,
-  taskName = "Verse Workspace",
-  taskTemplate,
-  team = [],
-  messages = [],
-  artifacts = [],
-  verseStudio = {},
-  user,
-  userTier = "Free",
-  isSending = false,
-  inputText = "",
-  onInputChange,
-  onSend,
-  onBack,
-  sendMessage,
-  stopStream
-}) {
-  // ============================================================================
-  // STATE
-  // ============================================================================
-  
-  // Nav collapse state
-  const [isNavCollapsed, setIsNavCollapsed] = useState(() => {
-    const saved = localStorage.getItem('vibe-coding-nav-collapsed');
-    return saved === 'true';
+  const looksLikeFilename =
+    /(^|\/)([\w.-]+\.(js|jsx|ts|tsx|py|html|css|md|json|yml|yaml|txt|sql|go|java|rs|php|sh|toml))$/i.test(title) ||
+    /(^|\n)\s*\/\/\s*file:\s*[\w./-]+\.\w+/i.test(content) ||
+    /(^|\n)\s*#\s*file:\s*[\w./-]+\.\w+/i.test(content);
+
+  const lineCount = content ? content.split("\n").length : 0;
+  const substantial = content.length >= 500 || lineCount >= 18;
+
+  const fileLikeType = ["code", "file", "document", "doc", "plan", "artifact"].includes(type);
+  const langHint = Boolean(lang) && lang !== "text";
+
+  return looksLikeFilename || (substantial && (fileLikeType || langHint));
+}
+
+export default function TaskChatWindow({ task, verseStudio, onBack }) {
+  const {
+    taskId,
+    team = [],
+    messages = [],
+    artifacts = [],
+    isSending = false,
+    activeRole = null,
+    handoffSuggestion,
+    showHandoffPrompt,
+    sendMessage,
+    stopStream,
+    confirmHandoff,
+    cancelHandoff,
+    refreshArtifacts,
+  } = verseStudio || {};
+
+  const [inputText, setInputText] = useState("");
+  const [isArtifactsCollapsed, setIsArtifactsCollapsed] = useState(false);
+  const [showAllArtifacts, setShowAllArtifacts] = useState(false);
+  const [expandedIds, setExpandedIds] = useState(() => new Set());
+  const [activeArtifactTab, setActiveArtifactTab] = useState("artifacts");
+
+  // ✅ NEW: attachments persist in the composer until Send
+  const [attachments, setAttachments] = useState([]); // { localId, name, size, status, documentId, error }
+
+  // ✅ NEW: upload state (legacy/global chip; preserved)
+  const [uploadState, setUploadState] = useState({
+    status: "idle", // idle | uploading | success | error
+    filename: "",
+    message: "",
   });
 
-  // Artifacts collapse state (already exists)
-  const [isArtifactsCollapsed, setIsArtifactsCollapsed] = useState(false);
-
-  // Artifacts tab state
-  const [activeArtifactTab, setActiveArtifactTab] = useState('artifacts');
-  const [showAllArtifacts, setShowAllArtifacts] = useState(false);
-  const [expandedIds, setExpandedIds] = useState(new Set());
-
-  // Toast notifications
-  const [toasts, setToasts] = useState([]);
-
-  // Attachments
-  const [attachments, setAttachments] = useState([]);
+  const textareaRef = useRef(null);
   const fileInputRef = useRef(null);
-  const messagesEndRef = useRef(null);
 
-  // ============================================================================
-  // HANDLERS
-  // ============================================================================
+  const heroTitle = task?.name || "Verse Workspace Task";
+  const heroSubtitle = task?.description || "Describe your goal and let your Verse Workspace team collaborate.";
+  const heroImageUrl = task?.heroImageUrl || null;
 
-  const toggleNavCollapse = () => {
-    setIsNavCollapsed(prev => {
-      const newState = !prev;
-      localStorage.setItem('vibe-coding-nav-collapsed', String(newState));
-      return newState;
-    });
-  };
+  const layoutClassName = isArtifactsCollapsed ? `${styles.layout} ${styles.layoutArtifactsCollapsed}` : styles.layout;
 
-  const handleSend = () => {
-    if (!inputText.trim() && attachments.length === 0) return;
-    if (!sendMessage) return;
-    
-    onSend?.();
-  };
+  const hasMessages = useMemo(() => Array.isArray(messages) && messages.length > 0, [messages]);
 
-  const handleStopStreaming = () => {
-    stopStream?.();
-  };
-
-  const openFilePicker = () => {
-    fileInputRef.current?.click();
-  };
-
-  const handleRefreshArtifacts = () => {
-    // Trigger artifact refresh logic
-    console.log('Refreshing artifacts...');
-  };
+  const visibleArtifacts = useMemo(() => {
+    const list = Array.isArray(artifacts) ? artifacts : [];
+    if (showAllArtifacts) return list;
+    return list.filter(isFileWorthyArtifact);
+  }, [artifacts, showAllArtifacts]);
 
   const toggleExpanded = (id) => {
-    setExpandedIds(prev => {
+    setExpandedIds((prev) => {
       const next = new Set(prev);
-      if (next.has(id)) {
-        next.delete(id);
-      } else {
-        next.add(id);
-      }
+      if (next.has(id)) next.delete(id);
+      else next.add(id);
       return next;
     });
   };
 
-  const addToast = (message, type = 'artifact') => {
-    const id = Date.now();
-    setToasts(prev => [...prev, { id, message, type }]);
-  };
-
-  const removeToast = (id) => {
-    setToasts(prev => prev.filter(t => t.id !== id));
-  };
-
-  // ============================================================================
-  // EFFECTS
-  // ============================================================================
-
-  // Auto-scroll to bottom
-  useEffect(() => {
-    messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
-  }, [messages]);
-
-  // Watch for new artifacts
-  useEffect(() => {
-    if (artifacts.length > 0) {
-      const latest = artifacts[artifacts.length - 1];
-      if (latest?.filename) {
-        addToast(`New artifact: ${latest.filename}`);
-      }
-    }
-  }, [artifacts.length]);
-
-  // ============================================================================
-  // COMPUTED VALUES
-  // ============================================================================
-
-  const layoutClassName = [
-    styles.layout,
-    isNavCollapsed && styles.layoutNavCollapsed,
-    isArtifactsCollapsed && isNavCollapsed && styles.layoutBothCollapsed
-  ].filter(Boolean).join(' ');
-
-  const navClassName = [
-    styles.navSection,
-    isNavCollapsed && styles.navSectionCollapsed
-  ].filter(Boolean).join(' ');
-
-  const visibleArtifacts = showAllArtifacts 
-    ? artifacts 
-    : artifacts.filter(a => a.type === 'file' || a.size > 200);
-
   const artifactLabel = (a, idx) => {
-    return a?.filename || a?.title || a?.name || `Artifact ${idx + 1}`;
+    const title = a?.filename || a?.title || a?.name;
+    if (title) return String(title);
+
+    const type = String(a?.type || a?.artifact_type || "Artifact");
+    const lang = a?.language || a?.lang;
+    const n = idx + 1;
+    return lang ? `${type} · ${lang} · #${n}` : `${type} · #${n}`;
   };
 
   const artifactDownloadUrl = (a) => {
-    if (!a?.id) return null;
-    return `${API_BASE}/api/verse-studio/artifact/${a.id}/download`;
+    const id = a?.id || a?.artifact_id;
+    if (!taskId || !id) return null;
+    return `${API_BASE}/api/verse-studio/task/${taskId}/artifact/${id}`;
   };
 
-  // Helper to get role metadata
-  const getRoleMetadata = (roleId) => {
-    const roleMap = {
-      'code_generation': { icon: '🎨', name: 'Frontend' },
-      'code_review_debug': { icon: '🔧', name: 'Backend' },
-      'documentation': { icon: '📝', name: 'Documentation' },
-      'testing': { icon: '✅', name: 'Testing' }
-    };
-    return roleMap[roleId] || { icon: '🤖', name: roleId };
+  const handleAutoGrow = useCallback(() => {
+    const el = textareaRef.current;
+    if (!el) return;
+    el.style.height = "0px";
+    const next = Math.min(el.scrollHeight, 140);
+    el.style.height = `${Math.max(next, 48)}px`;
+  }, []);
+
+  // ✅ UPDATED: keep attachments until send, then clear
+  const handleSend = useCallback(() => {
+    console.log("🔵 handleSend called at:", Date.now());
+    const trimmed = inputText.trim();
+
+    // block sending if no text AND no attachments
+    if ((!trimmed && attachments.length === 0) || !sendMessage) return;
+    console.log("⚠️ handleSend blocked: no content or no sendMessage");
+
+    // block sending while any uploads are still in progress
+    const stillUploading = attachments.some((a) => a.status === "uploading");
+    if (stillUploading) return;
+
+    const readyDocs = attachments.filter((a) => a.status === "ready");
+    const erroredDocs = attachments.filter((a) => a.status === "error");
+
+    let composed = trimmed;
+
+    if (readyDocs.length) {
+      const lines = readyDocs.map((d) => (d.documentId ? `- ${d.name} (id: ${d.documentId})` : `- ${d.name}`));
+      composed = `${composed || "Please use the attached documents."}\n\nAttached documents:\n${lines.join("\n")}`;
+    }
+
+    if (erroredDocs.length) {
+      const lines = erroredDocs.map((d) => `- ${d.name}: ${d.error || "upload failed"}`);
+      composed = `${composed || ""}\n\nUpload errors:\n${lines.join("\n")}`.trim();
+    }
+    console.log("📤 handleSend calling sendMessage with:", composed.substring(0, 50));
+
+    sendMessage(composed);
+    setInputText("");
+    setAttachments([]); // ✅ clear only after user sends
+
+    requestAnimationFrame(() => {
+      const el = textareaRef.current;
+      if (el) el.style.height = "48px";
+    });
+  }, [inputText, attachments, sendMessage]);
+
+  const handleKeyDown = (event) => {
+    if (event.key === "Enter" && !event.shiftKey) {
+      event.preventDefault();
+      handleSend();
+    }
   };
 
-  // ============================================================================
-  // RENDER
-  // ============================================================================
+  const handleStopStreaming = () => {
+    if (stopStream) stopStream();
+  };
+
+  const handleRefreshArtifacts = async () => {
+    if (!refreshArtifacts || !taskId) return;
+    await refreshArtifacts(taskId);
+  };
+
+  // ✅ NEW: uploader (kept + extended) — attachments persist until Send
+  const openFilePicker = () => fileInputRef.current?.click();
+
+  const validateFile = (file) => {
+    if (!file) return "No file selected.";
+    if (file.size > MAX_UPLOAD_BYTES) return "File too large. Max 5MB.";
+    const ext = (file.name.split(".").pop() || "").toLowerCase();
+    if (!ALLOWED_EXT.includes(ext)) return `Unsupported file type. Allowed: ${ALLOWED_EXT.join(", ")}.`;
+    return null;
+  };
+
+  const uploadDocument = async (file) => {
+    if (!taskId) {
+      setUploadState({ status: "error", filename: "", message: "Open a workspace before uploading." });
+      return;
+    }
+
+    const validationError = validateFile(file);
+    const localId = `${Date.now()}_${Math.random().toString(16).slice(2)}`;
+
+    setAttachments((prev) => [
+      ...prev,
+      {
+        localId,
+        name: file?.name || "document",
+        size: file?.size || 0,
+        status: validationError ? "error" : "uploading",
+        documentId: null,
+        error: validationError || null,
+      },
+    ]);
+
+    if (validationError) return;
+
+    try {
+      const csrf = document.cookie.match(/(?:^|;\s*)av_csrf=([^;]+)/)?.[1] || "";
+      const form = new FormData();
+      form.append("file", file);
+
+      const res = await fetch(`${API_BASE}/api/verse-studio/task/${taskId}/document`, {
+        method: "POST",
+        credentials: "include",
+        headers: csrf ? { "X-CSRF-Token": csrf } : undefined,
+        body: form,
+      });
+
+      const data = await res.json().catch(() => ({}));
+      if (!res.ok) {
+        throw new Error(data.error || `Upload failed (${res.status})`);
+      }
+
+      const docId = data.document_id || data.id || data.doc_id || null;
+
+      setAttachments((prev) =>
+        prev.map((a) => (a.localId === localId ? { ...a, status: "ready", documentId: docId, error: null } : a))
+      );
+
+      if (refreshArtifacts) await refreshArtifacts(taskId);
+    } catch (e) {
+      setAttachments((prev) =>
+        prev.map((a) => (a.localId === localId ? { ...a, status: "error", error: e.message || "Upload failed" } : a))
+      );
+    } finally {
+      if (fileInputRef.current) fileInputRef.current.value = "";
+    }
+  };
+
+  const onFileSelected = (e) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    uploadDocument(file);
+  };
+
+  const removeAttachment = (localId) => {
+    setAttachments((prev) => prev.filter((a) => a.localId !== localId));
+  };
 
   return (
     <div className={styles.taskWindow}>
-      {/* Toast Container */}
-      <div className={styles.toastContainer}>
-        {toasts.map(toast => (
-          <Toast
-            key={toast.id}
-            message={toast.message}
-            type={toast.type}
-            onClose={() => removeToast(toast.id)}
-          />
-        ))}
-      </div>
-
       <div className={layoutClassName}>
-        {/* ===== LEFT NAV ===== */}
-        <nav className={navClassName}>
-          {/* Collapse Toggle */}
-          <button
-            type="button"
-            className={styles.navCollapseToggle}
-            onClick={toggleNavCollapse}
-            aria-label={isNavCollapsed ? "Expand navigation" : "Collapse navigation"}
-            title={isNavCollapsed ? "Expand" : "Collapse"}
-          >
-            {isNavCollapsed ? '→' : '←'}
+        {/* LEFT */}
+        <aside className={styles.navSection}>
+          <div className={styles.userProfile}>
+            <div className={styles.userAvatar}>
+              <span className={styles.userInitial}>{heroTitle ? heroTitle.charAt(0).toUpperCase() : "V"}</span>
+            </div>
+            <div className={styles.userMeta}>
+              <div className={styles.userName}>Verse Studio</div>
+              <div className={styles.userTier}>Task workspace</div>
+            </div>
+          </div>
+
+          <div className={styles.navBlock}>
+            <div className={styles.navTitle}>Task overview</div>
+            <div className={styles.navTaskName}>{heroTitle}</div>
+            {heroSubtitle && <div className={styles.navTaskTemplate}>{heroSubtitle}</div>}
+          </div>
+
+          <div className={styles.navBlock}>
+            <div className={styles.navTitle}>Team roles</div>
+            <div className={styles.navTeamList}>
+              {team.length === 0 && <div className={styles.navEmpty}>Team will appear here once the task starts.</div>}
+              {team.map((role) => (
+                <div
+                  key={role.role_id || role.id}
+                  className={
+                    activeRole === role.role_id
+                      ? `${styles.navRoleItem} ${styles.navRoleItemActive}`
+                      : styles.navRoleItem
+                  }
+                >
+                  <div className={styles.navRoleIcon}>{role.role_icon || "⚙️"}</div>
+                  <div className={styles.navRoleText}>
+                    <div className={styles.navRoleName}>{role.role_name || role.name}</div>
+                    {role.llm_name && <div className={styles.navRoleLlm}>{role.llm_name}</div>}
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+
+          <button type="button" className={styles.backButton} onClick={onBack}>
+            ← Back to Verse Workspace
           </button>
+        </aside>
 
-          {/* EXPANDED CONTENT */}
-          <div className={styles.navExpandedContent}>
-            {/* User Profile */}
-            <div className={styles.userProfile}>
-              <div className={styles.userAvatar}>
-                <span className={styles.userInitial}>
-                  {user?.name?.charAt(0)?.toUpperCase() || 'U'}
-                </span>
+        {/* CENTER */}
+        <section className={styles.chatSection}>
+          <div className={styles.mobileBackBar}>
+            <button type="button" className={styles.mobileBackButton} onClick={onBack} aria-label="Back">
+              ← Back
+            </button>
+            <div className={styles.mobileBackTitle}>Workspace</div>
+          </div>
+
+          <header className={styles.chatHeader}>
+            {heroImageUrl && (
+              <div className={styles.heroImageBackdrop} aria-hidden="true">
+                <img src={heroImageUrl} alt="" />
+                <div className={styles.heroImageOverlay} />
               </div>
-              <div className={styles.userMeta}>
-                <div className={styles.userName}>{user?.name || 'User'}</div>
-                <div className={styles.userTier}>{userTier}</div>
+            )}
+            <div className={styles.headerContent}>
+              <h1 className={styles.headerTitle}>{heroTitle}</h1>
+              <p className={styles.headerSubtitle}>{heroSubtitle}</p>
+            </div>
+          </header>
+
+          <div className={styles.messagesScroll}>
+            {!hasMessages && (
+              <div className={styles.emptyState}>
+                <div className={styles.emptyTitle}>Your Verse Workspace team is ready.</div>
+                <p className={styles.emptyBody}>
+                  Describe your goal, paste a brief, or upload a document. Your roles will collaborate in this space.
+                </p>
               </div>
-            </div>
+            )}
 
-            {/* Task Info */}
-            <div className={styles.navBlock}>
-              <div className={styles.navTitle}>Task</div>
-              <div className={styles.navTaskName}>{taskName}</div>
-              {taskTemplate && (
-                <div className={styles.navTaskTemplate}>{taskTemplate}</div>
-              )}
-            </div>
+            {messages.map((message) => {
+              const isStreaming = message.streaming || message.is_streaming || false;
+              const messageKey = isStreaming ? `${message.id}-${message.text?.length || 0}` : message.id;
 
-            {/* Team Members */}
-            <div className={styles.navBlock}>
-              <div className={styles.navTitle}>Team</div>
-              <div className={styles.navTeamList}>
-                {team.length > 0 ? (
-                  team.map((member, idx) => (
-                    <div key={idx} className={styles.navRoleItem}>
-                      <div className={styles.navRoleIcon}>{member.icon || '🤖'}</div>
-                      <div className={styles.navRoleText}>
-                        <div className={styles.navRoleName}>{member.role || 'Role'}</div>
-                        <div className={styles.navRoleLlm}>{member.llm || 'AI'}</div>
+              return (
+                <div key={messageKey} className={styles.message}>
+                  <div
+                    className={
+                      message.user
+                        ? `${styles.messageCard} ${styles.messageCardUser}`
+                        : `${styles.messageCard} ${styles.messageCardAi}`
+                    }
+                    data-role={message.user ? "user" : "ai"}
+                  >
+                    <div className={styles.messageCardInner}>
+                      <div className={styles.messageMeta}>
+                        <span className={styles.messageRole}>
+                          {message.user ? "You" : message.role_name || "Assistant"}
+                          {isStreaming && <span style={{ opacity: 0.6 }}> ⋯</span>}
+                        </span>
+                        {!message.user && <CopyButton getText={() => String(message.text || "")} label="Copy message" />}
+                      </div>
+
+                      <div className={styles.messageBody}>
+                        <MarkdownMessage key={`md-${messageKey}`} text={message.text} variant="chat" />
                       </div>
                     </div>
-                  ))
-                ) : (
-                  <div className={styles.navEmpty}>No team members</div>
-                )}
-              </div>
-            </div>
+                  </div>
+                </div>
+              );
+            })}
 
-            {/* Back Button */}
-            <button
-              type="button"
-              className={styles.backButton}
-              onClick={onBack}
-            >
-              ← Back to Tasks
-            </button>
-          </div>
-
-          {/* COLLAPSED CONTENT */}
-          <div className={styles.navCollapsedContent}>
-            {/* Vertical Task Name */}
-            <div className={styles.verticalTaskName}>
-              {taskName}
-            </div>
-
-            {/* Vertical Back Button */}
-            <button
-              type="button"
-              className={styles.verticalBackButton}
-              onClick={onBack}
-              aria-label="Back to tasks"
-              title="Back to tasks"
-            >
-              ←
-            </button>
-          </div>
-        </nav>
-
-        {/* ===== CENTER CHAT ===== */}
-        <section className={styles.chatSection}>
-          {/* Messages Canvas */}
-          <div className={styles.canvas}>
-            {messages.length === 0 ? (
-              <div className={styles.emptyCanvas}>
-                <div className={styles.emptyIcon}>💬</div>
-                <div className={styles.emptyTitle}>Start the conversation</div>
-                <div className={styles.emptyText}>
-                  Describe what you want to build, and your team will collaborate to help you.
+            {showHandoffPrompt && handoffSuggestion && (
+              <div className={styles.handoffPrompt}>
+                <div className={styles.handoffText}>
+                  💡{" "}
+                  {handoffSuggestion.message ||
+                    `Switch to ${handoffSuggestion.to_role_name || "another role"} for the next step?`}
+                </div>
+                <div className={styles.handoffActions}>
+                  {confirmHandoff && (
+                    <button type="button" className={styles.handoffPrimary} onClick={confirmHandoff}>
+                      Continue
+                    </button>
+                  )}
+                  {cancelHandoff && (
+                    <button type="button" className={styles.handoffSecondary} onClick={cancelHandoff}>
+                      Later
+                    </button>
+                  )}
                 </div>
               </div>
-            ) : (
-              <>
-                {messages.map((msg, idx) => {
-                  if (msg.role === 'user') {
-                    return <UserMessageCard key={idx} content={msg.content} />;
-                  }
-
-                  // LLM response - split by artifacts
-                  const msgArtifacts = msg.artifacts || [];
-                  const roleData = getRoleMetadata(msg.role_id);
-
-                  if (msgArtifacts.length === 0) {
-                    // No artifacts - single card
-                    return (
-                      <ResponseCard
-                        key={idx}
-                        llm={{
-                          icon: roleData.icon,
-                          role: roleData.name,
-                          model: msg.llm_model || 'AI'
-                        }}
-                        content={msg.content}
-                        codeBlocks={[]}
-                        isStreaming={msg.isStreaming}
-                      />
-                    );
-                  }
-
-                  // Has artifacts - one card per file
-                  return msgArtifacts.map((artifact, artIdx) => (
-                    <ResponseCard
-                      key={`${idx}-${artIdx}`}
-                      llm={{
-                        icon: roleData.icon,
-                        role: roleData.name,
-                        model: msg.llm_model || 'AI'
-                      }}
-                      content={artIdx === 0 ? msg.content : ''}
-                      codeBlocks={[{
-                        filename: artifact.filename,
-                        language: artifact.language || 'text',
-                        code: artifact.code || artifact.content || '',
-                        lineCount: (artifact.code || artifact.content || '').split('\n').length
-                      }]}
-                      isStreaming={false}
-                    />
-                  ));
-                })}
-                <div ref={messagesEndRef} />
-              </>
             )}
           </div>
 
           {/* Composer */}
-          <div className={styles.composer}>
+          <div className={styles.composerFade} aria-hidden="true" />
+          <div className={styles.composerOverlay} role="region" aria-label="Message composer">
+            {uploadState.status !== "idle" && (
+              <div
+                className={
+                  uploadState.status === "uploading"
+                    ? `${styles.uploadChip} ${styles.uploadChipUploading}`
+                    : uploadState.status === "success"
+                    ? `${styles.uploadChip} ${styles.uploadChipSuccess}`
+                    : `${styles.uploadChip} ${styles.uploadChipError}`
+                }
+              >
+                <div className={styles.uploadChipTitle}>
+                  {uploadState.filename ? `📎 ${uploadState.filename}` : "Upload"}
+                </div>
+                <div className={styles.uploadChipMsg}>{uploadState.message}</div>
+                {uploadState.status === "error" && (
+                  <button
+                    type="button"
+                    className={styles.uploadChipDismiss}
+                    onClick={() => setUploadState({ status: "idle", filename: "", message: "" })}
+                    aria-label="Dismiss upload error"
+                    title="Dismiss"
+                  >
+                    ✕
+                  </button>
+                )}
+              </div>
+            )}
+
             <div className={styles.composerInner}>
-              {/* Attachments */}
+              <input
+                ref={fileInputRef}
+                type="file"
+                className={styles.hiddenFileInput}
+                onChange={onFileSelected}
+                accept=".pdf,.docx,.txt,.md"
+              />
+
+              <textarea
+                ref={textareaRef}
+                className={styles.composerInput}
+                placeholder="Type your next instruction… (Enter to send, Shift+Enter for new line)"
+                value={inputText}
+                onChange={(e) => {
+                  setInputText(e.target.value);
+                  handleAutoGrow();
+                }}
+                onInput={handleAutoGrow}
+                onKeyDown={handleKeyDown}
+                rows={1}
+              />
+
+              {/* Attachments chips (kept as-is to avoid breaking your upload UX) */}
               {attachments.length > 0 && (
-                <div className={styles.attachmentsList}>
-                  {attachments.map((att, idx) => (
-                    <div key={idx} className={styles.attachmentChip}>
-                      {att.name}
+                <div
+                  className={styles.attachmentsRow}
+                  style={{
+                    display: "flex",
+                    flexWrap: "wrap",
+                    gap: "8px",
+                    margin: "10px 0 0",
+                  }}
+                >
+                  {attachments.map((a) => (
+                    <div
+                      key={a.localId}
+                      className={styles.attachmentChip}
+                      style={{
+                        display: "inline-flex",
+                        alignItems: "center",
+                        gap: "8px",
+                        padding: "8px 10px",
+                        borderRadius: "999px",
+                        border: "1px solid rgba(207,174,92,.35)",
+                        background: "rgba(12,20,38,.72)",
+                        color: "#F2E8D5",
+                        maxWidth: "100%",
+                      }}
+                    >
+                      <span
+                        className={styles.attachmentName}
+                        style={{
+                          overflow: "hidden",
+                          textOverflow: "ellipsis",
+                          whiteSpace: "nowrap",
+                          maxWidth: "360px",
+                        }}
+                        title={a.name}
+                      >
+                        {a.name}
+                      </span>
+
+                      <span
+                        className={
+                          a.status === "uploading"
+                            ? styles.attachmentStatusUploading
+                            : a.status === "ready"
+                            ? styles.attachmentStatusReady
+                            : styles.attachmentStatusError
+                        }
+                        style={{
+                          fontSize: "12px",
+                          opacity: 0.9,
+                        }}
+                      >
+                        {a.status === "uploading" ? "Uploading…" : a.status === "ready" ? "Ready" : "Error"}
+                      </span>
+
+                      <button
+                        type="button"
+                        className={styles.attachmentRemove}
+                        onClick={() => removeAttachment(a.localId)}
+                        aria-label={`Remove ${a.name}`}
+                        title="Remove"
+                        style={{
+                          border: "none",
+                          background: "transparent",
+                          color: "#CBD5F5",
+                          cursor: "pointer",
+                          padding: "2px 4px",
+                          borderRadius: "8px",
+                        }}
+                      >
+                        ✕
+                      </button>
                     </div>
                   ))}
                 </div>
               )}
 
-              {/* Input Row */}
-              <div className={styles.composerRow}>
-                <textarea
-                  className={styles.composerTextarea}
-                  value={inputText}
-                  onChange={(e) => onInputChange?.(e.target.value)}
-                  placeholder="Type your message..."
-                  rows={1}
-                  disabled={!taskId}
-                />
+              <div className={styles.composerActions}>
+                <button
+                  type="button"
+                  className={styles.composerButton}
+                  onClick={openFilePicker}
+                  aria-label="Attach a document"
+                  title="Attach a document"
+                  disabled={isSending}
+                >
+                  +
+                </button>
 
-                <div className={styles.composerActions}>
-                  <input
-                    ref={fileInputRef}
-                    type="file"
-                    style={{ display: 'none' }}
-                    accept={ALLOWED_EXT.map(e => `.${e}`).join(',')}
-                    onChange={() => {/* handle file */}}
-                  />
-
-                  <button
-                    type="button"
-                    className={styles.composerButton}
-                    onClick={openFilePicker}
-                    title="Attach document"
-                    disabled={!taskId}
-                  >
-                    +
-                  </button>
-
-                  {isSending && stopStream && (
-                    <button
-                      type="button"
-                      className={`${styles.composerButton} ${styles.composerStop}`}
-                      onClick={handleStopStreaming}
-                      title="Stop"
-                    >
-                      ■
-                    </button>
-                  )}
-
+                {!isSending ? (
                   <button
                     type="button"
                     className={styles.composerButton}
                     onClick={handleSend}
-                    disabled={
-                      (!inputText.trim() && attachments.length === 0) ||
-                      !sendMessage
-                    }
+                    aria-label="Send message"
                     title="Send"
+                    disabled={isSending}
                   >
                     ➤
                   </button>
-                </div>
+                ) : (
+                  <button
+                    type="button"
+                    className={`${styles.composerButton} ${styles.composerStop}`}
+                    onClick={handleStopStreaming}
+                    aria-label="Stop generating"
+                    title="Stop"
+                  >
+                    ■
+                  </button>
+                )}
               </div>
             </div>
           </div>
         </section>
 
-        {/* ===== RIGHT ARTIFACTS ===== */}
-        <aside className={
-          isArtifactsCollapsed
-            ? `${styles.artifactsSection} ${styles.artifactsSectionCollapsed}`
-            : styles.artifactsSection
-        }>
+        {/* RIGHT */}
+        <aside className={styles.artifactsSection}>
           <div className={styles.artifactsHeader}>
             <div className={styles.artifactsHeaderRow}>
-              {!isArtifactsCollapsed && (
-                <div className={styles.artifactsTabs}>
-                  <button 
-                    type="button" 
-                    className={`${styles.artifactsTab} ${activeArtifactTab === 'artifacts' ? styles.artifactsTabActive : ''}`}
-                    onClick={() => setActiveArtifactTab('artifacts')}
-                  >
-                    Artifacts
-                  </button>
-                  <button 
-                    type="button" 
-                    className={`${styles.artifactsTab} ${activeArtifactTab === 'intelligence' ? styles.artifactsTabActive : ''}`}
-                    onClick={() => setActiveArtifactTab('intelligence')}
-                  >
-                    Intelligence
-                  </button>
-                </div>
-              )}
+              <div className={styles.artifactsTabs}>
+                <button
+                  type="button"
+                  className={
+                    activeArtifactTab === "artifacts"
+                      ? `${styles.artifactsTab} ${styles.artifactsTabActive}`
+                      : styles.artifactsTab
+                  }
+                  onClick={() => setActiveArtifactTab("artifacts")}
+                >
+                  Artifacts
+                </button>
+
+                <button
+                  type="button"
+                  className={
+                    activeArtifactTab === "intelligence"
+                      ? `${styles.artifactsTab} ${styles.artifactsTabActive}`
+                      : styles.artifactsTab
+                  }
+                  onClick={() => setActiveArtifactTab("intelligence")}
+                >
+                  Intelligence
+                </button>
+              </div>
 
               <button
                 type="button"
                 className={styles.artifactsToggle}
-                onClick={() => setIsArtifactsCollapsed(v => !v)}
-                aria-label={isArtifactsCollapsed ? "Expand" : "Collapse"}
+                onClick={() => setIsArtifactsCollapsed((v) => !v)}
+                aria-label={isArtifactsCollapsed ? "Expand artifacts panel" : "Collapse artifacts panel"}
+                title={isArtifactsCollapsed ? "Expand" : "Collapse"}
               >
                 <PanelToggleIcon collapsed={isArtifactsCollapsed} />
               </button>
             </div>
-
-            {!isArtifactsCollapsed && activeArtifactTab === 'artifacts' && (
-              <div className={styles.artifactsControls}>
-                <label className={styles.artifactsToggleRow}>
-                  <input
-                    type="checkbox"
-                    checked={showAllArtifacts}
-                    onChange={(e) => setShowAllArtifacts(e.target.checked)}
-                  />
-                  <span>Show all</span>
-                </label>
-                <button type="button" className={styles.artifactsMiniButton} onClick={handleRefreshArtifacts}>
-                  Refresh
-                </button>
-              </div>
-            )}
           </div>
 
           {isArtifactsCollapsed ? (
             <div className={styles.artifactsRail}>
-              <div className={styles.artifactsRailLabel}>📦</div>
+              <div className={styles.artifactsRailLabel}>Artifacts</div>
             </div>
           ) : (
             <div className={styles.artifactsContent}>
-              {activeArtifactTab === 'artifacts' && (
+              {activeArtifactTab === "intelligence" ? (
+                <IntelligenceTab task={task} verseStudio={verseStudio} />
+              ) : (
                 <>
-                  {visibleArtifacts.length === 0 ? (
-                    <div className={styles.artifactsEmpty}>
-                      <div className={styles.artifactsEmptyTitle}>No artifacts yet</div>
-                      <p className={styles.artifactsEmptyBody}>
-                        Generated files and artifacts will appear here.
-                      </p>
+                  <div className={styles.artifactsToolbar}>
+                    <div className={styles.artifactsToolbarLeft}>
+                      <button type="button" className={styles.refreshButton} onClick={handleRefreshArtifacts}>
+                        Refresh
+                      </button>
+
+                      <label className={styles.toggleRow}>
+                        <input
+                          type="checkbox"
+                          checked={showAllArtifacts}
+                          onChange={(e) => setShowAllArtifacts(e.target.checked)}
+                        />
+                        <span>Show all</span>
+                      </label>
                     </div>
-                  ) : (
-                    <div className={styles.artifactsList}>
-                      {visibleArtifacts.map((a, idx) => {
-                        const id = a?.id || `${idx}`;
+                  </div>
+
+                  <div className={styles.artifactsList}>
+                    {visibleArtifacts.length === 0 ? (
+                      <div className={styles.artifactsEmpty}>
+                        No file-worthy artifacts yet. Ask for a plan, a spec, or a code file.
+                      </div>
+                    ) : (
+                      visibleArtifacts.map((a, idx) => {
+                        const id = a?.id || a?.artifact_id || `${idx}`;
                         const label = artifactLabel(a, idx);
-                        const content = String(a?.content || a?.code || '');
                         const expanded = expandedIds.has(id);
-                        const dl = artifactDownloadUrl(a);
+                        const downloadUrl = artifactDownloadUrl(a);
+
+                        const content = a?.content || a?.text || a?.body || "";
 
                         return (
-                          <div key={id} className={styles.artifactCard}>
-                            <div className={styles.artifactTop}>
-                              <button
-                                type="button"
-                                className={styles.artifactTitle}
-                                onClick={() => toggleExpanded(id)}
-                              >
-                                {label}
-                              </button>
-                              <div className={styles.artifactActions}>
-                                <CopyButton getText={() => content} label="Copy" />
-                                {dl && (
-                                  <a className={styles.artifactDownload} href={dl} target="_blank" rel="noreferrer">
-                                    Download
-                                  </a>
-                                )}
-                              </div>
-                            </div>
+                          <div key={id} className={styles.artifactItem}>
+                            <button
+                              type="button"
+                              className={styles.artifactHeader}
+                              onClick={() => toggleExpanded(id)}
+                              aria-expanded={expanded}
+                            >
+                              <div className={styles.artifactTitle}>{label}</div>
+                              <div className={styles.artifactChevron}>{expanded ? "–" : "+"}</div>
+                            </button>
+
                             {expanded && (
-                              <pre className={styles.artifactPreview}>
-                                <code>{content}</code>
-                              </pre>
+                              <div className={styles.artifactBody}>
+                                <div className={styles.artifactActions}>
+                                  <CopyButton getText={() => String(content || "")} label="Copy" />
+                                  {downloadUrl && (
+                                    <a className={styles.downloadLink} href={downloadUrl} target="_blank" rel="noreferrer">
+                                      Download
+                                    </a>
+                                  )}
+                                </div>
+
+                                <div className={styles.artifactPreview}>
+                                  <MarkdownMessage text={String(content || "")} variant="doc" />
+                                </div>
+                              </div>
                             )}
                           </div>
                         );
-                      })}
-                    </div>
-                  )}
+                      })
+                    )}
+                  </div>
                 </>
-              )}
-
-              {activeArtifactTab === 'intelligence' && (
-                <IntelligenceTab
-                  constitutionalDecisions={verseStudio?.constitutionalDecisions || []}
-                  semanticStats={verseStudio?.semanticStats}
-                  intelligenceStats={verseStudio?.intelligenceStats}
-                  isLoading={verseStudio?.intelligenceStatsLoading}
-                />
               )}
             </div>
           )}
