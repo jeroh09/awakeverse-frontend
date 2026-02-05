@@ -292,17 +292,25 @@
 .messageBody { white-space: pre-wrap; }
 
 .messageAi {
-  align-self: flex-start;
-  background: linear-gradient(135deg, rgba(15, 23, 42, 0.98), rgba(99, 102, 241, 0.5));
-  border: 1px solid rgba(129, 140, 248, 0.7);
+  /* Full-width card */
+  align-self: stretch;
+  width: 100%;
+  max-width: 100%;
+  
+  /* Card styling */
+  background: var(--bg-interactive);
+  border: 1px solid var(--border-subtle);
+  border-radius: 12px;
+  padding: 12px 16px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
 }
 
 .messageUser {
   align-self: flex-end;
+  max-width: min(720px, 80%);  /* ADD THIS - explicit bubble width */
   background: rgba(15, 23, 42, 0.98);
   border: 1px solid rgba(148, 163, 184, 0.5);
 }
-
 /* Handoff prompt stays in scroll */
 .handoffPrompt {
   margin: 6px auto 4px;
