@@ -1270,6 +1270,8 @@
   color: rgba(99, 102, 241, 0.9);
 }
 .chatRail{
+  flex: 1 1 auto;
+  min-height: 0;
   width: 100%;
   max-width: 100%;
   margin: 0 auto;
