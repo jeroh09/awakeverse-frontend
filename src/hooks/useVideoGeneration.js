@@ -55,7 +55,8 @@ export function useVideoGeneration(scenarioId) {
   // ===== HELPER: Check Feature Access =====
   const canGenerateVideo = useCallback(() => {
     // Feature flag: Only user_id 44 for demo
-    const allowed = user?.id === 44;
+    const allowedUsers = [44, 45, 132];
+    const allowed = user?.id && allowedUsers.includes(user.id);
     console.log('🎫 Video generation access check:', {
       userId: user?.id,
       allowed
