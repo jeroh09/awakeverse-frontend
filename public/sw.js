@@ -1,228 +1,218 @@
-// sw.js - Tailored for YOUR AwakeVerse App
-const CACHE_NAME = 'awakeverse-v3-' + (new Date()).getTime(); // Dynamic version
+/* public/sw.js — AwakeVerse (Vercel + CRA hashed assets + safe navigation)
+   Goals:
+   - DO NOT cache SPA routes like /app, /login, etc.
+   - Cache ONE app shell (/) and serve it for navigations (back/forward/refresh/deep links).
+   - Precache CRA hashed assets using /asset-manifest.json
+   - Cache-first for /static/* with MIME guards (prevents text/plain being served as JS/CSS)
+   - Network-first for /api/* (with optional cache fallback for non-auth GETs)
+*/
 
-// CUSTOMIZED FOR YOUR ROUTES (from App.js)
-const APP_SHELL = [
-  '/',
-  '/app',                    // Main chat interface
-  '/login',                  // Auth pages (cached for offline access)
-  '/register',
-  '/profile-settings',       // User settings
-  '/upload-avatar',          // Avatar management
-  '/contact-us',             // Support
-  '/terms',                  // Legal pages
-  '/privacy',
-  '/community-guidelines',
-  '/copyright', 
-  '/security',
-  '/ai-disclaimer',
-  '/contractor-agreements',
-  '/forgot-password',        // Email auth flows
-  '/reset-password',
-  '/verify-email'
-];
+const CACHE_VERSION = 'awakeverse-v6'; // Bump this if you ever need to force-refresh caches
+const PRECACHE = `${CACHE_VERSION}-precache`;
+const RUNTIME = `${CACHE_VERSION}-runtime`;
 
-// STATIC ASSETS (from your build)
-const STATIC_ASSETS = [
-  '/static/js/bundle.js',
-  '/static/css/main.css',
+const CORE = [
+  '/', // app shell (index.html)
+  '/manifest.json',
   '/favicon.ico',
   '/logo192.png',
   '/logo512.png',
-  '/manifest.json'
 ];
 
+// Install: cache CORE + hashed build assets from asset-manifest.json
 self.addEventListener('install', (event) => {
-  event.waitUntil(
-    caches.open(CACHE_NAME)
-      .then((cache) => {
-        // Cache critical routes only - let Vercel handle the rest
-        return cache.addAll([...APP_SHELL, ...STATIC_ASSETS]);
-      })
-      .then(() => self.skipWaiting())
-      .catch(() => self.skipWaiting())
-  );
+  event.waitUntil((async () => {
+    const cache = await caches.open(PRECACHE);
+
+    // Best-effort core
+    await cache.addAll(CORE).catch(() => {});
+
+    // CRA hashed assets: /asset-manifest.json lists correct /static/* files per deploy
+    try {
+      const res = await fetch('/asset-manifest.json', { cache: 'no-store' });
+      if (res.ok) {
+        const manifest = await res.json();
+        const files = Object.values(manifest.files || {})
+          .filter((p) => typeof p === 'string' && p.startsWith('/static/'));
+
+        // Cache hashed assets (best-effort)
+        await cache.addAll(files).catch(() => {});
+      }
+    } catch (_) {
+      // If manifest fetch fails, app can still run online; SW won’t break the page
+    }
+
+    self.skipWaiting();
+  })());
 });
 
 self.addEventListener('activate', (event) => {
-  event.waitUntil(
-    caches.keys().then((cacheNames) => {
-      return Promise.all(
-        cacheNames.map((cacheName) => {
-          // Keep only current cache (from your cleanup logic)
-          if (cacheName !== CACHE_NAME) {
-            return caches.delete(cacheName);
-          }
-        })
-      );
-    }).then(() => {
-      // Claim clients immediately (from your navigation guard logic)
-      return self.clients.claim();
-    })
-  );
+  event.waitUntil((async () => {
+    const keys = await caches.keys();
+    await Promise.all(
+      keys.map((k) => (![PRECACHE, RUNTIME].includes(k) ? caches.delete(k) : undefined))
+    );
+    await self.clients.claim();
+  })());
 });
 
 self.addEventListener('fetch', (event) => {
-  const request = event.request;
-  
-  // Skip non-GET and Vercel-internal requests
-  if (request.method !== 'GET') return;
-  if (request.url.includes('/_next/') || request.url.includes('/_vercel/')) return;
-  
-  // Handle based on request type
-  if (request.url.includes('/api/')) {
-    event.respondWith(handleApiRequest(request));
-  } else if (isAppRoute(request)) {
-    event.respondWith(handleAppRoute(request));
-  } else {
-    event.respondWith(handleStaticAsset(request));
+  const req = event.request;
+
+  // Only handle GET
+  if (req.method !== 'GET') return;
+
+  const url = new URL(req.url);
+
+  // Ignore cross-origin
+  if (url.origin !== self.location.origin) return;
+
+  // Skip Vercel internals if they ever appear
+  if (url.pathname.startsWith('/_next/') || url.pathname.startsWith('/_vercel/')) return;
+
+  // Never intercept the SW file itself (helps updates stay clean)
+  if (url.pathname === '/sw.js') return;
+
+  // API: network-first (cache fallback for safe GETs)
+  if (url.pathname.startsWith('/api/')) {
+    event.respondWith(networkFirstApi(req));
+    return;
   }
+
+  // Navigation (refresh/deep link/back/forward full load):
+  // Serve the app shell (/) from cache as fallback.
+  if (req.mode === 'navigate') {
+    event.respondWith(appShellNavigate(req));
+    return;
+  }
+
+  // Hashed static assets: cache-first + MIME guards
+  if (url.pathname.startsWith('/static/')) {
+    event.respondWith(cacheFirstStatic(req));
+    return;
+  }
+
+  // Other same-origin requests: network-first
+  event.respondWith(networkFirst(req));
 });
 
-// API requests - network first, cache as fallback
-async function handleApiRequest(request) {
+/** Navigation handler: try fresh doc (no-store), else cached app shell (/). */
+async function appShellNavigate(req) {
+  const cache = await caches.open(PRECACHE);
+
+  // Prefer fresh HTML when online to avoid stale shell pointing to missing chunks
   try {
-    const response = await fetch(request);
-    
-    // Cache successful GET responses briefly (aligns with your auth context)
-    if (response.status === 200 && request.method === 'GET') {
-      const cache = await caches.open(CACHE_NAME);
-      cache.put(request, response.clone()).catch(() => {});
+    const fresh = await fetch(req, { cache: 'no-store' });
+    if (fresh && fresh.ok) return fresh;
+  } catch (_) {}
+
+  const cachedShell = await cache.match('/');
+  return cachedShell || offlineHtml();
+}
+
+/** Cache-first for hashed static assets, with MIME guards to prevent blank screens. */
+async function cacheFirstStatic(req) {
+  const cache = await caches.open(PRECACHE);
+
+  const cached = await cache.match(req);
+  if (cached) return cached;
+
+  const res = await fetch(req);
+
+  // Don’t cache non-200s (prevents caching “Not Found” bodies)
+  if (!res || res.status !== 200) return res;
+
+  // MIME guard: never treat text/plain (or HTML) as JS/CSS
+  const ct = (res.headers.get('content-type') || '').toLowerCase();
+  if (req.destination === 'script' && !ct.includes('javascript')) return res;
+  if (req.destination === 'style' && !ct.includes('text/css')) return res;
+
+  cache.put(req, res.clone()).catch(() => {});
+  return res;
+}
+
+/** Network-first for general requests with runtime cache fallback. */
+async function networkFirst(req) {
+  const cache = await caches.open(RUNTIME);
+  try {
+    const res = await fetch(req);
+    if (res && res.status === 200) cache.put(req, res.clone()).catch(() => {});
+    return res;
+  } catch (_) {
+    const cached = await cache.match(req);
+    return cached || Response.error();
+  }
+}
+
+/** API: network-first. Cache fallback only for non-auth GETs. */
+async function networkFirstApi(req) {
+  const cache = await caches.open(RUNTIME);
+  const isAuthish =
+    req.url.includes('/api/auth/') ||
+    req.url.includes('/api/login') ||
+    req.url.includes('/api/logout') ||
+    req.url.includes('/api/register') ||
+    req.url.includes('/api/session');
+
+  try {
+    const res = await fetch(req);
+    if (!isAuthish && res && res.status === 200) {
+      cache.put(req, res.clone()).catch(() => {});
     }
-    
-    return response;
-  } catch (error) {
-    // Offline fallback for safe-to-cache GET requests
-    if (request.method === 'GET' && !request.url.includes('/api/auth/')) {
-      const cached = await caches.match(request);
+    return res;
+  } catch (_) {
+    if (!isAuthish) {
+      const cached = await cache.match(req);
       if (cached) return cached;
     }
-    throw error;
+    return Response.error();
   }
 }
 
-// App routes - cache first for PWA experience
-async function handleAppRoute(request) {
-  // Try cache first for instant loading
-  const cached = await caches.match(request);
-  if (cached) return cached;
-  
-  try {
-    const response = await fetch(request);
-    
-    // Cache successful page responses
-    if (response.status === 200) {
-      const cache = await caches.open(CACHE_NAME);
-      cache.put(request, response.clone()).catch(() => {});
-    }
-    
-    return response;
-  } catch (error) {
-    // Offline fallback for navigation requests
-    if (request.mode === 'navigate') {
-      return createOfflineResponse();
-    }
-    throw error;
-  }
-}
-
-// Static assets - network first, cache as backup
-async function handleStaticAsset(request) {
-  try {
-    const response = await fetch(request);
-    
-    // Cache successful responses
-    if (response.status === 200) {
-      const cache = await caches.open(CACHE_NAME);
-      cache.put(request, response.clone()).catch(() => {});
-    }
-    
-    return response;
-  } catch (error) {
-    const cached = await caches.match(request);
-    if (cached) return cached;
-    throw error;
-  }
-}
-
-// Check if request is for one of your app routes
-function isAppRoute(request) {
-  const url = new URL(request.url);
-  return APP_SHELL.some(route => url.pathname === route) || 
-         request.mode === 'navigate';
-}
-
-// Create offline page that matches your app's theme
-function createOfflineResponse() {
+/** Offline HTML that matches your theme. */
+function offlineHtml() {
   return new Response(
-    `
-    <!DOCTYPE html>
-    <html>
-      <head>
-        <title>AwakeVerse - Offline</title>
-        <meta name="theme-color" content="#FFD700">
-        <style>
-          body { 
-            font-family: 'Inter', sans-serif;
-            background: #0a0a1a; 
-            color: #FFD700; 
-            text-align: center; 
-            padding: 50px;
-            margin: 0;
-          }
-          h1 { margin-bottom: 20px; }
-          .container { max-width: 400px; margin: 0 auto; }
-        </style>
-      </head>
-      <body>
-        <div class="container">
-          <h1>🌙 AwakeVerse</h1>
-          <p>You're currently offline.</p>
-          <p>Your conversations will sync when connection is restored.</p>
-        </div>
-      </body>
-    </html>
-    `,
-    { 
-      status: 503,
-      headers: { 'Content-Type': 'text/html' }
-    }
+    `<!doctype html>
+     <html>
+       <head>
+         <meta charset="utf-8" />
+         <meta name="theme-color" content="#FFD700" />
+         <title>AwakeVerse — Offline</title>
+         <style>
+           body{font-family:Inter,sans-serif;background:#0a0a1a;color:#FFD700;margin:0;padding:48px}
+           .box{max-width:520px;margin:0 auto}
+         </style>
+       </head>
+       <body>
+         <div class="box">
+           <h1>🌙 AwakeVerse</h1>
+           <p>You’re currently offline.</p>
+           <p>Reconnect and try again.</p>
+         </div>
+       </body>
+     </html>`,
+    { status: 503, headers: { 'Content-Type': 'text/html' } }
   );
 }
 
-// Push notifications (aligned with your existing logic)
+// Keep your existing push logic (unchanged)
 self.addEventListener('push', (event) => {
   if (!event.data) return;
-  
   try {
     const data = event.data.json();
     event.waitUntil(
-      self.registration.showNotification(
-        data.title || 'AwakeVerse',
-        {
-          body: data.body || 'New message available',
-          icon: '/logo192.png',
-          badge: '/logo192.png',
-          vibrate: [100, 50, 100],
-          data: data
-        }
-      )
+      self.registration.showNotification(data.title || 'AwakeVerse', {
+        body: data.body || 'New message available',
+        icon: '/logo192.png',
+        badge: '/logo192.png',
+        vibrate: [100, 50, 100],
+        data,
+      })
     );
-  } catch (error) {
-    // Silent handling
-  }
+  } catch (_) {}
 });
 
-// Keep your existing message handling for SKIP_WAITING
+// Keep SKIP_WAITING support
 self.addEventListener('message', (event) => {
-  if (event.data && event.data.type === 'SKIP_WAITING') {
-    self.skipWaiting();
-  }
-});
-
-// Background sync for your chat messages
-self.addEventListener('sync', (event) => {
-  if (event.tag === 'background-sync') {
-    // Implement based on your WebSocketContext logic
-  }
+  if (event.data && event.data.type === 'SKIP_WAITING') self.skipWaiting();
 });

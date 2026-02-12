@@ -50,9 +50,39 @@ root.render(
   </React.StrictMode>
 );
 
-// UNCHANGED service worker
-if ('serviceWorker' in navigator) {
-  navigator.serviceWorker.register('/sw.js')
-    .then(reg => console.log('Service Worker registered'))
-    .catch(err => console.log('Service Worker registration failed'));
+// Service worker registration (safe updates, single reload)
+if ('serviceWorker' in navigator && process.env.NODE_ENV === 'production') {
+  window.addEventListener('load', async () => {
+    let hasReloaded = false;
+
+    const safeReload = () => {
+      if (hasReloaded) return;
+      hasReloaded = true;
+      window.location.reload();
+    };
+
+    try {
+      const reg = await navigator.serviceWorker.register('/sw.js');
+
+      reg.addEventListener('updatefound', () => {
+        const newWorker = reg.installing;
+        if (!newWorker) return;
+
+        newWorker.addEventListener('statechange', () => {
+          if (newWorker.state === 'installed' && navigator.serviceWorker.controller) {
+            newWorker.postMessage({ type: 'SKIP_WAITING' });
+            // Don't reload here; wait for controllerchange
+          }
+        });
+      });
+
+      navigator.serviceWorker.addEventListener('controllerchange', () => {
+        safeReload();
+      });
+
+      console.log('Service Worker registered');
+    } catch (err) {
+      console.log('Service Worker registration failed', err);
+    }
+  });
 }
