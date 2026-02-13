@@ -1,9 +1,15 @@
-// src/pages/Login.jsx - WITH GOOGLE OAUTH BUTTON
+// src/pages/Login.jsx - MODIFIED VERSION with OAuth Error Notifications
+// REPLACE YOUR CURRENT Login.js with this version
+
 import React, { useState, useEffect } from 'react';
 import { Link, useNavigate, useLocation, useSearchParams } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
 import { sanitizeError } from '../utils/errorUtils';
 import '../style/AuthPageStyles.css';
+
+// ✅ ADD THESE TWO IMPORTS
+import { useOAuthErrorHandler } from '../hooks/useOAuthErrorHandler';
+import { OAuthErrorNotification } from '../components/OAuthErrorNotification';
 
 const API = process.env.NODE_ENV === 'development' ? '' : 'https://api.awakeverse.com';
 
@@ -40,6 +46,9 @@ export default function Login() {
   const navigate = useNavigate();
   const location = useLocation();
   const [searchParams] = useSearchParams();
+  
+  // ✅ ADD THIS LINE - Initialize OAuth error handler
+  const { oauthError, clearOAuthError } = useOAuthErrorHandler();
 
   // Check OAuth availability
   useEffect(() => {
@@ -55,26 +64,24 @@ export default function Login() {
     checkOAuth();
   }, []);
 
-  // Check for OAuth errors in URL
+  // ❌ REMOVE THIS OLD OAUTH ERROR HANDLING (lines 58-75 in your current file)
+  // The new useOAuthErrorHandler hook handles this automatically
+  /*
   useEffect(() => {
     const oauthError = searchParams.get('error');
     if (oauthError) {
       const errorMessages = {
         'oauth_denied': 'Google sign-in was cancelled',
         'oauth_failed': 'Google sign-in failed. Please try again',
-        'invalid_state': 'Security check failed. Please try again',
-        'token_exchange_failed': 'Failed to connect with Google',
-        'user_info_failed': 'Could not get your Google profile',
-        'database_error': 'Server error. Please try again',
-        'session_failed': 'Could not create session. Please try again'
+        ...
       };
       setError(errorMessages[oauthError] || 'Google sign-in failed');
-      // Clean URL
       window.history.replaceState({}, '', '/login');
     }
   }, [searchParams]);
+  */
 
-  // ✅ NEW: Check for verified email and quiz session
+  // ✅ KEEP THIS - Check for verified email and quiz session
   useEffect(() => {
     const verified = searchParams.get('verified');
     const quizSession = searchParams.get('quiz_session');
@@ -83,14 +90,13 @@ export default function Login() {
       setSuccessMessage('✅ Email verified! Please sign in to continue.');
     }
     
-    // Store quiz_session for use after login
     if (quizSession) {
       sessionStorage.setItem('pending_quiz_after_login', quizSession);
       console.log('📝 Stored quiz session for post-login:', quizSession);
     }
   }, [searchParams]);
 
-  // Check for email verification token in URL
+  // ✅ KEEP THIS - Check for email verification token in URL
   useEffect(() => {
     const token = searchParams.get('token');
     if (token) {
@@ -98,7 +104,7 @@ export default function Login() {
     }
   }, [searchParams]);
 
-  // Check for success message from registration or password reset
+  // ✅ KEEP THIS - Check for success message from registration or password reset
   useEffect(() => {
     if (location.state?.message) {
       setSuccessMessage(location.state.message);
@@ -106,7 +112,7 @@ export default function Login() {
     }
   }, [location, navigate]);
 
-  // Handle email verification from URL token
+  // ✅ KEEP ALL YOUR EXISTING FUNCTIONS
   const handleEmailVerification = async (token) => {
     setVerificationStatus('processing');
 
@@ -132,15 +138,12 @@ export default function Login() {
     }
   };
 
-  // Handle Google OAuth
   const handleGoogleLogin = () => {
     setLoading(true);
     setError('');
-    // Redirect to backend OAuth endpoint
     window.location.href = `${API}/api/auth/google`;
   };
 
-  // Enhanced submit handler with quiz redirect
   const handleSubmit = async (e) => {
     e.preventDefault();
     
@@ -161,12 +164,8 @@ export default function Login() {
     try {
       await login({ email, password });
       
-      // ✅ NEW: Check for pending quiz from URL or backend
       const pendingQuizFromUrl = sessionStorage.getItem('pending_quiz_after_login');
-      sessionStorage.removeItem('pending_quiz_after_login'); // Clear it
-      
-      // Backend might also return quiz_session_id (we'll add this)
-      // For now, use URL param
+      sessionStorage.removeItem('pending_quiz_after_login');
       
       if (pendingQuizFromUrl) {
         console.log(`🎯 Redirecting to template with quiz: ${pendingQuizFromUrl}`);
@@ -178,7 +177,6 @@ export default function Login() {
     } catch (err) {
       console.error('Login error:', err);
       
-      // Handle specific email verification error
       if (err.message.includes('verify your email') || err.message.includes('requires_verification')) {
         setError('Please verify your email address before signing in.');
         setShowResendVerification(true);
@@ -225,9 +223,16 @@ export default function Login() {
 
   return (
     <div className="auth-page">
-      {/* BRAND - Different placement for mobile vs desktop */}
+      {/* ✅ ADD THIS - OAuth Error Notification at the top */}
+      {oauthError && (
+        <OAuthErrorNotification 
+          error={oauthError} 
+          onDismiss={clearOAuthError}
+        />
+      )}
+
+      {/* ✅ KEEP ALL YOUR EXISTING JSX */}
       {!isMobile ? (
-        // Desktop: Brand in top-left corner
         <div style={{
           position: 'absolute',
           top: 'var(--space-xl)',
@@ -246,7 +251,6 @@ export default function Login() {
           </h1>
         </div>
       ) : (
-        // Mobile: Brand inside the form
         <div style={{
           position: 'absolute',
           top: 'var(--space-lg)',
@@ -267,7 +271,6 @@ export default function Login() {
       )}
 
       <div className="auth-container">
-        {/* SCENE PANEL */}
         <div 
           className="auth-scene-panel"
           style={{
@@ -275,7 +278,6 @@ export default function Login() {
           }}
         ></div>
         
-        {/* FLOATING AUTH FORM */}
         <div className="auth-form-container">
           <form className="auth-form" onSubmit={handleSubmit}>
             {verificationStatus === 'processing' && (

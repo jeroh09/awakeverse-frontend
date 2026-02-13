@@ -1,0 +1,203 @@
+/* src/components/OAuthErrorNotification.css */
+/* OAuth Error Notification - AwakeVerse Design System */
+
+.oauth-error-notification {
+  /* Positioning */
+  position: fixed;
+  top: var(--spacing-lg);
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 9999;
+  
+  /* Appearance - Dark theme matching auth pages */
+  background: var(--bg-surface);
+  border-radius: var(--border-radius-md);
+  border: 1.5px solid var(--notification-accent, var(--accent-primary));
+  box-shadow: var(--shadow-elevation03);
+  
+  /* Size */
+  max-width: 500px;
+  width: calc(100% - var(--spacing-xl));
+  
+  /* Animation */
+  animation: slideInDown 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+@keyframes slideInDown {
+  from {
+    opacity: 0;
+    transform: translateX(-50%) translateY(-20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(-50%) translateY(0);
+  }
+}
+
+.oauth-error-content {
+  display: flex;
+  align-items: flex-start;
+  gap: var(--spacing-md);
+  padding: var(--spacing-md);
+}
+
+.oauth-error-icon {
+  font-size: 20px;
+  line-height: 1;
+  flex-shrink: 0;
+  font-weight: var(--font-weight-bold);
+  color: var(--text-primary);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 24px;
+}
+
+/* Circuit icon for connection issues */
+.oauth-error-icon.circuit-icon {
+  font-family: 'Courier New', monospace;
+  font-size: 16px;
+  letter-spacing: -1px;
+}
+
+.circuit-symbol {
+  display: flex;
+  align-items: center;
+  gap: 2px;
+}
+
+.circuit-gap {
+  width: 4px;
+  height: 2px;
+  background: transparent;
+}
+
+.oauth-error-text {
+  flex: 1;
+  min-width: 0;
+}
+
+.oauth-error-title {
+  font-family: var(--font-body);
+  font-weight: var(--font-weight-semibold);
+  font-size: var(--font-size-body);
+  color: var(--text-primary);
+  margin-bottom: var(--spacing-xs);
+  line-height: var(--line-height-body);
+}
+
+.oauth-error-message {
+  font-family: var(--font-body);
+  font-size: var(--font-size-body-small);
+  color: var(--text-secondary);
+  line-height: var(--line-height-body-small);
+}
+
+.oauth-error-dismiss {
+  background: none;
+  border: none;
+  color: var(--text-tertiary);
+  font-size: 20px;
+  cursor: pointer;
+  padding: 0;
+  width: 24px;
+  height: 24px;
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: var(--border-radius-sm);
+  transition: var(--transition-fast);
+}
+
+.oauth-error-dismiss:hover {
+  background: var(--bg-interactive);
+  color: var(--text-primary);
+}
+
+.oauth-error-dismiss:active {
+  background: var(--bg-peak);
+}
+
+/* ============================================================================
+   MOBILE RESPONSIVE (matches your auth page breakpoints)
+   ============================================================================ */
+
+@media (max-width: 768px) {
+  .oauth-error-notification {
+    top: var(--spacing-md);
+    width: calc(100% - var(--spacing-lg));
+    max-width: calc(100vw - var(--spacing-lg));
+  }
+  
+  .oauth-error-content {
+    padding: var(--spacing-sm) var(--spacing-md);
+    gap: var(--spacing-sm);
+  }
+  
+  .oauth-error-icon {
+    font-size: 18px;
+    min-width: 20px;
+  }
+  
+  .oauth-error-icon.circuit-icon {
+    font-size: 14px;
+  }
+  
+  .oauth-error-title {
+    font-size: var(--font-size-body-small);
+  }
+  
+  .oauth-error-message {
+    font-size: var(--font-size-caption);
+  }
+  
+  .oauth-error-dismiss {
+    width: 20px;
+    height: 20px;
+    font-size: 18px;
+  }
+}
+
+/* Small mobile devices */
+@media (max-width: 375px) {
+  .oauth-error-notification {
+    width: calc(100% - var(--spacing-md));
+  }
+  
+  .oauth-error-content {
+    padding: var(--spacing-sm);
+  }
+}
+
+/* ============================================================================
+   ACCESSIBILITY
+   ============================================================================ */
+
+/* Reduced motion preference */
+@media (prefers-reduced-motion: reduce) {
+  .oauth-error-notification {
+    animation: fadeIn 0.2s ease-out;
+  }
+  
+  @keyframes fadeIn {
+    from { opacity: 0; }
+    to { opacity: 1; }
+  }
+}
+
+/* High contrast mode support */
+@media (prefers-contrast: high) {
+  .oauth-error-notification {
+    border-width: 2px;
+  }
+}
+
+/* ============================================================================
+   DARK MODE OPTIMIZATION (your design is already dark, but for future)
+   ============================================================================ */
+
+@media (prefers-color-scheme: dark) {
+  /* Already optimized for dark theme */
+  /* Can add overrides if needed for light mode support later */
+}
