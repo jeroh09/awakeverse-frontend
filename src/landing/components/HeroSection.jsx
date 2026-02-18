@@ -36,18 +36,15 @@ export default function HeroSection() {
   const [sectionRef, isVisible] = useIntersectionObserver();
   const prefersReducedMotion = usePrefersReducedMotion();
 
-  const LOOP_MS = 20000; // 17s animation + 3s pause
+  // 17s action + 3s pause = 20s loop
+  const LOOP_MS = 20000;
   const END_PAUSE_MS = 3000;
+
+  const userPrompt = 'How do I overcome self-doubt?';
 
   const convo = useMemo(
     () => [
-      {
-        id: 'u1',
-        kind: 'user',
-        name: 'You',
-        initials: 'Y',
-        text: 'How do I overcome self-doubt?',
-      },
+      { id: 'u1', kind: 'user', name: 'You', initials: 'Y', text: userPrompt },
       {
         id: 'm1',
         kind: 'character',
@@ -70,32 +67,42 @@ export default function HeroSection() {
         text: 'Know thyself. Self-doubt fades when you align actions with your true nature and purpose.',
       },
     ],
-    []
+    [userPrompt]
   );
 
+  // Timeline now includes: typing in input area first, then "send" to chat.
   const timeline = useMemo(
     () => [
-      { t: 0, type: 'SHOW_MESSAGE', id: 'u1' },
+      // Input typing
+      { t: 0, type: 'INPUT_START' },
+      { t: 2100, type: 'INPUT_DONE' },
 
-      { t: 1200, type: 'SHOW_TYPING', id: 'm1' },
-      { t: 2800, type: 'HIDE_TYPING' },
-      { t: 3000, type: 'SHOW_MESSAGE', id: 'm1' },
+      // Send user message to chat
+      { t: 2300, type: 'SHOW_MESSAGE', id: 'u1' },
 
-      { t: 6200, type: 'SHOW_TYPING', id: 's1' },
-      { t: 7700, type: 'HIDE_TYPING' },
-      { t: 7900, type: 'SHOW_MESSAGE', id: 's1' },
+      // Replies + typing indicators
+      { t: 3500, type: 'SHOW_TYPING', id: 'm1' },
+      { t: 5100, type: 'HIDE_TYPING' },
+      { t: 5300, type: 'SHOW_MESSAGE', id: 'm1' },
 
-      { t: 11200, type: 'SHOW_TYPING', id: 'p1' },
-      { t: 12700, type: 'HIDE_TYPING' },
-      { t: 12900, type: 'SHOW_MESSAGE', id: 'p1' },
+      { t: 8400, type: 'SHOW_TYPING', id: 's1' },
+      { t: 9900, type: 'HIDE_TYPING' },
+      { t: 10100, type: 'SHOW_MESSAGE', id: 's1' },
+
+      { t: 13400, type: 'SHOW_TYPING', id: 'p1' },
+      { t: 14900, type: 'HIDE_TYPING' },
+      { t: 15100, type: 'SHOW_MESSAGE', id: 'p1' },
 
       { t: LOOP_MS - END_PAUSE_MS, type: 'HOLD_END' },
     ],
-    [LOOP_MS]
+    [LOOP_MS, END_PAUSE_MS]
   );
 
   const [visibleIds, setVisibleIds] = useState(() => new Set());
   const [typingFor, setTypingFor] = useState(null);
+  const [inputText, setInputText] = useState('');
+  const [isInputTyping, setIsInputTyping] = useState(false);
+
   const logRef = useRef(null);
   const timersRef = useRef([]);
 
@@ -111,21 +118,53 @@ export default function HeroSection() {
     });
   };
 
-  const runCycle = () => {
+  const resetCycle = () => {
     setVisibleIds(new Set());
     setTypingFor(null);
+    setInputText('');
+    setIsInputTyping(false);
     if (logRef.current) logRef.current.scrollTop = 0;
+  };
 
+  const runInputTypewriter = () => {
+    setIsInputTyping(true);
+    setInputText('');
+    const total = userPrompt.length;
+    const duration = 2000; // ms
+    const step = Math.max(25, Math.floor(duration / total));
+
+    for (let i = 1; i <= total; i += 1) {
+      const id = setTimeout(() => setInputText(userPrompt.slice(0, i)), i * step);
+      timersRef.current.push(id);
+    }
+
+    const doneId = setTimeout(() => setIsInputTyping(false), duration + 50);
+    timersRef.current.push(doneId);
+  };
+
+  const runCycle = () => {
+    resetCycle();
+
+    // schedule events
     timeline.forEach((evt) => {
       const id = setTimeout(() => {
+        if (evt.type === 'INPUT_START') runInputTypewriter();
+        if (evt.type === 'INPUT_DONE') {
+          setIsInputTyping(false);
+          setInputText(userPrompt);
+        }
+
         if (evt.type === 'SHOW_MESSAGE') {
           setVisibleIds((prev) => {
             const next = new Set(prev);
             next.add(evt.id);
             return next;
           });
+          // clear the input after sending (keeps window stable)
+          setInputText('');
           scrollToBottom();
         }
+
         if (evt.type === 'SHOW_TYPING') {
           setTypingFor(evt.id);
           scrollToBottom();
@@ -144,21 +183,21 @@ export default function HeroSection() {
       const all = new Set(convo.map((m) => m.id));
       setVisibleIds(all);
       setTypingFor(null);
+      setInputText(userPrompt);
+      setIsInputTyping(false);
       return () => clearTimers();
     }
 
     runCycle();
 
     const intervalId = setInterval(() => {
-      clearTimers(); // clear any stragglers
+      clearTimers();
       runCycle();
     }, LOOP_MS);
 
     timersRef.current.push(intervalId);
-
     return () => clearTimers();
-    // deps are safe: memoized timeline/convo, and prefersReducedMotion changes rerun effect
-  }, [prefersReducedMotion, convo, timeline, LOOP_MS]);
+  }, [prefersReducedMotion, convo, LOOP_MS, userPrompt, timeline]);
 
   const visibleMessages = convo.filter((m) => visibleIds.has(m.id));
   const typingMeta = typingFor ? convo.find((m) => m.id === typingFor) : null;
@@ -186,7 +225,7 @@ export default function HeroSection() {
               <div className="heroChatHeader">
                 <div className="heroChatTitle">
                   <span className="heroChatTitleDot" aria-hidden="true" />
-                  <span>Live conversation</span>
+                  <span>Dialogue</span>
                 </div>
                 <Link to="/register" className="heroChatHeaderCta">
                   Start Chat
@@ -227,8 +266,9 @@ export default function HeroSection() {
               </div>
 
               <div className="heroChatFooter" aria-label="Chat input preview">
-                <div className="heroInputFake" aria-hidden="true">
-                  Ask anything…
+                <div className={`heroInputFake ${isInputTyping ? 'isTyping' : ''}`}>
+                  <span className="heroInputText">{inputText || 'Ask anything…'}</span>
+                  {isInputTyping && <span className="heroInputCursor" aria-hidden="true">|</span>}
                 </div>
                 <Link to="/register" className="heroSendFake" aria-label="Start your first conversation">
                   →
