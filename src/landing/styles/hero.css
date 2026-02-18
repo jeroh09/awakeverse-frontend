@@ -842,3 +842,100 @@
   .heroInputCursor { animation: none; opacity: 1; }
   .heroTypingDot { animation: none; }
 }
+/* =========================================================
+   HERO CHAT — transparency + indigo names + indigo input text
+   Append at bottom of hero.css
+   ========================================================= */
+
+:root{
+  --hero-indigo: var(--accent-primary, #4f46e5);
+}
+
+/* 1) Make the chat window ~50% more transparent */
+.heroChat{
+  /* was rgba(..., 0.55) */
+  background: rgba(20, 27, 46, 0.28) !important;
+  border-color: rgba(79, 70, 229, 0.75) !important;
+  backdrop-filter: blur(22px) saturate(1.15) !important;
+  -webkit-backdrop-filter: blur(22px) saturate(1.15) !important;
+
+  /* slightly soften the box shadow so it feels less “stuck on” */
+  box-shadow: 0 18px 60px rgba(0,0,0,0.28), var(--glow-indigo) !important;
+
+  font-family: var(--font-body) !important;
+}
+
+/* Make header/footer panels match the lighter glass feel */
+.heroChatHeader,
+.heroChatFooter{
+  background: rgba(255, 255, 255, 0.02) !important;
+}
+
+/* Optional integration trick: add a subtle vignette BEHIND chat (inside hero image) */
+.heroChat::before{
+  content:"";
+  position:absolute;
+  inset:-2px;
+  border-radius: inherit;
+  pointer-events:none;
+  background:
+    radial-gradient(520px 320px at 65% 20%, rgba(79,70,229,0.18), transparent 60%),
+    radial-gradient(520px 320px at 30% 80%, rgba(0,0,0,0.22), transparent 62%);
+  opacity: 0.75;
+  z-index: 0;
+}
+.heroChat > *{ position: relative; z-index: 1; }
+
+/* 2) Indigo character names (Marcus / Sherlock / Plato) */
+.heroMeta .heroName{
+  color: var(--hero-indigo) !important;
+  font-family: var(--font-display) !important; /* “Dialogue” vibe */
+  letter-spacing: 0.02em;
+}
+
+/* Keep user name “You” readable; optional: slightly muted */
+.heroMsgRow.isUser .heroMeta .heroName{
+  color: rgba(255,255,255,0.85) !important;
+  font-family: var(--font-body) !important;
+}
+
+/* 3) Typed user text in input area should be indigo + visible */
+.heroInputFake{
+  background: rgba(255, 255, 255, 0.04) !important;
+  border-color: rgba(79, 70, 229, 0.55) !important;
+  font-family: var(--font-body) !important;
+}
+
+/* When we are typing OR when there is typed text, make it indigo */
+.heroInputFake.isTyping .heroInputText{
+  color: var(--hero-indigo) !important;
+  font-weight: var(--font-weight-semibold, 600);
+}
+
+/* If you want it indigo even after typing finishes (when text remains visible) */
+.heroInputText{
+  color: var(--hero-indigo) !important;
+}
+
+/* Cursor brighter indigo */
+.heroInputCursor{
+  color: var(--hero-indigo) !important;
+  text-shadow: 0 0 12px rgba(79,70,229,0.45);
+}
+
+/* Bubbles: lighten character bubble fill so the glass reads through more */
+.heroBubble.isChar{
+  background: rgba(8, 10, 20, 0.22) !important;  /* was ~0.35 */
+  border-color: rgba(79, 70, 229, 0.22) !important;
+}
+
+/* User bubble stays indigo but slightly more glassy */
+.heroBubble.isUser{
+  background: rgba(79, 70, 229, 0.68) !important; /* slightly lighter */
+  border-color: rgba(79, 70, 229, 0.60) !important;
+}
+
+/* Title “Dialogue” uses display font explicitly */
+.heroChatTitle{
+  font-family: var(--font-display) !important;
+}
