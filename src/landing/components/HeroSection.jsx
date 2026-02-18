@@ -1,65 +1,39 @@
 // src/landing/components/HeroSection.jsx
 import React, { useState, useEffect } from 'react';
-import { Link } from 'react-router-dom';
-import { useIntersectionObserver } from '../hooks/useIntersectionObserver';
 import '../styles/hero.css';
 
 export default function HeroSection() {
-  const [typedText, setTypedText] = useState('');
-  const [isDeleting, setIsDeleting] = useState(false);
-  const [messageIndex, setMessageIndex] = useState(0);
-  const [sectionRef, isVisible] = useIntersectionObserver();
+  const [animationStep, setAnimationStep] = useState(0);
   
-  const messages = [
-    "Sherlock, I think my friend is lying..",
-    "Hey Tesla, should I buy Bitcoin?",
-    "Hi da Vinci, rate my idea!",
-    "Cleopatra, how do I deal with toxic coworkers?",
-    "Harriet, my plan feels risky. Am I ready?"
-  ];
-  
-  const currentMessage = messages[messageIndex];
-  const typingSpeed = 80;
-  const deletingSpeed = 50;
-  const pauseAfterComplete = 2000;
-  const pauseAfterDelete = 500;
-
-  // Typing animation effect
+  // Animation sequence timing
   useEffect(() => {
-    let timeout;
+    const sequence = [
+      { step: 0, duration: 2000 },  // User types
+      { step: 1, duration: 1500 },  // Typing indicator
+      { step: 2, duration: 3000 },  // Marcus replies
+      { step: 3, duration: 1500 },  // Typing indicator
+      { step: 4, duration: 3000 },  // Holmes replies
+      { step: 5, duration: 1500 },  // Typing indicator
+      { step: 6, duration: 3000 },  // Plato replies
+      { step: 7, duration: 3000 },  // Pause at end
+    ];
 
-    if (!isDeleting && typedText === currentMessage) {
-      // Finished typing - pause then start deleting
-      timeout = setTimeout(() => setIsDeleting(true), pauseAfterComplete);
-    } else if (isDeleting && typedText === '') {
-      // Finished deleting - move to next message
-      timeout = setTimeout(() => {
-        setIsDeleting(false);
-        setMessageIndex((prev) => (prev + 1) % messages.length);
-      }, pauseAfterDelete);
-    } else {
-      // Continue typing or deleting
-      const speed = isDeleting ? deletingSpeed : typingSpeed;
-      timeout = setTimeout(() => {
-        setTypedText(prev => {
-          if (isDeleting) {
-            return currentMessage.substring(0, prev.length - 1);
-          } else {
-            return currentMessage.substring(0, prev.length + 1);
-          }
-        });
-      }, speed);
+    const currentSequence = sequence[animationStep];
+    if (!currentSequence) {
+      // Reset to beginning
+      setAnimationStep(0);
+      return;
     }
 
+    const timeout = setTimeout(() => {
+      setAnimationStep((prev) => prev + 1);
+    }, currentSequence.duration);
+
     return () => clearTimeout(timeout);
-  }, [typedText, isDeleting, currentMessage, messages.length]);
+  }, [animationStep]);
 
   return (
-    <section 
-      id="hero" 
-      ref={sectionRef}
-      className={`hero-section ${isVisible ? 'animate-in' : ''}`}
-    >
+    <section id="hero" className="hero-section">
       <div className="hero-container">
         
         {/* Hero Scene with Image */}
@@ -69,40 +43,138 @@ export default function HeroSection() {
             alt="Historical figures in conversation"
             className="hero-image"
             loading="eager"
-            width="1200"
-            height="675"
           />
           
-          {/* Chat UI Overlay */}
-          <div className="chat-overlay">
-            <div className="chat-input-box">
-              <input 
-                type="text" 
-                value={typedText}
-                readOnly
-                placeholder="Ask anything..."
-                aria-label="Chat input preview"
-              />
-              <span className="typing-cursor">|</span>
-              <Link to="/register" className="start-chat-button">
-                Start Chat
-              </Link>
+          {/* Animated Chat Window */}
+          <div className="chat-window">
+            <div className="chat-window-header">
+              <div className="chat-header-dots">
+                <span></span>
+                <span></span>
+                <span></span>
+              </div>
+              <span className="chat-header-title">Conversation</span>
+            </div>
+            
+            <div className="chat-messages">
+              {/* User Message */}
+              {animationStep >= 0 && (
+                <div className="chat-message user">
+                  <div className="message-bubble user-bubble">
+                    How do I overcome self-doubt?
+                  </div>
+                </div>
+              )}
+
+              {/* Typing Indicator 1 */}
+              {animationStep === 1 && (
+                <div className="chat-message character">
+                  <div className="message-avatar">
+                    <span>M</span>
+                  </div>
+                  <div className="typing-indicator">
+                    <span></span>
+                    <span></span>
+                    <span></span>
+                  </div>
+                </div>
+              )}
+
+              {/* Marcus Aurelius Reply */}
+              {animationStep >= 2 && (
+                <div className="chat-message character">
+                  <div className="message-avatar">
+                    <span>M</span>
+                  </div>
+                  <div className="message-content">
+                    <div className="message-name">Marcus Aurelius</div>
+                    <div className="message-bubble character-bubble">
+                      Self-doubt is merely a thought. Observe it without judgment, then act with virtue regardless.
+                    </div>
+                  </div>
+                </div>
+              )}
+
+              {/* Typing Indicator 2 */}
+              {animationStep === 3 && (
+                <div className="chat-message character">
+                  <div className="message-avatar">
+                    <span>S</span>
+                  </div>
+                  <div className="typing-indicator">
+                    <span></span>
+                    <span></span>
+                    <span></span>
+                  </div>
+                </div>
+              )}
+
+              {/* Sherlock Holmes Reply */}
+              {animationStep >= 4 && (
+                <div className="chat-message character">
+                  <div className="message-avatar">
+                    <span>S</span>
+                  </div>
+                  <div className="message-content">
+                    <div className="message-name">Sherlock Holmes</div>
+                    <div className="message-bubble character-bubble">
+                      Doubt stems from insufficient data. Gather evidence of your capabilities and let logic guide you.
+                    </div>
+                  </div>
+                </div>
+              )}
+
+              {/* Typing Indicator 3 */}
+              {animationStep === 5 && (
+                <div className="chat-message character">
+                  <div className="message-avatar">
+                    <span>P</span>
+                  </div>
+                  <div className="typing-indicator">
+                    <span></span>
+                    <span></span>
+                    <span></span>
+                  </div>
+                </div>
+              )}
+
+              {/* Plato Reply */}
+              {animationStep >= 6 && (
+                <div className="chat-message character">
+                  <div className="message-avatar">
+                    <span>P</span>
+                  </div>
+                  <div className="message-content">
+                    <div className="message-name">Plato</div>
+                    <div className="message-bubble character-bubble">
+                      Know thyself. Self-doubt fades when you align actions with your true nature and purpose.
+                    </div>
+                  </div>
+                </div>
+              )}
             </div>
           </div>
         </div>
 
-        {/* Hero Text Content */}
+        {/* Hero Content */}
         <div className="hero-content">
           <h1 className="hero-title">The Conversation AI</h1>
           <p className="hero-subtitle">
             Create, chat, collaborate, and earn with iconic minds
           </p>
-          <Link to="/register" className="hero-cta">
+          
+          <a href="/register" className="hero-cta">
             Start Your First Conversation
             <span aria-hidden="true">→</span>
-          </Link>
+          </a>
         </div>
 
+      </div>
+
+      {/* Scroll Indicator */}
+      <div className="scroll-indicator">
+        <span>Scroll</span>
+        <div className="scroll-arrow">↓</div>
       </div>
     </section>
   );
