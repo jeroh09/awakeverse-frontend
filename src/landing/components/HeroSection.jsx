@@ -1,273 +1,281 @@
 // src/landing/components/HeroSection.jsx
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useEffect, useMemo, useRef, useState } from 'react';
+import { Link } from 'react-router-dom';
+import { useIntersectionObserver } from '../hooks/useIntersectionObserver';
 import '../styles/hero.css';
 
-export default function HeroSection() {
-  const [animationStep, setAnimationStep] = useState(0);
-  const [streamingText, setStreamingText] = useState('');
-  const [currentMessage, setCurrentMessage] = useState('');
-  const [isMinimized, setIsMinimized] = useState(false);
-  const [position, setPosition] = useState({ x: 0, y: 0 });
-  const [isDragging, setIsDragging] = useState(false);
-  const [dragStart, setDragStart] = useState({ x: 0, y: 0 });
-  const chatWindowRef = useRef(null);
-
-  const messages = {
-    user: "How do I overcome self-doubt?",
-    marcus: "Self-doubt is merely a thought. Observe it without judgment, then act with virtue regardless.",
-    sherlock: "Doubt stems from insufficient data. Gather evidence of your capabilities and let logic guide you."
-  };
-
-  // Animation sequence
-  useEffect(() => {
-    const sequence = async () => {
-      switch (animationStep) {
-        case 0: // User types in input
-          await typeText(messages.user, 'input', 50);
-          setTimeout(() => setAnimationStep(1), 500);
-          break;
-        case 1: // User message appears in chat
-          setCurrentMessage('user');
-          setTimeout(() => setAnimationStep(2), 1000);
-          break;
-        case 2: // Marcus typing indicator
-          setTimeout(() => setAnimationStep(3), 1500);
-          break;
-        case 3: // Marcus streams reply
-          setCurrentMessage('marcus');
-          await typeText(messages.marcus, 'marcus', 50);
-          setTimeout(() => setAnimationStep(4), 1000);
-          break;
-        case 4: // Sherlock typing indicator
-          setTimeout(() => setAnimationStep(5), 1500);
-          break;
-        case 5: // Sherlock streams reply
-          setCurrentMessage('sherlock');
-          await typeText(messages.sherlock, 'sherlock', 50);
-          setTimeout(() => setAnimationStep(6), 2000);
-          break;
-        case 6: // Pause and reset
-          setTimeout(() => {
-            setAnimationStep(0);
-            setStreamingText('');
-            setCurrentMessage('');
-          }, 3000);
-          break;
-        default:
-          break;
-      }
-    };
-
-    sequence();
-  }, [animationStep]);
-
-  // Streaming text effect
-  const typeText = (text, id, speed) => {
-    return new Promise((resolve) => {
-      let index = 0;
-      setStreamingText('');
-      
-      const interval = setInterval(() => {
-        if (index < text.length) {
-          setStreamingText((prev) => prev + text[index]);
-          index++;
-        } else {
-          clearInterval(interval);
-          resolve();
-        }
-      }, speed);
-    });
-  };
-
-  // Dragging functionality
-  const handleMouseDown = (e) => {
-    if (e.target.closest('.chat-pin')) return; // Don't drag when clicking pin
-    setIsDragging(true);
-    setDragStart({
-      x: e.clientX - position.x,
-      y: e.clientY - position.y
-    });
-  };
-
-  const handleMouseMove = (e) => {
-    if (!isDragging) return;
-    setPosition({
-      x: e.clientX - dragStart.x,
-      y: e.clientY - dragStart.y
-    });
-  };
-
-  const handleMouseUp = () => {
-    setIsDragging(false);
-  };
+function usePrefersReducedMotion() {
+  const [reduced, setReduced] = useState(false);
 
   useEffect(() => {
-    if (isDragging) {
-      document.addEventListener('mousemove', handleMouseMove);
-      document.addEventListener('mouseup', handleMouseUp);
-    } else {
-      document.removeEventListener('mousemove', handleMouseMove);
-      document.removeEventListener('mouseup', handleMouseUp);
-    }
+    if (typeof window === 'undefined' || !window.matchMedia) return;
+    const mq = window.matchMedia('(prefers-reduced-motion: reduce)');
+    const onChange = () => setReduced(!!mq.matches);
+    onChange();
+    if (mq.addEventListener) mq.addEventListener('change', onChange);
+    else mq.addListener(onChange);
     return () => {
-      document.removeEventListener('mousemove', handleMouseMove);
-      document.removeEventListener('mouseup', handleMouseUp);
+      if (mq.removeEventListener) mq.removeEventListener('change', onChange);
+      else mq.removeListener(onChange);
     };
-  }, [isDragging]);
+  }, []);
+
+  return reduced;
+}
+
+const TypingDots = ({ label = 'Typing reply' }) => (
+  <div className="heroTyping" role="status" aria-live="polite" aria-label={label}>
+    <span className="heroTypingDot" />
+    <span className="heroTypingDot" />
+    <span className="heroTypingDot" />
+    <span className="sr-only">{label}</span>
+  </div>
+);
+
+export default function HeroSection() {
+  const [sectionRef, isVisible] = useIntersectionObserver();
+  const prefersReducedMotion = usePrefersReducedMotion();
+
+  // 17s animation + 3s pause => 20s loop total
+  const LOOP_MS = 20000;
+  const END_PAUSE_MS = 3000;
+
+  const convo = useMemo(
+    () => [
+      {
+        id: 'u1',
+        kind: 'user',
+        name: 'You',
+        initials: 'Y',
+        text: 'How do I overcome self-doubt?',
+      },
+      {
+        id: 'm1',
+        kind: 'character',
+        name: 'Marcus Aurelius',
+        initials: 'M',
+        text: 'Self-doubt is merely a thought. Observe it without judgment, then act with virtue regardless.',
+      },
+      {
+        id: 's1',
+        kind: 'character',
+        name: 'Sherlock Holmes',
+        initials: 'S',
+        text: 'Doubt stems from insufficient data. Gather evidence of your capabilities and let logic guide you.',
+      },
+      {
+        id: 'p1',
+        kind: 'character',
+        name: 'Plato',
+        initials: 'P',
+        text: 'Know thyself. Self-doubt fades when you align actions with your true nature and purpose.',
+      },
+    ],
+    []
+  );
+
+  // Deterministic timeline (keeps the loop clean and consistent)
+  const timeline = useMemo(
+    () => [
+      { t: 0, type: 'SHOW_MESSAGE', id: 'u1' },
+
+      { t: 1200, type: 'SHOW_TYPING', id: 'm1' },
+      { t: 2800, type: 'HIDE_TYPING' },
+      { t: 3000, type: 'SHOW_MESSAGE', id: 'm1' },
+
+      { t: 6200, type: 'SHOW_TYPING', id: 's1' },
+      { t: 7700, type: 'HIDE_TYPING' },
+      { t: 7900, type: 'SHOW_MESSAGE', id: 's1' },
+
+      { t: 11200, type: 'SHOW_TYPING', id: 'p1' },
+      { t: 12700, type: 'HIDE_TYPING' },
+      { t: 12900, type: 'SHOW_MESSAGE', id: 'p1' },
+
+      { t: LOOP_MS - END_PAUSE_MS, type: 'HOLD_END' },
+    ],
+    []
+  );
+
+  const [visibleIds, setVisibleIds] = useState(() => new Set());
+  const [typingFor, setTypingFor] = useState(null);
+  const logRef = useRef(null);
+  const timersRef = useRef([]);
+
+  const clearTimers = () => {
+    timersRef.current.forEach((x) => clearTimeout(x));
+    timersRef.current = [];
+  };
+
+  const resetLoop = () => {
+    setVisibleIds(new Set());
+    setTypingFor(null);
+    if (logRef.current) logRef.current.scrollTop = 0;
+  };
+
+  const scrollToBottom = () => {
+    requestAnimationFrame(() => {
+      if (!logRef.current) return;
+      logRef.current.scrollTop = logRef.current.scrollHeight;
+    });
+  };
+
+  useEffect(() => {
+    clearTimers();
+
+    if (prefersReducedMotion) {
+      // Static preview: show all messages, no typing, no looping.
+      const all = new Set(convo.map((m) => m.id));
+      setVisibleIds(all);
+      setTypingFor(null);
+      return () => clearTimers();
+    }
+
+    resetLoop();
+
+    // schedule one cycle
+    timeline.forEach((evt) => {
+      const id = setTimeout(() => {
+        if (evt.type === 'SHOW_MESSAGE') {
+          setVisibleIds((prev) => {
+            const next = new Set(prev);
+            next.add(evt.id);
+            return next;
+          });
+          scrollToBottom();
+        }
+        if (evt.type === 'SHOW_TYPING') {
+          setTypingFor(evt.id);
+          scrollToBottom();
+        }
+        if (evt.type === 'HIDE_TYPING') {
+          setTypingFor(null);
+        }
+      }, evt.t);
+      timersRef.current.push(id);
+    });
+
+    // loop
+    const intervalId = setInterval(() => {
+      resetLoop();
+      timeline.forEach((evt) => {
+        const id = setTimeout(() => {
+          if (evt.type === 'SHOW_MESSAGE') {
+            setVisibleIds((prev) => {
+              const next = new Set(prev);
+              next.add(evt.id);
+              return next;
+            });
+            scrollToBottom();
+          }
+          if (evt.type === 'SHOW_TYPING') {
+            setTypingFor(evt.id);
+            scrollToBottom();
+          }
+          if (evt.type === 'HIDE_TYPING') setTypingFor(null);
+        }, evt.t);
+        timersRef.current.push(id);
+      });
+    }, LOOP_MS);
+
+    timersRef.current.push(intervalId);
+    return () => clearTimers();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [prefersReducedMotion, convo, timeline]);
+
+  const visibleMessages = convo.filter((m) => visibleIds.has(m.id));
+  const typingMeta = typingFor ? convo.find((m) => m.id === typingFor) : null;
 
   return (
-    <section id="hero" className="hero-section">
+    <section
+      id="hero"
+      ref={sectionRef}
+      className={`hero-section ${isVisible ? 'animate-in' : ''}`}
+      aria-label="AwakeVerse hero"
+    >
       <div className="hero-container">
-        
         {/* Hero Scene with Image */}
         <div className="hero-scene">
-          <img 
+          <img
             src="/images/heroscene.jpeg"
             alt="Historical figures in conversation"
             className="hero-image"
             loading="eager"
+            width="1200"
+            height="675"
           />
-          
-          {/* Animated Chat Window */}
-          <div 
-            ref={chatWindowRef}
-            className={`chat-window ${isMinimized ? 'minimized' : ''} ${isDragging ? 'dragging' : ''}`}
-            style={{
-              transform: `translate(${position.x}px, ${position.y}px)`
-            }}
-          >
-            <div 
-              className="chat-window-header"
-              onMouseDown={handleMouseDown}
-            >
-              <div className="chat-header-dots">
-                <span></span>
-                <span></span>
-                <span></span>
+
+          {/* NEW: Mobile-sized chat window (fixed height, contained) */}
+          <div className="heroChatSlot" aria-label="Conversation preview">
+            <div className="heroChat" role="region" aria-label="Conversation window preview">
+              <div className="heroChatHeader">
+                <div className="heroChatTitle">
+                  <span className="heroChatTitleDot" aria-hidden="true" />
+                  <span>Live conversation</span>
+                </div>
+                <Link to="/register" className="heroChatHeaderCta">
+                  Start Chat
+                </Link>
               </div>
-              <span className="chat-header-title">Dialogue</span>
-              <button 
-                className="chat-pin"
-                onClick={() => setIsMinimized(!isMinimized)}
-                aria-label={isMinimized ? 'Expand' : 'Minimize'}
+
+              <div
+                className="heroChatLog"
+                ref={logRef}
+                role="log"
+                aria-live="polite"
+                aria-relevant="additions text"
               >
-                📌
-              </button>
+                {visibleMessages.map((m) => (
+                  <div key={m.id} className={`heroMsgRow ${m.kind === 'user' ? 'isUser' : 'isChar'}`}>
+                    <div className={`heroAvatar ${m.kind === 'user' ? 'isUser' : 'isChar'}`} aria-hidden="true">
+                      {m.kind === 'user' ? 'Y' : m.initials}
+                    </div>
+
+                    <div className="heroBubbleWrap">
+                      <div className="heroMeta">
+                        <span className="heroName">{m.kind === 'user' ? 'You' : m.name}</span>
+                      </div>
+                      <div className={`heroBubble ${m.kind === 'user' ? 'isUser' : 'isChar'}`}>{m.text}</div>
+                    </div>
+                  </div>
+                ))}
+
+                {typingMeta && (
+                  <div className="heroMsgRow isChar isTyping">
+                    <div className="heroAvatar isChar" aria-hidden="true">
+                      {typingMeta.initials}
+                    </div>
+                    <div className="heroBubbleWrap">
+                      <div className="heroMeta">
+                        <span className="heroName">{typingMeta.name}</span>
+                      </div>
+                      <div className="heroBubble isChar heroBubbleTyping">
+                        <TypingDots />
+                      </div>
+                    </div>
+                  </div>
+                )}
+              </div>
+
+              <div className="heroChatFooter" aria-label="Chat input preview">
+                <div className="heroInputFake" aria-hidden="true">
+                  Ask anything…
+                </div>
+                <Link to="/register" className="heroSendFake" aria-label="Start your first conversation">
+                  →
+                </Link>
+              </div>
             </div>
-            
-            {!isMinimized && (
-              <>
-                <div className="chat-messages">
-                  {/* User Message */}
-                  {animationStep >= 1 && (
-                    <div className="chat-message user">
-                      <div className="message-bubble user-bubble">
-                        {messages.user}
-                      </div>
-                    </div>
-                  )}
-
-                  {/* Typing Indicator - Marcus */}
-                  {animationStep === 2 && (
-                    <div className="chat-message character">
-                      <div className="message-avatar">
-                        <span>M</span>
-                      </div>
-                      <div className="typing-indicator">
-                        <span></span>
-                        <span></span>
-                        <span></span>
-                      </div>
-                    </div>
-                  )}
-
-                  {/* Marcus Aurelius Reply */}
-                  {animationStep >= 3 && currentMessage === 'marcus' && (
-                    <div className="chat-message character">
-                      <div className="message-avatar">
-                        <span>M</span>
-                      </div>
-                      <div className="message-content">
-                        <div className="message-name">Marcus Aurelius</div>
-                        <div className="message-bubble character-bubble">
-                          {streamingText}
-                          {streamingText.length < messages.marcus.length && (
-                            <span className="streaming-cursor">|</span>
-                          )}
-                        </div>
-                      </div>
-                    </div>
-                  )}
-
-                  {/* Typing Indicator - Sherlock */}
-                  {animationStep === 4 && (
-                    <div className="chat-message character">
-                      <div className="message-avatar">
-                        <span>S</span>
-                      </div>
-                      <div className="typing-indicator">
-                        <span></span>
-                        <span></span>
-                        <span></span>
-                      </div>
-                    </div>
-                  )}
-
-                  {/* Sherlock Holmes Reply */}
-                  {animationStep >= 5 && currentMessage === 'sherlock' && (
-                    <div className="chat-message character">
-                      <div className="message-avatar">
-                        <span>S</span>
-                      </div>
-                      <div className="message-content">
-                        <div className="message-name">Sherlock Holmes</div>
-                        <div className="message-bubble character-bubble">
-                          {streamingText}
-                          {streamingText.length < messages.sherlock.length && (
-                            <span className="streaming-cursor">|</span>
-                          )}
-                        </div>
-                      </div>
-                    </div>
-                  )}
-                </div>
-
-                {/* Chat Input */}
-                <div className="chat-input">
-                  <input 
-                    type="text"
-                    value={animationStep === 0 ? streamingText : ''}
-                    placeholder="Type your message..."
-                    readOnly
-                  />
-                  <button className="send-button" aria-label="Send">
-                    →
-                  </button>
-                </div>
-              </>
-            )}
           </div>
         </div>
 
-        {/* Hero Content */}
+        {/* Hero Text Content */}
         <div className="hero-content">
           <h1 className="hero-title">The Conversation AI</h1>
-          <p className="hero-subtitle">
-            Create, chat, collaborate, and earn with iconic minds
-          </p>
-          
-          <a href="/register" className="hero-cta">
-            Start Your First Conversation
-            <span aria-hidden="true">→</span>
-          </a>
+          <p className="hero-subtitle">Create, chat, collaborate, and earn with iconic minds</p>
+          <Link to="/register" className="hero-cta">
+            Start Your First Conversation <span aria-hidden="true">→</span>
+          </Link>
         </div>
-
-      </div>
-
-      {/* Scroll Indicator */}
-      <div className="scroll-indicator">
-        <span>Scroll</span>
-        <div className="scroll-arrow">↓</div>
       </div>
     </section>
   );
