@@ -36,8 +36,7 @@ export default function HeroSection() {
   const [sectionRef, isVisible] = useIntersectionObserver();
   const prefersReducedMotion = usePrefersReducedMotion();
 
-  // 17s animation + 3s pause => 20s loop total
-  const LOOP_MS = 20000;
+  const LOOP_MS = 20000; // 17s animation + 3s pause
   const END_PAUSE_MS = 3000;
 
   const convo = useMemo(
@@ -74,7 +73,6 @@ export default function HeroSection() {
     []
   );
 
-  // Deterministic timeline (keeps the loop clean and consistent)
   const timeline = useMemo(
     () => [
       { t: 0, type: 'SHOW_MESSAGE', id: 'u1' },
@@ -93,7 +91,7 @@ export default function HeroSection() {
 
       { t: LOOP_MS - END_PAUSE_MS, type: 'HOLD_END' },
     ],
-    []
+    [LOOP_MS]
   );
 
   const [visibleIds, setVisibleIds] = useState(() => new Set());
@@ -106,12 +104,6 @@ export default function HeroSection() {
     timersRef.current = [];
   };
 
-  const resetLoop = () => {
-    setVisibleIds(new Set());
-    setTypingFor(null);
-    if (logRef.current) logRef.current.scrollTop = 0;
-  };
-
   const scrollToBottom = () => {
     requestAnimationFrame(() => {
       if (!logRef.current) return;
@@ -119,20 +111,11 @@ export default function HeroSection() {
     });
   };
 
-  useEffect(() => {
-    clearTimers();
+  const runCycle = () => {
+    setVisibleIds(new Set());
+    setTypingFor(null);
+    if (logRef.current) logRef.current.scrollTop = 0;
 
-    if (prefersReducedMotion) {
-      // Static preview: show all messages, no typing, no looping.
-      const all = new Set(convo.map((m) => m.id));
-      setVisibleIds(all);
-      setTypingFor(null);
-      return () => clearTimers();
-    }
-
-    resetLoop();
-
-    // schedule one cycle
     timeline.forEach((evt) => {
       const id = setTimeout(() => {
         if (evt.type === 'SHOW_MESSAGE') {
@@ -147,40 +130,35 @@ export default function HeroSection() {
           setTypingFor(evt.id);
           scrollToBottom();
         }
-        if (evt.type === 'HIDE_TYPING') {
-          setTypingFor(null);
-        }
+        if (evt.type === 'HIDE_TYPING') setTypingFor(null);
       }, evt.t);
+
       timersRef.current.push(id);
     });
+  };
 
-    // loop
+  useEffect(() => {
+    clearTimers();
+
+    if (prefersReducedMotion) {
+      const all = new Set(convo.map((m) => m.id));
+      setVisibleIds(all);
+      setTypingFor(null);
+      return () => clearTimers();
+    }
+
+    runCycle();
+
     const intervalId = setInterval(() => {
-      resetLoop();
-      timeline.forEach((evt) => {
-        const id = setTimeout(() => {
-          if (evt.type === 'SHOW_MESSAGE') {
-            setVisibleIds((prev) => {
-              const next = new Set(prev);
-              next.add(evt.id);
-              return next;
-            });
-            scrollToBottom();
-          }
-          if (evt.type === 'SHOW_TYPING') {
-            setTypingFor(evt.id);
-            scrollToBottom();
-          }
-          if (evt.type === 'HIDE_TYPING') setTypingFor(null);
-        }, evt.t);
-        timersRef.current.push(id);
-      });
+      clearTimers(); // clear any stragglers
+      runCycle();
     }, LOOP_MS);
 
     timersRef.current.push(intervalId);
+
     return () => clearTimers();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [prefersReducedMotion, convo, timeline]);
+    // deps are safe: memoized timeline/convo, and prefersReducedMotion changes rerun effect
+  }, [prefersReducedMotion, convo, timeline, LOOP_MS]);
 
   const visibleMessages = convo.filter((m) => visibleIds.has(m.id));
   const typingMeta = typingFor ? convo.find((m) => m.id === typingFor) : null;
@@ -193,7 +171,6 @@ export default function HeroSection() {
       aria-label="AwakeVerse hero"
     >
       <div className="hero-container">
-        {/* Hero Scene with Image */}
         <div className="hero-scene">
           <img
             src="/images/heroscene.jpeg"
@@ -204,7 +181,6 @@ export default function HeroSection() {
             height="675"
           />
 
-          {/* NEW: Mobile-sized chat window (fixed height, contained) */}
           <div className="heroChatSlot" aria-label="Conversation preview">
             <div className="heroChat" role="region" aria-label="Conversation window preview">
               <div className="heroChatHeader">
@@ -217,13 +193,7 @@ export default function HeroSection() {
                 </Link>
               </div>
 
-              <div
-                className="heroChatLog"
-                ref={logRef}
-                role="log"
-                aria-live="polite"
-                aria-relevant="additions text"
-              >
+              <div className="heroChatLog" ref={logRef} role="log" aria-live="polite" aria-relevant="additions text">
                 {visibleMessages.map((m) => (
                   <div key={m.id} className={`heroMsgRow ${m.kind === 'user' ? 'isUser' : 'isChar'}`}>
                     <div className={`heroAvatar ${m.kind === 'user' ? 'isUser' : 'isChar'}`} aria-hidden="true">
@@ -268,7 +238,6 @@ export default function HeroSection() {
           </div>
         </div>
 
-        {/* Hero Text Content */}
         <div className="hero-content">
           <h1 className="hero-title">The Conversation AI</h1>
           <p className="hero-subtitle">Create, chat, collaborate, and earn with iconic minds</p>
