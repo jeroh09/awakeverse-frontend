@@ -710,8 +710,11 @@ export default function TaskChatWindow({ task, verseStudio, onBack }) {
             )}
           </div>
 
-          {/* Generate Bar */}
-          <div className={styles.generateBar}>
+          {/* Composer */}
+          <div className={styles.composerOverlay} role="region" aria-label="Message composer">
+
+            {/* Generate Bar — lives inside composerOverlay so it sits above the input */}
+            <div className={styles.generateBar}>
               {generationStatus.isGenerating ? (
                 <>
                   <div className={styles.generateBarProgress}>
@@ -734,10 +737,7 @@ export default function TaskChatWindow({ task, verseStudio, onBack }) {
                   </button>
                 </>
               )}
-          </div>
-
-          {/* Composer */}
-          <div className={styles.composerOverlay} role="region" aria-label="Message composer">
+            </div>
             {/* ✅ Legacy upload chip preserved (now used mainly for global errors like missing taskId) */}
             {uploadState.status !== "idle" && (
               <div
