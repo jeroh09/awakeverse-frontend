@@ -332,6 +332,11 @@ export default function TaskChatWindow({ task, verseStudio, onBack }) {
     confirmHandoff,
     cancelHandoff,
     refreshArtifacts,
+    // Generation
+    taskMeta = { phase: 'discussion', template_id: null, params: {} },
+    generationStatus = { isGenerating: false, progress: 0, message: '', error: null },
+    generatedDocs = [],
+    triggerGenerate,
   } = verseStudio || {};
 
   const [inputText, setInputText] = useState("");
@@ -339,6 +344,26 @@ export default function TaskChatWindow({ task, verseStudio, onBack }) {
   const [showAllArtifacts, setShowAllArtifacts] = useState(false);
   const [expandedIds, setExpandedIds] = useState(() => new Set());
   const [activeArtifactTab, setActiveArtifactTab] = useState('artifacts');
+  const [lightboxDoc, setLightboxDoc] = useState(null); // { url, title }
+
+  // Build generate bar label from template + content_scope
+  const generateLabel = useMemo(() => {
+    if (!taskMeta?.template_id) return 'Generate Content';
+    const scopeRaw = taskMeta?.params?.content_scope || '';
+    const TYPE_LABELS = {
+      blog_post: 'Blog Post', social_pack: 'Social Pack',
+      video_script: 'Video Script', email_sequence: 'Email Sequence',
+      research_report: 'Research Report', lesson_plan: 'Lesson Plan',
+      course_curriculum: 'Course', classroom_debate: 'Debate',
+    };
+    if (scopeRaw) {
+      const types = scopeRaw.split('|').map(t => TYPE_LABELS[t] || t).join(' + ');
+      const label = 'Generate ' + types;
+      return label.length > 52 ? label.slice(0, 49) + '...' : label;
+    }
+    const TMPL = { writing_team: 'Creator Content', research_team: 'Research Report', education_team: 'Education Pack' };
+    return 'Generate ' + (TMPL[taskMeta.template_id] || 'Content');
+  }, [taskMeta]);
 
   // ✅ NEW: attachments persist in the composer until Send
   const [attachments, setAttachments] = useState([]); // { localId, name, size, status, documentId, error }
@@ -542,6 +567,7 @@ export default function TaskChatWindow({ task, verseStudio, onBack }) {
   };
 
   return (
+    <>
     <div className={styles.taskWindow}>
       <div className={layoutClassName}>
         {/* LEFT */}
@@ -678,6 +704,34 @@ export default function TaskChatWindow({ task, verseStudio, onBack }) {
               </div>
             )}
           </div>
+
+          {/* Generate Bar */}
+          {taskMeta?.template_id && taskMeta?.phase !== 'complete' && (
+            <div className={styles.generateBar}>
+              {generationStatus.isGenerating ? (
+                <>
+                  <div className={styles.generateBarProgress}>
+                    <div className={styles.generateBarProgressFill}
+                      style={{ width: Math.round((generationStatus.progress || 0) * 100) + '%' }} />
+                  </div>
+                  <span className={styles.generateBarLabel}>{generationStatus.message || 'Generating...'}</span>
+                </>
+              ) : generationStatus.error ? (
+                <>
+                  <span className={styles.generateBarError}>{generationStatus.error}</span>
+                  <button type="button" className={styles.generateBarBtn} onClick={triggerGenerate}>Retry</button>
+                </>
+              ) : (
+                <>
+                  <span className={styles.generateBarLabel} title={generateLabel}>{generateLabel}</span>
+                  <button type="button" className={styles.generateBarBtn} onClick={triggerGenerate}
+                    disabled={!triggerGenerate || taskMeta?.phase === 'generating'}>
+                    Generate
+                  </button>
+                </>
+              )}
+            </div>
+          )}
 
           {/* Composer */}
           <div className={styles.composerOverlay} role="region" aria-label="Message composer">
@@ -996,12 +1050,57 @@ export default function TaskChatWindow({ task, verseStudio, onBack }) {
               )}
 
               {activeArtifactTab === 'docs' && (
-                <div className={styles.artifactsEmpty}>
-                  <div className={styles.artifactsEmptyTitle}>Documentation</div>
-                  <p className={styles.artifactsEmptyBody}>
-                    Generated documentation from your workspace will appear here.
-                  </p>
-                </div>
+                <>
+                  {generatedDocs.length === 0 ? (
+                    <div className={styles.artifactsEmpty}>
+                      <div className={styles.artifactsEmptyTitle}>
+                        {taskMeta?.phase === 'complete' ? 'No documents generated' : 'Generated files appear here'}
+                      </div>
+                      <p className={styles.artifactsEmptyBody}>
+                        {taskMeta?.phase === 'discussion'
+                          ? 'Finish your brief then click Generate above.'
+                          : taskMeta?.phase === 'generating' ? 'Generation in progress...'
+                          : 'Documents, PDFs, and images will appear here once generated.'}
+                      </p>
+                    </div>
+                  ) : (
+                    <div className={styles.docsList}>
+                      {generatedDocs.map((doc) => {
+                        const isImage = /^(png|jpg|jpeg|gif|webp)$/i.test(doc.format || '');
+                        const icon = isImage ? 'IMG' : doc.format === 'pdf' ? 'PDF' : doc.format === 'docx' ? 'DOC' : 'FILE';
+                        const fullUrl = doc.download_url?.startsWith('http')
+                          ? doc.download_url : API_BASE + doc.download_url;
+                        return (
+                          <div key={doc.artifact_id} className={styles.docCard}>
+                            {isImage && (
+                              <button type="button" className={styles.docImageThumb}
+                                onClick={() => setLightboxDoc({ url: fullUrl, title: doc.download_filename || 'Image' })}
+                                aria-label="Preview image">
+                                <img src={fullUrl} alt={doc.download_filename || 'Generated image'} />
+                              </button>
+                            )}
+                            <div className={styles.docCardBody}>
+                              <div className={styles.docCardTitle}>
+                                <span className={styles.docCardIcon}>{icon}</span>
+                                <span className={styles.docCardName} title={doc.download_filename}>
+                                  {doc.download_filename || 'Untitled'}
+                                </span>
+                              </div>
+                              <div className={styles.docCardMeta}>
+                                {doc.format?.toUpperCase()}
+                                {doc.size_label && ' · ' + doc.size_label}
+                              </div>
+                            </div>
+                            <a href={fullUrl} download={doc.download_filename}
+                              className={styles.docCardDownload} target="_blank" rel="noreferrer">
+                              Download
+                            </a>
+                          </div>
+                        );
+                      })}
+                    </div>
+                  )}
+                </>
               )}
 
               {activeArtifactTab === 'resources' && (
@@ -1026,5 +1125,27 @@ export default function TaskChatWindow({ task, verseStudio, onBack }) {
         </aside>
       </div>
     </div>
+
+      {/* Image lightbox */}
+      {lightboxDoc && (
+        <div className={styles.lightbox} onClick={() => setLightboxDoc(null)} role="dialog" aria-modal="true">
+          <div className={styles.lightboxContent} onClick={e => e.stopPropagation()}>
+            <img src={lightboxDoc.url} alt={lightboxDoc.title} className={styles.lightboxImage} />
+            <div className={styles.lightboxFooter}>
+              <span className={styles.lightboxTitle}>{lightboxDoc.title}</span>
+              <div className={styles.lightboxActions}>
+                <a href={lightboxDoc.url} download={lightboxDoc.title}
+                  className={styles.lightboxDownload} target="_blank" rel="noreferrer">
+                  Download
+                </a>
+                <button type="button" className={styles.lightboxClose} onClick={() => setLightboxDoc(null)}>
+                  Close
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+    </>
   );
 }

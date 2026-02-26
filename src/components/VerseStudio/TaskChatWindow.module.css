@@ -1300,3 +1300,299 @@
   width: 100%;
   min-width: 0;
 }
+
+/* =============================================================================
+   GENERATE BAR
+   ============================================================================= */
+
+.generateBar {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 9px 14px;
+  margin: 0 0 8px;
+  border-radius: 10px;
+  border: 1px solid rgba(99, 102, 241, 0.3);
+  background: rgba(99, 102, 241, 0.08);
+  transition: border-color 0.15s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.generateBar:hover {
+  border-color: rgba(99, 102, 241, 0.5);
+}
+
+.generateBarLabel {
+  flex: 1;
+  font-family: 'Inter', system-ui, sans-serif;
+  font-size: 13px;
+  font-weight: 500;
+  color: #F1F5F9;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  min-width: 0;
+}
+
+.generateBarError {
+  flex: 1;
+  font-size: 12px;
+  color: #EF4444;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  min-width: 0;
+}
+
+.generateBarBtn {
+  flex-shrink: 0;
+  padding: 5px 14px;
+  border-radius: 8px;
+  border: none;
+  background: #6366F1;
+  color: #F1F5F9;
+  font-family: 'Inter', system-ui, sans-serif;
+  font-size: 12px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.15s cubic-bezier(0.4, 0, 0.2, 1);
+  letter-spacing: 0.01em;
+}
+
+.generateBarBtn:hover:not(:disabled) {
+  background: #818CF8;
+}
+
+.generateBarBtn:disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
+}
+
+/* Progress bar inline */
+.generateBarProgress {
+  flex: 1;
+  height: 4px;
+  border-radius: 99px;
+  background: rgba(99, 102, 241, 0.2);
+  overflow: hidden;
+  min-width: 60px;
+}
+
+.generateBarProgressFill {
+  height: 100%;
+  border-radius: 99px;
+  background: #6366F1;
+  transition: width 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+/* =============================================================================
+   DOCS TAB — Generated deliverables
+   ============================================================================= */
+
+.docsList {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.docCard {
+  display: flex;
+  flex-direction: column;
+  border-radius: 10px;
+  border: 1px solid rgba(148, 163, 184, 0.15);
+  background: rgba(10, 15, 26, 0.5);
+  overflow: hidden;
+  transition: border-color 0.15s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.docCard:hover {
+  border-color: rgba(99, 102, 241, 0.3);
+}
+
+.docImageThumb {
+  width: 100%;
+  max-height: 140px;
+  overflow: hidden;
+  border: none;
+  background: #0A0F1A;
+  cursor: zoom-in;
+  padding: 0;
+  display: block;
+}
+
+.docImageThumb img {
+  width: 100%;
+  height: 140px;
+  object-fit: cover;
+  display: block;
+  transition: transform 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.docImageThumb:hover img {
+  transform: scale(1.03);
+}
+
+.docCardBody {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+  padding: 10px 12px 6px;
+  flex: 1;
+}
+
+.docCardTitle {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.docCardIcon {
+  font-size: 11px;
+  font-weight: 700;
+  color: #6366F1;
+  background: rgba(99, 102, 241, 0.12);
+  padding: 2px 5px;
+  border-radius: 4px;
+  flex-shrink: 0;
+  letter-spacing: 0.04em;
+}
+
+.docCardName {
+  font-family: 'Inter', system-ui, sans-serif;
+  font-size: 13px;
+  font-weight: 500;
+  color: #F1F5F9;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.docCardMeta {
+  font-size: 11px;
+  color: #64748B;
+  padding-left: 2px;
+}
+
+.docCardDownload {
+  display: block;
+  padding: 7px 12px;
+  font-family: 'Inter', system-ui, sans-serif;
+  font-size: 12px;
+  font-weight: 600;
+  color: #6366F1;
+  text-decoration: none;
+  border-top: 1px solid rgba(148, 163, 184, 0.08);
+  transition: color 0.15s cubic-bezier(0.4, 0, 0.2, 1),
+              background 0.15s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.docCardDownload:hover {
+  color: #818CF8;
+  background: rgba(99, 102, 241, 0.06);
+}
+
+/* =============================================================================
+   IMAGE LIGHTBOX
+   ============================================================================= */
+
+.lightbox {
+  position: fixed;
+  inset: 0;
+  z-index: 9000;
+  background: rgba(10, 15, 26, 0.92);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  backdrop-filter: blur(8px);
+  animation: lightboxIn 0.18s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+@keyframes lightboxIn {
+  from { opacity: 0; }
+  to   { opacity: 1; }
+}
+
+.lightboxContent {
+  display: flex;
+  flex-direction: column;
+  max-width: min(90vw, 960px);
+  max-height: 90vh;
+  border-radius: 14px;
+  overflow: hidden;
+  border: 1px solid rgba(148, 163, 184, 0.2);
+  box-shadow: 0 16px 64px rgba(0, 0, 0, 0.6), 0 0 0 1px rgba(99, 102, 241, 0.15);
+  animation: lightboxScale 0.18s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+@keyframes lightboxScale {
+  from { transform: scale(0.94); }
+  to   { transform: scale(1); }
+}
+
+.lightboxImage {
+  display: block;
+  width: 100%;
+  max-height: 75vh;
+  object-fit: contain;
+  background: #0A0F1A;
+}
+
+.lightboxFooter {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 12px 16px;
+  background: #141B2E;
+  border-top: 1px solid rgba(148, 163, 184, 0.12);
+}
+
+.lightboxTitle {
+  font-family: 'Inter', system-ui, sans-serif;
+  font-size: 13px;
+  color: #94A3B8;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  flex: 1;
+}
+
+.lightboxActions {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-shrink: 0;
+}
+
+.lightboxDownload {
+  padding: 6px 14px;
+  border-radius: 7px;
+  background: rgba(99, 102, 241, 0.15);
+  color: #818CF8;
+  font-family: 'Inter', system-ui, sans-serif;
+  font-size: 12px;
+  font-weight: 600;
+  text-decoration: none;
+  transition: background 0.15s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.lightboxDownload:hover {
+  background: rgba(99, 102, 241, 0.28);
+}
+
+.lightboxClose {
+  padding: 6px 14px;
+  border-radius: 7px;
+  border: 1px solid rgba(148, 163, 184, 0.2);
+  background: transparent;
+  color: #94A3B8;
+  font-family: 'Inter', system-ui, sans-serif;
+  font-size: 12px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.15s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.lightboxClose:hover {
+  border-color: rgba(148, 163, 184, 0.4);
+  color: #F1F5F9;
+}

@@ -567,6 +567,14 @@ export default function useVerseStudio() {
             })
           : [];
 
+        // Extract task metadata for generate bar
+        const loadedTask = data?.task || {};
+        setTaskMeta({
+          phase:       loadedTask.phase || 'discussion',
+          template_id: loadedTask.template_id || null,
+          params:      loadedTask.params || loadedTask.task_params || {}
+        });
+
         setTaskId(loadedTaskId);
         setTeam(loadedTeam);
         setMessages(normalizedMessages);
@@ -836,6 +844,104 @@ export default function useVerseStudio() {
   );
 
   // ========================================================================
+  // GENERATION: fetch deliverables, trigger, poll
+  // ========================================================================
+
+  const fetchGeneratedDocs = useCallback(async (taskIdToFetch) => {
+    if (!taskIdToFetch) return [];
+    try {
+      const res = await fetch(
+        `${API_BASE}/api/verse-studio/task/${taskIdToFetch}/deliverables`,
+        { method: 'GET', headers: { 'Content-Type': 'application/json' }, credentials: 'include' }
+      );
+      if (!res.ok) return [];
+      const data = await res.json();
+      const docs = data.deliverables || [];
+      setGeneratedDocs(docs);
+      return docs;
+    } catch (e) {
+      console.warn('⚠️ fetchGeneratedDocs failed:', e);
+      return [];
+    }
+  }, []);
+
+  const pollGenerationStatus = useCallback((taskIdToPoll) => {
+    // Returns a cleanup function — call to stop polling
+    const intervalId = setInterval(async () => {
+      try {
+        const res = await fetch(
+          `${API_BASE}/api/verse-studio/task/${taskIdToPoll}/status`,
+          { method: 'GET', headers: { 'Content-Type': 'application/json' }, credentials: 'include' }
+        );
+        if (!res.ok) return;
+        const data = await res.json();
+
+        const phase    = data.phase || 'generating';
+        const progress = typeof data.progress === 'number' ? data.progress : 0;
+        const isDone   = phase === 'complete' || phase === 'failed';
+
+        setGenerationStatus({
+          isGenerating: !isDone,
+          progress,
+          message: isDone
+            ? (phase === 'complete' ? 'Generation complete' : 'Generation failed')
+            : `Generating… ${Math.round(progress * 100)}%`,
+          error: data.error || null
+        });
+
+        // Keep taskMeta phase in sync
+        setTaskMeta(prev => ({ ...prev, phase }));
+
+        if (isDone) {
+          clearInterval(intervalId);
+          if (phase === 'complete') {
+            await fetchGeneratedDocs(taskIdToPoll);
+          }
+        }
+      } catch (e) {
+        console.warn('⚠️ pollGenerationStatus error:', e);
+      }
+    }, 3000);
+
+    return () => clearInterval(intervalId);
+  }, [fetchGeneratedDocs]);
+
+  const triggerGenerate = useCallback(async () => {
+    if (!taskId) return;
+    if (generationStatus.isGenerating) return;
+
+    try {
+      const csrf = document.cookie.match(/(?:^|;\s*)av_csrf=([^;]+)/)?.[1] || '';
+
+      const res = await fetch(
+        `${API_BASE}/api/verse-studio/task/${taskId}/generate`,
+        {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json', 'X-CSRF-Token': csrf },
+          credentials: 'include',
+          body: JSON.stringify({})
+        }
+      );
+
+      if (!res.ok) {
+        const err = await res.json().catch(() => ({}));
+        throw new Error(err.error || `Generate failed (${res.status})`);
+      }
+
+      // Optimistically set generating state
+      setGenerationStatus({ isGenerating: true, progress: 0, message: 'Starting generation…', error: null });
+      setTaskMeta(prev => ({ ...prev, phase: 'generating' }));
+
+      // Start polling — cleanup is handled internally
+      pollGenerationStatus(taskId);
+
+    } catch (e) {
+      console.error('❌ triggerGenerate failed:', e);
+      setGenerationStatus(prev => ({ ...prev, isGenerating: false, error: e.message }));
+    }
+  }, [taskId, generationStatus.isGenerating, pollGenerationStatus]);
+
+  // ========================================================================
   // HANDOFF ACTIONS
   // ========================================================================
   const confirmHandoff = useCallback(() => {
@@ -901,6 +1007,9 @@ export default function useVerseStudio() {
       limitReached: false
     });
     // ✅ INTELLIGENCE STACK: Reset all intelligence state
+    setTaskMeta({ phase: 'discussion', template_id: null, params: {} });
+    setGenerationStatus({ isGenerating: false, progress: 0, message: '', error: null });
+    setGeneratedDocs([]);
     setConstitutionalDecisions([]);
     setSemanticStats({
       indexed_messages: 0,
@@ -964,6 +1073,13 @@ export default function useVerseStudio() {
 
     // ✅ NEW
     refreshArtifacts,
+
+    // Task meta + generation
+    taskMeta,
+    generationStatus,
+    generatedDocs,
+    triggerGenerate,
+    fetchGeneratedDocs,
 
     // Handoff actions
     confirmHandoff,
