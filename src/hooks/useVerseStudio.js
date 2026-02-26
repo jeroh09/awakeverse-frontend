@@ -48,6 +48,20 @@ export default function useVerseStudio() {
   // ✅ NEW: Artifacts state (backend-owned)
   const [artifacts, setArtifacts] = useState([]);
 
+  // Task metadata (phase, template_id, params — drives generate bar)
+  const [taskMeta, setTaskMeta] = useState({ phase: 'discussion', template_id: null, params: {} });
+
+  // Generation status (polled while phase='generating')
+  const [generationStatus, setGenerationStatus] = useState({
+    isGenerating: false,
+    progress: 0,
+    message: '',
+    error: null
+  });
+
+  // Generated deliverable docs (DOCX / PDF / images from pipeline)
+  const [generatedDocs, setGeneratedDocs] = useState([]);
+
   // LLM options (for TaskCreator / selection UX)
   const [llmOptions, setLlmOptions] = useState([]);
   const [llmOptionsLoading, setLlmOptionsLoading] = useState(false);
