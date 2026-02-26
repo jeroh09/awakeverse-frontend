@@ -522,6 +522,35 @@ export default function useVerseStudio() {
   );
 
   // ========================================================================
+  // GENERATION: fetch deliverables (declared before loadTask — loadTask calls it on remount)
+  // ========================================================================
+
+  const fetchGeneratedDocs = useCallback(async (taskIdToFetch) => {
+    if (!taskIdToFetch) return [];
+    try {
+      const res = await fetch(
+        `${API_BASE}/api/verse-studio/task/${taskIdToFetch}/deliverables`,
+        { method: 'GET', headers: { 'Content-Type': 'application/json' }, credentials: 'include' }
+      );
+      if (!res.ok) return [];
+      const data = await res.json();
+      const docs = data.deliverables || [];
+      // Badge: increment by how many new docs arrived vs what we had
+      setGeneratedDocs(prev => {
+        const prevCount = prev.length;
+        if (docs.length > prevCount) {
+          setNewDocsCount(n => n + (docs.length - prevCount));
+        }
+        return docs;
+      });
+      return docs;
+    } catch (e) {
+      console.warn('⚠️ fetchGeneratedDocs failed:', e);
+      return [];
+    }
+  }, []);
+
+  // ========================================================================
   // LOAD TASK (Resume)
   // ========================================================================
   const loadTask = useCallback(
@@ -889,35 +918,6 @@ export default function useVerseStudio() {
     },
     [taskId, circuitBreakerState.status, usageData, fetchUsage, generateMessageId, refreshArtifacts, fetchConstitutionalDecisions, fetchSemanticStats, fetchIntelligenceStats]
   );
-
-  // ========================================================================
-  // GENERATION: fetch deliverables, trigger, poll
-  // ========================================================================
-
-  const fetchGeneratedDocs = useCallback(async (taskIdToFetch) => {
-    if (!taskIdToFetch) return [];
-    try {
-      const res = await fetch(
-        `${API_BASE}/api/verse-studio/task/${taskIdToFetch}/deliverables`,
-        { method: 'GET', headers: { 'Content-Type': 'application/json' }, credentials: 'include' }
-      );
-      if (!res.ok) return [];
-      const data = await res.json();
-      const docs = data.deliverables || [];
-      // Badge: increment by how many new docs arrived vs what we had
-      setGeneratedDocs(prev => {
-        const prevCount = prev.length;
-        if (docs.length > prevCount) {
-          setNewDocsCount(n => n + (docs.length - prevCount));
-        }
-        return docs;
-      });
-      return docs;
-    } catch (e) {
-      console.warn('⚠️ fetchGeneratedDocs failed:', e);
-      return [];
-    }
-  }, []);
 
   const pollGenerationStatus = useCallback((taskIdToPoll) => {
     // Returns a cleanup function — call to stop polling
