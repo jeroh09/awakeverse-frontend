@@ -711,8 +711,7 @@ export default function TaskChatWindow({ task, verseStudio, onBack }) {
           </div>
 
           {/* Generate Bar */}
-          {effectiveTemplateId && effectivePhase !== 'complete' && (
-            <div className={styles.generateBar}>
+          <div className={styles.generateBar}>
               {generationStatus.isGenerating ? (
                 <>
                   <div className={styles.generateBarProgress}>
@@ -730,13 +729,12 @@ export default function TaskChatWindow({ task, verseStudio, onBack }) {
                 <>
                   <span className={styles.generateBarLabel} title={generateLabel}>{generateLabel}</span>
                   <button type="button" className={styles.generateBarBtn} onClick={triggerGenerate}
-                    disabled={!triggerGenerate || effectivePhase === 'generating'}>
+                    disabled={!triggerGenerate || effectivePhase === 'generating' || !hasMessages}>
                     Generate
                   </button>
                 </>
               )}
-            </div>
-          )}
+          </div>
 
           {/* Composer */}
           <div className={styles.composerOverlay} role="region" aria-label="Message composer">
