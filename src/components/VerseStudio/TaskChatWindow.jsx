@@ -347,6 +347,10 @@ export default function TaskChatWindow({ task, verseStudio, onBack }) {
   const [lightboxDoc, setLightboxDoc] = useState(null); // { url, title }
 
   // Build generate bar label from template + content_scope
+  // Derived from task prop (immediate) with taskMeta as richer fallback after loadTask
+  const effectiveTemplateId = taskMeta?.template_id || task?.template_id || task?.template_key || null;
+  const effectivePhase = taskMeta?.phase || 'discussion';
+
   const generateLabel = useMemo(() => {
     if (!effectiveTemplateId) return 'Generate Content';
     const scopeRaw = taskMeta?.params?.content_scope || task?.params?.content_scope || '';
@@ -382,9 +386,6 @@ export default function TaskChatWindow({ task, verseStudio, onBack }) {
   const heroSubtitle = task?.description || "Describe your goal and let your Verse Workspace team collaborate.";
   const heroImageUrl = task?.heroImageUrl || null;
 
-  // Fallback: task prop always has template_id from the task list; taskMeta populated after loadTask
-  const effectiveTemplateId = taskMeta?.template_id || task?.template_id || task?.template_key || null;
-  const effectivePhase = taskMeta?.phase || 'discussion';
 
   const layoutClassName = isArtifactsCollapsed
     ? `${styles.layout} ${styles.layoutArtifactsCollapsed}`
