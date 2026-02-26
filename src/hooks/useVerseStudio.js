@@ -469,6 +469,14 @@ export default function useVerseStudio() {
           throw new Error('No task_id returned from server');
         }
 
+        // Set taskMeta from payload (template_id known at create time)
+        const createdTask = data?.task || {};
+        setTaskMeta({
+          phase:       createdTask.phase || 'discussion',
+          template_id: createdTask.template_id || taskData?.template_id || null,
+          params:      createdTask.params || taskData?.params || {}
+        });
+
         setTaskId(newTaskId);
         setTeam(data.team || []);
         setMessages([]);
