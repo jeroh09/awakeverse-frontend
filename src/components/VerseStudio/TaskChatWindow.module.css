@@ -1277,6 +1277,22 @@
   background: rgba(99, 102, 241, 0.2);
   color: rgba(99, 102, 241, 0.9);
 }
+.docsBadge {
+  margin-left: 5px;
+  font-size: 9px;
+  font-weight: 700;
+  padding: 1px 5px;
+  border-radius: 999px;
+  background: rgba(99, 102, 241, 0.85);
+  color: #fff;
+  box-shadow: 0 0 0 2px rgba(99, 102, 241, 0.25);
+  animation: docsBadgePop 0.3s ease;
+}
+@keyframes docsBadgePop {
+  0%   { transform: scale(0.6); opacity: 0; }
+  70%  { transform: scale(1.15); }
+  100% { transform: scale(1);   opacity: 1; }
+}
 .chatRail {
   display: flex;           /* ADD - makes it flex container */
   flex-direction: column;  /* ADD - stacks children vertically */

@@ -62,6 +62,10 @@ export default function useVerseStudio() {
   // Generated deliverable docs (DOCX / PDF / images from pipeline)
   const [generatedDocs, setGeneratedDocs] = useState([]);
 
+  // Docs notification badge — count of newly generated docs not yet viewed
+  // Cleared when user opens the Docs tab (via clearDocsNotification)
+  const [newDocsCount, setNewDocsCount] = useState(0);
+
   // LLM options (for TaskCreator / selection UX)
   const [llmOptions, setLlmOptions] = useState([]);
   const [llmOptionsLoading, setLlmOptionsLoading] = useState(false);
@@ -626,6 +630,12 @@ export default function useVerseStudio() {
           fetchIntelligenceStats(loadedTaskId)
         ]);
 
+        // If task already completed, restore generated docs on remount
+        // Prevents docs disappearing when user navigates away and returns
+        if (loadedTask.phase === 'complete') {
+          await fetchGeneratedDocs(loadedTaskId);
+        }
+
         console.log('✅ Task loaded:', loadedTaskId);
         return loadedTaskId;
       } catch (error) {
@@ -633,7 +643,7 @@ export default function useVerseStudio() {
         throw error;
       }
     },
-    [fetchUsage, fetchConstitutionalDecisions, fetchSemanticStats, fetchIntelligenceStats]
+    [fetchUsage, fetchConstitutionalDecisions, fetchSemanticStats, fetchIntelligenceStats, fetchGeneratedDocs]
   );
 
   // ========================================================================
@@ -673,6 +683,21 @@ export default function useVerseStudio() {
             text: messageText,
             timestamp: Date.now()
           };
+
+          // If task is complete and user sends a meaningful new message,
+          // reset phase to discussion so Generate button unlocks.
+          if (messageText.trim().length > 15) {
+            const thanksPhrases = /^(thanks|thank you|great|perfect|awesome|ok|okay|got it|sounds good|nice|cool|cheers|good|sure|yes|no|yep|nope)[.!?]?$/i;
+            if (!thanksPhrases.test(messageText.trim())) {
+              setTaskMeta(prev => {
+                if (prev.phase === 'complete') {
+                  console.log('🔓 Meaningful post-completion message — unlocking Generate');
+                  return { ...prev, phase: 'discussion' };
+                }
+                return prev;
+              });
+            }
+          }
 
           // ✅ DEFENSIVE: Prevent duplicate user messages
           setMessages((prev) => {
@@ -879,7 +904,14 @@ export default function useVerseStudio() {
       if (!res.ok) return [];
       const data = await res.json();
       const docs = data.deliverables || [];
-      setGeneratedDocs(docs);
+      // Badge: increment by how many new docs arrived vs what we had
+      setGeneratedDocs(prev => {
+        const prevCount = prev.length;
+        if (docs.length > prevCount) {
+          setNewDocsCount(n => n + (docs.length - prevCount));
+        }
+        return docs;
+      });
       return docs;
     } catch (e) {
       console.warn('⚠️ fetchGeneratedDocs failed:', e);
@@ -1032,6 +1064,7 @@ export default function useVerseStudio() {
     setTaskMeta({ phase: 'discussion', template_id: null, params: {} });
     setGenerationStatus({ isGenerating: false, progress: 0, message: '', error: null });
     setGeneratedDocs([]);
+    setNewDocsCount(0);
     setConstitutionalDecisions([]);
     setSemanticStats({
       indexed_messages: 0,
@@ -1047,6 +1080,11 @@ export default function useVerseStudio() {
     });
     console.log('🔄 Task reset');
   }, [stopStream]);
+
+  // Clear docs badge when user opens Docs tab
+  const clearDocsNotification = useCallback(() => {
+    setNewDocsCount(0);
+  }, []);
 
   return {
     // Task state
@@ -1100,6 +1138,8 @@ export default function useVerseStudio() {
     taskMeta,
     generationStatus,
     generatedDocs,
+    newDocsCount,
+    clearDocsNotification,
     triggerGenerate,
     fetchGeneratedDocs,
 
