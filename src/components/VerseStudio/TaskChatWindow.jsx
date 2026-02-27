@@ -336,8 +336,6 @@ export default function TaskChatWindow({ task, verseStudio, onBack }) {
     taskMeta = { phase: 'discussion', template_id: null, params: {} },
     generationStatus = { isGenerating: false, progress: 0, message: '', error: null },
     generatedDocs = [],
-    newDocsCount = 0,
-    clearDocsNotification,
     triggerGenerate,
   } = verseStudio || {};
 
@@ -397,8 +395,10 @@ export default function TaskChatWindow({ task, verseStudio, onBack }) {
 
   const visibleArtifacts = useMemo(() => {
     const list = Array.isArray(artifacts) ? artifacts : [];
-    if (showAllArtifacts) return list;
-    return list.filter(isFileWorthyArtifact);
+    // Exclude deliverables (DOCX/PDF from pipeline) — they live in the Docs tab
+    const nonDeliverables = list.filter(a => !a.is_deliverable);
+    if (showAllArtifacts) return nonDeliverables;
+    return nonDeliverables.filter(isFileWorthyArtifact);
   }, [artifacts, showAllArtifacts]);
 
   const toggleExpanded = (id) => {
@@ -734,8 +734,8 @@ export default function TaskChatWindow({ task, verseStudio, onBack }) {
                 <>
                   <span className={styles.generateBarLabel} title={generateLabel}>{generateLabel}</span>
                   <button type="button" className={styles.generateBarBtn} onClick={triggerGenerate}
-                    disabled={!triggerGenerate || effectivePhase === 'generating' || effectivePhase === 'complete' || !hasMessages}>
-                    {effectivePhase === 'complete' ? 'Generated ✓' : 'Generate'}
+                    disabled={!triggerGenerate || effectivePhase === 'generating' || !hasMessages}>
+                    Generate
                   </button>
                 </>
               )}
@@ -939,15 +939,9 @@ export default function TaskChatWindow({ task, verseStudio, onBack }) {
                   <button 
                     type="button" 
                     className={`${styles.artifactsTab} ${activeArtifactTab === 'docs' ? styles.artifactsTabActive : ''}`}
-                    onClick={() => {
-                      setActiveArtifactTab('docs');
-                      if (clearDocsNotification) clearDocsNotification();
-                    }}
+                    onClick={() => setActiveArtifactTab('docs')}
                   >
                     Docs
-                    {newDocsCount > 0 && (
-                      <span className={styles.docsBadge}>{newDocsCount}</span>
-                    )}
                   </button>
                   <button 
                     type="button" 
