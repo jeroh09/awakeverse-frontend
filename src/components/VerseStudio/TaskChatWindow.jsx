@@ -1,5 +1,5 @@
 // src/components/VerseStudio/TaskChatWindow.jsx
-import React, { useCallback, useMemo, useRef, useState } from "react";
+import React, { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import ReactMarkdown from "react-markdown";
 import remarkGfm from "remark-gfm";
 import remarkMath from "remark-math";
@@ -379,8 +379,10 @@ export default function TaskChatWindow({ task, verseStudio, onBack }) {
     message: "",
   });
 
-  const textareaRef = useRef(null);
-  const fileInputRef = useRef(null);
+  const textareaRef    = useRef(null);
+  const fileInputRef   = useRef(null);
+  const scrollRef      = useRef(null);   // chat scroll container
+  const [showScrollBtn, setShowScrollBtn] = useState(false);
 
   const heroTitle = task?.name || "Verse Workspace Task";
   const heroSubtitle = task?.description || "Describe your goal and let your Verse Workspace team collaborate.";
@@ -395,11 +397,32 @@ export default function TaskChatWindow({ task, verseStudio, onBack }) {
 
   const visibleArtifacts = useMemo(() => {
     const list = Array.isArray(artifacts) ? artifacts : [];
-    // Exclude deliverables (DOCX/PDF from pipeline) — they live in the Docs tab
-    const nonDeliverables = list.filter(a => !a.is_deliverable);
-    if (showAllArtifacts) return nonDeliverables;
-    return nonDeliverables.filter(isFileWorthyArtifact);
+    if (showAllArtifacts) return list;
+    return list.filter(isFileWorthyArtifact);
   }, [artifacts, showAllArtifacts]);
+
+  // Auto-scroll to bottom when new messages arrive (only if already near bottom)
+  useEffect(() => {
+    const el = scrollRef.current;
+    if (!el) return;
+    const distFromBottom = el.scrollHeight - el.scrollTop - el.clientHeight;
+    if (distFromBottom < 220) {
+      el.scrollTo({ top: el.scrollHeight, behavior: 'smooth' });
+    }
+  }, [messages.length]);
+
+  // Show scroll button when user scrolls up more than 200px from bottom
+  const handleScroll = useCallback(() => {
+    const el = scrollRef.current;
+    if (!el) return;
+    const distFromBottom = el.scrollHeight - el.scrollTop - el.clientHeight;
+    setShowScrollBtn(distFromBottom > 200);
+  }, []);
+
+  const scrollToBottom = useCallback(() => {
+    const el = scrollRef.current;
+    if (el) el.scrollTo({ top: el.scrollHeight, behavior: 'smooth' });
+  }, []);
 
   const toggleExpanded = (id) => {
     setExpandedIds((prev) => {
@@ -647,7 +670,7 @@ export default function TaskChatWindow({ task, verseStudio, onBack }) {
           </header>
 
         <div className={styles.chatRail}>
-          <div className={styles.messagesScroll}>
+          <div className={styles.messagesScroll} ref={scrollRef} onScroll={handleScroll}>
             {!hasMessages && (
               <div className={styles.emptyState}>
                 <div className={styles.emptyTitle}>Your Verse Workspace team is ready.</div>
@@ -688,6 +711,18 @@ export default function TaskChatWindow({ task, verseStudio, onBack }) {
               );
             })}
         </div>
+
+            {/* Scroll-to-bottom button — appears when user scrolls up */}
+            {showScrollBtn && (
+              <button
+                type="button"
+                className={styles.scrollToBottomBtn}
+                onClick={scrollToBottom}
+                aria-label="Scroll to latest message"
+              >
+                ↓
+              </button>
+            )}
 
             {showHandoffPrompt && handoffSuggestion && (
               <div className={styles.handoffPrompt}>
