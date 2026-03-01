@@ -997,13 +997,17 @@ export default function useScenarioChat() {
     usageLoading,
     startScenario,
     continueConversation,
-    sendMessage,     
-    setDebateMode,   
-    stopDebate,         
-    continueConversation, 
-    nextSpeaker,        
-    runAutoDebate,
-    stopStream,
-    resetScenario
+    nextSpeaker,
+    sendMessage,
+    stopStream, 
+    resetScenario,
+    // ── Auto-debate additions ──
+    debateMode,
+    turnCap,
+    autoTurnCount,
+    autoStopped,
+    setDebateMode,
+    stopDebate,
+    runAutoDebate,    
   };
 }
