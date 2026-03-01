@@ -919,6 +919,9 @@ export default function useScenarioChat() {
         console.log(`🔄 Auto turn ${turnCount + 1}/${totalTurns}, last: '${lastSpeaker}'`);
 
         await nextSpeaker(lastSpeaker);
+        // Give current response time to complete before next speaker
+        await new Promise(resolve => setTimeout(resolve, 6000)); // 6s gap
+        turnCount++;
 
         // Read who just spoke from messages (nextSpeaker appends to messages state)
         setMessages(prev => {

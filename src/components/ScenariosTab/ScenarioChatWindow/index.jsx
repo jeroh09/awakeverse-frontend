@@ -207,6 +207,7 @@ export default function ScenarioChatWindow({
 
       // ── Auto-debate: kick off loop after seed message ────────────────
       if (debateMode === 'auto') {
+        await new Promise(resolve => setTimeout(resolve, 300));
         const lastAiMsg = [...messages].reverse()
           .find(m => !m.user && m.speaker !== 'system');
         await runAutoDebate(lastAiMsg?.speaker, turnCap);
