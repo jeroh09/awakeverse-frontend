@@ -448,61 +448,6 @@ export default function useScenarioChat() {
   }, [debateId]);
 
 
-  const runAutoDebate = useCallback(async (seedSpeaker, cap) => {
-    // Called after sendMessage() resolves (seed message already sent + responded to).
-    // Loops nextSpeaker() using resonance — same as clicking the button, automated.
-
-    autoStopRef.current = false;
-    let turnCount = 0;
-    let lastSpeaker = seedSpeaker;
-    const totalTurns = cap || turnCap;
-
-    console.log(`🤖 Auto-debate: ${totalTurns} turns, seed speaker: '${lastSpeaker}'`);
-
-    while (turnCount < totalTurns) {
-
-      // Check stop signal (set synchronously by stopDebate())
-      if (autoStopRef.current) {
-        console.log('🛑 Auto-debate halted by stop signal');
-        break;
-      }
-
-      // Check circuit breaker
-      if (circuitBreakerState.status === 'tripped') {
-        console.warn('⚠️ Auto-debate halted: circuit breaker tripped');
-        break;
-      }
-
-      try {
-        console.log(`🔄 Auto turn ${turnCount + 1}/${totalTurns}, last: '${lastSpeaker}'`);
-
-        await nextSpeaker(lastSpeaker);
-
-        // Read who just spoke from messages (nextSpeaker appends to messages state)
-        setMessages(prev => {
-          const lastAiMsg = [...prev].reverse().find(
-            m => !m.user && m.speaker !== 'system'
-          );
-          if (lastAiMsg) lastSpeaker = lastAiMsg.speaker;
-          return prev;  // no mutation — reading only
-        });
-
-        turnCount++;
-        setAutoTurnCount(turnCount);
-
-      } catch (error) {
-        console.error(`❌ Auto turn ${turnCount + 1} failed:`, error);
-        break;
-      }
-    }
-
-    // Loop ended (cap hit, stopped, or error)
-    setDebateModeState('user_driven');
-    setAutoStopped(turnCount < totalTurns);
-    console.log(`✅ Auto-debate ended: ${turnCount}/${totalTurns} turns`);
-
-  }, [debateId, turnCap, circuitBreakerState.status, nextSpeaker]);
-
   const continueConversation = useCallback(async (lastSpeaker) => {
     if (!debateId || !scenarioId || isSending) {
       console.warn('⚠️ continueConversation: Invalid state', { 
@@ -944,7 +889,61 @@ export default function useScenarioChat() {
       checkComplete();
     }
   }, [debateId, scenarioId, isSending, circuitBreakerState.status, generateMessageId]);
+  
+  const runAutoDebate = useCallback(async (seedSpeaker, cap) => {
+    // Called after sendMessage() resolves (seed message already sent + responded to).
+    // Loops nextSpeaker() using resonance — same as clicking the button, automated.
 
+    autoStopRef.current = false;
+    let turnCount = 0;
+    let lastSpeaker = seedSpeaker;
+    const totalTurns = cap || turnCap;
+
+    console.log(`🤖 Auto-debate: ${totalTurns} turns, seed speaker: '${lastSpeaker}'`);
+
+    while (turnCount < totalTurns) {
+
+      // Check stop signal (set synchronously by stopDebate())
+      if (autoStopRef.current) {
+        console.log('🛑 Auto-debate halted by stop signal');
+        break;
+      }
+
+      // Check circuit breaker
+      if (circuitBreakerState.status === 'tripped') {
+        console.warn('⚠️ Auto-debate halted: circuit breaker tripped');
+        break;
+      }
+
+      try {
+        console.log(`🔄 Auto turn ${turnCount + 1}/${totalTurns}, last: '${lastSpeaker}'`);
+
+        await nextSpeaker(lastSpeaker);
+
+        // Read who just spoke from messages (nextSpeaker appends to messages state)
+        setMessages(prev => {
+          const lastAiMsg = [...prev].reverse().find(
+            m => !m.user && m.speaker !== 'system'
+          );
+          if (lastAiMsg) lastSpeaker = lastAiMsg.speaker;
+          return prev;  // no mutation — reading only
+        });
+
+        turnCount++;
+        setAutoTurnCount(turnCount);
+
+      } catch (error) {
+        console.error(`❌ Auto turn ${turnCount + 1} failed:`, error);
+        break;
+      }
+    }
+
+    // Loop ended (cap hit, stopped, or error)
+    setDebateModeState('user_driven');
+    setAutoStopped(turnCount < totalTurns);
+    console.log(`✅ Auto-debate ended: ${turnCount}/${totalTurns} turns`);
+
+  }, [debateId, turnCap, circuitBreakerState.status, nextSpeaker]);
 
   const stopStream = useCallback(() => {
     if (controllerRef.current) {
