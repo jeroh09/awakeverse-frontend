@@ -9,6 +9,7 @@ import useScenarioChat from '../../../hooks/useScenarioChat';
 import useVideoGeneration from '../../../hooks/useVideoGeneration';
 import { useUser } from '../../../contexts/UserContext';
 import SubscriptionService from '../../../services/SubscriptionService';
+import DebateModeToggle from '../DebateModeToggle';
 import { ArrowLeft, ChevronRight } from 'lucide-react';
 
 // Existing components - keeping for now
@@ -69,7 +70,15 @@ export default function ScenarioChatWindow({
     continueConversation, 
     nextSpeaker,
     sendMessage,
-    resetScenario
+    resetScenario,
+     // ── Auto-debate ──────────────────
+    debateMode,
+    turnCap,
+    autoTurnCount,
+    autoStopped,
+    setDebateMode,
+    stopDebate,
+    runAutoDebate,
   } = useScenarioChat();
 
   // ===== VIDEO GENERATION HOOK =====
@@ -192,9 +201,17 @@ export default function ScenarioChatWindow({
       setShowUpgradeModal(true);
       return;
     }
-
+    
     try {
       await sendMessage(messageText);
+
+      // ── Auto-debate: kick off loop after seed message ────────────────
+      if (debateMode === 'auto') {
+        const lastAiMsg = [...messages].reverse()
+          .find(m => !m.user && m.speaker !== 'system');
+        await runAutoDebate(lastAiMsg?.speaker, turnCap);
+      }
+
     } catch (error) {
       console.error('❌ Failed to send message:', error);
 
@@ -206,8 +223,8 @@ export default function ScenarioChatWindow({
   };
 
   // ✅ NEW: Handle stop message generation
-  const handleStop = () => {
-    console.log('🛑 Stop button clicked - stopping message generation');
+  //const handleStop = () => {
+    //console.log('🛑 Stop button clicked - stopping message generation');
 
     // OPTION A: If useScenarioChat has a stopGeneration method
     // stopGeneration(); // Uncomment if available
@@ -215,8 +232,14 @@ export default function ScenarioChatWindow({
     // OPTION B: If using AbortController pattern (check useScenarioChat hook)
     // The hook should expose a stop/cancel method
     // For now, log a warning
-    console.warn('⚠️ handleStop called but no stop method available in useScenarioChat');
-    console.warn('⚠️ You may need to add AbortController pattern to useScenarioChat hook');
+    //console.warn('⚠️ handleStop called but no stop method available in useScenarioChat');
+    //console.warn('⚠️ You may need to add AbortController pattern to useScenarioChat hook');
+  //};
+  const handleStop = () => {
+    if (debateMode === 'auto') {
+      stopDebate();
+    }
+    console.log('🛑 handleStop called');
   };
 
   // Handle back button
@@ -404,7 +427,20 @@ export default function ScenarioChatWindow({
                   <ArrowLeft size={20} />
                 </button>
               )}
-              <h1 className="scenario-title">{scenario.title}</h1>
+              <div className={styles.headerTitleRow}>
+                <h1 className="scenario-title">{scenario.title}</h1>
+                <DebateModeToggle
+                  mode={debateMode}
+                  isSending={isSending}
+                  autoTurnCount={autoTurnCount}
+                  turnCap={turnCap}
+                  autoStopped={autoStopped}
+                  onToggle={() =>
+                    setDebateMode(debateMode === 'auto' ? 'user_driven' : 'auto')
+                  }
+                  onStop={stopDebate}
+                />
+              </div>
               {scenario.description && (
                 <p className="scenario-description">{scenario.description}</p>
               )}
@@ -449,12 +485,16 @@ export default function ScenarioChatWindow({
               canGenerateVideo={canGenerateVideo}
               theme={theme}
             />
-            
+  
             <FloatingChatInput
               starterQuestions={scenario.starter_questions || []}
               onSend={handleSend}
               onStop={handleStop}
-              isSending={isSending || (!isUnlimited && usageData.limitReached)}
+              isSending={
+                isSending ||
+                (debateMode === 'auto' && autoTurnCount > 0 && !autoStopped) ||
+                (!isUnlimited && usageData.limitReached)
+              }
             />
           </div>
         </div>

@@ -240,6 +240,13 @@
   margin: 0 0 var(--spacing-sm) 0;
 }
 
+@media (max-width: 768px) {
+  .chatContent :global(.scenario-title) {
+    font-size: 15px;   /* half of var(--font-size-h2) 30px */
+    line-height: 20px;
+  }
+}
+
 .chatContent :global(.scenario-description) {
   font-size: var(--font-size-body);
   color: var(--text-secondary);
@@ -255,4 +262,11 @@
   align-items: center;
   gap: var(--spacing-sm);
   font-size: var(--font-size-body-small);
+}
+.headerTitleRow {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--spacing-md);
+  flex-wrap: nowrap;
 }

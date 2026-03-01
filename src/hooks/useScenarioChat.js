@@ -20,6 +20,12 @@ export default function useScenarioChat() {
     remaining: 2
   });
   const [usageLoading, setUsageLoading] = useState(false);
+
+  const [debateMode, setDebateModeState]  = useState('user_driven');
+  const [turnCap, setTurnCap]             = useState(8);
+  const [autoTurnCount, setAutoTurnCount] = useState(0);
+  const [autoStopped, setAutoStopped]     = useState(false);
+  const autoStopRef = useRef(false);   // ref so loop reads it synchronously
   
   const [circuitBreakerState, setCircuitBreakerState] = useState({
     errorCount: 0,
@@ -119,6 +125,11 @@ export default function useScenarioChat() {
       }
 
       console.log('✅ Scenario started, debate_id:', newDebateId);
+
+      setDebateModeState('user_driven');
+      setAutoTurnCount(0);
+      setAutoStopped(false);
+      autoStopRef.current = false;
 
       await fetchUsage(scenario.id);
 
@@ -377,6 +388,120 @@ export default function useScenarioChat() {
 // ADD TO: useScenarioChat.js
 // LOCATION: After the sendMessage function, before stopStream
 // =============================================================================
+
+// ─────────────────────────────────────────────────────────────────────────────
+  const setDebateMode = useCallback(async (mode, customTurnCap = null) => {
+    if (!debateId) {
+      console.warn('⚠️ setDebateMode: no active debate');
+      return;
+    }
+    try {
+      const csrf = document.cookie.match(/(?:^|;\s*)av_csrf=([^;]+)/)?.[1] || '';
+      setDebateModeState(mode);
+      setAutoStopped(false);
+      autoStopRef.current = false;
+
+      const response = await fetch(`${API_BASE}/api/debate/${debateId}/mode`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json', 'X-CSRF-Token': csrf },
+        credentials: 'include',
+        body: JSON.stringify({
+          mode,
+          ...(customTurnCap !== null && { turn_cap: customTurnCap })
+        })
+      });
+
+      if (!response.ok) {
+        setDebateModeState('user_driven');
+        throw new Error(`Mode change failed: ${response.status}`);
+      }
+
+      const data = await response.json();
+      setTurnCap(data.turn_cap);
+      console.log(`🎛️ Debate mode → ${mode} (turn_cap=${data.turn_cap})`);
+
+    } catch (error) {
+      console.error('❌ setDebateMode failed:', error);
+    }
+  }, [debateId]);
+
+
+  const stopDebate = useCallback(async () => {
+    if (!debateId) return;
+
+    // Signal loop to halt after current response finishes
+    autoStopRef.current = true;
+    setAutoStopped(true);
+    setDebateModeState('user_driven');
+
+    try {
+      const csrf = document.cookie.match(/(?:^|;\s*)av_csrf=([^;]+)/)?.[1] || '';
+      await fetch(`${API_BASE}/api/debate/${debateId}/stop`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', 'X-CSRF-Token': csrf },
+        credentials: 'include'
+      });
+      console.log('🛑 Auto-debate stopped');
+    } catch (error) {
+      console.error('⚠️ stopDebate signal failed:', error);
+    }
+  }, [debateId]);
+
+
+  const runAutoDebate = useCallback(async (seedSpeaker, cap) => {
+    // Called after sendMessage() resolves (seed message already sent + responded to).
+    // Loops nextSpeaker() using resonance — same as clicking the button, automated.
+
+    autoStopRef.current = false;
+    let turnCount = 0;
+    let lastSpeaker = seedSpeaker;
+    const totalTurns = cap || turnCap;
+
+    console.log(`🤖 Auto-debate: ${totalTurns} turns, seed speaker: '${lastSpeaker}'`);
+
+    while (turnCount < totalTurns) {
+
+      // Check stop signal (set synchronously by stopDebate())
+      if (autoStopRef.current) {
+        console.log('🛑 Auto-debate halted by stop signal');
+        break;
+      }
+
+      // Check circuit breaker
+      if (circuitBreakerState.status === 'tripped') {
+        console.warn('⚠️ Auto-debate halted: circuit breaker tripped');
+        break;
+      }
+
+      try {
+        console.log(`🔄 Auto turn ${turnCount + 1}/${totalTurns}, last: '${lastSpeaker}'`);
+
+        await nextSpeaker(lastSpeaker);
+
+        // Read who just spoke from messages (nextSpeaker appends to messages state)
+        setMessages(prev => {
+          const lastAiMsg = [...prev].reverse().find(
+            m => !m.user && m.speaker !== 'system'
+          );
+          if (lastAiMsg) lastSpeaker = lastAiMsg.speaker;
+          return prev;  // no mutation — reading only
+        });
+
+        turnCount++;
+        setAutoTurnCount(turnCount);
+
+      } catch (error) {
+        console.error(`❌ Auto turn ${turnCount + 1} failed:`, error);
+        break;
+      }
+    }
+
+    // Loop ended (cap hit, stopped, or error)
+    setDebateModeState('user_driven');
+    setAutoStopped(turnCount < totalTurns);
+    console.log(`✅ Auto-debate ended: ${turnCount}/${totalTurns} turns`);
+
+  }, [debateId, turnCap, circuitBreakerState.status, nextSpeaker]);
 
   const continueConversation = useCallback(async (lastSpeaker) => {
     if (!debateId || !scenarioId || isSending) {
@@ -842,6 +967,10 @@ export default function useScenarioChat() {
     setScenarioId(null);
     setMessages([]);
     messageIdCounter.current = 0;
+    setDebateModeState('user_driven');
+    setAutoTurnCount(0);
+    setAutoStopped(false);
+    autoStopRef.current = false;
     setUsageData({
       questionsAsked: 0,
       tier: 'free',
@@ -871,6 +1000,13 @@ export default function useScenarioChat() {
     nextSpeaker,   // ✅ ADD THIS
     sendMessage,
     stopStream,
-    resetScenario
+    resetScenario,
+    debateMode,
+    turnCap,
+    autoTurnCount,
+    autoStopped,
+    setDebateMode,
+    stopDebate,
+    runAutoDebate,
   };
 }
