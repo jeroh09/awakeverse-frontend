@@ -31,11 +31,13 @@
   width: 100%;
   max-width: 660px;
   background: rgba(15, 23, 42, 0.97);
-  border: 1px solid rgba(148,163,184,0.14);
-  border-radius: 22px;
+  /* Double border: inner indigo line + outer ring + depth shadow */
+  border: 1px solid rgba(99,102,241,0.28);
   box-shadow:
-    0 0 0 1px rgba(99,102,241,0.06),
+    0 0 0 4px rgba(99,102,241,0.06),
+    0 0 0 5px rgba(99,102,241,0.04),
     0 28px 70px rgba(0,0,0,0.75);
+  border-radius: 22px;
   display: flex;
   flex-direction: column;
   padding: 2rem 2.25rem 1.6rem;
