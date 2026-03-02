@@ -198,20 +198,30 @@
   flex-direction: column;
   gap: 0;
   border-radius: 14px;
-  overflow: hidden;
-  /* Double border: inner line + outer ring via box-shadow */
-  border: 1px solid rgba(99,102,241,0.22);
+  overflow: visible; /* Must be visible so outer ring shadow renders outside */
+  /* Double border effect:
+     - border        = inner line (close, indigo tinted)
+     - box-shadow 1  = outer ring (offset 4px, creates gap between the two lines)
+     - box-shadow 2  = depth shadow underneath */
+  border: 1px solid rgba(99,102,241,0.45);
   box-shadow:
-    0 0 0 1px rgba(99,102,241,0.06),
-    0 4px 18px rgba(0,0,0,0.35);
-  background: rgba(15, 23, 42, 0.9);
+    0 0 0 4px rgba(15,23,42,0.97),
+    0 0 0 5px rgba(99,102,241,0.28),
+    0 8px 24px rgba(0,0,0,0.45);
+  background: rgba(15, 23, 42, 0.97);
   transition: border-color 0.2s ease, box-shadow 0.2s ease;
 }
+/* Clip image only — wrapper around img-panel handles radius */
+.ob-panel .ob-img-panel {
+  border-radius: 13px 13px 0 0;
+  overflow: hidden;
+}
 .ob-panel:hover {
-  border-color: rgba(99,102,241,0.55);
+  border-color: rgba(99,102,241,0.75);
   box-shadow:
-    0 0 0 1px rgba(99,102,241,0.18),
-    0 8px 28px rgba(99,102,241,0.12);
+    0 0 0 4px rgba(15,23,42,0.97),
+    0 0 0 5px rgba(99,102,241,0.55),
+    0 12px 32px rgba(99,102,241,0.18);
 }
 
 .ob-panel__text {
@@ -335,26 +345,33 @@
   display: flex;
   flex-direction: column;
   gap: 0;
-  background: rgba(15,23,42,0.9);
-  /* Double border: inner line + outer ring via box-shadow */
-  border: 1px solid rgba(99,102,241,0.22);
+  background: rgba(15,23,42,0.97);
+  /* Double border: same technique as ob-panel */
+  border: 1px solid rgba(99,102,241,0.45);
   box-shadow:
-    0 0 0 1px rgba(99,102,241,0.06),
-    0 4px 18px rgba(0,0,0,0.35);
+    0 0 0 4px rgba(15,23,42,0.97),
+    0 0 0 5px rgba(99,102,241,0.28),
+    0 8px 24px rgba(0,0,0,0.45);
   border-radius: 14px;
-  overflow: hidden;
+  overflow: visible;
   cursor: pointer;
   text-align: left;
   transition: all 0.18s ease;
   color: inherit;
   padding: 0;
 }
+/* Clip image top corners cleanly */
+.ob-path-panel .ob-img-panel {
+  border-radius: 13px 13px 0 0;
+  overflow: hidden;
+}
 .ob-path-panel:hover {
-  border-color: rgba(129,140,248,0.6);
+  border-color: rgba(129,140,248,0.75);
   box-shadow:
-    0 0 0 1px rgba(99,102,241,0.18),
-    0 10px 28px rgba(99,102,241,0.15);
-  background: rgba(99,102,241,0.07);
+    0 0 0 4px rgba(15,23,42,0.97),
+    0 0 0 5px rgba(99,102,241,0.55),
+    0 12px 32px rgba(99,102,241,0.18);
+  background: rgba(15,23,42,0.97);
   transform: translateY(-3px);
 }
 .ob-path-panel:active { transform: translateY(-1px) scale(0.99); }
