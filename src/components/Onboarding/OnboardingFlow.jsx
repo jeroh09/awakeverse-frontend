@@ -167,7 +167,7 @@ function StepWelcome() {
       <p className="ob-text">
         AwakeVerse orchestrates real, simultaneous AI minds —
         custom characters, and multi-LLM dialogue — all in one place.
-        Create Chracters, Enable Dialogue, Explore Stories, Get Multiple LLMs collaborating on Your Project
+        Create Characters, Enable Dialogue, Explore Stories, Get Multiple LLMs collaborating on Your Project
       </p>
       <div className="ob-pills">
         <span className="ob-pill">Multi-AI Experience</span>
@@ -245,7 +245,7 @@ function StepMultiChar() {
       </div>
       <div className="ob-callout">
         <span className="ob-callout__dot" />
-        Character.AI simulates multi-character with a single AI. AwakeVerse doesn't — genuinely separate minds.
+        Genuinely separate minds, and LLMs enhancing your creativity.
       </div>
     </div>
   );
