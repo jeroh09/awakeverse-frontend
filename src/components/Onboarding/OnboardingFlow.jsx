@@ -165,11 +165,12 @@ function StepWelcome() {
       </div>
       <p className="ob-tagline">Where conversations come alive.</p>
       <p className="ob-text">
-        This isn't a chatbot. AwakeVerse orchestrates real, simultaneous AI minds —
-        historical figures, custom characters, and multi-voice dialogue — all in one place.
+        AwakeVerse orchestrates real, simultaneous AI minds —
+        custom characters, and multi-LLM dialogue — all in one place.
+        Create Chracters, Enable Dialogue, Explore Stories, Get Multiple LLMs collaborating on Your Project
       </p>
       <div className="ob-pills">
-        <span className="ob-pill">Genuine multi-AI</span>
+        <span className="ob-pill">Multi-AI Experience</span>
         <span className="ob-pill">Creator economy</span>
         <span className="ob-pill">80% revenue share</span>
         <span className="ob-pill">Your characters, your rules</span>
@@ -193,7 +194,7 @@ function StepOneOnOne() {
           />
           <div className="ob-panel__text">
             <span className="ob-panel__name">Chat</span>
-            <span className="ob-panel__desc">Direct conversation with any character. They remember the thread.</span>
+            <span className="ob-panel__desc">Direct conversation with your created characters. They remember the thread.</span>
           </div>
         </div>
         <div className="ob-panel">
@@ -204,7 +205,7 @@ function StepOneOnOne() {
           />
           <div className="ob-panel__text">
             <span className="ob-panel__name">Story Mode</span>
-            <span className="ob-panel__desc">Co-author a narrative that unfolds with you.</span>
+            <span className="ob-panel__desc">Co-author a narrative that unfolds with your character.</span>
           </div>
         </div>
       </div>
@@ -238,7 +239,7 @@ function StepMultiChar() {
           />
           <div className="ob-panel__text">
             <span className="ob-panel__name">Workspace</span>
-            <span className="ob-panel__desc">Multiple AI minds working on a task together.</span>
+            <span className="ob-panel__desc">Multiple AI LLMs working on Your task, together.</span>
           </div>
         </div>
       </div>
@@ -285,7 +286,7 @@ function StepPath({ onComplete }) {
       key: 'create',
       img: '/images/onboarding/onboarding-path-create.webp',
       label: 'Create',
-      desc: 'Build your own character',
+      desc: 'Build your own character, Dialogue',
     },
     {
       key: 'story',
