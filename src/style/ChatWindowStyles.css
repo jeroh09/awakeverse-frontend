@@ -31,8 +31,8 @@
   
   .user-message {
     flex-direction: row-reverse;
-    margin-left: auto;
-    margin-right: 1rem;
+    margin-left: auto !important;  /* Add this */
+    margin-right: 0 !important;    /* Add this */  
   }
   
   .ai-message {
@@ -62,47 +62,35 @@
 }
 
 /* =======================
-   USER MESSAGE - IVORY WHITE BUBBLE (FIXED)
-   REPLACE lines 63-90 in ChatWindowStyles.css with this
+   USER MESSAGE - INDIGO BUBBLE
    ======================= */
 .user-message {
-  background: var(--brand-ivory, #F5F5DC) !important;  /* Ivory white */
-  color: #1A1A1A !important;  /* Soft black text */
-  border: 1px solid rgba(0, 0, 0, 0.1) !important;  /* Subtle dark border */
+  background: linear-gradient(
+    135deg,
+    rgba(99, 102, 241, 0.15) 0%,
+    rgba(129, 140, 248, 0.12) 100%
+  ) !important;
+  backdrop-filter: blur(12px) !important;
+  -webkit-backdrop-filter: blur(12px) !important;
+  border: 1px solid rgba(99, 102, 241, 0.3) !important;
   box-shadow: 
-    0 2px 8px rgba(0, 0, 0, 0.08),
-    inset 0 1px 0 rgba(255, 255, 255, 0.3) !important;
-  backdrop-filter: none !important;
-  -webkit-backdrop-filter: none !important;
+    0 2px 8px rgba(99, 102, 241, 0.15),
+    inset 0 1px 0 rgba(255, 255, 255, 0.05) !important;
 }
 
 .user-message:hover {
-  background: #FFFEF8 !important;  /* Slightly brighter ivory on hover */
-  border-color: rgba(0, 0, 0, 0.15) !important;
+  background: linear-gradient(
+    135deg,
+    rgba(99, 102, 241, 0.2) 0%,
+    rgba(129, 140, 248, 0.16) 100%
+  ) !important;
+  border-color: rgba(99, 102, 241, 0.4) !important;
   box-shadow: 
-    0 4px 12px rgba(0, 0, 0, 0.1),
-    inset 0 1px 0 rgba(255, 255, 255, 0.4) !important;
+    0 4px 12px rgba(99, 102, 241, 0.2),
+    inset 0 1px 0 rgba(255, 255, 255, 0.08) !important;
   transition: all 0.2s ease;
 }
 
-/* Mobile: 75% width (3/4 of screen) - prevents overlap with AI avatar */
-@media (max-width: 768px) {
-  .user-message {
-    max-width: 75% !important;
-  }
-}
-
-@media (max-width: 480px) {
-  .user-message {
-    max-width: 72% !important;
-  }
-}
-
-
-/* =======================
-   ALSO DELETE: Lines 526-550 (duplicate .userMessage section)
-   That section uses wrong class name and causes confusion
-   ======================= */
 /* =======================
    AI MESSAGE - FLAT (NO BUBBLE)
    ======================= */
@@ -157,7 +145,7 @@
 
 /* User message text */
 .user-message .message-content {
-  color: #1A1A1A !important;  /* ← NEW: Black text for ivory background */
+  color: var(--text-primary, #F1F5F9) !important;
   font-family: var(--font-body, 'Inter', system-ui, sans-serif) !important;
   font-size: 0.95rem !important;
   font-weight: 450 !important;
