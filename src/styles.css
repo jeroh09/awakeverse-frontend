@@ -1663,31 +1663,3 @@ input, textarea, [contenteditable="true"] {
 .invite-button-with-avatar {
   color: #6366F1 !important;
 }
-/* User messages - Ivory white background with black text */
-.userMessage {
-  background: var(--brand-ivory, #F5F5DC) !important;  /* Ivory white */
-  color: #1A1A1A !important;  /* Soft black text (easier on eyes than pure black) */
-  border: 1px solid rgba(0, 0, 0, 0.1);  /* Subtle dark border */
-  border-radius: var(--radius-lg, 1rem);
-  padding: 1rem 1.25rem;
-  font-family: var(--font-body);
-  line-height: 1.6;
-  margin-left: auto;  /* Right-aligned */
-  max-width: 600px;
-  white-space: pre-line;
-}
-
-/* Mobile: 75% width (3/4 of screen) - prevents overlap with AI avatar */
-@media (max-width: 768px) {
-  .userMessage {
-    max-width: 75% !important;  /* Only 3/4 of screen width */
-    margin-right: 0;  /* Align to right edge */
-  }
-}
-
-/* Very small screens - slightly less to ensure no overlap */
-@media (max-width: 480px) {
-  .userMessage {
-    max-width: 72% !important;
-  }
-}
