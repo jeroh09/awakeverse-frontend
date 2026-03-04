@@ -1,4 +1,5 @@
-// In your FloatingScrollButton.js, replace the component with this mobile-optimized version:
+// FloatingScrollButton.js - INDIGO THEME
+// Replace the buttonStyle and CSS sections with these updated versions
 
 import React from 'react';
 import { ChevronDown, MessageCircle } from 'lucide-react';
@@ -12,15 +13,13 @@ const FloatingScrollButton = ({
 }) => {
   if (!visible) return null;
 
-  // Mobile detection
   const isMobile = window.innerWidth <= 768 || /Android|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
 
   const positionStyles = {
     'bottom-right': {
       position: 'fixed',
-      bottom: isMobile ? '220px' : '200px', // Higher on mobile to avoid input area
+      bottom: isMobile ? '220px' : '200px',
       right: isMobile ? '16px' : '20px',
-      // Mobile PWA safe area
       paddingBottom: 'env(safe-area-inset-bottom)',
     },
     'bottom-center': {
@@ -34,35 +33,33 @@ const FloatingScrollButton = ({
 
   const buttonStyle = {
     ...positionStyles[position],
-    zIndex: 1001, // Higher than input area
+    zIndex: 1001,
     borderRadius: '50%',
-    width: isMobile ? '44px' : '48px', // Slightly smaller on mobile
+    width: isMobile ? '44px' : '48px',
     height: isMobile ? '44px' : '48px',
-    // 🎨 THEME: Gold transparent with gold border
+    // 🎨 INDIGO THEME (changed from gold)
     backgroundColor: hasNewMessages 
-      ? 'rgba(255, 215, 0, 0.15)' // Gold with transparency
-      : 'rgba(255, 215, 0, 0.1)',  // More transparent when no new messages
-    border: '2px solid #FFD700', // Gold border
-    boxShadow: '0 4px 12px rgba(255, 215, 0, 0.3)', // Gold shadow
+      ? 'rgba(99, 102, 241, 0.15)'  // Indigo with transparency
+      : 'rgba(99, 102, 241, 0.1)',   // More transparent when no new messages
+    border: '2px solid #6366F1',     // Indigo border
+    boxShadow: '0 4px 12px rgba(99, 102, 241, 0.3)', // Indigo shadow
     cursor: 'pointer',
     display: 'flex',
     alignItems: 'center',
     justifyContent: 'center',
-    color: '#FFD700', // Gold icon color
+    color: '#6366F1', // Indigo icon color
     transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
     transform: `${position === 'bottom-center' ? 'translateX(-50%) ' : ''}translateY(${visible ? '0' : '20px'})`,
     opacity: visible ? 1 : 0,
     pointerEvents: visible ? 'auto' : 'none',
-    // Enhanced breathing animation
-    animation: hasNewMessages ? 'goldPulse 2s infinite' : 'none',
-    // Mobile touch optimization
+    animation: hasNewMessages ? 'indigoPulse 2s infinite' : 'none',
     WebkitTapHighlightColor: 'transparent',
     touchAction: 'manipulation',
   };
 
   const iconStyle = {
     transition: 'transform 0.2s ease',
-    filter: 'drop-shadow(0 1px 2px rgba(0, 0, 0, 0.3))' // Text shadow for visibility
+    filter: 'drop-shadow(0 1px 2px rgba(0, 0, 0, 0.3))'
   };
 
   const badgeStyle = {
@@ -81,44 +78,41 @@ const FloatingScrollButton = ({
     fontWeight: 'bold',
     transform: hasNewMessages && messageCount > 0 ? 'scale(1)' : 'scale(0)',
     transition: 'transform 0.2s ease',
-    border: '1px solid #FFD700', // Gold border on badge
+    border: '1px solid #6366F1', // Indigo border on badge
     boxShadow: '0 1px 3px rgba(0, 0, 0, 0.3)'
   };
 
   return (
     <>
-      {/* Enhanced CSS for gold theme and mobile */}
       <style>{`
-        @keyframes goldPulse {
+        @keyframes indigoPulse {
           0%, 100% { 
             transform: ${position === 'bottom-center' ? 'translateX(-50%) ' : ''}scale(1);
-            box-shadow: 0 4px 12px rgba(255, 215, 0, 0.3);
+            box-shadow: 0 4px 12px rgba(99, 102, 241, 0.3);
           }
           50% { 
             transform: ${position === 'bottom-center' ? 'translateX(-50%) ' : ''}scale(1.05);
-            box-shadow: 0 6px 20px rgba(255, 215, 0, 0.5);
+            box-shadow: 0 6px 20px rgba(99, 102, 241, 0.5);
           }
         }
         
         .floating-scroll-button:hover {
           transform: ${position === 'bottom-center' ? 'translateX(-50%) ' : ''}scale(1.1) !important;
-          background-color: rgba(255, 215, 0, 0.25) !important;
-          box-shadow: 0 6px 20px rgba(255, 215, 0, 0.4) !important;
+          background-color: rgba(99, 102, 241, 0.25) !important;
+          box-shadow: 0 6px 20px rgba(99, 102, 241, 0.4) !important;
         }
         
         .floating-scroll-button:active {
           transform: ${position === 'bottom-center' ? 'translateX(-50%) ' : ''}scale(0.95) !important;
-          background-color: rgba(255, 215, 0, 0.3) !important;
+          background-color: rgba(99, 102, 241, 0.3) !important;
         }
 
-        /* Mobile PWA specific styles */
         @media (max-width: 768px) {
           .floating-scroll-button {
             bottom: calc(220px + env(safe-area-inset-bottom)) !important;
           }
         }
 
-        /* iOS PWA specific */
         @supports (-webkit-touch-callout: none) {
           .floating-scroll-button {
             bottom: calc(230px + env(safe-area-inset-bottom)) !important;
@@ -139,7 +133,6 @@ const FloatingScrollButton = ({
           <ChevronDown size={isMobile ? 18 : 20} style={iconStyle} />
         )}
         
-        {/* Message count badge */}
         {hasNewMessages && messageCount > 0 && (
           <span style={badgeStyle}>
             {messageCount > 9 ? '9+' : messageCount}
