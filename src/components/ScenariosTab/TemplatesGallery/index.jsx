@@ -1,4 +1,6 @@
-// src/components/ScenariosTab/TemplatesGallery/index.jsx - COMPLETE WITH ORIGINAL HEADERS
+// src/components/ScenariosTab/TemplatesGallery/index.jsx
+// ✅ UPDATED: onOpenGuide prop added — renders Dialogue Guide button in header
+
 import React, { useState, useEffect } from 'react';
 import { getTemplates, getCategories } from '../../../api';
 import CategoryFilter from './CategoryFilter';
@@ -11,7 +13,8 @@ export default function TemplatesGallery({
   isUnlimited, 
   onUpgradeRequired,
   currentScenarioCount = 0,
-  onScenarioCreated = () => {} 
+  onScenarioCreated = () => {},
+  onOpenGuide = null   // ✅ NEW: optional — safe if not passed
 }) {
   const [templates, setTemplates] = useState([]);
   const [categories, setCategories] = useState([]);
@@ -19,9 +22,8 @@ export default function TemplatesGallery({
   const [selectedTemplate, setSelectedTemplate] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
-  const [visibleCount, setVisibleCount] = useState(6); // Show 6 templates initially (3 rows of 2)
+  const [visibleCount, setVisibleCount] = useState(6);
 
-  // Load templates and categories on mount
   useEffect(() => {
     loadTemplatesData();
   }, [selectedCategory]);
@@ -30,20 +32,19 @@ export default function TemplatesGallery({
     try {
       setLoading(true);
       setError(null);
-      
-      // Load templates (with optional category filter)
+
       const templatesPromise = getTemplates(selectedCategory);
-      
-      // Load categories (only once)
-      const categoriesPromise = !categories.length ? getCategories() : Promise.resolve({ categories: categories });
-      
+      const categoriesPromise = !categories.length
+        ? getCategories()
+        : Promise.resolve({ categories: categories });
+
       const [templatesData, categoriesData] = await Promise.all([
         templatesPromise,
         categoriesPromise
       ]);
 
       setTemplates(templatesData.templates || []);
-      
+
       if (categoriesData.categories && !categories.length) {
         setCategories(categoriesData.categories);
       }
@@ -51,7 +52,9 @@ export default function TemplatesGallery({
       console.log('🎭 Templates loaded:', {
         count: templatesData.templates?.length,
         category: selectedCategory,
-        categories: categoriesData.categories ? Object.keys(categoriesData.categories).length : 'cached'
+        categories: categoriesData.categories
+          ? Object.keys(categoriesData.categories).length
+          : 'cached'
       });
 
     } catch (err) {
@@ -65,7 +68,7 @@ export default function TemplatesGallery({
 
   const handleCategorySelect = (category) => {
     setSelectedCategory(category === 'all' ? null : category);
-    setVisibleCount(6); // Reset to 6 when category changes
+    setVisibleCount(6);
   };
 
   const handleTemplateSelect = (template) => {
@@ -76,21 +79,16 @@ export default function TemplatesGallery({
     setSelectedTemplate(template);
   };
 
-  const handleCloseModal = () => {
-    setSelectedTemplate(null);
-  };
+  const handleCloseModal  = () => setSelectedTemplate(null);
+  const handleShowMore    = () => setVisibleCount(prev => prev + 6);
 
   const handleScenarioCreated = (newScenario) => {
     console.log('🎭 Gallery: Scenario created, notifying parent');
     onScenarioCreated(newScenario);
   };
 
-  const handleShowMore = () => {
-    setVisibleCount(prev => prev + 6); // Show 6 more templates
-  };
-
-  const visibleTemplates = templates.slice(0, visibleCount);
-  const hasMoreTemplates = visibleCount < templates.length;
+  const visibleTemplates  = templates.slice(0, visibleCount);
+  const hasMoreTemplates  = visibleCount < templates.length;
 
   if (loading) {
     return (
@@ -118,12 +116,23 @@ export default function TemplatesGallery({
 
   return (
     <div className="templates-gallery">
-      {/* ORIGINAL HEADER - KEEP INTACT */}
+
+      {/* ✅ UPDATED HEADER — guide button sits below subtitle */}
       <div className="gallery-header">
         <h2 className="gallery-title">Verse Dialogues</h2>
         <p className="gallery-subtitle">
-          Multi-character debates powered by AI • {isUnlimited ? 'Unlimited access' : 'Upgrade required'}
+          Multi-character debates powered by AI &bull; {isUnlimited ? 'Unlimited access' : 'Upgrade required'}
         </p>
+        {onOpenGuide && (
+          <button className="gallery-guide-btn" onClick={onOpenGuide}>
+            <svg width="13" height="13" viewBox="0 0 24 24" fill="none">
+              <circle cx="12" cy="12" r="9" stroke="currentColor" strokeWidth="2"/>
+              <path d="M12 8v1M12 11v5" stroke="currentColor" strokeWidth="2"
+                strokeLinecap="round"/>
+            </svg>
+            Dialogue Guide
+          </button>
+        )}
       </div>
 
       {/* Category Filter */}
@@ -151,7 +160,6 @@ export default function TemplatesGallery({
         </div>
       )}
 
-      {/* NEW: Show More CTA */}
       {hasMoreTemplates && (
         <button className="show-more-cta" onClick={handleShowMore}>
           <span className="cta-icon"></span>
@@ -159,7 +167,6 @@ export default function TemplatesGallery({
         </button>
       )}
 
-      {/* NEW: Scroll to My Dialogues Arrow */}
       <ScrollToMyDialogues />
 
       {selectedTemplate && (

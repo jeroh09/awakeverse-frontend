@@ -343,63 +343,7 @@
 .dg--dark  .dg-btn--ghost:hover { color: #94a3b8; border-color: rgba(148,163,184,0.2); }
 .dg--light .dg-btn--ghost:hover { color: #64748b; border-color: rgba(148,163,184,0.3); }
 
-/* ─── Breadcrumb block (in ScenariosTab) ─────────────────── */
-/* Button-only, centered below existing tab title */
-.scenarios-tab-breadcrumb {
-  display: flex;
-  justify-content: center;
-  padding: 0.5rem 2rem 1rem;
-  max-width: 1400px;
-  margin: 0 auto;
-  width: 100%;
-}
-
-.scenarios-tab-breadcrumb__guide-btn {
-  display: inline-flex;
-  align-items: center;
-  gap: 0.45rem;
-  padding: 0.42rem 1rem;
-  border-radius: 8px;
-  border: none;
-  cursor: pointer;
-  font-family: 'Inter', sans-serif;
-  font-size: 0.75rem;
-  font-weight: 600;
-  transition: all 0.18s ease;
-  letter-spacing: 0.02em;
-}
-
-/* Dark mode guide button */
-.theme-awakeverse .scenarios-tab-breadcrumb__guide-btn {
-  background: rgba(99, 102, 241, 0.1);
-  border: 1px solid rgba(99, 102, 241, 0.28);
-  color: #818cf8;
-  box-shadow: 0 0 0 2px rgba(99, 102, 241, 0.05);
-}
-.theme-awakeverse .scenarios-tab-breadcrumb__guide-btn:hover {
-  background: rgba(99, 102, 241, 0.18);
-  border-color: rgba(99, 102, 241, 0.5);
-  color: #e0e7ff;
-  box-shadow: 0 0 0 2px rgba(99, 102, 241, 0.1);
-}
-
-/* Light mode guide button */
-.scenarios-tab-container:not(.theme-awakeverse) .scenarios-tab-breadcrumb__guide-btn {
-  background: rgba(99, 102, 241, 0.06);
-  border: 1px solid rgba(99, 102, 241, 0.2);
-  color: #4f46e5;
-  box-shadow: 0 0 0 2px rgba(99, 102, 241, 0.03);
-}
-.scenarios-tab-container:not(.theme-awakeverse) .scenarios-tab-breadcrumb__guide-btn:hover {
-  background: rgba(99, 102, 241, 0.12);
-  border-color: rgba(99, 102, 241, 0.4);
-  box-shadow: 0 0 0 2px rgba(99, 102, 241, 0.08);
-}
-
-.scenarios-tab-breadcrumb__guide-btn svg {
-  flex-shrink: 0;
-  opacity: 0.8;
-}
+/* guide button styles live in TemplatesGallery.css as .gallery-guide-btn */
 
 /* ─── Mobile ──────────────────────────────────────────────── */
 @media (max-width: 600px) {

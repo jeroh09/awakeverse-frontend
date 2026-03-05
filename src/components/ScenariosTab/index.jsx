@@ -250,26 +250,11 @@ export default function ScenariosTab({
   return (
     <div className={`scenarios-tab-container ${currentTheme === 'awakeverse' ? 'theme-awakeverse' : ''}`}>
 
-      {/* ✅ Theme toggle — unchanged, floating */}
+      {/* Theme toggle — unchanged, floating */}
       <ThemeToggle
         currentTheme={currentTheme}
         onToggle={toggleTheme}
       />
-
-      {/* ✅ NEW: Guide button — centered below existing tab title */}
-      <div className="scenarios-tab-breadcrumb">
-        <button
-          className="scenarios-tab-breadcrumb__guide-btn"
-          onClick={() => setShowGuide(true)}
-        >
-          <svg width="14" height="14" viewBox="0 0 24 24" fill="none">
-            <circle cx="12" cy="12" r="9" stroke="currentColor" strokeWidth="2"/>
-            <path d="M12 8v1M12 11v5" stroke="currentColor" strokeWidth="2"
-              strokeLinecap="round"/>
-          </svg>
-          Dialogue Guide
-        </button>
-      </div>
 
       {/* ✅ NEW: Dialogue Guide modal */}
       <DialogueGuide
@@ -279,19 +264,20 @@ export default function ScenariosTab({
       />
 
       <div className="scenarios-content">
-        {/* Templates Gallery - unchanged */}
+        {/* ✅ UPDATED: onOpenGuide passed as prop — button renders inside gallery header */}
         <div className="gallery-section">
           <TemplatesGallery
             isUnlimited={isUnlimited}
             onUpgradeRequired={() => {}}
             currentScenarioCount={myScenarios.length}
             onScenarioCreated={handleScenarioCreated}
+            onOpenGuide={() => setShowGuide(true)}
           />
         </div>
 
         <UseCaseCarousel />
 
-        {/* My Scenarios Panel - unchanged */}
+        {/* My Scenarios Panel — unchanged */}
         <div className="scenarios-section">
           <MyScenariosPanel
             userId={user?.id}
@@ -304,7 +290,7 @@ export default function ScenariosTab({
         </div>
       </div>
 
-      {/* Blank Scenario Creator - unchanged */}
+      {/* Blank Scenario Creator — unchanged */}
       {showBlankCreator && (
         <ScenarioCreator
           template={null}

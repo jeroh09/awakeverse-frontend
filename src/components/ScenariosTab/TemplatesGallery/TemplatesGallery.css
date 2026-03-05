@@ -1,4 +1,4 @@
-/* src/components/ScenariosTab/TemplatesGallery/TemplatesGallery.css - UPDATED WITH 2-COLUMN GRID */
+/* src/components/ScenariosTab/TemplatesGallery/TemplatesGallery.css */
 
 .templates-gallery {
   padding: 0;
@@ -7,10 +7,13 @@
 /* ============================================================================
    GALLERY HEADER
    ============================================================================ */
-/* AFTER - Centered */
 .gallery-header {
   margin-bottom: 2rem;
-  text-align: center;  /* ✅ ADD THIS */
+  text-align: center;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.35rem;
 }
 
 .gallery-title {
@@ -27,12 +30,48 @@
   margin: 0;
 }
 
+/* ✅ Dialogue Guide button — sits below subtitle in header */
+.gallery-guide-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  margin-top: 0.5rem;
+  padding: 0.38rem 0.9rem;
+  border-radius: 8px;
+  border: 1px solid rgba(99, 102, 241, 0.28);
+  background: rgba(99, 102, 241, 0.08);
+  color: #818cf8;
+  font-family: 'Inter', system-ui, sans-serif;
+  font-size: 0.73rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.18s ease;
+  letter-spacing: 0.02em;
+}
+.gallery-guide-btn:hover {
+  background: rgba(99, 102, 241, 0.16);
+  border-color: rgba(99, 102, 241, 0.5);
+  color: #e0e7ff;
+}
+
+/* Light theme override */
+.scenarios-tab-container:not(.theme-awakeverse) .gallery-guide-btn {
+  border-color: rgba(99, 102, 241, 0.22);
+  background: rgba(99, 102, 241, 0.05);
+  color: #4f46e5;
+}
+.scenarios-tab-container:not(.theme-awakeverse) .gallery-guide-btn:hover {
+  background: rgba(99, 102, 241, 0.1);
+  border-color: rgba(99, 102, 241, 0.4);
+  color: #3730a3;
+}
+
 /* ============================================================================
-   TEMPLATE GRID - 2 COLUMNS
+   TEMPLATE GRID - 3 COLUMNS
    ============================================================================ */
 .template-grid {
   display: grid;
-  grid-template-columns: repeat(3, 1fr); /* Fixed 2 columns */
+  grid-template-columns: repeat(3, 1fr);
   gap: 1.5rem;
   margin-top: 2rem;
 }
@@ -62,7 +101,7 @@
 }
 
 @keyframes spin {
-  0% { transform: rotate(0deg); }
+  0%   { transform: rotate(0deg); }
   100% { transform: rotate(360deg); }
 }
 
@@ -82,7 +121,6 @@
   font-weight: 600;
   transition: all 0.3s ease;
 }
-
 .retry-button:hover {
   background: var(--scenarios-accent-secondary);
   transform: translateY(-2px);
@@ -109,7 +147,6 @@
   gap: 0.75rem;
   font-size: 1rem;
 }
-
 .show-more-cta:hover {
   border-color: var(--scenarios-accent-primary);
   color: var(--scenarios-accent-primary);
@@ -117,19 +154,10 @@
   transform: translateY(-2px);
   box-shadow: 0 4px 12px var(--scenarios-shadow);
 }
+.show-more-cta:active { transform: translateY(0); }
 
-.show-more-cta:active {
-  transform: translateY(0);
-}
-
-.cta-icon {
-  font-size: 1.25rem;
-  font-weight: bold;
-}
-
-.cta-text {
-  font-weight: 600;
-}
+.cta-icon { font-size: 1.25rem; font-weight: bold; }
+.cta-text  { font-weight: 600; }
 
 /* ============================================================================
    DARK THEME OVERRIDES
@@ -139,71 +167,35 @@
 }
 
 .scenarios-tab-container.theme-awakeverse .show-more-cta {
-  background: rgba(99, 102, 241, 0.05);  /* ✅ INDIGO */
-  border-color: rgba(99, 102, 241, 0.3); /* ✅ INDIGO */
-  color: #818CF8;                        /* ✅ INDIGO */
+  background: rgba(99, 102, 241, 0.05);
+  border-color: rgba(99, 102, 241, 0.3);
+  color: #818CF8;
 }
-
 .scenarios-tab-container.theme-awakeverse .show-more-cta:hover {
-  background: rgba(99, 102, 241, 0.1);   /* ✅ INDIGO */
-  border-color: #6366F1;                 /* ✅ INDIGO */
-  box-shadow: 0 4px 12px rgba(99, 102, 241, 0.2); /* ✅ INDIGO */
+  background: rgba(99, 102, 241, 0.1);
+  border-color: #6366F1;
+  box-shadow: 0 4px 12px rgba(99, 102, 241, 0.2);
 }
 
 /* ============================================================================
    RESPONSIVE
    ============================================================================ */
-
-/* Tablet - Single column */
 @media (max-width: 1024px) {
-  .template-grid {
-    grid-template-columns: repeat(2, 1fr); /* Keep 2 columns on tablet */
-  }
+  .template-grid { grid-template-columns: repeat(2, 1fr); }
 }
 
-/* Mobile - Single column */
 @media (max-width: 768px) {
-  .template-grid {
-    grid-template-columns: 1fr; /* 1 column on mobile */
-  }
-  
-  .gallery-title {
-    font-size: 1.5rem;
-  }
-  
-  .show-more-cta {
-    padding: 1rem;
-    font-size: 0.9rem;
-  }
-  
-  .cta-icon {
-    font-size: 1.1rem;
-  }
+  .template-grid { grid-template-columns: 1fr; }
+  .gallery-title  { font-size: 1.5rem; }
+  .show-more-cta  { padding: 1rem; font-size: 0.9rem; }
+  .cta-icon       { font-size: 1.1rem; }
 }
 
 /* ============================================================================
-   SCROLLBAR STYLING
+   SCROLLBAR
    ============================================================================ */
-.templates-gallery ::-webkit-scrollbar {
-  width: 8px;
-}
-
-.templates-gallery ::-webkit-scrollbar-track {
-  background: var(--scenarios-bg-secondary);
-  border-radius: 4px;
-}
-
-.templates-gallery ::-webkit-scrollbar-thumb {
-  background: var(--scenarios-border-color);
-  border-radius: 4px;
-}
-
-.templates-gallery ::-webkit-scrollbar-thumb:hover {
-  background: var(--scenarios-accent-primary);
-}
-
-/* Firefox scrollbar */
-.templates-gallery {
-  scrollbar-width: thin;
-  scrollbar-color: var(--scenarios-border-color) var(--scenarios-bg-secondary);
-}
+.templates-gallery ::-webkit-scrollbar        { width: 8px; }
+.templates-gallery ::-webkit-scrollbar-track  { background: var(--scenarios-bg-secondary); border-radius: 4px; }
+.templates-gallery ::-webkit-scrollbar-thumb  { background: var(--scenarios-border-color); border-radius: 4px; }
+.templates-gallery ::-webkit-scrollbar-thumb:hover { background: var(--scenarios-accent-primary); }
+.templates-gallery { scrollbar-width: thin; scrollbar-color: var(--scenarios-border-color) var(--scenarios-bg-secondary); }
