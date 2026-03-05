@@ -344,36 +344,15 @@
 .dg--light .dg-btn--ghost:hover { color: #64748b; border-color: rgba(148,163,184,0.3); }
 
 /* ─── Breadcrumb block (in ScenariosTab) ─────────────────── */
-/* Centered column: title → subtitle → guide button */
+/* Button-only, centered below existing tab title */
 .scenarios-tab-breadcrumb {
   display: flex;
-  flex-direction: column;
-  align-items: center;
-  text-align: center;
-  padding: 2rem 2rem 1rem;
+  justify-content: center;
+  padding: 0.5rem 2rem 1rem;
   max-width: 1400px;
   margin: 0 auto;
   width: 100%;
-  gap: 0.35rem;
 }
-
-.scenarios-tab-breadcrumb__title {
-  font-family: 'Syne', sans-serif;
-  font-size: 1.5rem;
-  font-weight: 700;
-  line-height: 1.2;
-}
-.theme-awakeverse .scenarios-tab-breadcrumb__title { color: #f5f5dc; }
-.scenarios-tab-container:not(.theme-awakeverse) .scenarios-tab-breadcrumb__title { color: #1e293b; }
-
-.scenarios-tab-breadcrumb__subtitle {
-  font-family: 'Inter', sans-serif;
-  font-size: 0.875rem;
-  line-height: 1.5;
-  margin-bottom: 0.5rem;
-}
-.theme-awakeverse .scenarios-tab-breadcrumb__subtitle { color: #64748b; }
-.scenarios-tab-container:not(.theme-awakeverse) .scenarios-tab-breadcrumb__subtitle { color: #94a3b8; }
 
 .scenarios-tab-breadcrumb__guide-btn {
   display: inline-flex;
@@ -388,7 +367,6 @@
   font-weight: 600;
   transition: all 0.18s ease;
   letter-spacing: 0.02em;
-  margin-top: 0.25rem;
 }
 
 /* Dark mode guide button */
