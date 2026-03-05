@@ -13,7 +13,7 @@ function usePreloadImages(srcs) {
       const img = new Image();
       img.src = src;
     });
-  }, []); // eslint-disable-line react-hooks/exhaustive-deps
+  }, []); 
 }
 
 // ─── Defensive image panel ────────────────────────────────────────────────────
