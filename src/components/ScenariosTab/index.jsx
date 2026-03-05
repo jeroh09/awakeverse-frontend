@@ -10,6 +10,7 @@ import ScenarioChatWindow from './ScenarioChatWindow';
 import './ScenariosTab.css';
 import UseCaseCarousel from './UseCaseCarousel';
 import ThemeToggle from './ThemeToggle';
+import DialogueGuide from './DialogueGuide';
 
 export default function ScenariosTab({ 
   marketHubScenario = null,
@@ -24,6 +25,7 @@ export default function ScenariosTab({
   const [myScenarios, setMyScenarios] = useState([]);
   const [showBlankCreator, setShowBlankCreator] = useState(false);
   const [activeScenario, setActiveScenario] = useState(null);
+  const [showGuide, setShowGuide] = useState(false);
 
     // ============================================================================
   // NEW: Handle Market Hub scenario passed from ChatApp
@@ -247,28 +249,52 @@ export default function ScenariosTab({
   // MAIN CONTENT - User has unlimited access OR is using Market Hub scenario
   return (
     <div className={`scenarios-tab-container ${currentTheme === 'awakeverse' ? 'theme-awakeverse' : ''}`}>
-      {/* ✅ NEW: Theme toggle with SVG icons */}
-      <ThemeToggle 
+
+      {/* ✅ Theme toggle — unchanged, floating */}
+      <ThemeToggle
         currentTheme={currentTheme}
         onToggle={toggleTheme}
       />
-      
+
+      {/* ✅ NEW: Breadcrumb row — tab title + Dialogue Guide button */}
+      <div className="scenarios-tab-breadcrumb">
+        <span className="scenarios-tab-breadcrumb__title">Verse Dialogues</span>
+        <button
+          className="scenarios-tab-breadcrumb__guide-btn"
+          onClick={() => setShowGuide(true)}
+        >
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none">
+            <circle cx="12" cy="12" r="9" stroke="currentColor" strokeWidth="2"/>
+            <path d="M12 8v1M12 11v5" stroke="currentColor" strokeWidth="2"
+              strokeLinecap="round"/>
+          </svg>
+          Dialogue Guide
+        </button>
+      </div>
+
+      {/* ✅ NEW: Dialogue Guide modal */}
+      <DialogueGuide
+        isOpen={showGuide}
+        onClose={() => setShowGuide(false)}
+        currentTheme={currentTheme}
+      />
+
       <div className="scenarios-content">
-        {/* Templates Gallery - User has access */}
+        {/* Templates Gallery - unchanged */}
         <div className="gallery-section">
-          <TemplatesGallery 
+          <TemplatesGallery
             isUnlimited={isUnlimited}
-            onUpgradeRequired={() => {}} // No-op since user already has access
+            onUpgradeRequired={() => {}}
             currentScenarioCount={myScenarios.length}
             onScenarioCreated={handleScenarioCreated}
           />
         </div>
-        {/* ✅✅✅ ADD CAROUSEL HERE - BETWEEN THESE TWO SECTIONS ✅✅✅ */}
+
         <UseCaseCarousel />
 
-        {/* My Scenarios Panel - User has access */}
+        {/* My Scenarios Panel - unchanged */}
         <div className="scenarios-section">
-          <MyScenariosPanel 
+          <MyScenariosPanel
             userId={user?.id}
             scenarios={myScenarios}
             onRefresh={loadMyScenarios}
@@ -279,7 +305,7 @@ export default function ScenariosTab({
         </div>
       </div>
 
-      {/* Blank Scenario Creator - opened from "Create New" button */}
+      {/* Blank Scenario Creator - unchanged */}
       {showBlankCreator && (
         <ScenarioCreator
           template={null}
