@@ -256,9 +256,12 @@ export default function ScenariosTab({
         onToggle={toggleTheme}
       />
 
-      {/* ✅ NEW: Breadcrumb row — tab title + Dialogue Guide button */}
+      {/* ✅ NEW: Breadcrumb block — centered, title + subtitle + guide button */}
       <div className="scenarios-tab-breadcrumb">
         <span className="scenarios-tab-breadcrumb__title">Verse Dialogues</span>
+        <span className="scenarios-tab-breadcrumb__subtitle">
+          Orchestrate real multi-AI debates between characters of your choosing
+        </span>
         <button
           className="scenarios-tab-breadcrumb__guide-btn"
           onClick={() => setShowGuide(true)}

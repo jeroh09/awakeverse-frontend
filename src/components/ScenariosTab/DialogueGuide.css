@@ -343,30 +343,43 @@
 .dg--dark  .dg-btn--ghost:hover { color: #94a3b8; border-color: rgba(148,163,184,0.2); }
 .dg--light .dg-btn--ghost:hover { color: #64748b; border-color: rgba(148,163,184,0.3); }
 
-/* ─── Breadcrumb row (in ScenariosTab) ───────────────────── */
+/* ─── Breadcrumb block (in ScenariosTab) ─────────────────── */
+/* Centered column: title → subtitle → guide button */
 .scenarios-tab-breadcrumb {
   display: flex;
+  flex-direction: column;
   align-items: center;
-  justify-content: space-between;
-  padding: 1.25rem 2rem 0.5rem;
+  text-align: center;
+  padding: 2rem 2rem 1rem;
   max-width: 1400px;
   margin: 0 auto;
   width: 100%;
+  gap: 0.35rem;
 }
 
 .scenarios-tab-breadcrumb__title {
   font-family: 'Syne', sans-serif;
-  font-size: 1.1rem;
+  font-size: 1.5rem;
   font-weight: 700;
+  line-height: 1.2;
 }
 .theme-awakeverse .scenarios-tab-breadcrumb__title { color: #f5f5dc; }
 .scenarios-tab-container:not(.theme-awakeverse) .scenarios-tab-breadcrumb__title { color: #1e293b; }
 
+.scenarios-tab-breadcrumb__subtitle {
+  font-family: 'Inter', sans-serif;
+  font-size: 0.875rem;
+  line-height: 1.5;
+  margin-bottom: 0.5rem;
+}
+.theme-awakeverse .scenarios-tab-breadcrumb__subtitle { color: #64748b; }
+.scenarios-tab-container:not(.theme-awakeverse) .scenarios-tab-breadcrumb__subtitle { color: #94a3b8; }
+
 .scenarios-tab-breadcrumb__guide-btn {
-  display: flex;
+  display: inline-flex;
   align-items: center;
   gap: 0.45rem;
-  padding: 0.38rem 0.85rem;
+  padding: 0.42rem 1rem;
   border-radius: 8px;
   border: none;
   cursor: pointer;
@@ -375,6 +388,7 @@
   font-weight: 600;
   transition: all 0.18s ease;
   letter-spacing: 0.02em;
+  margin-top: 0.25rem;
 }
 
 /* Dark mode guide button */
@@ -418,5 +432,5 @@
   .dg-content { padding: 0.9rem 1.25rem 0.6rem; }
   .dg-title { font-size: 1.1rem; }
   .dg-footer { padding: 0.75rem 1.25rem 1.1rem; }
-  .scenarios-tab-breadcrumb { padding: 1rem 1.25rem 0.4rem; }
+  .scenarios-tab-breadcrumb { padding: 1.5rem 1.25rem 0.75rem; }
 }
