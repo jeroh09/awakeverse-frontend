@@ -5,16 +5,37 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import './DialogueGuide.css';
 
+// ─── Preload all images when guide opens ─────────────────────────────────────
+// Fires once on mount — browsers cache the responses so navigation is instant
+function usePreloadImages(srcs) {
+  useEffect(() => {
+    srcs.forEach((src) => {
+      const img = new Image();
+      img.src = src;
+    });
+  }, []); // eslint-disable-line react-hooks/exhaustive-deps
+}
+
 // ─── Defensive image panel ────────────────────────────────────────────────────
+// Opacity fade handles brief load delay. useEffect resets state on src change
+// without remounting the DOM node — prevents the blank flash between steps.
 function GuideImage({ src, alt }) {
   const [failed, setFailed] = useState(false);
+  const [loaded, setLoaded] = useState(false);
+
+  useEffect(() => {
+    setFailed(false);
+    setLoaded(false);
+  }, [src]);
+
   return (
     <div className="dg-img-wrap">
       {!failed ? (
         <img
           src={src}
           alt={alt}
-          className="dg-img"
+          className={`dg-img ${loaded ? 'dg-img--loaded' : ''}`}
+          onLoad={() => setLoaded(true)}
           onError={() => setFailed(true)}
         />
       ) : (
@@ -102,6 +123,9 @@ export default function DialogueGuide({ isOpen, onClose, currentTheme = 'awakeve
   const [step, setStep] = useState(0);
   const [exiting, setExiting] = useState(false);
   const [exitDir, setExitDir] = useState('forward');
+
+  // ✅ Preload all images immediately when guide mounts — browser caches them
+  usePreloadImages(STEPS.map(s => s.img));
 
   // Reset to step 0 each time guide opens
   useEffect(() => {

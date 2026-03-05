@@ -193,6 +193,14 @@
   height: 100%;
   object-fit: cover;
   display: block;
+  /* Start invisible — fades in once loaded, prevents flash between steps */
+  opacity: 0;
+  transition: opacity 0.2s ease;
+}
+
+/* Triggered by onLoad via dg-img--loaded class */
+.dg-img--loaded {
+  opacity: 1;
 }
 
 .dg-img-fallback {
