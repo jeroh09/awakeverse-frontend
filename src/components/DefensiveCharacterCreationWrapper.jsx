@@ -5,7 +5,11 @@ const DefensiveCharacterCreationWrapper = ({
   children, 
   user_id, 
   onUpgradePrompt,
-  blockingMessage = "Character limit reached" 
+  blockingMessage = "Character limit reached",
+  // Optional: caller supplies their own blocked UI instead of the default overlay.
+  // Receives no args — onUpgradePrompt is already in scope for the caller.
+  // All existing usages that omit this prop are completely unaffected.
+  renderBlocked = null
 }) => {
   const [blockState, setBlockState] = useState({
     shouldBlock: false,
@@ -71,6 +75,10 @@ const DefensiveCharacterCreationWrapper = ({
 
   // Render with blocking if needed
   if (blockState.shouldBlock) {
+    // Caller supplied custom blocked UI — use it, skip the overlay entirely
+    if (renderBlocked) return renderBlocked();
+
+    // Default overlay — existing behaviour, all other usages unchanged
     return (
       <div style={{ position: 'relative', display: 'inline-block' }}>
         {/* Greyed out children */}

@@ -217,15 +217,9 @@ function MyCharacterCard({ character, onClick, onPublishToggle, isMobile }) {
 // Card 2: CTA — click to start creating
 // Card 3: ghost — awaiting creation
 function MyCharactersEmpty({ onCreateCharacter, user_id, onShowUpgradeModal, isMobile }) {
-  const [ctaHovered,   setCtaHovered]   = useState(false);
-  const [limitReached, setLimitReached] = useState(false);
+  const [ctaHovered, setCtaHovered] = useState(false);
   const W = CARD_W(isMobile);
   const H = CARD_H(isMobile);
-
-  const handleUpgradePrompt = () => {
-    setLimitReached(true);
-    onShowUpgradeModal?.('character_limit');
-  };
 
   // Shared card shell style — double border, same as PosterCard
   const cardShell = (extra = {}) => ({
@@ -311,143 +305,78 @@ function MyCharactersEmpty({ onCreateCharacter, user_id, onShowUpgradeModal, isM
         </div>
       </div>
 
-      {/* ── Card 2: CTA — create or upgrade depending on limit ── */}
-      <DefensiveCharacterCreationWrapper
-        user_id={user_id}
-        onUpgradePrompt={handleUpgradePrompt}
-      >
-        {limitReached ? (
-          /* ── Limit reached state ── */
-          <div
-            onClick={() => onShowUpgradeModal?.('character_limit')}
-            onMouseEnter={() => setCtaHovered(true)}
-            onMouseLeave={() => setCtaHovered(false)}
-            style={{
-              ...cardShell(),
-              cursor: 'pointer',
-              border: `1.5px solid ${ctaHovered ? '#FFA500' : 'rgba(255,165,0,0.45)'}`,
-              boxShadow: ctaHovered
-                ? `0 0 0 3px rgba(255,165,0,0.18), 0 14px 30px rgba(10,15,26,0.75)`
-                : `0 0 0 3px rgba(255,165,0,0.07), 0 4px 14px rgba(10,15,26,0.55)`,
-              background: ctaHovered
-                ? 'rgba(255,165,0,0.07)'
-                : theme.colors.background.surface,
-              transform: ctaHovered ? 'translateY(-5px) scale(1.025)' : 'none',
-              transition: theme.transitions.normal,
-              alignItems: 'center', justifyContent: 'center',
-              textAlign: 'center', gap: '0.65rem', flexDirection: 'column'
-            }}
-          >
-            {/* Lock icon — SVG */}
-            <div style={{
-              width: isMobile ? 36 : 44, height: isMobile ? 36 : 44,
-              borderRadius: '50%',
-              background: ctaHovered
-                ? 'rgba(255,165,0,0.18)'
-                : 'rgba(255,165,0,0.10)',
-              border: `1.5px solid ${ctaHovered ? '#FFA500' : 'rgba(255,165,0,0.4)'}`,
-              display: 'flex', alignItems: 'center', justifyContent: 'center',
-              transition: theme.transitions.normal, flexShrink: 0
-            }}>
-              <svg width={isMobile ? 15 : 18} height={isMobile ? 15 : 18} viewBox="0 0 18 18" fill="none">
-                <rect x="3" y="8" width="12" height="9" rx="2"
-                  stroke="#FFA500" strokeWidth="1.6"/>
-                <path d="M6 8V5.5a3 3 0 016 0V8"
-                  stroke="#FFA500" strokeWidth="1.6" strokeLinecap="round"/>
-                <circle cx="9" cy="13" r="1.2" fill="#FFA500"/>
-              </svg>
-            </div>
-
-            <div>
-              <p style={{
-                fontFamily: theme.typography.fonts.display,
-                fontSize: isMobile ? '0.72rem' : '0.78rem',
-                fontWeight: theme.typography.weights.bold,
-                color: '#FFA500',
-                margin: '0 0 0.2rem 0'
-              }}>
-                Limit Reached
-              </p>
-              <p style={{
-                fontFamily: theme.typography.fonts.body,
-                fontSize: isMobile ? '0.6rem' : '0.64rem',
-                color: 'rgba(255,165,0,0.7)',
-                margin: 0
-              }}>
-                Tap to upgrade
-              </p>
-            </div>
+      {/* ── Card 2: CTA — click to start creating ─────────── */}
+      {/* No limit check here — 0 chars always means under limit */}
+        <div
+          onClick={onCreateCharacter}
+          onMouseEnter={() => setCtaHovered(true)}
+          onMouseLeave={() => setCtaHovered(false)}
+          style={{
+            ...cardShell(),
+            cursor: 'pointer',
+            border: `1.5px solid ${ctaHovered
+              ? theme.colors.accent.primary
+              : 'rgba(99,102,241,0.45)'}`,
+            boxShadow: ctaHovered
+              ? `0 0 0 3px rgba(99,102,241,0.20), 0 14px 30px rgba(10,15,26,0.75)`
+              : `0 0 0 3px rgba(99,102,241,0.07), 0 4px 14px rgba(10,15,26,0.55)`,
+            background: ctaHovered
+              ? 'rgba(99,102,241,0.09)'
+              : theme.colors.background.surface,
+            transform: ctaHovered ? 'translateY(-5px) scale(1.025)' : 'none',
+            transition: theme.transitions.normal,
+            alignItems: 'center', justifyContent: 'center',
+            textAlign: 'center', gap: '0.65rem', flexDirection: 'column'
+          }}
+        >
+          {/* Plus icon — SVG, no Lucide */}
+          <div style={{
+            width: isMobile ? 36 : 44, height: isMobile ? 36 : 44,
+            borderRadius: '50%',
+            background: ctaHovered
+              ? `linear-gradient(135deg, ${theme.colors.accent.primary}, #4f46e5)`
+              : `rgba(99,102,241,0.14)`,
+            border: `1.5px solid ${ctaHovered
+              ? theme.colors.accent.primary
+              : 'rgba(99,102,241,0.35)'}`,
+            display: 'flex', alignItems: 'center', justifyContent: 'center',
+            transition: theme.transitions.normal, flexShrink: 0
+          }}>
+            <svg
+              width={isMobile ? 16 : 20}
+              height={isMobile ? 16 : 20}
+              viewBox="0 0 20 20" fill="none"
+            >
+              <line x1="10" y1="3" x2="10" y2="17"
+                stroke={ctaHovered ? '#fff' : theme.colors.accent.primary}
+                strokeWidth="2" strokeLinecap="round"/>
+              <line x1="3" y1="10" x2="17" y2="10"
+                stroke={ctaHovered ? '#fff' : theme.colors.accent.primary}
+                strokeWidth="2" strokeLinecap="round"/>
+            </svg>
           </div>
-        ) : (
-          /* ── Default: start creating ── */
-          <div
-            onClick={onCreateCharacter}
-            onMouseEnter={() => setCtaHovered(true)}
-            onMouseLeave={() => setCtaHovered(false)}
-            style={{
-              ...cardShell(),
-              cursor: 'pointer',
-              border: `1.5px solid ${ctaHovered
-                ? theme.colors.accent.primary
-                : 'rgba(99,102,241,0.45)'}`,
-              boxShadow: ctaHovered
-                ? `0 0 0 3px rgba(99,102,241,0.20), 0 14px 30px rgba(10,15,26,0.75)`
-                : `0 0 0 3px rgba(99,102,241,0.07), 0 4px 14px rgba(10,15,26,0.55)`,
-              background: ctaHovered
-                ? 'rgba(99,102,241,0.09)'
-                : theme.colors.background.surface,
-              transform: ctaHovered ? 'translateY(-5px) scale(1.025)' : 'none',
-              transition: theme.transitions.normal,
-              alignItems: 'center', justifyContent: 'center',
-              textAlign: 'center', gap: '0.65rem', flexDirection: 'column'
-            }}
-          >
-            {/* Plus icon — SVG */}
-            <div style={{
-              width: isMobile ? 36 : 44, height: isMobile ? 36 : 44,
-              borderRadius: '50%',
-              background: ctaHovered
-                ? `linear-gradient(135deg, ${theme.colors.accent.primary}, #4f46e5)`
-                : 'rgba(99,102,241,0.14)',
-              border: `1.5px solid ${ctaHovered
-                ? theme.colors.accent.primary
-                : 'rgba(99,102,241,0.35)'}`,
-              display: 'flex', alignItems: 'center', justifyContent: 'center',
-              transition: theme.transitions.normal, flexShrink: 0
-            }}>
-              <svg width={isMobile ? 16 : 20} height={isMobile ? 16 : 20} viewBox="0 0 20 20" fill="none">
-                <line x1="10" y1="3" x2="10" y2="17"
-                  stroke={ctaHovered ? '#fff' : theme.colors.accent.primary}
-                  strokeWidth="2" strokeLinecap="round"/>
-                <line x1="3" y1="10" x2="17" y2="10"
-                  stroke={ctaHovered ? '#fff' : theme.colors.accent.primary}
-                  strokeWidth="2" strokeLinecap="round"/>
-              </svg>
-            </div>
 
-            <div>
-              <p style={{
-                fontFamily: theme.typography.fonts.display,
-                fontSize: isMobile ? '0.72rem' : '0.78rem',
-                fontWeight: theme.typography.weights.bold,
-                color: ctaHovered ? theme.colors.text.primary : theme.colors.text.secondary,
-                margin: '0 0 0.2rem 0',
-                transition: theme.transitions.normal
-              }}>
-                Start Creating
-              </p>
-              <p style={{
-                fontFamily: theme.typography.fonts.body,
-                fontSize: isMobile ? '0.6rem' : '0.64rem',
-                color: theme.colors.text.secondary,
-                margin: 0
-              }}>
-                Click to begin
-              </p>
-            </div>
+          <div>
+            <p style={{
+              fontFamily: theme.typography.fonts.display,
+              fontSize: isMobile ? '0.72rem' : '0.78rem',
+              fontWeight: theme.typography.weights.bold,
+              color: ctaHovered ? theme.colors.text.primary : theme.colors.text.secondary,
+              margin: '0 0 0.2rem 0',
+              transition: theme.transitions.normal
+            }}>
+              Start Creating
+            </p>
+            <p style={{
+              fontFamily: theme.typography.fonts.body,
+              fontSize: isMobile ? '0.6rem' : '0.64rem',
+              color: theme.colors.text.secondary,
+              margin: 0
+            }}>
+              Click to begin
+            </p>
           </div>
-        )}
-      </DefensiveCharacterCreationWrapper>
+        </div>
 
       {/* ── Card 3: ghost — awaiting creation ─────────────── */}
       <div style={{
@@ -492,7 +421,6 @@ const CategoryRow = React.forwardRef(function CategoryRow(
   const isMyChars = category.key === 'my_characters';
   const chars     = category.characters || [];
   const stripRef  = useRef(null);
-  const [limitReached, setLimitReached] = useState(false);
 
   // ── Drag-to-scroll ──────────────────────────────────────────
   const drag = useRef({ on: false, startX: 0, sl: 0 });
@@ -554,77 +482,74 @@ const CategoryRow = React.forwardRef(function CategoryRow(
           {chars.length}
         </span>
 
-        {/* + New / Limit Reached — My Characters row header, has chars */}
+        {/* Create Character / Limit Reached — My Characters row, has chars */}
         {isMyChars && chars.length > 0 && (
-          limitReached ? (
-            /* Limit badge — inline in header */
-            <button
-              onClick={() => onShowUpgradeModal?.('character_limit')}
-              style={{
-                marginLeft: 'auto',
-                display: 'flex', alignItems: 'center', gap: '0.3rem',
-                background: 'rgba(255,165,0,0.08)',
-                border: '1px solid rgba(255,165,0,0.45)',
-                borderRadius: theme.borderRadius.sm,
-                color: '#FFA500',
-                fontSize: '0.68rem', fontWeight: 700,
-                fontFamily: theme.typography.fonts.body,
-                padding: '0.2rem 0.65rem',
-                cursor: 'pointer',
-                transition: theme.transitions.normal
-              }}
-              onMouseEnter={(e) => {
-                e.currentTarget.style.background = 'rgba(255,165,0,0.14)';
-                e.currentTarget.style.borderColor = '#FFA500';
-              }}
-              onMouseLeave={(e) => {
-                e.currentTarget.style.background = 'rgba(255,165,0,0.08)';
-                e.currentTarget.style.borderColor = 'rgba(255,165,0,0.45)';
-              }}
-            >
-              {/* Lock SVG */}
-              <svg width="10" height="10" viewBox="0 0 18 18" fill="none">
-                <rect x="3" y="8" width="12" height="9" rx="2"
-                  stroke="#FFA500" strokeWidth="1.8"/>
-                <path d="M6 8V5.5a3 3 0 016 0V8"
-                  stroke="#FFA500" strokeWidth="1.8" strokeLinecap="round"/>
-              </svg>
-              Limit reached · Upgrade ↗
-            </button>
-          ) : (
-            /* + New button */
-            <DefensiveCharacterCreationWrapper
-              user_id={user_id}
-              onUpgradePrompt={() => {
-                setLimitReached(true);
-                onShowUpgradeModal?.('character_limit');
-              }}
-            >
+          <DefensiveCharacterCreationWrapper
+            user_id={user_id}
+            onUpgradePrompt={() => onShowUpgradeModal?.('character_limit')}
+            renderBlocked={() => (
+              /* ── Limit reached — amber badge replaces button in-place ── */
               <button
-                onClick={onCreateCharacter}
+                onClick={() => onShowUpgradeModal?.('character_limit')}
                 style={{
                   marginLeft: 'auto',
-                  background: 'transparent',
-                  border: `1px solid ${theme.colors.accent.primary}50`,
+                  display: 'flex', alignItems: 'center', gap: '0.3rem',
+                  background: 'rgba(255,165,0,0.07)',
+                  border: '1px solid rgba(255,165,0,0.45)',
                   borderRadius: theme.borderRadius.sm,
-                  color: theme.colors.accent.primary,
-                  fontSize: '0.68rem', fontWeight: 600,
+                  color: '#FFA500',
+                  fontSize: '0.68rem', fontWeight: 700,
                   fontFamily: theme.typography.fonts.body,
                   padding: '0.2rem 0.65rem',
                   cursor: 'pointer',
-                  transition: theme.transitions.normal
+                  transition: theme.transitions.normal,
+                  whiteSpace: 'nowrap'
                 }}
                 onMouseEnter={(e) => {
-                  e.currentTarget.style.background = `${theme.colors.accent.primary}14`;
+                  e.currentTarget.style.background = 'rgba(255,165,0,0.14)';
+                  e.currentTarget.style.borderColor = '#FFA500';
                 }}
                 onMouseLeave={(e) => {
-                  e.currentTarget.style.background = 'transparent';
+                  e.currentTarget.style.background = 'rgba(255,165,0,0.07)';
+                  e.currentTarget.style.borderColor = 'rgba(255,165,0,0.45)';
                 }}
               >
-                + New
+                <svg width="10" height="10" viewBox="0 0 18 18" fill="none">
+                  <rect x="3" y="8" width="12" height="9" rx="2"
+                    stroke="#FFA500" strokeWidth="1.8"/>
+                  <path d="M6 8V5.5a3 3 0 016 0V8"
+                    stroke="#FFA500" strokeWidth="1.8" strokeLinecap="round"/>
+                </svg>
+                Limit reached · Upgrade ↗
               </button>
-            </DefensiveCharacterCreationWrapper>
-          )
+            )}
+          >
+            {/* ── Create Character button (shown when under limit) ── */}
+            <button
+              onClick={onCreateCharacter}
+              style={{
+                marginLeft: 'auto',
+                background: 'transparent',
+                border: `1px solid ${theme.colors.accent.primary}50`,
+                borderRadius: theme.borderRadius.sm,
+                color: theme.colors.accent.primary,
+                fontSize: '0.68rem', fontWeight: 600,
+                fontFamily: theme.typography.fonts.body,
+                padding: '0.2rem 0.65rem',
+                cursor: 'pointer',
+                transition: theme.transitions.normal,
+                whiteSpace: 'nowrap'
+              }}
+              onMouseEnter={(e) => {
+                e.currentTarget.style.background = `${theme.colors.accent.primary}14`;
+              }}
+              onMouseLeave={(e) => {
+                e.currentTarget.style.background = 'transparent';
+              }}
+            >
+              + Create Character
+            </button>
+          </DefensiveCharacterCreationWrapper>
         )}
       </div>
 
@@ -760,7 +685,6 @@ const NetflixRightPanel = ({
 }) => {
   const containerRef = useRef(null);
   const rowRefs      = useRef([]);
-  // null = at top (show only static title), object = scrolled (show category sub-label)
   const [activeCategory, setActiveCategory] = useState(null);
 
   // My Characters pinned first, rest in original order
