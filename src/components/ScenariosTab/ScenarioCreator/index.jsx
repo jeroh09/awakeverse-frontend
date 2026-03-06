@@ -1,334 +1,449 @@
 // src/components/ScenariosTab/ScenarioCreator/index.jsx
-import React, { useState, useEffect } from 'react';
+// Full-page split layout: category sidebar + character grid (left) | form (right)
+// position:fixed covers the screen — works from both ScenariosTab and TemplateDetailModal
+// onClose → returns to wherever the caller came from (no internal navigation needed)
+
+import React, { useState, useEffect, useMemo } from 'react';
 import { createScenario } from '../../../api';
-import CharacterSelector from './CharacterSelector';
-import QuestionEditor from './QuestionEditor';
+import { characterCategories } from '../../../data/characterCategories';
+import usePremiumCharacters from '../../../hooks/usePremiumCharacters';
 import { getDisplayNameFromKey } from '../../../utils/characterUtils';
-import './ScenarioCreator.css';
+import QuestionEditor from './QuestionEditor';
+import './ScenarioCreatorPage.css';
 
-export default function ScenarioCreator({ 
-  template, 
-  isOpen, 
-  onClose, 
+const API_BASE = process.env.REACT_APP_API_URL || 'https://api.awakeverse.com';
+
+// ─── Category label helper ────────────────────────────────────
+function getCategoryLabel(key) {
+  if (key === 'all') return 'All Characters';
+  if (key === 'my_characters') return '⭐ My Characters';
+  const cat = characterCategories.find(c => c.key === key);
+  return cat?.title || key.charAt(0).toUpperCase() + key.slice(1);
+}
+
+// ─── Character Avatar ─────────────────────────────────────────
+function CharAvatar({ char }) {
+  const [imgFailed, setImgFailed] = useState(false);
+  return (
+    <div className="scp-char-avatar">
+      {char.thumbnailUrl && !imgFailed ? (
+        <img
+          src={char.thumbnailUrl}
+          alt={char.name}
+          onError={() => setImgFailed(true)}
+        />
+      ) : (
+        <div className="scp-char-initial">
+          {char.name.charAt(0).toUpperCase()}
+        </div>
+      )}
+      {char.type === 'custom' && <span className="scp-custom-badge">⭐</span>}
+    </div>
+  );
+}
+
+// ─── Main Component ───────────────────────────────────────────
+export default function ScenarioCreator({
+  template            = null,
+  onClose,
   onSuccess,
-  currentScenarioCount = 0 
+  currentScenarioCount = 0,
+  // isOpen kept for backward compat — parent guards rendering so this is
+  // usually unnecessary, but we respect an explicit false
+  isOpen              = true,
 }) {
-  const [step, setStep] = useState(1); // 1: Characters, 2: Details, 3: Questions
-  const [loading, setLoading] = useState(false);
-  const [error, setError] = useState(null);
-
-  // Scenario data state
-  const [title, setTitle] = useState('');
-  const [description, setDescription] = useState('');
-  const [selectedCharacters, setSelectedCharacters] = useState([]);
-  const [starterQuestions, setStarterQuestions] = useState([]);
-  const [category, setCategory] = useState('');
-
-  // Initialize from template
+  // ── Mobile detection ──
+  const [isMobile, setIsMobile] = useState(false);
   useEffect(() => {
-    if (template && isOpen) {
+    const check = () => setIsMobile(window.innerWidth <= 768);
+    check();
+    window.addEventListener('resize', check);
+    return () => window.removeEventListener('resize', check);
+  }, []);
+
+  // ── Form state ──
+  const [title,             setTitle]             = useState('');
+  const [description,       setDescription]       = useState('');
+  const [scenarioCategory,  setScenarioCategory]  = useState('general');
+  const [selectedChars,     setSelectedChars]     = useState([]);
+  const [starterQuestions,  setStarterQuestions]  = useState([]);
+  const [loading,           setLoading]           = useState(false);
+  const [error,             setError]             = useState(null);
+
+  // ── Character browser state ──
+  const [searchQuery,    setSearchQuery]    = useState('');
+  const [activeCategory, setActiveCategory] = useState('all');
+
+  // ── Custom characters ──
+  const {
+    userCharacters = [],
+    loading: charsLoading,
+    fetchUserCharacters
+  } = usePremiumCharacters();
+
+  // Force fresh data on mount
+  useEffect(() => { fetchUserCharacters?.(); }, [fetchUserCharacters]);
+
+  // ── Initialise from template ──
+  useEffect(() => {
+    if (template) {
       setTitle(template.title || '');
       setDescription(template.description || '');
-      setCategory(template.category || 'general');
-      
-      // Initialize with template's suggested characters (or empty)
+      setScenarioCategory(template.category || 'general');
       const chars = template.suggested_characters || template.character_keys || [];
-      setSelectedCharacters(chars.slice(0, 4)); // Max 4
-      
-      // Initialize starter questions
-      const questions = template.starter_questions || [];
-      setStarterQuestions(questions.length > 0 ? [...questions] : [
-        'What are your thoughts on this topic?',
-        'How would you approach this situation?',
-        'What are the key considerations?'
-      ]);
+      setSelectedChars(chars.slice(0, 4));
+      const qs = template.starter_questions || [];
+      setStarterQuestions(qs.length > 0 ? [...qs] : []);
     }
-  }, [template, isOpen]);
+  }, [template]);
 
-  // Validation
-  const canProceedToStep2 = selectedCharacters.length >= 2 && selectedCharacters.length <= 4;
-  const canProceedToStep3 = title.trim().length > 0 && description.trim().length > 0;
-  const canSave = canProceedToStep2 && canProceedToStep3;
+  // ── Build combined character list ──
+  const allCharacters = useMemo(() => {
+    const chars = [];
+    const seen  = new Set();
 
-  // Check 5-scenario limit
-  const atScenarioLimit = currentScenarioCount >= 5;
-
-  // Handle character selection
-  const handleCharacterToggle = (characterKey) => {
-    setSelectedCharacters(prev => {
-      if (prev.includes(characterKey)) {
-        // Remove character
-        return prev.filter(key => key !== characterKey);
-      } else {
-        // Add character (if under limit)
-        if (prev.length < 4) {
-          return [...prev, characterKey];
+    // Static characters from categories
+    characterCategories.forEach(cat => {
+      if (cat.key === 'my_characters') return;
+      (cat.characters || []).forEach(char => {
+        if (!seen.has(char.key)) {
+          seen.add(char.key);
+          chars.push({
+            key:          char.key,
+            name:         char.name,
+            description:  char.description || char.tagline || '',
+            category:     cat.key,
+            categoryTitle:cat.title,
+            type:         'static',
+            thumbnailUrl: char.thumbnailUrl || `${API_BASE}/character_images/${char.key}.jpg`,
+          });
         }
-        return prev; // At max capacity
-      }
+      });
+    });
+
+    // Custom (approved) characters
+    if (!charsLoading && Array.isArray(userCharacters)) {
+      userCharacters
+        .filter(c => c?.character_key && c?.status === 'approved')
+        .forEach(char => {
+          if (!seen.has(char.character_key)) {
+            seen.add(char.character_key);
+            chars.push({
+              key:          char.character_key,
+              name:         char.display_name || getDisplayNameFromKey(char.character_key),
+              description:  char.short_description || 'Custom character',
+              category:     'my_characters',
+              categoryTitle:'My Characters',
+              type:         'custom',
+              thumbnailUrl: char.avatar_url || `/images/${char.character_key}.jpg`,
+            });
+          }
+        });
+    }
+
+    return chars;
+  }, [userCharacters, charsLoading]);
+
+  // ── Category list for sidebar ──
+  const categories = useMemo(() => {
+    const cats = [...new Set(allCharacters.map(c => c.category))].sort((a, b) => {
+      if (a === 'my_characters') return -1;
+      if (b === 'my_characters') return 1;
+      return a.localeCompare(b);
+    });
+    return ['all', ...cats];
+  }, [allCharacters]);
+
+  // ── Filtered characters for active category + search ──
+  const filteredCharacters = useMemo(() => {
+    let list = allCharacters;
+    if (activeCategory !== 'all') {
+      list = list.filter(c => c.category === activeCategory);
+    }
+    if (searchQuery.trim()) {
+      const q = searchQuery.toLowerCase();
+      list = list.filter(c =>
+        c.name.toLowerCase().includes(q) ||
+        c.description.toLowerCase().includes(q)
+      );
+    }
+    return list;
+  }, [allCharacters, activeCategory, searchQuery]);
+
+  // ── Character toggle ──
+  const toggleChar = (key) => {
+    setSelectedChars(prev => {
+      if (prev.includes(key)) return prev.filter(k => k !== key);
+      if (prev.length >= 4) return prev;
+      return [...prev, key];
     });
   };
 
-  // Handle save
+  // ── Validation ──
+  const canSave = (
+    selectedChars.length >= 2 &&
+    selectedChars.length <= 4 &&
+    title.trim().length > 0 &&
+    description.trim().length > 0
+  );
+  const atScenarioLimit = currentScenarioCount >= 5;
+
+  // ── Submit ──
   const handleSave = async () => {
     if (!canSave) {
-      setError('Please complete all required fields');
+      setError('Select 2–4 characters and complete the title and description.');
       return;
     }
-
     if (atScenarioLimit) {
-      setError('You have reached the maximum of 5 scenarios. Delete one to create a new scenario.');
+      setError('Maximum of 5 scenarios reached. Delete one to create a new scenario.');
       return;
     }
-
     try {
       setLoading(true);
       setError(null);
-
-      const scenarioData = {
-        title: title.trim(),
-        description: description.trim(),
-        category: category || 'general',
-        character_keys: selectedCharacters,
-        starter_questions: starterQuestions.filter(q => q.trim().length > 0),
-        scenario_type: 'debate', // Default type
-        max_simultaneous: Math.min(selectedCharacters.length, 4),
-        template_id: template?.id || null
-      };
-
-      console.log('🎭 Creating scenario:', scenarioData);
-
-      const result = await createScenario(scenarioData);
-
+      const result = await createScenario({
+        title:             title.trim(),
+        description:       description.trim(),
+        category:          scenarioCategory || 'general',
+        character_keys:    selectedChars,
+        starter_questions: starterQuestions.filter(q => q.trim()),
+        scenario_type:     'debate',
+        max_simultaneous:  Math.min(selectedChars.length, 4),
+        template_id:       template?.id || null,
+      });
       if (result.status === 'success') {
-        console.log('✅ Scenario created:', result.scenario);
         onSuccess(result.scenario);
-        handleClose();
+        onClose();
       } else {
         throw new Error(result.error || 'Failed to create scenario');
       }
     } catch (err) {
-      console.error('❌ Failed to create scenario:', err);
       setError(err.message || 'Failed to create scenario. Please try again.');
     } finally {
       setLoading(false);
     }
   };
 
-  // Handle close
-  const handleClose = () => {
-    setStep(1);
-    setError(null);
-    onClose();
-  };
-
-  // Navigation
-  const goToStep = (newStep) => {
-    setError(null);
-    setStep(newStep);
-  };
-
-  if (!isOpen) return null;
+  // ── Backward compat: respect explicit isOpen=false ──
+  if (isOpen === false) return null;
 
   return (
-    <div className="scenario-creator-overlay" onClick={handleClose}>
-      <div className="scenario-creator-modal" onClick={(e) => e.stopPropagation()}>
-        {/* Header */}
-        <div className="creator-header">
-          <div className="creator-title-section">
-            <h2>Create Scenario</h2>
-            {template && (
-              <span className="template-badge">
-                From template: {template.title}
-              </span>
-            )}
-          </div>
-          <button className="close-button" onClick={handleClose}>×</button>
-        </div>
+    <div className="scp-root">
 
-        {/* Progress Steps */}
-        <div className="creator-steps">
-          <div className={`step ${step >= 1 ? 'active' : ''} ${step > 1 ? 'completed' : ''}`}>
-            <div className="step-number">1</div>
-            <div className="step-label">Characters ({selectedCharacters.length}/4)</div>
-          </div>
-          <div className={`step ${step >= 2 ? 'active' : ''} ${step > 2 ? 'completed' : ''}`}>
-            <div className="step-number">2</div>
-            <div className="step-label">Details</div>
-          </div>
-          <div className={`step ${step >= 3 ? 'active' : ''}`}>
-            <div className="step-number">3</div>
-            <div className="step-label">Questions (optional)</div>
-          </div>
-        </div>
+      {/* ══ Header ══ */}
+      <div className="scp-header">
+        <button className="scp-back" onClick={onClose} disabled={loading}>
+          ← Back to Scenarios
+        </button>
 
-        {/* Error Display */}
-        {error && (
-          <div className="creator-error">
-            <span className="error-icon">⚠️</span>
-            {error}
-          </div>
-        )}
-
-        {/* Scenario Limit Warning */}
-        {atScenarioLimit && (
-          <div className="creator-warning">
-            <span className="warning-icon">🚫</span>
-            Maximum of 5 scenarios reached. Delete a scenario to create a new one.
-          </div>
-        )}
-
-        {/* Content Area */}
-        <div className="creator-content">
-          {/* Step 1: Character Selection */}
-          {step === 1 && (
-            <div className="creator-step-content">
-              <h3>Select Characters (2-4)</h3>
-              <p className="step-description">
-                Choose between 2 and 4 characters to participate in this debate scenario.
-              </p>
-              
-              <CharacterSelector
-                selectedCharacters={selectedCharacters}
-                onCharacterToggle={handleCharacterToggle}
-                maxCharacters={4}
-              />
-
-              <div className="selected-preview">
-                <h4>Selected Characters:</h4>
-                {selectedCharacters.length === 0 ? (
-                  <p className="empty-state">No characters selected yet</p>
-                ) : (
-                  <div className="selected-list">
-                    {selectedCharacters.map(char => (
-                      <div key={char} className="selected-character-chip">
-                        <span>{getDisplayNameFromKey(char)}</span>
-                        <button 
-                          onClick={() => handleCharacterToggle(char)}
-                          className="remove-chip"
-                        >
-                          ×
-                        </button>
-                      </div>
-                    ))}
-                  </div>
-                )}
-              </div>
-            </div>
-          )}
-
-          {/* Step 2: Details */}
-          {step === 2 && (
-            <div className="creator-step-content">
-              <h3>Scenario Details</h3>
-              <p className="step-description">
-                Give your scenario a title and description.
-              </p>
-
-              <div className="form-group">
-                <label htmlFor="scenario-title">Title *</label>
-                <input
-                  id="scenario-title"
-                  type="text"
-                  value={title}
-                  onChange={(e) => setTitle(e.target.value)}
-                  placeholder="e.g., The Future of AI Ethics"
-                  maxLength={100}
-                  className="form-input"
-                />
-                <div className="char-count">{title.length}/100</div>
-              </div>
-
-              <div className="form-group">
-                <label htmlFor="scenario-description">Description *</label>
-                <textarea
-                  id="scenario-description"
-                  value={description}
-                  onChange={(e) => setDescription(e.target.value)}
-                  placeholder="Describe what this scenario is about..."
-                  maxLength={500}
-                  rows={4}
-                  className="form-textarea"
-                />
-                <div className="char-count">{description.length}/500</div>
-              </div>
-
-              <div className="form-group">
-                <label htmlFor="scenario-category">Category</label>
-                <select
-                  id="scenario-category"
-                  value={category}
-                  onChange={(e) => setCategory(e.target.value)}
-                  className="form-select"
-                >
-                  <option value="philosophy">Philosophy</option>
-                  <option value="technology">Technology</option>
-                  <option value="business">Business</option>
-                  <option value="ethics">Ethics</option>
-                  <option value="fiction">Fiction</option>
-                  <option value="relationships">Relationships</option>
-                  <option value="science">Science</option>
-                  <option value="warfare">Warfare</option>
-                  <option value="general">General</option>
-                </select>
-              </div>
-            </div>
-          )}
-
-          {/* Step 3: Starter Questions */}
-          {step === 3 && (
-            <div className="creator-step-content">
-              <h3>Starter Questions</h3>
-              <p className="step-description">
-                Add questions that users can ask to start the debate or Skip.
-              </p>
-
-              <QuestionEditor
-                questions={starterQuestions}
-                onChange={setStarterQuestions}
-              />
-            </div>
+        <div className="scp-header-center">
+          <h1 className="scp-title">Create Scenario</h1>
+          {template && (
+            <span className="scp-template-badge">From: {template.title}</span>
           )}
         </div>
 
-        {/* Footer Actions */}
-        <div className="creator-footer">
-          <div className="footer-left">
-            {step > 1 && (
-              <button
-                onClick={() => goToStep(step - 1)}
-                className="nav-button secondary"
-                disabled={loading}
-              >
-                ← Back
-              </button>
-            )}
-          </div>
-
-          <div className="footer-right">
-            {step < 3 ? (
-              <button
-                onClick={() => goToStep(step + 1)}
-                className="nav-button primary"
-                disabled={
-                  (step === 1 && !canProceedToStep2) ||
-                  (step === 2 && !canProceedToStep3)
-                }
-              >
-                Next →
-              </button>
-            ) : (
-              <button
-                onClick={handleSave}
-                className="save-button"
-                disabled={!canSave || loading || atScenarioLimit}
-              >
-                {loading ? 'Creating...' : 'Create Scenario'}
-              </button>
-            )}
-          </div>
+        <div className="scp-header-right">
+          <span className="scp-selection-count">
+            {selectedChars.length}/4 selected
+          </span>
         </div>
       </div>
+
+      {/* ══ Body ══ */}
+      <div className="scp-body">
+
+        {/* ── LEFT PANEL: category sidebar + character grid ── */}
+        <div className="scp-left">
+
+          {/* Category sidebar */}
+          <div className="scp-categories">
+            {categories.map(cat => (
+              <button
+                key={cat}
+                className={`scp-cat-tab${activeCategory === cat ? ' active' : ''}`}
+                onClick={() => { setActiveCategory(cat); setSearchQuery(''); }}
+              >
+                {getCategoryLabel(cat)}
+              </button>
+            ))}
+          </div>
+
+          {/* Search + scrollable character grid */}
+          <div className="scp-char-panel">
+            <div className="scp-search-wrap">
+              <input
+                className="scp-search"
+                placeholder="Search characters…"
+                value={searchQuery}
+                onChange={e => setSearchQuery(e.target.value)}
+              />
+            </div>
+
+            <div className="scp-char-grid">
+              {charsLoading && allCharacters.length === 0 ? (
+                <div className="scp-state-msg">Loading characters…</div>
+              ) : filteredCharacters.length === 0 ? (
+                <div className="scp-state-msg">
+                  No characters found.
+                  {searchQuery && (
+                    <><br /><button
+                      style={{ marginTop: '0.5rem', background: 'none', border: 'none',
+                               color: '#6366F1', cursor: 'pointer', fontSize: '0.8rem' }}
+                      onClick={() => setSearchQuery('')}
+                    >Clear search</button></>
+                  )}
+                </div>
+              ) : (
+                filteredCharacters.map(char => {
+                  const selected = selectedChars.includes(char.key);
+                  const disabled = !selected && selectedChars.length >= 4;
+                  return (
+                    <div
+                      key={char.key}
+                      className={`scp-char-card${selected ? ' selected' : ''}${disabled ? ' disabled' : ''}`}
+                      onClick={() => !disabled && toggleChar(char.key)}
+                      title={char.name}
+                    >
+                      <CharAvatar char={char} />
+
+                      <div className="scp-char-info">
+                        <div className="scp-char-name">{char.name}</div>
+                        <div className="scp-char-desc">{char.description}</div>
+                      </div>
+
+                      {selected && <div className="scp-check">✓</div>}
+                    </div>
+                  );
+                })
+              )}
+            </div>
+          </div>
+        </div>
+
+        {/* ── RIGHT PANEL: form ── */}
+        <div className="scp-right">
+
+          {/* Banners */}
+          {error && <div className="scp-error">⚠️ {error}</div>}
+          {atScenarioLimit && !error && (
+            <div className="scp-warning">
+              🚫 Maximum of 5 scenarios reached. Delete one to create a new scenario.
+            </div>
+          )}
+
+          {/* Selected characters */}
+          <div className="scp-section">
+            <label className="scp-label">
+              Characters
+              <span className="scp-req"> *</span>
+              <span className="scp-optional">(2–4 required · {selectedChars.length}/4)</span>
+            </label>
+            <div className="scp-chips">
+              {selectedChars.length === 0 ? (
+                <span className="scp-no-selection">
+                  ← Choose characters from the left panel
+                </span>
+              ) : (
+                selectedChars.map(key => {
+                  const char = allCharacters.find(c => c.key === key);
+                  return (
+                    <div key={key} className="scp-chip">
+                      <span>{char?.name || getDisplayNameFromKey(key)}</span>
+                      <button
+                        className="scp-chip-remove"
+                        onClick={() => toggleChar(key)}
+                        aria-label={`Remove ${char?.name || key}`}
+                      >×</button>
+                    </div>
+                  );
+                })
+              )}
+            </div>
+            {selectedChars.length === 1 && (
+              <p className="scp-hint">Add at least one more character</p>
+            )}
+          </div>
+
+          {/* Title */}
+          <div className="scp-section">
+            <label className="scp-label" htmlFor="scp-title">
+              Title<span className="scp-req">*</span>
+            </label>
+            <input
+              id="scp-title"
+              className="scp-input"
+              value={title}
+              onChange={e => setTitle(e.target.value)}
+              placeholder="e.g., The Future of AI Ethics"
+              maxLength={100}
+            />
+            <div className="scp-char-count">{title.length}/100</div>
+          </div>
+
+          {/* Description */}
+          <div className="scp-section">
+            <label className="scp-label" htmlFor="scp-desc">
+              Description<span className="scp-req">*</span>
+            </label>
+            <textarea
+              id="scp-desc"
+              className="scp-textarea"
+              value={description}
+              onChange={e => setDescription(e.target.value)}
+              placeholder="What is this scenario about? Set the stage for the debate."
+              maxLength={500}
+              rows={isMobile ? 3 : 4}
+            />
+            <div className="scp-char-count">{description.length}/500</div>
+          </div>
+
+          {/* Category */}
+          <div className="scp-section">
+            <label className="scp-label" htmlFor="scp-cat">Category</label>
+            <select
+              id="scp-cat"
+              className="scp-select"
+              value={scenarioCategory}
+              onChange={e => setScenarioCategory(e.target.value)}
+            >
+              <option value="philosophy">Philosophy</option>
+              <option value="technology">Technology</option>
+              <option value="business">Business</option>
+              <option value="ethics">Ethics</option>
+              <option value="fiction">Fiction</option>
+              <option value="relationships">Relationships</option>
+              <option value="science">Science</option>
+              <option value="warfare">Warfare</option>
+              <option value="general">General</option>
+            </select>
+          </div>
+
+          {/* Starter questions */}
+          <div className="scp-section">
+            <label className="scp-label">
+              Starter Questions
+              <span className="scp-optional">(optional)</span>
+            </label>
+            <QuestionEditor
+              questions={starterQuestions}
+              onChange={setStarterQuestions}
+            />
+          </div>
+
+          {/* Save */}
+          <div className="scp-save-row">
+            <button
+              className="scp-save-btn"
+              onClick={handleSave}
+              disabled={!canSave || loading || atScenarioLimit}
+            >
+              {loading ? 'Creating…' : 'Create Scenario ▶'}
+            </button>
+          </div>
+
+        </div>{/* /scp-right */}
+      </div>{/* /scp-body */}
     </div>
   );
 }

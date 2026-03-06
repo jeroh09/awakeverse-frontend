@@ -246,6 +246,18 @@ export default function ScenariosTab({
     );
   }
 
+  // BLANK CREATOR — full-page takeover (same pattern as chat window above)
+  if (showBlankCreator) {
+    return (
+      <ScenarioCreator
+        template={null}
+        onClose={handleBlankCreatorClose}
+        onSuccess={handleBlankCreatorSuccess}
+        currentScenarioCount={myScenarios.length}
+      />
+    );
+  }
+
   // MAIN CONTENT - User has unlimited access OR is using Market Hub scenario
   return (
     <div className={`scenarios-tab-container ${currentTheme === 'awakeverse' ? 'theme-awakeverse' : ''}`}>
@@ -290,16 +302,6 @@ export default function ScenariosTab({
         </div>
       </div>
 
-      {/* Blank Scenario Creator — unchanged */}
-      {showBlankCreator && (
-        <ScenarioCreator
-          template={null}
-          isOpen={showBlankCreator}
-          onClose={handleBlankCreatorClose}
-          onSuccess={handleBlankCreatorSuccess}
-          currentScenarioCount={myScenarios.length}
-        />
-      )}
     </div>
   );
 }
