@@ -454,13 +454,17 @@ const ChatLauncherPage = ({ onStartChat, discoveredCharacters = [] }) => {
     if (myCharactersIndex !== -1) {
       baseCategories[myCharactersIndex] = {
         ...baseCategories[myCharactersIndex],
+        // CHANGE TO:
         characters: userCharacters.map(char => ({
           key: char.character_key,
+          id: char.id,                                    // ← ADD
           name: char.display_name,
           description: char.short_description,
           thumbnailUrl: char.avatar_url || char.thumbnailUrl || null,
           status: char.status,
-          rejection_reason: char.rejection_reason
+          rejection_reason: char.rejection_reason,
+          is_market_featured: char.is_market_featured || false,  // ← ADD
+          market_published_at: char.market_published_at || null  // ← ADD
         })),
         characterCount: userCharacters.length,
         pendingCount: userCharacters.filter(c => c.status === 'pending').length,
@@ -659,12 +663,12 @@ const ChatLauncherPage = ({ onStartChat, discoveredCharacters = [] }) => {
   }, []);
 
   // Add this new handler
-  const handleCharacterPublishToggle = useCallback((updatedCharacter) => {  
-  // Update the character in userCharacters array
-    setUserCharacters(prevChars => 
-      prevChars.map(char => 
-        char.id === updatedCharacter.id
-          ? { ...char, is_market_featured: updatedCharacter.is_market_featured }
+  // CHANGE TO:
+  const handleCharacterPublishToggle = useCallback((updatedCharacter) => {
+    setUserCharacters(prevChars =>
+      prevChars.map(char =>
+        (char.id === updatedCharacter.id || char.character_key === updatedCharacter.character_key)
+          ? { ...char, is_market_featured: updatedCharacter.is_market_featured, market_published_at: updatedCharacter.market_published_at }
           : char
       )
     );
