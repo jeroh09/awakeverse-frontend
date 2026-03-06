@@ -259,9 +259,7 @@ function MyCharactersEmpty({ onCreateCharacter, user_id, onShowUpgradeModal, isM
           lineHeight: 1.6, margin: 0,
           maxWidth: isMobile ? '280px' : '340px'
         }}>
-          Design a custom AI character with unique personality, expertise,
-          and backstory. From historical figures to original creations —
-          bring your vision to life.
+          Design a custom AI character with unique personality & expertise,
         </p>
       </div>
 
