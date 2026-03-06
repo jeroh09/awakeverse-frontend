@@ -511,7 +511,7 @@ const ChatLauncherPage = ({ onStartChat, discoveredCharacters = [] }) => {
     }
     
     return baseCategories;
-  }, [userCharacters.length, discoveredCharacters.length]);
+  }, [userCharacters, discoveredCharacters]);
 
   // NEW: Enhanced search to include discovered characters
   const performSemanticSearch = useMemo(() => {
