@@ -16,6 +16,8 @@ import { useAppView, VIEW_STATES } from '../contexts/AppViewContext';
 import PremiumCharacterCard from '../components/PremiumCharacterCard';
 import theme from '../design-system/tokens';
 import ScrollShell from '../components/ScrollShell';
+import NetflixRightPanel from '../components/NetflixRightPanel';
+
 
 
 
@@ -1574,237 +1576,20 @@ const ChatLauncherPage = ({ onStartChat, discoveredCharacters = [] }) => {
       </div>
 
       {/* RIGHT HALF - Categories/Characters */}
-      <div style={{ width: '50%', height: '100%', position: 'relative', perspective: '1000px' }}>
-
-        {/* Categories Grid */}
-        <div 
-          className="categories-grid-container"
-          style={{
-            position: 'absolute',
-            width: '100%',
-            height: '100%',
-            zIndex: 3,
-            padding: '2rem',
-            display: 'grid',
-            gridTemplateColumns: 'repeat(3, 1fr)',
-            gridTemplateRows: 'repeat(4, 1fr)',
-            gap: '1rem',
-            alignContent: 'start',
-            justifyContent: 'center',
-            transform: selectedCategory ? 'rotateY(-90deg)' : 'rotateY(0deg)',
-            transition: 'transform 0.6s ease-in-out',
-            transformStyle: 'preserve-3d',
-            backfaceVisibility: 'hidden',
-            overflowY: 'auto',
-            overflowX: 'hidden',
-            maxHeight: '100%',
-            paddingRight: '2.5rem'
-          }}
-        >
-          {/* ADD THIS SECTION HERE - BEFORE the category grid */}
-          <div style={{
-            marginBottom: '24px',
-            padding: '0 16px' // Optional padding for alignment
-          }}>
-            <h2 style={{
-              fontFamily: theme.typography.fonts.display,
-              fontSize: theme.typography.sizes.h2,
-              fontWeight: theme.typography.weights.bold,
-              color: theme.colors.text.primary,
-              marginBottom: theme.spacing.sm,
-              letterSpacing: '-0.5px'
-            }}>
-              Explore by Category
-            </h2>
-            <p style={{
-              fontFamily: theme.typography.fonts.body,
-              fontSize: theme.typography.sizes.bodySmall,
-              color: theme.colors.text.secondary
-            }}>
-              Discover characters across different domains of knowledge
-            </p>
-          </div>
-          {enhancedCategories.map((category, index) => (
-            <CategoryCard
-              key={category.key}
-              category={category}
-              onClick={() => handleCategorySelect(category)}
-              index={index}
-              isMobile={false}
-              onCreateCharacter={handleCreateCharacterClick}
-            />
-          ))}
-        </div>
-
-        {/* Characters Panel */}
-        <div style={{
-          position: 'absolute',
-          width: '100%',
-          height: '100%',
-          padding: '2rem',
-          transform: selectedCategory ? 'rotateY(0deg)' : 'rotateY(90deg)',
-          transition: 'transform 0.6s ease-in-out',
-          transformStyle: 'preserve-3d',
-          backfaceVisibility: 'hidden',
-          overflowY: 'auto'
-        }} className="character-panel">
-          {selectedCategory && (
-            <>
-              {/* Header */}
-              <div style={{
-                display: 'flex',
-                justifyContent: 'space-between',
-                alignItems: 'center',
-                marginBottom: '2rem',
-                paddingBottom: '1rem',
-                borderBottom: `1px solid ${theme.colors.border.medium}`
-              }}>
-                <h2 style={{
-                  color: theme.colors.text.primary,
-                  fontSize: '2rem',
-                  fontFamily: theme.typography.fonts.display,
-                  margin: 0,
-                  fontWeight: theme.typography.weights.bold,
-                  letterSpacing: '-0.5px',
-                  display: 'flex',
-                  alignItems: 'center',
-                  gap: '0.75rem'
-                }}>
-                  {selectedCategory.icon && (
-                    <span style={{ 
-                      fontSize: '1.8rem',
-                      filter: 'drop-shadow(0 2px 4px rgba(0, 0, 0, 0.3))'
-                    }}>
-                      {selectedCategory.icon}
-                    </span>
-                  )}
-                  {selectedCategory.title}
-                </h2>
-                
-                <button
-                  onClick={handleBackToCategories}
-                  style={{
-                    background: theme.colors.background.interactive,
-                    border: `1px solid ${theme.colors.border.strong}`,
-                    borderRadius: theme.borderRadius.md,
-                    color: theme.colors.text.primary,
-                    fontSize: theme.typography.sizes.bodySmall,
-                    fontWeight: theme.typography.weights.semibold,
-                    fontFamily: theme.typography.fonts.body,
-                    padding: '0.6rem 1.2rem',
-                    cursor: 'pointer',
-                    transition: theme.transitions.normal,
-                    display: 'flex',
-                    alignItems: 'center',
-                    gap: '0.5rem',
-                    boxShadow: theme.shadows.elevation01
-                  }}
-                  onMouseEnter={(e) => {
-                    e.currentTarget.style.background = theme.colors.background.peak;
-                    e.currentTarget.style.borderColor = theme.colors.accent.primary;
-                    e.currentTarget.style.boxShadow = theme.shadows.elevation02;
-                    e.currentTarget.style.transform = 'translateY(-2px)';
-                  }}
-                  onMouseLeave={(e) => {
-                    e.currentTarget.style.background = theme.colors.background.interactive;
-                    e.currentTarget.style.borderColor = theme.colors.border.strong;
-                    e.currentTarget.style.boxShadow = theme.shadows.elevation01;
-                    e.currentTarget.style.transform = 'translateY(0)';
-                  }}
-                >
-                  <span style={{ fontSize: '1.2rem' }}>←</span>
-                  <span>Back</span>
-                </button>
-              </div>
-              {/* Desktop Content Area */}
-              {selectedCategory.key === 'my_characters' ? (
-                <MyCharactersPanel 
-                  userCharacters={userCharacters}
-                  charactersLoading={charactersLoading}
-                  charactersError={charactersError}
-                  onCreateCharacter={handleCreateCharacterClick}
-                  onCharacterSelect={handleCharacterSelect}
-                  onCharacterPublishToggle={handleCharacterPublishToggle}  // ← ADD THIS
-                  isMobile={false}
-                  user_id={user?.id}
-                  onShowUpgradeModal={handleShowUpgradeModal}
-                />
-                ) : selectedCategory.key === 'discovered' ? (
-                  /* Special handling for discovered characters */
-                  <div>
-                    {selectedCategory.description && (
-                      <p style={{
-                        color: theme.colors.text.secondary,
-                        fontSize: theme.typography.sizes.body,
-                        fontFamily: theme.typography.fonts.body,
-                        marginBottom: theme.spacing.xl,
-                        textAlign: 'center',
-                        fontStyle: 'italic',
-                        lineHeight: 1.6
-                      }}>
-                        {selectedCategory.description}
-                      </p>
-                    )}
-                    <ScrollShell>
-                      <div style={{
-                        display: 'grid',
-                        gridTemplateColumns: 'repeat(auto-fill, minmax(220px, 1fr))',
-                        gap: '24px',
-                        padding: '1rem',
-                        paddingRight: '1.5rem'
-                      }}>
-                        {selectedCategory.characters.map((character, index) => (
-                          <div key={character.key} style={{ position: 'relative' }}>
-                            <PremiumCharacterCard
-                              character={character}
-                              onClick={() => handleCharacterSelect(character)}
-                              isMobile={false}
-                              showBadge={true}
-                            />
-                          </div>
-                        ))}
-                      </div>
-                    </ScrollShell>
-                    {selectedCategory.characters.length === 0 && (
-                      <div style={{
-                        textAlign: 'center',
-                        padding: '2rem',
-                        color: 'rgba(255, 215, 0, 0.7)'
-                      }}>
-                        <h3 style={{ margin: '0 0 1rem 0', fontSize: '1.2rem' }}>
-                          No characters discovered yet
-                        </h3>
-                        <p style={{ margin: 0, fontSize: '1rem' }}>
-                          Explore the Market Hub to find interesting characters and add them to this collection!
-                        </p>
-                      </div>
-                    )}
-                  </div>
-                ) : (
-                // REPLACE WITH:
-                <ScrollShell>
-                  <div style={{
-                    display: 'grid',
-                    gridTemplateColumns: 'repeat(auto-fill, minmax(220px, 1fr))',
-                    gap: '24px',
-                    padding: '1rem',
-                    paddingRight: '1.5rem'
-                  }}>
-                    {selectedCategory.characters.map((character, index) => (
-                      <PremiumCharacterCard
-                        key={character.key}
-                        character={character}
-                        onClick={() => handleCharacterSelect(character)}
-                        isMobile={false}
-                        showBadge={true}
-                      />
-                    ))}
-                  </div>
-                </ScrollShell>
-              )}
-            </>
-          )}
-        </div>
+      {/* RIGHT HALF - Netflix-style rows */}
+      <div style={{ width: '50%', height: '100%', overflow: 'hidden' }}>
+        <NetflixRightPanel
+          categories={enhancedCategories}
+          onCharacterSelect={handleCharacterSelect}
+          onCreateCharacter={handleCreateCharacterClick}
+          selectedChar={selectedChar}
+          userCharacters={userCharacters}
+          charactersLoading={charactersLoading}
+          charactersError={charactersError}
+          onCharacterPublishToggle={handleCharacterPublishToggle}
+          user_id={user?.id}
+          onShowUpgradeModal={handleShowUpgradeModal}
+        />
       </div>
 
       {/* Character Detail Modal (Desktop) */}
