@@ -44,7 +44,7 @@ const SCRATCH_TEMPLATE = {
   expertise_domain: null
 };
 
-const VISIBLE_COUNT = 5; // How many templates to show before "Show more"
+const VISIBLE_COUNT = 7; // How many templates to show before "Show more"
 
 // ─── Style helpers ────────────────────────────────────────────
 const S = {
@@ -200,11 +200,32 @@ function TemplateCard({ template, selected, onSelect }) {
         ) : null}
       </div>
 
-      <h3 style={S.cardTitle}>{template.name}</h3>
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
+        <h3 style={{ ...S.cardTitle, flex: 1 }}>{template.name}</h3>
+        {!isScratch && template.usage_count !== undefined && (
+          <span style={{
+            background: 'rgba(0,255,136,0.1)', border: '1px solid rgba(0,255,136,0.3)',
+            borderRadius: '6px', color: 'rgba(0,255,136,0.9)',
+            fontSize: '0.65rem', fontWeight: 700, padding: '0.2rem 0.45rem',
+            whiteSpace: 'nowrap', flexShrink: 0, marginLeft: '0.5rem'
+          }}>
+            {template.usage_count} uses
+          </span>
+        )}
+      </div>
       <p style={S.cardDesc}>{template.description}</p>
 
       {!isScratch && template.expertise_domain && (
-        <span style={S.expertise}>⚡ {template.expertise_domain}</span>
+        <span style={{ ...S.expertise, display: 'flex', alignItems: 'center', gap: '0.35rem' }}>
+          {/* Diamond-dot domain mark — no external icon dependency */}
+          <svg width='10' height='10' viewBox='0 0 10 10' fill='none'>
+            <rect x='5' y='0.5' width='6.36' height='6.36'
+              rx='0.8' transform='rotate(45 5 0.5)'
+              fill='rgba(99,102,241,0.25)' stroke='#6366F1' strokeWidth='1'/>
+            <circle cx='5' cy='5' r='1.2' fill='#818CF8'/>
+          </svg>
+          {template.expertise_domain}
+        </span>
       )}
 
       {!isScratch && template.usage_count !== undefined && (
