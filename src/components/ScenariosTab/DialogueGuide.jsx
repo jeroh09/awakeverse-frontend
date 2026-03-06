@@ -190,7 +190,7 @@ export default function DialogueGuide({ isOpen, onClose, currentTheme = 'awakeve
           </button>
         </div>
 
-        {/* ── Progress dots ───────────────────────────────────── */}
+        {/* ── Progress dots — desktop ──────────────────────────── */}
         <div className="dg-dots">
           {Array.from({ length: TOTAL }).map((_, i) => (
             <button
@@ -204,6 +204,11 @@ export default function DialogueGuide({ isOpen, onClose, currentTheme = 'awakeve
               aria-label={`Go to step ${i + 1}`}
             />
           ))}
+        </div>
+
+        {/* ── Step counter — mobile only ────────────────────────── */}
+        <div className="dg-dots-mobile">
+          Step {step + 1} of {TOTAL}
         </div>
 
         {/* ── Image ───────────────────────────────────────────── */}

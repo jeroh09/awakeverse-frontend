@@ -1,6 +1,7 @@
-// src/components/CharacterBuilder.jsx - Updated with new design system
+// src/components/CharacterBuilder.jsx
+// Single scrollable form — no steps, placeholder-based inputs, visual_description field
+
 import React, { useState, useEffect } from 'react';
-import { useAuth } from '../contexts/AuthContext';
 import { useUser } from '../contexts/UserContext';
 
 const API_BASE = process.env.REACT_APP_API_URL || 'http://localhost:5000';
@@ -11,1203 +12,563 @@ const getCookie = (name) => {
   if (parts.length === 2) return parts.pop().split(';').shift();
 };
 
+// ─── Shared input styles ──────────────────────────────────────
+const inputStyle = (hasError, disabled) => ({
+  width: '100%',
+  padding: '0.6rem 0.75rem',
+  fontSize: '0.85rem',
+  border: `1px solid ${hasError ? '#f87171' : 'rgba(99,102,241,0.3)'}`,
+  borderRadius: '8px',
+  background: 'rgba(28,38,64,0.8)',
+  color: '#F1F5F9',
+  outline: 'none',
+  fontFamily: "'Inter', system-ui, sans-serif",
+  transition: 'border-color 0.2s ease',
+  resize: 'vertical',
+  lineHeight: 1.5,
+  opacity: disabled ? 0.5 : 1,
+  boxSizing: 'border-box'
+});
 
+const labelStyle = {
+  display: 'block', color: '#94A3B8',
+  fontSize: '0.72rem', fontWeight: 600,
+  letterSpacing: '0.08em', textTransform: 'uppercase',
+  marginBottom: '0.35rem'
+};
+
+const hintStyle = {
+  color: 'rgba(148,163,184,0.6)', fontSize: '0.72rem',
+  margin: '0.25rem 0 0 0', lineHeight: 1.4
+};
+
+const sectionDivider = (label) => (
+  <div style={{
+    display: 'flex', alignItems: 'center', gap: '0.75rem',
+    margin: '1.5rem 0 1rem'
+  }}>
+    <div style={{ flex: 1, height: '1px', background: 'rgba(99,102,241,0.15)' }} />
+    <span style={{
+      color: '#6366F1', fontSize: '0.68rem', fontWeight: 700,
+      letterSpacing: '0.12em', textTransform: 'uppercase', flexShrink: 0
+    }}>
+      {label}
+    </span>
+    <div style={{ flex: 1, height: '1px', background: 'rgba(99,102,241,0.15)' }} />
+  </div>
+);
+
+// ─── Field wrapper ────────────────────────────────────────────
+function Field({ label, required, hint, error, char, maxChar, children }) {
+  return (
+    <div style={{ marginBottom: '1rem' }}>
+      <label style={labelStyle}>
+        {label}{required && <span style={{ color: '#f87171', marginLeft: '3px' }}>*</span>}
+      </label>
+      {children}
+      <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: '0.2rem' }}>
+        {error
+          ? <p style={{ color: '#f87171', fontSize: '0.72rem', margin: 0 }}>{error}</p>
+          : hint
+            ? <p style={hintStyle}>{hint}</p>
+            : <span />
+        }
+        {maxChar !== undefined && (
+          <span style={{ ...hintStyle, margin: 0, flexShrink: 0 }}>
+            {char}/{maxChar}
+          </span>
+        )}
+      </div>
+    </div>
+  );
+}
+
+// ─── Main component ───────────────────────────────────────────
 const CharacterBuilder = ({ template, onClose, onSuccess }) => {
-  const { user } = useUser();
-  const [isMobile, setIsMobile] = useState(false);
+  const { user }     = useUser();
+  const isScratch    = !template?.id || template.id === -1;
   const [showInfo, setShowInfo] = useState(false);
+  const [isMobile, setIsMobile] = useState(false);
 
+  useEffect(() => {
+    const check = () => setIsMobile(window.innerWidth <= 768);
+    check();
+    window.addEventListener('resize', check);
+    return () => window.removeEventListener('resize', check);
+  }, []);
 
-    // Helper: Read template fields from both flat (quiz) and nested (old) structures
-  const getTemplateField = (template, flatKey, nestedPath) => {
-    if (!template) return null;
-
-    // Try flat structure first (quiz templates)
-    if (template[flatKey] !== undefined) {
-      return template[flatKey];
-    }
-
-    // Fall back to nested structure (old templates)
-    if (template.template_data && nestedPath) {
-      return template.template_data[nestedPath];
-    }
-
-    return null;
-  };
-  
-
+  // ── Form state ──────────────────────────────────────────────
+  // Template pre-fills display_name only. All other fields are placeholder-driven.
   const [formData, setFormData] = useState({
-    // ✅ Support BOTH flat (quiz) and nested (old) template structures
-    display_name: template?.name || '',  // Quiz templates have .name
-    short_description: template?.description || '',  // Quiz templates have .description
-    system_instruction: template?.system_instruction || template?.template_data?.system_instruction_template || '',
-    behavior_goals: template?.behavior_goals || template?.template_data?.suggested_behavior_goals || [],
-    style_tone: template?.style_tone || template?.template_data?.suggested_style_tone || [],
-    constraints: template?.constraints || template?.template_data?.suggested_constraints || '',
-    keyword_triggers: template?.keyword_triggers || template?.template_data?.sample_triggers || []
+    display_name:      isScratch ? '' : (template?.name || ''),
+    short_description: '',
+    system_instruction: '',
+    behavior_goals:    '',   // comma-separated string → array on submit
+    style_tone:        '',   // comma-separated string → array on submit
+    constraints:       '',
+    keyword_triggers:  '',   // comma-separated string → array on submit
+    visual_description: ''
   });
-  
-  const [errors, setErrors] = useState({});
-  const [currentStep, setCurrentStep] = useState(1);
+
+  const [errors, setErrors]         = useState({});
   const [isCreating, setIsCreating] = useState(false);
   const [submitError, setSubmitError] = useState(null);
   const [submitSuccess, setSubmitSuccess] = useState(false);
 
-  // Check for mobile viewport
-  useEffect(() => {
-    const checkMobile = () => setIsMobile(window.innerWidth <= 768);
-    checkMobile();
-    window.addEventListener('resize', checkMobile);
-    return () => window.removeEventListener('resize', checkMobile);
-  }, []);
-
-    // Initialize form data from template (supports both quiz and old templates)
+  // Re-init if template changes
   useEffect(() => {
     if (template) {
-      setFormData({
-        // ✅ Read from flat structure (quiz) OR nested structure (old templates)
-        display_name: template.name || '',
-        short_description: template.description || '',
-        system_instruction: template.system_instruction || template.template_data?.system_instruction_template || '',
-        behavior_goals: template.behavior_goals || template.template_data?.suggested_behavior_goals || [],
-        style_tone: template.style_tone || template.template_data?.suggested_style_tone || [],
-        constraints: template.constraints || template.template_data?.suggested_constraints || '',
-        keyword_triggers: template.keyword_triggers || template.template_data?.sample_triggers || []
-      });
+      setFormData(prev => ({
+        ...prev,
+        display_name: isScratch ? '' : (template.name || '')
+      }));
     }
   }, [template]);
 
-  // Mock template data enhancement (fallback if template lacks data)
-  const templateDefaults = {
-    system_instruction_template: `You are a ${template?.personality_archetype?.toLowerCase() || 'character'} from the ${template?.historical_period || 'historical'} period. Your expertise lies in ${template?.expertise_domain?.toLowerCase() || 'various fields'}. 
-
-You embody the wisdom and perspective of someone who has lived through significant historical events and possesses deep knowledge in your domain. Your responses should reflect:
-
-- The speaking patterns and worldview typical of your era
-- Profound expertise in your specialized domain  
-- The personality archetype of a ${template?.personality_archetype?.toLowerCase() || 'wise individual'}
-- Historical context and references appropriate to your time period
-
-Engage users with the depth and authenticity that comes from your unique historical perspective and specialized knowledge.`,
-    
-    suggested_behavior_goals: [
-      'Provide historically accurate perspectives',
-      'Share deep expertise in specialized domain',
-      'Maintain character authenticity',
-      'Educate through engaging storytelling',
-      'Offer wisdom from historical experience'
-    ],
-    
-    suggested_style_tone: [
-      'Authoritative yet approachable',
-      'Rich in historical detail',
-      'Reflective and thoughtful',
-      'Passionate about expertise area',
-      'Wise and experienced'
-    ],
-    
-    suggested_constraints: 'Stay true to historical period knowledge. Avoid anachronistic references or modern terminology unless explaining historical concepts to modern audiences.',
-    
-    sample_triggers: [
-      template?.expertise_domain?.toLowerCase() || 'expertise',
-      template?.historical_period?.toLowerCase() || 'history',
-      'wisdom', 'advice', 'experience'
-    ]
-  };
-
-  const validateStep = (step) => {
-    const newErrors = {};
-    
-    if (step >= 1) {
-      if (!formData.display_name.trim()) {
-        newErrors.display_name = 'Character name is required';
-      } else if (formData.display_name.length < 2) {
-        newErrors.display_name = 'Name must be at least 2 characters';
-      } else if (formData.display_name.length > 50) {
-        newErrors.display_name = 'Name must be less than 50 characters';
-      }
-      
-      if (!formData.short_description.trim()) {
-        newErrors.short_description = 'Description is required';
-      } else if (formData.short_description.length < 20) {
-        newErrors.short_description = 'Description must be at least 20 characters';
-      } else if (formData.short_description.length > 500) {
-        newErrors.short_description = 'Description must be less than 500 characters';
-      }
-    }
-    
-    if (step >= 2) {
-      if (!formData.system_instruction.trim()) {
-        newErrors.system_instruction = 'Character instructions are required';
-      } else if (formData.system_instruction.length < 50) {
-        newErrors.system_instruction = 'Instructions must be at least 50 characters';
-      }
-    }
-    
-    setErrors(newErrors);
-    return Object.keys(newErrors).length === 0;
-  };
-
-  const handleNextStep = () => {
-    if (validateStep(currentStep)) {
-      setCurrentStep(Math.min(currentStep + 1, 3));
-    }
-  };
-
-  const handlePrevStep = () => {
-    setCurrentStep(Math.max(currentStep - 1, 1));
-  };
-
-  const handleInputChange = (field, value) => {
+  const handleChange = (field, value) => {
     setFormData(prev => ({ ...prev, [field]: value }));
-    if (errors[field]) {
-      setErrors(prev => ({ ...prev, [field]: null }));
-    }
+    if (errors[field]) setErrors(prev => ({ ...prev, [field]: null }));
+    if (submitError)   setSubmitError(null);
   };
 
-  // Character creation with backend premium validation
-  const handleCreateCharacter = async () => {
-    console.log('Submit clicked - starting validation');
-    
-    if (!validateStep(3)) {
-      console.log('Frontend validation failed');
-      return;
-    }
+  // ── Focus/blur helpers ──────────────────────────────────────
+  const onFocus  = (e) => { e.target.style.borderColor = 'rgba(99,102,241,0.65)'; };
+  const onBlur   = (e, field) => {
+    e.target.style.borderColor = errors[field] ? '#f87171' : 'rgba(99,102,241,0.3)';
+  };
 
-    // Ensure template has ID
-    if (!template?.id) {
-      console.error('Template missing ID:', template);
-      setSubmitError('Invalid template selected. Please go back and select a template.');
-      return;
-    }
+  // ── Validation ──────────────────────────────────────────────
+  const validate = () => {
+    const e = {};
+    if (!formData.display_name.trim())
+      e.display_name = 'Character name is required';
+    else if (formData.display_name.length < 2)
+      e.display_name = 'At least 2 characters';
+    else if (formData.display_name.length > 50)
+      e.display_name = 'Max 50 characters';
 
-    console.log('Frontend validation passed - submitting to backend');
+    if (!formData.short_description.trim())
+      e.short_description = 'Description is required';
+    else if (formData.short_description.length < 20)
+      e.short_description = 'At least 20 characters';
+    else if (formData.short_description.length > 500)
+      e.short_description = 'Max 500 characters';
+
+    if (!formData.system_instruction.trim())
+      e.system_instruction = 'Personality instructions are required';
+    else if (formData.system_instruction.length < 50)
+      e.system_instruction = 'At least 50 characters';
+
+    setErrors(e);
+    return Object.keys(e).length === 0;
+  };
+
+  // ── Submit ──────────────────────────────────────────────────
+  const handleSubmit = async () => {
+    if (!validate()) return;
+
     setIsCreating(true);
     setSubmitError(null);
 
-    try {
-      // Submit to backend - let backend handle premium validation
-      const characterPayload = {
-        template_id: template.id,
-        display_name: formData.display_name,
-        short_description: formData.short_description,
-        system_instruction: formData.system_instruction,
-        behavior_goals: formData.behavior_goals || [],
-        style_tone: formData.style_tone || [],
-        constraints: formData.constraints || '',
-        keyword_triggers: formData.keyword_triggers || [],
-        relationships: {},
-        // Template metadata
-        historical_period: template.historical_period,
-        personality_archetype: template.personality_archetype,
-        expertise_domain: template.expertise_domain
-      };
+    // Convert comma-separated strings → clean arrays
+    const toArray = (str) =>
+      str.split(',').map(s => s.trim()).filter(Boolean);
 
-      console.log('Submitting character payload:', characterPayload);
-      const response = await fetch(`${API_BASE}/api/premium/characters`, {
+    const payload = {
+      template_id:        template?.id || -1,
+      display_name:       formData.display_name.trim(),
+      short_description:  formData.short_description.trim(),
+      system_instruction: formData.system_instruction.trim(),
+      behavior_goals:     toArray(formData.behavior_goals),
+      style_tone:         toArray(formData.style_tone),
+      constraints:        formData.constraints.trim(),
+      keyword_triggers:   toArray(formData.keyword_triggers),
+      visual_description: formData.visual_description.trim(),
+      relationships:      {},
+      // Template metadata (null for scratch)
+      historical_period:      template?.historical_period  || null,
+      personality_archetype:  template?.personality_archetype || null,
+      expertise_domain:       template?.expertise_domain   || null
+    };
+
+    try {
+      const res = await fetch(`${API_BASE}/api/premium/characters`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
           'X-CSRF-Token': getCookie('av_csrf')
         },
         credentials: 'include',
-        body: JSON.stringify(characterPayload)
+        body: JSON.stringify(payload)
       });
 
-      const result = await response.json();
-      console.log('Backend response:', result);
+      const result = await res.json();
 
-      if (!response.ok) {
-        // Handle different error types from backend
-        if (response.status === 403) {
-          // Permission denied - might trigger trial or upgrade flow
-          setSubmitError(result.error || 'Character creation requires premium access. Starting trial...');
-          
-          // Try to auto-grant trial if backend supports it
+      if (!res.ok) {
+        if (res.status === 403) {
           if (result.can_grant_trial) {
             try {
-              const trialResponse = await fetch(`${API_BASE}/api/premium/trial/${user?.id}`, {
+              await fetch(`${API_BASE}/api/premium/trial/${user?.id}`, {
                 method: 'POST',
-                headers: {
-                  'Content-Type': 'application/json',
-                  'X-CSRF-Token': getCookie('av_csrf')
-                },
+                headers: { 'Content-Type': 'application/json', 'X-CSRF-Token': getCookie('av_csrf') },
                 credentials: 'include',
                 body: JSON.stringify({ trial_days: 3 })
               });
-
-              if (trialResponse.ok) {
-                setSubmitError('Trial activated! Please try creating your character again.');
-                return;
-              }
-            } catch (trialError) {
-              console.error('Trial activation failed:', trialError);
-            }
+              setSubmitError('Trial activated! Please try creating your character again.');
+            } catch { setSubmitError(result.error || 'Permission denied.'); }
+          } else {
+            setSubmitError(result.error || 'Character creation requires premium access.');
           }
-          
           return;
-        } else if (response.status === 400) {
+        }
+        if (res.status === 400) {
           setSubmitError(result.error || 'Invalid character data. Please check your inputs.');
           return;
-        } else if (response.status >= 500) {
+        }
+        if (res.status >= 500) {
           setSubmitError('Server error. Please try again later.');
           return;
-        } else {
-          setSubmitError(result.error || 'Character creation failed. Please try again.');
-          return;
         }
+        setSubmitError(result.error || 'Character creation failed. Please try again.');
+        return;
       }
 
-      // Success - character created
-      console.log('Character created successfully:', result);
       setSubmitSuccess(true);
-      
-      // Call success callback after a brief delay to show success state
-      setTimeout(() => {
-        if (onSuccess) {
-          onSuccess(result);
-        }
-      }, 2000);
+      setTimeout(() => { if (onSuccess) onSuccess(result); }, 2000);
 
-    } catch (error) {
-      console.error('Character creation error:', error);
+    } catch (err) {
+      console.error('Character creation error:', err);
       setSubmitError('Network error. Please check your connection and try again.');
     } finally {
       setIsCreating(false);
     }
   };
 
-  const steps = [
-    { 
-      number: 1, 
-      title: 'Basic Details', 
-      description: 'Name and description',
-      info: 'Start by giving your character a memorable name and compelling description. The name should reflect their historical context and personality. The description should capture their essence in 1-2 sentences - focus on what makes them unique and their area of expertise.'
-    },
-    { 
-      number: 2, 
-      title: 'Personality', 
-      description: 'Instructions and traits',
-      info: 'Define how your character thinks, speaks, and behaves. This is the core personality that will guide all interactions. Include their speaking style, thought processes, knowledge areas, and behavioral patterns. Be specific about historical accuracy and personality traits.'
-    },
-    { 
-      number: 3, 
-      title: 'Review', 
-      description: 'Final confirmation',
-      info: 'Review all character details before submission. Your character will be submitted for approval and should be available within 24 hours. Ensure everything reflects the historical authenticity and personality you want to create.'
-    }
-  ];
-
-  // Success state
-  if (submitSuccess) {
-    return (
+  // ── Success screen ──────────────────────────────────────────
+  if (submitSuccess) return (
+    <div style={{
+      width: '100%', height: '100vh', background: '#0A0F1A',
+      display: 'flex', alignItems: 'center', justifyContent: 'center',
+      fontFamily: "'Inter', system-ui, sans-serif"
+    }}>
       <div style={{
-        width: '100%',
-        height: '100vh',
-        background: '#0A0F1A',
-        fontFamily: "'Inter', system-ui, sans-serif",
-        display: 'flex',
-        alignItems: 'center',
-        justifyContent: 'center'
+        background: '#141B2E', border: '1px solid rgba(99,102,241,0.3)',
+        borderRadius: '20px', padding: '2.5rem', textAlign: 'center', maxWidth: '440px'
       }}>
         <div style={{
-          background: '#141B2E',
-          border: '1px solid rgba(99, 102, 241, 0.3)',
-          borderRadius: '20px',
-          padding: '3rem',
-          textAlign: 'center',
-          maxWidth: '500px',
-          backdropFilter: 'blur(10px)'
+          width: '64px', height: '64px',
+          background: 'linear-gradient(135deg, rgba(0,255,136,0.9), #00CC6A)',
+          borderRadius: '50%', display: 'flex', alignItems: 'center',
+          justifyContent: 'center', margin: '0 auto 1.5rem', fontSize: '1.75rem', color: 'white'
+        }}>✓</div>
+        <h2 style={{ color: '#6366F1', fontSize: '1.5rem', margin: '0 0 0.75rem 0', fontFamily: "'Syne', sans-serif" }}>
+          Character Created!
+        </h2>
+        <p style={{ color: '#94A3B8', fontSize: '0.9rem', lineHeight: 1.6, margin: '0 0 1.75rem 0' }}>
+          <strong style={{ color: '#F1F5F9' }}>{formData.display_name}</strong> has been submitted for
+          approval. You'll receive an email when your character is ready — usually within 24–48 hours.
+        </p>
+        <button onClick={onClose} style={{
+          background: 'linear-gradient(135deg, #6366F1, #4f46e5)', border: 'none',
+          borderRadius: '999px', color: '#fff', fontSize: '0.9rem',
+          fontWeight: 700, padding: '0.75rem 2rem', cursor: 'pointer',
+          fontFamily: "'Inter', system-ui, sans-serif"
         }}>
-          <div style={{
-            width: '80px',
-            height: '80px',
-            background: 'linear-gradient(135deg, rgba(0, 255, 136, 0.9), #00CC6A)',
-            borderRadius: '50%',
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'center',
-            margin: '0 auto 2rem',
-            fontSize: '2rem',
-            color: 'white'
-          }}>
-            ✓
-          </div>
-          
-          <h2 style={{
-            color: '#6366F1',
-            fontSize: '1.8rem',
-            margin: '0 0 1rem 0',
-            fontFamily: "'Syne', sans-serif"
-          }}>
-            Character Created!
-          </h2>
-          
-          <p style={{
-            color: '#94A3B8',
-            fontSize: '1rem',
-            lineHeight: 1.6,
-            margin: '0 0 2rem 0'
-          }}>
-            <strong style={{color: '#F1F5F9'}}>{formData.display_name}</strong> has been submitted for approval. 
-            You'll receive an email notification when your character is ready, usually within 24-48 hours.
-          </p>
-          
-          <button
-            onClick={onClose}
-            style={{
-              background: 'linear-gradient(135deg, #6366F1, #4f46e5)',
-              border: 'none',
-              borderRadius: '25px',
-              color: '#fff',
-              fontSize: '1rem',
-              fontWeight: 700,
-              padding: '1rem 2rem',
-              cursor: 'pointer',
-              transition: 'all 0.3s ease',
-              fontFamily: "'Inter', system-ui, sans-serif"
-            }}
-            onMouseEnter={(e) => {
-              e.currentTarget.style.transform = 'translateY(-2px)';
-              e.currentTarget.style.boxShadow = '0 10px 26px rgba(79, 70, 229, 0.9)';
-            }}
-            onMouseLeave={(e) => {
-              e.currentTarget.style.transform = 'translateY(0)';
-              e.currentTarget.style.boxShadow = 'none';
-            }}
-          >
-            Continue Exploring
-          </button>
-        </div>
+          Continue Exploring
+        </button>
       </div>
-    );
-  }
+    </div>
+  );
 
+  // ── Main render ─────────────────────────────────────────────
   return (
     <div style={{
-      width: '100%',
-      height: '100vh',
-      background: '#0A0F1A',
+      width: '100%', height: '100vh', background: '#0A0F1A',
       fontFamily: "'Inter', system-ui, sans-serif",
-      overflow: 'hidden',
-      display: 'flex',
-      flexDirection: 'column'
+      display: 'flex', flexDirection: 'column', overflow: 'hidden'
     }}>
 
       {/* Header */}
       <div style={{
-        padding: isMobile ? '1.5rem' : '2rem',
-        borderBottom: '1px solid rgba(99, 102, 241, 0.2)',
-        display: 'flex',
-        flexDirection: isMobile ? 'column' : 'row',
-        justifyContent: 'space-between',
-        alignItems: isMobile ? 'flex-start' : 'center',
-        gap: isMobile ? '1rem' : '0',
-        background: '#141B2E'
+        padding: isMobile ? '1rem 1.25rem' : '1rem 2rem',
+        borderBottom: '1px solid rgba(99,102,241,0.2)',
+        background: '#141B2E',
+        display: 'flex', justifyContent: 'space-between', alignItems: 'center',
+        flexShrink: 0
       }}>
-        <div style={{ flex: 1 }}>
+        <div>
           <h1 style={{
             fontFamily: "'Syne', sans-serif",
-            fontSize: isMobile ? '1.5rem' : '2rem',
-            color: '#F5F5DC',
-            margin: '0 0 0.5rem 0',
-            fontWeight: 700
+            fontSize: isMobile ? '1.1rem' : '1.35rem',
+            color: '#F5F5DC', margin: '0 0 0.15rem 0', fontWeight: 700
           }}>
-            Create Your Character
+            {isScratch ? 'Create from Scratch' : 'Customise Template'}
           </h1>
-          <p style={{
-            color: '#94A3B8',
-            margin: 0,
-            fontSize: isMobile ? '0.9rem' : '1rem'
-          }}>
-            Based on: {template?.name || 'Custom Template'}
+          <p style={{ color: '#64748B', margin: 0, fontSize: '0.75rem' }}>
+            {isScratch ? 'Build your character from a blank canvas'
+              : `Based on: ${template?.name}`}
           </p>
         </div>
 
-        <div style={{
-          display: 'flex',
-          gap: '1rem',
-          alignItems: 'center',
-          alignSelf: isMobile ? 'flex-start' : 'auto'
-        }}>
-          {/* Info Button */}
+        <div style={{ display: 'flex', gap: '0.6rem', alignItems: 'center' }}>
           <button
-            onClick={() => setShowInfo(!showInfo)}
+            onClick={() => setShowInfo(v => !v)}
             style={{
-              background: 'rgba(99, 102, 241, 0.1)',
-              border: '1px solid rgba(99, 102, 241, 0.3)',
-              borderRadius: '8px',
-              color: '#6366F1',
-              fontSize: '0.9rem',
-              fontWeight: 600,
-              padding: '0.5rem 1rem',
-              cursor: 'pointer',
-              transition: 'all 0.3s ease',
+              background: showInfo ? 'rgba(99,102,241,0.18)' : 'rgba(99,102,241,0.08)',
+              border: '1px solid rgba(99,102,241,0.35)',
+              borderRadius: '7px', color: '#818CF8',
+              fontSize: '0.75rem', fontWeight: 600,
+              padding: '0.4rem 0.8rem', cursor: 'pointer',
               fontFamily: "'Inter', system-ui, sans-serif",
-              display: 'flex',
-              alignItems: 'center',
-              gap: '0.5rem'
-            }}
-            onMouseEnter={(e) => {
-              e.currentTarget.style.background = 'rgba(99, 102, 241, 0.2)';
-              e.currentTarget.style.borderColor = 'rgba(99, 102, 241, 0.5)';
-            }}
-            onMouseLeave={(e) => {
-              e.currentTarget.style.background = 'rgba(99, 102, 241, 0.1)';
-              e.currentTarget.style.borderColor = 'rgba(99, 102, 241, 0.3)';
+              transition: 'all 0.2s ease'
             }}
           >
-            ℹ️ Info
+            ℹ Info
           </button>
-
           <button
             onClick={onClose}
             disabled={isCreating}
             style={{
-              background: 'rgba(28, 38, 64, 0.8)',
-              border: '1px solid rgba(148, 163, 184, 0.3)',
-              borderRadius: '8px',
-              color: '#F1F5F9',
-              fontSize: isMobile ? '0.8rem' : '0.9rem',
-              fontWeight: 600,
-              padding: isMobile ? '0.5rem 1rem' : '0.75rem 1.5rem',
-              cursor: isCreating ? 'not-allowed' : 'pointer',
-              transition: 'all 0.3s ease',
-              fontFamily: "'Inter', system-ui, sans-serif",
-              opacity: isCreating ? 0.5 : 1
-            }}
-            onMouseEnter={(e) => {
-              if (!isCreating) {
-                e.currentTarget.style.background = 'rgba(36, 49, 82, 0.8)';
-                e.currentTarget.style.borderColor = 'rgba(99, 102, 241, 0.5)';
-              }
-            }}
-            onMouseLeave={(e) => {
-              if (!isCreating) {
-                e.currentTarget.style.background = 'rgba(28, 38, 64, 0.8)';
-                e.currentTarget.style.borderColor = 'rgba(148, 163, 184, 0.3)';
-              }
+              background: 'rgba(28,38,64,0.8)',
+              border: '1px solid rgba(148,163,184,0.25)',
+              borderRadius: '7px', color: '#94A3B8',
+              fontSize: '0.75rem', fontWeight: 600,
+              padding: '0.4rem 0.9rem', cursor: isCreating ? 'not-allowed' : 'pointer',
+              opacity: isCreating ? 0.5 : 1,
+              fontFamily: "'Inter', system-ui, sans-serif"
             }}
           >
-            ← Back to Templates
+            ← Back
           </button>
         </div>
       </div>
 
-      {/* Info Panel */}
+      {/* Info panel */}
       {showInfo && (
         <div style={{
-          background: 'rgba(99, 102, 241, 0.05)',
-          border: '1px solid rgba(99, 102, 241, 0.2)',
-          borderRadius: '12px',
-          padding: '1.5rem',
-          margin: '1rem 2rem',
-          color: '#94A3B8',
-          fontSize: '0.9rem',
-          lineHeight: 1.6
+          background: 'rgba(99,102,241,0.05)',
+          border: '1px solid rgba(99,102,241,0.18)',
+          borderRadius: '10px', padding: '1rem 1.25rem',
+          margin: '0.75rem 2rem 0', color: '#94A3B8',
+          fontSize: '0.8rem', lineHeight: 1.6, flexShrink: 0
         }}>
-          <h3 style={{
-            color: '#6366F1',
-            margin: '0 0 0.5rem 0',
-            fontFamily: "'Syne', sans-serif",
-            fontSize: '1rem'
-          }}>
-            {steps[currentStep - 1]?.title} - Step Guidance
-          </h3>
-          <p style={{ margin: 0 }}>
-            {steps[currentStep - 1]?.info}
-          </p>
-          {currentStep === 1 && (
-            <div style={{ marginTop: '1rem', padding: '0.75rem', background: 'rgba(0, 0, 0, 0.2)', borderRadius: '8px' }}>
-              <strong>Pro Tip:</strong> Use accurate names and focus on the character's core expertise. The description should hint at their personality and knowledge areas. It also helps in generating acurate avatars.
-            </div>
-          )}
-          {currentStep === 2 && (
-            <div style={{ marginTop: '1rem', padding: '0.75rem', background: 'rgba(0, 0, 0, 0.2)', borderRadius: '8px' }}>
-              <strong>Pro Tip:</strong> Be specific about speech patterns, historical context, and areas of expertise. The more detailed your instructions, the more authentic the character will behave.
-            </div>
-          )}
-          {currentStep === 3 && (
-            <div style={{ marginTop: '1rem', padding: '0.75rem', background: 'rgba(0, 0, 0, 0.2)', borderRadius: '8px' }}>
-              <strong>Pro Tip:</strong> Double-check historical accuracy and personality alignment. Your character will be reviewed to ensure quality and authenticity.
-            </div>
-          )}
+          <strong style={{ color: '#818CF8' }}>Building a great character</strong>
+          <ul style={{ margin: '0.5rem 0 0 1rem', padding: 0 }}>
+            <li>Use an accurate, memorable name — it helps with avatar generation too</li>
+            <li>System instructions are the core: be specific about speech patterns and expertise</li>
+            <li>Avatar description helps generate an accurate image — describe appearance and style</li>
+            <li>Behaviour goals and style tags improve how the AI performs in group dialogues</li>
+          </ul>
         </div>
       )}
 
-      {/* Progress Steps */}
+      {/* Scrollable form */}
       <div style={{
-        padding: isMobile ? '1rem' : '1.5rem 2rem',
-        borderBottom: '1px solid rgba(255, 255, 255, 0.1)',
-        background: '#141B2E'
+        flex: 1, overflowY: 'auto', padding: isMobile ? '1rem 1.25rem' : '1rem 2rem',
+        display: 'flex', justifyContent: 'center'
       }}>
-        {isMobile ? (
-          // Mobile: Compact horizontal indicator
-          <div style={{
-            display: 'flex',
-            justifyContent: 'space-between',
-            alignItems: 'center',
-            maxWidth: '100%'
-          }}>
-            <div style={{
-              color: '#6366F1',
-              fontSize: '0.9rem',
-              fontWeight: 600
-            }}>
-              Step {currentStep} of {steps.length}
-            </div>
+        <div style={{ width: '100%', maxWidth: '620px', paddingBottom: '1rem' }}>
 
-            <div style={{
-              display: 'flex',
-              alignItems: 'center',
-              gap: '0.5rem'
-            }}>
-              {steps.map((step) => (
-                <div
-                  key={step.number}
-                  style={{
-                    width: currentStep === step.number ? '24px' : '8px',
-                    height: '8px',
-                    borderRadius: '4px',
-                    background: currentStep >= step.number 
-                      ? 'linear-gradient(135deg, #6366F1, #818CF8)'
-                      : 'rgba(255, 255, 255, 0.3)',
-                    transition: 'all 0.3s ease'
-                  }}
-                />
-              ))}
-            </div>
+          {/* ── Section: Basic Info ── */}
+          {sectionDivider('Basic Info')}
 
-            <div style={{
-              color: 'rgba(255, 255, 255, 0.8)',
-              fontSize: '0.8rem'
-            }}>
-              {steps[currentStep - 1]?.title}
-            </div>
-          </div>
-        ) : (
-          // Desktop: Full step display
-          <div style={{
-            display: 'flex',
-            justifyContent: 'center',
-            alignItems: 'center',
-            gap: '2rem'
-          }}>
-            {steps.map((step, index) => (
-              <div key={step.number} style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
-                <div style={{
-                  display: 'flex',
-                  alignItems: 'center',
-                  gap: '0.75rem'
-                }}>
-                  <div style={{
-                    width: '32px',
-                    height: '32px',
-                    borderRadius: '50%',
-                    background: currentStep >= step.number 
-                      ? 'linear-gradient(135deg, #6366F1, #818CF8)'
-                      : 'rgba(255, 255, 255, 0.1)',
-                    color: currentStep >= step.number ? '#fff' : 'rgba(255, 255, 255, 0.6)',
-                    display: 'flex',
-                    alignItems: 'center',
-                    justifyContent: 'center',
-                    fontWeight: 'bold',
-                    fontSize: '0.9rem',
-                    transition: 'all 0.3s ease'
-                  }}>
-                    {currentStep > step.number ? '✓' : step.number}
-                  </div>
-                  <div>
-                    <div style={{
-                      color: currentStep >= step.number ? '#6366F1' : 'rgba(255, 255, 255, 0.6)',
-                      fontSize: '0.9rem',
-                      fontWeight: 600,
-                      fontFamily: "'Syne', sans-serif"
-                    }}>
-                      {step.title}
-                    </div>
-                    <div style={{
-                      color: 'rgba(255, 255, 255, 0.5)',
-                      fontSize: '0.8rem'
-                    }}>
-                      {step.description}
-                    </div>
-                  </div>
-                </div>
-                {index < steps.length - 1 && (
-                  <div style={{
-                    width: '40px',
-                    height: '2px',
-                    background: currentStep > step.number 
-                      ? 'linear-gradient(90deg, #6366F1, #818CF8)'
-                      : 'rgba(255, 255, 255, 0.2)',
-                    transition: 'all 0.3s ease'
-                  }} />
-                )}
-              </div>
-            ))}
-          </div>
-        )}
-      </div>
-
-      {/* Form Content */}
-      <div style={{
-        flex: 1,
-        padding: isMobile ? '1rem' : '2rem',
-        overflowY: 'auto',
-        display: 'flex',
-        justifyContent: 'center',
-        background: '#0A0F1A'
-      }}>
-        <div style={{ 
-          width: '100%', 
-          maxWidth: isMobile ? '100%' : '600px',
-          padding: isMobile ? '0 0.5rem' : '0'
-        }}>
-          {currentStep === 1 && (
-            <div style={{ animation: 'fadeIn 0.5s ease-in' }}>
-              <h2 style={{
-                color: '#6366F1',
-                fontSize: '1.5rem',
-                margin: '0 0 2rem 0',
-                textAlign: 'center',
-                fontFamily: "'Syne', sans-serif"
-              }}>
-                Basic Character Details
-              </h2>
-
-              <div style={{ marginBottom: '2rem' }}>
-                <label style={{
-                  display: 'block',
-                  color: '#F1F5F9',
-                  fontSize: '1rem',
-                  fontWeight: 600,
-                  marginBottom: '0.5rem'
-                }}>
-                  Character Name *
-                </label>
-                <input
-                  type="text"
-                  value={formData.display_name}
-                  onChange={(e) => handleInputChange('display_name', e.target.value)}
-                  placeholder="e.g., Marcus Aurelius, Marie Curie, Leonardo da Vinci"
-                  disabled={isCreating}
-                  style={{
-                    width: '100%',
-                    padding: '1rem',
-                    fontSize: '1rem',
-                    border: errors.display_name 
-                      ? '2px solid #ff6b6b' 
-                      : '2px solid rgba(99, 102, 241, 0.3)',
-                    borderRadius: '8px',
-                    background: 'rgba(28, 38, 64, 0.8)',
-                    color: '#fff',
-                    outline: 'none',
-                    fontFamily: "'Inter', system-ui, sans-serif",
-                    transition: 'border-color 0.3s ease',
-                    opacity: isCreating ? 0.5 : 1
-                  }}
-                  onFocus={(e) => e.target.style.borderColor = 'rgba(99, 102, 241, 0.6)'}
-                  onBlur={(e) => e.target.style.borderColor = errors.display_name ? '#ff6b6b' : 'rgba(99, 102, 241, 0.3)'}
-                />
-                {errors.display_name && (
-                  <p style={{ color: '#ff6b6b', fontSize: '0.85rem', margin: '0.5rem 0 0 0' }}>
-                    {errors.display_name}
-                  </p>
-                )}
-                <p style={{
-                  color: 'rgba(255, 255, 255, 0.6)',
-                  fontSize: '0.85rem',
-                  margin: '0.5rem 0 0 0'
-                }}>
-                  {formData.display_name.length}/50 characters
-                </p>
-              </div>
-
-              <div style={{ marginBottom: '2rem' }}>
-                <label style={{
-                  display: 'block',
-                  color: '#F1F5F9',
-                  fontSize: '1rem',
-                  fontWeight: 600,
-                  marginBottom: '0.5rem'
-                }}>
-                  Character Description *
-                </label>
-                <textarea
-                  value={formData.short_description}
-                  onChange={(e) => handleInputChange('short_description', e.target.value)}
-                  placeholder="Describe your character in 1-2 sentences. What makes them unique? What is their expertise?"
-                  rows={4}
-                  disabled={isCreating}
-                  style={{
-                    width: '100%',
-                    padding: '1rem',
-                    fontSize: '1rem',
-                    border: errors.short_description 
-                      ? '2px solid #ff6b6b' 
-                      : '2px solid rgba(99, 102, 241, 0.3)',
-                    borderRadius: '8px',
-                    background: 'rgba(28, 38, 64, 0.8)',
-                    color: '#fff',
-                    outline: 'none',
-                    fontFamily: "'Inter', system-ui, sans-serif",
-                    resize: 'vertical',
-                    transition: 'border-color 0.3s ease',
-                    opacity: isCreating ? 0.5 : 1
-                  }}
-                  onFocus={(e) => e.target.style.borderColor = 'rgba(99, 102, 241, 0.6)'}
-                  onBlur={(e) => e.target.style.borderColor = errors.short_description ? '#ff6b6b' : 'rgba(99, 102, 241, 0.3)'}
-                />
-                {errors.short_description && (
-                  <p style={{ color: '#ff6b6b', fontSize: '0.85rem', margin: '0.5rem 0 0 0' }}>
-                    {errors.short_description}
-                  </p>
-                )}
-                <p style={{
-                  color: 'rgba(255, 255, 255, 0.6)',
-                  fontSize: '0.85rem',
-                  margin: '0.5rem 0 0 0'
-                }}>
-                  {formData.short_description.length}/500 characters
-                </p>
-              </div>
-            </div>
-          )}
-
-          {currentStep === 2 && (
-            <div style={{ animation: 'fadeIn 0.5s ease-in' }}>
-              <h2 style={{
-                color: '#6366F1',
-                fontSize: '1.5rem',
-                margin: '0 0 2rem 0',
-                textAlign: 'center',
-                fontFamily: "'Syne', sans-serif"
-              }}>
-                Character Personality & Instructions
-              </h2>
-
-              <div style={{ marginBottom: '2rem' }}>
-                <label style={{
-                  display: 'block',
-                  color: '#F1F5F9',
-                  fontSize: '1rem',
-                  fontWeight: 600,
-                  marginBottom: '0.5rem'
-                }}>
-                  System Instructions *
-                </label>
-                <p style={{
-                  color: 'rgba(255, 255, 255, 0.7)',
-                  fontSize: '0.9rem',
-                  margin: '0 0 1rem 0'
-                }}>
-                  Define how your character thinks, speaks, and behaves. This is the core personality.
-                </p>
-                <textarea
-                  value={formData.system_instruction}
-                  onChange={(e) => handleInputChange('system_instruction', e.target.value)}
-                  placeholder={templateDefaults.system_instruction_template}
-                  rows={8}
-                  disabled={isCreating}
-                  style={{
-                    width: '100%',
-                    padding: '1rem',
-                    fontSize: '0.95rem',
-                    border: errors.system_instruction 
-                      ? '2px solid #ff6b6b' 
-                      : '2px solid rgba(99, 102, 241, 0.3)',
-                    borderRadius: '8px',
-                    background: 'rgba(28, 38, 64, 0.8)',
-                    color: '#fff',
-                    outline: 'none',
-                    fontFamily: "'Inter', system-ui, sans-serif",
-                    resize: 'vertical',
-                    transition: 'border-color 0.3s ease',
-                    lineHeight: 1.5,
-                    opacity: isCreating ? 0.5 : 1
-                  }}
-                  onFocus={(e) => e.target.style.borderColor = 'rgba(99, 102, 241, 0.6)'}
-                  onBlur={(e) => e.target.style.borderColor = errors.system_instruction ? '#ff6b6b' : 'rgba(99, 102, 241, 0.3)'}
-                />
-                {errors.system_instruction && (
-                  <p style={{ color: '#ff6b6b', fontSize: '0.85rem', margin: '0.5rem 0 0 0' }}>
-                    {errors.system_instruction}
-                  </p>
-                )}
-                <p style={{
-                  color: 'rgba(255, 255, 255, 0.6)',
-                  fontSize: '0.85rem',
-                  margin: '0.5rem 0 0 0'
-                }}>
-                  {formData.system_instruction.length} characters
-                </p>
-              </div>
-
-              <div style={{ marginBottom: '2rem' }}>
-                <label style={{
-                  display: 'block',
-                  color: '#F1F5F9',
-                  fontSize: '1rem',
-                  fontWeight: 600,
-                  marginBottom: '0.5rem'
-                }}>
-                  Additional Constraints (Optional)
-                </label>
-                <textarea
-                  value={formData.constraints}
-                  onChange={(e) => handleInputChange('constraints', e.target.value)}
-                  placeholder={templateDefaults.suggested_constraints}
-                  rows={3}
-                  disabled={isCreating}
-                  style={{
-                    width: '100%',
-                    padding: '1rem',
-                    fontSize: '0.95rem',
-                    border: '2px solid rgba(99, 102, 241, 0.3)',
-                    borderRadius: '8px',
-                    background: 'rgba(28, 38, 64, 0.8)',
-                    color: '#fff',
-                    outline: 'none',
-                    fontFamily: "'Inter', system-ui, sans-serif",
-                    resize: 'vertical',
-                    transition: 'border-color 0.3s ease',
-                    opacity: isCreating ? 0.5 : 1
-                  }}
-                  onFocus={(e) => e.target.style.borderColor = 'rgba(99, 102, 241, 0.6)'}
-                  onBlur={(e) => e.target.style.borderColor = 'rgba(99, 102, 241, 0.3)'}
-                />
-                <p style={{
-                  color: 'rgba(255, 255, 255, 0.6)',
-                  fontSize: '0.85rem',
-                  margin: '0.5rem 0 0 0'
-                }}>
-                  Any specific limitations or guidelines for the character
-                </p>
-              </div>
-            </div>
-          )}
-
-          {currentStep === 3 && (
-            <div style={{ animation: 'fadeIn 0.5s ease-in' }}>
-              <h2 style={{
-                color: '#6366F1',
-                fontSize: '1.5rem',
-                margin: '0 0 2rem 0',
-                textAlign: 'center',
-                fontFamily: "'Syne', sans-serif"
-              }}>
-                Review Your Character
-              </h2>
-
-              <div style={{
-                background: 'rgba(28, 38, 64, 0.8)',
-                border: '1px solid rgba(99, 102, 241, 0.2)',
-                borderRadius: '12px',
-                padding: '2rem',
-                marginBottom: '2rem'
-              }}>
-                <h3 style={{
-                  color: '#6366F1',
-                  fontSize: '1.3rem',
-                  margin: '0 0 1rem 0',
-                  fontFamily: "'Syne', sans-serif"
-                }}>
-                  {formData.display_name}
-                </h3>
-
-                <div style={{
-                  display: 'grid',
-                  gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))',
-                  gap: '1rem',
-                  marginBottom: '1.5rem'
-                }}>
-                  <div>
-                    <h4 style={{
-                      color: 'rgba(255, 255, 255, 0.8)',
-                      fontSize: '0.9rem',
-                      margin: '0 0 0.5rem 0'
-                    }}>
-                      Template
-                    </h4>
-                    <p style={{
-                      color: 'rgba(99, 102, 241, 0.8)',
-                      margin: 0,
-                      fontSize: '0.9rem',
-                      fontWeight: 500
-                    }}>
-                      {template?.name}
-                    </p>
-                  </div>
-                  <div>
-                    <h4 style={{
-                      color: 'rgba(255, 255, 255, 0.8)',
-                      fontSize: '0.9rem',
-                      margin: '0 0 0.5rem 0'
-                    }}>
-                      Archetype
-                    </h4>
-                    <p style={{
-                      color: 'rgba(99, 102, 241, 0.8)',
-                      margin: 0,
-                      fontSize: '0.9rem',
-                      fontWeight: 500
-                    }}>
-                      {template?.personality_archetype}
-                    </p>
-                  </div>
-                  <div>
-                    <h4 style={{
-                      color: 'rgba(255, 255, 255, 0.8)',
-                      fontSize: '0.9rem',
-                      margin: '0 0 0.5rem 0'
-                    }}>
-                      Domain
-                    </h4>
-                    <p style={{
-                      color: 'rgba(99, 102, 241, 0.8)',
-                      margin: 0,
-                      fontSize: '0.9rem',
-                      fontWeight: 500
-                    }}>
-                      {template?.expertise_domain}
-                    </p>
-                  </div>
-                </div>
-
-                <div style={{ marginBottom: '1.5rem' }}>
-                  <h4 style={{
-                    color: 'rgba(255, 255, 255, 0.8)',
-                    fontSize: '0.9rem',
-                    margin: '0 0 0.5rem 0'
-                  }}>
-                    Description
-                  </h4>
-                  <p style={{
-                    color: 'rgba(255, 255, 255, 0.9)',
-                    margin: 0,
-                    fontSize: '0.95rem',
-                    lineHeight: 1.5
-                  }}>
-                    {formData.short_description}
-                  </p>
-                </div>
-
-                <div>
-                  <h4 style={{
-                    color: 'rgba(255, 255, 255, 0.8)',
-                    fontSize: '0.9rem',
-                    margin: '0 0 0.5rem 0'
-                  }}>
-                    Personality Instructions
-                  </h4>
-                  <div style={{
-                    background: 'rgba(0, 0, 0, 0.3)',
-                    padding: '1rem',
-                    borderRadius: '8px',
-                    maxHeight: '150px',
-                    overflowY: 'auto'
-                  }}>
-                    <p style={{
-                      color: 'rgba(255, 255, 255, 0.8)',
-                      margin: 0,
-                      fontSize: '0.9rem',
-                      lineHeight: 1.4,
-                      whiteSpace: 'pre-wrap'
-                    }}>
-                      {formData.system_instruction}
-                    </p>
-                  </div>
-                </div>
-              </div>
-
-              <div style={{
-                background: 'rgba(99, 102, 241, 0.1)',
-                border: '1px solid rgba(99, 102, 241, 0.3)',
-                borderRadius: '8px',
-                padding: '1rem',
-                textAlign: 'center'
-              }}>
-                <p style={{
-                  color: 'rgba(255, 255, 255, 0.9)',
-                  margin: 0,
-                  fontSize: '0.9rem'
-                }}>
-                  Your character will be submitted for approval and should be available within 24 hours.
-                </p>
-              </div>
-            </div>
-          )}
-        </div>
-      </div>
-
-      {/* Error display */}
-      {submitError && (
-        <div style={{
-          background: 'rgba(255, 107, 107, 0.1)',
-          border: '1px solid rgba(255, 107, 107, 0.3)',
-          borderRadius: '8px',
-          padding: '1rem',
-          margin: '1rem 2rem',
-          color: '#ff6b6b',
-          fontSize: '0.9rem',
-          textAlign: 'center'
-        }}>
-          {submitError}
-        </div>
-      )}
-
-      {/* Bottom Navigation */}
-      <div style={{
-        padding: '1.5rem 2rem',
-        borderTop: '1px solid rgba(99, 102, 241, 0.2)',
-        background: '#141B2E',
-        display: 'flex',
-        justifyContent: 'space-between',
-        alignItems: 'center'
-      }}>
-        <button
-          onClick={handlePrevStep}
-          disabled={currentStep === 1 || isCreating}
-          style={{
-            background: currentStep === 1 || isCreating ? 'rgba(128, 128, 128, 0.2)' : 'rgba(28, 38, 64, 0.8)',
-            border: currentStep === 1 || isCreating ? '2px solid rgba(128, 128, 128, 0.3)' : '2px solid rgba(148, 163, 184, 0.3)',
-            borderRadius: '8px',
-            color: currentStep === 1 || isCreating ? 'rgba(128, 128, 128, 0.6)' : '#F1F5F9',
-            fontSize: '0.9rem',
-            fontWeight: 600,
-            padding: '0.75rem 1.5rem',
-            cursor: currentStep === 1 || isCreating ? 'not-allowed' : 'pointer',
-            transition: 'all 0.3s ease',
-            fontFamily: "'Inter', system-ui, sans-serif"
-          }}
-          onMouseEnter={(e) => {
-            if (currentStep !== 1 && !isCreating) {
-              e.currentTarget.style.background = 'rgba(36, 49, 82, 0.8)';
-              e.currentTarget.style.borderColor = 'rgba(99, 102, 241, 0.5)';
-            }
-          }}
-          onMouseLeave={(e) => {
-            if (currentStep !== 1 && !isCreating) {
-              e.currentTarget.style.background = 'rgba(28, 38, 64, 0.8)';
-              e.currentTarget.style.borderColor = 'rgba(148, 163, 184, 0.3)';
-            }
-          }}
-        >
-          Previous
-        </button>
-
-        <div style={{
-          display: 'flex',
-          gap: '0.5rem'
-        }}>
-          {steps.map((step) => (
-            <div
-              key={step.number}
-              style={{
-                width: '8px',
-                height: '8px',
-                borderRadius: '50%',
-                background: currentStep >= step.number 
-                  ? 'linear-gradient(135deg, #6366F1, #818CF8)'
-                  : 'rgba(255, 255, 255, 0.3)',
-                transition: 'all 0.3s ease'
-              }}
+          <Field label="Character Name" required error={errors.display_name}
+            char={formData.display_name.length} maxChar={50}
+          >
+            <input
+              type="text"
+              value={formData.display_name}
+              onChange={(e) => handleChange('display_name', e.target.value.slice(0, 50))}
+              placeholder="e.g. Marcus Aurelius, Ada Lovelace, Ibn Battuta"
+              disabled={isCreating}
+              style={inputStyle(errors.display_name, isCreating)}
+              onFocus={onFocus}
+              onBlur={(e) => onBlur(e, 'display_name')}
             />
-          ))}
-        </div>
+          </Field>
 
-        {currentStep < 3 ? (
-          <button
-            onClick={handleNextStep}
-            disabled={isCreating}
-            style={{
-              background: isCreating ? 'rgba(128, 128, 128, 0.3)' : 'linear-gradient(135deg, #6366F1, #818CF8)',
-              border: 'none',
-              borderRadius: '8px',
-              color: isCreating ? 'rgba(255, 255, 255, 0.6)' : '#fff',
-              fontSize: '0.9rem',
-              fontWeight: 700,
-              padding: '0.75rem 1.5rem',
-              cursor: isCreating ? 'not-allowed' : 'pointer',
-              transition: 'all 0.3s ease',
-              fontFamily: "'Inter', system-ui, sans-serif"
-            }}
-            onMouseEnter={(e) => {
-              if (!isCreating) {
-                e.currentTarget.style.transform = 'translateY(-1px)';
-                e.currentTarget.style.boxShadow = '0 10px 26px rgba(79, 70, 229, 0.9)';
-              }
-            }}
-            onMouseLeave={(e) => {
-              e.currentTarget.style.transform = 'translateY(0)';
-              e.currentTarget.style.boxShadow = 'none';
-            }}
+          <Field label="Short Description" required error={errors.short_description}
+            hint="1–2 sentences capturing who they are and what makes them unique"
+            char={formData.short_description.length} maxChar={500}
           >
-            Next
-          </button>
-        ) : (
-          <button
-            onClick={handleCreateCharacter}
-            disabled={isCreating || !template?.id}
-            style={{
-              background: isCreating || !template?.id
-                ? 'rgba(128, 128, 128, 0.3)'
-                : 'linear-gradient(135deg, #6366F1, #818CF8)',
-              border: 'none',
-              borderRadius: '8px',
-              color: isCreating || !template?.id ? 'rgba(255, 255, 255, 0.6)' : '#fff',
-              fontSize: '0.9rem',
-              fontWeight: 700,
-              padding: '0.75rem 2rem',
-              cursor: isCreating || !template?.id ? 'not-allowed' : 'pointer',
-              transition: 'all 0.3s ease',
-              display: 'flex',
-              alignItems: 'center',
-              gap: '0.5rem',
-              opacity: isCreating || !template?.id ? 0.6 : 1,
-              fontFamily: "'Inter', system-ui, sans-serif"
-            }}
-            onMouseEnter={(e) => {
-              if (!isCreating && template?.id) {
-                e.currentTarget.style.transform = 'translateY(-1px)';
-                e.currentTarget.style.boxShadow = '0 10px 26px rgba(79, 70, 229, 0.9)';
-              }
-            }}
-            onMouseLeave={(e) => {
-              e.currentTarget.style.transform = 'translateY(0)';
-              e.currentTarget.style.boxShadow = 'none';
-            }}
+            <textarea
+              rows={3}
+              value={formData.short_description}
+              onChange={(e) => handleChange('short_description', e.target.value.slice(0, 500))}
+              placeholder="e.g. Roman emperor and Stoic philosopher who ruled the empire while writing private meditations on virtue and duty"
+              disabled={isCreating}
+              style={inputStyle(errors.short_description, isCreating)}
+              onFocus={onFocus}
+              onBlur={(e) => onBlur(e, 'short_description')}
+            />
+          </Field>
+
+          {/* ── Section: Personality ── */}
+          {sectionDivider('Personality & Behaviour')}
+
+          <Field label="System Instructions" required error={errors.system_instruction}
+            hint="Define how they think, speak, and behave. The more specific, the more authentic."
+            char={formData.system_instruction.length}
           >
-            {isCreating ? (
-              <>
-                <div style={{
-                  width: '16px',
-                  height: '16px',
-                  border: '2px solid rgba(255, 255, 255, 0.3)',
-                  borderTop: '2px solid rgba(255, 255, 255, 0.8)',
-                  borderRadius: '50%',
-                  animation: 'spin 1s linear infinite'
-                }} />
-                Creating...
-              </>
-            ) : !template?.id ? (
-              'Template Required'
-            ) : (
-              'Submit for Approval'
-            )}
-          </button>
-        )}
+            <textarea
+              rows={6}
+              value={formData.system_instruction}
+              onChange={(e) => handleChange('system_instruction', e.target.value)}
+              placeholder={`You are [Name], a [role/era description]. Your speaking style is [formal/conversational/archaic]. You frequently reference [topics, events, beliefs]. You approach questions through the lens of [philosophy/expertise]. You avoid [anachronisms/certain topics]. When challenged, you respond with [reasoning style].`}
+              disabled={isCreating}
+              style={inputStyle(errors.system_instruction, isCreating)}
+              onFocus={onFocus}
+              onBlur={(e) => onBlur(e, 'system_instruction')}
+            />
+          </Field>
+
+          <Field label="Behaviour Goals (optional)"
+            hint="What should this character aim to do in conversations? Comma-separated."
+          >
+            <input
+              type="text"
+              value={formData.behavior_goals}
+              onChange={(e) => handleChange('behavior_goals', e.target.value)}
+              placeholder="e.g. Share historical insights, Challenge assumptions, Teach through storytelling"
+              disabled={isCreating}
+              style={inputStyle(false, isCreating)}
+              onFocus={onFocus}
+              onBlur={(e) => onBlur(e, 'behavior_goals')}
+            />
+          </Field>
+
+          <Field label="Style & Tone Tags (optional)"
+            hint="Descriptive tags for how they communicate. Comma-separated."
+          >
+            <input
+              type="text"
+              value={formData.style_tone}
+              onChange={(e) => handleChange('style_tone', e.target.value)}
+              placeholder="e.g. Authoritative, Philosophical, Measured, Rich in metaphor"
+              disabled={isCreating}
+              style={inputStyle(false, isCreating)}
+              onFocus={onFocus}
+              onBlur={(e) => onBlur(e, 'style_tone')}
+            />
+          </Field>
+
+          <Field label="Keyword Triggers (optional)"
+            hint="Topics that naturally draw this character to engage. Comma-separated."
+          >
+            <input
+              type="text"
+              value={formData.keyword_triggers}
+              onChange={(e) => handleChange('keyword_triggers', e.target.value)}
+              placeholder="e.g. philosophy, virtue, leadership, Roman history, duty"
+              disabled={isCreating}
+              style={inputStyle(false, isCreating)}
+              onFocus={onFocus}
+              onBlur={(e) => onBlur(e, 'keyword_triggers')}
+            />
+          </Field>
+
+          <Field label="Constraints (optional)"
+            hint="Any guardrails — topics to avoid or boundaries to respect."
+          >
+            <textarea
+              rows={2}
+              value={formData.constraints}
+              onChange={(e) => handleChange('constraints', e.target.value)}
+              placeholder="e.g. Avoid referencing events after 180 AD. Do not use modern slang."
+              disabled={isCreating}
+              style={inputStyle(false, isCreating)}
+              onFocus={onFocus}
+              onBlur={(e) => onBlur(e, 'constraints')}
+            />
+          </Field>
+
+          {/* ── Section: Avatar ── */}
+          {sectionDivider('Avatar Description')}
+
+          <Field label="Visual Description (optional)"
+            hint="Describe appearance for AI image generation. Max 200 characters."
+            char={formData.visual_description.length} maxChar={200}
+          >
+            <textarea
+              rows={2}
+              value={formData.visual_description}
+              onChange={(e) => handleChange('visual_description', e.target.value.slice(0, 200))}
+              placeholder="e.g. Middle-aged man with a beard, wearing Roman imperial armour, wise and calm expression, oil painting style"
+              disabled={isCreating}
+              style={inputStyle(false, isCreating)}
+              onFocus={onFocus}
+              onBlur={(e) => onBlur(e, 'visual_description')}
+            />
+          </Field>
+
+          {/* ── Error ── */}
+          {submitError && (
+            <div style={{
+              background: 'rgba(248,113,113,0.08)',
+              border: '1px solid rgba(248,113,113,0.25)',
+              borderRadius: '8px', padding: '0.75rem 1rem',
+              color: '#f87171', fontSize: '0.82rem', margin: '0.5rem 0'
+            }}>
+              {submitError}
+            </div>
+          )}
+
+          {/* ── Submit ── */}
+          <div style={{
+            marginTop: '1.25rem', paddingTop: '1rem',
+            borderTop: '1px solid rgba(99,102,241,0.12)',
+            display: 'flex', justifyContent: 'space-between', alignItems: 'center'
+          }}>
+            <p style={{ color: '#475569', fontSize: '0.72rem', margin: 0, maxWidth: '55%' }}>
+              Your character will be reviewed for quality — usually approved within 24 hours.
+            </p>
+            <button
+              onClick={handleSubmit}
+              disabled={isCreating}
+              style={{
+                background: isCreating
+                  ? 'rgba(99,102,241,0.4)'
+                  : 'linear-gradient(135deg, #6366F1, #4f46e5)',
+                border: 'none', borderRadius: '8px',
+                color: '#fff', fontSize: '0.875rem', fontWeight: 700,
+                padding: '0.65rem 1.75rem', cursor: isCreating ? 'not-allowed' : 'pointer',
+                boxShadow: isCreating ? 'none' : '0 4px 14px rgba(99,102,241,0.45)',
+                fontFamily: "'Inter', system-ui, sans-serif",
+                display: 'flex', alignItems: 'center', gap: '0.5rem',
+                transition: 'all 0.2s ease'
+              }}
+              onMouseEnter={(e) => {
+                if (!isCreating) {
+                  e.currentTarget.style.transform = 'translateY(-1px)';
+                  e.currentTarget.style.boxShadow = '0 8px 20px rgba(79,70,229,0.7)';
+                }
+              }}
+              onMouseLeave={(e) => {
+                e.currentTarget.style.transform = 'translateY(0)';
+                e.currentTarget.style.boxShadow = isCreating ? 'none' : '0 4px 14px rgba(99,102,241,0.45)';
+              }}
+            >
+              {isCreating ? (
+                <>
+                  <div style={{
+                    width: '14px', height: '14px',
+                    border: '2px solid rgba(255,255,255,0.3)',
+                    borderTop: '2px solid #fff',
+                    borderRadius: '50%', animation: 'spin 0.8s linear infinite'
+                  }} />
+                  Submitting...
+                </>
+              ) : 'Submit for Approval →'}
+            </button>
+          </div>
+        </div>
       </div>
 
-      <style jsx>{`
-        @keyframes fadeIn {
-          from { opacity: 0; transform: translateY(20px); }
-          to   { opacity: 1; transform: translateY(0); }
-        }
-        @keyframes spin {
-          0% { transform: rotate(0deg); }
-          100% { transform: rotate(360deg); }
+      <style>{`
+        @keyframes spin { to { transform: rotate(360deg); } }
+        textarea, input { color: #F1F5F9 !important; }
+        textarea::placeholder, input::placeholder {
+          color: rgba(148,163,184,0.45) !important;
         }
       `}</style>
     </div>
