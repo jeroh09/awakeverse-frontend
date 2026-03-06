@@ -227,8 +227,8 @@ export default function QuestionEditor({ questions = [], onChange }) {
         
         {questions.length === 0 && (
           <span className="footer-hint">
-            💡 Add at least one question to help users start conversations
-          </span>
+            💡 Add a question to help users start conversations or Skip
+           </span>
         )}
       </div>
     </div>

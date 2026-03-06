@@ -48,7 +48,7 @@ export default function ScenarioCreator({
   // Validation
   const canProceedToStep2 = selectedCharacters.length >= 2 && selectedCharacters.length <= 4;
   const canProceedToStep3 = title.trim().length > 0 && description.trim().length > 0;
-  const canSave = canProceedToStep2 && canProceedToStep3 && starterQuestions.length > 0;
+  const canSave = canProceedToStep2 && canProceedToStep3;
 
   // Check 5-scenario limit
   const atScenarioLimit = currentScenarioCount >= 5;
@@ -158,7 +158,7 @@ export default function ScenarioCreator({
           </div>
           <div className={`step ${step >= 3 ? 'active' : ''}`}>
             <div className="step-number">3</div>
-            <div className="step-label">Questions</div>
+            <div className="step-label">Questions (optional)</div>
           </div>
         </div>
 
@@ -280,7 +280,7 @@ export default function ScenarioCreator({
             <div className="creator-step-content">
               <h3>Starter Questions</h3>
               <p className="step-description">
-                Add questions that users can ask to start the debate.
+                Add questions that users can ask to start the debate or Skip.
               </p>
 
               <QuestionEditor
