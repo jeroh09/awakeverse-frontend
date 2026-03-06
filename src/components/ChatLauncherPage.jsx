@@ -1090,96 +1090,20 @@ const ChatLauncherPage = ({ onStartChat, discoveredCharacters = [] }) => {
             isMobile={true}
           />
         )}
-
-        {/* Categories or Characters View */}
-        {!selectedCategory ? (
-          <div style={{
-            width: '100%',
-            display: 'grid',
-            gridTemplateColumns: 'repeat(2, 1fr)',
-            gap: '1rem',
-            marginTop: '1rem',
-          }}>
-            {enhancedCategories.map((category) => (
-              <CategoryCard
-                key={category.key}
-                category={category}
-                onClick={() => handleCategorySelect(category)}
-                isMobile={true}
-                onCreateCharacter={handleCreateCharacterClick}
-              />
-            ))}
-          </div>
-        ) : (
-          <>
-            {/* Category Header */}
-            <div style={{
-              display: 'flex',
-              justifyContent: 'space-between',
-              alignItems: 'center',
-              width: '100%',
-              maxWidth: '500px',
-              marginBottom: '1rem',
-              paddingBottom: '0.5rem',
-              borderBottom: `1px solid ${theme.colors.border.medium}`
-            }}>
-              <h2 style={{
-                color: theme.colors.text.primary,
-                fontSize: '1.5rem',
-                fontFamily: theme.typography.fonts.display,
-                margin: 0,
-                fontWeight: theme.typography.weights.bold,
-                letterSpacing: '-0.5px',
-                display: 'flex',
-                alignItems: 'center',
-                gap: '0.5rem'
-              }}>
-                {selectedCategory.icon && (
-                  <span style={{ 
-                    fontSize: '1.4rem',
-                    filter: 'drop-shadow(0 2px 4px rgba(0, 0, 0, 0.3))'
-                  }}>
-                    {selectedCategory.icon}
-                  </span>
-                )}
-                {selectedCategory.title}
-              </h2>
-
-              <button
-                onClick={handleBackToCategories}
-                style={{
-                  background: theme.colors.background.interactive,
-                  border: `1px solid ${theme.colors.border.strong}`,
-                  borderRadius: theme.borderRadius.sm,
-                  color: theme.colors.text.primary,
-                  fontSize: theme.typography.sizes.bodySmall,
-                  fontWeight: theme.typography.weights.semibold,
-                  fontFamily: theme.typography.fonts.body,
-                  padding: '0.4rem 0.9rem',
-                  cursor: 'pointer',
-                  transition: theme.transitions.normal,
-                  display: 'flex',
-                  alignItems: 'center',
-                  gap: '0.3rem'
-                }}
-              >
-                <span style={{ fontSize: '1.1rem' }}>←</span>
-                <span>Back</span>
-              </button>
-            </div>
-
-            {/* Mobile Character View */}
-            <MobileCharacterView
-              selectedCategory={selectedCategory}
-              userCharacters={userCharacters}
-              charactersLoading={charactersLoading}
-              charactersError={charactersError}
-              onCreateCharacter={handleCreateCharacterClick}
-              onCharacterSelect={handleCharacterSelect}
-              user_id={user?.id}
-            />
-          </>
-        )}
+        {/* Categories / Characters — Netflix rows (mobile) */}
+        <NetflixRightPanel
+          categories={enhancedCategories}
+          onCharacterSelect={handleCharacterSelect}
+          onCreateCharacter={handleCreateCharacterClick}
+          selectedChar={selectedChar}
+          userCharacters={userCharacters}
+          charactersLoading={charactersLoading}
+          charactersError={charactersError}
+          onCharacterPublishToggle={handleCharacterPublishToggle}
+          user_id={user?.id}
+          onShowUpgradeModal={handleShowUpgradeModal}
+          isMobile={true}
+        />
 
         {/* Character Detail Modal (Mobile) */}
         {selectedChar && (

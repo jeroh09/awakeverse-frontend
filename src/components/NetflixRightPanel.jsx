@@ -1,52 +1,30 @@
 // src/components/NetflixRightPanel.jsx
-// Netflix-style right panel — vertical scroll, horizontal rows per category
-// Sticky header updates as user scrolls through categories
+// Netflix-style panel — vertical scroll, one horizontal row per category
+// isMobile prop: same layout on mobile and desktop, different card sizes
 // Design: AwakeVerse tokens (Night Blue / Indigo / Ivory), no Lucide icons
 
-import React, { useState, useRef, useCallback, useEffect } from 'react';
+import React, { useState, useRef, useCallback, useEffect, useMemo } from 'react';
 import theme from '../design-system/tokens';
 import PublishToHubButton from './CreatorHub/PublishToHubButton';
 import DefensiveCharacterCreationWrapper from './DefensiveCharacterCreationWrapper';
 
-// ─── Avatar helper (mirrors renderSafeAvatar pattern) ────────
-function Avatar({ src, name, size = 56 }) {
-  const [failed, setFailed] = useState(false);
-  const initial = (name || 'C').charAt(0).toUpperCase();
+// ─── Card dimensions ──────────────────────────────────────────
+// One size for ALL categories — My Characters set the bar
+const CARD_W  = (isMobile) => isMobile ? 148 : 172;
+const CARD_H  = (isMobile) => isMobile ? 196 : 228;
+const GAP     = '0.75rem';
 
-  if (failed || !src) {
-    return (
-      <div style={{
-        width: size, height: size, borderRadius: '50%', flexShrink: 0,
-        background: 'linear-gradient(135deg, rgba(99,102,241,0.3), rgba(20,27,46,0.9))',
-        border: `1.5px solid ${theme.colors.accent.primary}55`,
-        display: 'flex', alignItems: 'center', justifyContent: 'center',
-        color: theme.colors.brand.ivory, fontWeight: 700,
-        fontSize: size * 0.38, fontFamily: theme.typography.fonts.display
-      }}>
-        {initial}
-      </div>
-    );
-  }
-
-  return (
-    <img
-      src={src}
-      alt={name}
-      onError={() => setFailed(true)}
-      style={{
-        width: size, height: size, borderRadius: '50%',
-        objectFit: 'cover', flexShrink: 0,
-        border: `1.5px solid ${theme.colors.accent.primary}44`
-      }}
-    />
-  );
-}
-
-// ─── Compact character card — regular categories ──────────────
-// Fixed 128px wide so rows stay tight and uniform
-function CompactCharacterCard({ character, onClick, isSelected }) {
-  const [hovered, setHovered] = useState(false);
-  const active = isSelected || hovered;
+// ─── Poster Card ──────────────────────────────────────────────
+// Image fills card background, gradient overlay, name at bottom
+// Double border: inner border + outer box-shadow ring
+// Used by every category
+function PosterCard({ character, onClick, isSelected, isMobile }) {
+  const [hovered,   setHovered]   = useState(false);
+  const [imgFailed, setImgFailed] = useState(false);
+  const active  = isSelected || hovered;
+  const initial = (character.name || 'C').charAt(0).toUpperCase();
+  const W = CARD_W(isMobile);
+  const H = CARD_H(isMobile);
 
   return (
     <div
@@ -54,128 +32,160 @@ function CompactCharacterCard({ character, onClick, isSelected }) {
       onMouseEnter={() => setHovered(true)}
       onMouseLeave={() => setHovered(false)}
       style={{
-        width: '128px',
+        width:     W,
+        height:    H,
         flexShrink: 0,
-        background: active
-          ? 'rgba(99,102,241,0.1)'
-          : theme.colors.background.surface,
-        border: `1.5px solid ${active ? theme.colors.accent.primary : theme.colors.border.medium}`,
+        position:  'relative',
         borderRadius: theme.borderRadius.md,
-        padding: '0.85rem 0.6rem 0.7rem',
-        cursor: 'pointer',
+        overflow:  'hidden',
+        cursor:    'pointer',
         transition: theme.transitions.normal,
-        display: 'flex', flexDirection: 'column',
-        alignItems: 'center', gap: '0.55rem',
-        transform: hovered ? 'translateY(-4px)' : 'translateY(0)',
+        transform: hovered
+          ? 'translateY(-5px) scale(1.025)'
+          : 'translateY(0) scale(1)',
+        // ── Double border ─────────────────────────────────
+        border: `1.5px solid ${active
+          ? theme.colors.accent.primary
+          : 'rgba(99,102,241,0.35)'}`,
         boxShadow: active
-          ? `0 8px 24px ${theme.colors.accent.primary}30`
-          : theme.shadows.elevation01
+          ? `0 0 0 3px rgba(99,102,241,0.20), 0 14px 30px rgba(10,15,26,0.75)`
+          : `0 0 0 3px rgba(99,102,241,0.07), 0 4px 14px rgba(10,15,26,0.55)`
       }}
     >
-      <Avatar src={character.thumbnailUrl} name={character.name} size={54} />
-
-      <span style={{
-        fontFamily: theme.typography.fonts.body,
-        fontSize: '0.72rem',
-        fontWeight: theme.typography.weights.semibold,
-        color: theme.colors.text.primary,
-        textAlign: 'center',
-        lineHeight: 1.25,
-        display: '-webkit-box',
-        WebkitLineClamp: 2,
-        WebkitBoxOrient: 'vertical',
-        overflow: 'hidden',
-        width: '100%'
-      }}>
-        {character.name}
-      </span>
-    </div>
-  );
-}
-
-// ─── My Character card — wider, has status + publish button ───
-// Fixed 176px wide to fit publish button comfortably
-function MyCharacterCard({ character, onClick, onPublishToggle }) {
-  const [hovered, setHovered] = useState(false);
-
-  const statusColors = {
-    pending:  { bg: 'rgba(255,165,0,0.15)', text: '#FFA500', label: '⏳ Pending' },
-    rejected: { bg: 'rgba(255,107,107,0.15)', text: '#ff6b6b', label: '❌ Rejected' },
-    approved: { bg: 'rgba(0,200,100,0.12)', text: '#00C864', label: '✓ Ready' }
-  };
-  const statusCfg = statusColors[character.status] || statusColors.approved;
-  const showStatus = character.status && character.status !== 'approved';
-
-  return (
-    <div
-      onMouseEnter={() => setHovered(true)}
-      onMouseLeave={() => setHovered(false)}
-      style={{
-        width: '176px',
-        flexShrink: 0,
-        background: hovered
-          ? 'rgba(99,102,241,0.08)'
-          : theme.colors.background.surface,
-        border: `1.5px solid ${hovered ? theme.colors.accent.primary : theme.colors.border.medium}`,
-        borderRadius: theme.borderRadius.md,
-        padding: '0.85rem 0.7rem 0.7rem',
-        cursor: 'pointer',
-        transition: theme.transitions.normal,
-        display: 'flex', flexDirection: 'column',
-        alignItems: 'center', gap: '0.5rem',
-        transform: hovered ? 'translateY(-4px)' : 'translateY(0)',
-        boxShadow: hovered ? `0 8px 24px ${theme.colors.accent.primary}25` : theme.shadows.elevation01,
-        position: 'relative'
-      }}
-    >
-      {/* Status badge — top right corner */}
-      {showStatus && (
+      {/* ── Background ── */}
+      {character.thumbnailUrl && !imgFailed ? (
+        <img
+          src={character.thumbnailUrl}
+          alt={character.name}
+          onError={() => setImgFailed(true)}
+          style={{
+            position: 'absolute', inset: 0,
+            width: '100%', height: '100%',
+            objectFit: 'cover',
+            objectPosition: 'top center',
+            display: 'block', pointerEvents: 'none'
+          }}
+        />
+      ) : (
+        /* Gradient fallback with large initial */
         <div style={{
-          position: 'absolute', top: '6px', right: '6px',
-          background: statusCfg.bg, color: statusCfg.text,
-          fontSize: '0.6rem', fontWeight: 700, padding: '2px 6px',
-          borderRadius: '5px', border: `1px solid ${statusCfg.text}44`,
-          fontFamily: theme.typography.fonts.body,
-          letterSpacing: '0.04em', whiteSpace: 'nowrap'
+          position: 'absolute', inset: 0,
+          background: `linear-gradient(155deg,
+            rgba(99,102,241,0.22) 0%,
+            rgba(10,15,26,0.97) 100%)`,
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center'
         }}>
-          {statusCfg.label}
+          <span style={{
+            fontFamily: theme.typography.fonts.display,
+            fontSize: Math.floor(H * 0.28),
+            fontWeight: 800,
+            color: `${theme.colors.accent.primary}50`,
+            userSelect: 'none', lineHeight: 1
+          }}>
+            {initial}
+          </span>
         </div>
       )}
 
-      {/* Avatar — click → handleCharacterSelect */}
-      <div onClick={() => onClick?.(character)} style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '0.5rem', width: '100%' }}>
-        <Avatar src={character.thumbnailUrl} name={character.name} size={54} />
+      {/* ── Bottom gradient overlay ── */}
+      <div style={{
+        position: 'absolute', inset: 0,
+        background:
+          'linear-gradient(to bottom, transparent 35%, rgba(10,15,26,0.82) 68%, rgba(10,15,26,0.98) 100%)',
+        pointerEvents: 'none'
+      }} />
+
+      {/* ── Hover indigo tint ── */}
+      {active && (
+        <div style={{
+          position: 'absolute', inset: 0,
+          background: 'rgba(99,102,241,0.08)',
+          pointerEvents: 'none'
+        }} />
+      )}
+
+      {/* ── Name ── */}
+      <div style={{
+        position: 'absolute', bottom: 0, left: 0, right: 0,
+        padding: '0.55rem 0.65rem 0.5rem',
+        pointerEvents: 'none'
+      }}>
         <span style={{
           fontFamily: theme.typography.fonts.body,
-          fontSize: '0.72rem',
+          fontSize: isMobile ? '0.68rem' : '0.74rem',
           fontWeight: theme.typography.weights.semibold,
-          color: theme.colors.text.primary,
-          textAlign: 'center',
+          color: theme.colors.brand.ivory,
           lineHeight: 1.25,
           display: '-webkit-box',
           WebkitLineClamp: 2,
           WebkitBoxOrient: 'vertical',
-          overflow: 'hidden',
-          width: '100%'
+          overflow: 'hidden'
         }}>
           {character.name}
         </span>
       </div>
+    </div>
+  );
+}
 
-      {/* Publish button — stopPropagation so card click doesn't fire */}
+// ─── My Characters card ───────────────────────────────────────
+// Poster + status badge overlaid + publish button BELOW (outside overflow:hidden)
+function MyCharacterCard({ character, onClick, onPublishToggle, isMobile }) {
+  const STATUS = {
+    pending:  { color: '#FFA500', label: '⏳ Pending'  },
+    rejected: { color: '#ff6b6b', label: '❌ Rejected'  },
+    approved: { color: '#00C864', label: '✓ Ready'      }
+  };
+  const s         = STATUS[character.status] || STATUS.approved;
+  const showBadge = character.status && character.status !== 'approved';
+  const W         = CARD_W(isMobile);
+
+  return (
+    <div style={{
+      width: W, flexShrink: 0,
+      display: 'flex', flexDirection: 'column', gap: '0.35rem'
+    }}>
+      {/* Poster + badge wrapper */}
+      <div style={{ position: 'relative', width: W }}>
+        <PosterCard
+          character={character}
+          onClick={onClick}
+          isMobile={isMobile}
+        />
+        {showBadge && (
+          <div style={{
+            position: 'absolute', top: 8, right: 8, zIndex: 5,
+            background: `${s.color}1c`,
+            border: `1px solid ${s.color}99`,
+            borderRadius: '5px',
+            color: s.color,
+            fontSize: '0.57rem', fontWeight: 700,
+            padding: '2px 6px',
+            fontFamily: theme.typography.fonts.body,
+            letterSpacing: '0.03em', whiteSpace: 'nowrap',
+            backdropFilter: 'blur(6px)'
+          }}>
+            {s.label}
+          </div>
+        )}
+      </div>
+
+      {/* Publish button — outside poster so overflow:hidden doesn't clip it */}
       <div
         onClick={(e) => e.stopPropagation()}
-        style={{ width: '100%', marginTop: '0.25rem', pointerEvents: 'auto' }}
+        style={{ width: '100%', pointerEvents: 'auto' }}
       >
         <PublishToHubButton
           character={{
-            id: character.id,
-            character_key: character.key,
-            display_name: character.name,
-            status: character.status,
+            id:                 character.id,
+            character_key:      character.key,
+            display_name:       character.name,
+            status:             character.status,
             is_market_featured: character.is_market_featured
           }}
-          onPublishSuccess={(updated) => onPublishToggle?.(updated)}
+          onPublishSuccess={(u) => onPublishToggle?.(u)}
           onPublishError={(err) => console.error('Publish error:', err)}
         />
       </div>
@@ -183,137 +193,186 @@ function MyCharacterCard({ character, onClick, onPublishToggle }) {
   );
 }
 
-// ─── Empty My Characters state ────────────────────────────────
-function MyCharactersEmpty({ onCreateCharacter, user_id, onShowUpgradeModal }) {
+// ─── Empty My Characters — "your IP." design ─────────────────
+// Exact markup from ChatLauncherHelpers, inlined with theme tokens
+function MyCharactersEmpty({ onCreateCharacter, user_id, onShowUpgradeModal, isMobile }) {
   return (
     <div style={{
-      display: 'flex', alignItems: 'center', gap: '1.25rem',
-      padding: '0.5rem 0'
+      display: 'flex', flexDirection: 'column',
+      alignItems: 'center', justifyContent: 'center',
+      padding: isMobile ? '1.5rem 1rem' : '2rem 1rem',
+      textAlign: 'center', width: '100%', gap: isMobile ? '1.5rem' : '2rem'
     }}>
-      {/* Placeholder card silhouette */}
-      {[0, 1, 2].map(i => (
-        <div key={i} style={{
-          width: '128px', flexShrink: 0,
-          height: '148px',
-          background: 'rgba(99,102,241,0.04)',
-          border: `1.5px dashed ${theme.colors.border.medium}`,
-          borderRadius: theme.borderRadius.md,
-          opacity: 1 - i * 0.25
-        }} />
-      ))}
 
-      {/* CTA */}
-      <div style={{ flexShrink: 0, display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
+      {/* "your IP." mark + taper underline */}
+      <div style={{
+        display: 'inline-flex', flexDirection: 'column',
+        alignItems: 'flex-start', gap: isMobile ? '8px' : '10px'
+      }}>
+        <span
+          aria-hidden="true"
+          style={{
+            lineHeight: 1, letterSpacing: '0.5px',
+            fontSize: isMobile ? '34px' : '44px',
+            userSelect: 'none', whiteSpace: 'nowrap',
+            fontFamily: theme.typography.fonts.display
+          }}
+        >
+          <span style={{ color: theme.colors.accent.primary }}>y</span>
+          <span style={{ color: theme.colors.brand.ivory }}>our </span>
+          <span style={{ color: theme.colors.accent.primary }}>I</span>
+          <span style={{ color: theme.colors.brand.ivory }}>P</span>
+          <span style={{ color: theme.colors.accent.primary }}>.</span>
+        </span>
+        {/* Indigo → Ivory taper underline */}
+        <span
+          aria-hidden="true"
+          style={{
+            height: isMobile ? '3px' : '4px',
+            width: isMobile ? '140px' : '180px',
+            borderRadius: '999px',
+            background: `linear-gradient(90deg,
+              ${theme.colors.accent.primary} 0%,
+              ${theme.colors.brand.ivory} 85%)`,
+            opacity: 0.95,
+            clipPath: 'polygon(0 0, 100% 35%, 100% 65%, 0 100%)',
+            display: 'block'
+          }}
+        />
+      </div>
+
+      {/* Title + body */}
+      <div>
+        <h3 style={{
+          fontFamily: theme.typography.fonts.display,
+          fontSize: isMobile ? '1.2rem' : '1.4rem',
+          fontWeight: theme.typography.weights.bold,
+          color: theme.colors.text.primary,
+          margin: '0 0 0.75rem 0', letterSpacing: '0.5px'
+        }}>
+          Create Your Own Character
+        </h3>
         <p style={{
           fontFamily: theme.typography.fonts.body,
-          fontSize: theme.typography.sizes.bodySmall,
+          fontSize: isMobile ? '0.85rem' : '0.9rem',
           color: theme.colors.text.secondary,
-          margin: 0, maxWidth: '160px', lineHeight: 1.4
+          lineHeight: 1.6, margin: 0,
+          maxWidth: isMobile ? '280px' : '340px'
         }}>
-          You haven't created a character yet.
+          Design a custom AI character with unique personality, expertise,
+          and backstory. From historical figures to original creations —
+          bring your vision to life.
         </p>
-        <DefensiveCharacterCreationWrapper
-          user_id={user_id}
-          onUpgradePrompt={() => onShowUpgradeModal?.('character_limit')}
-        >
-          <button
-            onClick={onCreateCharacter}
-            style={{
-              background: `linear-gradient(135deg, ${theme.colors.accent.primary}, #4f46e5)`,
-              border: 'none', borderRadius: theme.borderRadius.sm,
-              color: '#fff', fontSize: '0.75rem',
-              fontWeight: theme.typography.weights.semibold,
-              fontFamily: theme.typography.fonts.body,
-              padding: '0.5rem 1rem', cursor: 'pointer',
-              boxShadow: `0 4px 14px ${theme.colors.accent.primary}40`,
-              transition: theme.transitions.normal,
-              whiteSpace: 'nowrap'
-            }}
-            onMouseEnter={(e) => {
-              e.currentTarget.style.transform = 'translateY(-1px)';
-              e.currentTarget.style.boxShadow = `0 8px 20px ${theme.colors.accent.primary}60`;
-            }}
-            onMouseLeave={(e) => {
-              e.currentTarget.style.transform = 'translateY(0)';
-              e.currentTarget.style.boxShadow = `0 4px 14px ${theme.colors.accent.primary}40`;
-            }}
-          >
-            + Create Character
-          </button>
-        </DefensiveCharacterCreationWrapper>
       </div>
+
+      {/* "Start Creating" — ivory/silver button from original */}
+      <DefensiveCharacterCreationWrapper
+        user_id={user_id}
+        onUpgradePrompt={() => onShowUpgradeModal?.('character_limit')}
+      >
+        <button
+          onClick={onCreateCharacter}
+          style={{
+            background: 'linear-gradient(135deg, #F5F5DC, #C0C0C0)',
+            border: 'none',
+            borderRadius: isMobile ? '20px' : '25px',
+            color: '#000',
+            fontSize: isMobile ? '0.9rem' : '1rem',
+            fontWeight: 700,
+            padding: isMobile ? '0.8rem 1.5rem' : '1rem 2rem',
+            cursor: 'pointer',
+            transition: 'all 0.3s ease',
+            fontFamily: "'Georgia', serif",
+            boxShadow: '0 4px 16px rgba(0,0,0,0.4)'
+          }}
+          onMouseEnter={(e) => {
+            e.currentTarget.style.transform = 'translateY(-2px)';
+            e.currentTarget.style.boxShadow = '0 6px 24px rgba(0,0,0,0.6)';
+          }}
+          onMouseLeave={(e) => {
+            e.currentTarget.style.transform = 'translateY(0)';
+            e.currentTarget.style.boxShadow = '0 4px 16px rgba(0,0,0,0.4)';
+          }}
+        >
+          Start Creating
+        </button>
+      </DefensiveCharacterCreationWrapper>
     </div>
   );
 }
 
-// ─── Category row ─────────────────────────────────────────────
+// ─── Category Row ─────────────────────────────────────────────
 const CategoryRow = React.forwardRef(function CategoryRow(
   { category, onCharacterSelect, selectedChar, onCreateCharacter,
     onCharacterPublishToggle, user_id, onShowUpgradeModal,
-    charactersLoading, charactersError },
+    charactersLoading, charactersError, isMobile },
   ref
 ) {
   const isMyChars = category.key === 'my_characters';
-  const chars = category.characters || [];
-  const scrollRef = useRef(null);
+  const chars     = category.characters || [];
+  const stripRef  = useRef(null);
 
-  // Drag-to-scroll on the horizontal strip
-  const dragState = useRef({ dragging: false, startX: 0, scrollLeft: 0 });
-
-  const onMouseDown = (e) => {
-    dragState.current = {
-      dragging: true,
-      startX: e.pageX - scrollRef.current.offsetLeft,
-      scrollLeft: scrollRef.current.scrollLeft
+  // ── Drag-to-scroll ──────────────────────────────────────────
+  const drag = useRef({ on: false, startX: 0, sl: 0 });
+  const startDrag = (e) => {
+    if (!stripRef.current) return;
+    drag.current = {
+      on: true,
+      startX: e.pageX - stripRef.current.offsetLeft,
+      sl: stripRef.current.scrollLeft
     };
-    scrollRef.current.style.cursor = 'grabbing';
+    stripRef.current.style.cursor = 'grabbing';
   };
-  const onMouseUp = () => {
-    dragState.current.dragging = false;
-    if (scrollRef.current) scrollRef.current.style.cursor = 'grab';
+  const endDrag = () => {
+    drag.current.on = false;
+    if (stripRef.current) stripRef.current.style.cursor = 'grab';
   };
-  const onMouseMove = (e) => {
-    if (!dragState.current.dragging) return;
+  const moveDrag = (e) => {
+    if (!drag.current.on || !stripRef.current) return;
     e.preventDefault();
-    const x = e.pageX - scrollRef.current.offsetLeft;
-    const walk = (x - dragState.current.startX) * 1.2;
-    scrollRef.current.scrollLeft = dragState.current.scrollLeft - walk;
+    const x = e.pageX - stripRef.current.offsetLeft;
+    stripRef.current.scrollLeft = drag.current.sl - (x - drag.current.startX) * 1.2;
   };
+
+  const showStrip = !isMyChars ||
+    (!charactersLoading && !charactersError && chars.length > 0);
 
   return (
-    <div ref={ref} style={{ marginBottom: '1.75rem' }}>
+    <div ref={ref} style={{ marginBottom: '2rem' }}>
 
-      {/* Row label */}
+      {/* ── Row header ── */}
       <div style={{
         display: 'flex', alignItems: 'center', gap: '0.5rem',
-        marginBottom: '0.65rem', paddingLeft: '0.1rem'
+        marginBottom: '0.7rem'
       }}>
         {category.icon && (
-          <span style={{ fontSize: '1rem', lineHeight: 1 }}>{category.icon}</span>
+          <span style={{ fontSize: '0.9rem', lineHeight: 1, flexShrink: 0 }}>
+            {category.icon}
+          </span>
         )}
-        <h3 style={{
+        <span style={{
           fontFamily: theme.typography.fonts.display,
           fontSize: theme.typography.sizes.body,
           fontWeight: theme.typography.weights.bold,
           color: theme.colors.text.primary,
-          margin: 0, letterSpacing: '0.3px'
+          letterSpacing: '0.2px'
         }}>
           {category.title}
-        </h3>
+        </span>
         {/* Character count pill */}
         <span style={{
           background: `${theme.colors.accent.primary}18`,
-          border: `1px solid ${theme.colors.accent.primary}33`,
+          border: `1px solid ${theme.colors.accent.primary}2e`,
           borderRadius: '999px',
           color: theme.colors.accent.primary,
-          fontSize: '0.65rem', fontWeight: 600,
-          padding: '0.1rem 0.5rem',
+          fontSize: '0.6rem', fontWeight: 700,
+          padding: '0.1rem 0.45rem',
           fontFamily: theme.typography.fonts.body
         }}>
           {chars.length}
         </span>
 
-        {/* My characters: add create button inline */}
+        {/* + New button for My Characters when chars exist */}
         {isMyChars && chars.length > 0 && (
           <DefensiveCharacterCreationWrapper
             user_id={user_id}
@@ -324,16 +383,21 @@ const CategoryRow = React.forwardRef(function CategoryRow(
               style={{
                 marginLeft: 'auto',
                 background: 'transparent',
-                border: `1px solid ${theme.colors.accent.primary}55`,
+                border: `1px solid ${theme.colors.accent.primary}50`,
                 borderRadius: theme.borderRadius.sm,
                 color: theme.colors.accent.primary,
                 fontSize: '0.68rem', fontWeight: 600,
                 fontFamily: theme.typography.fonts.body,
-                padding: '0.2rem 0.65rem', cursor: 'pointer',
+                padding: '0.2rem 0.65rem',
+                cursor: 'pointer',
                 transition: theme.transitions.normal
               }}
-              onMouseEnter={(e) => { e.currentTarget.style.background = `${theme.colors.accent.primary}15`; }}
-              onMouseLeave={(e) => { e.currentTarget.style.background = 'transparent'; }}
+              onMouseEnter={(e) => {
+                e.currentTarget.style.background = `${theme.colors.accent.primary}14`;
+              }}
+              onMouseLeave={(e) => {
+                e.currentTarget.style.background = 'transparent';
+              }}
             >
               + New
             </button>
@@ -341,29 +405,34 @@ const CategoryRow = React.forwardRef(function CategoryRow(
         )}
       </div>
 
-      {/* My Characters loading/error states */}
+      {/* ── Loading (My Characters only) ── */}
       {isMyChars && charactersLoading && (
-        <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', padding: '0.5rem 0' }}>
+        <div style={{
+          display: 'flex', alignItems: 'center', gap: '0.65rem',
+          padding: '0.4rem 0'
+        }}>
           <div style={{
-            width: '20px', height: '20px', flexShrink: 0,
+            width: 18, height: 18, flexShrink: 0,
             border: `2px solid ${theme.colors.border.medium}`,
             borderTop: `2px solid ${theme.colors.accent.primary}`,
-            borderRadius: '50%', animation: 'nrp-spin 0.8s linear infinite'
+            borderRadius: '50%',
+            animation: 'nrp-spin 0.8s linear infinite'
           }} />
           <span style={{
             fontFamily: theme.typography.fonts.body,
             fontSize: theme.typography.sizes.bodySmall,
             color: theme.colors.text.secondary
           }}>
-            Loading your characters...
+            Loading your characters…
           </span>
         </div>
       )}
 
+      {/* ── Error (My Characters only) ── */}
       {isMyChars && !charactersLoading && charactersError && (
         <div style={{
-          padding: '0.6rem 0.85rem',
-          background: 'rgba(255,107,107,0.08)',
+          padding: '0.5rem 0.75rem',
+          background: 'rgba(255,107,107,0.07)',
           border: '1px solid rgba(255,107,107,0.2)',
           borderRadius: theme.borderRadius.sm,
           color: '#ff6b6b',
@@ -374,30 +443,33 @@ const CategoryRow = React.forwardRef(function CategoryRow(
         </div>
       )}
 
-      {/* Empty state for My Characters */}
+      {/* ── Empty My Characters — "your IP." design ── */}
       {isMyChars && !charactersLoading && !charactersError && chars.length === 0 && (
         <MyCharactersEmpty
           onCreateCharacter={onCreateCharacter}
           user_id={user_id}
           onShowUpgradeModal={onShowUpgradeModal}
+          isMobile={isMobile}
         />
       )}
 
-      {/* Horizontal scroll strip */}
-      {(!isMyChars || (!charactersLoading && !charactersError && chars.length > 0)) && (
+      {/* ── Horizontal scroll strip ── */}
+      {showStrip && (
         <div
-          ref={scrollRef}
-          onMouseDown={onMouseDown}
-          onMouseUp={onMouseUp}
-          onMouseLeave={onMouseUp}
-          onMouseMove={onMouseMove}
+          ref={stripRef}
+          onMouseDown={startDrag}
+          onMouseUp={endDrag}
+          onMouseLeave={endDrag}
+          onMouseMove={moveDrag}
           style={{
-            display: 'flex', gap: '0.65rem',
-            overflowX: 'auto', overflowY: 'visible',
-            paddingBottom: '0.5rem',
-            paddingTop: '0.15rem',
+            display: 'flex',
+            gap: GAP,
+            overflowX: 'auto',
+            overflowY: 'visible',    // allow card lift on hover
+            paddingBottom: '0.65rem',
+            paddingTop: '0.2rem',
+            paddingRight: '2rem',    // trailing space — prevents right-edge clip
             cursor: 'grab',
-            // Hide scrollbar cross-browser
             scrollbarWidth: 'none',
             msOverflowStyle: 'none',
             WebkitOverflowScrolling: 'touch'
@@ -410,13 +482,15 @@ const CategoryRow = React.forwardRef(function CategoryRow(
                 character={character}
                 onClick={onCharacterSelect}
                 onPublishToggle={onCharacterPublishToggle}
+                isMobile={isMobile}
               />
             ) : (
-              <CompactCharacterCard
+              <PosterCard
                 key={character.key || idx}
                 character={character}
                 onClick={onCharacterSelect}
                 isSelected={selectedChar?.key === character.key}
+                isMobile={isMobile}
               />
             )
           )}
@@ -424,13 +498,19 @@ const CategoryRow = React.forwardRef(function CategoryRow(
           {/* Empty category placeholder */}
           {chars.length === 0 && !isMyChars && (
             <div style={{
-              width: '128px', height: '148px', flexShrink: 0,
+              width: CARD_W(isMobile),
+              height: CARD_H(isMobile),
+              flexShrink: 0,
               background: 'rgba(99,102,241,0.04)',
-              border: `1.5px dashed ${theme.colors.border.medium}`,
+              border: '1px dashed rgba(99,102,241,0.2)',
+              boxShadow: '0 0 0 3px rgba(99,102,241,0.03)',
               borderRadius: theme.borderRadius.md,
               display: 'flex', alignItems: 'center', justifyContent: 'center'
             }}>
-              <span style={{ color: theme.colors.text.secondary, fontSize: '0.7rem' }}>
+              <span style={{
+                color: theme.colors.text.secondary, fontSize: '0.7rem',
+                fontFamily: theme.typography.fonts.body
+              }}>
                 Coming soon
               </span>
             </div>
@@ -443,57 +523,47 @@ const CategoryRow = React.forwardRef(function CategoryRow(
 
 // ─── Main panel ───────────────────────────────────────────────
 const NetflixRightPanel = ({
-  categories = [],
+  categories            = [],
   onCharacterSelect,
   onCreateCharacter,
   selectedChar,
-  userCharacters = [],
-  charactersLoading = false,
-  charactersError = null,
+  userCharacters        = [],
+  charactersLoading     = false,
+  charactersError       = null,
   onCharacterPublishToggle,
   user_id,
-  onShowUpgradeModal
+  onShowUpgradeModal,
+  isMobile              = false
 }) => {
-  const containerRef  = useRef(null);
-  const rowRefs       = useRef([]);
+  const containerRef = useRef(null);
+  const rowRefs      = useRef([]);
+  // null = at top (show only static title), object = scrolled (show category sub-label)
   const [activeCategory, setActiveCategory] = useState(null);
 
-  // Sort: My Characters always first, rest in original order
-  const sortedCategories = React.useMemo(() => {
+  // My Characters pinned first, rest in original order
+  const sortedCategories = useMemo(() => {
     const myChars = categories.find(c => c.key === 'my_characters');
     const rest    = categories.filter(c => c.key !== 'my_characters');
     return myChars ? [myChars, ...rest] : categories;
   }, [categories]);
 
-  // Set initial active category
-  useEffect(() => {
-    if (sortedCategories.length > 0 && !activeCategory) {
-      setActiveCategory(sortedCategories[0]);
-    }
-  }, [sortedCategories]);
-
-  // Update sticky header as user scrolls
+  // Update sticky sub-label as user scrolls
   const handleScroll = useCallback(() => {
-    const container = containerRef.current;
-    if (!container) return;
+    const el = containerRef.current;
+    if (!el) return;
+    const top = el.scrollTop;
 
-    const scrollTop = container.scrollTop;
-    let closestIdx  = 0;
-    let closestDist = Infinity;
+    if (top < 12) { setActiveCategory(null); return; }
 
-    rowRefs.current.forEach((el, i) => {
-      if (!el) return;
-      const dist = Math.abs(el.offsetTop - scrollTop - 8);
-      if (dist < closestDist) {
-        closestDist = dist;
-        closestIdx  = i;
-      }
+    let best = 0, bestDist = Infinity;
+    rowRefs.current.forEach((rowEl, i) => {
+      if (!rowEl) return;
+      const dist = Math.abs(rowEl.offsetTop - top - 4);
+      if (dist < bestDist) { bestDist = dist; best = i; }
     });
-
-    setActiveCategory(sortedCategories[closestIdx] || null);
+    setActiveCategory(sortedCategories[best] || null);
   }, [sortedCategories]);
 
-  // Attach scroll listener
   useEffect(() => {
     const el = containerRef.current;
     if (!el) return;
@@ -505,55 +575,79 @@ const NetflixRightPanel = ({
     <div style={{
       width: '100%', height: '100%',
       display: 'flex', flexDirection: 'column',
-      position: 'relative', overflow: 'hidden'
+      position: 'relative'
+      // No overflow:hidden — strips own their horizontal scroll
     }}>
 
-      {/* ── Sticky category header ─────────────────────────── */}
+      {/* ── Header ──────────────────────────────────────────── */}
+      {/* Centered title so it doesn't collide with left-side header/breadcrumb */}
       <div style={{
-        position: 'sticky', top: 0, zIndex: 10, flexShrink: 0,
-        background: `${theme.colors.background.canvas}f0`,
-        backdropFilter: 'blur(12px)',
+        flexShrink: 0, zIndex: 10,
+        background: `${theme.colors.background.canvas}ee`,
+        backdropFilter: 'blur(14px)',
         borderBottom: `1px solid ${theme.colors.border.medium}`,
-        padding: '0.55rem 1.5rem',
-        display: 'flex', alignItems: 'center', gap: '0.5rem',
-        minHeight: '40px'
+        padding: isMobile
+          ? '0.5rem 1rem 0.35rem'
+          : '0.5rem 1.5rem 0.35rem',
+        textAlign: 'center'            // ← centred so it doesn't block left header
       }}>
-        {activeCategory?.icon && (
-          <span style={{ fontSize: '0.95rem', lineHeight: 1 }}>
-            {activeCategory.icon}
-          </span>
-        )}
+        {/* Static title */}
         <span style={{
+          display: 'block',
           fontFamily: theme.typography.fonts.display,
-          fontSize: theme.typography.sizes.body,
+          fontSize: isMobile ? '0.88rem' : '0.95rem',
           fontWeight: theme.typography.weights.bold,
           color: theme.colors.text.primary,
-          letterSpacing: '0.3px',
-          transition: 'opacity 0.2s ease'
+          letterSpacing: '0.15px',
+          lineHeight: 1.3
         }}>
-          {activeCategory?.title || ''}
+          Create or Explore Characters
         </span>
-        {activeCategory && (
+
+        {/* Category sub-label — fades in once user scrolls */}
+        <div style={{
+          height: '1rem',
+          display: 'flex', alignItems: 'center',
+          justifyContent: 'center', gap: '0.3rem',
+          opacity: activeCategory ? 1 : 0,
+          transition: 'opacity 0.18s ease',
+          pointerEvents: 'none',
+          marginTop: '0.1rem'
+        }}>
+          {activeCategory?.icon && (
+            <span style={{ fontSize: '0.7rem', lineHeight: 1 }}>
+              {activeCategory.icon}
+            </span>
+          )}
           <span style={{
             fontFamily: theme.typography.fonts.body,
             fontSize: theme.typography.sizes.caption,
-            color: theme.colors.text.secondary,
-            marginLeft: '0.25rem'
+            color: theme.colors.accent.primary,
+            fontWeight: theme.typography.weights.semibold
           }}>
-            {(activeCategory.characters || []).length} characters
+            {activeCategory?.title}
           </span>
-        )}
+          <span style={{
+            fontFamily: theme.typography.fonts.body,
+            fontSize: theme.typography.sizes.caption,
+            color: theme.colors.text.secondary
+          }}>
+            · {(activeCategory?.characters || []).length}
+          </span>
+        </div>
       </div>
 
       {/* ── Scrollable rows ─────────────────────────────────── */}
+      {/* Left-pad here, NO right-pad — each strip provides its own paddingRight */}
       <div
         ref={containerRef}
         style={{
           flex: 1,
           overflowY: 'auto',
           overflowX: 'hidden',
-          padding: '1.25rem 1.5rem 2rem',
-          // Hide scrollbar
+          padding: isMobile
+            ? '1rem 0 2rem 1rem'
+            : '1.25rem 0 2.5rem 1.5rem',
           scrollbarWidth: 'thin',
           scrollbarColor: `${theme.colors.border.medium} transparent`
         }}
@@ -569,15 +663,18 @@ const NetflixRightPanel = ({
             onCharacterPublishToggle={onCharacterPublishToggle}
             user_id={user_id}
             onShowUpgradeModal={onShowUpgradeModal}
-            charactersLoading={category.key === 'my_characters' ? charactersLoading : false}
-            charactersError={category.key === 'my_characters' ? charactersError : null}
+            charactersLoading={
+              category.key === 'my_characters' ? charactersLoading : false
+            }
+            charactersError={
+              category.key === 'my_characters' ? charactersError : null
+            }
+            isMobile={isMobile}
           />
         ))}
       </div>
 
-      {/* Hide webkit scrollbar on horizontal strips */}
       <style>{`
-        .nrp-hscroll::-webkit-scrollbar { display: none; }
         @keyframes nrp-spin { to { transform: rotate(360deg); } }
       `}</style>
     </div>
