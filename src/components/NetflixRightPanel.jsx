@@ -11,7 +11,7 @@ import DefensiveCharacterCreationWrapper from './DefensiveCharacterCreationWrapp
 // ─── Card dimensions ──────────────────────────────────────────
 // One size for ALL categories — My Characters set the bar
 const CARD_W  = (isMobile) => isMobile ? 148 : 172;
-const CARD_H  = (isMobile) => isMobile ? 196 : 228;
+const CARD_H  = (isMobile) => isMobile ? 216 : 252; // extra height for description
 const GAP     = '0.75rem';
 
 // ─── Poster Card ──────────────────────────────────────────────
@@ -89,11 +89,11 @@ function PosterCard({ character, onClick, isSelected, isMobile }) {
         </div>
       )}
 
-      {/* ── Bottom gradient overlay ── */}
+      {/* ── Bottom gradient overlay — taller to cover name + description ── */}
       <div style={{
         position: 'absolute', inset: 0,
         background:
-          'linear-gradient(to bottom, transparent 35%, rgba(10,15,26,0.82) 68%, rgba(10,15,26,0.98) 100%)',
+          'linear-gradient(to bottom, transparent 25%, rgba(10,15,26,0.72) 55%, rgba(10,15,26,0.96) 78%, rgba(10,15,26,1) 100%)',
         pointerEvents: 'none'
       }} />
 
@@ -106,25 +106,44 @@ function PosterCard({ character, onClick, isSelected, isMobile }) {
         }} />
       )}
 
-      {/* ── Name ── */}
+      {/* ── Name + description ── */}
       <div style={{
         position: 'absolute', bottom: 0, left: 0, right: 0,
-        padding: '0.55rem 0.65rem 0.5rem',
-        pointerEvents: 'none'
+        padding: isMobile ? '0.5rem 0.6rem 0.45rem' : '0.55rem 0.65rem 0.5rem',
+        pointerEvents: 'none',
+        display: 'flex', flexDirection: 'column', gap: '0.2rem'
       }}>
+        {/* Name — display font (Syne) */}
         <span style={{
-          fontFamily: theme.typography.fonts.body,
-          fontSize: isMobile ? '0.68rem' : '0.74rem',
-          fontWeight: theme.typography.weights.semibold,
+          fontFamily: theme.typography.fonts.display,
+          fontSize: isMobile ? '0.7rem' : '0.76rem',
+          fontWeight: theme.typography.weights.bold,
           color: theme.colors.brand.ivory,
-          lineHeight: 1.25,
+          lineHeight: 1.2,
           display: '-webkit-box',
-          WebkitLineClamp: 2,
+          WebkitLineClamp: 1,
           WebkitBoxOrient: 'vertical',
-          overflow: 'hidden'
+          overflow: 'hidden',
+          letterSpacing: '0.2px'
         }}>
           {character.name}
         </span>
+        {/* Description — body font (Inter) */}
+        {character.description && (
+          <span style={{
+            fontFamily: theme.typography.fonts.body,
+            fontSize: isMobile ? '0.58rem' : '0.62rem',
+            fontWeight: 400,
+            color: `${theme.colors.brand.ivory}99`,
+            lineHeight: 1.35,
+            display: '-webkit-box',
+            WebkitLineClamp: 2,
+            WebkitBoxOrient: 'vertical',
+            overflow: 'hidden'
+          }}>
+            {character.description}
+          </span>
+        )}
       </div>
     </div>
   );
@@ -193,108 +212,205 @@ function MyCharacterCard({ character, onClick, onPublishToggle, isMobile }) {
   );
 }
 
-// ─── Empty My Characters — "your IP." design ─────────────────
-// Exact markup from ChatLauncherHelpers, inlined with theme tokens
+// ─── Empty My Characters — three-panel design ────────────────
+// Card 1: "your IP." mark + title + description
+// Card 2: CTA — click to start creating
+// Card 3: ghost — awaiting creation
 function MyCharactersEmpty({ onCreateCharacter, user_id, onShowUpgradeModal, isMobile }) {
-  return (
-    <div style={{
-      display: 'flex', flexDirection: 'column',
-      alignItems: 'center', justifyContent: 'center',
-      padding: isMobile ? '1.5rem 1rem' : '2rem 1rem',
-      textAlign: 'center', width: '100%', gap: isMobile ? '1.5rem' : '2rem'
-    }}>
+  const [ctaHovered, setCtaHovered] = useState(false);
+  const W = CARD_W(isMobile);
+  const H = CARD_H(isMobile);
 
-      {/* "your IP." mark + taper underline */}
-      <div style={{
-        display: 'inline-flex', flexDirection: 'column',
-        alignItems: 'flex-start', gap: isMobile ? '8px' : '10px'
-      }}>
-        <span
-          aria-hidden="true"
-          style={{
+  // Shared card shell style — double border, same as PosterCard
+  const cardShell = (extra = {}) => ({
+    width: W, height: H, flexShrink: 0,
+    borderRadius: theme.borderRadius.md,
+    border: `1.5px solid rgba(99,102,241,0.35)`,
+    boxShadow: `0 0 0 3px rgba(99,102,241,0.07), 0 4px 14px rgba(10,15,26,0.55)`,
+    background: theme.colors.background.surface,
+    display: 'flex', flexDirection: 'column',
+    alignItems: 'flex-start', justifyContent: 'flex-end',
+    padding: '1rem 0.85rem 0.85rem',
+    position: 'relative', overflow: 'hidden',
+    ...extra
+  });
+
+  return (
+    <div style={{ display: 'flex', gap: '0.75rem', alignItems: 'flex-start' }}>
+
+      {/* ── Card 1: your IP. + description ───────────────── */}
+      <div style={cardShell()}>
+        {/* Subtle indigo radial glow top-left */}
+        <div style={{
+          position: 'absolute', top: '-20%', left: '-15%',
+          width: '130%', height: '70%',
+          background: `radial-gradient(ellipse at top left,
+            rgba(99,102,241,0.14) 0%,
+            transparent 70%)`,
+          pointerEvents: 'none'
+        }} />
+
+        {/* "your IP." mark */}
+        <div style={{
+          position: 'absolute', top: '1rem', left: '0.85rem',
+          display: 'inline-flex', flexDirection: 'column',
+          alignItems: 'flex-start', gap: isMobile ? '6px' : '8px'
+        }}>
+          <span aria-hidden="true" style={{
             lineHeight: 1, letterSpacing: '0.5px',
-            fontSize: isMobile ? '34px' : '44px',
+            fontSize: isMobile ? '26px' : '32px',
             userSelect: 'none', whiteSpace: 'nowrap',
             fontFamily: theme.typography.fonts.display
-          }}
-        >
-          <span style={{ color: theme.colors.accent.primary }}>y</span>
-          <span style={{ color: theme.colors.brand.ivory }}>our </span>
-          <span style={{ color: theme.colors.accent.primary }}>I</span>
-          <span style={{ color: theme.colors.brand.ivory }}>P</span>
-          <span style={{ color: theme.colors.accent.primary }}>.</span>
-        </span>
-        {/* Indigo → Ivory taper underline */}
-        <span
-          aria-hidden="true"
-          style={{
-            height: isMobile ? '3px' : '4px',
-            width: isMobile ? '140px' : '180px',
+          }}>
+            <span style={{ color: theme.colors.accent.primary }}>y</span>
+            <span style={{ color: theme.colors.brand.ivory }}>our </span>
+            <span style={{ color: theme.colors.accent.primary }}>I</span>
+            <span style={{ color: theme.colors.brand.ivory }}>P</span>
+            <span style={{ color: theme.colors.accent.primary }}>.</span>
+          </span>
+          {/* Indigo → Ivory taper underline */}
+          <span aria-hidden="true" style={{
+            height: isMobile ? '2px' : '3px',
+            width: isMobile ? '90px' : '112px',
             borderRadius: '999px',
             background: `linear-gradient(90deg,
               ${theme.colors.accent.primary} 0%,
               ${theme.colors.brand.ivory} 85%)`,
-            opacity: 0.95,
+            opacity: 0.9,
             clipPath: 'polygon(0 0, 100% 35%, 100% 65%, 0 100%)',
             display: 'block'
-          }}
-        />
+          }} />
+        </div>
+
+        {/* Text at bottom */}
+        <div style={{ position: 'relative', zIndex: 1 }}>
+          <p style={{
+            fontFamily: theme.typography.fonts.display,
+            fontSize: isMobile ? '0.7rem' : '0.75rem',
+            fontWeight: theme.typography.weights.bold,
+            color: theme.colors.text.primary,
+            margin: '0 0 0.3rem 0',
+            lineHeight: 1.3
+          }}>
+            Create Your Own Character
+          </p>
+          <p style={{
+            fontFamily: theme.typography.fonts.body,
+            fontSize: isMobile ? '0.62rem' : '0.66rem',
+            color: theme.colors.text.secondary,
+            margin: 0, lineHeight: 1.45
+          }}>
+            Design a custom AI character with unique personality &amp; expertise.
+          </p>
+        </div>
       </div>
 
-      {/* Title + body */}
-      <div>
-        <h3 style={{
-          fontFamily: theme.typography.fonts.display,
-          fontSize: isMobile ? '1.2rem' : '1.4rem',
-          fontWeight: theme.typography.weights.bold,
-          color: theme.colors.text.primary,
-          margin: '0 0 0.75rem 0', letterSpacing: '0.5px'
-        }}>
-          Create Your Own Character
-        </h3>
-        <p style={{
-          fontFamily: theme.typography.fonts.body,
-          fontSize: isMobile ? '0.85rem' : '0.9rem',
-          color: theme.colors.text.secondary,
-          lineHeight: 1.6, margin: 0,
-          maxWidth: isMobile ? '280px' : '340px'
-        }}>
-          Design a custom AI character with unique personality & expertise,
-        </p>
-      </div>
-
-      {/* "Start Creating" — ivory/silver button from original */}
+      {/* ── Card 2: CTA — click to start creating ─────────── */}
       <DefensiveCharacterCreationWrapper
         user_id={user_id}
         onUpgradePrompt={() => onShowUpgradeModal?.('character_limit')}
       >
-        <button
+        <div
           onClick={onCreateCharacter}
+          onMouseEnter={() => setCtaHovered(true)}
+          onMouseLeave={() => setCtaHovered(false)}
           style={{
-            background: 'linear-gradient(135deg, #F5F5DC, #C0C0C0)',
-            border: 'none',
-            borderRadius: isMobile ? '20px' : '25px',
-            color: '#000',
-            fontSize: isMobile ? '0.9rem' : '1rem',
-            fontWeight: 700,
-            padding: isMobile ? '0.8rem 1.5rem' : '1rem 2rem',
+            ...cardShell(),
             cursor: 'pointer',
-            transition: 'all 0.3s ease',
-            fontFamily: "'Georgia', serif",
-            boxShadow: '0 4px 16px rgba(0,0,0,0.4)'
-          }}
-          onMouseEnter={(e) => {
-            e.currentTarget.style.transform = 'translateY(-2px)';
-            e.currentTarget.style.boxShadow = '0 6px 24px rgba(0,0,0,0.6)';
-          }}
-          onMouseLeave={(e) => {
-            e.currentTarget.style.transform = 'translateY(0)';
-            e.currentTarget.style.boxShadow = '0 4px 16px rgba(0,0,0,0.4)';
+            border: `1.5px solid ${ctaHovered
+              ? theme.colors.accent.primary
+              : 'rgba(99,102,241,0.45)'}`,
+            boxShadow: ctaHovered
+              ? `0 0 0 3px rgba(99,102,241,0.20), 0 14px 30px rgba(10,15,26,0.75)`
+              : `0 0 0 3px rgba(99,102,241,0.07), 0 4px 14px rgba(10,15,26,0.55)`,
+            background: ctaHovered
+              ? 'rgba(99,102,241,0.09)'
+              : theme.colors.background.surface,
+            transform: ctaHovered ? 'translateY(-5px) scale(1.025)' : 'none',
+            transition: theme.transitions.normal,
+            alignItems: 'center', justifyContent: 'center',
+            textAlign: 'center', gap: '0.65rem', flexDirection: 'column'
           }}
         >
-          Start Creating
-        </button>
+          {/* Plus icon — SVG, no Lucide */}
+          <div style={{
+            width: isMobile ? 36 : 44, height: isMobile ? 36 : 44,
+            borderRadius: '50%',
+            background: ctaHovered
+              ? `linear-gradient(135deg, ${theme.colors.accent.primary}, #4f46e5)`
+              : `rgba(99,102,241,0.14)`,
+            border: `1.5px solid ${ctaHovered
+              ? theme.colors.accent.primary
+              : 'rgba(99,102,241,0.35)'}`,
+            display: 'flex', alignItems: 'center', justifyContent: 'center',
+            transition: theme.transitions.normal, flexShrink: 0
+          }}>
+            <svg
+              width={isMobile ? 16 : 20}
+              height={isMobile ? 16 : 20}
+              viewBox="0 0 20 20" fill="none"
+            >
+              <line x1="10" y1="3" x2="10" y2="17"
+                stroke={ctaHovered ? '#fff' : theme.colors.accent.primary}
+                strokeWidth="2" strokeLinecap="round"/>
+              <line x1="3" y1="10" x2="17" y2="10"
+                stroke={ctaHovered ? '#fff' : theme.colors.accent.primary}
+                strokeWidth="2" strokeLinecap="round"/>
+            </svg>
+          </div>
+
+          <div>
+            <p style={{
+              fontFamily: theme.typography.fonts.display,
+              fontSize: isMobile ? '0.72rem' : '0.78rem',
+              fontWeight: theme.typography.weights.bold,
+              color: ctaHovered ? theme.colors.text.primary : theme.colors.text.secondary,
+              margin: '0 0 0.2rem 0',
+              transition: theme.transitions.normal
+            }}>
+              Start Creating
+            </p>
+            <p style={{
+              fontFamily: theme.typography.fonts.body,
+              fontSize: isMobile ? '0.6rem' : '0.64rem',
+              color: theme.colors.text.secondary,
+              margin: 0
+            }}>
+              Click to begin
+            </p>
+          </div>
+        </div>
       </DefensiveCharacterCreationWrapper>
+
+      {/* ── Card 3: ghost — awaiting creation ─────────────── */}
+      <div style={{
+        ...cardShell(),
+        border: '1px dashed rgba(99,102,241,0.2)',
+        boxShadow: '0 0 0 3px rgba(99,102,241,0.03)',
+        background: 'rgba(99,102,241,0.025)',
+        alignItems: 'center', justifyContent: 'center',
+        opacity: 0.55
+      }}>
+        <div style={{ textAlign: 'center' }}>
+          {/* Ghost avatar circle */}
+          <div style={{
+            width: isMobile ? 36 : 44, height: isMobile ? 36 : 44,
+            borderRadius: '50%',
+            border: '1px dashed rgba(99,102,241,0.35)',
+            margin: '0 auto 0.6rem',
+            background: 'rgba(99,102,241,0.06)'
+          }} />
+          <p style={{
+            fontFamily: theme.typography.fonts.body,
+            fontSize: isMobile ? '0.6rem' : '0.64rem',
+            color: theme.colors.text.secondary,
+            margin: 0, lineHeight: 1.4
+          }}>
+            Awaiting<br />creation
+          </p>
+        </div>
+      </div>
+
     </div>
   );
 }
