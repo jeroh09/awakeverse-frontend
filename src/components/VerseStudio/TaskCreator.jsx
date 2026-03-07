@@ -370,18 +370,23 @@ export default function TaskCreator({
           </div>
 
           {/* Step 2 — role assignment */}
+          {/* Conditionally rendered — RoleAssignmentStep initializes from selectedLlms  */}
+          {/* which must already be set. Mounting only on step===2 guarantees this.       */}
+          {/* roleAssignments in parent preserves edits if user navigates back/forward.  */}
           <div className={`wsc-step${step === 2 ? ' visible' : ''}`}>
-            <div className="wsc-role-wrap">
-              <RoleAssignmentStep
-                template={template}
-                selectedLlms={selectedLlms}
-                llmOptions={llmOptions}
-                initialAssignments={roleAssignments}
-                onAssignmentsChange={setRoleAssignments}
-                onBack={handleBackToStep1}
-                onSubmit={handleSubmitWithRoles}
-              />
-            </div>
+            {step === 2 && (
+              <div className="wsc-role-wrap">
+                <RoleAssignmentStep
+                  template={template}
+                  selectedLlms={selectedLlms}
+                  llmOptions={llmOptions}
+                  initialAssignments={roleAssignments}
+                  onAssignmentsChange={setRoleAssignments}
+                  onBack={handleBackToStep1}
+                  onSubmit={handleSubmitWithRoles}
+                />
+              </div>
+            )}
           </div>
 
           </div>{/* /wsc-step-area */}
