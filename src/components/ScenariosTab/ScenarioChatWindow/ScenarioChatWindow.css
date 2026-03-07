@@ -31,7 +31,7 @@
   z-index: 1000;
 }
 
-/* AwakeVerse (Dark) Theme */
+/* Awakeverse (Dark) Theme */
 .scenario-chat-window.theme-awakeverse {
   --chat-bg-primary: #0d1b2a;
   --chat-bg-secondary: rgba(13, 27, 42, 0.9);
@@ -103,38 +103,48 @@
 
 /* ===== CHAT HEADER ===== */
 .chat-header {
-  padding: 1.5rem 2rem;
+  padding: 0.65rem 1.25rem 0.65rem 1rem;
   border-bottom: 1px solid var(--chat-border-color);
   background: var(--chat-bg-card);
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  flex-shrink: 0;          /* never grows to push chat content down */
 }
 
 .scenario-title {
-  font-size: 1.5rem;
+  font-size: 1rem;
   color: var(--chat-accent-primary);
-  font-weight: 600;
-  margin: 0 0 0.5rem 0;
-  line-height: 1.3;
+  font-weight: 700;
+  margin: 0 0 0.2rem 0;
+  line-height: 1.25;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 
 .scenario-description {
-  font-size: 0.9rem;
+  font-size: 0.78rem;
   color: var(--chat-text-secondary);
   margin: 0;
-  line-height: 1.5;
+  line-height: 1.35;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 
 /* Mobile: Smaller header */
 @media (max-width: 768px) {
   .chat-header {
-    padding: 1rem 1.5rem;
+    padding: 0.5rem 0.85rem;
   }
   
   .scenario-title {
-    font-size: 1.25rem;
+    font-size: 0.9rem;
   }
   
   .scenario-description {
-    font-size: 0.85rem;
+    font-size: 0.72rem;
   }
 }
 
@@ -400,7 +410,7 @@
 
 /* ===== THEME OVERRIDES ===== */
 
-/* AwakeVerse (Dark) Theme */
+/* Awakeverse (Dark) Theme */
 .theme-awakeverse .init-loading-state {
   color: var(--chat-text-secondary, #a8c5da);
 }
@@ -493,14 +503,16 @@
 .usage-indicator {
   display: flex;
   align-items: center;
-  gap: 0.5rem;
-  padding: 0.75rem 1rem;
+  gap: 0.4rem;
+  padding: 0.3rem 0.65rem;
   background: var(--chat-accent-light, rgba(52, 152, 219, 0.1));
   border: 1px solid var(--chat-accent-primary, #3498db);
-  border-radius: 8px;
-  margin-top: 1rem;
-  font-size: 0.9rem;
+  border-radius: 6px;
+  margin-top: 0.4rem;
+  font-size: 0.75rem;
   color: var(--chat-text-primary, #2c3e50);
+  display: inline-flex;  /* shrink to content, not full width */
+  align-self: flex-start;
 }
 
 .usage-icon {
@@ -766,7 +778,7 @@
 
 /* ===== THEME OVERRIDES ===== */
 
-/* AwakeVerse (Dark) Theme */
+/* Awakeverse (Dark) Theme */
 .theme-awakeverse .usage-indicator {
   background: rgba(52, 152, 219, 0.15);
   border-color: rgba(52, 152, 219, 0.3);
