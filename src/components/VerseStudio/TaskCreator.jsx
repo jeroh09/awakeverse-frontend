@@ -252,7 +252,7 @@ export default function TaskCreator({
       </div>
 
       {/* ── Body ── */}
-      <div className="wsc-body">
+      <div className={`wsc-body${step === 2 ? ' step2' : ''}`}>
 
         {/* ── Left panel: LLM selector ── */}
         <div className="wsc-left">
@@ -299,7 +299,7 @@ export default function TaskCreator({
           <div className="wsc-step-area">
 
           {/* Step 1 — name + description */}
-          <div className={`wsc-step${step === 1 ? ' visible' : ''}`}>
+          <div className={`wsc-step wsc-step-form${step === 1 ? ' visible' : ''}`}>
 
             {/* Template strip (compact) */}
             {template && (
@@ -373,7 +373,7 @@ export default function TaskCreator({
           {/* Conditionally rendered — RoleAssignmentStep initializes from selectedLlms  */}
           {/* which must already be set. Mounting only on step===2 guarantees this.       */}
           {/* roleAssignments in parent preserves edits if user navigates back/forward.  */}
-          <div className={`wsc-step${step === 2 ? ' visible' : ''}`}>
+          <div className={`wsc-step wsc-step-roles${step === 2 ? ' visible' : ''}`}>
             {step === 2 && (
               <div className="wsc-role-wrap">
                 <RoleAssignmentStep

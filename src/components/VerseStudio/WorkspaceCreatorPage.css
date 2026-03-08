@@ -351,40 +351,49 @@
   border-radius: 2px;
 }
 
-/* ── Step area: flex:1 container that steps are absolute within ── */
-/* Footer sits BELOW this — steps never overlap it */
+/* ── Step area ── */
+/* Normal flex child — steps flow inside it, footer stays below */
 .wsc-step-area {
   flex: 1;
-  position: relative;
-  overflow: hidden;
+  display: flex;
+  flex-direction: column;
   min-height: 0;
+  overflow: hidden;
 }
 
 /* ── Step fade wrapper ── */
-/* Both steps live in the DOM — we show/hide with opacity + pointer-events */
 .wsc-step {
   opacity: 0;
   pointer-events: none;
   transition: opacity 0.22s ease;
-  position: absolute;
-  inset: 0;
-  height: 100%;                          /* must fill the step-area */
-  padding: 1.4rem 1.75rem 1rem;
-  overflow-y: auto;
-  display: flex;
+  display: none;                         /* hidden steps take no space */
   flex-direction: column;
-  gap: 0;
+  flex: 1;
+  min-height: 0;
+}
+.wsc-step.visible {
+  display: flex;                         /* visible step flows normally */
+  opacity: 1;
+  pointer-events: auto;
+}
+
+/* Step 1 — scrollable, padded */
+.wsc-step-form {
+  overflow-y: auto;
+  padding: 1.4rem 1.75rem 1rem;
   scrollbar-width: thin;
   scrollbar-color: rgba(99,102,241,0.22) transparent;
 }
-.wsc-step::-webkit-scrollbar { width: 4px; }
-.wsc-step::-webkit-scrollbar-thumb {
+.wsc-step-form::-webkit-scrollbar { width: 4px; }
+.wsc-step-form::-webkit-scrollbar-thumb {
   background: rgba(99,102,241,0.22);
   border-radius: 2px;
 }
-.wsc-step.visible {
-  opacity: 1;
-  pointer-events: auto;
+
+/* Step 2 — NO outer scroll, NO padding — RoleAssignmentStep owns everything */
+.wsc-step-roles {
+  overflow: hidden;
+  padding: 0;
 }
 
 /* ── Section + Fields ── */
@@ -505,27 +514,31 @@
 }
 
 /* ── Role assignment (Step 2) ── */
-/* RoleAssignmentStep was designed for modal context:
-   its root has max-height:calc(100vh-40px) and overflow:hidden.
-   We neutralise that here so it fills wsc-step naturally. */
+/* wsc-step-roles has overflow:hidden + no padding.
+   wsc-role-wrap fills it. RoleAssignmentStep's internal
+   assignmentsGrid (flex:1; overflow-y:auto) is the ONE scroller. */
 .wsc-role-wrap {
   flex: 1;
   display: flex;
   flex-direction: column;
   min-height: 0;
-  overflow: visible;                     /* let RoleAssignmentStep scroll itself */
   height: 100%;
+  overflow: hidden;
 }
 
-/* Override the modal-era max-height on RoleAssignmentStep root */
-.wsc-role-wrap > div {                  /* .roleAssignmentStep */
+/* Neutralise modal-era styles on RoleAssignmentStep root div */
+.wsc-role-wrap > div {
   max-height: none !important;
   height: 100%;
   flex: 1;
-  border-radius: 0;                     /* no rounded card inside full-page */
+  min-height: 0;
+  border-radius: 0;
   border: none;
   background: transparent;
-  padding: 1rem 1.75rem;
+  padding: 0.75rem 1.75rem 0;           /* top breathing room, no bottom — footer has it */
+  display: flex !important;
+  flex-direction: column !important;
+  overflow: hidden !important;
 }
 
 /* ══════════════════════════════════════
@@ -657,6 +670,12 @@
     flex-shrink: 0;
     border-right: none;
     border-bottom: 1px solid rgba(99,102,241,0.15);
+    transition: height 0.22s ease, opacity 0.22s ease;
+  }
+
+  /* Hide left panel on step 2 — roles step shows LLM names itself */
+  .wsc-body.step2 .wsc-left {
+    display: none;
   }
 
   /* Compact card mode on mobile — name + provider + check only */
@@ -677,7 +696,7 @@
   .wsc-topbar-right { display: none; }
   .wsc-back { font-size: 0.75rem; padding: 0.38rem 0.7rem; }
 
-  .wsc-step {
+  .wsc-step-form {
     padding: 1rem 1rem 1rem;
   }
 

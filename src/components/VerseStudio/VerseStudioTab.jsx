@@ -424,13 +424,10 @@ export default function VerseStudioTab() {
               className={styles.createWorkspaceButton}
               onClick={() => openCreator(null)}
               disabled={loading || isCreating}
-              title="Create a new workspace"
+              title="Create a new workspace from scratch"
             >
               <span className={styles.createWorkspaceIcon}>＋</span>
-              <span className={styles.createWorkspaceText}>
-                Create workspace
-                <span className={styles.createWorkspaceHint}>Start from scratch</span>
-              </span>
+              <span className={styles.createWorkspaceText}>Create workspace</span>
             </button>
           </div>
 
@@ -449,12 +446,10 @@ export default function VerseStudioTab() {
                 className={styles.createWorkspaceButton}
                 onClick={() => openCreator(null)}
                 disabled={loading || isCreating}
+                title="Create a new workspace from scratch"
               >
                 <span className={styles.createWorkspaceIcon}>＋</span>
-                <span className={styles.createWorkspaceText}>
-                  Create workspace
-                  <span className={styles.createWorkspaceHint}>Start from scratch</span>
-                </span>
+                <span className={styles.createWorkspaceText}>Create workspace</span>
               </button>
             </div>
           ) : (
