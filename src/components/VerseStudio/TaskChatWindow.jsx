@@ -104,14 +104,16 @@ export function MarkdownMessage({ text, variant = "chat", onToc }) {
         .replace(/\n(#{1,6}\s)/g, "\n\n$1")
         .replace(/(#{1,6} .+)\n(?!\n)/g, "$1\n\n")
         .replace(/\n\n{3,}/g, "\n\n");
-    } else {
+
     // chat: ensure single line-breaks between non-empty lines
     // become proper paragraph breaks so markdown renders during streaming
+
+    } else {
       s = s
-        .replace(/\n(#{1,6}\s)/g, "\n\n$1")        // headings get space before
-        .replace(/(#{1,6} .+)\n(?!\n)/g, "$1\n\n")  // headings get space after
-        .replace(/([^\n])\n([^\n])/g, "$1\n\n$2")   // single \n → \n\n (paragraph)
-        .replace(/\n\n{3,}/g, "\n\n");              // collapse 3+ newlines
+        .replace(/\n(#{1,6}\s)/g, "\n\n$1")
+        .replace(/(#{1,6}[^\n]+)\n(?!\n)/g, "$1\n\n")
+        .replace(/(?<!\n)\n(?!\n)/g, "\n\n")   // ← lookbehind/lookahead: no overlap
+        .replace(/\n{3,}/g, "\n\n");
     }
 
     return s;
@@ -208,10 +210,10 @@ export function MarkdownMessage({ text, variant = "chat", onToc }) {
         linkTarget="_blank"
         components={{
           // Headings: doc gets proper h1/h2/h3 with anchors; chat keeps simple hierarchy
-          h1: isDoc ? makeHeading("h1") : ({ children }) => <div className={styles.mdStrongTitle}>{children}</div>,
-          h2: isDoc ? makeHeading("h2") : ({ children }) => <div className={styles.mdStrongSubtitle}>{children}</div>,
-          h3: isDoc ? makeHeading("h3") : ({ children }) => <div className={styles.mdStrongSubtitle}>{children}</div>,
-          h4: isDoc ? makeHeading("h4") : ({ children }) => <div className={styles.mdStrongSubtitle}>{children}</div>,
+          h1: isDoc ? makeHeading("h1") : ({ children }) => <div className={styles.mdH1}>{children}</div>,
+          h2: isDoc ? makeHeading("h2") : ({ children }) => <div className={styles.mdH2}>{children}</div>,
+          h3: isDoc ? makeHeading("h3") : ({ children }) => <div className={styles.mdH3}>{children}</div>,
+          h4: isDoc ? makeHeading("h4") : ({ children }) => <div className={styles.mdH4}>{children}</div>,
 
           // Paragraphs / lists: wrapping controlled by mdChatContainer/mdDocContainer
           p: ({ children }) => <p className={styles.mdP}>{children}</p>,
