@@ -849,6 +849,12 @@ export default function useVerseStudio() {
                 currentBuffer = '';
               } else if (type === 'done') {
                 const { warnings, suggested_next } = data;
+              } else if (type === 'done') {
+  // Safety net: ensure no message stays stuck in streaming state
+                setMessages((prev) =>
+                  prev.map((m) => (m.streaming ? { ...m, streaming: false } : m))
+                );
+                const { warnings, suggested_next } = data;
 
                 if (warnings && warnings.length > 0) {
                   console.warn('⚠️ Warnings:', warnings);
@@ -868,6 +874,11 @@ export default function useVerseStudio() {
             }
           }
         }
+
+        // Hard reset: clear all streaming flags regardless of how stream ended
+        setMessages((prev) =>
+          prev.map((m) => (m.streaming ? { ...m, streaming: false } : m))
+        );
 
         setUsageData((prev) => ({
           ...prev,
