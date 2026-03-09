@@ -68,51 +68,56 @@ function slugify(raw) {
 }
 
 /**
- * MarkdownMessage
- * - variant="chat": simple markdown for chat bubbles (fast)
- * - variant="doc": rich markdown for artifacts/docs (TOC, math, anchors, callouts)
+ * MarkdownMessage — two-phase renderer
  *
- * NOTE: If you want TOC UI, render `toc` returned below in your artifact panel.
- */
-// ✅ Markdown renderer (Artifacts/docs get richer formatting; chat stays lightweight)
-// Requires these imports at top of TaskChatWindow.jsx:
-// import React, { useMemo, useRef } from "react";
-// import ReactMarkdown from "react-markdown";
-// import remarkGfm from "remark-gfm";
-// import remarkMath from "remark-math";
-// import rehypeKatex from "rehype-katex";
-
-/**
- * MarkdownMessage
- * - variant="chat": fast, compact, bubble-safe markdown
- * - variant="doc": richer docs markdown (TOC + math + anchors + callouts)
+ * PHASE 1 (streaming=true, chat):  plain-text renderer — no AST parsing.
+ *   ReactMarkdown builds a full syntax tree on every token. Incomplete markdown
+ *   (unclosed bold, half-written headings, unterminated lists) produces garbled
+ *   output mid-stream. We skip AST parsing entirely while the stream is live
+ *   and render lines as plain <p> elements instead.
  *
- * IMPORTANT: This wraps content in mdChatContainer / mdDocContainer so your
- * CSS modules can enforce fonts, sizes, and wrapping reliably.
+ * PHASE 2 (streaming=false or doc): full ReactMarkdown render.
+ *   Once the message is complete the swap is instant and imperceptible.
+ *   This mirrors how ChatGPT and Claude.ai handle streaming.
+ *
+ * variant="doc" always uses Phase 2 (artifacts/docs are never streamed inline).
  */
-export function MarkdownMessage({ text, variant = "chat", onToc }) {
+export function MarkdownMessage({ text, variant = "chat", streaming = false, onToc }) {
   const isDoc = variant === "doc";
 
-  // Light normalization to avoid “blob” output for docs
+  // ─── PHASE 1: Streaming plain-text renderer ───────────────────────────────────────────
+  if (!isDoc && streaming) {
+    const raw = String(text || "");
+    const lines = raw.split("\n");
+    return (
+      <div className={styles.mdChatContainer}>
+        {lines.map((line, i) =>
+          line.trim() === ""
+            ? <br key={i} />
+            : <p key={i} className={styles.mdP}>{line}</p>
+        )}
+      </div>
+    );
+  }
+
+  // ─── PHASE 2: Full markdown render ──────────────────────────────────────────────────────────
+  // Light normalization — only runs once stream is complete
   const normalized = useMemo(() => {
     if (!text) return "";
     let s = String(text);
 
     if (isDoc) {
-    // headings breathe
+      // headings breathe
       s = s
         .replace(/\n(#{1,6}\s)/g, "\n\n$1")
         .replace(/(#{1,6} .+)\n(?!\n)/g, "$1\n\n")
         .replace(/\n\n{3,}/g, "\n\n");
-
-    // chat: ensure single line-breaks between non-empty lines
-    // become proper paragraph breaks so markdown renders during streaming
-
     } else {
+      // chat: single \n → \n\n using lookahead/lookbehind (no overlap consumption bug)
       s = s
         .replace(/\n(#{1,6}\s)/g, "\n\n$1")
         .replace(/(#{1,6}[^\n]+)\n(?!\n)/g, "$1\n\n")
-        .replace(/(?<!\n)\n(?!\n)/g, "\n\n")   // ← lookbehind/lookahead: no overlap
+        .replace(/(?<!\n)\n(?!\n)/g, "\n\n")
         .replace(/\n{3,}/g, "\n\n");
     }
 
@@ -690,16 +695,13 @@ export default function TaskChatWindow({ task, verseStudio, onBack }) {
               </div>
             )}     
             
-            {messages.map((message, index) => {
-              // ✅ FIX: Force re-render during streaming for live markdown
-              const isStreaming = message.streaming || message.is_streaming || false;
-              const messageKey = isStreaming 
-                ? `${message.id}-${message.text?.length || 0}` 
-                : message.id;
+            {messages.map((message) => {
+              // Two-phase render: streaming flag set by useVerseStudio hook
+              const isStreaming = message.streaming === true;
 
               return (
                 <div
-                  key={messageKey}
+                  key={message.id}
                   className={message.user ? `${styles.message} ${styles.messageUser}` : `${styles.message} ${styles.messageAi}`}
                 >
                   <div className={styles.messageMeta}>
@@ -711,10 +713,10 @@ export default function TaskChatWindow({ task, verseStudio, onBack }) {
                   </div>
 
                   <div className={styles.messageBody}>
-                    {/* ✅ Force markdown re-render with key */}
-                    <MarkdownMessage 
-                      key={`md-${messageKey}`}
-                      text={message.text} 
+                    <MarkdownMessage
+                      key={message.id}
+                      text={message.text}
+                      streaming={isStreaming}
                     />
                   </div>
                 </div>
