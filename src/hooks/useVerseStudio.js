@@ -812,6 +812,7 @@ export default function useVerseStudio() {
                     role_id: role_id,
                     role_name: role_name,
                     text: '',
+                    streaming: true,
                     timestamp: Date.now()
                   }
                 ]);
@@ -826,14 +827,24 @@ export default function useVerseStudio() {
                   if (msgIndex !== -1) {
                     copy[msgIndex] = {
                       ...copy[msgIndex],
-                      text: currentBuffer
+                      text: currentBuffer,
+                      streaming: true
                     };
                   }
 
                   return copy;
                 });
+
               } else if (type === 'response_complete') {
                 setActiveRole(null);
+                if (currentMessageId !== null) {
+                  setMessages((prev) => {
+                    const copy = [...prev];
+                    const idx = copy.findIndex((m) => m.id === currentMessageId);
+                    if (idx !== -1) copy[idx] = { ...copy[idx], streaming: false };
+                    return copy;
+                  });
+                }
                 currentMessageId = null;
                 currentBuffer = '';
               } else if (type === 'done') {

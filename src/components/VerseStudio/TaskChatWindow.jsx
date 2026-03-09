@@ -99,11 +99,19 @@ export function MarkdownMessage({ text, variant = "chat", onToc }) {
     let s = String(text);
 
     if (isDoc) {
-      // headings breathe
+    // headings breathe
       s = s
         .replace(/\n(#{1,6}\s)/g, "\n\n$1")
         .replace(/(#{1,6} .+)\n(?!\n)/g, "$1\n\n")
         .replace(/\n\n{3,}/g, "\n\n");
+    } else {
+    // chat: ensure single line-breaks between non-empty lines
+    // become proper paragraph breaks so markdown renders during streaming
+      s = s
+        .replace(/\n(#{1,6}\s)/g, "\n\n$1")        // headings get space before
+        .replace(/(#{1,6} .+)\n(?!\n)/g, "$1\n\n")  // headings get space after
+        .replace(/([^\n])\n([^\n])/g, "$1\n\n$2")   // single \n → \n\n (paragraph)
+        .replace(/\n\n{3,}/g, "\n\n");              // collapse 3+ newlines
     }
 
     return s;

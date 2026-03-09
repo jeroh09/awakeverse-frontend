@@ -290,7 +290,7 @@
 
 .messageMeta { margin-bottom: 4px; }
 .messageRole { font-size: 11px; color: var(--text-secondary); }
-.messageBody { white-space: pre-wrap; }
+.messageBody { white-space: normal; }
 
 .messageAi {
   /* Full-width card */
