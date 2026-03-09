@@ -2260,3 +2260,252 @@
   margin-bottom: 0.5rem;
   border: 1px solid rgba(99, 102, 241, 0.2);
 }
+/* ========================================================
+   EMPTY STATE — Step Journey (append to CreatorDashboard.css)
+   Prefixed with `es-` to avoid any global conflicts
+   ======================================================== */
+
+.es-hero-label {
+  display: inline-block;
+  font-family: var(--font-body, 'Inter', sans-serif);
+  font-size: 0.72rem;
+  font-weight: 600;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  color: #818CF8;
+  background: rgba(99, 102, 241, 0.12);
+  border: 1px solid rgba(99, 102, 241, 0.3);
+  border-radius: 999px;
+  padding: 0.3rem 0.9rem;
+  margin-bottom: 1.1rem;
+}
+
+.empty-state-content h2 {
+  font-size: 1.9rem;
+  line-height: 1.2;
+  letter-spacing: -0.025em;
+}
+
+/* ── Step Journey Grid ── */
+.es-step-journey {
+  position: relative;
+  display: grid;
+  grid-template-columns: repeat(5, 1fr);
+  gap: 0;
+  margin-bottom: 2.25rem;
+}
+
+/* dashed connector — spans center of col 1 to center of col 5 */
+/* with 5 equal cols each col = 20%, col centres at 10%, 30%, 50%, 70%, 90% */
+.es-step-journey::before {
+  content: '';
+  position: absolute;
+  top: 36px;
+  left: calc(10% + 4px);
+  right: calc(10% + 4px);
+  height: 1px;
+  background: repeating-linear-gradient(
+    to right,
+    #6366F1 0px,
+    #6366F1 6px,
+    transparent 6px,
+    transparent 14px
+  );
+  opacity: 0.35;
+  z-index: 0;
+}
+
+.es-step-item {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.65rem;
+  padding: 0 0.35rem;
+  position: relative;
+  z-index: 1;
+  opacity: 0;
+  transform: translateY(12px);
+  animation: esStepIn 0.5s cubic-bezier(0.4, 0, 0.2, 1) forwards;
+}
+
+.es-step-item:nth-child(1) { animation-delay: 0.08s; }
+.es-step-item:nth-child(2) { animation-delay: 0.22s; }
+.es-step-item:nth-child(3) { animation-delay: 0.36s; }
+.es-step-item:nth-child(4) { animation-delay: 0.50s; }
+.es-step-item:nth-child(5) { animation-delay: 0.64s; }
+
+@keyframes esStepIn {
+  to { opacity: 1; transform: translateY(0); }
+}
+
+.es-step-node {
+  width: 66px;
+  height: 66px;
+  border-radius: 16px;
+  background: #1C2640;
+  border: 1px solid rgba(148, 163, 184, 0.2);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  position: relative;
+  transition: all 0.28s cubic-bezier(0.4, 0, 0.2, 1);
+  cursor: default;
+  flex-shrink: 0;
+}
+
+.es-step-node::after {
+  content: '';
+  position: absolute;
+  inset: -1px;
+  border-radius: 17px;
+  background: linear-gradient(135deg, rgba(99, 102, 241, 0.3), transparent 60%);
+  opacity: 0;
+  transition: opacity 0.28s ease;
+}
+
+.es-step-item:hover .es-step-node {
+  background: #243152;
+  border-color: rgba(99, 102, 241, 0.5);
+  transform: translateY(-3px);
+  box-shadow:
+    0 8px 24px rgba(10, 15, 26, 0.8),
+    0 0 20px -6px rgba(99, 102, 241, 0.35);
+}
+
+.es-step-item:hover .es-step-node::after { opacity: 1; }
+
+.es-step-node svg {
+  width: 26px;
+  height: 26px;
+  position: relative;
+  z-index: 1;
+}
+
+.es-step-badge {
+  position: absolute;
+  top: -8px;
+  right: -8px;
+  width: 20px;
+  height: 20px;
+  border-radius: 50%;
+  background: #6366F1;
+  border: 2px solid #141B2E;
+  font-family: var(--font-body, 'Inter', sans-serif);
+  font-size: 0.65rem;
+  font-weight: 700;
+  color: #fff;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 2;
+}
+
+.es-step-label {
+  font-size: 0.72rem;
+  font-weight: 500;
+  color: #94A3B8;
+  text-align: center;
+  line-height: 1.4;
+  transition: color 0.2s ease;
+}
+
+.es-step-item:hover .es-step-label { color: #F1F5F9; }
+
+/* step 5 — goal state pulse */
+.es-step-item:last-child .es-step-node {
+  border-color: rgba(99, 102, 241, 0.45);
+  background: linear-gradient(135deg, rgba(99, 102, 241, 0.18), #1C2640);
+}
+
+.es-step-item:last-child .es-step-badge {
+  animation: esPulseBadge 2.2s ease-in-out infinite;
+}
+
+@keyframes esPulseBadge {
+  0%, 100% { box-shadow: 0 0 0 0 rgba(99, 102, 241, 0.5); }
+  50%       { box-shadow: 0 0 0 5px rgba(99, 102, 241, 0); }
+}
+
+/* ── Divider ── */
+.es-divider {
+  height: 1px;
+  background: rgba(148, 163, 184, 0.1);
+  margin: 0 0 2rem;
+}
+
+/* ── New Button System (es- prefixed) ── */
+.es-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.45rem;
+  padding: 0.8rem 1.6rem;
+  border-radius: 999px;
+  font-family: var(--font-body, 'Inter', sans-serif);
+  font-weight: 600;
+  font-size: 0.9rem;
+  cursor: pointer;
+  transition: all 0.22s cubic-bezier(0.4, 0, 0.2, 1);
+  border: none;
+  outline: none;
+  text-decoration: none;
+}
+
+.es-btn-primary {
+  background: linear-gradient(135deg, #6366F1, #818CF8);
+  color: #fff;
+  box-shadow:
+    0 4px 16px rgba(99, 102, 241, 0.35),
+    0 0 0 1px rgba(99, 102, 241, 0.2);
+}
+
+.es-btn-primary:hover {
+  transform: translateY(-2px);
+  box-shadow:
+    0 8px 28px rgba(99, 102, 241, 0.45),
+    0 0 0 1px rgba(99, 102, 241, 0.3);
+}
+
+.es-btn-secondary {
+  background: #1C2640;
+  color: #F1F5F9;
+  border: 1px solid rgba(148, 163, 184, 0.2);
+}
+
+.es-btn-secondary:hover {
+  background: #243152;
+  border-color: rgba(99, 102, 241, 0.4);
+  color: #F5F5DC;
+  transform: translateY(-1px);
+}
+
+.es-btn-ghost {
+  background: transparent;
+  color: #94A3B8;
+  border: 1px solid rgba(148, 163, 184, 0.1);
+  font-weight: 500;
+}
+
+.es-btn-ghost:hover {
+  color: #F1F5F9;
+  border-color: rgba(148, 163, 184, 0.2);
+}
+
+/* ── Mobile: horizontal scroll — 5 nodes stay in one row ── */
+@media (max-width: 580px) {
+  .es-step-journey {
+    display: flex;
+    overflow-x: auto;
+    gap: 0;
+    padding-bottom: 0.5rem;
+    -webkit-overflow-scrolling: touch;
+    scrollbar-width: none;
+  }
+
+  .es-step-journey::-webkit-scrollbar { display: none; }
+
+  .es-step-journey::before { display: none; }
+
+  .es-step-item {
+    flex: 0 0 80px;
+  }
+}

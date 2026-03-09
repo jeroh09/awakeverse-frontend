@@ -891,42 +891,145 @@ const InteractiveLockedDashboard = ({ onUpgradeWithStripe, onUpgradeWithPayPal }
 const EmptyDashboardState = ({ onLearnMore, onGoToCharacters, onCreateCharacter }) => (
   <div className="empty-state">
     <div className="empty-state-content">
-      <span className="empty-state-icon">🎨</span>
-      <h2>Welcome to Creator Hub!</h2>
-      <p>You haven't published any characters to the Market Hub yet.</p>
-      <div className="empty-state-steps">
-        <h3>Get Started:</h3>
-        <ol>
-          <li>Create an amazing character in Character Builder</li>
-          <li>Get it approved by our team</li>
-          <li>Publish to Market Hub (Professional tier required)</li>
-          <li>Track performance and earn recognition!</li>
-        </ol>
+
+      <span className="es-hero-label">Creator Hub</span>
+      <h2>Build Characters.<br />Reach an Audience.</h2>
+      <p>You haven't published any characters yet. Follow the path below to go from idea to Market Hub in five steps.</p>
+
+      {/* ── Step Journey ── */}
+      <div className="es-step-journey">
+
+        {/* Step 1 — Design */}
+        <div className="es-step-item">
+          <div className="es-step-node">
+            <span className="es-step-badge">1</span>
+            <svg viewBox="0 0 24 24" fill="none" stroke="url(#es-g1)" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
+              <defs>
+                <linearGradient id="es-g1" x1="0" y1="0" x2="1" y2="1">
+                  <stop offset="0%" stopColor="#818CF8" />
+                  <stop offset="100%" stopColor="#6366F1" />
+                </linearGradient>
+              </defs>
+              <circle cx="12" cy="8" r="3.5" />
+              <path d="M6 20c0-3.3 2.7-6 6-6s6 2.7 6 6" />
+              <path d="M17 4l1.5 1.5L17 7" stroke="#818CF8" strokeWidth="1.5" />
+              <path d="M18.5 5.5h2" stroke="#818CF8" strokeWidth="1.5" />
+            </svg>
+          </div>
+          <span className="es-step-label">Design your<br />Character</span>
+        </div>
+
+        {/* Step 2 — Review */}
+        <div className="es-step-item">
+          <div className="es-step-node">
+            <span className="es-step-badge">2</span>
+            <svg viewBox="0 0 24 24" fill="none" stroke="url(#es-g2)" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
+              <defs>
+                <linearGradient id="es-g2" x1="0" y1="0" x2="1" y2="1">
+                  <stop offset="0%" stopColor="#818CF8" />
+                  <stop offset="100%" stopColor="#6366F1" />
+                </linearGradient>
+              </defs>
+              <path d="M12 2l7 3.5v5C19 15 16 19.5 12 22 8 19.5 5 15 5 10.5V5.5L12 2z" />
+              <polyline points="9 12 11.5 14.5 15 10" stroke="#A5B4FC" strokeWidth="1.8" />
+            </svg>
+          </div>
+          <span className="es-step-label">Team<br />Review</span>
+        </div>
+
+        {/* Step 3 — Publish */}
+        <div className="es-step-item">
+          <div className="es-step-node">
+            <span className="es-step-badge">3</span>
+            <svg viewBox="0 0 24 24" fill="none" stroke="url(#es-g3)" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
+              <defs>
+                <linearGradient id="es-g3" x1="0" y1="0" x2="1" y2="1">
+                  <stop offset="0%" stopColor="#818CF8" />
+                  <stop offset="100%" stopColor="#6366F1" />
+                </linearGradient>
+              </defs>
+              <circle cx="12" cy="12" r="8" />
+              <path d="M12 4c-2 2-3 4-3 8s1 6 3 8" />
+              <path d="M12 4c2 2 3 4 3 8s-1 6-3 8" />
+              <line x1="4.5" y1="12" x2="19.5" y2="12" />
+              <polyline points="10 7.5 12 4.5 14 7.5" stroke="#A5B4FC" />
+            </svg>
+          </div>
+          <span className="es-step-label">Publish to<br />Market Hub</span>
+        </div>
+
+        {/* Step 4 — Enter Dialogue */}
+        <div className="es-step-item">
+          <div className="es-step-node">
+            <span className="es-step-badge">4</span>
+            <svg viewBox="0 0 24 24" fill="none" strokeLinecap="round" strokeLinejoin="round">
+              <defs>
+                <linearGradient id="es-g4" x1="0" y1="0" x2="1" y2="1">
+                  <stop offset="0%" stopColor="#818CF8" />
+                  <stop offset="100%" stopColor="#6366F1" />
+                </linearGradient>
+              </defs>
+              <circle cx="6.5" cy="5.5" r="2.2" stroke="url(#es-g4)" strokeWidth="1.6" />
+              <circle cx="17.5" cy="5.5" r="2.2" stroke="url(#es-g4)" strokeWidth="1.6" />
+              <rect x="2" y="10" width="11" height="7" rx="2.5" stroke="url(#es-g4)" strokeWidth="1.6" />
+              <path d="M5 17l-1.5 2.5 3-1" stroke="url(#es-g4)" strokeWidth="1.4" />
+              <rect x="11" y="12.5" width="11" height="7" rx="2.5" stroke="#A5B4FC" strokeWidth="1.6" />
+              <path d="M19 19.5l1.5 2.5-3-1" stroke="#A5B4FC" strokeWidth="1.4" />
+              <circle cx="7" cy="13.5" r="0.8" fill="#818CF8" />
+              <circle cx="9.5" cy="13.5" r="0.8" fill="#818CF8" />
+              <circle cx="15" cy="16" r="0.8" fill="#A5B4FC" />
+              <circle cx="17.5" cy="16" r="0.8" fill="#A5B4FC" />
+            </svg>
+          </div>
+          <span className="es-step-label">Enter<br />Dialogue</span>
+        </div>
+
+        {/* Step 5 — Track & Earn */}
+        <div className="es-step-item">
+          <div className="es-step-node">
+            <span className="es-step-badge">5</span>
+            <svg viewBox="0 0 24 24" fill="none" stroke="url(#es-g5)" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
+              <defs>
+                <linearGradient id="es-g5" x1="0" y1="0" x2="1" y2="1">
+                  <stop offset="0%" stopColor="#818CF8" />
+                  <stop offset="100%" stopColor="#6366F1" />
+                </linearGradient>
+              </defs>
+              <rect x="3" y="14" width="4" height="7" rx="1" />
+              <rect x="10" y="10" width="4" height="11" rx="1" />
+              <rect x="17" y="6" width="4" height="15" rx="1" />
+              <polyline points="4 10 8.5 6 13 8 19 3" stroke="#A5B4FC" strokeWidth="1.6" />
+              <circle cx="19" cy="3" r="1.5" fill="#818CF8" stroke="none" />
+            </svg>
+          </div>
+          <span className="es-step-label">Track &amp;<br />Earn</span>
+        </div>
+
       </div>
+      {/* ── end step journey ── */}
+
+      <div className="es-divider" />
+
       <div className="empty-state-actions">
-        <button 
-          onClick={onCreateCharacter}
-          className="create-character-button"
-        >
+        <button onClick={onCreateCharacter} className="es-btn es-btn-primary">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" width="16" height="16">
+            <circle cx="12" cy="12" r="9" />
+            <line x1="12" y1="8" x2="12" y2="16" />
+            <line x1="8" y1="12" x2="16" y2="12" />
+          </svg>
           Create Character
         </button>
-        <button 
-          onClick={onGoToCharacters}
-          className="learn-more-button"
-        >
+        <button onClick={onGoToCharacters} className="es-btn es-btn-secondary">
           My Characters
         </button>
-        <button 
-          onClick={onLearnMore}
-          className="learn-more-button secondary"
-        >
-          Learn About Professional Features
+        <button onClick={onLearnMore} className="es-btn es-btn-ghost">
+          Professional Features →
         </button>
       </div>
+
     </div>
   </div>
 );
-
 const CharacterDetailModal = ({ character, onClose, onViewInHub }) => {
   const engagement = character.engagement || {};
   
