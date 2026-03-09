@@ -1709,11 +1709,6 @@
   gap: var(--spacing-sm);
 }
 
-.locked-dashboard-header h1::before {
-  content: "💎";
-  font-size: 1.5rem;
-}
-
 .locked-dashboard-header p {
   color: var(--text-secondary);
   font-size: var(--font-size-body);
