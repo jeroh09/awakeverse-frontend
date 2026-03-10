@@ -132,64 +132,44 @@ export function MarkdownMessage({ text, variant = "chat", streaming = false, onT
     },
   };
 
-  // ─── PHASE 1: Split-line streaming renderer ───────────────────────────────────────────
-    // ─── PHASE 1: Streaming renderer with robust code block handling ────────
+  // ─── PHASE 1: Full-buffer streaming renderer ─────────────────────────────
+  //
+  // Run the entire live buffer through ReactMarkdown on every token.
+  // Line-by-line normalization handles heading spacing without clobbering
+  // code block content. Fence guard closes any unclosed ``` so ReactMarkdown
+  // never receives malformed input.
   if (!isDoc && streaming) {
     const raw = String(text || "");
-    
-    // Split into lines to detect code block boundaries
-    const lines = raw.split('\n');
+    const lines = raw.split("\n");
     let inCodeBlock = false;
-    let codeBlockStart = -1;
-    const processedLines = [];
-    
+    const out = [];
+
     for (let i = 0; i < lines.length; i++) {
       const line = lines[i];
-      
-      // Toggle code block state on ``` markers
-      if (line.trim().startsWith('```')) {
+
+      if (line.trim().startsWith("```")) {
         inCodeBlock = !inCodeBlock;
-        codeBlockStart = inCodeBlock ? i : -1;
-        processedLines.push(line);
+        out.push(line);
         continue;
       }
-      
-      // If we're in a code block, preserve line exactly as-is
+
       if (inCodeBlock) {
-        processedLines.push(line);
+        out.push(line);
+        continue;
+      }
+
+      // Heading: ensure blank line before and after for correct AST parsing
+      if (/^#{1,6}\s/.test(line)) {
+        if (i > 0 && out[out.length - 1] !== "") out.push("");
+        out.push(line);
+        out.push("");
       } else {
-        // Outside code block, we can normalize
-        let processedLine = line;
-        
-        // Check if this line is a heading
-        if (line.match(/^#{1,6}\s/)) {
-          // Ensure heading has blank line before it
-          if (i > 0 && processedLines[processedLines.length - 1] !== '') {
-            processedLines.push('');
-          }
-          processedLines.push(line);
-          // Ensure heading has blank line after it
-          processedLines.push('');
-        } 
-        // Check if line is empty
-        else if (line === '') {
-          processedLines.push('');
-        }
-        // Regular text - if previous line wasn't empty, add a paragraph break
-        else {
-          if (i > 0 && processedLines[processedLines.length - 1] !== '' && 
-              !processedLines[processedLines.length - 1]?.match(/^#{1,6}\s/)) {
-            // This is continuing a paragraph - no extra newline needed
-            processedLines.push(line);
-          } else {
-            processedLines.push(line);
-          }
-        }
+        out.push(line);
       }
     }
-    
-    // Reconstruct with proper spacing
-    const normalized = processedLines.join('\n');
+
+    // Close any unclosed code fence so ReactMarkdown doesn't garble what follows
+    if (inCodeBlock) out.push("```");
 
     return (
       <div className={styles.mdChatContainer}>
@@ -198,7 +178,7 @@ export function MarkdownMessage({ text, variant = "chat", streaming = false, onT
           skipHtml={true}
           components={chatComponents}
         >
-          {normalized}
+          {out.join("\n")}
         </ReactMarkdown>
       </div>
     );
