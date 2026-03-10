@@ -288,6 +288,19 @@
   overflow-x: auto; /* Allow horizontal scroll only for code */
 }
 
+/* In-flight cursor line during streaming — rendered as plain text,
+   no markdown parsing. Sits below the completed+formatted portion. */
+.mdStreamingPartial {
+  display: block;
+  opacity: 0.75;
+  font-size: inherit;
+  line-height: inherit;
+  color: inherit;
+  white-space: pre-wrap;
+  word-break: break-word;
+  margin-top: 2px;
+}
+
 .messageMeta { margin-bottom: 4px; }
 .messageRole { font-size: 11px; color: var(--text-secondary); }
 .messageBody { white-space: normal; }

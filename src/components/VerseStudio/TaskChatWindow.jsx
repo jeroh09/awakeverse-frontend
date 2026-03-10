@@ -85,16 +85,98 @@ function slugify(raw) {
 export function MarkdownMessage({ text, variant = "chat", streaming = false, onToc }) {
   const isDoc = variant === "doc";
 
-  // ─── PHASE 1: Streaming plain-text renderer ───────────────────────────────────────────
+  // ─── Shared chat-mode component map ──────────────────────────────────────────────────
+  // Defined here (before Phase 1 early-return) so both phases use identical renderers.
+  // Doc-mode components (makeHeading, TOC anchors) are defined inline in Phase 2 below.
+  const chatComponents = {
+    h1: ({ children }) => <div className={styles.mdH1}>{children}</div>,
+    h2: ({ children }) => <div className={styles.mdH2}>{children}</div>,
+    h3: ({ children }) => <div className={styles.mdH3}>{children}</div>,
+    h4: ({ children }) => <div className={styles.mdH4}>{children}</div>,
+    p:  ({ children }) => <p className={styles.mdP}>{children}</p>,
+    ul: ({ children }) => <ul className={styles.mdUl}>{children}</ul>,
+    ol: ({ children }) => <ol className={styles.mdOl}>{children}</ol>,
+    li: ({ children }) => <li className={styles.mdLi}>{children}</li>,
+    a:  ({ href, children }) => (
+      <a className={styles.mdLink} href={href} rel="noopener noreferrer" target="_blank">
+        {children}
+      </a>
+    ),
+    blockquote: ({ children }) => (
+      <blockquote className={styles.mdQuote}>{children}</blockquote>
+    ),
+    table: ({ children }) => (
+      <div className={styles.mdTableWrap}>
+        <table className={styles.mdTable}>{children}</table>
+      </div>
+    ),
+    th: ({ children }) => <th className={styles.mdTh}>{children}</th>,
+    td: ({ children }) => <td className={styles.mdTd}>{children}</td>,
+    hr: () => <hr className={styles.mdHr} />,
+    code({ inline, className, children }) {
+      const codeText = normalizeCodeText(children);
+      const match = /language-(\w+)/.exec(className || "");
+      const lang = match?.[1] || "";
+      if (inline) return <code className={styles.mdInlineCode}>{children}</code>;
+      return (
+        <div className={styles.codeBlock}>
+          <div className={styles.codeHeader}>
+            <div className={styles.codeLang}>{lang || "code"}</div>
+            <CopyButton getText={() => codeText} label="Copy" />
+          </div>
+          <pre className={styles.mdPre}>
+            <code className={styles.mdCode}>{codeText}</code>
+          </pre>
+        </div>
+      );
+    },
+  };
+
+  // ─── PHASE 1: Split-line streaming renderer ───────────────────────────────────────────
+  //
+  // Strategy: split the live buffer at the last \n boundary.
+  //   completedRaw  — lines that ended with \n  → ReactMarkdown (fully formatted)
+  //   partialLine   — the fragment still being typed → plain <span> (no AST parsing)
+  //
+  // This means markdown is rendered correctly the moment each line is finished,
+  // while the in-flight cursor line is never half-parsed into garbled output.
+  //
+  // Fence guard: if the completed portion contains an odd number of ``` openers,
+  // a code block is still open. We close it temporarily before passing to
+  // ReactMarkdown, then the partial line renders below as plain text.
   if (!isDoc && streaming) {
     const raw = String(text || "");
-    const lines = raw.split("\n");
+
+    const lastNl      = raw.lastIndexOf("\n");
+    const completedRaw = lastNl >= 0 ? raw.slice(0, lastNl + 1) : "";
+    const partialLine  = lastNl >= 0 ? raw.slice(lastNl + 1)    : raw;
+
+    // Count ``` fence openers in completed portion — odd = unclosed block
+    const fenceCount  = (completedRaw.match(/^```/gm) || []).length;
+    const completedSafe = fenceCount % 2 !== 0
+      ? completedRaw + "\n```\n"
+      : completedRaw;
+
+    // Single-newline → double-newline so ReactMarkdown renders paragraphs/headings correctly
+    const normalizedStream = completedSafe
+      .replace(/\n(#{1,6}\s)/g, "\n\n$1")
+      .replace(/(#{1,6}[^\n]+)\n(?!\n)/g, "$1\n\n")
+      .replace(/(?<!\n)\n(?!\n)/g, "\n\n")
+      .replace(/\n{3,}/g, "\n\n");
+
     return (
       <div className={styles.mdChatContainer}>
-        {lines.map((line, i) =>
-          line.trim() === ""
-            ? <br key={i} />
-            : <p key={i} className={styles.mdP}>{line}</p>
+        {completedRaw && (
+          <ReactMarkdown
+            remarkPlugins={[remarkGfm]}
+            skipHtml={true}
+            components={chatComponents}
+          >
+            {normalizedStream}
+          </ReactMarkdown>
+        )}
+        {partialLine && (
+          <span className={styles.mdStreamingPartial}>{partialLine}</span>
         )}
       </div>
     );
@@ -213,29 +295,23 @@ export function MarkdownMessage({ text, variant = "chat", streaming = false, onT
         rehypePlugins={rehypePlugins}
         skipHtml={true}
         linkTarget="_blank"
-        components={{
-          // Headings: doc gets proper h1/h2/h3 with anchors; chat keeps simple hierarchy
-          h1: isDoc ? makeHeading("h1") : ({ children }) => <div className={styles.mdH1}>{children}</div>,
-          h2: isDoc ? makeHeading("h2") : ({ children }) => <div className={styles.mdH2}>{children}</div>,
-          h3: isDoc ? makeHeading("h3") : ({ children }) => <div className={styles.mdH3}>{children}</div>,
-          h4: isDoc ? makeHeading("h4") : ({ children }) => <div className={styles.mdH4}>{children}</div>,
-
-          // Paragraphs / lists: wrapping controlled by mdChatContainer/mdDocContainer
-          p: ({ children }) => <p className={styles.mdP}>{children}</p>,
+        components={isDoc ? {
+          // Doc mode: headings get anchor links + TOC IDs
+          h1: makeHeading("h1"),
+          h2: makeHeading("h2"),
+          h3: makeHeading("h3"),
+          h4: makeHeading("h4"),
+          p:  ({ children }) => <p className={styles.mdP}>{children}</p>,
           ul: ({ children }) => <ul className={styles.mdUl}>{children}</ul>,
           ol: ({ children }) => <ol className={styles.mdOl}>{children}</ol>,
           li: ({ children }) => <li className={styles.mdLi}>{children}</li>,
-
-          // Links wrap safely (long URLs)
-          a: ({ href, children }) => (
+          a:  ({ href, children }) => (
             <a className={styles.mdLink} href={href} rel="noopener noreferrer" target="_blank">
               {children}
             </a>
           ),
-
-          // Callouts in docs via blockquote convention
           blockquote: ({ children }) => {
-            const t = isDoc ? getCalloutType(children) : null;
+            const t = getCalloutType(children);
             if (t) {
               return (
                 <div className={`${styles.mdCallout} ${styles[`mdCallout_${t}`] || ""}`}>
@@ -245,8 +321,6 @@ export function MarkdownMessage({ text, variant = "chat", streaming = false, onT
             }
             return <blockquote className={styles.mdQuote}>{children}</blockquote>;
           },
-
-          // Tables (scroll container)
           table: ({ children }) => (
             <div className={styles.mdTableWrap}>
               <table className={styles.mdTable}>{children}</table>
@@ -254,17 +328,12 @@ export function MarkdownMessage({ text, variant = "chat", streaming = false, onT
           ),
           th: ({ children }) => <th className={styles.mdTh}>{children}</th>,
           td: ({ children }) => <td className={styles.mdTd}>{children}</td>,
-
           hr: () => <hr className={styles.mdHr} />,
-
-          // Code: inline wraps naturally; blocks scroll horizontally
           code({ inline, className, children }) {
             const codeText = normalizeCodeText(children);
             const match = /language-(\w+)/.exec(className || "");
             const lang = match?.[1] || "";
-
             if (inline) return <code className={styles.mdInlineCode}>{children}</code>;
-
             return (
               <div className={styles.codeBlock}>
                 <div className={styles.codeHeader}>
@@ -277,7 +346,7 @@ export function MarkdownMessage({ text, variant = "chat", streaming = false, onT
               </div>
             );
           },
-        }}
+        } : chatComponents}
       >
         {normalized}
       </ReactMarkdown>
