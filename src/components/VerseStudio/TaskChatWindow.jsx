@@ -133,51 +133,73 @@ export function MarkdownMessage({ text, variant = "chat", streaming = false, onT
   };
 
   // ─── PHASE 1: Split-line streaming renderer ───────────────────────────────────────────
-  //
-  // Strategy: split the live buffer at the last \n boundary.
-  //   completedRaw  — lines that ended with \n  → ReactMarkdown (fully formatted)
-  //   partialLine   — the fragment still being typed → plain <span> (no AST parsing)
-  //
-  // This means markdown is rendered correctly the moment each line is finished,
-  // while the in-flight cursor line is never half-parsed into garbled output.
-  //
-  // Fence guard: if the completed portion contains an odd number of ``` openers,
-  // a code block is still open. We close it temporarily before passing to
-  // ReactMarkdown, then the partial line renders below as plain text.
+    // ─── PHASE 1: Streaming renderer with robust code block handling ────────
   if (!isDoc && streaming) {
     const raw = String(text || "");
-
-    const lastNl      = raw.lastIndexOf("\n");
-    const completedRaw = lastNl >= 0 ? raw.slice(0, lastNl + 1) : "";
-    const partialLine  = lastNl >= 0 ? raw.slice(lastNl + 1)    : raw;
-
-    // Count ``` fence openers in completed portion — odd = unclosed block
-    const fenceCount  = (completedRaw.match(/^```/gm) || []).length;
-    const completedSafe = fenceCount % 2 !== 0
-      ? completedRaw + "\n```\n"
-      : completedRaw;
-
-    // Single-newline → double-newline so ReactMarkdown renders paragraphs/headings correctly
-    const normalizedStream = completedSafe
-      .replace(/\n(#{1,6}\s)/g, "\n\n$1")
-      .replace(/(#{1,6}[^\n]+)\n(?!\n)/g, "$1\n\n")
-      .replace(/(?<!\n)\n(?!\n)/g, "\n\n")
-      .replace(/\n{3,}/g, "\n\n");
+    
+    // Split into lines to detect code block boundaries
+    const lines = raw.split('\n');
+    let inCodeBlock = false;
+    let codeBlockStart = -1;
+    const processedLines = [];
+    
+    for (let i = 0; i < lines.length; i++) {
+      const line = lines[i];
+      
+      // Toggle code block state on ``` markers
+      if (line.trim().startsWith('```')) {
+        inCodeBlock = !inCodeBlock;
+        codeBlockStart = inCodeBlock ? i : -1;
+        processedLines.push(line);
+        continue;
+      }
+      
+      // If we're in a code block, preserve line exactly as-is
+      if (inCodeBlock) {
+        processedLines.push(line);
+      } else {
+        // Outside code block, we can normalize
+        let processedLine = line;
+        
+        // Check if this line is a heading
+        if (line.match(/^#{1,6}\s/)) {
+          // Ensure heading has blank line before it
+          if (i > 0 && processedLines[processedLines.length - 1] !== '') {
+            processedLines.push('');
+          }
+          processedLines.push(line);
+          // Ensure heading has blank line after it
+          processedLines.push('');
+        } 
+        // Check if line is empty
+        else if (line === '') {
+          processedLines.push('');
+        }
+        // Regular text - if previous line wasn't empty, add a paragraph break
+        else {
+          if (i > 0 && processedLines[processedLines.length - 1] !== '' && 
+              !processedLines[processedLines.length - 1]?.match(/^#{1,6}\s/)) {
+            // This is continuing a paragraph - no extra newline needed
+            processedLines.push(line);
+          } else {
+            processedLines.push(line);
+          }
+        }
+      }
+    }
+    
+    // Reconstruct with proper spacing
+    const normalized = processedLines.join('\n');
 
     return (
       <div className={styles.mdChatContainer}>
-        {completedRaw && (
-          <ReactMarkdown
-            remarkPlugins={[remarkGfm]}
-            skipHtml={true}
-            components={chatComponents}
-          >
-            {normalizedStream}
-          </ReactMarkdown>
-        )}
-        {partialLine && (
-          <span className={styles.mdStreamingPartial}>{partialLine}</span>
-        )}
+        <ReactMarkdown
+          remarkPlugins={[remarkGfm]}
+          skipHtml={true}
+          components={chatComponents}
+        >
+          {normalized}
+        </ReactMarkdown>
       </div>
     );
   }
