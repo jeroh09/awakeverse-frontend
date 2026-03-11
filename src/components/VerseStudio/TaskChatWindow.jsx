@@ -85,9 +85,58 @@ function slugify(raw) {
 export function MarkdownMessage({ text, variant = "chat", streaming = false, onToc }) {
   const isDoc = variant === "doc";
 
-  // ─── Shared chat-mode component map ──────────────────────────────────────────────────
-  // Defined here (before Phase 1 early-return) so both phases use identical renderers.
-  // Doc-mode components (makeHeading, TOC anchors) are defined inline in Phase 2 below.
+  // ─── ALL HOOKS FIRST — no conditional returns before this line ───────────
+  // React requires hooks to be called on every render in the same order.
+  // Phase 1 previously had an early return before these hooks, causing React
+  // to corrupt component state when streaming flipped to false. Fixed by
+  // hoisting all hooks unconditionally to the top.
+
+  // Normalised text for Phase 2 / doc mode (chat normalisation also used by Phase 1)
+  const normalized = useMemo(() => {
+    if (!text) return "";
+    let s = String(text);
+    if (isDoc) {
+      s = s
+        .replace(/\n(#{1,6}\s)/g, "\n\n$1")
+        .replace(/(#{1,6} .+)\n(?!\n)/g, "$1\n\n")
+        .replace(/\n\n{3,}/g, "\n\n");
+    } else {
+      s = s
+        .replace(/\n(#{1,6}\s)/g, "\n\n$1")
+        .replace(/(#{1,6}[^\n]+)\n(?!\n)/g, "$1\n\n")
+        .replace(/(?<!\n)\n(?!\n)/g, "\n\n")
+        .replace(/\n{3,}/g, "\n\n");
+    }
+    return s;
+  }, [text, isDoc]);
+
+  // TOC — only meaningful for doc variant
+  const toc = useMemo(() => {
+    if (!isDoc) return [];
+    const lines = normalized.split("\n");
+    const counts = new Map();
+    const out = [];
+    for (const line of lines) {
+      const m = line.match(/^(#{1,6})\s+(.+)\s*$/);
+      if (!m) continue;
+      const level = m[1].length;
+      const title = m[2].replace(/\s+#\s*$/, "").trim();
+      const base = slugify(title);
+      const n = (counts.get(base) || 0) + 1;
+      counts.set(base, n);
+      const id = n === 1 ? base : `${base}-${n}`;
+      out.push({ level, title, id });
+    }
+    return out;
+  }, [normalized, isDoc]);
+
+  const lastTocRef = useRef(null);
+  if (isDoc && onToc && toc !== lastTocRef.current) {
+    lastTocRef.current = toc;
+    onToc(toc);
+  }
+
+  // ─── Shared chat-mode component map ──────────────────────────────────────
   const chatComponents = {
     h1: ({ children }) => <div className={styles.mdH1}>{children}</div>,
     h2: ({ children }) => <div className={styles.mdH2}>{children}</div>,
@@ -133,11 +182,8 @@ export function MarkdownMessage({ text, variant = "chat", streaming = false, onT
   };
 
   // ─── PHASE 1: Full-buffer streaming renderer ─────────────────────────────
-  //
-  // Run the entire live buffer through ReactMarkdown on every token.
-  // Line-by-line normalization handles heading spacing without clobbering
-  // code block content. Fence guard closes any unclosed ``` so ReactMarkdown
-  // never receives malformed input.
+  // Runs on every token while streaming=true. Full buffer through ReactMarkdown
+  // with line-by-line normalisation and unclosed fence guard.
   if (!isDoc && streaming) {
     const raw = String(text || "");
     const lines = raw.split("\n");
@@ -146,19 +192,15 @@ export function MarkdownMessage({ text, variant = "chat", streaming = false, onT
 
     for (let i = 0; i < lines.length; i++) {
       const line = lines[i];
-
       if (line.trim().startsWith("```")) {
         inCodeBlock = !inCodeBlock;
         out.push(line);
         continue;
       }
-
       if (inCodeBlock) {
         out.push(line);
         continue;
       }
-
-      // Heading: ensure blank line before and after for correct AST parsing
       if (/^#{1,6}\s/.test(line)) {
         if (i > 0 && out[out.length - 1] !== "") out.push("");
         out.push(line);
@@ -168,7 +210,7 @@ export function MarkdownMessage({ text, variant = "chat", streaming = false, onT
       }
     }
 
-    // Close any unclosed code fence so ReactMarkdown doesn't garble what follows
+    // Close any unclosed fence so ReactMarkdown receives valid input
     if (inCodeBlock) out.push("```");
 
     return (
@@ -184,58 +226,7 @@ export function MarkdownMessage({ text, variant = "chat", streaming = false, onT
     );
   }
 
-  // ─── PHASE 2: Full markdown render ──────────────────────────────────────────────────────────
-  // Light normalization — only runs once stream is complete
-  const normalized = useMemo(() => {
-    if (!text) return "";
-    let s = String(text);
-
-    if (isDoc) {
-      // headings breathe
-      s = s
-        .replace(/\n(#{1,6}\s)/g, "\n\n$1")
-        .replace(/(#{1,6} .+)\n(?!\n)/g, "$1\n\n")
-        .replace(/\n\n{3,}/g, "\n\n");
-    } else {
-      // chat: single \n → \n\n using lookahead/lookbehind (no overlap consumption bug)
-      s = s
-        .replace(/\n(#{1,6}\s)/g, "\n\n$1")
-        .replace(/(#{1,6}[^\n]+)\n(?!\n)/g, "$1\n\n")
-        .replace(/(?<!\n)\n(?!\n)/g, "\n\n")
-        .replace(/\n{3,}/g, "\n\n");
-    }
-
-    return s;
-  }, [text, isDoc]);
-
-  // Simple TOC for docs variant
-  const toc = useMemo(() => {
-    if (!isDoc) return [];
-    const lines = normalized.split("\n");
-    const counts = new Map();
-    const out = [];
-
-    for (const line of lines) {
-      const m = line.match(/^(#{1,6})\s+(.+)\s*$/);
-      if (!m) continue;
-      const level = m[1].length;
-      const title = m[2].replace(/\s+#\s*$/, "").trim();
-      const base = slugify(title);
-      const n = (counts.get(base) || 0) + 1;
-      counts.set(base, n);
-      const id = n === 1 ? base : `${base}-${n}`;
-      out.push({ level, title, id });
-    }
-    return out;
-  }, [normalized, isDoc]);
-
-  // Provide TOC to parent if requested (Artifacts panel might want it)
-  const lastTocRef = useRef(null);
-  if (isDoc && onToc && toc !== lastTocRef.current) {
-    lastTocRef.current = toc;
-    onToc(toc);
-  }
-
+  // ─── PHASE 2: Full render (stream complete, or doc variant) ──────────────
   // Docs-style callouts via blockquote: > **Note:** ...
   const getCalloutType = (children) => {
     const raw = Array.isArray(children) ? children.map(String).join("\n") : String(children ?? "");
@@ -249,14 +240,10 @@ export function MarkdownMessage({ text, variant = "chat", streaming = false, onT
     return ({ children }) => {
       const textOnly = Array.isArray(children) ? children.join("") : String(children ?? "");
       const base = slugify(textOnly);
-
-      // Best-effort match: find first toc entry for this base (or base-n)
       const found = toc.find((h) => h.id === base || h.id.startsWith(`${base}-`));
       const id = found?.id || base;
-
       return (
         <Tag id={id} className={styles[`md${Tag.toUpperCase()}`] || styles.mdH2}>
-          {/* anchor only in doc mode */}
           {isDoc && (
             <a className={styles.headingAnchor} href={`#${id}`} aria-label="Link to section">
               #
@@ -273,7 +260,6 @@ export function MarkdownMessage({ text, variant = "chat", streaming = false, onT
 
   return (
     <div className={isDoc ? styles.mdDocContainer : styles.mdChatContainer}>
-      {/* TOC only for docs; show at 3+ headings */}
       {isDoc && toc.length >= 3 && (
         <div className={styles.mdToc}>
           <div className={styles.mdTocTitle}>Contents</div>
@@ -291,14 +277,12 @@ export function MarkdownMessage({ text, variant = "chat", streaming = false, onT
           </nav>
         </div>
       )}
-
       <ReactMarkdown
         remarkPlugins={remarkPlugins}
         rehypePlugins={rehypePlugins}
         skipHtml={true}
         linkTarget="_blank"
         components={isDoc ? {
-          // Doc mode: headings get anchor links + TOC IDs
           h1: makeHeading("h1"),
           h2: makeHeading("h2"),
           h3: makeHeading("h3"),
@@ -355,6 +339,7 @@ export function MarkdownMessage({ text, variant = "chat", streaming = false, onT
     </div>
   );
 }
+
 
 
 function PanelToggleIcon({ collapsed }) {
