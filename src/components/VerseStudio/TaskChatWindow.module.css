@@ -1207,6 +1207,14 @@
   overflow-wrap: anywhere;
   hyphens: auto;
   max-width: 92ch;
+
+  /* Heading sizes scoped to workspace chat — halved from global token values */
+  --font-size-h1: 18px;
+  --font-size-h2: 15px;
+  --font-size-h3: 13px;
+  --font-size-h4: 12px;
+  --font-size-body: 13px;
+  --font-size-body-small: 12px;
 }
 
 /* Docs headings use your display font + token sizes */

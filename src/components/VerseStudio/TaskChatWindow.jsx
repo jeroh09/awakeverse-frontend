@@ -408,6 +408,8 @@ export default function TaskChatWindow({ task, verseStudio, onBack }) {
     generationStatus = { isGenerating: false, progress: 0, message: '', error: null },
     generatedDocs = [],
     triggerGenerate,
+    newDocsCount = 0,
+    clearDocsNotification,
   } = verseStudio || {};
 
   const [inputText, setInputText] = useState("");
@@ -1042,9 +1044,12 @@ export default function TaskChatWindow({ task, verseStudio, onBack }) {
                   <button 
                     type="button" 
                     className={`${styles.artifactsTab} ${activeArtifactTab === 'docs' ? styles.artifactsTabActive : ''}`}
-                    onClick={() => setActiveArtifactTab('docs')}
+                    onClick={() => { setActiveArtifactTab('docs'); clearDocsNotification?.(); }}
                   >
                     Docs
+                    {newDocsCount > 0 && (
+                      <span className={styles.intelligenceBadge}>{newDocsCount}</span>
+                    )}
                   </button>
                   <button 
                     type="button" 
