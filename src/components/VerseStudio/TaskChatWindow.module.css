@@ -1290,14 +1290,17 @@
   box-shadow: 0 0 0 1px rgba(99, 102, 241, 0.6);
 }
 
-/* Intelligence tab specific */
+/* Tab notification badge — docs count, intelligence count */
 .intelligenceBadge {
-  margin-left: 4px;
+  margin-left: 5px;
   font-size: 9px;
-  padding: 1px 4px;
+  font-weight: 600;
+  padding: 2px 5px;
   border-radius: 999px;
-  background: rgba(99, 102, 241, 0.2);
-  color: rgba(99, 102, 241, 0.9);
+  background: #6366F1;
+  color: #F5F5DC;
+  box-shadow: 0 0 6px rgba(99, 102, 241, 0.6);
+  letter-spacing: 0.02em;
 }
 .scrollToBottomBtn {
   position: absolute;
