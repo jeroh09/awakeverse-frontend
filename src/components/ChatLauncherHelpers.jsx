@@ -486,128 +486,150 @@ export const PersonalizedSection = ({
   isMobile
 }) => {
   const maxCharacters = isMobile ? 3 : 4;
+  const avatarSize = isMobile ? '44px' : '40px';
+
   return (
     <div style={{
       width: '100%',
       maxWidth: isMobile ? '500px' : '400px',
-      margin: '1rem 0',
-      animation: 'slideInFromLeft 0.6s ease-out'
+      margin: '0.75rem 0',
+      animation: 'slideInFromLeft 0.5s ease-out'
     }}>
+
       {/* Header */}
       <div style={{
-        display: 'flex', alignItems: 'center', justifyContent: 'space-between',
-        marginBottom: '1rem', padding: '0 0.5rem'
+        display: 'flex',
+        alignItems: 'center',
+        marginBottom: '0.65rem',
+        paddingBottom: '0.4rem',
+        borderBottom: '1px solid rgba(99, 102, 241, 0.15)'
       }}>
-        <h3 style={{
-          ...substantialStyles.typography.heading,
-          fontSize: isMobile ? '0.9rem' : '1rem',
+        <span style={{
+          fontFamily: theme.typography.fonts.display,
+          fontSize: '0.7rem',
           fontWeight: 600,
-          letterSpacing: '0.5px',
-          margin: 0,
+          letterSpacing: '0.08em',
+          textTransform: 'uppercase',
+          color: theme.colors.text.tertiary
         }}>
           For You
-        </h3>
-        <span style={{
-          ...substantialStyles.typography.subtle,
-          background: 'rgba(255, 255, 255, 0.1)',
-          border: substantialStyles.effects.borderMedium,
-          borderRadius: '12px',
-          padding: '0.2rem 0.6rem',
-          fontSize: '0.7rem',
-          letterSpacing: '0.3px'
-        }}>
-          Recent
         </span>
       </div>
 
-      {/* List */}
+      {/* Avatar strip */}
       <div style={{
-        display: isMobile ? 'flex' : 'grid',
-        gridTemplateColumns: isMobile ? 'none' : 'repeat(2, 1fr)',
-        gap: isMobile ? '1rem' : '0.75rem',
-        padding: '0.5rem 0',
-        justifyContent: isMobile ? 'space-between' : 'normal'
+        display: 'flex',
+        flexDirection: 'row',
+        gap: isMobile ? '1.25rem' : '1rem',
+        alignItems: 'flex-start',
+        justifyContent: isMobile ? 'space-between' : 'flex-start',
+        padding: '0.1rem 0'
       }}>
-        {characters.slice(0, maxCharacters).map((c) => (
-          <div
-            key={c.character || c.name}
-            onClick={() => onCharacterSelect?.(c)}
-            style={{
-              background: substantialStyles.colors.darkContainer,
-              border: substantialStyles.effects.borderMedium,
-              borderRadius: '12px',
-              cursor: 'pointer',
-              transition: 'all 0.3s ease',
-              backdropFilter: 'blur(5px)',
-              position: 'relative',
-              padding: isMobile ? '0.75rem 0.5rem' : '0.75rem',
-              flex: isMobile ? '1' : 'none',
-              maxWidth: isMobile ? '100px' : 'none',
-              display: 'flex',
-              flexDirection: isMobile ? 'column' : 'row',
-              alignItems: 'center',
-              gap: isMobile ? '0.5rem' : '0.6rem'
-            }}
-          >
-            <div style={{ position: 'relative', flexShrink: 0 }}>
-              <img
-                src={c.thumbnailUrl || '/images/default-character.jpg'}
-                alt={c.name}
-                style={{
-                  width: isMobile ? '50px' : '45px',
-                  height: isMobile ? '50px' : '45px',
-                  borderRadius: '50%',
-                  border: substantialStyles.effects.borderMedium,
-                  objectFit: 'cover'
-                }}
-                onError={(e) => { 
-                  e.currentTarget.onError = null;
-                  e.currentTarget.style.display = 'none';
+        {characters.slice(0, maxCharacters).map((c) => {
+          const isActive = c.hasActiveConversation;
+          return (
+            <div
+              key={c.character || c.name}
+              onClick={() => onCharacterSelect?.(c)}
+              onMouseEnter={(e) => {
+                const ring = e.currentTarget.querySelector('.av-ring');
+                if (ring) ring.style.boxShadow = '0 0 0 2px #6366F1, 0 0 10px rgba(99,102,241,0.45)';
+                e.currentTarget.style.transform = 'translateY(-2px)';
+              }}
+              onMouseLeave={(e) => {
+                const ring = e.currentTarget.querySelector('.av-ring');
+                if (ring) ring.style.boxShadow = isActive
+                  ? '0 0 0 2px rgba(99,102,241,0.8)'
+                  : '0 0 0 1.5px rgba(99,102,241,0.25)';
+                e.currentTarget.style.transform = 'translateY(0)';
+              }}
+              style={{
+                display: 'flex',
+                flexDirection: 'column',
+                alignItems: 'center',
+                gap: '0.35rem',
+                cursor: 'pointer',
+                transition: 'transform 0.2s ease',
+                flex: isMobile ? '1' : 'none',
+                maxWidth: isMobile ? '80px' : '60px'
+              }}
+            >
+              {/* Avatar with ring */}
+              <div style={{ position: 'relative', flexShrink: 0 }}>
+                <div
+                  className="av-ring"
+                  style={{
+                    width: avatarSize,
+                    height: avatarSize,
+                    borderRadius: '50%',
+                    overflow: 'hidden',
+                    boxShadow: isActive
+                      ? '0 0 0 2px rgba(99,102,241,0.8)'
+                      : '0 0 0 1.5px rgba(99,102,241,0.25)',
+                    transition: 'box-shadow 0.2s ease',
+                    animation: isActive ? 'pulse 2s infinite' : 'none'
+                  }}
+                >
+                  <img
+                    src={c.thumbnailUrl || '/images/default-character.jpg'}
+                    alt={c.name}
+                    style={{
+                      width: '100%',
+                      height: '100%',
+                      objectFit: 'cover',
+                      display: 'block'
+                    }}
+                    onError={(e) => {
+                      e.currentTarget.onError = null;
+                      e.currentTarget.style.display = 'none';
+                      const parent = e.currentTarget.parentElement;
+                      if (!parent.querySelector('.text-fallback')) {
+                        const fallback = document.createElement('div');
+                        fallback.className = 'text-fallback';
+                        fallback.style.cssText = [
+                          'width:100%', 'height:100%', 'display:flex',
+                          'align-items:center', 'justify-content:center',
+                          'background:rgba(99,102,241,0.15)',
+                          'color:#F5F5DC', 'font-size:1rem', 'font-weight:600'
+                        ].join(';');
+                        fallback.textContent = (c.name || 'C').charAt(0).toUpperCase();
+                        parent.appendChild(fallback);
+                      }
+                    }}
+                  />
+                </div>
+                {/* Active dot — indigo, bottom-right */}
+                {isActive && (
+                  <div style={{
+                    position: 'absolute',
+                    bottom: '1px', right: '1px',
+                    width: '9px', height: '9px',
+                    background: '#6366F1',
+                    border: '2px solid #0A0F1A',
+                    borderRadius: '50%',
+                    animation: 'pulse 2s infinite'
+                  }} />
+                )}
+              </div>
 
-                  const parent = e.currentTarget.parentElement;
-                  if (!parent.querySelector('.text-fallback')) {
-                    const fallback = document.createElement('div');
-                    fallback.className = 'text-fallback';
-                    fallback.style.cssText = 'width:100%;height:100%;display:flex;align-items:center;justify-content:center;background:rgba(255,255,255,0.1);color:#F5F5DC;font-size:0.9rem;font-weight:bold;border-radius:50%;';
-                    fallback.textContent = (c.name || 'C').charAt(0).toUpperCase();
-                    parent.appendChild(fallback);
-                  }
-                }}
-              />
-              {c.hasActiveConversation && (
-                <div style={{
-                  position: 'absolute',
-                  top: '-2px', right: '-2px',
-                  width: '12px', height: '12px',
-                  background: '#00FF88',
-                  border: '2px solid #0B1426',
-                  borderRadius: '50%',
-                  animation: 'pulse 2s infinite'
-                }} />
-              )}
-            </div>
-            <div style={{
-              display: 'flex', flexDirection: 'column',
-              textAlign: isMobile ? 'center' : 'left',
-              minWidth: 0, flex: 1
-            }}>
+              {/* Name */}
               <span style={{
-                ...substantialStyles.typography.heading,
-                fontSize: isMobile ? '0.7rem' : '0.85rem',
-                fontWeight: 600,
-                lineHeight: 1.1,
-                letterSpacing: '0.3px'
+                fontFamily: theme.typography.fonts.body,
+                fontSize: '0.65rem',
+                fontWeight: 500,
+                color: theme.colors.text.secondary,
+                textAlign: 'center',
+                lineHeight: 1.2,
+                whiteSpace: 'nowrap',
+                overflow: 'hidden',
+                textOverflow: 'ellipsis',
+                maxWidth: '100%'
               }}>
                 {(String(c.name || '').split(' ')[0]) || 'Character'}
               </span>
-              {!isMobile && hasActiveConversations && c.hasActiveConversation && (
-                <span style={{ ...substantialStyles.typography.subtle, fontSize: '0.65rem' }}>
-                  Active now
-                </span>
-              )}
             </div>
-          </div>
-        ))}
+          );
+        })}
       </div>
     </div>
   );
