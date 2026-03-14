@@ -2,6 +2,8 @@
 import { useState, useCallback, useRef } from 'react';
 
 const API_BASE = process.env.REACT_APP_API_URL || 'https://api.awakeverse.com';
+// Pause between auto-debate turns — adjust to taste
+const AUTO_TURN_GAP_MS = 3000;
 
 export default function useScenarioChat() {
   
@@ -11,6 +13,7 @@ export default function useScenarioChat() {
   const [isSending, setIsSending] = useState(false);
   const [activeSpeakers, setActiveSpeakers] = useState(new Set());
   const [queuedSpeakers, setQueuedSpeakers] = useState(new Set());
+  
   
   const [usageData, setUsageData] = useState({
     questionsAsked: 0,
@@ -914,14 +917,14 @@ export default function useScenarioChat() {
         console.warn('⚠️ Auto-debate halted: circuit breaker tripped');
         break;
       }
-
+      
       try {
         console.log(`🔄 Auto turn ${turnCount + 1}/${totalTurns}, last: '${lastSpeaker}'`);
 
         await nextSpeaker(lastSpeaker);
         // Give current response time to complete before next speaker
-        await new Promise(resolve => setTimeout(resolve, 6000)); // 6s gap
-        turnCount++;
+        await new Promise(resolve => setTimeout(resolve, AUTO_TURN_GAP_MS));
+
 
         // Read who just spoke from messages (nextSpeaker appends to messages state)
         setMessages(prev => {
@@ -932,7 +935,7 @@ export default function useScenarioChat() {
           return prev;  // no mutation — reading only
         });
 
-        turnCount++;
+        turnCount++;   // single increment — was double-incrementing before
         setAutoTurnCount(turnCount);
 
       } catch (error) {
