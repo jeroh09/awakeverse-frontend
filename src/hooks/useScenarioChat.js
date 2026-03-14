@@ -227,6 +227,7 @@ export default function useScenarioChat() {
             }
 
             if (type === 'response' && speaker && content) {
+              lastSpeakerSeen = speaker;  // ← ADD THIS LINE
               if (!speakerBuffers.has(speaker)) {
                 const messageId = generateMessageId();
                 
@@ -278,6 +279,8 @@ export default function useScenarioChat() {
       });
 
       console.log('✅ Message complete');
+      return lastSpeakerSeen;  // ← ADD THIS LINE — lets caller know who just spoke
+
 
     } catch (error) {
       console.error('❌ Send message failed:', error);
@@ -493,7 +496,8 @@ export default function useScenarioChat() {
 
       const reader = response.body.getReader();
       const decoder = new TextDecoder();
-      
+
+      let lastSpeakerSeen = null;  // ← ADD THIS LINE
       const speakerBuffers = new Map();
       const completedSpeakers = new Set();
       let nextSpeaker = null;

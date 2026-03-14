@@ -203,14 +203,13 @@ export default function ScenarioChatWindow({
     }
     
     try {
-      await sendMessage(messageText);
+      const seedSpeaker = await sendMessage(messageText);
 
       // ── Auto-debate: kick off loop after seed message ────────────────
-      if (debateMode === 'auto') {
-        await new Promise(resolve => setTimeout(resolve, 300));
-        const lastAiMsg = [...messages].reverse()
-          .find(m => !m.user && m.speaker !== 'system');
-        await runAutoDebate(lastAiMsg?.speaker, turnCap);
+      if (debateMode === 'auto' && seedSpeaker) {
+        // Small gap to ensure isSending state has cleared before nextSpeaker checks it
+        await new Promise(resolve => setTimeout(resolve, 500));
+        await runAutoDebate(seedSpeaker, turnCap);
       }
 
     } catch (error) {
