@@ -200,6 +200,7 @@ export default function useScenarioChat() {
       const reader = response.body.getReader();
       const decoder = new TextDecoder();
       
+      let lastSpeakerSeen = null;
       const speakerBuffers = new Map();
       const completedSpeakers = new Set();
 
