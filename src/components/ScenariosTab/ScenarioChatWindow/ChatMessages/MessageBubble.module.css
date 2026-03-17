@@ -201,6 +201,48 @@
   opacity: 0.9;
 }
 
+/* ===== HEADINGS ===== */
+
+.heading1 {
+  font-size: 1.2em;
+  font-weight: var(--font-weight-semibold);
+  margin: var(--spacing-lg) 0 var(--spacing-sm) 0;
+  line-height: 1.3;
+  color: var(--text-primary);
+}
+
+.heading2 {
+  font-size: 1.05em;
+  font-weight: var(--font-weight-semibold);
+  margin: var(--spacing-md) 0 var(--spacing-sm) 0;
+  line-height: 1.3;
+  color: var(--text-primary);
+}
+
+.heading3 {
+  font-size: 0.95em;
+  font-weight: var(--font-weight-semibold);
+  margin: var(--spacing-sm) 0 var(--spacing-xs) 0;
+  line-height: 1.3;
+  color: var(--text-secondary);
+}
+
+/* First heading in a bubble needs no top margin */
+.messageText h1:first-child,
+.messageText h2:first-child,
+.messageText h3:first-child {
+  margin-top: 0;
+}
+
+/* ===== HORIZONTAL RULE ===== */
+
+.divider {
+  border: none;
+  border-top: 1px solid var(--border-subtle);
+  margin: var(--spacing-md) 0;
+  opacity: 0.5;
+}
+
 .link {
   color: inherit;
   text-decoration: underline;

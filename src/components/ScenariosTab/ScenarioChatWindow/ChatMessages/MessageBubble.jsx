@@ -150,7 +150,32 @@ export default function MessageBubble({
         <div className={styles.messageText}>
           <ReactMarkdown
             components={{
+              // ── Block elements ──────────────────────────────────────────
               p: ({ children }) => <p className={styles.paragraph}>{children}</p>,
+              // Headings — capped sizes so they stay proportional inside a bubble
+              h1: ({ children }) => <h1 className={styles.heading1}>{children}</h1>,
+              h2: ({ children }) => <h2 className={styles.heading2}>{children}</h2>,
+              h3: ({ children }) => <h3 className={styles.heading3}>{children}</h3>,
+              // Horizontal rule — thin divider with breathing room
+              hr: () => <hr className={styles.divider} />,
+              // Lists — nested lists inherit padding from CSS
+              ul: ({ children }) => <ul className={styles.list}>{children}</ul>,
+              ol: ({ children }) => <ol className={styles.orderedList}>{children}</ol>,
+              li: ({ children }) => <li className={styles.listItem}>{children}</li>,
+              blockquote: ({ children }) => <blockquote className={styles.blockquote}>{children}</blockquote>,
+              // ── Table elements ─────────────────────────────────────────
+              // Wrapped in a div so wide tables scroll rather than overflow the bubble
+              table: ({ children }) => (
+                <div className={styles.tableWrapper}>
+                  <table className={styles.table}>{children}</table>
+                </div>
+              ),
+              thead: ({ children }) => <thead className={styles.tableHead}>{children}</thead>,
+              tbody: ({ children }) => <tbody>{children}</tbody>,
+              tr: ({ children }) => <tr className={styles.tableRow}>{children}</tr>,
+              th: ({ children }) => <th className={styles.tableHeader}>{children}</th>,
+              td: ({ children }) => <td className={styles.tableCell}>{children}</td>,
+              // ── Inline elements ─────────────────────────────────────────
               strong: ({ children }) => <strong className={styles.bold}>{children}</strong>,
               em: ({ children }) => <em className={styles.italic}>{children}</em>,
               code: ({ inline, children }) => 
@@ -161,10 +186,6 @@ export default function MessageBubble({
                     <code>{children}</code>
                   </pre>
                 ),
-              ul: ({ children }) => <ul className={styles.list}>{children}</ul>,
-              ol: ({ children }) => <ol className={styles.orderedList}>{children}</ol>,
-              li: ({ children }) => <li className={styles.listItem}>{children}</li>,
-              blockquote: ({ children }) => <blockquote className={styles.blockquote}>{children}</blockquote>,
               a: ({ href, children }) => (
                 <a href={href} className={styles.link} target="_blank" rel="noopener noreferrer">
                   {children}

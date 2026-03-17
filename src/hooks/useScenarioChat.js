@@ -5,6 +5,14 @@ const API_BASE = process.env.REACT_APP_API_URL || 'https://api.awakeverse.com';
 // Pause between auto-debate turns — adjust to taste
 const AUTO_TURN_GAP_MS = 3000;
 
+// Pure utility — no hooks. Splits LLM text at paragraph boundaries.
+// Each block is a complete markdown unit: heading, paragraph, list, hr.
+// Keeps single-newline list items together within their block.
+const splitIntoBlocks = (text) => {
+  const blocks = text.split(/\n{2,}/).map(b => b.trim()).filter(Boolean);
+  return blocks.length > 0 ? blocks : [text.trim()];
+};
+
 export default function useScenarioChat() {
   
   const [debateId, setDebateId] = useState(null);
@@ -151,6 +159,84 @@ export default function useScenarioChat() {
     }
   }, [fetchUsage]);
 
+  // ─────────────────────────────────────────────────────────────────────────
+  // SHARED ANIMATION HELPERS
+  // Hoisted from sendMessage / continueConversation / nextSpeaker.
+  // Block-reveal: reveals one complete markdown paragraph/block per tick (380ms).
+  // Eliminates markdown flicker caused by word-by-word partial syntax rendering.
+  // To tune reveal speed: change the 380 value in revealNext's setTimeout.
+  // ─────────────────────────────────────────────────────────────────────────
+
+  const animateResponse = useCallback((speaker, fullText, buffers, completed) => {
+    const blocks = splitIntoBlocks(fullText);
+    let blockIndex = 0;
+
+    function revealNext() {
+      if (!buffers.has(speaker)) return;
+      const buffer = buffers.get(speaker);
+
+      if (blockIndex >= blocks.length) {
+        // Ensure final text is exactly fullText — guards against whitespace edge cases
+        buffer.displayedText = fullText;
+        buffer.animationComplete = true;
+
+        setMessages(prev => prev.map(msg =>
+          msg.id === buffer.messageId ? { ...msg, text: fullText } : msg
+        ));
+
+        completed.add(speaker);
+        setActiveSpeakers(prev => {
+          const next = new Set(prev);
+          next.delete(speaker);
+          return next;
+        });
+
+        console.log(`✅ ${speaker} animation complete (${blocks.length} blocks)`);
+        return;
+      }
+
+      // Reveal blocks cumulatively so context builds naturally on screen
+      const displayedText = blocks.slice(0, blockIndex + 1).join('\n\n');
+      buffer.displayedText = displayedText;
+      blockIndex++;
+
+      setMessages(prev => prev.map(msg =>
+        msg.id === buffer.messageId ? { ...msg, text: displayedText } : msg
+      ));
+
+      const timeoutId = setTimeout(revealNext, 280);
+      animationIntervalsRef.current.add(timeoutId);
+    }
+
+    revealNext();
+  }, [setMessages, setActiveSpeakers]);
+
+  const waitForAnimations = useCallback((buffers) => {
+    return new Promise((resolve) => {
+      const checkInterval = setInterval(() => {
+        const allDone = [...buffers.values()].every(b => b.animationComplete === true);
+        if (allDone) {
+          clearInterval(checkInterval);
+          resolve();
+        }
+      }, 100);
+
+      // 30s safety valve — force-complete any stragglers
+      setTimeout(() => {
+        clearInterval(checkInterval);
+        setMessages(prev => prev.map(msg => {
+          for (const buffer of buffers.values()) {
+            if (msg.id === buffer.messageId) {
+              return { ...msg, text: buffer.fullText };
+            }
+          }
+          return msg;
+        }));
+        resolve();
+      }, 30000);
+    });
+  }, [setMessages]);
+
   const sendMessage = useCallback(async (messageText) => {
     if (!debateId || !messageText.trim()) {
       console.error('❌ sendMessage: Missing required params');
@@ -236,7 +322,8 @@ export default function useScenarioChat() {
                   fullText: content,
                   displayedText: '',
                   messageId: messageId,
-                  displayName: display_name || speaker
+                  displayName: display_name || speaker,
+                  animationComplete: false
                 });
 
                 setActiveSpeakers(prev => new Set([...prev, speaker]));
@@ -312,84 +399,7 @@ export default function useScenarioChat() {
       setQueuedSpeakers(new Set());
       controllerRef.current = null;
     }
-
-    function animateResponse(speaker, fullText, buffers, completed) {
-      const words = fullText.split(' ');
-      let wordIndex = 0;
-      const WORDS_PER_TICK = 2;
-      const DELAY_MS = 100;
-
-      const interval = setInterval(() => {
-        if (wordIndex >= words.length) {
-          clearInterval(interval);
-          animationIntervalsRef.current.delete(interval);
-          completed.add(speaker);
-          
-          setActiveSpeakers(prev => {
-            const next = new Set(prev);
-            next.delete(speaker);
-            return next;
-          });
-          
-          console.log(`✅ ${speaker} animation complete`);
-          return;
-        }
-
-        const batch = words.slice(wordIndex, wordIndex + WORDS_PER_TICK).join(' ');
-        wordIndex += WORDS_PER_TICK;
-
-        const buffer = buffers.get(speaker);
-        if (buffer) {
-          buffer.displayedText += (buffer.displayedText ? ' ' : '') + batch;
-
-          setMessages(prev => {
-            const copy = [...prev];
-            const msgIndex = copy.findIndex(m => m.id === buffer.messageId);
-            
-            if (msgIndex !== -1) {
-              copy[msgIndex] = {
-                ...copy[msgIndex],
-                text: buffer.displayedText
-              };
-            }
-            
-            return copy;
-          });
-        }
-      }, DELAY_MS);
-
-      animationIntervalsRef.current.add(interval);
-
-      if (buffers.has(speaker)) {
-        buffers.get(speaker).interval = interval;
-      }
-    }
-
-    async function waitForAnimations(buffers) {
-      return new Promise((resolve) => {
-        const checkInterval = setInterval(() => {
-          let allComplete = true;
-          
-          for (const [speaker, buffer] of buffers.entries()) {
-            if (buffer.displayedText !== buffer.fullText) {
-              allComplete = false;
-              break;
-            }
-          }
-
-          if (allComplete) {
-            clearInterval(checkInterval);
-            resolve();
-          }
-        }, 100);
-
-        setTimeout(() => {
-          clearInterval(checkInterval);
-          resolve();
-        }, 30000);
-      });
-    }
-  }, [debateId, circuitBreakerState.status, usageData, scenarioId, fetchUsage, generateMessageId]);
+  }, [debateId, circuitBreakerState.status, usageData, scenarioId, fetchUsage, generateMessageId, animateResponse, waitForAnimations]);
 
 // =============================================================================
 // ADD TO: useScenarioChat.js
@@ -538,7 +548,8 @@ export default function useScenarioChat() {
                   fullText: content,
                   displayedText: '',
                   messageId: messageId,
-                  displayName: display_name || speaker
+                  displayName: display_name || speaker,
+                  animationComplete: false
                 });
 
                 setActiveSpeakers(prev => new Set([...prev, speaker]));
@@ -602,86 +613,7 @@ export default function useScenarioChat() {
       setQueuedSpeakers(new Set());
       controllerRef.current = null;
     }
-
-    // ⚠️ IMPORTANT: These helper functions must be accessible
-    // Either define them here or ensure they're shared with sendMessage
-    function animateResponse(speaker, fullText, buffers, completed) {
-      const words = fullText.split(' ');
-      let wordIndex = 0;
-      const WORDS_PER_TICK = 2;
-      const DELAY_MS = 100;
-
-      const interval = setInterval(() => {
-        if (wordIndex >= words.length) {
-          clearInterval(interval);
-          animationIntervalsRef.current.delete(interval);
-          completed.add(speaker);
-          
-          setActiveSpeakers(prev => {
-            const next = new Set(prev);
-            next.delete(speaker);
-            return next;
-          });
-          
-          console.log(`✅ ${speaker} animation complete`);
-          return;
-        }
-
-        const batch = words.slice(wordIndex, wordIndex + WORDS_PER_TICK).join(' ');
-        wordIndex += WORDS_PER_TICK;
-
-        const buffer = buffers.get(speaker);
-        if (buffer) {
-          buffer.displayedText += (buffer.displayedText ? ' ' : '') + batch;
-
-          setMessages(prev => {
-            const copy = [...prev];
-            const msgIndex = copy.findIndex(m => m.id === buffer.messageId);
-            
-            if (msgIndex !== -1) {
-              copy[msgIndex] = {
-                ...copy[msgIndex],
-                text: buffer.displayedText
-              };
-            }
-            
-            return copy;
-          });
-        }
-      }, DELAY_MS);
-
-      animationIntervalsRef.current.add(interval);
-
-      if (buffers.has(speaker)) {
-        buffers.get(speaker).interval = interval;
-      }
-    }
-
-    async function waitForAnimations(buffers) {
-      return new Promise((resolve) => {
-        const checkInterval = setInterval(() => {
-          let allComplete = true;
-          
-          for (const [speaker, buffer] of buffers.entries()) {
-            if (buffer.displayedText !== buffer.fullText) {
-              allComplete = false;
-              break;
-            }
-          }
-
-          if (allComplete) {
-            clearInterval(checkInterval);
-            resolve();
-          }
-        }, 100);
-
-        setTimeout(() => {
-          clearInterval(checkInterval);
-          resolve();
-        }, 30000);
-      });
-    }
-  }, [debateId, scenarioId, circuitBreakerState.status, isSending, generateMessageId]);
+  }, [debateId, scenarioId, circuitBreakerState.status, isSending, generateMessageId, animateResponse, waitForAnimations]);
 
 //=============================================================================
 //ADD TO: useScenarioChat.js
@@ -773,7 +705,8 @@ export default function useScenarioChat() {
                   fullText: content,
                   displayedText: '',
                   messageId: messageId,
-                  displayName: display_name || speaker
+                  displayName: display_name || speaker,
+                  animationComplete: false
                 });
 
                 setActiveSpeakers(prev => new Set([...prev, speaker]));
@@ -834,69 +767,7 @@ export default function useScenarioChat() {
       setQueuedSpeakers(new Set());
       controllerRef.current = null;
     }
-
-    // Reuse the same animation helper functions
-    function animateResponse(speaker, fullText, buffers, completed) {
-      const words = fullText.split(' ');
-      let wordIndex = 0;
-      const WORDS_PER_TICK = 2;
-      const DELAY_MS = 100;
-
-      const interval = setInterval(() => {
-        if (wordIndex >= words.length) {
-          clearInterval(interval);
-          animationIntervalsRef.current.delete(interval);
-          completed.add(speaker);
-          
-          setActiveSpeakers(prev => {
-            const next = new Set(prev);
-            next.delete(speaker);
-            return next;
-          });
-          
-          console.log(`✅ ${speaker} animation complete`);
-          return;
-        }
-
-        const batch = words.slice(wordIndex, wordIndex + WORDS_PER_TICK).join(' ');
-        wordIndex += WORDS_PER_TICK;
-
-        const buffer = buffers.get(speaker);
-        if (buffer) {
-          buffer.displayedText += (buffer.displayedText ? ' ' : '') + batch;
-          
-          setMessages(prev => prev.map(msg =>
-            msg.id === buffer.messageId
-              ? { ...msg, text: buffer.displayedText }
-              : msg
-          ));
-        }
-      }, DELAY_MS);
-
-      animationIntervalsRef.current.add(interval);
-    }
-
-    async function waitForAnimations(buffers) {
-      const checkComplete = () => {
-        for (const interval of animationIntervalsRef.current) {
-          clearInterval(interval);
-        }
-        animationIntervalsRef.current.clear();
-        
-        setMessages(prev => prev.map(msg => {
-          for (const [speaker, buffer] of buffers.entries()) {
-            if (msg.id === buffer.messageId) {
-              return { ...msg, text: buffer.fullText };
-            }
-          }
-          return msg;
-        }));
-      };
-
-      await new Promise(resolve => setTimeout(resolve, 500));
-      checkComplete();
-    }
-  }, [debateId, scenarioId, isSending, circuitBreakerState.status, generateMessageId]);
+  }, [debateId, scenarioId, isSending, circuitBreakerState.status, generateMessageId, animateResponse, waitForAnimations]);
   
   const runAutoDebate = useCallback(async (seedSpeaker, cap) => {
     // Called after sendMessage() resolves (seed message already sent + responded to).
@@ -962,7 +833,7 @@ export default function useScenarioChat() {
       controllerRef.current = null;
     }
     
-    animationIntervalsRef.current.forEach(interval => clearInterval(interval));
+    animationIntervalsRef.current.forEach(id => clearTimeout(id));
     animationIntervalsRef.current.clear();
     
     setIsSending(false);
