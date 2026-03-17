@@ -411,10 +411,9 @@
     to top,
     var(--bg-canvas) 0%,
     var(--bg-canvas) 60%,
-    rgba(10, 15, 26, 0.95) 80%,
-    transparent 100%
+    var(--bg-canvas-fade, rgba(10, 15, 26, 0)) 100%
   ) !important;
-  padding-bottom: var(--spacing-sm) !important; /* tighter to window edge */
+  padding-bottom: var(--spacing-sm) !important;
 }
 
 /* FIX 3: Input container - ENTIRE AREA night blue (matches page background) */
