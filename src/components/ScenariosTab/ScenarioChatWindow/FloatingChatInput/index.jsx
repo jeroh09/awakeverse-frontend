@@ -178,6 +178,8 @@ export default function FloatingChatInput({
           )}
         </button>
       </div>
+      {/* AI disclaimer */}
+      <p className={styles.disclaimer}>AwakeVerse is AI generated. Please check responses.</p>
     </div>
   );
 }

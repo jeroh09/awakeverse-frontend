@@ -9,6 +9,29 @@
   right: 0;
   z-index: 100;
   padding: var(--spacing-xl) var(--spacing-lg);
+
+  
+/* FIX 2: Restore gradient background so messages don't bleed through */
+.floatingInputWrapper {
+  background: linear-gradient(
+    to top,
+    var(--bg-canvas) 0%,
+    var(--bg-canvas) 60%,
+    rgba(10, 15, 26, 0.95) 80%,
+    transparent 100%
+  ) !important;
+}
+
+/* ===== AI DISCLAIMER ===== */
+.disclaimer {
+  text-align: center;
+  font-size: 0.7rem;
+  color: rgba(255, 245, 235, 0.45);
+  letter-spacing: 0.2px;
+  pointer-events: none;
+  padding-bottom: var(--spacing-xs);
+  margin: 0;
+}
   
   /* Smoother gradient fade - doesn't obscure messages */
   background: linear-gradient(

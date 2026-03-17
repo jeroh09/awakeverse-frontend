@@ -3,14 +3,14 @@
 // Steps 3-4: New layout structure with panel collapse state
 // VIDEO GENERATION INTEGRATED
 
-import React, { useState, useEffect, useMemo, useCallback } from 'react';
+import React, { useState, useEffect, useMemo, useCallback, useRef } from 'react';
 import usePremiumCharacters from '../../../hooks/usePremiumCharacters';
 import useScenarioChat from '../../../hooks/useScenarioChat';
 import useVideoGeneration from '../../../hooks/useVideoGeneration';
 import { useUser } from '../../../contexts/UserContext';
 import SubscriptionService from '../../../services/SubscriptionService';
 import DebateModeToggle from '../DebateModeToggle';
-import { ArrowLeft, ChevronRight } from 'lucide-react';
+import { ArrowLeft, ChevronRight, ChevronDown } from 'lucide-react';
 
 // Existing components - keeping for now
 // import ChatInput from './ChatInput'; // OLD - deprecated
@@ -49,6 +49,10 @@ export default function ScenarioChatWindow({
   
   // ✅ NEW: Info panel collapse state
   const [infoPanelCollapsed, setInfoPanelCollapsed] = useState(false);
+
+  // ✅ NEW: Scroll-to-bottom button
+  const messagesContainerRef = useRef(null);
+  const [showScrollButton, setShowScrollButton] = useState(false);
 
   // ✅ NEW: Mobile keyboard handling
   const { keyboardHeight, isKeyboardVisible } = useKeyboardHeight();
@@ -178,6 +182,23 @@ export default function ScenarioChatWindow({
     setInfoPanelCollapsed(prev => !prev);
     console.log('🔄 Info panel toggled:', !infoPanelCollapsed);
   };
+
+  // ✅ NEW: Scroll-to-bottom button logic
+  // Shows when user has scrolled more than 100px up from the bottom
+  const handleMessagesScroll = useCallback((e) => {
+    const el = e.target;
+    const distanceFromBottom = el.scrollHeight - el.scrollTop - el.clientHeight;
+    setShowScrollButton(distanceFromBottom > 100);
+  }, []);
+
+  const scrollToBottom = useCallback(() => {
+    if (messagesContainerRef.current) {
+      messagesContainerRef.current.scrollTo({
+        top: messagesContainerRef.current.scrollHeight,
+        behavior: 'smooth'
+      });
+    }
+  }, []);
 
   // Determine active speaker
   const currentActiveSpeaker = activeSpeakers.length > 0 ? activeSpeakers[0] : null;
@@ -484,7 +505,21 @@ export default function ScenarioChatWindow({
               isGeneratingVideo={videoGen.state.status === 'generating'}
               canGenerateVideo={canGenerateVideo}
               theme={theme}
+              containerRef={messagesContainerRef}
+              onScroll={handleMessagesScroll}
             />
+
+            {/* ✅ NEW: Scroll-to-bottom button — shown when user scrolls up */}
+            {showScrollButton && (
+              <button
+                className={styles.scrollToBottomButton}
+                onClick={scrollToBottom}
+                aria-label="Scroll to latest message"
+                title="Jump to latest"
+              >
+                <ChevronDown size={18} />
+              </button>
+            )}
   
             <FloatingChatInput
               starterQuestions={scenario.starter_questions || []}
