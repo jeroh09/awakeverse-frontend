@@ -17,6 +17,8 @@ import styles from './ChatMessages.module.css';
  * @param {boolean} isGeneratingVideo - Whether video is currently being generated
  * @param {boolean} canGenerateVideo - Whether user can generate video (5+ messages + access)
  * @param {string} theme - Theme (kept for compatibility, not used in new design)
+ * @param {React.Ref} containerRef - Optional external ref for the scroll container (for scroll-to-bottom button)
+ * @param {Function} onScroll - Optional scroll handler (for scroll-to-bottom button visibility)
  */
 export default function ChatMessages({
   messages = [],
@@ -27,10 +29,15 @@ export default function ChatMessages({
   onGenerateVideo,
   isGeneratingVideo = false,
   canGenerateVideo = false,
-  theme = 'light'
+  theme = 'light',
+  containerRef: externalRef,  // ✅ NEW: External ref from ScenarioChatWindow
+  onScroll,                    // ✅ NEW: Scroll handler from ScenarioChatWindow
 }) {
+  const internalRef = useRef(null);
+  // Use external ref if provided (for scroll button), otherwise use internal ref
+  const containerRef = externalRef || internalRef;
+
   const messagesEndRef = useRef(null);
-  const containerRef = useRef(null);
 
   // Auto-scroll to bottom when new messages arrive
   useEffect(() => {
@@ -61,7 +68,7 @@ export default function ChatMessages({
   // Empty state
   if (messages.length === 0 && !isSending) {
     return (
-      <div className={styles.messagesContainer} ref={containerRef}>
+      <div className={styles.messagesContainer} ref={containerRef} onScroll={onScroll}>
         <div className={styles.emptyState}>
           <div className={styles.emptyIcon}>🎭</div>
           <p className={styles.emptyText}>Start the conversation</p>
@@ -72,7 +79,11 @@ export default function ChatMessages({
   }
 
   return (
-    <div className={styles.messagesContainer} ref={containerRef}>
+    <div
+      className={styles.messagesContainer}
+      ref={containerRef}
+      onScroll={onScroll}  // ✅ NEW: Propagate scroll events to parent
+    >
       {/* Render all messages */}
       {messages.map((message, index) => (
         <MessageBubble
