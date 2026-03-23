@@ -852,5 +852,78 @@
     transform: rotate(360deg);
   }
 }
+/* ===== NESTED LISTS ===== */
+.list .list,
+.orderedList .orderedList,
+.list .orderedList,
+.orderedList .list {
+  margin: 2px 0;
+  padding-left: var(--spacing-md);
+}
+
+/* ===== TABLES ===== */
+.tableWrapper {
+  overflow-x: auto;
+  margin: var(--spacing-sm) 0;
+  border-radius: var(--border-radius-sm);
+}
+
+.table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.9em;
+}
+
+.tableHead {
+  background: var(--bg-peak);
+}
+
+.tableHeader {
+  padding: var(--spacing-xs) var(--spacing-md);
+  text-align: left;
+  font-weight: var(--font-weight-semibold);
+  border-bottom: 1px solid var(--border-medium);
+  white-space: nowrap;
+}
+
+.tableRow:nth-child(even) {
+  background: var(--bg-interactive);
+}
+
+.tableCell {
+  padding: var(--spacing-xs) var(--spacing-md);
+  border-bottom: 1px solid var(--border-subtle);
+  vertical-align: top;
+}
+
+/* User message table overrides */
+.userMessage .tableHeader,
+.userMessage .tableCell {
+  border-color: rgba(255, 255, 255, 0.2);
+}
+
+.userMessage .tableHead {
+  background: rgba(255, 255, 255, 0.15);
+}
+
+.userMessage .tableRow:nth-child(even) {
+  background: rgba(255, 255, 255, 0.08);
+}
+
+/* ===== USER MESSAGE HEADING OVERRIDES ===== */
+/* Headings inside user bubbles must be white, not --text-primary */
+.userMessage .heading1,
+.userMessage .heading2,
+.userMessage .heading3 {
+  color: white;
+}
+
+/* ===== HORIZONTAL RULE ===== */
+.divider {
+  border: none;
+  border-top: 1px solid var(--border-subtle);
+  margin: var(--spacing-md) 0;
+  opacity: 0.5;
+}
 
 /* ===== END OF VIDEO BUTTON STYLES ===== */
