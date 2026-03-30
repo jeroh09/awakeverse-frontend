@@ -871,7 +871,7 @@ const ChatLauncherPage = ({ onStartChat, discoveredCharacters = [] }) => {
             letterSpacing: '-0.5px',
             marginBottom: '8px'
           }}>
-            Welcome, {user?.displayName || 'Seeker'}
+            Welcome, {user?.displayName || user?.display_name || 'Seeker'}
           </h1>
           <p style={{
             fontFamily: theme.typography.fonts.body,
@@ -1164,7 +1164,7 @@ const ChatLauncherPage = ({ onStartChat, discoveredCharacters = [] }) => {
             letterSpacing: '-1px',
             marginBottom: '8px'
           }}>
-            Welcome, {user?.displayName || 'Seeker'}
+            Welcome, {user?.displayName || user?.display_name || 'Seeker'}
           </h1>
           <p style={{
             fontFamily: theme.typography.fonts.body,

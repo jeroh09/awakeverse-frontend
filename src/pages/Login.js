@@ -39,6 +39,7 @@ export default function Login() {
   const [successMessage, setSuccessMessage] = useState('');
   const [verificationStatus, setVerificationStatus] = useState(null);
   const [showResendVerification, setShowResendVerification] = useState(false);
+  const [showSetPassword, setShowSetPassword] = useState(false); // ✅ NEW: OAuth account prompt
   const [oauthAvailable, setOauthAvailable] = useState(false);
   
   const isMobile = useMobileDetection();
@@ -160,6 +161,7 @@ export default function Login() {
     setLoading(true);
     setError('');
     setShowResendVerification(false);
+    setShowSetPassword(false); // ✅ NEW: reset on each attempt
 
     try {
       await login({ email, password });
@@ -176,15 +178,23 @@ export default function Login() {
       
     } catch (err) {
       console.error('Login error:', err);
-      
-      if (err.message.includes('verify your email') || err.message.includes('requires_verification')) {
+      const msg = err.message || '';
+
+      // ✅ NEW: OAuth-only account — guide to set password
+      if (msg.includes('Google Sign-In') || msg.includes('oauth_account_no_password')) {
+        setShowSetPassword(true);
+        setError('');
+
+      // Existing: email not verified
+      } else if (msg.includes('verify your email') || msg.includes('requires_verification')) {
         setError('Please verify your email address before signing in.');
         setShowResendVerification(true);
+
+      // Existing: everything else — FIXED: single setError, no overwrite
       } else {
-        setError(err.message || 'Login failed. Please try again.');
+        setError(sanitizeError(err));
       }
-      
-      setError(sanitizeError(err));
+
     } finally {
       setLoading(false);
     }
@@ -328,6 +338,34 @@ export default function Login() {
                 >
                   Resend verification email
                 </button>
+              </div>
+            )}
+
+            {/* ✅ NEW: OAuth account — no password set */}
+            {showSetPassword && (
+              <div style={{ 
+                background: 'rgba(99, 102, 241, 0.1)', 
+                border: '1px solid rgba(99, 102, 241, 0.3)',
+                borderRadius: 'var(--radius-md)',
+                padding: 'var(--space-md)',
+                marginBottom: 'var(--space-md)',
+                textAlign: 'center'
+              }}>
+                <p style={{ margin: '0 0 8px 0', color: 'var(--text-primary)', fontSize: '0.9rem' }}>
+                  This account uses Google Sign-In. Set a password to use email login.
+                </p>
+                <Link
+                  to="/forgot-password"
+                  state={{ prefillEmail: email }}
+                  style={{
+                    color: 'var(--accent-primary)',
+                    fontSize: '0.9rem',
+                    fontWeight: 600,
+                    textDecoration: 'underline'
+                  }}
+                >
+                  Set a password →
+                </Link>
               </div>
             )}
             
