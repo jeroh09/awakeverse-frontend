@@ -1,13 +1,9 @@
-// src/contexts/UserContext.js - FIXED: Step 1-2 Subscription Display
-// ✅ CHANGES:
-// 1. Added getTierDisplayName helper function (NEW - line 132-142)
-// 2. Updated getSubscriptionInfo to use helper instead of non-existent field (line 160)
-
+// src/contexts/UserContext.js
+// PERSISTENT LOGIN: Silent refresh on 401 - stays logged in for 30 days
 import React, { createContext, useContext, useState, useEffect, useCallback } from 'react';
 
 const API_BASE = process.env.REACT_APP_API_URL || 'https://api.awakeverse.com';
 
-// ✅ STEP 1: Create context with DEFAULT VALUE to prevent undefined returns
 const UserContext = createContext({
   user: null,
   setUser: () => {},
@@ -29,81 +25,158 @@ export function UserProvider({ children }) {
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
 
-  /**
-   * Refresh user data and subscription status from API
-   * DEFENSIVE: Can be called after Stripe success or anytime
-   */
-  const refreshSubscription = useCallback(async (silent = false) => {
+  // ============================================================================
+  // HELPER: Read CSRF token from cookie (needed for refresh POST)
+  // ============================================================================
+  const getCsrfToken = () => {
     try {
-      if (!silent) {
-        setRefreshing(true);
-      }
+      return document.cookie
+        .split('; ')
+        .find(row => row.startsWith('av_csrf='))
+        ?.split('=')[1] || '';
+    } catch {
+      return '';
+    }
+  };
 
-      console.log('🔄 Refreshing user subscription data...');
+  // ============================================================================
+  // HELPER: Attempt silent token refresh
+  // Returns true if refresh succeeded, false otherwise
+  // DEFENSIVE: Never throws - always returns bool
+  // ============================================================================
+  const attemptSilentRefresh = useCallback(async () => {
+    try {
+      const csrfToken = getCsrfToken();
 
-      const response = await fetch(`${API_BASE}/api/auth/me`, {
-        credentials: 'include'
+      const res = await fetch(`${API_BASE}/api/auth/refresh`, {
+        method: 'POST',
+        credentials: 'include',
+        headers: {
+          'Content-Type': 'application/json',
+          'X-CSRF-Token': csrfToken
+        }
       });
 
-      console.log('🌐 Refresh response status:', response.status);
-
-      if (!response.ok) {
-        throw new Error(`HTTP ${response.status}`);
+      if (res.ok) {
+        console.log('🔄 Silent refresh succeeded - session extended 30 days');
+        return true;
       }
 
-      const data = await response.json();
-
-      if (!data.error) {
-        // DEFENSIVE: Update user state with fresh data
-        setUser(data);
-        
-        console.log('✅ Subscription refreshed successfully');
-        console.log('📊 Current tier:', data.subscription_tier || 'free');
-        console.log('💳 Subscription status:', data.subscription_status || 'none');
-        
-        return data;
-      } else {
-        console.error('❌ Refresh API error:', data.error);
-        return null;
-      }
-
-    } catch (error) {
-      console.error('❌ Subscription refresh failed:', error);
-      // DEFENSIVE: Don't clear user on refresh failure
-      return null;
-    } finally {
-      if (!silent) {
-        setRefreshing(false);
-      }
+      console.log('🔒 Silent refresh failed - session truly expired');
+      return false;
+    } catch (err) {
+      console.warn('⚠️ Silent refresh network error:', err.message);
+      return false;
     }
   }, []);
 
-  /**
-   * Check if user has a specific subscription tier
-   * DEFENSIVE: Returns false if no subscription data
-   */
+  // ============================================================================
+  // HELPER: Fetch /api/auth/me and set user state
+  // Returns user data on success, null on failure
+  // ============================================================================
+  const fetchMe = useCallback(async () => {
+    const res = await fetch(`${API_BASE}/api/auth/me`, {
+      credentials: 'include'
+    });
+
+    if (!res.ok) return { ok: false, status: res.status };
+
+    const data = await res.json().catch(() => ({}));
+    if (data && !data.error) {
+      return { ok: true, data };
+    }
+    return { ok: false, status: res.status };
+  }, []);
+
+  // ============================================================================
+  // INITIAL LOAD: Try /me → if 401 try refresh → retry /me → else logged out
+  // ============================================================================
+  useEffect(() => {
+    const loadUser = async () => {
+      try {
+        // Attempt 1: normal /me
+        let result = await fetchMe();
+
+        if (!result.ok && result.status === 401) {
+          // Access token expired — try silent refresh using av_rid
+          console.log('🔄 Access token expired, attempting silent refresh...');
+          const refreshed = await attemptSilentRefresh();
+
+          if (refreshed) {
+            // Retry /me with new access token
+            result = await fetchMe();
+          }
+        }
+
+        if (result.ok) {
+          setUser(result.data);
+          console.log('👤 User loaded:', result.data.username);
+          console.log('💎 Subscription:', result.data.subscription_tier || 'free');
+        } else {
+          // Both /me and refresh failed - genuinely logged out
+          setUser(null);
+          console.log('👤 No authenticated user');
+        }
+      } catch (err) {
+        console.error('❌ Auth load failed:', err);
+        setUser(null);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    loadUser();
+  }, [fetchMe, attemptSilentRefresh]);
+
+  // ============================================================================
+  // REFRESH SUBSCRIPTION: Manual refresh (e.g. after Stripe success)
+  // Same silent-refresh pattern - does not log user out on transient failures
+  // ============================================================================
+  const refreshSubscription = useCallback(async (silent = false) => {
+    try {
+      if (!silent) setRefreshing(true);
+
+      console.log('🔄 Refreshing user subscription data...');
+
+      let result = await fetchMe();
+
+      if (!result.ok && result.status === 401) {
+        const refreshed = await attemptSilentRefresh();
+        if (refreshed) {
+          result = await fetchMe();
+        }
+      }
+
+      if (result.ok) {
+        setUser(result.data);
+        console.log('✅ Subscription refreshed:', result.data.subscription_tier || 'free');
+        return result.data;
+      }
+
+      // DEFENSIVE: Don't clear user on refresh failure
+      console.error('❌ Refresh failed - keeping existing user state');
+      return null;
+
+    } catch (error) {
+      console.error('❌ Subscription refresh error:', error);
+      return null;
+    } finally {
+      if (!silent) setRefreshing(false);
+    }
+  }, [fetchMe, attemptSilentRefresh]);
+
+  // ============================================================================
+  // SUBSCRIPTION HELPERS (unchanged)
+  // ============================================================================
   const hasSubscription = useCallback((tierName = null) => {
     if (!user) return false;
-    
     const tier = user.subscription_tier || 'free';
     const status = user.subscription_status || 'none';
-    
-    // Check if subscription is active
     const isActive = ['active', 'trialing'].includes(status);
-    
-    if (!tierName) {
-      // Check if has any paid subscription
-      return isActive && tier !== 'free';
-    }
-    
-    // Check for specific tier
+    if (!tierName) return isActive && tier !== 'free';
     return isActive && tier === tierName;
   }, [user]);
 
-  /**
-   * ✅ STEP 1: NEW HELPER - Map tier name to display name
-   * DEFENSIVE: Always returns valid display name
-   */
   const getTierDisplayName = useCallback((tier) => {
     const tierMap = {
       'free': 'Free',
@@ -114,67 +187,22 @@ export function UserProvider({ children }) {
     return tierMap[tier?.toLowerCase()] || 'Free';
   }, []);
 
-  /**
-   * ✅ STEP 2: FIXED - Get current subscription tier info with proper display name mapping
-   * DEFENSIVE: Always returns valid object
-   */
   const getSubscriptionInfo = useCallback(() => {
     if (!user) {
-      return {
-        tier: 'free',
-        status: 'none',
-        display_name: 'Free',
-        is_active: false,
-        expires_at: null
-      };
+      return { tier: 'free', status: 'none', display_name: 'Free', is_active: false, expires_at: null };
     }
-
     return {
       tier: user.subscription_tier || 'free',
       status: user.subscription_status || 'none',
-      // ✅ FIXED: Use helper instead of non-existent user.subscription_tier_display
       display_name: getTierDisplayName(user.subscription_tier),
       is_active: ['active', 'trialing'].includes(user.subscription_status),
       expires_at: user.subscription_expires_at || null,
       message_limit: user.message_limit || 0,
       character_limit: user.character_limit || 0,
-      // ✅ BONUS: Add usage stats if available
       messages_used: user.messages_used || 0,
       characters_created: user.custom_character_count || 0
     };
   }, [user, getTierDisplayName]);
-
-  // ✅ Initial user load with error handling
-  useEffect(() => {
-    const loadUser = async () => {
-      try {
-        const response = await fetch(`${API_BASE}/api/auth/me`, {
-          credentials: 'include'
-        });
-        
-        console.log('🌐 auth/me status:', response.status);
-        
-        const data = await response.json().catch(() => ({}));
-        
-        if (data && !data.error) {
-          setUser(data);
-          console.log('👤 User loaded:', data.username);
-          console.log('💎 Subscription:', data.subscription_tier || 'free');
-          console.log('📊 Message limit:', data.message_limit || 150);
-        } else {
-          setUser(null);
-          console.log('👤 No authenticated user');
-        }
-      } catch (err) {
-        console.error('❌ auth/me fetch failed:', err);
-        setUser(null);
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    loadUser();
-  }, []);
 
   const value = {
     user,
@@ -193,37 +221,23 @@ export function UserProvider({ children }) {
   );
 }
 
-// ✅ DEFENSIVE useUser hook with guard and helpful error
 export function useUser() {
   const context = useContext(UserContext);
-  
-  // ✅ CRITICAL FIX: Guard against undefined context
+
   if (context === undefined) {
     console.error('❌ useUser() called outside UserProvider!');
-    console.error('📍 Stack trace:', new Error().stack);
-    
-    // ✅ Return safe fallback instead of undefined
     return {
       user: null,
-      setUser: () => {
-        console.warn('⚠️ setUser called outside UserProvider - no-op');
-      },
+      setUser: () => console.warn('⚠️ setUser called outside UserProvider'),
       loading: false,
       refreshing: false,
-      refreshSubscription: async () => {
-        console.warn('⚠️ refreshSubscription called outside UserProvider');
-        return null;
-      },
+      refreshSubscription: async () => null,
       hasSubscription: () => false,
       getSubscriptionInfo: () => ({
-        tier: 'free',
-        status: 'none',
-        display_name: 'Free',
-        is_active: false,
-        expires_at: null
+        tier: 'free', status: 'none', display_name: 'Free', is_active: false, expires_at: null
       })
     };
   }
-  
+
   return context;
 }

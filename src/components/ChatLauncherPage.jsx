@@ -1439,7 +1439,7 @@ const ChatLauncherPage = ({ onStartChat, discoveredCharacters = [] }) => {
             onClick={() => {
               const myCharsCategory = enhancedCategories.find(c => c.key === 'my_characters');
               if (myCharsCategory) {
-                handleCategorySelect(myCharsCategory);
+                handleCreateCharacterClick();
               }
             }}
             style={{
