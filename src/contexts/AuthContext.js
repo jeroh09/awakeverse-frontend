@@ -64,6 +64,10 @@ export function AuthProvider({ children }) {
 
   // Enhanced error message formatter
   const formatErrorMessage = (error, attempt = 1) => {
+    // Handle OAuth-only account — pass through unchanged so Login.js can detect it
+    if (error.message.includes('Google Sign-In') || error.message.includes('oauth_account_no_password')) {
+      return error.message;
+    }
     // Handle network errors
     if (error.name === 'TypeError' || error.message.includes('fetch')) {
       return "Connection issue. Please check your internet and try again.";
