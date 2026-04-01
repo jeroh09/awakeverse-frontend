@@ -35,10 +35,10 @@ export default function Header() {
       <a href="#hero" className="skip-link">
         Skip to main content
       </a>
-      
+
       <header className={`landing-header ${isScrolled ? 'scrolled' : ''}`}>
         <div className="header-container">
-          
+
           {/* Logo */}
           <Link to="/" className="header-logo">
             AwakeVerse
@@ -46,6 +46,14 @@ export default function Header() {
 
           {/* Desktop Navigation */}
           <nav className="header-nav desktop-nav">
+            <a
+              href="https://blog.awakeverse.com/blog/"
+              className="nav-link"
+              target="_blank"
+              rel="noopener noreferrer"
+            >
+              Blog
+            </a>
             <Link to="/terms" className="nav-link">Terms</Link>
             <Link to="/privacy" className="nav-link">Privacy</Link>
             <Link to="/contact-us" className="nav-link">Contact</Link>
@@ -62,7 +70,7 @@ export default function Header() {
           </div>
 
           {/* Mobile Menu Toggle */}
-          <button 
+          <button
             className="mobile-menu-toggle"
             onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
             aria-label="Toggle menu"
@@ -77,37 +85,46 @@ export default function Header() {
         {/* Mobile Navigation */}
         {isMobileMenuOpen && (
           <nav className="header-nav mobile-nav">
-            <Link 
-              to="/terms" 
+            <a
+              href="https://blog.awakeverse.com/blog/"
+              className="nav-link"
+              target="_blank"
+              rel="noopener noreferrer"
+              onClick={() => setIsMobileMenuOpen(false)}
+            >
+              Blog
+            </a>
+            <Link
+              to="/terms"
               className="nav-link"
               onClick={() => setIsMobileMenuOpen(false)}
             >
               Terms
             </Link>
-            <Link 
-              to="/privacy" 
+            <Link
+              to="/privacy"
               className="nav-link"
               onClick={() => setIsMobileMenuOpen(false)}
             >
               Privacy
             </Link>
-            <Link 
-              to="/contact-us" 
+            <Link
+              to="/contact-us"
               className="nav-link"
               onClick={() => setIsMobileMenuOpen(false)}
             >
               Contact
             </Link>
             <div className="mobile-nav-divider"></div>
-            <Link 
-              to="/login" 
+            <Link
+              to="/login"
               className="nav-link"
               onClick={() => setIsMobileMenuOpen(false)}
             >
               Sign In
             </Link>
-            <Link 
-              to="/register" 
+            <Link
+              to="/register"
               className="nav-link primary"
               onClick={() => setIsMobileMenuOpen(false)}
             >
