@@ -6,9 +6,10 @@
   right: 24px;
   z-index: 9000;
   background: transparent;
-  border: none;
+  border: 1.5px solid #6366F1;
+  border-radius: 8px;
   cursor: pointer;
-  padding: 4px;
+  padding: 8px;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -141,12 +142,17 @@
   padding: 7px 9px;
   border-radius: 8px;
   border: 0.5px solid rgba(255, 255, 255, 0.12);
-  background: rgba(255, 255, 255, 0.05);
-  color: var(--text-primary, #f5f5dc);
+  background: #0b1022;
+  color: #f5f5dc;
   outline: none;
   width: 100%;
   box-sizing: border-box;
   transition: border-color 0.15s;
+}
+
+.sw-select option {
+  background: #0b1022;
+  color: #f5f5dc;
 }
 
 .sw-select:focus,
