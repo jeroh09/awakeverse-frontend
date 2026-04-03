@@ -1,0 +1,303 @@
+/* SupportWidget.css */
+
+.sw-trigger {
+  position: fixed;
+  bottom: 24px;
+  right: 24px;
+  z-index: 9000;
+  background: transparent;
+  border: none;
+  cursor: pointer;
+  padding: 4px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  opacity: 0.85;
+  transition: opacity 0.15s ease, transform 0.15s ease;
+}
+
+.sw-trigger:hover {
+  opacity: 1;
+  transform: translateY(-2px);
+}
+
+.sw-trigger:active {
+  transform: translateY(0);
+}
+
+/* ── Modal ─────────────────────────────────────────────────────────────── */
+
+.sw-modal {
+  position: fixed;
+  bottom: 56px;
+  right: 24px;
+  z-index: 9001;
+  width: 340px;
+  background: var(--bg-surface, #0f1428);
+  border: 0.5px solid #6366F1;
+  border-radius: 12px;
+  padding: 1.25rem;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+
+  /* open upward animation */
+  transform-origin: bottom right;
+  animation: sw-open 0.18s ease forwards;
+}
+
+.sw-modal.sw-closing {
+  animation: sw-close 0.15s ease forwards;
+}
+
+@keyframes sw-open {
+  from { opacity: 0; transform: scale(0.92) translateY(8px); }
+  to   { opacity: 1; transform: scale(1)    translateY(0);   }
+}
+
+@keyframes sw-close {
+  from { opacity: 1; transform: scale(1)    translateY(0);   }
+  to   { opacity: 0; transform: scale(0.92) translateY(8px); }
+}
+
+/* ── Header ─────────────────────────────────────────────────────────────── */
+
+.sw-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.sw-header-left {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.sw-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: #6366F1;
+  flex-shrink: 0;
+}
+
+.sw-title {
+  font-family: var(--font-display, 'Syne', sans-serif);
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--text-primary, #f5f5dc);
+  margin: 0;
+}
+
+.sw-close {
+  background: transparent;
+  border: none;
+  cursor: pointer;
+  font-size: 20px;
+  line-height: 1;
+  color: var(--text-secondary, #a9b2c7);
+  padding: 0 2px;
+  transition: color 0.1s;
+}
+
+.sw-close:hover {
+  color: var(--text-primary, #f5f5dc);
+}
+
+/* ── Divider ─────────────────────────────────────────────────────────────── */
+
+.sw-divider {
+  border: none;
+  border-top: 0.5px solid rgba(255, 255, 255, 0.08);
+  margin: 0;
+}
+
+/* ── Form ─────────────────────────────────────────────────────────────── */
+
+.sw-form {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.sw-field {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.sw-label {
+  font-size: 12px;
+  color: var(--text-secondary, #a9b2c7);
+  font-family: var(--font-body, 'Inter', sans-serif);
+}
+
+.sw-select,
+.sw-input,
+.sw-textarea {
+  font-size: 13px;
+  font-family: var(--font-body, 'Inter', sans-serif);
+  padding: 7px 9px;
+  border-radius: 8px;
+  border: 0.5px solid rgba(255, 255, 255, 0.12);
+  background: rgba(255, 255, 255, 0.05);
+  color: var(--text-primary, #f5f5dc);
+  outline: none;
+  width: 100%;
+  box-sizing: border-box;
+  transition: border-color 0.15s;
+}
+
+.sw-select:focus,
+.sw-input:focus,
+.sw-textarea:focus {
+  border-color: #6366F1;
+}
+
+.sw-textarea {
+  resize: none;
+  line-height: 1.5;
+}
+
+/* ── Mode pills ─────────────────────────────────────────────────────────── */
+
+.sw-pills {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+.sw-pill {
+  font-size: 11px;
+  font-family: var(--font-body, 'Inter', sans-serif);
+  padding: 4px 10px;
+  border-radius: 999px;
+  border: 0.5px solid rgba(255, 255, 255, 0.15);
+  color: var(--text-secondary, #a9b2c7);
+  background: transparent;
+  cursor: pointer;
+  transition: border-color 0.12s, color 0.12s;
+  white-space: nowrap;
+}
+
+.sw-pill:hover {
+  border-color: #6366F1;
+  color: #6366F1;
+}
+
+.sw-pill.sw-pill--active {
+  border: 1.5px solid #6366F1;
+  color: #6366F1;
+  font-weight: 600;
+}
+
+/* ── Sender line ─────────────────────────────────────────────────────────── */
+
+.sw-sender {
+  font-size: 11px;
+  color: var(--text-secondary, #a9b2c7);
+  font-family: var(--font-body, 'Inter', sans-serif);
+}
+
+.sw-sender strong {
+  color: var(--text-primary, #f5f5dc);
+  font-weight: 500;
+}
+
+/* ── Submit button ─────────────────────────────────────────────────────── */
+
+.sw-submit {
+  background: #6366F1;
+  color: #fff;
+  border: none;
+  border-radius: 8px;
+  padding: 9px 16px;
+  font-size: 13px;
+  font-weight: 600;
+  font-family: var(--font-body, 'Inter', sans-serif);
+  cursor: pointer;
+  transition: background 0.15s, transform 0.1s;
+  width: 100%;
+}
+
+.sw-submit:hover:not(:disabled) {
+  background: #4f52d4;
+}
+
+.sw-submit:active:not(:disabled) {
+  transform: scale(0.98);
+}
+
+.sw-submit:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+/* ── Error ─────────────────────────────────────────────────────────────── */
+
+.sw-error {
+  font-size: 12px;
+  color: #ff8c8c;
+  font-family: var(--font-body, 'Inter', sans-serif);
+}
+
+/* ── Success state ─────────────────────────────────────────────────────── */
+
+.sw-success {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 0 4px;
+  text-align: center;
+}
+
+.sw-success-icon {
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  background: rgba(99, 102, 241, 0.15);
+  border: 1px solid #6366F1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.sw-success-title {
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--text-primary, #f5f5dc);
+  font-family: var(--font-display, 'Syne', sans-serif);
+  margin: 0;
+}
+
+.sw-success-ticket {
+  font-size: 13px;
+  color: #6366F1;
+  font-weight: 600;
+  font-family: var(--font-body, 'Inter', sans-serif);
+}
+
+.sw-success-sub {
+  font-size: 12px;
+  color: var(--text-secondary, #a9b2c7);
+  font-family: var(--font-body, 'Inter', sans-serif);
+  margin: 0;
+}
+
+/* ── Mobile ─────────────────────────────────────────────────────────────── */
+
+@media (max-width: 480px) {
+  .sw-modal {
+    right: 12px;
+    left: 12px;
+    width: auto;
+    bottom: 52px;
+  }
+
+  .sw-trigger {
+    right: 16px;
+    bottom: 16px;
+  }
+}

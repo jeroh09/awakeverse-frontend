@@ -25,7 +25,7 @@ import CreatorsLanding from './pages/CreatorsLanding/CreatorsLanding';
 import PricingPage from './pages/PricingPage';
 import MarketHubPage from './components/MarketHub/MarketHubPage';
 import PaymentSuccess from './components/PaymentSuccess';
-import PaymentCancelled from './components/PaymentCancelled'; // Add this import
+import PaymentCancelled from './components/PaymentCancelled';
 import ErrorBoundary from './components/ErrorBoundary';
 import PublicCharacterPage from './pages/PublicCharacterPage';
 import PublicScenarioPage from './pages/PublicScenarioPage';
@@ -33,7 +33,7 @@ import CreatorsCharterPage from './pages/CreatorsCharterPage';
 import BillingDashboard from './components/Billing/BillingDashboard';
 import QuizPage from './pages/QuizPage';
 import QuizResultsPage from './pages/QuizResultsPage';
-
+import SupportWidget from './components/SupportWidget/SupportWidget';
 
 import './styles.css';
 
@@ -52,110 +52,111 @@ export default function App() {
   const navigate = useNavigate();
 
   return (
-    <Routes>
-      {/* New landing page at root */}
-      <Route path="/" element={<LandingPage />} />
+    <>
+      <Routes>
+        {/* Landing page */}
+        <Route path="/" element={<LandingPage />} />
 
-      {/* Auth routes */}
-      <Route path="/login" element={<Login />} />
-      <Route path="/register" element={<Register />} />
+        {/* Auth routes */}
+        <Route path="/login" element={<Login />} />
+        <Route path="/register" element={<Register />} />
 
-      {/* Email authentication routes */}
-      <Route path="/forgot-password" element={<ForgotPassword />} />
-      <Route path="/reset-password" element={<ResetPassword />} />
-      <Route path="/verify-email" element={<EmailVerification />} />
-      <Route path="/verify-email" element={<Login />} />
+        {/* Email authentication routes */}
+        <Route path="/forgot-password" element={<ForgotPassword />} />
+        <Route path="/reset-password" element={<ResetPassword />} />
+        <Route path="/verify-email" element={<EmailVerification />} />
+        <Route path="/verify-email" element={<Login />} />
 
-      <Route path="/c/:characterId" element={<PublicCharacterPage />} />
-      <Route path="/s/:scenarioId" element={<PublicScenarioPage />} />
+        <Route path="/c/:characterId" element={<PublicCharacterPage />} />
+        <Route path="/s/:scenarioId" element={<PublicScenarioPage />} />
 
-      {/* Legal pages */}
-      <Route path="/terms" element={<TermsOfService />} />
-      <Route path="/privacy" element={<PrivacyPolicy />} />
-      <Route path="/community-guidelines" element={<CommunityGuidelines />} />
-      <Route path="/copyright" element={<CopyrightPolicy />} />
-      <Route path="/security" element={<SecurityPolicy />} />
-      <Route path="/ai-disclaimer" element={<AIDisclaimer />} />
-      <Route path="/contractor-agreements" element={<ContractorAgreements />} />
+        {/* Legal pages */}
+        <Route path="/terms" element={<TermsOfService />} />
+        <Route path="/privacy" element={<PrivacyPolicy />} />
+        <Route path="/community-guidelines" element={<CommunityGuidelines />} />
+        <Route path="/copyright" element={<CopyrightPolicy />} />
+        <Route path="/security" element={<SecurityPolicy />} />
+        <Route path="/ai-disclaimer" element={<AIDisclaimer />} />
+        <Route path="/contractor-agreements" element={<ContractorAgreements />} />
 
-      
-      {/* Market Hub - FIXED: Wrapped with ProtectedRoute + ErrorBoundary */}
-      <Route path="/creators" element={<CreatorsLanding />} />
-      <Route path="/pricing" element={<PricingPage />} />
+        {/* Creators & pricing */}
+        <Route path="/creators" element={<CreatorsLanding />} />
+        <Route path="/pricing" element={<PricingPage />} />
 
-      
-      <Route 
-        path="/market-hub" 
-        element={
-          <ErrorBoundary>
-            <MarketHubPage />
-          </ErrorBoundary>
-        } 
-      />
+        {/* Market Hub */}
+        <Route
+          path="/market-hub"
+          element={
+            <ErrorBoundary>
+              <MarketHubPage />
+            </ErrorBoundary>
+          }
+        />
 
-      {/* Payment routes - PROTECTED */}
-      <Route path="/payment-success"  element={<PaymentSuccess />} />
-      <Route path="/payment-cancelled" element={<PaymentCancelled />} />
+        {/* Payment routes */}
+        <Route path="/payment-success" element={<PaymentSuccess />} />
+        <Route path="/payment-cancelled" element={<PaymentCancelled />} />
 
+        {/* Main app */}
+        <Route
+          path="/app"
+          element={
+            <ErrorBoundary>
+              <ProtectedAppRoute>
+                <ChatApp />
+              </ProtectedAppRoute>
+            </ErrorBoundary>
+          }
+        />
 
-      {/* Main app with NEW AppViewProvider wrapper */}
-      <Route
-        path="/app"
-        element={
-          <ErrorBoundary>
-            <ProtectedAppRoute>
-              <ChatApp />
-            </ProtectedAppRoute>
-          </ErrorBoundary>
-        }
-      />
+        {/* Profile settings */}
+        <Route
+          path="/profile-settings"
+          element={
+            <ProtectedRoute>
+              <ProfileSettings />
+            </ProtectedRoute>
+          }
+        />
 
-      {/* Profile settings (wrapped for consistency) */}
-      <Route
-        path="/profile-settings"
-        element={
-          <ProtectedRoute>
-            <ProfileSettings />
-          </ProtectedRoute>
-        }
-      />
+        {/* Avatar upload */}
+        <Route
+          path="/upload-avatar"
+          element={
+            <ProtectedRoute>
+              <UploadAvatar />
+            </ProtectedRoute>
+          }
+        />
 
-      {/* Avatar upload (wrapped for consistency) */}
-      <Route
-        path="/upload-avatar"
-        element={
-          <ProtectedRoute>
-            <UploadAvatar />
-          </ProtectedRoute>
-        }
-      />
+        {/* Billing */}
+        <Route
+          path="/billing"
+          element={
+            <ProtectedRoute>
+              <BillingDashboard />
+            </ProtectedRoute>
+          }
+        />
 
-      {/* billingsss */}
-      <Route
-        path="/billing"
-        element={
-          <ProtectedRoute>
-            <BillingDashboard />
-          </ProtectedRoute>
-        }
-      />
+        {/* NOTE: No separate /hub route - all navigation happens within /app using view state */}
+        <Route path="/creators-charter" element={<CreatorsCharterPage />} />
+        <Route path="/quiz" element={<QuizPage />} />
+        <Route path="/quiz/results" element={<QuizResultsPage />} />
 
-      {/* NOTE: No separate /hub route - all navigation happens within /app using view state */}
-      <Route path="/creators-charter" element={<CreatorsCharterPage />} />
-      {/*Add routes (before fallback */}
-      <Route path="/quiz" element={<QuizPage />} />
-      <Route path="/quiz/results" element={<QuizResultsPage />} />
+        {/* Contact us */}
+        <Route path="/contact-us" element={<ContactUs />} />
 
+        {/* Aliases for legacy menu links */}
+        <Route path="/settings" element={<Navigate to="/profile-settings" replace />} />
+        <Route path="/contact" element={<Navigate to="/contact-us" replace />} />
 
-      {/* Contact us */}
-      <Route path="/contact-us" element={<ContactUs />} />
+        {/* Fallback */}
+        <Route path="*" element={<Navigate to="/" replace />} />
+      </Routes>
 
-      {/* Aliases for legacy menu links */}
-      <Route path="/settings" element={<Navigate to="/profile-settings" replace />} />
-      <Route path="/contact"  element={<Navigate to="/contact-us"      replace />} />
-
-      {/* Fallback: redirect everything else back to landing */}
-      <Route path="*" element={<Navigate to="/" replace />} />
-    </Routes>
+      {/* Support widget — fixed position, visible on all gated routes */}
+      {isAuthenticated && <SupportWidget />}
+    </>
   );
 }
