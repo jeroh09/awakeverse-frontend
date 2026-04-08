@@ -40,6 +40,14 @@ export default function Footer() {
               <Link to="/creators" className="footer-link">
                 Creators Landing
               </Link>
+              <a
+                href="https://docs.awakeverse.com"
+                className="footer-link"
+                target="_blank"
+                rel="noopener noreferrer"
+              >
+                Documentation
+              </a>
             </div>
           </div>
 
@@ -83,7 +91,6 @@ export default function Footer() {
             © 2025 AwakeVerse Ltd. All rights reserved.
           </div>
           
-          {/* Optional: Social Links or Additional Info */}
           <div className="footer-extra">
             <span className="footer-tagline">
               Conversations without Limits

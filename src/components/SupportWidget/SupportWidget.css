@@ -303,6 +303,7 @@
   }
 
   .sw-trigger {
+    display: none;
     right: 16px;
     bottom: 16px;
   }
