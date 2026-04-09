@@ -4,6 +4,7 @@
 import React, { useEffect, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import styles from './CreatorsCharterPage.module.css';
+import SEOHead from '../components/SEO/SEOHead';
 
 const CreatorsCharterPage = () => {
   const navigate = useNavigate();
@@ -69,6 +70,11 @@ const CreatorsCharterPage = () => {
 
   return (
     <div className={styles.charterPage}>
+      <SEOHead
+        title="Creator's Charter — Own Your Characters | AwakeVerse"
+        description="Publish original AI characters, earn 80% revenue share, and get IP certification. AwakeVerse's Creator's Charter puts creators first — platform-certified ownership, forever."
+        url="https://awakeverse.com/creators-charter"
+      />
       
       {/* ===================================================================
           HEADER NAVIGATION

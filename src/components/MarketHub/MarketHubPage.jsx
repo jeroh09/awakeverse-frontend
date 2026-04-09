@@ -15,6 +15,7 @@ import styles from './MarketHubPage.module.css';
 
 // 🆕 UPDATE: Import the CORRECT ScenarioChatWindow from ScenariosTab
 import ScenarioChatWindow from '../../components/ScenariosTab/ScenarioChatWindow';
+import SEOHead from '../SEO/SEOHead'
 
 const API_BASE = process.env.REACT_APP_API_URL || 'https://api.awakeverse.com';
 
@@ -504,6 +505,11 @@ const AuthenticatedMarketHub = ({
 
   return (
     <div className={styles.container}>
+      <SEOHead
+        title="Market Hub — Discover AI Characters and Templates | AwakeVerse"
+        description="Browse and use creator-built AI characters and Dialogue templates on AwakeVerse. Find certified characters across history, mythology, fiction, and professional domains."
+        url="https://awakeverse.com/market-hub"
+      />
       {/* ============================================================================
           UPDATED: Compact Premium Header - No Hero/Banner
           ============================================================================ */}
@@ -794,13 +800,20 @@ const MarketHubPage = ({
   if (isViewMode) {
     // Called from ChatApp view switching - always show authenticated version
     return (
-      <AuthenticatedMarketHub 
-        onCharacterSelect={onCharacterSelect}
-        onStartChat={onStartChat}
-        onScenarioSelect={onScenarioSelect}
-        isViewMode={true}
-      />
-    );
+      <>
+        <SEOHead
+          title="Market Hub — Discover AI Characters and Templates | AwakeVerse"
+          description="Browse and use creator-built AI characters and Dialogue templates on AwakeVerse. Find certified characters across history, mythology, fiction, and professional domains."
+          url="https://awakeverse.com/market-hub"
+        />
+        <AuthenticatedMarketHub 
+          onCharacterSelect={onCharacterSelect}
+          onStartChat={onStartChat}
+          onScenarioSelect={onScenarioSelect}
+          isViewMode={true}
+        />
+      </>
+      );
   }
 
 

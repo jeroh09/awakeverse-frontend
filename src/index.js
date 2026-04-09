@@ -1,9 +1,10 @@
-// src/index.js - MINIMAL SECURITY VERSION
+// src/index.js - with HelmetProvider added
 import './styles.css';
-import './utils/csrfInterceptor';  // ✅ Add this FIRST (before React imports)
+import './utils/csrfInterceptor';
 import React from 'react';
 import ReactDOM from 'react-dom/client';
 import { BrowserRouter } from 'react-router-dom';
+import { HelmetProvider } from 'react-helmet-async';  // ← ADD
 import { ThemeProvider } from './contexts/ThemeContext';
 import { AuthProvider } from './contexts/AuthContext';
 import { UserProvider } from './contexts/UserContext';
@@ -13,16 +14,14 @@ import { CharacterProvider } from './contexts/CharacterContext';
 import { ContextProvider } from './contexts/ContextContext';
 import App from './App';
 
-// MINIMAL security - only block obvious token logs
 if (process.env.NODE_ENV === 'production') {
   const originalLog = console.log;
   console.log = (...args) => {
-    // Only block logs that clearly contain tokens
     const message = args[0]?.toString() || '';
     if (message.includes('Bearer') || message.includes('Authorization')) {
-      return; // Block only these
+      return;
     }
-    originalLog(...args); // Allow all other logs
+    originalLog(...args);
   };
 }
 
@@ -30,23 +29,25 @@ const root = ReactDOM.createRoot(document.getElementById('root'));
 
 root.render(
   <React.StrictMode>
-    <BrowserRouter>
-      <ThemeProvider>
-        <UserProvider>
-          <AuthProvider>
-            <CharacterProvider>
-              <ContextProvider>
-                <WebSocketProvider>
-                  <PremiumCapabilitiesProvider>
-                    <App />
-                  </PremiumCapabilitiesProvider>
-                </WebSocketProvider>
-              </ContextProvider>
-            </CharacterProvider>
-          </AuthProvider>
-        </UserProvider>
-      </ThemeProvider>
-    </BrowserRouter>
+    <HelmetProvider>                      {/* ← WRAP HERE */}
+      <BrowserRouter>
+        <ThemeProvider>
+          <UserProvider>
+            <AuthProvider>
+              <CharacterProvider>
+                <ContextProvider>
+                  <WebSocketProvider>
+                    <PremiumCapabilitiesProvider>
+                      <App />
+                    </PremiumCapabilitiesProvider>
+                  </WebSocketProvider>
+                </ContextProvider>
+              </CharacterProvider>
+            </AuthProvider>
+          </UserProvider>
+        </ThemeProvider>
+      </BrowserRouter>
+    </HelmetProvider>                     {/* ← CLOSE HERE */}
   </React.StrictMode>
 );
 
@@ -71,7 +72,6 @@ if ('serviceWorker' in navigator && process.env.NODE_ENV === 'production') {
         newWorker.addEventListener('statechange', () => {
           if (newWorker.state === 'installed' && navigator.serviceWorker.controller) {
             newWorker.postMessage({ type: 'SKIP_WAITING' });
-            // Don't reload here; wait for controllerchange
           }
         });
       });

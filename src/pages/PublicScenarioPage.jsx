@@ -7,6 +7,8 @@ import { useUser } from '../contexts/UserContext';
 import { characterCategories } from '../data/characterCategories';
 import { isCustomCharacterKey, getDisplayNameFromKey } from '../utils/characterUtils';
 import styles from './PublicScenarioPage.module.css';
+import SEOHead from '../components/SEO/SEOHead';
+
 import { 
   TwitterIcon, 
   FacebookIcon, 
@@ -185,6 +187,15 @@ const PublicScenarioPage = () => {
 
   return (
     <div className={styles.publicScenarioPage}>
+      <SEOHead
+        title={`${scenario.title} — AI Dialogue | AwakeVerse`}
+        description={
+          scenario.description
+            ? `${scenario.description.slice(0, 140)}`
+            : `Join this multi-character AI Dialogue on AwakeVerse: ${scenario.title}`
+        }
+        url={`https://awakeverse.com/s/${scenario.id}`}
+      />
       {/* Header with branding */}
       <header className={styles.pageHeader}>
         <div className={styles.logo} onClick={() => navigate('/')}>

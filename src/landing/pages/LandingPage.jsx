@@ -5,6 +5,8 @@ import { Link } from 'react-router-dom';
 // Import styles
 import '../styles/landing.css';
 
+
+
 // Component imports
 import Header from '../components/Header';
 import HeroSection from '../components/HeroSection';
@@ -12,6 +14,7 @@ import FeaturesCarousel from '../components/FeaturesCarousel';
 import PillarsSection from '../components/PillarsSection';
 import CreatorSection from '../components/CreatorSection'; // Now imported
 import Footer from '../components/Footer';
+import SEOHead from '../../components/SEO/SEOHead';
 
 export default function LandingPage() {
   const [currentSection, setCurrentSection] = useState(0);
@@ -54,7 +57,11 @@ export default function LandingPage() {
 
   return (
     <div className="landing-page">
-      
+      <SEOHead
+        title="AwakeVerse — The Multi-AI Platform | Conversations Without Limits"
+        description="Have real conversations with AI characters — historical figures, mythological personas, and original creations. Run multi-character dialogues, collaborative stories, and AI team workspaces."
+        url="https://awakeverse.com/"
+      />
       {/* Header Navigation */}
       <Header />
       

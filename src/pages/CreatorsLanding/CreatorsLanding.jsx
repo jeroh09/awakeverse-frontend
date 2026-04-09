@@ -14,6 +14,8 @@ import {
   ArrowRight
 } from 'lucide-react';
 import styles from './CreatorsLanding.module.css';
+import SEOHead from '../../components/SEO/SEOHead'
+
 
 const CreatorsLanding = () => {
   const navigate = useNavigate();
@@ -46,6 +48,11 @@ const CreatorsLanding = () => {
 
   return (
     <div className={styles.container}>
+      <SEOHead
+        title="Build and Publish AI Characters | AwakeVerse Creators"
+        description="Create original AI characters on AwakeVerse, publish them to the Market Hub, and earn 80% of engagement revenue. Join the creator economy for multi-AI conversation."
+        url="https://awakeverse.com/creators"
+      />  
       <HeroSection 
         onStartCreating={handleStartCreating}
         onLearnMore={handleLearnMore}

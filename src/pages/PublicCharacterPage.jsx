@@ -6,6 +6,7 @@ import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { useUser } from '../contexts/UserContext';
 import styles from './PublicCharacterPage.module.css';
+import SEOHead from '../components/SEO/SEOHead';
 import { 
   TwitterIcon, 
   FacebookIcon, 
@@ -120,6 +121,17 @@ const PublicCharacterPage = () => {
 
   return (
     <div className={styles.publicCharacterPage}>
+
+      <SEOHead
+        title={`${character.display_name} — AI Character | AwakeVerse`}
+        description={
+          character.short_description || character.description
+            ? `${(character.short_description || character.description).slice(0, 140)}. Chat with ${character.display_name} on AwakeVerse.`
+            : `Have a conversation with ${character.display_name} on AwakeVerse — the multi-AI platform for real character conversations.`
+        }
+        image={character.avatar_url || 'https://awakeverse.com/awakeverse-social-card.jpg'}
+        url={`https://awakeverse.com/c/${character.character_key}`}
+      />
       {/* Header with branding */}
       <header className={styles.pageHeader}>
         <div className={styles.logo} onClick={() => navigate('/')}>

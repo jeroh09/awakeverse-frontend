@@ -8,73 +8,225 @@
     <meta charset="utf-8" />
     <link rel="icon" href="%PUBLIC_URL%/favicon.ico" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <meta name="theme-color" content="#FFD700" />
-    
+    <meta name="theme-color" content="#6366F1" />
+
     <!-- Primary Meta Tags -->
-    <title>AwakeVerse — The Multi-AI Platform for Everyone | Start with one. See where it leads.</title>
-    <meta name="title" content="AwakeVerse - The Conversation AI">
-    <meta
-      name="description"
-      content="Orchestrate characters, experts, and AI teams across every use case — education, business, creativity, and code."
-    />
-    <meta name="keywords" content="AwakeVerse, AI chat, historical figures, Multi-AI platform, fictional characters, virtual conversations, interactive learning, conversations without limits" />
+    <title>AwakeVerse — The Multi-AI Platform | Conversations Without Limits</title>
+    <meta name="title" content="AwakeVerse — The Multi-AI Platform | Conversations Without Limits" />
+    <meta name="description" content="Have real conversations with AI characters — historical figures, mythological personas, and original creations. Run multi-character dialogues, collaborative stories, and AI team workspaces." />
+    <meta name="keywords" content="AwakeVerse, multi-AI platform, AI characters, historical figures, multi-character AI, Verse Engine, AI dialogue, AI story mode, collaborative AI" />
     <meta name="author" content="AwakeVerse" />
-    
+
     <!-- PWA Meta Tags -->
     <meta name="apple-mobile-web-app-capable" content="yes" />
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
     <meta name="apple-mobile-web-app-title" content="AwakeVerse" />
     <meta name="mobile-web-app-capable" content="yes" />
     <meta name="application-name" content="AwakeVerse" />
-    
+
     <!-- Open Graph / Facebook -->
     <meta property="og:type" content="website" />
-    <meta property="og:url" content="https://awakeverse.com/">
-    <meta property="og:title" content="AwakeVerse - Conversations Without Limits" />
-    <meta property="og:description" content="Orchestrate characters, experts, and AI teams across every use case — education, business, creativity, and code." />
-    <meta property="og:image" content="%PUBLIC_URL%/logo512.png" />
-    
+    <meta property="og:url" content="https://awakeverse.com/" />
+    <meta property="og:site_name" content="AwakeVerse" />
+    <meta property="og:title" content="AwakeVerse — The Multi-AI Platform | Conversations Without Limits" />
+    <meta property="og:description" content="Have real conversations with AI characters — historical figures, mythological personas, and original creations. Run multi-character dialogues, collaborative stories, and AI team workspaces." />
+    <meta property="og:image" content="https://awakeverse.com/awakeverse-social-card.jpg" />
+    <meta property="og:image:width" content="1200" />
+    <meta property="og:image:height" content="630" />
+    <meta property="og:locale" content="en_GB" />
+
     <!-- Twitter -->
-    <meta property="twitter:card" content="summary_large_image" />
-    <meta property="twitter:url" content="https://awakeverse.com/">
-    <meta property="twitter:title" content="AwakeVerse - Conversations Without Limits" />
-    <meta property="twitter:description" content="Orchestrate characters, experts, and AI teams across every use case — education, business, creativity, and code." />
-    <meta property="twitter:image" content="%PUBLIC_URL%/logo512.png" />
-    
+    <meta name="twitter:card" content="summary_large_image" />
+    <meta name="twitter:site" content="@awakeverse_ai" />
+    <meta name="twitter:url" content="https://awakeverse.com/" />
+    <meta name="twitter:title" content="AwakeVerse — The Multi-AI Platform | Conversations Without Limits" />
+    <meta name="twitter:description" content="Have real conversations with AI characters — historical figures, mythological personas, and original creations. Run multi-character dialogues, collaborative stories, and AI team workspaces." />
+    <meta name="twitter:image" content="https://awakeverse.com/awakeverse-social-card.jpg" />
+
     <!-- Canonical URL -->
-    <link rel="canonical" href="https://awakeverse.com/">
-    
+    <link rel="canonical" href="https://awakeverse.com/" />
+
     <!-- Apple Touch Icons -->
     <link rel="apple-touch-icon" href="%PUBLIC_URL%/logo192.png" />
     <link rel="apple-touch-icon" sizes="152x152" href="%PUBLIC_URL%/logo192.png" />
     <link rel="apple-touch-icon" sizes="180x180" href="%PUBLIC_URL%/logo192.png" />
-    
+
     <!-- Splash Screen for iOS -->
-    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
     <link rel="apple-touch-startup-image" href="%PUBLIC_URL%/logo512.png" />
-    
+
     <!-- Manifest -->
     <link rel="manifest" href="%PUBLIC_URL%/manifest.json" />
-    
+
     <!-- Additional Fonts -->
     <link href="https://fonts.googleapis.com/css2?family=Cinzel+Decorative:wght@400;700&family=Inter:wght@400;500;600&family=Lora:ital,wght@0,400;0,500;1,400&display=swap" rel="stylesheet">
 
-    <!-- Structured Data for SEO -->
+    <!-- ═══════════════════════════════════════════════════════════
+         STRUCTURED DATA — Schema.org JSON-LD
+         Four schemas: SoftwareApplication, Organization,
+         WebSite, FAQPage
+         ═══════════════════════════════════════════════════════════ -->
+
+    <!-- 1. SoftwareApplication — primary product schema -->
     <script type="application/ld+json">
     {
       "@context": "https://schema.org",
-      "@type": "WebApplication",
+      "@type": "SoftwareApplication",
       "name": "AwakeVerse",
-      "description": "Multi-character AI conversation platform with historical figures",
+      "alternateName": "AwakeVerse Multi-AI Platform",
+      "description": "AwakeVerse is a multi-AI platform where users have real conversations with AI characters, run multi-character dialogues, explore collaborative stories, and work with teams of AI models simultaneously. Powered by the Verse Engine — an orchestration system that coordinates independent AI character perspectives in real time.",
       "url": "https://awakeverse.com",
-      "applicationCategory": "EducationalApplication",
-      "offers": {
-        "@type": "Offer",
-        "price": "0",
-        "priceCurrency": "USD"
+      "applicationCategory": "EntertainmentApplication",
+      "applicationSubCategory": "AI Conversation Platform",
+      "operatingSystem": "Web, iOS, Android",
+      "browserRequirements": "Requires JavaScript. Works in Chrome, Firefox, Safari, Edge.",
+      "inLanguage": "en",
+      "offers": [
+        {
+          "@type": "Offer",
+          "name": "Free",
+          "price": "0",
+          "priceCurrency": "GBP",
+          "description": "Access to platform characters, One-on-One Chat, Story mode, and limited Workspace sessions."
+        },
+        {
+          "@type": "Offer",
+          "name": "Unlimited",
+          "price": "0",
+          "priceCurrency": "GBP",
+          "description": "Full access to all modes including Dialogue, unlimited creator character access, Market Hub publishing, and creator economy participation."
+        }
+      ],
+      "featureList": [
+        "One-on-One Chat with AI characters",
+        "Multi-character Dialogue with 2-4 AI characters",
+        "Collaborative Story mode with three-act structure",
+        "Workspace with multiple AI models for task completion",
+        "Character Builder for creating custom AI personas",
+        "Market Hub for publishing and discovering creator characters",
+        "Creator economy with 80% revenue share",
+        "IP Certification for original characters",
+        "Verse Engine multi-agent orchestration",
+        "Resonance-based speaker selection"
+      ],
+      "screenshot": "https://awakeverse.com/awakeverse-social-card.jpg",
+      "image": "https://awakeverse.com/logo512.png",
+      "sameAs": [
+        "https://x.com/awakeverse_ai",
+        "https://docs.awakeverse.com"
+      ]
+    }
+    </script>
+
+    <!-- 2. Organization — establishes AwakeVerse as a known entity -->
+    <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@type": "Organization",
+      "name": "AwakeVerse",
+      "legalName": "AwakeVerse Ltd",
+      "url": "https://awakeverse.com",
+      "logo": "https://awakeverse.com/logo512.png",
+      "description": "AwakeVerse builds multi-AI conversation technology. The Verse Engine coordinates independent AI character perspectives in real time, enabling genuine multi-character conversations at scale.",
+      "email": "hello@awakeverse.com",
+      "sameAs": [
+        "https://x.com/awakeverse_ai",
+        "https://docs.awakeverse.com",
+        "https://blog.awakeverse.com"
+      ],
+      "contactPoint": {
+        "@type": "ContactPoint",
+        "contactType": "customer support",
+        "email": "hello@awakeverse.com",
+        "availableLanguage": "English"
       }
     }
     </script>
+
+    <!-- 3. WebSite — enables sitelinks search box in Google -->
+    <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@type": "WebSite",
+      "name": "AwakeVerse",
+      "url": "https://awakeverse.com",
+      "description": "The multi-AI platform for real conversations with AI characters.",
+      "potentialAction": {
+        "@type": "SearchAction",
+        "target": {
+          "@type": "EntryPoint",
+          "urlTemplate": "https://awakeverse.com/search?q={search_term_string}"
+        },
+        "query-input": "required name=search_term_string"
+      }
+    }
+    </script>
+
+    <!-- 4. FAQPage — Q&A pairs extracted directly by Google and AI tools -->
+    <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@type": "FAQPage",
+      "mainEntity": [
+        {
+          "@type": "Question",
+          "name": "What is AwakeVerse?",
+          "acceptedAnswer": {
+            "@type": "Answer",
+            "text": "AwakeVerse is a multi-AI platform where users have real conversations with AI characters, run multi-character dialogues, explore collaborative stories, and work with teams of AI models simultaneously. It is powered by the Verse Engine — an orchestration system that coordinates independent AI character perspectives in real time."
+          }
+        },
+        {
+          "@type": "Question",
+          "name": "How is AwakeVerse different from ChatGPT?",
+          "acceptedAnswer": {
+            "@type": "Answer",
+            "text": "ChatGPT is a single AI assistant optimised for helpfulness. AwakeVerse is a multi-character platform where each character maintains an independent, persistent personality. Characters disagree, hold positions, and engage with each other — not just with the user. The Verse Engine coordinates multiple independent AI participants rather than routing everything through one model."
+          }
+        },
+        {
+          "@type": "Question",
+          "name": "What is the Verse Engine?",
+          "acceptedAnswer": {
+            "@type": "Answer",
+            "text": "The Verse Engine is AwakeVerse's orchestration system that coordinates independent AI character perspectives in real-time conversations. It manages turn flow using resonance-based speaker selection, tracks conversation structure through a directed acyclic graph (DAG), and maintains each character's independent perspective throughout a session."
+          }
+        },
+        {
+          "@type": "Question",
+          "name": "How do I create a scenario on AwakeVerse?",
+          "acceptedAnswer": {
+            "@type": "Answer",
+            "text": "On AwakeVerse, multi-character conversations are called Dialogues. To create one: go to the Dialogue section, choose a template or start from scratch, select 2 to 4 characters, set a debate question or opening premise, set a turn limit, and launch. Dialogue requires an Unlimited tier subscription. Full guide at docs.awakeverse.com."
+          }
+        },
+        {
+          "@type": "Question",
+          "name": "Is AwakeVerse free?",
+          "acceptedAnswer": {
+            "@type": "Answer",
+            "text": "Yes. AwakeVerse has a free tier that includes access to the full platform character roster, One-on-One Chat, Story mode, and limited Workspace sessions. Dialogue and Market Hub publishing require an Unlimited tier subscription."
+          }
+        },
+        {
+          "@type": "Question",
+          "name": "How do creators earn money on AwakeVerse?",
+          "acceptedAnswer": {
+            "@type": "Answer",
+            "text": "Creators earn from a revenue pool funded by Unlimited subscription revenue. 80% of the pool is distributed to creators based on engagement and resonance scores of their published characters and templates. 20% is retained by the platform. Unlimited tier subscribers can publish characters and templates to the Market Hub to participate."
+          }
+        },
+        {
+          "@type": "Question",
+          "name": "What characters are available on AwakeVerse?",
+          "acceptedAnswer": {
+            "@type": "Answer",
+            "text": "AwakeVerse has a curated roster of historical figures, mythological personas, and fictional archetypes including Sherlock Holmes, Shakespeare, Socrates, Cleopatra, Harriet Tubman, Queen Amina of Zazzau, Loki, Mami Wata, Georgy Zhukov, and more. Users can also create and publish their own characters through the Character Builder."
+          }
+        }
+      ]
+    }
+    </script>
+
   </head>
   <body>
     <noscript>You need to enable JavaScript to run this app.</noscript>

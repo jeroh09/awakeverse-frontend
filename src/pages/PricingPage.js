@@ -2,6 +2,8 @@
 import React, { useState, useRef } from 'react';
 import { Link } from 'react-router-dom';
 import './PricingPage.css';
+import SEOHead from '../components/SEO/SEOHead';  // ← ADD THIS IMPORT
+
 
 const PricingPage = () => {
   const [activeSection, setActiveSection] = useState(0);
@@ -121,6 +123,12 @@ const PricingPage = () => {
 
   return (
     <div className="pricing-container">
+
+      <SEOHead
+        title="Pricing — Free, Pro, and Unlimited Plans | AwakeVerse"
+        description="AwakeVerse is free to start. Upgrade to Unlimited for full Dialogue access, unlimited creator characters, Market Hub publishing, and creator economy participation."
+        url="https://awakeverse.com/pricing"
+      />
       {/* Header */}
       <header className="pricing-header">
         <Link to="/" className="header-logo">
