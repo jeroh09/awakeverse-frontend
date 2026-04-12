@@ -337,7 +337,7 @@ export default function UseCaseEducation() {
         <div className={styles.ctaStrip}>
           <div className={styles.ctaText}>
             <h2>Start learning with AwakeVerse</h2>
-            <p>Free to start — no credit card required. All four modes available immediately.</p>
+            <p>Free to start. All four modes available immediately.</p>
           </div>
           <Link to="/register" className={styles.btnPrimary}>Get started free</Link>
         </div>

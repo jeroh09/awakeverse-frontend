@@ -38,6 +38,8 @@ import UseCaseCreative from './pages/UseCases/UseCaseCreative';
 import UseCaseEducation from './pages/UseCases/UseCaseEducation';
 import UseCaseBusiness from './pages/UseCases/UseCaseBusiness';
 import UseCaseDebate from './pages/UseCases/UseCaseDebate';
+import VsLLMs from './pages/VsLLMs';
+import UseCasesIndex from './pages/UseCases/UseCasesIndex';
 
 
 
@@ -88,10 +90,16 @@ export default function App() {
         {/* Creators & pricing */}
         <Route path="/creators" element={<CreatorsLanding />} />
         <Route path="/pricing" element={<PricingPage />} />
+
+
+        {/* Use-Cases */}
         <Route path="/use-cases/creative" element={<UseCaseCreative />} />
         <Route path="/use-cases/education" element={<UseCaseEducation />} />
         <Route path="/use-cases/business" element={<UseCaseBusiness />} />
         <Route path="/use-cases/debate" element={<UseCaseDebate />} />
+        <Route path="/vs/llms" element={<VsLLMs />} />
+        <Route path="/use-cases" element={<UseCasesIndex />} />
+
 
 
 
