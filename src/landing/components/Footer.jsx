@@ -67,6 +67,17 @@ export default function Footer() {
             </div>
           </div>
 
+          {/* Use Cases Section */}
+          <div className="footer-section">
+            <h4 className="footer-title">Use Cases</h4>
+            <div className="footer-links">
+              <Link to="/use-cases/creative" className="footer-link">Creative</Link>
+              <Link to="/use-cases/education" className="footer-link">Education</Link>
+              <Link to="/use-cases/business" className="footer-link">Business</Link>
+              <Link to="/use-cases/debate" className="footer-link">Debate</Link>
+            </div>
+          </div>
+
           {/* Support Section */}
           <div className="footer-section">
             <h4 className="footer-title">Support</h4>

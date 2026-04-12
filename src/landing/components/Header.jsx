@@ -57,6 +57,7 @@ export default function Header() {
             <Link to="/terms" className="nav-link">Terms</Link>
             <Link to="/privacy" className="nav-link">Privacy</Link>
             <Link to="/contact-us" className="nav-link">Contact</Link>
+            <Link to="/use-cases" className="nav-link">Use Cases</Link>
           </nav>
 
           {/* Auth Buttons */}
