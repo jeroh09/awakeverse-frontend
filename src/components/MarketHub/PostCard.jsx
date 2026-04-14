@@ -64,6 +64,7 @@ const PostCard = ({
   post,
   onReaction,
   onFollowChange,
+  onCharacterClick,           // fn(character) — opens CharacterDetailPanel
   isAuthenticated = false,
 }) => {
   const [followLoading,   setFollowLoading]   = useState(false);
@@ -138,7 +139,12 @@ const PostCard = ({
     >
       {/* ─ Header ─ */}
       <div className={styles.header}>
-        <div className={styles.charRow}>
+        <button
+          className={styles.charRow}
+          onClick={() => onCharacterClick?.(character)}
+          disabled={!onCharacterClick || !character?.id}
+          aria-label={`View ${character?.display_name || post.character_key}'s profile`}
+        >
           <CharacterAvatar character={character} postType={post.post_type} />
           <div className={styles.charInfo}>
             <span className={styles.charName}>
@@ -157,7 +163,7 @@ const PostCard = ({
               )}
             </div>
           </div>
-        </div>
+        </button>
 
         <div className={styles.headerRight}>
           {isAuthenticated && character?.id && (

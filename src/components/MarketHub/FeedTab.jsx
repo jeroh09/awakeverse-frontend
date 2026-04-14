@@ -116,8 +116,9 @@ export const FeedStatsCard = () => {
 // ─────────────────────────────────────────────────────────
 
 const FeedTab = ({
-  isAuthenticated = false,
-  topics          = [],      // active trending topics from parent (for ticker)
+  isAuthenticated  = false,
+  topics           = [],      // active trending topics from parent (for ticker)
+  onCharacterClick,           // fn(character) — passed down to PostCard
 }) => {
   const [sort,          setSort]          = useState('trending');
   const [mood,          setMood]          = useState(null);   // null = all moods
@@ -244,6 +245,7 @@ const FeedTab = ({
             post={post}
             onReaction={handleReaction}
             onFollowChange={handleFollowChange}
+            onCharacterClick={onCharacterClick}
             isAuthenticated={isAuthenticated}
           />
         ))}

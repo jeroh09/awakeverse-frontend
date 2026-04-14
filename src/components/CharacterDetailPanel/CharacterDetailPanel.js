@@ -1,8 +1,9 @@
 // src/components/CharacterDetailPanel/CharacterDetailPanel.js - COMPLETE UPDATED VERSION
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import floatingGlassStyles from './CharacterDetailPanel.module.css';
 import metadataStyles from './CharacterMetadata.module.css';
 import { extractCharacterMetadata } from '../../utils/characterExtractor';
+import api from '../../api';
 
 const CharacterDetailPanel = ({ 
   character, 
@@ -14,6 +15,10 @@ const CharacterDetailPanel = ({
   const [useOrganicBlob, setUseOrganicBlob] = useState(false);
   const [activeTooltip, setActiveTooltip] = useState(null);
   const [extractedMetadata, setExtractedMetadata] = useState(null);
+  const [panelTab, setPanelTab] = useState('about');   // 'about' | 'posts'
+  const [charPosts, setCharPosts] = useState([]);
+  const [postsLoading, setPostsLoading] = useState(false);
+  const [postsError, setPostsError] = useState(null);
   
   const styles = floatingGlassStyles;
   const metaStyles = metadataStyles;
@@ -36,6 +41,30 @@ const CharacterDetailPanel = ({
       setExtractedMetadata(metadata);
     }
   }, [character, description]);
+
+  // Fetch character posts when Posts tab is activated
+  const fetchCharPosts = useCallback(async () => {
+    const charId = character?.id;
+    if (!charId) return;
+    setPostsLoading(true);
+    setPostsError(null);
+    try {
+      const res = await api.get(`/social/character/${charId}/posts?per_page=10`);
+      if (res.data?.status === 'success') {
+        setCharPosts(res.data.posts || []);
+      }
+    } catch (err) {
+      setPostsError('Could not load posts');
+    } finally {
+      setPostsLoading(false);
+    }
+  }, [character?.id]);
+
+  useEffect(() => {
+    if (panelTab === 'posts' && charPosts.length === 0 && !postsLoading) {
+      fetchCharPosts();
+    }
+  }, [panelTab, fetchCharPosts, charPosts.length, postsLoading]);
 
   // ✅ NEW: Helper function to handle both discover + chat
   const handleStartChatWithDiscover = () => {
@@ -237,11 +266,71 @@ const CharacterDetailPanel = ({
           <h2 className={styles.name}>{displayName}</h2>
         </div>
         
+        {/* ── Tab nav ── */}
+        <div className={styles.tabNav}>
+          <button
+            className={`${styles.panelTab} ${panelTab === 'about' ? styles.panelTabActive : ''}`}
+            onClick={() => setPanelTab('about')}
+          >
+            About
+          </button>
+          <button
+            className={`${styles.panelTab} ${panelTab === 'posts' ? styles.panelTabActive : ''}`}
+            onClick={() => setPanelTab('posts')}
+          >
+            Posts
+          </button>
+        </div>
+
         <div className={styles.content}>
-          <p className={styles.description}>{description}</p>
-          
-          {/* ✅ NEW: Extracted Metadata Section */}
-          {renderMetadataSection()}
+          {panelTab === 'about' && (
+            <>
+              <p className={styles.description}>{description}</p>
+              {renderMetadataSection()}
+            </>
+          )}
+
+          {panelTab === 'posts' && (
+            <div className={styles.postsPanel}>
+              {postsLoading && (
+                <div className={styles.postsLoading}>Loading posts…</div>
+              )}
+              {postsError && (
+                <div className={styles.postsError}>{postsError}</div>
+              )}
+              {!postsLoading && !postsError && charPosts.length === 0 && (
+                <div className={styles.postsEmpty}>
+                  No published posts yet.
+                </div>
+              )}
+              {charPosts.map(post => (
+                <div key={post.id} className={styles.postItem}>
+                  <div className={styles.postItemHeader}>
+                    {post.is_story_post && post.story_chapter != null && (
+                      <span className={styles.postChapterBadge}>Ch.{post.story_chapter}</span>
+                    )}
+                    <span className={styles.postTypePill}>{post.post_type?.replace('_', ' ')}</span>
+                    {post.mood_tag && (
+                      <span className={styles.postMoodTag}>{post.mood_tag}</span>
+                    )}
+                  </div>
+                  {post.topic_headline && (
+                    <div className={styles.postTopic}>{post.topic_headline}</div>
+                  )}
+                  <p className={styles.postContent}>{post.content}</p>
+                  <div className={styles.postFooter}>
+                    <span>♥ {post.like_count || 0}</span>
+                    <span>👁 {post.view_count || 0}</span>
+                    <span className={styles.postTime}>
+                      {post.published_at
+                        ? new Date(post.published_at).toLocaleDateString()
+                        : ''}
+                    </span>
+                  </div>
+                </div>
+              ))}
+            </div>
+          )}
         </div>
         
         <div className={styles.footer}>

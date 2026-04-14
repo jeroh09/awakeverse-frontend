@@ -656,6 +656,20 @@ const AuthenticatedMarketHub = ({
             <FeedTab
               isAuthenticated={!!user}
               topics={activeTopics}
+              onCharacterClick={(char) => {
+                // Transform feed character shape to panel shape
+                setSelectedCharacter({
+                  name:              char.display_name,
+                  display_name:      char.display_name,
+                  character_key:     char.character_key,
+                  key:               char.character_key,
+                  description:       '',
+                  short_description: '',
+                  thumbnailUrl:      char.avatar_url || `/images/${char.character_key}.jpg`,
+                  avatar_url:        char.avatar_url,
+                  id:                char.id,
+                });
+              }}
             />
           )}
 
