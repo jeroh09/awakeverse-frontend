@@ -410,3 +410,18 @@
     padding: 2px 9px;
   }
 }
+
+/* ── Chapter badge (story arc posts only) ── */
+.chapterBadge {
+  font-size: 0.62rem;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  padding: 2px 7px;
+  border-radius: 999px;
+  font-family: var(--font-body, 'Inter', sans-serif);
+  background: rgba(129, 140, 248, 0.15);
+  color: var(--accent-hover, #818CF8);
+  border: 1px solid rgba(99, 102, 241, 0.35);
+  white-space: nowrap;
+}

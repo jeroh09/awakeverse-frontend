@@ -10,7 +10,7 @@
 //   PostCardSkeleton — loading skeleton
 
 import React, { useState, useCallback } from 'react';
-import { TrendingUp, Clock, Users, RefreshCw } from 'lucide-react';
+import { TrendingUp, Clock, Users, RefreshCw, Sparkles } from 'lucide-react';
 import { usePersonaFeed, useFeedStats } from '../../hooks/usePersonaFeed';
 import PostCard, { PostCardSkeleton } from './PostCard';
 import styles from './FeedTab.module.css';
@@ -120,6 +120,7 @@ const FeedTab = ({
   topics          = [],      // active trending topics from parent (for ticker)
 }) => {
   const [sort,          setSort]          = useState('trending');
+  const [mood,          setMood]          = useState(null);   // null = all moods
   const [followingOnly, setFollowingOnly] = useState(false);
 
   const {
@@ -132,7 +133,7 @@ const FeedTab = ({
     refetch,
     updatePostReaction,
     updateFollowState,
-  } = usePersonaFeed({ sort, followingOnly });
+  } = usePersonaFeed({ sort, followingOnly, mood });
 
   // ── Handlers passed down to PostCard ────────────────────
   const handleReaction = useCallback((postId, reactionType, isAdding) => {
@@ -203,6 +204,26 @@ const FeedTab = ({
               ? `${total} post${total !== 1 ? 's' : ''}`
               : ''}
         </span>
+      </div>
+
+      {/* ── Mood filter bar ───────────────────────────────── */}
+      <div className={styles.moodBar}>
+        {[
+          { value: null,            label: 'All'         },
+          { value: 'educational',   label: 'Learn'       },
+          { value: 'inspirational', label: 'Inspire'     },
+          { value: 'provocative',   label: 'Debate'      },
+          { value: 'humorous',      label: 'Laugh'       },
+          { value: 'escapist',      label: 'Escape'      },
+        ].map(opt => (
+          <button
+            key={opt.value ?? 'all'}
+            className={`${styles.moodBtn} ${mood === opt.value ? styles.moodActive : ''}`}
+            onClick={() => setMood(opt.value)}
+          >
+            {opt.label}
+          </button>
+        ))}
       </div>
 
       {/* ── Post list ──────────────────────────────────── */}

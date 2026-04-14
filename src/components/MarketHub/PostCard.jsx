@@ -169,6 +169,12 @@ const PostCard = ({
               {followLoading ? '…' : is_following ? '✓ Following' : '+ Follow'}
             </button>
           )}
+          {/* Chapter badge — only on story posts */}
+          {post.is_story_post && post.story_chapter != null && (
+            <span className={styles.chapterBadge}>
+              Ch.{post.story_chapter}
+            </span>
+          )}
           <span className={`${styles.typePill} ${styles[`pill_${post.post_type}`] || ''}`}>
             {typeConfig.label}
           </span>

@@ -24,6 +24,7 @@ const PER_PAGE     = 20;
 export const usePersonaFeed = ({
   sort          = 'trending',  // 'trending' | 'latest'
   followingOnly = false,       // true = /feed/following (auth required)
+  mood          = null,        // 'educational'|'humorous'|'inspirational'|'provocative'|'escapist'
   enabled       = true,
 } = {}) => {
   const [state, setState] = useState({
@@ -41,7 +42,7 @@ export const usePersonaFeed = ({
 
   // ── Cache key ──────────────────────────────────────────
   const createCacheKey = useCallback(
-    (page) => `${sort}:${followingOnly ? '1' : '0'}:${page}`,
+    (page) => `${sort}:${followingOnly ? '1' : '0'}:${mood ?? 'all'}:${page}`,
     [sort, followingOnly]
   );
 
@@ -82,6 +83,7 @@ export const usePersonaFeed = ({
         per_page: String(PER_PAGE),
         sort,
       });
+      if (mood) params.set('mood', mood);
 
       // api instance handles auth cookies + CSRF automatically
       const response = await api.get(`${endpoint}?${params}`, {
@@ -144,7 +146,7 @@ export const usePersonaFeed = ({
       setState(prev => ({ ...prev, loading: false, error: msg }));
       console.error('Feed fetch error:', err);
     }
-  }, [sort, followingOnly, createCacheKey]);
+  }, [sort, followingOnly, mood, createCacheKey]);
 
   // ── Load more (append next page) ──────────────────────
   const loadMore = useCallback(() => {
@@ -201,7 +203,7 @@ export const usePersonaFeed = ({
     return () => {
       if (abortControllerRef.current) abortControllerRef.current.abort();
     };
-  }, [enabled, sort, followingOnly, fetchPage]);
+  }, [enabled, sort, followingOnly, mood, fetchPage]);
 
   // ── Cleanup on unmount ─────────────────────────────────
   useEffect(() => {
