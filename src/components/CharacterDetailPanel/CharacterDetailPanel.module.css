@@ -233,17 +233,58 @@
 .miniPost {
   background: rgba(15, 23, 42, 0.75);
   border: 1px solid rgba(148, 163, 184, 0.14);
-  border-left: 2px solid var(--mp-accent, #818CF8);
   border-radius: 12px;
   padding: 11px 13px;
   display: flex;
   flex-direction: column;
   gap: 5px;
-  transition: border-color 0.15s;
+  position: relative;
+  overflow: visible;
+  transition: box-shadow 0.15s, transform 0.15s;
 }
 
 .miniPost:hover {
-  border-color: rgba(148, 163, 184, 0.25);
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.35), 0 0 0 1px rgba(99, 102, 241, 0.12);
+  transform: translateY(-1px);
+}
+
+/* 4-corner bracket accents — always indigo */
+.miniPost::before,
+.miniPost::after {
+  content: '';
+  position: absolute;
+  width: 10px;
+  height: 10px;
+  border-color: var(--accent-primary, #6366f1);
+  border-style: solid;
+  opacity: 0.6;
+  transition: opacity 0.15s, width 0.15s, height 0.15s;
+  pointer-events: none;
+}
+
+/* top-left + top-right */
+.miniPost::before {
+  top: -1px;
+  left: -1px;
+  border-width: 2px 0 0 2px;
+  border-radius: 12px 0 0 0;
+  box-shadow: calc(100% - 10px + 2px) 0 0 0 var(--accent-primary, #6366f1);
+}
+
+/* bottom-left + bottom-right */
+.miniPost::after {
+  bottom: -1px;
+  left: -1px;
+  border-width: 0 0 2px 2px;
+  border-radius: 0 0 0 12px;
+  box-shadow: calc(100% - 10px + 2px) 0 0 0 var(--accent-primary, #6366f1);
+}
+
+.miniPost:hover::before,
+.miniPost:hover::after {
+  opacity: 1;
+  width: 13px;
+  height: 13px;
 }
 
 .miniPostHeader {

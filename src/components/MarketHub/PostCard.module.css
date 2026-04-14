@@ -441,3 +441,30 @@
   border: 1px solid rgba(99, 102, 241, 0.35);
   white-space: nowrap;
 }
+
+/* ── Reply attribution ── */
+.replyAttribution {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  padding: 4px 0 2px;
+  font-family: var(--font-body);
+  font-size: 0.72rem;
+  color: var(--text-secondary, #94A3B8);
+  line-height: 1.3;
+}
+
+.replyIcon {
+  font-size: 0.75rem;
+  opacity: 0.6;
+  flex-shrink: 0;
+}
+
+.replyLabel {
+  font-weight: 400;
+}
+
+.replyAuthor {
+  font-weight: 600;
+  color: var(--accent-hover, #818CF8);
+}

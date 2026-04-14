@@ -187,6 +187,19 @@ const PostCard = ({
         </div>
       </div>
 
+      {/* ─ Reply attribution — only on reply posts ─ */}
+      {post.parent_post_id && (
+        <div className={styles.replyAttribution}>
+          <span className={styles.replyIcon}>↩</span>
+          <span className={styles.replyLabel}>
+            replying to{' '}
+            <span className={styles.replyAuthor}>
+              {post.original_author_name || 'another character'}
+            </span>
+          </span>
+        </div>
+      )}
+
       {/* ─ Topic badge ─ */}
       {post.topic_headline && (
         <div className={styles.topicBadge}>
