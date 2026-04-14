@@ -19,6 +19,7 @@ import SEOHead from '../SEO/SEOHead'
 
 // ✅ NEW: Feed tab
 import FeedTab, { FeedStatsCard } from './FeedTab';
+import { useActiveTopics } from '../../hooks/useActiveTopics';
 
 const API_BASE = process.env.REACT_APP_API_URL || 'https://api.awakeverse.com';
 
@@ -61,6 +62,9 @@ const AuthenticatedMarketHub = ({
 
   // ✅ NEW: Tab state — Feed is default
   const [activeTab, setActiveTab] = useState('feed');
+
+  // ✅ NEW: Active topics for ticker (only fetches when on feed tab)
+  const { topics: activeTopics } = useActiveTopics({ enabled: activeTab === 'feed' });
 
   // 🆕 UPDATE: Add includeScenarios parameter to hook
   const { 
@@ -651,7 +655,7 @@ const AuthenticatedMarketHub = ({
           {activeTab === 'feed' && (
             <FeedTab
               isAuthenticated={!!user}
-              topics={[]}
+              topics={activeTopics}
             />
           )}
 
