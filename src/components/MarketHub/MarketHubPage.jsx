@@ -17,6 +17,9 @@ import styles from './MarketHubPage.module.css';
 import ScenarioChatWindow from '../../components/ScenariosTab/ScenarioChatWindow';
 import SEOHead from '../SEO/SEOHead'
 
+// ✅ NEW: Feed tab
+import FeedTab, { FeedStatsCard } from './FeedTab';
+
 const API_BASE = process.env.REACT_APP_API_URL || 'https://api.awakeverse.com';
 
 // NEW: Enhanced Authenticated Market Hub for view integration - MOVED TO TOP
@@ -55,6 +58,9 @@ const AuthenticatedMarketHub = ({
   // 🆕 ADD: State for active scenario (like MyScenariosPanel pattern)
   const [activeScenario, setActiveScenario] = useState(null);
   const [selectedScenario, setSelectedScenario] = useState(null);
+
+  // ✅ NEW: Tab state — Feed is default
+  const [activeTab, setActiveTab] = useState('feed');
 
   // 🆕 UPDATE: Add includeScenarios parameter to hook
   const { 
@@ -532,7 +538,7 @@ const AuthenticatedMarketHub = ({
             <p className={styles.pageSubtitle}>
               {isViewMode 
                 ? 'Discover characters and add them to your collection'
-                : 'Discover amazing characters from our community'
+                : 'The living world of AI personas'
               }
             </p>
           </div>
@@ -553,17 +559,20 @@ const AuthenticatedMarketHub = ({
             />
           </div>
           
-          <button 
-            className={`${styles.filterToggle} ${showFilters ? styles.active : ''}`}
-            onClick={() => setShowFilters(!showFilters)}
-          >
-            <Filter size={18} />
-            {!isMobile && <span>Filters</span>}
-          </button>
+          {/* Filter toggle only shown on Discover tab */}
+          {activeTab === 'discover' && (
+            <button 
+              className={`${styles.filterToggle} ${showFilters ? styles.active : ''}`}
+              onClick={() => setShowFilters(!showFilters)}
+            >
+              <Filter size={18} />
+              {!isMobile && <span>Filters</span>}
+            </button>
+          )}
         </div>
 
-        {/* Expandable Filters */}
-        {showFilters && (
+        {/* Expandable Filters — only on Discover tab */}
+        {activeTab === 'discover' && showFilters && (
           <div className={styles.filtersPanel}>
             <div className={styles.filterGroup}>
               <label>Archetype</label>
@@ -613,125 +622,160 @@ const AuthenticatedMarketHub = ({
             </button>
           </div>
         )}
+
+        {/* ✅ NEW: Tab Navigation */}
+        <nav className={styles.tabNav}>
+          <button
+            className={`${styles.tab} ${activeTab === 'feed' ? styles.tabActive : ''}`}
+            onClick={() => setActiveTab('feed')}
+          >
+            <span className={styles.tabLabel}>Feed</span>
+            <span className={styles.tabDesc}>AI personas reacting to today's world</span>
+          </button>
+
+          <button
+            className={`${styles.tab} ${activeTab === 'discover' ? styles.tabActive : ''}`}
+            onClick={() => setActiveTab('discover')}
+          >
+            <span className={styles.tabLabel}>Discover</span>
+            <span className={styles.tabDesc}>Browse and chat with published characters</span>
+          </button>
+        </nav>
       </header>
 
       {/* Main Content */}
       <main className={styles.mainContent}>
         <div className={styles.contentArea}>
-          {/* Featured Characters Section */}
-          {!searchQuery && !Object.values(selectedFilters).some(v => v && v !== 'trending') && (
-            <section className={styles.featuredSection}>
-              <div className={styles.sectionHeader}>
-                <TrendingUp className={styles.sectionIcon} size={20} />
-                <h2>Featured This Week</h2>
-              </div>
-              <FeaturedCarousel 
-                characters={featuredCharacters}
-                loading={featuredLoading}
-                onCharacterClick={handleCharacterDetails}
-                onChatClick={handleStartChat}
-              />
-            </section>
+
+          {/* ✅ NEW: Feed tab */}
+          {activeTab === 'feed' && (
+            <FeedTab
+              isAuthenticated={!!user}
+              topics={[]}
+            />
           )}
 
-          {/* Browse Results */}
-          <section className={styles.browseSection}>
-            <div className={styles.sectionHeader}>
-              <div className={styles.resultsInfo}>
-                <h2>
-                  {searchQuery ? `Results for "${searchQuery}"` : 'Browse Characters & Scenarios'}
-                </h2>
-                {pagination && (
-                  <span className={styles.resultCount}>
-                    {pagination?.character_count || 0} characters, {pagination?.scenario_count || 0} scenarios
-                  </span>
-                )}
-              </div>
-            </div>
+          {/* ✅ Discover tab: existing content unchanged */}
+          {activeTab === 'discover' && (
+            <>
+              {/* Featured Characters Section */}
+              {!searchQuery && !Object.values(selectedFilters).some(v => v && v !== 'trending') && (
+                <section className={styles.featuredSection}>
+                  <div className={styles.sectionHeader}>
+                    <TrendingUp className={styles.sectionIcon} size={20} />
+                    <h2>Featured This Week</h2>
+                  </div>
+                  <FeaturedCarousel 
+                    characters={featuredCharacters}
+                    loading={featuredLoading}
+                    onCharacterClick={handleCharacterDetails}
+                    onChatClick={handleStartChat}
+                  />
+                </section>
+              )}
 
-            {loading ? (
-              <div className={styles.loadingGrid}>
-                {Array.from({ length: 8 }).map((_, i) => (
-                  <div key={i} className={styles.loadingCard} />
-                ))}
-              </div>
-            ) : allContent.length > 0 ? (
-              <>
-                {/* 🆕 UPDATED: Content Grid with Design System Spacing */}
-                <div className={styles.contentGrid}>
-                  {allContent.map((item) => (
-                    <UnifiedContentCard
-                      key={
-                        item.content_type === 'character' 
-                          ? `char-${item.character_id}` 
-                          : `scen-${item.scenario_id}`
-                      }
-                      item={item}
-                      onCardClick={handleCardClick}
-                      onChatClick={handleStartChat}
-                      onEngage={handleEngage}
-                      userCharacters={userCharacters}  // ✅ ADD THIS LINE
-                    />
-                  ))}
+              {/* Browse Results */}
+              <section className={styles.browseSection}>
+                <div className={styles.sectionHeader}>
+                  <div className={styles.resultsInfo}>
+                    <h2>
+                      {searchQuery ? `Results for "${searchQuery}"` : 'Browse Characters & Scenarios'}
+                    </h2>
+                    {pagination && (
+                      <span className={styles.resultCount}>
+                        {pagination?.character_count || 0} characters, {pagination?.scenario_count || 0} scenarios
+                      </span>
+                    )}
+                  </div>
                 </div>
 
-                {/* Pagination */}
-                {pagination && pagination.pages > 1 && (
-                  <div className={styles.pagination}>
-                    <button 
-                      onClick={handlePrevPage}
-                      disabled={!pagination.has_prev}
-                      className={styles.paginationButton}
-                    >
-                      Previous
-                    </button>
-                    
-                    <div className={styles.pageNumbers}>
-                      {Array.from({ length: Math.min(pagination.pages, 5) }, (_, i) => {
-                        const page = i + 1;
-                        return (
-                          <button
-                            key={page}
-                            onClick={() => handlePageChange(page)}
-                            className={`${styles.pageNumber} ${
-                              page === pagination.page ? styles.active : ''
-                            }`}
-                          >
-                            {page}
-                          </button>
-                        );
-                      })}
+                {loading ? (
+                  <div className={styles.loadingGrid}>
+                    {Array.from({ length: 8 }).map((_, i) => (
+                      <div key={i} className={styles.loadingCard} />
+                    ))}
+                  </div>
+                ) : allContent.length > 0 ? (
+                  <>
+                    {/* 🆕 UPDATED: Content Grid with Design System Spacing */}
+                    <div className={styles.contentGrid}>
+                      {allContent.map((item) => (
+                        <UnifiedContentCard
+                          key={
+                            item.content_type === 'character' 
+                              ? `char-${item.character_id}` 
+                              : `scen-${item.scenario_id}`
+                          }
+                          item={item}
+                          onCardClick={handleCardClick}
+                          onChatClick={handleStartChat}
+                          onEngage={handleEngage}
+                          userCharacters={userCharacters}  // ✅ ADD THIS LINE
+                        />
+                      ))}
                     </div>
-                    
-                    <button 
-                      onClick={handleNextPage}
-                      disabled={!pagination.has_next}
-                      className={styles.paginationButton}
-                    >
-                      Next
+
+                    {/* Pagination */}
+                    {pagination && pagination.pages > 1 && (
+                      <div className={styles.pagination}>
+                        <button 
+                          onClick={handlePrevPage}
+                          disabled={!pagination.has_prev}
+                          className={styles.paginationButton}
+                        >
+                          Previous
+                        </button>
+                        
+                        <div className={styles.pageNumbers}>
+                          {Array.from({ length: Math.min(pagination.pages, 5) }, (_, i) => {
+                            const page = i + 1;
+                            return (
+                              <button
+                                key={page}
+                                onClick={() => handlePageChange(page)}
+                                className={`${styles.pageNumber} ${
+                                  page === pagination.page ? styles.active : ''
+                                }`}
+                              >
+                                {page}
+                              </button>
+                            );
+                          })}
+                        </div>
+                        
+                        <button 
+                          onClick={handleNextPage}
+                          disabled={!pagination.has_next}
+                          className={styles.paginationButton}
+                        >
+                          Next
+                        </button>
+                      </div>
+                    )}
+                  </>
+                ) : (
+                  <div className={styles.emptyState}>
+                    <h3>No content found</h3>
+                    <p>Try adjusting your search or filters</p>
+                    <button onClick={handleClearFilters} className={styles.clearButton}>
+                      Clear Filters
                     </button>
                   </div>
                 )}
-              </>
-            ) : (
-              <div className={styles.emptyState}>
-                <h3>No content found</h3>
-                <p>Try adjusting your search or filters</p>
-                <button onClick={handleClearFilters} className={styles.clearButton}>
-                  Clear Filters
-                </button>
-              </div>
-            )}
-          </section>
+              </section>
+            </>
+          )}
         </div>
 
-        {/* Leaderboard Sidebar (Desktop) / Section (Mobile) */}
+        {/* Leaderboard Sidebar (Desktop) / Section (Mobile) — always visible */}
         {!isMobile ? (
           <aside className={styles.sidebar}>
+            {activeTab === 'feed' && <FeedStatsCard />}
             <LeaderboardSection />
           </aside>
         ) : (
           <section className={styles.mobileLeaderboard}>
+            {activeTab === 'feed' && <FeedStatsCard />}
             <LeaderboardSection />
           </section>
         )}
