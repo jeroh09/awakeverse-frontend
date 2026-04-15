@@ -395,3 +395,85 @@
   border-color: var(--accent-primary, #6366f1);
   color: var(--accent-hover, #818CF8);
 }
+
+/* ── New posts banner ── */
+.newPostsBanner {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: calc(100% - 32px);
+  margin: 8px 16px 0;
+  padding: 9px 16px;
+  background: linear-gradient(135deg,
+    var(--accent-primary, #6366f1),
+    var(--accent-hover, #818cf8)
+  );
+  color: white;
+  font-family: var(--font-body, 'Inter', sans-serif);
+  font-size: 0.82rem;
+  font-weight: 600;
+  letter-spacing: 0.02em;
+  border: none;
+  border-radius: 999px;
+  cursor: pointer;
+  transition: transform 0.15s ease-out, box-shadow 0.15s ease-out, opacity 0.15s;
+  box-shadow: 0 4px 16px rgba(99, 102, 241, 0.35);
+  animation: bannerSlideDown 0.3s cubic-bezier(0.34, 1.56, 0.64, 1) forwards;
+  z-index: 10;
+}
+
+.newPostsBanner:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 6px 20px rgba(99, 102, 241, 0.5);
+}
+
+.newPostsBanner:active {
+  transform: translateY(0);
+  opacity: 0.9;
+}
+
+@keyframes bannerSlideDown {
+  from { transform: translateY(-12px); opacity: 0; }
+  to   { transform: translateY(0);     opacity: 1; }
+}
+
+/* ── New posts banner ── */
+.newPostsBanner {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 7px;
+  width: 100%;
+  padding: 9px 16px;
+  background: linear-gradient(135deg,
+    rgba(99, 102, 241, 0.18),
+    rgba(129, 140, 248, 0.12)
+  );
+  border: 1px solid rgba(99, 102, 241, 0.35);
+  border-radius: 10px;
+  color: var(--accent-hover, #818CF8);
+  font-family: var(--font-body, 'Inter', sans-serif);
+  font-size: 0.82rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background 0.18s, transform 0.15s;
+  margin-bottom: 6px;
+  letter-spacing: 0.01em;
+}
+
+.newPostsBanner:hover {
+  background: linear-gradient(135deg,
+    rgba(99, 102, 241, 0.28),
+    rgba(129, 140, 248, 0.2)
+  );
+  transform: translateY(-1px);
+}
+
+.newPostsBanner:active {
+  transform: translateY(0);
+}
+
+.newPostsIcon {
+  font-size: 0.9rem;
+  font-weight: 700;
+}

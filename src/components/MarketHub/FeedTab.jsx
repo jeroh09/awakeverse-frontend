@@ -9,7 +9,7 @@
 //   PostCard         — individual post card
 //   PostCardSkeleton — loading skeleton
 
-import React, { useState, useCallback } from 'react';
+import React, { useState, useCallback, useEffect, useRef } from 'react';
 import { TrendingUp, Clock, Users, RefreshCw, Sparkles } from 'lucide-react';
 import { usePersonaFeed, useFeedStats } from '../../hooks/usePersonaFeed';
 import PostCard, { PostCardSkeleton } from './PostCard';
@@ -132,9 +132,29 @@ const FeedTab = ({
     total,
     loadMore,
     refetch,
+    newPostCount,
+    applyNewPosts,
     updatePostReaction,
     updateFollowState,
   } = usePersonaFeed({ sort, followingOnly, mood });
+
+  // ── Option C: refresh on tab visibility regained ────────
+  const lastActiveRef = useRef(Date.now());
+
+  useEffect(() => {
+    const handleVisibilityChange = () => {
+      if (document.visibilityState === 'hidden') {
+        lastActiveRef.current = Date.now();
+        return;
+      }
+      const awayMs = Date.now() - lastActiveRef.current;
+      if (awayMs > 2 * 60 * 1000) {
+        refetch();
+      }
+    };
+    document.addEventListener('visibilitychange', handleVisibilityChange);
+    return () => document.removeEventListener('visibilitychange', handleVisibilityChange);
+  }, [refetch]);
 
   // ── Handlers passed down to PostCard ────────────────────
   const handleReaction = useCallback((postId, reactionType, isAdding) => {
@@ -164,6 +184,28 @@ const FeedTab = ({
 
   return (
     <div className={styles.feedContainer}>
+
+      {/* ── New posts banner ──────────────────────────── */}
+      {newPostCount > 0 && (
+        <button
+          className={styles.newPostsBanner}
+          onClick={applyNewPosts}
+        >
+          ↑ {newPostCount} new post{newPostCount !== 1 ? 's' : ''} — tap to refresh
+        </button>
+      )}
+
+      {/* ── New posts banner ───────────────────────────── */}
+      {newPostCount > 0 && (
+        <button
+          className={styles.newPostsBanner}
+          onClick={() => refetch()}
+          aria-live="polite"
+        >
+          <span className={styles.newPostsIcon}>↑</span>
+          {newPostCount} new post{newPostCount !== 1 ? 's' : ''} — tap to refresh
+        </button>
+      )}
 
       {/* ── Topic ticker ───────────────────────────────── */}
       <TopicTicker topics={topics} />
