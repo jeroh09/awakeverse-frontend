@@ -4,6 +4,7 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { useUser } from '../../contexts/UserContext';
 import { useAppView } from '../../contexts/AppViewContext';
+import BusinessModePanel from './BusinessModePanel';
 import api from '../../api';
 import { 
   Eye, Heart, Bookmark, Share2, MessageCircle, 
@@ -22,6 +23,10 @@ import './CreatorDashboard.css';
 const CreatorDashboard = () => {
   const { user } = useUser();
   const { switchView, VIEW_STATES } = useAppView();
+
+  //business mode sectionn
+  const [hubMode, setHubMode] = useState('creator');
+
   
   // Dashboard state
   const [dashboardData, setDashboardData] = useState(null);
@@ -315,212 +320,217 @@ const CreatorDashboard = () => {
   }
 
   const { summary, characters, engagement_trends, recent_achievements, creator_info } = dashboardData;
-
   return (
-    <div className="creator-dashboard">
-      {/* ========= HEADER ========= */}
-      <header className="dashboard-header">
-        <div className="header-content">
-          <h1>Creator Hub</h1>
-          <p>Welcome back, {user?.displayName || 'Creator'}! Track your characters' performance.</p>
-        </div>
-        <div className="header-actions">
-          <button onClick={loadDashboardData} className="refresh-button">
-            <Zap size={16} />
-            Refresh Data
-          </button>
-        </div>
-      </header>
+      <div className="creator-dashboard">
+        {/* ========= HEADER ========= */}
+        <header className="dashboard-header">
+          <div className="header-content">
+            <h1>Creator Hub</h1>
+            <p>Welcome back, {user?.displayName || 'Creator'}! Track your characters' performance.</p>
+          </div>
+          <div className="header-actions">
+            <button onClick={loadDashboardData} className="refresh-button">
+              <Zap size={16} />
+              Refresh Data
+            </button>
+          </div>
+          <div className="mode-toggle-bar">
+            <button
+              className={`mode-toggle-btn${hubMode === 'creator' ? ' active' : ''}`}
+              onClick={() => setHubMode('creator')}
+            >
+              Creator
+            </button>
+            <button
+              className={`mode-toggle-btn${hubMode === 'business' ? ' active' : ''}`}
+              onClick={() => setHubMode('business')}
+            >
+              Business
+            </button>
+          </div>
+        </header>
 
-      {/* ========= QUICK STATS CARDS ========= */}
-      <section className="stats-section">
-        <div className="section-header">
-          <h2>Performance Overview</h2>
-          <span className="section-subtitle">Last 30 days</span>
-        </div>
-        <div className="stats-grid">
-          <StatCard
-            icon={<Eye size={20} />}
-            label="Total Views"
-            value={summary.total_views || 0}
-            trend="+12%"
-            color="#6366F1"
-          />
-          <StatCard
-            icon={<Heart size={20} />}
-            label="Total Likes"
-            value={summary.total_likes || 0}
-            trend="+8%"
-            color="#EF4444"
-          />
-          <StatCard
-            icon={<Bookmark size={20} />}
-            label="Total Bookmarks"
-            value={summary.total_bookmarks || 0}
-            trend="+15%"
-            color="#F59E0B"
-          />
-          <StatCard
-            icon={<Share2 size={20} />}
-            label="Total Shares"
-            value={summary.total_shares || 0}
-            trend="+5%"
-            color="#10B981"
-          />
-          <StatCard
-            icon={<MessageCircle size={20} />}
-            label="Chat Sessions"
-            value={summary.total_chat_sessions || 0}
-            trend="+22%"
-            color="#8B5CF6"
-          />
-          <StatCard
-            icon={<TrendingUp size={20} />}
-            label="Engagement Rate"
-            value={`${summary.avg_engagement_rate || 0}%`}
-            trend="+3%"
-            color="#06B6D4"
-          />
-        </div>
-      </section>
-
-      <div className="dashboard-content">
-        {/* ========= MAIN CONTENT AREA ========= */}
-        <main className="main-content">
-          {/* CHARACTERS GRID */}
-          <section className="characters-section">
-            <div className="section-header">
-              <h2>Your Characters</h2>
-              <span className="section-subtitle">
-                {characters.length} published characters
-              </span>
-            </div>
-            
-            <div className="characters-grid">
-              {characters.map(character => (
-                <CharacterCard
-                  key={character.character_id}
-                  character={character}
-                  onClick={() => setSelectedCharacter(character)}
-                />
-              ))}
-            </div>
-          </section>
-
-          {/* ENGAGEMENT TRENDS */}
-          {engagement_trends && engagement_trends.length > 0 && (
-            <section className="trends-section">
+        {hubMode === 'business' ? (
+          <BusinessModePanel />
+        ) : (
+          <>
+            {/* ========= QUICK STATS CARDS ========= */}
+            <section className="stats-section">
               <div className="section-header">
-                <h2>Engagement Trends</h2>
-                <span className="section-subtitle">Last 14 days performance</span>
+                <h2>Performance Overview</h2>
+                <span className="section-subtitle">Last 30 days</span>
               </div>
-              <EngagementChart data={engagement_trends} />
+              <div className="stats-grid">
+                <StatCard
+                  icon={<Eye size={20} />}
+                  label="Total Views"
+                  value={summary.total_views || 0}
+                  trend="+12%"
+                  color="#6366F1"
+                />
+                <StatCard
+                  icon={<Heart size={20} />}
+                  label="Total Likes"
+                  value={summary.total_likes || 0}
+                  trend="+8%"
+                  color="#EF4444"
+                />
+                <StatCard
+                  icon={<Bookmark size={20} />}
+                  label="Total Bookmarks"
+                  value={summary.total_bookmarks || 0}
+                  trend="+15%"
+                  color="#F59E0B"
+                />
+                <StatCard
+                  icon={<Share2 size={20} />}
+                  label="Total Shares"
+                  value={summary.total_shares || 0}
+                  trend="+5%"
+                  color="#10B981"
+                />
+                <StatCard
+                  icon={<MessageCircle size={20} />}
+                  label="Chat Sessions"
+                  value={summary.total_chat_sessions || 0}
+                  trend="+22%"
+                  color="#8B5CF6"
+                />
+                <StatCard
+                  icon={<TrendingUp size={20} />}
+                  label="Engagement Rate"
+                  value={`${summary.avg_engagement_rate || 0}%`}
+                  trend="+3%"
+                  color="#06B6D4"
+                />
+              </div>
             </section>
-          )}
-        </main>
 
-        {/* ========= SIDEBAR ========= */}
-        <aside className="dashboard-sidebar">
-          {/* QUICK ACTIONS */}
-          <section className="actions-panel">
-            <h3>Quick Actions</h3>
-            <div className="action-buttons">
-              {/* PRIMARY: CREATE CHARACTER */}
-              <button className="action-btn primary" onClick={handleCreateCharacter}>
-                <Sparkles size={16} />
-                Create New Character
-              </button>
+            <div className="dashboard-content">
+              {/* ========= MAIN CONTENT AREA ========= */}
+              <main className="main-content">
+                {/* CHARACTERS GRID */}
+                <section className="characters-section">
+                  <div className="section-header">
+                    <h2>Your Characters</h2>
+                    <span className="section-subtitle">
+                      {characters.length} published characters
+                    </span>
+                  </div>
+                  <div className="characters-grid">
+                    {characters.map(character => (
+                      <CharacterCard
+                        key={character.character_id}
+                        character={character}
+                        onClick={() => setSelectedCharacter(character)}
+                      />
+                    ))}
+                  </div>
+                </section>
 
-              {/* SECONDARY: CREATE STORY */}
-              <button 
-                className="action-btn secondary" 
-                onClick={handleCreateStory}
-              >
-                <BookOpen size={16} />
-                Create Story
-              </button>
+                {/* ENGAGEMENT TRENDS */}
+                {engagement_trends && engagement_trends.length > 0 && (
+                  <section className="trends-section">
+                    <div className="section-header">
+                      <h2>Engagement Trends</h2>
+                      <span className="section-subtitle">Last 14 days performance</span>
+                    </div>
+                    <EngagementChart data={engagement_trends} />
+                  </section>
+                )}
+              </main>
 
-              {/* SECONDARY: CREATE SCENARIO */}
-              <button 
-                className="action-btn secondary" 
-                onClick={handleCreateScenario}
-              >
-                <Users size={16} />
-                Create Dialogue
-              </button>
+              {/* ========= SIDEBAR ========= */}
+              <aside className="dashboard-sidebar">
+                {/* QUICK ACTIONS */}
+                <section className="actions-panel">
+                  <h3>Quick Actions</h3>
+                  <div className="action-buttons">
+                    <button className="action-btn primary" onClick={handleCreateCharacter}>
+                      <Sparkles size={16} />
+                      Create New Character
+                    </button>
+                    <button className="action-btn secondary" onClick={handleCreateStory}>
+                      <BookOpen size={16} />
+                      Create Story
+                    </button>
+                    <button className="action-btn secondary" onClick={handleCreateScenario}>
+                      <Users size={16} />
+                      Create Dialogue
+                    </button>
+                    <button className="action-btn secondary" onClick={handleViewMarketHub}>
+                      <BarChart3 size={16} />
+                      View Market Hub
+                    </button>
+                  </div>
+                </section>
 
-              {/* SECONDARY: MARKET HUB */}
-              <button className="action-btn secondary" onClick={handleViewMarketHub}>
-                <BarChart3 size={16} />
-                View Market Hub
-              </button>
-            </div>
-          </section>
+                {/* RECENT ACHIEVEMENTS */}
+                {recent_achievements && recent_achievements.length > 0 && (
+                  <section className="achievements-panel">
+                    <h3>Recent Achievements</h3>
+                    <div className="achievements-list">
+                      {recent_achievements.slice(0, 3).map((achievement, index) => (
+                        <div key={index} className="achievement-item">
+                          <div className="achievement-icon">🏆</div>
+                          <div className="achievement-content">
+                            <div className="achievement-title">{achievement.title}</div>
+                            <div className="achievement-date">
+                              {new Date(achievement.earned_at || achievement.date).toLocaleDateString()}
+                            </div>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  </section>
+                )}
 
-          {/* RECENT ACHIEVEMENTS */}
-          {recent_achievements && recent_achievements.length > 0 && (
-            <section className="achievements-panel">
-              <h3>Recent Achievements</h3>
-              <div className="achievements-list">
-                {recent_achievements.slice(0, 3).map((achievement, index) => (
-                  <div key={index} className="achievement-item">
-                    <div className="achievement-icon">🏆</div>
-                    <div className="achievement-content">
-                      <div className="achievement-title">{achievement.title}</div>
-                      <div className="achievement-date">
-                        {new Date(achievement.earned_at || achievement.date).toLocaleDateString()}
+                {/* CREATOR LEVEL */}
+                <section className="level-panel">
+                  <h3>Creator Level</h3>
+                  <div className="level-display">
+                    <div className="level-icon">
+                      <Crown size={24} />
+                    </div>
+                    <div className="level-info">
+                      <div className="level-name">{creator_info.level || 'Rising Star'}</div>
+                      <div className="level-progress">
+                        <div className="progress-bar">
+                          <div
+                            className="progress-fill"
+                            style={{ width: `${creator_info.progress || 45}%` }}
+                          />
+                        </div>
+                        <span className="progress-text">
+                          {creator_info.progress || 45}% to next level
+                        </span>
                       </div>
                     </div>
                   </div>
-                ))}
-              </div>
-            </section>
-          )}
-
-          {/* CREATOR LEVEL */}
-          <section className="level-panel">
-            <h3>Creator Level</h3>
-            <div className="level-display">
-              <div className="level-icon">
-                <Crown size={24} />
-              </div>
-              <div className="level-info">
-                <div className="level-name">{creator_info.level || 'Rising Star'}</div>
-                <div className="level-progress">
-                  <div className="progress-bar">
-                    <div 
-                      className="progress-fill" 
-                      style={{ width: `${creator_info.progress || 45}%` }}
-                    />
-                  </div>
-                  <span className="progress-text">
-                    {creator_info.progress || 45}% to next level
-                  </span>
-                </div>
-              </div>
+                </section>
+              </aside>
             </div>
-          </section>
-        </aside>
+
+            {/* ========= MODALS ========= */}
+            {selectedCharacter && (
+              <CharacterDetailModal
+                character={selectedCharacter}
+                onClose={() => setSelectedCharacter(null)}
+                onViewInHub={handleViewInMarketHub}
+              />
+            )}
+
+            <EducationalUpgradeModal
+              isOpen={showEducationalModal}
+              onClose={() => setShowEducationalModal(false)}
+              onUpgradeWithStripe={handleUpgradeWithStripe}
+              onUpgradeWithPayPal={handleUpgradeWithPayPal}
+              onComparePlans={handleComparePlans}
+            />
+          </>
+        )}
       </div>
-
-      {/* ========= MODALS ========= */}
-      {selectedCharacter && (
-        <CharacterDetailModal
-          character={selectedCharacter}
-          onClose={() => setSelectedCharacter(null)}
-          onViewInHub={handleViewInMarketHub}
-        />
-      )}
-
-      <EducationalUpgradeModal 
-        isOpen={showEducationalModal}
-        onClose={() => setShowEducationalModal(false)}
-        onUpgradeWithStripe={handleUpgradeWithStripe}
-        onUpgradeWithPayPal={handleUpgradeWithPayPal}
-        onComparePlans={handleComparePlans}
-      />
-    </div>
-  );
+    );
 };
 
 // ========= SUBCOMPONENTS =========

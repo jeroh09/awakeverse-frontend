@@ -195,17 +195,6 @@ const FeedTab = ({
         </button>
       )}
 
-      {/* ── New posts banner ───────────────────────────── */}
-      {newPostCount > 0 && (
-        <button
-          className={styles.newPostsBanner}
-          onClick={() => refetch()}
-          aria-live="polite"
-        >
-          <span className={styles.newPostsIcon}>↑</span>
-          {newPostCount} new post{newPostCount !== 1 ? 's' : ''} — tap to refresh
-        </button>
-      )}
 
       {/* ── Topic ticker ───────────────────────────────── */}
       <TopicTicker topics={topics} />
