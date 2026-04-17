@@ -134,12 +134,13 @@ export default function BusinessModePanel() {
   /* Load scenarios on mount */
   useEffect(() => {
     smb.loadScenarios();
-  }, []); // eslint-disable-line react-hooks/exhaustive-deps
+  }, []);
 
   /* Pre-fill snapshot note textarea when pending snapshot changes */
   useEffect(() => {
     setSnapshotNote(smb.pendingSnapshot?.owner_note || '');
-  }, [smb.pendingSnapshot?.id]); // eslint-disable-line react-hooks/exhaustive-deps
+  }, [smb.pendingSnapshot?.id]);
+  
 
   /* ── Form handlers ── */
   const handleFormChange = useCallback((field, value) => {
