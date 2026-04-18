@@ -67,8 +67,8 @@ export default function StickyNotes({
   const [tagVal, setTagVal] = useState('');
   const [adding, setAdding] = useState(false);
 
-  const widgetRef  = useRef(null);
-  const dragState  = useRef(null);   // { startX, startY, origRight, origBottom }
+  const widgetRef = useRef(null);
+  const dragState = useRef(null);
 
   /* Load notes on mount */
   useEffect(() => {
@@ -130,35 +130,36 @@ export default function StickyNotes({
     <div
       ref={widgetRef}
       style={{
-        position:     'fixed',
-        right:        pos.right,
-        bottom:       pos.bottom,
-        width:        320,
-        background:   '#141B2E',
-        border:       '1px solid rgba(99,102,241,0.35)',
-        borderRadius: 20,
-        boxShadow:    '0 8px 32px rgba(15,23,42,0.8), 0 0 24px rgba(99,102,241,0.12)',
-        zIndex:       1000,
-        overflow:     'hidden',
-        transition:   'height 0.22s cubic-bezier(0.4,0,0.2,1)',
-        height:       minimised ? 48 : 360,
-        display:      'flex',
-        flexDirection:'column',
+        position:      'fixed',
+        right:         pos.right,
+        bottom:        pos.bottom,
+        width:         320,
+        background:    '#141B2E',
+        /* Double border: inner indigo ring → dark gap → outer glow → depth */
+        border:        '1px solid rgba(99,102,241,0.35)',
+        boxShadow:     '0 0 0 3px rgba(10,15,26,0.95), 0 0 0 4px rgba(99,102,241,0.18), 0 8px 32px rgba(15,23,42,0.8)',
+        borderRadius:  20,
+        zIndex:        1000,
+        overflow:      'hidden',
+        transition:    'height 0.22s cubic-bezier(0.4,0,0.2,1)',
+        height:        minimised ? 48 : 360,
+        display:       'flex',
+        flexDirection: 'column',
       }}
     >
       {/* ── Header / drag handle ── */}
       <div
         onMouseDown={onMouseDown}
         style={{
-          display:       'flex',
-          alignItems:    'center',
-          justifyContent:'space-between',
-          padding:       '0 0.85rem',
-          height:        48,
-          borderBottom:  minimised ? 'none' : '1px solid rgba(148,163,184,0.1)',
-          cursor:        'grab',
-          background:    'radial-gradient(circle at top left, rgba(99,102,241,0.08), transparent 60%), #141B2E',
-          flexShrink:    0,
+          display:        'flex',
+          alignItems:     'center',
+          justifyContent: 'space-between',
+          padding:        '0 0.85rem',
+          height:         48,
+          borderBottom:   minimised ? 'none' : '1px solid rgba(148,163,184,0.1)',
+          cursor:         'grab',
+          background:     'radial-gradient(circle at top left, rgba(99,102,241,0.08), transparent 60%), #141B2E',
+          flexShrink:     0,
         }}
       >
         {/* Title */}
@@ -189,19 +190,11 @@ export default function StickyNotes({
         </div>
 
         {/* Controls */}
-        <div style={{ display:'flex', gap:'0.3rem' }} onMouseDown={e => e.stopPropagation()}>
-          <button
-            onClick={() => setMinimised(true)}
-            title="Minimise"
-            style={ctrlBtnStyle}
-          >
+        <div style={{ display: 'flex', gap: '0.3rem' }} onMouseDown={e => e.stopPropagation()}>
+          <button onClick={() => setMinimised(true)}  title="Minimise" style={ctrlBtnStyle}>
             <MinusIcon />
           </button>
-          <button
-            onClick={() => setMinimised(false)}
-            title="Expand"
-            style={ctrlBtnStyle}
-          >
+          <button onClick={() => setMinimised(false)} title="Expand"   style={ctrlBtnStyle}>
             <ExpandIcon />
           </button>
         </div>
@@ -218,7 +211,7 @@ export default function StickyNotes({
           overflow:      'hidden',
         }}>
           {/* Input row */}
-          <div style={{ display:'flex', gap:'0.4rem' }}>
+          <div style={{ display: 'flex', gap: '0.4rem' }}>
             <input
               value={inputVal}
               onChange={e => setInputVal(e.target.value)}
@@ -240,14 +233,14 @@ export default function StickyNotes({
               disabled={adding || !inputVal.trim()}
               style={{
                 ...ctrlBtnStyle,
-                width:      32,
-                height:     32,
-                background: '#6366F1',
-                border:     'none',
-                color:      '#fff',
+                width:        32,
+                height:       32,
+                background:   '#6366F1',
+                border:       'none',
+                color:        '#fff',
                 borderRadius: 8,
-                opacity:    (!inputVal.trim() || adding) ? 0.45 : 1,
-                cursor:     (!inputVal.trim() || adding) ? 'not-allowed' : 'pointer',
+                opacity:      (!inputVal.trim() || adding) ? 0.45 : 1,
+                cursor:       (!inputVal.trim() || adding) ? 'not-allowed' : 'pointer',
               }}
             >
               <PlusIcon />
@@ -255,42 +248,43 @@ export default function StickyNotes({
           </div>
 
           {/* Notes list */}
-          <div style={{
-            flex:      1,
-            overflowY: 'auto',
-            display:   'flex',
-            flexDirection: 'column',
-            gap:       '0.4rem',
-          }}
+          <div
+            style={{
+              flex:          1,
+              overflowY:     'auto',
+              display:       'flex',
+              flexDirection: 'column',
+              gap:           '0.4rem',
+            }}
             className="sn-list"
           >
             {notesLoading && (
-              <div style={{ fontSize:'0.8rem', color:'#475569', textAlign:'center', padding:'1rem' }}>
+              <div style={{ fontSize: '0.8rem', color: '#475569', textAlign: 'center', padding: '1rem' }}>
                 Loading…
               </div>
             )}
 
             {!notesLoading && notes.length === 0 && (
-              <div style={{ fontSize:'0.8rem', color:'#475569', textAlign:'center', padding:'1.25rem 0.5rem' }}>
+              <div style={{ fontSize: '0.8rem', color: '#475569', textAlign: 'center', padding: '1.25rem 0.5rem' }}>
                 No notes yet. Add one above.
               </div>
             )}
 
             {notes.map(note => (
               <div key={note.id} style={noteItemStyle}>
-                <div style={{ display:'flex', alignItems:'flex-start', gap:'0.4rem', flex:1, minWidth:0 }}>
+                <div style={{ display: 'flex', alignItems: 'flex-start', gap: '0.4rem', flex: 1, minWidth: 0 }}>
                   {/* Tag pip */}
                   <span style={{
-                    width:       6,
-                    height:      6,
-                    borderRadius:'50%',
-                    background:  PIP_COLORS[note.tag] || PIP_COLORS.default,
-                    flexShrink:  0,
-                    marginTop:   '0.4rem',
+                    width:        6,
+                    height:       6,
+                    borderRadius: '50%',
+                    background:   PIP_COLORS[note.tag] || PIP_COLORS.default,
+                    flexShrink:   0,
+                    marginTop:    '0.4rem',
                   }} />
                   <span style={{
-                    fontSize:   '0.81rem',
-                    color:      '#94A3B8',
+                    fontSize:  '0.81rem',
+                    color:     '#94A3B8',
                     lineHeight: 1.45,
                     flex:       1,
                     minWidth:   0,
@@ -302,22 +296,22 @@ export default function StickyNotes({
                 <button
                   onClick={() => handleDelete(note.id)}
                   style={{
-                    width:      20,
-                    height:     20,
-                    borderRadius: 4,
-                    border:     'none',
-                    background: 'transparent',
-                    color:      '#475569',
-                    cursor:     'pointer',
-                    display:    'flex',
-                    alignItems: 'center',
+                    width:          20,
+                    height:         20,
+                    borderRadius:   4,
+                    border:         'none',
+                    background:     'transparent',
+                    color:          '#475569',
+                    cursor:         'pointer',
+                    display:        'flex',
+                    alignItems:     'center',
                     justifyContent: 'center',
-                    flexShrink: 0,
-                    padding:    0,
-                    transition: 'all 0.12s ease',
+                    flexShrink:     0,
+                    padding:        0,
+                    transition:     'all 0.12s ease',
                   }}
-                  onMouseEnter={e => { e.currentTarget.style.color='#EF4444'; e.currentTarget.style.background='rgba(239,68,68,0.1)'; }}
-                  onMouseLeave={e => { e.currentTarget.style.color='#475569'; e.currentTarget.style.background='transparent'; }}
+                  onMouseEnter={e => { e.currentTarget.style.color = '#EF4444'; e.currentTarget.style.background = 'rgba(239,68,68,0.1)'; }}
+                  onMouseLeave={e => { e.currentTarget.style.color = '#475569'; e.currentTarget.style.background = 'transparent'; }}
                 >
                   <CloseIcon />
                 </button>
@@ -327,7 +321,6 @@ export default function StickyNotes({
         </div>
       )}
 
-      {/* Scrollbar styling injected once */}
       <style>{`
         .sn-list::-webkit-scrollbar { width: 3px; }
         .sn-list::-webkit-scrollbar-track { background: transparent; }
@@ -339,17 +332,19 @@ export default function StickyNotes({
 
 /* ─── Shared inline style objects ──────────────────────────── */
 const ctrlBtnStyle = {
-  width:        26,
-  height:       26,
-  borderRadius: 7,
-  border:       '1px solid rgba(148,163,184,0.15)',
-  background:   '#1C2640',
-  color:        '#64748B',
-  cursor:       'pointer',
-  display:      'flex',
-  alignItems:   'center',
+  width:          26,
+  height:         26,
+  borderRadius:   7,
+  border:         '1px solid rgba(148,163,184,0.15)',
+  /* Double border on control buttons */
+  boxShadow:      '0 0 0 2px rgba(10,15,26,0.95), 0 0 0 3px rgba(148,163,184,0.07)',
+  background:     '#1C2640',
+  color:          '#64748B',
+  cursor:         'pointer',
+  display:        'flex',
+  alignItems:     'center',
   justifyContent: 'center',
-  transition:   'all 0.12s ease',
+  transition:     'all 0.12s ease',
 };
 
 const noteInputStyle = {
@@ -357,6 +352,8 @@ const noteInputStyle = {
   padding:      '0.52rem 0.75rem',
   borderRadius: 10,
   border:       '1px solid rgba(148,163,184,0.18)',
+  /* Double border on input */
+  boxShadow:    '0 0 0 3px rgba(10,15,26,0.95), 0 0 0 4px rgba(148,163,184,0.06)',
   background:   '#1C2640',
   color:        '#F1F5F9',
   fontFamily:   "'Inter', sans-serif",
@@ -368,6 +365,8 @@ const tagSelectStyle = {
   padding:      '0.52rem 0.45rem',
   borderRadius: 10,
   border:       '1px solid rgba(148,163,184,0.18)',
+  /* Double border on select */
+  boxShadow:    '0 0 0 3px rgba(10,15,26,0.95), 0 0 0 4px rgba(148,163,184,0.06)',
   background:   '#1C2640',
   color:        '#94A3B8',
   fontFamily:   "'Inter', sans-serif",
@@ -384,5 +383,7 @@ const noteItemStyle = {
   padding:        '0.52rem 0.65rem',
   borderRadius:   8,
   background:     '#1C2640',
-  border:         '1px solid rgba(148,163,184,0.1)',
+  /* Double border on each note item */
+  border:         '1px solid rgba(148,163,184,0.12)',
+  boxShadow:      '0 0 0 3px rgba(10,15,26,0.95), 0 0 0 4px rgba(148,163,184,0.05)',
 };

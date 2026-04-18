@@ -328,25 +328,46 @@ const CreatorDashboard = () => {
             <h1>Creator Hub</h1>
             <p>Welcome back, {user?.displayName || 'Creator'}! Track your characters' performance.</p>
           </div>
-          <div className="header-actions">
-            <button onClick={loadDashboardData} className="refresh-button">
-              <Zap size={16} />
-              Refresh Data
-            </button>
-          </div>
-          <div className="mode-toggle-bar">
+
+          {/* ── Unified control pill: Refresh | Creator | Business ── */}
+          <div className="hub-control-bar">
+
             <button
-              className={`mode-toggle-btn${hubMode === 'creator' ? ' active' : ''}`}
+              className="hub-seg hub-seg-refresh"
+              onClick={loadDashboardData}
+              title="Refresh dashboard data"
+            >
+              <Zap size={13} />
+              Refresh
+            </button>
+
+            <div className="hub-control-divider" />
+
+            <button
+              className={`hub-seg${hubMode === 'creator' ? ' hub-seg--active' : ''}`}
               onClick={() => setHubMode('creator')}
             >
+              <svg width="13" height="13" viewBox="0 0 24 24" fill="none"
+                stroke="currentColor" strokeWidth="2"
+                strokeLinecap="round" strokeLinejoin="round">
+                <path d="M12 2l3 6.5 7 1-5 5 1.18 7L12 18l-6.18 3.5L7 14.5 2 9.5l7-1z"/>
+              </svg>
               Creator
             </button>
+
             <button
-              className={`mode-toggle-btn${hubMode === 'business' ? ' active' : ''}`}
+              className={`hub-seg${hubMode === 'business' ? ' hub-seg--active' : ''}`}
               onClick={() => setHubMode('business')}
             >
+              <svg width="13" height="13" viewBox="0 0 24 24" fill="none"
+                stroke="currentColor" strokeWidth="2"
+                strokeLinecap="round" strokeLinejoin="round">
+                <rect x="2" y="7" width="20" height="15" rx="2"/>
+                <path d="M16 7V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v2"/>
+              </svg>
               Business
             </button>
+
           </div>
         </header>
 
