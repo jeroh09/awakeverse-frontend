@@ -20,7 +20,7 @@
 .dashboard-header {
   display: flex;
   justify-content: space-between;
-  align-items: flex-start;
+  align-items: center;
   margin-bottom: 2rem;
   padding: 1.5rem;
   border-radius: 20px;
@@ -50,36 +50,95 @@
   font-weight: 400;
 }
 
-.header-actions {
+/* ─────────────────────────────────────────────────────────────────────
+   STEP C — ADD these new classes
+   Paste at line 84 (right after where refresh-button:hover ended,
+   before the ========= SECTION HEADERS ========= comment)
+   ───────────────────────────────────────────────────────────────────── */
+ 
+/* ========= HUB CONTROL BAR ========= */
+/*
+  Unified pill: Refresh | ── | Creator | Business
+  Double-border: inner ring → dark gap → outer glow → depth
+*/
+.hub-control-bar {
   display: flex;
-  gap: 0.75rem;
+  align-items: center;
+  flex-shrink: 0;
+  border: 1px solid rgba(99, 102, 241, 0.32);
+  box-shadow:
+    0 0 0 3px rgba(10, 15, 26, 0.95),
+    0 0 0 4px rgba(99, 102, 241, 0.18),
+    0 8px 28px rgba(0, 0, 0, 0.5);
+  border-radius: 9999px;
+  background: #141B2E;
+  padding: 4px;
+  gap: 2px;
 }
-
-.refresh-button {
+ 
+.hub-control-divider {
+  width: 1px;
+  height: 22px;
+  background: rgba(148, 163, 184, 0.14);
+  flex-shrink: 0;
+  margin: 0 2px;
+}
+ 
+.hub-seg {
   display: inline-flex;
   align-items: center;
-  gap: 0.5rem;
-  padding: 0.75rem 1.25rem;
-  border-radius: 999px;
-  border: 1px solid var(--border-medium, rgba(148, 163, 184, 0.4));
-  background: rgba(15, 23, 42, 0.9);
-  color: var(--text-secondary, #CBD5F5);
+  gap: 0.38rem;
+  padding: 0.45rem 1rem;
+  border-radius: 9999px;
+  border: none;
+  background: transparent;
+  color: var(--text-secondary, #64748B);
   font-family: var(--font-body, 'Inter', system-ui, sans-serif);
-  font-size: 0.9rem;
+  font-size: 0.82rem;
   font-weight: 500;
   cursor: pointer;
-  transition: all 0.22s cubic-bezier(0.4, 0, 0.2, 1);
-  box-shadow: 0 2px 8px rgba(15, 23, 42, 0.6);
+  transition: color 0.15s ease, background 0.15s ease;
+  white-space: nowrap;
 }
-
-.refresh-button:hover {
-  border-color: var(--accent-primary, #6366F1);
-  background: rgba(15, 23, 42, 0.95);
-  color: var(--text-primary, #F9FAFB);
-  box-shadow: 
-    0 4px 16px rgba(15, 23, 42, 0.8),
-    0 0 20px rgba(99, 102, 241, 0.3);
-  transform: translateY(-1px);
+ 
+.hub-seg:hover {
+  color: #94A3B8;
+}
+ 
+/* Refresh segment — no active state */
+.hub-seg-refresh:hover {
+  color: var(--text-primary, #F1F5F9);
+  background: rgba(148, 163, 184, 0.07);
+}
+ 
+/* Active mode segment */
+.hub-seg--active {
+  color: #F1F5F9;
+  background: #6366F1;
+  box-shadow:
+    inset 0 0 0 1px rgba(129, 140, 248, 0.28),
+    0 0 12px rgba(99, 102, 241, 0.22);
+}
+ 
+.hub-seg--active:hover {
+  background: #818CF8;
+}
+ 
+@media (max-width: 540px) {
+  .dashboard-header {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 1rem;
+  }
+ 
+  .hub-control-bar {
+    align-self: flex-start;
+  }
+ 
+  .hub-seg {
+    padding: 0.42rem 0.75rem;
+    font-size: 0.78rem;
+  }
 }
 
 /* ========= SECTION HEADERS ========= */
