@@ -516,6 +516,70 @@ class PaymentRouter {
       triggerSource
     });
   }
+
+// ============================================================================
+// PATCH: Add this static method to PaymentRouter class in PaymentRouter.js
+// Place it after the existing quickUpgrade() method (~line 518)
+// ============================================================================
+
+  /**
+   * Verify a payment session after returning from provider checkout.
+   * Routes to the correct provider based on the `provider` argument.
+   * 
+   * PaymentSuccess.jsx should call this instead of raw fetch.
+   * 
+   * @param {string} sessionId - Stripe session ID or PayPal subscription ID
+   * @param {string} [provider='stripe'] - 'stripe' or 'paypal'
+   * @returns {Promise<Object>} { success, status, completed, tierName, ... } or error shape
+   */
+  static async verifySession(sessionId, provider = 'stripe') {
+    try {
+      // DEFENSIVE: require a session ID
+      if (!sessionId) {
+        logError('verifySession called without sessionId');
+        return createErrorResponse(ERROR_TYPES.API_ERROR, {
+          reason: 'Missing session ID'
+        });
+      }
+
+      // DEFENSIVE: normalise provider string
+      const normalisedProvider = (provider || 'stripe').toLowerCase();
+
+      if (normalisedProvider === 'stripe') {
+        const stripeInstance = getProvider('stripe');
+        return await stripeInstance.getSessionStatus(sessionId);
+      }
+
+      // PayPal — placeholder until backend is ready
+      if (normalisedProvider === 'paypal') {
+        warn('verifySession: PayPal verification not yet implemented, returning safe fallback');
+        return createErrorResponse(ERROR_TYPES.PROVIDER_UNAVAILABLE, {
+          provider: 'paypal',
+          reason: 'PayPal session verification not yet implemented'
+        });
+      }
+
+      // Unknown provider — fail clearly rather than silently
+      logError(`verifySession: unknown provider "${normalisedProvider}"`);
+      return createErrorResponse(ERROR_TYPES.PROVIDER_UNAVAILABLE, {
+        provider: normalisedProvider,
+        reason: 'Unknown payment provider'
+      });
+
+    } catch (error) {
+      logError('verifySession: unexpected error', error);
+      return createErrorResponse(ERROR_TYPES.API_ERROR, {
+        originalError: error.message
+      });
+    }
+  }
+
+// ============================================================================
+// END PATCH
+// No other changes to PaymentRouter.js are needed.
+// The existing getProvider(), log(), warn(), logError(), createErrorResponse()
+// helpers are already in scope — this method uses all of them.
+// ============================================================================
   
   /**
    * Get current environment configuration
