@@ -226,3 +226,20 @@
     display: none;
   }
 }
+/* ================================================
+   Add these rules to src/landing/styles/footer.css
+   ================================================ */
+ 
+/* Enterprise footer link — indigo accent */
+.footer-link-enterprise {
+  color: var(--accent-primary) !important;
+  font-weight: var(--font-weight-medium);
+}
+ 
+.footer-link-enterprise:hover {
+  color: var(--accent-hover) !important;
+}
+ 
+.footer-link-enterprise::after {
+  background: var(--accent-primary);
+}

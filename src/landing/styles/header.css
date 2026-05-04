@@ -364,3 +364,21 @@ body.mobile-menu-open {
 .skip-link:focus {
   top: var(--space-md);
 }
+/* ================================================
+   Add these rules to src/landing/styles/header.css
+   ================================================ */
+ 
+/* Enterprise nav link — subtle indigo highlight */
+.nav-link-enterprise {
+  color: var(--accent-primary) !important;
+  font-weight: var(--font-weight-semibold);
+}
+ 
+.nav-link-enterprise:hover {
+  color: var(--accent-hover) !important;
+}
+ 
+.nav-link-enterprise::after {
+  background: var(--accent-primary);
+}
+ 
