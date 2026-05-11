@@ -31,8 +31,9 @@
     linear-gradient(90deg, rgba(99, 102, 241, 0.12) 1px, transparent 1px);
   background-size: 28px 28px;
   background-position: 0 0;
-  -webkit-mask-image: linear-gradient(to bottom, black 0%, black 35%, transparent 75%);
-  mask-image:         linear-gradient(to bottom, black 0%, black 35%, transparent 75%);
+  /* replace with */
+-webkit-mask-image: linear-gradient(to bottom, black 0%, black 10%, transparent 20%);
+mask-image:         linear-gradient(to bottom, black 0%, black 10%, transparent 20%);
 }
 
 /* Desktop edge vignette — on ::after so it's above the grid but below content */

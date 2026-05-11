@@ -1334,7 +1334,7 @@ export default function ChatWindow({
           emotionIntensity={emotionIntensity}
           participants={participants}
           onBack={onBack}
-          onCharacterSelect={handleCharacterSelect}
+          onCharacterSelect={onCharacterSelect}   
           inviteSuggestions={getInviteSuggestions()}
           isMobile={isMobile}
           enabled={true}
