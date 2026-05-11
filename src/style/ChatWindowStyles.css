@@ -481,17 +481,36 @@
    =================================================================== */
 
 /* ── Dot grid background ── */
-/* Pure CSS, zero JS, zero repaints. One radial-gradient stamp tiled. */
+/* ===================================================================
+   GRID v2 — square line grid, fades to canvas colour by input area.
+   Replace the radial-gradient block in ChatWindowStyles.css with this.
+   =================================================================== */
+
 .chat-panel-container {
   background-color: #0A0F1A;
-  background-image: radial-gradient(
-    circle,
-    rgba(99, 102, 241, 0.18) 1px,
-    transparent 1px
-  );
-  background-size: 24px 24px;
+
+  /* Two overlapping linear-gradients form a square grid of lines */
+  background-image:
+    linear-gradient(rgba(99, 102, 241, 0.10) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(99, 102, 241, 0.10) 1px, transparent 1px);
+  background-size: 28px 28px;
   background-position: 0 0;
-  background-attachment: local; /* scrolls with content, not viewport */
+
+  /* Mask: grid fully visible at top, fades out before input area.
+     The canvas colour (#0A0F1A) shows through transparently —
+     so the bottom of the chat reads as plain dark blue, no grid.  */
+  -webkit-mask-image: linear-gradient(
+    to bottom,
+    black 0%,
+    black 40%,
+    transparent 82%
+  );
+  mask-image: linear-gradient(
+    to bottom,
+    black 0%,
+    black 40%,
+    transparent 82%
+  );
 }
 
 /* ── Full-height layout that survives the mobile virtual keyboard ── */
@@ -805,45 +824,4 @@
   border: none !important;
   box-shadow: none !important;
   backdrop-filter: none !important;
-}
-/* ===================================================================
-   LAYOUT FIX — append to ChatWindowStyles.css
-   Fixes: feed panel stacking below chat instead of beside it,
-          and scroll button landing on feed panel.
-   =================================================================== */
-
-/* ── Force row layout on the chat container ──────────────────────────
-   styles.css sets flex-direction: column on .chat-panel-container.
-   This must come AFTER that import to win.                           */
-.chat-panel-container {
-  flex-direction: row !important;
-  height: 100dvh !important;
-  overflow: hidden !important;
-}
-
-/* ── Remove the border-radius boxing the outer chat-window ───────────
-   styles.css line 163: border-radius: 10px creates a visual box gap
-   between the rounded container and the feed panel edge.             */
-.chat-window {
-  border-radius: 0 !important;
-  min-height: 0 !important;   /* was 100vh — fights dvh on the container */
-}
-
-/* ── Inner chat window fills remaining space beside feed panel ───────*/
-.chat-panel-container > .chat-window {
-  flex: 1 !important;
-  min-width: 0 !important;
-  overflow: hidden !important;
-}
-
-/* ── Give the 70% content width space to the feed instead ───────────
-   styles.css was centering .chat-history and .chat-input at 70%,
-   which left blank margins inside the chat column. Now the feed
-   panel IS the boundary — content should use the full column width. */
-@media (min-width: 601px) {
-  .chat-window .chat-history,
-  .chat-window .chat-input {
-    width: 100% !important;
-    margin: 0 !important;
-  }
 }
