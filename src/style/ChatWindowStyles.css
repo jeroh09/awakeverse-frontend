@@ -1,12 +1,113 @@
 /* ===================================================================
-   CHAT WINDOW STYLES - DEDICATED MODULE
-   Location: src/style/ChatWindowStyles.css
-   Import this in ChatWindow.js
+   CHAT WINDOW STYLES — clean consolidated build
+   src/style/ChatWindowStyles.css
    =================================================================== */
 
-/* =======================
-   MESSAGE LAYOUT & SPACING
-   ======================= */
+
+/* ══════════════════════════════════════════════════════════════════
+   1. LAYOUT — chat-panel-container, chat-window, history, input
+══════════════════════════════════════════════════════════════════ */
+
+.chat-panel-container {
+  background-color: #0A0F1A;
+  position: relative;
+  height: 100vh;
+  height: 100dvh;
+  display: flex;
+  flex-direction: row;
+  overflow: hidden;
+}
+
+/* Square grid on pseudo-element — mask only fades the grid,
+   never touches child content or the input area             */
+.chat-panel-container::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+  pointer-events: none;
+  background-image:
+    linear-gradient(rgba(99, 102, 241, 0.12) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(99, 102, 241, 0.12) 1px, transparent 1px);
+  background-size: 28px 28px;
+  background-position: 0 0;
+  -webkit-mask-image: linear-gradient(to bottom, black 0%, black 35%, transparent 75%);
+  mask-image:         linear-gradient(to bottom, black 0%, black 35%, transparent 75%);
+}
+
+/* Desktop edge vignette — on ::after so it's above the grid but below content */
+@media (min-width: 769px) {
+  .chat-panel-container::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: radial-gradient(ellipse at center, transparent 55%, rgba(10, 15, 26, 0.3) 100%);
+    pointer-events: none;
+    z-index: 0;
+  }
+}
+
+/* Inner chat column */
+.chat-panel-container > .chat-window {
+  position: relative;
+  z-index: 1;
+  flex: 1;
+  min-width: 0;
+}
+
+/* Feed panel sits above grid too */
+.chat-panel-container > .chat-feed-panel {
+  position: relative;
+  z-index: 1;
+}
+
+.chat-window {
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  background-color: transparent !important;
+  background-image: none !important;
+}
+
+/* Message list — the only scrolling region */
+.chat-history {
+  flex: 1;
+  overflow-y: auto;
+  overflow-x: hidden;
+  -webkit-overflow-scrolling: touch;
+  padding-top: 100px;
+  scrollbar-width: thin;
+  scrollbar-color: #6366F1 rgba(10, 10, 30, 0.4);
+}
+
+.chat-history::-webkit-scrollbar       { width: 8px; }
+.chat-history::-webkit-scrollbar-track { background: rgba(10,10,30,0.4); border-left: 1px solid #6366F1; }
+.chat-history::-webkit-scrollbar-thumb { background: #6366F1; border-radius: 4px; }
+
+/* Input footer — always visible, never squished */
+.chat-input {
+  flex-shrink: 0;
+  padding-bottom: env(safe-area-inset-bottom, 0px);
+}
+
+
+/* ══════════════════════════════════════════════════════════════════
+   2. FLOATING AVATAR — z-index only, never override position:fixed
+══════════════════════════════════════════════════════════════════ */
+
+.floating-avatar-container {
+  z-index: 50;
+  pointer-events: none;
+}
+.floating-avatar-wrapper {
+  pointer-events: all;
+}
+
+
+/* ══════════════════════════════════════════════════════════════════
+   3. MESSAGE LAYOUT
+══════════════════════════════════════════════════════════════════ */
+
 .user-message,
 .ai-message {
   display: flex;
@@ -22,78 +123,69 @@
   clear: both;
 }
 
-/* Desktop layout */
 @media (min-width: 601px) {
-  .user-message,
+  .user-message {
+    max-width: 68%;
+    width: fit-content;
+    flex-direction: row-reverse;
+    margin-left: auto;
+    margin-right: 0;
+  }
   .ai-message {
     max-width: 70%;
-  }
-  
-  .user-message {
-    flex-direction: row-reverse;
-    margin-left: auto !important;  /* Add this */
-    margin-right: 0 !important;    /* Add this */  
-  }
-  
-  .ai-message {
     flex-direction: row;
     margin-right: auto;
     margin-left: 0;
   }
 }
 
-/* Mobile layout */
 @media (max-width: 600px) {
   .user-message,
   .ai-message {
-    max-width: 92%;
     padding: 10px 14px;
     border-radius: 14px;
     margin-bottom: 1.5rem;
   }
-  
   .user-message {
+    max-width: 82%;
+    width: fit-content;
     flex-direction: row-reverse;
+    margin-left: auto;
+    margin-right: 0;
+    padding: 8px 12px;
+    border-radius: 16px 4px 16px 16px;
   }
-  
   .ai-message {
+    max-width: 92%;
     flex-direction: row;
   }
 }
 
-/* =======================
-   USER MESSAGE - INDIGO BUBBLE
-   ======================= */
+
+/* ══════════════════════════════════════════════════════════════════
+   4. USER BUBBLE — flat indigo fill, no chrome
+══════════════════════════════════════════════════════════════════ */
+
 .user-message {
-  background: linear-gradient(
-    135deg,
-    rgba(99, 102, 241, 0.15) 0%,
-    rgba(129, 140, 248, 0.12) 100%
-  ) !important;
-  backdrop-filter: blur(12px) !important;
-  -webkit-backdrop-filter: blur(12px) !important;
-  border: 1px solid rgba(99, 102, 241, 0.3) !important;
-  box-shadow: 
-    0 2px 8px rgba(99, 102, 241, 0.15),
-    inset 0 1px 0 rgba(255, 255, 255, 0.05) !important;
+  background: rgba(99, 102, 241, 0.11) !important;
+  backdrop-filter: none !important;
+  -webkit-backdrop-filter: none !important;
+  border: none !important;
+  box-shadow: none !important;
+  border-radius: 18px 4px 18px 18px !important;
 }
 
 .user-message:hover {
-  background: linear-gradient(
-    135deg,
-    rgba(99, 102, 241, 0.2) 0%,
-    rgba(129, 140, 248, 0.16) 100%
-  ) !important;
-  border-color: rgba(99, 102, 241, 0.4) !important;
-  box-shadow: 
-    0 4px 12px rgba(99, 102, 241, 0.2),
-    inset 0 1px 0 rgba(255, 255, 255, 0.08) !important;
-  transition: all 0.2s ease;
+  background: rgba(99, 102, 241, 0.16) !important;
+  transform: none !important;
+  box-shadow: none !important;
 }
 
-/* =======================
-   AI MESSAGE - FLAT (NO BUBBLE)
-   ======================= */
+
+/* ══════════════════════════════════════════════════════════════════
+   5. AI MESSAGE — no bubble
+══════════════════════════════════════════════════════════════════ */
+
 .ai-message {
   background: transparent !important;
   backdrop-filter: none !important;
@@ -102,9 +194,11 @@
   padding: 8px 12px !important;
 }
 
-/* =======================
-   MESSAGE ICONS (AVATARS)
-   ======================= */
+
+/* ══════════════════════════════════════════════════════════════════
+   6. MESSAGE ICONS (AVATARS)
+══════════════════════════════════════════════════════════════════ */
+
 .message-icon {
   width: 36px;
   height: 36px;
@@ -127,9 +221,15 @@
   border-color: rgba(148, 163, 184, 0.3);
 }
 
-/* =======================
-   MESSAGE CONTENT
-   ======================= */
+@media (max-width: 768px) {
+  .message-icon { width: 32px; height: 32px; }
+}
+
+
+/* ══════════════════════════════════════════════════════════════════
+   7. MESSAGE CONTENT & TYPOGRAPHY
+══════════════════════════════════════════════════════════════════ */
+
 .message-content {
   flex: 1;
   position: relative;
@@ -137,27 +237,22 @@
   word-break: break-word;
   overflow-wrap: break-word;
   min-width: 0;
-  background: transparent !important; /* ✅ Force no background on content */
-  border: none !important; /* ✅ Force no border on content */
-  box-shadow: none !important; /* ✅ Force no shadow on content */
-  backdrop-filter: none !important; /* ✅ Force no blur on content */
+  background: transparent !important;
+  border: none !important;
+  box-shadow: none !important;
+  backdrop-filter: none !important;
 }
 
-/* User message text */
 .user-message .message-content {
-  color: var(--text-primary, #F1F5F9) !important;
+  color: #F1F5F9 !important;
   font-family: var(--font-body, 'Inter', system-ui, sans-serif) !important;
   font-size: 0.95rem !important;
   font-weight: 450 !important;
   line-height: 1.6 !important;
   text-shadow: none !important;
   letter-spacing: 0.01em;
-  background: transparent !important; /* ✅ No inner bubble */
-  border: none !important; /* ✅ No inner bubble */
-  box-shadow: none !important; /* ✅ No inner bubble */
 }
 
-/* AI message text */
 .ai-message .message-content {
   color: var(--text-primary, #F1F5F9) !important;
   font-family: var(--font-body, 'Inter', system-ui, sans-serif) !important;
@@ -168,9 +263,17 @@
   letter-spacing: 0.01em;
 }
 
-/* =======================
-   MESSAGE LABELS (CHARACTER NAMES)
-   ======================= */
+@media (max-width: 768px) {
+  .message-content { font-size: 0.9rem !important; }
+  .user-message .message-content {
+    max-width: 100% !important;
+    width: auto !important;
+    flex: none !important;
+    min-width: 0 !important;
+  }
+}
+
+/* Character name label */
 .message-content strong {
   display: block !important;
   margin-bottom: 0.5rem;
@@ -180,37 +283,22 @@
   letter-spacing: 0.02em;
 }
 
-.ai-message .message-content strong {
-  color: var(--accent-primary, #6366F1) !important;
-}
+.ai-message .message-content strong { color: var(--accent-primary, #6366F1) !important; }
+.user-message .message-content strong { display: none !important; }
 
-.user-message .message-content strong {
-  display: none !important; /* ✅ Hide "You:" label - avatar is enough */
-}
 
-/* =======================
-   MARKDOWN RENDERING
-   ======================= */
-.message-content p {
-  margin: 0 0 0.75em 0;
-  font-family: inherit;
-  font-size: inherit;
-  line-height: inherit;
-}
+/* ══════════════════════════════════════════════════════════════════
+   8. MARKDOWN RENDERING
+══════════════════════════════════════════════════════════════════ */
 
-.message-content p:last-child {
-  margin-bottom: 0;
-}
-
+.message-content p              { margin: 0 0 0.75em 0; font-family: inherit; font-size: inherit; line-height: inherit; }
+.message-content p:last-child   { margin-bottom: 0; }
 .message-content ul,
-.message-content ol {
-  margin: 0.5em 0;
-  padding-left: 1.5em;
-}
+.message-content ol             { margin: 0.5em 0; padding-left: 1.5em; }
+.message-content li             { margin-bottom: 0.25em; }
 
-.message-content li {
-  margin-bottom: 0.25em;
-}
+.ai-message .message-content p          { margin-bottom: 1em !important; }
+.ai-message .message-content p:last-child { margin-bottom: 0 !important; }
 
 .message-content code {
   background: rgba(99, 102, 241, 0.1);
@@ -230,28 +318,17 @@
   margin: 0.75em 0;
 }
 
-.message-content pre code {
-  background: transparent;
-  border: none;
-  padding: 0;
-}
+.message-content pre code { background: transparent; border: none; padding: 0; }
 
-/* Better paragraph spacing in AI messages */
-.ai-message .message-content p {
-  margin-bottom: 1em !important;  /* Increased from 0.75em */
-}
 
-.ai-message .message-content p:last-child {
-  margin-bottom: 0 !important;  /* No extra space after last paragraph */
-}
+/* ══════════════════════════════════════════════════════════════════
+   9. CHAT TEXTAREA
+══════════════════════════════════════════════════════════════════ */
 
-/* =======================
-   CHAT INPUT AREA - INDIGO BORDER ONLY
-   ======================= */
 .chat-textarea {
   flex: 1;
   background: rgba(40, 30, 70, 0.6) !important;
-  border: 1px solid rgba(99, 102, 241, 0.8) !important; /* ✅ Indigo border */
+  border: 1px solid rgba(99, 102, 241, 0.8) !important;
   color: gold !important;
   border-radius: 12px !important;
   padding: 10px !important;
@@ -263,7 +340,7 @@
   font-size: 0.95rem !important;
   line-height: 1.5 !important;
   box-sizing: border-box;
-  transition: all 0.2s ease;
+  transition: border-color 0.2s ease;
 }
 
 .chat-textarea:focus {
@@ -272,18 +349,21 @@
   box-shadow: 0 0 0 2px rgba(99, 102, 241, 0.2) !important;
 }
 
-.chat-textarea::placeholder {
-  color: rgba(255, 215, 0, 0.7) !important;
+.chat-textarea::placeholder { color: rgba(255, 215, 0, 0.7) !important; }
+
+@media (max-width: 768px) {
+  .chat-textarea {
+    min-height: 44px !important;
+    font-size: 16px !important; /* prevents iOS auto-zoom */
+  }
 }
 
-/* =======================
-   THINKING INDICATOR
-   ======================= */
-.typing {
-  display: inline-flex;
-  gap: 6px;
-  align-items: center;
-}
+
+/* ══════════════════════════════════════════════════════════════════
+   10. THINKING INDICATOR
+══════════════════════════════════════════════════════════════════ */
+
+.typing { display: inline-flex; gap: 6px; align-items: center; }
 
 .dot {
   width: 7px;
@@ -293,29 +373,19 @@
   opacity: 0.3;
   animation: pulse 1.2s infinite ease-in-out;
 }
-
-.dot:nth-child(2) {
-  animation-delay: 0.2s;
-}
-
-.dot:nth-child(3) {
-  animation-delay: 0.4s;
-}
+.dot:nth-child(2) { animation-delay: 0.2s; }
+.dot:nth-child(3) { animation-delay: 0.4s; }
 
 @keyframes pulse {
-  0%, 100% { 
-    opacity: 0.3;
-    transform: scale(1);
-  }
-  50% { 
-    opacity: 1;
-    transform: scale(1.2);
-  }
+  0%, 100% { opacity: 0.3; transform: scale(1); }
+  50%       { opacity: 1;   transform: scale(1.2); }
 }
 
-/* =======================
-   EDIT INTERFACE
-   ======================= */
+
+/* ══════════════════════════════════════════════════════════════════
+   11. EDIT INTERFACE
+══════════════════════════════════════════════════════════════════ */
+
 .edit-textarea {
   background: rgba(20, 27, 46, 0.9) !important;
   color: var(--text-primary, #F1F5F9) !important;
@@ -343,7 +413,6 @@
   align-items: center;
 }
 
-/* Hide edit button until hover */
 .user-message .edit-button {
   opacity: 0;
   visibility: hidden;
@@ -352,19 +421,17 @@
   top: 8px;
   right: 8px;
 }
+.user-message:hover .edit-button { opacity: 1; visibility: visible; }
 
-.user-message:hover .edit-button {
-  opacity: 1;
-  visibility: visible;
-}
 
-/* =======================
-   BUTTONS - INDIGO THEME
-   ======================= */
+/* ══════════════════════════════════════════════════════════════════
+   12. BUTTONS
+══════════════════════════════════════════════════════════════════ */
+
 .chat-window button {
   font-family: var(--font-body, 'Inter', system-ui, sans-serif) !important;
   cursor: pointer;
-  transition: all 0.2s ease;
+  transition: background 0.2s ease, border-color 0.2s ease, transform 0.15s ease;
 }
 
 .chat-window .chat-header button,
@@ -399,18 +466,12 @@
   margin-right: 0.5rem;
   box-shadow: 0 2px 8px rgba(99, 102, 241, 0.3);
 }
-
 .chat-window .send-button:hover {
   background: linear-gradient(135deg, #818CF8, #6366F1);
   box-shadow: 0 4px 16px rgba(99, 102, 241, 0.4);
   transform: translateY(-2px);
 }
-
-.chat-window .send-button:disabled {
-  opacity: 0.5;
-  cursor: not-allowed;
-  transform: none;
-}
+.chat-window .send-button:disabled { opacity: 0.5; cursor: not-allowed; transform: none; }
 
 .chat-window .cancel-button {
   background: rgba(20, 27, 46, 0.8);
@@ -421,15 +482,16 @@
   font-weight: 600;
   font-size: 0.9rem;
 }
-
 .chat-window .cancel-button:hover {
   background: rgba(20, 27, 46, 0.95);
   border-color: rgba(148, 163, 184, 0.5);
 }
 
-/* =======================
-   ERROR STATES
-   ======================= */
+
+/* ══════════════════════════════════════════════════════════════════
+   13. ERROR STATES
+══════════════════════════════════════════════════════════════════ */
+
 .error-text {
   color: var(--semantic-error, #EF4444);
   font-size: 0.9rem;
@@ -440,388 +502,43 @@
   border-radius: 8px;
 }
 
-/* =======================
-   RESPONSIVE
-   ======================= */
+
+/* ══════════════════════════════════════════════════════════════════
+   14. MOBILE — one consolidated block
+══════════════════════════════════════════════════════════════════ */
+
 @media (max-width: 768px) {
-  .message-icon {
-    width: 32px;
-    height: 32px;
-  }
-  
-  .message-content {
-    font-size: 0.9rem !important;
-  }
-  
-  .chat-textarea {
-    min-height: 44px !important;
-    font-size: 0.9rem !important;
+  /* Layout: stack vertically, feed hidden */
+  .chat-panel-container      { flex-direction: column; }
+  .chat-feed-panel           { display: none !important; }
+  .floating-character-hub    { display: none !important; }
+  .left-rail-hub             { display: none !important; }
+  [class*="PrestigeHub"],
+  [class*="prestige-hub"]    { display: none !important; }
+
+  /* Avatar sits closer to top on smaller screens */
+  .floating-avatar-container { top: 0.75rem; }
+
+  /* Less top padding when avatar is smaller */
+  .chat-history.with-floating-avatar { padding-top: 80px; }
+
+  /* Input safe area */
+  .chat-input {
+    padding: 8px 10px;
+    padding-bottom: max(8px, env(safe-area-inset-bottom, 8px));
   }
 }
 
-/* =======================
-   ACCESSIBILITY
-   ======================= */
-::selection {
-  background: rgba(99, 102, 241, 0.3);
-  color: white;
-}
+
+/* ══════════════════════════════════════════════════════════════════
+   15. ACCESSIBILITY
+══════════════════════════════════════════════════════════════════ */
+
+::selection { background: rgba(99, 102, 241, 0.3); color: white; }
 
 @media (prefers-reduced-motion: reduce) {
   .user-message,
   .user-message:hover,
-  .dot {
-    animation: none !important;
-    transition: none !important;
-  }
-}
-/* ===================================================================
-   CHAT WINDOW — DOT GRID BACKGROUND + MOBILE KEYBOARD SAFETY
-   Add these rules to ChatWindowStyles.css or import separately.
-   =================================================================== */
-
-/* ── Dot grid background ── */
-/* ===================================================================
-   GRID v2 — square line grid, fades to canvas colour by input area.
-   Replace the radial-gradient block in ChatWindowStyles.css with this.
-   =================================================================== */
-
-.chat-panel-container {
-  background-color: #0A0F1A;
-
-  /* Two overlapping linear-gradients form a square grid of lines */
-  background-image:
-    linear-gradient(rgba(99, 102, 241, 0.10) 1px, transparent 1px),
-    linear-gradient(90deg, rgba(99, 102, 241, 0.10) 1px, transparent 1px);
-  background-size: 28px 28px;
-  background-position: 0 0;
-
-  /* Mask: grid fully visible at top, fades out before input area.
-     The canvas colour (#0A0F1A) shows through transparently —
-     so the bottom of the chat reads as plain dark blue, no grid.  */
-  -webkit-mask-image: linear-gradient(
-    to bottom,
-    black 0%,
-    black 40%,
-    transparent 82%
-  );
-  mask-image: linear-gradient(
-    to bottom,
-    black 0%,
-    black 40%,
-    transparent 82%
-  );
-}
-
-/* ── Full-height layout that survives the mobile virtual keyboard ── */
-/*
-   Problem: when the soft keyboard opens on mobile, 100vh stays fixed
-   at the original viewport height — the page overflows or the input
-   slides under the keyboard.
-
-   Fix: use 100dvh (dynamic viewport height) which shrinks when the
-   keyboard is up. Fall back to 100vh for browsers that don't support dvh.
-   The flex column pushes the input to the very bottom, and only the
-   message list (flex:1 + overflow-y:auto) scrolls — the floating avatar
-   and header never leave the screen.
-*/
-.chat-panel-container {
-  height: 100vh;           /* fallback */
-  height: 100dvh;          /* shrinks when keyboard opens */
-  display: flex;
-  flex-direction: row;     /* left-rail | chat | feed */
-  overflow: hidden;        /* nothing escapes */
-  position: relative;
-}
-
-.chat-window {
-  display: flex;
-  flex-direction: column;
-  flex: 1;
-  min-width: 0;
-  overflow: hidden;        /* children scroll, not the window */
-  position: relative;
-}
-
-/* Message list — the ONLY scrollable region */
-.chat-history {
-  flex: 1;
-  overflow-y: auto;
-  overflow-x: hidden;
-  -webkit-overflow-scrolling: touch; /* momentum scroll on iOS */
-  /* top padding reserves space for the floating avatar */
-  padding-top: 100px;
-}
-
-/* Input footer — always visible, always at bottom */
-.chat-input {
-  flex-shrink: 0;           /* never squished */
-  padding-bottom: env(safe-area-inset-bottom, 0px); /* iPhone notch */
-}
-
-/* ── Mobile: kill the feed panel completely ── */
-@media (max-width: 768px) {
-  /* Feed is hidden — the chat takes the full width */
-  .feed-panel,
-  .floating-character-hub {
-    display: none !important;
-  }
-
-  /* Left rail also collapses on mobile */
-  .left-rail-hub {
-    display: none !important;
-  }
-
-  /* Chat window fills the screen */
-  .chat-panel-container {
-    flex-direction: column;
-  }
-
-  /* Floating avatar stays at same position but smaller */
-  .floating-avatar-container {
-    top: 0.75rem;
-  }
-
-  /* Slightly less top padding on mobile (smaller avatar) */
-  .chat-history.with-floating-avatar {
-    padding-top: 80px;
-  }
-
-  /* Input row: slightly taller tap targets on mobile */
-  .chat-input {
-    padding: 8px 10px;
-    padding-bottom: max(8px, env(safe-area-inset-bottom, 8px));
-  }
-
-  /* Prevent textarea from triggering full-page zoom on iOS (font must be ≥16px) */
-  .chat-textarea {
-    font-size: 16px !important;
-  }
-}
-
-/* ── Prevent floating avatar from leaving screen on keyboard open ── */
-/*
-   The floating avatar is position:fixed relative to the viewport.
-   On mobile with 100dvh, the viewport shrinks when the keyboard opens,
-   so the avatar naturally stays in view. No extra fix needed.
-   But we ensure it's never behind the input:
-*/
-.floating-avatar-container {
-  z-index: 50;            /* above message list, below input (z:100) */
-  pointer-events: none;   /* clicks pass through to messages below */
-}
-.floating-avatar-wrapper {
-  pointer-events: all;    /* re-enable on the avatar itself */
-}
-
-/* ── Prestige hub: also hidden on mobile ── */
-@media (max-width: 768px) {
-  .floating-character-hub,
-  [class*="PrestigeHub"],
-  [class*="prestige-hub"] {
-    display: none !important;
-  }
-}
-
-/* ── Desktop: dot grid looks better with a subtle vignette at edges ── */
-@media (min-width: 769px) {
-  .chat-panel-container::after {
-    content: '';
-    position: absolute;
-    inset: 0;
-    background: radial-gradient(
-      ellipse at center,
-      transparent 60%,
-      rgba(10, 15, 26, 0.35) 100%
-    );
-    pointer-events: none;
-    z-index: 0;
-  }
-
-  /* Ensure chat content sits above the vignette */
-  .chat-window,
-  .floating-character-hub,
-  .floating-avatar-container {
-    z-index: 1;
-  }
-}
-/* ===================================================================
-   CHAT WINDOW — DOT GRID BACKGROUND + MOBILE KEYBOARD SAFETY
-   v2 — fixes avatar position regression from v1
-   =================================================================== */
-
-/* ── Dot grid background ── */
-.chat-panel-container {
-  background-color: #0A0F1A;
-  background-image: radial-gradient(
-    circle,
-    rgba(99, 102, 241, 0.18) 1px,
-    transparent 1px
-  );
-  background-size: 24px 24px;
-  background-position: 0 0;
-  background-attachment: local;
-}
-
-/* ── Full-height layout — survives mobile virtual keyboard ── */
-.chat-panel-container {
-  height: 100vh;
-  height: 100dvh;
-  display: flex;
-  flex-direction: row;
-  overflow: hidden;
-  position: relative;
-}
-
-/* Message list — only scrollable region */
-.chat-history {
-  flex: 1;
-  overflow-y: auto;
-  overflow-x: hidden;
-  -webkit-overflow-scrolling: touch;
-  padding-top: 100px;
-}
-
-/* Input footer — always visible, never squished */
-.chat-input {
-  flex-shrink: 0;
-  padding-bottom: env(safe-area-inset-bottom, 0px);
-}
-
-/* ── Inner chat window: transparent so grid shows through ── */
-/* IMPORTANT: .chat-window gets background from styles.css — we override it here */
-.chat-panel-container .chat-window {
-  background-color: transparent !important;
-  background-image: none !important;
-}
-
-/* ── Desktop: subtle radial vignette at the edges ── */
-/* NOTE: only ::after pseudo-element creates the vignette.
-   We do NOT set position:relative on .floating-avatar-container
-   — it must keep position:fixed from FloatingAvatar.css          */
-@media (min-width: 769px) {
-  .chat-panel-container::after {
-    content: '';
-    position: absolute;
-    inset: 0;
-    background: radial-gradient(
-      ellipse at center,
-      transparent 55%,
-      rgba(10, 15, 26, 0.3) 100%
-    );
-    pointer-events: none;
-    z-index: 0;
-  }
-
-  /* Only the inner elements that need to sit above the vignette */
-  .chat-panel-container .chat-window,
-  .floating-character-hub {
-    position: relative;
-    z-index: 1;
-  }
-  /* .floating-avatar-container is intentionally excluded —
-     it uses position:fixed and must not be touched here     */
-}
-
-/* ── Mobile: hide feed + hub, full-width chat ── */
-@media (max-width: 768px) {
-  .feed-panel,
-  .floating-character-hub {
-    display: none !important;
-  }
-
-  .chat-panel-container {
-    flex-direction: column;
-  }
-
-  .floating-avatar-container {
-    top: 0.75rem;
-  }
-
-  .chat-history.with-floating-avatar {
-    padding-top: 80px;
-  }
-
-  .chat-input {
-    padding: 8px 10px;
-    padding-bottom: max(8px, env(safe-area-inset-bottom, 8px));
-  }
-
-  /* Prevent iOS auto-zoom on input focus (requires font-size ≥ 16px) */
-  .chat-textarea {
-    font-size: 16px !important;
-  }
-}
-
-/* ── Prestige hub: hidden on mobile ── */
-@media (max-width: 768px) {
-  [class*="PrestigeHub"],
-  [class*="prestige-hub"] {
-    display: none !important;
-  }
-}
-/* ===================================================================
-   USER BUBBLE — OPTION B (FLAT, BORDERLESS, INDIGO FILL)
-   Add to ChatWindowStyles.css, or import as its own file.
-   Replaces the gradient + blur + border approach.
-   =================================================================== */
-
-/* ── Core bubble: flat indigo fill, no chrome ── */
-.user-message {
-  background: rgba(99, 102, 241, 0.11) !important;
-  backdrop-filter: none !important;
-  -webkit-backdrop-filter: none !important;
-  border: none !important;
-  box-shadow: none !important;
-  border-radius: 18px 4px 18px 18px !important; /* subtle tail: top-right corner cut */
-}
-
-.user-message:hover {
-  background: rgba(99, 102, 241, 0.16) !important;
-  transform: none !important; /* remove the translateY lift — feels heavy in a chat */
-  box-shadow: none !important;
-}
-
-/* ── Desktop: tighter max-width, proper right-alignment ── */
-@media (min-width: 601px) {
-  .user-message {
-    max-width: 68% !important;
-    width: fit-content !important;
-    margin-left: auto !important;
-    margin-right: 0 !important;
-    flex-direction: row-reverse;
-  }
-}
-
-/* ── Mobile: not full width — the big fix ── */
-@media (max-width: 600px) {
-  .user-message {
-    max-width: 82% !important;  /* was 100% / width:100% — that's the bloat */
-    width: fit-content !important;
-    margin-left: auto !important;
-    margin-right: 0 !important;
-    padding: 8px 12px !important;
-    border-radius: 16px 4px 16px 16px !important;
-  }
-
-  /* Message content fits bubble, doesn't force width */
-  .user-message .message-content {
-    max-width: 100% !important;
-    width: auto !important;
-    flex: none !important;
-    min-width: 0 !important;
-  }
-}
-
-/* ── Text color stays light on the indigo fill ── */
-.user-message .message-content {
-  color: #F1F5F9 !important;
-}
-
-/* ── AI message: no changes to shape, just ensure no background ── */
-.ai-message {
-  background: transparent !important;
-  border: none !important;
-  box-shadow: none !important;
-  backdrop-filter: none !important;
+  .dot { animation: none !important; transition: none !important; }
+  .chat-panel-container::before { animation: none; }
 }
