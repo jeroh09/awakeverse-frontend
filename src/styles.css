@@ -1625,3 +1625,56 @@ input, textarea, [contenteditable="true"] {
   text-transform: none !important;
   font-family: var(--font-body) !important;
 }
+/* ===================================================================
+   STYLES.CSS PATCH — add at the very bottom of styles.css
+   Fixes: background layering (grid square-in-square issue)
+   =================================================================== */
+
+/* Canvas background on root elements so the dot grid has a base to sit on */
+body,
+.app-container {
+  background-color: #0A0F1A;
+}
+
+/* ── Kill the opaque .chat-window backgrounds ──
+   These two blocks in styles.css were covering the dot grid
+   on .chat-panel-container. Making them transparent lets the
+   grid and the #0A0F1A canvas colour show through correctly.   */
+.chat-window {
+  background-color: transparent !important;
+  background-image: none !important;
+}
+
+/* The outer .chat-body wrapper also needs to be see-through */
+.chat-body {
+  background-color: transparent !important;
+  background-image: none !important;
+}
+
+/* ── Remove the global transition bomb ──
+   `* { transition-duration: 0.2s }` in styles.css adds transitions
+   to layout containers and causes the keyboard-open jank.
+   We scope transitions only to interactive elements.            */
+* {
+  transition-property: none;
+  transition-duration: 0s;
+}
+
+a,
+button,
+.invite-button,
+.pane-invite-button,
+.character-dot,
+.radial-button,
+.feed-collapse-btn,
+.sort-btn,
+.mood-btn,
+.fc,
+.char-dot,
+.emotion-ring,
+.floating-avatar-core,
+.message-icon {
+  transition-property: background-color, border-color, color, opacity, transform, box-shadow;
+  transition-duration: 0.18s;
+  transition-timing-function: cubic-bezier(0.4, 0, 0.2, 1);
+}

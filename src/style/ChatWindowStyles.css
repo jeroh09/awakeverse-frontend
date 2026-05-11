@@ -623,7 +623,186 @@
   .chat-window,
   .floating-character-hub,
   .floating-avatar-container {
+    z-index: 1;
+  }
+}
+/* ===================================================================
+   CHAT WINDOW — DOT GRID BACKGROUND + MOBILE KEYBOARD SAFETY
+   v2 — fixes avatar position regression from v1
+   =================================================================== */
+
+/* ── Dot grid background ── */
+.chat-panel-container {
+  background-color: #0A0F1A;
+  background-image: radial-gradient(
+    circle,
+    rgba(99, 102, 241, 0.18) 1px,
+    transparent 1px
+  );
+  background-size: 24px 24px;
+  background-position: 0 0;
+  background-attachment: local;
+}
+
+/* ── Full-height layout — survives mobile virtual keyboard ── */
+.chat-panel-container {
+  height: 100vh;
+  height: 100dvh;
+  display: flex;
+  flex-direction: row;
+  overflow: hidden;
+  position: relative;
+}
+
+/* Message list — only scrollable region */
+.chat-history {
+  flex: 1;
+  overflow-y: auto;
+  overflow-x: hidden;
+  -webkit-overflow-scrolling: touch;
+  padding-top: 100px;
+}
+
+/* Input footer — always visible, never squished */
+.chat-input {
+  flex-shrink: 0;
+  padding-bottom: env(safe-area-inset-bottom, 0px);
+}
+
+/* ── Inner chat window: transparent so grid shows through ── */
+/* IMPORTANT: .chat-window gets background from styles.css — we override it here */
+.chat-panel-container .chat-window {
+  background-color: transparent !important;
+  background-image: none !important;
+}
+
+/* ── Desktop: subtle radial vignette at the edges ── */
+/* NOTE: only ::after pseudo-element creates the vignette.
+   We do NOT set position:relative on .floating-avatar-container
+   — it must keep position:fixed from FloatingAvatar.css          */
+@media (min-width: 769px) {
+  .chat-panel-container::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: radial-gradient(
+      ellipse at center,
+      transparent 55%,
+      rgba(10, 15, 26, 0.3) 100%
+    );
+    pointer-events: none;
+    z-index: 0;
+  }
+
+  /* Only the inner elements that need to sit above the vignette */
+  .chat-panel-container .chat-window,
+  .floating-character-hub {
     position: relative;
     z-index: 1;
   }
+  /* .floating-avatar-container is intentionally excluded —
+     it uses position:fixed and must not be touched here     */
+}
+
+/* ── Mobile: hide feed + hub, full-width chat ── */
+@media (max-width: 768px) {
+  .feed-panel,
+  .floating-character-hub {
+    display: none !important;
+  }
+
+  .chat-panel-container {
+    flex-direction: column;
+  }
+
+  .floating-avatar-container {
+    top: 0.75rem;
+  }
+
+  .chat-history.with-floating-avatar {
+    padding-top: 80px;
+  }
+
+  .chat-input {
+    padding: 8px 10px;
+    padding-bottom: max(8px, env(safe-area-inset-bottom, 8px));
+  }
+
+  /* Prevent iOS auto-zoom on input focus (requires font-size ≥ 16px) */
+  .chat-textarea {
+    font-size: 16px !important;
+  }
+}
+
+/* ── Prestige hub: hidden on mobile ── */
+@media (max-width: 768px) {
+  [class*="PrestigeHub"],
+  [class*="prestige-hub"] {
+    display: none !important;
+  }
+}
+/* ===================================================================
+   USER BUBBLE — OPTION B (FLAT, BORDERLESS, INDIGO FILL)
+   Add to ChatWindowStyles.css, or import as its own file.
+   Replaces the gradient + blur + border approach.
+   =================================================================== */
+
+/* ── Core bubble: flat indigo fill, no chrome ── */
+.user-message {
+  background: rgba(99, 102, 241, 0.11) !important;
+  backdrop-filter: none !important;
+  -webkit-backdrop-filter: none !important;
+  border: none !important;
+  box-shadow: none !important;
+  border-radius: 18px 4px 18px 18px !important; /* subtle tail: top-right corner cut */
+}
+
+.user-message:hover {
+  background: rgba(99, 102, 241, 0.16) !important;
+  transform: none !important; /* remove the translateY lift — feels heavy in a chat */
+  box-shadow: none !important;
+}
+
+/* ── Desktop: tighter max-width, proper right-alignment ── */
+@media (min-width: 601px) {
+  .user-message {
+    max-width: 68% !important;
+    width: fit-content !important;
+    margin-left: auto !important;
+    margin-right: 0 !important;
+    flex-direction: row-reverse;
+  }
+}
+
+/* ── Mobile: not full width — the big fix ── */
+@media (max-width: 600px) {
+  .user-message {
+    max-width: 82% !important;  /* was 100% / width:100% — that's the bloat */
+    width: fit-content !important;
+    margin-left: auto !important;
+    margin-right: 0 !important;
+    padding: 8px 12px !important;
+    border-radius: 16px 4px 16px 16px !important;
+  }
+
+  /* Message content fits bubble, doesn't force width */
+  .user-message .message-content {
+    max-width: 100% !important;
+    width: auto !important;
+    flex: none !important;
+    min-width: 0 !important;
+  }
+}
+
+/* ── Text color stays light on the indigo fill ── */
+.user-message .message-content {
+  color: #F1F5F9 !important;
+}
+
+/* ── AI message: no changes to shape, just ensure no background ── */
+.ai-message {
+  background: transparent !important;
+  border: none !important;
+  box-shadow: none !important;
+  backdrop-filter: none !important;
 }
