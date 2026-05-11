@@ -350,7 +350,7 @@ export default function ChatWindow({
   // Reset on unmount so support widget snaps back
     return () => document.documentElement.style.setProperty('--feed-w', '0px');
   }, [feedOpen, isMobile]);
-  
+
   const showUpgradeFlow = (reason = 'general') => {
     setUpgradeReason(reason);
     setUpgradeModalOpen(true);
@@ -1505,7 +1505,8 @@ export default function ChatWindow({
         isAuthenticated={!!user}
         onCharacterClick={handleCharacterSelect}
       />
-      {/* ✅ ADD: Floating Scroll Button - RIGHT HERE AT THE END */}
+
+      {/* ── Floating Scroll Button — INSIDE .chat-window ── */}
       <FloatingScrollButton
         visible={!isNearBottom && chatHistory.length > 0}
         hasNewMessages={hasNewMessages || newMessageCount > 0}
