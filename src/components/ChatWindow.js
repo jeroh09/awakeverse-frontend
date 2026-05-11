@@ -85,16 +85,6 @@ const ChatItem = memo(({ index, style, data }) => {
     return new Set(msg.invite_candidates || []);
   });
 
-  // Feed panel state
-  const [feedOpen, setFeedOpen] = useState(true);
-
-  useEffect(() => {
-    const w = isMobile ? '0px' : feedOpen ? '256px' : '42px';
-    document.documentElement.style.setProperty('--feed-w', w);
-  // Reset on unmount so support widget snaps back
-    return () => document.documentElement.style.setProperty('--feed-w', '0px');
-  }, [feedOpen, isMobile]);
-
   // Resize tracking for smooth auto-layout
   useEffect(() => {
     if (rowRef.current) {
@@ -351,6 +341,16 @@ export default function ChatWindow({
   const usageTracking = useUsageTracking(character);
   const [upgradeModalOpen, setUpgradeModalOpen] = useState(false);
   const [upgradeReason, setUpgradeReason] = useState('general');
+    // Feed panel state
+  const [feedOpen, setFeedOpen] = useState(true);
+
+  useEffect(() => {
+    const w = isMobile ? '0px' : feedOpen ? '256px' : '42px';
+    document.documentElement.style.setProperty('--feed-w', w);
+  // Reset on unmount so support widget snaps back
+    return () => document.documentElement.style.setProperty('--feed-w', '0px');
+  }, [feedOpen, isMobile]);
+  
   const showUpgradeFlow = (reason = 'general') => {
     setUpgradeReason(reason);
     setUpgradeModalOpen(true);
