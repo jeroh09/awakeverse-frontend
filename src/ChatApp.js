@@ -433,6 +433,7 @@ export default function ChatApp() {
                   prestigeHubVisible={prestigeHubVisible}
                   onPrestigeHubToggle={togglePrestigeHub}
                   discoveredCharacters={discoveredCharacters}
+                  onCharacterSelect={handleMarketHubStartChat}
                 />
               </div>
             </div>

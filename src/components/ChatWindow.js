@@ -324,6 +324,7 @@ export default function ChatWindow({
   onToggleVisibility,
   prestigeHubVisible,
   onPrestigeHubToggle,
+  onCharacterSelect,    // ← ADD THI
   discoveredCharacters = []
 }) {
 
@@ -1503,7 +1504,7 @@ export default function ChatWindow({
         isOpen={feedOpen}
         onToggle={() => setFeedOpen(prev => !prev)}
         isAuthenticated={!!user}
-        onCharacterClick={handleCharacterSelect}
+        onCharacterClick={onCharacterSelect}
       />
 
       {/* ── Floating Scroll Button — INSIDE .chat-window ── */}
