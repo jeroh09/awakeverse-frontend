@@ -1,0 +1,144 @@
+/* src/components/ChatFeedPanel/ChatFeedPanel.css
+   Collapsible right-side feed panel inside chat-panel-container.
+   chat-panel-container is flex-direction: row — this panel is a flex child.
+*/
+
+/* ── Panel shell ── */
+.chat-feed-panel {
+  width: 256px;
+  flex-shrink: 0;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  border-left: 1px solid rgba(148, 163, 184, 0.10);
+  background: rgba(10, 15, 26, 0.72);
+  transition: width 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  position: relative;
+  z-index: 1;
+}
+
+.chat-feed-panel.cfp-collapsed {
+  width: 42px;
+}
+
+/* Hidden entirely on mobile — chat takes full width */
+@media (max-width: 768px) {
+  .chat-feed-panel {
+    display: none !important;
+  }
+}
+
+/* ── Header ── */
+.cfp-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 10px 10px;
+  border-bottom: 1px solid rgba(148, 163, 184, 0.08);
+  flex-shrink: 0;
+  min-height: 42px;
+  box-sizing: border-box;
+}
+
+.cfp-collapsed .cfp-header {
+  justify-content: center;
+  padding: 10px 0;
+}
+
+.cfp-title {
+  font-size: 10px;
+  font-weight: 600;
+  color: #64748B;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  font-family: 'Inter', sans-serif;
+  white-space: nowrap;
+  overflow: hidden;
+}
+
+/* Toggle button */
+.cfp-toggle {
+  width: 22px;
+  height: 22px;
+  border-radius: 5px;
+  background: transparent;
+  border: 1px solid rgba(148, 163, 184, 0.10);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  color: #64748B;
+  flex-shrink: 0;
+  transition: background 0.15s, color 0.15s, border-color 0.15s;
+  padding: 0;
+}
+
+.cfp-toggle:hover {
+  background: #1C2640;
+  color: #F1F5F9;
+  border-color: rgba(148, 163, 184, 0.2);
+}
+
+.cfp-toggle:focus {
+  outline: 2px solid rgba(99, 102, 241, 0.5);
+  outline-offset: 2px;
+}
+
+/* ── Feed body ── */
+/* FeedTab renders its own scroll containers — we just give it the space */
+.cfp-body {
+  flex: 1;
+  overflow-y: auto;
+  overflow-x: hidden;
+  min-width: 220px;     /* prevents FeedTab squishing mid-transition */
+  scrollbar-width: thin;
+  scrollbar-color: rgba(148, 163, 184, 0.12) transparent;
+}
+
+.cfp-body::-webkit-scrollbar {
+  width: 3px;
+}
+
+.cfp-body::-webkit-scrollbar-thumb {
+  background: rgba(148, 163, 184, 0.12);
+  border-radius: 2px;
+}
+
+/* Padding FeedTab's internal content — FeedTab has no outer padding by default */
+.cfp-body > * {
+  padding: 8px 8px 16px;
+}
+
+/* ── Collapsed icon strip ── */
+.cfp-strip {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 12px;
+  padding: 12px 0;
+}
+
+.cfp-strip-icon {
+  width: 26px;
+  height: 26px;
+  border-radius: 6px;
+  background: rgba(28, 38, 64, 0.5);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #475569;
+  cursor: pointer;
+  transition: background 0.15s, color 0.15s;
+}
+
+.cfp-strip-icon:hover {
+  background: #1C2640;
+  color: #818CF8;
+}
+
+/* ── Reduced motion ── */
+@media (prefers-reduced-motion: reduce) {
+  .chat-feed-panel {
+    transition: none;
+  }
+}

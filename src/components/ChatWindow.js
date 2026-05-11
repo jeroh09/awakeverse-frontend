@@ -22,6 +22,7 @@ import DualPathUpgradeSystem from '../components/DualPathUpgradeSystem';
 import '../styles.css';
 import '../style/InviteStyles.css';
 import '../style/ChatWindowStyles.css';  // ✅ ADD THIS LINE
+import ChatFeedPanel from './ChatFeedPanel/ChatFeedPanel';
 
 
 const API = process.env.REACT_APP_API_BASE_URL || 'https://api.awakeverse.com';
@@ -83,6 +84,16 @@ const ChatItem = memo(({ index, style, data }) => {
   const [usedInvitees, setUsedInvitees] = useState(() => {
     return new Set(msg.invite_candidates || []);
   });
+
+  // Feed panel state
+  const [feedOpen, setFeedOpen] = useState(true);
+
+  useEffect(() => {
+    const w = isMobile ? '0px' : feedOpen ? '256px' : '42px';
+    document.documentElement.style.setProperty('--feed-w', w);
+  // Reset on unmount so support widget snaps back
+    return () => document.documentElement.style.setProperty('--feed-w', '0px');
+  }, [feedOpen, isMobile]);
 
   // Resize tracking for smooth auto-layout
   useEffect(() => {
@@ -1487,6 +1498,13 @@ export default function ChatWindow({
         </div>
         <ContextPanel />
       </div>
+      {/* ── Feed panel ── */}
+      <ChatFeedPanel
+        isOpen={feedOpen}
+        onToggle={() => setFeedOpen(prev => !prev)}
+        isAuthenticated={!!user}
+        onCharacterClick={handleCharacterSelect}
+      />
       {/* ✅ ADD: Floating Scroll Button - RIGHT HERE AT THE END */}
       <FloatingScrollButton
         visible={!isNearBottom && chatHistory.length > 0}

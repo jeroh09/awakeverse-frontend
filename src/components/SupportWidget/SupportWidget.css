@@ -1,9 +1,15 @@
-/* SupportWidget.css */
+/* SupportWidget.css — v2
+   Uses --feed-w CSS variable so it never overlaps the feed panel.
+   Variable is set in right_panel_layout.css on :root.
+   Dynamic update: call document.documentElement.style.setProperty('--feed-w', val)
+   from the feed toggle handler when that component is built.
+*/
 
+/* ── Trigger ──────────────────────────────────────────────────────────── */
 .sw-trigger {
   position: fixed;
   bottom: 24px;
-  right: 24px;
+  right: calc(var(--feed-w, 0px) + 16px);  /* shifts left when feed is open */
   z-index: 9000;
   background: transparent;
   border: 1.5px solid #6366F1;
@@ -14,24 +20,20 @@
   align-items: center;
   justify-content: center;
   opacity: 0.85;
-  transition: opacity 0.15s ease, transform 0.15s ease;
+  transition:
+    opacity 0.15s ease,
+    transform 0.15s ease,
+    right 0.3s cubic-bezier(0.4, 0, 0.2, 1);  /* smooth slide when feed toggles */
 }
 
-.sw-trigger:hover {
-  opacity: 1;
-  transform: translateY(-2px);
-}
+.sw-trigger:hover  { opacity: 1; transform: translateY(-2px); }
+.sw-trigger:active { transform: translateY(0); }
 
-.sw-trigger:active {
-  transform: translateY(0);
-}
-
-/* ── Modal ─────────────────────────────────────────────────────────────── */
-
+/* ── Modal ────────────────────────────────────────────────────────────── */
 .sw-modal {
   position: fixed;
   bottom: 56px;
-  right: 24px;
+  right: calc(var(--feed-w, 0px) + 16px);  /* tracks trigger */
   z-index: 9001;
   width: 340px;
   background: var(--bg-surface, #0f1428);
@@ -41,10 +43,9 @@
   display: flex;
   flex-direction: column;
   gap: 12px;
-
-  /* open upward animation */
   transform-origin: bottom right;
   animation: sw-open 0.18s ease forwards;
+  transition: right 0.3s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
 .sw-modal.sw-closing {
@@ -61,8 +62,7 @@
   to   { opacity: 0; transform: scale(0.92) translateY(8px); }
 }
 
-/* ── Header ─────────────────────────────────────────────────────────────── */
-
+/* ── Header ───────────────────────────────────────────────────────────── */
 .sw-header {
   display: flex;
   align-items: center;
@@ -102,12 +102,9 @@
   transition: color 0.1s;
 }
 
-.sw-close:hover {
-  color: var(--text-primary, #f5f5dc);
-}
+.sw-close:hover { color: var(--text-primary, #f5f5dc); }
 
-/* ── Divider ─────────────────────────────────────────────────────────────── */
-
+/* ── Divider ──────────────────────────────────────────────────────────── */
 .sw-divider {
   border: none;
   border-top: 0.5px solid rgba(255, 255, 255, 0.08);
@@ -115,7 +112,6 @@
 }
 
 /* ── Form ─────────────────────────────────────────────────────────────── */
-
 .sw-form {
   display: flex;
   flex-direction: column;
@@ -150,24 +146,18 @@
   transition: border-color 0.15s;
 }
 
-.sw-select option {
-  background: #0b1022;
-  color: #f5f5dc;
-}
+.sw-select option { background: #0b1022; color: #f5f5dc; }
 
 .sw-select:focus,
 .sw-input:focus,
-.sw-textarea:focus {
-  border-color: #6366F1;
-}
+.sw-textarea:focus { border-color: #6366F1; }
 
 .sw-textarea {
   resize: none;
   line-height: 1.5;
 }
 
-/* ── Mode pills ─────────────────────────────────────────────────────────── */
-
+/* ── Mode pills ───────────────────────────────────────────────────────── */
 .sw-pills {
   display: flex;
   flex-wrap: wrap;
@@ -187,32 +177,19 @@
   white-space: nowrap;
 }
 
-.sw-pill:hover {
-  border-color: #6366F1;
-  color: #6366F1;
-}
+.sw-pill:hover              { border-color: #6366F1; color: #6366F1; }
+.sw-pill.sw-pill--active    { border: 1.5px solid #6366F1; color: #6366F1; font-weight: 600; }
 
-.sw-pill.sw-pill--active {
-  border: 1.5px solid #6366F1;
-  color: #6366F1;
-  font-weight: 600;
-}
-
-/* ── Sender line ─────────────────────────────────────────────────────────── */
-
+/* ── Sender line ──────────────────────────────────────────────────────── */
 .sw-sender {
   font-size: 11px;
   color: var(--text-secondary, #a9b2c7);
   font-family: var(--font-body, 'Inter', sans-serif);
 }
 
-.sw-sender strong {
-  color: var(--text-primary, #f5f5dc);
-  font-weight: 500;
-}
+.sw-sender strong { color: var(--text-primary, #f5f5dc); font-weight: 500; }
 
-/* ── Submit button ─────────────────────────────────────────────────────── */
-
+/* ── Submit ───────────────────────────────────────────────────────────── */
 .sw-submit {
   background: #6366F1;
   color: #fff;
@@ -227,29 +204,18 @@
   width: 100%;
 }
 
-.sw-submit:hover:not(:disabled) {
-  background: #4f52d4;
-}
+.sw-submit:hover:not(:disabled)  { background: #4f52d4; }
+.sw-submit:active:not(:disabled) { transform: scale(0.98); }
+.sw-submit:disabled               { opacity: 0.6; cursor: not-allowed; }
 
-.sw-submit:active:not(:disabled) {
-  transform: scale(0.98);
-}
-
-.sw-submit:disabled {
-  opacity: 0.6;
-  cursor: not-allowed;
-}
-
-/* ── Error ─────────────────────────────────────────────────────────────── */
-
+/* ── Error ────────────────────────────────────────────────────────────── */
 .sw-error {
   font-size: 12px;
   color: #ff8c8c;
   font-family: var(--font-body, 'Inter', sans-serif);
 }
 
-/* ── Success state ─────────────────────────────────────────────────────── */
-
+/* ── Success ──────────────────────────────────────────────────────────── */
 .sw-success {
   display: flex;
   flex-direction: column;
@@ -292,19 +258,18 @@
   margin: 0;
 }
 
-/* ── Mobile ─────────────────────────────────────────────────────────────── */
-
+/* ── Mobile ───────────────────────────────────────────────────────────── */
 @media (max-width: 480px) {
+  /* Trigger hidden on mobile — chat is full screen, no room */
+  .sw-trigger {
+    display: none;
+  }
+
+  /* Modal slides up from bottom edge on mobile */
   .sw-modal {
     right: 12px;
     left: 12px;
     width: auto;
     bottom: 52px;
-  }
-
-  .sw-trigger {
-    display: none;
-    right: 16px;
-    bottom: 16px;
   }
 }
