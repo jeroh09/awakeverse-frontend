@@ -475,3 +475,155 @@
     transition: none !important;
   }
 }
+/* ===================================================================
+   CHAT WINDOW — DOT GRID BACKGROUND + MOBILE KEYBOARD SAFETY
+   Add these rules to ChatWindowStyles.css or import separately.
+   =================================================================== */
+
+/* ── Dot grid background ── */
+/* Pure CSS, zero JS, zero repaints. One radial-gradient stamp tiled. */
+.chat-panel-container {
+  background-color: #0A0F1A;
+  background-image: radial-gradient(
+    circle,
+    rgba(99, 102, 241, 0.18) 1px,
+    transparent 1px
+  );
+  background-size: 24px 24px;
+  background-position: 0 0;
+  background-attachment: local; /* scrolls with content, not viewport */
+}
+
+/* ── Full-height layout that survives the mobile virtual keyboard ── */
+/*
+   Problem: when the soft keyboard opens on mobile, 100vh stays fixed
+   at the original viewport height — the page overflows or the input
+   slides under the keyboard.
+
+   Fix: use 100dvh (dynamic viewport height) which shrinks when the
+   keyboard is up. Fall back to 100vh for browsers that don't support dvh.
+   The flex column pushes the input to the very bottom, and only the
+   message list (flex:1 + overflow-y:auto) scrolls — the floating avatar
+   and header never leave the screen.
+*/
+.chat-panel-container {
+  height: 100vh;           /* fallback */
+  height: 100dvh;          /* shrinks when keyboard opens */
+  display: flex;
+  flex-direction: row;     /* left-rail | chat | feed */
+  overflow: hidden;        /* nothing escapes */
+  position: relative;
+}
+
+.chat-window {
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+  min-width: 0;
+  overflow: hidden;        /* children scroll, not the window */
+  position: relative;
+}
+
+/* Message list — the ONLY scrollable region */
+.chat-history {
+  flex: 1;
+  overflow-y: auto;
+  overflow-x: hidden;
+  -webkit-overflow-scrolling: touch; /* momentum scroll on iOS */
+  /* top padding reserves space for the floating avatar */
+  padding-top: 100px;
+}
+
+/* Input footer — always visible, always at bottom */
+.chat-input {
+  flex-shrink: 0;           /* never squished */
+  padding-bottom: env(safe-area-inset-bottom, 0px); /* iPhone notch */
+}
+
+/* ── Mobile: kill the feed panel completely ── */
+@media (max-width: 768px) {
+  /* Feed is hidden — the chat takes the full width */
+  .feed-panel,
+  .floating-character-hub {
+    display: none !important;
+  }
+
+  /* Left rail also collapses on mobile */
+  .left-rail-hub {
+    display: none !important;
+  }
+
+  /* Chat window fills the screen */
+  .chat-panel-container {
+    flex-direction: column;
+  }
+
+  /* Floating avatar stays at same position but smaller */
+  .floating-avatar-container {
+    top: 0.75rem;
+  }
+
+  /* Slightly less top padding on mobile (smaller avatar) */
+  .chat-history.with-floating-avatar {
+    padding-top: 80px;
+  }
+
+  /* Input row: slightly taller tap targets on mobile */
+  .chat-input {
+    padding: 8px 10px;
+    padding-bottom: max(8px, env(safe-area-inset-bottom, 8px));
+  }
+
+  /* Prevent textarea from triggering full-page zoom on iOS (font must be ≥16px) */
+  .chat-textarea {
+    font-size: 16px !important;
+  }
+}
+
+/* ── Prevent floating avatar from leaving screen on keyboard open ── */
+/*
+   The floating avatar is position:fixed relative to the viewport.
+   On mobile with 100dvh, the viewport shrinks when the keyboard opens,
+   so the avatar naturally stays in view. No extra fix needed.
+   But we ensure it's never behind the input:
+*/
+.floating-avatar-container {
+  z-index: 50;            /* above message list, below input (z:100) */
+  pointer-events: none;   /* clicks pass through to messages below */
+}
+.floating-avatar-wrapper {
+  pointer-events: all;    /* re-enable on the avatar itself */
+}
+
+/* ── Prestige hub: also hidden on mobile ── */
+@media (max-width: 768px) {
+  .floating-character-hub,
+  [class*="PrestigeHub"],
+  [class*="prestige-hub"] {
+    display: none !important;
+  }
+}
+
+/* ── Desktop: dot grid looks better with a subtle vignette at edges ── */
+@media (min-width: 769px) {
+  .chat-panel-container::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: radial-gradient(
+      ellipse at center,
+      transparent 60%,
+      rgba(10, 15, 26, 0.35) 100%
+    );
+    pointer-events: none;
+    z-index: 0;
+  }
+
+  /* Ensure chat content sits above the vignette */
+  .chat-window,
+  .floating-character-hub,
+  .floating-avatar-container {
+    position: relative;
+    z-index: 1;
+  }
+}

@@ -1,25 +1,23 @@
 /* ===================================================================
-   INVITE SUGGESTION SYSTEM - CONTAINED STYLING
+   INVITE SUGGESTION SYSTEM — AWAKEVERSE DESIGN SYSTEM
+   Tokens: --accent #6366F1 · --accent-h #818CF8 · --font-b Inter
    =================================================================== */
 
-/* Invite Container - Positioned within message content */
+/* ── Invite container ── */
 .invite-suggestion {
-  background: rgba(30, 60, 120, 0.05);
-  border: 1px solid #d4af37;
+  background: rgba(99, 102, 241, 0.05);
+  border: 1px solid rgba(99, 102, 241, 0.25);
   border-radius: 14px;
   padding: 12px 14px;
-  margin: 8px 0 4px 0; /* Reduced margins to prevent excessive spacing */
-  box-shadow:
-    0 1px 2px rgba(0, 0, 0, 0.04),
-    inset 0 1px 0 rgba(255, 255, 255, 0.05);
+  margin: 8px 0 4px 0;
   position: relative;
   overflow: hidden;
-  /* Ensure it doesn't break out of message flow */
   width: 100%;
   max-width: 100%;
   box-sizing: border-box;
 }
 
+/* Indigo top accent line */
 .invite-suggestion::before {
   content: '';
   position: absolute;
@@ -27,289 +25,193 @@
   left: 0;
   right: 0;
   height: 2px;
-  background: linear-gradient(90deg, #d4af37, #facc15, #d97706);
+  background: linear-gradient(90deg, #6366F1, #818CF8, #6366F1);
   border-radius: 14px 14px 0 0;
 }
 
-/* Prompt Text */
+/* ── Prompt text ── */
 .invite-prompt {
-  font-size: 14px;
-  font-weight: 600;
-  color: #d4af37;
+  font-size: 13px;
+  font-weight: 500;
+  color: #818CF8;
   margin-bottom: 10px;
   display: flex;
   align-items: center;
-  gap: 6px;
-  font-family: 'Playfair Display', serif;
+  gap: 7px;
+  font-family: 'Inter', system-ui, sans-serif;
   line-height: 1.4;
 }
 
+/* User-plus SVG icon — no library dependency */
 .invite-prompt::before {
-  content: '✨';
-  font-size: 16px;
-  filter: drop-shadow(0 0 4px rgba(212, 175, 55, 0.4));
+  content: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='15' height='15' viewBox='0 0 24 24' fill='none' stroke='%23818CF8' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2'/%3E%3Ccircle cx='9' cy='7' r='4'/%3E%3Cline x1='19' y1='8' x2='19' y2='14'/%3E%3Cline x1='22' y1='11' x2='16' y2='11'/%3E%3C/svg%3E");
+  display: inline-flex;
+  align-items: center;
   flex-shrink: 0;
+  line-height: 1;
 }
 
-/* Button Grid Container */
+/* ── Button grid ── */
 .invite-buttons {
   display: flex;
   flex-wrap: wrap;
-  gap: 8px;
+  gap: 7px;
   align-items: center;
   justify-content: flex-start;
+  overflow-x: auto;
+  scrollbar-width: none;
+  -ms-overflow-style: none;
 }
+.invite-buttons::-webkit-scrollbar { display: none; }
 
-/* Individual Invite Button */
+/* ── Individual invite button ── */
 .invite-button {
   display: inline-flex;
   align-items: center;
-  gap: 8px;
-  padding: 6px 12px;
-  border: 1px solid #d4af37;
-  background-color: rgba(30, 60, 120, 0.1);
+  gap: 7px;
+  padding: 5px 12px;
+  border: 1px solid rgba(99, 102, 241, 0.35);
+  background: rgba(99, 102, 241, 0.08);
   border-radius: 999px;
-  font-size: 13px;
-  font-family: 'Playfair Display', serif;
-  text-transform: uppercase;
+  font-size: 12.5px;
+  font-family: 'Inter', system-ui, sans-serif;
   font-weight: 500;
-  color: #d4af37;
+  color: #818CF8;
   cursor: pointer;
-  transition: all 0.25s ease;
-  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.08);
+  transition: background 0.2s ease, border-color 0.2s ease, transform 0.15s ease;
   white-space: nowrap;
-  /* Prevent button from breaking layout */
   max-width: 100%;
   box-sizing: border-box;
+  user-select: none;
+  -webkit-user-select: none;
 }
 
 .invite-button:hover:not(:disabled) {
-  background-color: rgba(30, 60, 120, 0.2);
-  transform: scale(1.05);
-  box-shadow: 0 0 6px rgba(212, 175, 55, 0.4);
+  background: rgba(99, 102, 241, 0.16);
+  border-color: rgba(129, 140, 248, 0.55);
+  transform: translateY(-1px);
+}
+
+.invite-button:focus {
+  outline: 2px solid rgba(99, 102, 241, 0.5);
+  outline-offset: 2px;
 }
 
 .invite-button:disabled {
-  background-color: rgba(120, 120, 120, 0.1);
-  color: #aaa;
-  border-color: #aaa;
+  background: rgba(148, 163, 184, 0.06);
+  color: #475569;
+  border-color: rgba(148, 163, 184, 0.15);
   cursor: not-allowed;
-  opacity: 0.6;
+  opacity: 0.55;
   transform: none;
 }
 
-/* Avatar within Button */
+/* ── Avatar within button ── */
 .invite-button-avatar {
-  width: 22px;
-  height: 22px;
+  width: 20px;
+  height: 20px;
   border-radius: 50%;
   object-fit: cover;
-  border: 1px solid rgba(255, 255, 255, 0.6);
-  box-shadow: 0 1px 1px rgba(0, 0, 0, 0.1);
+  border: 1px solid rgba(129, 140, 248, 0.4);
   flex-shrink: 0;
 }
 
-/* Button with Avatar Styling */
 .invite-button-with-avatar {
-  padding-left: 10px;
-  padding-right: 14px;
+  padding-left: 8px;
+  padding-right: 12px;
 }
 
-/* New Invite Animation */
+/* ── New invite pulse ── */
 .invite-suggestion.new-invite {
   animation: invitePulse 1.5s ease-in-out;
 }
 
 @keyframes invitePulse {
-  0% {
-    box-shadow: 0 0 0 0 rgba(212, 175, 55, 0.5);
-  }
-  50% {
-    box-shadow: 0 0 0 8px rgba(212, 175, 55, 0);
-  }
-  100% {
-    box-shadow: 0 0 0 0 rgba(212, 175, 55, 0);
-  }
+  0%   { box-shadow: 0 0 0 0   rgba(99, 102, 241, 0.45); }
+  50%  { box-shadow: 0 0 0 8px rgba(99, 102, 241, 0);    }
+  100% { box-shadow: 0 0 0 0   rgba(99, 102, 241, 0);    }
 }
 
-/* ===================================================================
-   RESPONSIVE DESIGN
-   =================================================================== */
-
-/* Mobile Adjustments */
-@media (max-width: 640px) {
-  .invite-suggestion {
-    padding: 10px;
-    margin: 6px 0 3px 0;
-  }
-
-  .invite-button {
-    padding: 5px 10px;
-    font-size: 12px;
-    gap: 6px;
-  }
-
-  .invite-button-avatar {
-    width: 20px;
-    height: 20px;
-  }
-
-  .invite-prompt {
-    font-size: 13px;
-    margin-bottom: 8px;
-  }
-
-  .invite-buttons {
-    gap: 6px;
-  }
-}
-
-/* Large Screen Adjustments */
-@media (min-width: 1024px) {
-  .invite-suggestion {
-    max-width: 90%; /* Prevent it from being too wide on large screens */
-  }
-  
-  .invite-buttons {
-    gap: 10px;
-  }
-  
-  .invite-button {
-    padding: 8px 14px;
-    font-size: 14px;
-  }
-}
-
-/* ===================================================================
-   INTEGRATION WITH MESSAGE SYSTEM
-   =================================================================== */
-
-/* Ensure invite suggestions don't interfere with message spacing */
+/* ── Integration with message content ── */
 .message-content .invite-suggestion {
-  /* Reset any inherited margin/padding that might interfere */
   margin-top: 0.75rem;
   margin-bottom: 0.25rem;
   margin-left: 0;
   margin-right: 0;
 }
+.message-content .invite-suggestion:last-child { margin-bottom: 0; }
+.message-content > *:not(.invite-suggestion) + .invite-suggestion { margin-top: 0.75rem; }
 
-/* When invite is the last element in a message */
-.message-content .invite-suggestion:last-child {
-  margin-bottom: 0;
+/* ── Pane invite bar ── */
+.pane-invite-bar {
+  background: rgba(99, 102, 241, 0.05);
+  border-bottom: 1px solid rgba(99, 102, 241, 0.2);
+  padding: 7px 16px;
+  text-align: center;
+  flex-shrink: 0;
 }
 
-/* Ensure proper text flow around invites */
-.message-content > *:not(.invite-suggestion) + .invite-suggestion {
-  margin-top: 0.75rem;
+.pane-invite-button {
+  background: rgba(99, 102, 241, 0.08);
+  border: 1px solid rgba(99, 102, 241, 0.3);
+  color: #818CF8;
+  padding: 5px 16px;
+  border-radius: 999px;
+  font-family: 'Inter', system-ui, sans-serif;
+  font-size: 12.5px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: background 0.2s ease, transform 0.15s ease;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
 }
 
-/* ===================================================================
-   ACCESSIBILITY & INTERACTION
-   =================================================================== */
-
-/* Focus states for keyboard navigation */
-.invite-button:focus {
-  outline: 2px solid rgba(212, 175, 55, 0.6);
-  outline-offset: 2px;
+/* Plus icon on pane button */
+.pane-invite-button::before {
+  content: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='13' height='13' viewBox='0 0 24 24' fill='none' stroke='%23818CF8' stroke-width='2.5' stroke-linecap='round'%3E%3Cline x1='12' y1='5' x2='12' y2='19'/%3E%3Cline x1='5' y1='12' x2='19' y2='12'/%3E%3C/svg%3E");
+  display: inline-flex;
+  align-items: center;
+  line-height: 1;
 }
 
-/* High contrast mode support */
+.pane-invite-button:hover {
+  background: rgba(99, 102, 241, 0.15);
+  transform: translateY(-1px);
+}
+
+/* ── Responsive ── */
+@media (max-width: 640px) {
+  .invite-suggestion { padding: 10px; margin: 6px 0 3px 0; }
+  .invite-button { padding: 4px 10px; font-size: 12px; gap: 6px; }
+  .invite-button-avatar { width: 18px; height: 18px; }
+  .invite-prompt { font-size: 12px; margin-bottom: 8px; }
+  .invite-buttons { gap: 6px; }
+}
+
+@media (min-width: 1024px) {
+  .invite-suggestion { max-width: 90%; }
+  .invite-buttons { gap: 9px; }
+  .invite-button { padding: 6px 14px; font-size: 13px; }
+}
+
+/* ── Accessibility ── */
 @media (prefers-contrast: high) {
-  .invite-suggestion {
-    border-width: 2px;
-    background: rgba(0, 0, 0, 0.8);
-  }
-  
-  .invite-button {
-    border-width: 2px;
-    background: rgba(0, 0, 0, 0.9);
-  }
+  .invite-suggestion { border-width: 2px; border-color: #818CF8; }
+  .invite-button { border-width: 2px; }
 }
 
-/* Reduced motion support */
 @media (prefers-reduced-motion: reduce) {
-  .invite-button {
-    transition: none;
-  }
-  
-  .invite-button:hover {
-    transform: none;
-  }
-  
-  .invite-suggestion.new-invite {
-    animation: none;
-  }
-  
-  @keyframes invitePulse {
-    /* Disable animation */
-    0%, 100% {
-      box-shadow: 0 0 0 0 rgba(212, 175, 55, 0.5);
-    }
-  }
+  .invite-button { transition: none; }
+  .invite-button:hover { transform: none; }
+  .invite-suggestion.new-invite { animation: none; }
 }
 
-/* ===================================================================
-   ERROR PREVENTION
-   =================================================================== */
-
-/* Prevent invite elements from breaking out of containers */
+/* ── Overflow safety ── */
 .invite-suggestion,
 .invite-prompt,
 .invite-buttons,
 .invite-button {
   word-wrap: break-word;
   overflow-wrap: break-word;
-  hyphens: auto;
-}
-
-/* Ensure buttons don't cause horizontal scroll */
-.invite-buttons {
-  overflow-x: auto;
-  scrollbar-width: none;
-  -ms-overflow-style: none;
-}
-
-.invite-buttons::-webkit-scrollbar {
-  display: none;
-}
-
-/* Prevent text selection on interactive elements */
-.invite-button,
-.invite-prompt::before {
-  user-select: none;
-  -webkit-user-select: none;
-  -moz-user-select: none;
-  -ms-user-select: none;
-}
-
-/* ===================================================================
-   PANE INVITE BAR (if you have this feature)
-   =================================================================== */
-
-.pane-invite-bar {
-  background: rgba(30, 60, 120, 0.08);
-  border-bottom: 1px solid #d4af37;
-  padding: 8px 16px;
-  text-align: center;
-  flex-shrink: 0;
-}
-
-.pane-invite-button {
-  background: rgba(30, 60, 120, 0.1);
-  border: 1px solid #d4af37;
-  color: #d4af37;
-  padding: 6px 16px;
-  border-radius: 20px;
-  font-family: 'Playfair Display', serif;
-  font-size: 13px;
-  font-weight: 500;
-  text-transform: uppercase;
-  cursor: pointer;
-  transition: all 0.25s ease;
-}
-
-.pane-invite-button:hover {
-  background: rgba(30, 60, 120, 0.2);
-  transform: translateY(-1px);
-  box-shadow: 0 2px 8px rgba(212, 175, 55, 0.3);
 }
