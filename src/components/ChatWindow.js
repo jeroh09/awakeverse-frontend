@@ -27,6 +27,17 @@ import ChatFeedPanel from './ChatFeedPanel/ChatFeedPanel';
 
 const API = process.env.REACT_APP_API_BASE_URL || 'https://api.awakeverse.com';
 
+function getSafeDisplay(text) {
+  if (!text) return text;
+  const lines = text.split('\n');
+  const lastLine = lines[lines.length - 1];
+  // Only hold back if the incomplete last line is a heading marker
+  if (lastLine.startsWith('#')) {
+    return lines.slice(0, -1).join('\n');
+  }
+  return text;
+}
+
 function useMediaQuery(maxWidth) {
   const query = `(max-width: ${maxWidth}px)`;
   const [matches, setMatches] = useState(() => window.matchMedia(query).matches);
@@ -1288,13 +1299,20 @@ export default function ChatWindow({
   };
   const retry = async idx => {
     const userText = chatHistory[idx - 1]?.text || '';
+  // AFTER:
     setChatHistory(prev => {
       const copy = [...prev];
-      copy[idx] = { user: false, text: '', error: null, speaker: character };
+      if (copy[aiIndex]) {
+        copy[aiIndex] = {
+          ...copy[aiIndex],
+          speaker: actualSpeaker,
+          text: getSafeDisplay(fullReply),   // ← holds back incomplete headings
+          has_invite_suggestion: hasInviteSuggestion,
+          invite_candidates: inviteCandidates
+        };
+      }
       return copy;
     });
-    await sendAI(userText, idx);
-  };
 
   // ✅ BREATHING INTERFACE STYLES
   const breathingStyles = {
