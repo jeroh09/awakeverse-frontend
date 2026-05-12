@@ -1161,7 +1161,7 @@ export default function ChatWindow({
                   copy[aiIndex] = {
                     ...copy[aiIndex],
                     speaker: actualSpeaker, // ✅ Use actual speaker
-                    text: fullReply,
+                    text: getSafeDisplay(fullReply),
                     has_invite_suggestion: hasInviteSuggestion,
                     invite_candidates: inviteCandidates
                   };
@@ -1299,20 +1299,13 @@ export default function ChatWindow({
   };
   const retry = async idx => {
     const userText = chatHistory[idx - 1]?.text || '';
-  // AFTER:
     setChatHistory(prev => {
       const copy = [...prev];
-      if (copy[aiIndex]) {
-        copy[aiIndex] = {
-          ...copy[aiIndex],
-          speaker: actualSpeaker,
-          text: getSafeDisplay(fullReply),   // ← holds back incomplete headings
-          has_invite_suggestion: hasInviteSuggestion,
-          invite_candidates: inviteCandidates
-        };
-      }
+      copy[idx] = { user: false, text: '', error: null, speaker: character };
       return copy;
     });
+    await sendAI(userText, idx);
+  };
 
   // ✅ BREATHING INTERFACE STYLES
   const breathingStyles = {
