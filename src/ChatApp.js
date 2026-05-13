@@ -208,7 +208,7 @@ export default function ChatApp() {
     setPreviewCharacterKey(null);
     setPrestigeHubVisible(false);
     switchView(VIEW_STATES.CHAT);
-    window.history.replaceState(
+    window.history.pushState(
       { isAppRoot: true, view: 'chat', character: key },
       '',
       `/app#chat/${key}`
@@ -319,6 +319,24 @@ export default function ChatApp() {
       }
     })();
   }, [selectedCharacterKey, user, currentSessionId]);
+
+  useEffect(() => {
+    const handlePopState = () => {
+      const hash = window.location.hash.slice(1);
+      if (!hash || !hash.startsWith('chat/')) {
+      // Browser back reached the launcher state
+        handleBackToLauncher();
+      } else {
+      // Browser back reached a different chat
+        const key = hash.replace('chat/', '');
+        setSelectedCharacterKey(key);
+        switchView(VIEW_STATES.CHAT);
+      }
+    };
+
+    window.addEventListener('popstate', handlePopState);
+    return () => window.removeEventListener('popstate', handlePopState);
+  }, [handleBackToLauncher, setSelectedCharacterKey, switchView]);
 
   const handleStartChat = useCallback((key) => {
     handleCharacterSelection(key, 'start_chat');
