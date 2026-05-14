@@ -17,6 +17,7 @@ import PremiumCharacterCard from '../components/PremiumCharacterCard';
 import theme from '../design-system/tokens';
 import ScrollShell from '../components/ScrollShell';
 import NetflixRightPanel from '../components/NetflixRightPanel';
+import LegendsMapPanel from '../components/LegendsMapPanel/LegendsMapPanel';
 
 
 
@@ -327,6 +328,10 @@ const ChatLauncherPage = ({ onStartChat, discoveredCharacters = [] }) => {
     setUpgradeModalOpen(false);
     setUpgradeReason('general');
   }, []);
+
+  //map constt
+  const [mapOpen, setMapOpen]               = useState(false);
+  const [mapSelectedChar, setMapSelectedChar] = useState(null);
   
 
   // Mobile detection
@@ -1503,6 +1508,74 @@ const ChatLauncherPage = ({ onStartChat, discoveredCharacters = [] }) => {
         </div>
       </div>
 
+          {/* globe Button - Opens map Panel */}
+          <div style={{ position: 'relative', display: 'flex', alignItems: 'center' }}>
+            <button
+              onClick={() => setMapOpen(true)}
+              title="Legends Map"
+              aria-label="Open Legends Map"
+              style={{
+                width: '42px',
+                height: '42px',
+                borderRadius: theme.borderRadius.md,          // 12px
+                border: `1px solid ${theme.colors.accent.primary}55`,
+                background: theme.colors.accent.glow,          // rgba(99,102,241,0.2)
+                color: theme.colors.accent.hover,              // #818CF8
+                fontSize: '1.1rem',
+                cursor: 'pointer',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                transition: theme.transitions.normal,
+                flexShrink: 0,
+              }}
+              onMouseEnter={(e) => {
+                e.currentTarget.style.background   = theme.colors.accent.glowStrong;
+                e.currentTarget.style.borderColor  = theme.colors.accent.primary;
+                e.currentTarget.style.transform    = 'scale(1.08)';
+                // Show tooltip
+                e.currentTarget.nextSibling.style.opacity    = '1';
+                e.currentTarget.nextSibling.style.transform  = 'translateX(-50%) translateY(0)';
+              }}
+              onMouseLeave={(e) => {
+                e.currentTarget.style.background   = theme.colors.accent.glow;
+                e.currentTarget.style.borderColor  = `${theme.colors.accent.primary}55`;
+                e.currentTarget.style.transform    = 'scale(1)';
+                // Hide tooltip
+                e.currentTarget.nextSibling.style.opacity    = '0';
+                e.currentTarget.nextSibling.style.transform  = 'translateX(-50%) translateY(4px)';
+              }}
+            >
+              🌍
+            </button>
+            {/* Hover tooltip */}
+            <div
+              style={{
+                position: 'absolute',
+                bottom: 'calc(100% + 8px)',
+                left: '50%',
+                transform: 'translateX(-50%) translateY(4px)',
+                background: theme.colors.background.surface,   // #141B2E
+                border: `1px solid ${theme.colors.accent.primary}55`,
+                borderRadius: theme.borderRadius.sm,            // 8px
+                padding: '4px 10px',
+                whiteSpace: 'nowrap',
+                fontSize: theme.typography.sizes.caption,       // 12px
+                fontFamily: theme.typography.fonts.body,        // Inter
+                fontWeight: theme.typography.weights.medium,    // 500
+                color: theme.colors.accent.hover,               // #818CF8
+                opacity: 0,
+                pointerEvents: 'none',
+                transition: theme.transitions.fast,
+                boxShadow: theme.shadows.elevation02,
+                zIndex: 10,
+              }}
+            >
+              Legends Map
+            </div>
+          </div>10
+
+
       {/* RIGHT HALF - Categories/Characters */}
       {/* RIGHT HALF - Netflix-style rows */}
       <div style={{ width: '50%', height: '100%', overflow: 'hidden' }}>
@@ -1612,6 +1685,31 @@ const ChatLauncherPage = ({ onStartChat, discoveredCharacters = [] }) => {
         triggerReason={upgradeReason}
         currentUsage={null}
       />
+      <LegendsMapPanel
+        isOpen={mapOpen}
+        onClose={() => {
+          setMapOpen(false);
+          setMapSelectedChar(null);
+        }}
+        onCharacterSelect={(char) => {
+          setMapSelectedChar(char);
+        }}
+      />
+        {mapSelectedChar && (
+        <div style={{ zIndex: 2500 }}>
+          <CharacterDetailPanel
+            character={mapSelectedChar}
+            onClose={() => setMapSelectedChar(null)}
+            onStartChat={(char) => {
+              setMapSelectedChar(null);
+              setMapOpen(false);
+              handleCharacterSelect(char);   
+            }}
+            showDiscoverAction={false}
+            isMobile={false}
+          />
+        </div>
+      )}     
     </div>
   );
 };
