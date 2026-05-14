@@ -311,11 +311,13 @@ const LegendsMapPanel = ({ isOpen, onClose, onCharacterSelect }) => {
     const ro = new ResizeObserver(resize);
     ro.observe(area);
 
-    // Render loop
-    const clock = new THREE.Clock();
+    // Render loop — use performance.now() directly (THREE.Clock is deprecated in newer builds)
+    let lastTime = performance.now();
     const tick  = () => {
       rafRef.current = requestAnimationFrame(tick);
-      const dt = clock.getDelta();
+      const now = performance.now();
+      const dt  = Math.min((now - lastTime) / 1000, 0.05); // cap at 50ms to avoid jumps
+      lastTime  = now;
       if (rotatingRef.current) {
         const s = 0.07;
         globe.rotation.y    += dt * s; pinGroup.rotation.y  += dt * s;

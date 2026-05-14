@@ -1431,15 +1431,18 @@ const ChatLauncherPage = ({ onStartChat, discoveredCharacters = [] }) => {
             isMobile={false}
           />
         )}
+ // ── REPLACE the entire buttons container with this: ─────────────────────────
+ 
         {/* ADD BUTTONS CONTAINER RIGHT HERE */}
         <div style={{
           display: 'flex',
           gap: theme.spacing.md,
           marginTop: theme.spacing.lg,
           width: '100%',
-          maxWidth: '400px'
+          maxWidth: '400px',
+          alignItems: 'center',
         }}>
-          {/* CREATE Button - Opens My Characters Panel */}
+          {/* CREATE Button */}
           <button
             onClick={() => {
               const myCharsCategory = enhancedCategories.find(c => c.key === 'my_characters');
@@ -1460,7 +1463,7 @@ const ChatLauncherPage = ({ onStartChat, discoveredCharacters = [] }) => {
               outline: 'none',
               background: `linear-gradient(135deg, ${theme.colors.accent.primary} 0%, ${theme.colors.accent.hover} 100%)`,
               color: '#fff',
-              boxShadow: theme.shadows.elevation02
+              boxShadow: theme.shadows.elevation02,
             }}
             onMouseEnter={(e) => {
               e.currentTarget.style.transform = 'translateY(-2px)';
@@ -1473,8 +1476,8 @@ const ChatLauncherPage = ({ onStartChat, discoveredCharacters = [] }) => {
           >
             Create
           </button>
-
-          {/* DISCOVER Button - Opens Market Hub */}
+ 
+          {/* DISCOVER Button */}
           <button
             onClick={() => switchView(VIEW_STATES.MARKET_HUB)}
             style={{
@@ -1490,7 +1493,7 @@ const ChatLauncherPage = ({ onStartChat, discoveredCharacters = [] }) => {
               outline: 'none',
               background: theme.colors.background.interactive,
               color: theme.colors.text.primary,
-              boxShadow: theme.shadows.elevation01
+              boxShadow: theme.shadows.elevation01,
             }}
             onMouseEnter={(e) => {
               e.currentTarget.style.transform = 'translateY(-2px)';
@@ -1505,65 +1508,60 @@ const ChatLauncherPage = ({ onStartChat, discoveredCharacters = [] }) => {
           >
             Discover
           </button>
-        </div>
-      </div>
-
-          {/* globe Button - Opens map Panel */}
-          <div style={{ position: 'relative', display: 'flex', alignItems: 'center' }}>
+ 
+          {/* 🌍 LEGENDS MAP — icon only, tooltip on hover, same row as Create/Discover */}
+          <div style={{ position: 'relative', flexShrink: 0 }}>
             <button
               onClick={() => setMapOpen(true)}
-              title="Legends Map"
               aria-label="Open Legends Map"
               style={{
                 width: '42px',
                 height: '42px',
-                borderRadius: theme.borderRadius.md,          // 12px
+                borderRadius: theme.borderRadius.md,
                 border: `1px solid ${theme.colors.accent.primary}55`,
-                background: theme.colors.accent.glow,          // rgba(99,102,241,0.2)
-                color: theme.colors.accent.hover,              // #818CF8
+                background: theme.colors.accent.glow,
+                color: theme.colors.accent.hover,
                 fontSize: '1.1rem',
                 cursor: 'pointer',
                 display: 'flex',
                 alignItems: 'center',
                 justifyContent: 'center',
                 transition: theme.transitions.normal,
-                flexShrink: 0,
               }}
               onMouseEnter={(e) => {
-                e.currentTarget.style.background   = theme.colors.accent.glowStrong;
-                e.currentTarget.style.borderColor  = theme.colors.accent.primary;
-                e.currentTarget.style.transform    = 'scale(1.08)';
-                // Show tooltip
-                e.currentTarget.nextSibling.style.opacity    = '1';
-                e.currentTarget.nextSibling.style.transform  = 'translateX(-50%) translateY(0)';
+                e.currentTarget.style.background  = theme.colors.accent.glowStrong;
+                e.currentTarget.style.borderColor = theme.colors.accent.primary;
+                e.currentTarget.style.transform   = 'scale(1.08)';
+                const tip = e.currentTarget.parentElement.querySelector('[data-tip]');
+                if (tip) { tip.style.opacity = '1'; tip.style.transform = 'translateX(-50%) translateY(0)'; }
               }}
               onMouseLeave={(e) => {
-                e.currentTarget.style.background   = theme.colors.accent.glow;
-                e.currentTarget.style.borderColor  = `${theme.colors.accent.primary}55`;
-                e.currentTarget.style.transform    = 'scale(1)';
-                // Hide tooltip
-                e.currentTarget.nextSibling.style.opacity    = '0';
-                e.currentTarget.nextSibling.style.transform  = 'translateX(-50%) translateY(4px)';
+                e.currentTarget.style.background  = theme.colors.accent.glow;
+                e.currentTarget.style.borderColor = `${theme.colors.accent.primary}55`;
+                e.currentTarget.style.transform   = 'scale(1)';
+                const tip = e.currentTarget.parentElement.querySelector('[data-tip]');
+                if (tip) { tip.style.opacity = '0'; tip.style.transform = 'translateX(-50%) translateY(4px)'; }
               }}
             >
               🌍
             </button>
-            {/* Hover tooltip */}
+            {/* Tooltip */}
             <div
+              data-tip="true"
               style={{
                 position: 'absolute',
                 bottom: 'calc(100% + 8px)',
                 left: '50%',
                 transform: 'translateX(-50%) translateY(4px)',
-                background: theme.colors.background.surface,   // #141B2E
+                background: theme.colors.background.surface,
                 border: `1px solid ${theme.colors.accent.primary}55`,
-                borderRadius: theme.borderRadius.sm,            // 8px
+                borderRadius: theme.borderRadius.sm,
                 padding: '4px 10px',
                 whiteSpace: 'nowrap',
-                fontSize: theme.typography.sizes.caption,       // 12px
-                fontFamily: theme.typography.fonts.body,        // Inter
-                fontWeight: theme.typography.weights.medium,    // 500
-                color: theme.colors.accent.hover,               // #818CF8
+                fontSize: theme.typography.sizes.caption,
+                fontFamily: theme.typography.fonts.body,
+                fontWeight: theme.typography.weights.medium,
+                color: theme.colors.accent.hover,
                 opacity: 0,
                 pointerEvents: 'none',
                 transition: theme.transitions.fast,
@@ -1573,8 +1571,10 @@ const ChatLauncherPage = ({ onStartChat, discoveredCharacters = [] }) => {
             >
               Legends Map
             </div>
-          </div>10
-
+          </div>
+         </div>
+        </div>
+        {/* ── END BUTTONS CONTAINER ── */}
 
       {/* RIGHT HALF - Categories/Characters */}
       {/* RIGHT HALF - Netflix-style rows */}
