@@ -590,7 +590,7 @@ export const characterCategories = [
       { 
         key: 'shaka_zulu',
         name: 'Shaka Zulu',
-        thumbnailUrl: '/images/shaka.jpg',
+        thumbnailUrl: '/images/shaka_zulu.jpg',
         description: 'Assegai Reformer. Short stabs win long wars. His bull-horn formation reshaped warfare—and empires paid in blood.'
       },
       {

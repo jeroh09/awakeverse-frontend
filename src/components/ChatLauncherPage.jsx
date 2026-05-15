@@ -1701,7 +1701,8 @@ const ChatLauncherPage = ({ onStartChat, discoveredCharacters = [] }) => {
             onStartChat={(char) => {
               setMapSelectedChar(null);
               setMapOpen(false);
-              handleCharacterSelect(char);   
+              trackInteraction(char.key || char.character_key);
+              onStartChat(char.key || char.character_key);   
             }}
             showDiscoverAction={false}
             isMobile={false}
