@@ -35,51 +35,6 @@ const CONT_COLOR = {
 
 const AUTO_RESUME_MS = 4000;
 
-// ── Inject pin animation styles once into <head> ─────────────────────────────
-// react-globe.gl htmlElementsData creates real DOM nodes outside React,
-// so we use a global style tag for the keyframe animation.
-function ensurePinStyles() {
-  const id = 'lgd-pin-styles';
-  if (document.getElementById(id)) return;
-  const s = document.createElement('style');
-  s.id = id;
-  s.textContent = `
-    .lgd-pin {
-      position: relative;
-      width: 20px;
-      height: 20px;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      cursor: pointer;
-    }
-    .lgd-pin-dot {
-      width: 9px;
-      height: 9px;
-      border-radius: 50%;
-      border: 1.5px solid rgba(255,255,255,0.85);
-      flex-shrink: 0;
-      transition: transform 0.2s ease;
-      position: relative;
-      z-index: 1;
-    }
-    .lgd-pin:hover .lgd-pin-dot { transform: scale(1.65); }
-    .lgd-pin-pulse {
-      position: absolute;
-      inset: 0;
-      border-radius: 50%;
-      border: 1px solid;
-      opacity: 0;
-      animation: lgdPulse 2.4s ease-out infinite;
-    }
-    @keyframes lgdPulse {
-      0%   { opacity: 0.65; transform: scale(1);   }
-      100% { opacity: 0;    transform: scale(3.5); }
-    }
-  `;
-  document.head.appendChild(s);
-}
-
 // ── Globe SVG icon — replaces emoji ──────────────────────────────────────────
 const GlobeIcon = () => (
   <svg viewBox="0 0 24 24" fill="none" stroke="url(#lgd-grad)" strokeWidth="1.7"
@@ -203,6 +158,8 @@ const LegendsMapPanel = ({ isOpen, onClose, onCharacterSelect }) => {
   const [pauseHint, setPauseHint]             = useState(false);
   // Globe canvas dimensions — driven by ResizeObserver on the wrapper
   const [globeSize, setGlobeSize]             = useState({ w: 660, h: 500 });
+  // Hovered pin drives the React-rendered tooltip
+  const [hoveredPin, setHoveredPin]           = useState(null);
 
   const globeRef       = useRef(null);
   const globeWrapRef   = useRef(null);
@@ -212,9 +169,6 @@ const LegendsMapPanel = ({ isOpen, onClose, onCharacterSelect }) => {
 
   // Keep selectedPinRef in sync with state
   useEffect(() => { selectedPinRef.current = selectedPin; }, [selectedPin]);
-
-  // ── Inject pin animation styles once ──────────────────────────────────────
-  useEffect(() => { ensurePinStyles(); }, []);
 
   // ── Measure globe wrapper via ResizeObserver ───────────────────────────────
   useEffect(() => {
@@ -303,35 +257,6 @@ const LegendsMapPanel = ({ isOpen, onClose, onCharacterSelect }) => {
     setRotating(true);
     setPauseHint(false);
   }, []);
-
-  // ── Create pin DOM element ─────────────────────────────────────────────────
-  const createPin = useCallback((pin) => {
-    const color = CONT_COLOR[pin.continent] || '#6366F1';
-    const delay = (Math.random() * 2).toFixed(2);
-
-    const el = document.createElement('div');
-    el.className = 'lgd-pin';
-    el.setAttribute('aria-label', pin.display_name);
-    el.title = pin.display_name;
-    el.innerHTML = `
-      <div class="lgd-pin-dot"
-        style="background:${color};box-shadow:0 0 7px ${color},0 0 14px ${color};">
-      </div>
-      <div class="lgd-pin-pulse"
-        style="border-color:${color};animation-delay:${delay}s;">
-      </div>
-    `;
-
-    el.addEventListener('click', () => {
-      setSelectedPin(pin);
-      selectedPinRef.current = pin;
-      rotatingRef.current = false;
-      setRotating(false);
-      clearTimeout(resumeTimerRef.current);
-    });
-
-    return el;
-  }, []); // stable — CONT_COLOR and setters never change
 
   // ── Globe background click — pause / resume ────────────────────────────────
   const handleGlobeClick = useCallback(() => {
@@ -468,13 +393,45 @@ const LegendsMapPanel = ({ isOpen, onClose, onCharacterSelect }) => {
                 bumpImageUrl="//unpkg.com/three-globe/example/img/earth-topology.png"
                 atmosphereColor="#6366F1"
                 atmosphereAltitude={0.14}
-                htmlElementsData={filtered}
-                htmlLat={d => d.lat}
-                htmlLng={d => d.lng}
-                htmlAltitude={0.012}
-                htmlElement={d => createPin(d)}
+
+                pointsData={filtered}
+                pointLat={d => d.lat}
+                pointLng={d => d.lng}
+                pointAltitude={0.012}
+                pointColor={d => CONT_COLOR[d.continent] || '#6366F1'}
+                pointRadius={0.45}
+                pointLabel={() => ''}
+
+                ringsData={filtered}
+                ringLat={d => d.lat}
+                ringLng={d => d.lng}
+                ringColor={d => CONT_COLOR[d.continent] || '#6366F1'}
+                ringMaxRadius={3}
+                ringPropagationSpeed={2}
+                ringRepeatPeriod={1200}
+                ringAltitude={0.005}
+
+                onPointClick={(pin) => {
+                  setSelectedPin(pin);
+                  selectedPinRef.current = pin;
+                  rotatingRef.current = false;
+                  setRotating(false);
+                  clearTimeout(resumeTimerRef.current);
+                }}
+                onPointHover={(pin) => setHoveredPin(pin || null)}
                 onGlobeClick={handleGlobeClick}
               />
+            )}
+
+            {/* React-rendered tooltip — no raw DOM */}
+            {hoveredPin && (
+              <div className={styles.tooltip}>
+                <strong>{hoveredPin.display_name}</strong>
+                <span>
+                  {hoveredPin.country}
+                  {hoveredPin.historical_period ? ` · ${hoveredPin.historical_period}` : ''}
+                </span>
+              </div>
             )}
 
             {!loading && !error && (
