@@ -1430,9 +1430,7 @@ const ChatLauncherPage = ({ onStartChat, discoveredCharacters = [] }) => {
             hasActiveConversations={hasActiveConversations}
             isMobile={false}
           />
-        )}
- // ── REPLACE the entire buttons container with this: ─────────────────────────
- 
+        )} 
         {/* ADD BUTTONS CONTAINER RIGHT HERE */}
         <div style={{
           display: 'flex',

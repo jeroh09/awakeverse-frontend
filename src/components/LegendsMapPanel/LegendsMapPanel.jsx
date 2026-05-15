@@ -534,7 +534,7 @@ const LegendsMapPanel = ({ isOpen, onClose, onCharacterSelect }) => {
           {!loading && !error && pins.length === 0 && (
             <div className={styles.stateBox}>
               <span className={styles.stateIcon}>🗺️</span>
-              <p>No legends mapped yet — the cron job populates this daily.</p>
+              <p></p>
             </div>
           )}
 
