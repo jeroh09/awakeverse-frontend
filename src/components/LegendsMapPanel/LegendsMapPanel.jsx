@@ -132,54 +132,51 @@ const CharacterCard = memo(({ pin, onClose, onStartChat }) => {
   const { src, failed, handleError } = useImageSrc(pin);
 
   return (
-  <div className={`${styles.charCard} ${pin ? styles.charCardVisible : ''}`}>
-    {pin && (
-      <>
-        {/* Layer 1 — background image, fills entire card */}
-        {!failed && src ? (
-          <img
-            src={src}
-            alt={pin.display_name}
-            className={styles.cardBgImage}
-            onError={handleError}
-            draggable={false}
-          />
-        ) : (
-          /* Fallback bg when both jpg and jpeg fail */
-          <div className={styles.cardBgFallback}>
-            {(pin.display_name || '?').charAt(0).toUpperCase()}
-          </div>
-        )}
-
-        {/* Layer 2 — natural gradient fade, transparent → dark */}
-        <div className={styles.cardGradient} />
-
-        {/* Layer 3 — content pinned to bottom */}
-        <div className={styles.cardContent}>
-          <button className={styles.cardClose} onClick={onClose} aria-label="Close">×</button>
-
-          <div className={styles.cardName}>{pin.display_name}</div>
-
-          <div className={styles.cardOrigin}>
-            {pin.country}{pin.continent ? ` · ${pin.continent}` : ''}
-          </div>
-
-          {pin.historical_period && (
-            <div className={styles.cardPeriod}>{pin.historical_period}</div>
+    <div className={`${styles.charCard} ${pin ? styles.charCardVisible : ''}`}>
+      {pin && (
+        <>
+          {/* Layer 1 — background image, fills entire card */}
+          {!failed && src ? (
+            <img
+              src={src}
+              alt={pin.display_name}
+              className={styles.cardBgImage}
+              onError={handleError}
+              draggable={false}
+            />
+          ) : (
+            <div className={styles.cardBgFallback}>
+              {(pin.display_name || '?').charAt(0).toUpperCase()}
+            </div>
           )}
 
-          {pin.short_description && (
-            <p className={styles.cardDesc}>{pin.short_description}</p>
-          )}
+          {/* Layer 2 — natural gradient fade, transparent to dark */}
+          <div className={styles.cardGradient} />
 
-          <button className={styles.cardCta} onClick={() => onStartChat(pin)}>
-            Start Chat →
-          </button>
-        </div>
-      </>
-    )}
-  </div>
-));
+          {/* Layer 3 — content pinned to bottom */}
+          <div className={styles.cardContent}>
+            <button className={styles.cardClose} onClick={onClose} aria-label="Close">
+              &times;
+            </button>
+            <div className={styles.cardName}>{pin.display_name}</div>
+            <div className={styles.cardOrigin}>
+              {pin.country}{pin.continent ? ` · ${pin.continent}` : ''}
+            </div>
+            {pin.historical_period && (
+              <div className={styles.cardPeriod}>{pin.historical_period}</div>
+            )}
+            {pin.short_description && (
+              <p className={styles.cardDesc}>{pin.short_description}</p>
+            )}
+            <button className={styles.cardCta} onClick={() => onStartChat(pin)}>
+              Start Chat
+            </button>
+          </div>
+        </>
+      )}
+    </div>
+  );
+});
 
 // ── Main component ────────────────────────────────────────────────────────────
 
@@ -599,7 +596,7 @@ const LegendsMapPanel = ({ isOpen, onClose, onCharacterSelect }) => {
           {!loading && !error && pins.length === 0 && (
             <div className={styles.stateBox}>
               <span className={styles.stateIcon}>🗺️</span>
-              <p></p>
+              <p>No legends mapped yet — the cron job populates this daily.</p>
             </div>
           )}
 
