@@ -1,16 +1,17 @@
 /* LegendsMapPanel.module.css
  *
- * Follows AwakeVerse design language from OnboardingFlow.css exactly.
+ * Centered modal — double indigo border, 22px radius, AwakeVerse tokens.
+ * Matches ob-card double-border technique from OnboardingFlow.css exactly.
  *
- * Shell bg   : #020617
- * Card bg    : rgba(15, 23, 42, 0.97)   — matches .ob-card
- * Accent     : #6366f1 / #818cf8
- * Ivory      : #f5f5dc                   — all titles
- * Secondary  : #94a3b8
- * Tertiary   : #64748b
- * Double border: inner 1px rgba(99,102,241,0.28)
- *               outer ring via box-shadow 0 0 0 4-5px
- * Radius     : 22px panel · 14px inner cards · 9px pills/buttons
+ * Shell bg  : #020617
+ * Surface   : rgba(15, 23, 42, 0.97)
+ * Accent    : #6366f1 / #818cf8
+ * Ivory     : #f5f5dc
+ * Double border:
+ *   inner  → border: 1px solid rgba(99,102,241,0.28)
+ *   outer  → box-shadow: 0 0 0 4px rgba(99,102,241,0.06),
+ *                        0 0 0 5px rgba(99,102,241,0.04)
+ * Radius    : 22px panel · 18px card · 9px buttons · 999px pills
  */
 
 /* ── Backdrop ── */
@@ -23,46 +24,48 @@
   animation: fadeIn 0.22s ease-out forwards;
 }
 
-/* ── Panel shell ── */
+/* ── Panel — centered modal ── */
 .panel {
   position: fixed;
-  top: 0;
-  left: 0;
-  bottom: 0;
-  width: min(840px, 90vw);
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  width: min(940px, 92vw);
+  height: min(680px, 88vh);
   z-index: 1200;
 
-  /* Background + radial ambient glow — matches ob-shell + ob-bg */
-  background: #020617;
+  background: #0a0f1a;
 
-  /* Double border: inner indigo line + outer dim ring + depth shadow */
-  border-right: 1px solid rgba(99, 102, 241, 0.28);
+  /* Double indigo border — ob-card technique */
+  border: 1px solid rgba(99, 102, 241, 0.28);
   box-shadow:
-    4px 0 0 0 rgba(99, 102, 241, 0.06),
-    5px 0 0 0 rgba(99, 102, 241, 0.04),
-    6px 0 48px rgba(0, 0, 0, 0.75);
+    0 0 0 4px rgba(99, 102, 241, 0.06),
+    0 0 0 5px rgba(99, 102, 241, 0.04),
+    0 32px 80px rgba(0, 0, 0, 0.85),
+    0 0 60px -20px rgba(99, 102, 241, 0.2);
 
+  border-radius: 22px;
+  overflow: hidden;
   display: flex;
   flex-direction: column;
-  overflow: hidden;
-  border-radius: 0 22px 22px 0;
 
-  animation: slideInLeft 0.36s cubic-bezier(0.34, 1.3, 0.64, 1) forwards;
+  animation: panelIn 0.38s cubic-bezier(0.34, 1.2, 0.64, 1) forwards;
 }
 
-/* Ambient radial gradients inside the panel — like ob-bg */
+/* Ambient radial glow inside panel */
 .panel::before {
   content: '';
   position: absolute;
   inset: 0;
   background:
-    radial-gradient(ellipse 55% 40% at 15% 15%, rgba(99,102,241,0.11) 0%, transparent 70%),
-    radial-gradient(ellipse 40% 35% at 85% 80%, rgba(129,140,248,0.07) 0%, transparent 68%);
+    radial-gradient(ellipse 55% 45% at 50% 50%, rgba(99,102,241,0.07) 0%, transparent 65%),
+    radial-gradient(ellipse 30% 25% at 10% 10%, rgba(99,102,241,0.06) 0%, transparent 58%),
+    radial-gradient(ellipse 25% 20% at 90% 88%, rgba(129,140,248,0.04) 0%, transparent 55%);
   pointer-events: none;
   z-index: 0;
 }
 
-/* All children above the radial overlay */
+/* All direct children above radial overlay */
 .panel > * { position: relative; z-index: 1; }
 
 /* ── Header ── */
@@ -70,7 +73,8 @@
   display: flex;
   align-items: center;
   justify-content: space-between;
-  padding: 1.2rem 1.5rem 0.9rem;
+  gap: 0.75rem;
+  padding: 1rem 1.4rem 0.85rem;
   border-bottom: 1px solid rgba(148, 163, 184, 0.08);
   flex-shrink: 0;
 }
@@ -79,18 +83,27 @@
   display: flex;
   align-items: center;
   gap: 0.7rem;
+  flex-shrink: 0;
 }
 
 .titleIcon {
-  font-size: 1.4rem;
-  line-height: 1;
-  filter: drop-shadow(0 0 8px rgba(99, 102, 241, 0.5));
+  width: 34px;
+  height: 34px;
+  border-radius: 10px;
+  background: rgba(99, 102, 241, 0.1);
+  border: 1px solid rgba(99, 102, 241, 0.28);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
 }
 
-/* Title: Syne + IVORY — not indigo */
+.titleIcon svg { width: 17px; height: 17px; }
+
+/* Title: Syne + ivory */
 .title {
   font-family: 'Syne', -apple-system, BlinkMacSystemFont, sans-serif;
-  font-size: 1.15rem;
+  font-size: 1.05rem;
   font-weight: 700;
   color: #f5f5dc;
   margin: 0;
@@ -100,22 +113,22 @@
 
 .subtitle {
   font-family: 'Inter', system-ui, sans-serif;
-  font-size: 0.68rem;
+  font-size: 0.65rem;
   font-weight: 600;
-  letter-spacing: 0.08em;
+  letter-spacing: 0.09em;
   text-transform: uppercase;
-  color: #6366f1;
-  margin: 3px 0 0;
+  color: #818cf8;
+  margin: 2px 0 0;
 }
 
 .closeBtn {
-  width: 32px;
-  height: 32px;
+  width: 30px;
+  height: 30px;
   border-radius: 50%;
   border: 1px solid rgba(99, 102, 241, 0.32);
   background: rgba(99, 102, 241, 0.07);
   color: #818cf8;
-  font-size: 18px;
+  font-size: 16px;
   line-height: 1;
   cursor: pointer;
   display: flex;
@@ -126,165 +139,139 @@
 }
 
 .closeBtn:hover {
-  background: rgba(99, 102, 241, 0.18);
+  background: rgba(99, 102, 241, 0.2);
   border-color: #6366f1;
   transform: scale(1.08);
 }
 
-/* ── Continent filter pills — matches .ob-pill ── */
+/* ── Continent filter pills ── */
 .filterRow {
   display: flex;
-  gap: 0.4rem;
-  padding: 0.7rem 1.5rem;
+  gap: 0.3rem;
+  flex: 1;
   overflow-x: auto;
-  flex-shrink: 0;
   scrollbar-width: none;
-  border-bottom: 1px solid rgba(148, 163, 184, 0.07);
 }
 
 .filterRow::-webkit-scrollbar { display: none; }
 
 .pill {
-  padding: 0.25rem 0.7rem;
+  padding: 0.22rem 0.65rem;
   border-radius: 999px;
   white-space: nowrap;
-  border: 1px solid rgba(99, 102, 241, 0.32);
+  border: 1px solid rgba(99, 102, 241, 0.28);
   background: rgba(99, 102, 241, 0.07);
   color: #818cf8;
   font-family: 'Inter', system-ui, sans-serif;
-  font-size: 0.7rem;
+  font-size: 0.65rem;
   font-weight: 500;
   cursor: pointer;
   transition: all 0.18s ease;
 }
 
 .pill:hover {
-  border-color: rgba(99, 102, 241, 0.6);
+  border-color: rgba(99, 102, 241, 0.55);
   color: #e0e7ff;
-  background: rgba(99, 102, 241, 0.12);
+  background: rgba(99, 102, 241, 0.13);
 }
 
 .pillActive {
-  background: rgba(99, 102, 241, 0.16);
+  background: rgba(99, 102, 241, 0.18);
   border-color: #6366f1;
   color: #e0e7ff;
   font-weight: 600;
-  box-shadow: 0 0 10px rgba(99, 102, 241, 0.3);
+  box-shadow: 0 0 10px rgba(99, 102, 241, 0.25);
 }
 
-/* ── Globe wrapper ── */
+/* ── Body ── */
+.body {
+  flex: 1;
+  display: flex;
+  min-height: 0;
+  overflow: hidden;
+}
+
+/* ── Globe stage ── */
 .globeWrap {
   flex: 1;
   position: relative;
   overflow: hidden;
+  min-width: 0;
   display: flex;
   align-items: center;
   justify-content: center;
-  min-height: 0;
 }
 
-.canvas {
-  width: 100% !important;
-  height: 100% !important;
-  display: block;
-  border-radius: 0;
-}
-
-/* ── Rotation hint ── */
+/* Rotation hint */
 .rotHint {
   position: absolute;
-  bottom: 12px;
+  bottom: 0.75rem;
   left: 50%;
   transform: translateX(-50%);
   font-family: 'Inter', system-ui, sans-serif;
-  font-size: 0.62rem;
+  font-size: 0.58rem;
   font-weight: 500;
-  letter-spacing: 0.04em;
-  color: rgba(148, 163, 184, 0.35);
+  letter-spacing: 0.05em;
+  color: rgba(148, 163, 184, 0.3);
   pointer-events: none;
-  transition: opacity 0.3s, color 0.3s;
   white-space: nowrap;
+  z-index: 5;
+  transition: color 0.3s;
 }
 
 .rotHintPaused {
   color: rgba(99, 102, 241, 0.45);
 }
 
-/* ── Tooltip ── */
-.tooltip {
-  position: absolute;
-  pointer-events: none;
-  /* Matches ob-card aesthetic */
-  background: rgba(15, 23, 42, 0.97);
-  border: 1px solid rgba(99, 102, 241, 0.28);
-  box-shadow:
-    0 0 0 4px rgba(99, 102, 241, 0.05),
-    0 8px 24px rgba(0, 0, 0, 0.6);
-  border-radius: 12px;
-  padding: 7px 12px;
-  font-family: 'Inter', system-ui, sans-serif;
-  opacity: 0;
-  transition: opacity 0.12s;
-  max-width: 190px;
-  z-index: 10;
+/* ── Card column — width-animates open on pin click ── */
+.cardCol {
+  width: 0;
+  flex-shrink: 0;
+  overflow: hidden;
+  transition:
+    width 0.4s cubic-bezier(0.34, 1.1, 0.64, 1),
+    border-left-color 0.3s ease;
+  border-left: 1px solid transparent;
 }
 
-.tooltip strong {
-  display: block;
-  font-size: 12px;
-  font-weight: 700;
-  color: #f5f5dc;
-  margin-bottom: 2px;
+.cardColVisible {
+  width: 240px;
+  border-left-color: rgba(148, 163, 184, 0.08);
 }
 
-.tooltip span {
-  font-size: 10.5px;
-  color: #64748b;
+/* Inner wrapper — fixed 240px to stay stable during width animation */
+.cardInner {
+  width: 240px;
+  height: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 1rem 0.9rem;
 }
 
-/* ── Character card — full-bleed image + gradient fade (CategoryCard pattern) ── */
+/* ── Character card — full-bleed image + gradient fade ── */
 .charCard {
-  position: absolute;
-  right: 16px;
-  top: 50%;
-  transform: translateY(-50%) translateX(20px);
-  width: 210px;
-  height: 300px;
-
-  /* Double border: inner indigo line + dark gap + outer ring */
+  width: 100%;
+  border-radius: 18px;
+  overflow: hidden;
   border: 1px solid rgba(99, 102, 241, 0.45);
   box-shadow:
     0 0 0 4px rgba(15, 23, 42, 0.97),
     0 0 0 5px rgba(99, 102, 241, 0.28),
-    0 16px 48px rgba(0, 0, 0, 0.7);
-  border-radius: 18px;
-  overflow: hidden;
-
-  z-index: 20;
-  opacity: 0;
-  pointer-events: none;
-  transition:
-    opacity 0.3s ease,
-    transform 0.4s cubic-bezier(0.34, 1.1, 0.64, 1),
-    border-color 0.2s ease,
-    box-shadow 0.2s ease;
-
-  /* Fallback bg if no image */
+    0 16px 40px rgba(0, 0, 0, 0.7);
   background: rgba(15, 23, 42, 0.97);
-}
-
-.charCardVisible {
-  opacity: 1;
-  pointer-events: auto;
-  transform: translateY(-50%) translateX(0);
+  position: relative;
+  height: 340px;
+  transition: border-color 0.2s ease, box-shadow 0.2s ease;
 }
 
 .charCard:hover {
-  border-color: rgba(99, 102, 241, 0.75);
+  border-color: rgba(99, 102, 241, 0.7);
   box-shadow:
     0 0 0 4px rgba(15, 23, 42, 0.97),
-    0 0 0 5px rgba(99, 102, 241, 0.55),
-    0 20px 56px rgba(99, 102, 241, 0.2);
+    0 0 0 5px rgba(99, 102, 241, 0.5),
+    0 20px 52px rgba(0, 0, 0, 0.7),
+    0 0 40px -10px rgba(99, 102, 241, 0.25);
 }
 
 /* Layer 1 — full-bleed character image */
@@ -299,11 +286,9 @@
   transition: transform 0.4s ease;
 }
 
-.charCard:hover .cardBgImage {
-  transform: scale(1.04);
-}
+.charCard:hover .cardBgImage { transform: scale(1.04); }
 
-/* Fallback when both jpg and jpeg fail — shows initial letter */
+/* Fallback when image fails */
 .cardBgFallback {
   position: absolute;
   inset: 0;
@@ -314,29 +299,27 @@
   font-family: 'Syne', -apple-system, BlinkMacSystemFont, sans-serif;
   font-size: 4rem;
   font-weight: 700;
-  color: rgba(99, 102, 241, 0.35);
+  color: rgba(99, 102, 241, 0.3);
   letter-spacing: -2px;
 }
 
-/* Layer 2 — natural gradient fade, no hard cutoff
-   transparent top → semi-transparent midpoint → near-opaque bottom
-   The image still shows through the upper portion                     */
+/* Layer 2 — natural gradient: transparent top → near-opaque bottom */
 .cardGradient {
   position: absolute;
   inset: 0;
   background: linear-gradient(
     to bottom,
-    rgba(2, 6, 23, 0)     0%,
-    rgba(2, 6, 23, 0)     25%,
-    rgba(2, 6, 23, 0.18)  40%,
-    rgba(2, 6, 23, 0.6)   60%,
-    rgba(2, 6, 23, 0.88)  78%,
-    rgba(2, 6, 23, 0.97)  92%
+    rgba(2, 6, 23, 0)    0%,
+    rgba(2, 6, 23, 0)    25%,
+    rgba(2, 6, 23, 0.18) 40%,
+    rgba(2, 6, 23, 0.6)  60%,
+    rgba(2, 6, 23, 0.88) 78%,
+    rgba(2, 6, 23, 0.97) 92%
   );
   pointer-events: none;
 }
 
-/* Layer 3 — content pinned to bottom, over the gradient */
+/* Layer 3 — content pinned to bottom */
 .cardContent {
   position: absolute;
   bottom: 0;
@@ -345,10 +328,10 @@
   padding: 0.9rem 0.85rem 0.85rem;
   display: flex;
   flex-direction: column;
-  gap: 0.2rem;
+  gap: 0.18rem;
 }
 
-/* Close button — top-right, above all layers */
+/* Close button — top-right corner */
 .cardClose {
   position: absolute;
   top: 9px;
@@ -359,13 +342,13 @@
   border: 1px solid rgba(99, 102, 241, 0.35);
   border-radius: 50%;
   color: #94a3b8;
-  font-size: 13px;
+  font-size: 12px;
   cursor: pointer;
   display: flex;
   align-items: center;
   justify-content: center;
-  transition: all 0.15s;
   backdrop-filter: blur(4px);
+  transition: all 0.15s ease;
   z-index: 10;
 }
 
@@ -375,10 +358,10 @@
   color: #f5f5dc;
 }
 
-/* Card name: Syne + ivory */
+/* Card text */
 .cardName {
   font-family: 'Syne', -apple-system, BlinkMacSystemFont, sans-serif;
-  font-size: 0.95rem;
+  font-size: 0.92rem;
   font-weight: 700;
   color: #f5f5dc;
   line-height: 1.2;
@@ -389,9 +372,9 @@
 
 .cardOrigin {
   font-family: 'Inter', system-ui, sans-serif;
-  font-size: 0.62rem;
+  font-size: 0.58rem;
   font-weight: 600;
-  letter-spacing: 0.08em;
+  letter-spacing: 0.09em;
   text-transform: uppercase;
   color: #818cf8;
   margin-bottom: 3px;
@@ -399,34 +382,33 @@
 
 .cardPeriod {
   font-family: 'Inter', system-ui, sans-serif;
-  font-size: 0.6rem;
-  color: rgba(148, 163, 184, 0.65);
+  font-size: 0.58rem;
+  color: rgba(148, 163, 184, 0.55);
   margin-bottom: 5px;
 }
 
 .cardDesc {
   font-family: 'Inter', system-ui, sans-serif;
-  font-size: 0.68rem;
+  font-size: 0.65rem;
   color: rgba(148, 163, 184, 0.85);
   line-height: 1.5;
-  margin: 0 0 0.65rem;
-  /* Cap at 2 lines to keep card compact */
+  margin: 0 0 0.6rem;
   display: -webkit-box;
   -webkit-line-clamp: 2;
   -webkit-box-orient: vertical;
   overflow: hidden;
 }
 
-/* CTA: matches .ob-btn--primary */
+/* CTA — matches ob-btn--primary */
 .cardCta {
   width: 100%;
-  padding: 0.48rem;
+  padding: 0.45rem;
   border-radius: 9px;
   background: linear-gradient(135deg, #6366f1, #818cf8);
   border: none;
   color: #fff;
   font-family: 'Inter', system-ui, sans-serif;
-  font-size: 0.76rem;
+  font-size: 0.72rem;
   font-weight: 600;
   cursor: pointer;
   box-shadow: 0 2px 14px rgba(99, 102, 241, 0.4);
@@ -448,6 +430,8 @@
   padding: 3rem 2rem;
   text-align: center;
   font-family: 'Inter', system-ui, sans-serif;
+  width: 100%;
+  height: 100%;
 }
 
 .stateIcon { font-size: 2.4rem; }
@@ -468,7 +452,7 @@
   animation: spin 0.85s linear infinite;
 }
 
-/* Retry: matches .ob-btn--ghost */
+/* Retry — matches ob-btn--ghost */
 .retryBtn {
   padding: 0.5rem 1.2rem;
   border-radius: 9px;
@@ -494,10 +478,10 @@
   align-items: center;
   justify-content: center;
   gap: 0.5rem;
-  padding: 0.6rem 1.5rem;
+  padding: 0.55rem 1.4rem;
   border-top: 1px solid rgba(148, 163, 184, 0.07);
   font-family: 'Inter', system-ui, sans-serif;
-  font-size: 0.62rem;
+  font-size: 0.6rem;
   font-weight: 500;
   color: #475569;
   font-style: italic;
@@ -507,9 +491,9 @@
 .footerDot { opacity: 0.4; }
 
 /* ── Animations ── */
-@keyframes slideInLeft {
-  from { transform: translateX(-100%); opacity: 0.6; }
-  to   { transform: translateX(0);     opacity: 1;   }
+@keyframes panelIn {
+  from { opacity: 0; transform: translate(-50%, -50%) scale(0.96); }
+  to   { opacity: 1; transform: translate(-50%, -50%) scale(1);    }
 }
 
 @keyframes fadeIn {
@@ -523,29 +507,29 @@
 
 /* ── Accessibility ── */
 @media (prefers-reduced-motion: reduce) {
-  .panel, .backdrop { animation: none; }
-  .panel { transform: translateX(0); }
-  .backdrop { opacity: 1; }
+  .panel   { animation: none; transform: translate(-50%, -50%); }
+  .backdrop { animation: none; }
+  .cardCol { transition: none; }
 }
 
 /* ── Mobile ── */
 @media (max-width: 768px) {
   .panel {
-    width: 100vw;
-    border-radius: 0;
-    border-right: none;
+    width: 96vw;
+    height: 92vh;
+    border-radius: 16px;
   }
-  .charCard {
-    right: 8px;
-    left: 8px;
-    width: auto;
-    height: 220px;
-    top: auto;
-    bottom: 64px;
-    transform: translateY(12px);
-    border-radius: 18px;
+
+  /* On mobile, card col hides — card overlays globe from bottom instead */
+  .cardColVisible {
+    width: 0;
+    border-left-color: transparent;
   }
-  .charCardVisible {
-    transform: translateY(0);
+
+  .header {
+    flex-wrap: wrap;
+    padding: 0.75rem 1rem 0.65rem;
   }
+
+  .filterRow { max-width: 100%; }
 }
