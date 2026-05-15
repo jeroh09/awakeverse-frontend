@@ -92,25 +92,90 @@ const FilterPills = memo(({ active, onChange }) => (
   </div>
 ));
 
-const CharacterCard = memo(({ pin, onClose, onStartChat }) => (
+// ── Resolve image src with jpg/jpeg fallback ─────────────────────────────
+function useImageSrc(pin) {
+  const initial = pin?.image_url || (pin ? `/images/${pin.character_key}.jpg` : null);
+  const [src, setSrc]                   = React.useState(initial);
+  const [fallbackTried, setFallbackTried] = React.useState(false);
+  const [failed, setFailed]             = React.useState(false);
+
+  // Reset when pin changes
+  React.useEffect(() => {
+    const next = pin?.image_url || (pin ? `/images/${pin.character_key}.jpg` : null);
+    setSrc(next);
+    setFallbackTried(false);
+    setFailed(false);
+  }, [pin?.character_key]);
+
+  const handleError = React.useCallback(() => {
+    if (!fallbackTried && src) {
+      // jpg → jpeg, jpeg → jpg
+      const swapped = src.endsWith('.jpeg')
+        ? src.slice(0, -5) + '.jpg'
+        : src.slice(0, src.lastIndexOf('.')) + '.jpeg';
+      setSrc(swapped);
+      setFallbackTried(true);
+    } else {
+      setFailed(true);
+    }
+  }, [src, fallbackTried]);
+
+  return { src, failed, handleError };
+}
+
+// ── Character card — full-bleed image with gradient fade ─────────────────
+// Matches ChatLauncherPage CategoryCard pattern:
+//   Layer 1: character image fills entire card (cover)
+//   Layer 2: natural gradient top → dark bottom (no hard cutoff)
+//   Layer 3: text content pinned to bottom
+const CharacterCard = memo(({ pin, onClose, onStartChat }) => {
+  const { src, failed, handleError } = useImageSrc(pin);
+
+  return (
   <div className={`${styles.charCard} ${pin ? styles.charCardVisible : ''}`}>
     {pin && (
       <>
-        <button className={styles.cardClose} onClick={onClose} aria-label="Close">×</button>
-        <div className={styles.cardAvatar}>{pin.emoji || '⭐'}</div>
-        <div className={styles.cardName}>{pin.display_name}</div>
-        <div className={styles.cardOrigin}>
-          {pin.country}{pin.continent ? ` · ${pin.continent}` : ''}
+        {/* Layer 1 — background image, fills entire card */}
+        {!failed && src ? (
+          <img
+            src={src}
+            alt={pin.display_name}
+            className={styles.cardBgImage}
+            onError={handleError}
+            draggable={false}
+          />
+        ) : (
+          /* Fallback bg when both jpg and jpeg fail */
+          <div className={styles.cardBgFallback}>
+            {(pin.display_name || '?').charAt(0).toUpperCase()}
+          </div>
+        )}
+
+        {/* Layer 2 — natural gradient fade, transparent → dark */}
+        <div className={styles.cardGradient} />
+
+        {/* Layer 3 — content pinned to bottom */}
+        <div className={styles.cardContent}>
+          <button className={styles.cardClose} onClick={onClose} aria-label="Close">×</button>
+
+          <div className={styles.cardName}>{pin.display_name}</div>
+
+          <div className={styles.cardOrigin}>
+            {pin.country}{pin.continent ? ` · ${pin.continent}` : ''}
+          </div>
+
+          {pin.historical_period && (
+            <div className={styles.cardPeriod}>{pin.historical_period}</div>
+          )}
+
+          {pin.short_description && (
+            <p className={styles.cardDesc}>{pin.short_description}</p>
+          )}
+
+          <button className={styles.cardCta} onClick={() => onStartChat(pin)}>
+            Start Chat →
+          </button>
         </div>
-        {pin.historical_period && (
-          <div className={styles.cardPeriod}>{pin.historical_period}</div>
-        )}
-        {pin.short_description && (
-          <p className={styles.cardDesc}>{pin.short_description}</p>
-        )}
-        <button className={styles.cardCta} onClick={() => onStartChat(pin)}>
-          Start Chat →
-        </button>
       </>
     )}
   </div>
