@@ -3,6 +3,7 @@
 
 import React, { useState, useEffect } from 'react';
 import { useUser } from '../contexts/UserContext';
+import styles from './CharacterBuilder.module.css';
 
 const API_BASE = process.env.REACT_APP_API_URL || 'http://localhost:5000';
 
@@ -84,11 +85,14 @@ function Field({ label, required, hint, error, char, maxChar, children }) {
 }
 
 // ─── Main component ───────────────────────────────────────────
-const CharacterBuilder = ({ template, onClose, onSuccess }) => {
+const CharacterBuilder = ({ template, onClose, onSuccess, prefillData }) => {
   const { user }     = useUser();
   const isScratch    = !template?.id || template.id === -1;
   const [showInfo, setShowInfo] = useState(false);
   const [isMobile, setIsMobile] = useState(false);
+  const [scanBanner, setScanBanner] = useState(
+    prefillData ? prefillData.source_hint || 'Pre-filled from your image — review and edit before submitting.' : null
+  );
 
   useEffect(() => {
     const check = () => setIsMobile(window.innerWidth <= 768);
@@ -99,15 +103,18 @@ const CharacterBuilder = ({ template, onClose, onSuccess }) => {
 
   // ── Form state ──────────────────────────────────────────────
   // Template pre-fills display_name only. All other fields are placeholder-driven.
-  const [formData, setFormData] = useState({
-    display_name:      isScratch ? '' : (template?.name || ''),
-    short_description: '',
-    system_instruction: '',
-    behavior_goals:    '',   // comma-separated string → array on submit
-    style_tone:        '',   // comma-separated string → array on submit
-    constraints:       '',
-    keyword_triggers:  '',   // comma-separated string → array on submit
-    visual_description: ''
+  const [formData, setFormData] = useState(() => {
+    const f = prefillData?.fields || {};
+    return {
+      display_name:       f.display_name       || (isScratch ? '' : (template?.name || '')),
+      short_description:  f.short_description  || '',
+      system_instruction: f.system_instruction || '',
+      behavior_goals:     f.behavior_goals     || '',
+      style_tone:         f.style_tone         || '',
+      constraints:        f.constraints        || '',
+      keyword_triggers:   f.keyword_triggers   || '',
+      visual_description: f.visual_description || '',
+    };
   });
 
   const [errors, setErrors]         = useState({});
@@ -342,6 +349,34 @@ const CharacterBuilder = ({ template, onClose, onSuccess }) => {
           </button>
         </div>
       </div>
+
+      {/* Scan banner — shown when CharacterBuilder was pre-filled from an image */}
+      {scanBanner && (
+        <div className={styles.scanBanner}>
+          <div className={styles.scanBannerLeft}>
+            <span className={styles.scanBannerIcon}>
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.7"
+                strokeLinecap="round" strokeLinejoin="round" width="15" height="15">
+                <circle cx="11" cy="11" r="5.5"/>
+                <line x1="15.5" y1="15.5" x2="20" y2="20"/>
+                <line x1="11" y1="4" x2="11" y2="5.5" strokeWidth="1.4"/>
+                <line x1="18" y1="11" x2="16.5" y2="11" strokeWidth="1.4"/>
+                <line x1="11" y1="18" x2="11" y2="16.5" strokeWidth="1.4"/>
+                <line x1="4" y1="11" x2="5.5" y2="11" strokeWidth="1.4"/>
+              </svg>
+            </span>
+            <p className={styles.scanBannerText}>
+              <strong>Pre-filled from your image</strong>
+              {' — '}{scanBanner}
+            </p>
+          </div>
+          <button
+            className={styles.scanBannerDismiss}
+            onClick={() => setScanBanner(null)}
+            aria-label="Dismiss"
+          >×</button>
+        </div>
+      )}
 
       {/* Info panel */}
       {showInfo && (

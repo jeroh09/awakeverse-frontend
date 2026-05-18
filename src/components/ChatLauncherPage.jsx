@@ -18,6 +18,7 @@ import theme from '../design-system/tokens';
 import ScrollShell from '../components/ScrollShell';
 import NetflixRightPanel from '../components/NetflixRightPanel';
 import LegendsMapPanel from '../components/LegendsMapPanel/LegendsMapPanel';
+import ScanLegendModal from '../components/ScanLegendModal/ScanLegendModal';
 
 
 
@@ -332,6 +333,9 @@ const ChatLauncherPage = ({ onStartChat, discoveredCharacters = [] }) => {
   //map constt
   const [mapOpen, setMapOpen]               = useState(false);
   const [mapSelectedChar, setMapSelectedChar] = useState(null);
+  const [scanOpen, setScanOpen]               = useState(false);
+  const [prefillData, setPrefillData]         = useState(null);
+  const [activeToolToggle, setActiveToolToggle] = useState('map'); // 'map' | 'scan'
   
 
   // Mobile detection
@@ -840,8 +844,9 @@ const ChatLauncherPage = ({ onStartChat, discoveredCharacters = [] }) => {
       }}>
         <CharacterBuilder 
           template={selectedTemplate}
-          onClose={handleCloseCreationFlow}
+          onClose={() => { handleCloseCreationFlow(); setPrefillData(null); }}
           onSuccess={handleCharacterCreationComplete}
+          prefillData={prefillData}
         />
       </div>
     );
@@ -1430,17 +1435,16 @@ const ChatLauncherPage = ({ onStartChat, discoveredCharacters = [] }) => {
             hasActiveConversations={hasActiveConversations}
             isMobile={false}
           />
-        )} 
+        )}
         {/* ADD BUTTONS CONTAINER RIGHT HERE */}
         <div style={{
           display: 'flex',
           gap: theme.spacing.md,
           marginTop: theme.spacing.lg,
           width: '100%',
-          maxWidth: '400px',
-          alignItems: 'center',
+          maxWidth: '400px'
         }}>
-          {/* CREATE Button */}
+          {/* CREATE Button - Opens My Characters Panel */}
           <button
             onClick={() => {
               const myCharsCategory = enhancedCategories.find(c => c.key === 'my_characters');
@@ -1461,7 +1465,7 @@ const ChatLauncherPage = ({ onStartChat, discoveredCharacters = [] }) => {
               outline: 'none',
               background: `linear-gradient(135deg, ${theme.colors.accent.primary} 0%, ${theme.colors.accent.hover} 100%)`,
               color: '#fff',
-              boxShadow: theme.shadows.elevation02,
+              boxShadow: theme.shadows.elevation02
             }}
             onMouseEnter={(e) => {
               e.currentTarget.style.transform = 'translateY(-2px)';
@@ -1474,8 +1478,8 @@ const ChatLauncherPage = ({ onStartChat, discoveredCharacters = [] }) => {
           >
             Create
           </button>
- 
-          {/* DISCOVER Button */}
+
+          {/* DISCOVER Button - Opens Market Hub */}
           <button
             onClick={() => switchView(VIEW_STATES.MARKET_HUB)}
             style={{
@@ -1491,7 +1495,7 @@ const ChatLauncherPage = ({ onStartChat, discoveredCharacters = [] }) => {
               outline: 'none',
               background: theme.colors.background.interactive,
               color: theme.colors.text.primary,
-              boxShadow: theme.shadows.elevation01,
+              boxShadow: theme.shadows.elevation01
             }}
             onMouseEnter={(e) => {
               e.currentTarget.style.transform = 'translateY(-2px)';
@@ -1506,73 +1510,141 @@ const ChatLauncherPage = ({ onStartChat, discoveredCharacters = [] }) => {
           >
             Discover
           </button>
- 
-          {/* 🌍 LEGENDS MAP — icon only, tooltip on hover, same row as Create/Discover */}
-          <div style={{ position: 'relative', flexShrink: 0 }}>
+          {/* THIRD BUTTON — Toggle pill: Map | Scan */}
+          <div style={{
+            flex: 1,
+            display: 'flex',
+            alignItems: 'center',
+            background: theme.colors.background.interactive,
+            border: `1px solid ${theme.colors.border.strong}`,
+            borderRadius: '9999px',
+            padding: '3px',
+            gap: '2px',
+            boxShadow: theme.shadows.elevation01,
+            transition: theme.transitions.normal,
+            minWidth: 0,
+          }}>
+
+            {/* Map segment */}
             <button
-              onClick={() => setMapOpen(true)}
-              aria-label="Open Legends Map"
+              onClick={() => {
+                setActiveToolToggle('map');
+                setMapOpen(true);
+              }}
+              aria-label="Legends Map"
               style={{
-                width: '42px',
-                height: '42px',
-                borderRadius: theme.borderRadius.md,
-                border: `1px solid ${theme.colors.accent.primary}55`,
-                background: theme.colors.accent.glow,
-                color: theme.colors.accent.hover,
-                fontSize: '1.1rem',
-                cursor: 'pointer',
+                flex: 1,
                 display: 'flex',
                 alignItems: 'center',
                 justifyContent: 'center',
-                transition: theme.transitions.normal,
+                gap: '0.35rem',
+                padding: '0.48rem 0.6rem',
+                borderRadius: '9999px',
+                border: 'none',
+                outline: 'none',
+                cursor: 'pointer',
+                fontFamily: theme.typography.fonts.body,
+                fontSize: theme.typography.sizes.bodySmall,
+                fontWeight: theme.typography.weights.semibold,
+                transition: theme.transitions.fast,
+                whiteSpace: 'nowrap',
+                ...(activeToolToggle === 'map' ? {
+                  background: `linear-gradient(135deg, ${theme.colors.accent.primary}, ${theme.colors.accent.hover})`,
+                  color: '#fff',
+                  boxShadow: '0 2px 12px rgba(99,102,241,0.4)',
+                } : {
+                  background: 'transparent',
+                  color: theme.colors.text.secondary,
+                }),
               }}
               onMouseEnter={(e) => {
-                e.currentTarget.style.background  = theme.colors.accent.glowStrong;
-                e.currentTarget.style.borderColor = theme.colors.accent.primary;
-                e.currentTarget.style.transform   = 'scale(1.08)';
-                const tip = e.currentTarget.parentElement.querySelector('[data-tip]');
-                if (tip) { tip.style.opacity = '1'; tip.style.transform = 'translateX(-50%) translateY(0)'; }
+                if (activeToolToggle !== 'map') {
+                  e.currentTarget.style.background = theme.colors.background.peak;
+                  e.currentTarget.style.color = theme.colors.text.primary;
+                }
               }}
               onMouseLeave={(e) => {
-                e.currentTarget.style.background  = theme.colors.accent.glow;
-                e.currentTarget.style.borderColor = `${theme.colors.accent.primary}55`;
-                e.currentTarget.style.transform   = 'scale(1)';
-                const tip = e.currentTarget.parentElement.querySelector('[data-tip]');
-                if (tip) { tip.style.opacity = '0'; tip.style.transform = 'translateX(-50%) translateY(4px)'; }
+                if (activeToolToggle !== 'map') {
+                  e.currentTarget.style.background = 'transparent';
+                  e.currentTarget.style.color = theme.colors.text.secondary;
+                }
               }}
             >
-              🌍
+              <svg viewBox="0 0 18 18" fill="none" stroke="currentColor" strokeWidth="1.6"
+                strokeLinecap="round" strokeLinejoin="round" width="13" height="13"
+                style={{ flexShrink: 0 }}>
+                <circle cx="9" cy="9" r="7"/>
+                <path d="M9 2c-1.5 1.5-2.5 3.8-2.5 7s1 5.5 2.5 7"/>
+                <path d="M9 2c1.5 1.5 2.5 3.8 2.5 7s-1 5.5-2.5 7"/>
+                <line x1="2.5" y1="9" x2="15.5" y2="9"/>
+                <line x1="3.2" y1="6" x2="14.8" y2="6"/>
+                <line x1="3.2" y1="12" x2="14.8" y2="12"/>
+              </svg>
+              Map
             </button>
-            {/* Tooltip */}
-            <div
-              data-tip="true"
+
+            {/* Scan segment */}
+            <button
+              onClick={() => {
+                setActiveToolToggle('scan');
+                setScanOpen(true);
+              }}
+              aria-label="Scan a Legend"
               style={{
-                position: 'absolute',
-                bottom: 'calc(100% + 8px)',
-                left: '50%',
-                transform: 'translateX(-50%) translateY(4px)',
-                background: theme.colors.background.surface,
-                border: `1px solid ${theme.colors.accent.primary}55`,
-                borderRadius: theme.borderRadius.sm,
-                padding: '4px 10px',
-                whiteSpace: 'nowrap',
-                fontSize: theme.typography.sizes.caption,
+                flex: 1,
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                gap: '0.35rem',
+                padding: '0.48rem 0.6rem',
+                borderRadius: '9999px',
+                border: 'none',
+                outline: 'none',
+                cursor: 'pointer',
                 fontFamily: theme.typography.fonts.body,
-                fontWeight: theme.typography.weights.medium,
-                color: theme.colors.accent.hover,
-                opacity: 0,
-                pointerEvents: 'none',
+                fontSize: theme.typography.sizes.bodySmall,
+                fontWeight: theme.typography.weights.semibold,
                 transition: theme.transitions.fast,
-                boxShadow: theme.shadows.elevation02,
-                zIndex: 10,
+                whiteSpace: 'nowrap',
+                ...(activeToolToggle === 'scan' ? {
+                  background: `linear-gradient(135deg, ${theme.colors.accent.primary}, ${theme.colors.accent.hover})`,
+                  color: '#fff',
+                  boxShadow: '0 2px 12px rgba(99,102,241,0.4)',
+                } : {
+                  background: 'transparent',
+                  color: theme.colors.text.secondary,
+                }),
+              }}
+              onMouseEnter={(e) => {
+                if (activeToolToggle !== 'scan') {
+                  e.currentTarget.style.background = theme.colors.background.peak;
+                  e.currentTarget.style.color = theme.colors.text.primary;
+                }
+              }}
+              onMouseLeave={(e) => {
+                if (activeToolToggle !== 'scan') {
+                  e.currentTarget.style.background = 'transparent';
+                  e.currentTarget.style.color = theme.colors.text.secondary;
+                }
               }}
             >
-              Legends Map
-            </div>
+              <svg viewBox="0 0 18 18" fill="none" stroke="currentColor" strokeWidth="1.6"
+                strokeLinecap="round" strokeLinejoin="round" width="13" height="13"
+                style={{ flexShrink: 0 }}>
+                <circle cx="8.5" cy="8.5" r="4.5"/>
+                <line x1="12" y1="12" x2="16" y2="16"/>
+                <line x1="8.5" y1="3.5" x2="8.5" y2="4.5"/>
+                <line x1="13.5" y1="8.5" x2="12.5" y2="8.5"/>
+                <line x1="8.5" y1="13.5" x2="8.5" y2="12.5"/>
+                <line x1="3.5" y1="8.5" x2="4.5" y2="8.5"/>
+              </svg>
+              Scan
+            </button>
+
           </div>
-         </div>
         </div>
-        {/* ── END BUTTONS CONTAINER ── */}
+      </div>
+
 
       {/* RIGHT HALF - Categories/Characters */}
       {/* RIGHT HALF - Netflix-style rows */}
@@ -1683,6 +1755,18 @@ const ChatLauncherPage = ({ onStartChat, discoveredCharacters = [] }) => {
         triggerReason={upgradeReason}
         currentUsage={null}
       />
+      {/* Scan Legend Modal */}
+      <ScanLegendModal
+        isOpen={scanOpen}
+        onClose={() => setScanOpen(false)}
+        isMobile={isMobile}
+        onPrefill={(data) => {
+          setPrefillData(data);
+          setScanOpen(false);
+          handleCreateCharacterClick();   // opens CharacterBuilder with prefill
+        }}
+      />
+
       <LegendsMapPanel
         isOpen={mapOpen}
         onClose={() => {
@@ -1701,8 +1785,7 @@ const ChatLauncherPage = ({ onStartChat, discoveredCharacters = [] }) => {
             onStartChat={(char) => {
               setMapSelectedChar(null);
               setMapOpen(false);
-              trackInteraction(char.key || char.character_key);
-              onStartChat(char.key || char.character_key);   
+              handleCharacterSelect(char);   
             }}
             showDiscoverAction={false}
             isMobile={false}
