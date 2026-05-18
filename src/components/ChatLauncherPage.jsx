@@ -1513,6 +1513,8 @@ const ChatLauncherPage = ({ onStartChat, discoveredCharacters = [] }) => {
           {/* THIRD BUTTON — Toggle pill: Map | Scan */}
           <div style={{
             flex: 1,
+            minWidth: 0,
+            overflow: 'hidden',
             display: 'flex',
             alignItems: 'center',
             background: theme.colors.background.interactive,
@@ -1522,7 +1524,6 @@ const ChatLauncherPage = ({ onStartChat, discoveredCharacters = [] }) => {
             gap: '2px',
             boxShadow: theme.shadows.elevation01,
             transition: theme.transitions.normal,
-            minWidth: 0,
           }}>
 
             {/* Map segment */}
@@ -1538,16 +1539,18 @@ const ChatLauncherPage = ({ onStartChat, discoveredCharacters = [] }) => {
                 alignItems: 'center',
                 justifyContent: 'center',
                 gap: '0.35rem',
-                padding: '0.48rem 0.6rem',
+                padding: '0.38rem 0.45rem',
                 borderRadius: '9999px',
                 border: 'none',
                 outline: 'none',
                 cursor: 'pointer',
                 fontFamily: theme.typography.fonts.body,
-                fontSize: theme.typography.sizes.bodySmall,
+                fontSize: '0.72rem',
                 fontWeight: theme.typography.weights.semibold,
                 transition: theme.transitions.fast,
                 whiteSpace: 'nowrap',
+                overflow: 'hidden',
+                minWidth: 0,
                 ...(activeToolToggle === 'map' ? {
                   background: `linear-gradient(135deg, ${theme.colors.accent.primary}, ${theme.colors.accent.hover})`,
                   color: '#fff',
@@ -1596,16 +1599,18 @@ const ChatLauncherPage = ({ onStartChat, discoveredCharacters = [] }) => {
                 alignItems: 'center',
                 justifyContent: 'center',
                 gap: '0.35rem',
-                padding: '0.48rem 0.6rem',
+                padding: '0.38rem 0.45rem',
                 borderRadius: '9999px',
                 border: 'none',
                 outline: 'none',
                 cursor: 'pointer',
                 fontFamily: theme.typography.fonts.body,
-                fontSize: theme.typography.sizes.bodySmall,
+                fontSize: '0.72rem',
                 fontWeight: theme.typography.weights.semibold,
                 transition: theme.transitions.fast,
                 whiteSpace: 'nowrap',
+                overflow: 'hidden',
+                minWidth: 0,
                 ...(activeToolToggle === 'scan' ? {
                   background: `linear-gradient(135deg, ${theme.colors.accent.primary}, ${theme.colors.accent.hover})`,
                   color: '#fff',
