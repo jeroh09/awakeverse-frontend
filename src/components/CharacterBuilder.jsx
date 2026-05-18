@@ -43,6 +43,13 @@ const hintStyle = {
   margin: '0.25rem 0 0 0', lineHeight: 1.4
 };
 
+// Auto-grow textarea — expands vertically as content fills it
+const autoResize = (el) => {
+  if (!el) return;
+  el.style.height = 'auto';
+  el.style.height = el.scrollHeight + 'px';
+};
+
 const sectionDivider = (label) => (
   <div style={{
     display: 'flex', alignItems: 'center', gap: '0.75rem',
@@ -460,13 +467,13 @@ const CharacterBuilder = ({ template, onClose, onSuccess, prefillData }) => {
           <Field label="Behaviour Goals (optional)"
             hint="What should this character aim to do in conversations? Comma-separated."
           >
-            <input
-              type="text"
+            <textarea
+              rows={2}
               value={formData.behavior_goals}
-              onChange={(e) => handleChange('behavior_goals', e.target.value)}
+              onChange={(e) => { handleChange('behavior_goals', e.target.value); autoResize(e.target); }}
               placeholder="e.g. Share historical insights, Challenge assumptions, Teach through storytelling"
               disabled={isCreating}
-              style={inputStyle(false, isCreating)}
+              style={{ ...inputStyle(false, isCreating), resize: 'none', overflow: 'hidden', minHeight: '2.6rem' }}
               onFocus={onFocus}
               onBlur={(e) => onBlur(e, 'behavior_goals')}
             />
@@ -475,13 +482,13 @@ const CharacterBuilder = ({ template, onClose, onSuccess, prefillData }) => {
           <Field label="Style & Tone Tags (optional)"
             hint="Descriptive tags for how they communicate. Comma-separated."
           >
-            <input
-              type="text"
+            <textarea
+              rows={2}
               value={formData.style_tone}
-              onChange={(e) => handleChange('style_tone', e.target.value)}
+              onChange={(e) => { handleChange('style_tone', e.target.value); autoResize(e.target); }}
               placeholder="e.g. Authoritative, Philosophical, Measured, Rich in metaphor"
               disabled={isCreating}
-              style={inputStyle(false, isCreating)}
+              style={{ ...inputStyle(false, isCreating), resize: 'none', overflow: 'hidden', minHeight: '2.6rem' }}
               onFocus={onFocus}
               onBlur={(e) => onBlur(e, 'style_tone')}
             />
@@ -490,13 +497,13 @@ const CharacterBuilder = ({ template, onClose, onSuccess, prefillData }) => {
           <Field label="Keyword Triggers (optional)"
             hint="Topics that naturally draw this character to engage. Comma-separated."
           >
-            <input
-              type="text"
+            <textarea
+              rows={2}
               value={formData.keyword_triggers}
-              onChange={(e) => handleChange('keyword_triggers', e.target.value)}
+              onChange={(e) => { handleChange('keyword_triggers', e.target.value); autoResize(e.target); }}
               placeholder="e.g. philosophy, virtue, leadership, Roman history, duty"
               disabled={isCreating}
-              style={inputStyle(false, isCreating)}
+              style={{ ...inputStyle(false, isCreating), resize: 'none', overflow: 'hidden', minHeight: '2.6rem' }}
               onFocus={onFocus}
               onBlur={(e) => onBlur(e, 'keyword_triggers')}
             />

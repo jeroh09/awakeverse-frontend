@@ -336,6 +336,7 @@ const ChatLauncherPage = ({ onStartChat, discoveredCharacters = [] }) => {
   const [scanOpen, setScanOpen]               = useState(false);
   const [prefillData, setPrefillData]         = useState(null);
   const [activeToolToggle, setActiveToolToggle] = useState('map'); // 'map' | 'scan'
+  const [toolHint, setToolHint]                   = useState(null);   // 'map' | 'scan' | null
   
 
   // Mobile detection
@@ -1511,8 +1512,30 @@ const ChatLauncherPage = ({ onStartChat, discoveredCharacters = [] }) => {
             Discover
           </button>
           {/* THIRD BUTTON — Toggle pill: Map | Scan */}
+          <div style={{ flex: 1, position: 'relative' }}>
+          {/* Tooltip */}
+          {toolHint && (
+            <div style={{
+              position: 'absolute',
+              bottom: 'calc(100% + 7px)',
+              left: '50%',
+              transform: 'translateX(-50%)',
+              background: theme.colors.background.surface,
+              border: `1px solid ${theme.colors.border.medium}`,
+              borderRadius: theme.borderRadius.sm,
+              padding: '4px 10px',
+              fontSize: theme.typography.sizes.caption,
+              fontFamily: theme.typography.fonts.body,
+              color: theme.colors.text.secondary,
+              whiteSpace: 'nowrap',
+              pointerEvents: 'none',
+              boxShadow: theme.shadows.elevation02,
+              zIndex: 10,
+            }}>
+              {toolHint === 'map' ? 'Explore myths and legends.' : 'Upload myths and icons.'}
+            </div>
+          )}
           <div style={{
-            flex: 1,
             display: 'flex',
             alignItems: 'center',
             background: theme.colors.background.interactive,
@@ -1531,6 +1554,8 @@ const ChatLauncherPage = ({ onStartChat, discoveredCharacters = [] }) => {
                 setActiveToolToggle('map');
                 setMapOpen(true);
               }}
+              onMouseEnter={() => setToolHint('map')}
+              onMouseLeave={() => setToolHint(null)}
               aria-label="Legends Map"
               style={{
                 flex: 1,
@@ -1589,6 +1614,8 @@ const ChatLauncherPage = ({ onStartChat, discoveredCharacters = [] }) => {
                 setActiveToolToggle('scan');
                 setScanOpen(true);
               }}
+              onMouseEnter={() => setToolHint('scan')}
+              onMouseLeave={() => setToolHint(null)}
               aria-label="Scan a Legend"
               style={{
                 flex: 1,
@@ -1641,6 +1668,7 @@ const ChatLauncherPage = ({ onStartChat, discoveredCharacters = [] }) => {
               Scan
             </button>
 
+          </div>
           </div>
         </div>
       </div>
