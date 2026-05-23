@@ -11,6 +11,7 @@ import { useUser } from '../../../contexts/UserContext';
 import SubscriptionService from '../../../services/SubscriptionService';
 import DebateModeToggle from '../DebateModeToggle';
 import { ArrowLeft, ChevronRight, ChevronDown } from 'lucide-react';
+import ScriptViewerModal from './ScriptViewerModal';
 
 // Existing components - keeping for now
 // import ChatInput from './ChatInput'; // OLD - deprecated
@@ -88,6 +89,7 @@ export default function ScenarioChatWindow({
   // ===== VIDEO GENERATION HOOK =====
   const contentGen = useContentGeneration(scenario.id); 
   const [isCreatePanelOpen, setIsCreatePanelOpen] = useState(false);
+  const [viewingJob, setViewingJob] = useState(null); 
 
   // Defensive checks
   if (!scenario || !onBack) {
@@ -550,6 +552,7 @@ export default function ScenarioChatWindow({
           onOpenCreate={handleOpenCreate}
           onCloseCreate={handleCloseCreate}
           onCreateContent={contentGen.createContent}
+          onViewJob={(job) => setViewingJob(job)} 
         />
       </div>
 
@@ -560,6 +563,14 @@ export default function ScenarioChatWindow({
           theme={theme}
           questionsUsed={usageData.questionsAsked}
           limit={usageData.limit}
+        />
+      )}
+      {/* Script Viewer Modal — overlays full chat window */}
+      {viewingJob && (
+        <ScriptViewerModal
+          job={viewingJob}
+          scenarioTitle={scenario.title}
+          onClose={() => setViewingJob(null)}
         />
       )}
     </div>

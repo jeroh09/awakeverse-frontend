@@ -238,7 +238,19 @@ export default function MessageBubble({
                 aria-label="Create content from this conversation"
                 title={isCreating ? 'Creating...' : 'Create script, audio or video'}
               >
-                <span className={styles.videoIcon}>✨</span>
+                <span className={styles.videoIcon}>
+                  <svg viewBox="0 0 16 16" fill="none" stroke="currentColor"
+                    strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round"
+                    width="13" height="13">
+                    <line x1="9.5" y1="6.5" x2="14" y2="11"/>
+                    <path d="M9.5 6.5L7 4l-5 5 2.5 2.5L9.5 6.5z"/>
+                    <line x1="4" y1="2" x2="4" y2="4"/>
+                    <line x1="2" y1="4" x2="4" y2="4"/>
+                    <line x1="12" y1="4" x2="12" y2="2"/>
+                    <line x1="14" y1="4" x2="12" y2="4"/>
+                    <line x1="13" y1="7" x2="14" y2="6"/>
+                  </svg>
+                </span>
                 <span className={styles.videoTooltip}>
                   {isCreating ? 'Creating...' : 'Create'}
                 </span>

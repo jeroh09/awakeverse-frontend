@@ -560,4 +560,392 @@
   hyphens: auto;
 }
 
+/* InfoPanel.module.css — ADDITIONS for 2B-2
+   Append these to the end of the existing InfoPanel.module.css.
+   Do not replace existing styles.
+*/
+
+/* ═══════════════════════════════════════════════════════════════════
+   CREATE PANEL
+   ═══════════════════════════════════════════════════════════════════ */
+
+.fieldLabel {
+  font-size: var(--font-size-caption);
+  font-weight: var(--font-weight-semibold);
+  color: var(--text-tertiary);
+  text-transform: uppercase;
+  letter-spacing: 0.7px;
+  margin: 0 0 var(--spacing-sm) 0;
+}
+
+/* ── Type selector ── */
+.typeSelector {
+  display: flex;
+  gap: var(--spacing-sm);
+  margin-bottom: var(--spacing-lg);
+}
+
+.typeButton {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+  padding: var(--spacing-md) var(--spacing-sm);
+  background: var(--bg-interactive);
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--border-radius-md);
+  cursor: pointer;
+  transition: var(--transition-fast);
+  position: relative;
+  overflow: hidden;
+}
+
+.typeButton:hover:not(:disabled) {
+  border-color: var(--border-medium);
+  background: var(--bg-peak);
+}
+
+.typeButtonActive {
+  border-color: var(--accent-primary) !important;
+  background: var(--accent-glow) !important;
+  box-shadow: var(--shadow-glow);
+}
+
+.typeButtonSoon {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.typeIcon {
+  font-size: 20px;
+  line-height: 1;
+}
+
+.typeLabel {
+  font-size: var(--font-size-caption);
+  font-weight: var(--font-weight-medium);
+  color: var(--text-secondary);
+  line-height: 1;
+}
+
+.typeButtonActive .typeLabel {
+  color: var(--accent-primary);
+}
+
+.soonBadge {
+  position: absolute;
+  top: 4px;
+  right: 4px;
+  font-size: 9px;
+  font-weight: var(--font-weight-bold);
+  color: var(--text-tertiary);
+  background: var(--bg-surface);
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--border-radius-sm);
+  padding: 1px 4px;
+  letter-spacing: 0.3px;
+  text-transform: uppercase;
+}
+
+/* ── Duration selector ── */
+.durationSelector {
+  display: flex;
+  gap: var(--spacing-sm);
+  margin-bottom: var(--spacing-lg);
+}
+
+.durationButton {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 2px;
+  padding: var(--spacing-sm);
+  background: var(--bg-interactive);
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--border-radius-md);
+  cursor: pointer;
+  transition: var(--transition-fast);
+}
+
+.durationButton:hover {
+  border-color: var(--border-medium);
+  background: var(--bg-peak);
+}
+
+.durationButtonActive {
+  border-color: var(--accent-primary) !important;
+  background: var(--accent-glow) !important;
+  box-shadow: var(--shadow-glow);
+}
+
+.durationLabel {
+  font-family: var(--font-display);
+  font-size: var(--font-size-body-small);
+  font-weight: var(--font-weight-bold);
+  color: var(--text-primary);
+  line-height: 1;
+}
+
+.durationButtonActive .durationLabel {
+  color: var(--accent-primary);
+}
+
+.durationDesc {
+  font-size: var(--font-size-caption);
+  color: var(--text-tertiary);
+  line-height: 1;
+}
+
+/* ── Generate button ── */
+.generateButton {
+  width: 100%;
+  padding: var(--spacing-md) var(--spacing-lg);
+  background: var(--accent-primary);
+  color: white;
+  border: none;
+  border-radius: var(--border-radius-md);
+  font-family: var(--font-display);
+  font-size: var(--font-size-body-small);
+  font-weight: var(--font-weight-semibold);
+  cursor: pointer;
+  transition: var(--transition-fast);
+  box-shadow: var(--shadow-elevation02);
+  margin-bottom: var(--spacing-md);
+  letter-spacing: 0.3px;
+}
+
+.generateButton:hover:not(:disabled) {
+  background: var(--accent-hover);
+  box-shadow: var(--shadow-glow);
+  transform: translateY(-1px);
+}
+
+.generateButton:active {
+  transform: translateY(0);
+}
+
+.generateButton:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+  transform: none;
+}
+
+/* ── Back link ── */
+.backLink {
+  display: block;
+  width: 100%;
+  padding: var(--spacing-sm) 0;
+  background: none;
+  border: none;
+  color: var(--text-tertiary);
+  font-size: var(--font-size-caption);
+  cursor: pointer;
+  text-align: center;
+  transition: var(--transition-fast);
+}
+
+.backLink:hover {
+  color: var(--text-secondary);
+}
+
+/* ═══════════════════════════════════════════════════════════════════
+   STATUS CARDS — creating / success / error
+   ═══════════════════════════════════════════════════════════════════ */
+
+.creatingCard,
+.successCard,
+.errorCard {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--spacing-md);
+  padding: var(--spacing-xl);
+  background: var(--bg-interactive);
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--border-radius-md);
+}
+
+/* Spinner */
+.creatingSpinner {
+  width: 36px;
+  height: 36px;
+  border: 3px solid var(--border-medium);
+  border-top-color: var(--accent-primary);
+  border-radius: 50%;
+  animation: spinnerRotate 0.9s linear infinite;
+}
+
+@keyframes spinnerRotate {
+  to { transform: rotate(360deg); }
+}
+
+.creatingLabel {
+  font-size: var(--font-size-body-small);
+  font-weight: var(--font-weight-medium);
+  color: var(--text-primary);
+  margin: 0;
+  text-align: center;
+}
+
+.creatingHint {
+  font-size: var(--font-size-caption);
+  color: var(--text-tertiary);
+  margin: 0;
+  text-align: center;
+}
+
+/* Success */
+.successIcon,
+.errorCardIcon {
+  font-size: 36px;
+}
+
+.successLabel {
+  font-size: var(--font-size-body-small);
+  font-weight: var(--font-weight-semibold);
+  color: var(--text-primary);
+  margin: 0;
+  text-align: center;
+}
+
+.successMeta {
+  font-size: var(--font-size-caption);
+  color: var(--text-tertiary);
+  margin: 0;
+  text-align: center;
+}
+
+/* Error */
+.errorCardText {
+  font-size: var(--font-size-caption);
+  color: var(--text-secondary);
+  margin: 0;
+  text-align: center;
+  line-height: 1.5;
+}
+
+/* ═══════════════════════════════════════════════════════════════════
+   CREATED CONTENT LIST
+   ═══════════════════════════════════════════════════════════════════ */
+
+.jobsList {
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-sm);
+}
+
+.jobCard {
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-md);
+  width: 100%;
+  padding: var(--spacing-md);
+  background: var(--bg-interactive);
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--border-radius-md);
+  cursor: pointer;
+  transition: var(--transition-fast);
+  text-align: left;
+}
+
+.jobCard:hover {
+  border-color: var(--accent-primary);
+  background: var(--bg-peak);
+  box-shadow: var(--shadow-glow);
+}
+
+.jobCard:active {
+  transform: scale(0.98);
+}
+
+.jobCardIcon {
+  font-size: 22px;
+  flex-shrink: 0;
+  line-height: 1;
+}
+
+.jobCardBody {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.jobCardType {
+  font-size: var(--font-size-body-small);
+  font-weight: var(--font-weight-semibold);
+  color: var(--text-primary);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.jobCardMeta {
+  font-size: var(--font-size-caption);
+  color: var(--text-tertiary);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.jobCardArrow {
+  font-size: 18px;
+  color: var(--text-tertiary);
+  flex-shrink: 0;
+  transition: var(--transition-fast);
+}
+
+.jobCard:hover .jobCardArrow {
+  color: var(--accent-primary);
+  transform: translateX(2px);
+}
+
+/* Loading shimmer */
+.jobsLoading {
+  padding: var(--spacing-md) 0;
+}
+
+.jobsLoadingBar {
+  height: 48px;
+  background: linear-gradient(
+    90deg,
+    var(--bg-interactive) 25%,
+    var(--bg-peak) 50%,
+    var(--bg-interactive) 75%
+  );
+  background-size: 200% 100%;
+  border-radius: var(--border-radius-md);
+  animation: shimmerSlide 1.4s ease-in-out infinite;
+}
+
+@keyframes shimmerSlide {
+  0%   { background-position: 200% 0; }
+  100% { background-position: -200% 0; }
+}
+
+/* ═══════════════════════════════════════════════════════════════════
+   ACCESSIBILITY
+   ═══════════════════════════════════════════════════════════════════ */
+
+@media (prefers-reduced-motion: reduce) {
+  .creatingSpinner,
+  .jobsLoadingBar {
+    animation: none !important;
+  }
+  .generateButton:hover,
+  .jobCard:hover .jobCardArrow {
+    transform: none !important;
+  }
+}
+
+.typeButton:focus-visible,
+.durationButton:focus-visible,
+.generateButton:focus-visible,
+.jobCard:focus-visible {
+  outline: 2px solid var(--accent-primary);
+  outline-offset: 2px;
+}
 /* ===== END OF VIDEO GENERATION STYLES ===== */
