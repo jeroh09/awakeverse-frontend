@@ -8,14 +8,14 @@ import { getDisplayNameFromKey, isCustomCharacterKey } from '../../../../utils/c
 import { characterCategories } from '../../../../data/characterCategories';
 import styles from './MessageBubble.module.css';
 
-export default function MessageBubble({ 
-  message, 
+export default function MessageBubble({
+  message,
   userCharacters = [],
   onContinue,
   onNextSpeaker,
-  onGenerateVideo,
-  isGeneratingVideo = false,
-  canGenerateVideo = false,
+  onOpenCreate,           // was onGenerateVideo
+  isCreating = false,     // was isGeneratingVideo
+  canCreateContent = false, // was canGenerateVideo
   isSending,
   isLastMessage
 }) {
@@ -91,7 +91,8 @@ export default function MessageBubble({
 
   const showContinueButton = showButtons && onContinue;
   const showNextSpeakerButton = showButtons && onNextSpeaker;
-  const showVideoButton = showButtons && canGenerateVideo && onGenerateVideo;
+  const showCreateButton = showButtons && canCreateContent && onOpenCreate;
+
 
   const handleContinue = () => {
     if (onContinue && speaker) {
@@ -107,10 +108,10 @@ export default function MessageBubble({
     }
   };
 
-  const handleGenerateVideo = () => {
-    if (onGenerateVideo) {
-      console.log('🎬 Generate Video clicked');
-      onGenerateVideo();
+  const handleOpenCreate = () => {
+    if (onOpenCreate) {
+      console.log('✨ Create clicked');
+      onOpenCreate();
     }
   };
 
@@ -198,7 +199,7 @@ export default function MessageBubble({
         </div>
 
         {/* Action Buttons - Continue, Next Speaker, and Generate Video */}
-        {(showContinueButton || showNextSpeakerButton || showVideoButton) && (
+        {(showContinueButton || showNextSpeakerButton || showCreateButton) && (
           <div className={styles.actionButtonsContainer}>
             {/* Continue Button (››) - Smart continuation */}
             {showContinueButton && (
@@ -227,19 +228,19 @@ export default function MessageBubble({
                 <span className={styles.nextSpeakerTooltip}>Next</span>
               </button>
             )}
-
-            {/* Video Generation Button (🎬) - Create video */}
-            {showVideoButton && (
+             
+            {/* Create Button (✨) — opens Create panel in InfoPanel */}
+            {showCreateButton && (
               <button
                 className={styles.videoButton}
-                onClick={handleGenerateVideo}
-                disabled={isGeneratingVideo || isSending}
-                aria-label="Generate video from conversation"
-                title={isGeneratingVideo ? 'Generating video...' : 'Create video from this conversation'}
+                onClick={handleOpenCreate}
+                disabled={isCreating || isSending}
+                aria-label="Create content from this conversation"
+                title={isCreating ? 'Creating...' : 'Create script, audio or video'}
               >
-                <span className={styles.videoIcon}>🎬</span>
+                <span className={styles.videoIcon}>✨</span>
                 <span className={styles.videoTooltip}>
-                  {isGeneratingVideo ? 'Generating...' : 'Create Video'}
+                  {isCreating ? 'Creating...' : 'Create'}
                 </span>
               </button>
             )}

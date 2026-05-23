@@ -6,7 +6,7 @@
 import React, { useState, useEffect, useMemo, useCallback, useRef } from 'react';
 import usePremiumCharacters from '../../../hooks/usePremiumCharacters';
 import useScenarioChat from '../../../hooks/useScenarioChat';
-import useVideoGeneration from '../../../hooks/useVideoGeneration';
+import useContentGeneration from '../../../hooks/useContentGeneration';
 import { useUser } from '../../../contexts/UserContext';
 import SubscriptionService from '../../../services/SubscriptionService';
 import DebateModeToggle from '../DebateModeToggle';
@@ -86,7 +86,8 @@ export default function ScenarioChatWindow({
   } = useScenarioChat();
 
   // ===== VIDEO GENERATION HOOK =====
-  const videoGen = useVideoGeneration(scenario.id);
+  const contentGen = useContentGeneration(scenario.id); 
+  const [isCreatePanelOpen, setIsCreatePanelOpen] = useState(false);
 
   // Defensive checks
   if (!scenario || !onBack) {
@@ -275,32 +276,32 @@ export default function ScenarioChatWindow({
   };
 
   // ===== VIDEO GENERATION HANDLERS =====
-
-  // Handle video generation button click
-  const handleGenerateVideo = useCallback(async () => {
-    try {
-      console.log('🎬 User clicked Generate Video');
-      await videoGen.startGeneration();
-    } catch (error) {
-      console.error('❌ Failed to start video generation:', error);
+    // ===== CONTENT CREATION HANDLERS =====
+ 
+  // ✨ Create button in MessageBubble opens the Create panel in InfoPanel.
+  // It does NOT trigger generation directly — the user picks type/duration first.
+  const handleOpenCreate = useCallback(() => {
+    console.log('✨ Opening Create panel');
+    setIsCreatePanelOpen(true);
+    // Auto-expand InfoPanel if it was collapsed
+    if (infoPanelCollapsed) {
+      setInfoPanelCollapsed(false);
     }
-  }, [videoGen]);
+  }, [infoPanelCollapsed]);
+ 
+  // Called by InfoPanel's close/back button
+  const handleCloseCreate = useCallback(() => {
+    setIsCreatePanelOpen(false);
+    contentGen.resetContent();
+  }, [contentGen]);
+ 
+  // Minimum non-user messages required to enable Create button
+  const canCreateContent = useMemo(() => {
+    const aiMessages = messages.filter(m => !m.user && m.speaker !== 'user');
+    return aiMessages.length >= 5;
+  }, [messages]);
+ 
 
-  // Handle video download
-  const handleDownloadVideo = useCallback(() => {
-    console.log('⬇️ User clicked Download Video');
-    videoGen.downloadVideo();
-  }, [videoGen]);
-
-  // Calculate if user can generate video
-  // Requirements: 5+ non-user messages AND user has access (user_id 44)
-  const canGenerateVideo = useMemo(() => {
-    const nonUserMessages = messages.filter(m => !m.user && m.speaker !== 'user');
-    const hasEnoughMessages = nonUserMessages.length >= 5;
-    const hasAccess = videoGen.canGenerateVideo;
-    
-    return hasEnoughMessages && hasAccess;
-  }, [messages, videoGen.canGenerateVideo]);
 
   // ✅ NEW: Handle scenario switch
   // Defensive: Just navigate back and let parent handle scenario selection
@@ -489,7 +490,7 @@ export default function ScenarioChatWindow({
                     Tier: {userTier} | Usage: {usageData.questionsAsked}/{usageData.limit} |
                     Panel: {infoPanelCollapsed ? 'collapsed' : 'expanded'} |
                     Keyboard: {isKeyboardVisible ? `${keyboardHeight}px` : 'hidden'} |
-                    Video: {videoGen.state.status}
+                    Content: {contentGen.state.status} | CreatePanel: {isCreatePanelOpen ? 'open' : 'closed'}
                   </small>
                 </div>
               )}
@@ -501,9 +502,9 @@ export default function ScenarioChatWindow({
               isSending={isSending}
               onContinue={continueConversation}
               onNextSpeaker={nextSpeaker}
-              onGenerateVideo={handleGenerateVideo}
-              isGeneratingVideo={videoGen.state.status === 'generating'}
-              canGenerateVideo={canGenerateVideo}
+              onOpenCreate={handleOpenCreate}
+              isCreating={contentGen.state.status === 'creating'}
+              canCreateContent={canCreateContent}
               theme={theme}
               containerRef={messagesContainerRef}
               onScroll={handleMessagesScroll}
@@ -542,8 +543,13 @@ export default function ScenarioChatWindow({
           currentScenarioId={scenario.id}
           onScenarioSelect={handleScenarioSwitch}
           onHomeClick={handleBack}
-          videoState={videoGen.state}
-          onDownloadVideo={handleDownloadVideo}
+          contentState={contentGen.state}
+          contentJobs={contentGen.jobs}
+          contentJobsLoading={contentGen.jobsLoading}
+          isCreatePanelOpen={isCreatePanelOpen}
+          onOpenCreate={handleOpenCreate}
+          onCloseCreate={handleCloseCreate}
+          onCreateContent={contentGen.createContent}
         />
       </div>
 

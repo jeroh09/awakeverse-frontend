@@ -26,12 +26,12 @@ export default function ChatMessages({
   isSending = false,
   onContinue,
   onNextSpeaker,
-  onGenerateVideo,
-  isGeneratingVideo = false,
-  canGenerateVideo = false,
+  onOpenCreate,             // was onGenerateVideo
+  isCreating = false,       // was isGeneratingVideo
+  canCreateContent = false, // was canGenerateVideo
   theme = 'light',
-  containerRef: externalRef,  // ✅ NEW: External ref from ScenarioChatWindow
-  onScroll,                    // ✅ NEW: Scroll handler from ScenarioChatWindow
+  containerRef: externalRef,
+  onScroll,
 }) {
   const internalRef = useRef(null);
   // Use external ref if provided (for scroll button), otherwise use internal ref
@@ -52,9 +52,9 @@ export default function ChatMessages({
     isSending,
     hasContinue: !!onContinue,
     hasNextSpeaker: !!onNextSpeaker,
-    hasGenerateVideo: !!onGenerateVideo,
-    isGeneratingVideo,
-    canGenerateVideo
+    hasOpenCreate: !!onOpenCreate,
+    isCreating,
+    canCreateContent
   });
 
   // Track last message from each speaker for button visibility
@@ -92,9 +92,9 @@ export default function ChatMessages({
           userCharacters={userCharacters}
           onContinue={onContinue}
           onNextSpeaker={onNextSpeaker}
-          onGenerateVideo={onGenerateVideo}
-          isGeneratingVideo={isGeneratingVideo}
-          canGenerateVideo={canGenerateVideo}
+          onOpenCreate={onOpenCreate}
+          isCreating={isCreating}
+          canCreateContent={canCreateContent}
           isSending={isSending}
           isLastMessage={
             !message.user && 
