@@ -93,7 +93,8 @@ export default function useContentGeneration(scenarioId) {
 
       console.log('✅ Content job complete:', data.job_id);
 
-      setState({ status: 'complete', activeJob: data, error: null });
+      const normalizedJob = { ...data, id: data.id || data.job_id };
+      setState({ status: 'complete', activeJob: normalizedJob, error: null });
 
       // Refresh list so new job appears in InfoPanel immediately
       await loadJobs();
