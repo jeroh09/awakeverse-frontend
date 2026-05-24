@@ -31,9 +31,12 @@ export default function ScriptViewerModal({ job, scenarioTitle, onClose, onJobUp
   }, [isEditing]);
 
   // Keep editedScript in sync if job prop changes (e.g. after save)
+
   useEffect(() => {
+  if (!isEditing) {
     setEditedScript(job.condensed_script || '');
-  }, [job.condensed_script]);
+  }
+}, [job.condensed_script, isEditing]);
 
   // ── Escape key ──────────────────────────────────────────────────────────
   const handleKeyDown = useCallback((e) => {
