@@ -1,11 +1,13 @@
 // src/components/ScenariosTab/ScenarioChatWindow/ScriptViewerModal.jsx
-// 80% viewport modal overlaying the full chat window.
-// Renders at ScenarioChatWindow level — above everything.
+// UPDATED: adds edit mode — toggle view/textarea, Save calls PATCH endpoint.
+// Full replacement of previous ScriptViewerModal.jsx.
 
-import React, { useEffect, useCallback } from 'react';
+import React, { useState, useEffect, useCallback, useRef } from 'react';
 import styles from './ScriptViewerModal.module.css';
 
-export default function ScriptViewerModal({ job, scenarioTitle, onClose }) {
+const API_BASE = process.env.REACT_APP_API_URL || 'https://api.awakeverse.com';
+
+export default function ScriptViewerModal({ job, scenarioTitle, onClose, onJobUpdated }) {
   if (!job) return null;
 
   const script    = job.condensed_script || '';
@@ -13,25 +15,106 @@ export default function ScriptViewerModal({ job, scenarioTitle, onClose }) {
   const duration  = job.duration_seconds || 180;
   const type      = job.content_type     || 'script';
 
-  // ── Close on Escape ──────────────────────────────────────────────────────
+  // ── Edit state ──────────────────────────────────────────────────────────
+  const [isEditing,    setIsEditing]    = useState(false);
+  const [editedScript, setEditedScript] = useState(script);
+  const [isSaving,     setIsSaving]     = useState(false);
+  const [saveError,    setSaveError]    = useState(null);
+  const [saveSuccess,  setSaveSuccess]  = useState(false);
+  const textareaRef = useRef(null);
+
+  // Focus textarea on edit mode entry
+  useEffect(() => {
+    if (isEditing && textareaRef.current) {
+      textareaRef.current.focus();
+    }
+  }, [isEditing]);
+
+  // Keep editedScript in sync if job prop changes (e.g. after save)
+  useEffect(() => {
+    setEditedScript(job.condensed_script || '');
+  }, [job.condensed_script]);
+
+  // ── Escape key ──────────────────────────────────────────────────────────
   const handleKeyDown = useCallback((e) => {
-    if (e.key === 'Escape') onClose();
-  }, [onClose]);
+    if (e.key === 'Escape') {
+      if (isEditing) {
+        handleCancelEdit();
+      } else {
+        onClose();
+      }
+    }
+  }, [isEditing, onClose]);
 
   useEffect(() => {
     document.addEventListener('keydown', handleKeyDown);
     return () => document.removeEventListener('keydown', handleKeyDown);
   }, [handleKeyDown]);
 
-  // ── Copy to clipboard ────────────────────────────────────────────────────
-  const handleCopy = async () => {
+  // ── Edit handlers ───────────────────────────────────────────────────────
+  const handleEdit = () => {
+    setSaveError(null);
+    setSaveSuccess(false);
+    setIsEditing(true);
+  };
+
+  const handleCancelEdit = () => {
+    setEditedScript(job.condensed_script || '');
+    setIsEditing(false);
+    setSaveError(null);
+  };
+
+  const handleSave = async () => {
+    const trimmed = editedScript.trim();
+    if (!trimmed) return;
+
+    const csrf = document.cookie.match(/(?:^|;\s*)av_csrf=([^;]+)/)?.[1] || '';
+
+    setIsSaving(true);
+    setSaveError(null);
+
     try {
-      await navigator.clipboard.writeText(script);
-      // Brief visual feedback handled by CSS :active
+      const response = await fetch(`${API_BASE}/api/content/jobs/${job.id}`, {
+        method: 'PATCH',
+        headers: {
+          'Content-Type': 'application/json',
+          'X-CSRF-Token': csrf,
+        },
+        credentials: 'include',
+        body: JSON.stringify({ condensed_script: trimmed }),
+      });
+
+      const data = await response.json();
+
+      if (!response.ok) {
+        throw new Error(data.error || `Save failed: ${response.status}`);
+      }
+
+      setSaveSuccess(true);
+      setIsEditing(false);
+      setTimeout(() => setSaveSuccess(false), 2500);
+
+      // Notify parent to refresh jobs list
+      if (onJobUpdated) onJobUpdated(data);
+
+      console.log(`✏️ Script saved: job ${job.id}, ${data.char_count} chars`);
+
+    } catch (error) {
+      console.error('❌ Save failed:', error);
+      setSaveError(error.message);
+    } finally {
+      setIsSaving(false);
+    }
+  };
+
+  // ── Copy ────────────────────────────────────────────────────────────────
+  const handleCopy = async () => {
+    const content = isEditing ? editedScript : (job.condensed_script || '');
+    try {
+      await navigator.clipboard.writeText(content);
     } catch {
-      // Fallback for older browsers
       const el = document.createElement('textarea');
-      el.value = script;
+      el.value = content;
       document.body.appendChild(el);
       el.select();
       document.execCommand('copy');
@@ -39,14 +122,21 @@ export default function ScriptViewerModal({ job, scenarioTitle, onClose }) {
     }
   };
 
-  // ── Download as .txt ────────────────────────────────────────────────────
+  // ── Download ────────────────────────────────────────────────────────────
   const handleDownload = () => {
+    const content  = job.condensed_script || '';
     const filename = `${scenarioTitle || 'screenplay'}_${duration}s.txt`
       .toLowerCase()
       .replace(/\s+/g, '_')
       .replace(/[^a-z0-9_\.]/g, '');
 
-    const blob = new Blob([script], { type: 'text/plain;charset=utf-8' });
+    // Prepend Fountain identifier comment for users who want to rename to .fountain
+    const exportContent =
+      `# ${scenarioTitle} — ${duration}s Screenplay\n` +
+      `# Fountain format — rename to .fountain to import into Final Draft, Highland, WriterDuet\n\n` +
+      content;
+
+    const blob = new Blob([exportContent], { type: 'text/plain;charset=utf-8' });
     const url  = URL.createObjectURL(blob);
     const a    = document.createElement('a');
     a.href     = url;
@@ -55,10 +145,15 @@ export default function ScriptViewerModal({ job, scenarioTitle, onClose }) {
     URL.revokeObjectURL(url);
   };
 
-  // ── Backdrop click to close ──────────────────────────────────────────────
+  // ── Backdrop ────────────────────────────────────────────────────────────
   const handleBackdropClick = (e) => {
-    if (e.target === e.currentTarget) onClose();
+    if (e.target === e.currentTarget && !isEditing) onClose();
   };
+
+  // ── Live char count ─────────────────────────────────────────────────────
+  const displayCharCount = isEditing
+    ? editedScript.length
+    : charCount;
 
   return (
     <div
@@ -66,63 +161,122 @@ export default function ScriptViewerModal({ job, scenarioTitle, onClose }) {
       onClick={handleBackdropClick}
       role="dialog"
       aria-modal="true"
-      aria-label={`${type} viewer`}
+      aria-label="Script viewer"
     >
       <div className={styles.modal}>
 
-        {/* ── Header ──────────────────────────────────────────────────── */}
+        {/* ── Header ──────────────────────────────────────────────── */}
         <div className={styles.header}>
           <div className={styles.headerLeft}>
             <span className={styles.headerIcon}>📄</span>
             <div>
               <h2 className={styles.headerTitle}>{scenarioTitle}</h2>
               <p className={styles.headerMeta}>
-                Screenplay · {duration}s · {charCount >= 1000
-                  ? `${(charCount / 1000).toFixed(1)}k chars`
-                  : `${charCount} chars`}
+                Fountain screenplay · {duration}s ·{' '}
+                {displayCharCount >= 1000
+                  ? `${(displayCharCount / 1000).toFixed(1)}k chars`
+                  : `${displayCharCount} chars`}
+                {isEditing && (
+                  <span className={styles.editingBadge}>editing</span>
+                )}
+                {saveSuccess && (
+                  <span className={styles.savedBadge}>✓ saved</span>
+                )}
               </p>
             </div>
           </div>
 
           <div className={styles.headerActions}>
-            <button
-              className={styles.actionButton}
-              onClick={handleCopy}
-              title="Copy to clipboard"
-              aria-label="Copy script"
-            >
-              Copy
-            </button>
-            <button
-              className={styles.actionButton}
-              onClick={handleDownload}
-              title="Download as .txt"
-              aria-label="Download script"
-            >
-              Download
-            </button>
+            {!isEditing ? (
+              <>
+                <button
+                  className={styles.actionButton}
+                  onClick={handleEdit}
+                  title="Edit script"
+                >
+                  ✏️ Edit
+                </button>
+                <button
+                  className={styles.actionButton}
+                  onClick={handleCopy}
+                  title="Copy to clipboard"
+                >
+                  Copy
+                </button>
+                <button
+                  className={styles.actionButton}
+                  onClick={handleDownload}
+                  title="Download as .txt"
+                >
+                  Download
+                </button>
+              </>
+            ) : (
+              <>
+                <button
+                  className={styles.saveButton}
+                  onClick={handleSave}
+                  disabled={isSaving || !editedScript.trim()}
+                  title="Save edits"
+                >
+                  {isSaving ? 'Saving…' : 'Save'}
+                </button>
+                <button
+                  className={styles.actionButton}
+                  onClick={handleCancelEdit}
+                  disabled={isSaving}
+                  title="Discard edits"
+                >
+                  Cancel
+                </button>
+              </>
+            )}
             <button
               className={styles.closeButton}
-              onClick={onClose}
+              onClick={isEditing ? handleCancelEdit : onClose}
               aria-label="Close viewer"
-              title="Close (Esc)"
+              title={isEditing ? 'Discard and close' : 'Close (Esc)'}
             >
               ✕
             </button>
           </div>
         </div>
 
-        {/* ── Script body ─────────────────────────────────────────────── */}
+        {/* ── Save error ──────────────────────────────────────────── */}
+        {saveError && (
+          <div className={styles.saveError}>
+            ⚠️ {saveError}
+          </div>
+        )}
+
+        {/* ── Body: view or edit ──────────────────────────────────── */}
         <div className={styles.body}>
-          <pre className={styles.scriptText}>{script}</pre>
+          {isEditing ? (
+            <textarea
+              ref={textareaRef}
+              className={styles.editTextarea}
+              value={editedScript}
+              onChange={(e) => setEditedScript(e.target.value)}
+              spellCheck={false}
+              aria-label="Edit screenplay"
+            />
+          ) : (
+            <pre className={styles.scriptText}>
+              {job.condensed_script || ''}
+            </pre>
+          )}
         </div>
 
-        {/* ── Footer ──────────────────────────────────────────────────── */}
+        {/* ── Footer ──────────────────────────────────────────────── */}
         <div className={styles.footer}>
           <span className={styles.footerText}>
-            Generated from &ldquo;{scenarioTitle}&rdquo; &middot; {duration}s
+            {isEditing
+              ? 'Editing — changes are not saved until you click Save'
+              : `"${scenarioTitle}" · ${duration}s · Fountain format`}
           </span>
-          <span className={styles.footerHint}>Press Esc to close</span>
+          <span className={styles.footerHint}>
+            {isEditing ? 'Esc to cancel' : 'Esc to close'}
+          </span>
         </div>
 
       </div>
