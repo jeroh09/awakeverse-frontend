@@ -67,6 +67,7 @@ export default function ScenarioCreator({
   const [scenarioCategory,  setScenarioCategory]  = useState('general');
   const [selectedChars,     setSelectedChars]     = useState([]);
   const [starterQuestions,  setStarterQuestions]  = useState([]);
+  const [sceneSetting, setSceneSetting] = useState('');
   const [loading,           setLoading]           = useState(false);
   const [error,             setError]             = useState(null);
 
@@ -94,6 +95,7 @@ export default function ScenarioCreator({
       setSelectedChars(chars.slice(0, 4));
       const qs = template.starter_questions || [];
       setStarterQuestions(qs.length > 0 ? [...qs] : []);
+      setSceneSetting(template.scene_setting || '');
     }
   }, [template]);
 
@@ -210,6 +212,7 @@ export default function ScenarioCreator({
         scenario_type:     'debate',
         max_simultaneous:  Math.min(selectedChars.length, 4),
         template_id:       template?.id || null,
+        scene_setting: sceneSetting.trim() || null,
       });
       if (result.status === 'success') {
         onSuccess(result.scenario);
@@ -395,7 +398,25 @@ export default function ScenarioCreator({
               maxLength={500}
               rows={isMobile ? 3 : 4}
             />
-            <div className="scp-char-count">{description.length}/500</div>
+          <div className="scp-char-count">{description.length}/500</div> 
+          {/* Scene Setting — optional, feeds screenplay generation */}
+          <div className="scp-section">
+            <label className="scp-label" htmlFor="scp-scene">
+              Scene Setting
+              <span className="scp-optional"> (optional)</span>
+            </label>
+            <input
+              id="scp-scene"
+              className="scp-input"
+              value={sceneSetting}
+              onChange={e => setSceneSetting(e.target.value)}
+              placeholder="e.g. A living room in South London, evening"
+              maxLength={200}
+            />
+            <div className="scp-hint">
+              Helps the script generator place your characters in the right environment.
+            </div>
+          </div>
           </div>
 
           {/* Category */}
