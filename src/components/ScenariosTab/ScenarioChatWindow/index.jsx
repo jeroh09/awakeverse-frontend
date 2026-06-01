@@ -23,6 +23,7 @@ import AvatarsColumn from './AvatarsColumn';
 
 // NEW: InfoPanel (Phase 4)
 import InfoPanel from './InfoPanel';
+import MediaJobModal from './MediaJobModal';
 
 // NEW: FloatingChatInput (Phase 5)
 import FloatingChatInput from './FloatingChatInput';
@@ -106,8 +107,8 @@ export default function ScenarioChatWindow({
     initialized: isInitialized,
     usageData,
     infoPanelCollapsed,
-    videoStatus: videoGen.state.status,
-    videoProgress: videoGen.state.progress
+    contentStatus:   contentGen.state.status,
+    contentProgress: contentGen.state.progress
   });
 
   // Fetch user's tier on mount
@@ -565,9 +566,22 @@ export default function ScenarioChatWindow({
           limit={usageData.limit}
         />
       )}
-      {/* Script Viewer Modal — overlays full chat window */}
-      {viewingJob && (
+      {/* Script viewer */}
+      {viewingJob && viewingJob.content_type === 'script' && (
         <ScriptViewerModal
+          job={viewingJob}
+          scenarioTitle={scenario.title}
+          onClose={() => setViewingJob(null)}
+          onJobUpdated={(updatedJob) => {
+            setViewingJob(updatedJob);
+            contentGen.loadJobs();
+          }}
+        />
+      )}
+ 
+      {/* Audio / Video download modal */}
+      {viewingJob && ['audio', 'video'].includes(viewingJob.content_type) && (
+        <MediaJobModal
           job={viewingJob}
           scenarioTitle={scenario.title}
           onClose={() => setViewingJob(null)}
