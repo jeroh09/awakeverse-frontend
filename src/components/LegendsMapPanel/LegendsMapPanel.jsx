@@ -602,81 +602,69 @@ const LegendsMapPanel = ({ isOpen, onClose, onCharacterSelect }) => {
                 atmosphereColor="#6366F1"
                 atmosphereAltitude={0.14}
 
-                pointsData={activeMode === 'legends' ? filtered : []}
+                pointsData={activeMode === 'legends' ? filtered : cityFiltered}
                 pointLat={d => d.lat}
                 pointLng={d => d.lng}
-                pointAltitude={0.012}
-                pointColor={d => CONT_COLOR[d.continent] || '#6366F1'}
-                pointRadius={0.45}
-                pointLabel={() => ''}
+                pointAltitude={activeMode === 'legends' ? 0.012 : 0.02}
+                pointColor={d =>
+                  activeMode === 'cities'
+                    ? (selectedCity?.city_key === d.city_key ? '#ffffff' : 'rgba(224,231,255,0.75)')
+                    : (CONT_COLOR[d.continent] || '#6366F1')
+                }
+                pointRadius={activeMode === 'legends' ? 0.45 : 0.7}
+                pointLabel={d =>
+                  activeMode === 'cities'
+                    ? `<div style="background:rgba(10,15,26,0.95);border:1px solid rgba(99,102,241,0.4);border-radius:8px;padding:5px 10px;font-family:Inter,sans-serif;font-size:11px;color:#f5f5dc"><strong>${d.display_name}</strong><br/><span style="color:#818cf8;font-size:10px">${d.dominant_era||''}</span></div>`
+                    : ''
+                }
 
-                ringsData={activeMode === 'legends' ? filtered : []}
+                ringsData={activeMode === 'legends' ? filtered : cityFiltered}
                 ringLat={d => d.lat}
                 ringLng={d => d.lng}
-                ringColor={d => CONT_COLOR[d.continent] || '#6366F1'}
-                ringMaxRadius={3}
-                ringPropagationSpeed={2}
+                ringColor={d =>
+                  activeMode === 'cities'
+                    ? (selectedCity?.city_key === d.city_key ? '#ffffff' : 'rgba(224,231,255,0.6)')
+                    : (CONT_COLOR[d.continent] || '#6366F1')
+                }
+                ringMaxRadius={activeMode === 'cities' ? 4 : 3}
+                ringPropagationSpeed={activeMode === 'cities' ? 1.5 : 2}
                 ringRepeatPeriod={1200}
                 ringAltitude={0.005}
 
-                labelsData={activeMode === 'cities' ? cityFiltered : []}
-                labelLat={d => d.lat}
-                labelLng={d => d.lng}
-                labelAltitude={0.018}
-                labelText={() => ''}
-                labelSize={0}
-                labelDotRadius={0.6}
-                labelColor={() => '#e0e7ff'}
-                labelDotOrientation={() => 'bottom'}
-
-                htmlElementsData={activeMode === 'cities' ? cityFiltered : []}
-                htmlLat={d => d.lat}
-                htmlLng={d => d.lng}
-                htmlAltitude={0.02}
-                htmlElement={d => {
-                  const el = document.createElement('div');
-                  const isSelected = selectedCity?.city_key === d.city_key;
-                  el.style.cssText = `
-                    width:${isSelected ? 20 : 14}px;
-                    height:${isSelected ? 20 : 14}px;
-                    border-radius:50%;
-                    border:${isSelected ? 2 : 1.5}px solid #e0e7ff;
-                    background:rgba(255,255,255,${isSelected ? 0.25 : 0.12});
-                    cursor:pointer;
-                    transition:all .2s;
-                    box-shadow:0 0 ${isSelected ? 12 : 6}px rgba(240,245,255,0.5);
-                  `;
-                  el.onclick = () => {
-                    setSelectedCity(d);
+                onPointClick={(point) => {
+                  if (activeMode === 'legends') {
+                    setSelectedPin(point);
+                    selectedPinRef.current = point;
+                  } else {
+                    // Cities mode — point is a city
+                    setSelectedCity(point);
                     setCitySelectedChar(null);
-                    fetchCityChars(d.city_key);
-                    rotatingRef.current = false;
-                    setRotating(false);
-                    clearTimeout(resumeTimerRef.current);
-                  };
-                  return el;
-                }}
-
-                onPointClick={(pin) => {
-                  if (activeMode !== 'legends') return;
-                  setSelectedPin(pin);
-                  selectedPinRef.current = pin;
+                    fetchCityChars(point.city_key);
+                  }
                   rotatingRef.current = false;
                   setRotating(false);
                   clearTimeout(resumeTimerRef.current);
                 }}
-                onPointHover={(pin) => setHoveredPin(pin || null)}
+                onPointHover={(point) => {
+                  if (activeMode === 'legends') {
+                    setHoveredPin(point || null);
+                  } else {
+                    setHoveredPin(point || null);
+                  }
+                }}
                 onGlobeClick={handleGlobeClick}
               />
             )}
 
-            {/* React-rendered tooltip — legends mode */}
-            {activeMode === 'legends' && hoveredPin && (
+            {/* Tooltip — adapts to mode */}
+            {hoveredPin && (
               <div className={styles.tooltip}>
                 <strong>{hoveredPin.display_name}</strong>
                 <span>
-                  {hoveredPin.country}
-                  {hoveredPin.historical_period ? ` · ${hoveredPin.historical_period}` : ''}
+                  {activeMode === 'cities'
+                    ? hoveredPin.dominant_era || hoveredPin.country || ''
+                    : `${hoveredPin.country || ''}${hoveredPin.historical_period ? ' · ' + hoveredPin.historical_period : ''}`
+                  }
                 </span>
               </div>
             )}
