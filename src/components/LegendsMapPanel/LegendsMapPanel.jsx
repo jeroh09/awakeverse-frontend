@@ -54,6 +54,26 @@ const GlobeIcon = () => (
   </svg>
 );
 
+// ── City icon SVG ────────────────────────────────────────────────────────────
+const CityIcon = () => (
+  <svg viewBox="0 0 24 24" fill="none" stroke="url(#city-grad)" strokeWidth="1.7"
+    strokeLinecap="round" strokeLinejoin="round">
+    <defs>
+      <linearGradient id="city-grad" x1="0" y1="0" x2="1" y2="1">
+        <stop offset="0%" stopColor="#818CF8" />
+        <stop offset="100%" stopColor="#6366F1" />
+      </linearGradient>
+    </defs>
+    <rect x="3" y="10" width="6" height="11" />
+    <rect x="9" y="6" width="6" height="15" />
+    <rect x="15" y="13" width="6" height="8" />
+    <line x1="1" y1="21" x2="23" y2="21" />
+    <line x1="6" y1="10" x2="6" y2="7" />
+    <line x1="6" y1="7" x2="12" y2="3" />
+    <line x1="12" y1="3" x2="12" y2="6" />
+  </svg>
+);
+
 // ── Filter pills ─────────────────────────────────────────────────────────────
 const FilterPills = memo(({ active, onChange }) => (
   <div className={styles.filterRow}>
@@ -146,6 +166,104 @@ const CharacterCard = memo(({ pin, onClose, onStartChat }) => {
   );
 });
 
+// ── City character chip ──────────────────────────────────────────────────────
+const CityChip = memo(({ char, selected, onClick }) => {
+  const { src, failed, handleError } = useImageSrc({
+    image_url: char.image_url,
+    character_key: char.character_key,
+  });
+  return (
+    <button
+      className={`${styles.chip} ${selected ? styles.chipSelected : ''}`}
+      onClick={onClick}
+      title={char.display_name}
+    >
+      {!failed && src ? (
+        <img src={src} alt={char.display_name}
+          className={styles.chipImg} onError={handleError} draggable={false} />
+      ) : (
+        <div className={styles.chipImgFallback}>
+          {(char.display_name || '?').charAt(0).toUpperCase()}
+        </div>
+      )}
+      <div className={styles.chipName}>{char.display_name}</div>
+    </button>
+  );
+});
+
+// ── City memory panel (renders inside cardCol) ────────────────────────────────
+const CityPanel = memo(({ city, cityChars, loadingChars, selectedChar, onChipClick, onCharClose, onStartChat }) => {
+  if (!city) return null;
+  return (
+    <div className={styles.cityPanelInner}>
+      {/* City info */}
+      <div className={styles.cityHero}>
+        <div className={styles.cityTopRow}>
+          <div className={styles.cityName}>{city.display_name}</div>
+          {city.continent && (
+            <span className={styles.cityContBadge}>{city.continent}</span>
+          )}
+        </div>
+        {city.dominant_era && (
+          <div className={styles.cityEra}>{city.dominant_era}</div>
+        )}
+        {city.famous_for && (
+          <div className={styles.cityFamous}>{city.famous_for}</div>
+        )}
+        {Array.isArray(city.themes) && city.themes.length > 0 && (
+          <div className={styles.cityTags}>
+            {city.themes.slice(0, 4).map(t => (
+              <span key={t} className={styles.cityTag}>{t}</span>
+            ))}
+          </div>
+        )}
+        {city.cultural_summary && (
+          <p className={styles.citySummary}>{city.cultural_summary}</p>
+        )}
+      </div>
+
+      {/* Character chips */}
+      <div className={styles.chipsSection}>
+        <div className={styles.chipsLabel}>
+          {city.character_count || 0} legend{city.character_count !== 1 ? 's' : ''} from here
+        </div>
+
+        {loadingChars && (
+          <div className={styles.chipsLoading}><div className={styles.spinnerSm} /></div>
+        )}
+
+        {!loadingChars && cityChars.length > 0 && (
+          <div className={styles.chipsGrid}>
+            {cityChars.map(char => (
+              <CityChip
+                key={char.character_key}
+                char={char}
+                selected={selectedChar?.character_key === char.character_key}
+                onClick={() => onChipClick(char)}
+              />
+            ))}
+          </div>
+        )}
+
+        {!loadingChars && cityChars.length === 0 && (
+          <p className={styles.chipsEmpty}>No legends linked yet</p>
+        )}
+
+        {/* Full-bleed char card on chip click */}
+        {selectedChar && (
+          <div className={styles.chipCharCard}>
+            <CharacterCard
+              pin={selectedChar}
+              onClose={onCharClose}
+              onStartChat={onStartChat}
+            />
+          </div>
+        )}
+      </div>
+    </div>
+  );
+});
+
 // ── Main component ────────────────────────────────────────────────────────────
 const LegendsMapPanel = ({ isOpen, onClose, onCharacterSelect }) => {
   const [pins, setPins]                       = useState([]);
@@ -160,6 +278,16 @@ const LegendsMapPanel = ({ isOpen, onClose, onCharacterSelect }) => {
   const [globeSize, setGlobeSize]             = useState({ w: 660, h: 500 });
   // Hovered pin drives the React-rendered tooltip
   const [hoveredPin, setHoveredPin]           = useState(null);
+
+  // ── City memory state ────────────────────────────────────────────────────
+  const [activeMode, setActiveMode]           = useState('legends'); // 'legends' | 'cities'
+  const [cityPins, setCityPins]               = useState([]);
+  const [cityFiltered, setCityFiltered]       = useState([]);
+  const [loadingCities, setLoadingCities]     = useState(false);
+  const [selectedCity, setSelectedCity]       = useState(null);
+  const [cityChars, setCityChars]             = useState([]);
+  const [loadingCityChars, setLoadingCityChars] = useState(false);
+  const [citySelectedChar, setCitySelectedChar] = useState(null);
 
   const globeRef       = useRef(null);
   const globeWrapRef   = useRef(null);
@@ -228,6 +356,40 @@ const LegendsMapPanel = ({ isOpen, onClose, onCharacterSelect }) => {
 
   useEffect(() => { if (isOpen) fetchPins(); }, [isOpen, fetchPins]);
 
+  const fetchCities = useCallback(async () => {
+    if (cityPins.length > 0) return;
+    setLoadingCities(true);
+    try {
+      const res  = await fetch(`${API_BASE}/api/city-memories`, { credentials: 'include' });
+      if (!res.ok) throw new Error(`HTTP ${res.status}`);
+      const data = await res.json();
+      if (data.status === 'success') {
+        setCityPins(data.cities || []);
+        setCityFiltered(data.cities || []);
+      }
+    } catch (e) {
+      console.warn('City memories fetch failed:', e);
+    } finally {
+      setLoadingCities(false);
+    }
+  }, [cityPins.length]);
+
+  const fetchCityChars = useCallback(async (cityKey) => {
+    setLoadingCityChars(true);
+    setCityChars([]);
+    setCitySelectedChar(null);
+    try {
+      const res  = await fetch(`${API_BASE}/api/city-memories/${cityKey}`, { credentials: 'include' });
+      if (!res.ok) throw new Error(`HTTP ${res.status}`);
+      const data = await res.json();
+      if (data.status === 'success') setCityChars(data.characters || []);
+    } catch (e) {
+      console.warn('City chars fetch failed:', e);
+    } finally {
+      setLoadingCityChars(false);
+    }
+  }, []);
+
   // ── Continent filter ───────────────────────────────────────────────────────
   useEffect(() => {
     setFiltered(
@@ -236,6 +398,26 @@ const LegendsMapPanel = ({ isOpen, onClose, onCharacterSelect }) => {
         : pins.filter(p => p.continent === activeContinent)
     );
   }, [activeContinent, pins]);
+
+  // ── City continent filter ─────────────────────────────────────────────────
+  useEffect(() => {
+    setCityFiltered(
+      activeContinent === 'All'
+        ? cityPins
+        : cityPins.filter(c => c.continent === activeContinent)
+    );
+  }, [activeContinent, cityPins]);
+
+  // ── Mode switch ────────────────────────────────────────────────────────────
+  const handleModeSwitch = useCallback((mode) => {
+    setActiveMode(mode);
+    setSelectedPin(null);
+    selectedPinRef.current = null;
+    setSelectedCity(null);
+    setCityChars([]);
+    setCitySelectedChar(null);
+    if (mode === 'cities') fetchCities();
+  }, [fetchCities]);
 
   // ── Rotation helpers ───────────────────────────────────────────────────────
   const pauseRotation = useCallback((resumeAfter = AUTO_RESUME_MS) => {
@@ -294,11 +476,21 @@ const LegendsMapPanel = ({ isOpen, onClose, onCharacterSelect }) => {
     });
   }, [onCharacterSelect]);
 
+  // ── City chip click ───────────────────────────────────────────────────────
+  const handleChipClick = useCallback((char) => {
+    setCitySelectedChar(prev =>
+      prev?.character_key === char.character_key ? null : char
+    );
+  }, []);
+
   // ── Continent change ───────────────────────────────────────────────────────
   const handleContinentChange = useCallback((c) => {
     setActiveContinent(c);
     setSelectedPin(null);
     selectedPinRef.current = null;
+    setSelectedCity(null);
+    setCityChars([]);
+    setCitySelectedChar(null);
   }, []);
 
   // ── Cleanup ────────────────────────────────────────────────────────────────
@@ -333,26 +525,42 @@ const LegendsMapPanel = ({ isOpen, onClose, onCharacterSelect }) => {
         <div className={styles.header}>
           <div className={styles.titleGroup}>
             <div className={styles.titleIcon}>
-              <GlobeIcon />
+              {activeMode === 'legends' ? <GlobeIcon /> : <CityIcon />}
             </div>
             <div>
-              <h2 className={styles.title}>Legends of the World</h2>
+              <h2 className={styles.title}>
+                {activeMode === 'legends' ? 'Legends of the World' : 'City Memories'}
+              </h2>
               <p className={styles.subtitle}>
-                {filtered.length}{' '}
-                {filtered.length === 1 ? 'legend' : 'legends'} across history &amp; myth
+                {activeMode === 'legends'
+                  ? `${filtered.length} ${filtered.length === 1 ? 'legend' : 'legends'} across history & myth`
+                  : `${cityFiltered.length} cities · ${cityPins.reduce((s,c) => s + (c.character_count||0), 0)} legends`
+                }
               </p>
             </div>
           </div>
 
+          {/* Mode toggle */}
+          <div className={styles.modeToggle}>
+            <button
+              className={`${styles.modeTab} ${activeMode === 'legends' ? styles.modeTabActive : ''}`}
+              onClick={() => handleModeSwitch('legends')}
+            >
+              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round"><circle cx="12" cy="8" r="4"/><path d="M4 20c0-4 3.6-7 8-7s8 3 8 7"/></svg>
+              Legends
+            </button>
+            <button
+              className={`${styles.modeTab} ${activeMode === 'cities' ? styles.modeTabActive : ''}`}
+              onClick={() => handleModeSwitch('cities')}
+            >
+              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round"><rect x="3" y="10" width="5" height="11"/><rect x="9" y="6" width="6" height="15"/><rect x="16" y="13" width="5" height="8"/><line x1="1" y1="21" x2="23" y2="21"/></svg>
+              Cities
+            </button>
+          </div>
+
           <FilterPills active={activeContinent} onChange={handleContinentChange} />
 
-          <button
-            className={styles.closeBtn}
-            onClick={onClose}
-            aria-label="Close map"
-          >
-            ×
-          </button>
+          <button className={styles.closeBtn} onClick={onClose} aria-label="Close map">×</button>
         </div>
 
         {/* ── Body ── */}
@@ -394,7 +602,7 @@ const LegendsMapPanel = ({ isOpen, onClose, onCharacterSelect }) => {
                 atmosphereColor="#6366F1"
                 atmosphereAltitude={0.14}
 
-                pointsData={filtered}
+                pointsData={activeMode === 'legends' ? filtered : []}
                 pointLat={d => d.lat}
                 pointLng={d => d.lng}
                 pointAltitude={0.012}
@@ -402,7 +610,7 @@ const LegendsMapPanel = ({ isOpen, onClose, onCharacterSelect }) => {
                 pointRadius={0.45}
                 pointLabel={() => ''}
 
-                ringsData={filtered}
+                ringsData={activeMode === 'legends' ? filtered : []}
                 ringLat={d => d.lat}
                 ringLng={d => d.lng}
                 ringColor={d => CONT_COLOR[d.continent] || '#6366F1'}
@@ -411,7 +619,46 @@ const LegendsMapPanel = ({ isOpen, onClose, onCharacterSelect }) => {
                 ringRepeatPeriod={1200}
                 ringAltitude={0.005}
 
+                labelsData={activeMode === 'cities' ? cityFiltered : []}
+                labelLat={d => d.lat}
+                labelLng={d => d.lng}
+                labelAltitude={0.018}
+                labelText={() => ''}
+                labelSize={0}
+                labelDotRadius={0.6}
+                labelColor={() => '#e0e7ff'}
+                labelDotOrientation={() => 'bottom'}
+
+                htmlElementsData={activeMode === 'cities' ? cityFiltered : []}
+                htmlLat={d => d.lat}
+                htmlLng={d => d.lng}
+                htmlAltitude={0.02}
+                htmlElement={d => {
+                  const el = document.createElement('div');
+                  const isSelected = selectedCity?.city_key === d.city_key;
+                  el.style.cssText = `
+                    width:${isSelected ? 20 : 14}px;
+                    height:${isSelected ? 20 : 14}px;
+                    border-radius:50%;
+                    border:${isSelected ? 2 : 1.5}px solid #e0e7ff;
+                    background:rgba(255,255,255,${isSelected ? 0.25 : 0.12});
+                    cursor:pointer;
+                    transition:all .2s;
+                    box-shadow:0 0 ${isSelected ? 12 : 6}px rgba(240,245,255,0.5);
+                  `;
+                  el.onclick = () => {
+                    setSelectedCity(d);
+                    setCitySelectedChar(null);
+                    fetchCityChars(d.city_key);
+                    rotatingRef.current = false;
+                    setRotating(false);
+                    clearTimeout(resumeTimerRef.current);
+                  };
+                  return el;
+                }}
+
                 onPointClick={(pin) => {
+                  if (activeMode !== 'legends') return;
                   setSelectedPin(pin);
                   selectedPinRef.current = pin;
                   rotatingRef.current = false;
@@ -423,8 +670,8 @@ const LegendsMapPanel = ({ isOpen, onClose, onCharacterSelect }) => {
               />
             )}
 
-            {/* React-rendered tooltip — no raw DOM */}
-            {hoveredPin && (
+            {/* React-rendered tooltip — legends mode */}
+            {activeMode === 'legends' && hoveredPin && (
               <div className={styles.tooltip}>
                 <strong>{hoveredPin.display_name}</strong>
                 <span>
@@ -445,14 +692,31 @@ const LegendsMapPanel = ({ isOpen, onClose, onCharacterSelect }) => {
             )}
           </div>
 
-          {/* Character card column — expands on pin click */}
-          <div className={`${styles.cardCol} ${selectedPin ? styles.cardColVisible : ''}`}>
+          {/* Card / City panel column */}
+          <div className={`${styles.cardCol} ${
+            (activeMode === 'legends' && selectedPin) ||
+            (activeMode === 'cities' && selectedCity)
+              ? styles.cardColVisible : ''
+          }`}>
             <div className={styles.cardInner}>
-              <CharacterCard
-                pin={selectedPin}
-                onClose={handleCardClose}
-                onStartChat={handleStartChat}
-              />
+              {activeMode === 'legends' && (
+                <CharacterCard
+                  pin={selectedPin}
+                  onClose={handleCardClose}
+                  onStartChat={handleStartChat}
+                />
+              )}
+              {activeMode === 'cities' && selectedCity && (
+                <CityPanel
+                  city={selectedCity}
+                  cityChars={cityChars}
+                  loadingChars={loadingCityChars}
+                  selectedChar={citySelectedChar}
+                  onChipClick={handleChipClick}
+                  onCharClose={() => setCitySelectedChar(null)}
+                  onStartChat={handleStartChat}
+                />
+              )}
             </div>
           </div>
 
@@ -460,7 +724,11 @@ const LegendsMapPanel = ({ isOpen, onClose, onCharacterSelect }) => {
 
         {/* ── Footer ── */}
         <div className={styles.footer}>
-          <span>Click any pin to explore a legend</span>
+          <span>
+            {activeMode === 'legends'
+              ? 'Click any pin to explore a legend'
+              : 'Click any ring to open a city memory'}
+          </span>
           <span className={styles.footerDot}>·</span>
           <span>Drag to rotate · Scroll to zoom</span>
         </div>

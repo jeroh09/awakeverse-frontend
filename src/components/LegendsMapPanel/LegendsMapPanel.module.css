@@ -490,6 +490,270 @@
 
 .footerDot { opacity: 0.4; }
 
+
+/* ══════════════════════════════════════════════════════
+   MODE TOGGLE — Legends | Cities
+══════════════════════════════════════════════════════ */
+
+.modeToggle {
+  display: flex;
+  border-radius: 999px;
+  border: 1px solid rgba(99, 102, 241, 0.28);
+  background: rgba(99, 102, 241, 0.06);
+  overflow: hidden;
+  flex-shrink: 0;
+}
+
+.modeTab {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  padding: 0.28rem 0.75rem;
+  border: none;
+  background: transparent;
+  color: rgba(99, 102, 241, 0.55);
+  font-family: 'Inter', system-ui, sans-serif;
+  font-size: 0.65rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.18s ease;
+  white-space: nowrap;
+}
+
+.modeTab svg { flex-shrink: 0; }
+
+.modeTab:hover {
+  color: #818cf8;
+  background: rgba(99, 102, 241, 0.08);
+}
+
+.modeTabActive {
+  background: rgba(99, 102, 241, 0.2);
+  color: #e0e7ff;
+}
+
+/* ══════════════════════════════════════════════════════
+   CITY PANEL — slides in via cardCol
+══════════════════════════════════════════════════════ */
+
+.cityPanelInner {
+  width: 100%;
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+
+/* City hero — name, era, tags, summary */
+.cityHero {
+  padding: 1rem 0.9rem 0.85rem;
+  border-bottom: 1px solid rgba(148, 163, 184, 0.08);
+  flex-shrink: 0;
+}
+
+.cityTopRow {
+  display: flex;
+  align-items: flex-start;
+  gap: 6px;
+  margin-bottom: 3px;
+}
+
+.cityName {
+  font-family: 'Syne', -apple-system, BlinkMacSystemFont, sans-serif;
+  font-size: 1rem;
+  font-weight: 700;
+  color: #f5f5dc;
+  line-height: 1.2;
+  flex: 1;
+}
+
+.cityContBadge {
+  font-size: 0.55rem;
+  font-weight: 600;
+  letter-spacing: 0.07em;
+  text-transform: uppercase;
+  padding: 2px 7px;
+  border-radius: 999px;
+  background: rgba(99, 102, 241, 0.1);
+  border: 1px solid rgba(99, 102, 241, 0.28);
+  color: #818cf8;
+  white-space: nowrap;
+  flex-shrink: 0;
+  margin-top: 2px;
+}
+
+.cityEra {
+  font-family: 'Inter', system-ui, sans-serif;
+  font-size: 0.6rem;
+  font-weight: 600;
+  letter-spacing: 0.07em;
+  text-transform: uppercase;
+  color: #818cf8;
+  margin-bottom: 7px;
+}
+
+.cityFamous {
+  font-family: 'Inter', system-ui, sans-serif;
+  font-size: 0.68rem;
+  font-weight: 500;
+  color: #e0e7ff;
+  line-height: 1.45;
+  margin-bottom: 7px;
+  font-style: italic;
+}
+
+.cityTags {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px;
+  margin-bottom: 8px;
+}
+
+.cityTag {
+  padding: 2px 7px;
+  border-radius: 999px;
+  font-size: 0.58rem;
+  font-weight: 500;
+  border: 1px solid rgba(99, 102, 241, 0.28);
+  color: #818cf8;
+  background: rgba(99, 102, 241, 0.07);
+}
+
+.citySummary {
+  font-family: 'Inter', system-ui, sans-serif;
+  font-size: 0.65rem;
+  color: rgba(148, 163, 184, 0.75);
+  line-height: 1.6;
+  margin: 0;
+  display: -webkit-box;
+  -webkit-line-clamp: 4;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+
+/* Character chips section */
+.chipsSection {
+  flex: 1;
+  overflow-y: auto;
+  padding: 0.85rem 0.9rem 0.9rem;
+  scrollbar-width: thin;
+  scrollbar-color: rgba(99, 102, 241, 0.3) transparent;
+}
+
+.chipsSection::-webkit-scrollbar { width: 3px; }
+.chipsSection::-webkit-scrollbar-thumb {
+  background: rgba(99, 102, 241, 0.3);
+  border-radius: 2px;
+}
+
+.chipsLabel {
+  font-family: 'Inter', system-ui, sans-serif;
+  font-size: 0.58rem;
+  font-weight: 600;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: rgba(148, 163, 184, 0.4);
+  margin-bottom: 8px;
+}
+
+.chipsGrid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 6px;
+  margin-bottom: 10px;
+}
+
+/* Individual chip */
+.chip {
+  background: rgba(15, 23, 42, 0.9);
+  border: 1px solid rgba(99, 102, 241, 0.22);
+  border-radius: 10px;
+  overflow: hidden;
+  cursor: pointer;
+  transition: all 0.15s ease;
+  padding: 0;
+  text-align: left;
+}
+
+.chip:hover {
+  border-color: rgba(99, 102, 241, 0.55);
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.4);
+}
+
+.chipSelected {
+  border-color: #6366f1;
+  box-shadow:
+    0 0 0 2px rgba(99, 102, 241, 0.25),
+    0 4px 12px rgba(0, 0, 0, 0.4);
+}
+
+.chipImg {
+  width: 100%;
+  aspect-ratio: 1;
+  object-fit: cover;
+  object-position: top center;
+  display: block;
+}
+
+.chipImgFallback {
+  width: 100%;
+  aspect-ratio: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: linear-gradient(135deg, rgba(99,102,241,0.15), rgba(15,23,42,0.9));
+  font-family: 'Syne', -apple-system, BlinkMacSystemFont, sans-serif;
+  font-size: 1.2rem;
+  font-weight: 700;
+  color: rgba(99, 102, 241, 0.4);
+}
+
+.chipName {
+  font-family: 'Syne', -apple-system, BlinkMacSystemFont, sans-serif;
+  font-size: 0.58rem;
+  font-weight: 600;
+  color: #f5f5dc;
+  padding: 4px 5px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+/* Loading / empty states */
+.chipsLoading {
+  display: flex;
+  justify-content: center;
+  padding: 1.5rem 0;
+}
+
+.spinnerSm {
+  width: 24px;
+  height: 24px;
+  border: 2px solid rgba(99, 102, 241, 0.12);
+  border-top-color: #6366f1;
+  border-radius: 50%;
+  animation: spin 0.85s linear infinite;
+}
+
+.chipsEmpty {
+  font-family: 'Inter', system-ui, sans-serif;
+  font-size: 0.7rem;
+  color: #475569;
+  font-style: italic;
+  text-align: center;
+  padding: 1rem 0;
+}
+
+/* Full char card triggered from chip */
+.chipCharCard {
+  margin-top: 8px;
+}
+
+.chipCharCard .charCard {
+  height: 200px;
+}
+
 /* ── Animations ── */
 @keyframes panelIn {
   from { opacity: 0; transform: translate(-50%, -50%) scale(0.96); }
