@@ -1,6 +1,7 @@
 // src/components/ScenariosTab/ScenarioChatWindow/MediaJobModal.jsx
 // Audio/Video preview + download modal.
 // Uses blob URL for authenticated playback — no new endpoints needed.
+// Info block hidden when media is playing to maximise player space.
 
 import React, { useState, useCallback, useEffect, useRef } from 'react';
 import styles from './MediaJobModal.module.css';
@@ -54,17 +55,14 @@ export default function MediaJobModal({ job, scenarioTitle, onClose }) {
   const [previewError,   setPreviewError]   = useState(null);
   const blobUrlRef = useRef(null);
 
-  // Cleanup blob URL on unmount
   useEffect(() => {
     return () => {
-      if (blobUrlRef.current) {
-        URL.revokeObjectURL(blobUrlRef.current);
-      }
+      if (blobUrlRef.current) URL.revokeObjectURL(blobUrlRef.current);
     };
   }, []);
 
   const handlePreview = async () => {
-    if (previewUrl) return; // already loaded
+    if (previewUrl) return;
     setPreviewLoading(true);
     setPreviewError(null);
     try {
@@ -92,6 +90,9 @@ export default function MediaJobModal({ job, scenarioTitle, onClose }) {
     if (e.target === e.currentTarget) onClose();
   };
 
+  // True once media blob is loaded and player is visible
+  const isPlaying = !!previewUrl;
+
   return (
     <div
       className={styles.overlay}
@@ -99,14 +100,15 @@ export default function MediaJobModal({ job, scenarioTitle, onClose }) {
       role="dialog"
       aria-modal="true"
     >
-      <div className={`${styles.modal} ${previewUrl && isVideo ? styles.modalWide : ''}`}>
+      <div className={[
+        styles.modal,
+        isVideo && isPlaying ? styles.modalVideo : '',
+      ].filter(Boolean).join(' ')}>
 
         {/* Header */}
         <div className={styles.header}>
           <div className={styles.headerLeft}>
-            <span className={styles.headerIcon}>
-              {isAudio ? '🎧' : '🎬'}
-            </span>
+            <span className={styles.headerIcon}>{isAudio ? '🎧' : '🎬'}</span>
             <div>
               <h2 className={styles.headerTitle}>
                 {isAudio ? 'Audio Drama' : 'Scene Video'}
@@ -117,11 +119,7 @@ export default function MediaJobModal({ job, scenarioTitle, onClose }) {
               </p>
             </div>
           </div>
-          <button
-            className={styles.closeButton}
-            onClick={onClose}
-            aria-label="Close"
-          >
+          <button className={styles.closeButton} onClick={onClose} aria-label="Close">
             ✕
           </button>
         </div>
@@ -129,16 +127,11 @@ export default function MediaJobModal({ job, scenarioTitle, onClose }) {
         {/* Body */}
         <div className={styles.body}>
 
-          {/* ── Preview player ──────────────────────────────────────── */}
+          {/* Preview button — before load */}
           {!previewUrl && !previewLoading && !previewError && (
-            <button
-              className={styles.previewButton}
-              onClick={handlePreview}
-            >
-              <span className={styles.previewIcon}>
-                {isAudio ? '🔊' : '▶'}
-              </span>
-              Preview {isAudio ? 'Audio' : 'Video'}
+            <button className={styles.previewButton} onClick={handlePreview}>
+              <span className={styles.previewIcon}>{isAudio ? '🔊' : '▶'}</span>
+              {isAudio ? 'Play Audio Drama' : 'Play Scene Video'}
             </button>
           )}
 
@@ -153,52 +146,42 @@ export default function MediaJobModal({ job, scenarioTitle, onClose }) {
             <p className={styles.previewError}>{previewError}</p>
           )}
 
+          {/* Audio player */}
           {previewUrl && isAudio && (
             <div className={styles.audioPlayerWrapper}>
-              <audio
-                controls
-                autoPlay
-                src={previewUrl}
-                className={styles.audioPlayer}
-              >
+              <audio controls autoPlay src={previewUrl} className={styles.audioPlayer}>
                 Your browser does not support audio playback.
               </audio>
             </div>
           )}
 
+          {/* Video player — 16:9 aspect ratio, controls always visible */}
           {previewUrl && isVideo && (
             <div className={styles.videoPlayerWrapper}>
-              <video
-                controls
-                autoPlay
-                src={previewUrl}
-                className={styles.videoPlayer}
-              >
+              <video controls autoPlay src={previewUrl} className={styles.videoPlayer}>
                 Your browser does not support video playback.
               </video>
             </div>
           )}
 
-          {/* ── Info block ──────────────────────────────────────────── */}
-          <div className={styles.infoBlock}>
-            <span className={styles.infoIcon}>
-              {isAudio ? '🎙️' : '🎞️'}
-            </span>
-            <div className={styles.infoText}>
-              <p className={styles.infoTitle}>
-                {isAudio
-                  ? 'Multi-voice audio drama'
-                  : 'Scene video with character voices'}
-              </p>
-              <p className={styles.infoDesc}>
-                {isAudio
-                  ? 'Characters voiced by ElevenLabs with accent-matched profiles.'
-                  : 'AI-generated scene visuals combined with character audio.'}
-              </p>
+          {/* Info block — hidden once media is loaded to give player full space */}
+          {!isPlaying && (
+            <div className={styles.infoBlock}>
+              <span className={styles.infoIcon}>{isAudio ? '🎙️' : '🎞️'}</span>
+              <div className={styles.infoText}>
+                <p className={styles.infoTitle}>
+                  {isAudio ? 'Multi-voice audio drama' : 'Scene video with character voices'}
+                </p>
+                <p className={styles.infoDesc}>
+                  {isAudio
+                    ? 'Characters voiced by ElevenLabs with accent-matched profiles.'
+                    : 'AI-generated scene visuals combined with character audio.'}
+                </p>
+              </div>
             </div>
-          </div>
+          )}
 
-          {/* ── Download buttons ────────────────────────────────────── */}
+          {/* Download buttons */}
           <div className={styles.downloadButtons}>
             {isAudio && (
               <button
@@ -209,7 +192,6 @@ export default function MediaJobModal({ job, scenarioTitle, onClose }) {
                 Download MP3
               </button>
             )}
-
             {isVideo && (
               <>
                 <button
@@ -235,9 +217,7 @@ export default function MediaJobModal({ job, scenarioTitle, onClose }) {
 
         {/* Footer */}
         <div className={styles.footer}>
-          <span className={styles.footerText}>
-            &ldquo;{scenarioTitle}&rdquo;
-          </span>
+          <span className={styles.footerText}>&ldquo;{scenarioTitle}&rdquo;</span>
           <span className={styles.footerHint}>Esc to close</span>
         </div>
 

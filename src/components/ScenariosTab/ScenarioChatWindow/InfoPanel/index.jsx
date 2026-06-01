@@ -34,10 +34,9 @@ function formatJobDate(isoString) {
   const d   = new Date(isoString);
   const now = new Date();
   const isToday =
-    d.getDate() === now.getDate() &&
-    d.getMonth() === now.getMonth() &&
+    d.getDate()     === now.getDate()     &&
+    d.getMonth()    === now.getMonth()    &&
     d.getFullYear() === now.getFullYear();
-
   const time = d.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
   return isToday
     ? `Today ${time}`
@@ -57,10 +56,50 @@ function contentTypeLabel(type) {
   return CONTENT_TYPES.find(t => t.id === type)?.label || 'Script';
 }
 
-function creatingHintText(type) {
-  if (type === 'audio') return 'Generating character voices and assembling audio drama…';
-  if (type === 'video') return 'Generating audio, scene clips, and assembling video… (20–40 min)';
-  return 'This takes a few seconds';
+/**
+ * Stage-aware progress messages for the video pipeline.
+ * Matches the actual pipeline stages in video_assembly_service.py.
+ *   0–5%   parsing
+ *   5–22%  audio generation
+ *   22–30% audio assembly + character registry
+ *   30–50% FLUX images
+ *   50–78% Pika submissions + polling
+ *   78–85% downloading clips
+ *   85–100% FFmpeg assembly
+ */
+function videoProgressMessage(pct) {
+  if (pct < 5)  return 'Parsing screenplay…';
+  if (pct < 22) return 'Generating character voices…';
+  if (pct < 30) return 'Assembling audio drama…';
+  if (pct < 50) return 'Generating scene images…';
+  if (pct < 78) return 'Animating scenes — this is the slow part…';
+  if (pct < 85) return 'Downloading scene clips…';
+  if (pct < 95) return 'Assembling final video…';
+  return 'Almost there…';
+}
+
+function audioProgressMessage(pct) {
+  if (pct < 10) return 'Preparing screenplay…';
+  if (pct < 90) return 'Generating character voices…';
+  return 'Assembling audio drama…';
+}
+
+function friendlyError(rawError) {
+  if (!rawError) return 'Something went wrong. Please try again.';
+  const e = rawError.toLowerCase();
+  if (e.includes('screenplay') || e.includes('script'))
+    return 'No screenplay found. Generate a Script first, then try again.';
+  if (e.includes('balance') || e.includes('credit') || e.includes('quota'))
+    return 'Generation service is temporarily unavailable. Please try again shortly.';
+  if (e.includes('timeout') || e.includes('timed out'))
+    return 'Generation took too long and timed out. Try a shorter duration.';
+  if (e.includes('no clips') || e.includes('assembly'))
+    return 'Video assembly failed — some scene clips could not be generated. Try again.';
+  if (e.includes('elevenlabs') || e.includes('audio'))
+    return 'Voice generation failed. Please try again.';
+  if (e.includes('limit'))
+    return 'Daily generation limit reached. Try again tomorrow.';
+  return 'Generation failed unexpectedly. Please try again.';
 }
 
 // ── Download helper ───────────────────────────────────────────────────────────
@@ -69,12 +108,10 @@ async function downloadJobFile(jobId, type) {
   try {
     const url      = `${API_BASE}/api/content/jobs/${jobId}/download-${type}`;
     const response = await fetch(url, { credentials: 'include' });
-
     if (!response.ok) {
       console.error(`Download failed: ${response.status}`);
       return;
     }
-
     const blob    = await response.blob();
     const blobUrl = URL.createObjectURL(blob);
     const a       = document.createElement('a');
@@ -86,7 +123,6 @@ async function downloadJobFile(jobId, type) {
     a.click();
     document.body.removeChild(a);
     URL.revokeObjectURL(blobUrl);
-    console.log(`⬇️ Downloaded ${type} for job ${jobId}`);
   } catch (e) {
     console.error('Download error:', e);
   }
@@ -107,20 +143,17 @@ export default function InfoPanel({
   onCreateContent    = async () => {},
   onViewJob          = () => {},
 }) {
-  const [selectedType,     setSelectedType]     = useState('script');
-  const [selectedDuration, setSelectedDuration] = useState(180);
+  const [selectedType,       setSelectedType]       = useState('script');
+  const [selectedDuration,   setSelectedDuration]   = useState(180);
   const [selectedVideoStyle, setSelectedVideoStyle] = useState('realistic');
+
   const validScenarios = Array.isArray(scenarios) ? scenarios : [];
   const status         = contentState?.status   || 'idle';
   const progress       = contentState?.progress || 0;
+  const pct            = Math.round(progress * 100);
   const isAsync        = ['audio', 'video'].includes(selectedType);
 
-  console.log('📋 InfoPanel:', {
-    status, progress: Math.round(progress * 100), isCreatePanelOpen,
-    jobsCount: contentJobs.length,
-  });
-
-  // ── Shared header ──────────────────────────────────────────────────────────
+  // ── Shared header ─────────────────────────────────────────────────────────
   const Header = () => (
     <div className={styles.header}>
       <button
@@ -134,58 +167,113 @@ export default function InfoPanel({
     </div>
   );
 
-  // ── CREATING ───────────────────────────────────────────────────────────────
+  // ── CREATING ──────────────────────────────────────────────────────────────
   if (status === 'creating') {
-    const pct = Math.round(progress * 100);
+    // Which content type is actually generating — from the active job if available
+    const activeType = contentState?.activeJob?.content_type || selectedType;
+    const isVideoJob = activeType === 'video';
+    const isAudioJob = activeType === 'audio';
+
+    const stageMessage = isVideoJob
+      ? videoProgressMessage(pct)
+      : isAudioJob
+        ? audioProgressMessage(pct)
+        : 'Generating screenplay…';
+
+    // Estimated time hint — only shown for video
+    const timeHint = isVideoJob
+      ? pct < 50
+        ? 'Usually takes 8–12 minutes total'
+        : 'More than halfway there…'
+      : null;
+
     return (
       <div className={styles.infoPanel}>
         <Header />
         <div className={styles.section}>
-          <h3 className={styles.sectionTitle}>Creating</h3>
+          <h3 className={styles.sectionTitle}>
+            {isVideoJob ? '🎬 Generating Scene Video' :
+             isAudioJob ? '🎧 Generating Audio Drama' :
+             '📄 Generating Script'}
+          </h3>
+
           <div className={styles.creatingCard}>
+            {/* Spinner */}
             <div className={styles.creatingSpinner} />
-            <p className={styles.creatingLabel}>
-              Generating your {selectedType}…
-            </p>
+
+            {/* Stage message */}
+            <p className={styles.creatingLabel}>{stageMessage}</p>
+
+            {/* Progress bar — async jobs only */}
             {isAsync && (
-              <>
-                <div className={styles.asyncProgressBar}>
+              <div className={styles.progressWrapper}>
+                <div className={styles.progressBar}>
                   <div
-                    className={styles.asyncProgressFill}
+                    className={styles.progressFill}
                     style={{ width: `${pct}%` }}
+                    role="progressbar"
+                    aria-valuenow={pct}
+                    aria-valuemin={0}
+                    aria-valuemax={100}
                   />
                 </div>
-                <p className={styles.asyncProgressText}>{pct}%</p>
-              </>
+                <span className={styles.progressPct}>{pct}%</span>
+              </div>
             )}
-            <p className={styles.creatingHint}>{creatingHintText(selectedType)}</p>
+
+            {/* Time hint */}
+            {timeHint && (
+              <p className={styles.creatingHint}>{timeHint}</p>
+            )}
+
+            {/* Stage breakdown for video — shows what's coming */}
+            {isVideoJob && pct < 80 && (
+              <div className={styles.stageList}>
+                <div className={`${styles.stageItem} ${pct >= 5  ? styles.stageDone : pct >= 2  ? styles.stageActive : ''}`}>
+                  <span className={styles.stageDot} />
+                  <span>Voices</span>
+                </div>
+                <div className={`${styles.stageItem} ${pct >= 30 ? styles.stageDone : pct >= 22 ? styles.stageActive : ''}`}>
+                  <span className={styles.stageDot} />
+                  <span>Scene images</span>
+                </div>
+                <div className={`${styles.stageItem} ${pct >= 78 ? styles.stageDone : pct >= 50 ? styles.stageActive : ''}`}>
+                  <span className={styles.stageDot} />
+                  <span>Animation</span>
+                </div>
+                <div className={`${styles.stageItem} ${pct >= 100 ? styles.stageDone : pct >= 85 ? styles.stageActive : ''}`}>
+                  <span className={styles.stageDot} />
+                  <span>Assembly</span>
+                </div>
+              </div>
+            )}
           </div>
         </div>
       </div>
     );
   }
 
-  // ── FAILED ─────────────────────────────────────────────────────────────────
+  // ── FAILED ────────────────────────────────────────────────────────────────
   if (status === 'failed' && isCreatePanelOpen) {
+    const message = friendlyError(contentState?.error);
     return (
       <div className={styles.infoPanel}>
         <Header />
         <div className={styles.section}>
-          <h3 className={styles.sectionTitle}>Generation failed</h3>
+          <h3 className={styles.sectionTitle}>Generation Failed</h3>
           <div className={styles.errorCard}>
             <span className={styles.errorCardIcon}>⚠️</span>
-            <p className={styles.errorCardText}>
-              {contentState?.error || 'Something went wrong'}
-            </p>
+            <p className={styles.errorCardText}>{message}</p>
             <button
               className={styles.generateButton}
               onClick={() => onCreateContent({
                 contentType:     selectedType,
                 durationSeconds: selectedDuration,
                 messageIds:      [],
+                videoStyle:      selectedVideoStyle,
               })}
             >
-              Try again
+              Try Again
             </button>
             <button className={styles.backLink} onClick={onCloseCreate}>
               ← Back
@@ -196,7 +284,7 @@ export default function InfoPanel({
     );
   }
 
-  // ── COMPLETE ───────────────────────────────────────────────────────────────
+  // ── COMPLETE ──────────────────────────────────────────────────────────────
   if (status === 'complete' && isCreatePanelOpen && contentState?.activeJob) {
     const job  = contentState.activeJob;
     const type = job.content_type;
@@ -205,63 +293,47 @@ export default function InfoPanel({
       <div className={styles.infoPanel}>
         <Header />
         <div className={styles.section}>
-          <h3 className={styles.sectionTitle}>Ready</h3>
+          <h3 className={styles.sectionTitle}>Ready ✅</h3>
           <div className={styles.successCard}>
-            <span className={styles.successIcon}>✅</span>
+            <span className={styles.successIcon}>
+              {type === 'script' ? '📄' : type === 'audio' ? '🎧' : '🎬'}
+            </span>
             <p className={styles.successLabel}>
               {contentTypeLabel(type)} generated
             </p>
 
-            {/* Script */}
             {type === 'script' && (
               <>
                 <p className={styles.successMeta}>
                   {formatCharCount(job.char_count)} · {job.duration_seconds}s
                 </p>
-                <button
-                  className={styles.generateButton}
-                  onClick={() => onViewJob(job)}
-                >
+                <button className={styles.generateButton} onClick={() => onViewJob(job)}>
                   View Script
                 </button>
               </>
             )}
 
-            {/* Audio */}
             {type === 'audio' && (
               <>
-                <p className={styles.successMeta}>
-                  Audio drama · {job.duration_seconds}s
-                </p>
+                <p className={styles.successMeta}>Audio drama · {job.duration_seconds}s</p>
                 <button
                   className={styles.generateButton}
-                  onClick={() => downloadJobFile(job.id, 'audio')}
+                  onClick={() => onViewJob(job)}
                 >
-                  ⬇ Download MP3
+                  🎧 Play / Download
                 </button>
               </>
             )}
 
-            {/* Video */}
             {type === 'video' && (
               <>
-                <p className={styles.successMeta}>
-                  Scene video · {job.duration_seconds}s
-                </p>
+                <p className={styles.successMeta}>Scene video · {job.duration_seconds}s</p>
                 <button
                   className={styles.generateButton}
-                  onClick={() => downloadJobFile(job.id, 'video')}
+                  onClick={() => onViewJob(job)}
                 >
-                  ⬇ Download MP4
+                  🎬 Watch / Download
                 </button>
-                {job.audio_url && (
-                  <button
-                    className={`${styles.generateButton} ${styles.generateButtonSecondary}`}
-                    onClick={() => downloadJobFile(job.id, 'audio')}
-                  >
-                    ⬇ Download MP3 (audio track)
-                  </button>
-                )}
               </>
             )}
 
@@ -274,7 +346,7 @@ export default function InfoPanel({
     );
   }
 
-  // ── CREATE PANEL ───────────────────────────────────────────────────────────
+  // ── CREATE PANEL ──────────────────────────────────────────────────────────
   if (isCreatePanelOpen) {
     const handleGenerate = async () => {
       try {
@@ -338,15 +410,14 @@ export default function InfoPanel({
             </>
           )}
 
-          {/* Context hint for async types */}
-          {selectedType !== 'script' && (
+          {/* Audio hint */}
+          {selectedType === 'audio' && (
             <p className={styles.asyncTypeHint}>
-              {selectedType === 'audio'
-                ? '🎧 Generates character voices from your screenplay'
-                : '🎬 Generates audio + full scene video from your screenplay. Takes 20–40 min.'}
+              🎧 Generates character voices from your screenplay. Takes 2–5 minutes.
             </p>
           )}
- 
+
+          {/* Video style + hint */}
           {selectedType === 'video' && (
             <>
               <p className={styles.fieldLabel}>Visual style</p>
@@ -368,16 +439,12 @@ export default function InfoPanel({
                 ))}
               </div>
               <p className={styles.asyncTypeHint}>
-                🎬 Generates audio + full scene video. Takes 20–40 min.
+                🎬 Generates audio + animated scene video. Takes 8–12 minutes.
               </p>
             </>
           )}
- 
 
-          <button
-            className={styles.generateButton}
-            onClick={handleGenerate}
-          >
+          <button className={styles.generateButton} onClick={handleGenerate}>
             Generate {contentTypeLabel(selectedType)}
           </button>
 
@@ -389,16 +456,14 @@ export default function InfoPanel({
     );
   }
 
-  // ── DEFAULT: jobs list + scenarios ─────────────────────────────────────────
+  // ── DEFAULT: jobs list + scenarios ────────────────────────────────────────
   return (
     <div className={styles.infoPanel}>
       <Header />
 
-      {/* Created Content */}
       {(contentJobsLoading || contentJobs.length > 0) && (
         <div className={styles.section}>
           <h3 className={styles.sectionTitle}>Created Content</h3>
-
           {contentJobsLoading ? (
             <div className={styles.jobsLoading}>
               <div className={styles.jobsLoadingBar} />
@@ -434,7 +499,6 @@ export default function InfoPanel({
         </div>
       )}
 
-      {/* Scenarios */}
       <div className={styles.section}>
         <h3 className={styles.sectionTitle}>My Scenarios</h3>
         {validScenarios.length === 0 ? (
