@@ -1,38 +1,11 @@
 // src/components/ScenariosTab/ScenarioChatWindow/MediaJobModal.jsx
-// Download modal for audio and video ContentJobs.
-// Renders when viewingJob.content_type is 'audio' or 'video'.
-// ScriptViewerModal handles 'script' jobs.
+// Audio/Video preview + download modal.
+// Uses blob URL for authenticated playback — no new endpoints needed.
 
-import React, { useCallback, useEffect } from 'react';
+import React, { useState, useCallback, useEffect, useRef } from 'react';
 import styles from './MediaJobModal.module.css';
 
 const API_BASE = process.env.REACT_APP_API_URL || 'https://api.awakeverse.com';
-
-async function downloadJobFile(jobId, type) {
-  try {
-    const response = await fetch(
-      `${API_BASE}/api/content/jobs/${jobId}/download-${type}`,
-      { credentials: 'include' }
-    );
-    if (!response.ok) {
-      console.error('Download failed:', response.status);
-      return;
-    }
-    const blob    = await response.blob();
-    const blobUrl = URL.createObjectURL(blob);
-    const a       = document.createElement('a');
-    a.href        = blobUrl;
-    a.download    = type === 'audio'
-      ? `audio_drama_${jobId}.mp3`
-      : `scene_video_${jobId}.mp4`;
-    document.body.appendChild(a);
-    a.click();
-    document.body.removeChild(a);
-    URL.revokeObjectURL(blobUrl);
-  } catch (e) {
-    console.error('Download error:', e);
-  }
-}
 
 function formatDate(iso) {
   if (!iso) return '';
@@ -42,12 +15,69 @@ function formatDate(iso) {
   });
 }
 
+async function fetchBlobUrl(jobId, type) {
+  const response = await fetch(
+    `${API_BASE}/api/content/jobs/${jobId}/download-${type}`,
+    { credentials: 'include' }
+  );
+  if (!response.ok) throw new Error(`Failed to load ${type}: ${response.status}`);
+  const blob = await response.blob();
+  return URL.createObjectURL(blob);
+}
+
+async function downloadJobFile(jobId, type) {
+  try {
+    const blobUrl = await fetchBlobUrl(jobId, type);
+    const a       = document.createElement('a');
+    a.href        = blobUrl;
+    a.download    = type === 'audio'
+      ? `audio_drama_${jobId}.mp3`
+      : `scene_video_${jobId}.mp4`;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    setTimeout(() => URL.revokeObjectURL(blobUrl), 5000);
+  } catch (e) {
+    console.error('Download error:', e);
+  }
+}
+
 export default function MediaJobModal({ job, scenarioTitle, onClose }) {
   if (!job) return null;
 
-  const type     = job.content_type;
-  const isAudio  = type === 'audio';
-  const isVideo  = type === 'video';
+  const type    = job.content_type;
+  const isAudio = type === 'audio';
+  const isVideo = type === 'video';
+
+  const [previewUrl,     setPreviewUrl]     = useState(null);
+  const [previewLoading, setPreviewLoading] = useState(false);
+  const [previewError,   setPreviewError]   = useState(null);
+  const blobUrlRef = useRef(null);
+
+  // Cleanup blob URL on unmount
+  useEffect(() => {
+    return () => {
+      if (blobUrlRef.current) {
+        URL.revokeObjectURL(blobUrlRef.current);
+      }
+    };
+  }, []);
+
+  const handlePreview = async () => {
+    if (previewUrl) return; // already loaded
+    setPreviewLoading(true);
+    setPreviewError(null);
+    try {
+      const url = await fetchBlobUrl(job.id, type);
+      blobUrlRef.current = url;
+      setPreviewUrl(url);
+    } catch (e) {
+      setPreviewError('Could not load preview. Try downloading instead.');
+      console.error('Preview error:', e);
+    } finally {
+      setPreviewLoading(false);
+    }
+  };
 
   const handleKeyDown = useCallback((e) => {
     if (e.key === 'Escape') onClose();
@@ -68,9 +98,8 @@ export default function MediaJobModal({ job, scenarioTitle, onClose }) {
       onClick={handleBackdrop}
       role="dialog"
       aria-modal="true"
-      aria-label={`${type} job details`}
     >
-      <div className={styles.modal}>
+      <div className={`${styles.modal} ${previewUrl && isVideo ? styles.modalWide : ''}`}>
 
         {/* Header */}
         <div className={styles.header}>
@@ -92,7 +121,6 @@ export default function MediaJobModal({ job, scenarioTitle, onClose }) {
             className={styles.closeButton}
             onClick={onClose}
             aria-label="Close"
-            title="Close (Esc)"
           >
             ✕
           </button>
@@ -100,6 +128,58 @@ export default function MediaJobModal({ job, scenarioTitle, onClose }) {
 
         {/* Body */}
         <div className={styles.body}>
+
+          {/* ── Preview player ──────────────────────────────────────── */}
+          {!previewUrl && !previewLoading && !previewError && (
+            <button
+              className={styles.previewButton}
+              onClick={handlePreview}
+            >
+              <span className={styles.previewIcon}>
+                {isAudio ? '🔊' : '▶'}
+              </span>
+              Preview {isAudio ? 'Audio' : 'Video'}
+            </button>
+          )}
+
+          {previewLoading && (
+            <div className={styles.previewLoading}>
+              <div className={styles.previewSpinner} />
+              <p>Loading {isAudio ? 'audio' : 'video'}…</p>
+            </div>
+          )}
+
+          {previewError && (
+            <p className={styles.previewError}>{previewError}</p>
+          )}
+
+          {previewUrl && isAudio && (
+            <div className={styles.audioPlayerWrapper}>
+              <audio
+                controls
+                autoPlay
+                src={previewUrl}
+                className={styles.audioPlayer}
+              >
+                Your browser does not support audio playback.
+              </audio>
+            </div>
+          )}
+
+          {previewUrl && isVideo && (
+            <div className={styles.videoPlayerWrapper}>
+              <video
+                controls
+                autoPlay
+                src={previewUrl}
+                className={styles.videoPlayer}
+              >
+                Your browser does not support video playback.
+              </video>
+            </div>
+          )}
+
+          {/* ── Info block ──────────────────────────────────────────── */}
           <div className={styles.infoBlock}>
             <span className={styles.infoIcon}>
               {isAudio ? '🎙️' : '🎞️'}
@@ -112,17 +192,14 @@ export default function MediaJobModal({ job, scenarioTitle, onClose }) {
               </p>
               <p className={styles.infoDesc}>
                 {isAudio
-                  ? 'Characters voiced by ElevenLabs with accent-matched profiles. '
-                    + 'Download as MP3 to use in any audio player or podcast app.'
-                  : 'AI-generated scene visuals combined with character audio. '
-                    + 'Download as MP4 to use in your video editor or share directly.'}
+                  ? 'Characters voiced by ElevenLabs with accent-matched profiles.'
+                  : 'AI-generated scene visuals combined with character audio.'}
               </p>
             </div>
           </div>
 
-          {/* Download buttons */}
+          {/* ── Download buttons ────────────────────────────────────── */}
           <div className={styles.downloadButtons}>
-
             {isAudio && (
               <button
                 className={styles.downloadButton}
@@ -142,7 +219,6 @@ export default function MediaJobModal({ job, scenarioTitle, onClose }) {
                   <span className={styles.downloadIcon}>⬇</span>
                   Download MP4
                 </button>
-
                 {job.audio_url && (
                   <button
                     className={`${styles.downloadButton} ${styles.downloadButtonSecondary}`}
@@ -160,7 +236,7 @@ export default function MediaJobModal({ job, scenarioTitle, onClose }) {
         {/* Footer */}
         <div className={styles.footer}>
           <span className={styles.footerText}>
-            Generated from &ldquo;{scenarioTitle}&rdquo;
+            &ldquo;{scenarioTitle}&rdquo;
           </span>
           <span className={styles.footerHint}>Esc to close</span>
         </div>
