@@ -146,6 +146,7 @@ export default function useContentGeneration(scenarioId) {
     durationSeconds = 180,
     messageIds      = [],
     scriptFormat    = 'screenplay',
+    storyStyle      = 'debate',
     videoStyle      = 'realistic',
   } = {}) => {
     if (!scenarioId) {
@@ -175,6 +176,7 @@ export default function useContentGeneration(scenarioId) {
           duration_seconds: durationSeconds,
           message_ids:      messageIds,
           script_format:    scriptFormat,
+          story_style:      storyStyle,
           video_style:      videoStyle,
         }),
       });

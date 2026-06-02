@@ -32,6 +32,15 @@ const SCRIPT_FORMATS = [
   { id: 'narrative',  label: 'Narrative',  icon: '📖' },
 ];
 
+const STORY_STYLES = [
+  { id: 'debate',   label: 'Debate',   icon: '🧠' },
+  { id: 'drama',    label: 'Drama',    icon: '🎭' },
+  { id: 'action',   label: 'Action',   icon: '⚔️'  },
+  { id: 'romance',  label: 'Romance',  icon: '💫' },
+  { id: 'mystery',  label: 'Mystery',  icon: '🔍' },
+  { id: 'comedy',   label: 'Comedy',   icon: '😄' },
+];
+
 // ── Helpers ───────────────────────────────────────────────────────────────────
 
 function formatJobDate(isoString) {
@@ -152,6 +161,7 @@ export default function InfoPanel({
   const [selectedDuration,   setSelectedDuration]   = useState(180);
   const [selectedVideoStyle, setSelectedVideoStyle] = useState('realistic');
   const [selectedFormat,     setSelectedFormat]     = useState('screenplay');
+  const [selectedStoryStyle, setSelectedStoryStyle] = useState('debate');
 
   const validScenarios = Array.isArray(scenarios) ? scenarios : [];
   const status         = contentState?.status   || 'idle';
@@ -362,6 +372,7 @@ export default function InfoPanel({
           messageIds:      [],
           videoStyle:      selectedVideoStyle,
           scriptFormat:    selectedType === 'script' ? selectedFormat : 'screenplay',
+          storyStyle:      selectedType === 'script' ? selectedStoryStyle : 'debate',
         });
       } catch {
         // error surfaced via contentState.error → FAILED block
@@ -439,6 +450,29 @@ export default function InfoPanel({
                   📖 Prose narrative — literary third-person format.
                   Cannot be used for audio or video generation.
                 </p>
+              )}
+
+              {selectedFormat === 'screenplay' && (
+                <>
+                  <p className={styles.fieldLabel}>Story style</p>
+                  <div className={styles.styleGrid}>
+                    {STORY_STYLES.map(s => (
+                      <button
+                        key={s.id}
+                        className={[
+                          styles.styleButton,
+                          selectedStoryStyle === s.id ? styles.styleButtonActive : '',
+                        ].filter(Boolean).join(' ')}
+                        onClick={() => setSelectedStoryStyle(s.id)}
+                        aria-pressed={selectedStoryStyle === s.id}
+                        title={s.label}
+                      >
+                        <span className={styles.styleIcon}>{s.icon}</span>
+                        <span className={styles.styleLabel}>{s.label}</span>
+                      </button>
+                    ))}
+                  </div>
+                </>
               )}
             </>
           )}
