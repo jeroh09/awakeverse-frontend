@@ -1,869 +1,317 @@
-/* InfoPanel.module.css */
-/* Right side panel with home button and scenarios list */
+/* InfoPanel.module.css
+ *
+ * Full replacement — AwakeVerse design tokens throughout.
+ * Covers:
+ *   - All existing class names from current index.jsx (backward-compat until JSX rewrite)
+ *   - All new class names from redesigned index.jsx
+ *   - ScenarioListItem class names
+ *
+ * Tokens:
+ *   bg-surface    : #141B2E
+ *   bg-interactive: #1C2640
+ *   bg-peak       : #243152
+ *   accent        : #6366F1 / #818CF8
+ *   ivory         : #F5F5DC
+ *   border-s      : rgba(148,163,184,0.08)
+ *   border-m      : rgba(148,163,184,0.14)
+ *   border-a      : rgba(99,102,241,0.28)
+ *   Syne (display) · Inter (body)
+ */
 
-/* ===== INFO PANEL CONTAINER ===== */
+/* ══════════════════════════════════════════════════════
+   SHELL
+══════════════════════════════════════════════════════ */
+
 .infoPanel {
   display: flex;
   flex-direction: column;
   height: 100%;
-  background: var(--bg-surface);
   overflow: hidden;
+  background: #141B2E;
+  font-family: 'Inter', system-ui, sans-serif;
 }
 
-/* ===== HEADER ===== */
+/* ══════════════════════════════════════════════════════
+   HEADER NAV STRIP
+══════════════════════════════════════════════════════ */
+
 .header {
-  padding: var(--spacing-xl);
-  border-bottom: 1px solid var(--border-subtle);
   display: flex;
   align-items: center;
-  justify-content: center;
-  background: var(--bg-surface);
+  gap: 0.5rem;
+  padding: 0.75rem 0.9rem 0.65rem;
+  border-bottom: 1px solid rgba(148, 163, 184, 0.08);
+  flex-shrink: 0;
 }
 
+/* ── Old home button (current index.jsx) ── */
 .homeButton {
-  width: 48px;
-  height: 48px;
-  border-radius: var(--border-radius-md);
-  background: var(--bg-interactive);
-  border: 1px solid var(--border-medium);
-  color: var(--accent-primary);
+  width: 30px;
+  height: 30px;
+  border-radius: 8px;
+  border: 1px solid rgba(148, 163, 184, 0.14);
+  background: #1C2640;
+  color: #94A3B8;
+  cursor: pointer;
   display: flex;
   align-items: center;
   justify-content: center;
-  cursor: pointer;
-  transition: var(--transition-fast);
-  box-shadow: var(--shadow-elevation01);
+  transition: all 0.16s cubic-bezier(0.4, 0, 0.2, 1);
+  flex-shrink: 0;
 }
-
 .homeButton:hover {
-  background: var(--bg-peak);
-  border-color: var(--accent-primary);
-  box-shadow: var(--shadow-glow);
-  transform: scale(1.05);
+  background: #243152;
+  border-color: rgba(99, 102, 241, 0.4);
+  color: #F1F5F9;
 }
 
-.homeButton:active {
-  transform: scale(0.95);
-}
-
-.homeButton:focus-visible {
-  outline: 2px solid var(--accent-primary);
-  outline-offset: 2px;
-}
-
-/* ===== SECTION ===== */
-.section {
-  padding: var(--spacing-xl);
-  border-bottom: 1px solid var(--border-subtle);
-  overflow-y: auto;
+/* ── New header sub-elements (redesigned index.jsx) ── */
+.headerCenter {
   flex: 1;
+  min-width: 0;
 }
 
-.sectionTitle {
-  font-family: var(--font-display);
-  font-size: var(--font-size-caption);
-  font-weight: var(--font-weight-semibold);
+.headerLabel {
+  font-size: 0.58rem;
+  font-weight: 600;
+  letter-spacing: 0.09em;
   text-transform: uppercase;
-  color: var(--text-tertiary);
-  margin: 0 0 var(--spacing-md) 0;
-  letter-spacing: 0.8px;
+  color: #818CF8;
+  line-height: 1;
 }
 
-/* ===== SCENARIOS LIST ===== */
-.scenariosList {
-  display: flex;
-  flex-direction: column;
-  gap: var(--spacing-md);
-}
-
-/* ===== SCENARIO ITEM ===== */
-.scenarioItem {
-  padding: var(--spacing-md) var(--spacing-lg);
-  background: var(--bg-interactive);
-  border-radius: var(--border-radius-md);
-  border: 1px solid var(--border-subtle);
-  cursor: pointer;
-  transition: var(--transition-fast);
-}
-
-.scenarioItem:hover {
-  border-color: var(--border-medium);
-  box-shadow: var(--shadow-elevation02);
-  background: var(--bg-peak);
-}
-
-.scenarioItem:active {
-  transform: scale(0.98);
-}
-
-.scenarioItem.active {
-  border-color: var(--accent-primary);
-  background: var(--accent-glow);
-  box-shadow: var(--shadow-glow);
-}
-
-.scenarioItem:focus-visible {
-  outline: 2px solid var(--accent-primary);
-  outline-offset: 2px;
-}
-
-/* ===== SCENARIO CONTENT ===== */
-.scenarioTitle {
-  font-size: var(--font-size-body-small);
-  font-weight: var(--font-weight-semibold);
-  color: var(--text-primary);
-  margin-bottom: var(--spacing-xs);
-  line-height: 1.4;
-  display: -webkit-box;
-  -webkit-line-clamp: 2;
-  -webkit-box-orient: vertical;
+.headerScenario {
+  font-family: 'Syne', -apple-system, BlinkMacSystemFont, sans-serif;
+  font-size: 0.78rem;
+  font-weight: 700;
+  color: #F5F5DC;
+  line-height: 1.2;
+  white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
+  margin-top: 2px;
 }
 
-.scenarioItem.active .scenarioTitle {
-  color: var(--accent-primary);
+.headerBadge {
+  font-size: 0.58rem;
+  font-weight: 600;
+  padding: 0.15rem 0.45rem;
+  border-radius: 999px;
+  background: rgba(99, 102, 241, 0.12);
+  border: 1px solid rgba(99, 102, 241, 0.25);
+  color: #818CF8;
+  white-space: nowrap;
+  flex-shrink: 0;
 }
 
-.scenarioMeta {
-  display: flex;
-  align-items: center;
-  gap: var(--spacing-sm);
-  flex-wrap: wrap;
-}
+/* ══════════════════════════════════════════════════════
+   SCROLLABLE BODY
+══════════════════════════════════════════════════════ */
 
-.metaItem {
-  font-size: var(--font-size-caption);
-  color: var(--text-tertiary);
-  display: flex;
-  align-items: center;
-  gap: 4px;
-}
-
-.scenarioItem.active .metaItem {
-  color: var(--accent-hover);
-}
-
-/* ===== EMPTY STATE ===== */
-.emptyState {
+.panelBody {
+  flex: 1;
+  overflow-y: auto;
+  overflow-x: hidden;
+  scrollbar-width: thin;
+  scrollbar-color: rgba(99, 102, 241, 0.25) transparent;
   display: flex;
   flex-direction: column;
+}
+
+.panelBody::-webkit-scrollbar { width: 3px; }
+.panelBody::-webkit-scrollbar-thumb {
+  background: rgba(99, 102, 241, 0.25);
+  border-radius: 2px;
+}
+
+/* ══════════════════════════════════════════════════════
+   SECTIONS — used by both old and new layout
+══════════════════════════════════════════════════════ */
+
+.section {
+  padding: 0.8rem 0.9rem;
+  border-bottom: 1px solid rgba(148, 163, 184, 0.08);
+  overflow-y: auto;
+}
+
+.section:last-child { border-bottom: none; }
+
+.sectionHeader {
+  display: flex;
   align-items: center;
-  justify-content: center;
-  padding: var(--spacing-xxl) var(--spacing-lg);
-  text-align: center;
-  gap: var(--spacing-md);
+  justify-content: space-between;
+  margin-bottom: 0.55rem;
 }
 
-.emptyIcon {
-  font-size: 48px;
-  opacity: 0.3;
+/* ── Old section title (current index.jsx — plain text) ── */
+.sectionTitle {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+  font-family: 'Inter', system-ui, sans-serif;
+  font-size: 0.62rem;
+  font-weight: 700;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: #64748B;
+  margin-bottom: 0.55rem;
 }
 
-.emptyText {
-  font-size: var(--font-size-body-small);
-  color: var(--text-tertiary);
-  margin: 0;
+.sectionTitle svg { opacity: 0.7; }
+
+.countBadge {
+  font-size: 0.58rem;
+  font-weight: 700;
+  padding: 0.1rem 0.42rem;
+  border-radius: 999px;
+  background: #1C2640;
+  color: #64748B;
 }
 
-/* ===== SCROLLBAR ===== */
-.section::-webkit-scrollbar {
-  width: 6px;
-}
-
-.section::-webkit-scrollbar-track {
-  background: transparent;
-}
-
+/* Scrollbar for section */
+.section::-webkit-scrollbar { width: 3px; }
+.section::-webkit-scrollbar-track { background: transparent; }
 .section::-webkit-scrollbar-thumb {
-  background: var(--border-medium);
-  border-radius: var(--border-radius-sm);
+  background: rgba(99, 102, 241, 0.25);
+  border-radius: 2px;
 }
 
-.section::-webkit-scrollbar-thumb:hover {
-  background: var(--accent-primary);
-}
+/* ══════════════════════════════════════════════════════
+   SCENARIO LIST — used by ScenarioListItem
+══════════════════════════════════════════════════════ */
 
-/* ===== ACCESSIBILITY ===== */
-
-/* Reduce motion */
-@media (prefers-reduced-motion: reduce) {
-  .scenarioItem,
-  .homeButton {
-    transition: none !important;
-  }
-  
-  .scenarioItem:hover,
-  .scenarioItem:active,
-  .homeButton:hover,
-  .homeButton:active {
-    transform: none !important;
-  }
-}
-
-/* High contrast mode */
-@media (prefers-contrast: high) {
-  .scenarioItem {
-    border-width: 2px;
-  }
-  
-  .scenarioItem.active {
-    border-width: 3px;
-  }
-  
-  .homeButton {
-    border-width: 2px;
-  }
-}
-
-/* ===== DEFENSIVE FALLBACKS ===== */
-
-/* Ensure content doesn't overflow */
 .scenariosList {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
   min-height: 0;
   overflow-y: auto;
 }
 
-/* Prevent text selection on interactive elements */
-.scenarioItem,
-.homeButton {
+.scenarioItem {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.55rem 0.65rem;
+  border-radius: 9px;
+  border: 1px solid transparent;
+  cursor: pointer;
+  transition: all 0.16s cubic-bezier(0.4, 0, 0.2, 1);
+  background: transparent;
+  width: 100%;
+  text-align: left;
   user-select: none;
-  -webkit-user-select: none;
 }
 
-/* Ensure proper spacing even with long content */
-.scenarioTitle {
-  word-break: break-word;
-  hyphens: auto;
-}
-/* =============================================================================
- * VIDEO GENERATION STYLES - Progress, Download, Error
- * ADD THIS TO THE END OF InfoPanel.module.css
- * =============================================================================
- */
-
-/* ===== VIDEO PROGRESS SECTION ===== */
-
-.progressContainer {
-  padding: var(--spacing-xl);
-  background: var(--bg-interactive);
-  border-radius: var(--border-radius-md);
-  border: 1px solid var(--border-subtle);
-  display: flex;
-  flex-direction: column;
-  gap: var(--spacing-md);
+.scenarioItem:hover {
+  background: #1C2640;
+  border-color: rgba(148, 163, 184, 0.14);
 }
 
-.stageIndicator {
-  font-size: var(--font-size-body);
-  font-weight: var(--font-weight-semibold);
-  color: var(--text-primary);
-  text-align: center;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: var(--spacing-sm);
-  min-height: 24px; /* Prevent layout shift */
+.scenarioItem.active {
+  background: rgba(99, 102, 241, 0.1);
+  border-color: rgba(99, 102, 241, 0.3);
 }
 
-.progressBar {
-  width: 100%;
-  height: 8px;
-  background: var(--bg-surface);
-  border-radius: var(--border-radius-full);
-  overflow: hidden;
-  position: relative;
+.scenarioItem:focus-visible {
+  outline: 2px solid rgba(99, 102, 241, 0.5);
+  outline-offset: 1px;
 }
 
-.progressFill {
-  height: 100%;
-  background: linear-gradient(90deg, var(--accent-primary), var(--accent-hover));
-  border-radius: var(--border-radius-full);
-  transition: width 0.5s ease;
-  position: relative;
-  overflow: hidden;
-}
-
-/* Animated shimmer effect on progress bar */
-.progressFill::after {
-  content: '';
-  position: absolute;
-  top: 0;
-  left: -100%;
-  width: 100%;
-  height: 100%;
-  background: linear-gradient(
-    90deg,
-    transparent,
-    rgba(255, 255, 255, 0.3),
-    transparent
-  );
-  animation: shimmer 2s infinite;
-}
-
-@keyframes shimmer {
-  100% {
-    left: 100%;
-  }
-}
-
-.progressText {
-  font-size: var(--font-size-h3);
-  font-weight: var(--font-weight-bold);
-  color: var(--accent-primary);
-  text-align: center;
-}
-
-.timeEstimate {
-  font-size: var(--font-size-caption);
-  color: var(--text-tertiary);
-  text-align: center;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: var(--spacing-xs);
-}
-
-.spinningIcon {
-  animation: spin 1s linear infinite;
-}
-
-@keyframes spin {
-  to {
-    transform: rotate(360deg);
-  }
-}
-
-.infoText {
-  font-size: var(--font-size-body-small);
-  color: var(--text-secondary);
-  text-align: center;
-  padding-top: var(--spacing-sm);
-  border-top: 1px solid var(--border-subtle);
-  line-height: 1.5;
-}
-
-/* ===== VIDEO DOWNLOAD SECTION ===== */
-
-.downloadContainer {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: var(--spacing-md);
-  padding: var(--spacing-xl);
-  background: var(--bg-interactive);
-  border-radius: var(--border-radius-md);
-  border: 1px solid var(--border-subtle);
-}
-
-.successIcon {
-  font-size: 64px;
-  animation: bounceIn 0.6s ease-out;
-}
-
-@keyframes bounceIn {
-  0% {
-    transform: scale(0);
-    opacity: 0;
-  }
-  50% {
-    transform: scale(1.1);
-  }
-  100% {
-    transform: scale(1);
-    opacity: 1;
-  }
-}
-
-.successText {
-  font-size: var(--font-size-body);
-  color: var(--text-secondary);
-  margin: 0;
-  text-align: center;
-  line-height: 1.5;
-}
-
-.downloadButton {
-  width: 100%;
-  padding: var(--spacing-md) var(--spacing-lg);
-  background: var(--accent-primary);
-  color: white;
-  border: none;
-  border-radius: var(--border-radius-md);
-  font-size: var(--font-size-body);
-  font-weight: var(--font-weight-semibold);
-  cursor: pointer;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: var(--spacing-sm);
-  transition: var(--transition-fast);
-  box-shadow: var(--shadow-elevation02);
-}
-
-.downloadButton:hover {
-  background: var(--accent-hover);
-  box-shadow: var(--shadow-glow);
-  transform: translateY(-2px);
-}
-
-.downloadButton:active {
-  transform: translateY(0);
-}
-
-.downloadButton:focus-visible {
-  outline: 2px solid var(--accent-primary);
-  outline-offset: 2px;
-}
-
-.secondaryButton {
-  width: 100%;
-  padding: var(--spacing-md) var(--spacing-lg);
-  background: var(--bg-peak);
-  color: var(--text-primary);
-  border: 1px solid var(--border-medium);
-  border-radius: var(--border-radius-md);
-  font-size: var(--font-size-body);
-  font-weight: var(--font-weight-medium);
-  cursor: pointer;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: var(--spacing-sm);
-  transition: var(--transition-fast);
-}
-
-.secondaryButton:hover {
-  background: var(--bg-interactive);
-  border-color: var(--accent-primary);
-  color: var(--accent-primary);
-}
-
-.secondaryButton:active {
-  transform: scale(0.98);
-}
-
-.secondaryButton:focus-visible {
-  outline: 2px solid var(--accent-primary);
-  outline-offset: 2px;
-}
-
-/* ===== ERROR STATE ===== */
-
-.errorContainer {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: var(--spacing-md);
-  padding: var(--spacing-xl);
-  background: var(--bg-interactive);
-  border-radius: var(--border-radius-md);
-  border: 1px solid var(--border-subtle);
-}
-
-.errorIcon {
-  font-size: 64px;
-  animation: shake 0.5s ease-in-out;
-}
-
-@keyframes shake {
-  0%, 100% {
-    transform: translateX(0);
-  }
-  25% {
-    transform: translateX(-10px);
-  }
-  75% {
-    transform: translateX(10px);
-  }
-}
-
-.errorText {
-  font-size: var(--font-size-body-small);
-  color: var(--text-secondary);
-  margin: 0;
-  text-align: center;
-  line-height: 1.5;
-}
-
-/* ===== MOBILE OPTIMIZATIONS ===== */
-
-@media (max-width: 768px) {
-  .progressContainer,
-  .downloadContainer,
-  .errorContainer {
-    padding: var(--spacing-md);
-  }
-  
-  .successIcon,
-  .errorIcon {
-    font-size: 48px;
-  }
-  
-  .downloadButton,
-  .secondaryButton {
-    padding: var(--spacing-sm) var(--spacing-md);
-    font-size: var(--font-size-body-small);
-  }
-}
-
-/* ===== ACCESSIBILITY ===== */
-
-/* Reduce motion */
-@media (prefers-reduced-motion: reduce) {
-  .progressFill,
-  .spinningIcon,
-  .successIcon,
-  .errorIcon {
-    animation: none !important;
-  }
-  
-  .progressFill::after {
-    animation: none !important;
-  }
-  
-  .downloadButton:hover,
-  .secondaryButton:hover {
-    transform: none !important;
-  }
-}
-
-/* High contrast mode */
-@media (prefers-contrast: high) {
-  .progressBar {
-    border: 2px solid var(--border-medium);
-  }
-  
-  .downloadButton,
-  .secondaryButton {
-    border-width: 2px;
-  }
-}
-
-/* ===== DEFENSIVE FALLBACKS ===== */
-
-/* Ensure containers don't break layout */
-.progressContainer,
-.downloadContainer,
-.errorContainer {
-  min-width: 0;
-  max-width: 100%;
-  overflow: hidden;
-}
-
-/* Ensure long error messages wrap properly */
-.errorText,
-.successText,
-.infoText {
-  word-wrap: break-word;
-  overflow-wrap: break-word;
-  hyphens: auto;
-}
-
-/* InfoPanel.module.css — ADDITIONS for 2B-2
-   Append these to the end of the existing InfoPanel.module.css.
-   Do not replace existing styles.
-*/
-
-/* ═══════════════════════════════════════════════════════════════════
-   CREATE PANEL
-   ═══════════════════════════════════════════════════════════════════ */
-
-.fieldLabel {
-  font-size: var(--font-size-caption);
-  font-weight: var(--font-weight-semibold);
-  color: var(--text-tertiary);
-  text-transform: uppercase;
-  letter-spacing: 0.7px;
-  margin: 0 0 var(--spacing-sm) 0;
-}
-
-/* ── Type selector ── */
-.typeSelector {
-  display: flex;
-  gap: var(--spacing-sm);
-  margin-bottom: var(--spacing-lg);
-}
-
-.typeButton {
-  flex: 1;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: 4px;
-  padding: var(--spacing-md) var(--spacing-sm);
-  background: var(--bg-interactive);
-  border: 1px solid var(--border-subtle);
-  border-radius: var(--border-radius-md);
-  cursor: pointer;
-  transition: var(--transition-fast);
-  position: relative;
-  overflow: hidden;
-}
-
-.typeButton:hover:not(:disabled) {
-  border-color: var(--border-medium);
-  background: var(--bg-peak);
-}
-
-.typeButtonActive {
-  border-color: var(--accent-primary) !important;
-  background: var(--accent-glow) !important;
-  box-shadow: var(--shadow-glow);
-}
-
-.typeButtonSoon {
-  opacity: 0.5;
-  cursor: not-allowed;
-}
-
-.typeIcon {
-  font-size: 20px;
-  line-height: 1;
-}
-
-.typeLabel {
-  font-size: var(--font-size-caption);
-  font-weight: var(--font-weight-medium);
-  color: var(--text-secondary);
-  line-height: 1;
-}
-
-.typeButtonActive .typeLabel {
-  color: var(--accent-primary);
-}
-
-.soonBadge {
-  position: absolute;
-  top: 4px;
-  right: 4px;
-  font-size: 9px;
-  font-weight: var(--font-weight-bold);
-  color: var(--text-tertiary);
-  background: var(--bg-surface);
-  border: 1px solid var(--border-subtle);
-  border-radius: var(--border-radius-sm);
-  padding: 1px 4px;
-  letter-spacing: 0.3px;
-  text-transform: uppercase;
-}
-
-/* ── Duration selector ── */
-.durationSelector {
-  display: flex;
-  gap: var(--spacing-sm);
-  margin-bottom: var(--spacing-lg);
-}
-
-.durationButton {
-  flex: 1;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: 2px;
-  padding: var(--spacing-sm);
-  background: var(--bg-interactive);
-  border: 1px solid var(--border-subtle);
-  border-radius: var(--border-radius-md);
-  cursor: pointer;
-  transition: var(--transition-fast);
-}
-
-.durationButton:hover {
-  border-color: var(--border-medium);
-  background: var(--bg-peak);
-}
-
-.durationButtonActive {
-  border-color: var(--accent-primary) !important;
-  background: var(--accent-glow) !important;
-  box-shadow: var(--shadow-glow);
-}
-
-.durationLabel {
-  font-family: var(--font-display);
-  font-size: var(--font-size-body-small);
-  font-weight: var(--font-weight-bold);
-  color: var(--text-primary);
-  line-height: 1;
-}
-
-.durationButtonActive .durationLabel {
-  color: var(--accent-primary);
-}
-
-.durationDesc {
-  font-size: var(--font-size-caption);
-  color: var(--text-tertiary);
-  line-height: 1;
-}
-
-/* ── Generate button ── */
-.generateButton {
-  width: 100%;
-  padding: var(--spacing-md) var(--spacing-lg);
-  background: var(--accent-primary);
-  color: white;
-  border: none;
-  border-radius: var(--border-radius-md);
-  font-family: var(--font-display);
-  font-size: var(--font-size-body-small);
-  font-weight: var(--font-weight-semibold);
-  cursor: pointer;
-  transition: var(--transition-fast);
-  box-shadow: var(--shadow-elevation02);
-  margin-bottom: var(--spacing-md);
-  letter-spacing: 0.3px;
-}
-
-.generateButton:hover:not(:disabled) {
-  background: var(--accent-hover);
-  box-shadow: var(--shadow-glow);
-  transform: translateY(-1px);
-}
-
-.generateButton:active {
-  transform: translateY(0);
-}
-
-.generateButton:disabled {
-  opacity: 0.4;
-  cursor: not-allowed;
-  transform: none;
-}
-
-/* ── Back link ── */
-.backLink {
-  display: block;
-  width: 100%;
-  padding: var(--spacing-sm) 0;
-  background: none;
-  border: none;
-  color: var(--text-tertiary);
-  font-size: var(--font-size-caption);
-  cursor: pointer;
-  text-align: center;
-  transition: var(--transition-fast);
-}
-
-.backLink:hover {
-  color: var(--text-secondary);
-}
-
-/* ═══════════════════════════════════════════════════════════════════
-   STATUS CARDS — creating / success / error
-   ═══════════════════════════════════════════════════════════════════ */
-
-.creatingCard,
-.successCard,
-.errorCard {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: var(--spacing-md);
-  padding: var(--spacing-xl);
-  background: var(--bg-interactive);
-  border: 1px solid var(--border-subtle);
-  border-radius: var(--border-radius-md);
-}
-
-/* Spinner */
-.creatingSpinner {
-  width: 36px;
-  height: 36px;
-  border: 3px solid var(--border-medium);
-  border-top-color: var(--accent-primary);
+.scenarioDot {
+  width: 6px;
+  height: 6px;
   border-radius: 50%;
-  animation: spinnerRotate 0.9s linear infinite;
+  background: #64748B;
+  flex-shrink: 0;
+  transition: background 0.16s;
 }
 
-@keyframes spinnerRotate {
-  to { transform: rotate(360deg); }
+.scenarioItem.active .scenarioDot { background: #818CF8; }
+
+.scenarioInfo { flex: 1; min-width: 0; }
+
+.scenarioTitle {
+  font-family: 'Inter', system-ui, sans-serif;
+  font-size: 0.76rem;
+  font-weight: 600;
+  color: #F1F5F9;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  line-height: 1.2;
 }
 
-.creatingLabel {
-  font-size: var(--font-size-body-small);
-  font-weight: var(--font-weight-medium);
-  color: var(--text-primary);
-  margin: 0;
-  text-align: center;
+.scenarioItem.active .scenarioTitle { color: #F5F5DC; }
+
+.scenarioMeta {
+  display: flex;
+  align-items: center;
+  gap: 0.3rem;
+  margin-top: 2px;
 }
 
-.creatingHint {
-  font-size: var(--font-size-caption);
-  color: var(--text-tertiary);
-  margin: 0;
-  text-align: center;
+.metaItem {
+  display: flex;
+  align-items: center;
+  gap: 0.3rem;
+  font-family: 'Inter', system-ui, sans-serif;
+  font-size: 0.62rem;
+  color: #64748B;
 }
 
-/* Success */
-.successIcon,
-.errorCardIcon {
-  font-size: 36px;
+.scenarioArrow {
+  color: #475569;
+  font-size: 0.7rem;
+  flex-shrink: 0;
+  opacity: 0;
+  transition: opacity 0.16s;
 }
 
-.successLabel {
-  font-size: var(--font-size-body-small);
-  font-weight: var(--font-weight-semibold);
-  color: var(--text-primary);
-  margin: 0;
-  text-align: center;
-}
+.scenarioItem:hover .scenarioArrow,
+.scenarioItem.active .scenarioArrow { opacity: 1; }
 
-.successMeta {
-  font-size: var(--font-size-caption);
-  color: var(--text-tertiary);
-  margin: 0;
-  text-align: center;
-}
+/* ══════════════════════════════════════════════════════
+   JOB CHIPS — created content list
+══════════════════════════════════════════════════════ */
 
-/* Error */
-.errorCardText {
-  font-size: var(--font-size-caption);
-  color: var(--text-secondary);
-  margin: 0;
-  text-align: center;
-  line-height: 1.5;
-}
-
-/* ═══════════════════════════════════════════════════════════════════
-   CREATED CONTENT LIST
-   ═══════════════════════════════════════════════════════════════════ */
-
+/* ── Old jobsList / jobCard (current index.jsx) ── */
 .jobsList {
   display: flex;
   flex-direction: column;
-  gap: var(--spacing-sm);
+  gap: 4px;
 }
 
 .jobCard {
   display: flex;
   align-items: center;
-  gap: var(--spacing-md);
-  width: 100%;
-  padding: var(--spacing-md);
-  background: var(--bg-interactive);
-  border: 1px solid var(--border-subtle);
-  border-radius: var(--border-radius-md);
+  gap: 0.5rem;
+  padding: 0.45rem 0.65rem;
+  border-radius: 8px;
+  border: 1px solid rgba(148, 163, 184, 0.14);
+  background: #1C2640;
   cursor: pointer;
-  transition: var(--transition-fast);
+  transition: all 0.16s cubic-bezier(0.4, 0, 0.2, 1);
+  width: 100%;
   text-align: left;
+  font-family: 'Inter', system-ui, sans-serif;
 }
 
 .jobCard:hover {
-  border-color: var(--accent-primary);
-  background: var(--bg-peak);
-  box-shadow: var(--shadow-glow);
-}
-
-.jobCard:active {
-  transform: scale(0.98);
+  background: #243152;
+  border-color: rgba(99, 102, 241, 0.3);
 }
 
 .jobCardIcon {
-  font-size: 22px;
+  width: 26px;
+  height: 26px;
+  border-radius: 6px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
   flex-shrink: 0;
-  line-height: 1;
+  font-size: 0.85rem;
+  background: rgba(99, 102, 241, 0.12);
 }
 
 .jobCardBody {
@@ -871,310 +319,617 @@
   min-width: 0;
   display: flex;
   flex-direction: column;
-  gap: 2px;
+  gap: 1px;
 }
 
 .jobCardType {
-  font-size: var(--font-size-body-small);
-  font-weight: var(--font-weight-semibold);
-  color: var(--text-primary);
+  font-size: 0.72rem;
+  font-weight: 600;
+  color: #F1F5F9;
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
 }
 
 .jobCardMeta {
-  font-size: var(--font-size-caption);
-  color: var(--text-tertiary);
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
+  font-size: 0.6rem;
+  color: #64748B;
 }
 
 .jobCardArrow {
-  font-size: 18px;
-  color: var(--text-tertiary);
+  color: #475569;
+  font-size: 0.7rem;
   flex-shrink: 0;
-  transition: var(--transition-fast);
 }
 
-.jobCard:hover .jobCardArrow {
-  color: var(--accent-primary);
-  transform: translateX(2px);
+/* ── New chip sub-elements (redesigned index.jsx) ── */
+.jobChipIcon {
+  width: 26px;
+  height: 26px;
+  border-radius: 6px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
 }
 
-/* Loading shimmer */
-.jobsLoading {
-  padding: var(--spacing-md) 0;
-}
+.jobChipIconScript { background: rgba(99,102,241,0.12); color: #818CF8;  }
+.jobChipIconAudio  { background: rgba(16,185,129,0.12); color: #10B981;  }
+.jobChipIconVideo  { background: rgba(239,68,68,0.1);   color: #EF4444;  }
+
+/* ── Loading bar ── */
+.jobsLoading { padding: 0.5rem 0; }
 
 .jobsLoadingBar {
-  height: 48px;
-  background: linear-gradient(
-    90deg,
-    var(--bg-interactive) 25%,
-    var(--bg-peak) 50%,
-    var(--bg-interactive) 75%
-  );
-  background-size: 200% 100%;
-  border-radius: var(--border-radius-md);
-  animation: shimmerSlide 1.4s ease-in-out infinite;
-}
-
-@keyframes shimmerSlide {
-  0%   { background-position: 200% 0; }
-  100% { background-position: -200% 0; }
-}
-
-/* ═══════════════════════════════════════════════════════════════════
-   ACCESSIBILITY
-   ═══════════════════════════════════════════════════════════════════ */
-
-@media (prefers-reduced-motion: reduce) {
-  .creatingSpinner,
-  .jobsLoadingBar {
-    animation: none !important;
-  }
-  .generateButton:hover,
-  .jobCard:hover .jobCardArrow {
-    transform: none !important;
-  }
-}
-
-.typeButton:focus-visible,
-.durationButton:focus-visible,
-.generateButton:focus-visible,
-.jobCard:focus-visible {
-  outline: 2px solid var(--accent-primary);
-  outline-offset: 2px;
-}
-/* ===== END OF VIDEO GENERATION STYLES ===== */
-/* ── Progress bar (TD-6) — add to InfoPanel.module.css ──────────────────── */
-
-/* Wrapper: bar + percentage on one line */
-.progressWrapper {
-  display: flex;
-  align-items: center;
-  gap: var(--spacing-sm);
-  width: 100%;
-  margin-top: var(--spacing-sm);
-}
-
-.progressBar {
-  flex: 1;
-  height: 6px;
-  background: var(--border-medium);
+  height: 4px;
   border-radius: 999px;
+  background: rgba(99, 102, 241, 0.12);
   overflow: hidden;
+  position: relative;
 }
 
-.progressFill {
+.jobsLoadingBar::after {
+  content: '';
+  position: absolute;
+  left: -40%;
+  width: 40%;
   height: 100%;
-  background: linear-gradient(90deg, var(--accent-primary), var(--accent-hover));
-  border-radius: 999px;
-  transition: width 0.6s ease-out;
-  min-width: 4px;
+  background: linear-gradient(90deg, transparent, rgba(99,102,241,0.45), transparent);
+  animation: shimmer 1.4s ease-in-out infinite;
 }
 
-.progressPct {
-  font-size: var(--font-size-caption);
-  color: var(--text-tertiary);
-  min-width: 32px;
-  text-align: right;
-  font-variant-numeric: tabular-nums;
+@keyframes shimmer {
+  to { left: 140%; }
 }
 
-/* ── Stage breakdown list ────────────────────────────────────────────────── */
-.stageList {
+/* ══════════════════════════════════════════════════════
+   EMPTY STATE
+══════════════════════════════════════════════════════ */
+
+.emptyState {
   display: flex;
   flex-direction: column;
-  gap: 6px;
-  width: 100%;
-  margin-top: var(--spacing-md);
-  padding: var(--spacing-md);
-  background: var(--bg-peak);
-  border-radius: var(--border-radius-md);
-  border: 1px solid var(--border-subtle);
+  align-items: center;
+  gap: 0.4rem;
+  padding: 1.25rem 0.9rem;
+  text-align: center;
 }
 
-.stageItem {
+.emptyIcon {
+  font-size: 1.5rem;
+  color: #475569;
   display: flex;
   align-items: center;
-  gap: var(--spacing-sm);
-  font-size: var(--font-size-caption);
-  color: var(--text-tertiary);
-  transition: color 0.3s ease;
+  justify-content: center;
 }
 
-.stageItem.stageActive {
-  color: var(--accent-primary);
-  font-weight: var(--font-weight-medium);
+.emptyText {
+  font-family: 'Inter', system-ui, sans-serif;
+  font-size: 0.72rem;
+  color: #475569;
+  font-style: italic;
+  margin: 0;
 }
 
-.stageItem.stageDone {
-  color: var(--text-secondary);
-  text-decoration: line-through;
-  opacity: 0.6;
-}
+/* ══════════════════════════════════════════════════════
+   CREATE PANEL HEADER
+══════════════════════════════════════════════════════ */
 
-.stageDot {
-  width: 6px;
-  height: 6px;
-  border-radius: 50%;
-  background: var(--border-medium);
+.createHeader {
+  display: flex;
+  align-items: center;
+  gap: 0.55rem;
+  padding: 0.75rem 0.9rem 0.6rem;
+  border-bottom: 1px solid rgba(148, 163, 184, 0.08);
   flex-shrink: 0;
-  transition: background 0.3s ease;
 }
 
-.stageItem.stageActive .stageDot {
-  background: var(--accent-primary);
-  box-shadow: 0 0 0 3px var(--accent-glow);
-}
-
-.stageItem.stageDone .stageDot {
-  background: var(--text-tertiary);
-}
-/* ── Progress bar (TD-6) — add to InfoPanel.module.css ──────────────────── */
-
-/* Wrapper: bar + percentage on one line */
-.progressWrapper {
+.createBack {
+  width: 26px;
+  height: 26px;
+  border-radius: 7px;
+  border: 1px solid rgba(148, 163, 184, 0.14);
+  background: #1C2640;
+  color: #94A3B8;
+  cursor: pointer;
   display: flex;
   align-items: center;
-  gap: var(--spacing-sm);
-  width: 100%;
-  margin-top: var(--spacing-sm);
+  justify-content: center;
+  transition: all 0.15s cubic-bezier(0.4, 0, 0.2, 1);
+  flex-shrink: 0;
+}
+.createBack:hover { background: #243152; color: #F1F5F9; }
+
+.createTitle {
+  font-family: 'Syne', -apple-system, BlinkMacSystemFont, sans-serif;
+  font-size: 0.85rem;
+  font-weight: 700;
+  color: #F5F5DC;
 }
 
-.progressBar {
+/* ══════════════════════════════════════════════════════
+   CREATE ZONES
+══════════════════════════════════════════════════════ */
+
+.zone {
+  padding: 0.8rem 0.9rem;
+  border-bottom: 1px solid rgba(148, 163, 184, 0.08);
+}
+
+.zoneLabel {
+  display: flex;
+  align-items: center;
+  gap: 0.3rem;
+  font-size: 0.58rem;
+  font-weight: 700;
+  letter-spacing: 0.11em;
+  text-transform: uppercase;
+  color: #475569;
+  margin-bottom: 0.55rem;
+}
+
+/* ── Content type selector (old + new) ── */
+.typeSelector {
+  display: flex;
+  gap: 5px;
+}
+
+.typeButton {
   flex: 1;
-  height: 6px;
-  background: var(--border-medium);
-  border-radius: 999px;
-  overflow: hidden;
-}
-
-.progressFill {
-  height: 100%;
-  background: linear-gradient(90deg, var(--accent-primary), var(--accent-hover));
-  border-radius: 999px;
-  transition: width 0.6s ease-out;
-  min-width: 4px;
-}
-
-.progressPct {
-  font-size: var(--font-size-caption);
-  color: var(--text-tertiary);
-  min-width: 32px;
-  text-align: right;
-  font-variant-numeric: tabular-nums;
-}
-
-/* ── Stage breakdown list ────────────────────────────────────────────────── */
-.stageList {
   display: flex;
   flex-direction: column;
-  gap: 6px;
-  width: 100%;
-  margin-top: var(--spacing-md);
-  padding: var(--spacing-md);
-  background: var(--bg-peak);
-  border-radius: var(--border-radius-md);
-  border: 1px solid var(--border-subtle);
+  align-items: center;
+  gap: 0.28rem;
+  padding: 0.55rem 0.35rem;
+  border-radius: 10px;
+  border: 1px solid rgba(148, 163, 184, 0.14);
+  background: #1C2640;
+  color: #94A3B8;
+  cursor: pointer;
+  transition: all 0.16s cubic-bezier(0.4, 0, 0.2, 1);
+  font-family: 'Inter', system-ui, sans-serif;
 }
 
-.stageItem {
+.typeButton:hover {
+  background: #243152;
+  border-color: rgba(99, 102, 241, 0.3);
+  color: #F1F5F9;
+}
+
+.typeButtonActive {
+  background: rgba(99, 102, 241, 0.14);
+  border-color: rgba(99, 102, 241, 0.5);
+  color: #818CF8;
+  box-shadow: 0 0 12px rgba(99, 102, 241, 0.15);
+}
+
+.typeIcon {
   display: flex;
   align-items: center;
-  gap: var(--spacing-sm);
-  font-size: var(--font-size-caption);
-  color: var(--text-tertiary);
-  transition: color 0.3s ease;
+  justify-content: center;
+  font-size: 1rem;
+  line-height: 1;
 }
 
-.stageItem.stageActive {
-  color: var(--accent-primary);
-  font-weight: var(--font-weight-medium);
+.typeLabel {
+  font-size: 0.65rem;
+  font-weight: 600;
 }
 
-.stageItem.stageDone {
-  color: var(--text-secondary);
-  text-decoration: line-through;
-  opacity: 0.6;
+/* ── Field label ── */
+.fieldLabel {
+  font-family: 'Inter', system-ui, sans-serif;
+  font-size: 0.6rem;
+  font-weight: 600;
+  letter-spacing: 0.07em;
+  text-transform: uppercase;
+  color: #475569;
+  margin-bottom: 0.3rem;
+  margin-top: 0.65rem;
 }
 
-.stageDot {
-  width: 6px;
-  height: 6px;
-  border-radius: 50%;
-  background: var(--border-medium);
-  flex-shrink: 0;
-  transition: background 0.3s ease;
+.fieldLabel:first-child { margin-top: 0; }
+
+/* ── Duration selector ── */
+.durationSelector {
+  display: flex;
+  gap: 4px;
 }
 
-.stageItem.stageActive .stageDot {
-  background: var(--accent-primary);
-  box-shadow: 0 0 0 3px var(--accent-glow);
+.durationButton {
+  flex: 1;
+  padding: 0.35rem 0.25rem;
+  border-radius: 7px;
+  border: 1px solid rgba(148, 163, 184, 0.14);
+  background: #1C2640;
+  cursor: pointer;
+  transition: all 0.15s cubic-bezier(0.4, 0, 0.2, 1);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  font-family: 'Inter', system-ui, sans-serif;
+  gap: 1px;
 }
 
-.stageItem.stageDone .stageDot {
-  background: var(--text-tertiary);
+.durationButton:hover {
+  background: #243152;
+  border-color: rgba(99, 102, 241, 0.3);
 }
 
-/* ── Existing classes that need updating ─────────────────────────────────── */
-/* Replace the old asyncProgressBar/asyncProgressFill/asyncProgressText 
-   with progressWrapper/progressBar/progressFill/progressPct above.
-   Remove these if they exist in your current InfoPanel.module.css:
-   .asyncProgressBar
-   .asyncProgressFill  
-   .asyncProgressText
-*/
+.durationButtonActive {
+  background: rgba(99, 102, 241, 0.12);
+  border-color: rgba(99, 102, 241, 0.4);
+}
 
-/* ── Story style selector grid — add to InfoPanel.module.css ─────────────── */
+.durationLabel {
+  font-size: 0.7rem;
+  font-weight: 700;
+  color: #F1F5F9;
+}
 
+.durationDesc {
+  font-size: 0.55rem;
+  color: #64748B;
+}
+
+/* ── Style grid (story styles + video styles) ── */
 .styleGrid {
   display: grid;
   grid-template-columns: repeat(3, 1fr);
-  gap: var(--spacing-sm);
-  width: 100%;
+  gap: 4px;
 }
 
 .styleButton {
   display: flex;
-  flex-direction: column;
   align-items: center;
-  gap: 4px;
-  padding: var(--spacing-sm) var(--spacing-xs);
-  background: var(--bg-interactive);
-  border: 1px solid var(--border-subtle);
-  border-radius: var(--border-radius-md);
+  gap: 0.3rem;
+  padding: 0.35rem 0.4rem;
+  border-radius: 7px;
+  border: 1px solid rgba(148, 163, 184, 0.14);
+  background: #1C2640;
   cursor: pointer;
-  transition: var(--transition-fast);
+  transition: all 0.15s cubic-bezier(0.4, 0, 0.2, 1);
+  font-family: 'Inter', system-ui, sans-serif;
+  font-size: 0.62rem;
+  font-weight: 600;
+  color: #94A3B8;
 }
 
 .styleButton:hover {
-  border-color: var(--accent-primary);
-  background: var(--accent-glow);
+  background: #243152;
+  border-color: rgba(99, 102, 241, 0.3);
+  color: #F1F5F9;
 }
 
 .styleButtonActive {
-  border-color: var(--accent-primary);
-  background: var(--accent-glow);
-  box-shadow: 0 0 0 1px var(--accent-primary);
+  background: rgba(99, 102, 241, 0.12);
+  border-color: rgba(99, 102, 241, 0.4);
+  color: #818CF8;
 }
 
 .styleIcon {
-  font-size: 20px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 0.8rem;
   line-height: 1;
 }
 
 .styleLabel {
-  font-size: 10px;
-  font-weight: var(--font-weight-medium);
-  color: var(--text-secondary);
-  text-transform: uppercase;
-  letter-spacing: 0.04em;
+  font-size: 0.62rem;
+  font-weight: 600;
 }
 
-.styleButtonActive .styleLabel {
-  color: var(--accent-primary);
+/* ── Hint box (async type hint) ── */
+.asyncTypeHint {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.4rem;
+  padding: 0.5rem 0.6rem;
+  border-radius: 8px;
+  background: rgba(99, 102, 241, 0.06);
+  border: 1px solid rgba(99, 102, 241, 0.15);
+  font-family: 'Inter', system-ui, sans-serif;
+  font-size: 0.65rem;
+  color: #64748B;
+  line-height: 1.4;
+  margin-top: 0.5rem;
+}
+
+.hintIcon {
+  flex-shrink: 0;
+  margin-top: 1px;
+  color: #818CF8;
+  display: flex;
+}
+
+/* ── Generate CTA zone ── */
+.zoneCta {
+  padding: 0.75rem 0.9rem;
+  border-top: 1px solid rgba(148, 163, 184, 0.08);
+  flex-shrink: 0;
+  margin-top: auto;
+}
+
+/* ── Old generate button + back link (current index.jsx) ── */
+.generateButton {
+  width: 100%;
+  padding: 0.6rem;
+  border-radius: 10px;
+  border: none;
+  background: linear-gradient(135deg, #6366F1, #818CF8);
+  color: #fff;
+  font-family: 'Inter', system-ui, sans-serif;
+  font-size: 0.82rem;
+  font-weight: 700;
+  cursor: pointer;
+  transition: all 0.18s cubic-bezier(0.4, 0, 0.2, 1);
+  box-shadow: 0 2px 14px rgba(99, 102, 241, 0.35);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.45rem;
+}
+
+.generateButton:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 4px 22px rgba(99, 102, 241, 0.5);
+}
+
+.generateButton:disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
+  transform: none;
+}
+
+.backLink {
+  display: block;
+  margin-top: 0.55rem;
+  background: none;
+  border: none;
+  color: #475569;
+  font-family: 'Inter', system-ui, sans-serif;
+  font-size: 0.75rem;
+  cursor: pointer;
+  text-align: center;
+  width: 100%;
+  padding: 0.25rem;
+  transition: color 0.15s;
+  border-radius: 6px;
+}
+.backLink:hover { color: #94A3B8; }
+
+/* ══════════════════════════════════════════════════════
+   PROGRESS / CREATING STATE
+══════════════════════════════════════════════════════ */
+
+.creatingCard {
+  background: #1C2640;
+  border: 1px solid rgba(148, 163, 184, 0.14);
+  border-radius: 12px;
+  padding: 0.9rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.65rem;
+}
+
+.creatingSpinner {
+  width: 24px;
+  height: 24px;
+  border: 2.5px solid rgba(99, 102, 241, 0.15);
+  border-top-color: #818CF8;
+  border-radius: 50%;
+  animation: spin 0.9s linear infinite;
+  align-self: center;
+}
+
+.creatingLabel {
+  font-family: 'Inter', system-ui, sans-serif;
+  font-size: 0.75rem;
+  color: #94A3B8;
+  text-align: center;
+  margin: 0;
+  line-height: 1.4;
+}
+
+.creatingHint {
+  font-family: 'Inter', system-ui, sans-serif;
+  font-size: 0.65rem;
+  color: #475569;
+  text-align: center;
+  margin: 0;
+}
+
+/* ── Progress bar ── */
+.progressWrapper {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.progressBar {
+  flex: 1;
+  height: 4px;
+  background: rgba(99, 102, 241, 0.12);
+  border-radius: 999px;
+  overflow: hidden;
+}
+
+.progressFill {
+  height: 100%;
+  background: linear-gradient(90deg, #6366F1, #818CF8);
+  border-radius: 999px;
+  transition: width 0.5s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.progressPct {
+  font-family: 'Inter', system-ui, sans-serif;
+  font-size: 0.65rem;
+  font-weight: 700;
+  color: #818CF8;
+  flex-shrink: 0;
+  min-width: 2.2rem;
+  text-align: right;
+}
+
+/* ── Stage list ── */
+.stageList {
+  display: flex;
+  gap: 4px;
+}
+
+.stageItem {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 3px;
+  padding: 0.35rem 0.2rem;
+  border-radius: 6px;
+  background: rgba(148, 163, 184, 0.04);
+  border: 1px solid transparent;
+  font-family: 'Inter', system-ui, sans-serif;
+  font-size: 0.56rem;
+  color: #475569;
+  font-weight: 600;
+  text-align: center;
+  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.stageDone {
+  background: rgba(16, 185, 129, 0.08);
+  border-color: rgba(16, 185, 129, 0.2);
+  color: #10B981;
+}
+
+.stageActive {
+  background: rgba(99, 102, 241, 0.1);
+  border-color: rgba(99, 102, 241, 0.3);
+  color: #818CF8;
+}
+
+.stageDot {
+  width: 5px;
+  height: 5px;
+  border-radius: 50%;
+  background: currentColor;
+  flex-shrink: 0;
+}
+
+/* ── New stage chip (redesigned) ── */
+.stageChip {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 3px;
+  padding: 0.35rem 0.2rem;
+  border-radius: 6px;
+  background: rgba(148, 163, 184, 0.04);
+  border: 1px solid transparent;
+  font-family: 'Inter', system-ui, sans-serif;
+  font-size: 0.56rem;
+  color: #475569;
+  font-weight: 600;
+  text-align: center;
+}
+
+.stageChipDone  { background: rgba(16,185,129,0.08);  border-color: rgba(16,185,129,0.2);  color: #10B981; }
+.stageChipActive{ background: rgba(99,102,241,0.1);   border-color: rgba(99,102,241,0.3);  color: #818CF8; }
+
+/* ══════════════════════════════════════════════════════
+   SUCCESS / COMPLETE STATE
+══════════════════════════════════════════════════════ */
+
+.successCard {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 1rem 0.75rem;
+  background: #1C2640;
+  border: 1px solid rgba(16, 185, 129, 0.2);
+  border-radius: 12px;
+  text-align: center;
+}
+
+.successIcon {
+  font-size: 1.6rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.successLabel {
+  font-family: 'Syne', -apple-system, BlinkMacSystemFont, sans-serif;
+  font-size: 0.88rem;
+  font-weight: 700;
+  color: #F5F5DC;
+  margin: 0;
+}
+
+.successMeta {
+  font-family: 'Inter', system-ui, sans-serif;
+  font-size: 0.7rem;
+  color: #64748B;
+  margin: 0;
+}
+
+/* ══════════════════════════════════════════════════════
+   FAILED / ERROR STATE
+══════════════════════════════════════════════════════ */
+
+.errorCard {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.55rem;
+  padding: 1rem 0.75rem;
+  background: rgba(239, 68, 68, 0.05);
+  border: 1px solid rgba(239, 68, 68, 0.2);
+  border-radius: 12px;
+  text-align: center;
+}
+
+.errorCardIcon {
+  font-size: 1.4rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.errorCardText {
+  font-family: 'Inter', system-ui, sans-serif;
+  font-size: 0.75rem;
+  color: #94A3B8;
+  margin: 0;
+  line-height: 1.5;
+}
+
+/* ══════════════════════════════════════════════════════
+   ANIMATIONS
+══════════════════════════════════════════════════════ */
+
+@keyframes spin {
+  to { transform: rotate(360deg); }
+}
+
+/* ══════════════════════════════════════════════════════
+   ACCESSIBILITY
+══════════════════════════════════════════════════════ */
+
+@media (prefers-reduced-motion: reduce) {
+  .creatingSpinner { animation: none; }
+  .progressFill    { transition: none; }
+  .jobsLoadingBar::after { animation: none; }
+}
+
+/* ══════════════════════════════════════════════════════
+   MOBILE
+══════════════════════════════════════════════════════ */
+
+@media (max-width: 768px) {
+  .scenarioItem { padding: 0.65rem 0.75rem; }
+  .typeButton   { padding: 0.5rem 0.25rem; }
+  .styleGrid    { grid-template-columns: repeat(2, 1fr); }
 }

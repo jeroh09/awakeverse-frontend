@@ -56,7 +56,15 @@ export default function ScenarioListItem({
       <div className={styles.scenarioTitle}>{title}</div>
       <div className={styles.scenarioMeta}>
         <span className={styles.metaItem}>
-          👥 {participantCount} participant{participantCount !== 1 ? 's' : ''}
+          <svg viewBox="0 0 12 12" fill="none" stroke="currentColor" strokeWidth="1.4"
+            strokeLinecap="round" strokeLinejoin="round" width="10" height="10">
+            <circle cx="4" cy="4" r="1.8"/>
+            <circle cx="8.5" cy="4" r="1.8"/>
+            <path d="M1 10.5c0-1.7 1.3-3 3-3"/>
+            <path d="M11.5 10.5c0-1.7-1.3-3-3-3"/>
+            <path d="M4 7.5c.5-.2 1-.3 2-.3s1.5.1 2 .3"/>
+          </svg>
+          {participantCount} participant{participantCount !== 1 ? 's' : ''}
         </span>
       </div>
     </div>
