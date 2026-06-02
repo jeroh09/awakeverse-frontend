@@ -27,6 +27,11 @@ const VIDEO_STYLES = [
   { id: 'comic_book', label: 'Comic',  icon: '📖' },
 ];
 
+const SCRIPT_FORMATS = [
+  { id: 'screenplay', label: 'Screenplay', icon: '🎬' },
+  { id: 'narrative',  label: 'Narrative',  icon: '📖' },
+];
+
 // ── Helpers ───────────────────────────────────────────────────────────────────
 
 function formatJobDate(isoString) {
@@ -146,6 +151,7 @@ export default function InfoPanel({
   const [selectedType,       setSelectedType]       = useState('script');
   const [selectedDuration,   setSelectedDuration]   = useState(180);
   const [selectedVideoStyle, setSelectedVideoStyle] = useState('realistic');
+  const [selectedFormat,     setSelectedFormat]     = useState('screenplay');
 
   const validScenarios = Array.isArray(scenarios) ? scenarios : [];
   const status         = contentState?.status   || 'idle';
@@ -355,6 +361,7 @@ export default function InfoPanel({
           durationSeconds: selectedDuration,
           messageIds:      [],
           videoStyle:      selectedVideoStyle,
+          scriptFormat:    selectedType === 'script' ? selectedFormat : 'screenplay',
         });
       } catch {
         // error surfaced via contentState.error → FAILED block
@@ -407,6 +414,32 @@ export default function InfoPanel({
                   </button>
                 ))}
               </div>
+
+              <p className={styles.fieldLabel}>Format</p>
+              <div className={styles.typeSelector}>
+                {SCRIPT_FORMATS.map(f => (
+                  <button
+                    key={f.id}
+                    className={[
+                      styles.typeButton,
+                      selectedFormat === f.id ? styles.typeButtonActive : '',
+                    ].filter(Boolean).join(' ')}
+                    onClick={() => setSelectedFormat(f.id)}
+                    aria-pressed={selectedFormat === f.id}
+                    title={f.label}
+                  >
+                    <span className={styles.typeIcon}>{f.icon}</span>
+                    <span className={styles.typeLabel}>{f.label}</span>
+                  </button>
+                ))}
+              </div>
+
+              {selectedFormat === 'narrative' && (
+                <p className={styles.asyncTypeHint}>
+                  📖 Prose narrative — literary third-person format.
+                  Cannot be used for audio or video generation.
+                </p>
+              )}
             </>
           )}
 
