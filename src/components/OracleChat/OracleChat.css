@@ -273,11 +273,9 @@
   padding: 0.55rem 0.85rem;
   resize: none;
   min-height: 38px;
-  max-height: 120px;
-  overflow-y: auto;
+  max-height: 200px;    /* hard cap — scrolls only beyond ~8 lines */
+  overflow-y: hidden;   /* hidden by default; JS sets height so no scrollbar shows */
   transition: border-color 0.15s ease;
-  scrollbar-width: thin;
-  scrollbar-color: rgba(99,102,241,0.3) transparent;
 }
 
 .oc-input:focus {
@@ -323,4 +321,69 @@
   opacity: 0.35;
   cursor: not-allowed;
   box-shadow: none;
+}
+
+/* ── AV wordmark — replaces star icon ───────────────────────────────────── */
+.oc-av-mark {
+  font-family: 'Syne', system-ui, sans-serif;
+  font-size: 0.65rem;
+  font-weight: 700;
+  font-style: italic;
+  color: #818cf8;
+  letter-spacing: -0.02em;
+  line-height: 1;
+  text-shadow: 0 0 8px rgba(99, 102, 241, 0.6);
+  user-select: none;
+}
+
+/* ── Markdown rendering ──────────────────────────────────────────────────── */
+
+.oc-md-p {
+  margin: 0 0 0.5rem;
+  line-height: 1.65;
+}
+
+.oc-md-p:last-child { margin-bottom: 0; }
+
+.oc-md-spacer { height: 0.35rem; }
+
+.oc-md-ol,
+.oc-md-ul {
+  margin: 0.25rem 0 0.5rem 0;
+  padding-left: 1.4rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.3rem;
+}
+
+.oc-md-ol { list-style: decimal; }
+.oc-md-ul { list-style: disc; }
+
+.oc-md-ol li,
+.oc-md-ul li {
+  font-size: 0.88rem;
+  line-height: 1.6;
+  color: #e2e8f0;
+  padding-left: 0.2rem;
+}
+
+/* Marker colour */
+.oc-md-ol li::marker,
+.oc-md-ul li::marker {
+  color: #6366f1;
+}
+
+.oc-md-bold {
+  font-weight: 700;
+  color: #e0e7ff;
+}
+
+.oc-md-code {
+  font-family: 'JetBrains Mono', 'Fira Code', monospace;
+  font-size: 0.78rem;
+  background: rgba(99, 102, 241, 0.12);
+  border: 1px solid rgba(99, 102, 241, 0.22);
+  border-radius: 4px;
+  padding: 0.05rem 0.35rem;
+  color: #a5b4fc;
 }

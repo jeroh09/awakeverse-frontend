@@ -2,6 +2,7 @@
 // ✅ Caveat wordmark (A + V indigo)
 // ✅ ONBOARDING: "Get Started" nav item dispatches awakeverse:open-onboarding
 // ✅ CTRL+A: showButton on mobile dispatches awakeverse:toggle-launcher instead of re-showing header
+// ✅ UPDATED: sidebarTitle wordmark is now a button that opens Oracle chat
 
 import React, { useState, useEffect } from 'react';
 import styles from './Header.module.css';
@@ -81,121 +82,96 @@ const CreateIcon = ({ className }) => (
         <feDropShadow dx="0" dy="0" stdDeviation="2" floodColor="#6366f1" floodOpacity="0.55" />
       </filter>
     </defs>
-    <rect x="5" y="4" width="14" height="16" rx="3" stroke="currentColor" strokeWidth="2" filter="url(#createGlow)" />
-    <path d="M9 9h2M12 12h3M9 15h5" stroke="currentColor" strokeWidth="2" strokeLinecap="round" filter="url(#createGlow)" />
+    <path d="M12 5v14M5 12h14"
+      stroke="currentColor" strokeWidth="2" strokeLinecap="round"
+      filter="url(#createGlow)"
+    />
   </svg>
 );
 
-const VerseStudioIcon = ({ className }) => (
+const WorkspaceIcon = ({ className }) => (
   <svg className={className} width="20" height="20" viewBox="0 0 24 24" fill="none">
     <defs>
-      <filter id="verseGlow" x="-50%" y="-50%" width="200%" height="200%">
-        <feDropShadow dx="0" dy="0" stdDeviation="2.2" floodColor="#6366f1" floodOpacity="0.65" />
+      <filter id="workspaceGlow" x="-50%" y="-50%" width="200%" height="200%">
+        <feDropShadow dx="0" dy="0" stdDeviation="2" floodColor="#6366f1" floodOpacity="0.55" />
       </filter>
     </defs>
-    <circle cx="12" cy="12" r="7" stroke="currentColor" strokeWidth="1.8" opacity="0.7" filter="url(#verseGlow)" />
-    <circle cx="9" cy="9" r="1.7" fill="currentColor" opacity="0.95" filter="url(#verseGlow)" />
-    <circle cx="15" cy="10" r="1.5" fill="currentColor" opacity="0.85" filter="url(#verseGlow)" />
-    <circle cx="11" cy="15" r="1.4" fill="currentColor" opacity="0.85" filter="url(#verseGlow)" />
-    <path
-      d="M9 9L15 10L11 15Z"
-      stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round"
-      opacity="0.85" filter="url(#verseGlow)"
-    />
+    <rect x="3" y="3" width="8" height="8" rx="1.5" stroke="currentColor" strokeWidth="1.8" filter="url(#workspaceGlow)" />
+    <rect x="13" y="3" width="8" height="8" rx="1.5" stroke="currentColor" strokeWidth="1.8" filter="url(#workspaceGlow)" />
+    <rect x="3" y="13" width="8" height="8" rx="1.5" stroke="currentColor" strokeWidth="1.8" filter="url(#workspaceGlow)" />
+    <rect x="13" y="13" width="8" height="8" rx="1.5" stroke="currentColor" strokeWidth="1.8" filter="url(#workspaceGlow)" />
+  </svg>
+);
+
+const GetStartedIcon = ({ className }) => (
+  <svg className={className} width="20" height="20" viewBox="0 0 24 24" fill="none">
+    <defs>
+      <filter id="getStartedGlow" x="-50%" y="-50%" width="200%" height="200%">
+        <feDropShadow dx="0" dy="0" stdDeviation="2" floodColor="#6366f1" floodOpacity="0.55" />
+      </filter>
+    </defs>
+    <circle cx="12" cy="12" r="9" stroke="currentColor" strokeWidth="1.8" filter="url(#getStartedGlow)" />
+    <path d="M12 8v1M12 11v5" stroke="currentColor" strokeWidth="2" strokeLinecap="round" filter="url(#getStartedGlow)" />
   </svg>
 );
 
 const ChevronDownIcon = ({ className }) => (
   <svg className={className} width="20" height="20" viewBox="0 0 24 24" fill="none">
-    <defs>
-      <filter id="chevronGlow" x="-50%" y="-50%" width="200%" height="200%">
-        <feDropShadow dx="0" dy="0" stdDeviation="2" floodColor="#6366f1" floodOpacity="0.6" />
-      </filter>
-    </defs>
-    <path
-      d="M6 9l6 6 6-6"
-      stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"
-      filter="url(#chevronGlow)"
-    />
+    <path d="M6 9l6 6 6-6" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
   </svg>
 );
 
-// ✅ Get Started — compass icon, indigo glow pattern
-const GetStartedIcon = ({ className }) => (
-  <svg className={className} width="20" height="20" viewBox="0 0 24 24" fill="none">
-    <defs>
-      <filter id="gsGlow" x="-50%" y="-50%" width="200%" height="200%">
-        <feDropShadow dx="0" dy="0" stdDeviation="2" floodColor="#6366f1" floodOpacity="0.6" />
-      </filter>
-    </defs>
-    <circle cx="12" cy="12" r="8" stroke="currentColor" strokeWidth="1.8" filter="url(#gsGlow)" />
-    <path d="M12 5v1.5M12 17.5V19M5 12h1.5M17.5 12H19"
-      stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" filter="url(#gsGlow)" />
-    <path d="M14.5 9l-4 4.5 2-1 2-3.5z" fill="currentColor" opacity="0.9" filter="url(#gsGlow)" />
-    <path d="M9.5 15l4-4.5-2 1-2 3.5z" fill="currentColor" opacity="0.4" filter="url(#gsGlow)" />
-  </svg>
-);
-
-// ✅ AwakeVerse Caveat wordmark
+// ── AwakeVerse wordmark ───────────────────────────────────────────────────────
 const AwakeVerseWordmark = ({ className }) => (
-  <span className={className} aria-label="AwakeVerse">
-    <span className={styles.wordmarkIndigo}>A</span>
-    <span className={styles.wordmarkIvory}>wake</span>
-    <span className={styles.wordmarkIndigo}>V</span>
-    <span className={styles.wordmarkIvory}>erse</span>
+  <span className={className}>
+    <span style={{ color: '#6366f1' }}>A</span>
+    <span style={{ color: '#f5f5dc' }}>wake</span>
+    <span style={{ color: '#6366f1' }}>V</span>
+    <span style={{ color: '#f5f5dc' }}>erse</span>
   </span>
 );
 
-// ─── Main component ───────────────────────────────────────────────────────────
+// ── Main component ────────────────────────────────────────────────────────────
+export default function Header({ showNavigation = true }) {
+  const { user, getSubscriptionInfo } = useUser() || {};
+  const { isAuthenticated }           = useAuth() || {};
+  const viewContext                   = useAppView();
 
-export default function Header() {
-  const { user, getSubscriptionInfo } = useUser();
-  const { isAuthenticated } = useAuth();
-  const API_BASE = process.env.REACT_APP_API_URL || 'https://api.awakeverse.com';
-
-  let viewContext = null;
-  try {
-    viewContext = useAppView();
-  } catch (e) {
-    console.error('Header: useAppView must be used within AppViewProvider', e);
-  }
-
+  const [isSidebarOpen,   setIsSidebarOpen]   = useState(false);
   const [isHeaderVisible, setIsHeaderVisible] = useState(true);
-  const [isSidebarOpen, setIsSidebarOpen] = useState(false);
-  const [isMobile, setIsMobile] = useState(window.innerWidth <= 768);
+  const [isMobile,        setIsMobile]        = useState(false);
+
+  const API_BASE = process.env.REACT_APP_API_URL || 'http://localhost:5000';
 
   useEffect(() => {
-    const handleResize = () => setIsMobile(window.innerWidth <= 768);
-    window.addEventListener('resize', handleResize);
-    return () => window.removeEventListener('resize', handleResize);
+    const check = () => setIsMobile(window.innerWidth <= 768);
+    check();
+    window.addEventListener('resize', check);
+    return () => window.removeEventListener('resize', check);
   }, []);
 
-  const showNavigation = isAuthenticated && !!viewContext;
-
+  // Auto-hide header after 6 seconds
   useEffect(() => {
-    if (!isHeaderVisible || !isAuthenticated) return;
-    const timer = setTimeout(() => setIsHeaderVisible(false), 6000);
-    return () => clearTimeout(timer);
-  }, [isHeaderVisible, isAuthenticated]);
-
-  const navItems = !showNavigation
-    ? []
-    : [
-        { key: 'chat',        label: 'Chat',      icon: ChatIcon,        viewState: viewContext.VIEW_STATES.CHAT },
-        { key: 'discover',    label: 'Discover',  icon: DiscoverIcon,    viewState: viewContext.VIEW_STATES.MARKET_HUB },
-        { key: 'stories',     label: 'Story',     icon: StoriesIcon,     viewState: viewContext.VIEW_STATES.STORY_MODE },
-        { key: 'create',      label: 'Create',    icon: CreateIcon,      viewState: viewContext.VIEW_STATES.CREATOR_DASHBOARD },
-        { key: 'scenarios',   label: 'Dialogue',  icon: ScenariosIcon,   viewState: viewContext.VIEW_STATES.SCENARIOS },
-        { key: 'verseStudio', label: 'Workspace', icon: VerseStudioIcon, viewState: viewContext.VIEW_STATES.VERSE_STUDIO },
-      ];
-
-  const itemsByKey = Object.fromEntries(navItems.map((item) => [item.key, item]));
+    const t = setTimeout(() => setIsHeaderVisible(false), 6000);
+    return () => clearTimeout(t);
+  }, []);
 
   const navGroups = [
-    { key: 'primary',     label: 'Primary',      items: ['chat', 'discover'] },
-    { key: 'storyWorld',  label: 'Story world',  items: ['stories'] },
-    { key: 'productivity',label: 'Productivity', items: ['create', 'scenarios', 'verseStudio'] },
+    { key: 'primary',      label: 'Primary',      items: ['chat', 'discover', 'create'] },
+    { key: 'story',        label: 'Story Worlds',  items: ['stories', 'scenarios'] },
+    { key: 'productivity', label: 'Productivity',  items: ['workspace'] },
   ];
+
+  const VIEW_STATES = viewContext?.VIEW_STATES || {};
+
+  const itemsByKey = {
+    chat:       { key: 'chat',       label: 'Chat',        icon: ChatIcon,       viewState: VIEW_STATES.CHAT },
+    discover:   { key: 'discover',   label: 'Discover',    icon: DiscoverIcon,   viewState: VIEW_STATES.MARKET_HUB },
+    create:     { key: 'create',     label: 'Create',      icon: CreateIcon,     viewState: VIEW_STATES.CHARACTER_BUILDER },
+    stories:    { key: 'stories',    label: 'Stories',     icon: StoriesIcon,    viewState: VIEW_STATES.STORY },
+    scenarios:  { key: 'scenarios',  label: 'Dialogues',   icon: ScenariosIcon,  viewState: VIEW_STATES.SCENARIOS },
+    workspace:  { key: 'workspace',  label: 'Workspace',   icon: WorkspaceIcon,  viewState: VIEW_STATES.WORKSPACE },
+  };
 
   const handleNavClick = (viewState) => {
     if (!viewContext) return;
@@ -203,12 +179,19 @@ export default function Header() {
     setIsSidebarOpen(false);
   };
 
-  // ✅ Get Started — closes sidebar, then opens onboarding overlay
   const handleGetStartedClick = () => {
     setIsSidebarOpen(false);
     setTimeout(() => {
       window.dispatchEvent(new CustomEvent('awakeverse:open-onboarding'));
     }, 200);
+  };
+
+  // ✅ NEW: Oracle trigger — closes sidebar, fires event, ChatLauncherPage listens
+  const handleOracleClick = () => {
+    setIsSidebarOpen(false);
+    setTimeout(() => {
+      window.dispatchEvent(new CustomEvent('awakeverse:open-oracle-chat'));
+    }, 180);
   };
 
   const toggleSidebar = () => {
@@ -218,9 +201,6 @@ export default function Header() {
 
   const closeSidebar = () => setIsSidebarOpen(false);
 
-  // ✅ showButton click handler
-  // Desktop: re-shows the header bar as before
-  // Mobile: toggles the Ctrl+A launcher overlay instead
   const handleShowButtonClick = () => {
     if (isMobile) {
       window.dispatchEvent(new CustomEvent('awakeverse:toggle-launcher'));
@@ -244,8 +224,8 @@ export default function Header() {
     user?.email?.charAt(0) ||
     'A';
 
-  const subscriptionInfo = getSubscriptionInfo ? getSubscriptionInfo() : null;
-  const subscriptionLabel = subscriptionInfo?.display_name || 'Free';
+  const subscriptionInfo   = getSubscriptionInfo ? getSubscriptionInfo() : null;
+  const subscriptionLabel  = subscriptionInfo?.display_name || 'Free';
   const subscriptionActive = subscriptionInfo?.is_active || false;
 
   const isInActiveChatWindow  = viewContext?.activeChatCharacter !== null && viewContext?.activeChatCharacter !== undefined;
@@ -278,22 +258,20 @@ export default function Header() {
                   )}
                 </div>
                 <ProfileButton user={user} />
-                <button
-                  className={styles.retractButton}
-                  onClick={() => setIsHeaderVisible(false)}
-                  aria-label="Hide header"
-                  title="Hide header"
-                >
-                  ⌃
-                </button>
               </>
             )}
+            <button
+              className={styles.retractButton}
+              onClick={() => setIsHeaderVisible(false)}
+              aria-label="Hide header"
+            >
+              ↑
+            </button>
           </div>
         </header>
       )}
 
-      {/* ── Show / launcher toggle button ──────────────────── */}
-      {/* ✅ UPDATED: mobile tap opens launcher overlay, desktop re-shows header */}
+      {/* ── Show button (when header hidden) ───────────────── */}
       {!isHeaderVisible && !shouldHideButton && (
         <button
           className={styles.showButton}
@@ -332,17 +310,29 @@ export default function Header() {
             onClick={(e) => e.stopPropagation()}
             aria-label="AwakeVerse navigation"
           >
-            {/* Sidebar header */}
+            {/* ── Sidebar header ── */}
             <div className={styles.sidebarHeader}>
               <div className={styles.sidebarTitleBlock}>
-                <span className={styles.sidebarTitle}>
-                  <AwakeVerseWordmark className={styles.wordmark} />
+
+                {/* ✅ UPDATED: wordmark is now a button that opens Oracle chat */}
+                <button
+                  className={styles.sidebarTitleBtn}
+                  onClick={handleOracleClick}
+                  aria-label="Open Oracle chat"
+                  title="Ask the Oracle"
+                >
+                  <span className={styles.sidebarTitle}>
+                    <AwakeVerseWordmark className={styles.wordmark} />
+                  </span>
+                </button>
+
+                <span className={styles.sidebarSubtitle}>
+                  Primary, story worlds, and productivity.
                 </span>
-                <span className={styles.sidebarSubtitle}>Primary, story worlds, and productivity.</span>
               </div>
             </div>
 
-            {/* Nav groups */}
+            {/* ── Nav groups ── */}
             <nav className={styles.sidebarNav}>
               {navGroups.map((group) => {
                 const groupItems = group.items.map((key) => itemsByKey[key]).filter(Boolean);
@@ -368,7 +358,7 @@ export default function Header() {
                 );
               })}
 
-              {/* ✅ Get Started group — always at bottom of nav */}
+              {/* ✅ Get Started group — always at bottom */}
               <div className={`${styles.sidebarSection} ${styles.sidebarSectionGetStarted}`}>
                 <div className={styles.sidebarSectionLabel}>Guide</div>
                 <div className={styles.sidebarSectionItems}>
@@ -383,20 +373,21 @@ export default function Header() {
               </div>
             </nav>
 
-            {/* Sidebar footer */}
-            {isAuthenticated && (
-              <footer className={styles.sidebarFooter}>
-                <div className={styles.userMeta}>
-                  <div className={styles.userName}>
-                    {user?.display_name || user?.displayName || user?.name || 'AwakeVerse explorer'}
-                  </div>
-                  {user?.username && <div className={styles.userEmail}>{user.username}</div>}
-                </div>
-                <div className={`${styles.subscriptionBadge} ${subscriptionActive ? styles.subscriptionActive : ''}`}>
-                  {subscriptionLabel}
-                </div>
-              </footer>
-            )}
+            {/* ── Sidebar footer ── */}
+            <div className={styles.sidebarFooter}>
+              <div className={styles.userMeta}>
+                <span className={styles.userName}>
+                  {user?.display_name || user?.displayName || user?.name || 'User'}
+                </span>
+                <span className={styles.userEmail}>
+                  {user?.email || ''}
+                </span>
+              </div>
+              <span className={`${styles.subscriptionBadge} ${subscriptionActive ? styles.subscriptionActive : ''}`}>
+                {subscriptionLabel}
+              </span>
+            </div>
+
           </aside>
         </div>
       )}

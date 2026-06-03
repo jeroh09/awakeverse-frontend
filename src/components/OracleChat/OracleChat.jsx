@@ -26,16 +26,7 @@ const BackIcon = () => (
 );
 
 const OracleAvatarIcon = () => (
-  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" aria-hidden="true">
-    <defs>
-      <filter id="oc-glow" x="-50%" y="-50%" width="200%" height="200%">
-        <feDropShadow dx="0" dy="0" stdDeviation="2" floodColor="#6366f1" floodOpacity="0.7"/>
-      </filter>
-    </defs>
-    <path d="M12 2L14.5 9H22L16 13.5L18.5 21L12 16.5L5.5 21L8 13.5L2 9H9.5L12 2z"
-      stroke="#818cf8" strokeWidth="1.6" strokeLinejoin="round"
-      fill="rgba(99,102,241,0.15)" filter="url(#oc-glow)"/>
-  </svg>
+  <span className="oc-av-mark" aria-hidden="true">AV</span>
 );
 
 // ── Typing indicator ──────────────────────────────────────────────────────────
@@ -48,6 +39,87 @@ const TypingIndicator = () => (
   </div>
 );
 
+// ── Lightweight markdown renderer ────────────────────────────────────────────
+// Handles: bold (**text**), numbered lists, bullet lists, inline code.
+// No external dep — pure React.
+
+function renderMarkdown(text) {
+  const lines = text.split('\n');
+  const elements = [];
+  let i = 0;
+
+  while (i < lines.length) {
+    const line = lines[i];
+
+    // Blank line — spacing
+    if (line.trim() === '') {
+      elements.push(<div key={i} className="oc-md-spacer" />);
+      i++;
+      continue;
+    }
+
+    // Numbered list item: "1. text" or "1) text"
+    const numMatch = line.match(/^(\d+)[.)]\s+(.*)/);
+    if (numMatch) {
+      const listItems = [];
+      while (i < lines.length) {
+        const m = lines[i].match(/^(\d+)[.)]\s+(.*)/);
+        if (!m) break;
+        listItems.push(<li key={i}>{renderInline(m[2])}</li>);
+        i++;
+      }
+      elements.push(<ol key={`ol-${i}`} className="oc-md-ol">{listItems}</ol>);
+      continue;
+    }
+
+    // Bullet list item: "* text" or "- text" or "• text"
+    const bulletMatch = line.match(/^[*\-•]\s+(.*)/);
+    if (bulletMatch) {
+      const listItems = [];
+      while (i < lines.length) {
+        const m = lines[i].match(/^[*\-•]\s+(.*)/);
+        if (!m) break;
+        listItems.push(<li key={i}>{renderInline(m[1])}</li>);
+        i++;
+      }
+      elements.push(<ul key={`ul-${i}`} className="oc-md-ul">{listItems}</ul>);
+      continue;
+    }
+
+    // Normal paragraph
+    elements.push(<p key={i} className="oc-md-p">{renderInline(line)}</p>);
+    i++;
+  }
+
+  return elements;
+}
+
+// Inline: bold (**text**), inline code (`code`)
+function renderInline(text) {
+  const parts = [];
+  // Split on **bold** and `code` markers
+  const regex = /(`[^`]+`|\*\*[^*]+\*\*)/g;
+  let last = 0;
+  let match;
+  let key = 0;
+
+  while ((match = regex.exec(text)) !== null) {
+    if (match.index > last) {
+      parts.push(text.slice(last, match.index));
+    }
+    const token = match[0];
+    if (token.startsWith('`')) {
+      parts.push(<code key={key++} className="oc-md-code">{token.slice(1, -1)}</code>);
+    } else if (token.startsWith('**')) {
+      parts.push(<strong key={key++} className="oc-md-bold">{token.slice(2, -2)}</strong>);
+    }
+    last = match.index + token.length;
+  }
+
+  if (last < text.length) parts.push(text.slice(last));
+  return parts;
+}
+
 // ── Message bubble ────────────────────────────────────────────────────────────
 
 const OracleMessage = ({ role, content }) => (
@@ -58,7 +130,7 @@ const OracleMessage = ({ role, content }) => (
       </div>
     )}
     <div className="oc-bubble">
-      {content}
+      {role === 'assistant' ? renderMarkdown(content) : content}
     </div>
   </div>
 );
@@ -88,6 +160,14 @@ export default function OracleChat({ onBack, userName = null }) {
   useEffect(() => {
     inputRef.current?.focus();
   }, []);
+
+  // Auto-expand textarea height to match content
+  const autosizeInput = () => {
+    const el = inputRef.current;
+    if (!el) return;
+    el.style.height = 'auto';        // reset first so shrink works
+    el.style.height = el.scrollHeight + 'px';
+  };
 
   const sendMessage = useCallback(async () => {
     const text = input.trim();
@@ -155,6 +235,7 @@ export default function OracleChat({ onBack, userName = null }) {
     setMessages([{ role: 'assistant', content: GREETING }]);
     setError(null);
     setInput('');
+    if (inputRef.current) inputRef.current.style.height = 'auto';
     inputRef.current?.focus();
   };
 
@@ -217,7 +298,7 @@ export default function OracleChat({ onBack, userName = null }) {
           ref={inputRef}
           className="oc-input"
           value={input}
-          onChange={e => setInput(e.target.value)}
+          onChange={e => { setInput(e.target.value); autosizeInput(); }}
           onKeyDown={handleKeyDown}
           placeholder="Ask the Oracle…"
           rows={1}

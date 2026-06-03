@@ -360,6 +360,13 @@ const ChatLauncherPage = ({ onStartChat, discoveredCharacters = [] }) => {
     return () => clearInterval(interval);
   }, []);
 
+  // Add this useEffect near your other event listener useEffects
+  useEffect(() => {
+    const handler = () => setOracleChatMode(true);
+    window.addEventListener('awakeverse:open-oracle-chat', handler);
+    return () => window.removeEventListener('awakeverse:open-oracle-chat', handler);
+  }, []);
+
   // Load user's custom characters
    // Load user's custom characters (opaque-cookie auth)
   const loadUserCharacters = useCallback(async () => {
