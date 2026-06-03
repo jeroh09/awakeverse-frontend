@@ -1460,7 +1460,7 @@ const ChatLauncherPage = ({ onStartChat, discoveredCharacters = [] }) => {
                   e.currentTarget.style.color = '#818cf8';
                 }}
               >
-                Ask the Oracle instead
+                ✦ Ask the Oracle instead
               </button>
             </div>
           )}
