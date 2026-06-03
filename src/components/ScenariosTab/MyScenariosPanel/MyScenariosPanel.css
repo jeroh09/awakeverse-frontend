@@ -1,71 +1,208 @@
-/* src/components/ScenariosTab/MyScenariosPanel/MyScenariosPanel.css - UPDATED WITH GRID */
+/* src/components/ScenariosTab/MyScenariosPanel/MyScenariosPanel.css
+   ✅ REDESIGNED: double-border panel shell, styled header, empty state, error banner
+   ✅ PRESERVED: all existing class names — ScenarioCard and CreateButton depend on them
+*/
+
+/* ── Panel wrapper ───────────────────────────────────────────────────────── */
 .my-scenarios-panel {
   margin-top: 2rem;
   padding-top: 2rem;
-  border-top: 1px solid var(--scenarios-border-color);
+  border-top: 1px solid rgba(99, 102, 241, 0.18);
+  display: flex;
+  flex-direction: column;
+  gap: 1.25rem;
 }
 
+/* ── Header ──────────────────────────────────────────────────────────────── */
 .panel-header {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  margin-bottom: 1.5rem;
+  gap: 1rem;
 }
 
 .panel-header h3 {
-  color: var(--scenarios-text-primary);
-  font-size: 1.5rem;
+  font-family: 'Syne', system-ui, sans-serif;
+  font-size: 1.3rem;
+  font-weight: 700;
+  color: #e0e7ff;
   margin: 0;
+  line-height: 1;
 }
 
 .scenario-counter {
-  color: var(--scenarios-text-secondary);
-  font-size: 0.9rem;
-  background: var(--scenarios-bg-secondary);
-  padding: 0.5rem 1rem;
-  border-radius: 16px;
-  font-weight: 600;
+  font-size: 0.7rem;
+  font-weight: 700;
+  color: #818cf8;
+  background: rgba(99, 102, 241, 0.12);
+  border: 1px solid rgba(99, 102, 241, 0.25);
+  padding: 0.28rem 0.75rem;
+  border-radius: 999px;
+  letter-spacing: 0.02em;
 }
 
-/* UPDATED: Changed to grid layout */
+/* ── Error banner ────────────────────────────────────────────────────────── */
+.panel-error-banner {
+  display: flex;
+  align-items: center;
+  gap: 0.65rem;
+  padding: 0.75rem 1rem;
+  border-radius: 10px;
+  background: rgba(239, 68, 68, 0.08);
+  border: 1px solid rgba(239, 68, 68, 0.28);
+  color: #f87171;
+  font-size: 0.82rem;
+}
+
+.error-message {
+  flex: 1;
+  font-weight: 500;
+}
+
+.dismiss-error {
+  width: 26px;
+  height: 26px;
+  border-radius: 6px;
+  border: 1px solid rgba(239, 68, 68, 0.25);
+  background: transparent;
+  color: #f87171;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  transition: background 0.15s;
+  margin-left: auto;
+  padding: 0;
+}
+
+.dismiss-error:hover {
+  background: rgba(239, 68, 68, 0.12);
+}
+
+/* ── Scenarios grid ──────────────────────────────────────────────────────── */
 .scenarios-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
-  gap: 1.5rem;
-  margin-bottom: 2rem;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 1.25rem;
 }
 
-/* Ensure 3 columns on larger screens */
 @media (min-width: 1200px) {
-  .scenarios-grid {
-    grid-template-columns: repeat(3, 1fr);
-  }
+  .scenarios-grid { grid-template-columns: repeat(3, 1fr); }
 }
 
-/* Keep scenario cards looking good in grid */
+@media (max-width: 1024px) {
+  .scenarios-grid { grid-template-columns: repeat(2, 1fr); }
+}
+
+@media (max-width: 640px) {
+  .scenarios-grid { grid-template-columns: 1fr; gap: 1rem; }
+}
+
+/* Ensure cards stretch to fill grid cell */
 .scenarios-grid .scenario-card {
   height: 100%;
   display: flex;
   flex-direction: column;
 }
 
+/* ── Empty state ─────────────────────────────────────────────────────────── */
 .empty-scenarios {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 0.75rem;
+  padding: 3.5rem 2rem;
   text-align: center;
-  padding: 3rem 2rem;
-  color: var(--scenarios-text-secondary);
-  background: var(--scenarios-bg-card);
-  border-radius: 12px;
-  border: 2px dashed var(--scenarios-border-color);
-  grid-column: 1 / -1; /* Span full width */
+  border-radius: 14px;
+  background: rgba(15, 23, 42, 0.5);
+  border: 1px dashed rgba(99, 102, 241, 0.28);
+  grid-column: 1 / -1;
+}
+
+.empty-title {
+  font-family: 'Syne', system-ui, sans-serif;
+  font-size: 1rem;
+  font-weight: 700;
+  color: #e0e7ff;
+  margin: 0;
 }
 
 .hint {
-  font-size: 0.9rem;
-  margin-top: 0.5rem;
-  margin-bottom: 2rem;
-  opacity: 0.7;
+  font-size: 0.8rem;
+  color: #475569;
+  margin: 0;
+  max-width: 300px;
+  line-height: 1.55;
+  opacity: 1;
 }
 
+/* ── Create New section ──────────────────────────────────────────────────── */
+.create-new-section {
+  margin-top: 0.5rem;
+  padding-top: 1.25rem;
+  border-top: 1px solid rgba(99, 102, 241, 0.12);
+}
+
+/* ── Max scenarios message ───────────────────────────────────────────────── */
+.max-scenarios-message {
+  display: flex;
+  align-items: center;
+  gap: 0.85rem;
+  padding: 1rem 1.25rem;
+  border-radius: 10px;
+  background: rgba(239, 68, 68, 0.05);
+  border: 1px solid rgba(239, 68, 68, 0.2);
+  margin-top: 0.5rem;
+}
+
+.max-scenarios-message p {
+  margin: 0;
+  font-size: 0.85rem;
+  font-weight: 600;
+  color: #f87171;
+}
+
+.max-scenarios-message .hint {
+  font-size: 0.75rem;
+  color: #64748b;
+  margin-top: 0.15rem;
+}
+
+/* ── Light theme overrides ───────────────────────────────────────────────── */
+.scenarios-tab-container:not(.theme-awakeverse) .my-scenarios-panel {
+  border-top-color: rgba(99, 102, 241, 0.15);
+}
+
+.scenarios-tab-container:not(.theme-awakeverse) .panel-header h3 {
+  color: #1e1b4b;
+}
+
+.scenarios-tab-container:not(.theme-awakeverse) .scenario-counter {
+  color: #4f46e5;
+  background: rgba(99, 102, 241, 0.07);
+  border-color: rgba(99, 102, 241, 0.18);
+}
+
+.scenarios-tab-container:not(.theme-awakeverse) .empty-scenarios {
+  background: rgba(255, 255, 255, 0.7);
+  border-color: rgba(99, 102, 241, 0.2);
+}
+
+.scenarios-tab-container:not(.theme-awakeverse) .empty-title {
+  color: #1e1b4b;
+}
+
+.scenarios-tab-container:not(.theme-awakeverse) .hint {
+  color: #94a3b8;
+}
+
+.scenarios-tab-container:not(.theme-awakeverse) .create-new-section {
+  border-top-color: rgba(99, 102, 241, 0.1);
+}
+
+/* Loading / error fallback states (kept for safety) */
 .panel-loading,
 .panel-error {
   display: flex;
@@ -82,13 +219,12 @@
   border: 3px solid var(--scenarios-border-color);
   border-top: 3px solid var(--scenarios-accent-primary);
   border-radius: 50%;
-  animation: spin 1s linear infinite;
+  animation: msp-spin 1s linear infinite;
   margin-bottom: 1rem;
 }
 
-@keyframes spin {
-  0% { transform: rotate(0deg); }
-  100% { transform: rotate(360deg); }
+@keyframes msp-spin {
+  to { transform: rotate(360deg); }
 }
 
 .retry-button {
@@ -105,93 +241,13 @@
   background: var(--scenarios-accent-secondary);
 }
 
-/* Panel Error Banner */
-.panel-error-banner {
-  display: flex;
-  align-items: center;
-  gap: 0.75rem;
-  padding: 1rem;
-  background: rgba(231, 76, 60, 0.1);
-  border: 1px solid rgba(231, 76, 60, 0.3);
-  border-radius: 8px;
-  color: #e74c3c;
-  margin-bottom: 1.5rem;
-  font-size: 0.9rem;
-}
-
-.error-icon {
-  font-size: 1.1rem;
-}
-
-.dismiss-error {
-  background: none;
-  border: none;
-  color: #e74c3c;
-  cursor: pointer;
-  font-size: 1.2rem;
-  margin-left: auto;
-  padding: 0.25rem;
-  border-radius: 4px;
-}
-
-.dismiss-error:hover {
-  background: rgba(231, 76, 60, 0.2);
-}
-
-/* Create New Section */
-.create-new-section {
-  margin-top: 2rem;
-  padding-top: 2rem;
-  border-top: 1px solid var(--scenarios-border-color);
-}
-
-.max-scenarios-message {
-  text-align: center;
-  padding: 1.5rem;
-  background: var(--scenarios-bg-secondary);
-  border: 1px solid var(--scenarios-border-color);
-  border-radius: 8px;
-  color: var(--scenarios-text-secondary);
-  margin-top: 1rem;
-}
-
-.max-scenarios-message p {
-  margin: 0.5rem 0;
-}
-
-/* Mobile responsive */
+/* Mobile */
 @media (max-width: 768px) {
-  .scenarios-grid {
-    grid-template-columns: 1fr;
-    gap: 1rem;
-  }
-  
   .panel-header {
     flex-direction: column;
-    gap: 1rem;
     align-items: flex-start;
+    gap: 0.65rem;
   }
-  
-  .scenario-counter {
-    align-self: flex-start;
-  }
-  
-  .empty-scenarios {
-    padding: 2rem 1rem;
-  }
-}
-
-/* Dark theme overrides */
-.scenarios-tab-container.theme-awakeverse .my-scenarios-panel {
-  border-top-color: rgba(255, 215, 0, 0.2);
-}
-
-.scenarios-tab-container.theme-awakeverse .empty-scenarios {
-  background: rgba(255, 215, 0, 0.05);
-  border-color: rgba(255, 215, 0, 0.3);
-}
-
-.scenarios-tab-container.theme-awakeverse .max-scenarios-message {
-  background: rgba(255, 215, 0, 0.05);
-  border-color: rgba(255, 215, 0, 0.2);
+  .scenario-counter { align-self: flex-start; }
+  .empty-scenarios  { padding: 2.5rem 1rem; }
 }

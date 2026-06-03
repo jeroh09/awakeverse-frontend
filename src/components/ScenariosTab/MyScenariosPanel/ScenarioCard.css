@@ -1,176 +1,242 @@
-/* src/components/ScenariosTab/MyScenariosPanel/ScenarioCard.css - ENHANCED */
-.scenario-card {
-  background: var(--scenarios-bg-card);
-  border: 1px solid var(--scenarios-border-color);
-  border-radius: 12px;
-  padding: 1.5rem;
-  transition: all 0.3s ease;
-  position: relative;
-  overflow: hidden; /* ✅ UPDATED: Allow background to show */
+/* src/components/ScenariosTab/MyScenariosPanel/ScenarioCard.css
+   ✅ REDESIGNED: double-border shell, SVG-aware icon buttons
+   ✅ PRESERVED: background image, overlay, publish styles, published badge,
+                 all existing class names untouched
+*/
+
+/* ── Spinner keyframe ────────────────────────────────────────────────────── */
+@keyframes sc-spin {
+  to { transform: rotate(360deg); }
 }
 
-/* ✅ NEW: Card Background Image */
+/* ── Card shell — double-border pattern ─────────────────────────────────── */
+.scenario-card {
+  border-radius: 14px;
+  overflow: hidden;                 /* clips background image to rounded corners */
+  position: relative;
+
+  /* Double border */
+  border: 1px solid rgba(99, 102, 241, 0.42);
+  box-shadow:
+    0 0 0 4px rgba(15, 23, 42, 0.97),
+    0 0 0 5px rgba(99, 102, 241, 0.2),
+    0 8px 24px rgba(0, 0, 0, 0.4);
+
+  transition: border-color 0.18s ease, box-shadow 0.18s ease, transform 0.18s ease;
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+}
+
+.scenario-card:hover:not(.deleting) {
+  border-color: rgba(99, 102, 241, 0.72);
+  box-shadow:
+    0 0 0 4px rgba(15, 23, 42, 0.97),
+    0 0 0 5px rgba(99, 102, 241, 0.48),
+    0 12px 32px rgba(99, 102, 241, 0.18);
+  transform: translateY(-3px);
+}
+
+.scenario-card.deleting {
+  opacity: 0.55;
+  pointer-events: none;
+}
+
+/* ── Background image (original structure, unchanged) ────────────────────── */
 .scenario-card-background {
   position: absolute;
-  top: 0;
-  left: 0;
-  right: 0;
-  bottom: 0;
+  inset: 0;
   background-size: cover;
   background-position: center;
   background-repeat: no-repeat;
-  opacity: 0.35; /* Subtle background */
-  transition: all 0.3s ease;
+  opacity: 0.35;
+  transition: opacity 0.3s ease, transform 0.3s ease;
   z-index: 0;
 }
 
 .scenario-card:hover .scenario-card-background {
-  opacity: 0.55; /* Slightly more visible on hover */
-  transform: scale(1.05); /* Subtle zoom effect */
+  opacity: 0.55;
+  transform: scale(1.05);
 }
 
-/* ✅ NEW: Dark overlay for readability */
 .scenario-card-overlay {
   position: absolute;
-  top: 0;
-  left: 0;
-  right: 0;
-  bottom: 0;
-  background: linear-gradient(
-    135deg,
-    rgba(0, 0, 0, 0.3) 0%,
-    rgba(0, 0, 0, 0.1) 100%
-  );
+  inset: 0;
+  background: linear-gradient(135deg, rgba(0,0,0,0.3) 0%, rgba(0,0,0,0.1) 100%);
   z-index: 1;
 }
 
-/* ✅ NEW: Card content wrapper (sits above background) */
+/* ── Card content (sits above background) ────────────────────────────────── */
 .scenario-card-content {
   position: relative;
   z-index: 2;
   display: flex;
   flex-direction: column;
-  height: 100%;
+  flex: 1;
+  padding: 1.25rem;
+  gap: 0.7rem;
 }
 
-.scenario-card:hover:not(.deleting) {
-  border-color: var(--scenarios-accent-primary);
-  box-shadow: 0 4px 16px var(--scenarios-shadow);
-  transform: translateY(-2px);
-}
-
-.scenario-card.deleting {
-  opacity: 0.6;
-  pointer-events: none;
-}
-
-/* Header */
+/* ── Header ──────────────────────────────────────────────────────────────── */
 .scenario-header {
   display: flex;
   justify-content: space-between;
   align-items: flex-start;
-  margin-bottom: 1rem;
-  gap: 1rem;
+  gap: 0.75rem;
 }
 
 .scenario-title {
-  color: var(--scenarios-text-primary);
-  font-size: 1.1rem;
-  font-weight: 600;
+  font-family: 'Syne', system-ui, sans-serif;
+  font-size: 1rem;
+  font-weight: 700;
+  color: #e0e7ff;
   margin: 0;
   flex: 1;
   line-height: 1.3;
 }
 
-/* Actions */
+/* ── Action buttons ──────────────────────────────────────────────────────── */
 .scenario-actions {
   display: flex;
-  gap: 0.5rem;
+  gap: 0.35rem;
   flex-shrink: 0;
 }
 
 .action-button {
-  padding: 0.5rem 0.75rem;
-  border: 1px solid var(--scenarios-border-color);
-  border-radius: 6px;
-  background: var(--scenarios-bg-secondary);
-  color: var(--scenarios-text-secondary);
+  width: 30px;
+  height: 30px;
+  border-radius: 7px;
+  border: 1px solid rgba(99, 102, 241, 0.22);
+  background: rgba(15, 23, 42, 0.65);
+  color: #64748b;
   cursor: pointer;
-  font-size: 0.8rem;
-  font-weight: 500;
-  transition: all 0.3s ease;
-  white-space: nowrap;
   display: flex;
   align-items: center;
-  gap: 0.25rem;
+  justify-content: center;
+  transition: all 0.15s ease;
+  flex-shrink: 0;
+  backdrop-filter: blur(4px);
 }
 
 .action-button:hover:not(:disabled) {
-  border-color: var(--scenarios-accent-primary);
-  color: var(--scenarios-accent-primary);
-  transform: translateY(-1px);
+  color: #818cf8;
+  border-color: rgba(99, 102, 241, 0.5);
+  background: rgba(99, 102, 241, 0.18);
 }
 
 .action-button.delete:hover:not(:disabled) {
-  border-color: #e74c3c;
-  color: #e74c3c;
-  background: rgba(231, 76, 60, 0.1);
+  color: #f87171;
+  border-color: rgba(239, 68, 68, 0.4);
+  background: rgba(239, 68, 68, 0.12);
 }
 
 .action-button:disabled {
-  opacity: 0.5;
+  opacity: 0.4;
   cursor: not-allowed;
-  transform: none;
 }
 
-/* Description */
+/* Publish button — unpublished state */
+.action-button.publish {
+  border-color: rgba(255, 215, 0, 0.3);
+  color: rgba(255, 215, 0, 0.65);
+}
+
+.action-button.publish:hover:not(:disabled) {
+  border-color: rgba(255, 215, 0, 0.6);
+  color: rgba(255, 215, 0, 1);
+  background: rgba(255, 215, 0, 0.1);
+}
+
+/* Publish button — published state */
+.action-button.publish.published {
+  border-color: rgba(255, 215, 0, 0.6);
+  color: rgba(255, 215, 0, 1);
+  background: rgba(255, 215, 0, 0.12);
+}
+
+/* Published → hover turns into unpublish warning */
+.action-button.publish.published:hover:not(:disabled) {
+  border-color: rgba(239, 68, 68, 0.5);
+  color: rgba(239, 68, 68, 0.9);
+  background: rgba(239, 68, 68, 0.1);
+}
+
+/* ── Published badge ─────────────────────────────────────────────────────── */
+.published-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  padding: 0.28rem 0.7rem;
+  border-radius: 999px;
+  background: rgba(255, 215, 0, 0.1);
+  border: 1px solid rgba(255, 215, 0, 0.3);
+  font-size: 0.68rem;
+  font-weight: 700;
+  color: rgba(255, 215, 0, 1);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  align-self: flex-start;
+}
+
+.badge-icon {
+  display: flex;
+  align-items: center;
+}
+
+/* ── Description ─────────────────────────────────────────────────────────── */
 .scenario-description {
-  color: var(--scenarios-text-secondary);
-  font-size: 0.9rem;
-  margin-bottom: 1rem;
+  font-size: 0.82rem;
+  color: #94a3b8;
   line-height: 1.5;
+  margin: 0;
   display: -webkit-box;
   -webkit-line-clamp: 2;
   -webkit-box-orient: vertical;
   overflow: hidden;
 }
 
-/* Meta Info */
+/* ── Meta row ────────────────────────────────────────────────────────────── */
 .scenario-meta {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  margin-bottom: 1rem;
-  gap: 1rem;
-}
-
-/* Character Thumbnails */
-.character-thumbnails {
-  display: flex;
-  gap: 0.5rem;
+  gap: 0.75rem;
   flex-wrap: wrap;
 }
 
+/* ── Character thumbnails (original structure, unchanged) ────────────────── */
+.character-thumbnails {
+  display: flex;
+  gap: 0;
+}
+
 .character-thumbnail {
-  width: 32px;
-  height: 32px;
-  min-width: 32px;
+  width: 30px;
+  height: 30px;
+  min-width: 30px;
   border-radius: 50%;
   display: flex;
   align-items: center;
   justify-content: center;
-  font-size: 0.8rem;
-  font-weight: bold;
+  font-size: 0.65rem;
+  font-weight: 700;
   color: white;
-  box-shadow: 0 2px 4px var(--scenarios-shadow);
-  cursor: default;
+  background: linear-gradient(135deg, #6366f1, #818cf8);
+  border: 2px solid rgba(15, 23, 42, 0.97);
+  margin-left: -5px;
   position: relative;
   overflow: hidden;
-  border: 2px solid var(--scenarios-border-color);
-  background: linear-gradient(135deg, var(--scenarios-accent-primary), var(--scenarios-accent-secondary));
+  box-shadow: 0 2px 5px rgba(0,0,0,0.3);
+  cursor: default;
+  transition: margin-left 0.15s ease;
 }
 
-/* Simple IMG approach */
+.character-thumbnail:first-child { margin-left: 0; }
+
+.character-thumbnails:hover .character-thumbnail {
+  margin-left: -1px;
+}
+
 .thumbnail-img {
   width: 100%;
   height: 100%;
@@ -181,11 +247,10 @@
   left: 0;
 }
 
-/* Thumbnail fallback text */
 .thumbnail-fallback {
   position: absolute;
   z-index: 1;
-  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.5);
+  text-shadow: 0 1px 2px rgba(0,0,0,0.5);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -194,178 +259,144 @@
 }
 
 .character-thumbnail.more {
-  background: var(--scenarios-text-secondary);
-  font-size: 0.7rem;
+  background: rgba(71, 85, 105, 0.9);
+  font-size: 0.6rem;
 }
 
-/* Question Count Badge */
+/* ── Question count badge ────────────────────────────────────────────────── */
 .question-count {
-  color: var(--scenarios-text-secondary);
-  font-size: 0.85rem;
-  background: var(--scenarios-bg-secondary);
-  padding: 0.5rem 0.75rem;
-  border-radius: 12px;
-  border: 1px solid var(--scenarios-border-color);
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  font-size: 0.72rem;
+  color: #64748b;
+  background: rgba(15, 23, 42, 0.55);
+  padding: 0.3rem 0.65rem;
+  border-radius: 8px;
+  border: 1px solid rgba(99, 102, 241, 0.18);
   white-space: nowrap;
   font-weight: 500;
+  backdrop-filter: blur(4px);
 }
 
-/* Category Badge */
+/* ── Category badge ──────────────────────────────────────────────────────── */
 .scenario-category {
-  display: inline-block;
-  padding: 0.5rem 0.75rem;
-  background: var(--scenarios-accent-light);
-  color: var(--scenarios-accent-primary);
-  border-radius: 12px;
-  font-size: 0.8rem;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  padding: 0.25rem 0.7rem;
+  border-radius: 999px;
+  background: rgba(99, 102, 241, 0.1);
+  border: 1px solid rgba(99, 102, 241, 0.22);
+  color: #818cf8;
+  font-size: 0.7rem;
   font-weight: 600;
-  margin-bottom: 1rem;
+  align-self: flex-start;
+  text-transform: capitalize;
 }
 
-/* Start Debate Button */
+/* ── Enter Dialogue button ───────────────────────────────────────────────── */
 .start-debate-button {
   width: 100%;
-  padding: 0.75rem;
-  background: linear-gradient(135deg, var(--scenarios-accent-primary), var(--scenarios-accent-secondary));
-  border: none;
-  border-radius: 8px;
-  color: white;
+  padding: 0.6rem 1rem;
+  border-radius: 9px;
+  border: 1px solid rgba(99, 102, 241, 0.4);
+  background: rgba(99, 102, 241, 0.12);
+  color: #818cf8;
+  font-family: 'Inter', system-ui, sans-serif;
+  font-size: 0.82rem;
   font-weight: 600;
   cursor: pointer;
-  transition: all 0.3s ease;
-  font-size: 0.95rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  transition: all 0.18s ease;
+  margin-top: auto;
+  backdrop-filter: blur(4px);
+  letter-spacing: 0.01em;
 }
 
 .start-debate-button:hover:not(:disabled) {
-  transform: scale(1.02);
-  box-shadow: 0 4px 16px var(--scenarios-shadow);
+  background: rgba(99, 102, 241, 0.22);
+  border-color: rgba(99, 102, 241, 0.65);
+  color: #c7d2fe;
+  transform: translateY(-1px);
+  box-shadow: 0 4px 14px rgba(99, 102, 241, 0.2);
+}
+
+.start-debate-button:active:not(:disabled) {
+  transform: translateY(0);
 }
 
 .start-debate-button:disabled {
-  opacity: 0.6;
+  opacity: 0.45;
   cursor: not-allowed;
-  transform: none;
 }
 
-/* Responsive Design */
-@media (max-width: 768px) {
-  .scenario-header {
-    flex-direction: column;
-    gap: 0.75rem;
-  }
-
-  .scenario-actions {
-    width: 100%;
-    justify-content: flex-end;
-  }
-
-  .scenario-meta {
-    flex-direction: column;
-    align-items: flex-start;
-    gap: 0.75rem;
-  }
-
-  .character-thumbnails {
-    width: 100%;
-  }
-
-  .question-count {
-    align-self: flex-start;
-  }
-}
-
-/* Dark Theme Overrides */
+/* ── Dark theme overrides ────────────────────────────────────────────────── */
 .scenarios-tab-container.theme-awakeverse .scenario-card {
-  background: var(--scenarios-bg-card);
-}
-
-/* ✅ NEW: Dark theme background - slightly more visible */
-.scenarios-tab-container.theme-awakeverse .scenario-card-background {
-  opacity: 0.45; /* More visible in dark theme */
-}
-
-.scenarios-tab-container.theme-awakeverse .scenario-card:hover .scenario-card-background {
-  opacity: 0.5;
-}
-
-/* ✅ NEW: Dark theme overlay - stronger gradient for readability */
-.scenarios-tab-container.theme-awakeverse .scenario-card-overlay {
-  background: linear-gradient(
-    135deg,
-    rgba(10, 15, 26, 0.6) 0%,
-    rgba(10, 15, 26, 0.3) 100%
-  );
+  box-shadow:
+    0 0 0 4px #0A0F1A,
+    0 0 0 5px rgba(99, 102, 241, 0.2),
+    0 8px 24px rgba(0,0,0,0.5);
 }
 
 .scenarios-tab-container.theme-awakeverse .scenario-card:hover:not(.deleting) {
-  background: rgba(255, 215, 0, 0.03);
+  box-shadow:
+    0 0 0 4px #0A0F1A,
+    0 0 0 5px rgba(99, 102, 241, 0.48),
+    0 12px 32px rgba(99, 102, 241, 0.2);
 }
 
-.scenarios-tab-container.theme-awakeverse .action-button.delete:hover:not(:disabled) {
-  background: rgba(231, 76, 60, 0.15);
-}
-/* Add these styles to src/components/ScenariosTab/MyScenariosPanel/ScenarioCard.css */
-/* APPEND TO END OF FILE */
-
-/* ============================================
-   PUBLISH BUTTON STYLES - THEME-AWARE
-   ============================================ */
-
-/* Publish Button - Unpublished State - DARK MODE */
-.action-button.publish {
-  border-color: rgba(255, 215, 0, 0.3);
-  color: rgba(255, 215, 0, 0.7);
+.scenarios-tab-container.theme-awakeverse .scenario-card-background {
+  opacity: 0.45;
 }
 
-.action-button.publish:hover:not(:disabled) {
-  border-color: rgba(255, 215, 0, 0.6);
-  color: rgba(255, 215, 0, 1);
-  background: rgba(255, 215, 0, 0.1);
+.scenarios-tab-container.theme-awakeverse .scenario-card:hover .scenario-card-background {
+  opacity: 0.55;
 }
 
-/* Publish Button - Published State - DARK MODE */
-.action-button.publish.published {
-  border-color: rgba(255, 215, 0, 0.6);
-  color: rgba(255, 215, 0, 1);
-  background: rgba(255, 215, 0, 0.15);
+.scenarios-tab-container.theme-awakeverse .scenario-card-overlay {
+  background: linear-gradient(135deg, rgba(10,15,26,0.6) 0%, rgba(10,15,26,0.3) 100%);
 }
 
-/* Publish Button - Published Hover (unpublish warning) - DARK MODE */
-.action-button.publish.published:hover:not(:disabled) {
-  border-color: rgba(231, 76, 60, 0.5);
-  color: rgba(231, 76, 60, 0.9);
-  background: rgba(231, 76, 60, 0.1);
+/* ── Light theme overrides ───────────────────────────────────────────────── */
+.scenarios-tab-container:not(.theme-awakeverse) .scenario-card {
+  border-color: rgba(99, 102, 241, 0.28);
+  box-shadow:
+    0 0 0 4px rgba(255,255,255,0.98),
+    0 0 0 5px rgba(99, 102, 241, 0.12),
+    0 4px 16px rgba(0,0,0,0.08);
 }
 
-/* Published Badge - DARK MODE */
-.published-badge {
-  display: inline-flex;
-  align-items: center;
-  gap: 0.5rem;
-  padding: 0.5rem 0.75rem;
-  background: rgba(255, 215, 0, 0.1);
-  border: 1px solid rgba(255, 215, 0, 0.3);
-  border-radius: 12px;
-  margin-bottom: 1rem;
-  font-size: 0.85rem;
-  color: rgba(255, 215, 0, 1);
-  font-weight: 600;
+.scenarios-tab-container:not(.theme-awakeverse) .scenario-card:hover:not(.deleting) {
+  box-shadow:
+    0 0 0 4px rgba(255,255,255,0.98),
+    0 0 0 5px rgba(99, 102, 241, 0.3),
+    0 8px 24px rgba(99, 102, 241, 0.12);
 }
 
-.badge-icon {
-  font-size: 1rem;
+.scenarios-tab-container:not(.theme-awakeverse) .scenario-title {
+  color: #1e1b4b;
 }
 
-.badge-text {
-  text-transform: uppercase;
-  letter-spacing: 0.5px;
+.scenarios-tab-container:not(.theme-awakeverse) .scenario-description {
+  color: #64748b;
 }
 
-/* ============================================
-   LIGHT MODE OVERRIDES
-   ============================================ */
+.scenarios-tab-container:not(.theme-awakeverse) .action-button {
+  background: rgba(255,255,255,0.85);
+  border-color: rgba(99, 102, 241, 0.18);
+  color: #94a3b8;
+}
 
-/* Publish Button - Unpublished State - LIGHT MODE */
+.scenarios-tab-container:not(.theme-awakeverse) .action-button:hover:not(:disabled) {
+  color: #4f46e5;
+  border-color: rgba(99, 102, 241, 0.4);
+  background: rgba(99, 102, 241, 0.08);
+}
+
 .scenarios-tab-container:not(.theme-awakeverse) .action-button.publish {
   border-color: rgba(52, 152, 219, 0.4);
   color: rgba(52, 152, 219, 0.8);
@@ -377,23 +408,45 @@
   background: rgba(52, 152, 219, 0.1);
 }
 
-/* Publish Button - Published State - LIGHT MODE */
 .scenarios-tab-container:not(.theme-awakeverse) .action-button.publish.published {
   border-color: rgba(52, 152, 219, 0.7);
   color: rgba(52, 152, 219, 1);
-  background: rgba(52, 152, 219, 0.15);
+  background: rgba(52, 152, 219, 0.12);
 }
 
-/* Publish Button - Published Hover - LIGHT MODE */
 .scenarios-tab-container:not(.theme-awakeverse) .action-button.publish.published:hover:not(:disabled) {
-  border-color: rgba(231, 76, 60, 0.6);
-  color: rgba(231, 76, 60, 1);
-  background: rgba(231, 76, 60, 0.15);
+  border-color: rgba(239, 68, 68, 0.5);
+  color: rgba(239, 68, 68, 1);
+  background: rgba(239, 68, 68, 0.1);
 }
 
-/* Published Badge - LIGHT MODE */
 .scenarios-tab-container:not(.theme-awakeverse) .published-badge {
   background: rgba(52, 152, 219, 0.1);
-  border-color: rgba(52, 152, 219, 0.4);
+  border-color: rgba(52, 152, 219, 0.35);
   color: rgba(52, 152, 219, 1);
+}
+
+.scenarios-tab-container:not(.theme-awakeverse) .character-thumbnail {
+  border-color: rgba(255,255,255,0.98);
+}
+
+.scenarios-tab-container:not(.theme-awakeverse) .start-debate-button {
+  color: #4f46e5;
+  border-color: rgba(99, 102, 241, 0.3);
+  background: rgba(99, 102, 241, 0.06);
+}
+
+.scenarios-tab-container:not(.theme-awakeverse) .start-debate-button:hover:not(:disabled) {
+  background: rgba(99, 102, 241, 0.12);
+  border-color: rgba(99, 102, 241, 0.5);
+  color: #3730a3;
+}
+
+/* ── Responsive ──────────────────────────────────────────────────────────── */
+@media (max-width: 768px) {
+  .scenario-card-content { padding: 1rem; gap: 0.6rem; }
+  .scenario-title        { font-size: 0.92rem; }
+  .scenario-header       { flex-direction: column; gap: 0.6rem; }
+  .scenario-actions      { width: 100%; justify-content: flex-end; }
+  .scenario-meta         { flex-direction: column; align-items: flex-start; }
 }

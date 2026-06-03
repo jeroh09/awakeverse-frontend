@@ -1,126 +1,142 @@
-/* src/components/ScenariosTab/TemplatesGallery/TemplateCard.css - UPDATED WITH PREVIEW CARD DESIGN */
+/* src/components/ScenariosTab/TemplatesGallery/TemplateCard.css
+   Double-border card — matches onboarding ob-panel pattern
+*/
 
-/* ============================================================================
-   TEMPLATE PREVIEW CARD - Based on dialogue-preview-card design
-   ============================================================================ */
-.template-preview-card {
-  border-radius: 16px;
-  overflow: hidden;
-  background: var(--scenarios-bg-card);
-  border: 1px solid var(--scenarios-border-color);
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
-  transition: all 0.18s ease-out;
+/* ── Card shell ──────────────────────────────────────────────────────────── */
+.tc-card {
+  border-radius: 14px;
+  overflow: visible;
+  background: rgba(15, 23, 42, 0.97);
+
+  /* Double border */
+  border: 1px solid rgba(99, 102, 241, 0.42);
+  box-shadow:
+    0 0 0 4px rgba(15, 23, 42, 0.97),
+    0 0 0 5px rgba(99, 102, 241, 0.2),
+    0 8px 24px rgba(0, 0, 0, 0.4);
+
   cursor: pointer;
-  position: relative;
   display: flex;
   flex-direction: column;
   height: 100%;
+  transition: border-color 0.18s ease, box-shadow 0.18s ease, transform 0.18s ease;
+  position: relative;
 }
 
-.template-preview-card:hover {
+.tc-card:hover {
+  border-color: rgba(99, 102, 241, 0.72);
+  box-shadow:
+    0 0 0 4px rgba(15, 23, 42, 0.97),
+    0 0 0 5px rgba(99, 102, 241, 0.48),
+    0 14px 36px rgba(99, 102, 241, 0.18);
   transform: translateY(-4px);
-  box-shadow: 0 12px 32px var(--scenarios-shadow);
-  border-color: var(--scenarios-accent-primary);
 }
 
-.template-preview-card.locked {
-  opacity: 0.85;
+.tc-card:focus-visible {
+  outline: 2px solid rgba(99, 102, 241, 0.7);
+  outline-offset: 6px;
 }
 
-/* Lock Indicator */
-.template-lock-indicator {
+.tc-card--locked {
+  opacity: 0.82;
+}
+
+/* ── Lock indicator ──────────────────────────────────────────────────────── */
+.tc-lock {
   position: absolute;
-  top: 1rem;
-  right: 1rem;
-  font-size: 1.5rem;
-  z-index: 2;
-  background: rgba(0, 0, 0, 0.6);
-  width: 40px;
-  height: 40px;
+  top: 0.85rem;
+  right: 0.85rem;
+  z-index: 3;
+  width: 30px;
+  height: 30px;
   border-radius: 50%;
+  background: rgba(15, 23, 42, 0.85);
+  border: 1px solid rgba(99, 102, 241, 0.3);
   display: flex;
   align-items: center;
   justify-content: center;
+  color: #818cf8;
   backdrop-filter: blur(4px);
 }
 
-/* ============================================================================
-   IMAGE SECTION
-   ============================================================================ */
-.template-preview-image-wrapper {
+/* ── Image panel — gradient-based, no external image dependency ──────────── */
+.tc-image-panel {
   position: relative;
   width: 100%;
-  height: 200px;
+  height: 120px;
+  border-radius: 13px 13px 0 0;
   overflow: hidden;
-  background: linear-gradient(135deg, var(--scenarios-accent-primary), var(--scenarios-accent-secondary));
+  flex-shrink: 0;
 }
 
-.template-preview-image {
-  width: 100%;
-  height: 100%;
-  object-fit: cover;
-  display: block;
-  transition: transform 0.3s ease;
+/* Subtle radial shimmer overlay */
+.tc-image-pattern {
+  position: absolute;
+  inset: 0;
+  background: radial-gradient(ellipse at 30% 40%, var(--tc-pattern, rgba(255,255,255,0.12)) 0%, transparent 65%);
+  pointer-events: none;
 }
 
-.template-preview-card:hover .template-preview-image {
-  transform: scale(1.05);
+/* Large ghost letter — category initial as background decoration */
+.tc-image-ghost {
+  position: absolute;
+  bottom: -0.25rem;
+  right: 0.75rem;
+  font-family: 'Syne', system-ui, sans-serif;
+  font-size: 5rem;
+  font-weight: 700;
+  color: rgba(255, 255, 255, 0.1);
+  line-height: 1;
+  pointer-events: none;
+  user-select: none;
+  letter-spacing: -0.02em;
 }
 
-.template-preview-image-fallback {
-  width: 100%;
-  height: 100%;
-  display: none;
-  align-items: center;
-  justify-content: center;
-  background: linear-gradient(135deg, var(--scenarios-accent-primary), var(--scenarios-accent-secondary));
-  color: white;
-  font-size: 1rem;
-  font-weight: 600;
-  text-align: center;
-  padding: 20px;
+/* Scale image slightly on card hover */
+.tc-card:hover .tc-image-panel {
+  /* gradient panels don't need scale, keep static */
 }
 
-/* ============================================================================
-   CONTENT SECTION
-   ============================================================================ */
-.template-preview-content {
-  padding: 16px;
+/* ── Card body ───────────────────────────────────────────────────────────── */
+.tc-body {
+  padding: 1rem;
   display: flex;
   flex-direction: column;
   flex-grow: 1;
+  gap: 0.55rem;
 }
 
-/* Category Badge */
-.template-category-badge {
+/* ── Category badge ──────────────────────────────────────────────────────── */
+.tc-category-badge {
   display: inline-block;
-  padding: 4px 12px;
-  margin-bottom: 12px;
-  border-radius: 9999px;
-  background: var(--scenarios-accent-light);
-  color: var(--scenarios-accent-primary);
-  font-size: 0.75rem;
-  font-weight: 600;
+  padding: 0.22rem 0.65rem;
+  border-radius: 999px;
+  background: rgba(99, 102, 241, 0.12);
+  border: 1px solid rgba(99, 102, 241, 0.25);
+  color: #818cf8;
+  font-size: 0.65rem;
+  font-weight: 700;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
   align-self: flex-start;
-  text-transform: capitalize;
 }
 
-/* Title */
-.template-preview-title {
-  margin: 0 0 8px;
+/* ── Title ───────────────────────────────────────────────────────────────── */
+.tc-title {
   font-family: 'Syne', system-ui, sans-serif;
-  font-size: 1.1rem;
-  font-weight: 600;
-  color: var(--scenarios-text-primary);
+  font-size: 0.95rem;
+  font-weight: 700;
+  color: #e0e7ff;
+  margin: 0;
   line-height: 1.3;
 }
 
-/* Description */
-.template-preview-description {
-  margin: 0 0 12px;
-  font-size: 0.85rem;
-  color: var(--scenarios-text-secondary);
-  line-height: 1.4;
+/* ── Description ─────────────────────────────────────────────────────────── */
+.tc-description {
+  font-size: 0.78rem;
+  color: #64748b;
+  line-height: 1.5;
+  margin: 0;
   display: -webkit-box;
   -webkit-line-clamp: 2;
   -webkit-box-orient: vertical;
@@ -128,100 +144,129 @@
   flex-grow: 1;
 }
 
-/* ============================================================================
-   CHARACTER AVATARS ROW
-   ============================================================================ */
-.template-character-avatars {
+/* ── Avatars row ─────────────────────────────────────────────────────────── */
+.tc-avatars {
   display: flex;
-  gap: 6px;
-  margin-bottom: 12px;
-  flex-wrap: wrap;
+  gap: 0;
+  margin-top: 0.15rem;
 }
 
-.template-avatar-circle {
-  width: 32px;
-  height: 32px;
+.tc-avatar {
+  width: 28px;
+  height: 28px;
+  min-width: 28px;
   border-radius: 50%;
   display: flex;
   align-items: center;
   justify-content: center;
-  font-size: 0.75rem;
-  font-weight: bold;
-  color: white;
-  box-shadow: 0 2px 4px var(--scenarios-shadow);
+  background: linear-gradient(135deg, #6366f1, #818cf8);
+  border: 2px solid rgba(15, 23, 42, 0.97);
+  margin-left: -5px;
   position: relative;
   overflow: hidden;
-  border: 2px solid var(--scenarios-border-color);
-  background: linear-gradient(135deg, var(--scenarios-accent-primary), var(--scenarios-accent-secondary));
+  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.3);
+  transition: margin-left 0.15s ease;
 }
 
-/* Avatar initial text (shows as fallback) */
-.template-avatar-initial {
-  position: absolute;
-  z-index: 1;
+.tc-avatar:first-child { margin-left: 0; }
+
+.tc-avatars:hover .tc-avatar {
+  margin-left: -1px;
+}
+
+/* Initial text */
+.tc-avatar-initial {
+  font-size: 0.6rem;
+  font-weight: 700;
+  color: white;
   text-shadow: 0 1px 2px rgba(0, 0, 0, 0.5);
+  z-index: 1;
+  position: relative;
   pointer-events: none;
 }
 
-/* Hide initial when background image is present */
-.template-avatar-circle[style*="background-image"]:not([style*="background-image: url();"]) .template-avatar-initial {
+/* Hide initial when background-image is set and loaded */
+.tc-avatar[style*="background-image"]:not([style*="url()"]) .tc-avatar-initial {
   display: none;
 }
 
-.template-avatar-circle.more {
-  background: var(--scenarios-text-secondary);
-  font-size: 0.65rem;
+.tc-avatar--more {
+  background: rgba(71, 85, 105, 0.9);
+  font-size: 0.58rem;
+  font-weight: 700;
+  color: #94a3b8;
 }
 
-/* ============================================================================
-   STARTER QUESTIONS BADGE
-   ============================================================================ */
-.template-preview-badge {
-  display: inline-block;
-  padding: 8px 12px;
+/* ── Questions badge ─────────────────────────────────────────────────────── */
+.tc-questions-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  padding: 0.3rem 0.7rem;
   border-radius: 8px;
-  background: var(--scenarios-bg-secondary);
-  color: var(--scenarios-text-secondary);
-  font-size: 0.8rem;
+  background: rgba(15, 23, 42, 0.5);
+  border: 1px solid rgba(99, 102, 241, 0.18);
+  color: #64748b;
+  font-size: 0.7rem;
   font-weight: 500;
-  border: 1px solid var(--scenarios-border-color);
   align-self: flex-start;
 }
 
-/* ============================================================================
-   DARK THEME OVERRIDES
-   ============================================================================ */
-.scenarios-tab-container.theme-awakeverse .template-preview-card {
-  background: 
-    radial-gradient(circle at top left, rgba(99, 102, 241, 0.05), transparent 60%),
-    var(--scenarios-bg-card);
+/* ── Light theme overrides ───────────────────────────────────────────────── */
+.scenarios-tab-container:not(.theme-awakeverse) .tc-card {
+  background: rgba(255, 255, 255, 0.98);
+  border-color: rgba(99, 102, 241, 0.28);
+  box-shadow:
+    0 0 0 4px rgba(255, 255, 255, 0.98),
+    0 0 0 5px rgba(99, 102, 241, 0.12),
+    0 4px 16px rgba(0, 0, 0, 0.07);
 }
 
-.scenarios-tab-container.theme-awakeverse .template-preview-card:hover {
-  box-shadow: 0 12px 32px rgba(99, 102, 241, 0.2);
+.scenarios-tab-container:not(.theme-awakeverse) .tc-card:hover {
+  border-color: rgba(99, 102, 241, 0.55);
+  box-shadow:
+    0 0 0 4px rgba(255, 255, 255, 0.98),
+    0 0 0 5px rgba(99, 102, 241, 0.3),
+    0 10px 28px rgba(99, 102, 241, 0.12);
 }
 
-.scenarios-tab-container.theme-awakeverse .template-preview-image-wrapper {
-  background: linear-gradient(135deg, rgba(99, 102, 241, 0.3), rgba(129, 140, 248, 0.3));
+.scenarios-tab-container:not(.theme-awakeverse) .tc-title {
+  color: #1e1b4b;
 }
 
-.scenarios-tab-container.theme-awakeverse .template-preview-image-fallback {
-  background: linear-gradient(135deg, rgba(99, 102, 241, 0.3), rgba(129, 140, 248, 0.3));
+.scenarios-tab-container:not(.theme-awakeverse) .tc-description {
+  color: #64748b;
 }
 
-/* ============================================================================
-   RESPONSIVE
-   ============================================================================ */
+.scenarios-tab-container:not(.theme-awakeverse) .tc-lock {
+  background: rgba(255, 255, 255, 0.9);
+}
+
+.scenarios-tab-container:not(.theme-awakeverse) .tc-avatar {
+  border-color: rgba(255, 255, 255, 0.98);
+}
+
+.scenarios-tab-container:not(.theme-awakeverse) .tc-questions-badge {
+  background: rgba(99, 102, 241, 0.04);
+  border-color: rgba(99, 102, 241, 0.15);
+}
+
+/* ── Responsive ──────────────────────────────────────────────────────────── */
 @media (max-width: 768px) {
-  .template-preview-image-wrapper {
-    height: 160px;
+  .tc-image-panel {
+    height: 90px;
   }
 
-  .template-preview-title {
-    font-size: 1rem;
+  .tc-title {
+    font-size: 0.88rem;
   }
 
-  .template-preview-description {
-    font-size: 0.8rem;
+  .tc-description {
+    font-size: 0.74rem;
+  }
+
+  .tc-body {
+    padding: 0.85rem;
+    gap: 0.45rem;
   }
 }
