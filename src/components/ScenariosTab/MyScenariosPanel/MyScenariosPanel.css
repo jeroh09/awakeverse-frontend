@@ -30,6 +30,14 @@
   line-height: 1;
 }
 
+/* Right side: counter + create button grouped together */
+.panel-header-right {
+  display: flex;
+  align-items: center;
+  gap: 0.65rem;
+  flex-shrink: 0;
+}
+
 .scenario-counter {
   font-size: 0.7rem;
   font-weight: 700;
@@ -143,14 +151,7 @@
   opacity: 1;
 }
 
-/* ── Create New section ──────────────────────────────────────────────────── */
-.create-new-section {
-  margin-top: 0.5rem;
-  padding-top: 1.25rem;
-  border-top: 1px solid rgba(99, 102, 241, 0.12);
-  display: flex;
-  justify-content: flex-start;
-}
+/* create-new-section removed — button now lives in panel-header-right */
 
 /* ── Max scenarios message ───────────────────────────────────────────────── */
 .max-scenarios-message {
@@ -254,6 +255,9 @@
     flex-direction: column;
     align-items: flex-start;
     gap: 0.65rem;
+  }
+  .panel-header-right {
+    align-self: flex-start;
   }
   .scenario-counter { align-self: flex-start; }
   .empty-scenarios  { padding: 2.5rem 1rem; }

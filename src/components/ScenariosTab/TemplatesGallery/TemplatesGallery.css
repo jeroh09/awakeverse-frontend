@@ -1,4 +1,6 @@
-/* src/components/ScenariosTab/TemplatesGallery/TemplatesGallery.css */
+/* src/components/ScenariosTab/TemplatesGallery/TemplatesGallery.css
+   ✅ UPDATED: show-more-cta compact; ScrollToMyDialogues styles removed
+*/
 
 .templates-gallery {
   padding: 0;
@@ -30,7 +32,7 @@
   margin: 0;
 }
 
-/* ✅ Dialogue Guide button — sits below subtitle in header */
+/* Guide button — only rendered when onOpenGuide is passed */
 .gallery-guide-btn {
   display: inline-flex;
   align-items: center;
@@ -53,8 +55,6 @@
   border-color: rgba(99, 102, 241, 0.5);
   color: #e0e7ff;
 }
-
-/* Light theme override */
 .scenarios-tab-container:not(.theme-awakeverse) .gallery-guide-btn {
   border-color: rgba(99, 102, 241, 0.22);
   background: rgba(99, 102, 241, 0.05);
@@ -67,7 +67,7 @@
 }
 
 /* ============================================================================
-   TEMPLATE GRID - 3 COLUMNS
+   TEMPLATE GRID
    ============================================================================ */
 .template-grid {
   display: grid;
@@ -127,54 +127,80 @@
 }
 
 /* ============================================================================
-   SHOW MORE CTA
+   SHOW MORE CTA — compact inline pill, not full-width banner
    ============================================================================ */
 .show-more-cta {
-  width: 100%;
-  padding: 1.25rem;
-  background: var(--scenarios-bg-secondary);
-  border: 2px dashed var(--scenarios-border-color);
-  border-radius: 12px;
-  color: var(--scenarios-text-secondary);
-  font-weight: 600;
-  cursor: pointer;
-  transition: all 0.3s ease;
-  margin-top: 1.5rem;
-  text-align: center;
-  display: flex;
+  display: inline-flex;
   align-items: center;
   justify-content: center;
-  gap: 0.75rem;
-  font-size: 1rem;
+  margin: 1.25rem auto 0;
+  padding: 0.45rem 1.2rem;
+  border-radius: 999px;
+
+  /* Double border — matches pill family */
+  border: 1px solid rgba(99, 102, 241, 0.35);
+  box-shadow:
+    0 0 0 3px rgba(15, 23, 42, 0.97),
+    0 0 0 4px rgba(99, 102, 241, 0.16);
+
+  background: rgba(99, 102, 241, 0.07);
+  color: #818cf8;
+  font-family: 'Inter', system-ui, sans-serif;
+  font-size: 0.76rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.18s ease;
+  letter-spacing: 0.02em;
+
+  /* Centre it below the grid */
+  display: flex;
+  width: fit-content;
+  margin-left: auto;
+  margin-right: auto;
+  margin-top: 1.25rem;
 }
+
 .show-more-cta:hover {
-  border-color: var(--scenarios-accent-primary);
-  color: var(--scenarios-accent-primary);
-  background: var(--scenarios-accent-light);
-  transform: translateY(-2px);
-  box-shadow: 0 4px 12px var(--scenarios-shadow);
+  background: rgba(99, 102, 241, 0.14);
+  border-color: rgba(99, 102, 241, 0.6);
+  color: #c7d2fe;
+  transform: translateY(-1px);
+  box-shadow:
+    0 0 0 3px rgba(15, 23, 42, 0.97),
+    0 0 0 4px rgba(99, 102, 241, 0.35),
+    0 4px 12px rgba(99, 102, 241, 0.15);
 }
+
 .show-more-cta:active { transform: translateY(0); }
 
-.cta-icon { font-size: 1.25rem; font-weight: bold; }
+/* cta-icon removed from JSX — rule kept as safety no-op */
+.cta-icon { display: none; }
 .cta-text  { font-weight: 600; }
+
+/* Light theme */
+.scenarios-tab-container:not(.theme-awakeverse) .show-more-cta {
+  background: rgba(99, 102, 241, 0.05);
+  border-color: rgba(99, 102, 241, 0.25);
+  color: #4f46e5;
+  box-shadow:
+    0 0 0 3px rgba(255, 255, 255, 0.98),
+    0 0 0 4px rgba(99, 102, 241, 0.1);
+}
+.scenarios-tab-container:not(.theme-awakeverse) .show-more-cta:hover {
+  background: rgba(99, 102, 241, 0.1);
+  border-color: rgba(99, 102, 241, 0.45);
+  color: #3730a3;
+  box-shadow:
+    0 0 0 3px rgba(255, 255, 255, 0.98),
+    0 0 0 4px rgba(99, 102, 241, 0.22),
+    0 4px 10px rgba(99, 102, 241, 0.1);
+}
 
 /* ============================================================================
    DARK THEME OVERRIDES
    ============================================================================ */
 .scenarios-tab-container.theme-awakeverse .gallery-title {
   color: var(--scenarios-accent-primary);
-}
-
-.scenarios-tab-container.theme-awakeverse .show-more-cta {
-  background: rgba(99, 102, 241, 0.05);
-  border-color: rgba(99, 102, 241, 0.3);
-  color: #818CF8;
-}
-.scenarios-tab-container.theme-awakeverse .show-more-cta:hover {
-  background: rgba(99, 102, 241, 0.1);
-  border-color: #6366F1;
-  box-shadow: 0 4px 12px rgba(99, 102, 241, 0.2);
 }
 
 /* ============================================================================
@@ -185,10 +211,8 @@
 }
 
 @media (max-width: 768px) {
-  .template-grid { grid-template-columns: 1fr; }
+  .template-grid  { grid-template-columns: 1fr; }
   .gallery-title  { font-size: 1.5rem; }
-  .show-more-cta  { padding: 1rem; font-size: 0.9rem; }
-  .cta-icon       { font-size: 1.1rem; }
 }
 
 /* ============================================================================

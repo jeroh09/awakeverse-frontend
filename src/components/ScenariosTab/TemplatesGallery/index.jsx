@@ -1,12 +1,13 @@
 // src/components/ScenariosTab/TemplatesGallery/index.jsx
-// ✅ UPDATED: onOpenGuide prop added — renders Dialogue Guide button in header
+// ✅ UPDATED: ScrollToMyDialogues removed (no longer needed with tab layout)
+// ✅ UPDATED: onOpenGuide passed as null from parent (guide lives in DialoguePill)
+// ✅ All other logic untouched
 
 import React, { useState, useEffect } from 'react';
 import { getTemplates, getCategories } from '../../../api';
 import CategoryFilter from './CategoryFilter';
 import TemplateCard from './TemplateCard';
 import TemplateDetailModal from './TemplateDetailModal';
-import ScrollToMyDialogues from './ScrollToMyDialogues';
 import './TemplatesGallery.css';
 
 export default function TemplatesGallery({ 
@@ -14,7 +15,7 @@ export default function TemplatesGallery({
   onUpgradeRequired,
   currentScenarioCount = 0,
   onScenarioCreated = () => {},
-  onOpenGuide = null   // ✅ NEW: optional — safe if not passed
+  onOpenGuide = null
 }) {
   const [templates, setTemplates] = useState([]);
   const [categories, setCategories] = useState([]);
@@ -79,16 +80,16 @@ export default function TemplatesGallery({
     setSelectedTemplate(template);
   };
 
-  const handleCloseModal  = () => setSelectedTemplate(null);
-  const handleShowMore    = () => setVisibleCount(prev => prev + 6);
+  const handleCloseModal      = () => setSelectedTemplate(null);
+  const handleShowMore        = () => setVisibleCount(prev => prev + 6);
 
   const handleScenarioCreated = (newScenario) => {
     console.log('🎭 Gallery: Scenario created, notifying parent');
     onScenarioCreated(newScenario);
   };
 
-  const visibleTemplates  = templates.slice(0, visibleCount);
-  const hasMoreTemplates  = visibleCount < templates.length;
+  const visibleTemplates = templates.slice(0, visibleCount);
+  const hasMoreTemplates = visibleCount < templates.length;
 
   if (loading) {
     return (
@@ -117,7 +118,6 @@ export default function TemplatesGallery({
   return (
     <div className="templates-gallery">
 
-      {/* ✅ UPDATED HEADER — guide button sits below subtitle */}
       <div className="gallery-header">
         <h2 className="gallery-title">Verse Dialogues</h2>
         <p className="gallery-subtitle">
@@ -135,7 +135,6 @@ export default function TemplatesGallery({
         )}
       </div>
 
-      {/* Category Filter */}
       <CategoryFilter
         categories={categories}
         selectedCategory={selectedCategory}
@@ -162,12 +161,9 @@ export default function TemplatesGallery({
 
       {hasMoreTemplates && (
         <button className="show-more-cta" onClick={handleShowMore}>
-          <span className="cta-icon"></span>
           <span className="cta-text">+{templates.length - visibleCount} more templates</span>
         </button>
       )}
-
-      <ScrollToMyDialogues />
 
       {selectedTemplate && (
         <TemplateDetailModal

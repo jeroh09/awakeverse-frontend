@@ -194,14 +194,16 @@ export default function MyScenariosPanel({
       <div className="my-scenarios-panel">
         <div className="panel-header">
           <h3>My Dialogues</h3>
-          <div className="scenario-counter">0 / 5 Dialogues</div>
+          <div className="panel-header-right">
+            <div className="scenario-counter">0 / 5 Dialogues</div>
+            <CreateButton onClick={onCreateNew} variant="primary" />
+          </div>
         </div>
         <div className="scenarios-grid">
           <div className="empty-scenarios">
             <EmptyIcon />
             <p className="empty-title">No dialogues yet</p>
             <p className="hint">Create your first dialogue to start multi-character debates</p>
-            <CreateButton onClick={onCreateNew} variant="primary" />
           </div>
         </div>
       </div>
@@ -214,7 +216,12 @@ export default function MyScenariosPanel({
 
       <div className="panel-header">
         <h3>My Dialogues</h3>
-        <div className="scenario-counter">{scenarios.length} / 5 Dialogues</div>
+        <div className="panel-header-right">
+          <div className="scenario-counter">{scenarios.length} / 5 Dialogues</div>
+          {scenarios.length < 5 && (
+            <CreateButton onClick={onCreateNew} variant="primary" />
+          )}
+        </div>
       </div>
 
       {/* Error banner */}
@@ -248,17 +255,6 @@ export default function MyScenariosPanel({
           />
         ))}
       </div>
-
-      {/* Create New — only shown when under limit */}
-      {scenarios.length < 5 && (
-        <div className="create-new-section">
-          <CreateButton
-            onClick={onCreateNew}
-            variant="secondary"
-            disabled={scenarios.length >= 5}
-          />
-        </div>
-      )}
 
       {/* Max reached message */}
       {scenarios.length >= 5 && (
