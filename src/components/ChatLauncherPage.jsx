@@ -19,6 +19,7 @@ import ScrollShell from '../components/ScrollShell';
 import NetflixRightPanel from '../components/NetflixRightPanel';
 import LegendsMapPanel from '../components/LegendsMapPanel/LegendsMapPanel';
 import ScanLegendModal from '../components/ScanLegendModal/ScanLegendModal';
+import OracleChat from '../components/OracleChat/OracleChat';
 
 
 
@@ -130,6 +131,7 @@ const ORACLE_PROMPTS = [
   "Who would you counsel with?",
   "Find your mentor...",
 ];
+
 
 const PlusChevronIcon = ({ size = 18, className, style }) => (
   <svg
@@ -337,6 +339,8 @@ const ChatLauncherPage = ({ onStartChat, discoveredCharacters = [] }) => {
   const [prefillData, setPrefillData]         = useState(null);
   const [activeToolToggle, setActiveToolToggle] = useState('map'); // 'map' | 'scan'
   const [toolHint, setToolHint]                   = useState(null);   // 'map' | 'scan' | null
+  const [oracleChatMode, setOracleChatMode] = useState(false);
+
   
 
   // Mobile detection
@@ -1424,6 +1428,40 @@ const ChatLauncherPage = ({ onStartChat, discoveredCharacters = [] }) => {
               }}>
                 Try searching for character names or themes
               </small>
+              {/* ✅ Oracle trigger — shown when search finds nothing */}
+              <button
+                onClick={() => {
+                  setShowResults(false);
+                  setOracleChatMode(true);
+                }}
+                style={{
+                  display: 'block',
+                  width: '100%',
+                  marginTop: theme.spacing.md,
+                  padding: `${theme.spacing.sm} ${theme.spacing.md}`,
+                  background: 'rgba(99, 102, 241, 0.1)',
+                  border: '1px solid rgba(99, 102, 241, 0.3)',
+                  borderRadius: theme.borderRadius.md,
+                  color: '#818cf8',
+                  fontFamily: theme.typography.fonts.body,
+                  fontSize: theme.typography.sizes.caption,
+                  fontWeight: theme.typography.weights.semibold,
+                  cursor: 'pointer',
+                  transition: theme.transitions.normal,
+                }}
+                onMouseEnter={e => {
+                  e.currentTarget.style.background = 'rgba(99, 102, 241, 0.18)';
+                  e.currentTarget.style.borderColor = '#6366f1';
+                  e.currentTarget.style.color = '#e0e7ff';
+                }}
+                onMouseLeave={e => {
+                  e.currentTarget.style.background = 'rgba(99, 102, 241, 0.1)';
+                  e.currentTarget.style.borderColor = 'rgba(99, 102, 241, 0.3)';
+                  e.currentTarget.style.color = '#818cf8';
+                }}
+              >
+                Ask the Oracle instead
+              </button>
             </div>
           )}
         </div>
