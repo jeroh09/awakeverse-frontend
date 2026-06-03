@@ -1,46 +1,101 @@
-/* src/components/ScenariosTab/MyScenariosPanel/CreateButton.css */
+/* src/components/ScenariosTab/MyScenariosPanel/CreateButton.css
+   ✅ UPDATED: compact inline pill — no longer full-width
+*/
+
 .create-button {
-  display: flex;
+  display: inline-flex;
   align-items: center;
-  gap: 0.75rem;
-  padding: 1rem 1.5rem;
-  border: none;
-  border-radius: 8px;
+  gap: 0.45rem;
+  padding: 0.5rem 1.1rem;
+  border-radius: 9px;
+  font-family: 'Inter', system-ui, sans-serif;
+  font-size: 0.8rem;
   font-weight: 600;
   cursor: pointer;
-  transition: all 0.3s ease;
-  font-size: 1rem;
-  width: 100%;
-  justify-content: center;
+  transition: all 0.18s ease;
+  white-space: nowrap;
+  letter-spacing: 0.01em;
+
+  /* NOT full-width — auto width, aligned left in its container */
+  width: auto;
 }
 
+/* Primary variant — used in empty state */
 .create-button.primary {
-  background: linear-gradient(135deg, var(--scenarios-accent-primary), var(--scenarios-accent-secondary));
-  color: white;
+  background: rgba(99, 102, 241, 0.18);
+  color: #c7d2fe;
+  border: 1px solid rgba(99, 102, 241, 0.45);
+  box-shadow:
+    0 0 0 3px rgba(15, 23, 42, 0.97),
+    0 0 0 4px rgba(99, 102, 241, 0.2);
 }
 
+.create-button.primary:hover:not(.disabled) {
+  background: rgba(99, 102, 241, 0.28);
+  border-color: rgba(99, 102, 241, 0.7);
+  color: #e0e7ff;
+  transform: translateY(-1px);
+  box-shadow:
+    0 0 0 3px rgba(15, 23, 42, 0.97),
+    0 0 0 4px rgba(99, 102, 241, 0.4),
+    0 4px 14px rgba(99, 102, 241, 0.2);
+}
+
+/* Secondary variant — used in create-new-section */
 .create-button.secondary {
-  background: var(--scenarios-bg-card);
-  color: var(--scenarios-accent-primary);
-  border: 2px solid var(--scenarios-accent-primary);
+  background: rgba(99, 102, 241, 0.08);
+  color: #818cf8;
+  border: 1px solid rgba(99, 102, 241, 0.32);
 }
 
-.create-button:hover:not(.disabled) {
-  transform: translateY(-2px);
-  box-shadow: 0 4px 16px var(--scenarios-shadow);
+.create-button.secondary:hover:not(.disabled) {
+  background: rgba(99, 102, 241, 0.16);
+  border-color: rgba(99, 102, 241, 0.55);
+  color: #c7d2fe;
+  transform: translateY(-1px);
 }
 
 .create-button.disabled {
-  opacity: 0.6;
+  opacity: 0.45;
   cursor: not-allowed;
   transform: none;
 }
 
+/* Icon — the "+" symbol */
 .button-icon {
-  font-size: 1.25rem;
-  font-weight: bold;
+  font-size: 1rem;
+  font-weight: 700;
+  line-height: 1;
 }
 
 .button-text {
-  font-size: 0.95rem;
+  font-size: 0.8rem;
+}
+
+/* Light theme overrides */
+.scenarios-tab-container:not(.theme-awakeverse) .create-button.primary {
+  background: rgba(99, 102, 241, 0.1);
+  color: #4338ca;
+  border-color: rgba(99, 102, 241, 0.35);
+  box-shadow:
+    0 0 0 3px rgba(255, 255, 255, 0.98),
+    0 0 0 4px rgba(99, 102, 241, 0.14);
+}
+
+.scenarios-tab-container:not(.theme-awakeverse) .create-button.primary:hover:not(.disabled) {
+  background: rgba(99, 102, 241, 0.18);
+  border-color: rgba(99, 102, 241, 0.55);
+  color: #3730a3;
+}
+
+.scenarios-tab-container:not(.theme-awakeverse) .create-button.secondary {
+  background: rgba(99, 102, 241, 0.05);
+  color: #4f46e5;
+  border-color: rgba(99, 102, 241, 0.25);
+}
+
+.scenarios-tab-container:not(.theme-awakeverse) .create-button.secondary:hover:not(.disabled) {
+  background: rgba(99, 102, 241, 0.1);
+  border-color: rgba(99, 102, 241, 0.45);
+  color: #3730a3;
 }
