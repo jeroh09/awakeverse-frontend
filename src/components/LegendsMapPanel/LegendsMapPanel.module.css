@@ -536,13 +536,7 @@
    CITY PANEL — slides in via cardCol
 ══════════════════════════════════════════════════════ */
 
-.cityPanelInner {
-  width: 100%;
-  height: 100%;
-  display: flex;
-  flex-direction: column;
-  overflow: hidden;
-}
+/* cityPanelInner — see two-pane slide section at bottom of file */
 
 /* City hero — name, era, tags, summary */
 .cityHero {
@@ -745,14 +739,7 @@
   padding: 1rem 0;
 }
 
-/* Full char card triggered from chip */
-.chipCharCard {
-  margin-top: 8px;
-}
-
-.chipCharCard .charCard {
-  height: 200px;
-}
+/* chipCharCard removed — character card now lives in its own pane (Option A) */
 
 /* ── Animations ── */
 @keyframes panelIn {
@@ -825,4 +812,94 @@
 .tooltip span {
   font-size: 10px;
   color: #64748b;
+}
+
+/* ══════════════════════════════════════════════════════
+   CITY PANEL — OPTION A TWO-PANE SLIDE
+   cityPanelInner contains a slide track with two full-width panes.
+   translateX(0)    → city view (default)
+   translateX(-100%) → character view (chip selected)
+══════════════════════════════════════════════════════ */
+
+/* Outer container — clips the sliding track */
+.cityPanelInner {
+  width: 100%;
+  height: 100%;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+  position: relative;
+}
+
+/* Track — two panes side by side, each 100% width */
+.citySlideTrack {
+  display: flex;
+  flex-direction: row;
+  /* Each pane is 100% of the container width */
+  width: 200%;
+  height: 100%;
+  transition: transform 0.38s cubic-bezier(0.34, 1.1, 0.64, 1);
+  will-change: transform;
+}
+
+/* Individual pane — exactly half the track = 100% of visible area */
+.cityPane {
+  width: 50%;
+  flex-shrink: 0;
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+
+/* Pane 1 scrollable content */
+.cityPane:first-child {
+  overflow-y: auto;
+  scrollbar-width: thin;
+  scrollbar-color: rgba(99, 102, 241, 0.3) transparent;
+}
+
+.cityPane:first-child::-webkit-scrollbar { width: 3px; }
+.cityPane:first-child::-webkit-scrollbar-thumb {
+  background: rgba(99, 102, 241, 0.3);
+  border-radius: 2px;
+}
+
+/* ── Back button — top of character pane ─────────────────────────────────── */
+.cityBackBtn {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  padding: 0.65rem 0.9rem 0.5rem;
+  border: none;
+  background: transparent;
+  color: #818cf8;
+  font-family: 'Inter', system-ui, sans-serif;
+  font-size: 0.68rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: color 0.15s ease;
+  text-align: left;
+  flex-shrink: 0;
+  letter-spacing: 0.02em;
+}
+
+.cityBackBtn:hover {
+  color: #c7d2fe;
+}
+
+/* ── Character card wrapper inside pane 2 — takes remaining height ───────── */
+.cityCharCardWrap {
+  flex: 1;
+  padding: 0 0.9rem 0.9rem;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+}
+
+/* Full-height card inside pane 2 */
+.cityCharCardWrap .charCard {
+  flex: 1;
+  height: auto;
+  min-height: 0;
 }
