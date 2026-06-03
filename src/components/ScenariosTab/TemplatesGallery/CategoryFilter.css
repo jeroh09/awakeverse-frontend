@@ -1,177 +1,170 @@
-/* src/components/ScenariosTab/TemplatesGallery/CategoryFilter.css - SLEEK REDESIGN */
+/* src/components/ScenariosTab/TemplatesGallery/CategoryFilter.css
+   ✅ REDESIGNED: double-border pill group matching DialoguePill
+   ✅ Wraps gracefully when categories exceed one line
+*/
 
-/* ============================================================================
-   CATEGORY FILTER - SLEEK PILL DESIGN
-   ============================================================================ */
-.category-filter {
+/* ── Outer wrapper — centres the pill, handles overflow ──────────────────── */
+.cf-wrapper {
   display: flex;
-  justify-content: center; /* ✅ Center the filter chips */
-  gap: 0.75rem;
-  margin-bottom: 2.5rem;
+  justify-content: center;
+  margin-bottom: 2rem;
+  padding: 0.25rem 0.5rem;
   overflow-x: auto;
-  padding: 0.5rem;
-  
-  /* Hide scrollbar but keep functionality */
-  scrollbar-width: none; /* Firefox */
-  -ms-overflow-style: none; /* IE/Edge */
+  scrollbar-width: none;
+  -ms-overflow-style: none;
 }
+.cf-wrapper::-webkit-scrollbar { display: none; }
 
-.category-filter::-webkit-scrollbar {
-  display: none; /* Chrome/Safari */
-}
-
-/* ============================================================================
-   CATEGORY CHIPS - PILL STYLE
-   ============================================================================ */
-.category-chip {
-  padding: 0.75rem 1.5rem;
-  background: var(--scenarios-bg-card);
-  border: 1px solid var(--scenarios-border-color);
-  border-radius: 9999px; /* ✅ Fully rounded pill */
-  cursor: pointer;
-  white-space: nowrap;
-  transition: all 0.3s ease;
-  color: var(--scenarios-text-secondary);
-  
-  display: flex;
+/* ── Pill shell — double border, matches DialoguePill exactly ────────────── */
+.cf-pill {
+  display: inline-flex;
   align-items: center;
-  gap: 0.5rem;
-  
-  font-size: 0.9rem;
-  font-weight: 500;
-  
-  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+  flex-wrap: wrap;           /* wraps to second line if many categories */
+  gap: 0;
+  border-radius: 999px;
+  background: rgba(15, 23, 42, 0.97);
+
+  /* Double border */
+  border: 1px solid rgba(99, 102, 241, 0.45);
+  box-shadow:
+    0 0 0 4px rgba(15, 23, 42, 0.97),
+    0 0 0 5px rgba(99, 102, 241, 0.22),
+    0 8px 24px rgba(0, 0, 0, 0.4);
+
+  padding: 3px;
 }
 
-.category-chip:hover {
-  border-color: var(--scenarios-accent-primary);
-  background: var(--scenarios-bg-interactive, var(--scenarios-bg-secondary));
-  transform: translateY(-2px);
-  box-shadow: 0 4px 8px var(--scenarios-shadow);
-  color: var(--scenarios-accent-primary);
-}
-
-.category-chip:active {
-  transform: translateY(0);
-}
-
-/* Active State */
-.category-chip.active {
-  background: var(--scenarios-accent-primary);
-  border-color: var(--scenarios-accent-primary);
-  color: white;
-  font-weight: 600;
-  box-shadow: 0 4px 12px var(--scenarios-shadow);
-}
-
-.category-chip.active:hover {
-  background: var(--scenarios-accent-secondary);
-  border-color: var(--scenarios-accent-secondary);
-  transform: translateY(-2px);
-}
-
-/* ============================================================================
-   CATEGORY COUNT BADGE
-   ============================================================================ */
-.category-count {
-  background: rgba(255, 255, 255, 0.2);
-  color: var(--scenarios-text-primary);
-  border-radius: 9999px; /* ✅ Fully rounded */
-  padding: 0.25rem 0.6rem;
-  font-size: 0.75rem;
-  font-weight: 600;
-  min-width: 24px;
-  text-align: center;
-  
-  /* Subtle border for definition */
-  border: 1px solid rgba(0, 0, 0, 0.1);
-}
-
-.category-chip:hover .category-count {
-  background: var(--scenarios-accent-primary);
-  color: white;
-  border-color: transparent;
-}
-
-.category-chip.active .category-count {
-  background: rgba(255, 255, 255, 0.25);
-  color: white;
-  border-color: rgba(255, 255, 255, 0.3);
-}
-
-/* ============================================================================
-   DARK THEME OVERRIDES - MATCHING THEME TOGGLE
-   ============================================================================ */
-.scenarios-tab-container.theme-awakeverse .category-chip {
-  background: rgba(20, 27, 46, 0.8);
-  backdrop-filter: blur(10px);
-  border-color: rgba(99, 102, 241, 0.3);
-  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
-  color: #94A3B8;
-}
-
-.scenarios-tab-container.theme-awakeverse .category-chip:hover {
-  background: rgba(36, 49, 82, 0.9);
-  border-color: #6366F1;
-  box-shadow: 0 4px 8px rgba(99, 102, 241, 0.3);
-  color: #818CF8;
-}
-
-.scenarios-tab-container.theme-awakeverse .category-chip.active {
-  background: #6366F1;
-  border-color: #818CF8;
-  box-shadow: 0 4px 12px rgba(99, 102, 241, 0.4);
-}
-
-.scenarios-tab-container.theme-awakeverse .category-chip.active:hover {
-  background: #818CF8;
-  border-color: #818CF8;
-}
-
-.scenarios-tab-container.theme-awakeverse .category-count {
-  background: rgba(99, 102, 241, 0.2);
-  color: #E2E8F0;
-  border-color: rgba(99, 102, 241, 0.3);
-}
-
-.scenarios-tab-container.theme-awakeverse .category-chip:hover .category-count {
-  background: #6366F1;
-  color: white;
-  border-color: transparent;
-}
-
-.scenarios-tab-container.theme-awakeverse .category-chip.active .category-count {
-  background: rgba(255, 255, 255, 0.25);
-  color: white;
-  border-color: rgba(255, 255, 255, 0.3);
-}
-
-/* ============================================================================
-   RESPONSIVE
-   ============================================================================ */
+/* When wrapping, use a slightly looser radius so it looks natural */
 @media (max-width: 768px) {
-  .category-filter {
-    justify-content: flex-start; /* Left align on mobile */
-    gap: 0.6rem;
-    margin-bottom: 2rem;
-  }
-  
-  .category-chip {
-    padding: 0.6rem 1.25rem;
-    font-size: 0.85rem;
-  }
-  
-  .category-count {
-    padding: 0.2rem 0.5rem;
-    font-size: 0.7rem;
-    min-width: 20px;
+  .cf-pill {
+    border-radius: 16px;
   }
 }
 
-/* Very small screens */
-@media (max-width: 480px) {
-  .category-chip {
-    padding: 0.5rem 1rem;
-    font-size: 0.8rem;
+/* ── Divider between segments ────────────────────────────────────────────── */
+.cf-divider {
+  width: 1px;
+  height: 18px;
+  background: rgba(99, 102, 241, 0.22);
+  flex-shrink: 0;
+  align-self: center;
+}
+
+/* ── Segments ────────────────────────────────────────────────────────────── */
+.cf-segment {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  padding: 0.38rem 0.9rem;
+  border-radius: 999px;
+  border: none;
+  background: transparent;
+  color: #64748b;
+  font-family: 'Inter', system-ui, sans-serif;
+  font-size: 0.76rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: color 0.15s ease, background 0.15s ease;
+  white-space: nowrap;
+  letter-spacing: 0.01em;
+  line-height: 1;
+}
+
+.cf-segment:hover:not(.cf-segment--active) {
+  color: #94a3b8;
+  background: rgba(99, 102, 241, 0.06);
+}
+
+.cf-segment:focus-visible {
+  outline: 2px solid rgba(99, 102, 241, 0.6);
+  outline-offset: 2px;
+}
+
+/* Active segment — filled capsule inside the pill */
+.cf-segment--active {
+  background: rgba(99, 102, 241, 0.18);
+  color: #c7d2fe;
+  box-shadow: inset 0 0 0 1px rgba(99, 102, 241, 0.35);
+}
+
+/* ── Count badge ─────────────────────────────────────────────────────────── */
+.cf-count {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 17px;
+  height: 17px;
+  padding: 0 4px;
+  border-radius: 999px;
+  background: rgba(99, 102, 241, 0.2);
+  color: #818cf8;
+  font-size: 0.62rem;
+  font-weight: 700;
+  line-height: 1;
+  border: 1px solid rgba(99, 102, 241, 0.25);
+}
+
+.cf-segment--active .cf-count {
+  background: rgba(99, 102, 241, 0.4);
+  color: #e0e7ff;
+  border-color: rgba(99, 102, 241, 0.5);
+}
+
+/* ── Light theme overrides ───────────────────────────────────────────────── */
+.scenarios-tab-container:not(.theme-awakeverse) .cf-pill {
+  background: rgba(255, 255, 255, 0.98);
+  border-color: rgba(99, 102, 241, 0.28);
+  box-shadow:
+    0 0 0 4px rgba(255, 255, 255, 0.98),
+    0 0 0 5px rgba(99, 102, 241, 0.12),
+    0 4px 14px rgba(0, 0, 0, 0.08);
+}
+
+.scenarios-tab-container:not(.theme-awakeverse) .cf-divider {
+  background: rgba(99, 102, 241, 0.15);
+}
+
+.scenarios-tab-container:not(.theme-awakeverse) .cf-segment {
+  color: #94a3b8;
+}
+
+.scenarios-tab-container:not(.theme-awakeverse) .cf-segment:hover:not(.cf-segment--active) {
+  color: #4f46e5;
+  background: rgba(99, 102, 241, 0.06);
+}
+
+.scenarios-tab-container:not(.theme-awakeverse) .cf-segment--active {
+  background: rgba(99, 102, 241, 0.1);
+  color: #4338ca;
+  box-shadow: inset 0 0 0 1px rgba(99, 102, 241, 0.25);
+}
+
+.scenarios-tab-container:not(.theme-awakeverse) .cf-count {
+  background: rgba(99, 102, 241, 0.1);
+  color: #4f46e5;
+  border-color: rgba(99, 102, 241, 0.18);
+}
+
+.scenarios-tab-container:not(.theme-awakeverse) .cf-segment--active .cf-count {
+  background: rgba(99, 102, 241, 0.22);
+  color: #3730a3;
+}
+
+/* ── Mobile ──────────────────────────────────────────────────────────────── */
+@media (max-width: 640px) {
+  .cf-wrapper {
+    justify-content: flex-start;
+    margin-bottom: 1.5rem;
+  }
+
+  .cf-segment {
+    padding: 0.35rem 0.75rem;
+    font-size: 0.72rem;
+  }
+
+  .cf-count {
+    font-size: 0.58rem;
+    min-width: 15px;
+    height: 15px;
   }
 }

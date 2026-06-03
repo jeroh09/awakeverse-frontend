@@ -121,6 +121,11 @@
   grid-column: 1 / -1;
 }
 
+/* CreateButton inside empty state — centred with auto width */
+.empty-scenarios .create-button {
+  margin-top: 0.25rem;
+}
+
 .empty-title {
   font-family: 'Syne', system-ui, sans-serif;
   font-size: 1rem;
@@ -143,6 +148,8 @@
   margin-top: 0.5rem;
   padding-top: 1.25rem;
   border-top: 1px solid rgba(99, 102, 241, 0.12);
+  display: flex;
+  justify-content: flex-start;
 }
 
 /* ── Max scenarios message ───────────────────────────────────────────────── */
