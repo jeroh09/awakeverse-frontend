@@ -1169,548 +1169,550 @@ const ChatLauncherPage = ({ onStartChat, discoveredCharacters = [] }) => {
         position: 'relative',
         borderRight: '1px solid rgba(255, 215, 0, 0.2)'
       }}>
-        {/* Welcome Section */}
-        <div style={{ textAlign: 'center', marginBottom: '1.5rem' }}>
-          <h1 style={{
-            fontFamily: theme.typography.fonts.display,
-            fontSize: '30',
-            fontWeight: theme.typography.weights.bold,
-            color: theme.colors.brand.ivory,
-            letterSpacing: '-1px',
-            marginBottom: '8px'
-          }}>
-            Welcome, {user?.displayName || user?.display_name || 'Seeker'}
-          </h1>
-          <p style={{
-            fontFamily: theme.typography.fonts.body,
-            fontSize: '12px',
-            color: theme.colors.text.secondary,
-            fontStyle: 'italic',
-            marginBottom: '22px'
-          }}>
-            {currentPlaceholder}
-          </p>
-
-          {/* Show discovered count if any */}
-          {discoveredCharacters.length > 0 && (
-            <div style={{
-              marginTop: theme.spacing.md,
-              padding: `${theme.spacing.sm} ${theme.spacing.md}`,
-              background: `linear-gradient(135deg, ${theme.colors.accent.glow} 0%, rgba(99, 102, 241, 0.15) 100%)`,
-              border: `1px solid ${theme.colors.accent.primary}40`,
-              borderRadius: theme.borderRadius.lg,
-              fontSize: theme.typography.sizes.bodySmall,
-              color: theme.colors.accent.primary,
-              display: 'inline-flex',
-              alignItems: 'center',
-              gap: theme.spacing.sm,
-              backdropFilter: 'blur(10px)',
-              fontFamily: theme.typography.fonts.body,
-              fontWeight: theme.typography.weights.semibold,
-              boxShadow: theme.shadows.elevation02,
-              transition: theme.transitions.normal,
-              cursor: 'default'
-            }}
-            onMouseEnter={(e) => {
-              e.currentTarget.style.boxShadow = `${theme.shadows.elevation03}, ${theme.shadows.glow}`;
-              e.currentTarget.style.borderColor = theme.colors.accent.primary;
-            }}
-            onMouseLeave={(e) => {
-              e.currentTarget.style.boxShadow = theme.shadows.elevation02;
-              e.currentTarget.style.borderColor = `${theme.colors.accent.primary}40`;
-            }}>
-              <span
-                style={{
-                  display: 'inline-flex',
-                  alignItems: 'center',
-                  justifyContent: 'center',
-                  width: '18px',
-                  height: '18px',
-                  flex: '0 0 18px',
-                  animation: 'pulse 2s infinite',
-                  filter: 'drop-shadow(0 0 6px rgba(99, 102, 241, 0.4))'
-                }}
-              >
-                <PlusChevronIcon size={18} />
-              </span>
-              {discoveredCharacters.length} character{discoveredCharacters.length !== 1 ? 's' : ''} discovered from Market Hub
-            </div>
-          )}
-        </div>
-
-        {/* Search Section */}
-        <div style={{ width: '100%', maxWidth: '400px', position: 'relative', marginBottom: '1rem' }}>
-          <PremiumOracleSearch
-            value={inputValue}
-            onChange={(e) => handleInputChange(e.target.value)}  // ← Change this line
-            onFocus={() => inputValue.length >= 2 && setShowResults(true)}
-            onBlur={() => {
-              setTimeout(() => setShowResults(false), 200);
-            }}
+        {oracleChatMode ? (
+          <OracleChat
+            onBack={() => setOracleChatMode(false)}
+            userName={user?.displayName || user?.display_name || 'Seeker'}
           />
-          {/* Enhanced Search Results (Desktop) with source indicators */}
-          {showResults && searchResults.length > 0 && (
-            <div style={{
-              position: 'absolute',
-              top: '100%',
-              left: 0,
-              right: 0,
-              maxHeight: '300px',
-              overflowY: 'auto',
-              background: theme.colors.background.surface,
-              border: `1px solid ${theme.colors.accent.primary}33`, // 20% opacity
-              borderRadius: theme.borderRadius.lg,
-              backdropFilter: 'blur(20px)',
-              padding: theme.spacing.md,
-              marginTop: theme.spacing.sm,
-              zIndex: 1000,
-              boxShadow: theme.shadows.elevation04
-            }}>
-              {searchResults.map((character, index) => (
-                <div
-                  key={character.key}
-                  onClick={() => handleCharacterSelect(character)}
-                  style={{
-                    display: 'flex',
-                    alignItems: 'center',
-                    gap: theme.spacing.md,
-                    padding: theme.spacing.md,
-                    background: theme.colors.background.interactive,
-                    border: `1px solid ${theme.colors.border.medium}`,
-                    borderRadius: theme.borderRadius.md,
-                    cursor: 'pointer',
-                    transition: theme.transitions.normal,
-                    marginBottom: index < searchResults.length - 1 ? theme.spacing.sm : 0,
-                    position: 'relative'
-                  }}
-                  onMouseEnter={(e) => {
-                    e.currentTarget.style.background = theme.colors.background.peak;
-                    e.currentTarget.style.borderColor = theme.colors.accent.primary;
-                    e.currentTarget.style.boxShadow = theme.shadows.elevation03;
-                  }}
-                  onMouseLeave={(e) => {
-                    e.currentTarget.style.background = theme.colors.background.interactive;
-                    e.currentTarget.style.borderColor = theme.colors.border.medium;
-                    e.currentTarget.style.boxShadow = 'none';
-                  }}
-                >
-                  <img
-                    src={character.thumbnailUrl}
-                    alt={character.name}
-                    style={{
-                      width: '40px',
-                      height: '40px',
-                      borderRadius: '50%',
-                      objectFit: 'cover',
-                      border: '2px solid rgba(255, 215, 0, 0.3)',
-                      opacity: character.status === 'rejected' ? 0.6 : 1
-                    }}
-                    onError={(e) => { 
-                      e.currentTarget.onError = null;
-                      e.currentTarget.style.display = 'none';
-
-                      const parent = e.currentTarget.parentElement;
-                      if (!parent.querySelector('.text-fallback')) {
-                        const fallback = document.createElement('div');
-                        fallback.className = 'text-fallback';
-                        fallback.style.cssText = 'width:100%;height:100%;display:flex;align-items:center;justify-content:center;background:rgba(255,215,0,0.2);color:#FFD700;font-size:1.2rem;font-weight:bold;border-radius:50%;';
-                        fallback.textContent = (character.name || 'C').charAt(0).toUpperCase();
-                        parent.appendChild(fallback);
-                      }
-                    }}
-                  />
-                  <div style={{ flex: 1, minWidth: 0 }}>
-                    <div style={{ 
-                      fontSize: theme.typography.sizes.body,
-                      fontWeight: theme.typography.weights.semibold,
-                      color: character.status === 'approved' 
-                        ? theme.colors.accent.primary  // Approved = indigo
-                        : character.status === 'pending'
-                          ? theme.colors.semantic.warning  // Pending = amber
-                          : theme.colors.text.primary,  // Default = white
-                      marginBottom: '0.25rem',
-                      display: 'flex',
-                      alignItems: 'center',
-                      gap: '0.5rem'
-                    }}>
-                      {character.name}
-                      {/* Source indicator */}
-                      {character.source === 'market_hub' && (
-                        <span
-                          style={{
-                            fontSize: theme.typography.sizes.caption, // 12px
-                            background: theme.colors.accent.glow, // rgba(99, 102, 241, 0.2)
-                            padding: `${theme.spacing.xs} ${theme.spacing.sm}`, // 4px 8px
-                            borderRadius: theme.borderRadius.sm, // 8px
-                            color: theme.colors.accent.primary, // #6366F1
-                            fontWeight: theme.typography.weights.semibold, // 600
-                            fontFamily: theme.typography.fonts.body, // 'Inter'
-                            display: 'inline-flex',
-                            alignItems: 'center',
-                            gap: '4px',
-                            marginLeft: theme.spacing.xs // 4px
-                          }}
-                        >
-                          <span
-                            style={{
-                              display: 'inline-flex',
-                              alignItems: 'center',
-                              justifyContent: 'center',
-                              width: '14px',
-                              height: '14px',
-                              flex: '0 0 14px',
-                              animation: 'pulse 2s infinite'
-                            }}
-                          >
-                            <PlusChevronIcon size={14} />
-                          </span>
-                          Discovered
-                        </span>
-                      )}
-                    </div>
-                    <div style={{ 
-                      fontSize: theme.typography.sizes.body,
-                      fontWeight: theme.typography.weights.semibold,
-                      color: character.status === 'approved' 
-                        ? theme.colors.accent.primary  // Approved = indigo
-                        : character.status === 'pending'
-                          ? theme.colors.semantic.warning  // Pending = amber
-                          : theme.colors.text.primary,  // Default = white
-                      marginBottom: '0.25rem',
-                      display: 'flex',
-                      alignItems: 'center',
-                      gap: '0.5rem'
-                    }}>
-                      {character.category}
-                      {character.expertise_domain && character.source === 'market_hub' && (
-                        <span style={{ margin: '0 0.3rem', color: 'rgba(255, 255, 255, 0.5)' }}>•</span>
-                      )}
-                      {character.expertise_domain && character.source === 'market_hub' && (
-                        <span style={{ color: 'rgba(255, 215, 0, 0.6)' }}>
-                          {character.expertise_domain}
-                        </span>
-                      )}
-                    </div>
-                  </div>
-                </div>
-              ))}
-            </div>
-          )}
-
-          {showResults && searchResults.length === 0 && inputValue.length >= 2 && (
-            <div style={{
-              position: 'absolute',
-              top: '100%',
-              left: 0,
-              right: 0,
-              background: theme.colors.background.surface,
-              border: `1px solid ${theme.colors.border.medium}`,
-              borderRadius: theme.borderRadius.lg,
-              backdropFilter: 'blur(20px)',
-              padding: theme.spacing.md,
-              marginTop: theme.spacing.sm,
-              textAlign: 'center',
-              zIndex: 999,
-              boxShadow: theme.shadows.elevation03
-            }}>
+        ) : (
+          <>
+            {/* Welcome Section */}
+            <div style={{ textAlign: 'center', marginBottom: '1.5rem' }}>
+              <h1 style={{
+                fontFamily: theme.typography.fonts.display,
+                fontSize: '30',
+                fontWeight: theme.typography.weights.bold,
+                color: theme.colors.brand.ivory,
+                letterSpacing: '-1px',
+                marginBottom: '8px'
+              }}>
+                Welcome, {user?.displayName || user?.display_name || 'Seeker'}
+              </h1>
               <p style={{
-                color: theme.colors.text.primary,
-                margin: `0 0 ${theme.spacing.sm} 0`,
-                fontSize: theme.typography.sizes.body,
-                fontFamily: theme.typography.fonts.body
-              }}>
-                No matches for "{inputValue}"
-              </p>
-              <small style={{
+                fontFamily: theme.typography.fonts.body,
+                fontSize: '12px',
                 color: theme.colors.text.secondary,
-                fontSize: theme.typography.sizes.caption,
-                fontFamily: theme.typography.fonts.body
+                fontStyle: 'italic',
+                marginBottom: '22px'
               }}>
-                Try searching for character names or themes
-              </small>
-              {/* ✅ Oracle trigger — shown when search finds nothing */}
-              <button
-                onClick={() => {
-                  setShowResults(false);
-                  setOracleChatMode(true);
-                }}
-                style={{
-                  display: 'block',
-                  width: '100%',
+                {currentPlaceholder}
+              </p>
+
+              {/* Show discovered count if any */}
+              {discoveredCharacters.length > 0 && (
+                <div style={{
                   marginTop: theme.spacing.md,
                   padding: `${theme.spacing.sm} ${theme.spacing.md}`,
-                  background: 'rgba(99, 102, 241, 0.1)',
-                  border: '1px solid rgba(99, 102, 241, 0.3)',
-                  borderRadius: theme.borderRadius.md,
-                  color: '#818cf8',
+                  background: `linear-gradient(135deg, ${theme.colors.accent.glow} 0%, rgba(99, 102, 241, 0.15) 100%)`,
+                  border: `1px solid ${theme.colors.accent.primary}40`,
+                  borderRadius: theme.borderRadius.lg,
+                  fontSize: theme.typography.sizes.bodySmall,
+                  color: theme.colors.accent.primary,
+                  display: 'inline-flex',
+                  alignItems: 'center',
+                  gap: theme.spacing.sm,
+                  backdropFilter: 'blur(10px)',
                   fontFamily: theme.typography.fonts.body,
-                  fontSize: theme.typography.sizes.caption,
                   fontWeight: theme.typography.weights.semibold,
+                  boxShadow: theme.shadows.elevation02,
+                  transition: theme.transitions.normal,
+                  cursor: 'default'
+                }}
+                onMouseEnter={(e) => {
+                  e.currentTarget.style.boxShadow = `${theme.shadows.elevation03}, ${theme.shadows.glow}`;
+                  e.currentTarget.style.borderColor = theme.colors.accent.primary;
+                }}
+                onMouseLeave={(e) => {
+                  e.currentTarget.style.boxShadow = theme.shadows.elevation02;
+                  e.currentTarget.style.borderColor = `${theme.colors.accent.primary}40`;
+                }}>
+                  <span
+                    style={{
+                      display: 'inline-flex',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                      width: '18px',
+                      height: '18px',
+                      flex: '0 0 18px',
+                      animation: 'pulse 2s infinite',
+                      filter: 'drop-shadow(0 0 6px rgba(99, 102, 241, 0.4))'
+                    }}
+                  >
+                    <PlusChevronIcon size={18} />
+                  </span>
+                  {discoveredCharacters.length} character{discoveredCharacters.length !== 1 ? 's' : ''} discovered from Market Hub
+                </div>
+              )}
+            </div>
+
+            {/* Search Section */}
+            <div style={{ width: '100%', maxWidth: '400px', position: 'relative', marginBottom: '1rem' }}>
+              <PremiumOracleSearch
+                value={inputValue}
+                onChange={(e) => handleInputChange(e.target.value)}
+                onFocus={() => inputValue.length >= 2 && setShowResults(true)}
+                onBlur={() => {
+                  setTimeout(() => setShowResults(false), 200);
+                }}
+              />
+              {/* Enhanced Search Results (Desktop) with source indicators */}
+              {showResults && searchResults.length > 0 && (
+                <div style={{
+                  position: 'absolute',
+                  top: '100%',
+                  left: 0,
+                  right: 0,
+                  maxHeight: '300px',
+                  overflowY: 'auto',
+                  background: theme.colors.background.surface,
+                  border: `1px solid ${theme.colors.accent.primary}33`,
+                  borderRadius: theme.borderRadius.lg,
+                  backdropFilter: 'blur(20px)',
+                  padding: theme.spacing.md,
+                  marginTop: theme.spacing.sm,
+                  zIndex: 1000,
+                  boxShadow: theme.shadows.elevation04
+                }}>
+                  {searchResults.map((character, index) => (
+                    <div
+                      key={character.key}
+                      onClick={() => handleCharacterSelect(character)}
+                      style={{
+                        display: 'flex',
+                        alignItems: 'center',
+                        gap: theme.spacing.md,
+                        padding: theme.spacing.md,
+                        background: theme.colors.background.interactive,
+                        border: `1px solid ${theme.colors.border.medium}`,
+                        borderRadius: theme.borderRadius.md,
+                        cursor: 'pointer',
+                        transition: theme.transitions.normal,
+                        marginBottom: index < searchResults.length - 1 ? theme.spacing.sm : 0,
+                        position: 'relative'
+                      }}
+                      onMouseEnter={(e) => {
+                        e.currentTarget.style.background = theme.colors.background.peak;
+                        e.currentTarget.style.borderColor = theme.colors.accent.primary;
+                        e.currentTarget.style.boxShadow = theme.shadows.elevation03;
+                      }}
+                      onMouseLeave={(e) => {
+                        e.currentTarget.style.background = theme.colors.background.interactive;
+                        e.currentTarget.style.borderColor = theme.colors.border.medium;
+                        e.currentTarget.style.boxShadow = 'none';
+                      }}
+                    >
+                      <img
+                        src={character.thumbnailUrl}
+                        alt={character.name}
+                        style={{
+                          width: '40px',
+                          height: '40px',
+                          borderRadius: '50%',
+                          objectFit: 'cover',
+                          border: '2px solid rgba(255, 215, 0, 0.3)',
+                          opacity: character.status === 'rejected' ? 0.6 : 1
+                        }}
+                        onError={(e) => { 
+                          e.currentTarget.onError = null;
+                          e.currentTarget.style.display = 'none';
+                          const parent = e.currentTarget.parentElement;
+                          if (!parent.querySelector('.text-fallback')) {
+                            const fallback = document.createElement('div');
+                            fallback.className = 'text-fallback';
+                            fallback.style.cssText = 'width:100%;height:100%;display:flex;align-items:center;justify-content:center;background:rgba(255,215,0,0.2);color:#FFD700;font-size:1.2rem;font-weight:bold;border-radius:50%;';
+                            fallback.textContent = (character.name || 'C').charAt(0).toUpperCase();
+                            parent.appendChild(fallback);
+                          }
+                        }}
+                      />
+                      <div style={{ flex: 1, minWidth: 0 }}>
+                        <div style={{ 
+                          fontSize: theme.typography.sizes.body,
+                          fontWeight: theme.typography.weights.semibold,
+                          color: character.status === 'approved' 
+                            ? theme.colors.accent.primary
+                            : character.status === 'pending'
+                              ? theme.colors.semantic.warning
+                              : theme.colors.text.primary,
+                          marginBottom: '0.25rem',
+                          display: 'flex',
+                          alignItems: 'center',
+                          gap: '0.5rem'
+                        }}>
+                          {character.name}
+                          {character.source === 'market_hub' && (
+                            <span
+                              style={{
+                                fontSize: theme.typography.sizes.caption,
+                                background: theme.colors.accent.glow,
+                                padding: `${theme.spacing.xs} ${theme.spacing.sm}`,
+                                borderRadius: theme.borderRadius.sm,
+                                color: theme.colors.accent.primary,
+                                fontWeight: theme.typography.weights.semibold,
+                                fontFamily: theme.typography.fonts.body,
+                                display: 'inline-flex',
+                                alignItems: 'center',
+                                gap: '4px',
+                                marginLeft: theme.spacing.xs
+                              }}
+                            >
+                              <span
+                                style={{
+                                  display: 'inline-flex',
+                                  alignItems: 'center',
+                                  justifyContent: 'center',
+                                  width: '14px',
+                                  height: '14px',
+                                  flex: '0 0 14px',
+                                  animation: 'pulse 2s infinite'
+                                }}
+                              >
+                                <PlusChevronIcon size={14} />
+                              </span>
+                              Discovered
+                            </span>
+                          )}
+                        </div>
+                        <div style={{ 
+                          fontSize: theme.typography.sizes.body,
+                          fontWeight: theme.typography.weights.semibold,
+                          color: character.status === 'approved' 
+                            ? theme.colors.accent.primary
+                            : character.status === 'pending'
+                              ? theme.colors.semantic.warning
+                              : theme.colors.text.primary,
+                          marginBottom: '0.25rem',
+                          display: 'flex',
+                          alignItems: 'center',
+                          gap: '0.5rem'
+                        }}>
+                          {character.category}
+                          {character.expertise_domain && character.source === 'market_hub' && (
+                            <span style={{ margin: '0 0.3rem', color: 'rgba(255, 255, 255, 0.5)' }}>•</span>
+                          )}
+                          {character.expertise_domain && character.source === 'market_hub' && (
+                            <span style={{ color: 'rgba(255, 215, 0, 0.6)' }}>
+                              {character.expertise_domain}
+                            </span>
+                          )}
+                        </div>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              )}
+
+              {showResults && searchResults.length === 0 && inputValue.length >= 2 && (
+                <div style={{
+                  position: 'absolute',
+                  top: '100%',
+                  left: 0,
+                  right: 0,
+                  background: theme.colors.background.surface,
+                  border: `1px solid ${theme.colors.border.medium}`,
+                  borderRadius: theme.borderRadius.lg,
+                  backdropFilter: 'blur(20px)',
+                  padding: theme.spacing.md,
+                  marginTop: theme.spacing.sm,
+                  textAlign: 'center',
+                  zIndex: 999,
+                  boxShadow: theme.shadows.elevation03
+                }}>
+                  <p style={{
+                    color: theme.colors.text.primary,
+                    margin: `0 0 ${theme.spacing.sm} 0`,
+                    fontSize: theme.typography.sizes.body,
+                    fontFamily: theme.typography.fonts.body
+                  }}>
+                    No matches for "{inputValue}"
+                  </p>
+                  <small style={{
+                    color: theme.colors.text.secondary,
+                    fontSize: theme.typography.sizes.caption,
+                    fontFamily: theme.typography.fonts.body
+                  }}>
+                    Try searching for character names or themes
+                  </small>
+                  <button
+                    onClick={() => {
+                      setShowResults(false);
+                      setOracleChatMode(true);
+                    }}
+                    style={{
+                      display: 'block',
+                      width: '100%',
+                      marginTop: theme.spacing.md,
+                      padding: `${theme.spacing.sm} ${theme.spacing.md}`,
+                      background: 'rgba(99, 102, 241, 0.1)',
+                      border: '1px solid rgba(99, 102, 241, 0.3)',
+                      borderRadius: theme.borderRadius.md,
+                      color: '#818cf8',
+                      fontFamily: theme.typography.fonts.body,
+                      fontSize: theme.typography.sizes.caption,
+                      fontWeight: theme.typography.weights.semibold,
+                      cursor: 'pointer',
+                      transition: theme.transitions.normal,
+                    }}
+                    onMouseEnter={e => {
+                      e.currentTarget.style.background = 'rgba(99, 102, 241, 0.18)';
+                      e.currentTarget.style.borderColor = '#6366f1';
+                      e.currentTarget.style.color = '#e0e7ff';
+                    }}
+                    onMouseLeave={e => {
+                      e.currentTarget.style.background = 'rgba(99, 102, 241, 0.1)';
+                      e.currentTarget.style.borderColor = 'rgba(99, 102, 241, 0.3)';
+                      e.currentTarget.style.color = '#818cf8';
+                    }}
+                  >
+                    ✦ Ask the Oracle instead
+                  </button>
+                </div>
+              )}
+            </div>
+
+            {/* Personalized Section (Desktop) */}
+            {shouldShowForYou && (
+              <PersonalizedSection 
+                characters={recentCharacters}
+                onCharacterSelect={handleRecentCharacterSelect}
+                hasActiveConversations={hasActiveConversations}
+                isMobile={false}
+              />
+            )}
+
+            {/* ADD BUTTONS CONTAINER */}
+            <div style={{
+              display: 'flex',
+              gap: theme.spacing.md,
+              marginTop: theme.spacing.lg,
+              width: '100%',
+              maxWidth: '400px'
+            }}>
+              {/* CREATE Button */}
+              <button
+                onClick={() => {
+                  const myCharsCategory = enhancedCategories.find(c => c.key === 'my_characters');
+                  if (myCharsCategory) {
+                    handleCreateCharacterClick();
+                  }
+                }}
+                style={{
+                  flex: 1,
+                  padding: `${theme.spacing.md} ${theme.spacing.lg}`,
+                  borderRadius: theme.borderRadius.md,
+                  fontSize: theme.typography.sizes.body,
+                  fontWeight: theme.typography.weights.semibold,
+                  fontFamily: theme.typography.fonts.body,
                   cursor: 'pointer',
                   transition: theme.transitions.normal,
+                  border: 'none',
+                  outline: 'none',
+                  background: `linear-gradient(135deg, ${theme.colors.accent.primary} 0%, ${theme.colors.accent.hover} 100%)`,
+                  color: '#fff',
+                  boxShadow: theme.shadows.elevation02
                 }}
-                onMouseEnter={e => {
-                  e.currentTarget.style.background = 'rgba(99, 102, 241, 0.18)';
-                  e.currentTarget.style.borderColor = '#6366f1';
-                  e.currentTarget.style.color = '#e0e7ff';
+                onMouseEnter={(e) => {
+                  e.currentTarget.style.transform = 'translateY(-2px)';
+                  e.currentTarget.style.boxShadow = `${theme.shadows.elevation03}, ${theme.shadows.glow}`;
                 }}
-                onMouseLeave={e => {
-                  e.currentTarget.style.background = 'rgba(99, 102, 241, 0.1)';
-                  e.currentTarget.style.borderColor = 'rgba(99, 102, 241, 0.3)';
-                  e.currentTarget.style.color = '#818cf8';
+                onMouseLeave={(e) => {
+                  e.currentTarget.style.transform = 'translateY(0)';
+                  e.currentTarget.style.boxShadow = theme.shadows.elevation02;
                 }}
               >
-                ✦ Ask the Oracle instead
+                Create
               </button>
-            </div>
-          )}
-        </div>
 
-        {/* Personalized Section (Desktop) */}
-        {shouldShowForYou && (
-          <PersonalizedSection 
-            characters={recentCharacters}
-            onCharacterSelect={handleRecentCharacterSelect}
-            hasActiveConversations={hasActiveConversations}
-            isMobile={false}
-          />
+              {/* DISCOVER Button */}
+              <button
+                onClick={() => switchView(VIEW_STATES.MARKET_HUB)}
+                style={{
+                  flex: 1,
+                  padding: `${theme.spacing.md} ${theme.spacing.lg}`,
+                  borderRadius: theme.borderRadius.md,
+                  fontSize: theme.typography.sizes.body,
+                  fontWeight: theme.typography.weights.semibold,
+                  fontFamily: theme.typography.fonts.body,
+                  cursor: 'pointer',
+                  transition: theme.transitions.normal,
+                  border: `1px solid ${theme.colors.border.strong}`,
+                  outline: 'none',
+                  background: theme.colors.background.interactive,
+                  color: theme.colors.text.primary,
+                  boxShadow: theme.shadows.elevation01
+                }}
+                onMouseEnter={(e) => {
+                  e.currentTarget.style.transform = 'translateY(-2px)';
+                  e.currentTarget.style.background = theme.colors.background.peak;
+                  e.currentTarget.style.borderColor = theme.colors.accent.primary;
+                }}
+                onMouseLeave={(e) => {
+                  e.currentTarget.style.transform = 'translateY(0)';
+                  e.currentTarget.style.background = theme.colors.background.interactive;
+                  e.currentTarget.style.borderColor = theme.colors.border.strong;
+                }}
+              >
+                Discover
+              </button>
+
+              {/* Map/Scan Toggle Pill */}
+              <div style={{ flex: 1, position: 'relative' }}>
+                {toolHint && (
+                  <div style={{
+                    position: 'absolute',
+                    bottom: 'calc(100% + 7px)',
+                    left: '50%',
+                    transform: 'translateX(-50%)',
+                    background: theme.colors.background.surface,
+                    border: `1px solid ${theme.colors.border.medium}`,
+                    borderRadius: theme.borderRadius.sm,
+                    padding: '4px 10px',
+                    fontSize: theme.typography.sizes.caption,
+                    fontFamily: theme.typography.fonts.body,
+                    color: theme.colors.text.secondary,
+                    whiteSpace: 'nowrap',
+                    pointerEvents: 'none',
+                    boxShadow: theme.shadows.elevation02,
+                    zIndex: 10,
+                  }}>
+                    {toolHint === 'map' ? 'Explore myths and legends.' : 'Upload myths and icons.'}
+                  </div>
+                )}
+                <div style={{
+                  display: 'flex',
+                  alignItems: 'center',
+                  background: theme.colors.background.interactive,
+                  border: `1px solid ${theme.colors.border.strong}`,
+                  borderRadius: '9999px',
+                  padding: '3px',
+                  gap: '2px',
+                  boxShadow: theme.shadows.elevation01,
+                  transition: theme.transitions.normal,
+                  minWidth: 0,
+                }}>
+                  <button
+                    onClick={() => {
+                      setActiveToolToggle('map');
+                      setMapOpen(true);
+                    }}
+                    onMouseEnter={() => setToolHint('map')}
+                    onMouseLeave={() => setToolHint(null)}
+                    aria-label="Legends Map"
+                    style={{
+                      flex: 1,
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                      gap: '0.35rem',
+                      padding: '0.48rem 0.6rem',
+                      borderRadius: '9999px',
+                      border: 'none',
+                      outline: 'none',
+                      cursor: 'pointer',
+                      fontFamily: theme.typography.fonts.body,
+                      fontSize: theme.typography.sizes.bodySmall,
+                      fontWeight: theme.typography.weights.semibold,
+                      transition: theme.transitions.fast,
+                      whiteSpace: 'nowrap',
+                      ...(activeToolToggle === 'map' ? {
+                        background: `linear-gradient(135deg, ${theme.colors.accent.primary}, ${theme.colors.accent.hover})`,
+                        color: '#fff',
+                        boxShadow: '0 2px 12px rgba(99,102,241,0.4)',
+                      } : {
+                        background: 'transparent',
+                        color: theme.colors.text.secondary,
+                      }),
+                    }}
+                    onMouseEnter={(e) => {
+                      if (activeToolToggle !== 'map') {
+                        e.currentTarget.style.background = theme.colors.background.peak;
+                        e.currentTarget.style.color = theme.colors.text.primary;
+                      }
+                    }}
+                    onMouseLeave={(e) => {
+                      if (activeToolToggle !== 'map') {
+                        e.currentTarget.style.background = 'transparent';
+                        e.currentTarget.style.color = theme.colors.text.secondary;
+                      }
+                    }}
+                  >
+                    <svg viewBox="0 0 18 18" fill="none" stroke="currentColor" strokeWidth="1.6"
+                      strokeLinecap="round" strokeLinejoin="round" width="13" height="13"
+                      style={{ flexShrink: 0 }}>
+                      <circle cx="9" cy="9" r="7"/>
+                      <path d="M9 2c-1.5 1.5-2.5 3.8-2.5 7s1 5.5 2.5 7"/>
+                      <path d="M9 2c1.5 1.5 2.5 3.8 2.5 7s-1 5.5-2.5 7"/>
+                      <line x1="2.5" y1="9" x2="15.5" y2="9"/>
+                      <line x1="3.2" y1="6" x2="14.8" y2="6"/>
+                      <line x1="3.2" y1="12" x2="14.8" y2="12"/>
+                    </svg>
+                    Map
+                  </button>
+
+                  <button
+                    onClick={() => {
+                      setActiveToolToggle('scan');
+                      setScanOpen(true);
+                    }}
+                    onMouseEnter={() => setToolHint('scan')}
+                    onMouseLeave={() => setToolHint(null)}
+                    aria-label="Scan a Legend"
+                    style={{
+                      flex: 1,
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                      gap: '0.35rem',
+                      padding: '0.48rem 0.6rem',
+                      borderRadius: '9999px',
+                      border: 'none',
+                      outline: 'none',
+                      cursor: 'pointer',
+                      fontFamily: theme.typography.fonts.body,
+                      fontSize: theme.typography.sizes.bodySmall,
+                      fontWeight: theme.typography.weights.semibold,
+                      transition: theme.transitions.fast,
+                      whiteSpace: 'nowrap',
+                      ...(activeToolToggle === 'scan' ? {
+                        background: `linear-gradient(135deg, ${theme.colors.accent.primary}, ${theme.colors.accent.hover})`,
+                        color: '#fff',
+                        boxShadow: '0 2px 12px rgba(99,102,241,0.4)',
+                      } : {
+                        background: 'transparent',
+                        color: theme.colors.text.secondary,
+                      }),
+                    }}
+                    onMouseEnter={(e) => {
+                      if (activeToolToggle !== 'scan') {
+                        e.currentTarget.style.background = theme.colors.background.peak;
+                        e.currentTarget.style.color = theme.colors.text.primary;
+                      }
+                    }}
+                    onMouseLeave={(e) => {
+                      if (activeToolToggle !== 'scan') {
+                        e.currentTarget.style.background = 'transparent';
+                        e.currentTarget.style.color = theme.colors.text.secondary;
+                      }
+                    }}
+                  >
+                    <svg viewBox="0 0 18 18" fill="none" stroke="currentColor" strokeWidth="1.6"
+                      strokeLinecap="round" strokeLinejoin="round" width="13" height="13"
+                      style={{ flexShrink: 0 }}>
+                      <circle cx="8.5" cy="8.5" r="4.5"/>
+                      <line x1="12" y1="12" x2="16" y2="16"/>
+                      <line x1="8.5" y1="3.5" x2="8.5" y2="4.5"/>
+                      <line x1="13.5" y1="8.5" x2="12.5" y2="8.5"/>
+                      <line x1="8.5" y1="13.5" x2="8.5" y2="12.5"/>
+                      <line x1="3.5" y1="8.5" x2="4.5" y2="8.5"/>
+                    </svg>
+                    Scan
+                  </button>
+                </div>
+              </div>
+            </div>
+          </>
         )}
-        {/* ADD BUTTONS CONTAINER RIGHT HERE */}
-        <div style={{
-          display: 'flex',
-          gap: theme.spacing.md,
-          marginTop: theme.spacing.lg,
-          width: '100%',
-          maxWidth: '400px'
-        }}>
-          {/* CREATE Button - Opens My Characters Panel */}
-          <button
-            onClick={() => {
-              const myCharsCategory = enhancedCategories.find(c => c.key === 'my_characters');
-              if (myCharsCategory) {
-                handleCreateCharacterClick();
-              }
-            }}
-            style={{
-              flex: 1,
-              padding: `${theme.spacing.md} ${theme.spacing.lg}`,
-              borderRadius: theme.borderRadius.md,
-              fontSize: theme.typography.sizes.body,
-              fontWeight: theme.typography.weights.semibold,
-              fontFamily: theme.typography.fonts.body,
-              cursor: 'pointer',
-              transition: theme.transitions.normal,
-              border: 'none',
-              outline: 'none',
-              background: `linear-gradient(135deg, ${theme.colors.accent.primary} 0%, ${theme.colors.accent.hover} 100%)`,
-              color: '#fff',
-              boxShadow: theme.shadows.elevation02
-            }}
-            onMouseEnter={(e) => {
-              e.currentTarget.style.transform = 'translateY(-2px)';
-              e.currentTarget.style.boxShadow = `${theme.shadows.elevation03}, ${theme.shadows.glow}`;
-            }}
-            onMouseLeave={(e) => {
-              e.currentTarget.style.transform = 'translateY(0)';
-              e.currentTarget.style.boxShadow = theme.shadows.elevation02;
-            }}
-          >
-            Create
-          </button>
-
-          {/* DISCOVER Button - Opens Market Hub */}
-          <button
-            onClick={() => switchView(VIEW_STATES.MARKET_HUB)}
-            style={{
-              flex: 1,
-              padding: `${theme.spacing.md} ${theme.spacing.lg}`,
-              borderRadius: theme.borderRadius.md,
-              fontSize: theme.typography.sizes.body,
-              fontWeight: theme.typography.weights.semibold,
-              fontFamily: theme.typography.fonts.body,
-              cursor: 'pointer',
-              transition: theme.transitions.normal,
-              border: `1px solid ${theme.colors.border.strong}`,
-              outline: 'none',
-              background: theme.colors.background.interactive,
-              color: theme.colors.text.primary,
-              boxShadow: theme.shadows.elevation01
-            }}
-            onMouseEnter={(e) => {
-              e.currentTarget.style.transform = 'translateY(-2px)';
-              e.currentTarget.style.background = theme.colors.background.peak;
-              e.currentTarget.style.borderColor = theme.colors.accent.primary;
-            }}
-            onMouseLeave={(e) => {
-              e.currentTarget.style.transform = 'translateY(0)';
-              e.currentTarget.style.background = theme.colors.background.interactive;
-              e.currentTarget.style.borderColor = theme.colors.border.strong;
-            }}
-          >
-            Discover
-          </button>
-          {/* THIRD BUTTON — Toggle pill: Map | Scan */}
-          <div style={{ flex: 1, position: 'relative' }}>
-          {/* Tooltip */}
-          {toolHint && (
-            <div style={{
-              position: 'absolute',
-              bottom: 'calc(100% + 7px)',
-              left: '50%',
-              transform: 'translateX(-50%)',
-              background: theme.colors.background.surface,
-              border: `1px solid ${theme.colors.border.medium}`,
-              borderRadius: theme.borderRadius.sm,
-              padding: '4px 10px',
-              fontSize: theme.typography.sizes.caption,
-              fontFamily: theme.typography.fonts.body,
-              color: theme.colors.text.secondary,
-              whiteSpace: 'nowrap',
-              pointerEvents: 'none',
-              boxShadow: theme.shadows.elevation02,
-              zIndex: 10,
-            }}>
-              {toolHint === 'map' ? 'Explore myths and legends.' : 'Upload myths and icons.'}
-            </div>
-          )}
-          <div style={{
-            display: 'flex',
-            alignItems: 'center',
-            background: theme.colors.background.interactive,
-            border: `1px solid ${theme.colors.border.strong}`,
-            borderRadius: '9999px',
-            padding: '3px',
-            gap: '2px',
-            boxShadow: theme.shadows.elevation01,
-            transition: theme.transitions.normal,
-            minWidth: 0,
-          }}>
-
-            {/* Map segment */}
-            <button
-              onClick={() => {
-                setActiveToolToggle('map');
-                setMapOpen(true);
-              }}
-              onMouseEnter={() => setToolHint('map')}
-              onMouseLeave={() => setToolHint(null)}
-              aria-label="Legends Map"
-              style={{
-                flex: 1,
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'center',
-                gap: '0.35rem',
-                padding: '0.48rem 0.6rem',
-                borderRadius: '9999px',
-                border: 'none',
-                outline: 'none',
-                cursor: 'pointer',
-                fontFamily: theme.typography.fonts.body,
-                fontSize: theme.typography.sizes.bodySmall,
-                fontWeight: theme.typography.weights.semibold,
-                transition: theme.transitions.fast,
-                whiteSpace: 'nowrap',
-                ...(activeToolToggle === 'map' ? {
-                  background: `linear-gradient(135deg, ${theme.colors.accent.primary}, ${theme.colors.accent.hover})`,
-                  color: '#fff',
-                  boxShadow: '0 2px 12px rgba(99,102,241,0.4)',
-                } : {
-                  background: 'transparent',
-                  color: theme.colors.text.secondary,
-                }),
-              }}
-              onMouseEnter={(e) => {
-                if (activeToolToggle !== 'map') {
-                  e.currentTarget.style.background = theme.colors.background.peak;
-                  e.currentTarget.style.color = theme.colors.text.primary;
-                }
-              }}
-              onMouseLeave={(e) => {
-                if (activeToolToggle !== 'map') {
-                  e.currentTarget.style.background = 'transparent';
-                  e.currentTarget.style.color = theme.colors.text.secondary;
-                }
-              }}
-            >
-              <svg viewBox="0 0 18 18" fill="none" stroke="currentColor" strokeWidth="1.6"
-                strokeLinecap="round" strokeLinejoin="round" width="13" height="13"
-                style={{ flexShrink: 0 }}>
-                <circle cx="9" cy="9" r="7"/>
-                <path d="M9 2c-1.5 1.5-2.5 3.8-2.5 7s1 5.5 2.5 7"/>
-                <path d="M9 2c1.5 1.5 2.5 3.8 2.5 7s-1 5.5-2.5 7"/>
-                <line x1="2.5" y1="9" x2="15.5" y2="9"/>
-                <line x1="3.2" y1="6" x2="14.8" y2="6"/>
-                <line x1="3.2" y1="12" x2="14.8" y2="12"/>
-              </svg>
-              Map
-            </button>
-
-            {/* Scan segment */}
-            <button
-              onClick={() => {
-                setActiveToolToggle('scan');
-                setScanOpen(true);
-              }}
-              onMouseEnter={() => setToolHint('scan')}
-              onMouseLeave={() => setToolHint(null)}
-              aria-label="Scan a Legend"
-              style={{
-                flex: 1,
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'center',
-                gap: '0.35rem',
-                padding: '0.48rem 0.6rem',
-                borderRadius: '9999px',
-                border: 'none',
-                outline: 'none',
-                cursor: 'pointer',
-                fontFamily: theme.typography.fonts.body,
-                fontSize: theme.typography.sizes.bodySmall,
-                fontWeight: theme.typography.weights.semibold,
-                transition: theme.transitions.fast,
-                whiteSpace: 'nowrap',
-                ...(activeToolToggle === 'scan' ? {
-                  background: `linear-gradient(135deg, ${theme.colors.accent.primary}, ${theme.colors.accent.hover})`,
-                  color: '#fff',
-                  boxShadow: '0 2px 12px rgba(99,102,241,0.4)',
-                } : {
-                  background: 'transparent',
-                  color: theme.colors.text.secondary,
-                }),
-              }}
-              onMouseEnter={(e) => {
-                if (activeToolToggle !== 'scan') {
-                  e.currentTarget.style.background = theme.colors.background.peak;
-                  e.currentTarget.style.color = theme.colors.text.primary;
-                }
-              }}
-              onMouseLeave={(e) => {
-                if (activeToolToggle !== 'scan') {
-                  e.currentTarget.style.background = 'transparent';
-                  e.currentTarget.style.color = theme.colors.text.secondary;
-                }
-              }}
-            >
-              <svg viewBox="0 0 18 18" fill="none" stroke="currentColor" strokeWidth="1.6"
-                strokeLinecap="round" strokeLinejoin="round" width="13" height="13"
-                style={{ flexShrink: 0 }}>
-                <circle cx="8.5" cy="8.5" r="4.5"/>
-                <line x1="12" y1="12" x2="16" y2="16"/>
-                <line x1="8.5" y1="3.5" x2="8.5" y2="4.5"/>
-                <line x1="13.5" y1="8.5" x2="12.5" y2="8.5"/>
-                <line x1="8.5" y1="13.5" x2="8.5" y2="12.5"/>
-                <line x1="3.5" y1="8.5" x2="4.5" y2="8.5"/>
-              </svg>
-              Scan
-            </button>
-
-          </div>
-          </div>
-        </div>
       </div>
-
 
       {/* RIGHT HALF - Categories/Characters */}
       {/* RIGHT HALF - Netflix-style rows */}
