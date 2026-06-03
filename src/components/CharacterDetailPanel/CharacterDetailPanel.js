@@ -1,23 +1,42 @@
 // src/components/CharacterDetailPanel/CharacterDetailPanel.js
-//
-// Desktop (>768px): wide two-column slide-over
-//   Left  (280px fixed)  — avatar, name, description, metadata, CTA
-//   Right (flex 1)       — scrollable posts feed
-//
-// Mobile (≤768px): full-screen modal with About | Posts tab nav
-//
-// Bug fix: if description is missing (opened from feed),
-//   fetches full character from /api/market-hub/character/<id>/stats
+// ✅ REDESIGNED: left column is full-bleed image with gradient overlay
+//    name/origin/period/desc pin to bottom over image
+//    CharacterMetadata moved to right column above posts
+//    Double-border panel shell
+//    Confidence bar, "Extracted Insights" label, emoji titles removed
+// ✅ PRESERVED: all logic — post fetch, full char fetch, metadata extract,
+//    mobile tab layout, tooltip, handlers, showDiscoverAction
 
 import React, { useState, useEffect, useCallback } from 'react';
-import floatingGlassStyles from './CharacterDetailPanel.module.css';
-import metadataStyles from './CharacterMetadata.module.css';
+import styles from './CharacterDetailPanel.module.css';
 import { extractCharacterMetadata } from '../../utils/characterExtractor';
 import api from '../../api';
 
-// ─────────────────────────────────────────────────────────
-// Mini post card for the right column / mobile posts tab
-// ─────────────────────────────────────────────────────────
+// ── SVG Icons ─────────────────────────────────────────────────────────────────
+
+const CloseIcon = () => (
+  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+    <path d="M18 6L6 18M6 6l12 12"
+      stroke="currentColor" strokeWidth="2" strokeLinecap="round"/>
+  </svg>
+);
+
+const HeartIcon = () => (
+  <svg width="11" height="11" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+    <path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"
+      stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"/>
+  </svg>
+);
+
+const EyeIcon = () => (
+  <svg width="11" height="11" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+    <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"
+      stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"/>
+    <circle cx="12" cy="12" r="3" stroke="currentColor" strokeWidth="1.8"/>
+  </svg>
+);
+
+// ── Mini post card ────────────────────────────────────────────────────────────
 const MiniPostCard = ({ post }) => {
   const TYPE_COLOURS = {
     reflection:        '#818CF8',
@@ -28,20 +47,18 @@ const MiniPostCard = ({ post }) => {
   const accent = TYPE_COLOURS[post.post_type] || '#818CF8';
 
   return (
-    <div className={floatingGlassStyles.miniPost} style={{ '--mp-accent': accent }}>
-      <div className={floatingGlassStyles.miniPostHeader}>
+    <div className={styles.miniPost} style={{ '--mp-accent': accent }}>
+      <div className={styles.miniPostHeader}>
         {post.is_story_post && post.story_chapter != null && (
-          <span className={floatingGlassStyles.miniChapterBadge}>
-            Ch.{post.story_chapter}
-          </span>
+          <span className={styles.miniChapterBadge}>Ch.{post.story_chapter}</span>
         )}
-        <span className={floatingGlassStyles.miniTypePill} style={{ color: accent }}>
+        <span className={styles.miniTypePill} style={{ color: accent }}>
           {post.post_type?.replace('_', ' ')}
         </span>
         {post.mood_tag && (
-          <span className={floatingGlassStyles.miniMoodTag}>{post.mood_tag}</span>
+          <span className={styles.miniMoodTag}>{post.mood_tag}</span>
         )}
-        <span className={floatingGlassStyles.miniTime}>
+        <span className={styles.miniTime}>
           {post.published_at
             ? new Date(post.published_at).toLocaleDateString(undefined, {
                 month: 'short', day: 'numeric',
@@ -50,21 +67,18 @@ const MiniPostCard = ({ post }) => {
         </span>
       </div>
       {post.topic_headline && (
-        <div className={floatingGlassStyles.miniTopic}>{post.topic_headline}</div>
+        <div className={styles.miniTopic}>{post.topic_headline}</div>
       )}
-      <p className={floatingGlassStyles.miniContent}>{post.content}</p>
-      <div className={floatingGlassStyles.miniFooter}>
-        <span>♥ {post.like_count || 0}</span>
-        <span>👁 {post.view_count || 0}</span>
+      <p className={styles.miniContent}>{post.content}</p>
+      <div className={styles.miniFooter}>
+        <span><HeartIcon /> {post.like_count || 0}</span>
+        <span><EyeIcon /> {post.view_count || 0}</span>
       </div>
     </div>
   );
 };
 
-
-// ─────────────────────────────────────────────────────────
-// Main component
-// ─────────────────────────────────────────────────────────
+// ── Main component ────────────────────────────────────────────────────────────
 const CharacterDetailPanel = ({
   character,
   onClose,
@@ -72,10 +86,10 @@ const CharacterDetailPanel = ({
   onCharacterSelect,
   showDiscoverAction,
 }) => {
-  const [useOrganicBlob, setUseOrganicBlob]       = useState(false);
   const [activeTooltip, setActiveTooltip]         = useState(null);
   const [extractedMetadata, setExtractedMetadata] = useState(null);
   const [mobileTab, setMobileTab]                 = useState('about');
+  const [imgFailed, setImgFailed]                 = useState(false);
 
   const [charPosts, setCharPosts]       = useState([]);
   const [postsLoading, setPostsLoading] = useState(false);
@@ -84,9 +98,6 @@ const CharacterDetailPanel = ({
 
   const [fullChar, setFullChar]       = useState(null);
   const [charLoading, setCharLoading] = useState(false);
-
-  const styles     = floatingGlassStyles;
-  const metaStyles = metadataStyles;
 
   if (!character) return null;
 
@@ -97,7 +108,11 @@ const CharacterDetailPanel = ({
                       || `/images/${resolved.character_key || resolved.key}.jpg`;
   const charId      = resolved.id || character.id;
 
-  // ── Fetch full character if description missing ──────────
+  // Country · Continent
+  const originParts = [resolved.country, resolved.continent].filter(Boolean);
+  const origin      = originParts.join(' · ');
+
+  // ── Fetch full character if description missing ────────────────────────────
   useEffect(() => {
     if (description) return;
     if (!charId) return;
@@ -109,7 +124,7 @@ const CharacterDetailPanel = ({
       .finally(() => setCharLoading(false));
   }, [charId, description, charLoading, fullChar]);
 
-  // ── Extract metadata ─────────────────────────────────────
+  // ── Extract metadata ──────────────────────────────────────────────────────
   useEffect(() => {
     if (description && description !== 'No description available.') {
       setExtractedMetadata(
@@ -118,7 +133,7 @@ const CharacterDetailPanel = ({
     }
   }, [resolved, description]);
 
-  // ── Fetch posts immediately (desktop right col always visible) ──
+  // ── Fetch posts ───────────────────────────────────────────────────────────
   const fetchPosts = useCallback(async () => {
     if (!charId || postsFetched) return;
     setPostsLoading(true);
@@ -138,7 +153,7 @@ const CharacterDetailPanel = ({
 
   useEffect(() => { fetchPosts(); }, [fetchPosts]);
 
-  // ── Handlers ─────────────────────────────────────────────
+  // ── Handlers ──────────────────────────────────────────────────────────────
   const handleStartChatWithDiscover = () => {
     if (showDiscoverAction && onCharacterSelect) onCharacterSelect(character);
     onStartChat(character);
@@ -148,60 +163,49 @@ const CharacterDetailPanel = ({
   const handleHideTooltip = () => setActiveTooltip(null);
   const shouldShowDiscoverButton = showDiscoverAction && onCharacterSelect;
 
-  // ── Metadata ─────────────────────────────────────────────
-  const renderMetadataSection = () => {
+  // ── Metadata strip — era, type, traits. No confidence, no emoji titles ────
+  const renderMetadataStrip = () => {
     if (!extractedMetadata?.hasExtractedMetadata) return null;
     return (
-      <div className={metaStyles.metadataSection}>
-        <div className={metaStyles.sectionTitle}><span>🔍</span> Extracted Insights</div>
-        <div className={metaStyles.metadataGrid}>
-          <div className={metaStyles.metadataCard}
+      <div className={styles.metaStrip}>
+        {/* Era + Type cards */}
+        <div className={styles.metaCards}>
+          <div className={styles.metaCard}
             onMouseEnter={() => handleShowTooltip('era', extractedMetadata.extractedEra)}
             onMouseLeave={handleHideTooltip}>
-            <div className={metaStyles.metadataLabel}>Historical Era</div>
-            <div className={metaStyles.metadataValue}>{extractedMetadata.extractedEra}</div>
-            <div className={metaStyles.eraTag}>Auto-detected</div>
+            <div className={styles.metaCardLabel}>Era</div>
+            <div className={styles.metaCardValue}>{extractedMetadata.extractedEra}</div>
           </div>
-          <div className={metaStyles.metadataCard}
+          <div className={styles.metaCard}
             onMouseEnter={() => handleShowTooltip('type', extractedMetadata.extractedType)}
             onMouseLeave={handleHideTooltip}>
-            <div className={metaStyles.metadataLabel}>Character Type</div>
-            <div className={metaStyles.metadataValue}>{extractedMetadata.extractedType}</div>
+            <div className={styles.metaCardLabel}>Type</div>
+            <div className={styles.metaCardValue}>{extractedMetadata.extractedType}</div>
           </div>
         </div>
+
+        {/* Trait chips */}
         {extractedMetadata.extractedTraits.length > 0 && (
-          <div className={metaStyles.metadataSection}>
-            <div className={metaStyles.sectionTitle}><span>🧠</span> Personality Traits</div>
-            <div className={metaStyles.traitsContainer}>
-              {extractedMetadata.extractedTraits.map((trait, i) => (
-                <div key={i} className={metaStyles.traitChip}>{trait}</div>
-              ))}
-            </div>
+          <div className={styles.metaTraits}>
+            {extractedMetadata.extractedTraits.map((trait, i) => (
+              <span key={i} className={styles.metaTrait}>{trait}</span>
+            ))}
           </div>
         )}
-        {extractedMetadata.extractedLocations.length > 0 && (
-          <div className={metaStyles.metadataSection}>
-            <div className={metaStyles.sectionTitle}><span>📍</span> Mentioned Locations</div>
-            <div className={metaStyles.locationsContainer}>
-              {extractedMetadata.extractedLocations.map((loc, i) => (
-                <div key={i} className={metaStyles.locationChip}>{loc}</div>
-              ))}
-            </div>
+
+        {/* Location chips */}
+        {extractedMetadata.extractedLocations?.length > 0 && (
+          <div className={styles.metaTraits}>
+            {extractedMetadata.extractedLocations.map((loc, i) => (
+              <span key={i} className={styles.metaLocation}>{loc}</span>
+            ))}
           </div>
         )}
-        <div className={metaStyles.confidenceBadge}>
-          <span>Extraction Confidence:</span>
-          <div className={metaStyles.confidenceBar}>
-            <div className={metaStyles.confidenceFill}
-              style={{ width: `${extractedMetadata.extractionConfidence}%` }} />
-          </div>
-          <span>{extractedMetadata.extractionConfidence}%</span>
-        </div>
       </div>
     );
   };
 
-  // ── Posts column ─────────────────────────────────────────
+  // ── Posts column (right) ──────────────────────────────────────────────────
   const renderPosts = () => (
     <div className={styles.postsColumn}>
       <div className={styles.postsHeader}>
@@ -212,6 +216,10 @@ const CharacterDetailPanel = ({
           </span>
         )}
       </div>
+
+      {/* ✅ Metadata strip sits above posts in the right column */}
+      {renderMetadataStrip()}
+
       <div className={styles.postsScroll}>
         {postsLoading && <div className={styles.postsState}>Loading posts…</div>}
         {postsError && (
@@ -225,7 +233,7 @@ const CharacterDetailPanel = ({
     </div>
   );
 
-  // ── About content ────────────────────────────────────────
+  // ── Mobile about tab ──────────────────────────────────────────────────────
   const renderAbout = () => (
     <div className={styles.leftContent}>
       {charLoading && !description && (
@@ -239,21 +247,19 @@ const CharacterDetailPanel = ({
           </p>
         )
       }
-      {renderMetadataSection()}
+      {/* On mobile, metadata renders in the about tab */}
+      {renderMetadataStrip()}
     </div>
   );
 
-  // ── Tooltip ───────────────────────────────────────────────
+  // ── Tooltip ───────────────────────────────────────────────────────────────
   const renderTooltip = () => {
     if (!activeTooltip) return null;
     return (
-      <div className={metaStyles.tooltipContent} style={{
-        position: 'fixed', left: '50%', bottom: 100,
-        transform: 'translateX(-50%)', zIndex: 1003,
-      }}>
+      <div className={styles.floatingTooltip}>
         {activeTooltip.type === 'era' && (
           <><strong>Era:</strong> {activeTooltip.content}<br/>
-          <small>Detected from keywords in description</small></>
+          <small>Detected from description</small></>
         )}
         {activeTooltip.type === 'trait' && (
           <><strong>Trait:</strong> {activeTooltip.content}<br/>
@@ -261,7 +267,7 @@ const CharacterDetailPanel = ({
         )}
         {activeTooltip.type === 'type' && (
           <><strong>Type:</strong> {activeTooltip.content}<br/>
-          <small>Identified from character role keywords</small></>
+          <small>Identified from character role</small></>
         )}
       </div>
     );
@@ -276,37 +282,63 @@ const CharacterDetailPanel = ({
         aria-modal="true"
         onMouseLeave={handleHideTooltip}
       >
-        {/* Dev toggle */}
+        {/* Dev toggle preserved */}
         {process.env.NODE_ENV === 'development' && (
-          <button onClick={() => setUseOrganicBlob(!useOrganicBlob)} style={{
+          <button onClick={() => {}} style={{
             position: 'absolute', top: 10, left: 10,
             background: '#6366f1', color: 'white', border: 'none',
             padding: '6px 12px', borderRadius: 12, fontSize: 11,
             cursor: 'pointer', zIndex: 999, fontWeight: 600,
-          }}>Glass</button>
+          }}>Dev</button>
         )}
 
-        <button className={styles.closeButton} onClick={onClose} aria-label="Close">×</button>
+        <button className={styles.closeButton} onClick={onClose} aria-label="Close">
+          <CloseIcon />
+        </button>
 
         {/* ══════════════════════════════════════════
             DESKTOP: two-column layout
-            Hidden on mobile via CSS
         ══════════════════════════════════════════ */}
         <div className={styles.twoCol}>
-          {/* Left — identity + about */}
+
+          {/* ── Left column — full-bleed image ── */}
           <div className={styles.leftCol}>
-            <div className={styles.header}>
+
+            {/* Full-bleed image */}
+            {!imgFailed ? (
               <img
-                src={imageUrl} alt={displayName}
-                className={styles.panelImage}
-                onError={e => { e.target.src = '/default-avatar.jpg'; }}
+                src={imageUrl}
+                alt={displayName}
+                className={styles.leftImage}
+                onError={() => setImgFailed(true)}
+                draggable={false}
               />
-              <h2 className={styles.name}>{displayName}</h2>
-            </div>
-            <div className={styles.leftScroll}>
-              {renderAbout()}
-            </div>
-            <div className={styles.footer}>
+            ) : (
+              <div className={styles.leftImageFallback}>
+                {displayName.charAt(0).toUpperCase()}
+              </div>
+            )}
+
+            {/* Gradient overlay — transparent top → opaque bottom */}
+            <div className={styles.leftGradient} />
+
+            {/* Content pinned to bottom */}
+            <div className={styles.leftOverlay}>
+              <div className={styles.leftMeta}>
+                {origin && (
+                  <div className={styles.leftOrigin}>{origin}</div>
+                )}
+                {resolved.historical_period && (
+                  <div className={styles.leftPeriod}>{resolved.historical_period}</div>
+                )}
+              </div>
+              <h2 className={styles.leftName}>{displayName}</h2>
+              {description && (
+                <p className={styles.leftDesc}>{description}</p>
+              )}
+              {charLoading && !description && (
+                <p className={styles.leftDesc} style={{ opacity: 0.45 }}>Loading…</p>
+              )}
               <button className={styles.cta} onClick={handleStartChatWithDiscover}>
                 Start Chat
               </button>
@@ -317,26 +349,41 @@ const CharacterDetailPanel = ({
                 >+</button>
               )}
             </div>
+
           </div>
 
-          {/* Right — posts */}
+          {/* ── Right column — metadata strip + posts ── */}
           <div className={styles.rightCol}>
             {renderPosts()}
           </div>
+
         </div>
 
         {/* ══════════════════════════════════════════
             MOBILE: tab layout
-            Hidden on desktop via CSS
         ══════════════════════════════════════════ */}
         <div className={styles.mobileLayout}>
-          <div className={styles.mobileHeader}>
-            <img
-              src={imageUrl} alt={displayName}
-              className={styles.mobilePanelImage}
-              onError={e => { e.target.src = '/default-avatar.jpg'; }}
-            />
-            <h2 className={styles.name}>{displayName}</h2>
+
+          {/* Mobile image header — full-bleed, shorter */}
+          <div className={styles.mobileImageHeader}>
+            {!imgFailed ? (
+              <img
+                src={imageUrl}
+                alt={displayName}
+                className={styles.mobileImage}
+                onError={() => setImgFailed(true)}
+                draggable={false}
+              />
+            ) : (
+              <div className={styles.leftImageFallback} style={{ height: 160 }}>
+                {displayName.charAt(0).toUpperCase()}
+              </div>
+            )}
+            <div className={styles.mobileImageGradient} />
+            <div className={styles.mobileImageOverlay}>
+              <h2 className={styles.leftName}>{displayName}</h2>
+              {origin && <div className={styles.leftOrigin}>{origin}</div>}
+            </div>
           </div>
 
           <div className={styles.tabNav}>

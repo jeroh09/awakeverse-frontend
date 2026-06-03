@@ -1,194 +1,142 @@
-/* src/components/CharacterDetailPanel/CharacterMetadata.module.css - FIXED VERSION */
+/* CharacterMetadata.module.css
+ * ✅ STRIPPED: confidence bar, "Extracted Insights" label, emoji section titles
+ * ✅ KEPT: era card, type card, trait chips, location chips — clean and compact
+ * Note: CharacterMetadata.js component is no longer used directly —
+ *       metadata is now rendered inline in CharacterDetailPanel.js
+ *       via renderMetadataStrip(). This file kept for any legacy imports.
+ */
 @import '../../design-system/variables.css';
+
 .metadataSection {
-  margin: var(--spacing-lg) 0;
+  margin: 0;
 }
 
+/* Section title — kept for any legacy use but emoji stripped in JSX */
 .sectionTitle {
   display: flex;
   align-items: center;
-  gap: var(--spacing-sm);
+  gap: 6px;
   font-family: var(--font-display);
-  font-size: var(--font-size-caption);
-  color: var(--text-secondary);
+  font-size: 0.6rem;
+  font-weight: 700;
+  color: rgba(148, 163, 184, 0.45);
   text-transform: uppercase;
-  letter-spacing: 1px;
-  margin-bottom: var(--spacing-md);
-  font-weight: var(--font-weight-semibold);
+  letter-spacing: 0.08em;
+  margin-bottom: 8px;
 }
 
 .metadataGrid {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
-  gap: var(--spacing-sm);
-  margin-bottom: var(--spacing-lg);
+  grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
+  gap: 6px;
+  margin-bottom: 10px;
 }
 
 .metadataCard {
-  background: var(--bg-interactive);
-  padding: var(--spacing-md);
-  border-radius: var(--border-radius-md);
-  border: 1px solid var(--border-medium);
-  transition: var(--transition-fast);
-  cursor: pointer;
+  background: rgba(15, 23, 42, 0.8);
+  padding: 8px 10px;
+  border-radius: 10px;
+  border: 1px solid rgba(99, 102, 241, 0.2);
+  transition: border-color 0.15s, transform 0.15s;
+  cursor: default;
+  box-shadow:
+    0 0 0 3px rgba(10, 15, 26, 0.98),
+    0 0 0 4px rgba(99, 102, 241, 0.08);
 }
 
 .metadataCard:hover {
-  border-color: var(--accent-primary);
-  transform: translateY(-2px);
-  box-shadow: var(--shadow-elevation02);
+  border-color: rgba(99, 102, 241, 0.45);
+  transform: translateY(-1px);
 }
 
 .metadataLabel {
-  font-size: var(--font-size-caption);
-  color: var(--text-tertiary);
+  font-size: 0.55rem;
+  font-weight: 700;
+  letter-spacing: 0.08em;
   text-transform: uppercase;
-  letter-spacing: 0.5px;
-  margin-bottom: var(--spacing-xs);
-  font-weight: var(--font-weight-medium);
+  color: rgba(148, 163, 184, 0.4);
+  margin-bottom: 3px;
 }
 
 .metadataValue {
-  font-weight: var(--font-weight-semibold);
-  font-size: var(--font-size-body);
-  color: var(--text-primary);
-  line-height: 1.4;
+  font-weight: 600;
+  font-size: 0.72rem;
+  color: #e0e7ff;
+  line-height: 1.3;
 }
 
-.eraTag {
-  display: inline-flex;
-  align-items: center;
-  padding: var(--spacing-xs) var(--spacing-sm);
-  background: linear-gradient(135deg, 
-    rgba(99, 102, 241, 0.15), 
-    rgba(129, 140, 248, 0.1)
-  );
-  border: 1px solid rgba(99, 102, 241, 0.3);
-  border-radius: var(--border-radius-full);
-  font-size: var(--font-size-caption);
-  color: var(--accent-hover);
-  font-weight: var(--font-weight-semibold);
-  margin-top: var(--spacing-xs);
-  cursor: pointer;
-  transition: var(--transition-fast);
-}
-
-.eraTag:hover {
-  background: linear-gradient(135deg, 
-    rgba(99, 102, 241, 0.25), 
-    rgba(129, 140, 248, 0.2)
-  );
-  border-color: var(--accent-primary);
-}
+/* eraTag — "Auto-detected" badge removed from JSX; rule kept as no-op */
+.eraTag { display: none; }
 
 .traitsContainer {
   display: flex;
   flex-wrap: wrap;
-  gap: var(--spacing-xs);
-  margin-top: var(--spacing-sm);
+  gap: 4px;
+  margin-top: 6px;
 }
 
 .traitChip {
-  padding: var(--spacing-xs) var(--spacing-md);
-  background: linear-gradient(135deg, 
-    rgba(16, 185, 129, 0.15), 
-    rgba(5, 150, 105, 0.1)
-  );
-  border: 1px solid rgba(16, 185, 129, 0.3);
-  border-radius: var(--border-radius-full);
-  font-size: var(--font-size-body-small);
-  color: var(--semantic-success);
-  font-weight: var(--font-weight-medium);
-  cursor: pointer;
-  transition: var(--transition-fast);
+  padding: 2px 8px;
+  border-radius: 999px;
+  font-size: 0.6rem;
+  font-weight: 500;
+  background: rgba(16, 185, 129, 0.1);
+  border: 1px solid rgba(16, 185, 129, 0.25);
+  color: #34d399;
+  cursor: default;
+  transition: background 0.15s;
 }
 
 .traitChip:hover {
-  background: linear-gradient(135deg, 
-    rgba(16, 185, 129, 0.25), 
-    rgba(5, 150, 105, 0.2)
-  );
-  transform: scale(1.05);
+  background: rgba(16, 185, 129, 0.18);
 }
 
 .locationsContainer {
   display: flex;
   flex-wrap: wrap;
-  gap: var(--spacing-xs);
-  margin-top: var(--spacing-sm);
+  gap: 4px;
+  margin-top: 6px;
 }
 
 .locationChip {
-  padding: var(--spacing-xs) var(--spacing-sm);
-  background: linear-gradient(135deg, 
-    rgba(59, 130, 246, 0.15), 
-    rgba(37, 99, 235, 0.1)
-  );
-  border: 1px solid rgba(59, 130, 246, 0.3);
-  border-radius: var(--border-radius-full);
-  font-size: var(--font-size-caption);
-  color: var(--semantic-info);
-  font-weight: var(--font-weight-medium);
+  padding: 2px 8px;
+  border-radius: 999px;
+  font-size: 0.6rem;
+  font-weight: 500;
+  background: rgba(59, 130, 246, 0.1);
+  border: 1px solid rgba(59, 130, 246, 0.25);
+  color: #7dd3fc;
+  cursor: default;
 }
 
-.confidenceBadge {
-  display: inline-flex;
-  align-items: center;
-  gap: var(--spacing-xs);
-  padding: var(--spacing-xs) var(--spacing-sm);
-  background: var(--bg-interactive);
-  border: 1px solid var(--border-medium);
-  border-radius: var(--border-radius-sm);
-  font-size: var(--font-size-caption);
-  color: var(--text-tertiary);
-  margin-top: var(--spacing-md);
-}
+/* Confidence badge — hidden entirely */
+.confidenceBadge { display: none; }
+.confidenceBar   { display: none; }
+.confidenceFill  { display: none; }
 
-.confidenceBar {
-  width: 60px;
-  height: 4px;
-  background: var(--border-medium);
-  border-radius: 2px;
-  overflow: hidden;
-}
-
-.confidenceFill {
-  height: 100%;
-  background: linear-gradient(90deg, 
-    var(--semantic-success), 
-    var(--accent-primary)
-  );
-  border-radius: 2px;
-  transition: width 0.3s ease;
-}
-
-/* Tooltip */
-.tooltip {
-  position: relative;
-}
+/* Tooltip — kept for legacy, hidden by default */
+.tooltip { position: relative; }
 
 .tooltipContent {
   position: absolute;
   bottom: 100%;
   left: 50%;
   transform: translateX(-50%);
-  background: var(--bg-canvas);
-  color: var(--text-primary);
-  padding: var(--spacing-sm) var(--spacing-md);
-  border-radius: var(--border-radius-md);
-  font-size: var(--font-size-caption);
+  background: rgba(10, 15, 26, 0.97);
+  color: #e0e7ff;
+  padding: 6px 12px;
+  border-radius: 8px;
+  font-size: 0.68rem;
   white-space: nowrap;
   opacity: 0;
   pointer-events: none;
-  transition: opacity 0.3s ease;
-  margin-bottom: var(--spacing-sm);
+  transition: opacity 0.2s;
+  margin-bottom: 6px;
   z-index: 1002;
-  border: 1px solid var(--border-medium);
-  box-shadow: var(--shadow-elevation03);
-  max-width: 250px;
+  border: 1px solid rgba(99, 102, 241, 0.22);
+  box-shadow: 0 4px 16px rgba(0,0,0,0.4);
+  max-width: 240px;
   width: max-content;
 }
 
-.tooltip:hover .tooltipContent {
-  opacity: 1;
-}
+.tooltip:hover .tooltipContent { opacity: 1; }
