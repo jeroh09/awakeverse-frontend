@@ -548,7 +548,7 @@
   padding-top: 0.65rem;
   border-top: 1px solid rgba(148, 163, 184, 0.12);
 }
-/* ── Oracle trigger — wordmark as clickable button ─────────────────────── */
+/* ── Oracle trigger — wordmark as clickable button ── */
 .sidebarTitleBtn {
   display: inline-block;
   background: none;
@@ -561,31 +561,7 @@
   line-height: 1;
 }
 
-.sidebarTitleBtn:hover {
-  opacity: 0.75;
-}
-
-.sidebarTitleBtn:focus-visible {
-  outline: 2px solid rgba(99, 102, 241, 0.6);
-  outline-offset: 3px;
-}
-
-/* ── Oracle trigger — wordmark as clickable button ─────────────────────── */
-.sidebarTitleBtn {
-  display: inline-block;
-  background: none;
-  border: none;
-  padding: 0;
-  margin: 0;
-  cursor: pointer;
-  border-radius: 6px;
-  transition: opacity 0.15s ease;
-  line-height: 1;
-}
-
-.sidebarTitleBtn:hover {
-  opacity: 0.75;
-}
+.sidebarTitleBtn:hover { opacity: 0.72; }
 
 .sidebarTitleBtn:focus-visible {
   outline: 2px solid rgba(99, 102, 241, 0.6);

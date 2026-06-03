@@ -958,7 +958,9 @@ const ChatLauncherPage = ({ onStartChat, discoveredCharacters = [] }) => {
 
           {/* Enhanced Search Results with source indicators */}
           {showResults && searchResults.length > 0 && (
-            <div style={{
+            <div 
+              onMouseDown={e => e.preventDefault()}
+              style={{
               position: 'absolute',
               top: '100%',
               left: 0,
@@ -1076,7 +1078,9 @@ const ChatLauncherPage = ({ onStartChat, discoveredCharacters = [] }) => {
           )}
 
           {showResults && searchResults.length === 0 && inputValue.length >= 2 && (
-            <div style={{
+            <div 
+              onMouseDown={e => e.preventDefault()}  
+              style={{
               position: 'absolute',
               top: '100%',
               left: 0,
