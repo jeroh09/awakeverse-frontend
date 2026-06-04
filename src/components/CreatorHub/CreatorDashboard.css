@@ -6,7 +6,9 @@
   width: 100%;
   min-height: 100vh;
   padding: 2rem;
+  padding-top: calc(2rem + 60px);
   box-sizing: border-box;
+  overflow-y: auto;
   background: 
     radial-gradient(circle at top left, rgba(99, 102, 241, 0.15), transparent 50%),
     radial-gradient(circle at bottom right, rgba(15, 23, 42, 0.9), transparent 60%),
@@ -1260,6 +1262,7 @@
 @media (max-width: 768px) {
   .creator-dashboard {
     padding: 1rem;
+    padding-top: calc(1rem + 56px);
   }
   
   .dashboard-header {
