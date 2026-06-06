@@ -337,3 +337,81 @@
   .overlay, .modal { animation: none !important; }
   .previewSpinner   { animation: none !important; }
 }
+/* ── Script modal — wider for text ──────────────────────────────────────── */
+.modalScript {
+  width: min(680px, 95vw);
+}
+
+/* ── Script viewer ───────────────────────────────────────────────────────── */
+.scriptViewer {
+  background: var(--bg-peak);
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--border-radius-md);
+  padding: var(--spacing-lg);
+  max-height: 340px;
+  overflow-y: auto;
+}
+
+.scriptText {
+  font-family: 'Courier New', Courier, monospace;
+  font-size: 11.5px;
+  line-height: 1.75;
+  color: var(--text-secondary);
+  white-space: pre-wrap;
+  word-break: break-word;
+  margin: 0;
+}
+
+/* ── Share button ────────────────────────────────────────────────────────── */
+.shareButton {
+  width: 100%;
+  padding: var(--spacing-md) var(--spacing-lg);
+  background: var(--bg-interactive);
+  color: var(--text-secondary);
+  border: 1px solid var(--border-medium);
+  border-radius: var(--border-radius-md);
+  font-family: var(--font-display);
+  font-size: var(--font-size-body-small);
+  font-weight: var(--font-weight-medium);
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--spacing-sm);
+  transition: var(--transition-fast);
+}
+
+.shareButton:hover {
+  border-color: var(--accent-primary);
+  color: var(--accent-primary);
+  background: var(--accent-glow);
+}
+
+.shareButtonCopied {
+  border-color: #22c55e;
+  color: #22c55e;
+  background: rgba(34,197,94,0.08);
+}
+
+.shareButtonError {
+  border-color: #ef4444;
+  color: #ef4444;
+  background: rgba(239,68,68,0.08);
+}
+
+/* ── Download label + hint ───────────────────────────────────────────────── */
+.downloadLabel {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 2px;
+  flex: 1;
+}
+
+.downloadHint {
+  font-size: 10px;
+  font-weight: var(--font-weight-normal);
+  opacity: 0.7;
+  font-family: var(--font-body);
+  letter-spacing: 0.02em;
+}
