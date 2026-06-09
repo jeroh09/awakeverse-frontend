@@ -372,6 +372,8 @@ export default function InfoPanel({
   onCloseCreate      = () => {},
   onCreateContent    = async () => {},
   onViewJob          = () => {},
+  onCancelJob        = () => {},
+  onDeleteJob        = () => {},
 }) {
   const [selectedType,       setSelectedType]       = useState('script');
   const [selectedDuration,   setSelectedDuration]   = useState(180);
@@ -480,6 +482,18 @@ export default function InfoPanel({
                   </div>
                 </div>
               )}
+
+              <button
+                type="button"
+                className={styles.stopButton}
+                onClick={() => {
+                  const jid = contentState?.activeJob?.id;
+                  if (jid) onCancelJob(jid);
+                }}
+                title="Stop this generation (still counts toward your daily limit)"
+              >
+                ✕ Stop generation
+              </button>
             </div>
           </div>
 
@@ -859,10 +873,13 @@ export default function InfoPanel({
             ) : (
               <div className={styles.jobsList}>
                 {contentJobs.map(job => (
-                  <button
+                  <div
                     key={job.id}
                     className={styles.jobCard}
                     onClick={() => onViewJob(job)}
+                    role="button"
+                    tabIndex={0}
+                    onKeyDown={(e) => { if (e.key === 'Enter') onViewJob(job); }}
                     title={`View ${contentTypeLabel(job.content_type)}`}
                   >
                     <div className={[styles.jobCardIcon, jobChipIconClass(job.content_type)].join(' ')}>
@@ -876,8 +893,21 @@ export default function InfoPanel({
                         {jobChipMeta(job)} · {formatJobDate(job.created_at)}
                       </span>
                     </div>
-                    <span className={styles.jobCardArrow}>›</span>
-                  </button>
+                    <button
+                      type="button"
+                      className={styles.jobCardDelete}
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        if (window.confirm('Delete this generation? This cannot be undone.')) {
+                          onDeleteJob(job.id);
+                        }
+                      }}
+                      title="Delete generation"
+                      aria-label="Delete generation"
+                    >
+                      🗑
+                    </button>
+                  </div>
                 ))}
               </div>
             )}

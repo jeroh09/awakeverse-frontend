@@ -553,7 +553,9 @@ export default function ScenarioChatWindow({
           onOpenCreate={handleOpenCreate}
           onCloseCreate={handleCloseCreate}
           onCreateContent={contentGen.createContent}
-          onViewJob={(job) => setViewingJob(job)} 
+          onViewJob={(job) => setViewingJob(job)}
+          onCancelJob={contentGen.cancelContent}
+          onDeleteJob={contentGen.deleteJob}
         />
       </div>
 
