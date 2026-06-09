@@ -130,6 +130,10 @@ export default function useContentGeneration(scenarioId) {
             error:     job.error_message || 'Generation failed',
             progress:  0,
           });
+        } else if (jobStatus === 'cancelled') {
+          stopPolling();
+          setState({ status: 'idle', activeJob: null, error: null, progress: 0 });
+          await loadJobs();
         }
         // 'processing' / 'pending' → keep polling
 
@@ -236,11 +240,64 @@ export default function useContentGeneration(scenarioId) {
     setState(INITIAL_STATE);
   }, [stopPolling]);
 
+  // ── Cancel (stop) an in-flight job ──────────────────────────────────────────
+
+  const cancelContent = useCallback(async (jobId) => {
+    console.log('🛑 cancelContent called with jobId=', jobId);
+    if (!jobId) { console.warn('cancelContent: no jobId — aborting'); return; }
+    const csrf = document.cookie.match(/(?:^|;\s*)av_csrf=([^;]+)/)?.[1] || '';
+    // Optimistic: stop polling + return UI to idle; worker stops at next beat.
+    stopPolling();
+    setState(INITIAL_STATE);
+    try {
+      await fetch(`${API_BASE}/api/content/jobs/${jobId}/cancel`, {
+        method: 'POST',
+        headers: { 'X-CSRF-Token': csrf },
+        credentials: 'include',
+      });
+      console.log(`🛑 Cancel requested: job ${jobId}`);
+    } catch (e) {
+      console.warn('⚠️ cancel request failed:', e.message);
+    } finally {
+      await loadJobs();
+    }
+  }, [stopPolling, loadJobs]);
+
+  // ── Delete a job (+ its stored media) ───────────────────────────────────────
+
+  const deleteJob = useCallback(async (jobId) => {
+    console.log('🗑️ deleteJob called with jobId=', jobId);
+    if (!jobId) { console.warn('deleteJob: no jobId — aborting'); return; }
+    const csrf = document.cookie.match(/(?:^|;\s*)av_csrf=([^;]+)/)?.[1] || '';
+    try {
+      const res = await fetch(`${API_BASE}/api/content/jobs/${jobId}`, {
+        method: 'DELETE',
+        headers: { 'X-CSRF-Token': csrf },
+        credentials: 'include',
+      });
+      if (!res.ok) {
+        const data = await res.json().catch(() => ({}));
+        throw new Error(data.error || `Delete failed: ${res.status}`);
+      }
+      console.log(`🗑️ Deleted job ${jobId}`);
+      // If we deleted the job currently shown, clear it.
+      setState(prev =>
+        prev.activeJob?.id === jobId ? INITIAL_STATE : prev
+      );
+    } catch (e) {
+      console.error('❌ deleteJob failed:', e);
+    } finally {
+      await loadJobs();
+    }
+  }, [loadJobs]);
+
   return {
     state,          // { status, activeJob, error, progress }
     jobs,           // ContentJob[] — past completed jobs
     jobsLoading,
     createContent,  // (params) => Promise<job>
+    cancelContent,  // (jobId) => void — stop an in-flight job
+    deleteJob,      // (jobId) => void — delete a job + its media
     loadJobs,       // () => void — manual refresh
     resetContent,   // () => void
   };
