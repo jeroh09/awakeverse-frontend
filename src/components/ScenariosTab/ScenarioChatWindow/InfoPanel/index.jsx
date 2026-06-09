@@ -756,6 +756,24 @@ export default function InfoPanel({
             {/* Video options */}
             {selectedType === 'video' && (
               <>
+                <p className={styles.fieldLabel}>Duration</p>
+                <div className={styles.durationSelector}>
+                  {DURATIONS.map(d => (
+                    <button
+                      key={d.value}
+                      className={[
+                        styles.durationButton,
+                        selectedDuration === d.value ? styles.durationButtonActive : '',
+                      ].filter(Boolean).join(' ')}
+                      onClick={() => setSelectedDuration(d.value)}
+                      aria-pressed={selectedDuration === d.value}
+                    >
+                      <span className={styles.durationLabel}>{d.label}</span>
+                      <span className={styles.durationDesc}>{d.desc}</span>
+                    </button>
+                  ))}
+                </div>
+
                 <p className={styles.fieldLabel}>Story style</p>
                 <div className={styles.styleGrid}>
                   {STORY_STYLES.map(s => (
