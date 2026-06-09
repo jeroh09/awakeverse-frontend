@@ -7,7 +7,15 @@ import styles from './ScriptViewerModal.module.css';
 
 const API_BASE = process.env.REACT_APP_API_URL || 'https://api.awakeverse.com';
 
-export default function ScriptViewerModal({ job, scenarioTitle, onClose, onJobUpdated }) {
+// Visual styles offered at render time (match InfoPanel's video styles)
+const VIDEO_STYLES = [
+  { id: 'realistic',  label: 'Realistic' },
+  { id: 'anime',      label: 'Anime' },
+  { id: 'cartoon',    label: 'Cartoon' },
+  { id: 'comic_book', label: 'Comic' },
+];
+
+export default function ScriptViewerModal({ job, scenarioTitle, onClose, onJobUpdated, onRenderVideo }) {
   if (!job) return null;
 
   const script    = job.condensed_script || '';
@@ -23,6 +31,10 @@ export default function ScriptViewerModal({ job, scenarioTitle, onClose, onJobUp
   const [saveSuccess,  setSaveSuccess]  = useState(false);
   const textareaRef = useRef(null);
 
+  // ── Render-video state ────────────────────────────────────────────────────
+  const [videoStyle,  setVideoStyle]  = useState(job.video_style || 'realistic');
+  const [isRendering, setIsRendering] = useState(false);
+
   // Focus textarea on edit mode entry
   useEffect(() => {
     if (isEditing && textareaRef.current) {
@@ -37,6 +49,11 @@ export default function ScriptViewerModal({ job, scenarioTitle, onClose, onJobUp
     setEditedScript(job.condensed_script || '');
   }
 }, [job.condensed_script, isEditing]);
+
+  // Pre-select the visual style the video panel chose (stored on the script job)
+  useEffect(() => {
+    setVideoStyle(job.video_style || 'realistic');
+  }, [job.id, job.video_style]);
 
   // ── Escape key ──────────────────────────────────────────────────────────
   const handleKeyDown = useCallback((e) => {
@@ -107,6 +124,18 @@ export default function ScriptViewerModal({ job, scenarioTitle, onClose, onJobUp
       setSaveError(error.message);
     } finally {
       setIsSaving(false);
+    }
+  };
+
+  // ── Render video from this (saved) script ─────────────────────────────────
+  const handleRenderVideo = async () => {
+    if (!onRenderVideo || isRendering) return;
+    setIsRendering(true);
+    try {
+      await onRenderVideo(videoStyle);   // parent creates the video job + closes the viewer
+    } catch (e) {
+      console.error('❌ Render video failed:', e);
+      setIsRendering(false);             // on success the modal unmounts, so only reset on error
     }
   };
 
@@ -269,6 +298,39 @@ export default function ScriptViewerModal({ job, scenarioTitle, onClose, onJobUp
             </pre>
           )}
         </div>
+
+        {/* ── Render bar: visual style + Render Video ─────────────── */}
+        {!isEditing && onRenderVideo && (job.condensed_script || '').trim() && (
+          <div className={styles.renderBar}>
+            <div className={styles.renderStyles}>
+              <span className={styles.renderLabel}>Visual style</span>
+              <div className={styles.styleGrid}>
+                {VIDEO_STYLES.map(s => (
+                  <button
+                    key={s.id}
+                    type="button"
+                    className={[
+                      styles.styleButton,
+                      videoStyle === s.id ? styles.styleButtonActive : '',
+                    ].filter(Boolean).join(' ')}
+                    onClick={() => setVideoStyle(s.id)}
+                    aria-pressed={videoStyle === s.id}
+                  >
+                    {s.label}
+                  </button>
+                ))}
+              </div>
+            </div>
+            <button
+              className={styles.renderButton}
+              onClick={handleRenderVideo}
+              disabled={isRendering}
+              title="Generate the video from this screenplay"
+            >
+              {isRendering ? 'Starting…' : '▶  Render Video'}
+            </button>
+          </div>
+        )}
 
         {/* ── Footer ──────────────────────────────────────────────── */}
         <div className={styles.footer}>

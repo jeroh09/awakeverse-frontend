@@ -600,13 +600,29 @@ export default function InfoPanel({
   if (isCreatePanelOpen) {
     const handleGenerate = async () => {
       try {
+        // Video is a two-step: generate the screenplay first, open it for review/edit,
+        // then the viewer's "Render Video" button is the actual (paid) fal trigger.
+        if (selectedType === 'video') {
+          const scriptJob = await onCreateContent({
+            contentType:     'script',
+            durationSeconds: selectedDuration,
+            messageIds:      [],
+            scriptFormat:    'screenplay',
+            storyStyle:      selectedStoryStyle,
+            videoStyle:      selectedVideoStyle,   // carried → viewer pre-selects this look
+          });
+          const id = scriptJob && (scriptJob.id || scriptJob.job_id);
+          if (id) onViewJob({ ...scriptJob, id });
+          return;
+        }
+
         await onCreateContent({
           contentType:     selectedType,
           durationSeconds: selectedDuration,
           messageIds:      [],
           videoStyle:      selectedVideoStyle,
           scriptFormat:    selectedType === 'script' ? selectedFormat : 'screenplay',
-          storyStyle:      selectedType === 'script' ? selectedStoryStyle : 'debate',
+          storyStyle:      selectedStoryStyle,
         });
       } catch {
         // error surfaced via contentState.error → FAILED block
@@ -740,6 +756,25 @@ export default function InfoPanel({
             {/* Video options */}
             {selectedType === 'video' && (
               <>
+                <p className={styles.fieldLabel}>Story style</p>
+                <div className={styles.styleGrid}>
+                  {STORY_STYLES.map(s => (
+                    <button
+                      key={s.id}
+                      className={[
+                        styles.styleButton,
+                        selectedStoryStyle === s.id ? styles.styleButtonActive : '',
+                      ].filter(Boolean).join(' ')}
+                      onClick={() => setSelectedStoryStyle(s.id)}
+                      aria-pressed={selectedStoryStyle === s.id}
+                      title={s.label}
+                    >
+                      <span className={styles.styleIcon}><s.Icon /></span>
+                      <span className={styles.styleLabel}>{s.label}</span>
+                    </button>
+                  ))}
+                </div>
+
                 <p className={styles.fieldLabel}>Visual style</p>
                 <div className={styles.styleGrid}>
                   {VIDEO_STYLES.map(s => (
@@ -760,7 +795,7 @@ export default function InfoPanel({
                 </div>
                 <p className={styles.asyncTypeHint}>
                   <InfoIcon />
-                  Generates audio + animated video. Takes 8–12 minutes.
+                  Builds the screenplay first — review and edit it, then hit Render Video.
                 </p>
               </>
             )}
