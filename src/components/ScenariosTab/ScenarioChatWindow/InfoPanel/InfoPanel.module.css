@@ -528,6 +528,31 @@
   margin-top: 0.65rem;
 }
 
+.posterTitleInput {
+  width: 100%;
+  box-sizing: border-box;
+  padding: 0.5rem 0.6rem;
+  border-radius: 7px;
+  border: 1px solid rgba(148, 163, 184, 0.14);
+  background: #1C2640;
+  color: #E2E8F0;
+  font-family: 'Inter', system-ui, sans-serif;
+  font-size: 0.72rem;
+  font-weight: 500;
+  outline: none;
+  transition: border-color 0.15s cubic-bezier(0.4, 0, 0.2, 1),
+              box-shadow 0.15s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.posterTitleInput::placeholder {
+  color: #475569;
+}
+
+.posterTitleInput:focus {
+  border-color: rgba(99, 102, 241, 0.5);
+  box-shadow: 0 0 0 2px rgba(99, 102, 241, 0.18);
+}
+
 .fieldLabel:first-child { margin-top: 0; }
 
 /* ── Duration selector ── */

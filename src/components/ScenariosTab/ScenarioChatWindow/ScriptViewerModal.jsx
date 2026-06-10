@@ -187,6 +187,56 @@ export default function ScriptViewerModal({ job, scenarioTitle, onClose, onJobUp
     ? editedScript.length
     : charCount;
 
+  // ── Poster: image viewer (no script editing / render bar) ─────────────────
+  if (job.content_type === 'poster') {
+    return (
+      <div
+        className={styles.overlay}
+        onClick={(e) => { if (e.target === e.currentTarget) onClose(); }}
+        role="dialog"
+        aria-modal="true"
+        aria-label="Poster viewer"
+      >
+        <div className={styles.modal}>
+          <div className={styles.header}>
+            <div className={styles.headerLeft}>
+              <span className={styles.headerIcon}>🖼️</span>
+              <div>
+                <h2 className={styles.headerTitle}>{scenarioTitle}</h2>
+                <p className={styles.headerMeta}>Poster · {job.video_style || 'realistic'}</p>
+              </div>
+            </div>
+            <div className={styles.headerActions}>
+              <a
+                className={styles.actionButton}
+                href={job.output_url}
+                target="_blank"
+                rel="noreferrer"
+                download
+                title="Download poster"
+              >
+                Download
+              </a>
+              <button className={styles.closeButton} onClick={onClose} aria-label="Close viewer">
+                ✕
+              </button>
+            </div>
+          </div>
+          <div
+            className={styles.body}
+            style={{ display: 'flex', alignItems: 'center', justifyContent: 'center' }}
+          >
+            <img
+              src={job.output_url}
+              alt={`${scenarioTitle} poster`}
+              style={{ maxWidth: '100%', maxHeight: '100%', objectFit: 'contain', borderRadius: 8 }}
+            />
+          </div>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div
       className={styles.overlay}

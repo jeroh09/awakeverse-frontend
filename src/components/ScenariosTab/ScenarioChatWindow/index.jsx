@@ -556,6 +556,7 @@ export default function ScenarioChatWindow({
           onViewJob={(job) => setViewingJob(job)}
           onCancelJob={contentGen.cancelContent}
           onDeleteJob={contentGen.deleteJob}
+          onGeneratePoster={contentGen.generatePoster}
         />
       </div>
 
@@ -569,7 +570,7 @@ export default function ScenarioChatWindow({
         />
       )}
       {/* Script viewer */}
-      {viewingJob && viewingJob.content_type === 'script' && (
+      {viewingJob && (viewingJob.content_type === 'script' || viewingJob.content_type === 'poster') && (
         <ScriptViewerModal
           job={viewingJob}
           scenarioTitle={scenario.title}

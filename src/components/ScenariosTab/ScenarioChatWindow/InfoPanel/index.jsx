@@ -2,7 +2,7 @@
 // Complete rewrite — no Lucide, no emoji. SVG icons throughout.
 // Structure: header nav strip · two-zone create panel · chip-style jobs · stage progress.
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import ScenarioListItem from './ScenarioListItem';
 import styles from './InfoPanel.module.css';
 
@@ -221,6 +221,14 @@ const CONTENT_TYPES = [
   { id: 'script', label: 'Script', Icon: ScriptIcon },
   { id: 'audio',  label: 'Audio',  Icon: AudioIcon  },
   { id: 'video',  label: 'Scene',  Icon: VideoIcon  },
+  { id: 'poster', label: 'Poster', Icon: VideoIcon  },
+];
+
+const POSTER_ASPECTS = [
+  { id: 'portrait', label: 'Portrait' },
+  { id: 'wide',     label: 'Wide' },
+  { id: 'story',    label: 'Story' },
+  { id: 'square',   label: 'Square' },
 ];
 
 const DURATIONS = [
@@ -374,15 +382,23 @@ export default function InfoPanel({
   onViewJob          = () => {},
   onCancelJob        = () => {},
   onDeleteJob        = () => {},
+  onGeneratePoster   = async () => {},
 }) {
   const [selectedType,       setSelectedType]       = useState('script');
   const [selectedDuration,   setSelectedDuration]   = useState(180);
   const [selectedVideoStyle, setSelectedVideoStyle] = useState('realistic');
   const [selectedFormat,     setSelectedFormat]     = useState('screenplay');
   const [selectedStoryStyle, setSelectedStoryStyle] = useState('debate');
+  const [posterTitle,        setPosterTitle]        = useState('');
+  const [posterAspect,       setPosterAspect]       = useState('portrait');
 
   const validScenarios = Array.isArray(scenarios) ? scenarios : [];
   const activeScenario = validScenarios.find(s => s.id === currentScenarioId);
+
+  // Poster title defaults to the scenario's title (editable).
+  useEffect(() => {
+    setPosterTitle(activeScenario?.title || '');
+  }, [activeScenario?.id, activeScenario?.title]);
   const status         = contentState?.status   || 'idle';
   const progress       = contentState?.progress || 0;
   const pct            = Math.round(progress * 100);
@@ -600,6 +616,15 @@ export default function InfoPanel({
                 </>
               )}
 
+              {type === 'poster' && (
+                <>
+                  <p className={styles.successMeta}>Poster · {job.video_style || 'realistic'}</p>
+                  <button className={styles.generateButton} onClick={() => onViewJob(job)}>
+                    View Poster
+                  </button>
+                </>
+              )}
+
               <button className={styles.backLink} onClick={onCloseCreate}>
                 ← Back
               </button>
@@ -627,6 +652,18 @@ export default function InfoPanel({
           });
           const id = scriptJob && (scriptJob.id || scriptJob.job_id);
           if (id) onViewJob({ ...scriptJob, id });
+          return;
+        }
+
+        // Poster is synchronous; open it in the viewer when ready.
+        if (selectedType === 'poster') {
+          const job = await onGeneratePoster({
+            title:      posterTitle.trim(),
+            aspect:     posterAspect,
+            videoStyle: selectedVideoStyle,
+          });
+          const pid = job && (job.id || job.job_id);
+          if (pid) onViewJob({ ...job, id: pid });
           return;
         }
 
@@ -831,6 +868,59 @@ export default function InfoPanel({
                 </p>
               </>
             )}
+
+            {selectedType === 'poster' && (
+              <>
+                <p className={styles.fieldLabel}>Title</p>
+                <input
+                  className={styles.posterTitleInput}
+                  value={posterTitle}
+                  onChange={(e) => setPosterTitle(e.target.value)}
+                  placeholder={activeScenario?.title || 'Poster title'}
+                  maxLength={120}
+                  aria-label="Poster title"
+                />
+
+                <p className={styles.fieldLabel}>Format</p>
+                <div className={styles.styleGrid}>
+                  {POSTER_ASPECTS.map(a => (
+                    <button
+                      key={a.id}
+                      className={[
+                        styles.styleButton,
+                        posterAspect === a.id ? styles.styleButtonActive : '',
+                      ].filter(Boolean).join(' ')}
+                      onClick={() => setPosterAspect(a.id)}
+                      aria-pressed={posterAspect === a.id}
+                    >
+                      <span className={styles.styleLabel}>{a.label}</span>
+                    </button>
+                  ))}
+                </div>
+
+                <p className={styles.fieldLabel}>Visual style</p>
+                <div className={styles.styleGrid}>
+                  {VIDEO_STYLES.map(s => (
+                    <button
+                      key={s.id}
+                      className={[
+                        styles.styleButton,
+                        selectedVideoStyle === s.id ? styles.styleButtonActive : '',
+                      ].filter(Boolean).join(' ')}
+                      onClick={() => setSelectedVideoStyle(s.id)}
+                      aria-pressed={selectedVideoStyle === s.id}
+                    >
+                      <span className={styles.styleLabel}>{s.label}</span>
+                    </button>
+                  ))}
+                </div>
+
+                <p className={styles.asyncTypeHint}>
+                  <InfoIcon />
+                  Title defaults to the scenario name — edit it freely. Matches the scene's visual style.
+                </p>
+              </>
+            )}
           </div>
 
         </div>
@@ -898,6 +988,7 @@ export default function InfoPanel({
                       className={styles.jobCardDelete}
                       onClick={(e) => {
                         e.stopPropagation();
+                        console.log('🗑️ delete button clicked for job', job.id, '— onDeleteJob is', typeof onDeleteJob);
                         if (window.confirm('Delete this generation? This cannot be undone.')) {
                           onDeleteJob(job.id);
                         }

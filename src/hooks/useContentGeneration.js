@@ -291,11 +291,41 @@ export default function useContentGeneration(scenarioId) {
     }
   }, [loadJobs]);
 
+  // ── Generate a poster (sync; returns a content_type='poster' job) ──────────
+
+  const generatePoster = useCallback(async ({
+    title = '', aspect = 'portrait', videoStyle = 'realistic', prompt = '',
+  } = {}) => {
+    if (!scenarioId) return;
+    const csrf = document.cookie.match(/(?:^|;\s*)av_csrf=([^;]+)/)?.[1] || '';
+    setState({ status: 'creating', activeJob: { content_type: 'poster' }, error: null, progress: 0.3 });
+    try {
+      const res = await fetch(`${API_BASE}/api/content/scenarios/${scenarioId}/poster`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', 'X-CSRF-Token': csrf },
+        credentials: 'include',
+        body: JSON.stringify({ title, aspect, video_style: videoStyle, prompt }),
+      });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error || `Poster failed: ${res.status}`);
+      const job = { ...data, id: data.id || data.job_id };
+      setState({ status: 'complete', activeJob: job, error: null, progress: 1 });
+      await loadJobs();
+      console.log('🖼️ poster generated:', job.id);
+      return job;
+    } catch (e) {
+      console.error('❌ generatePoster failed:', e);
+      setState({ status: 'failed', activeJob: null, error: e.message, progress: 0 });
+      throw e;
+    }
+  }, [scenarioId, loadJobs]);
+
   return {
     state,          // { status, activeJob, error, progress }
     jobs,           // ContentJob[] — past completed jobs
     jobsLoading,
     createContent,  // (params) => Promise<job>
+    generatePoster, // (params) => Promise<job> — sync poster
     cancelContent,  // (jobId) => void — stop an in-flight job
     deleteJob,      // (jobId) => void — delete a job + its media
     loadJobs,       // () => void — manual refresh
