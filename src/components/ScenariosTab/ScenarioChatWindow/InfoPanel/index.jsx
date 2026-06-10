@@ -78,6 +78,17 @@ const VideoIcon = ({ size = 16 }) => (
   </svg>
 );
 
+// ✅ NEW: Custom PosterIcon — framed image / portrait
+const PosterIcon = ({ size = 16 }) => (
+  <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.6"
+    strokeLinecap="round" strokeLinejoin="round" width={size} height={size}>
+    <rect x="1.5" y="1.5" width="13" height="13" rx="1.5" />
+    <rect x="3.5" y="4" width="9" height="6" rx="0.8" />
+    <line x1="3.5" y1="12.5" x2="12.5" y2="12.5" />
+    <line x1="5.5" y1="14" x2="10.5" y2="14" />
+  </svg>
+);
+
 const ScreenplayIcon = ({ size = 14 }) => (
   <svg viewBox="0 0 14 14" fill="none" stroke="currentColor" strokeWidth="1.5"
     strokeLinecap="round" strokeLinejoin="round" width={size} height={size}>
@@ -221,7 +232,7 @@ const CONTENT_TYPES = [
   { id: 'script', label: 'Script', Icon: ScriptIcon },
   { id: 'audio',  label: 'Audio',  Icon: AudioIcon  },
   { id: 'video',  label: 'Scene',  Icon: VideoIcon  },
-  { id: 'poster', label: 'Poster', Icon: VideoIcon  },
+  { id: 'poster', label: 'Poster', Icon: PosterIcon },   // ← custom poster icon
 ];
 
 const POSTER_ASPECTS = [
@@ -292,13 +303,16 @@ function ContentTypeIcon({ type, size = 12 }) {
 function jobChipIconClass(type) {
   if (type === 'audio') return styles.jobChipIconAudio;
   if (type === 'video') return styles.jobChipIconVideo;
+  // poster falls back to script styling (no distinct colour)
   return styles.jobChipIconScript;
 }
 
 function jobChipMeta(job) {
   if (job.content_type === 'script') return formatCharCount(job.char_count);
   if (job.content_type === 'audio')  return 'MP3';
-  return 'MP4';
+  if (job.content_type === 'video')  return 'MP4';
+  if (job.content_type === 'poster') return 'PNG';
+  return '';
 }
 
 /**
@@ -340,23 +354,38 @@ function friendlyError(rawError) {
   return 'Generation failed unexpectedly. Please try again.';
 }
 
-// ── Download helper ───────────────────────────────────────────────────────────
+// ── Download helper (supports audio, video, poster) ──────────────────────────
 
 async function downloadJobFile(jobId, type) {
   try {
-    const url      = `${API_BASE}/api/content/jobs/${jobId}/download-${type}`;
+    let url = '';
+    let filename = '';
+
+    if (type === 'audio') {
+      url = `${API_BASE}/api/content/jobs/${jobId}/download-audio`;
+      filename = `audio_drama_${jobId}.mp3`;
+    } else if (type === 'video') {
+      url = `${API_BASE}/api/content/jobs/${jobId}/download-video`;
+      filename = `scene_video_${jobId}.mp4`;
+    } else if (type === 'poster') {
+      url = `${API_BASE}/api/content/jobs/${jobId}/download-poster`;
+      filename = `poster_${jobId}.png`;
+    } else {
+      console.error('Unknown download type:', type);
+      return;
+    }
+
     const response = await fetch(url, { credentials: 'include' });
     if (!response.ok) {
       console.error(`Download failed: ${response.status}`);
       return;
     }
-    const blob    = await response.blob();
+
+    const blob = await response.blob();
     const blobUrl = URL.createObjectURL(blob);
-    const a       = document.createElement('a');
-    a.href        = blobUrl;
-    a.download    = type === 'audio'
-      ? `audio_drama_${jobId}.mp3`
-      : `scene_video_${jobId}.mp4`;
+    const a = document.createElement('a');
+    a.href = blobUrl;
+    a.download = filename;
     document.body.appendChild(a);
     a.click();
     document.body.removeChild(a);
@@ -618,9 +647,14 @@ export default function InfoPanel({
 
               {type === 'poster' && (
                 <>
-                  <p className={styles.successMeta}>Poster · {job.video_style || 'realistic'}</p>
-                  <button className={styles.generateButton} onClick={() => onViewJob(job)}>
-                    View Poster
+                  <p className={styles.successMeta}>
+                    Poster · {job.video_style || 'realistic'} · PNG
+                  </p>
+                  <button
+                    className={styles.generateButton}
+                    onClick={() => downloadJobFile(job.id, 'poster')}
+                  >
+                    Download Poster
                   </button>
                 </>
               )}
@@ -656,7 +690,7 @@ export default function InfoPanel({
         }
 
         // Poster is async (queued like video). Kick it off; progress shows in
-        // the panel, and the complete-state card's "View Poster" opens it.
+        // the panel, and the complete-state card's "Download Poster" opens it.
         if (selectedType === 'poster') {
           await onGeneratePoster({
             title:      posterTitle.trim(),
