@@ -384,6 +384,39 @@
   color: #475569;
 }
 
+.introToggle {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  cursor: pointer;
+  font-family: 'Inter', system-ui, sans-serif;
+  font-size: 0.75rem;
+  font-weight: 600;
+  color: var(--text-secondary, #94A3B8);
+  user-select: none;
+  white-space: nowrap;
+}
+
+.introToggle input {
+  width: 15px;
+  height: 15px;
+  accent-color: #6366F1;
+  cursor: pointer;
+  flex-shrink: 0;
+}
+
+.introToggle span {
+  display: flex;
+  flex-direction: column;
+  line-height: 1.2;
+}
+
+.introToggle small {
+  font-size: 0.6rem;
+  font-weight: 500;
+  color: #475569;
+}
+
 .styleGrid {
   display: grid;
   grid-template-columns: repeat(4, 1fr);

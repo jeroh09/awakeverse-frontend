@@ -15,7 +15,7 @@ const VIDEO_STYLES = [
   { id: 'comic_book', label: 'Comic' },
 ];
 
-export default function ScriptViewerModal({ job, scenarioTitle, onClose, onJobUpdated, onRenderVideo }) {
+export default function ScriptViewerModal({ job, scenarioTitle, onClose, onJobUpdated, onRenderVideo, hasPoster = false }) {
   if (!job) return null;
 
   const script    = job.condensed_script || '';
@@ -32,8 +32,9 @@ export default function ScriptViewerModal({ job, scenarioTitle, onClose, onJobUp
   const textareaRef = useRef(null);
 
   // ── Render-video state ────────────────────────────────────────────────────
-  const [videoStyle,  setVideoStyle]  = useState(job.video_style || 'realistic');
-  const [isRendering, setIsRendering] = useState(false);
+  const [videoStyle,   setVideoStyle]   = useState(job.video_style || 'realistic');
+  const [isRendering,  setIsRendering]  = useState(false);
+  const [includeIntro, setIncludeIntro] = useState(hasPoster);  // default on if a poster exists
 
   // Focus textarea on edit mode entry
   useEffect(() => {
@@ -132,7 +133,7 @@ export default function ScriptViewerModal({ job, scenarioTitle, onClose, onJobUp
     if (!onRenderVideo || isRendering) return;
     setIsRendering(true);
     try {
-      await onRenderVideo(videoStyle);   // parent creates the video job + closes the viewer
+      await onRenderVideo(videoStyle, includeIntro);   // parent creates the video job + closes the viewer
     } catch (e) {
       console.error('❌ Render video failed:', e);
       setIsRendering(false);             // on success the modal unmounts, so only reset on error
@@ -371,6 +372,19 @@ export default function ScriptViewerModal({ job, scenarioTitle, onClose, onJobUp
                 ))}
               </div>
             </div>
+
+            <label className={styles.introToggle}>
+              <input
+                type="checkbox"
+                checked={includeIntro}
+                onChange={(e) => setIncludeIntro(e.target.checked)}
+              />
+              <span>
+                Branded intro
+                <small>{hasPoster ? 'opens with your poster' : 'generates a wide title card'}</small>
+              </span>
+            </label>
+
             <button
               className={styles.renderButton}
               onClick={handleRenderVideo}

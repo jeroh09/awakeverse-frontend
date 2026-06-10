@@ -574,12 +574,14 @@ export default function ScenarioChatWindow({
         <ScriptViewerModal
           job={viewingJob}
           scenarioTitle={scenario.title}
+          hasPoster={(contentGen.jobs || []).some(
+            j => j.content_type === 'poster' && j.status === 'complete' && j.output_url)}
           onClose={() => setViewingJob(null)}
           onJobUpdated={(updatedJob) => {
             setViewingJob(updatedJob);
             contentGen.loadJobs();
           }}
-          onRenderVideo={async (videoStyle) => {
+          onRenderVideo={async (videoStyle, includeIntro) => {
             const scriptJob = viewingJob;
             setViewingJob(null);                 // close viewer; progress shows in InfoPanel
             await contentGen.createContent({
@@ -587,6 +589,7 @@ export default function ScenarioChatWindow({
               storyStyle:      scriptJob.story_style || 'debate',
               videoStyle,
               durationSeconds: scriptJob.duration_seconds || 180,
+              intro:           !!includeIntro,
             });
           }}
         />

@@ -152,6 +152,7 @@ export default function useContentGeneration(scenarioId) {
     scriptFormat    = 'screenplay',
     storyStyle      = 'debate',
     videoStyle      = 'realistic',
+    intro           = false,
   } = {}) => {
     if (!scenarioId) {
       console.error('❌ createContent: scenarioId missing');
@@ -182,6 +183,7 @@ export default function useContentGeneration(scenarioId) {
           script_format:    scriptFormat,
           story_style:      storyStyle,
           video_style:      videoStyle,
+          intro:            intro,
         }),
       });
 
