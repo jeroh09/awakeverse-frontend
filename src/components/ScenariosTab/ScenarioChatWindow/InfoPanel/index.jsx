@@ -655,15 +655,14 @@ export default function InfoPanel({
           return;
         }
 
-        // Poster is synchronous; open it in the viewer when ready.
+        // Poster is async (queued like video). Kick it off; progress shows in
+        // the panel, and the complete-state card's "View Poster" opens it.
         if (selectedType === 'poster') {
-          const job = await onGeneratePoster({
+          await onGeneratePoster({
             title:      posterTitle.trim(),
             aspect:     posterAspect,
             videoStyle: selectedVideoStyle,
           });
-          const pid = job && (job.id || job.job_id);
-          if (pid) onViewJob({ ...job, id: pid });
           return;
         }
 

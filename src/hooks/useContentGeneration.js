@@ -298,7 +298,8 @@ export default function useContentGeneration(scenarioId) {
   } = {}) => {
     if (!scenarioId) return;
     const csrf = document.cookie.match(/(?:^|;\s*)av_csrf=([^;]+)/)?.[1] || '';
-    setState({ status: 'creating', activeJob: { content_type: 'poster' }, error: null, progress: 0.3 });
+    stopPolling();
+    setState({ status: 'creating', activeJob: { content_type: 'poster', progress: 0 }, error: null, progress: 0 });
     try {
       const res = await fetch(`${API_BASE}/api/content/scenarios/${scenarioId}/poster`, {
         method: 'POST',
@@ -308,17 +309,25 @@ export default function useContentGeneration(scenarioId) {
       });
       const data = await res.json();
       if (!res.ok) throw new Error(data.error || `Poster failed: ${res.status}`);
-      const job = { ...data, id: data.id || data.job_id };
-      setState({ status: 'complete', activeJob: job, error: null, progress: 1 });
-      await loadJobs();
-      console.log('🖼️ poster generated:', job.id);
-      return job;
+
+      // Async (202): poster renders on the RQ worker → poll until complete.
+      const jobId = data.job_id || data.id;
+      setState({
+        status:    'creating',
+        activeJob: { id: jobId, content_type: 'poster', progress: 0 },
+        error:     null,
+        progress:  0,
+      });
+      startPolling(jobId, 'poster');
+      console.log(`⏳ Poster queued: ${jobId}`);
+      return data;
     } catch (e) {
       console.error('❌ generatePoster failed:', e);
+      stopPolling();
       setState({ status: 'failed', activeJob: null, error: e.message, progress: 0 });
       throw e;
     }
-  }, [scenarioId, loadJobs]);
+  }, [scenarioId, startPolling, stopPolling]);
 
   return {
     state,          // { status, activeJob, error, progress }
