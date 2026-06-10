@@ -1,5 +1,5 @@
 // src/components/ScenariosTab/ScenarioChatWindow/InfoPanel/index.jsx
-// Complete rewrite — no Lucide, no emoji. SVG icons throughout.
+// Complete rewrite — no Lucide, no emoji. SVG icons
 // Structure: header nav strip · two-zone create panel · chip-style jobs · stage progress.
 
 import React, { useState, useEffect } from 'react';
@@ -1052,4 +1052,4 @@ export default function InfoPanel({
       </div>
     </div>
   );
-}
+}  
