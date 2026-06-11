@@ -42,8 +42,8 @@ export default function usePremiumCapabilities() {
       return {
         subscription_state: SUBSCRIPTION_STATES.FREE,
         is_premium: false,
-        can_create_character: True,
-        can_chat_with_character: True,
+        can_create_character: true,
+        can_chat_with_character: true,
         can_access_templates: true,
         should_show_upgrade: false,
         should_show_trial_prompt: true,
