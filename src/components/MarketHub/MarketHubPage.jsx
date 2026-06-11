@@ -290,7 +290,7 @@ const AuthenticatedMarketHub = ({
 
         // Handle specific error cases
         if (startResponse.status === 403) {
-          alert('Unlimited tier required to start debates');
+          alert('Explorer tier or above required to start Verse scenarios. Upgrade to access.');
           return;
         }
 

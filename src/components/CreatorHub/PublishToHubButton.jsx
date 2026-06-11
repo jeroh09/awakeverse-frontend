@@ -62,7 +62,7 @@ const PublishToHubButton = ({
       
       if (response.data && response.data.subscription) {
         const tier = response.data.subscription.tier;
-        return tier === 'unlimited';
+        return ['pro', 'unlimited'].includes(tier);
       }
       
       return false;
@@ -134,7 +134,8 @@ const PublishToHubButton = ({
       if (errorMessage.includes('private character')) {
         errorMessage = 'Character must be public to publish to Market Hub';
       } else if (errorMessage.includes('Unauthorized') || errorMessage.includes('tier required')) {
-        errorMessage = 'Unlimited tier required to publish';
+        errorMessage = 'Creator tier or above required to publish';
+
       }
       
       setError(errorMessage);
@@ -200,7 +201,8 @@ const PublishToHubButton = ({
           onClick={handleToggleClick}
           disabled={isProcessing}
           className="publish-to-hub-button"
-          title="Publish to Market Hub (Unlimited tier required)"
+          title="Publish to Market Hub (Professional tier or above required)"
+
         >
           {isProcessing ? (
             <>
