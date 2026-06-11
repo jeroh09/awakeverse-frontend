@@ -581,7 +581,7 @@ export default function ScenarioChatWindow({
             setViewingJob(updatedJob);
             contentGen.loadJobs();
           }}
-          onRenderVideo={async (videoStyle, includeIntro) => {
+          onRenderVideo={async (videoStyle, includeIntro, includeOutro) => {
             const scriptJob = viewingJob;
             setViewingJob(null);                 // close viewer; progress shows in InfoPanel
             await contentGen.createContent({
@@ -590,6 +590,7 @@ export default function ScenarioChatWindow({
               videoStyle,
               durationSeconds: scriptJob.duration_seconds || 180,
               intro:           !!includeIntro,
+              outro:           !!includeOutro,
             });
           }}
         />

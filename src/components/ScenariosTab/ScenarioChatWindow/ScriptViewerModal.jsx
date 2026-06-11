@@ -35,6 +35,7 @@ export default function ScriptViewerModal({ job, scenarioTitle, onClose, onJobUp
   const [videoStyle,   setVideoStyle]   = useState(job.video_style || 'realistic');
   const [isRendering,  setIsRendering]  = useState(false);
   const [includeIntro, setIncludeIntro] = useState(hasPoster);  // default on if a poster exists
+  const [includeOutro, setIncludeOutro] = useState(true);       // credits outro — default on
 
   // Focus textarea on edit mode entry
   useEffect(() => {
@@ -133,7 +134,7 @@ export default function ScriptViewerModal({ job, scenarioTitle, onClose, onJobUp
     if (!onRenderVideo || isRendering) return;
     setIsRendering(true);
     try {
-      await onRenderVideo(videoStyle, includeIntro);   // parent creates the video job + closes the viewer
+      await onRenderVideo(videoStyle, includeIntro, includeOutro);   // parent creates the video job + closes the viewer
     } catch (e) {
       console.error('❌ Render video failed:', e);
       setIsRendering(false);             // on success the modal unmounts, so only reset on error
@@ -382,6 +383,18 @@ export default function ScriptViewerModal({ job, scenarioTitle, onClose, onJobUp
               <span>
                 Branded intro
                 <small>{hasPoster ? 'opens with your poster' : 'generates a wide title card'}</small>
+              </span>
+            </label>
+
+            <label className={styles.introToggle}>
+              <input
+                type="checkbox"
+                checked={includeOutro}
+                onChange={(e) => setIncludeOutro(e.target.checked)}
+              />
+              <span>
+                Credits
+                <small>closes with the cast</small>
               </span>
             </label>
 
