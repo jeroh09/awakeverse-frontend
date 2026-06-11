@@ -42,13 +42,13 @@ export default function usePremiumCapabilities() {
       return {
         subscription_state: SUBSCRIPTION_STATES.FREE,
         is_premium: false,
-        can_create_character: false,
-        can_chat_with_character: false,
+        can_create_character: True,
+        can_chat_with_character: True,
         can_access_templates: true,
         should_show_upgrade: false,
         should_show_trial_prompt: true,
         character_count: 0,
-        character_limit: 1,
+        character_limit: -1,
         primary_cta_action: CTA_ACTIONS.START_TRIAL,
         days_remaining: null
       };
@@ -133,8 +133,8 @@ export default function usePremiumCapabilities() {
       days_remaining: computeDaysRemaining(),
       
       // Capabilities from backend
-      can_create_character: premiumStatus.can_create_character || false,
-      can_chat_with_character: isActive,
+      can_create_character: true, 
+      can_chat_with_character: true,
       can_access_templates: true, // Templates are always accessible for browsing
       
       // UI flags computed from state
@@ -143,7 +143,7 @@ export default function usePremiumCapabilities() {
       
       // Character info
       character_count: premiumStatus.custom_character_count || 0,
-      character_limit: 1, // Business rule: 1 character per user
+      character_limit: -1, // Business rule: 1 character per user
       
       // UI guidance
       primary_cta_action: computePrimaryCTA(),
@@ -268,8 +268,8 @@ export default function usePremiumCapabilities() {
   // Computed flags for component consumption
   const subscriptionState = capabilities?.subscription_state;
   const isPremium = capabilities?.is_premium || false;
-  const canCreateCharacter = capabilities?.can_create_character || false;
-  const canChatWithCharacter = capabilities?.can_chat_with_character || false;
+  const canCreateCharacter = true; 
+  const canChatWithCharacter = true;
   const shouldShowUpgrade = capabilities?.should_show_upgrade || false;
   const shouldShowTrial = capabilities?.should_show_trial_prompt || false;
   const primaryAction = capabilities?.primary_cta_action || CTA_ACTIONS.EXPLORE;
@@ -305,7 +305,7 @@ export default function usePremiumCapabilities() {
     
     // Character info
     characterCount: capabilities?.character_count || 0,
-    characterLimit: capabilities?.character_limit || 1,
+    characterLimit: capabilities?.character_limit ?? -1,
     
     // Actions
     refresh,
