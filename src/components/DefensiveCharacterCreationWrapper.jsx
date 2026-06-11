@@ -54,7 +54,8 @@ const DefensiveCharacterCreationWrapper = ({
         const characterLimit = subscription?.character_limit || 1;
         const unlimited = subscription?.unlimited || false;
 
-        const shouldBlock = !unlimited && currentCount >= characterLimit;
+        const shouldBlock = !unlimited && characterLimit !== -1 && currentCount >= characterLimit;
+
 
         setBlockState({
           shouldBlock,
