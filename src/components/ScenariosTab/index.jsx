@@ -66,12 +66,13 @@ export default function ScenariosTab({
       });
       if (data.status === 'success' && data.subscription) {
         setSubscriptionData(data);
-        const hasUnlimited =
-          data.subscription.tier      === 'unlimited' ||
-          data.subscription.tier_name === 'unlimited' ||
+        const PAID_TIERS = ['starter', 'pro', 'unlimited'];
+        const hasPaidTier =
+          PAID_TIERS.includes(data.subscription.tier) ||
+          PAID_TIERS.includes(data.subscription.tier_name) ||
           data.subscription.unlimited === true;
-        setRequiresUpgrade(!hasUnlimited);
-        console.log('🎭 Scenarios Access:', hasUnlimited ? 'GRANTED' : 'REQUIRES UPGRADE');
+        setRequiresUpgrade(!hasPaidTier);
+        console.log('🎭 Scenarios Access:', hasPaidTier ? 'GRANTED' : 'REQUIRES UPGRADE');
       } else {
         console.warn('⚠️ Using fallback subscription data');
         const fallback = SubscriptionService.getFallbackSubscriptionData();
@@ -154,7 +155,7 @@ export default function ScenariosTab({
   const handleUpgradeWithStripe = async () => {
     try {
       await PaymentRouter.redirectToCheckout({
-        tier: 'unlimited',
+        tier: 'starter',
         provider: 'stripe',
         triggerSource: 'scenarios_tab_upgrade_required'
       });
@@ -163,11 +164,11 @@ export default function ScenariosTab({
       alert('Unable to redirect to Stripe payment page. Please try again or contact support.');
     }
   };
-
+ 
   const handleUpgradeWithPayPal = async () => {
     try {
       await PaymentRouter.redirectToCheckout({
-        tier: 'unlimited',
+        tier: 'starter',
         provider: 'paypal',
         triggerSource: 'scenarios_tab_upgrade_required'
       });
@@ -176,14 +177,16 @@ export default function ScenariosTab({
       alert('Unable to redirect to PayPal payment page. Please try again or contact support.');
     }
   };
+ 
 
   const toggleTheme = () => {
     setCurrentTheme(prev => prev === 'light' ? 'awakeverse' : 'light');
   };
 
+  const PAID_TIERS = ['starter', 'pro', 'unlimited'];
   const isUnlimited =
-    subscriptionData?.subscription?.tier      === 'unlimited' ||
-    subscriptionData?.subscription?.tier_name === 'unlimited' ||
+    PAID_TIERS.includes(subscriptionData?.subscription?.tier) ||
+    PAID_TIERS.includes(subscriptionData?.subscription?.tier_name) ||
     subscriptionData?.subscription?.unlimited === true;
 
   // ── Loading ────────────────────────────────────────────────────────────────
