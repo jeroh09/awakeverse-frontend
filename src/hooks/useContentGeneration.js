@@ -164,7 +164,12 @@ export default function useContentGeneration(scenarioId) {
 
     // Stop any existing poll before starting a new job
     stopPolling();
-    setState({ status: 'creating', activeJob: null, error: null, progress: 0 });
+    setState({
+      status:    'creating',
+      activeJob: { content_type: contentType, progress: 0 },  // known up-front so progress UI shows
+      error:     null,
+      progress:  0,
+    });
 
     console.log('📝 Creating content:', { contentType, durationSeconds, scenarioId });
 

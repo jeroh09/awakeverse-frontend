@@ -414,7 +414,9 @@ export default function InfoPanel({
   const status         = contentState?.status   || 'idle';
   const progress       = contentState?.progress || 0;
   const pct            = Math.round(progress * 100);
-  const isAsync        = ['audio', 'video'].includes(selectedType);
+  const isAsync        = ['audio', 'video'].includes(
+    contentState?.activeJob?.content_type || selectedType
+  );
 
   // ── Shared header nav strip ────────────────────────────────────────────────
   const Header = ({ generating = false }) => (
@@ -1052,4 +1054,4 @@ export default function InfoPanel({
       </div>
     </div>
   );
-}  
+}
