@@ -4,10 +4,9 @@
 // ✅ All original logic restored exactly — API endpoints, filtering, rotation helpers,
 //    handleStartChat pin mapping, handleChipClick toggle, continent useEffects
 // ✅ NEW [Step 1]: Camera flight on pin click + continent pill camera swing
-// ✅ NEW [Step 2]: Arcs between related legends when a card is open
 
 import React, {
-  useState, useEffect, useRef, useCallback, memo, useMemo
+  useState, useEffect, useRef, useCallback, memo
 } from 'react';
 import Globe from 'react-globe.gl';
 import styles from './LegendsMapPanel.module.css';
@@ -42,48 +41,6 @@ const CONTINENT_CENTROIDS = {
 };
 
 const AUTO_RESUME_MS = 4000;
-
-// ── [NEW Step 2] Arc colour helper ────────────────────────────────────────────
-// Returns a semi-transparent version of the continent colour for arcs
-function arcColor(continent) {
-  const base = CONT_COLOR[continent] || '#6366F1';
-  // Append 99 (60% opacity) to 6-digit hex
-  return base + '99';
-}
-
-// ── [NEW Step 2] Compute related arcs for a selected pin ─────────────────────
-// Relatedness: same historical_period (primary) OR same personality_archetype (secondary)
-// Cap at 8 arcs to avoid visual noise; exclude the selected pin itself
-function computeRelatedArcs(selectedPin, allPins) {
-  if (!selectedPin || !allPins.length) return [];
-
-  const period    = selectedPin.historical_period?.trim();
-  const archetype = selectedPin.personality_archetype?.trim();
-
-  const related = allPins.filter(p => {
-    if (p.character_key === selectedPin.character_key) return false;
-    if (!p.lat || !p.lng) return false;
-    const periodMatch    = period    && p.historical_period?.trim()    === period;
-    const archetypeMatch = archetype && p.personality_archetype?.trim() === archetype;
-    return periodMatch || archetypeMatch;
-  });
-
-  // Prefer period matches over archetype-only; stable sort keeps order deterministic
-  related.sort((a, b) => {
-    const aP = period    && a.historical_period?.trim()    === period;
-    const bP = period    && b.historical_period?.trim()    === period;
-    return (bP ? 1 : 0) - (aP ? 1 : 0);
-  });
-
-  return related.slice(0, 8).map(p => ({
-    startLat: selectedPin.lat,
-    startLng: selectedPin.lng,
-    endLat:   p.lat,
-    endLng:   p.lng,
-    color:    arcColor(selectedPin.continent),
-    label:    p.display_name,
-  }));
-}
 
 // ── Globe SVG icon ────────────────────────────────────────────────────────────
 const GlobeIcon = () => (
@@ -357,13 +314,6 @@ const LegendsMapPanel = ({ isOpen, onClose, onCharacterSelect }) => {
   const selectedPinRef = useRef(null);
 
   useEffect(() => { selectedPinRef.current = selectedPin; }, [selectedPin]);
-
-  // ── [NEW Step 2] Related arcs — computed from selectedPin + all pins ───────
-  // Pure client-side: no API call, recomputes only when selection changes
-  const relatedArcs = useMemo(
-    () => computeRelatedArcs(selectedPin, pins),
-    [selectedPin, pins]
-  );
 
   // ── Measure globe wrapper ─────────────────────────────────────────────────
   useEffect(() => {
@@ -704,16 +654,6 @@ const LegendsMapPanel = ({ isOpen, onClose, onCharacterSelect }) => {
                 ringRepeatPeriod={1200}
                 ringAltitude={0.005}
 
-                arcsData={activeMode === 'legends' ? relatedArcs : []}
-                arcStartLat={d => d.startLat}
-                arcStartLng={d => d.startLng}
-                arcEndLat={d => d.endLat}
-                arcEndLng={d => d.endLng}
-                arcColor={d => d.color}
-                arcAltitude={0.3}
-                arcStroke={0.5}
-                arcLabel={d => `<div style="background:rgba(10,15,26,0.9);border:1px solid rgba(99,102,241,0.4);border-radius:6px;padding:4px 8px;font-family:Inter,sans-serif;font-size:10px;color:#f5f5dc">${d.label}</div>`}
-
                 onPointClick={(point) => {
                   if (activeMode === 'legends') {
                     setSelectedPin(point);
@@ -770,13 +710,6 @@ const LegendsMapPanel = ({ isOpen, onClose, onCharacterSelect }) => {
               </div>
             )}
 
-            {/* ── [NEW Step 2] Arc legend — shown when a pin with arcs is selected ── */}
-            {activeMode === 'legends' && selectedPin && relatedArcs.length > 0 && (
-              <div className={styles.arcLegend}>
-                <span className={styles.arcLegendDot} style={{ background: arcColor(selectedPin.continent) }} />
-                {relatedArcs.length} contemporary{relatedArcs.length !== 1 ? 's' : ''} connected
-              </div>
-            )}
           </div>
 
           {/* Card / City panel column */}
