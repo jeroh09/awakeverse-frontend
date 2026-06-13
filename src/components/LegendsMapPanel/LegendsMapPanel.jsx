@@ -3,9 +3,11 @@
 // ✅ UPDATED: CharacterCard CTA → "Start Chat" (direct, no intermediate step)
 // ✅ All original logic restored exactly — API endpoints, filtering, rotation helpers,
 //    handleStartChat pin mapping, handleChipClick toggle, continent useEffects
+// ✅ NEW [Step 1]: Camera flight on pin click + continent pill camera swing
+// ✅ NEW [Step 2]: Arcs between related legends when a card is open
 
 import React, {
-  useState, useEffect, useRef, useCallback, memo
+  useState, useEffect, useRef, useCallback, memo, useMemo
 } from 'react';
 import Globe from 'react-globe.gl';
 import styles from './LegendsMapPanel.module.css';
@@ -27,7 +29,61 @@ const CONT_COLOR = {
   Oceania:         '#14B8A6',
 };
 
+// ── [NEW Step 1] Continent centroids for camera flight ────────────────────────
+// Midpoints of CONTINENT_BOUNDS from map_cache_service.py
+const CONTINENT_CENTROIDS = {
+  Africa:          { lat:  1.0,  lng:  16.5, altitude: 1.8 },
+  Asia:            { lat: 39.0,  lng: 103.0, altitude: 1.6 },
+  Europe:          { lat: 53.5,  lng:  10.0, altitude: 1.8 },
+  'Middle East':   { lat: 27.0,  lng:  44.0, altitude: 2.0 },
+  'North America': { lat: 43.5,  lng: -110.0, altitude: 1.8 },
+  'South America': { lat: -21.5, lng:  -58.0, altitude: 1.9 },
+  Oceania:         { lat: -27.5, lng:  145.0, altitude: 2.0 },
+};
+
 const AUTO_RESUME_MS = 4000;
+
+// ── [NEW Step 2] Arc colour helper ────────────────────────────────────────────
+// Returns a semi-transparent version of the continent colour for arcs
+function arcColor(continent) {
+  const base = CONT_COLOR[continent] || '#6366F1';
+  // Append 99 (60% opacity) to 6-digit hex
+  return base + '99';
+}
+
+// ── [NEW Step 2] Compute related arcs for a selected pin ─────────────────────
+// Relatedness: same historical_period (primary) OR same personality_archetype (secondary)
+// Cap at 8 arcs to avoid visual noise; exclude the selected pin itself
+function computeRelatedArcs(selectedPin, allPins) {
+  if (!selectedPin || !allPins.length) return [];
+
+  const period    = selectedPin.historical_period?.trim();
+  const archetype = selectedPin.personality_archetype?.trim();
+
+  const related = allPins.filter(p => {
+    if (p.character_key === selectedPin.character_key) return false;
+    if (!p.lat || !p.lng) return false;
+    const periodMatch    = period    && p.historical_period?.trim()    === period;
+    const archetypeMatch = archetype && p.personality_archetype?.trim() === archetype;
+    return periodMatch || archetypeMatch;
+  });
+
+  // Prefer period matches over archetype-only; stable sort keeps order deterministic
+  related.sort((a, b) => {
+    const aP = period    && a.historical_period?.trim()    === period;
+    const bP = period    && b.historical_period?.trim()    === period;
+    return (bP ? 1 : 0) - (aP ? 1 : 0);
+  });
+
+  return related.slice(0, 8).map(p => ({
+    startLat: selectedPin.lat,
+    startLng: selectedPin.lng,
+    endLat:   p.lat,
+    endLng:   p.lng,
+    color:    arcColor(selectedPin.continent),
+    label:    p.display_name,
+  }));
+}
 
 // ── Globe SVG icon ────────────────────────────────────────────────────────────
 const GlobeIcon = () => (
@@ -302,6 +358,13 @@ const LegendsMapPanel = ({ isOpen, onClose, onCharacterSelect }) => {
 
   useEffect(() => { selectedPinRef.current = selectedPin; }, [selectedPin]);
 
+  // ── [NEW Step 2] Related arcs — computed from selectedPin + all pins ───────
+  // Pure client-side: no API call, recomputes only when selection changes
+  const relatedArcs = useMemo(
+    () => computeRelatedArcs(selectedPin, pins),
+    [selectedPin, pins]
+  );
+
   // ── Measure globe wrapper ─────────────────────────────────────────────────
   useEffect(() => {
     const el = globeWrapRef.current;
@@ -489,7 +552,8 @@ const LegendsMapPanel = ({ isOpen, onClose, onCharacterSelect }) => {
     );
   }, []);
 
-  // ── Continent change (original) ───────────────────────────────────────────
+  // ── [NEW Step 1] Continent change — filter + camera flight ────────────────
+  // Original: only set state. Added: fly globe to continent centroid.
   const handleContinentChange = useCallback((c) => {
     setActiveContinent(c);
     setSelectedPin(null);
@@ -497,6 +561,18 @@ const LegendsMapPanel = ({ isOpen, onClose, onCharacterSelect }) => {
     setSelectedCity(null);
     setCityChars([]);
     setCitySelectedChar(null);
+
+    // Camera flight — guard globeRef exactly as existing rotation code does
+    if (!globeRef.current) return;
+    if (c === 'All') {
+      // Zoom back to overview
+      globeRef.current.pointOfView({ altitude: 2.2 }, 900);
+    } else {
+      const centroid = CONTINENT_CENTROIDS[c];
+      if (centroid) {
+        globeRef.current.pointOfView(centroid, 900);
+      }
+    }
   }, []);
 
   // ── Cleanup ───────────────────────────────────────────────────────────────
@@ -584,7 +660,7 @@ const LegendsMapPanel = ({ isOpen, onClose, onCharacterSelect }) => {
             {!loading && !error && pins.length === 0 && (
               <div className={styles.stateBox}>
                 <span className={styles.stateIcon}>🗺️</span>
-                <p>No legends mapped yet — the cron job populates this daily.</p>
+                <p>Legends are being placed on the map — check back soon.</p>
               </div>
             )}
 
@@ -628,14 +704,38 @@ const LegendsMapPanel = ({ isOpen, onClose, onCharacterSelect }) => {
                 ringRepeatPeriod={1200}
                 ringAltitude={0.005}
 
+                arcsData={activeMode === 'legends' ? relatedArcs : []}
+                arcStartLat={d => d.startLat}
+                arcStartLng={d => d.startLng}
+                arcEndLat={d => d.endLat}
+                arcEndLng={d => d.endLng}
+                arcColor={d => d.color}
+                arcAltitude={0.3}
+                arcStroke={0.5}
+                arcLabel={d => `<div style="background:rgba(10,15,26,0.9);border:1px solid rgba(99,102,241,0.4);border-radius:6px;padding:4px 8px;font-family:Inter,sans-serif;font-size:10px;color:#f5f5dc">${d.label}</div>`}
+
                 onPointClick={(point) => {
                   if (activeMode === 'legends') {
                     setSelectedPin(point);
                     selectedPinRef.current = point;
+                    // ── [NEW Step 1] Fly camera to clicked pin ──────────────
+                    if (globeRef.current) {
+                      globeRef.current.pointOfView(
+                        { lat: point.lat, lng: point.lng, altitude: 1.5 },
+                        800
+                      );
+                    }
                   } else {
                     setSelectedCity(point);
                     setCitySelectedChar(null);
                     fetchCityChars(point.city_key);
+                    // ── [NEW Step 1] Fly camera to clicked city pin ─────────
+                    if (globeRef.current) {
+                      globeRef.current.pointOfView(
+                        { lat: point.lat, lng: point.lng, altitude: 1.5 },
+                        800
+                      );
+                    }
                   }
                   rotatingRef.current = false;
                   setRotating(false);
@@ -667,6 +767,14 @@ const LegendsMapPanel = ({ isOpen, onClose, onCharacterSelect }) => {
                   : rotating
                     ? '● rotating — click to pause'
                     : '● paused'}
+              </div>
+            )}
+
+            {/* ── [NEW Step 2] Arc legend — shown when a pin with arcs is selected ── */}
+            {activeMode === 'legends' && selectedPin && relatedArcs.length > 0 && (
+              <div className={styles.arcLegend}>
+                <span className={styles.arcLegendDot} style={{ background: arcColor(selectedPin.continent) }} />
+                {relatedArcs.length} contemporary{relatedArcs.length !== 1 ? 's' : ''} connected
               </div>
             )}
           </div>
