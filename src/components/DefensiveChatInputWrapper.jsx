@@ -47,17 +47,7 @@ const DefensiveChatInputWrapper = ({
         const subscription = data.subscription;
 
         // Defensive limit checking
-        const messagesUsed = subscription?.messages_used || 0;
-        const messageLimit = subscription?.message_limit || 150;
-        const unlimited = subscription?.unlimited || false;
-
-        const shouldBlock = !unlimited && messagesUsed >= messageLimit;
-
-        setBlockState({
-          shouldBlock,
-          reason: shouldBlock ? `Message limit reached (${messagesUsed}/${messageLimit})` : null,
-          loading: false
-        });
+        setBlockState({ shouldBlock: false, reason: null, loading: false });
 
       } catch (error) {
         console.warn('Chat limit check failed - allowing chat:', error);

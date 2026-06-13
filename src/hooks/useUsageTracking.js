@@ -102,9 +102,9 @@ const useUsageTracking = (character) => {
     return {
       tier: 'free',
       tier_display: 'Free',
-      message_limit: 150,
+      message_limit: -1,
       messages_used: 0,
-      messages_remaining: 150,
+      messages_remaining: -1,
       unlimited: false,
       can_send_message: true,
       data_source: 'fallback'
@@ -144,6 +144,7 @@ const useUsageTracking = (character) => {
         severity: 'high'
       };
     }
+    
     
     // Close to limit (90%+)
     if (usagePercent >= 90) {
@@ -248,7 +249,7 @@ const useUsageTracking = (character) => {
     
     // Compatibility with existing components (if needed)
     messages_used: usage?.messages_used || 0,
-    message_limit: usage?.message_limit || 150,
+    message_limit: usage?.message_limit ?? -1,
     unlimited: usage?.unlimited || false,
     
     // Debug info (development only)
