@@ -122,52 +122,10 @@ const useUsageTracking = (character) => {
     }
   }, [isCustomCharacter, fetchUsageData]);
   
-  // Soft reminder logic - contextual messaging
   const getSoftReminder = useCallback(() => {
-    if (!isCustomCharacter || !usage) {
-      return null;
-    }
-    
-    if (usage.unlimited) {
-      return null; // No reminders for unlimited users
-    }
-    
-    const { messages_used, message_limit, can_send_message } = usage;
-    const usagePercent = message_limit > 0 ? (messages_used / message_limit) * 100 : 0;
-    
-    // Limit reached
-    if (!can_send_message || messages_used >= message_limit) {
-      return {
-        type: 'limit_reached',
-        message: 'Message limit reached',
-        actionText: 'See upgrade plans',
-        severity: 'high'
-      };
-    }
-    
-    
-    // Close to limit (90%+)
-    if (usagePercent >= 90) {
-      return {
-        type: 'very_close',
-        message: 'Almost at your limit',
-        actionText: 'Upgrade to Pro',
-        severity: 'medium'
-      };
-    }
-    
-    // Approaching limit (80%+)
-    if (usagePercent >= 80) {
-      return {
-        type: 'approaching',
-        message: 'Close to your limit',
-        actionText: 'Upgrade to continue',
-        severity: 'low'
-      };
-    }
-    
+    // No message limits — reminders disabled
     return null;
-  }, [isCustomCharacter, usage]);
+  }, []);
   
   // Manual refresh function for post-message updates
   const refreshUsage = useCallback(async () => {

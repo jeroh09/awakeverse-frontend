@@ -1257,12 +1257,6 @@ export default function ChatWindow({
     }
   };
   const sendMessage = () => {
-    // ✅ CRITICAL: Check usage limits for custom characters
-    if (usageTracking.isCustomCharacter && !usageTracking.canSendMessage) {
-      // Block the message and show upgrade flow
-      setShowUpgradeFlow('message_limit');
-      return;
-    }
     if (!message.trim() || isSending) return;
     const userText = message;
 
