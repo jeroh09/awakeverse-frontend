@@ -96,9 +96,9 @@ class SubscriptionService {
         status: 'success',
         tiers: [
           { name: 'free', display_name: 'Free', message_limit: 150, monthly_price: 'Free' },
-          { name: 'starter', display_name: 'Starter', message_limit: 500, monthly_price: '£3.99' },
-          { name: 'pro', display_name: 'Pro', message_limit: 2000, monthly_price: '£6.99' },
-          { name: 'unlimited', display_name: 'Unlimited', message_limit: -1, monthly_price: '£11.99' }
+          { name: 'starter', display_name: 'EXPLORER', message_limit: -1, monthly_price: '£10.99' },
+          { name: 'pro', display_name: 'PROFESSIONAL', message_limit: -1, monthly_price: '£19.99' },
+          { name: 'unlimited', display_name: 'CREATOR', message_limit: -1, monthly_price: '£29.99' }
         ],
         fallback_mode: true
       };

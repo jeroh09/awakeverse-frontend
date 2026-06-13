@@ -198,19 +198,19 @@ const useUsageTracking = (character) => {
     // Upgrade path suggestions
     const upgradePaths = {
       'free': {
-        suggestedTier: 'Starter',
+        suggestedTier: 'EXPLORER',
         suggestedLimit: '500 messages/month',
-        suggestedPrice: '£3.99'
+        suggestedPrice: '£10.99'
       },
       'starter': {
-        suggestedTier: 'Pro', 
+        suggestedTier: 'PROFESSIONAL', 
         suggestedLimit: '2,000 messages/month',
-        suggestedPrice: '£6.99'
+        suggestedPrice: '£19.99'
       },
       'pro': {
-        suggestedTier: 'Unlimited',
+        suggestedTier: 'CREATOR',
         suggestedLimit: 'Unlimited messages',
-        suggestedPrice: '£111.99'
+        suggestedPrice: '£29.99'
       }
     };
     

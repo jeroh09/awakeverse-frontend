@@ -153,17 +153,17 @@ export const useSubscriptionAwareUsage = (character, user_id) => {
       'free': { 
         suggestedTier: 'Starter', 
         suggestedLimit: '500 messages/month', 
-        suggestedPrice: '£3.99' 
+        suggestedPrice: '£10.99' 
       },
       'starter': { 
-        suggestedTier: 'Pro', 
+        suggestedTier: 'PROFESSIONAL', 
         suggestedLimit: '2,000 messages/month', 
-        suggestedPrice: '£6.99' 
+        suggestedPrice: '£19.99' 
       },
       'pro': { 
         suggestedTier: 'Unlimited', 
         suggestedLimit: 'Unlimited messages', 
-        suggestedPrice: '£11.99' 
+        suggestedPrice: '£29.99' 
       }
     };
 
@@ -242,7 +242,7 @@ export const useSubscriptionAwareUsage = (character, user_id) => {
       
       const tierLimits = {
         'starter': { limit: 500, display: 'Starter' },
-        'pro': { limit: 2000, display: 'Pro' },
+        'pro': { limit: 2000, display: 'PROFESSIONAL' },
         'unlimited': { limit: -1, display: 'Unlimited' }
       };
       

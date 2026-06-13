@@ -70,7 +70,7 @@ const SUBSCRIPTION_TIERS = {
   },
   pro: {
     name: 'pro',
-    display_name: 'Pro',
+    display_name: 'PROFESSIONAL',
     price: 19.99,
     character_limit: 15,
     message_limit: 2000,

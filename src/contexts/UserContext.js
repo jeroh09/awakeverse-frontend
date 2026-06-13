@@ -181,7 +181,7 @@ export function UserProvider({ children }) {
     const tierMap = {
       'free': 'Free',
       'starter': 'Starter',
-      'pro': 'Pro',
+      'pro': 'PROFESSIONAL',
       'unlimited': 'Unlimited'
     };
     return tierMap[tier?.toLowerCase()] || 'Free';

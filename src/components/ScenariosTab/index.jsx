@@ -445,7 +445,7 @@ const ScenariosUpgradeRequired = ({ onLearnMore, onUpgradeWithStripe, onUpgradeW
           <span className="dialogue-pricing-badge">Professional Tier</span>
           <h2 className="dialogue-pricing-title">Full Access to Verse Dialogues</h2>
           <div className="dialogue-pricing-amount">
-            <span className="dialogue-price-value">£11.99</span>
+            <span className="dialogue-price-value">£10.99</span>
             <span className="dialogue-price-period">/month</span>
           </div>
           <div className="dialogue-cta-buttons">
@@ -531,7 +531,7 @@ const EducationalUpgradeModal = ({ isOpen, onClose, onUpgradeWithStripe, onUpgra
           <div className="dialogue-modal-pricing-header">
             <span className="dialogue-modal-pricing-badge">Professional Plan</span>
             <div className="dialogue-modal-price">
-              <span className="dialogue-modal-price-amount">£11.99</span>
+              <span className="dialogue-modal-price-amount">£10.99</span>
               <span className="dialogue-modal-price-period">/month</span>
             </div>
           </div>
@@ -543,10 +543,10 @@ const EducationalUpgradeModal = ({ isOpen, onClose, onUpgradeWithStripe, onUpgra
           </div>
           <div className="dialogue-modal-pricing-actions">
             <button className="dialogue-modal-cta-button primary" onClick={onUpgradeWithStripe}>
-              💳 Upgrade with Stripe - £11.99/month
+              💳 Upgrade with Stripe - £10.99/month
             </button>
             <button className="dialogue-modal-cta-button secondary" onClick={onUpgradeWithPayPal}>
-              🅿️ Pay with PayPal - £11.99/month
+              🅿️ Pay with PayPal - £10.99/month
             </button>
             <button className="dialogue-modal-compare-button"
               onClick={() => window.open('/pricing', '_blank')}>

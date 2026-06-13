@@ -7,7 +7,7 @@ const SubscriptionPlansCards = () => {
     {
       id: 'starter',
       name: 'Starter',
-      price: '£3.99',
+      price: '£10.99',
       period: '/month',
       description: 'Perfect for getting started',
       features: [
@@ -21,8 +21,8 @@ const SubscriptionPlansCards = () => {
     },
     {
       id: 'pro',
-      name: 'Pro',
-      price: '£6.99',
+      name: 'PROFESSIONAL',
+      price: '£19.99',
       period: '/month',
       description: 'Most popular choice',
       features: [
@@ -38,7 +38,7 @@ const SubscriptionPlansCards = () => {
     {
       id: 'unlimited',
       name: 'Unlimited',
-      price: '£11.99',
+      price: '£29.99',
       period: '/month',
       description: 'For power users',
       features: [

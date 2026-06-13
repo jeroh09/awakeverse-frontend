@@ -64,9 +64,9 @@ const SUBSCRIPTION_TIERS = {
     display_name: 'EXPLORER',
     tagline: 'Start Your Journey',
     prices: {
-      GBP: { amount: 3.99, symbol: '£', display: '£3.99' },
-      USD: { amount: 4.99, symbol: '$', display: '$4.99' },
-      EUR: { amount: 4.99, symbol: '€', display: '€4.99' }
+      GBP: { amount: 10.99, symbol: '£', display: '£10.99' },
+      USD: { amount: 13.99, symbol: '$', display: '$13.99' },
+      EUR: { amount: 12.99, symbol: '€', display: '€12.99' }
     },
     character_limit: 0,
     message_limit: 2000,
@@ -83,9 +83,9 @@ const SUBSCRIPTION_TIERS = {
     display_name: 'CREATOR',
     tagline: 'Build & Earn',
     prices: {
-      GBP: { amount: 6.99, symbol: '£', display: '£6.99' },
-      USD: { amount: 7.99, symbol: '$', display: '$7.99' },
-      EUR: { amount: 7.99, symbol: '€', display: '€7.99' }
+      GBP: { amount: 19.99, symbol: '£', display: '£19.99' },
+      USD: { amount: 24.99, symbol: '$', display: '$24.99' },
+      EUR: { amount: 22.99, symbol: '€', display: '€22.99' }
     },
     character_limit: -1,
     message_limit: -1,
@@ -104,9 +104,9 @@ const SUBSCRIPTION_TIERS = {
     display_name: 'PROFESSIONAL',
     tagline: 'Go Pro & Scale',
     prices: {
-      GBP: { amount: 11.99, symbol: '£', display: '£11.99' },
-      USD: { amount: 14.99, symbol: '$', display: '$14.99' },
-      EUR: { amount: 14.99, symbol: '€', display: '€14.99' }
+      GBP: { amount: 29.99, symbol: '£', display: '£29.99' },
+      USD: { amount: 37.99, symbol: '$', display: '$37.99' },
+      EUR: { amount: 34.99, symbol: '€', display: '€34.99' }
     },
     character_limit: -1,
     message_limit: -1,

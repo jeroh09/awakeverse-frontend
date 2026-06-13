@@ -65,7 +65,7 @@ const PricingPage = () => {
     {
       id: 'starter',
       name: 'Explorer',
-      price: '£3.99',
+      price: '£10.99',
       period: '/month',
       description: 'Perfect for getting started with AI conversations',
       features: [
@@ -83,7 +83,7 @@ const PricingPage = () => {
     {
       id: 'pro',
       name: 'Creator', 
-      price: '£6.99',
+      price: '£19.99',
       period: '/month',
       description: 'Most popular for serious creators and power users',
       features: [
@@ -102,7 +102,7 @@ const PricingPage = () => {
     {
       id: 'unlimited',
       name: 'Professional',
-      price: '£11.99', 
+      price: '£29.99', 
       period: '/month',
       description: 'Maximum power for unlimited creativity',
       features: [

@@ -663,7 +663,7 @@ function UpgradeModal({ onClose, theme, questionsUsed, limit }) {
 
           <div className="upgrade-pricing">
             <div className="pricing-amount">
-              <span className="price">£11.99</span>
+              <span className="price">£10.99</span>
               <span className="period">/month</span>
             </div>
             <p className="pricing-guarantee">

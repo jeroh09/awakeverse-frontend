@@ -129,9 +129,9 @@ const TIER_CONFIG = {
     displayName: 'EXPLORER',
     description: 'Start Your Journey',
     pricing: {
-      GBP: { amount: 3.99, display: '£3.99' },
-      USD: { amount: 4.99, display: '$4.99' },
-      EUR: { amount: 4.99, display: '€4.99' }
+      GBP: { amount: 10.99, display: '£10.99' },
+      USD: { amount: 13.99, display: '$13.99' },
+      EUR: { amount: 12.99, display: '€12.99' }
     }
   },
   
@@ -140,9 +140,9 @@ const TIER_CONFIG = {
     displayName: 'CREATOR',
     description: 'Build & Earn',
     pricing: {
-      GBP: { amount: 6.99, display: '£6.99' },
-      USD: { amount: 7.99, display: '$7.99' },
-      EUR: { amount: 7.99, display: '€7.99' }
+      GBP: { amount: 19.99, display: '£19.99' },
+      USD: { amount: 24.99, display: '$24.99' },
+      EUR: { amount: 22.99, display: '€22.99' }
     },
     recommended: true
   },
@@ -152,9 +152,9 @@ const TIER_CONFIG = {
     displayName: 'PROFESSIONAL',
     description: 'Go Pro & Scale',
     pricing: {
-      GBP: { amount: 11.99, display: '£11.99' },
-      USD: { amount: 14.99, display: '$14.99' },
-      EUR: { amount: 14.99, display: '€14.99' }
+      GBP: { amount: 29.99, display: '£29.99' },
+      USD: { amount: 37.99, display: '$37.99' },
+      EUR: { amount: 34.99, display: '€34.99' }
     }
   }
 };

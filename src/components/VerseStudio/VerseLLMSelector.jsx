@@ -170,7 +170,7 @@ export default function VerseLLMSelector({
                   )}
                   {tier && (
                     <span className={styles.optionTier}>
-                      {tier === 'pro' ? 'Pro' : tier === 'free' ? 'Free' : tier}
+                      {tier === 'pro' ? 'PROFESSIONAL' : tier === 'free' ? 'Free' : tier}
                     </span>
                   )}
                 </div>

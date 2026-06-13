@@ -47,7 +47,7 @@ function LlmCard({ llm, isSelected, isLocked, onToggle }) {
           ))}
           {tier && (
             <span className="wsc-llm-tier">
-              {tier === 'pro' ? 'Pro' : tier === 'free' ? 'Free' : tier}
+              {tier === 'pro' ? 'PROFESSIONAL' : tier === 'free' ? 'Free' : tier}
             </span>
           )}
         </div>

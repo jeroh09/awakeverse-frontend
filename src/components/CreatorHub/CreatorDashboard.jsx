@@ -844,7 +844,7 @@ const InteractiveLockedDashboard = ({ onUpgradeWithStripe, onUpgradeWithPayPal }
             <div className="locked-pricing-header">
               <h3>Unlock Everything</h3>
               <div className="locked-pricing">
-                <span className="locked-price-amount">£11.99</span>
+                <span className="locked-price-amount">£29.99</span>
                 <span className="locked-price-period">/month</span>
               </div>
               <p className="locked-pricing-description">Cancel anytime. All features included.</p>
@@ -1210,7 +1210,7 @@ const EducationalUpgradeModal = ({ isOpen, onClose, onUpgradeWithStripe, onUpgra
           <div className="pricing-header">
             <h3>Professional Plan</h3>
             <div className="price">
-              <span className="amount">£11.99</span>
+              <span className="amount">£29.99</span>
               <span className="period">/month</span>
             </div>
           </div>
@@ -1229,13 +1229,13 @@ const EducationalUpgradeModal = ({ isOpen, onClose, onUpgradeWithStripe, onUpgra
               onClick={onUpgradeWithStripe}
               className="upgrade-now-button"
             >
-              Pay with Stripe - £11.99/month
+              Pay with Stripe - £29.99/month
             </button>
             <button 
               onClick={onUpgradeWithPayPal}
               className="upgrade-now-button secondary"
             >
-              Pay with PayPal - £11.99/month
+              Pay with PayPal - £29.99/month
             </button>
             <button 
               className="compare-plans-button"
