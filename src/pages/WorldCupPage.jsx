@@ -154,79 +154,37 @@ const WorldCupPage = () => {
     const t1 = normalizeTeam(fixture.team1 || fixture.home_team || '');
     const t2 = normalizeTeam(fixture.team2 || fixture.away_team || '');
 
-    const buildPrompt = (team) => {
+    const fetchLegends = async (team) => {
       const meta = getTeamMeta(team);
-      return `You are a historian and mythologist. Generate exactly 3 legendary historical or mythological figures representing ${team} (tag: "${meta.tag}", era: ${meta.era}).
-
-Mix real historical figures AND mythology for dramatic effect. Use cinematic, powerful language.
-
-Respond ONLY with valid JSON, no markdown fences, no explanation:
-{
-  "legends": [
-    {
-      "name": "Figure Name",
-      "era": "Time period",
-      "role": "Their title e.g. Warrior Queen, Sun God",
-      "oneliner": "One powerful sentence about their legend (max 15 words)",
-      "visual": "Physical description for image generation: clothing, weapons, distinctive features, setting backdrop"
-    }
-  ]
-}`;
+      const res  = await fetch(`${API_BASE}/api/worldcup/generate-legends`, {
+        method:  'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body:    JSON.stringify({ team, tag: meta.tag, era: meta.era }),
+      });
+      if (!res.ok) {
+        const err = await res.json().catch(() => ({ message: `HTTP ${res.status}` }));
+        throw new Error(err.message || `HTTP ${res.status}`);
+      }
+      const data = await res.json();
+      if (!data.legends?.length) throw new Error('No legends returned');
+      return data.legends;
     };
 
     try {
-      const [r1, r2] = await Promise.all([
-        callAnthropicAPI(buildPrompt(t1)),
-        callAnthropicAPI(buildPrompt(t2)),
+      const [l1, l2] = await Promise.all([
+        fetchLegends(t1),
+        fetchLegends(t2),
       ]);
-
-      const l1 = safeParseJSON(r1);
-      const l2 = safeParseJSON(r2);
-
-      setLegends({
-        [t1]: l1?.legends || getFallbackLegends(t1),
-        [t2]: l2?.legends || getFallbackLegends(t2),
-      });
+      setLegends({ [t1]: l1, [t2]: l2 });
       setTab('legends');
     } catch (e) {
-      console.warn('Legend generation failed, using fallback:', e.message);
+      console.warn('Legend generation failed:', e.message);
       setLegendError(e.message);
-      setLegends({
-        [t1]: getFallbackLegends(t1),
-        [t2]: getFallbackLegends(t2),
-      });
-      setTab('legends');
+      // Do NOT fall back to generic legends — show error and let user retry
     } finally {
       setLoadingLegends(false);
     }
   }, []);
-
-  async function callAnthropicAPI(userPrompt) {
-    const res = await fetch('https://api.anthropic.com/v1/messages', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        model: 'claude-sonnet-4-6',
-        max_tokens: 1000,
-        messages: [{ role: 'user', content: userPrompt }],
-      }),
-    });
-    if (!res.ok) throw new Error(`Anthropic API ${res.status}`);
-    const data = await res.json();
-    return data.content?.[0]?.text || '';
-  }
-
-  function safeParseJSON(text) {
-    try {
-      return JSON.parse(text.replace(/```json|```/g, '').trim());
-    } catch {
-      const match = text.match(/\{[\s\S]*\}/);
-      if (match) {
-        try { return JSON.parse(match[0]); } catch { return null; }
-      }
-      return null;
-    }
-  }
 
   // ── Generate images via Awakeverse proxy ───────────────────────────────
 
@@ -545,7 +503,15 @@ Respond ONLY with valid JSON, no markdown fences, no explanation:
 
               {legendError && (
                 <div className={styles.notice}>
-                  ⚠ AI unavailable — showing curated legends
+                  ⚠ {legendError}
+                  <button
+                    className={styles.ghostBtn}
+                    onClick={() => generateLegends(selectedFixture)}
+                    style={{ marginLeft: '12px' }}
+                    type="button"
+                  >
+                    Retry
+                  </button>
                 </div>
               )}
 
