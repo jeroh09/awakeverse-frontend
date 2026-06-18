@@ -130,7 +130,7 @@ const WorldCupPage = () => {
       setLoadingFixtures(true);
       setFixtureError(null);
       try {
-        const res = await fetch('https://raw.githubusercontent.com/openfootball/worldcup.json/master/2026/worldcup.json');
+        const res = await fetch(`${API_BASE}/api/worldcup/fixtures`);
         if (!res.ok) throw new Error(`HTTP ${res.status}`);
         const data = await res.json();
         const all = data.matches || [];
