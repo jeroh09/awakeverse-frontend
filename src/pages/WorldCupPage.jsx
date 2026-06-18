@@ -21,6 +21,7 @@ const API_BASE = process.env.REACT_APP_API_URL || 'https://api.awakeverse.com';
 const OUR_TEAMS = [
   'England', 'Brazil', 'France', 'Argentina', 'Portugal',
   'Ghana', 'Senegal', 'Germany', 'United States', 'Mexico', 'Japan', 'South Korea',
+  'Canada',
 ];
 
 const TEAM_META = {
@@ -36,6 +37,7 @@ const TEAM_META = {
   'Mexico':        { tag: 'Aztec Eagles',       color: '#006847', symbol: '🦅', era: 'Aztec Empire' },
   'Japan':         { tag: 'Samurai Blue',       color: '#BC002D', symbol: '⚔️', era: 'Feudal Japan' },
   'South Korea':   { tag: 'Tigers of Asia',     color: '#003478', symbol: '🐯', era: 'Joseon Dynasty' },
+  'Canada':        { tag: 'Les Rouges',          color: '#FF0000', symbol: '🍁', era: 'Indigenous & Colonial Canada' },
 };
 
 const FAL_MODELS = [
