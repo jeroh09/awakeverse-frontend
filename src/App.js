@@ -40,6 +40,8 @@ import UseCaseBusiness from './pages/UseCases/UseCaseBusiness';
 import UseCaseDebate from './pages/UseCases/UseCaseDebate';
 import VsLLMs from './pages/VsLLMs';
 import UseCasesIndex from './pages/UseCases/UseCasesIndex';
+import WorldCupPage from './pages/WorldCupPage';
+
 
 
 
@@ -165,6 +167,7 @@ export default function App() {
         <Route path="/creators-charter" element={<CreatorsCharterPage />} />
         <Route path="/quiz" element={<QuizPage />} />
         <Route path="/quiz/results" element={<QuizResultsPage />} />
+        <Route path="/worldcup" element={<WorldCupPage />} />
 
         {/* Contact us */}
         <Route path="/contact-us" element={<ContactUs />} />
