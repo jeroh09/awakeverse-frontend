@@ -553,3 +553,43 @@
     font-size: 13px;
   }
 }
+
+/* ── Carousel result ──────────────────────────────────────────────────── */
+
+.carouselResult {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 16px;
+  padding: 8px 0 24px;
+}
+
+.carouselImage {
+  width: 100%;
+  max-width: 540px;
+  border-radius: 8px;
+  box-shadow: 0 0 40px rgba(99,102,241,0.2);
+  display: block;
+}
+
+.carouselActions {
+  display: flex;
+  gap: 10px;
+  align-items: center;
+}
+
+.sceneLinks {
+  display: flex;
+  gap: 16px;
+}
+
+.sceneLink {
+  font-size: 11px;
+  color: var(--wc-accent);
+  text-decoration: none;
+  letter-spacing: 0.5px;
+}
+
+.sceneLink:hover {
+  color: var(--wc-hover);
+}

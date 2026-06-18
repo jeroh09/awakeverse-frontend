@@ -39,12 +39,12 @@ const TEAM_META = {
 };
 
 const FAL_MODELS = [
-  { id: 'fal-ai/flux/dev',                   label: 'FLUX Dev',     note: 'Best quality' },
-  { id: 'fal-ai/flux/schnell',               label: 'FLUX Schnell', note: 'Fastest' },
-  { id: 'fal-ai/stable-diffusion-v3-medium', label: 'SD v3',        note: 'Painterly' },
+  { id: 'fal-ai/flux/dev',     label: 'FLUX Dev',      note: 'Best quality' },
+  { id: 'fal-ai/flux/schnell', label: 'FLUX Schnell',  note: 'Fastest' },
+  { id: 'fal-ai/flux-realism', label: 'FLUX Realism',  note: 'Photorealistic' },
 ];
 
-const TABS = ['fixtures', 'legends', 'images'];
+const TABS = ['fixtures', 'legends', 'carousel', 'fixture-card', 'pathway'];
 
 // ── Helpers ────────────────────────────────────────────────────────────────
 
@@ -68,12 +68,12 @@ function getFallbackFixtures() {
   const today = getTodayStr();
   const next  = new Date(Date.now() + 86400000).toISOString().split('T')[0];
   return [
-    { id: 'f1', date: today, team1: 'England',   team2: 'Senegal',       round: 'Group E', time: '19:00' },
-    { id: 'f2', date: today, team1: 'Brazil',     team2: 'Mexico',        round: 'Group D', time: '22:00' },
-    { id: 'f3', date: next,  team1: 'France',     team2: 'Japan',         round: 'Group F', time: '16:00' },
-    { id: 'f4', date: next,  team1: 'Argentina',  team2: 'Ghana',         round: 'Group C', time: '20:00' },
-    { id: 'f5', date: next,  team1: 'Portugal',   team2: 'South Korea',   round: 'Group H', time: '18:00' },
-    { id: 'f6', date: next,  team1: 'Germany',    team2: 'United States', round: 'Group E', time: '21:00' },
+    { team1: 'England',   team2: 'Senegal',       date: today, time: '19:00', round: 'Group E', group: 'Group E' },
+    { team1: 'Brazil',    team2: 'Mexico',         date: today, time: '22:00', round: 'Group D', group: 'Group D' },
+    { team1: 'France',    team2: 'Japan',          date: next,  time: '16:00', round: 'Group F', group: 'Group F' },
+    { team1: 'Argentina', team2: 'Ghana',          date: next,  time: '20:00', round: 'Group C', group: 'Group C' },
+    { team1: 'Portugal',  team2: 'South Korea',    date: next,  time: '18:00', round: 'Group H', group: 'Group H' },
+    { team1: 'Germany',   team2: 'United States',  date: next,  time: '21:00', round: 'Group E', group: 'Group E' },
   ];
 }
 
@@ -105,12 +105,21 @@ const WorldCupPage = () => {
   const [fixtureError, setFixtureError]   = useState(null);
   const [loadingFixtures, setLoadingFixtures] = useState(true);
   const [selectedFixture, setSelectedFixture] = useState(null);
-  const [legends, setLegends]             = useState({});       // { teamName: [legend, ...] }
+  const [legends, setLegends]               = useState({});
   const [loadingLegends, setLoadingLegends] = useState(false);
-  const [legendError, setLegendError]     = useState(null);
-  const [images, setImages]               = useState({});       // { 'legendName__modelId': { url, model_label, error } }
-  const [loadingImages, setLoadingImages] = useState(false);
-  const [imageError, setImageError]       = useState(null);
+  const [legendError, setLegendError]       = useState(null);
+  const [images, setImages]                 = useState({});
+  const [loadingImages, setLoadingImages]   = useState(false);
+  const [imageError, setImageError]         = useState(null);
+  const [carousel, setCarousel]             = useState(null);   // { card: base64, team1_scene_url, team2_scene_url }
+  const [loadingCarousel, setLoadingCarousel] = useState(false);
+  const [carouselError, setCarouselError]   = useState(null);
+  const [fixtureCard, setFixtureCard]       = useState(null);   // base64 PNG
+  const [loadingFixtureCard, setLoadingFixtureCard] = useState(false);
+  const [fixtureCardError, setFixtureCardError]     = useState(null);
+  const [pathwayCard, setPathwayCard]       = useState(null);
+  const [loadingPathway, setLoadingPathway] = useState(false);
+  const [pathwayError, setPathwayError]     = useState(null);
 
   const todayStr = getTodayStr();
 
@@ -121,16 +130,16 @@ const WorldCupPage = () => {
       setLoadingFixtures(true);
       setFixtureError(null);
       try {
-        const res = await fetch('https://thestatsapi.com/world-cup/data/fixtures.json');
+        const res = await fetch('https://raw.githubusercontent.com/openfootball/worldcup.json/master/2026/worldcup.json');
         if (!res.ok) throw new Error(`HTTP ${res.status}`);
         const data = await res.json();
-        const all = data.matches || data.fixtures || data || [];
+        const all = data.matches || [];
         const filtered = all.filter(m => {
-          const t1 = normalizeTeam(m.team1 || m.home_team || '');
-          const t2 = normalizeTeam(m.team2 || m.away_team || '');
+          const t1 = normalizeTeam(m.team1 || '');
+          const t2 = normalizeTeam(m.team2 || '');
           return OUR_TEAMS.includes(t1) || OUR_TEAMS.includes(t2);
         });
-        setFixtures(filtered.slice(0, 30));
+        setFixtures(filtered.slice(0, 40));
       } catch (e) {
         console.warn('Fixture API failed, using fallback:', e.message);
         setFixtureError(e.message);
@@ -151,8 +160,8 @@ const WorldCupPage = () => {
     setLegends({});
     setImages({});
 
-    const t1 = normalizeTeam(fixture.team1 || fixture.home_team || '');
-    const t2 = normalizeTeam(fixture.team2 || fixture.away_team || '');
+    const t1 = normalizeTeam(fixture.team1 || '');
+    const t2 = normalizeTeam(fixture.team2 || '');
 
     const fetchLegends = async (team) => {
       const meta = getTeamMeta(team);
@@ -194,8 +203,8 @@ const WorldCupPage = () => {
     setImageError(null);
     setImages({});
 
-    const t1 = normalizeTeam(selectedFixture.team1 || selectedFixture.home_team || '');
-    const t2 = normalizeTeam(selectedFixture.team2 || selectedFixture.away_team || '');
+    const t1 = normalizeTeam(selectedFixture.team1 || '');
+    const t2 = normalizeTeam(selectedFixture.team2 || '');
 
     // Test: 1st legend per team only = 2 characters × 3 models = 6 images
     const testPairs = [
@@ -248,12 +257,206 @@ const WorldCupPage = () => {
     setTab('images');
   }, [selectedFixture, legends]);
 
+  // ── Generate carousel card (legends battle) ─────────────────────────────
+
+  const generateCarousel = useCallback(async () => {
+    if (!selectedFixture || !Object.keys(legends).length) return;
+    setLoadingCarousel(true);
+    setCarouselError(null);
+    setCarousel(null);
+
+    const t1  = normalizeTeam(selectedFixture.team1 || '');
+    const t2  = normalizeTeam(selectedFixture.team2 || '');
+    const mt1 = getTeamMeta(t1);
+    const mt2 = getTeamMeta(t2);
+
+    try {
+      const res = await fetch(`${API_BASE}/api/worldcup/generate-carousel`, {
+        method:  'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          team1: t1, team2: t2,
+          team1_color: mt1.color, team2_color: mt2.color,
+          team1_tag: mt1.tag,    team2_tag: mt2.tag,
+          team1_legends: legends[t1] || [],
+          team2_legends: legends[t2] || [],
+          model: 'fal-ai/flux/dev',
+          fixture: {
+            round: selectedFixture.round || selectedFixture.group || 'Group Stage',
+            date:  selectedFixture.date  || '',
+            time:  selectedFixture.time  || '',
+          },
+        }),
+      });
+      if (!res.ok) {
+        const err = await res.json().catch(() => ({ message: `HTTP ${res.status}` }));
+        throw new Error(err.message || `HTTP ${res.status}`);
+      }
+      const data = await res.json();
+      if (!data.card) throw new Error('No card returned');
+      setCarousel(data);
+      setTab('carousel');
+    } catch (e) {
+      console.warn('Carousel generation failed:', e.message);
+      setCarouselError(e.message);
+    } finally {
+      setLoadingCarousel(false);
+    }
+  }, [selectedFixture, legends]);
+
+  // ── Generate fixture card (Card 1) ──────────────────────────────────────
+
+  const generateFixtureCard = useCallback(async () => {
+    if (!selectedFixture) return;
+    setLoadingFixtureCard(true);
+    setFixtureCardError(null);
+    setFixtureCard(null);
+
+    const t1  = normalizeTeam(selectedFixture.team1 || '');
+    const t2  = normalizeTeam(selectedFixture.team2 || '');
+    const mt1 = getTeamMeta(t1);
+    const mt2 = getTeamMeta(t2);
+
+    try {
+      const res = await fetch(`${API_BASE}/api/worldcup/generate-fixture-card`, {
+        method:  'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          team1: t1, team2: t2,
+          team1_color: mt1.color, team2_color: mt2.color,
+          team1_tag: mt1.tag,    team2_tag: mt2.tag,
+          team1_symbol: mt1.symbol, team2_symbol: mt2.symbol,
+          round:  selectedFixture.round || selectedFixture.group || 'Group Stage',
+          date:   selectedFixture.date  || '',
+          time:   selectedFixture.time  || '',
+          score:  selectedFixture.score || null,
+        }),
+      });
+      if (!res.ok) {
+        const err = await res.json().catch(() => ({ message: `HTTP ${res.status}` }));
+        throw new Error(err.message || `HTTP ${res.status}`);
+      }
+      const data = await res.json();
+      if (!data.card) throw new Error('No card returned');
+      setFixtureCard(data.card);
+      setTab('fixture-card');
+    } catch (e) {
+      console.warn('Fixture card failed:', e.message);
+      setFixtureCardError(e.message);
+    } finally {
+      setLoadingFixtureCard(false);
+    }
+  }, [selectedFixture]);
+
+  // ── Download helper ──────────────────────────────────────────────────────
+
+  function downloadCard(base64, filename) {
+    const link = document.createElement('a');
+    link.href = base64;
+    link.download = filename;
+    link.click();
+  }
+
+  // ── Build team fixture nodes from full fixture list ──────────────────────
+
+  function buildTeamFixtures(team, allFixtures, currentMatchup) {
+    const teamMatches = allFixtures
+      .filter(m => {
+        const t1 = normalizeTeam(m.team1 || '');
+        const t2 = normalizeTeam(m.team2 || '');
+        return t1 === team || t2 === team;
+      })
+      .slice(0, 3);
+
+    return teamMatches.map(m => {
+      const t1      = normalizeTeam(m.team1 || '');
+      const t2      = normalizeTeam(m.team2 || '');
+      const isHome  = t1 === team;
+      const opponent = isHome ? t2 : t1;
+
+      // openfootball format: score.ft = [2, 0] or absent
+      const ft      = m.score?.ft || null;
+      let scoreStr  = null;
+      let result    = null;
+
+      if (ft && Array.isArray(ft) && ft.length === 2) {
+        const myGoals  = isHome ? ft[0] : ft[1];
+        const oppGoals = isHome ? ft[1] : ft[0];
+        scoreStr = `${myGoals}-${oppGoals}`;
+        result   = myGoals > oppGoals ? 'W' : myGoals < oppGoals ? 'L' : 'D';
+      }
+
+      // Format date short e.g. "Jun 22"
+      let dateShort = m.date || '';
+      try {
+        const d = new Date(m.date);
+        dateShort = d.toLocaleDateString('en-GB', { month: 'short', day: 'numeric' });
+      } catch {}
+
+      return { opponent, date: dateShort, score: scoreStr, result };
+    });
+  }
+
+  // ── Generate pathway card ────────────────────────────────────────────────
+
+  const generatePathwayCard = useCallback(async () => {
+    if (!selectedFixture) return;
+    setLoadingPathway(true);
+    setPathwayError(null);
+    setPathwayCard(null);
+
+    const t1  = normalizeTeam(selectedFixture.team1 || '');
+    const t2  = normalizeTeam(selectedFixture.team2 || '');
+    const mt1 = getTeamMeta(t1);
+    const mt2 = getTeamMeta(t2);
+
+    const team1Fixtures = buildTeamFixtures(t1, fixtures, selectedFixture);
+    const team2Fixtures = buildTeamFixtures(t2, fixtures, selectedFixture);
+
+    const matchDate = selectedFixture.date || '';
+    const isToday   = matchDate === getTodayStr();
+
+    try {
+      const res = await fetch(`${API_BASE}/api/worldcup/generate-pathway-card`, {
+        method:  'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          team1: t1, team2: t2,
+          team1_color: mt1.color, team2_color: mt2.color,
+          team1_tag: mt1.tag,    team2_tag: mt2.tag,
+          team1_symbol: mt1.symbol, team2_symbol: mt2.symbol,
+          round:    selectedFixture.round || selectedFixture.group || 'Group Stage',
+          date:     matchDate,
+          time:     selectedFixture.time || '',
+          is_today: isToday,
+          team1_fixtures: team1Fixtures,
+          team2_fixtures: team2Fixtures,
+        }),
+      });
+
+      if (!res.ok) {
+        const err = await res.json().catch(() => ({ message: `HTTP ${res.status}` }));
+        throw new Error(err.message || `HTTP ${res.status}`);
+      }
+
+      const data = await res.json();
+      if (!data.card) throw new Error('No card returned');
+      setPathwayCard(data.card);
+      setTab('pathway');
+    } catch (e) {
+      console.warn('Pathway card failed:', e.message);
+      setPathwayError(e.message);
+    } finally {
+      setLoadingPathway(false);
+    }
+  }, [selectedFixture, fixtures]);
+
   // ── Derived data ────────────────────────────────────────────────────────
 
   const grouped = useMemo(() => {
     const today = [], upcoming = [], past = [];
     fixtures.forEach(m => {
-      const d = m.date || m.match_date || '';
+      const d = m.date || '';
       if (d === todayStr)    today.push(m);
       else if (d > todayStr) upcoming.push(m);
       else                   past.push(m);
@@ -264,8 +467,8 @@ const WorldCupPage = () => {
   const selectedTeams = useMemo(() => {
     if (!selectedFixture) return [];
     return [
-      normalizeTeam(selectedFixture.team1 || selectedFixture.home_team || ''),
-      normalizeTeam(selectedFixture.team2 || selectedFixture.away_team || ''),
+      normalizeTeam(selectedFixture.team1 || ''),
+      normalizeTeam(selectedFixture.team2 || ''),
     ];
   }, [selectedFixture]);
 
@@ -301,12 +504,12 @@ const WorldCupPage = () => {
   // ── Sub-components ─────────────────────────────────────────────────────
 
   const FixtureCard = ({ m }) => {
-    const t1   = normalizeTeam(m.team1 || m.home_team || '');
-    const t2   = normalizeTeam(m.team2 || m.away_team || '');
+    const t1   = normalizeTeam(m.team1 || '');
+    const t2   = normalizeTeam(m.team2 || '');
     const mt1  = getTeamMeta(t1);
     const mt2  = getTeamMeta(t2);
     const isSelected = selectedFixture === m;
-    const isToday    = (m.date || m.match_date || '') === todayStr;
+    const isToday    = (m.date || '') === todayStr;
     const score      = m.score?.ft || null;
 
     return (
@@ -316,7 +519,7 @@ const WorldCupPage = () => {
         type="button"
       >
         <div className={styles.fixtureMeta}>
-          <span className={styles.fixtureRound}>{m.round || m.group || 'Group Stage'} · {m.time || m.match_time || ''}</span>
+          <span className={styles.fixtureRound}>{m.round || m.group || 'Group Stage'} · {m.time || ''}</span>
           <div className={styles.fixtureBadges}>
             {isToday && <span className={styles.badgeToday}>TODAY</span>}
             {score   && <span className={styles.badgeScore}>{score[0]}–{score[1]}</span>}
@@ -417,7 +620,12 @@ const WorldCupPage = () => {
                 onClick={() => setTab(t)}
                 type="button"
               >
-                {t === 'fixtures' ? '⚽ Fixtures' : t === 'legends' ? '⚔️ Legends' : '🎨 Images'}
+                {t === 'fixtures'     ? '⚽ Fixtures'
+             : t === 'legends'      ? '⚔️ Legends'
+             : t === 'carousel'     ? '🃏 Carousel'
+             : t === 'fixture-card' ? '📋 Match Card'
+             : t === 'pathway'      ? '🗺️ Pathway'
+             : t}
               </button>
             ))}
           </div>
@@ -588,39 +796,239 @@ const WorldCupPage = () => {
               )}
             </div>
           )}
+
+          {/* ── CAROUSEL TAB ─────────────────────────────────────────── */}
+          {tab === 'carousel' && (
+            <div className={styles.tabContent}>
+              {!selectedFixture && (
+                <div className={styles.emptyState}>
+                  <p>Select a fixture and generate legends first.</p>
+                  <button className={styles.ghostBtn} onClick={() => setTab('fixtures')} type="button">Go to Fixtures</button>
+                </div>
+              )}
+
+              {selectedFixture && !Object.keys(legends).length && !loadingCarousel && (
+                <div className={styles.emptyState}>
+                  <p>Generate legends first to build the carousel card.</p>
+                  <button className={styles.ghostBtn} onClick={() => setTab('legends')} type="button">Go to Legends</button>
+                </div>
+              )}
+
+              {loadingCarousel && (
+                <div className={styles.centered}>
+                  <div className={styles.spinner} style={{ width: '36px', height: '36px' }} />
+                  <p>Generating scenes + compositing card...</p>
+                  <p className={styles.smallNote}>Two fal.ai scenes + WeasyPrint render · ~60–90s</p>
+                </div>
+              )}
+
+              {carouselError && (
+                <div className={styles.notice}>⚠ {carouselError}</div>
+              )}
+
+              {carousel?.card && !loadingCarousel && (
+                <div className={styles.carouselResult}>
+                  <img
+                    src={carousel.card}
+                    alt="Legends Carousel Card"
+                    className={styles.carouselImage}
+                  />
+                  <div className={styles.carouselActions}>
+                    <button
+                      className={styles.primaryBtn}
+                      onClick={() => downloadCard(carousel.card, `${selectedTeams[0]}_vs_${selectedTeams[1]}_legends.png`)}
+                      type="button"
+                    >
+                      ⬇ Download Card
+                    </button>
+                    <button
+                      className={styles.ghostBtn}
+                      onClick={() => { setCarousel(null); generateCarousel(); }}
+                      disabled={loadingCarousel}
+                      type="button"
+                    >
+                      ↺ Regenerate
+                    </button>
+                  </div>
+                  <div className={styles.sceneLinks}>
+                    <a href={carousel.team1_scene_url} target="_blank" rel="noreferrer" className={styles.sceneLink}>
+                      {selectedTeams[0]} scene ↗
+                    </a>
+                    <a href={carousel.team2_scene_url} target="_blank" rel="noreferrer" className={styles.sceneLink}>
+                      {selectedTeams[1]} scene ↗
+                    </a>
+                  </div>
+                </div>
+              )}
+            </div>
+          )}
+
+          {/* ── FIXTURE CARD TAB ─────────────────────────────────────── */}
+          {tab === 'fixture-card' && (
+            <div className={styles.tabContent}>
+              {!selectedFixture && (
+                <div className={styles.emptyState}>
+                  <p>Select a fixture first.</p>
+                  <button className={styles.ghostBtn} onClick={() => setTab('fixtures')} type="button">Go to Fixtures</button>
+                </div>
+              )}
+
+              {loadingFixtureCard && (
+                <div className={styles.centered}>
+                  <div className={styles.spinner} style={{ width: '36px', height: '36px' }} />
+                  <p>Generating match card...</p>
+                  <p className={styles.smallNote}>WeasyPrint render · ~5s</p>
+                </div>
+              )}
+
+              {fixtureCardError && (
+                <div className={styles.notice}>⚠ {fixtureCardError}</div>
+              )}
+
+              {fixtureCard && !loadingFixtureCard && (
+                <div className={styles.carouselResult}>
+                  <img
+                    src={fixtureCard}
+                    alt="Fixture Card"
+                    className={styles.carouselImage}
+                  />
+                  <div className={styles.carouselActions}>
+                    <button
+                      className={styles.primaryBtn}
+                      onClick={() => downloadCard(fixtureCard, `${selectedTeams[0]}_vs_${selectedTeams[1]}_matchcard.png`)}
+                      type="button"
+                    >
+                      ⬇ Download Card
+                    </button>
+                    <button
+                      className={styles.ghostBtn}
+                      onClick={() => { setFixtureCard(null); generateFixtureCard(); }}
+                      disabled={loadingFixtureCard}
+                      type="button"
+                    >
+                      ↺ Regenerate
+                    </button>
+                  </div>
+                </div>
+              )}
+
+              {selectedFixture && !fixtureCard && !loadingFixtureCard && (
+                <div className={styles.emptyState}>
+                  <button className={styles.primaryBtn} onClick={generateFixtureCard} type="button">
+                    📋 Generate Match Card
+                  </button>
+                </div>
+              )}
+            </div>
+          )}
+
+          {/* ── PATHWAY TAB ──────────────────────────────────────────── */}
+          {tab === 'pathway' && (
+            <div className={styles.tabContent}>
+              {!selectedFixture && (
+                <div className={styles.emptyState}>
+                  <p>Select a fixture first.</p>
+                  <button className={styles.ghostBtn} onClick={() => setTab('fixtures')} type="button">
+                    Go to Fixtures
+                  </button>
+                </div>
+              )}
+
+              {loadingPathway && (
+                <div className={styles.centered}>
+                  <div className={styles.spinner} style={{ width: '36px', height: '36px' }} />
+                  <p>Building pathway card...</p>
+                  <p className={styles.smallNote}>WeasyPrint render · ~5s</p>
+                </div>
+              )}
+
+              {pathwayError && (
+                <div className={styles.notice}>⚠ {pathwayError}</div>
+              )}
+
+              {pathwayCard && !loadingPathway && (
+                <div className={styles.carouselResult}>
+                  <img
+                    src={pathwayCard}
+                    alt="Pathway Card"
+                    className={styles.carouselImage}
+                  />
+                  <div className={styles.carouselActions}>
+                    <button
+                      className={styles.primaryBtn}
+                      onClick={() => downloadCard(pathwayCard, `${selectedTeams[0]}_vs_${selectedTeams[1]}_pathway.png`)}
+                      type="button"
+                    >
+                      ⬇ Download Card
+                    </button>
+                    <button
+                      className={styles.ghostBtn}
+                      onClick={() => { setPathwayCard(null); generatePathwayCard(); }}
+                      disabled={loadingPathway}
+                      type="button"
+                    >
+                      ↺ Regenerate
+                    </button>
+                  </div>
+                </div>
+              )}
+
+              {selectedFixture && !pathwayCard && !loadingPathway && (
+                <div className={styles.emptyState}>
+                  <button className={styles.primaryBtn} onClick={generatePathwayCard} type="button">
+                    🗺️ Generate Pathway Card
+                  </button>
+                </div>
+              )}
+            </div>
+          )}
+
         </main>
 
         {/* Footer */}
         <footer className={styles.footer}>
           {tab === 'fixtures' && selectedFixture && (
-            <button
-              className={styles.primaryBtn}
-              onClick={() => generateLegends(selectedFixture)}
-              disabled={loadingLegends}
-              type="button"
-            >
-              {loadingLegends ? 'Summoning...' : `⚔️ Generate Legends`}
+            <button className={styles.primaryBtn} onClick={() => generateLegends(selectedFixture)}
+              disabled={loadingLegends} type="button">
+              {loadingLegends ? 'Summoning...' : '⚔️ Generate Legends'}
             </button>
           )}
 
           {tab === 'legends' && Object.keys(legends).length > 0 && (
-            <button
-              className={styles.primaryBtn}
-              onClick={generateImages}
-              disabled={loadingImages}
-              type="button"
-            >
-              {loadingImages ? 'Generating 6 images...' : '🎨 Compare 3 Models (2 Legends)'}
+            <button className={styles.primaryBtn} onClick={generateCarousel}
+              disabled={loadingCarousel} type="button">
+              {loadingCarousel ? 'Building carousel...' : '🃏 Generate Carousel Card'}
             </button>
           )}
 
-          {tab === 'images' && Object.keys(images).length > 0 && (
-            <button
-              className={styles.primaryBtn}
-              onClick={() => alert('Step 5: Full carousel renderer coming next.')}
-              type="button"
-            >
-              🃏 Build Full Carousel →
+          {tab === 'fixtures' && selectedFixture && (
+            <div style={{ display: 'flex', gap: '8px' }}>
+              <button className={styles.ghostBtn} onClick={generateFixtureCard}
+                disabled={loadingFixtureCard} type="button">
+                {loadingFixtureCard ? 'Building...' : '📋 Match Card'}
+              </button>
+              <button className={styles.ghostBtn} onClick={generatePathwayCard}
+                disabled={loadingPathway} type="button">
+                {loadingPathway ? 'Building...' : '🗺️ Pathway'}
+              </button>
+            </div>
+          )}
+
+          {tab === 'carousel' && Object.keys(legends).length > 0 && !carousel && !loadingCarousel && (
+            <button className={styles.primaryBtn} onClick={generateCarousel} type="button">
+              🃏 Generate Carousel Card
+            </button>
+          )}
+
+          {tab === 'fixture-card' && selectedFixture && !fixtureCard && !loadingFixtureCard && (
+            <button className={styles.primaryBtn} onClick={generateFixtureCard} type="button">
+              📋 Generate Match Card
+            </button>
+          )}
+
+          {tab === 'pathway' && selectedFixture && !pathwayCard && !loadingPathway && (
+            <button className={styles.primaryBtn} onClick={generatePathwayCard} type="button">
+              🗺️ Generate Pathway Card
             </button>
           )}
         </footer>
