@@ -168,7 +168,7 @@ const WorldCupPage = () => {
       const res  = await fetch(`${API_BASE}/api/worldcup/generate-legends`, {
         method:  'POST',
         headers: { 'Content-Type': 'application/json' },
-        body:    JSON.stringify({ team, tag: meta.tag, era: meta.era }),
+        body: JSON.stringify({ team, tag: meta.tag, era: meta.era, opponent: t1 === team ? t2 : t1, round: selectedFixture.round || selectedFixture.group || 'Group Stage' }),
       });
       if (!res.ok) {
         const err = await res.json().catch(() => ({ message: `HTTP ${res.status}` }));
