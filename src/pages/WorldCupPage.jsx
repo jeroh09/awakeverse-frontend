@@ -165,12 +165,12 @@ const WorldCupPage = () => {
     const t1 = normalizeTeam(fixture.team1 || '');
     const t2 = normalizeTeam(fixture.team2 || '');
 
-    const fetchLegends = async (team) => {
+    const fetchLegends = async (team, opponent, round) => {
       const meta = getTeamMeta(team);
       const res  = await fetch(`${API_BASE}/api/worldcup/generate-legends`, {
         method:  'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ team, tag: meta.tag, era: meta.era, opponent: t1 === team ? t2 : t1, round: selectedFixture.round || selectedFixture.group || 'Group Stage' }),
+        body:    JSON.stringify({ team, tag: meta.tag, era: meta.era, opponent, round }),
       });
       if (!res.ok) {
         const err = await res.json().catch(() => ({ message: `HTTP ${res.status}` }));
@@ -182,9 +182,11 @@ const WorldCupPage = () => {
     };
 
     try {
+      const round = fixture.round || fixture.group || 'Group Stage';
+
       const [l1, l2] = await Promise.all([
-        fetchLegends(t1),
-        fetchLegends(t2),
+        fetchLegends(t1, t2, round),
+        fetchLegends(t2, t1, round),
       ]);
       setLegends({ [t1]: l1, [t2]: l2 });
       setTab('legends');
