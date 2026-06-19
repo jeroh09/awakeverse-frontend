@@ -395,6 +395,7 @@ export default function InfoPanel({
   onCancelJob        = () => {},
   onDeleteJob        = () => {},
   onGeneratePoster   = async () => {},
+  selectedMessageIds = [],   // ids chosen on the bubbles; [] = use all (today's behaviour)
 }) {
   const [selectedType,       setSelectedType]       = useState('script');
   const [selectedDuration,   setSelectedDuration]   = useState(180);
@@ -566,7 +567,7 @@ export default function InfoPanel({
                 onClick={() => onCreateContent({
                   contentType:     selectedType,
                   durationSeconds: selectedDuration,
-                  messageIds:      [],
+                  messageIds:      selectedMessageIds,
                   videoStyle:      selectedVideoStyle,
                 })}
               >
@@ -660,7 +661,7 @@ export default function InfoPanel({
           const scriptJob = await onCreateContent({
             contentType:     'script',
             durationSeconds: selectedDuration,
-            messageIds:      [],
+            messageIds:      selectedMessageIds,
             scriptFormat:    'screenplay',
             storyStyle:      selectedStoryStyle,
             videoStyle:      selectedVideoStyle,   // carried → viewer pre-selects this look
@@ -684,7 +685,7 @@ export default function InfoPanel({
         await onCreateContent({
           contentType:     selectedType,
           durationSeconds: selectedDuration,
-          messageIds:      [],
+          messageIds:      selectedMessageIds,
           videoStyle:      selectedVideoStyle,
           scriptFormat:    selectedType === 'script' ? selectedFormat : 'screenplay',
           storyStyle:      selectedStoryStyle,
