@@ -29,9 +29,6 @@ export default function ChatMessages({
   onOpenCreate,             // was onGenerateVideo
   isCreating = false,       // was isGeneratingVideo
   canCreateContent = false, // was canGenerateVideo
-  selectionMode = false,            // bubbles show include/exclude toggle
-  selectedMessageIds = null,        // Set<id> of chosen messages
-  onToggleMessageSelect,            // (id) => void
   theme = 'light',
   containerRef: externalRef,
   onScroll,
@@ -98,14 +95,6 @@ export default function ChatMessages({
           onOpenCreate={onOpenCreate}
           isCreating={isCreating}
           canCreateContent={canCreateContent}
-          selectionMode={selectionMode}
-          isSelected={
-            selectionMode &&
-            !!selectedMessageIds &&
-            message.id != null &&
-            selectedMessageIds.has(message.id)
-          }
-          onToggleSelect={onToggleMessageSelect}
           isSending={isSending}
           isLastMessage={
             !message.user && 

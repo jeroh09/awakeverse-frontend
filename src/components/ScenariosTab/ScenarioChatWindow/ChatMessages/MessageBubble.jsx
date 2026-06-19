@@ -16,6 +16,9 @@ export default function MessageBubble({
   onOpenCreate,           // was onGenerateVideo
   isCreating = false,     // was isGeneratingVideo
   canCreateContent = false, // was canGenerateVideo
+  selectionMode = false,  // show include/exclude toggle on this bubble
+  isSelected = false,     // whether this message is in the selection
+  onToggleSelect,         // (id) => void
   isSending,
   isLastMessage
 }) {
@@ -115,8 +118,58 @@ export default function MessageBubble({
     }
   };
 
+  const handleToggleSelect = (e) => {
+    e.stopPropagation();
+    if (onToggleSelect && message.id != null) {
+      onToggleSelect(message.id);
+    }
+  };
+
   return (
-    <div className={bubbleClassName}>
+    <div
+      className={bubbleClassName}
+      style={selectionMode ? {
+        position: 'relative',
+        opacity: isSelected ? 1 : 0.4,
+        transition: 'opacity 0.15s ease',
+      } : undefined}
+    >
+      {/* Selection toggle — rides on the bubble (include/exclude for the video) */}
+      {selectionMode && (
+        <button
+          type="button"
+          onClick={handleToggleSelect}
+          aria-label={isSelected ? 'Exclude this message' : 'Include this message'}
+          title={isSelected ? 'Included — tap to exclude' : 'Excluded — tap to include'}
+          style={{
+            position: 'absolute',
+            top: 6,
+            right: 6,
+            zIndex: 5,
+            width: 24,
+            height: 24,
+            borderRadius: '50%',
+            border: isSelected ? '2px solid #16a34a' : '2px solid rgba(120,120,120,0.45)',
+            background: isSelected ? '#16a34a' : 'rgba(255,255,255,0.92)',
+            color: '#fff',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            cursor: 'pointer',
+            padding: 0,
+            boxShadow: '0 1px 3px rgba(0,0,0,0.18)',
+          }}
+        >
+          {isSelected && (
+            <svg width="12" height="12" viewBox="0 0 16 16" fill="none"
+              stroke="currentColor" strokeWidth="2.6"
+              strokeLinecap="round" strokeLinejoin="round">
+              <path d="M3 8.5l3.5 3.5L13 4.5" />
+            </svg>
+          )}
+        </button>
+      )}
+
       {/* Avatar - only for character messages */}
       {!isUser && characterInfo && (
         <div className={styles.avatar}>

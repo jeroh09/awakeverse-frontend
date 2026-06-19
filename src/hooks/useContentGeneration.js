@@ -338,11 +338,38 @@ export default function useContentGeneration(scenarioId) {
     }
   }, [scenarioId, startPolling, stopPolling]);
 
+  // ── Suggest critical messages (pre-select) ─────────────────────────────────
+  // GET the LLM-ranked critical message ids for the "choose what goes in" step.
+  // Defensive: never throws. Returns { suggested_ids: number[] | null }.
+  //   • array  → use these as the pre-checked set
+  //   • null   → caller should fall back to "all selected" (today's behaviour)
+  const suggestMessages = useCallback(async () => {
+    if (!scenarioId) return { suggested_ids: null };
+    try {
+      const response = await fetch(
+        `${API_BASE}/api/content/scenarios/${scenarioId}/suggest-messages`,
+        { credentials: 'include' }
+      );
+      if (!response.ok) {
+        console.warn('🎯 suggestMessages: non-OK', response.status);
+        return { suggested_ids: null };
+      }
+      const data = await response.json();
+      return {
+        suggested_ids: Array.isArray(data.suggested_ids) ? data.suggested_ids : null,
+      };
+    } catch (error) {
+      console.warn('🎯 suggestMessages failed:', error);
+      return { suggested_ids: null };
+    }
+  }, [scenarioId]);
+
   return {
     state,          // { status, activeJob, error, progress }
     jobs,           // ContentJob[] — past completed jobs
     jobsLoading,
     createContent,  // (params) => Promise<job>
+    suggestMessages,// () => Promise<{ suggested_ids: number[] | null }>
     generatePoster, // (params) => Promise<job> — sync poster
     cancelContent,  // (jobId) => void — stop an in-flight job
     deleteJob,      // (jobId) => void — delete a job + its media

@@ -92,6 +92,12 @@ export default function ScenarioChatWindow({
   const [isCreatePanelOpen, setIsCreatePanelOpen] = useState(false);
   const [viewingJob, setViewingJob] = useState(null); 
 
+  // ===== MESSAGE SELECTION (script generation) =====
+  // selectionMode: bubbles show an include/exclude toggle.
+  // selectedMessageIds: Set<VerseMessage.id> currently chosen for the script.
+  const [selectionMode, setSelectionMode] = useState(false);
+  const [selectedMessageIds, setSelectedMessageIds] = useState(() => new Set());
+
   // Defensive checks
   if (!scenario || !onBack) {
     console.error('❌ ScenarioChatWindow: scenario and onBack props required');
@@ -281,22 +287,50 @@ export default function ScenarioChatWindow({
   // ===== VIDEO GENERATION HANDLERS =====
     // ===== CONTENT CREATION HANDLERS =====
  
-  // ✨ Create button in MessageBubble opens the Create panel in InfoPanel.
-  // It does NOT trigger generation directly — the user picks type/duration first.
-  const handleOpenCreate = useCallback(() => {
-    console.log('✨ Opening Create panel');
+  // ✨ Create button in MessageBubble opens the Create panel AND turns on
+  // message selection (pre-checked from the suggest call). The user adjusts
+  // ticks on the bubbles, then picks type/duration in the panel.
+  const handleOpenCreate = useCallback(async () => {
+    console.log('✨ Opening Create panel + selection');
     setIsCreatePanelOpen(true);
-    // Auto-expand InfoPanel if it was collapsed
+    setSelectionMode(true);
     if (infoPanelCollapsed) {
       setInfoPanelCollapsed(false);
     }
-  }, [infoPanelCollapsed]);
+
+    // Safe default: everything selected (== today's behaviour). Then refine
+    // from the suggest call if it returns a usable set.
+    const allIds = messages.filter(m => m.id != null).map(m => m.id);
+    setSelectedMessageIds(new Set(allIds));
+
+    try {
+      const { suggested_ids } = await contentGen.suggestMessages();
+      if (Array.isArray(suggested_ids) && suggested_ids.length > 0) {
+        setSelectedMessageIds(new Set(suggested_ids));
+      }
+      // null / empty → keep the all-selected fallback
+    } catch (e) {
+      console.warn('🎯 pre-select failed; keeping all selected', e);
+    }
+  }, [infoPanelCollapsed, messages, contentGen]);
  
   // Called by InfoPanel's close/back button
   const handleCloseCreate = useCallback(() => {
     setIsCreatePanelOpen(false);
+    setSelectionMode(false);
     contentGen.resetContent();
   }, [contentGen]);
+
+  // Toggle a single message in/out of the selection.
+  const handleToggleMessageSelect = useCallback((id) => {
+    if (id == null) return;
+    setSelectedMessageIds(prev => {
+      const next = new Set(prev);
+      if (next.has(id)) next.delete(id);
+      else next.add(id);
+      return next;
+    });
+  }, []);
  
   // Minimum non-user messages required to enable Create button
   const canCreateContent = useMemo(() => {
@@ -508,6 +542,9 @@ export default function ScenarioChatWindow({
               onOpenCreate={handleOpenCreate}
               isCreating={contentGen.state.status === 'creating'}
               canCreateContent={canCreateContent}
+              selectionMode={selectionMode}
+              selectedMessageIds={selectedMessageIds}
+              onToggleMessageSelect={handleToggleMessageSelect}
               theme={theme}
               containerRef={messagesContainerRef}
               onScroll={handleMessagesScroll}
@@ -553,10 +590,7 @@ export default function ScenarioChatWindow({
           onOpenCreate={handleOpenCreate}
           onCloseCreate={handleCloseCreate}
           onCreateContent={contentGen.createContent}
-          onViewJob={(job) => setViewingJob(job)}
-          onCancelJob={contentGen.cancelContent}
-          onDeleteJob={contentGen.deleteJob}
-          onGeneratePoster={contentGen.generatePoster}
+          onViewJob={(job) => setViewingJob(job)} 
         />
       </div>
 
@@ -570,28 +604,14 @@ export default function ScenarioChatWindow({
         />
       )}
       {/* Script viewer */}
-      {viewingJob && (viewingJob.content_type === 'script' || viewingJob.content_type === 'poster') && (
+      {viewingJob && viewingJob.content_type === 'script' && (
         <ScriptViewerModal
           job={viewingJob}
           scenarioTitle={scenario.title}
-          hasPoster={(contentGen.jobs || []).some(
-            j => j.content_type === 'poster' && j.status === 'complete' && j.output_url)}
           onClose={() => setViewingJob(null)}
           onJobUpdated={(updatedJob) => {
             setViewingJob(updatedJob);
             contentGen.loadJobs();
-          }}
-          onRenderVideo={async (videoStyle, includeIntro, includeOutro) => {
-            const scriptJob = viewingJob;
-            setViewingJob(null);                 // close viewer; progress shows in InfoPanel
-            await contentGen.createContent({
-              contentType:     'video',
-              storyStyle:      scriptJob.story_style || 'debate',
-              videoStyle,
-              durationSeconds: scriptJob.duration_seconds || 180,
-              intro:           !!includeIntro,
-              outro:           !!includeOutro,
-            });
           }}
         />
       )}
@@ -663,7 +683,7 @@ function UpgradeModal({ onClose, theme, questionsUsed, limit }) {
 
           <div className="upgrade-pricing">
             <div className="pricing-amount">
-              <span className="price">£10.99</span>
+              <span className="price">£11.99</span>
               <span className="period">/month</span>
             </div>
             <p className="pricing-guarantee">
