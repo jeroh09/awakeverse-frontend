@@ -294,6 +294,7 @@ export default function ScenarioChatWindow({
     console.log('✨ Opening Create panel + selection');
     setIsCreatePanelOpen(true);
     setSelectionMode(true);
+    // Auto-expand InfoPanel if it was collapsed
     if (infoPanelCollapsed) {
       setInfoPanelCollapsed(false);
     }
@@ -613,6 +614,16 @@ export default function ScenarioChatWindow({
           onJobUpdated={(updatedJob) => {
             setViewingJob(updatedJob);
             contentGen.loadJobs();
+          }}
+          onRenderVideo={async (videoStyle) => {
+            const scriptJob = viewingJob;
+            setViewingJob(null);                 // close viewer; progress shows in InfoPanel
+            await contentGen.createContent({
+              contentType:     'video',
+              storyStyle:      scriptJob.story_style || 'debate',
+              videoStyle,
+              durationSeconds: scriptJob.duration_seconds || 180,
+            });
           }}
         />
       )}
