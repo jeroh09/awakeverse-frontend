@@ -1,0 +1,205 @@
+/* src/components/ScenariosTab/ScenarioChatWindow/SceneEditor.module.css
+   CP3 — scene editor styles. Neutral/dark to sit inside MediaJobModal. */
+
+.editor {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  width: 100%;
+}
+
+/* ── Toolbar ─────────────────────────────────────────────── */
+.toolbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+.toolbarRight {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+}
+.field {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.fieldLabel {
+  font-size: 12px;
+  font-weight: 600;
+  letter-spacing: 0.02em;
+  color: rgba(255, 255, 255, 0.6);
+  text-transform: uppercase;
+}
+.select {
+  appearance: none;
+  background: rgba(255, 255, 255, 0.06);
+  color: #f1f1f4;
+  border: 1px solid rgba(255, 255, 255, 0.14);
+  border-radius: 8px;
+  padding: 7px 28px 7px 10px;
+  font-size: 13px;
+  cursor: pointer;
+  background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='10' height='6' viewBox='0 0 10 6'><path d='M1 1l4 4 4-4' fill='none' stroke='%23999' stroke-width='1.6' stroke-linecap='round'/></svg>");
+  background-repeat: no-repeat;
+  background-position: right 9px center;
+}
+.select:disabled { opacity: 0.5; cursor: default; }
+.toggle {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  font-size: 13px;
+  color: #d7d7dd;
+  cursor: pointer;
+  user-select: none;
+}
+.toggle input { width: 15px; height: 15px; accent-color: #7c5cff; cursor: pointer; }
+
+.hint {
+  margin: 0;
+  font-size: 12px;
+  color: rgba(255, 255, 255, 0.45);
+}
+
+/* ── List + cards ────────────────────────────────────────── */
+.list {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  max-height: 46vh;
+  overflow-y: auto;
+  padding: 2px;
+}
+.card {
+  display: flex;
+  align-items: stretch;
+  gap: 10px;
+  background: rgba(255, 255, 255, 0.045);
+  border: 1px solid rgba(255, 255, 255, 0.10);
+  border-radius: 12px;
+  padding: 8px;
+  touch-action: none;          /* let @dnd-kit own the gesture on touch */
+}
+.handle {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 26px;
+  flex: 0 0 26px;
+  background: transparent;
+  border: none;
+  color: rgba(255, 255, 255, 0.4);
+  cursor: grab;
+  border-radius: 6px;
+}
+.handle:hover { color: rgba(255, 255, 255, 0.75); background: rgba(255,255,255,0.05); }
+.handle:active { cursor: grabbing; }
+
+.thumbWrap {
+  position: relative;
+  flex: 0 0 84px;
+  width: 84px;
+  height: 56px;
+  border-radius: 8px;
+  overflow: hidden;
+  background: rgba(0, 0, 0, 0.35);
+}
+.thumb { width: 100%; height: 100%; object-fit: cover; display: block; }
+.thumbFallback {
+  width: 100%; height: 100%;
+  background: linear-gradient(135deg, rgba(124,92,255,0.25), rgba(255,255,255,0.05));
+}
+.posBadge {
+  position: absolute;
+  top: 4px; left: 4px;
+  min-width: 17px; height: 17px;
+  padding: 0 4px;
+  border-radius: 5px;
+  background: rgba(0, 0, 0, 0.65);
+  color: #fff;
+  font-size: 11px;
+  font-weight: 700;
+  display: flex; align-items: center; justify-content: center;
+}
+
+.cardBody { flex: 1 1 auto; display: flex; flex-direction: column; gap: 5px; min-width: 0; }
+.cardMeta { display: flex; align-items: baseline; justify-content: space-between; gap: 8px; }
+.speaker {
+  font-size: 13px; font-weight: 700; color: #ececf1;
+  white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+}
+.seconds { font-size: 11px; color: rgba(255, 255, 255, 0.45); flex: 0 0 auto; }
+.caption {
+  width: 100%;
+  resize: none;
+  background: rgba(0, 0, 0, 0.25);
+  border: 1px solid rgba(255, 255, 255, 0.10);
+  border-radius: 7px;
+  color: #e7e7ec;
+  font-size: 12.5px;
+  line-height: 1.35;
+  padding: 6px 8px;
+  font-family: inherit;
+}
+.caption:focus { outline: none; border-color: rgba(124, 92, 255, 0.7); }
+
+/* ── Buttons / footer ────────────────────────────────────── */
+.backBtn, .secondaryBtn {
+  display: inline-flex; align-items: center; gap: 6px;
+  background: rgba(255, 255, 255, 0.07);
+  color: #e7e7ec;
+  border: 1px solid rgba(255, 255, 255, 0.14);
+  border-radius: 8px;
+  padding: 7px 12px;
+  font-size: 13px;
+  cursor: pointer;
+}
+.backBtn:hover, .secondaryBtn:hover { background: rgba(255, 255, 255, 0.12); }
+.backBtn:disabled { opacity: 0.5; cursor: default; }
+
+.footer { margin-top: 4px; }
+.applyBtn, .primaryBtn {
+  width: 100%;
+  background: linear-gradient(135deg, #7c5cff, #5b3df0);
+  color: #fff;
+  border: none;
+  border-radius: 10px;
+  padding: 12px;
+  font-size: 14px;
+  font-weight: 700;
+  cursor: pointer;
+}
+.applyBtn:disabled { opacity: 0.45; cursor: default; }
+.primaryBtn { width: auto; padding: 10px 20px; }
+
+.progressRow { display: flex; align-items: center; gap: 12px; }
+.progressTrack {
+  flex: 1 1 auto; height: 8px;
+  background: rgba(255, 255, 255, 0.10);
+  border-radius: 999px; overflow: hidden;
+}
+.progressFill {
+  height: 100%;
+  background: linear-gradient(90deg, #7c5cff, #9d83ff);
+  transition: width 0.4s ease;
+}
+.progressLabel { font-size: 12.5px; color: rgba(255, 255, 255, 0.6); flex: 0 0 auto; }
+
+.error { margin: 0; color: #ff8585; font-size: 13px; }
+
+/* ── Empty + done states ─────────────────────────────────── */
+.empty { display: flex; flex-direction: column; align-items: center; gap: 14px; padding: 28px 12px; }
+.emptyText { margin: 0; color: rgba(255, 255, 255, 0.6); font-size: 14px; }
+
+.doneWrap { display: flex; flex-direction: column; gap: 14px; align-items: center; }
+.doneTitle { margin: 0; font-size: 15px; font-weight: 700; color: #d6ffe2; }
+.doneVideo {
+  width: 100%;
+  max-height: 52vh;
+  border-radius: 12px;
+  background: #000;
+}
+.doneActions { display: flex; gap: 10px; justify-content: center; }

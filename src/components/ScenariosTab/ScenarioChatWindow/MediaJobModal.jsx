@@ -1,9 +1,11 @@
 // src/components/ScenariosTab/ScenarioChatWindow/MediaJobModal.jsx
 // Audio/Video/Script preview + download + share modal.
 // Follows SVG icon design pattern. No emoji icons.
+// CP3: video jobs get an "Edit Scene" button that swaps the body into SceneEditor.
 
 import React, { useState, useCallback, useEffect, useRef } from 'react';
 import styles from './MediaJobModal.module.css';
+import SceneEditor from './SceneEditor';
 
 const API_BASE = process.env.REACT_APP_API_URL || 'https://api.awakeverse.com';
 
@@ -154,6 +156,14 @@ const CheckIcon = () => (
   </svg>
 );
 
+const EditIcon = () => (
+  <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.6"
+    strokeLinecap="round" strokeLinejoin="round" width="15" height="15">
+    <path d="M11.5 2.5a1.4 1.4 0 0 1 2 2L6 12l-2.8.8.8-2.8z"/>
+    <line x1="10" y1="4" x2="12" y2="6"/>
+  </svg>
+);
+
 // ── Component ─────────────────────────────────────────────────────────────────
 
 export default function MediaJobModal({ job, scenarioTitle, onClose }) {
@@ -169,6 +179,7 @@ export default function MediaJobModal({ job, scenarioTitle, onClose }) {
   const [previewError,   setPreviewError]   = useState(null);
   const [copied,         setCopied]         = useState(false);
   const [copyError,      setCopyError]      = useState(false);
+  const [mode,           setMode]           = useState('view');  // 'view' | 'edit'
   const blobUrlRef = useRef(null);
 
   useEffect(() => {
@@ -194,6 +205,16 @@ export default function MediaJobModal({ job, scenarioTitle, onClose }) {
     }
   };
 
+  // After a re-assembly the job's output_url changed — drop any stale preview blob
+  // so the next "Play Scene Video" fetches the updated cut.
+  const handleApplied = useCallback(() => {
+    if (blobUrlRef.current) {
+      URL.revokeObjectURL(blobUrlRef.current);
+      blobUrlRef.current = null;
+    }
+    setPreviewUrl(null);
+  }, []);
+
   const handleCopyLink = async () => {
     setCopyError(false);
     try {
@@ -208,8 +229,9 @@ export default function MediaJobModal({ job, scenarioTitle, onClose }) {
   };
 
   const handleKeyDown = useCallback((e) => {
-    if (e.key === 'Escape') onClose();
-  }, [onClose]);
+    // In edit mode let the editor own Escape (back), don't close the whole modal.
+    if (e.key === 'Escape' && mode === 'view') onClose();
+  }, [onClose, mode]);
 
   useEffect(() => {
     document.addEventListener('keydown', handleKeyDown);
@@ -217,19 +239,22 @@ export default function MediaJobModal({ job, scenarioTitle, onClose }) {
   }, [handleKeyDown]);
 
   const handleBackdrop = (e) => {
-    if (e.target === e.currentTarget) onClose();
+    // Don't let a stray backdrop click nuke an in-progress edit.
+    if (e.target === e.currentTarget && mode === 'view') onClose();
   };
 
   const isPlaying = !!previewUrl;
+  const isEditing = isVideo && mode === 'edit';
 
   const headerIcon = isAudio ? <HeadphonesIcon /> : isVideo ? <VideoCameraIcon /> : <ScriptIcon />;
-  const headerTitle = isAudio ? 'Audio Drama' : isVideo ? 'Scene Video' : 'Screenplay';
+  const headerTitle = isEditing ? 'Edit Scene'
+    : isAudio ? 'Audio Drama' : isVideo ? 'Scene Video' : 'Screenplay';
 
   return (
     <div className={styles.overlay} onClick={handleBackdrop} role="dialog" aria-modal="true">
       <div className={[
         styles.modal,
-        isVideo && isPlaying ? styles.modalVideo : '',
+        isVideo && (isPlaying || isEditing) ? styles.modalVideo : '',
         isScript ? styles.modalScript : '',
       ].filter(Boolean).join(' ')}>
 
@@ -252,6 +277,15 @@ export default function MediaJobModal({ job, scenarioTitle, onClose }) {
 
         {/* Body */}
         <div className={styles.body}>
+
+          {isEditing ? (
+            <SceneEditor
+              job={job}
+              onClose={() => setMode('view')}
+              onApplied={handleApplied}
+            />
+          ) : (
+          <>
 
           {/* ── Script viewer ─────────────────────────────────────── */}
           {isScript && job.condensed_script && (
@@ -383,9 +417,16 @@ export default function MediaJobModal({ job, scenarioTitle, onClose }) {
               </button>
             )}
 
-            {/* Video downloads */}
+            {/* Video — edit + downloads */}
             {isVideo && (
               <>
+                <button
+                  className={styles.downloadButton}
+                  onClick={() => setMode('edit')}
+                >
+                  <EditIcon />
+                  Edit Scene
+                </button>
                 <button
                   className={styles.downloadButton}
                   onClick={() => downloadJobFile(
@@ -413,12 +454,17 @@ export default function MediaJobModal({ job, scenarioTitle, onClose }) {
               </>
             )}
           </div>
+
+          </>
+          )}
         </div>
 
         {/* Footer */}
         <div className={styles.footer}>
           <span className={styles.footerText}>&ldquo;{scenarioTitle}&rdquo;</span>
-          <span className={styles.footerHint}>Esc to close</span>
+          <span className={styles.footerHint}>
+            {isEditing ? 'Editing scene' : 'Esc to close'}
+          </span>
         </div>
 
       </div>
