@@ -132,6 +132,23 @@
   white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
 }
 .seconds { font-size: 11px; color: rgba(255, 255, 255, 0.45); flex: 0 0 auto; }
+.metaRight { display: flex; align-items: center; gap: 4px; flex: 0 0 auto; }
+.cardAction {
+  display: inline-flex; align-items: center; justify-content: center;
+  width: 24px; height: 24px;
+  background: rgba(255, 255, 255, 0.06);
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  border-radius: 6px;
+  color: rgba(255, 255, 255, 0.65);
+  cursor: pointer;
+}
+.cardAction:hover { background: rgba(255, 255, 255, 0.14); color: #fff; }
+.cardAction:disabled { opacity: 0.3; cursor: default; }
+.cardActionDanger:hover:not(:disabled) {
+  background: rgba(255, 90, 90, 0.18);
+  border-color: rgba(255, 90, 90, 0.5);
+  color: #ff9d9d;
+}
 .caption {
   width: 100%;
   resize: none;

@@ -48,9 +48,24 @@ const BackIcon = () => (
     <polyline points="10 3 5 8 10 13"/>
   </svg>
 );
+const DuplicateIcon = () => (
+  <svg viewBox="0 0 16 16" width="14" height="14" fill="none" stroke="currentColor"
+    strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+    <rect x="5.5" y="5.5" width="8" height="8" rx="1.5"/>
+    <path d="M10.5 5.5V4a1.5 1.5 0 0 0-1.5-1.5H4A1.5 1.5 0 0 0 2.5 4v5A1.5 1.5 0 0 0 4 10.5h1.5"/>
+  </svg>
+);
+const TrashIcon = () => (
+  <svg viewBox="0 0 16 16" width="14" height="14" fill="none" stroke="currentColor"
+    strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+    <polyline points="2.5 4 13.5 4"/>
+    <path d="M5.5 4V2.8a1 1 0 0 1 1-1h3a1 1 0 0 1 1 1V4"/>
+    <path d="M12 4l-.6 8.2a1.2 1.2 0 0 1-1.2 1.1H5.8a1.2 1.2 0 0 1-1.2-1.1L4 4"/>
+  </svg>
+);
 
 // ── One sortable beat card ────────────────────────────────────────────────────
-function BeatCard({ beat, position, onCaptionChange }) {
+function BeatCard({ beat, position, canDelete, onCaptionChange, onDuplicate, onDelete }) {
   const {
     attributes, listeners, setNodeRef, transform, transition, isDragging,
   } = useSortable({ id: beat.id });
@@ -85,9 +100,30 @@ function BeatCard({ beat, position, onCaptionChange }) {
       <div className={styles.cardBody}>
         <div className={styles.cardMeta}>
           <span className={styles.speaker}>{beat.speaker || '—'}</span>
-          <span className={styles.seconds}>
-            {typeof beat.seconds === 'number' ? `${beat.seconds.toFixed(1)}s` : ''}
-          </span>
+          <div className={styles.metaRight}>
+            <span className={styles.seconds}>
+              {typeof beat.seconds === 'number' ? `${beat.seconds.toFixed(1)}s` : ''}
+            </span>
+            <button
+              type="button"
+              className={styles.cardAction}
+              title="Duplicate beat"
+              aria-label="Duplicate beat"
+              onClick={() => onDuplicate(beat.id)}
+            >
+              <DuplicateIcon />
+            </button>
+            <button
+              type="button"
+              className={`${styles.cardAction} ${styles.cardActionDanger}`}
+              title={canDelete ? 'Delete beat' : 'Keep at least one beat'}
+              aria-label="Delete beat"
+              disabled={!canDelete}
+              onClick={() => onDelete(beat.id)}
+            >
+              <TrashIcon />
+            </button>
+          </div>
         </div>
         <textarea
           className={styles.caption}
@@ -109,8 +145,10 @@ export default function SceneEditor({ job, onClose, onApplied }) {
     return typeof m === 'string' ? JSON.parse(m) : m;
   }, [job]);
 
+  const idRef = useRef(0);
+  const makeId = () => `b${idRef.current++}`;
   const [beats, setBeats] = useState(() =>
-    (manifest?.beats || []).map((b, i) => ({ ...b, id: String(b.index ?? i) }))
+    (manifest?.beats || []).map((b) => ({ ...b, id: makeId() }))
   );
   const [ambience, setAmbience] = useState(manifest?.ambience ?? '');
   const [captions, setCaptions] = useState(manifest?.captions ?? true);
@@ -123,10 +161,9 @@ export default function SceneEditor({ job, onClose, onApplied }) {
   const pollRef  = useRef(null);
   const startRef = useRef(null);
 
-  // Snapshot for dirty-checking
+  // Snapshots for dirty-checking (order/captions compared against initialBeats)
+  const initialBeats = useRef(manifest?.beats || []);
   const initial = useRef({
-    order:    (manifest?.beats || []).map(b => String(b.index)),
-    captions: (manifest?.beats || []).map(b => b.caption || ''),
     ambience: manifest?.ambience ?? '',
     capsOn:   manifest?.captions ?? true,
   });
@@ -156,15 +193,14 @@ export default function SceneEditor({ job, onClose, onApplied }) {
   }
 
   const dirty = (() => {
-    const order = beats.map(b => b.id);
-    if (order.join() !== initial.current.order.join()) return true;
     if (ambience !== initial.current.ambience) return true;
     if (captions !== initial.current.capsOn) return true;
-    // caption text (compare in current order against original-by-id)
-    const origById = Object.fromEntries(
-      (manifest.beats || []).map(b => [String(b.index), b.caption || ''])
+    const orig = initialBeats.current;
+    if (beats.length !== orig.length) return true;            // duplicated / deleted
+    return beats.some((b, i) =>
+      b.clip_url !== orig[i]?.clip_url ||                     // reordered
+      (b.caption || '') !== (orig[i]?.caption || '')          // recaptioned
     );
-    return beats.some(b => (b.caption || '') !== (origById[b.id] ?? ''));
   })();
 
   const handleDragEnd = ({ active, over }) => {
@@ -178,6 +214,19 @@ export default function SceneEditor({ job, onClose, onApplied }) {
 
   const handleCaptionChange = (id, text) =>
     setBeats(items => items.map(b => (b.id === id ? { ...b, caption: text } : b)));
+
+  // Duplicate: clone the beat (same clip_url — no re-render), insert right after.
+  const handleDuplicate = (id) =>
+    setBeats(items => {
+      const i = items.findIndex(b => b.id === id);
+      if (i < 0) return items;
+      const copy = { ...items[i], id: makeId() };
+      return [...items.slice(0, i + 1), copy, ...items.slice(i + 1)];
+    });
+
+  // Delete: drop the beat. Guard — never empty the scene (engine needs >=1).
+  const handleDelete = (id) =>
+    setBeats(items => (items.length <= 1 ? items : items.filter(b => b.id !== id)));
 
   const buildManifest = () => ({
     ...manifest,
@@ -302,7 +351,10 @@ export default function SceneEditor({ job, onClose, onApplied }) {
                 key={b.id}
                 beat={b}
                 position={i + 1}
+                canDelete={beats.length > 1}
                 onCaptionChange={handleCaptionChange}
+                onDuplicate={handleDuplicate}
+                onDelete={handleDelete}
               />
             ))}
           </div>
