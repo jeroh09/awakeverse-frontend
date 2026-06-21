@@ -1,7 +1,6 @@
 // src/components/ScenariosTab/ScenarioChatWindow/MediaJobModal.jsx
-// Audio/Video/Script preview + download + share modal.
-// Follows SVG icon design pattern. No emoji icons.
-// CP3: video jobs get an "Edit Scene" button that swaps the body into SceneEditor.
+// Audio/Video preview + download + share. Full-page view — no overlay wrapper.
+// CP3: video jobs get an "Edit Scene" mode that swaps body into SceneEditor.
 
 import React, { useState, useCallback, useEffect, useRef } from 'react';
 import styles from './MediaJobModal.module.css';
@@ -205,8 +204,7 @@ export default function MediaJobModal({ job, scenarioTitle, onClose }) {
     }
   };
 
-  // After a re-assembly the job's output_url changed — drop any stale preview blob
-  // so the next "Play Scene Video" fetches the updated cut.
+  // After a re-assembly drop the stale blob so next Play fetches the new cut
   const handleApplied = useCallback(() => {
     if (blobUrlRef.current) {
       URL.revokeObjectURL(blobUrlRef.current);
@@ -228,8 +226,8 @@ export default function MediaJobModal({ job, scenarioTitle, onClose }) {
     }
   };
 
+  // Escape only closes in view mode — edit mode owns its own back button
   const handleKeyDown = useCallback((e) => {
-    // In edit mode let the editor own Escape (back), don't close the whole modal.
     if (e.key === 'Escape' && mode === 'view') onClose();
   }, [onClose, mode]);
 
@@ -238,236 +236,213 @@ export default function MediaJobModal({ job, scenarioTitle, onClose }) {
     return () => document.removeEventListener('keydown', handleKeyDown);
   }, [handleKeyDown]);
 
-  const handleBackdrop = (e) => {
-    // Don't let a stray backdrop click nuke an in-progress edit.
-    if (e.target === e.currentTarget && mode === 'view') onClose();
-  };
-
   const isPlaying = !!previewUrl;
   const isEditing = isVideo && mode === 'edit';
 
-  const headerIcon = isAudio ? <HeadphonesIcon /> : isVideo ? <VideoCameraIcon /> : <ScriptIcon />;
-  const headerTitle = isEditing ? 'Edit Scene'
+  const headerIcon  = isAudio ? <HeadphonesIcon /> : isVideo ? <VideoCameraIcon /> : <ScriptIcon />;
+  const headerTitle = isEditing
+    ? 'Edit Scene'
     : isAudio ? 'Audio Drama' : isVideo ? 'Scene Video' : 'Screenplay';
 
   return (
-    <div className={styles.overlay} onClick={handleBackdrop} role="dialog" aria-modal="true">
-      <div className={[
-        styles.modal,
-        isVideo && (isPlaying || isEditing) ? styles.modalVideo : '',
-        isScript ? styles.modalScript : '',
-      ].filter(Boolean).join(' ')}>
+    <div className={styles.page} role="main" aria-label={headerTitle}>
 
-        {/* Header */}
-        <div className={styles.header}>
-          <div className={styles.headerLeft}>
-            <span className={styles.headerIcon}>{headerIcon}</span>
-            <div>
-              <h2 className={styles.headerTitle}>{headerTitle}</h2>
-              <p className={styles.headerMeta}>
-                {scenarioTitle} · {job.duration_seconds}s
-                {job.created_at && ` · ${formatDate(job.created_at)}`}
-              </p>
-            </div>
+      {/* ── Header ──────────────────────────────────────────────────────── */}
+      <div className={styles.header}>
+        <div className={styles.headerLeft}>
+          <span className={styles.headerIcon}>{headerIcon}</span>
+          <div>
+            <h2 className={styles.headerTitle}>{headerTitle}</h2>
+            <p className={styles.headerMeta}>
+              {scenarioTitle} · {job.duration_seconds}s
+              {job.created_at && ` · ${formatDate(job.created_at)}`}
+            </p>
           </div>
-          <button className={styles.closeButton} onClick={onClose} aria-label="Close">
-            <CloseIcon />
-          </button>
         </div>
+        <button className={styles.closeButton} onClick={onClose} aria-label="Back to chat">
+          <CloseIcon />
+        </button>
+      </div>
 
-        {/* Body */}
-        <div className={styles.body}>
+      {/* ── Body ────────────────────────────────────────────────────────── */}
+      <div className={isEditing ? styles.bodyEdit : styles.bodyView}>
 
-          {isEditing ? (
-            <SceneEditor
-              job={job}
-              onClose={() => setMode('view')}
-              onApplied={handleApplied}
-            />
-          ) : (
+        {/* ── EDIT MODE: SceneEditor fills the full body ─────────────── */}
+        {isEditing && (
+          <SceneEditor
+            job={job}
+            onClose={() => setMode('view')}
+            onApplied={handleApplied}
+          />
+        )}
+
+        {/* ── VIEW MODE ─────────────────────────────────────────────────── */}
+        {!isEditing && (
           <>
+            {/* LEFT: player area */}
+            <div className={styles.playerCol}>
 
-          {/* ── Script viewer ─────────────────────────────────────── */}
-          {isScript && job.condensed_script && (
-            <div className={styles.scriptViewer}>
-              <pre className={styles.scriptText}>{job.condensed_script}</pre>
-            </div>
-          )}
+              {/* Script viewer */}
+              {isScript && job.condensed_script && (
+                <div className={styles.scriptViewer}>
+                  <pre className={styles.scriptText}>{job.condensed_script}</pre>
+                </div>
+              )}
 
-          {/* ── Preview button ─────────────────────────────────────── */}
-          {(isAudio || isVideo) && !previewUrl && !previewLoading && !previewError && (
-            <button className={styles.previewButton} onClick={handlePreview}>
-              <span className={styles.previewIcon}>
-                {isAudio ? <SpeakerIcon /> : <PlayIcon />}
-              </span>
-              {isAudio ? 'Play Audio Drama' : 'Play Scene Video'}
-            </button>
-          )}
-
-          {previewLoading && (
-            <div className={styles.previewLoading}>
-              <div className={styles.previewSpinner} />
-              <p>Loading {isAudio ? 'audio' : 'video'}…</p>
-            </div>
-          )}
-
-          {previewError && (
-            <p className={styles.previewError}>{previewError}</p>
-          )}
-
-          {/* Audio player */}
-          {previewUrl && isAudio && (
-            <div className={styles.audioPlayerWrapper}>
-              <audio controls autoPlay src={previewUrl} className={styles.audioPlayer}>
-                Your browser does not support audio playback.
-              </audio>
-            </div>
-          )}
-
-          {/* Video player */}
-          {previewUrl && isVideo && (
-            <div className={styles.videoPlayerWrapper}>
-              <video controls autoPlay src={previewUrl} className={styles.videoPlayer}>
-                Your browser does not support video playback.
-              </video>
-            </div>
-          )}
-
-          {/* Info block — hidden once media loaded or for scripts */}
-          {!isPlaying && !isScript && (
-            <div className={styles.infoBlock}>
-              <span className={styles.infoIcon}>
-                {isAudio ? <MicIcon /> : <FilmIcon />}
-              </span>
-              <div className={styles.infoText}>
-                <p className={styles.infoTitle}>
-                  {isAudio ? 'Multi-voice audio drama' : 'Scene video with character voices'}
-                </p>
-                <p className={styles.infoDesc}>
-                  {isAudio
-                    ? 'Characters voiced by ElevenLabs with accent-matched profiles.'
-                    : 'AI-generated scene visuals combined with character audio.'}
-                </p>
-              </div>
-            </div>
-          )}
-
-          {/* ── Share button ───────────────────────────────────────── */}
-          <button
-            className={[
-              styles.shareButton,
-              copied    ? styles.shareButtonCopied : '',
-              copyError ? styles.shareButtonError  : '',
-            ].filter(Boolean).join(' ')}
-            onClick={handleCopyLink}
-          >
-            {copied ? <CheckIcon /> : <LinkIcon />}
-            {copied ? 'Link copied!' : copyError ? 'Could not copy' : 'Copy shareable link'}
-          </button>
-
-          {/* ── Download buttons ───────────────────────────────────── */}
-          <div className={styles.downloadButtons}>
-
-            {/* Script downloads */}
-            {isScript && (
-              <>
-                <button
-                  className={styles.downloadButton}
-                  onClick={() => downloadJobFile(
-                    job.id,
-                    'download-script',
-                    `screenplay_${job.id}.fountain`
-                  )}
-                >
-                  <DownloadIcon />
-                  <span className={styles.downloadLabel}>
-                    Download .fountain
-                    <span className={styles.downloadHint}>Highland · WriterDuet · Final Draft</span>
+              {/* Preview trigger */}
+              {(isAudio || isVideo) && !previewUrl && !previewLoading && !previewError && (
+                <button className={styles.previewButton} onClick={handlePreview}>
+                  <span className={styles.previewIcon}>
+                    {isAudio ? <SpeakerIcon /> : <PlayIcon />}
                   </span>
+                  {isAudio ? 'Play Audio Drama' : 'Play Scene Video'}
                 </button>
-                <button
-                  className={`${styles.downloadButton} ${styles.downloadButtonSecondary}`}
-                  onClick={() => downloadJobFile(
-                    job.id,
-                    'download-fdx',
-                    `screenplay_${job.id}.fdx`
-                  )}
-                >
-                  <DownloadIcon />
-                  <span className={styles.downloadLabel}>
-                    Download .fdx
-                    <span className={styles.downloadHint}>Final Draft native format</span>
-                  </span>
-                </button>
-              </>
-            )}
+              )}
 
-            {/* Audio download */}
-            {isAudio && (
+              {previewLoading && (
+                <div className={styles.previewLoading}>
+                  <div className={styles.previewSpinner} />
+                  <p>Loading {isAudio ? 'audio' : 'video'}…</p>
+                </div>
+              )}
+
+              {previewError && (
+                <p className={styles.previewError}>{previewError}</p>
+              )}
+
+              {/* Audio player */}
+              {previewUrl && isAudio && (
+                <div className={styles.audioPlayerWrapper}>
+                  <audio controls autoPlay src={previewUrl} className={styles.audioPlayer}>
+                    Your browser does not support audio playback.
+                  </audio>
+                </div>
+              )}
+
+              {/* Video player */}
+              {previewUrl && isVideo && (
+                <div className={styles.videoPlayerWrapper}>
+                  <video controls autoPlay src={previewUrl} className={styles.videoPlayer}>
+                    Your browser does not support video playback.
+                  </video>
+                </div>
+              )}
+
+              {/* Info block — hidden once media loaded */}
+              {!isPlaying && !isScript && (
+                <div className={styles.infoBlock}>
+                  <span className={styles.infoIcon}>
+                    {isAudio ? <MicIcon /> : <FilmIcon />}
+                  </span>
+                  <div className={styles.infoText}>
+                    <p className={styles.infoTitle}>
+                      {isAudio ? 'Multi-voice audio drama' : 'Scene video with character voices'}
+                    </p>
+                    <p className={styles.infoDesc}>
+                      {isAudio
+                        ? 'Characters voiced by ElevenLabs with accent-matched profiles.'
+                        : 'AI-generated scene visuals combined with character audio.'}
+                    </p>
+                  </div>
+                </div>
+              )}
+            </div>
+
+            {/* RIGHT: actions column */}
+            <div className={styles.actionsCol}>
+
+              {/* Share */}
               <button
-                className={styles.downloadButton}
-                onClick={() => downloadJobFile(
-                  job.id,
-                  'download-audio',
-                  `audio_drama_${job.id}.mp3`
-                )}
+                className={[
+                  styles.shareButton,
+                  copied    ? styles.shareButtonCopied : '',
+                  copyError ? styles.shareButtonError  : '',
+                ].filter(Boolean).join(' ')}
+                onClick={handleCopyLink}
               >
-                <DownloadIcon />
-                Download MP3
+                {copied ? <CheckIcon /> : <LinkIcon />}
+                {copied ? 'Link copied!' : copyError ? 'Could not copy' : 'Copy shareable link'}
               </button>
-            )}
 
-            {/* Video — edit + downloads */}
-            {isVideo && (
-              <>
-                <button
-                  className={styles.downloadButton}
-                  onClick={() => setMode('edit')}
-                >
-                  <EditIcon />
-                  Edit Scene
-                </button>
-                <button
-                  className={styles.downloadButton}
-                  onClick={() => downloadJobFile(
-                    job.id,
-                    'download-video',
-                    `scene_video_${job.id}.mp4`
-                  )}
-                >
-                  <DownloadIcon />
-                  Download MP4
-                </button>
-                {job.audio_url && (
+              {/* Downloads */}
+              <div className={styles.downloadButtons}>
+
+                {isScript && (
+                  <>
+                    <button
+                      className={styles.downloadButton}
+                      onClick={() => downloadJobFile(job.id, 'download-script', `screenplay_${job.id}.fountain`)}
+                    >
+                      <DownloadIcon />
+                      <span className={styles.downloadLabel}>
+                        Download .fountain
+                        <span className={styles.downloadHint}>Highland · WriterDuet · Final Draft</span>
+                      </span>
+                    </button>
+                    <button
+                      className={`${styles.downloadButton} ${styles.downloadButtonSecondary}`}
+                      onClick={() => downloadJobFile(job.id, 'download-fdx', `screenplay_${job.id}.fdx`)}
+                    >
+                      <DownloadIcon />
+                      <span className={styles.downloadLabel}>
+                        Download .fdx
+                        <span className={styles.downloadHint}>Final Draft native format</span>
+                      </span>
+                    </button>
+                  </>
+                )}
+
+                {isAudio && (
                   <button
-                    className={`${styles.downloadButton} ${styles.downloadButtonSecondary}`}
-                    onClick={() => downloadJobFile(
-                      job.id,
-                      'download-audio',
-                      `audio_drama_${job.id}.mp3`
-                    )}
+                    className={styles.downloadButton}
+                    onClick={() => downloadJobFile(job.id, 'download-audio', `audio_drama_${job.id}.mp3`)}
                   >
                     <DownloadIcon />
-                    Download MP3 (audio track)
+                    Download MP3
                   </button>
                 )}
-              </>
-            )}
-          </div>
 
+                {isVideo && (
+                  <>
+                    <button
+                      className={styles.downloadButton}
+                      onClick={() => setMode('edit')}
+                    >
+                      <EditIcon />
+                      Edit Scene
+                    </button>
+                    <button
+                      className={styles.downloadButton}
+                      onClick={() => downloadJobFile(job.id, 'download-video', `scene_video_${job.id}.mp4`)}
+                    >
+                      <DownloadIcon />
+                      Download MP4
+                    </button>
+                    {job.audio_url && (
+                      <button
+                        className={`${styles.downloadButton} ${styles.downloadButtonSecondary}`}
+                        onClick={() => downloadJobFile(job.id, 'download-audio', `audio_drama_${job.id}.mp3`)}
+                      >
+                        <DownloadIcon />
+                        Download MP3 (audio track)
+                      </button>
+                    )}
+                  </>
+                )}
+              </div>
+            </div>
           </>
-          )}
-        </div>
-
-        {/* Footer */}
-        <div className={styles.footer}>
-          <span className={styles.footerText}>&ldquo;{scenarioTitle}&rdquo;</span>
-          <span className={styles.footerHint}>
-            {isEditing ? 'Editing scene' : 'Esc to close'}
-          </span>
-        </div>
-
+        )}
       </div>
+
+      {/* ── Footer ──────────────────────────────────────────────────────── */}
+      <div className={styles.footer}>
+        <span className={styles.footerText}>&ldquo;{scenarioTitle}&rdquo;</span>
+        <span className={styles.footerHint}>
+          {isEditing ? 'Editing scene · use Back to return to view' : 'Esc to go back'}
+        </span>
+      </div>
+
     </div>
   );
 }

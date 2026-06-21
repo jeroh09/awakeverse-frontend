@@ -1,50 +1,16 @@
 /* MediaJobModal.module.css */
+/* Full-page view — .page is the root, fixed inset:0, no overlay wrapper */
 
-/* ── Overlay ─────────────────────────────────────────────────────────────── */
-.overlay {
+/* ── Page root ───────────────────────────────────────────────────────────── */
+.page {
   position: fixed;
   inset: 0;
   z-index: 300;
-  background: rgba(10, 15, 26, 0.88);
-  backdrop-filter: blur(6px);
-  -webkit-backdrop-filter: blur(6px);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  animation: overlayIn 0.2s ease-out;
-  padding: var(--spacing-lg);
-}
-
-@keyframes overlayIn {
-  from { opacity: 0; }
-  to   { opacity: 1; }
-}
-
-/* ── Modal — default (audio / before load) ───────────────────────────────── */
-.modal {
-  width: 500px;
-  max-width: 95vw;
-  max-height: 92vh;
   background: var(--bg-surface);
-  border: 1px solid var(--border-medium);
-  border-radius: var(--border-radius-xl);
-  box-shadow:
-    0 24px 64px -12px rgba(0,0,0,0.55),
-    0 0 0 1px rgba(99,102,241,0.1);
   display: flex;
   flex-direction: column;
   overflow: hidden;
-  animation: modalIn 0.25s cubic-bezier(0.16,1,0.3,1);
-}
-
-/* Video modal — wider, maximises player space */
-.modalVideo {
-  width: min(860px, 95vw);
-}
-
-@keyframes modalIn {
-  from { opacity: 0; transform: scale(0.95) translateY(8px); }
-  to   { opacity: 1; transform: scale(1)    translateY(0);   }
+  font-family: var(--font-body, 'Inter', sans-serif);
 }
 
 /* ── Header ──────────────────────────────────────────────────────────────── */
@@ -70,6 +36,9 @@
   font-size: 26px;
   line-height: 1;
   flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  color: var(--text-secondary);
 }
 
 .headerTitle {
@@ -106,20 +75,60 @@
 }
 
 .closeButton:hover {
-  background: rgba(239,68,68,0.1);
-  border-color: rgba(239,68,68,0.3);
+  background: rgba(239, 68, 68, 0.1);
+  border-color: rgba(239, 68, 68, 0.3);
   color: #EF4444;
 }
 
-/* ── Body ────────────────────────────────────────────────────────────────── */
-.body {
+/* ── Body: VIEW mode — two-column ────────────────────────────────────────── */
+/* Left: player/preview. Right: actions (share + downloads). */
+.bodyView {
+  flex: 1;
+  display: grid;
+  grid-template-columns: 1fr 320px;
+  gap: 0;
+  overflow: hidden;
+  min-height: 0;
+}
+
+/* ── Body: EDIT mode — SceneEditor fills everything ──────────────────────── */
+.bodyEdit {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;   /* SceneEditor owns its own scroll */
+  min-height: 0;
   padding: var(--spacing-lg) var(--spacing-xl);
+}
+
+/* ── Player column (left) ────────────────────────────────────────────────── */
+.playerCol {
   display: flex;
   flex-direction: column;
   gap: var(--spacing-md);
+  padding: var(--spacing-lg) var(--spacing-xl);
   overflow-y: auto;
-  flex: 1;
+  border-right: 1px solid var(--border-subtle);
 }
+
+.playerCol::-webkit-scrollbar       { width: 6px; }
+.playerCol::-webkit-scrollbar-track { background: transparent; }
+.playerCol::-webkit-scrollbar-thumb { background: var(--border-medium); border-radius: 3px; }
+.playerCol::-webkit-scrollbar-thumb:hover { background: var(--accent-primary); }
+
+/* ── Actions column (right) ──────────────────────────────────────────────── */
+.actionsCol {
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-md);
+  padding: var(--spacing-lg) var(--spacing-xl);
+  overflow-y: auto;
+  background: var(--bg-interactive);
+}
+
+.actionsCol::-webkit-scrollbar       { width: 6px; }
+.actionsCol::-webkit-scrollbar-track { background: transparent; }
+.actionsCol::-webkit-scrollbar-thumb { background: var(--border-medium); border-radius: 3px; }
 
 /* ── Preview button ──────────────────────────────────────────────────────── */
 .previewButton {
@@ -145,7 +154,11 @@
   background: var(--accent-glow);
 }
 
-.previewIcon { font-size: 24px; }
+.previewIcon {
+  font-size: 24px;
+  display: flex;
+  align-items: center;
+}
 
 /* ── Preview loading ─────────────────────────────────────────────────────── */
 .previewLoading {
@@ -174,7 +187,7 @@
   color: #EF4444;
   text-align: center;
   padding: var(--spacing-md);
-  background: rgba(239,68,68,0.08);
+  background: rgba(239, 68, 68, 0.08);
   border-radius: var(--border-radius-md);
   margin: 0;
 }
@@ -195,13 +208,13 @@
   outline: none;
 }
 
-/* ── Video player — 16:9, controls always fully visible ──────────────────── */
+/* ── Video player ────────────────────────────────────────────────────────── */
+/* Fills available width in the player column at 16:9 */
 .videoPlayerWrapper {
   border-radius: var(--border-radius-md);
   overflow: hidden;
   background: #000;
   border: 1px solid var(--border-subtle);
-  /* Enforce 16:9 so the browser never clips the control bar */
   aspect-ratio: 16 / 9;
   width: 100%;
 }
@@ -211,11 +224,10 @@
   height: 100%;
   display: block;
   outline: none;
-  /* object-fit: contain keeps letterboxing inside the 16:9 box */
   object-fit: contain;
 }
 
-/* ── Info block — only shown before media loads ──────────────────────────── */
+/* ── Info block ──────────────────────────────────────────────────────────── */
 .infoBlock {
   display: flex;
   gap: var(--spacing-md);
@@ -225,27 +237,61 @@
   border: 1px solid var(--border-subtle);
 }
 
-.infoIcon { font-size: 26px; line-height: 1; flex-shrink: 0; }
-
-.infoText {
+.infoIcon {
+  font-size: 26px;
+  line-height: 1;
+  flex-shrink: 0;
   display: flex;
-  flex-direction: column;
-  gap: var(--spacing-sm);
-}
-
-.infoTitle {
-  font-size: var(--font-size-body-small);
-  font-weight: var(--font-weight-semibold);
-  color: var(--text-primary);
-  margin: 0;
-}
-
-.infoDesc {
-  font-size: var(--font-size-caption);
+  align-items: center;
   color: var(--text-secondary);
-  margin: 0;
-  line-height: 1.5;
 }
+
+.infoText    { display: flex; flex-direction: column; gap: var(--spacing-sm); }
+.infoTitle   { font-size: var(--font-size-body-small); font-weight: var(--font-weight-semibold); color: var(--text-primary); margin: 0; }
+.infoDesc    { font-size: var(--font-size-caption); color: var(--text-secondary); margin: 0; line-height: 1.5; }
+
+/* ── Script viewer ───────────────────────────────────────────────────────── */
+.scriptViewer {
+  background: var(--bg-peak);
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--border-radius-md);
+  padding: var(--spacing-lg);
+  overflow-y: auto;
+  flex: 1;
+}
+
+.scriptText {
+  font-family: 'Courier New', Courier, monospace;
+  font-size: 11.5px;
+  line-height: 1.75;
+  color: var(--text-secondary);
+  white-space: pre-wrap;
+  word-break: break-word;
+  margin: 0;
+}
+
+/* ── Share button ────────────────────────────────────────────────────────── */
+.shareButton {
+  width: 100%;
+  padding: var(--spacing-md) var(--spacing-lg);
+  background: var(--bg-interactive);
+  color: var(--text-secondary);
+  border: 1px solid var(--border-medium);
+  border-radius: var(--border-radius-md);
+  font-family: var(--font-display);
+  font-size: var(--font-size-body-small);
+  font-weight: var(--font-weight-medium);
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--spacing-sm);
+  transition: var(--transition-fast);
+}
+
+.shareButton:hover         { border-color: var(--accent-primary); color: var(--accent-primary); background: var(--accent-glow); }
+.shareButtonCopied         { border-color: #22c55e; color: #22c55e; background: rgba(34,197,94,0.08); }
+.shareButtonError          { border-color: #ef4444; color: #ef4444; background: rgba(239,68,68,0.08); }
 
 /* ── Download buttons ────────────────────────────────────────────────────── */
 .downloadButtons {
@@ -292,114 +338,6 @@
   transform: none;
 }
 
-.downloadIcon { font-size: 16px; }
-
-/* ── Footer ──────────────────────────────────────────────────────────────── */
-.footer {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  padding: var(--spacing-md) var(--spacing-xl);
-  border-top: 1px solid var(--border-subtle);
-  background: var(--bg-interactive);
-  flex-shrink: 0;
-}
-
-.footerText,
-.footerHint { font-size: var(--font-size-caption); color: var(--text-tertiary); }
-
-/* ── Mobile ──────────────────────────────────────────────────────────────── */
-@media (max-width: 768px) {
-  .modal,
-  .modalVideo {
-    width: 100vw;
-    max-width: 100vw;
-    border-radius: var(--border-radius-lg) var(--border-radius-lg) 0 0;
-    position: fixed;
-    bottom: 0;
-    max-height: 90vh;
-  }
-
-  .overlay {
-    align-items: flex-end;
-    padding: 0;
-  }
-
-  /* On mobile, cap video height so controls aren't off screen */
-  .videoPlayerWrapper {
-    aspect-ratio: 16 / 9;
-    max-height: 56vw; /* 16:9 of viewport width */
-  }
-}
-
-/* ── Accessibility ───────────────────────────────────────────────────────── */
-@media (prefers-reduced-motion: reduce) {
-  .overlay, .modal { animation: none !important; }
-  .previewSpinner   { animation: none !important; }
-}
-/* ── Script modal — wider for text ──────────────────────────────────────── */
-.modalScript {
-  width: min(680px, 95vw);
-}
-
-/* ── Script viewer ───────────────────────────────────────────────────────── */
-.scriptViewer {
-  background: var(--bg-peak);
-  border: 1px solid var(--border-subtle);
-  border-radius: var(--border-radius-md);
-  padding: var(--spacing-lg);
-  max-height: 340px;
-  overflow-y: auto;
-}
-
-.scriptText {
-  font-family: 'Courier New', Courier, monospace;
-  font-size: 11.5px;
-  line-height: 1.75;
-  color: var(--text-secondary);
-  white-space: pre-wrap;
-  word-break: break-word;
-  margin: 0;
-}
-
-/* ── Share button ────────────────────────────────────────────────────────── */
-.shareButton {
-  width: 100%;
-  padding: var(--spacing-md) var(--spacing-lg);
-  background: var(--bg-interactive);
-  color: var(--text-secondary);
-  border: 1px solid var(--border-medium);
-  border-radius: var(--border-radius-md);
-  font-family: var(--font-display);
-  font-size: var(--font-size-body-small);
-  font-weight: var(--font-weight-medium);
-  cursor: pointer;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: var(--spacing-sm);
-  transition: var(--transition-fast);
-}
-
-.shareButton:hover {
-  border-color: var(--accent-primary);
-  color: var(--accent-primary);
-  background: var(--accent-glow);
-}
-
-.shareButtonCopied {
-  border-color: #22c55e;
-  color: #22c55e;
-  background: rgba(34,197,94,0.08);
-}
-
-.shareButtonError {
-  border-color: #ef4444;
-  color: #ef4444;
-  background: rgba(239,68,68,0.08);
-}
-
-/* ── Download label + hint ───────────────────────────────────────────────── */
 .downloadLabel {
   display: flex;
   flex-direction: column;
@@ -414,4 +352,46 @@
   opacity: 0.7;
   font-family: var(--font-body);
   letter-spacing: 0.02em;
+}
+
+/* ── Footer ──────────────────────────────────────────────────────────────── */
+.footer {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: var(--spacing-md) var(--spacing-xl);
+  border-top: 1px solid var(--border-subtle);
+  background: var(--bg-interactive);
+  flex-shrink: 0;
+}
+
+.footerText  { font-size: var(--font-size-caption); color: var(--text-tertiary); }
+.footerHint  { font-size: var(--font-size-caption); color: var(--text-tertiary); }
+
+/* ── Mobile — stack to single column ────────────────────────────────────── */
+@media (max-width: 768px) {
+  .bodyView {
+    grid-template-columns: 1fr;
+    grid-template-rows: auto 1fr;
+    overflow-y: auto;
+  }
+
+  .playerCol {
+    border-right: none;
+    border-bottom: 1px solid var(--border-subtle);
+    overflow-y: visible;
+  }
+
+  .actionsCol {
+    overflow-y: visible;
+  }
+
+  .videoPlayerWrapper {
+    aspect-ratio: 16 / 9;
+  }
+}
+
+/* ── Accessibility ───────────────────────────────────────────────────────── */
+@media (prefers-reduced-motion: reduce) {
+  .previewSpinner { animation: none !important; }
 }
