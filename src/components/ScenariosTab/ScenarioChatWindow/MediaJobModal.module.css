@@ -121,23 +121,12 @@
 .bodyEditGrid {
   flex: 1;
   display: grid;
-  grid-template-columns: 420px 1fr;
+  grid-template-columns: 1fr 420px;  /* video dominant left, beats right */
   overflow: hidden;
   min-height: 0;
 }
 
-/* Left: beat card list — SceneEditor fills this */
-.editBeatsCol {
-  display: flex;
-  flex-direction: column;
-  overflow: hidden;
-  min-height: 0;
-  padding: var(--spacing-lg) var(--spacing-xl);
-  border-right: 1px solid rgba(255, 255, 255, 0.08);
-  background: var(--bg-canvas);
-}
-
-/* Right: video display */
+/* Left: video display */
 .editVideoCol {
   display: flex;
   flex-direction: column;
@@ -145,6 +134,19 @@
   justify-content: center;
   background: #000;
   overflow: hidden;
+  order: 1;
+}
+
+/* Right: beat card list — SceneEditor fills this */
+.editBeatsCol {
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  min-height: 0;
+  padding: var(--spacing-lg) var(--spacing-xl);
+  border-left: 1px solid rgba(255, 255, 255, 0.08);
+  background: var(--bg-canvas);
+  order: 2;
 }
 
 /* Video fills the column, letterboxed */
@@ -377,18 +379,20 @@
   }
   .actionsCol { overflow-y: visible; }
 
-  /* Edit mode: stack beats above video */
+  /* Edit mode: video top, beats below */
   .bodyEditGrid {
     grid-template-columns: 1fr;
-    grid-template-rows: 1fr auto;
-  }
-  .editBeatsCol {
-    border-right: none;
-    border-bottom: 1px solid rgba(255,255,255,0.08);
+    grid-template-rows: auto 1fr;
   }
   .editVideoCol {
-    height: 40vw; /* approximate 16:9 on mobile viewport */
+    order: 1;
+    height: 56vw;
     flex-shrink: 0;
+  }
+  .editBeatsCol {
+    order: 2;
+    border-left: none;
+    border-top: 1px solid rgba(255,255,255,0.08);
   }
 }
 

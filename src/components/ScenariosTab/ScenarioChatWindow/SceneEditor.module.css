@@ -41,18 +41,30 @@
 }
 .select {
   appearance: none;
-  background: rgba(255, 255, 255, 0.06);
-  color: #f1f1f4;
+  background: var(--bg-peak, #1C2640);
+  color: var(--text-primary, #F1F1F4);
   border: 1px solid rgba(255, 255, 255, 0.14);
   border-radius: 8px;
   padding: 7px 28px 7px 10px;
   font-size: 13px;
+  font-family: inherit;
   cursor: pointer;
-  background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='10' height='6' viewBox='0 0 10 6'><path d='M1 1l4 4 4-4' fill='none' stroke='%23999' stroke-width='1.6' stroke-linecap='round'/></svg>");
+  background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='10' height='6' viewBox='0 0 10 6'><path d='M1 1l4 4 4-4' fill='none' stroke='%2394A3B8' stroke-width='1.6' stroke-linecap='round'/></svg>");
   background-repeat: no-repeat;
   background-position: right 9px center;
+  /* Prevent OS from overriding option colours in the dropdown */
+  color-scheme: dark;
+}
+.select:focus {
+  outline: none;
+  border-color: rgba(124, 92, 255, 0.7);
 }
 .select:disabled { opacity: 0.5; cursor: default; }
+/* Option elements inherit color-scheme: dark — dark bg, light text in the native popup */
+.select option {
+  background: var(--bg-peak, #1C2640);
+  color: var(--text-primary, #F1F1F4);
+}
 
 .toggle {
   display: flex;
