@@ -1,13 +1,11 @@
 // src/components/ScenariosTab/ScenarioChatWindow/ScriptViewerModal.jsx
-// UPDATED: adds edit mode — toggle view/textarea, Save calls PATCH endpoint.
-// Full replacement of previous ScriptViewerModal.jsx.
+// UPDATED: full-page view — no overlay wrapper. Root div IS the page.
 
 import React, { useState, useEffect, useCallback, useRef } from 'react';
 import styles from './ScriptViewerModal.module.css';
 
 const API_BASE = process.env.REACT_APP_API_URL || 'https://api.awakeverse.com';
 
-// Visual styles offered at render time (match InfoPanel's video styles)
 const VIDEO_STYLES = [
   { id: 'realistic',  label: 'Realistic' },
   { id: 'anime',      label: 'Anime' },
@@ -34,25 +32,21 @@ export default function ScriptViewerModal({ job, scenarioTitle, onClose, onJobUp
   // ── Render-video state ────────────────────────────────────────────────────
   const [videoStyle,   setVideoStyle]   = useState(job.video_style || 'realistic');
   const [isRendering,  setIsRendering]  = useState(false);
-  const [includeIntro, setIncludeIntro] = useState(hasPoster);  // default on if a poster exists
-  const [includeOutro, setIncludeOutro] = useState(true);       // credits outro — default on
+  const [includeIntro, setIncludeIntro] = useState(hasPoster);
+  const [includeOutro, setIncludeOutro] = useState(true);
 
-  // Focus textarea on edit mode entry
   useEffect(() => {
     if (isEditing && textareaRef.current) {
       textareaRef.current.focus();
     }
   }, [isEditing]);
 
-  // Keep editedScript in sync if job prop changes (e.g. after save)
-
   useEffect(() => {
-  if (!isEditing) {
-    setEditedScript(job.condensed_script || '');
-  }
-}, [job.condensed_script, isEditing]);
+    if (!isEditing) {
+      setEditedScript(job.condensed_script || '');
+    }
+  }, [job.condensed_script, isEditing]);
 
-  // Pre-select the visual style the video panel chose (stored on the script job)
   useEffect(() => {
     setVideoStyle(job.video_style || 'realistic');
   }, [job.id, job.video_style]);
@@ -116,9 +110,7 @@ export default function ScriptViewerModal({ job, scenarioTitle, onClose, onJobUp
       setIsEditing(false);
       setTimeout(() => setSaveSuccess(false), 2500);
 
-      // Notify parent to refresh jobs list
       if (onJobUpdated) onJobUpdated(data);
-
       console.log(`✏️ Script saved: job ${job.id}, ${data.char_count} chars`);
 
     } catch (error) {
@@ -129,19 +121,17 @@ export default function ScriptViewerModal({ job, scenarioTitle, onClose, onJobUp
     }
   };
 
-  // ── Render video from this (saved) script ─────────────────────────────────
   const handleRenderVideo = async () => {
     if (!onRenderVideo || isRendering) return;
     setIsRendering(true);
     try {
-      await onRenderVideo(videoStyle, includeIntro, includeOutro);   // parent creates the video job + closes the viewer
+      await onRenderVideo(videoStyle, includeIntro, includeOutro);
     } catch (e) {
       console.error('❌ Render video failed:', e);
-      setIsRendering(false);             // on success the modal unmounts, so only reset on error
+      setIsRendering(false);
     }
   };
 
-  // ── Copy ────────────────────────────────────────────────────────────────
   const handleCopy = async () => {
     const content = isEditing ? editedScript : (job.condensed_script || '');
     try {
@@ -156,7 +146,6 @@ export default function ScriptViewerModal({ job, scenarioTitle, onClose, onJobUp
     }
   };
 
-  // ── Download ────────────────────────────────────────────────────────────
   const handleDownload = () => {
     const content  = job.condensed_script || '';
     const filename = `${scenarioTitle || 'screenplay'}_${duration}s.txt`
@@ -164,7 +153,6 @@ export default function ScriptViewerModal({ job, scenarioTitle, onClose, onJobUp
       .replace(/\s+/g, '_')
       .replace(/[^a-z0-9_\.]/g, '');
 
-    // Prepend Fountain identifier comment for users who want to rename to .fountain
     const exportContent =
       `# ${scenarioTitle} — ${duration}s Screenplay\n` +
       `# Fountain format — rename to .fountain to import into Final Draft, Highland, WriterDuet\n\n` +
@@ -179,249 +167,205 @@ export default function ScriptViewerModal({ job, scenarioTitle, onClose, onJobUp
     URL.revokeObjectURL(url);
   };
 
-  // ── Backdrop ────────────────────────────────────────────────────────────
-  const handleBackdropClick = (e) => {
-    if (e.target === e.currentTarget && !isEditing) onClose();
-  };
+  const displayCharCount = isEditing ? editedScript.length : charCount;
 
-  // ── Live char count ─────────────────────────────────────────────────────
-  const displayCharCount = isEditing
-    ? editedScript.length
-    : charCount;
-
-  // ── Poster: image viewer (no script editing / render bar) ─────────────────
+  // ── Poster: image viewer ───────────────────────────────────────────────
   if (job.content_type === 'poster') {
     return (
-      <div
-        className={styles.overlay}
-        onClick={(e) => { if (e.target === e.currentTarget) onClose(); }}
-        role="dialog"
-        aria-modal="true"
-        aria-label="Poster viewer"
-      >
-        <div className={styles.modal}>
-          <div className={styles.header}>
-            <div className={styles.headerLeft}>
-              <span className={styles.headerIcon}>🖼️</span>
-              <div>
-                <h2 className={styles.headerTitle}>{scenarioTitle}</h2>
-                <p className={styles.headerMeta}>Poster · {job.video_style || 'realistic'}</p>
-              </div>
-            </div>
-            <div className={styles.headerActions}>
-              <a
-                className={styles.actionButton}
-                href={job.output_url}
-                target="_blank"
-                rel="noreferrer"
-                download
-                title="Download poster"
-              >
-                Download
-              </a>
-              <button className={styles.closeButton} onClick={onClose} aria-label="Close viewer">
-                ✕
-              </button>
+      <div className={styles.page} role="main" aria-label="Poster viewer">
+        <div className={styles.header}>
+          <div className={styles.headerLeft}>
+            <span className={styles.headerIcon}>🖼️</span>
+            <div>
+              <h2 className={styles.headerTitle}>{scenarioTitle}</h2>
+              <p className={styles.headerMeta}>Poster · {job.video_style || 'realistic'}</p>
             </div>
           </div>
-          <div
-            className={styles.body}
-            style={{ display: 'flex', alignItems: 'center', justifyContent: 'center' }}
-          >
-            <img
-              src={job.output_url}
-              alt={`${scenarioTitle} poster`}
-              style={{ maxWidth: '100%', maxHeight: '100%', objectFit: 'contain', borderRadius: 8 }}
-            />
+          <div className={styles.headerActions}>
+            <a
+              className={styles.actionButton}
+              href={job.output_url}
+              target="_blank"
+              rel="noreferrer"
+              download
+              title="Download poster"
+            >
+              Download
+            </a>
+            <button className={styles.closeButton} onClick={onClose} aria-label="Back">
+              ✕
+            </button>
           </div>
+        </div>
+        <div className={styles.body} style={{ display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+          <img
+            src={job.output_url}
+            alt={`${scenarioTitle} poster`}
+            style={{ maxWidth: '100%', maxHeight: '100%', objectFit: 'contain', borderRadius: 8 }}
+          />
         </div>
       </div>
     );
   }
 
+  // ── Script viewer / editor ─────────────────────────────────────────────
   return (
-    <div
-      className={styles.overlay}
-      onClick={handleBackdropClick}
-      role="dialog"
-      aria-modal="true"
-      aria-label="Script viewer"
-    >
-      <div className={styles.modal}>
+    <div className={styles.page} role="main" aria-label="Script viewer">
 
-        {/* ── Header ──────────────────────────────────────────────── */}
-        <div className={styles.header}>
-          <div className={styles.headerLeft}>
-            <span className={styles.headerIcon}>📄</span>
-            <div>
-              <h2 className={styles.headerTitle}>{scenarioTitle}</h2>
-              <p className={styles.headerMeta}>
-                Fountain screenplay · {duration}s ·{' '}
-                {displayCharCount >= 1000
-                  ? `${(displayCharCount / 1000).toFixed(1)}k chars`
-                  : `${displayCharCount} chars`}
-                {isEditing && (
-                  <span className={styles.editingBadge}>editing</span>
-                )}
-                {saveSuccess && (
-                  <span className={styles.savedBadge}>✓ saved</span>
-                )}
-              </p>
-            </div>
-          </div>
-
-          <div className={styles.headerActions}>
-            {!isEditing ? (
-              <>
-                <button
-                  className={styles.actionButton}
-                  onClick={handleEdit}
-                  title="Edit script"
-                >
-                  ✏️ Edit
-                </button>
-                <button
-                  className={styles.actionButton}
-                  onClick={handleCopy}
-                  title="Copy to clipboard"
-                >
-                  Copy
-                </button>
-                <button
-                  className={styles.actionButton}
-                  onClick={handleDownload}
-                  title="Download as .txt"
-                >
-                  Download
-                </button>
-              </>
-            ) : (
-              <>
-                <button
-                  className={styles.saveButton}
-                  onClick={handleSave}
-                  disabled={isSaving || !editedScript.trim()}
-                  title="Save edits"
-                >
-                  {isSaving ? 'Saving…' : 'Save'}
-                </button>
-                <button
-                  className={styles.actionButton}
-                  onClick={handleCancelEdit}
-                  disabled={isSaving}
-                  title="Discard edits"
-                >
-                  Cancel
-                </button>
-              </>
-            )}
-            <button
-              className={styles.closeButton}
-              onClick={isEditing ? handleCancelEdit : onClose}
-              aria-label="Close viewer"
-              title={isEditing ? 'Discard and close' : 'Close (Esc)'}
-            >
-              ✕
-            </button>
+      {/* ── Header ──────────────────────────────────────────────── */}
+      <div className={styles.header}>
+        <div className={styles.headerLeft}>
+          <span className={styles.headerIcon}>📄</span>
+          <div>
+            <h2 className={styles.headerTitle}>{scenarioTitle}</h2>
+            <p className={styles.headerMeta}>
+              Fountain screenplay · {duration}s ·{' '}
+              {displayCharCount >= 1000
+                ? `${(displayCharCount / 1000).toFixed(1)}k chars`
+                : `${displayCharCount} chars`}
+              {isEditing && <span className={styles.editingBadge}>editing</span>}
+              {saveSuccess && <span className={styles.savedBadge}>✓ saved</span>}
+            </p>
           </div>
         </div>
 
-        {/* ── Save error ──────────────────────────────────────────── */}
-        {saveError && (
-          <div className={styles.saveError}>
-            ⚠️ {saveError}
-          </div>
-        )}
-
-        {/* ── Body: view or edit ──────────────────────────────────── */}
-        <div className={styles.body}>
-          {isEditing ? (
-            <textarea
-              ref={textareaRef}
-              className={styles.editTextarea}
-              value={editedScript}
-              onChange={(e) => setEditedScript(e.target.value)}
-              spellCheck={false}
-              aria-label="Edit screenplay"
-            />
+        <div className={styles.headerActions}>
+          {!isEditing ? (
+            <>
+              <button className={styles.actionButton} onClick={handleEdit} title="Edit script">
+                ✏️ Edit
+              </button>
+              <button className={styles.actionButton} onClick={handleCopy} title="Copy to clipboard">
+                Copy
+              </button>
+              <button className={styles.actionButton} onClick={handleDownload} title="Download as .txt">
+                Download
+              </button>
+            </>
           ) : (
-            <pre className={styles.scriptText}>
-              {job.condensed_script || ''}
-            </pre>
+            <>
+              <button
+                className={styles.saveButton}
+                onClick={handleSave}
+                disabled={isSaving || !editedScript.trim()}
+                title="Save edits"
+              >
+                {isSaving ? 'Saving…' : 'Save'}
+              </button>
+              <button
+                className={styles.actionButton}
+                onClick={handleCancelEdit}
+                disabled={isSaving}
+                title="Discard edits"
+              >
+                Cancel
+              </button>
+            </>
           )}
+          <button
+            className={styles.closeButton}
+            onClick={isEditing ? handleCancelEdit : onClose}
+            aria-label={isEditing ? 'Discard and close' : 'Back to chat'}
+            title={isEditing ? 'Discard and close' : 'Back (Esc)'}
+          >
+            ✕
+          </button>
         </div>
-
-        {/* ── Render bar: visual style + Render Video ─────────────── */}
-        {!isEditing && onRenderVideo && (job.condensed_script || '').trim() && (
-          <div className={styles.renderBar}>
-            <div className={styles.renderStyles}>
-              <span className={styles.renderLabel}>Visual style</span>
-              <div className={styles.styleGrid}>
-                {VIDEO_STYLES.map(s => (
-                  <button
-                    key={s.id}
-                    type="button"
-                    className={[
-                      styles.styleButton,
-                      videoStyle === s.id ? styles.styleButtonActive : '',
-                    ].filter(Boolean).join(' ')}
-                    onClick={() => setVideoStyle(s.id)}
-                    aria-pressed={videoStyle === s.id}
-                  >
-                    {s.label}
-                  </button>
-                ))}
-              </div>
-            </div>
-
-            <label className={styles.introToggle}>
-              <input
-                type="checkbox"
-                checked={includeIntro}
-                onChange={(e) => setIncludeIntro(e.target.checked)}
-              />
-              <span>
-                Branded intro
-                <small>{hasPoster ? 'opens with your poster' : 'generates a wide title card'}</small>
-              </span>
-            </label>
-
-            <label className={styles.introToggle}>
-              <input
-                type="checkbox"
-                checked={includeOutro}
-                onChange={(e) => setIncludeOutro(e.target.checked)}
-              />
-              <span>
-                Credits
-                <small>closes with the cast</small>
-              </span>
-            </label>
-
-            <button
-              className={styles.renderButton}
-              onClick={handleRenderVideo}
-              disabled={isRendering}
-              title="Generate the video from this screenplay"
-            >
-              {isRendering ? 'Starting…' : '▶  Render Video'}
-            </button>
-          </div>
-        )}
-
-        {/* ── Footer ──────────────────────────────────────────────── */}
-        <div className={styles.footer}>
-          <span className={styles.footerText}>
-            {isEditing
-              ? 'Editing — changes are not saved until you click Save'
-              : `"${scenarioTitle}" · ${duration}s · Fountain format`}
-          </span>
-          <span className={styles.footerHint}>
-            {isEditing ? 'Esc to cancel' : 'Esc to close'}
-          </span>
-        </div>
-
       </div>
+
+      {/* ── Save error ──────────────────────────────────────────── */}
+      {saveError && (
+        <div className={styles.saveError}>⚠️ {saveError}</div>
+      )}
+
+      {/* ── Body ────────────────────────────────────────────────── */}
+      <div className={styles.body}>
+        {isEditing ? (
+          <textarea
+            ref={textareaRef}
+            className={styles.editTextarea}
+            value={editedScript}
+            onChange={(e) => setEditedScript(e.target.value)}
+            spellCheck={false}
+            aria-label="Edit screenplay"
+          />
+        ) : (
+          <pre className={styles.scriptText}>
+            {job.condensed_script || ''}
+          </pre>
+        )}
+      </div>
+
+      {/* ── Render bar ──────────────────────────────────────────── */}
+      {!isEditing && onRenderVideo && (job.condensed_script || '').trim() && (
+        <div className={styles.renderBar}>
+          <div className={styles.renderStyles}>
+            <span className={styles.renderLabel}>Visual style</span>
+            <div className={styles.styleGrid}>
+              {VIDEO_STYLES.map(s => (
+                <button
+                  key={s.id}
+                  type="button"
+                  className={[
+                    styles.styleButton,
+                    videoStyle === s.id ? styles.styleButtonActive : '',
+                  ].filter(Boolean).join(' ')}
+                  onClick={() => setVideoStyle(s.id)}
+                  aria-pressed={videoStyle === s.id}
+                >
+                  {s.label}
+                </button>
+              ))}
+            </div>
+          </div>
+
+          <label className={styles.introToggle}>
+            <input
+              type="checkbox"
+              checked={includeIntro}
+              onChange={(e) => setIncludeIntro(e.target.checked)}
+            />
+            <span>
+              Branded intro
+              <small>{hasPoster ? 'opens with your poster' : 'generates a wide title card'}</small>
+            </span>
+          </label>
+
+          <label className={styles.introToggle}>
+            <input
+              type="checkbox"
+              checked={includeOutro}
+              onChange={(e) => setIncludeOutro(e.target.checked)}
+            />
+            <span>
+              Credits
+              <small>closes with the cast</small>
+            </span>
+          </label>
+
+          <button
+            className={styles.renderButton}
+            onClick={handleRenderVideo}
+            disabled={isRendering}
+            title="Generate the video from this screenplay"
+          >
+            {isRendering ? 'Starting…' : '▶  Render Video'}
+          </button>
+        </div>
+      )}
+
+      {/* ── Footer ──────────────────────────────────────────────── */}
+      <div className={styles.footer}>
+        <span className={styles.footerText}>
+          {isEditing
+            ? 'Editing — changes are not saved until you click Save'
+            : `"${scenarioTitle}" · ${duration}s · Fountain format`}
+        </span>
+        <span className={styles.footerHint}>
+          {isEditing ? 'Esc to cancel' : 'Esc to go back'}
+        </span>
+      </div>
+
     </div>
   );
 }
