@@ -20,15 +20,16 @@ const API_BASE = process.env.REACT_APP_API_URL || 'https://api.awakeverse.com';
 const POLL_MS  = 4000;
 const POLL_TIMEOUT_MS = 20 * 60 * 1000;   // 20m hard stop (matches reassemble job_timeout)
 
-// Music beds — keep in sync with your ambience module's supported genres.
+// Music beds — these mirror the pipeline's _STORY_STYLES genres exactly.
 // value '' = no ambient bed.
 const MUSIC_OPTIONS = [
-  { value: '',         label: 'No music' },
-  { value: 'debate',   label: 'Debate hall' },
-  { value: 'drama',    label: 'Drama' },
-  { value: 'mystery',  label: 'Mystery' },
-  { value: 'thriller', label: 'Thriller' },
-  { value: 'romance',  label: 'Romance' },
+  { value: '',        label: 'No music' },
+  { value: 'debate',  label: 'Debate' },
+  { value: 'drama',   label: 'Drama' },
+  { value: 'action',  label: 'Action' },
+  { value: 'romance', label: 'Romance' },
+  { value: 'mystery', label: 'Mystery' },
+  { value: 'comedy',  label: 'Comedy' },
 ];
 
 const csrfToken = () =>

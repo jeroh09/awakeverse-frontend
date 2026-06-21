@@ -254,18 +254,6 @@ export default function ScenarioChatWindow({
   };
 
   // ✅ NEW: Handle stop message generation
-  //const handleStop = () => {
-    //console.log('🛑 Stop button clicked - stopping message generation');
-
-    // OPTION A: If useScenarioChat has a stopGeneration method
-    // stopGeneration(); // Uncomment if available
-
-    // OPTION B: If using AbortController pattern (check useScenarioChat hook)
-    // The hook should expose a stop/cancel method
-    // For now, log a warning
-    //console.warn('⚠️ handleStop called but no stop method available in useScenarioChat');
-    //console.warn('⚠️ You may need to add AbortController pattern to useScenarioChat hook');
-  //};
   const handleStop = () => {
     if (debateMode === 'auto') {
       stopDebate();
@@ -339,7 +327,6 @@ export default function ScenarioChatWindow({
     return aiMessages.length >= 5;
   }, [messages]);
  
-
 
   // ✅ NEW: Handle scenario switch
   // Defensive: Just navigate back and let parent handle scenario selection
@@ -420,6 +407,50 @@ export default function ScenarioChatWindow({
           </div>
         </div>
       </div>
+    );
+  }
+
+  // ===== FULL-PAGE VIEWS =====
+  // When a job is selected, the full component swaps to a full-page view.
+  // This replaces the previous overlay modal pattern.
+  // All props flow through unchanged — no logic difference from the modal version.
+
+  if (viewingJob && (viewingJob.content_type === 'script' || viewingJob.content_type === 'poster')) {
+    return (
+      <ScriptViewerModal
+        job={viewingJob}
+        scenarioTitle={scenario.title}
+        hasPoster={(contentGen.jobs || []).some(
+          j => j.content_type === 'poster' && j.status === 'complete' && j.output_url
+        )}
+        onClose={() => setViewingJob(null)}
+        onJobUpdated={(updatedJob) => {
+          setViewingJob(updatedJob);
+          contentGen.loadJobs();
+        }}
+        onRenderVideo={async (videoStyle, includeIntro, includeOutro) => {
+          const scriptJob = viewingJob;
+          setViewingJob(null); // return to chat; progress shows in InfoPanel
+          await contentGen.createContent({
+            contentType:     'video',
+            storyStyle:      scriptJob.story_style || 'debate',
+            videoStyle,
+            durationSeconds: scriptJob.duration_seconds || 180,
+            intro:           !!includeIntro,
+            outro:           !!includeOutro,
+          });
+        }}
+      />
+    );
+  }
+
+  if (viewingJob && ['audio', 'video'].includes(viewingJob.content_type)) {
+    return (
+      <MediaJobModal
+        job={viewingJob}
+        scenarioTitle={scenario.title}
+        onClose={() => setViewingJob(null)}
+      />
     );
   }
 
@@ -606,41 +637,6 @@ export default function ScenarioChatWindow({
           theme={theme}
           questionsUsed={usageData.questionsAsked}
           limit={usageData.limit}
-        />
-      )}
-      {/* Script viewer */}
-      {viewingJob && (viewingJob.content_type === 'script' || viewingJob.content_type === 'poster') && (
-        <ScriptViewerModal
-          job={viewingJob}
-          scenarioTitle={scenario.title}
-          hasPoster={(contentGen.jobs || []).some(
-            j => j.content_type === 'poster' && j.status === 'complete' && j.output_url)}
-          onClose={() => setViewingJob(null)}
-          onJobUpdated={(updatedJob) => {
-            setViewingJob(updatedJob);
-            contentGen.loadJobs();
-          }}
-          onRenderVideo={async (videoStyle, includeIntro, includeOutro) => {
-            const scriptJob = viewingJob;
-            setViewingJob(null);                 // close viewer; progress shows in InfoPanel
-            await contentGen.createContent({
-              contentType:     'video',
-              storyStyle:      scriptJob.story_style || 'debate',
-              videoStyle,
-              durationSeconds: scriptJob.duration_seconds || 180,
-              intro:           !!includeIntro,
-              outro:           !!includeOutro,
-            });
-          }}
-        />
-      )}
- 
-      {/* Audio / Video download modal */}
-      {viewingJob && ['audio', 'video'].includes(viewingJob.content_type) && (
-        <MediaJobModal
-          job={viewingJob}
-          scenarioTitle={scenario.title}
-          onClose={() => setViewingJob(null)}
         />
       )}
     </div>
