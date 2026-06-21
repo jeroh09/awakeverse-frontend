@@ -1,8 +1,9 @@
 // src/components/ScenariosTab/ScenarioChatWindow/SceneEditor.jsx
 // CP3 — Scene editor: reorder (drag), recaption, swap music, then re-assemble.
-// Self-contained: reads the spine from job.beats_manifest, POSTs an edited
-// manifest to /reassemble, polls the same job, and shows the new video.
-// No AI — free edits only. Needs: @dnd-kit/core @dnd-kit/sortable @dnd-kit/utilities
+// Updated: two-column layout — beat cards left, video right (owned by MediaJobModal).
+// Done state is now inline in the bottom bar — no full-page takeover.
+// New prop: currentVideoUrl — the video src passed down from MediaJobModal.
+// onApplied(updatedJob) still fires when reassembly completes.
 
 import React, { useState, useRef, useEffect, useMemo } from 'react';
 import {
@@ -18,10 +19,8 @@ import styles from './SceneEditor.module.css';
 
 const API_BASE = process.env.REACT_APP_API_URL || 'https://api.awakeverse.com';
 const POLL_MS  = 4000;
-const POLL_TIMEOUT_MS = 20 * 60 * 1000;   // 20m hard stop (matches reassemble job_timeout)
+const POLL_TIMEOUT_MS = 20 * 60 * 1000;
 
-// Music beds — these mirror the pipeline's _STORY_STYLES genres exactly.
-// value '' = no ambient bed.
 const MUSIC_OPTIONS = [
   { value: '',        label: 'No music' },
   { value: 'debate',  label: 'Debate' },
@@ -64,8 +63,14 @@ const TrashIcon = () => (
     <path d="M12 4l-.6 8.2a1.2 1.2 0 0 1-1.2 1.1H5.8a1.2 1.2 0 0 1-1.2-1.1L4 4"/>
   </svg>
 );
+const CheckIcon = () => (
+  <svg viewBox="0 0 16 16" width="14" height="14" fill="none" stroke="currentColor"
+    strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+    <polyline points="3 8 6 11 13 4"/>
+  </svg>
+);
 
-// ── One sortable beat card ────────────────────────────────────────────────────
+// ── One sortable beat card — unchanged ────────────────────────────────────────
 function BeatCard({ beat, position, canDelete, onCaptionChange, onDuplicate, onDelete }) {
   const {
     attributes, listeners, setNodeRef, transform, transition, isDragging,
@@ -80,7 +85,6 @@ function BeatCard({ beat, position, canDelete, onCaptionChange, onDuplicate, onD
 
   return (
     <div ref={setNodeRef} style={style} className={styles.card}>
-      {/* Drag handle only — leaves the caption box free to edit/select */}
       <button
         type="button"
         className={styles.handle}
@@ -139,7 +143,13 @@ function BeatCard({ beat, position, canDelete, onCaptionChange, onDuplicate, onD
 }
 
 // ── Editor ────────────────────────────────────────────────────────────────────
-export default function SceneEditor({ job, onClose, onApplied }) {
+// Props:
+//   job            — the content job (beats_manifest, id, etc.)
+//   currentVideoUrl — current video src, passed from MediaJobModal (updates after apply)
+//   onClose        — back button → MediaJobModal sets mode='view'
+//   onApplied(job) — fires when reassembly completes; MediaJobModal updates video src
+
+export default function SceneEditor({ job, currentVideoUrl, onClose, onApplied }) {
   const manifest = useMemo(() => {
     const m = job?.beats_manifest;
     if (!m) return null;
@@ -154,15 +164,14 @@ export default function SceneEditor({ job, onClose, onApplied }) {
   const [ambience, setAmbience] = useState(manifest?.ambience ?? '');
   const [captions, setCaptions] = useState(manifest?.captions ?? true);
 
-  const [status,    setStatus]    = useState('editing'); // editing | applying | done | error
-  const [progress,  setProgress]  = useState(0);
-  const [resultUrl, setResultUrl] = useState(null);
-  const [error,     setError]     = useState(null);
+  // status: 'editing' | 'applying' | 'done' | 'error'
+  const [status,   setStatus]   = useState('editing');
+  const [progress, setProgress] = useState(0);
+  const [error,    setError]    = useState(null);
 
   const pollRef  = useRef(null);
   const startRef = useRef(null);
 
-  // Snapshots for dirty-checking (order/captions compared against initialBeats)
   const initialBeats = useRef(manifest?.beats || []);
   const initial = useRef({
     ambience: manifest?.ambience ?? '',
@@ -176,7 +185,6 @@ export default function SceneEditor({ job, onClose, onApplied }) {
     useSensor(KeyboardSensor, { coordinateGetter: sortableKeyboardCoordinates }),
   );
 
-  // Ensure the stored ambience always appears as an option
   const musicOptions = useMemo(() => {
     if (ambience && !MUSIC_OPTIONS.some(o => o.value === ambience)) {
       return [...MUSIC_OPTIONS, { value: ambience, label: ambience }];
@@ -184,23 +192,26 @@ export default function SceneEditor({ job, onClose, onApplied }) {
     return MUSIC_OPTIONS;
   }, [ambience]);
 
+  // Empty guard — show inline, not a full takeover
   if (!manifest || beats.length === 0) {
     return (
-      <div className={styles.empty}>
-        <p className={styles.emptyText}>This video has no editable scene data yet.</p>
-        <button className={styles.backBtn} onClick={onClose}><BackIcon /> Back</button>
+      <div className={styles.editor}>
+        <div className={styles.empty}>
+          <p className={styles.emptyText}>This video has no editable scene data yet.</p>
+          <button className={styles.backBtn} onClick={onClose}><BackIcon /> Back</button>
+        </div>
       </div>
     );
   }
 
   const dirty = (() => {
     if (ambience !== initial.current.ambience) return true;
-    if (captions !== initial.current.capsOn) return true;
+    if (captions !== initial.current.capsOn)   return true;
     const orig = initialBeats.current;
-    if (beats.length !== orig.length) return true;            // duplicated / deleted
+    if (beats.length !== orig.length) return true;
     return beats.some((b, i) =>
-      b.clip_url !== orig[i]?.clip_url ||                     // reordered
-      (b.caption || '') !== (orig[i]?.caption || '')          // recaptioned
+      b.clip_url !== orig[i]?.clip_url ||
+      (b.caption || '') !== (orig[i]?.caption || '')
     );
   })();
 
@@ -216,7 +227,6 @@ export default function SceneEditor({ job, onClose, onApplied }) {
   const handleCaptionChange = (id, text) =>
     setBeats(items => items.map(b => (b.id === id ? { ...b, caption: text } : b)));
 
-  // Duplicate: clone the beat (same clip_url — no re-render), insert right after.
   const handleDuplicate = (id) =>
     setBeats(items => {
       const i = items.findIndex(b => b.id === id);
@@ -225,7 +235,6 @@ export default function SceneEditor({ job, onClose, onApplied }) {
       return [...items.slice(0, i + 1), copy, ...items.slice(i + 1)];
     });
 
-  // Delete: drop the beat. Guard — never empty the scene (engine needs >=1).
   const handleDelete = (id) =>
     setBeats(items => (items.length <= 1 ? items : items.filter(b => b.id !== id)));
 
@@ -233,7 +242,6 @@ export default function SceneEditor({ job, onClose, onApplied }) {
     ...manifest,
     ambience: ambience || null,
     captions,
-    // strip the dnd id, renumber index to the new order
     beats: beats.map(({ id, ...b }, i) => ({ ...b, index: i })),
   });
 
@@ -245,7 +253,7 @@ export default function SceneEditor({ job, onClose, onApplied }) {
 
     try {
       const res = await fetch(`${API_BASE}/api/content/jobs/${job.id}/reassemble`, {
-        method: 'POST',
+        method:  'POST',
         headers: { 'Content-Type': 'application/json', 'X-CSRF-Token': csrfToken() },
         credentials: 'include',
         body: JSON.stringify({ manifest: buildManifest() }),
@@ -268,10 +276,8 @@ export default function SceneEditor({ job, onClose, onApplied }) {
           setProgress(j.progress || 0);
           if (j.status === 'complete') {
             clearInterval(pollRef.current); pollRef.current = null;
-            // cache-bust just in case the player clings to the old src
-            setResultUrl(`${j.output_url}${j.output_url.includes('?') ? '&' : '?'}t=${Date.now()}`);
             setStatus('done');
-            onApplied?.(j);
+            onApplied?.(j);   // MediaJobModal updates currentVideoUrl — video refreshes
           } else if (j.status === 'failed') {
             clearInterval(pollRef.current); pollRef.current = null;
             setError(j.error_message || 'Re-assembly failed');
@@ -287,27 +293,11 @@ export default function SceneEditor({ job, onClose, onApplied }) {
 
   const busy = status === 'applying';
 
-  // ── Done state ──────────────────────────────────────────────────────────────
-  if (status === 'done') {
-    return (
-      <div className={styles.doneWrap}>
-        <p className={styles.doneTitle}>Scene updated</p>
-        <video controls autoPlay src={resultUrl} className={styles.doneVideo}>
-          Your browser does not support video playback.
-        </video>
-        <div className={styles.doneActions}>
-          <button className={styles.secondaryBtn} onClick={() => setStatus('editing')}>
-            Keep editing
-          </button>
-          <button className={styles.primaryBtn} onClick={onClose}>Done</button>
-        </div>
-      </div>
-    );
-  }
-
-  // ── Editing / applying ──────────────────────────────────────────────────────
+  // ── Render ────────────────────────────────────────────────────────────────────
   return (
     <div className={styles.editor}>
+
+      {/* ── Toolbar ─────────────────────────────────────────────────────── */}
       <div className={styles.toolbar}>
         <button className={styles.backBtn} onClick={onClose} disabled={busy}>
           <BackIcon /> Back
@@ -340,6 +330,7 @@ export default function SceneEditor({ job, onClose, onApplied }) {
 
       <p className={styles.hint}>Drag to reorder · edit captions inline</p>
 
+      {/* ── Beat card list ───────────────────────────────────────────────── */}
       <DndContext
         sensors={sensors}
         collisionDetection={closestCenter}
@@ -362,10 +353,16 @@ export default function SceneEditor({ job, onClose, onApplied }) {
         </SortableContext>
       </DndContext>
 
-      {status === 'error' && <p className={styles.error}>{error}</p>}
+      {/* ── Bottom bar — cycles through all states ───────────────────────── */}
+      <div className={styles.bottomBar}>
 
-      <div className={styles.footer}>
-        {busy ? (
+        {/* Error */}
+        {status === 'error' && (
+          <p className={styles.error}>{error}</p>
+        )}
+
+        {/* Applying — progress */}
+        {busy && (
           <div className={styles.progressRow}>
             <div className={styles.progressTrack}>
               <div
@@ -375,7 +372,25 @@ export default function SceneEditor({ job, onClose, onApplied }) {
             </div>
             <span className={styles.progressLabel}>Re-assembling…</span>
           </div>
-        ) : (
+        )}
+
+        {/* Done — inline confirmation + keep editing */}
+        {status === 'done' && !busy && (
+          <div className={styles.doneBar}>
+            <span className={styles.doneLabel}>
+              <CheckIcon /> Scene updated
+            </span>
+            <button
+              className={styles.keepEditingBtn}
+              onClick={() => setStatus('editing')}
+            >
+              Keep editing
+            </button>
+          </div>
+        )}
+
+        {/* Apply button — shown when idle or after done */}
+        {!busy && status !== 'done' && (
           <button
             className={styles.applyBtn}
             onClick={apply}
@@ -385,6 +400,19 @@ export default function SceneEditor({ job, onClose, onApplied }) {
             Apply changes
           </button>
         )}
+
+        {/* After done: re-enable apply for further edits */}
+        {status === 'done' && (
+          <button
+            className={styles.applyBtn}
+            onClick={apply}
+            disabled={!dirty}
+            title={dirty ? 'Apply new changes' : 'No new changes'}
+          >
+            Apply changes
+          </button>
+        )}
+
       </div>
     </div>
   );

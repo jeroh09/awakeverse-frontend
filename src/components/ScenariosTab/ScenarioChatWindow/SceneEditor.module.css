@@ -1,19 +1,19 @@
 /* src/components/ScenariosTab/ScenarioChatWindow/SceneEditor.module.css
-   CP3 — scene editor styles. Updated to fill full page body height.
-   Card designs, thumbnails, badges, captions — all unchanged. */
+   CP3 — scene editor styles. Left column in two-column edit layout.
+   Card designs, thumbnails, badges, captions — all unchanged.
+   Done state is now inline in the bottom bar. */
 
-/* ── Editor root — fills whatever container gives it ────────────────────── */
-/* When inside MediaJobModal's .bodyEdit, it gets flex:1 height from the parent */
+/* ── Editor root — fills the left column ────────────────────────────────── */
 .editor {
   display: flex;
   flex-direction: column;
   gap: 12px;
   width: 100%;
   height: 100%;
-  min-height: 0;  /* required: lets flex children shrink and scroll */
+  min-height: 0;
 }
 
-/* ── Toolbar ─────────────────────────────────────────────── */
+/* ── Toolbar ─────────────────────────────────────────────────────────────── */
 .toolbar {
   display: flex;
   align-items: center;
@@ -53,6 +53,7 @@
   background-position: right 9px center;
 }
 .select:disabled { opacity: 0.5; cursor: default; }
+
 .toggle {
   display: flex;
   align-items: center;
@@ -71,8 +72,7 @@
   flex-shrink: 0;
 }
 
-/* ── List — fills remaining height, scrolls internally ──────────────────── */
-/* max-height removed — flex:1 + min-height:0 handles it correctly now */
+/* ── Beat card list — scrolls within available height ───────────────────── */
 .list {
   display: flex;
   flex-direction: column;
@@ -88,7 +88,7 @@
 .list::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.15); border-radius: 3px; }
 .list::-webkit-scrollbar-thumb:hover { background: rgba(255,255,255,0.28); }
 
-/* ── Beat cards — completely unchanged ───────────────────────────────────── */
+/* ── Beat cards — unchanged ─────────────────────────────────────────────── */
 .card {
   display: flex;
   align-items: stretch;
@@ -98,7 +98,7 @@
   border-radius: 12px;
   padding: 8px;
   touch-action: none;
-  flex-shrink: 0;  /* cards don't compress — list scrolls instead */
+  flex-shrink: 0;
 }
 .handle {
   display: flex;
@@ -112,10 +112,10 @@
   cursor: grab;
   border-radius: 6px;
 }
-.handle:hover { color: rgba(255, 255, 255, 0.75); background: rgba(255,255,255,0.05); }
+.handle:hover  { color: rgba(255, 255, 255, 0.75); background: rgba(255,255,255,0.05); }
 .handle:active { cursor: grabbing; }
 
-/* Thumbnail — small, as designed originally */
+/* Thumbnail — small, as designed */
 .thumbWrap {
   position: relative;
   flex: 0 0 84px;
@@ -125,7 +125,7 @@
   overflow: hidden;
   background: rgba(0, 0, 0, 0.35);
 }
-.thumb { width: 100%; height: 100%; object-fit: cover; display: block; }
+.thumb         { width: 100%; height: 100%; object-fit: cover; display: block; }
 .thumbFallback {
   width: 100%; height: 100%;
   background: linear-gradient(135deg, rgba(124,92,255,0.25), rgba(255,255,255,0.05));
@@ -143,14 +143,12 @@
   display: flex; align-items: center; justify-content: center;
 }
 
-.cardBody { flex: 1 1 auto; display: flex; flex-direction: column; gap: 5px; min-width: 0; }
-.cardMeta { display: flex; align-items: baseline; justify-content: space-between; gap: 8px; }
-.speaker {
-  font-size: 13px; font-weight: 700; color: #ececf1;
-  white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
-}
-.seconds { font-size: 11px; color: rgba(255, 255, 255, 0.45); flex: 0 0 auto; }
+.cardBody  { flex: 1 1 auto; display: flex; flex-direction: column; gap: 5px; min-width: 0; }
+.cardMeta  { display: flex; align-items: baseline; justify-content: space-between; gap: 8px; }
+.speaker   { font-size: 13px; font-weight: 700; color: #ececf1; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.seconds   { font-size: 11px; color: rgba(255, 255, 255, 0.45); flex: 0 0 auto; }
 .metaRight { display: flex; align-items: center; gap: 4px; flex: 0 0 auto; }
+
 .cardAction {
   display: inline-flex; align-items: center; justify-content: center;
   width: 24px; height: 24px;
@@ -160,13 +158,14 @@
   color: rgba(255, 255, 255, 0.65);
   cursor: pointer;
 }
-.cardAction:hover { background: rgba(255, 255, 255, 0.14); color: #fff; }
+.cardAction:hover    { background: rgba(255, 255, 255, 0.14); color: #fff; }
 .cardAction:disabled { opacity: 0.3; cursor: default; }
 .cardActionDanger:hover:not(:disabled) {
   background: rgba(255, 90, 90, 0.18);
   border-color: rgba(255, 90, 90, 0.5);
   color: #ff9d9d;
 }
+
 .caption {
   width: 100%;
   resize: none;
@@ -181,7 +180,7 @@
 }
 .caption:focus { outline: none; border-color: rgba(124, 92, 255, 0.7); }
 
-/* ── Buttons / footer ────────────────────────────────────── */
+/* ── Buttons ─────────────────────────────────────────────────────────────── */
 .backBtn, .secondaryBtn {
   display: inline-flex; align-items: center; gap: 6px;
   background: rgba(255, 255, 255, 0.07);
@@ -195,8 +194,20 @@
 .backBtn:hover, .secondaryBtn:hover { background: rgba(255, 255, 255, 0.12); }
 .backBtn:disabled { opacity: 0.5; cursor: default; }
 
-.footer { margin-top: 4px; flex-shrink: 0; }
-.applyBtn, .primaryBtn {
+/* ── Bottom bar — pinned, cycles through states ──────────────────────────── */
+.bottomBar {
+  flex-shrink: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  padding-top: 4px;
+  /* Subtle top separator to visually anchor the bar */
+  border-top: 1px solid rgba(255, 255, 255, 0.07);
+  padding-top: 10px;
+}
+
+/* Apply button */
+.applyBtn {
   width: 100%;
   background: linear-gradient(135deg, #7c5cff, #5b3df0);
   color: #fff;
@@ -206,10 +217,12 @@
   font-size: 14px;
   font-weight: 700;
   cursor: pointer;
+  transition: opacity 0.15s ease, filter 0.15s ease;
 }
+.applyBtn:hover:not(:disabled) { filter: brightness(1.08); }
 .applyBtn:disabled { opacity: 0.45; cursor: default; }
-.primaryBtn { width: auto; padding: 10px 20px; }
 
+/* Progress row */
 .progressRow { display: flex; align-items: center; gap: 12px; }
 .progressTrack {
   flex: 1 1 auto; height: 8px;
@@ -223,18 +236,50 @@
 }
 .progressLabel { font-size: 12.5px; color: rgba(255, 255, 255, 0.6); flex: 0 0 auto; }
 
-.error { margin: 0; color: #ff8585; font-size: 13px; flex-shrink: 0; }
+/* Done bar — inline confirmation */
+.doneBar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 8px 12px;
+  background: rgba(16, 185, 129, 0.1);
+  border: 1px solid rgba(16, 185, 129, 0.25);
+  border-radius: 8px;
+}
+.doneLabel {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 13px;
+  font-weight: 600;
+  color: #10B981;
+}
+.keepEditingBtn {
+  background: none;
+  border: 1px solid rgba(16, 185, 129, 0.35);
+  border-radius: 6px;
+  color: #10B981;
+  font-size: 12px;
+  font-weight: 600;
+  padding: 4px 10px;
+  cursor: pointer;
+  transition: background 0.15s ease;
+}
+.keepEditingBtn:hover { background: rgba(16, 185, 129, 0.12); }
 
-/* ── Empty + done states ─────────────────────────────────── */
-.empty { display: flex; flex-direction: column; align-items: center; gap: 14px; padding: 28px 12px; }
+/* Error */
+.error { margin: 0; color: #ff8585; font-size: 13px; }
+
+/* ── Empty state ─────────────────────────────────────────────────────────── */
+.empty {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 14px;
+  padding: 28px 12px;
+  flex: 1;
+}
 .emptyText { margin: 0; color: rgba(255, 255, 255, 0.6); font-size: 14px; }
 
-.doneWrap { display: flex; flex-direction: column; gap: 14px; align-items: center; flex: 1; min-height: 0; }
-.doneTitle { margin: 0; font-size: 15px; font-weight: 700; color: #d6ffe2; flex-shrink: 0; }
-.doneVideo {
-  width: 100%;
-  max-height: 52vh;   /* kept as designed — sensible cap even in full-page */
-  border-radius: 12px;
-  background: #000;
-}
-.doneActions { display: flex; gap: 10px; justify-content: center; flex-shrink: 0; }
+/* ── Misc secondary button ───────────────────────────────────────────────── */
+.primaryBtn { width: auto; padding: 10px 20px; }

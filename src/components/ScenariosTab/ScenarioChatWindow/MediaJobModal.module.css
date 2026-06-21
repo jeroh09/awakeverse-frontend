@@ -1,5 +1,7 @@
 /* MediaJobModal.module.css */
-/* Full-page view — .page is the root, fixed inset:0, no overlay wrapper */
+/* Full-page view — .page is the root, no overlay wrapper.
+   VIEW mode: two-column grid — player left, actions right.
+   EDIT mode: two-column grid — beat cards left, video right. */
 
 /* ── Page root ───────────────────────────────────────────────────────────── */
 .page {
@@ -24,14 +26,12 @@
   gap: var(--spacing-md);
   flex-shrink: 0;
 }
-
 .headerLeft {
   display: flex;
   align-items: center;
   gap: var(--spacing-md);
   min-width: 0;
 }
-
 .headerIcon {
   font-size: 26px;
   line-height: 1;
@@ -40,7 +40,6 @@
   align-items: center;
   color: var(--text-secondary);
 }
-
 .headerTitle {
   font-family: var(--font-display);
   font-size: var(--font-size-h4);
@@ -48,7 +47,6 @@
   color: var(--text-primary);
   margin: 0 0 2px 0;
 }
-
 .headerMeta {
   font-size: var(--font-size-caption);
   color: var(--text-tertiary);
@@ -57,7 +55,6 @@
   overflow: hidden;
   text-overflow: ellipsis;
 }
-
 .closeButton {
   width: 36px;
   height: 36px;
@@ -68,40 +65,28 @@
   border: 1px solid var(--border-subtle);
   border-radius: var(--border-radius-md);
   color: var(--text-tertiary);
-  font-size: 16px;
   cursor: pointer;
   transition: var(--transition-fast);
   flex-shrink: 0;
 }
-
 .closeButton:hover {
   background: rgba(239, 68, 68, 0.1);
   border-color: rgba(239, 68, 68, 0.3);
   color: #EF4444;
 }
 
-/* ── Body: VIEW mode — two-column ────────────────────────────────────────── */
-/* Left: player/preview. Right: actions (share + downloads). */
+/* ══════════════════════════════════════════════════════════════════════════
+   VIEW MODE — player left · actions right
+══════════════════════════════════════════════════════════════════════════ */
 .bodyView {
   flex: 1;
   display: grid;
   grid-template-columns: 1fr 320px;
-  gap: 0;
   overflow: hidden;
   min-height: 0;
 }
 
-/* ── Body: EDIT mode — SceneEditor fills everything ──────────────────────── */
-.bodyEdit {
-  flex: 1;
-  display: flex;
-  flex-direction: column;
-  overflow: hidden;   /* SceneEditor owns its own scroll */
-  min-height: 0;
-  padding: var(--spacing-lg) var(--spacing-xl);
-}
-
-/* ── Player column (left) ────────────────────────────────────────────────── */
+/* Player column */
 .playerCol {
   display: flex;
   flex-direction: column;
@@ -110,13 +95,12 @@
   overflow-y: auto;
   border-right: 1px solid var(--border-subtle);
 }
-
 .playerCol::-webkit-scrollbar       { width: 6px; }
 .playerCol::-webkit-scrollbar-track { background: transparent; }
 .playerCol::-webkit-scrollbar-thumb { background: var(--border-medium); border-radius: 3px; }
 .playerCol::-webkit-scrollbar-thumb:hover { background: var(--accent-primary); }
 
-/* ── Actions column (right) ──────────────────────────────────────────────── */
+/* Actions column */
 .actionsCol {
   display: flex;
   flex-direction: column;
@@ -125,10 +109,66 @@
   overflow-y: auto;
   background: var(--bg-interactive);
 }
-
 .actionsCol::-webkit-scrollbar       { width: 6px; }
 .actionsCol::-webkit-scrollbar-track { background: transparent; }
 .actionsCol::-webkit-scrollbar-thumb { background: var(--border-medium); border-radius: 3px; }
+
+/* ══════════════════════════════════════════════════════════════════════════
+   EDIT MODE — beat cards left · video right
+   Left (beats) narrower; right (video) dominant.
+   420px gives enough room for card thumbnails + captions.
+══════════════════════════════════════════════════════════════════════════ */
+.bodyEditGrid {
+  flex: 1;
+  display: grid;
+  grid-template-columns: 420px 1fr;
+  overflow: hidden;
+  min-height: 0;
+}
+
+/* Left: beat card list — SceneEditor fills this */
+.editBeatsCol {
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  min-height: 0;
+  padding: var(--spacing-lg) var(--spacing-xl);
+  border-right: 1px solid rgba(255, 255, 255, 0.08);
+  background: var(--bg-canvas);
+}
+
+/* Right: video display */
+.editVideoCol {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  background: #000;
+  overflow: hidden;
+}
+
+/* Video fills the column, letterboxed */
+.editVideo {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+  display: block;
+  outline: none;
+}
+
+/* Placeholder when no video yet */
+.editVideoPlaceholder {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+  height: 100%;
+  color: rgba(255, 255, 255, 0.25);
+  font-size: 13px;
+  font-family: var(--font-body, 'Inter', sans-serif);
+  text-align: center;
+  padding: var(--spacing-xl);
+}
 
 /* ── Preview button ──────────────────────────────────────────────────────── */
 .previewButton {
@@ -147,18 +187,12 @@
   gap: var(--spacing-md);
   transition: var(--transition-fast);
 }
-
 .previewButton:hover {
   border-color: var(--accent-primary);
   color: var(--accent-primary);
   background: var(--accent-glow);
 }
-
-.previewIcon {
-  font-size: 24px;
-  display: flex;
-  align-items: center;
-}
+.previewIcon { font-size: 24px; display: flex; align-items: center; }
 
 /* ── Preview loading ─────────────────────────────────────────────────────── */
 .previewLoading {
@@ -170,16 +204,13 @@
   color: var(--text-tertiary);
   font-size: var(--font-size-caption);
 }
-
 .previewSpinner {
-  width: 28px;
-  height: 28px;
+  width: 28px; height: 28px;
   border: 3px solid var(--border-medium);
   border-top-color: var(--accent-primary);
   border-radius: 50%;
   animation: spin 0.9s linear infinite;
 }
-
 @keyframes spin { to { transform: rotate(360deg); } }
 
 .previewError {
@@ -187,7 +218,7 @@
   color: #EF4444;
   text-align: center;
   padding: var(--spacing-md);
-  background: rgba(239, 68, 68, 0.08);
+  background: rgba(239,68,68,0.08);
   border-radius: var(--border-radius-md);
   margin: 0;
 }
@@ -199,7 +230,6 @@
   padding: var(--spacing-md);
   border: 1px solid var(--border-subtle);
 }
-
 .audioPlayer {
   width: 100%;
   height: 48px;
@@ -208,8 +238,7 @@
   outline: none;
 }
 
-/* ── Video player ────────────────────────────────────────────────────────── */
-/* Fills available width in the player column at 16:9 */
+/* ── Video player (view mode) ────────────────────────────────────────────── */
 .videoPlayerWrapper {
   border-radius: var(--border-radius-md);
   overflow: hidden;
@@ -218,7 +247,6 @@
   aspect-ratio: 16 / 9;
   width: 100%;
 }
-
 .videoPlayer {
   width: 100%;
   height: 100%;
@@ -236,19 +264,10 @@
   border-radius: var(--border-radius-md);
   border: 1px solid var(--border-subtle);
 }
-
-.infoIcon {
-  font-size: 26px;
-  line-height: 1;
-  flex-shrink: 0;
-  display: flex;
-  align-items: center;
-  color: var(--text-secondary);
-}
-
-.infoText    { display: flex; flex-direction: column; gap: var(--spacing-sm); }
-.infoTitle   { font-size: var(--font-size-body-small); font-weight: var(--font-weight-semibold); color: var(--text-primary); margin: 0; }
-.infoDesc    { font-size: var(--font-size-caption); color: var(--text-secondary); margin: 0; line-height: 1.5; }
+.infoIcon  { font-size: 26px; line-height: 1; flex-shrink: 0; display: flex; align-items: center; color: var(--text-secondary); }
+.infoText  { display: flex; flex-direction: column; gap: var(--spacing-sm); }
+.infoTitle { font-size: var(--font-size-body-small); font-weight: var(--font-weight-semibold); color: var(--text-primary); margin: 0; }
+.infoDesc  { font-size: var(--font-size-caption); color: var(--text-secondary); margin: 0; line-height: 1.5; }
 
 /* ── Script viewer ───────────────────────────────────────────────────────── */
 .scriptViewer {
@@ -259,7 +278,6 @@
   overflow-y: auto;
   flex: 1;
 }
-
 .scriptText {
   font-family: 'Courier New', Courier, monospace;
   font-size: 11.5px;
@@ -288,17 +306,12 @@
   gap: var(--spacing-sm);
   transition: var(--transition-fast);
 }
-
-.shareButton:hover         { border-color: var(--accent-primary); color: var(--accent-primary); background: var(--accent-glow); }
-.shareButtonCopied         { border-color: #22c55e; color: #22c55e; background: rgba(34,197,94,0.08); }
-.shareButtonError          { border-color: #ef4444; color: #ef4444; background: rgba(239,68,68,0.08); }
+.shareButton:hover      { border-color: var(--accent-primary); color: var(--accent-primary); background: var(--accent-glow); }
+.shareButtonCopied      { border-color: #22c55e; color: #22c55e; background: rgba(34,197,94,0.08); }
+.shareButtonError       { border-color: #ef4444; color: #ef4444; background: rgba(239,68,68,0.08); }
 
 /* ── Download buttons ────────────────────────────────────────────────────── */
-.downloadButtons {
-  display: flex;
-  flex-direction: column;
-  gap: var(--spacing-sm);
-}
+.downloadButtons { display: flex; flex-direction: column; gap: var(--spacing-sm); }
 
 .downloadButton {
   width: 100%;
@@ -317,19 +330,16 @@
   gap: var(--spacing-sm);
   transition: var(--transition-fast);
 }
-
 .downloadButton:hover {
   background: var(--accent-hover);
   box-shadow: var(--shadow-glow);
   transform: translateY(-1px);
 }
-
 .downloadButtonSecondary {
   background: var(--bg-peak);
   color: var(--text-secondary);
   border: 1px solid var(--border-medium);
 }
-
 .downloadButtonSecondary:hover {
   background: var(--bg-interactive);
   border-color: var(--accent-primary);
@@ -337,22 +347,8 @@
   box-shadow: none;
   transform: none;
 }
-
-.downloadLabel {
-  display: flex;
-  flex-direction: column;
-  align-items: flex-start;
-  gap: 2px;
-  flex: 1;
-}
-
-.downloadHint {
-  font-size: 10px;
-  font-weight: var(--font-weight-normal);
-  opacity: 0.7;
-  font-family: var(--font-body);
-  letter-spacing: 0.02em;
-}
+.downloadLabel { display: flex; flex-direction: column; align-items: flex-start; gap: 2px; flex: 1; }
+.downloadHint  { font-size: 10px; font-weight: var(--font-weight-normal); opacity: 0.7; font-family: var(--font-body); letter-spacing: 0.02em; }
 
 /* ── Footer ──────────────────────────────────────────────────────────────── */
 .footer {
@@ -364,30 +360,35 @@
   background: var(--bg-interactive);
   flex-shrink: 0;
 }
+.footerText { font-size: var(--font-size-caption); color: var(--text-tertiary); }
+.footerHint { font-size: var(--font-size-caption); color: var(--text-tertiary); }
 
-.footerText  { font-size: var(--font-size-caption); color: var(--text-tertiary); }
-.footerHint  { font-size: var(--font-size-caption); color: var(--text-tertiary); }
-
-/* ── Mobile — stack to single column ────────────────────────────────────── */
+/* ── Mobile ──────────────────────────────────────────────────────────────── */
 @media (max-width: 768px) {
+  /* View mode: stack vertically */
   .bodyView {
     grid-template-columns: 1fr;
-    grid-template-rows: auto 1fr;
     overflow-y: auto;
   }
-
   .playerCol {
     border-right: none;
     border-bottom: 1px solid var(--border-subtle);
     overflow-y: visible;
   }
+  .actionsCol { overflow-y: visible; }
 
-  .actionsCol {
-    overflow-y: visible;
+  /* Edit mode: stack beats above video */
+  .bodyEditGrid {
+    grid-template-columns: 1fr;
+    grid-template-rows: 1fr auto;
   }
-
-  .videoPlayerWrapper {
-    aspect-ratio: 16 / 9;
+  .editBeatsCol {
+    border-right: none;
+    border-bottom: 1px solid rgba(255,255,255,0.08);
+  }
+  .editVideoCol {
+    height: 40vw; /* approximate 16:9 on mobile viewport */
+    flex-shrink: 0;
   }
 }
 

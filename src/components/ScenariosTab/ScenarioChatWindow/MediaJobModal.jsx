@@ -1,6 +1,7 @@
 // src/components/ScenariosTab/ScenarioChatWindow/MediaJobModal.jsx
-// Audio/Video preview + download + share. Full-page view — no overlay wrapper.
-// CP3: video jobs get an "Edit Scene" mode that swaps body into SceneEditor.
+// Full-page view — no overlay wrapper. Root div IS the page.
+// VIEW mode: two-column — player left, actions right.
+// EDIT mode: two-column — beat cards left, video right.
 
 import React, { useState, useCallback, useEffect, useRef } from 'react';
 import styles from './MediaJobModal.module.css';
@@ -51,7 +52,7 @@ async function getShareLink(jobId) {
   return data.share_url;
 }
 
-// ── SVG icon components ───────────────────────────────────────────────────────
+// ── SVG icons ─────────────────────────────────────────────────────────────────
 
 const HeadphonesIcon = () => (
   <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.7"
@@ -62,7 +63,6 @@ const HeadphonesIcon = () => (
     <path d="M3 17a9 9 0 0 0 9 5 9 9 0 0 0 9-5"/>
   </svg>
 );
-
 const VideoCameraIcon = () => (
   <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.7"
     strokeLinecap="round" strokeLinejoin="round" width="22" height="22">
@@ -70,7 +70,6 @@ const VideoCameraIcon = () => (
     <polyline points="15 9 23 5 23 19 15 15"/>
   </svg>
 );
-
 const ScriptIcon = () => (
   <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.7"
     strokeLinecap="round" strokeLinejoin="round" width="22" height="22">
@@ -81,7 +80,6 @@ const ScriptIcon = () => (
     <polyline points="10 9 9 9 8 9"/>
   </svg>
 );
-
 const CloseIcon = () => (
   <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="2"
     strokeLinecap="round" width="14" height="14">
@@ -89,7 +87,6 @@ const CloseIcon = () => (
     <line x1="13" y1="3" x2="3" y2="13"/>
   </svg>
 );
-
 const SpeakerIcon = () => (
   <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.7"
     strokeLinecap="round" strokeLinejoin="round" width="26" height="26">
@@ -98,7 +95,6 @@ const SpeakerIcon = () => (
     <path d="M19.07 4.93a10 10 0 0 1 0 14.14"/>
   </svg>
 );
-
 const PlayIcon = () => (
   <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.7"
     strokeLinecap="round" strokeLinejoin="round" width="26" height="26">
@@ -106,7 +102,6 @@ const PlayIcon = () => (
     <polygon points="10 8 18 12 10 16"/>
   </svg>
 );
-
 const MicIcon = () => (
   <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.7"
     strokeLinecap="round" strokeLinejoin="round" width="22" height="22">
@@ -116,7 +111,6 @@ const MicIcon = () => (
     <line x1="9" y1="22" x2="15" y2="22"/>
   </svg>
 );
-
 const FilmIcon = () => (
   <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.7"
     strokeLinecap="round" strokeLinejoin="round" width="22" height="22">
@@ -130,7 +124,6 @@ const FilmIcon = () => (
     <line x1="17" y1="17" x2="22" y2="17"/>
   </svg>
 );
-
 const DownloadIcon = () => (
   <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.8"
     strokeLinecap="round" strokeLinejoin="round" width="15" height="15">
@@ -139,7 +132,6 @@ const DownloadIcon = () => (
     <line x1="2" y1="14" x2="14" y2="14"/>
   </svg>
 );
-
 const LinkIcon = () => (
   <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8"
     strokeLinecap="round" strokeLinejoin="round" width="15" height="15">
@@ -147,14 +139,12 @@ const LinkIcon = () => (
     <path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"/>
   </svg>
 );
-
 const CheckIcon = () => (
   <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="2"
     strokeLinecap="round" strokeLinejoin="round" width="15" height="15">
     <polyline points="3 8 6 11 13 4"/>
   </svg>
 );
-
 const EditIcon = () => (
   <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.6"
     strokeLinecap="round" strokeLinejoin="round" width="15" height="15">
@@ -168,9 +158,9 @@ const EditIcon = () => (
 export default function MediaJobModal({ job, scenarioTitle, onClose }) {
   if (!job) return null;
 
-  const type     = job.content_type;
-  const isAudio  = type === 'audio';
-  const isVideo  = type === 'video';
+  const type    = job.content_type;
+  const isAudio = type === 'audio';
+  const isVideo = type === 'video';
   const isScript = type === 'script';
 
   const [previewUrl,     setPreviewUrl]     = useState(null);
@@ -178,7 +168,11 @@ export default function MediaJobModal({ job, scenarioTitle, onClose }) {
   const [previewError,   setPreviewError]   = useState(null);
   const [copied,         setCopied]         = useState(false);
   const [copyError,      setCopyError]      = useState(false);
-  const [mode,           setMode]           = useState('view');  // 'view' | 'edit'
+  const [mode,           setMode]           = useState('view'); // 'view' | 'edit'
+
+  // Edit mode: video src starts as job.output_url, updates after each apply
+  const [editVideoUrl, setEditVideoUrl] = useState(job.output_url || null);
+
   const blobUrlRef = useRef(null);
 
   useEffect(() => {
@@ -186,6 +180,11 @@ export default function MediaJobModal({ job, scenarioTitle, onClose }) {
       if (blobUrlRef.current) URL.revokeObjectURL(blobUrlRef.current);
     };
   }, []);
+
+  // Reset edit video url if job changes (e.g. parent refreshes job)
+  useEffect(() => {
+    setEditVideoUrl(job.output_url || null);
+  }, [job.output_url]);
 
   const handlePreview = async () => {
     if (previewUrl) return;
@@ -204,8 +203,16 @@ export default function MediaJobModal({ job, scenarioTitle, onClose }) {
     }
   };
 
-  // After a re-assembly drop the stale blob so next Play fetches the new cut
-  const handleApplied = useCallback(() => {
+  // Called by SceneEditor when reassembly completes.
+  // Updates the right-column video src with the fresh cut (cache-busted).
+  const handleApplied = useCallback((updatedJob) => {
+    if (updatedJob?.output_url) {
+      const busted = `${updatedJob.output_url}${
+        updatedJob.output_url.includes('?') ? '&' : '?'
+      }t=${Date.now()}`;
+      setEditVideoUrl(busted);
+    }
+    // Also drop the view-mode blob so re-entering view shows the new cut
     if (blobUrlRef.current) {
       URL.revokeObjectURL(blobUrlRef.current);
       blobUrlRef.current = null;
@@ -226,7 +233,7 @@ export default function MediaJobModal({ job, scenarioTitle, onClose }) {
     }
   };
 
-  // Escape only closes in view mode — edit mode owns its own back button
+  // Escape only closes in view mode — edit mode's Back button handles exit
   const handleKeyDown = useCallback((e) => {
     if (e.key === 'Escape' && mode === 'view') onClose();
   }, [onClose, mode]);
@@ -264,182 +271,202 @@ export default function MediaJobModal({ job, scenarioTitle, onClose }) {
         </button>
       </div>
 
-      {/* ── Body ────────────────────────────────────────────────────────── */}
-      <div className={isEditing ? styles.bodyEdit : styles.bodyView}>
+      {/* ══════════════════════════════════════════════════════════════════
+          EDIT MODE — two columns: beat cards left · video right
+      ══════════════════════════════════════════════════════════════════ */}
+      {isEditing && (
+        <div className={styles.bodyEditGrid}>
 
-        {/* ── EDIT MODE: SceneEditor fills the full body ─────────────── */}
-        {isEditing && (
-          <SceneEditor
-            job={job}
-            onClose={() => setMode('view')}
-            onApplied={handleApplied}
-          />
-        )}
+          {/* Left: SceneEditor */}
+          <div className={styles.editBeatsCol}>
+            <SceneEditor
+              job={job}
+              currentVideoUrl={editVideoUrl}
+              onClose={() => setMode('view')}
+              onApplied={handleApplied}
+            />
+          </div>
 
-        {/* ── VIEW MODE ─────────────────────────────────────────────────── */}
-        {!isEditing && (
-          <>
-            {/* LEFT: player area */}
-            <div className={styles.playerCol}>
+          {/* Right: current / updated video */}
+          <div className={styles.editVideoCol}>
+            {editVideoUrl ? (
+              <video
+                key={editVideoUrl}   /* key forces reload when src changes */
+                controls
+                src={editVideoUrl}
+                className={styles.editVideo}
+              >
+                Your browser does not support video playback.
+              </video>
+            ) : (
+              <div className={styles.editVideoPlaceholder}>
+                <span>Video preview will appear here</span>
+              </div>
+            )}
+          </div>
 
-              {/* Script viewer */}
-              {isScript && job.condensed_script && (
-                <div className={styles.scriptViewer}>
-                  <pre className={styles.scriptText}>{job.condensed_script}</pre>
+        </div>
+      )}
+
+      {/* ══════════════════════════════════════════════════════════════════
+          VIEW MODE — two columns: player left · actions right
+      ══════════════════════════════════════════════════════════════════ */}
+      {!isEditing && (
+        <div className={styles.bodyView}>
+
+          {/* Left: player */}
+          <div className={styles.playerCol}>
+
+            {isScript && job.condensed_script && (
+              <div className={styles.scriptViewer}>
+                <pre className={styles.scriptText}>{job.condensed_script}</pre>
+              </div>
+            )}
+
+            {(isAudio || isVideo) && !previewUrl && !previewLoading && !previewError && (
+              <button className={styles.previewButton} onClick={handlePreview}>
+                <span className={styles.previewIcon}>
+                  {isAudio ? <SpeakerIcon /> : <PlayIcon />}
+                </span>
+                {isAudio ? 'Play Audio Drama' : 'Play Scene Video'}
+              </button>
+            )}
+
+            {previewLoading && (
+              <div className={styles.previewLoading}>
+                <div className={styles.previewSpinner} />
+                <p>Loading {isAudio ? 'audio' : 'video'}…</p>
+              </div>
+            )}
+
+            {previewError && (
+              <p className={styles.previewError}>{previewError}</p>
+            )}
+
+            {previewUrl && isAudio && (
+              <div className={styles.audioPlayerWrapper}>
+                <audio controls autoPlay src={previewUrl} className={styles.audioPlayer}>
+                  Your browser does not support audio playback.
+                </audio>
+              </div>
+            )}
+
+            {previewUrl && isVideo && (
+              <div className={styles.videoPlayerWrapper}>
+                <video controls autoPlay src={previewUrl} className={styles.videoPlayer}>
+                  Your browser does not support video playback.
+                </video>
+              </div>
+            )}
+
+            {!isPlaying && !isScript && (
+              <div className={styles.infoBlock}>
+                <span className={styles.infoIcon}>
+                  {isAudio ? <MicIcon /> : <FilmIcon />}
+                </span>
+                <div className={styles.infoText}>
+                  <p className={styles.infoTitle}>
+                    {isAudio ? 'Multi-voice audio drama' : 'Scene video with character voices'}
+                  </p>
+                  <p className={styles.infoDesc}>
+                    {isAudio
+                      ? 'Characters voiced by ElevenLabs with accent-matched profiles.'
+                      : 'AI-generated scene visuals combined with character audio.'}
+                  </p>
                 </div>
+              </div>
+            )}
+          </div>
+
+          {/* Right: actions */}
+          <div className={styles.actionsCol}>
+
+            <button
+              className={[
+                styles.shareButton,
+                copied    ? styles.shareButtonCopied : '',
+                copyError ? styles.shareButtonError  : '',
+              ].filter(Boolean).join(' ')}
+              onClick={handleCopyLink}
+            >
+              {copied ? <CheckIcon /> : <LinkIcon />}
+              {copied ? 'Link copied!' : copyError ? 'Could not copy' : 'Copy shareable link'}
+            </button>
+
+            <div className={styles.downloadButtons}>
+
+              {isScript && (
+                <>
+                  <button
+                    className={styles.downloadButton}
+                    onClick={() => downloadJobFile(job.id, 'download-script', `screenplay_${job.id}.fountain`)}
+                  >
+                    <DownloadIcon />
+                    <span className={styles.downloadLabel}>
+                      Download .fountain
+                      <span className={styles.downloadHint}>Highland · WriterDuet · Final Draft</span>
+                    </span>
+                  </button>
+                  <button
+                    className={`${styles.downloadButton} ${styles.downloadButtonSecondary}`}
+                    onClick={() => downloadJobFile(job.id, 'download-fdx', `screenplay_${job.id}.fdx`)}
+                  >
+                    <DownloadIcon />
+                    <span className={styles.downloadLabel}>
+                      Download .fdx
+                      <span className={styles.downloadHint}>Final Draft native format</span>
+                    </span>
+                  </button>
+                </>
               )}
 
-              {/* Preview trigger */}
-              {(isAudio || isVideo) && !previewUrl && !previewLoading && !previewError && (
-                <button className={styles.previewButton} onClick={handlePreview}>
-                  <span className={styles.previewIcon}>
-                    {isAudio ? <SpeakerIcon /> : <PlayIcon />}
-                  </span>
-                  {isAudio ? 'Play Audio Drama' : 'Play Scene Video'}
+              {isAudio && (
+                <button
+                  className={styles.downloadButton}
+                  onClick={() => downloadJobFile(job.id, 'download-audio', `audio_drama_${job.id}.mp3`)}
+                >
+                  <DownloadIcon />
+                  Download MP3
                 </button>
               )}
 
-              {previewLoading && (
-                <div className={styles.previewLoading}>
-                  <div className={styles.previewSpinner} />
-                  <p>Loading {isAudio ? 'audio' : 'video'}…</p>
-                </div>
-              )}
-
-              {previewError && (
-                <p className={styles.previewError}>{previewError}</p>
-              )}
-
-              {/* Audio player */}
-              {previewUrl && isAudio && (
-                <div className={styles.audioPlayerWrapper}>
-                  <audio controls autoPlay src={previewUrl} className={styles.audioPlayer}>
-                    Your browser does not support audio playback.
-                  </audio>
-                </div>
-              )}
-
-              {/* Video player */}
-              {previewUrl && isVideo && (
-                <div className={styles.videoPlayerWrapper}>
-                  <video controls autoPlay src={previewUrl} className={styles.videoPlayer}>
-                    Your browser does not support video playback.
-                  </video>
-                </div>
-              )}
-
-              {/* Info block — hidden once media loaded */}
-              {!isPlaying && !isScript && (
-                <div className={styles.infoBlock}>
-                  <span className={styles.infoIcon}>
-                    {isAudio ? <MicIcon /> : <FilmIcon />}
-                  </span>
-                  <div className={styles.infoText}>
-                    <p className={styles.infoTitle}>
-                      {isAudio ? 'Multi-voice audio drama' : 'Scene video with character voices'}
-                    </p>
-                    <p className={styles.infoDesc}>
-                      {isAudio
-                        ? 'Characters voiced by ElevenLabs with accent-matched profiles.'
-                        : 'AI-generated scene visuals combined with character audio.'}
-                    </p>
-                  </div>
-                </div>
-              )}
-            </div>
-
-            {/* RIGHT: actions column */}
-            <div className={styles.actionsCol}>
-
-              {/* Share */}
-              <button
-                className={[
-                  styles.shareButton,
-                  copied    ? styles.shareButtonCopied : '',
-                  copyError ? styles.shareButtonError  : '',
-                ].filter(Boolean).join(' ')}
-                onClick={handleCopyLink}
-              >
-                {copied ? <CheckIcon /> : <LinkIcon />}
-                {copied ? 'Link copied!' : copyError ? 'Could not copy' : 'Copy shareable link'}
-              </button>
-
-              {/* Downloads */}
-              <div className={styles.downloadButtons}>
-
-                {isScript && (
-                  <>
-                    <button
-                      className={styles.downloadButton}
-                      onClick={() => downloadJobFile(job.id, 'download-script', `screenplay_${job.id}.fountain`)}
-                    >
-                      <DownloadIcon />
-                      <span className={styles.downloadLabel}>
-                        Download .fountain
-                        <span className={styles.downloadHint}>Highland · WriterDuet · Final Draft</span>
-                      </span>
-                    </button>
-                    <button
-                      className={`${styles.downloadButton} ${styles.downloadButtonSecondary}`}
-                      onClick={() => downloadJobFile(job.id, 'download-fdx', `screenplay_${job.id}.fdx`)}
-                    >
-                      <DownloadIcon />
-                      <span className={styles.downloadLabel}>
-                        Download .fdx
-                        <span className={styles.downloadHint}>Final Draft native format</span>
-                      </span>
-                    </button>
-                  </>
-                )}
-
-                {isAudio && (
+              {isVideo && (
+                <>
                   <button
                     className={styles.downloadButton}
-                    onClick={() => downloadJobFile(job.id, 'download-audio', `audio_drama_${job.id}.mp3`)}
+                    onClick={() => setMode('edit')}
+                  >
+                    <EditIcon />
+                    Edit Scene
+                  </button>
+                  <button
+                    className={styles.downloadButton}
+                    onClick={() => downloadJobFile(job.id, 'download-video', `scene_video_${job.id}.mp4`)}
                   >
                     <DownloadIcon />
-                    Download MP3
+                    Download MP4
                   </button>
-                )}
-
-                {isVideo && (
-                  <>
+                  {job.audio_url && (
                     <button
-                      className={styles.downloadButton}
-                      onClick={() => setMode('edit')}
-                    >
-                      <EditIcon />
-                      Edit Scene
-                    </button>
-                    <button
-                      className={styles.downloadButton}
-                      onClick={() => downloadJobFile(job.id, 'download-video', `scene_video_${job.id}.mp4`)}
+                      className={`${styles.downloadButton} ${styles.downloadButtonSecondary}`}
+                      onClick={() => downloadJobFile(job.id, 'download-audio', `audio_drama_${job.id}.mp3`)}
                     >
                       <DownloadIcon />
-                      Download MP4
+                      Download MP3 (audio track)
                     </button>
-                    {job.audio_url && (
-                      <button
-                        className={`${styles.downloadButton} ${styles.downloadButtonSecondary}`}
-                        onClick={() => downloadJobFile(job.id, 'download-audio', `audio_drama_${job.id}.mp3`)}
-                      >
-                        <DownloadIcon />
-                        Download MP3 (audio track)
-                      </button>
-                    )}
-                  </>
-                )}
-              </div>
+                  )}
+                </>
+              )}
             </div>
-          </>
-        )}
-      </div>
+          </div>
+        </div>
+      )}
 
       {/* ── Footer ──────────────────────────────────────────────────────── */}
       <div className={styles.footer}>
         <span className={styles.footerText}>&ldquo;{scenarioTitle}&rdquo;</span>
         <span className={styles.footerHint}>
-          {isEditing ? 'Editing scene · use Back to return to view' : 'Esc to go back'}
+          {isEditing ? 'Use Back to return to view' : 'Esc to go back'}
         </span>
       </div>
 
