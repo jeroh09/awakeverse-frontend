@@ -256,7 +256,24 @@ export default function PodcastStudioPage({ context, onClose }) {
       }
     }
     if (context.preloadedLines?.length) {
-      dispatchLines({ type: 'SET', lines: context.preloadedLines.map((l, i) => ({ ...l, id: Date.now() + i, audioUrl: null })) });
+      const charKey = context.characterKey || 'guest';
+      dispatchLines({
+        type: 'SET',
+        lines: context.preloadedLines.map((l, i) => ({
+          ...l,
+          id: Date.now() + i,
+          audioUrl: null,
+          // Normalise backend role → frontend speakerId
+          // backend sends speaker_id: 'host'|'guest'
+          // frontend speakers use speakerId: 'user' | characterKey
+          speakerId: (l.speaker_id || l.speakerId) === 'host'
+            ? 'user'
+            : charKey,
+          displayName: (l.speaker_id || l.speakerId) === 'host'
+            ? 'You'
+            : (l.display_name || context.character?.name || charKey),
+        })),
+      });
     }
     // startTab — open Studio at a specific tab (e.g. 'script' from ScriptViewerModal)
     if (context.startTab) {
@@ -594,7 +611,12 @@ export default function PodcastStudioPage({ context, onClose }) {
                   </div>
                 )}
                 {lines.map((line, i) => {
-                  const spk = speakers.find(s => s.speakerId === line.speakerId) || speakers[0];
+                  // Match by speakerId first, then by role as fallback
+                  const spk = speakers.find(s => s.speakerId === line.speakerId)
+                    || (line.speakerId === 'user'
+                        ? speakers.find(s => !s.isCharacter)
+                        : speakers.find(s => s.isCharacter))
+                    || speakers[0];
                   return (
                     <div
                     key={line.id}
@@ -608,10 +630,14 @@ export default function PodcastStudioPage({ context, onClose }) {
                       <div className={styles.dragHandle} title="Drag to reorder">
                       <Ic.Drag />
                     </div>
-                    <div className={styles.lineDot} style={{ background: spk?.color || '#6366F1' }} />
+                    <div className={styles.lineDot} style={{ background: spk?.color || (line.speakerId === 'user' ? '#6366F1' : '#10B981') }} />
                       <div className={styles.lineBody}>
-                        <div className={styles.lineTag} style={{ color: spk?.color || '#818CF8' }}>
-                          {spk?.displayName || 'Speaker'} · {spk?.role === 'host' ? 'Host' : 'Guest'}
+                        <div className={styles.lineTag} style={{ color: spk?.color || (line.speakerId === 'user' ? '#6366F1' : '#10B981') }}>
+                          {spk?.displayName || line.displayName || 'Speaker'} · {
+                            spk
+                              ? (spk.role === 'host' ? 'Host' : 'Guest')
+                              : (line.speakerId === 'user' ? 'Host' : 'Guest')
+                          }
                         </div>
                         <textarea
                           className={styles.lineTextarea}
