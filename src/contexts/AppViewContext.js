@@ -13,7 +13,8 @@ export const VIEW_STATES = {
   CREATOR_DASHBOARD: 'creator_dashboard',
   SCENARIOS: 'scenarios',
   STORY_MODE: 'story_mode',  // NEW
-  VERSE_STUDIO: 'verse_studio'  // 🔹 Workspace / Verse Studio tab
+  VERSE_STUDIO: 'verse_studio',  // 🔹 Workspace / Verse Studio tab
+  PODCAST_STUDIO: 'podcast_studio'  // 🎙️ Podcast Studio
 };
 
 const STORAGE_KEY = 'awakeverse_discovered_characters';
@@ -128,9 +129,8 @@ const VIEW_TO_HASH_MAP = {
   [VIEW_STATES.CREATOR_DASHBOARD]: 'create',
   [VIEW_STATES.SCENARIOS]: 'scenarios',
   [VIEW_STATES.STORY_MODE]: 'stories',
-  [VIEW_STATES.VERSE_STUDIO]: 'workspace'  // 🔹 URL: #workspace
-
-  
+  [VIEW_STATES.VERSE_STUDIO]: 'workspace',  // 🔹 URL: #workspace
+  [VIEW_STATES.PODCAST_STUDIO]: 'studio'   // 🎙️ URL: #studio
 };
 
 /**
@@ -162,7 +162,9 @@ function getViewFromHash(hashString) {
 
     // 🔹 Workspace / Verse Studio aliases
     'workspace': VIEW_STATES.VERSE_STUDIO,
-    'verse': VIEW_STATES.VERSE_STUDIO
+    'verse': VIEW_STATES.VERSE_STUDIO,
+    'studio': VIEW_STATES.PODCAST_STUDIO,
+    'podcast_studio': VIEW_STATES.PODCAST_STUDIO  // Alias
   };
   return HASH_TO_VIEW_MAP[baseView] || VIEW_STATES.CHAT;
 }
@@ -193,6 +195,13 @@ export const AppViewProvider = ({ children }) => {
 
   // ✅ NEW: Chat Mode state (following activeScenario pattern)
   const [activeChatCharacter, setActiveChatCharacter] = useState(null);
+
+  // ============================================================================
+  // 🎙️ NEW: PODCAST STUDIO context state (following activeStory pattern)
+  // Carries chat context from ChatWindow into PodcastStudioPage.
+  // Shape: { character, characterKey, chatHistory, topic, preloadedLines }
+  // ============================================================================
+  const [activePodcastContext, setActivePodcastContext] = useState(null);
 
   // ============================================================================
   // LOCALSTORAGE CACHE LAYER (Instant load, offline support)
@@ -515,6 +524,15 @@ export const AppViewProvider = ({ children }) => {
   }, []);
 
   // ============================================================================
+  // 🎙️ NEW: PODCAST STUDIO context setter
+  // ============================================================================
+
+  const setActivePodcastContextData = useCallback((context) => {
+    console.log('🎙️ Setting active podcast context:', context?.character);
+    setActivePodcastContext(context);
+  }, []);
+
+  // ============================================================================
   // MANUAL SYNC (for pull-to-refresh or settings)
   // ============================================================================
 
@@ -565,7 +583,11 @@ export const AppViewProvider = ({ children }) => {
 
     // ✅ NEW: Chat Mode context values
     activeChatCharacter,
-    setActiveChatCharacter: setActiveChatCharacterData
+    setActiveChatCharacter: setActiveChatCharacterData,
+
+    // 🎙️ NEW: Podcast Studio context values
+    activePodcastContext,
+    setActivePodcastContext: setActivePodcastContextData
   };
 
   return (
