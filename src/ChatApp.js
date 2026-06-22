@@ -26,6 +26,7 @@ import StoryModeTab from './components/StoryMode/index';
 import { useSearchParams } from 'react-router-dom';
 import StripeSuccessHandler from './components/StripeSuccessHandler';
 import VerseStudioTab from './components/VerseStudio/VerseStudioTab';
+import PodcastStudioPage from './components/PodcastStudio/PodcastStudioPage';
 import OnboardingFlow, { isOnboardingComplete } from './components/Onboarding/OnboardingFlow';
 import './components/LauncherOverlay/LauncherOverlay.css';
 import './styles.css';
@@ -61,7 +62,9 @@ export default function ChatApp() {
     addDiscoveredCharacter,
     discoveredCharacters,
     activeChatCharacter,
-    setActiveChatCharacter
+    setActiveChatCharacter,
+    activePodcastContext,
+    setActivePodcastContext
   } = useAppView();
 
   const {
@@ -491,6 +494,13 @@ export default function ChatApp() {
         <div className="verse-workspace-view-container">
           <VerseStudioTab />
         </div>
+      )}
+
+      {currentView === VIEW_STATES.PODCAST_STUDIO && (
+        <PodcastStudioPage
+          context={activePodcastContext}
+          onClose={() => switchView(VIEW_STATES.CHAT)}
+        />
       )}
 
       {previewCharacterKey && (

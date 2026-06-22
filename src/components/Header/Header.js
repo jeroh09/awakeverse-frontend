@@ -105,6 +105,27 @@ const VerseStudioIcon = ({ className }) => (
   </svg>
 );
 
+// 🎙️ Podcast Studio — microphone with waveform bars, indigo glow pattern
+const PodcastStudioIcon = ({ className }) => (
+  <svg className={className} width="20" height="20" viewBox="0 0 24 24" fill="none">
+    <defs>
+      <filter id="podcastGlow" x="-50%" y="-50%" width="200%" height="200%">
+        <feDropShadow dx="0" dy="0" stdDeviation="2.2" floodColor="#6366f1" floodOpacity="0.65" />
+      </filter>
+    </defs>
+    <rect x="9" y="2" width="6" height="11" rx="3"
+      stroke="currentColor" strokeWidth="1.8" opacity="0.95" filter="url(#podcastGlow)" />
+    <path d="M5 10a7 7 0 0014 0"
+      stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" opacity="0.85" filter="url(#podcastGlow)" />
+    <line x1="12" y1="19" x2="12" y2="22"
+      stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" filter="url(#podcastGlow)" />
+    <line x1="8" y1="22" x2="16" y2="22"
+      stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" filter="url(#podcastGlow)" />
+    <path d="M3 8v1.5M6 6.5v3M21 8v1.5M18 6.5v3"
+      stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" opacity="0.7" filter="url(#podcastGlow)" />
+  </svg>
+);
+
 const ChevronDownIcon = ({ className }) => (
   <svg className={className} width="20" height="20" viewBox="0 0 24 24" fill="none">
     <defs>
@@ -187,6 +208,7 @@ export default function Header() {
         { key: 'create',      label: 'Create',    icon: CreateIcon,      viewState: viewContext.VIEW_STATES.CREATOR_DASHBOARD },
         { key: 'scenarios',   label: 'Dialogue',  icon: ScenariosIcon,   viewState: viewContext.VIEW_STATES.SCENARIOS },
         { key: 'verseStudio', label: 'Workspace', icon: VerseStudioIcon, viewState: viewContext.VIEW_STATES.VERSE_STUDIO },
+        { key: 'podcastStudio', label: 'Studio',    icon: PodcastStudioIcon, viewState: viewContext.VIEW_STATES.PODCAST_STUDIO },
       ];
 
   const itemsByKey = Object.fromEntries(navItems.map((item) => [item.key, item]));
@@ -194,7 +216,7 @@ export default function Header() {
   const navGroups = [
     { key: 'primary',     label: 'Primary',      items: ['chat', 'discover'] },
     { key: 'storyWorld',  label: 'Story world',  items: ['stories'] },
-    { key: 'productivity',label: 'Productivity', items: ['create', 'scenarios', 'verseStudio'] },
+    { key: 'productivity',label: 'Productivity', items: ['create', 'scenarios', 'podcastStudio', 'verseStudio'] },
   ];
 
   const handleNavClick = (viewState) => {
