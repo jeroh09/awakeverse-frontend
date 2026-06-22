@@ -1217,3 +1217,26 @@
   background: rgba(16, 185, 129, 0.22);
   border-color: rgba(16, 185, 129, 0.5);
 }
+
+/* ── Drag to reorder lines ───────────────────────────────────────────────── */
+.dragHandle {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 18px;
+  flex-shrink: 0;
+  color: var(--text-muted);
+  cursor: grab;
+  opacity: 0;
+  transition: opacity 0.15s;
+  margin-top: 0.35rem;
+}
+
+.lineCard:hover .dragHandle { opacity: 1; }
+.dragHandle:active { cursor: grabbing; }
+
+.lineCardDragOver {
+  border-color: rgba(99, 102, 241, 0.6) !important;
+  background: rgba(99, 102, 241, 0.08) !important;
+  box-shadow: 0 0 0 2px rgba(99, 102, 241, 0.2) !important;
+}

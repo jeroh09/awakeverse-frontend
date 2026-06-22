@@ -54,6 +54,16 @@ const BUILD_STAGES = [
 
 // ── SVG Icons ────────────────────────────────────────────────────────────────
 const Ic = {
+  Drag: () => (
+    <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8">
+      <circle cx="9"  cy="5"  r="1.2" fill="currentColor" stroke="none"/>
+      <circle cx="9"  cy="12" r="1.2" fill="currentColor" stroke="none"/>
+      <circle cx="9"  cy="19" r="1.2" fill="currentColor" stroke="none"/>
+      <circle cx="15" cy="5"  r="1.2" fill="currentColor" stroke="none"/>
+      <circle cx="15" cy="12" r="1.2" fill="currentColor" stroke="none"/>
+      <circle cx="15" cy="19" r="1.2" fill="currentColor" stroke="none"/>
+    </svg>
+  ),
   Upload: () => (
     <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#6366F1" strokeWidth="1.8">
       <path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4" strokeLinecap="round"/>
@@ -176,7 +186,7 @@ export default function PodcastStudioPage({ context, onClose }) {
   const [avatarBuilt,   setAvatarBuilt]   = useState(false);
   const [buildStage,    setBuildStage]    = useState(null); // null | 'uploading'|'composing'|'baking'|'done'
   const [buildError,    setBuildError]    = useState(null);
-  const [dragOver,      setDragOver]      = useState(false);
+  const [avatarDragOver, setAvatarDragOver] = useState(false);
   const fileInputRef = useRef(null);
 
   // ── Script ────────────────────────────────────────────────────────────────
@@ -189,6 +199,8 @@ export default function PodcastStudioPage({ context, onClose }) {
 
   // ── Generate ──────────────────────────────────────────────────────────────
   const [submitted, setSubmitted] = useState(false);
+  const [dragIdx,   setDragIdx]   = useState(null);  // index being dragged
+  const [dragOver,  setDragOver_l] = useState(null);  // index being hovered
 
   // ── Tab done state ────────────────────────────────────────────────────────
   const tabsDone = {
@@ -265,8 +277,8 @@ export default function PodcastStudioPage({ context, onClose }) {
     reader.readAsDataURL(file);
   }, []);
 
-  const onDrop = useCallback(e => {
-    e.preventDefault(); setDragOver(false);
+  const onAvatarDrop = useCallback(e => {
+    e.preventDefault(); setAvatarDragOver(false);
     processFile(e.dataTransfer.files[0]);
   }, [processFile]);
 
@@ -304,6 +316,31 @@ export default function PodcastStudioPage({ context, onClose }) {
       setBuildStage(null);
     }
   }, [photoFile, uploadPhoto, buildAvatar, selectedEnvId, context]);
+
+  // ── Line drag-to-reorder ──────────────────────────────────────────────────
+  const handleDragStart = useCallback((e, idx) => {
+    setDragIdx(idx);
+    e.dataTransfer.effectAllowed = 'move';
+  }, []);
+
+  const handleDragOver = useCallback((e, idx) => {
+    e.preventDefault();
+    e.dataTransfer.dropEffect = 'move';
+    setDragOver_l(idx);
+  }, []);
+
+  const handleDrop = useCallback((e, idx) => {
+    e.preventDefault();
+    if (dragIdx === null || dragIdx === idx) return;
+    dispatchLines({ type: 'MOVE', from: dragIdx, to: idx });
+    setDragIdx(null);
+    setDragOver_l(null);
+  }, [dragIdx, dispatchLines]);
+
+  const handleDragEnd = useCallback(() => {
+    setDragIdx(null);
+    setDragOver_l(null);
+  }, []);
 
   // ── Submit session ────────────────────────────────────────────────────────
   const handleGenerate = useCallback(async () => {
@@ -447,10 +484,10 @@ export default function PodcastStudioPage({ context, onClose }) {
                         </div>
                       )}
                       <div
-                        className={`${styles.dropZone} ${dragOver ? styles.dropZoneDrag : ''}`}
-                        onDragOver={e => { e.preventDefault(); setDragOver(true); }}
-                        onDragLeave={() => setDragOver(false)}
-                        onDrop={onDrop}
+                        className={`${styles.dropZone} ${avatarDragOver ? styles.dropZoneDrag : ''}`}
+                        onDragOver={e => { e.preventDefault(); setAvatarDragOver(true); }}
+                        onDragLeave={() => setAvatarDragOver(false)}
+                        onDrop={onAvatarDrop}
                         onClick={() => !photoPreview && fileInputRef.current?.click()}
                         role="button" tabIndex={0}
                       >
@@ -556,11 +593,22 @@ export default function PodcastStudioPage({ context, onClose }) {
                     No lines yet — generate from topic, import from chat, or add manually.
                   </div>
                 )}
-                {lines.map(line => {
+                {lines.map((line, i) => {
                   const spk = speakers.find(s => s.speakerId === line.speakerId) || speakers[0];
                   return (
-                    <div key={line.id} className={styles.lineCard}>
-                      <div className={styles.lineDot} style={{ background: spk?.color || '#6366F1' }} />
+                    <div
+                    key={line.id}
+                    className={`${styles.lineCard} ${dragOver === i ? styles.lineCardDragOver : ''}`}
+                    draggable
+                    onDragStart={e => handleDragStart(e, i)}
+                    onDragOver={e => handleDragOver(e, i)}
+                    onDrop={e => handleDrop(e, i)}
+                    onDragEnd={handleDragEnd}
+                  >
+                      <div className={styles.dragHandle} title="Drag to reorder">
+                      <Ic.Drag />
+                    </div>
+                    <div className={styles.lineDot} style={{ background: spk?.color || '#6366F1' }} />
                       <div className={styles.lineBody}>
                         <div className={styles.lineTag} style={{ color: spk?.color || '#818CF8' }}>
                           {spk?.displayName || 'Speaker'} · {spk?.role === 'host' ? 'Host' : 'Guest'}
