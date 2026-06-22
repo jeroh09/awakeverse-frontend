@@ -1523,18 +1523,18 @@ export default function ChatWindow({
                   className="creation-pill-btn"
                   onClick={async () => {
                     setPillDismissed(true);
-                    // Generate podcast script from chat history via Llama
+                    const charKey = typeof character === 'string' ? character : character?.key;
                     const lastUserMsg = [...chatHistory].reverse().find(m => m.user);
                     const topic = lastUserMsg?.text?.slice(0, 120) || '';
-                    const charKey = typeof character === 'string' ? character : character?.key;
                     try {
                       const csrf = document.cookie.match(/(?:^|;\s*)av_csrf=([^;]+)/)?.[1] || '';
+                      // Send thread_id — backend pulls from DB directly (reliable speaker labelling)
                       const res = await fetch(`${API}/api/podcast/generate-script`, {
                         method: 'POST',
                         headers: { 'Content-Type': 'application/json', 'X-CSRF-Token': csrf },
                         credentials: 'include',
                         body: JSON.stringify({
-                          messages:      chatHistory.map(m => ({ user: !!m.user, text: m.text || '' })),
+                          thread_id:     threadId,
                           character_key: charKey,
                           display_name:  displayName || 'Guest',
                           topic,
