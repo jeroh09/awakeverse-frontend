@@ -1511,6 +1511,41 @@ export default function ChatWindow({
           </AutoSizer>
         </div>
 
+        {/* ── Input area wrapper — pill anchors to this, not the whole window ── */}
+        <div className="chat-input-wrapper">
+
+          {/* Pill floats above input, anchored to wrapper */}
+          {showCreationPill && (
+            <div className="creation-pill-overlay">
+              <div className="creation-pill">
+                <span className="creation-pill-label">Ready to create?</span>
+                <button
+                  className="creation-pill-btn"
+                  onClick={() => {
+                    setPillDismissed(true);
+                    const event = new CustomEvent('awakeverse:generate-script');
+                    window.dispatchEvent(event);
+                  }}
+                >
+                  📄 Script
+                </button>
+                <button
+                  className="creation-pill-btn creation-pill-btn--podcast"
+                  onClick={handleOpenPodcast}
+                >
+                  🎙 Podcast
+                </button>
+                <button
+                  className="creation-pill-dismiss"
+                  onClick={() => setPillDismissed(true)}
+                  aria-label="Dismiss"
+                >
+                  ✕
+                </button>
+              </div>
+            </div>
+          )}
+
         <footer className="chat-input">
           {/* ✅ ADD USAGE WARNING ABOVE INPUT */}
           {usageTracking.showWarning && usageTracking.isCustomCharacter && (
@@ -1526,39 +1561,6 @@ export default function ChatWindow({
               />
             </div>
           )}
-          {/* ── Creation pill — appears after 3+ exchanges ── */}
-          {showCreationPill && (
-            <div className="creation-pill-wrap">
-              <div className="creation-pill">
-                <span className="creation-pill-label">Ready to create?</span>
-                <button
-                  className="creation-pill-btn"
-                  onClick={() => {
-                    setPillDismissed(true);
-                    // Trigger existing script generation flow
-                    const event = new CustomEvent('awakeverse:generate-script');
-                    window.dispatchEvent(event);
-                  }}
-                >
-                  📄 Generate Script
-                </button>
-                <button
-                  className="creation-pill-btn creation-pill-btn--podcast"
-                  onClick={handleOpenPodcast}
-                >
-                  🎙 Create Podcast
-                </button>
-                <button
-                  className="creation-pill-dismiss"
-                  onClick={() => setPillDismissed(true)}
-                  aria-label="Dismiss"
-                >
-                  ✕
-                </button>
-              </div>
-            </div>
-          )}
-
           {/* WRAP InputArea with defensive wrapper */}
           <DefensiveChatInputWrapper
             character={character}
@@ -1579,6 +1581,7 @@ export default function ChatWindow({
             />
           </DefensiveChatInputWrapper>
         </footer>
+        </div>{/* end chat-input-wrapper */}
         <div className="chat-footer-note">
           AI-generated characters, for reference only
         </div>

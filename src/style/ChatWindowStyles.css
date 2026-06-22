@@ -543,95 +543,124 @@ mask-image:         linear-gradient(to bottom, black 0%, black 10%, transparent 
   .dot { animation: none !important; transition: none !important; }
   .chat-panel-container::before { animation: none; }
 }
-/* ── Podcast creation pill ─────────────────────────────────────────────────
-   Appears above the input after 3+ message exchanges.
-   Append this to ChatWindowStyles.css
+/* ── Chat input wrapper — anchors the pill ────────────────────────────────
+   Wrap around footer + pill. position:relative so pill can anchor here.
+   Append to ChatWindowStyles.css
    ─────────────────────────────────────────────────────────────────────── */
 
-.creation-pill-wrap {
-  padding: 0 12px 8px;
+.chat-input-wrapper {
+  position: relative;   /* pill anchors to this */
+  flex-shrink: 0;       /* same as chat-input was */
+}
+
+/* ── Creation pill — floats flush above the input ─────────────────────────
+   position:absolute; bottom:100% — sits on top of input, never pushes it.
+   Works on mobile too — anchored to wrapper not the window.
+   ─────────────────────────────────────────────────────────────────────── */
+
+.creation-pill-overlay {
+  position: absolute;
+  bottom: 100%;         /* flush above the input area */
+  left: 0;
+  right: 0;
+  z-index: 60;
   display: flex;
   justify-content: center;
-  animation: pillSlideUp 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+  padding: 0 12px 6px;
+  pointer-events: none; /* let taps through to input below */
+  animation: pillSlideUp 0.22s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
 @keyframes pillSlideUp {
-  from { opacity: 0; transform: translateY(8px); }
+  from { opacity: 0; transform: translateY(6px); }
   to   { opacity: 1; transform: translateY(0); }
 }
 
+/* The pill — single horizontal strip */
 .creation-pill {
-  display: flex;
+  display: inline-flex;
   align-items: center;
-  gap: 6px;
-  padding: 5px 8px 5px 12px;
-  background: rgba(10, 15, 30, 0.82);
-  backdrop-filter: blur(16px);
-  -webkit-backdrop-filter: blur(16px);
+  gap: 5px;
+  padding: 5px 6px 5px 12px;
+  background: rgba(10, 15, 30, 0.90);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
   border: 1px solid rgba(99, 102, 241, 0.38);
-  box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.10);
-  border-radius: 999px;
-  max-width: 420px;
-  width: 100%;
+  box-shadow:
+    0 0 0 3px rgba(99, 102, 241, 0.10),
+    0 -4px 20px rgba(10, 15, 30, 0.55);
+  border-radius: 999px;   /* pill */
+  pointer-events: auto;
+  width: fit-content;
+  max-width: calc(100% - 24px);
 }
 
 .creation-pill-label {
-  font-size: 0.7rem;
+  font-size: 0.67rem;
   color: #64748B;
   font-family: 'Inter', sans-serif;
   white-space: nowrap;
   flex-shrink: 0;
+  margin-right: 2px;
 }
 
+/* Buttons — pill shaped */
 .creation-pill-btn {
-  display: flex;
+  display: inline-flex;
   align-items: center;
-  gap: 4px;
-  padding: 0.3rem 0.75rem;
+  gap: 3px;
+  padding: 0.26rem 0.7rem;
   background: rgba(99, 102, 241, 0.12);
-  border: 1px solid rgba(99, 102, 241, 0.3);
+  border: 1px solid rgba(99, 102, 241, 0.32);
   box-shadow: 0 0 0 2px rgba(99, 102, 241, 0.07);
-  border-radius: 999px;
+  border-radius: 999px;   /* pill */
   cursor: pointer;
-  font-size: 0.72rem;
+  font-size: 0.68rem;
   font-weight: 600;
   color: #A5B4FC;
   font-family: 'Inter', sans-serif;
   white-space: nowrap;
-  transition: all 0.15s;
+  transition: all 0.14s;
+  line-height: 1.2;
 }
 
 .creation-pill-btn:hover {
   background: rgba(99, 102, 241, 0.22);
-  border-color: rgba(99, 102, 241, 0.5);
+  border-color: rgba(99, 102, 241, 0.55);
 }
 
+/* Podcast button — slightly more prominent */
 .creation-pill-btn--podcast {
-  background: linear-gradient(135deg, rgba(99, 102, 241, 0.2), rgba(129, 140, 248, 0.15));
-  border-color: rgba(99, 102, 241, 0.45);
+  background: linear-gradient(135deg,
+    rgba(99, 102, 241, 0.22),
+    rgba(129, 140, 248, 0.16));
+  border-color: rgba(99, 102, 241, 0.48);
   color: #C7D2FE;
 }
 
 .creation-pill-btn--podcast:hover {
-  background: linear-gradient(135deg, rgba(99, 102, 241, 0.32), rgba(129, 140, 248, 0.25));
+  background: linear-gradient(135deg,
+    rgba(99, 102, 241, 0.35),
+    rgba(129, 140, 248, 0.28));
 }
 
+/* Dismiss × */
 .creation-pill-dismiss {
-  width: 22px;
-  height: 22px;
+  width: 20px;
+  height: 20px;
   border-radius: 50%;
   background: transparent;
-  border: 1px solid rgba(148, 163, 184, 0.15);
+  border: 1px solid rgba(148, 163, 184, 0.14);
   display: flex;
   align-items: center;
   justify-content: center;
   cursor: pointer;
   color: #475569;
-  font-size: 0.65rem;
+  font-size: 0.6rem;
   line-height: 1;
   transition: all 0.12s;
-  margin-left: auto;
   flex-shrink: 0;
+  margin-left: 2px;
 }
 
 .creation-pill-dismiss:hover {
@@ -640,28 +669,43 @@ mask-image:         linear-gradient(to bottom, black 0%, black 10%, transparent 
   color: #FCA5A5;
 }
 
-/* ── Podcast launch button in header ───────────────────────────────────────
-   Sits in .header-controls alongside the back button.
-   ─────────────────────────────────────────────────────────────────────── */
+/* ── Mobile: pill stays centred, never overflows ─────────────────────────── */
+@media (max-width: 768px) {
+  .creation-pill {
+    gap: 4px;
+    padding: 4px 5px 4px 10px;
+  }
 
+  .creation-pill-label {
+    display: none; /* hide label on small screens, save space */
+  }
+
+  .creation-pill-btn {
+    padding: 0.24rem 0.6rem;
+    font-size: 0.65rem;
+  }
+}
+
+/* ── Podcast mic button in chat header ─────────────────────────────────── */
 .podcast-launch-btn {
-  width: 32px;
-  height: 32px;
+  width: 30px;
+  height: 30px;
   border-radius: 50%;
   background: rgba(99, 102, 241, 0.1);
-  border: 1px solid rgba(99, 102, 241, 0.3);
-  box-shadow: 0 0 0 2px rgba(99, 102, 241, 0.08);
+  border: 1px solid rgba(99, 102, 241, 0.28);
+  box-shadow: 0 0 0 2px rgba(99, 102, 241, 0.07);
   display: flex;
   align-items: center;
   justify-content: center;
   cursor: pointer;
   color: #818CF8;
-  transition: all 0.15s;
+  transition: all 0.14s;
+  flex-shrink: 0;
 }
 
 .podcast-launch-btn:hover {
   background: rgba(99, 102, 241, 0.2);
   border-color: rgba(99, 102, 241, 0.5);
   color: #A5B4FC;
-  box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.15);
+  box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.14);
 }
