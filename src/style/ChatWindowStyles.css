@@ -543,3 +543,125 @@ mask-image:         linear-gradient(to bottom, black 0%, black 10%, transparent 
   .dot { animation: none !important; transition: none !important; }
   .chat-panel-container::before { animation: none; }
 }
+/* ── Podcast creation pill ─────────────────────────────────────────────────
+   Appears above the input after 3+ message exchanges.
+   Append this to ChatWindowStyles.css
+   ─────────────────────────────────────────────────────────────────────── */
+
+.creation-pill-wrap {
+  padding: 0 12px 8px;
+  display: flex;
+  justify-content: center;
+  animation: pillSlideUp 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+@keyframes pillSlideUp {
+  from { opacity: 0; transform: translateY(8px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+.creation-pill {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 5px 8px 5px 12px;
+  background: rgba(10, 15, 30, 0.82);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  border: 1px solid rgba(99, 102, 241, 0.38);
+  box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.10);
+  border-radius: 999px;
+  max-width: 420px;
+  width: 100%;
+}
+
+.creation-pill-label {
+  font-size: 0.7rem;
+  color: #64748B;
+  font-family: 'Inter', sans-serif;
+  white-space: nowrap;
+  flex-shrink: 0;
+}
+
+.creation-pill-btn {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  padding: 0.3rem 0.75rem;
+  background: rgba(99, 102, 241, 0.12);
+  border: 1px solid rgba(99, 102, 241, 0.3);
+  box-shadow: 0 0 0 2px rgba(99, 102, 241, 0.07);
+  border-radius: 999px;
+  cursor: pointer;
+  font-size: 0.72rem;
+  font-weight: 600;
+  color: #A5B4FC;
+  font-family: 'Inter', sans-serif;
+  white-space: nowrap;
+  transition: all 0.15s;
+}
+
+.creation-pill-btn:hover {
+  background: rgba(99, 102, 241, 0.22);
+  border-color: rgba(99, 102, 241, 0.5);
+}
+
+.creation-pill-btn--podcast {
+  background: linear-gradient(135deg, rgba(99, 102, 241, 0.2), rgba(129, 140, 248, 0.15));
+  border-color: rgba(99, 102, 241, 0.45);
+  color: #C7D2FE;
+}
+
+.creation-pill-btn--podcast:hover {
+  background: linear-gradient(135deg, rgba(99, 102, 241, 0.32), rgba(129, 140, 248, 0.25));
+}
+
+.creation-pill-dismiss {
+  width: 22px;
+  height: 22px;
+  border-radius: 50%;
+  background: transparent;
+  border: 1px solid rgba(148, 163, 184, 0.15);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  color: #475569;
+  font-size: 0.65rem;
+  line-height: 1;
+  transition: all 0.12s;
+  margin-left: auto;
+  flex-shrink: 0;
+}
+
+.creation-pill-dismiss:hover {
+  background: rgba(239, 68, 68, 0.12);
+  border-color: rgba(239, 68, 68, 0.25);
+  color: #FCA5A5;
+}
+
+/* ── Podcast launch button in header ───────────────────────────────────────
+   Sits in .header-controls alongside the back button.
+   ─────────────────────────────────────────────────────────────────────── */
+
+.podcast-launch-btn {
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  background: rgba(99, 102, 241, 0.1);
+  border: 1px solid rgba(99, 102, 241, 0.3);
+  box-shadow: 0 0 0 2px rgba(99, 102, 241, 0.08);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  color: #818CF8;
+  transition: all 0.15s;
+}
+
+.podcast-launch-btn:hover {
+  background: rgba(99, 102, 241, 0.2);
+  border-color: rgba(99, 102, 241, 0.5);
+  color: #A5B4FC;
+  box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.15);
+}

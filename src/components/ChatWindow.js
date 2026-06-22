@@ -6,6 +6,7 @@ import ReactMarkdown from 'react-markdown';
 import { VariableSizeList as List } from 'react-window';
 import AutoSizer from 'react-virtualized-auto-sizer';
 import { useUser } from '../contexts/UserContext';
+import { useAppView } from '../contexts/AppViewContext';
 import { useConversation } from '../hooks/useConversation';
 import { CHARACTERS } from '../data/characters';
 import ContextPanel from './ContextPanel';
@@ -342,6 +343,7 @@ export default function ChatWindow({
 
 
   const { user } = useUser();
+  const { switchView, VIEW_STATES, setActivePodcastContext } = useAppView();
   const socket = useSocket();
   const isMobile = useMediaQuery(600);
   const { userCharacters } = usePremiumCharacters();
@@ -1256,7 +1258,38 @@ export default function ChatWindow({
       controllerRef.current = null;
     }
   };
+  // ── Creation pill state ─────────────────────────────────────────────────────
+  // Appears above input after 3+ user+AI exchanges. Offers "Generate Script"
+  // or "Create Podcast". Dismisses on tap or X. Resets after each send.
+  const [pillDismissed, setPillDismissed] = useState(false);
+
+  const turnCount = useMemo(() => {
+    let pairs = 0, sawUser = false;
+    for (const m of chatHistory) {
+      if (m.user) { sawUser = true; }
+      else if (sawUser) { pairs++; sawUser = false; }
+    }
+    return pairs;
+  }, [chatHistory]);
+
+  const showCreationPill = !pillDismissed && turnCount >= 3;
+
+  const handleOpenPodcast = useCallback(() => {
+    const lastUserMsg = [...chatHistory].reverse().find(m => m.user);
+    const topic = lastUserMsg?.text?.slice(0, 120) || '';
+    setActivePodcastContext({
+      character,
+      characterKey: typeof character === 'string' ? character : character?.key,
+      chatHistory,
+      topic,
+      preloadedLines: [],
+    });
+    switchView(VIEW_STATES.PODCAST_STUDIO);
+    setPillDismissed(true);
+  }, [chatHistory, character, setActivePodcastContext, switchView, VIEW_STATES]);
+
   const sendMessage = () => {
+    setPillDismissed(false); // reset so pill can re-appear after 3 more turns
     if (!message.trim() || isSending) return;
     const userText = message;
 
@@ -1414,6 +1447,20 @@ export default function ChatWindow({
             )}
             
             <div className="header-controls">
+              <button
+                className="podcast-launch-btn"
+                onClick={handleOpenPodcast}
+                title="Create Podcast"
+                aria-label="Open Podcast Studio"
+              >
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8">
+                  <rect x="9" y="2" width="6" height="11" rx="3"/>
+                  <path d="M5 10a7 7 0 0014 0" strokeLinecap="round"/>
+                  <line x1="12" y1="19" x2="12" y2="22" strokeLinecap="round"/>
+                  <line x1="8" y1="22" x2="16" y2="22" strokeLinecap="round"/>
+                  <path d="M3 8v1.5M6 6.5v3M21 8v1.5M18 6.5v3" strokeLinecap="round"/>
+                </svg>
+              </button>
               <button onClick={onBack} className="back-button" title="Back">
                 <ArrowLeft size={20} />
               </button>
@@ -1479,6 +1526,39 @@ export default function ChatWindow({
               />
             </div>
           )}
+          {/* ── Creation pill — appears after 3+ exchanges ── */}
+          {showCreationPill && (
+            <div className="creation-pill-wrap">
+              <div className="creation-pill">
+                <span className="creation-pill-label">Ready to create?</span>
+                <button
+                  className="creation-pill-btn"
+                  onClick={() => {
+                    setPillDismissed(true);
+                    // Trigger existing script generation flow
+                    const event = new CustomEvent('awakeverse:generate-script');
+                    window.dispatchEvent(event);
+                  }}
+                >
+                  📄 Generate Script
+                </button>
+                <button
+                  className="creation-pill-btn creation-pill-btn--podcast"
+                  onClick={handleOpenPodcast}
+                >
+                  🎙 Create Podcast
+                </button>
+                <button
+                  className="creation-pill-dismiss"
+                  onClick={() => setPillDismissed(true)}
+                  aria-label="Dismiss"
+                >
+                  ✕
+                </button>
+              </div>
+            </div>
+          )}
+
           {/* WRAP InputArea with defensive wrapper */}
           <DefensiveChatInputWrapper
             character={character}
