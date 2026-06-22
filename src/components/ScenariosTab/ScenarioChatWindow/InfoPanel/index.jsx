@@ -409,6 +409,7 @@ export default function InfoPanel({
   onCancelJob        = () => {},
   onDeleteJob        = () => {},
   onGeneratePoster   = async () => {},
+  onSendToStudio     = null,   // (lines, topic, scriptText) => void — podcast path only
   selectedMessageIds = [],   // ids chosen on the bubbles; [] = use all (today's behaviour)
 }) {
   const [selectedType,       setSelectedType]       = useState('script');
@@ -666,10 +667,6 @@ export default function InfoPanel({
   }
 
   // ── CREATE PANEL ──────────────────────────────────────────────────────────
-  // ── Podcast Studio: use AppView to switch to Studio after script gen ──────
-  const { switchView, VIEW_STATES, setActivePodcastContext } =
-    (() => { try { return require('../../../contexts/AppViewContext').useAppView(); } catch { return {}; } })();
-
   if (isCreatePanelOpen) {
     const handleGenerate = async () => {
       try {
@@ -697,23 +694,25 @@ export default function InfoPanel({
                 }
               );
               const data = res.ok ? await res.json() : null;
-              if (setActivePodcastContext && switchView && VIEW_STATES) {
-                setActivePodcastContext({
-                  character:      null,
-                  characterKey:   null,
-                  chatHistory:    [],
-                  topic:          scenarioTitle || '',
-                  startTab:       'script',
-                  preloadedLines: data?.lines || [],
-                  scriptText:     scriptJob.condensed_script,
-                  jobId:          scriptJob.id,
+              if (onSendToStudio) {
+                onSendToStudio({
+                  lines:      data?.lines || [],
+                  topic:      scenarioTitle || '',
+                  scriptText: scriptJob.condensed_script,
+                  jobId:      scriptJob.id,
                 });
-                switchView(VIEW_STATES.PODCAST_STUDIO);
               }
             } catch (e) {
               console.error('❌ Podcast parse-script failed:', e);
-              // Fallback: open ScriptViewerModal so user isn't stranded
-              if (scriptJob.id) onViewJob({ ...scriptJob });
+              // Fallback: send with empty lines so Studio still opens
+              if (onSendToStudio) {
+                onSendToStudio({
+                  lines: [], topic: scenarioTitle || '',
+                  scriptText: scriptJob.condensed_script, jobId: scriptJob.id,
+                });
+              } else if (scriptJob.id) {
+                onViewJob({ ...scriptJob });
+              }
             }
           }
           return;

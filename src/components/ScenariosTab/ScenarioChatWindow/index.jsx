@@ -8,6 +8,7 @@ import usePremiumCharacters from '../../../hooks/usePremiumCharacters';
 import useScenarioChat from '../../../hooks/useScenarioChat';
 import useContentGeneration from '../../../hooks/useContentGeneration';
 import { useUser } from '../../../contexts/UserContext';
+import { useAppView } from '../../../contexts/AppViewContext';
 import SubscriptionService from '../../../services/SubscriptionService';
 import DebateModeToggle from '../DebateModeToggle';
 import { ArrowLeft, ChevronRight, ChevronDown } from 'lucide-react';
@@ -60,6 +61,7 @@ export default function ScenarioChatWindow({
   const { keyboardHeight, isKeyboardVisible } = useKeyboardHeight();
 
   const { user } = useUser();
+  const { switchView, VIEW_STATES, setActivePodcastContext } = useAppView();
   const { userCharacters = [] } = usePremiumCharacters();
 
   // Get scenario chat hook with usage tracking
@@ -627,6 +629,19 @@ export default function ScenarioChatWindow({
           onDeleteJob={contentGen.deleteJob}
           onCancelJob={contentGen.cancelContent}
           onGeneratePoster={contentGen.generatePoster}
+          onSendToStudio={({ lines, topic, scriptText, jobId }) => {
+            setActivePodcastContext({
+              character:      null,
+              characterKey:   null,
+              chatHistory:    [],
+              topic:          topic || scenario?.title || '',
+              startTab:       'script',
+              preloadedLines: lines || [],
+              scriptText:     scriptText || '',
+              jobId:          jobId || null,
+            });
+            switchView(VIEW_STATES.PODCAST_STUDIO);
+          }}
         />
       </div>
 
