@@ -217,30 +217,9 @@ export default function PodcastStudioPage({ context, onClose }) {
 
   useEffect(() => { loadSessions(); }, [loadSessions]);
 
-  // ── Saved avatar auto-apply ──────────────────────────────────────────────
-  // If user has a saved avatar, apply it immediately — skip photo upload.
-  useEffect(() => {
-    if (!avatars?.length) return;
-    if (avatarBuilt) return;  // already built this session
-    const saved = avatars[0]; // most recent avatar
-    setAvatarRefUrl(saved.avatarRefUrl);
-    setAvatarBuilt(true);
-    setSpeakers(prev => {
-      if (prev.find(s => s.speakerId === 'user')) return prev;
-      return [{
-        speakerId:    'user',
-        displayName:  'You',
-        avatarRefUrl: saved.avatarRefUrl,
-        voiceId:      '21m00Tcm4TlvDq8ikWAM',
-        voiceMode:    'tts',
-        gender:       'female',
-        color:        SPEAKER_COLORS[0],
-        isCharacter:  false,
-        role:         'host',
-      }, ...prev];
-    });
-    console.log('👤 Saved avatar auto-applied:', saved.avatarId);
-  }, [avatars, avatarBuilt]);
+  // ── Saved avatar — available but NOT auto-applied ───────────────────────
+  // User sees saved avatars as a quick option but must confirm env + click Build.
+  // Auto-applying locked them into studio_tech regardless of env choice.
 
   // ── Init from context ─────────────────────────────────────────────────────
   useEffect(() => {
@@ -385,6 +364,15 @@ export default function PodcastStudioPage({ context, onClose }) {
           {activeTab === 'avatar' && (
             <div className={styles.avatarPage}>
 
+              {/* Hidden file input — always mounted so ref is never null */}
+              <input
+                ref={fileInputRef}
+                type="file"
+                accept="image/jpeg,image/jpg,image/png,image/webp"
+                style={{ display: 'none' }}
+                onChange={e => { processFile(e.target.files[0]); e.target.value = ''; }}
+              />
+
               {/* Build stage fullscreen overlay */}
               {buildStage && buildStage !== 'done' && (
                 <div className={styles.buildOverlay}>
@@ -430,15 +418,32 @@ export default function PodcastStudioPage({ context, onClose }) {
                     </div>
                   ) : (
                     <>
-                      {/* Saved avatar quick-use card */}
-                      {avatars?.length > 0 && !photoFile && (
+                      {/* Saved avatar quick-use — user picks env first, then clicks Build */}
+                      {avatars?.length > 0 && !photoFile && !avatarBuilt && (
                         <div className={styles.savedAvatarBanner}>
                           <img src={avatars[0].avatarRefUrl} alt="Saved avatar" className={styles.savedAvatarThumb} />
                           <div className={styles.savedAvatarInfo}>
-                            <div className={styles.savedAvatarLabel}>Saved avatar found</div>
-                            <div className={styles.savedAvatarSub}>Auto-applied — or upload a new photo below</div>
+                            <div className={styles.savedAvatarLabel}>You have a saved avatar</div>
+                            <div className={styles.savedAvatarSub}>Pick a background → click Build to use it</div>
                           </div>
-                          <div className={styles.savedAvatarTick}><Ic.Check /></div>
+                          <button
+                            className={styles.useSavedBtn}
+                            onClick={() => {
+                              // Use saved photo URL to re-bake into selected env
+                              const saved = avatars[0];
+                              if (saved.photoUrl) {
+                                fetch(saved.photoUrl)
+                                  .then(r => r.blob())
+                                  .then(blob => {
+                                    const file = new File([blob], 'saved_photo.jpg', { type: 'image/jpeg' });
+                                    processFile(file);
+                                  })
+                                  .catch(() => console.warn('Could not load saved photo'));
+                              }
+                            }}
+                          >
+                            Use saved
+                          </button>
                         </div>
                       )}
                       <div
@@ -467,8 +472,7 @@ export default function PodcastStudioPage({ context, onClose }) {
                           </>
                         )}
                       </div>
-                      <input ref={fileInputRef} type="file" accept="image/jpeg,image/jpg,image/png,image/webp"
-                        style={{ display: 'none' }} onChange={e => processFile(e.target.files[0])} />
+                      {/* file input moved to top of avatarPage — always mounted */}
                       {buildError && <div className={styles.errorBox}>{buildError}</div>}
                       {photoFile && (
                         <button className={styles.buildBtn} onClick={handleBuildAvatar} disabled={!!buildStage}>
@@ -723,14 +727,16 @@ export default function PodcastStudioPage({ context, onClose }) {
                 {environments.map(env => (
                   <div
                     key={env.envId}
-                    className={`${styles.envCard} ${selectedEnvId === env.envId ? styles.envCardSelected : ''} ${activeTab === 'generate' ? styles.envCardReadOnly : ''}`}
+                    className={`${styles.envCardWrap} ${selectedEnvId === env.envId ? styles.envCardWrapSelected : ''}`}
                     onClick={() => activeTab !== 'generate' && setSelectedEnvId(env.envId)}
-                    title={env.name}
                   >
-                    {env.previewUrl
-                      ? <img src={env.previewUrl} alt={env.name} className={styles.envImg} />
-                      : <div className={styles.envPlaceholder} />
-                    }
+                    <div className={`${styles.envCard} ${selectedEnvId === env.envId ? styles.envCardSelected : ''} ${activeTab === 'generate' ? styles.envCardReadOnly : ''}`}>
+                      {env.previewUrl
+                        ? <img src={env.previewUrl} alt={env.name} className={styles.envImg} />
+                        : <div className={styles.envPlaceholder} />
+                      }
+                    </div>
+                    <span className={styles.envName}>{env.name}</span>
                   </div>
                 ))}
               </div>
