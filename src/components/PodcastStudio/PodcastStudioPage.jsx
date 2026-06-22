@@ -611,12 +611,12 @@ export default function PodcastStudioPage({ context, onClose }) {
                   </div>
                 )}
                 {lines.map((line, i) => {
-                  // Match by speakerId first, then by role as fallback
-                  const spk = speakers.find(s => s.speakerId === line.speakerId)
-                    || (line.speakerId === 'user'
-                        ? speakers.find(s => !s.isCharacter)
-                        : speakers.find(s => s.isCharacter))
-                    || speakers[0];
+                  // Read display info directly from line — no speakers[] lookup.
+                  // speakers[] is only used at session submit for avatar/voice.
+                  const isHost    = line.speakerId === 'user';
+                  const lineColor = isHost ? '#6366F1' : '#10B981';
+                  const lineName  = line.displayName || (isHost ? 'You' : 'Guest');
+                  const lineRole  = isHost ? 'Host' : 'Guest';
                   return (
                     <div
                     key={line.id}
@@ -630,14 +630,10 @@ export default function PodcastStudioPage({ context, onClose }) {
                       <div className={styles.dragHandle} title="Drag to reorder">
                       <Ic.Drag />
                     </div>
-                    <div className={styles.lineDot} style={{ background: spk?.color || (line.speakerId === 'user' ? '#6366F1' : '#10B981') }} />
+                    <div className={styles.lineDot} style={{ background: lineColor }} />
                       <div className={styles.lineBody}>
-                        <div className={styles.lineTag} style={{ color: spk?.color || (line.speakerId === 'user' ? '#6366F1' : '#10B981') }}>
-                          {spk?.displayName || line.displayName || 'Speaker'} · {
-                            spk
-                              ? (spk.role === 'host' ? 'Host' : 'Guest')
-                              : (line.speakerId === 'user' ? 'Host' : 'Guest')
-                          }
+                        <div className={styles.lineTag} style={{ color: lineColor }}>
+                          {lineName} · {lineRole}
                         </div>
                         <textarea
                           className={styles.lineTextarea}
