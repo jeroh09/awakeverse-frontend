@@ -1,5 +1,8 @@
 // src/components/ScenariosTab/ScenarioChatWindow/InfoPanel/index.jsx
 // Complete rewrite — no Lucide, no emoji. SVG icons
+// ── Podcast Studio integration ────────────────────────────────────────────────
+// When story_style === 'podcast', generate script then immediately push to Studio.
+// No ScriptViewerModal, no Render Video — clean handoff.
 // Structure: header nav strip · two-zone create panel · chip-style jobs · stage progress.
 
 import React, { useState, useEffect } from 'react';
@@ -148,6 +151,16 @@ const ComedyIcon = () => (
   </svg>
 );
 
+const PodcastIcon = () => (
+  <svg viewBox="0 0 12 12" fill="none" stroke="currentColor" strokeWidth="1.4"
+    strokeLinecap="round" width="10" height="10">
+    <rect x="4.5" y="1" width="3" height="5.5" rx="1.5"/>
+    <path d="M2.5 5a3.5 3.5 0 0 0 7 0"/>
+    <line x1="6" y1="8.5" x2="6" y2="11"/>
+    <line x1="4" y1="11" x2="8" y2="11"/>
+  </svg>
+);
+
 const RealIcon = () => (
   <svg viewBox="0 0 12 12" fill="none" stroke="currentColor" strokeWidth="1.4"
     strokeLinecap="round" width="10" height="10">
@@ -266,6 +279,7 @@ const STORY_STYLES = [
   { id: 'romance', label: 'Romance', Icon: RomanceIcon },
   { id: 'mystery', label: 'Mystery', Icon: MysteryIcon },
   { id: 'comedy',  label: 'Comedy',  Icon: ComedyIcon  },
+  { id: 'podcast', label: 'Podcast', Icon: PodcastIcon },
 ];
 
 // ── Helpers ───────────────────────────────────────────────────────────────────
@@ -652,9 +666,59 @@ export default function InfoPanel({
   }
 
   // ── CREATE PANEL ──────────────────────────────────────────────────────────
+  // ── Podcast Studio: use AppView to switch to Studio after script gen ──────
+  const { switchView, VIEW_STATES, setActivePodcastContext } =
+    (() => { try { return require('../../../contexts/AppViewContext').useAppView(); } catch { return {}; } })();
+
   if (isCreatePanelOpen) {
     const handleGenerate = async () => {
       try {
+        // ── PODCAST: generate script → immediately push to Studio ────────────
+        // No ScriptViewerModal, no Render Video. Clean handoff.
+        if (selectedStoryStyle === 'podcast') {
+          const scriptJob = await onCreateContent({
+            contentType:     'script',
+            durationSeconds: selectedDuration,
+            messageIds:      selectedMessageIds,
+            scriptFormat:    'screenplay',
+            storyStyle:      'podcast',
+          });
+          if (scriptJob && scriptJob.condensed_script) {
+            // Parse script into podcast lines
+            try {
+              const csrf = document.cookie.match(/(?:^|;\s*)av_csrf=([^;]+)/)?.[1] || '';
+              const res = await fetch(
+                `${process.env.REACT_APP_API_URL || 'https://api.awakeverse.com'}/api/podcast/parse-script`,
+                {
+                  method:      'POST',
+                  headers:     { 'Content-Type': 'application/json', 'X-CSRF-Token': csrf },
+                  credentials: 'include',
+                  body:        JSON.stringify({ script_text: scriptJob.condensed_script }),
+                }
+              );
+              const data = res.ok ? await res.json() : null;
+              if (setActivePodcastContext && switchView && VIEW_STATES) {
+                setActivePodcastContext({
+                  character:      null,
+                  characterKey:   null,
+                  chatHistory:    [],
+                  topic:          scenarioTitle || '',
+                  startTab:       'script',
+                  preloadedLines: data?.lines || [],
+                  scriptText:     scriptJob.condensed_script,
+                  jobId:          scriptJob.id,
+                });
+                switchView(VIEW_STATES.PODCAST_STUDIO);
+              }
+            } catch (e) {
+              console.error('❌ Podcast parse-script failed:', e);
+              // Fallback: open ScriptViewerModal so user isn't stranded
+              if (scriptJob.id) onViewJob({ ...scriptJob });
+            }
+          }
+          return;
+        }
+
         // Video is a two-step: generate the screenplay first, open it for review/edit,
         // then the viewer's "Render Video" button is the actual (paid) fal trigger.
         if (selectedType === 'video') {

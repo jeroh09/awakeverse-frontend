@@ -151,6 +151,7 @@ export default function PodcastStudioPage({ context, onClose }) {
     state,
     environments,
     envsLoading,
+    avatars,
     uploadPhoto,
     buildAvatar,
     getCharacterRef,
@@ -216,6 +217,31 @@ export default function PodcastStudioPage({ context, onClose }) {
 
   useEffect(() => { loadSessions(); }, [loadSessions]);
 
+  // ── Saved avatar auto-apply ──────────────────────────────────────────────
+  // If user has a saved avatar, apply it immediately — skip photo upload.
+  useEffect(() => {
+    if (!avatars?.length) return;
+    if (avatarBuilt) return;  // already built this session
+    const saved = avatars[0]; // most recent avatar
+    setAvatarRefUrl(saved.avatarRefUrl);
+    setAvatarBuilt(true);
+    setSpeakers(prev => {
+      if (prev.find(s => s.speakerId === 'user')) return prev;
+      return [{
+        speakerId:    'user',
+        displayName:  'You',
+        avatarRefUrl: saved.avatarRefUrl,
+        voiceId:      '21m00Tcm4TlvDq8ikWAM',
+        voiceMode:    'tts',
+        gender:       'female',
+        color:        SPEAKER_COLORS[0],
+        isCharacter:  false,
+        role:         'host',
+      }, ...prev];
+    });
+    console.log('👤 Saved avatar auto-applied:', saved.avatarId);
+  }, [avatars, avatarBuilt]);
+
   // ── Init from context ─────────────────────────────────────────────────────
   useEffect(() => {
     if (!context) return;
@@ -240,6 +266,10 @@ export default function PodcastStudioPage({ context, onClose }) {
     }
     if (context.preloadedLines?.length) {
       dispatchLines({ type: 'SET', lines: context.preloadedLines.map((l, i) => ({ ...l, id: Date.now() + i, audioUrl: null })) });
+    }
+    // startTab — open Studio at a specific tab (e.g. 'script' from ScriptViewerModal)
+    if (context.startTab) {
+      setActiveTab(context.startTab);
     }
   }, [context, getCharacterRef]);
 
@@ -400,6 +430,17 @@ export default function PodcastStudioPage({ context, onClose }) {
                     </div>
                   ) : (
                     <>
+                      {/* Saved avatar quick-use card */}
+                      {avatars?.length > 0 && !photoFile && (
+                        <div className={styles.savedAvatarBanner}>
+                          <img src={avatars[0].avatarRefUrl} alt="Saved avatar" className={styles.savedAvatarThumb} />
+                          <div className={styles.savedAvatarInfo}>
+                            <div className={styles.savedAvatarLabel}>Saved avatar found</div>
+                            <div className={styles.savedAvatarSub}>Auto-applied — or upload a new photo below</div>
+                          </div>
+                          <div className={styles.savedAvatarTick}><Ic.Check /></div>
+                        </div>
+                      )}
                       <div
                         className={`${styles.dropZone} ${dragOver ? styles.dropZoneDrag : ''}`}
                         onDragOver={e => { e.preventDefault(); setDragOver(true); }}
@@ -674,7 +715,7 @@ export default function PodcastStudioPage({ context, onClose }) {
         {/* ── RIGHT: environment picker (always visible) ── */}
         <div className={styles.envPanel}>
           <div className={styles.glassCard} style={{ height: '100%' }}>
-            <div className={styles.cardLabel}>Environment</div>
+            <div className={styles.cardLabel}>Studio Backgrounds</div>
             {envsLoading ? (
               <div className={styles.loadingHint}>Loading…</div>
             ) : (
@@ -690,7 +731,6 @@ export default function PodcastStudioPage({ context, onClose }) {
                       ? <img src={env.previewUrl} alt={env.name} className={styles.envImg} />
                       : <div className={styles.envPlaceholder} />
                     }
-                    <span className={styles.envLabel}>{env.name}</span>
                   </div>
                 ))}
               </div>

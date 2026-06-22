@@ -1521,10 +1521,43 @@ export default function ChatWindow({
                 <span className="creation-pill-label">Ready to create?</span>
                 <button
                   className="creation-pill-btn"
-                  onClick={() => {
+                  onClick={async () => {
                     setPillDismissed(true);
-                    const event = new CustomEvent('awakeverse:generate-script');
-                    window.dispatchEvent(event);
+                    // Generate podcast script from chat history via Llama
+                    const lastUserMsg = [...chatHistory].reverse().find(m => m.user);
+                    const topic = lastUserMsg?.text?.slice(0, 120) || '';
+                    const charKey = typeof character === 'string' ? character : character?.key;
+                    try {
+                      const csrf = document.cookie.match(/(?:^|;\s*)av_csrf=([^;]+)/)?.[1] || '';
+                      const res = await fetch(`${API_BASE}/api/podcast/generate-script`, {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json', 'X-CSRF-Token': csrf },
+                        credentials: 'include',
+                        body: JSON.stringify({
+                          messages:      chatHistory.map(m => ({ user: !!m.user, text: m.text || '' })),
+                          character_key: charKey,
+                          display_name:  displayName || 'Guest',
+                          topic,
+                        }),
+                      });
+                      const data = await res.json();
+                      if (res.ok && data.lines?.length) {
+                        setActivePodcastContext({
+                          character,
+                          characterKey:   charKey,
+                          chatHistory,
+                          topic:          data.topic || topic,
+                          startTab:       'script',
+                          preloadedLines: data.lines,
+                          scriptText:     data.script_text,
+                        });
+                        switchView(VIEW_STATES.PODCAST_STUDIO);
+                      } else {
+                        console.error('Script generation failed:', data.error);
+                      }
+                    } catch (e) {
+                      console.error('Script generation error:', e);
+                    }
                   }}
                 >
                   📄 Script

@@ -16,6 +16,8 @@ const VIDEO_STYLES = [
 export default function ScriptViewerModal({ job, scenarioTitle, onClose, onJobUpdated, onRenderVideo, hasPoster = false }) {
   if (!job) return null;
 
+
+
   const script    = job.condensed_script || '';
   const charCount = job.char_count       || script.length;
   const duration  = job.duration_seconds || 180;
@@ -351,6 +353,8 @@ export default function ScriptViewerModal({ job, scenarioTitle, onClose, onJobUp
           >
             {isRendering ? 'Starting…' : '▶  Render Video'}
           </button>
+
+
         </div>
       )}
 
