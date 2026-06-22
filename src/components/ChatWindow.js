@@ -1529,7 +1529,7 @@ export default function ChatWindow({
                     const charKey = typeof character === 'string' ? character : character?.key;
                     try {
                       const csrf = document.cookie.match(/(?:^|;\s*)av_csrf=([^;]+)/)?.[1] || '';
-                      const res = await fetch(`${API_BASE}/api/podcast/generate-script`, {
+                      const res = await fetch(`${API}/api/podcast/generate-script`, {
                         method: 'POST',
                         headers: { 'Content-Type': 'application/json', 'X-CSRF-Token': csrf },
                         credentials: 'include',
