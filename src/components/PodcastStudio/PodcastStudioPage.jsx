@@ -192,6 +192,7 @@ export default function PodcastStudioPage({ context, onClose }) {
   // ── Script ────────────────────────────────────────────────────────────────
   const [lines, dispatchLines] = useReducer(linesReducer, []);
   const [topic, setTopic]      = useState('');
+  const linesInitialised = useRef(false);  // guard: only SET lines once on mount
 
   // ── My Podcasts ───────────────────────────────────────────────────────────
   const [sessions,        setSessions]        = useState([]);
@@ -255,7 +256,8 @@ export default function PodcastStudioPage({ context, onClose }) {
         }).catch(() => {});
       }
     }
-    if (context.preloadedLines?.length) {
+    if (context.preloadedLines?.length && !linesInitialised.current) {
+      linesInitialised.current = true;
       const charKey = context.characterKey || 'guest';
       dispatchLines({
         type: 'SET',
