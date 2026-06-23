@@ -362,6 +362,20 @@ export default function PodcastStudioPage({ context, onClose }) {
   // ── Submit session ────────────────────────────────────────────────────────
   const handleGenerate = useCallback(async () => {
     if (!speakers.length || !lines.length) return;
+
+    // Debug: log exactly what speakers and lines are being sent
+    console.log('🎙️ Generate — speakers:', JSON.stringify(speakers.map(s => ({ id: s.speakerId, name: s.displayName, hasAvatar: !!s.avatarRefUrl }))));
+    console.log('🎙️ Generate — lines:', JSON.stringify(lines.map(l => ({ id: l.speakerId, text: l.text?.slice(0,30) }))));
+
+    // Block if host lines exist but no user avatar built
+    const hasHostLines   = lines.some(l => l.speakerId === 'user');
+    const hasUserSpeaker = speakers.some(s => s.speakerId === 'user');
+    if (hasHostLines && !hasUserSpeaker) {
+      setBuildError('Please build your avatar first — go to the Avatar tab to upload your photo.');
+      setActiveTab('avatar');
+      return;
+    }
+
     setSubmitted(true);
     try {
       await createSession({
@@ -371,7 +385,10 @@ export default function PodcastStudioPage({ context, onClose }) {
           avatarRefUrl: s.avatarRefUrl, voiceMode: s.voiceMode,
           voiceId: s.voiceId, gender: s.gender,
         })),
-        lines: lines.map(l => ({ speakerId: l.speakerId, text: l.text || '', audioUrl: l.audioUrl || null })),
+        // Only send lines that have text AND whose speakerId matches a speaker
+        lines: lines
+          .filter(l => (l.text || '').trim() || l.audioUrl)
+          .map(l => ({ speakerId: l.speakerId, text: l.text || '', audioUrl: l.audioUrl || null })),
       });
       // Refresh My Podcasts after completion
       if (state.status === 'complete') loadSessions();

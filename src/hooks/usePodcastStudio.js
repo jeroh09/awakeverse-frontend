@@ -473,11 +473,14 @@ export default function usePodcastStudio() {
         gender:         s.gender      || 'neutral',
         accent:         s.accent      || '',
       })),
-      lines: session.lines.map(l => ({
-        speaker_id: l.speakerId,
-        text:       l.text      || '',
-        audio_url:  l.audioUrl  || null,
-      })),
+      // Filter out lines with no text (TTS lines must have content)
+      lines: session.lines
+        .filter(l => (l.text || '').trim() || l.audioUrl)
+        .map(l => ({
+          speaker_id: l.speakerId,
+          text:       l.text      || '',
+          audio_url:  l.audioUrl  || null,
+        })),
     };
 
     try {
