@@ -1882,3 +1882,126 @@
   transition: background 0.15s;
 }
 .podcastDeleteConfirm:hover { background: rgba(239, 68, 68, 1); }
+
+
+/* ══ VOICE PICKER PANEL ══════════════════════════════════════════════════════ */
+.voiceGrid {
+  display: flex;
+  flex-direction: column;
+  gap: 0.45rem;
+}
+
+.voiceCard {
+  border: 1px solid rgba(99, 102, 241, 0.18);
+  box-shadow: 0 0 0 1px rgba(99, 102, 241, 0.06);
+  border-radius: var(--radius-md);
+  padding: 0.6rem 0.7rem;
+  background: rgba(15, 23, 42, 0.8);
+  cursor: pointer;
+  transition: all 0.15s ease;
+  position: relative;
+}
+
+.voiceCard:hover {
+  border-color: rgba(99, 102, 241, 0.45);
+  box-shadow: 0 0 0 1px rgba(99, 102, 241, 0.18);
+  background: rgba(99, 102, 241, 0.06);
+}
+
+.voiceCardSelected {
+  border-color: var(--indigo) !important;
+  box-shadow: 0 0 0 1px rgba(99, 102, 241, 0.35) !important;
+  background: rgba(99, 102, 241, 0.1) !important;
+}
+
+.voiceCardTop {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.4rem;
+  margin-bottom: 0.18rem;
+}
+
+.voiceCardName {
+  font-family: 'Syne', sans-serif;
+  font-size: 0.8rem;
+  font-weight: 700;
+  color: #e0e7ff;
+}
+
+.voiceCardAccent {
+  font-size: 0.65rem;
+  font-weight: 600;
+  color: var(--indigo-light);
+  text-transform: capitalize;
+  font-family: 'Inter', sans-serif;
+  letter-spacing: 0.04em;
+}
+
+.voiceCardVibe {
+  font-size: 0.63rem;
+  color: var(--text-muted);
+  font-family: 'Inter', sans-serif;
+  margin-top: 0.1rem;
+}
+
+.voiceCardCheck {
+  position: absolute;
+  top: 6px;
+  right: 28px;
+  color: #34D399;
+  display: flex;
+  align-items: center;
+}
+
+.voicePreviewBtn {
+  width: 20px;
+  height: 20px;
+  border-radius: 50%;
+  background: rgba(99, 102, 241, 0.12);
+  border: 1px solid rgba(99, 102, 241, 0.25);
+  color: var(--indigo-light);
+  font-size: 0.55rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  flex-shrink: 0;
+  transition: all 0.15s;
+}
+
+.voicePreviewBtn:hover {
+  background: rgba(99, 102, 241, 0.25);
+  border-color: var(--indigo);
+}
+
+.voicePreviewBtnPlaying {
+  background: rgba(99, 102, 241, 0.3) !important;
+  border-color: var(--indigo) !important;
+  color: #fff !important;
+}
+
+/* ══ RECORDING STATES ════════════════════════════════════════════════════════ */
+.lineBtnRecording {
+  color: #EF4444 !important;
+  border-color: rgba(239, 68, 68, 0.4) !important;
+  background: rgba(239, 68, 68, 0.1) !important;
+  animation: recordPulse 1s ease-in-out infinite;
+}
+
+@keyframes recordPulse {
+  0%, 100% { box-shadow: 0 0 0 0 rgba(239, 68, 68, 0.4); }
+  50%       { box-shadow: 0 0 0 4px rgba(239, 68, 68, 0); }
+}
+
+.audioTagClear {
+  background: none;
+  border: none;
+  cursor: pointer;
+  color: inherit;
+  font-size: 0.65rem;
+  padding: 0 0.15rem;
+  opacity: 0.6;
+  transition: opacity 0.15s;
+}
+.audioTagClear:hover { opacity: 1; }

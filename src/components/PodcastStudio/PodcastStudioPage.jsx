@@ -163,6 +163,7 @@ export default function PodcastStudioPage({ context, onClose }) {
     environments,
     envsLoading,
     avatars,
+    voices,
     uploadPhoto,
     buildAvatar,
     getCharacterRef,
@@ -247,6 +248,25 @@ export default function PodcastStudioPage({ context, onClose }) {
   const [scriptLoading,    setScriptLoading]    = useState(false);
   const [latestScriptBlock, setLatestScriptBlock] = useState(null); // from ---SCRIPT--- marker
   const chatBubblesRef = useRef(null);
+
+  // ── Recording state ───────────────────────────────────────────────────────
+  // Per-line recording: one line records at a time.
+  // recordingLineId: which line is currently recording (null = idle)
+  // mediaRecorderRef: holds the active MediaRecorder instance
+  // recordingChunks: accumulates audio data chunks during recording
+  const [recordingLineId,  setRecordingLineId]  = useState(null);
+  const [recordingError,   setRecordingError]   = useState(null);
+  const [uploadingLineId,  setUploadingLineId]  = useState(null); // uploading indicator
+  const mediaRecorderRef = useRef(null);
+  const recordingChunks  = useRef([]);
+
+  // ── Voice picker state ────────────────────────────────────────────────────
+  // voiceGenderFilter: which gender tab is active in the picker ('female'|'male')
+  // playingPreviewId: which voice is currently playing a preview
+  // selectedVoices: { [speakerId]: voiceId } — persisted on speakers[] at selection
+  const [voiceGenderFilter, setVoiceGenderFilter] = useState('female');
+  const [playingPreviewId,  setPlayingPreviewId]  = useState(null);
+  const previewAudioRef = useRef(null);
 
   // ── Tab done state ────────────────────────────────────────────────────────
   const tabsDone = {
@@ -444,6 +464,112 @@ if (context.topic) setTopic(context.topic);
       console.error('❌ convert-to-lines:', e);
     }
   }, [latestScriptBlock, speakers, context, dispatchLines]);
+
+  // ── Per-line recording ────────────────────────────────────────────────────
+  // Toggle record on a line. Press once to start, press again to stop + upload.
+  // Uses MediaRecorder API. Audio goes through POST /api/podcast/audio/upload
+  // (noise reduction applied server-side). Returns audioUrl stored on the line.
+
+  const handleRecord = useCallback(async (lineId) => {
+    setRecordingError(null);
+
+    // If already recording this line — stop
+    if (recordingLineId === lineId) {
+      mediaRecorderRef.current?.stop();
+      return;
+    }
+
+    // If recording a different line — stop that first
+    if (recordingLineId && mediaRecorderRef.current) {
+      mediaRecorderRef.current.stop();
+    }
+
+    // Request mic access
+    let stream;
+    try {
+      stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+    } catch (e) {
+      setRecordingError('Microphone access denied. Please allow microphone in your browser settings.');
+      return;
+    }
+
+    recordingChunks.current = [];
+    const mimeType = MediaRecorder.isTypeSupported('audio/webm;codecs=opus')
+      ? 'audio/webm;codecs=opus'
+      : 'audio/webm';
+
+    const recorder = new MediaRecorder(stream, { mimeType });
+    mediaRecorderRef.current = recorder;
+    setRecordingLineId(lineId);
+
+    recorder.ondataavailable = e => {
+      if (e.data.size > 0) recordingChunks.current.push(e.data);
+    };
+
+    recorder.onstop = async () => {
+      // Stop all tracks
+      stream.getTracks().forEach(t => t.stop());
+      setRecordingLineId(null);
+
+      const blob = new Blob(recordingChunks.current, { type: mimeType });
+      if (blob.size < 100) {
+        setRecordingError('Recording too short — please try again.');
+        return;
+      }
+
+      // Upload (noise reduction happens server-side)
+      setUploadingLineId(lineId);
+      try {
+        const audioUrl = await uploadAudio(blob);
+        dispatchLines({ type: 'UPDATE', id: lineId, patch: { audioUrl } });
+        console.log(`🎤 Line ${lineId} recorded → ${audioUrl}`);
+      } catch (e) {
+        setRecordingError(`Upload failed: ${e.message}`);
+      } finally {
+        setUploadingLineId(null);
+      }
+    };
+
+    recorder.start();
+  }, [recordingLineId, uploadAudio, dispatchLines]);
+
+  // ── Voice preview playback ────────────────────────────────────────────────
+  // Play/stop ElevenLabs preview MP3 for a voice card.
+  // Only one preview plays at a time.
+
+  const handlePlayPreview = useCallback((voiceId, previewUrl) => {
+    // Stop current
+    if (previewAudioRef.current) {
+      previewAudioRef.current.pause();
+      previewAudioRef.current = null;
+    }
+    if (playingPreviewId === voiceId) {
+      setPlayingPreviewId(null);
+      return;
+    }
+    // Play new
+    const audio = new Audio(previewUrl);
+    previewAudioRef.current = audio;
+    setPlayingPreviewId(voiceId);
+    audio.play().catch(() => setPlayingPreviewId(null));
+    audio.onended = () => {
+      setPlayingPreviewId(null);
+      previewAudioRef.current = null;
+    };
+  }, [playingPreviewId]);
+
+  // ── Assign voice to speaker ───────────────────────────────────────────────
+  const handleSelectVoice = useCallback((speakerId, voiceId) => {
+    setSpeakers(prev => prev.map(s =>
+      s.speakerId === speakerId ? { ...s, voiceId } : s
+    ));
+    // Stop any playing preview
+    if (previewAudioRef.current) {
+      previewAudioRef.current.pause();
+      previewAudioRef.current = null;
+      setPlayingPreviewId(null);
+    }
+  }, []);
 
   // ── File handling ─────────────────────────────────────────────────────────
   const processFile = useCallback((file) => {
@@ -1165,10 +1291,29 @@ if (context.topic) setTopic(context.topic);
                               onChange={e => dispatchLines({ type: 'UPDATE', id: line.id, patch: { text: e.target.value } })}
                               rows={2}
                             />
-                            {line.audioUrl && <div className={styles.audioTag}>🎤 Recorded</div>}
+                            {line.audioUrl && (
+                              <div className={styles.audioTag}>
+                                🎤 Recorded
+                                <button
+                                  className={styles.audioTagClear}
+                                  onClick={() => dispatchLines({ type: 'UPDATE', id: line.id, patch: { audioUrl: null } })}
+                                  title="Remove recording — use TTS instead"
+                                >✕</button>
+                              </div>
+                            )}
                           </div>
                           <div className={styles.lineButtons}>
-                            <button className={styles.lineBtn} title="Record"><Ic.Record /></button>
+                            <button
+                              className={`${styles.lineBtn} ${recordingLineId === line.id ? styles.lineBtnRecording : ''}`}
+                              title={recordingLineId === line.id ? 'Stop recording' : uploadingLineId === line.id ? 'Uploading…' : 'Record line'}
+                              onClick={() => handleRecord(line.id)}
+                              disabled={uploadingLineId === line.id}
+                            >
+                              {uploadingLineId === line.id
+                                ? <span className={styles.spin}><Ic.Spin /></span>
+                                : <Ic.Record />
+                              }
+                            </button>
                             <button className={styles.lineBtn} title="Delete" onClick={() => dispatchLines({ type: 'REMOVE', id: line.id })}><Ic.Trash /></button>
                           </div>
                         </div>
@@ -1178,6 +1323,12 @@ if (context.topic) setTopic(context.topic);
                       onClick={() => dispatchLines({ type: 'ADD', speakerId: speakers[0]?.speakerId || 'user' })}>
                       <Ic.Add /> Add line
                     </button>
+                    {recordingError && (
+                      <div className={styles.errorBox} style={{ margin: '0.5rem 0 0' }}>
+                        {recordingError}
+                        <button style={{ marginLeft: '0.5rem', background: 'none', border: 'none', cursor: 'pointer', color: 'inherit' }} onClick={() => setRecordingError(null)}>✕</button>
+                      </div>
+                    )}
                   </div>
                 </>
               )}
@@ -1371,37 +1522,125 @@ if (context.topic) setTopic(context.topic);
 
         </div>
 
-        {/* ── RIGHT: environment picker (always visible) ── */}
+        {/* ── RIGHT PANEL — contextual by tab ── */}
         <div className={styles.envPanel}>
-          <div className={styles.glassCard} style={{ height: '100%' }}>
-            <div className={styles.cardLabel}>Studio Backgrounds</div>
-            {envsLoading ? (
-              <div className={styles.loadingHint}>Loading…</div>
-            ) : (
-              <div className={styles.envGrid}>
-                {environments.map(env => (
-                  <div
-                    key={env.envId}
-                    className={`${styles.envCardWrap} ${selectedEnvId === env.envId ? styles.envCardWrapSelected : ''}`}
-                    onClick={() => activeTab !== 'generate' && setSelectedEnvId(env.envId)}
+
+          {/* SCRIPT TAB → Voice picker */}
+          {activeTab === 'script' && (
+            <div className={styles.glassCard} style={{ height: '100%', display: 'flex', flexDirection: 'column', gap: '0.65rem' }}>
+              <div className={styles.cardLabel}>Voice</div>
+
+              {/* Gender filter toggle */}
+              <div className={styles.scriptModeToggle} style={{ alignSelf: 'stretch' }}>
+                {['female', 'male'].map(g => (
+                  <button
+                    key={g}
+                    className={`${styles.scriptModeBtn} ${voiceGenderFilter === g ? styles.scriptModeBtnActive : ''}`}
+                    style={{ flex: 1, justifyContent: 'center' }}
+                    onClick={() => setVoiceGenderFilter(g)}
                   >
-                    <div className={`${styles.envCard} ${selectedEnvId === env.envId ? styles.envCardSelected : ''} ${activeTab === 'generate' ? styles.envCardReadOnly : ''}`}>
-                      {env.previewUrl
-                        ? <img src={env.previewUrl} alt={env.name} className={styles.envImg} />
-                        : <div className={styles.envPlaceholder} />
-                      }
-                    </div>
-                    <span className={styles.envName}>{env.name}</span>
-                  </div>
+                    {g === 'female' ? '♀ Female' : '♂ Male'}
+                  </button>
                 ))}
               </div>
-            )}
-            {selectedEnv && (
-              <div className={styles.envSelected}>
-                Selected: <strong>{selectedEnv.name}</strong>
+
+              {/* Per-speaker sections */}
+              <div style={{ flex: 1, overflowY: 'auto', display: 'flex', flexDirection: 'column', gap: '1rem', minHeight: 0 }}>
+                {(speakers.length === 0
+                  ? [{ speakerId: 'user', displayName: 'You', role: 'host' }]
+                  : speakers
+                ).map(spk => {
+                  const filteredVoices = voices.filter(v => v.gender === voiceGenderFilter);
+                  const selectedVoiceId = spk.voiceId;
+                  return (
+                    <div key={spk.speakerId}>
+                      <div style={{
+                        fontSize: '0.65rem', fontWeight: 700, letterSpacing: '0.1em',
+                        textTransform: 'uppercase', color: '#6366f1',
+                        fontFamily: 'Inter,sans-serif', marginBottom: '0.35rem',
+                      }}>
+                        {spk.displayName} · {spk.role === 'host' ? 'Host' : 'Guest'}
+                      </div>
+                      {!selectedVoiceId && (
+                        <div style={{
+                          fontSize: '0.68rem', color: '#F59E0B', fontFamily: 'Inter,sans-serif',
+                          marginBottom: '0.4rem', display: 'flex', alignItems: 'center', gap: '0.3rem',
+                        }}>
+                          ⚠ Pick a voice below
+                        </div>
+                      )}
+                      <div className={styles.voiceGrid}>
+                        {filteredVoices.length === 0 && (
+                          <div style={{ fontSize: '0.7rem', color: 'var(--text-muted)', fontFamily: 'Inter,sans-serif' }}>
+                            No voices loaded.
+                          </div>
+                        )}
+                        {filteredVoices.map(v => {
+                          const isSelected = selectedVoiceId === v.voiceId;
+                          const isPlaying  = playingPreviewId === v.voiceId;
+                          return (
+                            <div
+                              key={v.voiceId}
+                              className={`${styles.voiceCard} ${isSelected ? styles.voiceCardSelected : ''}`}
+                              onClick={() => handleSelectVoice(spk.speakerId, v.voiceId)}
+                            >
+                              <div className={styles.voiceCardTop}>
+                                <div className={styles.voiceCardName}>{v.displayName}</div>
+                                <button
+                                  className={`${styles.voicePreviewBtn} ${isPlaying ? styles.voicePreviewBtnPlaying : ''}`}
+                                  onClick={e => { e.stopPropagation(); handlePlayPreview(v.voiceId, v.previewUrl); }}
+                                  title={isPlaying ? 'Stop' : 'Preview'}
+                                >
+                                  {isPlaying ? '■' : '▶'}
+                                </button>
+                              </div>
+                              <div className={styles.voiceCardAccent}>{v.accent}</div>
+                              <div className={styles.voiceCardVibe}>{v.vibe}</div>
+                              {isSelected && <div className={styles.voiceCardCheck}><Ic.Check /></div>}
+                            </div>
+                          );
+                        })}
+                      </div>
+                    </div>
+                  );
+                })}
               </div>
-            )}
-          </div>
+            </div>
+          )}
+
+          {/* ALL OTHER TABS → Environment picker */}
+          {activeTab !== 'script' && activeTab !== 'podcasts' && activeTab !== 'guide' && (
+            <div className={styles.glassCard} style={{ height: '100%' }}>
+              <div className={styles.cardLabel}>Studio Backgrounds</div>
+              {envsLoading ? (
+                <div className={styles.loadingHint}>Loading…</div>
+              ) : (
+                <div className={styles.envGrid}>
+                  {environments.map(env => (
+                    <div
+                      key={env.envId}
+                      className={`${styles.envCardWrap} ${selectedEnvId === env.envId ? styles.envCardWrapSelected : ''}`}
+                      onClick={() => activeTab !== 'generate' && setSelectedEnvId(env.envId)}
+                    >
+                      <div className={`${styles.envCard} ${selectedEnvId === env.envId ? styles.envCardSelected : ''} ${activeTab === 'generate' ? styles.envCardReadOnly : ''}`}>
+                        {env.previewUrl
+                          ? <img src={env.previewUrl} alt={env.name} className={styles.envImg} />
+                          : <div className={styles.envPlaceholder} />
+                        }
+                      </div>
+                      <span className={styles.envName}>{env.name}</span>
+                    </div>
+                  ))}
+                </div>
+              )}
+              {selectedEnv && (
+                <div className={styles.envSelected}>
+                  Selected: <strong>{selectedEnv.name}</strong>
+                </div>
+              )}
+            </div>
+          )}
+
         </div>
 
       </div>

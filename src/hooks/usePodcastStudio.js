@@ -79,6 +79,7 @@ export default function usePodcastStudio() {
   const [environments, setEnvironments] = useState([]);   // list from GET /environments
   const [envsLoading,  setEnvsLoading]  = useState(false);
   const [avatars,      setAvatars]      = useState([]);   // user's saved avatars
+  const [voices,       setVoices]       = useState([]);   // curated voice list
 
   const pollingRef      = useRef(null);
   const startTimeRef    = useRef(null);
@@ -160,11 +161,53 @@ export default function usePodcastStudio() {
     }
   }, []);
 
+  // ── Load curated voices ───────────────────────────────────────────────────
+  //
+  // Fetches active voices from podcast_curated_voices table.
+  // Called once on mount. Returns normalised voice objects.
+  //
+  // Backend → Frontend naming:
+  //   voice_id     → voiceId
+  //   display_name → displayName
+  //   preview_url  → previewUrl
+  //   gender       → gender
+  //   accent       → accent
+  //   vibe         → vibe
+  //   slot         → slot
+
+  const loadVoices = useCallback(async () => {
+    try {
+      const res = await fetch(`${API_BASE}/api/podcast/voices`, {
+        credentials: 'include',
+      });
+      if (res.ok) {
+        const data = await res.json();
+        setVoices(
+          (data.voices || []).map(v => ({
+            voiceId:     v.voice_id,
+            displayName: v.display_name,
+            gender:      v.gender,
+            accent:      v.accent,
+            vibe:        v.vibe,
+            previewUrl:  v.preview_url,
+            slot:        v.slot,
+          }))
+        );
+        console.log(`🎤 Voices loaded: ${data.voices?.length}`);
+      } else {
+        console.warn('⚠️ Failed to load voices:', res.status);
+      }
+    } catch (e) {
+      console.warn('⚠️ loadVoices error:', e.message);
+    }
+  }, []);
+
   // Load on mount
   useEffect(() => {
     loadEnvironments();
     loadAvatars();
-  }, [loadEnvironments, loadAvatars]);
+    loadVoices();
+  }, [loadEnvironments, loadAvatars, loadVoices]);
 
   // ── Polling loop — mirrors useContentGeneration exactly ───────────────────
 
@@ -791,6 +834,7 @@ export default function usePodcastStudio() {
     environments,   // normalised env objects
     envsLoading,
     avatars,        // user's saved avatars
+    voices,         // curated voice list [{ voiceId, displayName, gender, accent, vibe, previewUrl, slot }]
 
     // Avatar + photo
     uploadPhoto,      // (File)   → photoUrl
@@ -809,6 +853,7 @@ export default function usePodcastStudio() {
     // Utilities
     loadEnvironments, // () → void — manual refresh
     loadAvatars,      // () → void — manual refresh
+    loadVoices,       // () → void — manual refresh
     resetStudio,      // () → void
   };
 }
