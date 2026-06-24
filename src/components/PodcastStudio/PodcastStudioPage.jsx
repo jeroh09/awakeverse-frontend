@@ -237,7 +237,7 @@ export default function PodcastStudioPage({ context, onClose }) {
   // ── Init from context ─────────────────────────────────────────────────────
   useEffect(() => {
     if (!context) return;
-    if (context.topic) setTopic(context.topic);
+if (context.topic) setTopic(context.topic);
     if (context.character) {
       const key = context.characterKey || context.character?.key;
       if (key) {
