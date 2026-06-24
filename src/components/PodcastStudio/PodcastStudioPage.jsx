@@ -714,10 +714,13 @@ if (context.topic) setTopic(context.topic);
                 )}
 
                 {/* Empty state */}
-                {speakers.length === 0 && !photoPreview && (
+                {speakers.filter(s => s.speakerId !== 'user').length === 0 && !photoPreview && (
                   <div className={styles.emptyHint}>
                     Upload your photo above to get started.
-                    {context?.character && ` ${context.character.name} will join as your guest.`}
+                    {context?.character
+                      ? ` ${context.character.display_name || context.character.name || 'Your guest'} will join as your guest.`
+                      : null
+                    }
                   </div>
                 )}
               </div>
