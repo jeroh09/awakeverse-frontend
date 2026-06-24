@@ -169,6 +169,9 @@ export default function PodcastStudioPage({ context, onClose }) {
     uploadAudio,
     createSession,
     resetStudio,
+    deleteAvatar,
+    deleteSession,
+    sendScriptMessage,
   } = usePodcastStudio();
 
   // ── Navigation ────────────────────────────────────────────────────────────
@@ -209,6 +212,17 @@ export default function PodcastStudioPage({ context, onClose }) {
   // ── My Podcasts ───────────────────────────────────────────────────────────
   const [sessions,        setSessions]        = useState([]);
   const [sessionsLoading, setSessionsLoading] = useState(false);
+
+  // ── Pagination — client-side, 10 per page ────────────────────────────────
+  // avatars[] and sessions[] are loaded in full (max 50); we slice for display.
+  const PAGE_SIZE = 10;
+  const [avatarPage,  setAvatarPage]  = useState(0); // 0-indexed
+  const [sessionPage, setSessionPage] = useState(0);
+
+  // ── Delete confirm state ──────────────────────────────────────────────────
+  // confirmDelete: { type: 'avatar'|'session', id: string } | null
+  // First click sets this. Second click (on "Sure?") executes delete.
+  const [confirmDelete, setConfirmDelete] = useState(null);
 
   // ── Generate ──────────────────────────────────────────────────────────────
   const [submitted, setSubmitted] = useState(false);
@@ -709,49 +723,100 @@ if (context.topic) setTopic(context.topic);
 
                 <div className={styles.avatarGrid}>
 
-                  {/* Saved avatars — one square card each */}
-                  {avatars?.map(av => {
-                    const isActive = av.avatarId === speakers.find(s => s.speakerId === 'user')?.savedAvatarId;
+                  {/* Saved avatars — paginated, 10 per page */}
+                  {(avatars || []).slice(avatarPage * PAGE_SIZE, (avatarPage + 1) * PAGE_SIZE).map(av => {
+                    const isActive   = av.avatarId === speakers.find(s => s.speakerId === 'user')?.savedAvatarId;
+                    const isConfirm  = confirmDelete?.type === 'avatar' && confirmDelete?.id === av.avatarId;
                     return (
                       <div
                         key={av.avatarId}
                         className={`${styles.avatarSquareCard} ${isActive ? styles.avatarSquareSelected : ''}`}
-                        onClick={async () => {
-                          const photoUrl = av.photoUrl;
-                          if (!photoUrl) return;
-                          const displayName = context?.user?.displayName || av.displayName || 'You';
-                          const result = await buildAvatar({ photoUrl, displayName, envId: selectedEnvId, position: 'right' })
-                            .catch(e => { setBuildError(e.message); return null; });
-                          if (!result) return;
-                          setAvatarBuilt(true);
-                          setAvatarRefUrl(result.avatarRefUrl);
-                          setSpeakers(prev => {
-                            const entry = { speakerId: 'user', displayName, avatarRefUrl: result.avatarRefUrl,
-                              voiceMode: 'tts', voiceId: '21m00Tcm4TlvDq8ikWAM', gender: 'female',
-                              color: SPEAKER_COLORS[0], isCharacter: false, role: 'host', savedAvatarId: av.avatarId };
-                            const already = prev.find(s => s.speakerId === 'user');
-                            return already ? prev.map(s => s.speakerId === 'user' ? entry : s) : [entry, ...prev];
-                          });
-                        }}
-                        title={`Use ${av.displayName}`}
+                        style={{ position: 'relative' }}
                       >
-                        {av.avatarRefUrl
-                          ? <img src={av.avatarRefUrl} alt={av.displayName} className={styles.avatarSquareImg} />
-                          : <div className={styles.avatarSquareImgFallback}>👤</div>
-                        }
+                        {/* Clickable image area */}
+                        <div style={{ flex: 1, overflow: 'hidden', cursor: 'pointer' }}
+                          onClick={async () => {
+                            if (confirmDelete) { setConfirmDelete(null); return; }
+                            const photoUrl = av.photoUrl;
+                            if (!photoUrl) return;
+                            const displayName = context?.user?.displayName || av.displayName || 'You';
+                            const result = await buildAvatar({ photoUrl, displayName, envId: selectedEnvId, position: 'right' })
+                              .catch(e => { setBuildError(e.message); return null; });
+                            if (!result) return;
+                            setAvatarBuilt(true);
+                            setAvatarRefUrl(result.avatarRefUrl);
+                            setSpeakers(prev => {
+                              const entry = { speakerId: 'user', displayName, avatarRefUrl: result.avatarRefUrl,
+                                voiceMode: 'tts', voiceId: '21m00Tcm4TlvDq8ikWAM', gender: 'female',
+                                color: SPEAKER_COLORS[0], isCharacter: false, role: 'host', savedAvatarId: av.avatarId };
+                              const already = prev.find(s => s.speakerId === 'user');
+                              return already ? prev.map(s => s.speakerId === 'user' ? entry : s) : [entry, ...prev];
+                            });
+                          }}
+                        >
+                          {av.avatarRefUrl
+                            ? <img src={av.avatarRefUrl} alt={av.displayName} className={styles.avatarSquareImg} />
+                            : <div className={styles.avatarSquareImgFallback}>👤</div>
+                          }
+                        </div>
+
                         <div className={styles.avatarSquareName}>{av.displayName}</div>
+
                         {isActive && (
                           <span className={`${styles.avatarSquareBadge} ${styles.avatarSquareBadgeHost}`}>Active</span>
+                        )}
+
+                        {/* Delete control — bottom-right corner */}
+                        {isConfirm ? (
+                          <button
+                            style={{
+                              position: 'absolute', bottom: 28, right: 4,
+                              fontSize: '0.58rem', fontWeight: 700, padding: '0.15rem 0.4rem',
+                              background: 'rgba(239,68,68,0.85)', color: '#fff',
+                              border: '1px solid rgba(239,68,68,0.5)', borderRadius: 6,
+                              cursor: 'pointer', fontFamily: 'Inter,sans-serif',
+                            }}
+                            onClick={async e => {
+                              e.stopPropagation();
+                              try {
+                                await deleteAvatar(av.avatarId);
+                                setConfirmDelete(null);
+                                // Reset page if we deleted the last item on this page
+                                const remaining = (avatars?.length || 1) - 1;
+                                if (avatarPage > 0 && avatarPage * PAGE_SIZE >= remaining) {
+                                  setAvatarPage(p => p - 1);
+                                }
+                              } catch (err) { setBuildError(err.message); }
+                            }}
+                          >
+                            Sure?
+                          </button>
+                        ) : (
+                          <button
+                            style={{
+                              position: 'absolute', bottom: 28, right: 4,
+                              fontSize: '0.58rem', fontWeight: 700, padding: '0.15rem 0.4rem',
+                              background: 'rgba(10,15,30,0.7)', color: '#64748b',
+                              border: '1px solid rgba(148,163,184,0.15)', borderRadius: 6,
+                              cursor: 'pointer', fontFamily: 'Inter,sans-serif',
+                              opacity: 0,
+                            }}
+                            className={styles.avatarDeleteBtn}
+                            onClick={e => { e.stopPropagation(); setConfirmDelete({ type: 'avatar', id: av.avatarId }); }}
+                            title="Delete avatar"
+                          >
+                            ✕
+                          </button>
                         )}
                       </div>
                     );
                   })}
 
-                  {/* Upload new — always the last card */}
+                  {/* Upload new — always last */}
                   {!avatarBuilt && (
                     <div
                       className={styles.avatarSquareAdd}
-                      onClick={() => fileInputRef.current?.click()}
+                      onClick={() => { setConfirmDelete(null); fileInputRef.current?.click(); }}
                       title="Upload a new photo"
                     >
                       {photoPreview ? (
@@ -766,7 +831,7 @@ if (context.topic) setTopic(context.topic);
                     </div>
                   )}
 
-                  {/* Built — show as active card */}
+                  {/* Built — show as active selected card */}
                   {avatarBuilt && avatarRefUrl && (
                     <div className={`${styles.avatarSquareCard} ${styles.avatarSquareSelected}`}>
                       <img src={avatarRefUrl} alt="Your avatar" className={styles.avatarSquareImg} />
@@ -775,6 +840,31 @@ if (context.topic) setTopic(context.topic);
                     </div>
                   )}
                 </div>
+
+                {/* Pagination controls */}
+                {(avatars?.length || 0) > PAGE_SIZE && (
+                  <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', paddingTop: '0.5rem', borderTop: '1px solid rgba(148,163,184,0.08)' }}>
+                    <button
+                      className={styles.actionChip}
+                      disabled={avatarPage === 0}
+                      onClick={() => { setAvatarPage(p => p - 1); setConfirmDelete(null); }}
+                      style={{ opacity: avatarPage === 0 ? 0.35 : 1 }}
+                    >
+                      ← Prev
+                    </button>
+                    <span style={{ fontSize: '0.65rem', color: 'var(--text-muted)', fontFamily: 'Inter,sans-serif' }}>
+                      {avatarPage * PAGE_SIZE + 1}–{Math.min((avatarPage + 1) * PAGE_SIZE, avatars.length)} of {avatars.length}
+                    </span>
+                    <button
+                      className={styles.actionChip}
+                      disabled={(avatarPage + 1) * PAGE_SIZE >= (avatars?.length || 0)}
+                      onClick={() => { setAvatarPage(p => p + 1); setConfirmDelete(null); }}
+                      style={{ opacity: (avatarPage + 1) * PAGE_SIZE >= (avatars?.length || 0) ? 0.35 : 1 }}
+                    >
+                      Next →
+                    </button>
+                  </div>
+                )}
 
                 {buildError && <div className={styles.errorBox}>{buildError}</div>}
                 {photoFile && !avatarBuilt && (
@@ -922,16 +1012,24 @@ if (context.topic) setTopic(context.topic);
                 <div className={styles.scriptChatArea}>
                   {/* Bubbles scroll */}
                   <div className={styles.chatBubbles} ref={chatBubblesRef}>
-                    {scriptMessages.map((msg, i) => (
-                      <div key={i} className={`${styles.bubbleRow} ${msg.role === 'user' ? styles.bubbleRowUser : ''}`}>
-                        {msg.role === 'assistant' && (
-                          <div className={styles.bubbleAvatar}>AI</div>
-                        )}
-                        <div className={msg.role === 'assistant' ? styles.bubbleAi : styles.bubbleUser}>
-                          {msg.content}
+                    {scriptMessages.map((msg, i) => {
+                      // Strip ---SCRIPT--- ... ---END--- from visible bubble text.
+                      // The script block is already extracted into latestScriptBlock —
+                      // showing the raw markers in the bubble confuses the user.
+                      const visibleText = msg.role === 'assistant'
+                        ? msg.content.replace(/---SCRIPT---[\s\S]*?---END---/g, '').trim()
+                        : msg.content;
+                      return (
+                        <div key={i} className={`${styles.bubbleRow} ${msg.role === 'user' ? styles.bubbleRowUser : ''}`}>
+                          {msg.role === 'assistant' && (
+                            <div className={styles.bubbleAvatar}>AI</div>
+                          )}
+                          <div className={msg.role === 'assistant' ? styles.bubbleAi : styles.bubbleUser}>
+                            {visibleText}
+                          </div>
                         </div>
-                      </div>
-                    ))}
+                      );
+                    })}
                     {scriptLoading && (
                       <div className={styles.bubbleRow}>
                         <div className={styles.bubbleAvatar}>AI</div>

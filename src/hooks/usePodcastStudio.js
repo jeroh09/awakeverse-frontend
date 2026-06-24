@@ -663,6 +663,68 @@ export default function usePodcastStudio() {
     }
   }, [stopPolling, startPolling]);
 
+  // ── Delete avatar ─────────────────────────────────────────────────────────
+  //
+  // Frontend: avatarId (string UUID)
+  // Backend:  DELETE /api/podcast/avatar/<avatar_id>
+  // Returns:  void — caller refreshes avatars list
+  //
+  // Naming:
+  //   avatarId → avatar_id  (path param)
+
+  const deleteAvatar = useCallback(async (avatarId) => {
+    if (!avatarId) throw new Error('avatarId is required');
+
+    try {
+      const res = await fetch(`${API_BASE}/api/podcast/avatar/${avatarId}`, {
+        method:  'DELETE',
+        headers: { 'X-CSRF-Token': getCsrf() },
+        credentials: 'include',
+      });
+
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error || `Delete failed: ${res.status}`);
+
+      console.log(`🗑️ Avatar deleted: ${avatarId}`);
+      // Refresh avatars list so grid updates immediately
+      await loadAvatars();
+
+    } catch (e) {
+      console.error('❌ deleteAvatar failed:', e);
+      throw e;
+    }
+  }, [loadAvatars]);
+
+  // ── Delete session ─────────────────────────────────────────────────────────
+  //
+  // Frontend: sessionId (string UUID)
+  // Backend:  DELETE /api/podcast/session/<session_id>
+  // Returns:  void — caller removes from local sessions list
+  //
+  // Naming:
+  //   sessionId → session_id  (path param)
+
+  const deleteSession = useCallback(async (sessionId) => {
+    if (!sessionId) throw new Error('sessionId is required');
+
+    try {
+      const res = await fetch(`${API_BASE}/api/podcast/session/${sessionId}`, {
+        method:  'DELETE',
+        headers: { 'X-CSRF-Token': getCsrf() },
+        credentials: 'include',
+      });
+
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error || `Delete failed: ${res.status}`);
+
+      console.log(`🗑️ Session deleted: ${sessionId}`);
+
+    } catch (e) {
+      console.error('❌ deleteSession failed:', e);
+      throw e;
+    }
+  }, []);
+
   // ── Script chat assistant ─────────────────────────────────────────────────
   //
   // Stateless — caller sends full message history each turn.
@@ -731,16 +793,18 @@ export default function usePodcastStudio() {
     avatars,        // user's saved avatars
 
     // Avatar + photo
-    uploadPhoto,    // (File)   → photoUrl
-    buildAvatar,    // (params) → { avatarId, avatarRefUrl, envId, previewUrl }
-    getCharacterRef,// (key)    → { characterRefUrl, characterVoiceId, characterDisplayName }
+    uploadPhoto,      // (File)   → photoUrl
+    buildAvatar,      // (params) → { avatarId, avatarRefUrl, envId, previewUrl }
+    getCharacterRef,  // (key)    → { characterRefUrl, characterVoiceId, characterDisplayName }
+    deleteAvatar,     // (avatarId) → void (refreshes avatars list)
 
     // Audio (record mode)
-    uploadAudio,    // (Blob)   → audioUrl
+    uploadAudio,      // (Blob)   → audioUrl
 
     // Session (render job)
     createSession,    // (session) → sessionId (starts polling)
     sendScriptMessage,// ({ messages, speakerName, topic, guestName }) → { reply, scriptBlock }
+    deleteSession,    // (sessionId) → void
 
     // Utilities
     loadEnvironments, // () → void — manual refresh
