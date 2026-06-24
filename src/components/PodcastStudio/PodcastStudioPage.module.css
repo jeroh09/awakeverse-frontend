@@ -184,6 +184,17 @@
   flex-shrink: 0;
 }
 
+/* Avatar grid card — capped height so guest card below always stays visible.
+   The avatarGrid inside wraps naturally; the card itself doesn't grow unbounded. */
+.avatarGridCard {
+  flex-shrink: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0.6rem;
+  /* 2 rows of 160px cards + name label + gaps + padding ≈ 420px */
+  max-height: 420px;
+}
+
 /* Build overlay — fullscreen within the content area */
 .buildOverlay {
   position: absolute;

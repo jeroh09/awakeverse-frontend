@@ -844,7 +844,7 @@ if (context.topic) setTopic(context.topic);
               )}
 
               {/* ── Avatar grid — square cards, horizontal wrap ── */}
-              <div className={styles.glassCard} style={{ flex: 1, minHeight: 0 }}>
+              <div className={`${styles.glassCard} ${styles.avatarGridCard}`}>
                 <div className={styles.cardLabel}>Your avatar</div>
 
                 <div className={styles.avatarGrid}>
