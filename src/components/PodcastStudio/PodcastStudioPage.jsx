@@ -42,6 +42,7 @@ const TAB_LABELS  = {
   guide:    'Guide',
 };
 const SPEAKER_COLORS = ['#6366F1', '#10B981', '#F59E0B', '#EF4444'];
+const DEFAULT_GUEST_VOICE = 'pNInz6obpgDQGcFmaJgB'; // Adam — ElevenLabs neutral male
 const API_BASE = process.env.REACT_APP_API_URL || 'https://api.awakeverse.com';
 
 // ── Avatar build stages (mirrors ScanLegendModal stage pattern) ───────────────
@@ -374,7 +375,7 @@ if (context.topic) setTopic(context.topic);
         speakerId:    guestId,
         displayName:  guestName.trim(),
         avatarRefUrl: photoUrl,   // raw photo — worker generates fullbody + bakes
-        voiceId:      null,
+        voiceId:      DEFAULT_GUEST_VOICE,
         voiceMode:    'tts',
         gender:       'neutral',
         color:        SPEAKER_COLORS[1],
@@ -778,6 +779,21 @@ if (context.topic) setTopic(context.topic);
                   const lineColor = isHost ? '#6366F1' : '#10B981';
                   const lineName  = line.displayName || (isHost ? 'You' : 'Guest');
                   const lineRole  = isHost ? 'Host' : 'Guest';
+
+                  // Toggle speaker — cycles through all speakers in order
+                  const handleToggleSpeaker = () => {
+                    const allSpeakers = speakers.length > 0
+                      ? speakers
+                      : [{ speakerId: 'user', displayName: 'You', role: 'host' }];
+                    const currentIdx = allSpeakers.findIndex(s => s.speakerId === line.speakerId);
+                    const nextIdx    = (currentIdx + 1) % allSpeakers.length;
+                    const next       = allSpeakers[nextIdx];
+                    dispatchLines({ type: 'UPDATE', id: line.id, patch: {
+                      speakerId:   next.speakerId,
+                      displayName: next.displayName,
+                    }});
+                  };
+
                   return (
                     <div
                     key={line.id}
@@ -793,8 +809,13 @@ if (context.topic) setTopic(context.topic);
                     </div>
                     <div className={styles.lineDot} style={{ background: lineColor }} />
                       <div className={styles.lineBody}>
-                        <div className={styles.lineTag} style={{ color: lineColor }}>
-                          {lineName} · {lineRole}
+                        <div
+                          className={styles.lineTag}
+                          style={{ color: lineColor, cursor: speakers.length > 1 ? 'pointer' : 'default' }}
+                          onClick={speakers.length > 1 ? handleToggleSpeaker : undefined}
+                          title={speakers.length > 1 ? 'Click to change speaker' : ''}
+                        >
+                          {lineName} · {lineRole}{speakers.length > 1 ? ' ↕' : ''}
                         </div>
                         <textarea
                           className={styles.lineTextarea}
