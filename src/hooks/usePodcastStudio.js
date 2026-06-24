@@ -49,7 +49,7 @@ import { useState, useCallback, useEffect, useRef } from 'react';
 
 const API_BASE = process.env.REACT_APP_API_URL || 'https://api.awakeverse.com';
 
-const POLL_INTERVAL_MS = 5000;          // poll every 5s — matches useContentGeneration
+const POLL_INTERVAL_MS = 5000;           // poll every 5s — matches useContentGeneration
 const POLL_TIMEOUT_MS  = 45 * 60 * 1000; // 45min hard stop — matches useContentGeneration
 
 // Mirrors INITIAL_STATE in useContentGeneration exactly.
@@ -80,8 +80,11 @@ export default function usePodcastStudio() {
   const [envsLoading,  setEnvsLoading]  = useState(false);
   const [avatars,      setAvatars]      = useState([]);   // user's saved avatars
 
-  const pollingRef   = useRef(null);
-  const startTimeRef = useRef(null);
+  const pollingRef      = useRef(null);
+  const startTimeRef    = useRef(null);
+  // Ref to the active sessionId so visibility/pageshow handlers can read it
+  // without stale closure over startPolling's argument.
+  const activeSessionId = useRef(null);
 
   // ── Polling cleanup — mirrors useContentGeneration ────────────────────────
 
@@ -167,7 +170,8 @@ export default function usePodcastStudio() {
 
   const startPolling = useCallback((sessionId) => {
     stopPolling();
-    startTimeRef.current = Date.now();
+    startTimeRef.current    = Date.now();
+    activeSessionId.current = sessionId;
     console.log(`⏳ Polling podcast session ${sessionId}…`);
 
     pollingRef.current = setInterval(async () => {
@@ -175,6 +179,7 @@ export default function usePodcastStudio() {
       // Hard timeout guard
       if (Date.now() - startTimeRef.current > POLL_TIMEOUT_MS) {
         stopPolling();
+        activeSessionId.current = null;
         setState(prev => ({
           ...prev,
           status: 'failed',
@@ -216,6 +221,7 @@ export default function usePodcastStudio() {
 
         if (jobStatus === 'complete') {
           stopPolling();
+          activeSessionId.current = null;
           setState({
             status: 'complete',
             activeJob: {
@@ -229,6 +235,7 @@ export default function usePodcastStudio() {
 
         } else if (jobStatus === 'failed') {
           stopPolling();
+          activeSessionId.current = null;
           setState({
             status:    'failed',
             activeJob: null,
@@ -243,6 +250,143 @@ export default function usePodcastStudio() {
       }
     }, POLL_INTERVAL_MS);
   }, [stopPolling]);
+
+  // ── Tab visibility recovery ───────────────────────────────────────────────
+  //
+  // Problem: setInterval is throttled (or killed) when the laptop sleeps or
+  // the browser tab goes to background. The backend job finishes, but the
+  // frontend never receives 'complete' — it shows 'failed' on timeout, while
+  // the video is already in My Podcasts.
+  //
+  // Fix: on visibilitychange (tab comes back into focus) and on pageshow
+  // (iOS back-forward cache restore), if we have an active session that is
+  // still in 'rendering' state, immediately fire one poll tick and restart
+  // the interval cleanly.
+  //
+  // Recovery flow:
+  //   tab hidden / laptop sleeps → setInterval throttles / dies
+  //   user returns → visibilitychange fires → immediate poll → if complete,
+  //   setState('complete') and done; if still processing, restart interval.
+  //
+  // Naming:
+  //   activeSessionId (ref)  — sessionId being polled, null when idle
+  //   startTimeRef    (ref)  — wall-clock start, preserved across recovery
+  //                            so the 45min timeout still counts total elapsed
+
+  useEffect(() => {
+    const handleVisibilityChange = () => {
+      if (document.visibilityState !== 'visible') return;
+
+      const sid = activeSessionId.current;
+      if (!sid) return; // nothing being polled — nothing to recover
+
+      console.log(`👁️ Tab visible — recovering poll for session ${sid}`);
+
+      // Immediate one-off fetch so we don't wait 5s for the next tick
+      fetch(`${API_BASE}/api/podcast/session/${sid}`, { credentials: 'include' })
+        .then(r => r.ok ? r.json() : null)
+        .then(job => {
+          if (!job) return;
+
+          console.log(`🔄 Recovery poll: session=${sid} status=${job.status} progress=${Math.round((job.progress || 0) * 100)}%`);
+
+          if (job.status === 'complete') {
+            stopPolling();
+            activeSessionId.current = null;
+            setState({
+              status: 'complete',
+              activeJob: {
+                sessionId: sid,
+                finalUrl:     job.final_url,
+                totalSeconds: job.total_seconds,
+              },
+              error:    null,
+              progress: 1,
+            });
+
+          } else if (job.status === 'failed') {
+            stopPolling();
+            activeSessionId.current = null;
+            setState({
+              status:    'failed',
+              activeJob: null,
+              error:     job.error || 'Render failed — please try again.',
+              progress:  0,
+            });
+
+          } else {
+            // Still queued/processing — restart the interval (it may have died)
+            console.log(`⏳ Job still running — restarting poll interval for ${sid}`);
+            stopPolling();
+            // Preserve the original startTimeRef so the 45min timeout counts
+            // total elapsed time, not just since recovery.
+            pollingRef.current = setInterval(async () => {
+              if (Date.now() - startTimeRef.current > POLL_TIMEOUT_MS) {
+                stopPolling();
+                activeSessionId.current = null;
+                setState(prev => ({
+                  ...prev,
+                  status: 'failed',
+                  error:  'Render timed out. Please try again.',
+                }));
+                return;
+              }
+              try {
+                const res = await fetch(
+                  `${API_BASE}/api/podcast/session/${sid}`,
+                  { credentials: 'include' }
+                );
+                if (!res.ok) return;
+                const j = await res.json();
+                setState(prev => ({
+                  ...prev,
+                  progress: j.progress ?? prev.progress,
+                  activeJob: {
+                    ...prev.activeJob,
+                    sessionId: sid,
+                    finalUrl:     j.final_url     || null,
+                    totalSeconds: j.total_seconds || null,
+                  },
+                }));
+                if (j.status === 'complete') {
+                  stopPolling();
+                  activeSessionId.current = null;
+                  setState({
+                    status: 'complete',
+                    activeJob: { sessionId: sid, finalUrl: j.final_url, totalSeconds: j.total_seconds },
+                    error: null, progress: 1,
+                  });
+                } else if (j.status === 'failed') {
+                  stopPolling();
+                  activeSessionId.current = null;
+                  setState({ status: 'failed', activeJob: null, error: j.error || 'Render failed — please try again.', progress: 0 });
+                }
+              } catch (e) {
+                console.warn('⚠️ Polling error (will retry):', e.message);
+              }
+            }, POLL_INTERVAL_MS);
+          }
+        })
+        .catch(e => console.warn('⚠️ Recovery poll fetch failed:', e.message));
+    };
+
+    // iOS back-forward cache: page is restored from bfcache, not re-mounted.
+    // persisted=true means it came from bfcache — treat same as tab focus.
+    const handlePageShow = (e) => {
+      if (e.persisted) {
+        console.log('📱 iOS bfcache restore — triggering visibility recovery');
+        handleVisibilityChange();
+      }
+    };
+
+    document.addEventListener('visibilitychange', handleVisibilityChange);
+    window.addEventListener('pageshow', handlePageShow);
+
+    return () => {
+      document.removeEventListener('visibilitychange', handleVisibilityChange);
+      window.removeEventListener('pageshow', handlePageShow);
+    };
+  }, [stopPolling]); // stopPolling is stable (useCallback with no deps)
 
   // ── Upload photo — mirrors ScanLegendModal.handleScan pattern ────────────
   //
@@ -519,10 +663,60 @@ export default function usePodcastStudio() {
     }
   }, [stopPolling, startPolling]);
 
+  // ── Script chat assistant ─────────────────────────────────────────────────
+  //
+  // Stateless — caller sends full message history each turn.
+  //
+  // Frontend params:
+  //   messages[]   → messages     [{role:'user'|'assistant', content:'...'}]
+  //   speakerName  → speaker_name  (host display name)
+  //   topic        → topic         (optional context hint)
+  //   guestName    → guest_name    (optional, interview mode only)
+  //
+  // Backend response → normalised:
+  //   reply        → reply         (AI full message text)
+  //   script_block → scriptBlock   (Fountain text between ---SCRIPT--- / ---END---, or null)
+
+  const sendScriptMessage = useCallback(async ({ messages, speakerName, topic, guestName }) => {
+    if (!messages?.length) throw new Error('messages are required');
+
+    try {
+      const res = await fetch(`${API_BASE}/api/podcast/script-chat`, {
+        method:  'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'X-CSRF-Token': getCsrf(),
+        },
+        credentials: 'include',
+        body: JSON.stringify({
+          messages,
+          speaker_name: speakerName || 'You',
+          topic:        topic       || '',
+          ...(guestName ? { guest_name: guestName } : {}),
+        }),
+      });
+
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error || `Script chat failed: ${res.status}`);
+
+      console.log(`🤖 Script assistant replied — has_script=${!!data.script_block}`);
+
+      return {
+        reply:       data.reply,
+        scriptBlock: data.script_block || null,
+      };
+
+    } catch (e) {
+      console.error('❌ sendScriptMessage failed:', e);
+      throw e;
+    }
+  }, []);
+
   // ── Reset — mirrors useContentGeneration.resetContent ────────────────────
 
   const resetStudio = useCallback(() => {
     stopPolling();
+    activeSessionId.current = null;
     setState(INITIAL_STATE);
     console.log('🔄 Podcast studio reset');
   }, [stopPolling]);
@@ -545,7 +739,8 @@ export default function usePodcastStudio() {
     uploadAudio,    // (Blob)   → audioUrl
 
     // Session (render job)
-    createSession,  // (session) → sessionId (starts polling)
+    createSession,    // (session) → sessionId (starts polling)
+    sendScriptMessage,// ({ messages, speakerName, topic, guestName }) → { reply, scriptBlock }
 
     // Utilities
     loadEnvironments, // () → void — manual refresh

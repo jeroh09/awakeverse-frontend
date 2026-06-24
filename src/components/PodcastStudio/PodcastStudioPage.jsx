@@ -215,6 +215,25 @@ export default function PodcastStudioPage({ context, onClose }) {
   const [dragIdx,   setDragIdx]   = useState(null);  // index being dragged
   const [dragOver,  setDragOver_l] = useState(null);  // index being hovered
 
+  // ── Mode picker ───────────────────────────────────────────────────────────
+  // Shown on cold entry (no context.character). 'solo'|'interview'|null(not chosen yet).
+  // null = picker visible. Skipping sets 'solo' as default.
+  const [podcastMode, setPodcastMode] = useState(
+    context?.character ? 'interview' : null
+  );
+
+  // ── Script chat assistant ─────────────────────────────────────────────────
+  // 'chat' = AI write mode (chat bubbles). 'lines' = edit lines mode (line cards).
+  // Entry from chat pill with preloadedLines starts in 'lines'.
+  const [scriptMode,       setScriptMode]       = useState(
+    context?.preloadedLines?.length ? 'lines' : 'chat'
+  );
+  const [scriptMessages,   setScriptMessages]   = useState([]); // [{role,content}]
+  const [scriptInput,      setScriptInput]      = useState('');
+  const [scriptLoading,    setScriptLoading]    = useState(false);
+  const [latestScriptBlock, setLatestScriptBlock] = useState(null); // from ---SCRIPT--- marker
+  const chatBubblesRef = useRef(null);
+
   // ── Tab done state ────────────────────────────────────────────────────────
   const tabsDone = {
     avatar:   avatarBuilt || speakers.some(s => s.isCharacter && s.avatarRefUrl),
@@ -285,6 +304,15 @@ if (context.topic) setTopic(context.topic);
     if (context.preloadedLines?.length && !linesInitialised.current) {
       linesInitialised.current = true;
       const charKey = context.characterKey || 'guest';
+      // Seed default host speaker so line labels resolve to "You · Host"
+      // even before the user builds their avatar.
+      setSpeakers(prev => {
+        if (prev.find(s => s.speakerId === 'user')) return prev;
+        return [{ speakerId: 'user', displayName: 'You', role: 'host',
+                  isCharacter: false, color: SPEAKER_COLORS[0],
+                  voiceMode: 'tts', voiceId: '21m00Tcm4TlvDq8ikWAM', gender: 'female',
+                  avatarRefUrl: null }, ...prev];
+      });
       dispatchLines({
         type: 'SET',
         lines: context.preloadedLines.map((l, i) => ({
@@ -308,6 +336,100 @@ if (context.topic) setTopic(context.topic);
       setActiveTab(context.startTab);
     }
   }, [context, getCharacterRef]);
+
+  // ── Script chat assistant ─────────────────────────────────────────────────
+  // Seed opener message when entering chat mode with empty history.
+  useEffect(() => {
+    if (scriptMode !== 'chat' || scriptMessages.length > 0) return;
+    const guestName = speakers.find(s => s.isCharacter || (s.speakerId !== 'user' && s.role === 'guest'))?.displayName;
+    const opener = guestName
+      ? `What should you and ${guestName} talk about? I can write the script and refine it with you.`
+      : `What's your podcast about? I'll help you write a natural monologue, line by line.`;
+    setScriptMessages([{ role: 'assistant', content: opener }]);
+  }, [scriptMode]); // eslint-disable-line react-hooks/exhaustive-deps
+
+  // Auto-scroll chat bubbles to bottom on new messages
+  useEffect(() => {
+    if (chatBubblesRef.current) {
+      chatBubblesRef.current.scrollTop = chatBubblesRef.current.scrollHeight;
+    }
+  }, [scriptMessages, scriptLoading]);
+
+  const handleSendScriptMessage = useCallback(async () => {
+    const text = scriptInput.trim();
+    if (!text || scriptLoading) return;
+
+    const newMessages = [...scriptMessages, { role: 'user', content: text }];
+    setScriptMessages(newMessages);
+    setScriptInput('');
+    setScriptLoading(true);
+
+    const guestName = speakers.find(s => s.role === 'guest')?.displayName;
+    const userDisplayName = context?.user?.displayName || 'You';
+
+    try {
+      const csrf = document.cookie.match(/(?:^|;\s*)av_csrf=([^;]+)/)?.[1] || '';
+      const res = await fetch(`${API_BASE}/api/podcast/script-chat`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', 'X-CSRF-Token': csrf },
+        credentials: 'include',
+        body: JSON.stringify({
+          messages:     newMessages,
+          speaker_name: userDisplayName,
+          topic:        topic || text,
+          ...(guestName ? { guest_name: guestName } : {}),
+        }),
+      });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error || 'Script assistant failed');
+
+      setScriptMessages(prev => [...prev, { role: 'assistant', content: data.reply }]);
+      if (data.script_block) setLatestScriptBlock(data.script_block);
+
+    } catch (e) {
+      console.error('❌ script-chat:', e);
+      setScriptMessages(prev => [...prev, {
+        role: 'assistant',
+        content: 'Sorry, I hit an error. Please try again.',
+      }]);
+    } finally {
+      setScriptLoading(false);
+    }
+  }, [scriptInput, scriptMessages, scriptLoading, speakers, topic, context]);
+
+  const handleConvertToLines = useCallback(async () => {
+    if (!latestScriptBlock) return;
+    try {
+      const csrf = document.cookie.match(/(?:^|;\s*)av_csrf=([^;]+)/)?.[1] || '';
+      const guestName = speakers.find(s => s.role === 'guest')?.displayName || 'Guest';
+      const res = await fetch(`${API_BASE}/api/podcast/parse-script`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', 'X-CSRF-Token': csrf },
+        credentials: 'include',
+        body: JSON.stringify({
+          script_text: latestScriptBlock,
+          host_name:   context?.user?.displayName || 'You',
+          guest_name:  guestName,
+        }),
+      });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error || 'Parse failed');
+      const charKey = speakers.find(s => s.role === 'guest')?.speakerId || 'guest';
+      dispatchLines({
+        type: 'SET',
+        lines: (data.lines || []).map((l, i) => ({
+          ...l,
+          id:         Date.now() + i,
+          audioUrl:   null,
+          speakerId:  (l.speaker_id || l.speakerId) === 'host' ? 'user' : charKey,
+          displayName:(l.speaker_id || l.speakerId) === 'host' ? 'You' : guestName,
+        })),
+      });
+      setScriptMode('lines');
+    } catch (e) {
+      console.error('❌ convert-to-lines:', e);
+    }
+  }, [latestScriptBlock, speakers, context, dispatchLines]);
 
   // ── File handling ─────────────────────────────────────────────────────────
   const processFile = useCallback((file) => {
@@ -490,14 +612,68 @@ if (context.topic) setTopic(context.topic);
           {activeTab === 'avatar' && (
             <div className={styles.avatarPage}>
 
-              {/* Hidden file input — always mounted so ref is never null */}
-              <input
-                ref={fileInputRef}
-                type="file"
-                accept="image/jpeg,image/jpg,image/png,image/webp"
-                style={{ display: 'none' }}
-                onChange={e => { processFile(e.target.files[0]); e.target.value = ''; }}
-              />
+              {/* Hidden file inputs — always mounted */}
+              <input ref={fileInputRef} type="file"
+                accept="image/jpeg,image/jpg,image/png,image/webp" style={{ display: 'none' }}
+                onChange={e => { processFile(e.target.files[0]); e.target.value = ''; }} />
+
+              {/* ── Mode picker overlay — cold entry only ── */}
+              {podcastMode === null && (
+                <div className={styles.pickerOverlay}>
+                  <div className={styles.pickerCard}>
+                    <div>
+                      <p className={styles.pickerEyebrow}>Podcast Studio</p>
+                      <h2 className={styles.pickerHeading}>What are you creating today?</h2>
+                      <p className={styles.pickerSub}>Choose your format — you can change this later.</p>
+                    </div>
+                    <div className={styles.pickerOptions}>
+                      {/* Solo voice */}
+                      <button className={styles.pickerOption} onClick={() => { setPodcastMode('solo'); setActiveTab('script'); }}>
+                        <div className={styles.pickerOptionImg}>
+                          <img src="/images/solo_voice.jpg" alt="Solo voice"
+                            onError={e => { e.currentTarget.style.display='none'; e.currentTarget.nextSibling.style.display='flex'; }} />
+                          <div className={styles.pickerOptionImgFallback} style={{ display: 'none' }}>
+                            <span>🎙</span>
+                            <span className={styles.pickerOptionImgFilename}>solo_voice.jpg</span>
+                          </div>
+                        </div>
+                        <div className={styles.pickerOptionBody}>
+                          <div className={styles.pickerOptionName}>Solo voice</div>
+                          <div className={styles.pickerOptionDesc}>Just you. An AI assistant helps craft your monologue, line by line.</div>
+                          <div className={styles.pickerOptionCta}>
+                            Start writing
+                            <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" aria-hidden="true"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
+                          </div>
+                        </div>
+                      </button>
+                      {/* Open conversation */}
+                      <button className={styles.pickerOption} onClick={() => { setPodcastMode('interview'); }}>
+                        <div className={styles.pickerOptionImg}>
+                          <img src="/images/open_conversation.jpg" alt="Open conversation"
+                            onError={e => { e.currentTarget.style.display='none'; e.currentTarget.nextSibling.style.display='flex'; }} />
+                          <div className={styles.pickerOptionImgFallback} style={{ display: 'none' }}>
+                            <span>🎤</span>
+                            <span className={styles.pickerOptionImgFilename}>open_conversation.jpg</span>
+                          </div>
+                        </div>
+                        <div className={styles.pickerOptionBody}>
+                          <div className={styles.pickerOptionName}>Open conversation</div>
+                          <div className={styles.pickerOptionDesc}>You and a guest. Trade lines from chat or write the script fresh.</div>
+                          <div className={styles.pickerOptionCta}>
+                            Add a guest
+                            <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" aria-hidden="true"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
+                          </div>
+                        </div>
+                      </button>
+                    </div>
+                    <div className={styles.pickerFooter}>
+                      <button className={styles.pickerSkip} onClick={() => setPodcastMode('solo')}>
+                        Not sure yet — explore first
+                      </button>
+                    </div>
+                  </div>
+                </div>
+              )}
 
               {/* Build stage fullscreen overlay */}
               {buildStage && buildStage !== 'done' && (
@@ -527,223 +703,180 @@ if (context.topic) setTopic(context.topic);
                 </div>
               )}
 
-              {/* Speaker cards */}
-              <div className={styles.speakerCards}>
+              {/* ── Avatar grid — square cards, horizontal wrap ── */}
+              <div className={styles.glassCard} style={{ flex: 1, minHeight: 0 }}>
+                <div className={styles.cardLabel}>Your avatar</div>
 
-                {/* User card */}
-                <div className={styles.glassCard}>
-                  <div className={styles.cardLabel}>Your avatar</div>
+                <div className={styles.avatarGrid}>
 
-                  {avatarBuilt && avatarRefUrl ? (
-                    <div className={styles.builtWrap}>
-                      <img src={avatarRefUrl} alt="Your avatar" className={styles.builtImg} />
-                      <div className={styles.builtBadge}><Ic.Check /> Avatar ready</div>
-                      <button className={styles.rebuildLink} onClick={() => { setAvatarBuilt(false); setBuildStage(null); setPhotoFile(null); setPhotoPreview(null); }}>
-                        Change photo
-                      </button>
-                    </div>
-                  ) : (
-                    <>
-                      {/* Saved avatar quick-use — user picks env first, then clicks Build */}
-                      {avatars?.length > 0 && !photoFile && !avatarBuilt && (
-                        <div className={styles.savedAvatarBanner}>
-                          <img src={avatars[0].avatarRefUrl} alt="Saved avatar" className={styles.savedAvatarThumb} />
-                          <div className={styles.savedAvatarInfo}>
-                            <div className={styles.savedAvatarLabel}>You have a saved avatar</div>
-                            <div className={styles.savedAvatarSub}>Pick a background → click Build to use it</div>
-                          </div>
-                          <button
-                            className={styles.useSavedBtn}
-                            onClick={async () => {
-                              // Use saved photo — raw photo URL goes directly to worker
-                              // Worker runs fullbody gen + bake into selected env at render time
-                              const saved = avatars[0];
-                              const photoUrl = saved.photoUrl;
-                              if (!photoUrl) {
-                                console.warn('No photoUrl on saved avatar — cannot reuse');
-                                return;
-                              }
-                              const displayName = context?.user?.displayName || saved.displayName || 'You';
-                              // Skip upload — photo already on Spaces, use URL directly
-                              const result = await buildAvatar({
-                                photoUrl,
-                                displayName,
-                                envId: selectedEnvId,
-                                position: 'right',
-                              }).catch(e => { setBuildError(e.message); return null; });
-                              if (!result) return;
-                              setAvatarBuilt(true);
-                              setAvatarRefUrl(result.avatarRefUrl);
-                              setSpeakers(prev => {
-                                const already = prev.find(s => s.speakerId === 'user');
-                                if (already) return prev.map(s => s.speakerId === 'user'
-                                  ? { ...s, avatarRefUrl: result.avatarRefUrl } : s);
-                                return [...prev, {
-                                  speakerId: 'user', displayName,
-                                  avatarRefUrl: result.avatarRefUrl,
-                                  voiceMode: 'tts', voiceId: '21m00Tcm4TlvDq8ikWAM',
-                                  gender: 'female', color: SPEAKER_COLORS[0],
-                                  isCharacter: false, role: 'host',
-                                }];
-                              });
-                            }}
-                          >
-                            Use saved
-                          </button>
-                        </div>
-                      )}
+                  {/* Saved avatars — one square card each */}
+                  {avatars?.map(av => {
+                    const isActive = av.avatarId === speakers.find(s => s.speakerId === 'user')?.savedAvatarId;
+                    return (
                       <div
-                        className={`${styles.dropZone} ${avatarDragOver ? styles.dropZoneDrag : ''}`}
-                        onDragOver={e => { e.preventDefault(); setAvatarDragOver(true); }}
-                        onDragLeave={() => setAvatarDragOver(false)}
-                        onDrop={onAvatarDrop}
-                        onClick={() => !photoPreview && fileInputRef.current?.click()}
-                        role="button" tabIndex={0}
+                        key={av.avatarId}
+                        className={`${styles.avatarSquareCard} ${isActive ? styles.avatarSquareSelected : ''}`}
+                        onClick={async () => {
+                          const photoUrl = av.photoUrl;
+                          if (!photoUrl) return;
+                          const displayName = context?.user?.displayName || av.displayName || 'You';
+                          const result = await buildAvatar({ photoUrl, displayName, envId: selectedEnvId, position: 'right' })
+                            .catch(e => { setBuildError(e.message); return null; });
+                          if (!result) return;
+                          setAvatarBuilt(true);
+                          setAvatarRefUrl(result.avatarRefUrl);
+                          setSpeakers(prev => {
+                            const entry = { speakerId: 'user', displayName, avatarRefUrl: result.avatarRefUrl,
+                              voiceMode: 'tts', voiceId: '21m00Tcm4TlvDq8ikWAM', gender: 'female',
+                              color: SPEAKER_COLORS[0], isCharacter: false, role: 'host', savedAvatarId: av.avatarId };
+                            const already = prev.find(s => s.speakerId === 'user');
+                            return already ? prev.map(s => s.speakerId === 'user' ? entry : s) : [entry, ...prev];
+                          });
+                        }}
+                        title={`Use ${av.displayName}`}
                       >
-                        {photoPreview ? (
-                          <div className={styles.photoPreviewWrap}>
-                            <img src={photoPreview} alt="Preview" className={styles.photoPreview} />
-                            <button className={styles.changePhotoBtn} onClick={e => { e.stopPropagation(); setPhotoFile(null); setPhotoPreview(null); fileInputRef.current?.click(); }}>
-                              Change
-                            </button>
-                          </div>
-                        ) : (
-                          <>
-                            <div className={styles.dropIcon}><Ic.Upload /></div>
-                            <p>Drop your photo here</p>
-                            <button className={styles.browseBtn} onClick={e => { e.stopPropagation(); fileInputRef.current?.click(); }}>
-                              Browse files
-                            </button>
-                            <small>JPEG, PNG, WebP · Max 10MB</small>
-                          </>
+                        {av.avatarRefUrl
+                          ? <img src={av.avatarRefUrl} alt={av.displayName} className={styles.avatarSquareImg} />
+                          : <div className={styles.avatarSquareImgFallback}>👤</div>
+                        }
+                        <div className={styles.avatarSquareName}>{av.displayName}</div>
+                        {isActive && (
+                          <span className={`${styles.avatarSquareBadge} ${styles.avatarSquareBadgeHost}`}>Active</span>
                         )}
                       </div>
-                      {/* file input moved to top of avatarPage — always mounted */}
-                      {buildError && <div className={styles.errorBox}>{buildError}</div>}
-                      {photoFile && (
-                        <button className={styles.buildBtn} onClick={handleBuildAvatar} disabled={!!buildStage}>
-                          {buildStage ? <><span className={styles.spin}><Ic.Spin /></span> Building…</> : '✦ Build my avatar'}
-                        </button>
+                    );
+                  })}
+
+                  {/* Upload new — always the last card */}
+                  {!avatarBuilt && (
+                    <div
+                      className={styles.avatarSquareAdd}
+                      onClick={() => fileInputRef.current?.click()}
+                      title="Upload a new photo"
+                    >
+                      {photoPreview ? (
+                        <img src={photoPreview} alt="Preview"
+                          style={{ width: '100%', height: '100%', objectFit: 'cover', borderRadius: 13 }} />
+                      ) : (
+                        <>
+                          <div className={styles.avatarSquareAddIcon}><Ic.Upload /></div>
+                          <span className={styles.avatarSquareAddLabel}>Upload photo</span>
+                        </>
                       )}
-                    </>
+                    </div>
+                  )}
+
+                  {/* Built — show as active card */}
+                  {avatarBuilt && avatarRefUrl && (
+                    <div className={`${styles.avatarSquareCard} ${styles.avatarSquareSelected}`}>
+                      <img src={avatarRefUrl} alt="Your avatar" className={styles.avatarSquareImg} />
+                      <div className={styles.avatarSquareName}>You</div>
+                      <span className={`${styles.avatarSquareBadge} ${styles.avatarSquareBadgeHost}`}>Host</span>
+                    </div>
                   )}
                 </div>
 
-                {/* AI character cards */}
-                {speakers.filter(s => s.isCharacter).map(spk => (
-                  <div key={spk.speakerId} className={styles.glassCard}>
-                    <div className={styles.cardLabel}>AI Guest</div>
-                    <div className={styles.charCard}>
-                      <div className={styles.charAvatar} style={{ background: `linear-gradient(135deg, ${spk.color}, ${spk.color}88)` }}>
-                        {spk.displayName?.slice(0, 2).toUpperCase()}
-                      </div>
-                      <div>
-                        <div className={styles.charName}>{spk.displayName}</div>
-                        <div className={styles.charRole}>AI character · TTS voice</div>
-                      </div>
-                      <span className={`${styles.badge} ${styles.badgeGuest}`}>Guest</span>
-                      {spk.avatarRefUrl && <div className={styles.readyTick}><Ic.Check /></div>}
-                    </div>
-                  </div>
-                ))}
-
-                {/* Custom guest speaker cards (real person, user-provided photo) */}
-                {speakers.filter(s => !s.isCharacter && s.speakerId !== 'user').map(spk => (
-                  <div key={spk.speakerId} className={styles.glassCard}>
-                    <div className={styles.cardLabel}>Real Guest</div>
-                    <div className={styles.charCard}>
-                      <div className={styles.charAvatar} style={{ background: `linear-gradient(135deg, ${spk.color}, ${spk.color}88)` }}>
-                        {spk.displayName?.slice(0, 2).toUpperCase()}
-                      </div>
-                      <div>
-                        <div className={styles.charName}>{spk.displayName}</div>
-                        <div className={styles.charRole}>Real person · TTS voice</div>
-                      </div>
-                      <span className={`${styles.badge} ${styles.badgeGuest}`}>Guest</span>
-                      {spk.avatarRefUrl && <div className={styles.readyTick}><Ic.Check /></div>}
-                    </div>
-                  </div>
-                ))}
-
-                {/* Custom guest — lightweight add (no build step, worker handles at render) */}
-                {!speakers.some(s => s.isCharacter) && (
-                  <div className={styles.glassCard}>
-                    <input
-                      ref={guestFileRef}
-                      type="file"
-                      accept="image/jpeg,image/jpg,image/png,image/webp"
-                      style={{ display: 'none' }}
-                      onChange={e => {
-                        const f = e.target.files?.[0];
-                        if (!f) return;
-                        setGuestFile(f);
-                        const reader = new FileReader();
-                        reader.onload = ev => setGuestPreview(ev.target.result);
-                        reader.readAsDataURL(f);
-                        setGuestBuilt(false);
-                      }}
-                    />
-
-                    {guestBuilt ? (
-                      /* Guest added — show summary card */
-                      <div className={styles.charCard}>
-                        {guestPreview && (
-                          <img src={guestPreview} alt={guestName}
-                            style={{ width: 40, height: 40, borderRadius: '50%', objectFit: 'cover' }} />
-                        )}
-                        <div>
-                          <div className={styles.charName}>{guestName}</div>
-                          <div className={styles.charRole}>Real person · guest</div>
-                        </div>
-                        <span className={`${styles.badge} ${styles.badgeGuest}`}>Guest</span>
-                        <button className={styles.rebuildLink} onClick={() => {
-                          setGuestBuilt(false); setGuestFile(null);
-                          setGuestPreview(null); setGuestName('');
-                          setSpeakers(prev => prev.filter(s => s.role !== 'guest' || s.isCharacter));
-                        }}>Remove</button>
-                      </div>
-                    ) : (
-                      /* Add guest form */
-                      <div className={styles.addGuestForm}>
-                        <input
-                          className={styles.guestNameInput}
-                          placeholder="Guest name…"
-                          value={guestName}
-                          onChange={e => setGuestName(e.target.value)}
-                        />
-                        <button
-                          className={styles.addGuestPhotoBtn}
-                          onClick={() => guestFileRef.current?.click()}
-                        >
-                          {guestPreview
-                            ? <><img src={guestPreview} alt="Guest"
-                                style={{ width: 20, height: 20, borderRadius: '50%', objectFit: 'cover', marginRight: 6 }} />
-                                Change photo</>
-                            : <><Ic.Upload /> Upload photo</>
-                          }
-                        </button>
-                        {guestError && <div className={styles.errorBox}>{guestError}</div>}
-                        {guestFile && guestName.trim() && (
-                          <button className={styles.actionChip} onClick={handleAddGuest}>
-                            <Ic.Add /> Add guest
-                          </button>
-                        )}
-                      </div>
-                    )}
-                  </div>
+                {buildError && <div className={styles.errorBox}>{buildError}</div>}
+                {photoFile && !avatarBuilt && (
+                  <button className={styles.buildBtn} onClick={handleBuildAvatar} disabled={!!buildStage}>
+                    {buildStage ? <><span className={styles.spin}><Ic.Spin /></span> Building…</> : '✦ Build my avatar'}
+                  </button>
                 )}
-
-                {/* Empty state */}
-                {speakers.filter(s => s.speakerId !== 'user').length === 0 && !photoPreview && (
-                  <div className={styles.emptyHint}>
-                    Upload your photo above to get started.
-                    {context?.character
-                      ? ` ${context.character.display_name || context.character.name || 'Your guest'} will join as your guest.`
-                      : null
-                    }
-                  </div>
+                {avatarBuilt && (
+                  <button className={styles.rebuildLink} style={{ alignSelf: 'center' }}
+                    onClick={() => { setAvatarBuilt(false); setBuildStage(null); setPhotoFile(null); setPhotoPreview(null); }}>
+                    Upload a different photo
+                  </button>
                 )}
               </div>
+
+              {/* AI character guest cards */}
+              {speakers.filter(s => s.isCharacter).map(spk => (
+                <div key={spk.speakerId} className={styles.glassCard}>
+                  <div className={styles.cardLabel}>AI Guest</div>
+                  <div className={styles.charCard}>
+                    <div className={styles.charAvatar} style={{ background: `linear-gradient(135deg, ${spk.color}, ${spk.color}88)` }}>
+                      {spk.displayName?.slice(0, 2).toUpperCase()}
+                    </div>
+                    <div>
+                      <div className={styles.charName}>{spk.displayName}</div>
+                      <div className={styles.charRole}>AI character · TTS voice</div>
+                    </div>
+                    <span className={`${styles.badge} ${styles.badgeGuest}`}>Guest</span>
+                    {spk.avatarRefUrl && <div className={styles.readyTick}><Ic.Check /></div>}
+                  </div>
+                </div>
+              ))}
+
+              {/* Custom real-person guest */}
+              {speakers.filter(s => !s.isCharacter && s.speakerId !== 'user').map(spk => (
+                <div key={spk.speakerId} className={styles.glassCard}>
+                  <div className={styles.cardLabel}>Real Guest</div>
+                  <div className={styles.charCard}>
+                    <div className={styles.charAvatar} style={{ background: `linear-gradient(135deg, ${spk.color}, ${spk.color}88)` }}>
+                      {spk.displayName?.slice(0, 2).toUpperCase()}
+                    </div>
+                    <div>
+                      <div className={styles.charName}>{spk.displayName}</div>
+                      <div className={styles.charRole}>Real person · guest</div>
+                    </div>
+                    <span className={`${styles.badge} ${styles.badgeGuest}`}>Guest</span>
+                    {spk.avatarRefUrl && <div className={styles.readyTick}><Ic.Check /></div>}
+                  </div>
+                </div>
+              ))}
+
+              {/* Add custom guest — interview mode only, no AI character yet */}
+              {podcastMode === 'interview' && !speakers.some(s => s.isCharacter) && (
+                <div className={styles.glassCard}>
+                  <input ref={guestFileRef} type="file"
+                    accept="image/jpeg,image/jpg,image/png,image/webp" style={{ display: 'none' }}
+                    onChange={e => {
+                      const f = e.target.files?.[0]; if (!f) return;
+                      setGuestFile(f);
+                      const reader = new FileReader();
+                      reader.onload = ev => setGuestPreview(ev.target.result);
+                      reader.readAsDataURL(f);
+                      setGuestBuilt(false);
+                    }} />
+                  {guestBuilt ? (
+                    <div className={styles.charCard}>
+                      {guestPreview && <img src={guestPreview} alt={guestName} style={{ width: 40, height: 40, borderRadius: '50%', objectFit: 'cover' }} />}
+                      <div>
+                        <div className={styles.charName}>{guestName}</div>
+                        <div className={styles.charRole}>Real person · guest</div>
+                      </div>
+                      <span className={`${styles.badge} ${styles.badgeGuest}`}>Guest</span>
+                      <button className={styles.rebuildLink} onClick={() => {
+                        setGuestBuilt(false); setGuestFile(null); setGuestPreview(null); setGuestName('');
+                        setSpeakers(prev => prev.filter(s => s.role !== 'guest' || s.isCharacter));
+                      }}>Remove</button>
+                    </div>
+                  ) : (
+                    <div className={styles.addGuestForm}>
+                      <input className={styles.guestNameInput} placeholder="Guest name…"
+                        value={guestName} onChange={e => setGuestName(e.target.value)} />
+                      <button className={styles.addGuestPhotoBtn} onClick={() => guestFileRef.current?.click()}>
+                        {guestPreview
+                          ? <><img src={guestPreview} alt="Guest" style={{ width: 20, height: 20, borderRadius: '50%', objectFit: 'cover', marginRight: 6 }} />Change photo</>
+                          : <><Ic.Upload /> Upload photo</>}
+                      </button>
+                      {guestError && <div className={styles.errorBox}>{guestError}</div>}
+                      {guestFile && guestName.trim() && (
+                        <button className={styles.actionChip} onClick={handleAddGuest}><Ic.Add /> Add guest</button>
+                      )}
+                    </div>
+                  )}
+                </div>
+              )}
+
+              {speakers.filter(s => s.speakerId !== 'user').length === 0 && !photoPreview && podcastMode !== null && (
+                <div className={styles.emptyHint}>
+                  {podcastMode === 'solo'
+                    ? 'Upload your photo to build your solo avatar.'
+                    : `Upload your photo above. ${context?.character?.display_name || 'Your guest'} will join as guest.`}
+                </div>
+              )}
             </div>
           )}
 
@@ -751,22 +884,25 @@ if (context.topic) setTopic(context.topic);
           {activeTab === 'script' && (
             <div className={styles.scriptPage}>
 
-              {/* Topic + AI generate */}
-              <div className={styles.topicBar}>
-                <div className={styles.topicInputWrap}>
-                  <input
-                    className={styles.topicInput}
-                    placeholder="Topic: e.g. The future of AI in Africa…"
-                    value={topic}
-                    onChange={e => setTopic(e.target.value)}
-                  />
-                  <button className={styles.aiBtn} disabled={!topic.trim()}>
-                    ✦ Generate
+              {/* Mode toggle */}
+              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexShrink: 0 }}>
+                <div className={styles.scriptModeToggle}>
+                  <button
+                    className={`${styles.scriptModeBtn} ${scriptMode === 'chat' ? styles.scriptModeBtnActive : ''}`}
+                    onClick={() => setScriptMode('chat')}
+                  >
+                    ✦ AI Write
+                  </button>
+                  <button
+                    className={`${styles.scriptModeBtn} ${scriptMode === 'lines' ? styles.scriptModeBtnActive : ''}`}
+                    onClick={() => setScriptMode('lines')}
+                  >
+                    ≡ Edit Lines {lines.length > 0 && `(${lines.length})`}
                   </button>
                 </div>
-                <div className={styles.scriptActions}>
+                {/* Import from chat — lines mode only */}
+                {scriptMode === 'lines' && context?.chatHistory?.length > 0 && (
                   <button className={styles.actionChip} onClick={() => {
-                    if (!context?.chatHistory?.length) return;
                     const msgs = context.chatHistory.slice(-8).filter(m => m.content?.trim());
                     dispatchLines({ type: 'SET', lines: msgs.map((m, i) => ({
                       id: Date.now() + i,
@@ -778,84 +914,134 @@ if (context.topic) setTopic(context.topic);
                   }}>
                     <Ic.Import /> Import from chat
                   </button>
-                  <button className={styles.actionChip} onClick={() => dispatchLines({ type: 'ADD', speakerId: speakers[0]?.speakerId || 'user' })}>
-                    <Ic.Add /> Add line
-                  </button>
-                </div>
-              </div>
-
-              {/* Lines */}
-              <div className={styles.lineScroll}>
-                {lines.length === 0 && (
-                  <div className={styles.emptyLines}>
-                    No lines yet — generate from topic, import from chat, or add manually.
-                  </div>
                 )}
-                {lines.map((line, i) => {
-                  // Read display info directly from line — no speakers[] lookup.
-                  // speakers[] is only used at session submit for avatar/voice.
-                  const isHost    = line.speakerId === 'user';
-                  const lineColor = isHost ? '#6366F1' : '#10B981';
-                  const lineName  = line.displayName || (isHost ? 'You' : 'Guest');
-                  const lineRole  = isHost ? 'Host' : 'Guest';
-
-                  // Toggle speaker — cycles through all speakers in order
-                  const handleToggleSpeaker = () => {
-                    const allSpeakers = speakers.length > 0
-                      ? speakers
-                      : [{ speakerId: 'user', displayName: 'You', role: 'host' }];
-                    const currentIdx = allSpeakers.findIndex(s => s.speakerId === line.speakerId);
-                    const nextIdx    = (currentIdx + 1) % allSpeakers.length;
-                    const next       = allSpeakers[nextIdx];
-                    dispatchLines({ type: 'UPDATE', id: line.id, patch: {
-                      speakerId:   next.speakerId,
-                      displayName: next.displayName,
-                    }});
-                  };
-
-                  return (
-                    <div
-                    key={line.id}
-                    className={`${styles.lineCard} ${dragOver === i ? styles.lineCardDragOver : ''}`}
-                    draggable
-                    onDragStart={e => handleDragStart(e, i)}
-                    onDragOver={e => handleDragOver(e, i)}
-                    onDrop={e => handleDrop(e, i)}
-                    onDragEnd={handleDragEnd}
-                  >
-                      <div className={styles.dragHandle} title="Drag to reorder">
-                      <Ic.Drag />
-                    </div>
-                    <div className={styles.lineDot} style={{ background: lineColor }} />
-                      <div className={styles.lineBody}>
-                        <div
-                          className={styles.lineTag}
-                          style={{ color: lineColor, cursor: speakers.length > 1 ? 'pointer' : 'default' }}
-                          onClick={speakers.length > 1 ? handleToggleSpeaker : undefined}
-                          title={speakers.length > 1 ? 'Click to change speaker' : ''}
-                        >
-                          {lineName} · {lineRole}{speakers.length > 1 ? ' ↕' : ''}
-                        </div>
-                        <textarea
-                          className={styles.lineTextarea}
-                          value={line.text}
-                          placeholder="Type the line…"
-                          onChange={e => dispatchLines({ type: 'UPDATE', id: line.id, patch: { text: e.target.value } })}
-                          rows={2}
-                        />
-                        {line.audioUrl && <div className={styles.audioTag}>🎤 Recorded</div>}
-                      </div>
-                      <div className={styles.lineButtons}>
-                        <button className={styles.lineBtn} title="Record"><Ic.Record /></button>
-                        <button className={styles.lineBtn} title="Delete" onClick={() => dispatchLines({ type: 'REMOVE', id: line.id })}><Ic.Trash /></button>
-                      </div>
-                    </div>
-                  );
-                })}
-                <button className={styles.addLineBtn} onClick={() => dispatchLines({ type: 'ADD', speakerId: speakers[0]?.speakerId || 'user' })}>
-                  <Ic.Add /> Add line
-                </button>
               </div>
+
+              {/* ── CHAT MODE ── */}
+              {scriptMode === 'chat' && (
+                <div className={styles.scriptChatArea}>
+                  {/* Bubbles scroll */}
+                  <div className={styles.chatBubbles} ref={chatBubblesRef}>
+                    {scriptMessages.map((msg, i) => (
+                      <div key={i} className={`${styles.bubbleRow} ${msg.role === 'user' ? styles.bubbleRowUser : ''}`}>
+                        {msg.role === 'assistant' && (
+                          <div className={styles.bubbleAvatar}>AI</div>
+                        )}
+                        <div className={msg.role === 'assistant' ? styles.bubbleAi : styles.bubbleUser}>
+                          {msg.content}
+                        </div>
+                      </div>
+                    ))}
+                    {scriptLoading && (
+                      <div className={styles.bubbleRow}>
+                        <div className={styles.bubbleAvatar}>AI</div>
+                        <div className={styles.bubbleAi}>
+                          <div className={styles.bubbleThinking}>
+                            <div className={styles.bubbleDot} />
+                            <div className={styles.bubbleDot} />
+                            <div className={styles.bubbleDot} />
+                          </div>
+                        </div>
+                      </div>
+                    )}
+                  </div>
+
+                  {/* Convert to lines — appears when a script block is ready */}
+                  {latestScriptBlock && (
+                    <button className={styles.convertBtn} onClick={handleConvertToLines}>
+                      <Ic.Check /> Convert to lines
+                    </button>
+                  )}
+
+                  {/* Input bar */}
+                  <div className={styles.scriptInputBar}>
+                    <textarea
+                      className={styles.scriptInput}
+                      placeholder={scriptMessages.length === 0 ? 'What\'s your podcast about?' : 'Refine the script…'}
+                      value={scriptInput}
+                      rows={1}
+                      onChange={e => setScriptInput(e.target.value)}
+                      onKeyDown={e => {
+                        if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); handleSendScriptMessage(); }
+                      }}
+                    />
+                    <button
+                      className={styles.scriptSendBtn}
+                      onClick={handleSendScriptMessage}
+                      disabled={!scriptInput.trim() || scriptLoading}
+                    >
+                      {scriptLoading ? <span className={styles.spin}><Ic.Spin /></span> : 'Send ➤'}
+                    </button>
+                  </div>
+                </div>
+              )}
+
+              {/* ── LINES MODE ── */}
+              {scriptMode === 'lines' && (
+                <>
+                  <div className={styles.lineScroll}>
+                    {lines.length === 0 && (
+                      <div className={styles.emptyLines}>
+                        No lines yet — switch to AI Write to generate, or add manually.
+                      </div>
+                    )}
+                    {lines.map((line, i) => {
+                      const isHost    = line.speakerId === 'user';
+                      const lineColor = isHost ? '#6366F1' : '#10B981';
+                      const lineName  = line.displayName || (isHost ? 'You' : 'Guest');
+                      const lineRole  = isHost ? 'Host' : 'Guest';
+                      const handleToggleSpeaker = () => {
+                        const allSpeakers = speakers.length > 0
+                          ? speakers
+                          : [{ speakerId: 'user', displayName: 'You', role: 'host' }];
+                        const currentIdx = allSpeakers.findIndex(s => s.speakerId === line.speakerId);
+                        const nextIdx    = (currentIdx + 1) % allSpeakers.length;
+                        const next       = allSpeakers[nextIdx];
+                        dispatchLines({ type: 'UPDATE', id: line.id, patch: { speakerId: next.speakerId, displayName: next.displayName } });
+                      };
+                      return (
+                        <div key={line.id}
+                          className={`${styles.lineCard} ${dragOver === i ? styles.lineCardDragOver : ''}`}
+                          draggable
+                          onDragStart={e => handleDragStart(e, i)}
+                          onDragOver={e => handleDragOver(e, i)}
+                          onDrop={e => handleDrop(e, i)}
+                          onDragEnd={handleDragEnd}
+                        >
+                          <div className={styles.dragHandle} title="Drag to reorder"><Ic.Drag /></div>
+                          <div className={styles.lineDot} style={{ background: lineColor }} />
+                          <div className={styles.lineBody}>
+                            <div
+                              className={styles.lineTag}
+                              style={{ color: lineColor, cursor: speakers.length > 1 ? 'pointer' : 'default' }}
+                              onClick={speakers.length > 1 ? handleToggleSpeaker : undefined}
+                              title={speakers.length > 1 ? 'Click to change speaker' : ''}
+                            >
+                              {lineName} · {lineRole}{speakers.length > 1 ? ' ↕' : ''}
+                            </div>
+                            <textarea
+                              className={styles.lineTextarea}
+                              value={line.text}
+                              placeholder="Type the line…"
+                              onChange={e => dispatchLines({ type: 'UPDATE', id: line.id, patch: { text: e.target.value } })}
+                              rows={2}
+                            />
+                            {line.audioUrl && <div className={styles.audioTag}>🎤 Recorded</div>}
+                          </div>
+                          <div className={styles.lineButtons}>
+                            <button className={styles.lineBtn} title="Record"><Ic.Record /></button>
+                            <button className={styles.lineBtn} title="Delete" onClick={() => dispatchLines({ type: 'REMOVE', id: line.id })}><Ic.Trash /></button>
+                          </div>
+                        </div>
+                      );
+                    })}
+                    <button className={styles.addLineBtn}
+                      onClick={() => dispatchLines({ type: 'ADD', speakerId: speakers[0]?.speakerId || 'user' })}>
+                      <Ic.Add /> Add line
+                    </button>
+                  </div>
+                </>
+              )}
             </div>
           )}
 
