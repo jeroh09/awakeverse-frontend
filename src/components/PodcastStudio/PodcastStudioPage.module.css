@@ -172,7 +172,16 @@
   gap: var(--gap);
   min-height: 0;
   overflow-y: auto;
+  overflow-x: hidden;
   position: relative;
+  /* Ensure the pane itself scrolls, not the parent layout */
+  max-height: 100%;
+  padding-right: 2px; /* prevent scrollbar overlap */
+}
+
+/* All glass cards inside avatar pane must not force parent to grow */
+.avatarPage > .glassCard {
+  flex-shrink: 0;
 }
 
 /* Build overlay — fullscreen within the content area */
