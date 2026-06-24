@@ -346,7 +346,7 @@ if (context.topic) setTopic(context.topic);
       ? `What should you and ${guestName} talk about? I can write the script and refine it with you.`
       : `What's your podcast about? I'll help you write a natural monologue, line by line.`;
     setScriptMessages([{ role: 'assistant', content: opener }]);
-  }, [scriptMode]); // eslint-disable-line react-hooks/exhaustive-deps
+  }, [scriptMode]); // eslint-disable-line
 
   // Auto-scroll chat bubbles to bottom on new messages
   useEffect(() => {
