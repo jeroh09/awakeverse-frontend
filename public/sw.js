@@ -7,7 +7,8 @@
    - Network-first for /api/* (with optional cache fallback for non-auth GETs)
 */
 
-const CACHE_VERSION = 'awakeverse-v6'; // Bump this if you ever need to force-refresh caches
+
+const CACHE_VERSION = 'awakeverse-v7';
 const PRECACHE = `${CACHE_VERSION}-precache`;
 const RUNTIME = `${CACHE_VERSION}-runtime`;
 
