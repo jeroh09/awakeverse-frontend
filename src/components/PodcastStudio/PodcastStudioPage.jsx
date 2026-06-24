@@ -253,7 +253,21 @@ export default function PodcastStudioPage({ context, onClose }) {
             isCharacter:  true,
             role:         'guest',
           }]);
-        }).catch(() => {});
+        }).catch((err) => {
+          // Ref fetch failed — still add speaker with fallback so lines stay valid
+          console.warn('⚠️ getCharacterRef failed for', key, err);
+          setSpeakers(prev => prev.find(s => s.speakerId === key) ? prev : [...prev, {
+            speakerId:    key,
+            displayName:  context.character?.name || 'Guest',
+            avatarRefUrl: null,
+            voiceId:      null,
+            voiceMode:    'tts',
+            gender:       'neutral',
+            color:        SPEAKER_COLORS[1],
+            isCharacter:  true,
+            role:         'guest',
+          }]);
+        });
       }
     }
     if (context.preloadedLines?.length && !linesInitialised.current) {
