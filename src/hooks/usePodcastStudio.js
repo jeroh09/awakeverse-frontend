@@ -139,7 +139,8 @@ export default function usePodcastStudio() {
           (data.avatars || []).map(a => ({
             avatarId:      a.avatar_id,
             displayName:   a.display_name,
-            avatarRefUrl:  a.avatar_ref_url,
+            photoUrl:      a.photo_url,       // raw photo — for re-baking into any env
+            avatarRefUrl:  a.avatar_ref_url,  // baked into default env (preview only)
             defaultEnvId:  a.default_env_id,
             position:      a.position,
             createdAt:     a.created_at,

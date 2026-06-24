@@ -554,18 +554,38 @@ if (context.topic) setTopic(context.topic);
                           </div>
                           <button
                             className={styles.useSavedBtn}
-                            onClick={() => {
-                              // Use saved photo URL to re-bake into selected env
+                            onClick={async () => {
+                              // Use saved photo — raw photo URL goes directly to worker
+                              // Worker runs fullbody gen + bake into selected env at render time
                               const saved = avatars[0];
-                              if (saved.photoUrl) {
-                                fetch(saved.photoUrl)
-                                  .then(r => r.blob())
-                                  .then(blob => {
-                                    const file = new File([blob], 'saved_photo.jpg', { type: 'image/jpeg' });
-                                    processFile(file);
-                                  })
-                                  .catch(() => console.warn('Could not load saved photo'));
+                              const photoUrl = saved.photoUrl;
+                              if (!photoUrl) {
+                                console.warn('No photoUrl on saved avatar — cannot reuse');
+                                return;
                               }
+                              const displayName = context?.user?.displayName || saved.displayName || 'You';
+                              // Skip upload — photo already on Spaces, use URL directly
+                              const result = await buildAvatar({
+                                photoUrl,
+                                displayName,
+                                envId: selectedEnvId,
+                                position: 'right',
+                              }).catch(e => { setBuildError(e.message); return null; });
+                              if (!result) return;
+                              setAvatarBuilt(true);
+                              setAvatarRefUrl(result.avatarRefUrl);
+                              setSpeakers(prev => {
+                                const already = prev.find(s => s.speakerId === 'user');
+                                if (already) return prev.map(s => s.speakerId === 'user'
+                                  ? { ...s, avatarRefUrl: result.avatarRefUrl } : s);
+                                return [...prev, {
+                                  speakerId: 'user', displayName,
+                                  avatarRefUrl: result.avatarRefUrl,
+                                  voiceMode: 'tts', voiceId: '21m00Tcm4TlvDq8ikWAM',
+                                  gender: 'female', color: SPEAKER_COLORS[0],
+                                  isCharacter: false, role: 'host',
+                                }];
+                              });
                             }}
                           >
                             Use saved
