@@ -1240,3 +1240,21 @@
   background: rgba(99, 102, 241, 0.08) !important;
   box-shadow: 0 0 0 2px rgba(99, 102, 241, 0.2) !important;
 }
+/* ── Custom guest name input ─────────────────────────────────────────────── */
+.guestNameInput {
+  width: 100%;
+  background: rgba(255,255,255,0.05);
+  border: 1px solid rgba(255,255,255,0.12);
+  border-radius: 8px;
+  padding: 10px 14px;
+  color: var(--text-primary);
+  font-size: 0.78rem;
+  font-family: 'Inter', sans-serif;
+  outline: none;
+  margin-bottom: 12px;
+  box-sizing: border-box;
+}
+.guestNameInput:focus {
+  border-color: rgba(99,102,241,0.5);
+}
+.guestNameInput::placeholder { color: var(--text-muted); }
