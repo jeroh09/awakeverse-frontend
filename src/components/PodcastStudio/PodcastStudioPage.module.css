@@ -1258,3 +1258,28 @@
   border-color: rgba(99,102,241,0.5);
 }
 .guestNameInput::placeholder { color: var(--text-muted); }
+
+/* ── Add guest form ──────────────────────────────────────────────────────── */
+.addGuestForm {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.addGuestPhotoBtn {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  background: rgba(255,255,255,0.05);
+  border: 1px dashed rgba(255,255,255,0.2);
+  border-radius: 8px;
+  padding: 10px 14px;
+  color: var(--text-secondary);
+  font-size: 0.78rem;
+  cursor: pointer;
+  transition: border-color 0.2s;
+}
+.addGuestPhotoBtn:hover {
+  border-color: rgba(99,102,241,0.5);
+  color: var(--text-primary);
+}

@@ -187,7 +187,16 @@ export default function PodcastStudioPage({ context, onClose }) {
   const [buildStage,    setBuildStage]    = useState(null); // null | 'uploading'|'composing'|'baking'|'done'
   const [buildError,    setBuildError]    = useState(null);
   const [avatarDragOver, setAvatarDragOver] = useState(false);
-  const fileInputRef = useRef(null);
+  const fileInputRef     = useRef(null);
+
+  // ── Custom guest (real person, user-provided photo) ───────────────────────
+  const [guestFile,      setGuestFile]      = useState(null);
+  const [guestPreview,   setGuestPreview]   = useState(null);
+  const [guestName,      setGuestName]      = useState('');
+  const [guestBuilding,  setGuestBuilding]  = useState(false);
+  const [guestBuilt,     setGuestBuilt]     = useState(false);
+  const [guestError,     setGuestError]     = useState(null);
+  const guestFileRef = useRef(null);
 
   // ── Script ────────────────────────────────────────────────────────────────
   const [lines, dispatchLines] = useReducer(linesReducer, []);
@@ -349,6 +358,36 @@ if (context.topic) setTopic(context.topic);
       setBuildStage(null);
     }
   }, [photoFile, uploadPhoto, buildAvatar, selectedEnvId, context]);
+
+  // ── Add custom guest (lightweight — no build, worker handles at render) ──
+  const handleAddGuest = useCallback(async () => {
+    if (!guestFile || !guestName.trim()) return;
+    setGuestBuilding(true);
+    setGuestError(null);
+    try {
+      // Just upload the photo — no avatar baking here
+      // Worker _resolve_refs detects is_character=false + avatar_ref_url
+      // and runs fullbody gen + bake at render time
+      const photoUrl = await uploadPhoto(guestFile);
+      const guestId  = `custom_guest_${Date.now()}`;
+      setSpeakers(prev => [...prev.filter(s => s.role !== 'guest' || s.isCharacter), {
+        speakerId:    guestId,
+        displayName:  guestName.trim(),
+        avatarRefUrl: photoUrl,   // raw photo — worker generates fullbody + bakes
+        voiceId:      null,
+        voiceMode:    'tts',
+        gender:       'neutral',
+        color:        SPEAKER_COLORS[1],
+        isCharacter:  false,
+        role:         'guest',
+      }]);
+      setGuestBuilt(true);
+    } catch (e) {
+      setGuestError(e.message || 'Failed to add guest');
+    } finally {
+      setGuestBuilding(false);
+    }
+  }, [guestFile, guestName, uploadPhoto]);
 
   // ── Line drag-to-reorder ──────────────────────────────────────────────────
   const handleDragStart = useCallback((e, idx) => {
@@ -587,6 +626,92 @@ if (context.topic) setTopic(context.topic);
                     </div>
                   </div>
                 ))}
+
+                {/* Custom guest speaker cards (real person, user-provided photo) */}
+                {speakers.filter(s => !s.isCharacter && s.speakerId !== 'user').map(spk => (
+                  <div key={spk.speakerId} className={styles.glassCard}>
+                    <div className={styles.cardLabel}>Real Guest</div>
+                    <div className={styles.charCard}>
+                      <div className={styles.charAvatar} style={{ background: `linear-gradient(135deg, ${spk.color}, ${spk.color}88)` }}>
+                        {spk.displayName?.slice(0, 2).toUpperCase()}
+                      </div>
+                      <div>
+                        <div className={styles.charName}>{spk.displayName}</div>
+                        <div className={styles.charRole}>Real person · TTS voice</div>
+                      </div>
+                      <span className={`${styles.badge} ${styles.badgeGuest}`}>Guest</span>
+                      {spk.avatarRefUrl && <div className={styles.readyTick}><Ic.Check /></div>}
+                    </div>
+                  </div>
+                ))}
+
+                {/* Custom guest — lightweight add (no build step, worker handles at render) */}
+                {!speakers.some(s => s.isCharacter) && (
+                  <div className={styles.glassCard}>
+                    <input
+                      ref={guestFileRef}
+                      type="file"
+                      accept="image/jpeg,image/jpg,image/png,image/webp"
+                      style={{ display: 'none' }}
+                      onChange={e => {
+                        const f = e.target.files?.[0];
+                        if (!f) return;
+                        setGuestFile(f);
+                        const reader = new FileReader();
+                        reader.onload = ev => setGuestPreview(ev.target.result);
+                        reader.readAsDataURL(f);
+                        setGuestBuilt(false);
+                      }}
+                    />
+
+                    {guestBuilt ? (
+                      /* Guest added — show summary card */
+                      <div className={styles.charCard}>
+                        {guestPreview && (
+                          <img src={guestPreview} alt={guestName}
+                            style={{ width: 40, height: 40, borderRadius: '50%', objectFit: 'cover' }} />
+                        )}
+                        <div>
+                          <div className={styles.charName}>{guestName}</div>
+                          <div className={styles.charRole}>Real person · guest</div>
+                        </div>
+                        <span className={`${styles.badge} ${styles.badgeGuest}`}>Guest</span>
+                        <button className={styles.rebuildLink} onClick={() => {
+                          setGuestBuilt(false); setGuestFile(null);
+                          setGuestPreview(null); setGuestName('');
+                          setSpeakers(prev => prev.filter(s => s.role !== 'guest' || s.isCharacter));
+                        }}>Remove</button>
+                      </div>
+                    ) : (
+                      /* Add guest form */
+                      <div className={styles.addGuestForm}>
+                        <input
+                          className={styles.guestNameInput}
+                          placeholder="Guest name…"
+                          value={guestName}
+                          onChange={e => setGuestName(e.target.value)}
+                        />
+                        <button
+                          className={styles.addGuestPhotoBtn}
+                          onClick={() => guestFileRef.current?.click()}
+                        >
+                          {guestPreview
+                            ? <><img src={guestPreview} alt="Guest"
+                                style={{ width: 20, height: 20, borderRadius: '50%', objectFit: 'cover', marginRight: 6 }} />
+                                Change photo</>
+                            : <><Ic.Upload /> Upload photo</>
+                          }
+                        </button>
+                        {guestError && <div className={styles.errorBox}>{guestError}</div>}
+                        {guestFile && guestName.trim() && (
+                          <button className={styles.actionChip} onClick={handleAddGuest}>
+                            <Ic.Add /> Add guest
+                          </button>
+                        )}
+                      </div>
+                    )}
+                  </div>
+                )}
 
                 {/* Empty state */}
                 {speakers.length === 0 && !photoPreview && (
