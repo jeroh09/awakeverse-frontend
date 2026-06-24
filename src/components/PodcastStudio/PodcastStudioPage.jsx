@@ -201,6 +201,8 @@ export default function PodcastStudioPage({ context, onClose }) {
 
   // ── Script ────────────────────────────────────────────────────────────────
   const [lines, dispatchLines] = useReducer(linesReducer, []);
+  const linesRef = useRef(lines);          // always-current lines for handleGenerate
+  useEffect(() => { linesRef.current = lines; }, [lines]);
   const [topic, setTopic]      = useState('');
   const linesInitialised = useRef(false);  // guard: only SET lines once on mount
 
@@ -417,14 +419,11 @@ if (context.topic) setTopic(context.topic);
 
   // ── Submit session ────────────────────────────────────────────────────────
   const handleGenerate = useCallback(async () => {
-    if (!speakers.length || !lines.length) return;
-
-    // Debug: log exactly what speakers and lines are being sent
-    console.log('🎙️ Generate — speakers:', JSON.stringify(speakers.map(s => ({ id: s.speakerId, name: s.displayName, hasAvatar: !!s.avatarRefUrl }))));
-    console.log('🎙️ Generate — lines:', JSON.stringify(lines.map(l => ({ id: l.speakerId, text: l.text?.slice(0,30) }))));
+    const currentLines = linesRef.current;
+    if (!speakers.length || !currentLines.length) return;
 
     // Block if host lines exist but no user avatar built
-    const hasHostLines   = lines.some(l => l.speakerId === 'user');
+    const hasHostLines   = currentLines.some(l => l.speakerId === 'user');
     const hasUserSpeaker = speakers.some(s => s.speakerId === 'user');
     if (hasHostLines && !hasUserSpeaker) {
       setBuildError('Please build your avatar first — go to the Avatar tab to upload your photo.');
@@ -442,14 +441,14 @@ if (context.topic) setTopic(context.topic);
           voiceId: s.voiceId, gender: s.gender,
         })),
         // Only send lines that have text AND whose speakerId matches a speaker
-        lines: lines
+        lines: currentLines
           .filter(l => (l.text || '').trim() || l.audioUrl)
           .map(l => ({ speakerId: l.speakerId, text: l.text || '', audioUrl: l.audioUrl || null })),
       });
       // Refresh My Podcasts after completion
       if (state.status === 'complete') loadSessions();
     } catch (e) { setSubmitted(false); }
-  }, [speakers, lines, selectedEnvId, createSession, state.status, loadSessions]);
+  }, [speakers, selectedEnvId, createSession, state.status, loadSessions]);
 
   // ── Reload sessions when generate completes ───────────────────────────────
   useEffect(() => {
