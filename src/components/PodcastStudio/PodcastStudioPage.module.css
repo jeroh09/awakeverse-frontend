@@ -1842,3 +1842,43 @@
   gap: 0.55rem;
   min-height: 0;
 }
+
+
+/* ══ AVATAR DELETE BUTTON — visible on hover via parent:hover ═══════════════ */
+.avatarSquareCard:hover .avatarDeleteBtn {
+  opacity: 1 !important;
+}
+
+/* ══ PODCAST DELETE BUTTONS ══════════════════════════════════════════════════ */
+.podcastDeleteBtn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0.3rem 0.5rem;
+  background: transparent;
+  border: 1px solid rgba(148, 163, 184, 0.15);
+  border-radius: var(--radius-btn);
+  color: var(--text-muted);
+  cursor: pointer;
+  font-size: 0.75rem;
+  transition: all 0.15s;
+}
+.podcastDeleteBtn:hover {
+  border-color: rgba(239, 68, 68, 0.4);
+  color: #EF4444;
+  background: rgba(239, 68, 68, 0.06);
+}
+
+.podcastDeleteConfirm {
+  padding: 0.3rem 0.65rem;
+  background: rgba(239, 68, 68, 0.85);
+  border: 1px solid rgba(239, 68, 68, 0.5);
+  border-radius: var(--radius-btn);
+  color: #fff;
+  cursor: pointer;
+  font-size: 0.72rem;
+  font-weight: 700;
+  font-family: 'Inter', sans-serif;
+  transition: background 0.15s;
+}
+.podcastDeleteConfirm:hover { background: rgba(239, 68, 68, 1); }

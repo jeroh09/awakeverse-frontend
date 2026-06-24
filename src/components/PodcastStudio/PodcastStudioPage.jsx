@@ -213,9 +213,9 @@ export default function PodcastStudioPage({ context, onClose }) {
   const [sessions,        setSessions]        = useState([]);
   const [sessionsLoading, setSessionsLoading] = useState(false);
 
-  // ── Pagination — client-side, 10 per page ────────────────────────────────
+  // ── Pagination — client-side, 8 per page (+ upload button = 9 slots) ─────
   // avatars[] and sessions[] are loaded in full (max 50); we slice for display.
-  const PAGE_SIZE = 10;
+  const PAGE_SIZE = 8;
   const [avatarPage,  setAvatarPage]  = useState(0); // 0-indexed
   const [sessionPage, setSessionPage] = useState(0);
 
@@ -1013,11 +1013,16 @@ if (context.topic) setTopic(context.topic);
                   {/* Bubbles scroll */}
                   <div className={styles.chatBubbles} ref={chatBubblesRef}>
                     {scriptMessages.map((msg, i) => {
-                      // Strip ---SCRIPT--- ... ---END--- from visible bubble text.
-                      // The script block is already extracted into latestScriptBlock —
-                      // showing the raw markers in the bubble confuses the user.
+                      // Strip ONLY the ---SCRIPT--- and ---END--- marker lines.
+                      // The script content itself stays fully visible in the bubble
+                      // so the user can read it, react, and ask for changes.
+                      // The script_block is also extracted separately for "Convert to lines".
+                      const hasScript = msg.role === 'assistant' && /---SCRIPT---/.test(msg.content);
                       const visibleText = msg.role === 'assistant'
-                        ? msg.content.replace(/---SCRIPT---[\s\S]*?---END---/g, '').trim()
+                        ? msg.content
+                            .replace(/---SCRIPT---\n?/g, '')
+                            .replace(/---END---\n?/g, '')
+                            .trim()
                         : msg.content;
                       return (
                         <div key={i} className={`${styles.bubbleRow} ${msg.role === 'user' ? styles.bubbleRowUser : ''}`}>
@@ -1025,7 +1030,43 @@ if (context.topic) setTopic(context.topic);
                             <div className={styles.bubbleAvatar}>AI</div>
                           )}
                           <div className={msg.role === 'assistant' ? styles.bubbleAi : styles.bubbleUser}>
-                            {visibleText}
+                            {hasScript
+                              ? visibleText.split('\n').map((line, li) => {
+                                  const isLabel = /^HOST\s*$/.test(line.trim());
+                                  return line.trim() === '' ? (
+                                    <div key={li} style={{ height: '0.4rem' }} />
+                                  ) : (
+                                    <div key={li} style={{
+                                      fontWeight:  isLabel ? 700 : 400,
+                                      fontSize:    isLabel ? '0.62rem' : '0.78rem',
+                                      color:       isLabel ? '#6366f1' : 'inherit',
+                                      letterSpacing: isLabel ? '0.1em' : 0,
+                                      textTransform: isLabel ? 'uppercase' : 'none',
+                                      lineHeight:  isLabel ? 1.2 : 1.55,
+                                      marginTop:   isLabel ? '0.5rem' : 0,
+                                    }}>
+                                      {line}
+                                    </div>
+                                  );
+                                })
+                              : visibleText
+                            }
+                            {hasScript && (
+                              <div style={{
+                                marginTop: '0.65rem',
+                                paddingTop: '0.45rem',
+                                borderTop: '1px solid rgba(99,102,241,0.2)',
+                                fontSize: '0.68rem',
+                                color: '#34D399',
+                                fontWeight: 600,
+                                fontFamily: 'Inter,sans-serif',
+                                display: 'flex',
+                                alignItems: 'center',
+                                gap: '0.3rem',
+                              }}>
+                                ✓ Happy with this? Click Convert to lines below
+                              </div>
+                            )}
                           </div>
                         </div>
                       );
@@ -1218,30 +1259,89 @@ if (context.topic) setTopic(context.topic);
                 </div>
               )}
               <div className={styles.podcastGrid}>
-                {sessions.map(session => (
-                  <div key={session.session_id} className={styles.podcastCard}>
-                    {session.final_url ? (
-                      <video src={session.final_url} className={styles.podcastThumb} muted />
-                    ) : (
-                      <div className={styles.podcastThumbPlaceholder}><Ic.Video /></div>
-                    )}
-                    <div className={styles.podcastMeta}>
-                      <div className={styles.podcastSpeakers}>
-                        {session.speakers?.map(s => s.display_name).join(' + ') || 'Unknown'}
+                {sessions
+                  .slice(sessionPage * PAGE_SIZE, (sessionPage + 1) * PAGE_SIZE)
+                  .map(session => {
+                    const isConfirm = confirmDelete?.type === 'session' && confirmDelete?.id === session.session_id;
+                    return (
+                      <div key={session.session_id} className={styles.podcastCard} style={{ position: 'relative' }}>
+                        {session.final_url ? (
+                          <video src={session.final_url} className={styles.podcastThumb} muted />
+                        ) : (
+                          <div className={styles.podcastThumbPlaceholder}><Ic.Video /></div>
+                        )}
+                        <div className={styles.podcastMeta}>
+                          <div className={styles.podcastSpeakers}>
+                            {session.speakers?.map(s => s.display_name).join(' + ') || 'Unknown'}
+                          </div>
+                          <div className={styles.podcastDetails}>
+                            {fmtDate(session.created_at)}
+                            {session.total_seconds && ` · ${fmtDuration(session.total_seconds)}`}
+                          </div>
+                        </div>
+                        <div style={{ display: 'flex', gap: '0.4rem', alignItems: 'center' }}>
+                          {session.final_url && (
+                            <a href={session.final_url} target="_blank" rel="noreferrer" className={styles.podcastPlayBtn}>
+                              <Ic.Play /> Play
+                            </a>
+                          )}
+                          {/* Delete control */}
+                          {isConfirm ? (
+                            <button
+                              className={styles.podcastDeleteConfirm}
+                              onClick={async () => {
+                                try {
+                                  await deleteSession(session.session_id);
+                                  setSessions(prev => prev.filter(s => s.session_id !== session.session_id));
+                                  setConfirmDelete(null);
+                                  const remaining = sessions.length - 1;
+                                  if (sessionPage > 0 && sessionPage * PAGE_SIZE >= remaining) {
+                                    setSessionPage(p => p - 1);
+                                  }
+                                } catch (err) { console.error(err); }
+                              }}
+                            >
+                              Sure?
+                            </button>
+                          ) : (
+                            <button
+                              className={styles.podcastDeleteBtn}
+                              onClick={() => setConfirmDelete({ type: 'session', id: session.session_id })}
+                              title="Delete podcast"
+                            >
+                              <Ic.Trash />
+                            </button>
+                          )}
+                        </div>
                       </div>
-                      <div className={styles.podcastDetails}>
-                        {fmtDate(session.created_at)}
-                        {session.total_seconds && ` · ${fmtDuration(session.total_seconds)}`}
-                      </div>
-                    </div>
-                    {session.final_url && (
-                      <a href={session.final_url} target="_blank" rel="noreferrer" className={styles.podcastPlayBtn}>
-                        <Ic.Play /> Play
-                      </a>
-                    )}
-                  </div>
-                ))}
+                    );
+                  })}
               </div>
+
+              {/* Session pagination */}
+              {sessions.length > PAGE_SIZE && (
+                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', paddingTop: '0.65rem', borderTop: '1px solid rgba(148,163,184,0.08)' }}>
+                  <button
+                    className={styles.actionChip}
+                    disabled={sessionPage === 0}
+                    onClick={() => { setSessionPage(p => p - 1); setConfirmDelete(null); }}
+                    style={{ opacity: sessionPage === 0 ? 0.35 : 1 }}
+                  >
+                    ← Prev
+                  </button>
+                  <span style={{ fontSize: '0.65rem', color: 'var(--text-muted)', fontFamily: 'Inter,sans-serif' }}>
+                    {sessionPage * PAGE_SIZE + 1}–{Math.min((sessionPage + 1) * PAGE_SIZE, sessions.length)} of {sessions.length}
+                  </span>
+                  <button
+                    className={styles.actionChip}
+                    disabled={(sessionPage + 1) * PAGE_SIZE >= sessions.length}
+                    onClick={() => { setSessionPage(p => p + 1); setConfirmDelete(null); }}
+                    style={{ opacity: (sessionPage + 1) * PAGE_SIZE >= sessions.length ? 0.35 : 1 }}
+                  >
+                    Next →
+                  </button>
+                </div>
+              )}
             </div>
           )}
 
