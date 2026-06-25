@@ -592,7 +592,28 @@ if (context.topic) setTopic(context.topic);
     };
   }, [playingLineId, lineBlobUrls]);
 
-  // ── Voice preview playback ────────────────────────────────────────────────
+  // ── Podcast download — blob pattern from MediaJobModal ───────────────────
+  // Direct href on a CDN URL opens in browser instead of downloading.
+  // Fetch as blob → create object URL → programmatic <a> click → revoke.
+  const handleDownloadPodcast = useCallback(async (session) => {
+    if (!session?.final_url) return;
+    try {
+      const res  = await fetch(session.final_url, { credentials: 'include' });
+      if (!res.ok) throw new Error(`Fetch failed: ${res.status}`);
+      const blob = await res.blob();
+      const url  = URL.createObjectURL(blob);
+      const a    = document.createElement('a');
+      const speakers = session.speakers?.map(s => s.display_name).join('_') || 'podcast';
+      a.href     = url;
+      a.download = `awakeverse_${speakers}_${session.session_id?.slice(0, 8)}.mp4`;
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      setTimeout(() => URL.revokeObjectURL(url), 5000);
+    } catch (e) {
+      console.error('❌ Download failed:', e);
+    }
+  }, []);
   // Play/stop ElevenLabs preview MP3 for a voice card.
   // Only one preview plays at a time.
 
@@ -1505,14 +1526,13 @@ if (context.topic) setTopic(context.topic);
                       </span>
                     </div>
                     <div style={{ display: 'flex', gap: '0.5rem', alignItems: 'center' }}>
-                      <a
-                        href={activeSession.final_url}
-                        download
+                      <button
                         className={styles.podcastPlayerBtn}
-                        title="Download"
+                        onClick={() => handleDownloadPodcast(activeSession)}
+                        title="Download MP4"
                       >
                         ⬇ Download
-                      </a>
+                      </button>
                       <button
                         className={styles.podcastPlayerClose}
                         onClick={() => {
@@ -1583,7 +1603,7 @@ if (context.topic) setTopic(context.topic);
                           </div>
                         </div>
 
-                        {/* Actions — play, download, delete */}
+                        {/* Actions — uniform sized pill buttons */}
                         <div className={styles.podcastActions}>
                           {session.final_url && (
                             <button
@@ -1591,18 +1611,17 @@ if (context.topic) setTopic(context.topic);
                               onClick={() => setActiveSession(session)}
                               title="Play"
                             >
-                              <Ic.Play />
+                              ▶ Play
                             </button>
                           )}
                           {session.final_url && (
-                            <a
-                              href={session.final_url}
-                              download
+                            <button
                               className={styles.podcastActionBtn}
-                              title="Download"
+                              onClick={() => handleDownloadPodcast(session)}
+                              title="Download MP4"
                             >
-                              ⬇
-                            </a>
+                              ⬇ Save
+                            </button>
                           )}
                           {isConfirm ? (
                             <button
@@ -1624,11 +1643,12 @@ if (context.topic) setTopic(context.topic);
                             </button>
                           ) : (
                             <button
-                              className={styles.podcastDeleteBtn}
+                              className={styles.podcastActionBtn}
                               onClick={() => setConfirmDelete({ type: 'session', id: session.session_id })}
                               title="Delete"
+                              style={{ color: 'var(--text-muted)' }}
                             >
-                              <Ic.Trash />
+                              🗑 Del
                             </button>
                           )}
                         </div>
