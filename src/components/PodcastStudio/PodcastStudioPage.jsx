@@ -135,6 +135,13 @@ const linesReducer = (state, action) => {
     case 'ADD':    return [...state, { speakerId: action.speakerId, text: '', audioUrl: null, id: Date.now() }];
     case 'UPDATE': return state.map(l => l.id === action.id ? { ...l, ...action.patch } : l);
     case 'REMOVE': return state.filter(l => l.id !== action.id);
+    case 'MOVE': {
+      // Drag-to-reorder: move item at index `from` to index `to`
+      const next = [...state];
+      const [moved] = next.splice(action.from, 1);
+      next.splice(action.to, 0, moved);
+      return next;
+    }
     default:       return state;
   }
 };
@@ -856,8 +863,7 @@ if (context.topic) setTopic(context.topic);
           .filter(l => (l.text || '').trim() || l.audioUrl)
           .map(l => ({ speakerId: l.speakerId, text: l.text || '', audioUrl: l.audioUrl || null })),
       });
-      // Refresh My Podcasts after completion
-      if (state.status === 'complete') loadSessions();
+      // Sessions list is refreshed by the useEffect watching state.status === 'complete'
     } catch (e) { setSubmitted(false); }
   }, [speakers, selectedEnvId, createSession, state.status, loadSessions]);
 

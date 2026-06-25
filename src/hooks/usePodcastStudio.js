@@ -246,6 +246,30 @@ export default function usePodcastStudio() {
     }
   }, []);
 
+  // ── Load voice clone status ───────────────────────────────────────────────
+  // DECLARATION ORDER NOTE: must be defined before the mount useEffect below
+  // so that the dependency array reference is not in the Temporal Dead Zone
+  // when Terser evaluates it in the production bundle.
+
+  const loadVoiceClone = useCallback(async () => {
+    try {
+      const res = await fetch(`${API_BASE}/api/podcast/voice/clone`, {
+        credentials: 'include',
+      });
+      if (res.ok) {
+        const data = await res.json();
+        if (data.has_clone) {
+          setVoiceClone({ voiceId: data.voice_id, cloneName: data.clone_name });
+          console.log(`🎙️ Voice clone loaded: ${data.clone_name} (${data.voice_id})`);
+        } else {
+          setVoiceClone(null);
+        }
+      }
+    } catch (e) {
+      console.warn('⚠️ loadVoiceClone error:', e.message);
+    }
+  }, []);
+
   // Load on mount
   useEffect(() => {
     loadEnvironments();
@@ -816,25 +840,6 @@ export default function usePodcastStudio() {
   }, []);
 
   // ── Voice clone ───────────────────────────────────────────────────────────
-  const loadVoiceClone = useCallback(async () => {
-    try {
-      const res = await fetch(`${API_BASE}/api/podcast/voice/clone`, {
-        credentials: 'include',
-      });
-      if (res.ok) {
-        const data = await res.json();
-        if (data.has_clone) {
-          setVoiceClone({ voiceId: data.voice_id, cloneName: data.clone_name });
-          console.log(`🎙️ Voice clone loaded: ${data.clone_name} (${data.voice_id})`);
-        } else {
-          setVoiceClone(null);
-        }
-      }
-    } catch (e) {
-      console.warn('⚠️ loadVoiceClone error:', e.message);
-    }
-  }, []);
-
   const cloneVoice = useCallback(async (audioBlob, cloneName = 'My Voice') => {
     if (!audioBlob) throw new Error('audioBlob is required');
 
