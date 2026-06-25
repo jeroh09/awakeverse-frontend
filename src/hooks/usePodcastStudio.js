@@ -33,6 +33,7 @@
 //   session.speakers[].speakerId   speaker_id     POST /api/podcast/session body
 //   session.speakers[].displayName display_name   POST /api/podcast/session body
 //   session.speakers[].avatarRefUrl avatar_ref_url POST /api/podcast/session body
+//   session.speakers[].savedAvatarId avatar_id     POST /api/podcast/session body  ← fullbody cache key
 //   session.speakers[].voiceMode   voice_mode     POST /api/podcast/session body
 //   session.speakers[].voiceId     voice_id       POST /api/podcast/session body
 //   session.lines[].speakerId      speaker_id     POST /api/podcast/session body
@@ -700,6 +701,7 @@ export default function usePodcastStudio() {
         speaker_id:     s.speakerId,
         display_name:   s.displayName,
         avatar_ref_url: s.avatarRefUrl,
+        avatar_id:      s.savedAvatarId || null,  // UUID from podcast_avatars — enables fullbody cache
         voice_mode:     s.voiceMode,
         voice_id:       s.voiceId     || null,
         gender:         s.gender      || 'neutral',
