@@ -246,13 +246,13 @@ export default function PodcastStudioPage({ context, onClose }) {
 
   // ── Mode select with consent recording ───────────────────────────────────
   const handleModeSelect = useCallback(async (mode) => {
-    if (!consented) await recordConsent();
-    if (mode === 'solo') {
-      setPodcastMode('solo');
-      setActiveTab('script');
-    } else {
-      setPodcastMode('interview');
+    // Record consent first — must complete before proceeding
+    if (!consented) {
+      const ok = await recordConsent();
+      if (!ok) return; // don't proceed if consent failed
     }
+    setPodcastMode(mode);
+    if (mode === 'solo') setActiveTab('script');
   }, [consented, recordConsent]);
 
   // ── Script chat assistant ─────────────────────────────────────────────────
