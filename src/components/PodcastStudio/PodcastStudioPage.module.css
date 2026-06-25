@@ -2236,3 +2236,46 @@
   color: #A5B4FC;
   background: rgba(99,102,241,0.06);
 }
+
+
+/* ══ PICKER CONSENT CHECKBOXES ══════════════════════════════════════════════ */
+.pickerConsent {
+  display: flex;
+  flex-direction: column;
+  gap: 0.55rem;
+  padding: 0.85rem 0.9rem;
+  background: rgba(99, 102, 241, 0.04);
+  border: 1px solid rgba(99, 102, 241, 0.14);
+  box-shadow: 0 0 0 1px rgba(99, 102, 241, 0.06);
+  border-radius: 12px;
+}
+
+.pickerConsentLabel {
+  font-size: 0.65rem;
+  font-weight: 700;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--text-muted);
+  font-family: 'Inter', sans-serif;
+  margin: 0;
+}
+
+.pickerConsentRow {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.55rem;
+  cursor: pointer;
+  font-size: 0.74rem;
+  color: var(--text-secondary);
+  font-family: 'Inter', sans-serif;
+  line-height: 1.45;
+}
+
+.pickerCheckbox {
+  width: 15px;
+  height: 15px;
+  flex-shrink: 0;
+  margin-top: 2px;
+  accent-color: var(--accent-primary);
+  cursor: pointer;
+}

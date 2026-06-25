@@ -161,6 +161,49 @@ export default function usePodcastStudio() {
     }
   }, []);
 
+  // ── Consent (once-ever per user) ─────────────────────────────────────────
+  //
+  // Backend → Frontend naming:
+  //   consented    → consented     (boolean)
+  //   consented_at → consentedAt   (ISO string or null)
+
+  const [consented,   setConsented]   = useState(null); // null=loading, true/false
+
+  const loadConsent = useCallback(async () => {
+    try {
+      const res = await fetch(`${API_BASE}/api/podcast/consent`, {
+        credentials: 'include',
+      });
+      if (res.ok) {
+        const data = await res.json();
+        setConsented(data.consented);
+        console.log(`🔒 Podcast consent: ${data.consented}`);
+      }
+    } catch (e) {
+      console.warn('⚠️ loadConsent error:', e.message);
+      setConsented(false); // default to showing checkboxes on error
+    }
+  }, []);
+
+  const recordConsent = useCallback(async () => {
+    try {
+      const res = await fetch(`${API_BASE}/api/podcast/consent`, {
+        method:  'POST',
+        headers: { 'X-CSRF-Token': getCsrf() },
+        credentials: 'include',
+      });
+      if (res.ok) {
+        setConsented(true);
+        console.log('✅ Podcast consent recorded');
+        return true;
+      }
+      return false;
+    } catch (e) {
+      console.warn('⚠️ recordConsent error:', e.message);
+      return false;
+    }
+  }, []);
+
   // ── Load curated voices ───────────────────────────────────────────────────
   //
   // Fetches active voices from podcast_curated_voices table.
@@ -207,7 +250,8 @@ export default function usePodcastStudio() {
     loadEnvironments();
     loadAvatars();
     loadVoices();
-  }, [loadEnvironments, loadAvatars, loadVoices]);
+    loadConsent();
+  }, [loadEnvironments, loadAvatars, loadVoices, loadConsent]);
 
   // ── Polling loop — mirrors useContentGeneration exactly ───────────────────
 
@@ -834,7 +878,8 @@ export default function usePodcastStudio() {
     environments,   // normalised env objects
     envsLoading,
     avatars,        // user's saved avatars
-    voices,         // curated voice list [{ voiceId, displayName, gender, accent, vibe, previewUrl, slot }]
+    voices,         // curated voice list
+    consented,      // boolean | null — has user given podcast consent
 
     // Avatar + photo
     uploadPhoto,      // (File)   → photoUrl
@@ -854,6 +899,8 @@ export default function usePodcastStudio() {
     loadEnvironments, // () → void — manual refresh
     loadAvatars,      // () → void — manual refresh
     loadVoices,       // () → void — manual refresh
+    loadConsent,      // () → void — check consent status
+    recordConsent,    // () → bool — record consent, returns true on success
     resetStudio,      // () → void
   };
 }

@@ -164,6 +164,7 @@ export default function PodcastStudioPage({ context, onClose }) {
     envsLoading,
     avatars,
     voices,
+    consented,
     uploadPhoto,
     buildAvatar,
     getCharacterRef,
@@ -173,6 +174,7 @@ export default function PodcastStudioPage({ context, onClose }) {
     deleteAvatar,
     deleteSession,
     sendScriptMessage,
+    recordConsent,
   } = usePodcastStudio();
 
   // ── Navigation ────────────────────────────────────────────────────────────
@@ -236,6 +238,22 @@ export default function PodcastStudioPage({ context, onClose }) {
   const [podcastMode, setPodcastMode] = useState(
     context?.character ? 'interview' : null
   );
+  // Consent checkboxes — local UI state only, shown once ever.
+  // consentGiven = both boxes checked (enables mode cards).
+  const [consentPhoto, setConsentPhoto] = useState(false);
+  const [consentVoice, setConsentVoice] = useState(false);
+  const consentGiven = consentPhoto && consentVoice;
+
+  // ── Mode select with consent recording ───────────────────────────────────
+  const handleModeSelect = useCallback(async (mode) => {
+    if (!consented) await recordConsent();
+    if (mode === 'solo') {
+      setPodcastMode('solo');
+      setActiveTab('script');
+    } else {
+      setPodcastMode('interview');
+    }
+  }, [consented, recordConsent]);
 
   // ── Script chat assistant ─────────────────────────────────────────────────
   // 'chat' = AI write mode (chat bubbles). 'lines' = edit lines mode (line cards).
@@ -852,7 +870,12 @@ if (context.topic) setTopic(context.topic);
                     </div>
                     <div className={styles.pickerOptions}>
                       {/* Solo voice */}
-                      <button className={styles.pickerOption} onClick={() => { setPodcastMode('solo'); setActiveTab('script'); }}>
+                      <button
+                        className={styles.pickerOption}
+                        onClick={() => handleModeSelect('solo')}
+                        disabled={!consented && !consentGiven}
+                        style={{ opacity: (!consented && !consentGiven) ? 0.45 : 1, cursor: (!consented && !consentGiven) ? 'not-allowed' : 'pointer' }}
+                      >
                         <div className={styles.pickerOptionImg}>
                           <img src="/images/solo_voice.jpg" alt="Solo voice"
                             onError={e => { e.currentTarget.style.display='none'; e.currentTarget.nextSibling.style.display='flex'; }} />
@@ -871,7 +894,12 @@ if (context.topic) setTopic(context.topic);
                         </div>
                       </button>
                       {/* Open conversation */}
-                      <button className={styles.pickerOption} onClick={() => { setPodcastMode('interview'); }}>
+                      <button
+                        className={styles.pickerOption}
+                        onClick={() => handleModeSelect('interview')}
+                        disabled={!consented && !consentGiven}
+                        style={{ opacity: (!consented && !consentGiven) ? 0.45 : 1, cursor: (!consented && !consentGiven) ? 'not-allowed' : 'pointer' }}
+                      >
                         <div className={styles.pickerOptionImg}>
                           <img src="/images/open_conversation.jpg" alt="Open conversation"
                             onError={e => { e.currentTarget.style.display='none'; e.currentTarget.nextSibling.style.display='flex'; }} />
@@ -890,8 +918,39 @@ if (context.topic) setTopic(context.topic);
                         </div>
                       </button>
                     </div>
+
+                    {/* Consent checkboxes — only shown if not yet consented */}
+                    {!consented && (
+                      <div className={styles.pickerConsent}>
+                        <p className={styles.pickerConsentLabel}>Before we begin:</p>
+                        <label className={styles.pickerConsentRow}>
+                          <input
+                            type="checkbox"
+                            checked={consentPhoto}
+                            onChange={e => setConsentPhoto(e.target.checked)}
+                            className={styles.pickerCheckbox}
+                          />
+                          <span>My photo is of me, or I have the rights to use it</span>
+                        </label>
+                        <label className={styles.pickerConsentRow}>
+                          <input
+                            type="checkbox"
+                            checked={consentVoice}
+                            onChange={e => setConsentVoice(e.target.checked)}
+                            className={styles.pickerCheckbox}
+                          />
+                          <span>Any voice I record is my own voice</span>
+                        </label>
+                      </div>
+                    )}
+
                     <div className={styles.pickerFooter}>
-                      <button className={styles.pickerSkip} onClick={() => setPodcastMode('solo')}>
+                      <button className={styles.pickerSkip} onClick={() => {
+                        if (!consented && !consentGiven) return;
+                        handleModeSelect('solo');
+                      }}
+                        style={{ opacity: (!consented && !consentGiven) ? 0.35 : 1 }}
+                      >
                         Not sure yet — explore first
                       </button>
                     </div>
