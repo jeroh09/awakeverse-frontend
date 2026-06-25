@@ -81,6 +81,8 @@ export default function usePodcastStudio() {
   const [envsLoading,  setEnvsLoading]  = useState(false);
   const [avatars,      setAvatars]      = useState([]);   // user's saved avatars
   const [voices,       setVoices]       = useState([]);   // curated voice list
+  const [consented,    setConsented]    = useState(null); // null=loading, true/false
+  const [voiceClone,   setVoiceClone]   = useState(null); // { voiceId, cloneName } | null
 
   const pollingRef      = useRef(null);
   const startTimeRef    = useRef(null);
@@ -167,8 +169,6 @@ export default function usePodcastStudio() {
   // Backend → Frontend naming:
   //   consented    → consented     (boolean)
   //   consented_at → consentedAt   (ISO string or null)
-
-  const [consented,   setConsented]   = useState(null); // null=loading, true/false
 
   const loadConsent = useCallback(async () => {
     try {
@@ -816,21 +816,6 @@ export default function usePodcastStudio() {
   }, []);
 
   // ── Voice clone ───────────────────────────────────────────────────────────
-  //
-  // Frontend params:
-  //   audioBlob  (Blob)   — recording from MediaRecorder
-  //   cloneName  (string) — display name, default "My Voice"
-  //
-  // Backend response → normalised:
-  //   voice_id   → voiceId
-  //   clone_name → cloneName
-  //
-  // Naming:
-  //   POST /api/podcast/voice/clone
-  //   GET  /api/podcast/voice/clone → { hasClone, voiceId, cloneName }
-
-  const [voiceClone, setVoiceClone] = useState(null); // { voiceId, cloneName } | null
-
   const loadVoiceClone = useCallback(async () => {
     try {
       const res = await fetch(`${API_BASE}/api/podcast/voice/clone`, {
