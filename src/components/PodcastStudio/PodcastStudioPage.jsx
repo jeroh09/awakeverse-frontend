@@ -165,6 +165,7 @@ export default function PodcastStudioPage({ context, onClose }) {
     avatars,
     voices,
     consented,
+    voiceClone,
     uploadPhoto,
     buildAvatar,
     getCharacterRef,
@@ -175,6 +176,8 @@ export default function PodcastStudioPage({ context, onClose }) {
     deleteSession,
     sendScriptMessage,
     recordConsent,
+    cloneVoice,
+    loadVoiceClone,
   } = usePodcastStudio();
 
   // ── Navigation ────────────────────────────────────────────────────────────
@@ -636,6 +639,52 @@ if (context.topic) setTopic(context.topic);
       console.error('❌ Download failed:', e);
     }
   }, []);
+  // ── Voice clone recording state ───────────────────────────────────────────
+  const [cloningVoice,    setCloningVoice]    = useState(false);
+  const [cloneRecSeconds, setCloneRecSeconds] = useState(0);
+  const [cloneError,      setCloneError]      = useState(null);
+  const [cloneSubmitting, setCloneSubmitting] = useState(false);
+  const cloneRecorderRef  = useRef(null);
+  const cloneChunksRef    = useRef([]);
+  const cloneTimerRef     = useRef(null);
+
+  const handleCloneRecord = useCallback(async () => {
+    setCloneError(null);
+    if (cloningVoice) {
+      cloneRecorderRef.current?.stop();
+      clearInterval(cloneTimerRef.current);
+      return;
+    }
+    let stream;
+    try {
+      stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+    } catch (e) {
+      setCloneError('Microphone access denied.'); return;
+    }
+    cloneChunksRef.current = [];
+    const mimeType = MediaRecorder.isTypeSupported('audio/webm;codecs=opus')
+      ? 'audio/webm;codecs=opus' : 'audio/webm';
+    const recorder = new MediaRecorder(stream, { mimeType });
+    cloneRecorderRef.current = recorder;
+    setCloneRecSeconds(0);
+    setCloningVoice(true);
+    cloneTimerRef.current = setInterval(() => setCloneRecSeconds(s => s + 1), 1000);
+    recorder.ondataavailable = e => { if (e.data.size > 0) cloneChunksRef.current.push(e.data); };
+    recorder.onstop = async () => {
+      stream.getTracks().forEach(t => t.stop());
+      clearInterval(cloneTimerRef.current);
+      setCloningVoice(false);
+      setCloneRecSeconds(0);
+      const blob = new Blob(cloneChunksRef.current, { type: mimeType });
+      if (blob.size < 1000) { setCloneError('Too short — aim for 30+ seconds.'); return; }
+      setCloneSubmitting(true);
+      try { await cloneVoice(blob, 'My Voice'); }
+      catch (e) { setCloneError(e.message); }
+      finally { setCloneSubmitting(false); }
+    };
+    recorder.start();
+  }, [cloningVoice, cloneVoice]);
+
   // Play/stop ElevenLabs preview MP3 for a voice card.
   // Only one preview plays at a time.
 
@@ -1803,6 +1852,80 @@ if (context.topic) setTopic(context.topic);
           {activeTab === 'script' && (
             <div className={styles.glassCard} style={{ height: '100%', display: 'flex', flexDirection: 'column', gap: '0.65rem' }}>
               <div className={styles.cardLabel}>Voice</div>
+
+              {/* ── My Voice clone card ── */}
+              <div style={{
+                padding: '0.7rem 0.8rem',
+                background: 'rgba(99,102,241,0.05)',
+                border: '1px solid rgba(99,102,241,0.2)',
+                boxShadow: '0 0 0 1px rgba(99,102,241,0.08)',
+                borderRadius: 12,
+                flexShrink: 0,
+              }}>
+                {voiceClone ? (
+                  // Clone exists — show as selectable card
+                  <div
+                    className={`${styles.voiceCard} ${
+                      speakers.some(s => s.voiceId === voiceClone.voiceId) ? styles.voiceCardSelected : ''
+                    }`}
+                    style={{ margin: 0 }}
+                    onClick={() => {
+                      const hostSpk = speakers.find(s => s.speakerId === 'user') || speakers[0];
+                      if (hostSpk) handleSelectVoice(hostSpk.speakerId, voiceClone.voiceId);
+                    }}
+                  >
+                    <div className={styles.voiceCardTop}>
+                      <div className={styles.voiceCardName}>🎙 {voiceClone.cloneName}</div>
+                    </div>
+                    <div className={styles.voiceCardAccent}>your voice</div>
+                    <div className={styles.voiceCardVibe}>Cloned from your recording</div>
+                    <button
+                      style={{
+                        marginTop: '0.45rem', fontSize: '0.65rem', color: '#64748b',
+                        background: 'none', border: 'none', cursor: 'pointer',
+                        fontFamily: 'Inter,sans-serif', padding: 0, textAlign: 'left',
+                      }}
+                      onClick={e => { e.stopPropagation(); handleCloneRecord(); }}
+                    >
+                      {cloningVoice
+                        ? `⏹ Stop (${cloneRecSeconds}s)`
+                        : cloneSubmitting ? '⏳ Cloning…' : '↺ Re-record voice'}
+                    </button>
+                  </div>
+                ) : (
+                  // No clone yet — show record prompt
+                  <div>
+                    <div style={{ fontSize: '0.72rem', fontWeight: 700, color: '#e0e7ff', fontFamily: 'Syne,sans-serif', marginBottom: '0.3rem' }}>
+                      🎙 Clone your voice
+                    </div>
+                    <div style={{ fontSize: '0.68rem', color: 'var(--text-muted)', fontFamily: 'Inter,sans-serif', marginBottom: '0.5rem', lineHeight: 1.45 }}>
+                      Record 30–60s of natural speech. We'll clone it for all your podcasts.
+                    </div>
+                    {cloningVoice && (
+                      <div className={styles.recordingCounter} style={{ marginBottom: '0.4rem' }}>
+                        <span className={styles.recordingDot} />
+                        {`${Math.floor(cloneRecSeconds / 60)}:${String(cloneRecSeconds % 60).padStart(2, '0')}`}
+                        <span style={{ opacity: 0.6, fontSize: '0.62rem' }}>— tap stop when done</span>
+                      </div>
+                    )}
+                    {cloneError && (
+                      <div style={{ fontSize: '0.68rem', color: '#EF4444', fontFamily: 'Inter,sans-serif', marginBottom: '0.4rem' }}>
+                        {cloneError}
+                      </div>
+                    )}
+                    <button
+                      className={styles.actionChip}
+                      onClick={handleCloneRecord}
+                      disabled={cloneSubmitting}
+                      style={cloningVoice ? { color: '#EF4444', borderColor: 'rgba(239,68,68,0.4)' } : {}}
+                    >
+                      {cloneSubmitting ? '⏳ Cloning…'
+                        : cloningVoice ? `⏹ Stop recording (${cloneRecSeconds}s)`
+                        : '⏺ Record my voice'}
+                    </button>
+                  </div>
+                )}
+              </div>
 
               {/* Gender filter toggle */}
               <div className={styles.scriptModeToggle} style={{ alignSelf: 'stretch' }}>

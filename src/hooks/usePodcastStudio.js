@@ -252,7 +252,8 @@ export default function usePodcastStudio() {
     loadAvatars();
     loadVoices();
     loadConsent();
-  }, [loadEnvironments, loadAvatars, loadVoices, loadConsent]);
+    loadVoiceClone();
+  }, [loadEnvironments, loadAvatars, loadVoices, loadConsent, loadVoiceClone]);
 
   // ── Polling loop — mirrors useContentGeneration exactly ───────────────────
 
@@ -814,6 +815,72 @@ export default function usePodcastStudio() {
     }
   }, []);
 
+  // ── Voice clone ───────────────────────────────────────────────────────────
+  //
+  // Frontend params:
+  //   audioBlob  (Blob)   — recording from MediaRecorder
+  //   cloneName  (string) — display name, default "My Voice"
+  //
+  // Backend response → normalised:
+  //   voice_id   → voiceId
+  //   clone_name → cloneName
+  //
+  // Naming:
+  //   POST /api/podcast/voice/clone
+  //   GET  /api/podcast/voice/clone → { hasClone, voiceId, cloneName }
+
+  const [voiceClone, setVoiceClone] = useState(null); // { voiceId, cloneName } | null
+
+  const loadVoiceClone = useCallback(async () => {
+    try {
+      const res = await fetch(`${API_BASE}/api/podcast/voice/clone`, {
+        credentials: 'include',
+      });
+      if (res.ok) {
+        const data = await res.json();
+        if (data.has_clone) {
+          setVoiceClone({ voiceId: data.voice_id, cloneName: data.clone_name });
+          console.log(`🎙️ Voice clone loaded: ${data.clone_name} (${data.voice_id})`);
+        } else {
+          setVoiceClone(null);
+        }
+      }
+    } catch (e) {
+      console.warn('⚠️ loadVoiceClone error:', e.message);
+    }
+  }, []);
+
+  const cloneVoice = useCallback(async (audioBlob, cloneName = 'My Voice') => {
+    if (!audioBlob) throw new Error('audioBlob is required');
+
+    const formData = new FormData();
+    formData.append('audio', audioBlob, 'voice_sample.webm');
+    formData.append('name', cloneName);
+
+    try {
+      const res = await fetch(`${API_BASE}/api/podcast/voice/clone`, {
+        method:      'POST',
+        headers:     { 'X-CSRF-Token': getCsrf() },
+        credentials: 'include',
+        body:        formData,
+      });
+
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error || `Clone failed: ${res.status}`);
+
+      const clone = { voiceId: data.voice_id, cloneName: data.clone_name };
+      setVoiceClone(clone);
+      // Refresh voices list so "My Voice" appears in picker immediately
+      await loadVoices();
+      console.log(`🎙️ Voice cloned: ${data.clone_name} (${data.voice_id})`);
+      return clone;
+
+    } catch (e) {
+      console.error('❌ cloneVoice failed:', e);
+      throw e;
+    }
+  }, [loadVoices]);
+
   // ── Script chat assistant ─────────────────────────────────────────────────
   //
   // Stateless — caller sends full message history each turn.
@@ -880,8 +947,9 @@ export default function usePodcastStudio() {
     environments,   // normalised env objects
     envsLoading,
     avatars,        // user's saved avatars
-    voices,         // curated voice list
+    voices,         // curated voice list (includes "My Voice" if clone exists)
     consented,      // boolean | null — has user given podcast consent
+    voiceClone,     // { voiceId, cloneName } | null — user's cloned voice
 
     // Avatar + photo
     uploadPhoto,      // (File)   → photoUrl
@@ -891,6 +959,10 @@ export default function usePodcastStudio() {
 
     // Audio (record mode)
     uploadAudio,      // (Blob)   → audioUrl
+
+    // Voice clone (IVC)
+    cloneVoice,       // (audioBlob, cloneName?) → { voiceId, cloneName }
+    loadVoiceClone,   // () → void — refresh clone status
 
     // Session (render job)
     createSession,    // (session) → sessionId (starts polling)
