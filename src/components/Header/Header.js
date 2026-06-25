@@ -6,6 +6,7 @@
 // ✅ All original logic preserved: Oracle, onboarding, launcher, viewContext, nav groups
 
 import React, { useState, useEffect, useRef, useCallback } from 'react';
+import { useNavigate } from 'react-router-dom';
 import styles from './Header.module.css';
 import { useUser } from '../../contexts/UserContext';
 import { useAuth } from '../../contexts/AuthContext';
@@ -159,13 +160,14 @@ const AwakeVerseWordmarkFull = ({ className }) => (
   </span>
 );
 
-// ─── Profile popup menu items ─────────────────────────────────────────────────
-// Extend this array to add more profile pages
+// ─── Profile menu items — navigate to /profile-settings?tab=<tab>
+// Mirrors the exact routes ProfileButton used before this redesign.
+// 'tab' values must match what ProfileSettingsPage expects in its query param.
 const PROFILE_MENU_ITEMS = [
-  { key: 'profile',  label: 'Profile',       icon: 'ti-user',         viewState: 'PROFILE' },
-  { key: 'settings', label: 'Settings',      icon: 'ti-settings',     viewState: 'SETTINGS' },
-  { key: 'billing',  label: 'Billing',       icon: 'ti-credit-card',  viewState: 'BILLING' },
-  { key: 'upgrade',  label: 'Upgrade',       icon: 'ti-star',         viewState: 'UPGRADE' },
+  { key: 'account',      label: 'Account',      icon: 'ti-user',         tab: 'account' },
+  { key: 'settings',     label: 'Settings',     icon: 'ti-settings',     tab: 'settings' },
+  { key: 'subscription', label: 'Subscription', icon: 'ti-credit-card',  tab: 'subscription' },
+  { key: 'creator',      label: 'Creator Hub',  icon: 'ti-sparkles',     tab: 'creator' },
 ];
 
 // ─── Main component ───────────────────────────────────────────────────────────
@@ -173,6 +175,7 @@ const PROFILE_MENU_ITEMS = [
 export default function Header() {
   const { user, getSubscriptionInfo } = useUser();
   const { isAuthenticated, logout } = useAuth();
+  const navigate = useNavigate();
   const API_BASE = process.env.REACT_APP_API_URL || 'https://api.awakeverse.com';
 
   // Defensive viewContext — same try/catch as original
@@ -258,15 +261,13 @@ export default function Header() {
     }, 200);
   }, []);
 
-  // ✅ Profile menu — navigate to a sub-page via viewContext
-  const handleProfileMenuClick = useCallback((viewState) => {
+  // ✅ Profile menu — navigate to /profile-settings?tab=<tab>
+  // Exact same route ProfileButton used before this redesign
+  const handleProfileMenuClick = useCallback((tab) => {
     setIsProfileOpen(false);
     setIsSidebarOpen(false);
-    if (viewContext && viewState) {
-      // Navigate if viewContext has that state; fall back gracefully
-      try { viewContext.switchView(viewState); } catch (e) { /* page not wired yet */ }
-    }
-  }, [viewContext]);
+    navigate(`/profile-settings${tab ? `?tab=${tab}` : ''}`);
+  }, [navigate]);
 
   const handleLogout = useCallback(() => {
     setIsProfileOpen(false);
@@ -334,6 +335,7 @@ export default function Header() {
         <AwakeVerseWordmark className={styles.triggerWordmark} />
         <span className={styles.triggerSep} aria-hidden="true" />
         <span className={styles.triggerHome}>Home</span>
+        <i className={`ti ti-layout-sidebar-left-expand ${styles.triggerChevron}`} aria-hidden="true" />
       </button>
 
       {/* ── Overlay — closes panel on click outside ── */}
@@ -431,7 +433,7 @@ export default function Header() {
                       key={item.key}
                       className={styles.profileMenuItem}
                       role="menuitem"
-                      onClick={() => handleProfileMenuClick(item.viewState)}
+                      onClick={() => handleProfileMenuClick(item.tab)}
                     >
                       <i className={`ti ${item.icon} ${styles.profileMenuIcon}`} aria-hidden="true" />
                       {item.label}
