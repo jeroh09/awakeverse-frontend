@@ -235,6 +235,10 @@ export default function PodcastStudioPage({ context, onClose }) {
   const [dragIdx,   setDragIdx]   = useState(null);  // index being dragged
   const [dragOver,  setDragOver_l] = useState(null);  // index being hovered
 
+  // ── Podcast player state ──────────────────────────────────────────────────
+  const [activeSession,    setActiveSession]    = useState(null);
+  const podcastVideoRef    = useRef(null);
+
   // ── Mode picker ───────────────────────────────────────────────────────────
   // Shown on cold entry (no context.character). 'solo'|'interview'|null(not chosen yet).
   // null = picker visible. Skipping sets 'solo' as default.
@@ -286,10 +290,6 @@ export default function PodcastStudioPage({ context, onClose }) {
   const recordingChunks    = useRef([]);
   const recordingTimerRef  = useRef(null);
   const lineAudioRef       = useRef(null);                       // current playback Audio object
-
-  // ── Podcast player state ──────────────────────────────────────────────────
-  const [activeSession,    setActiveSession]    = useState(null);// session being played
-  const podcastVideoRef    = useRef(null);
 
   // ── Voice picker state ────────────────────────────────────────────────────
   // voiceGenderFilter: which gender tab is active in the picker ('female'|'male')
