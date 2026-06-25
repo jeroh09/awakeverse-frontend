@@ -358,7 +358,7 @@ export default function Header() {
             <div className={styles.panelHead}>
               <div className={styles.panelHeadLeft}>
                 <button
-                  className={`${styles.wordmark} ${styles.panelWordmark}`}
+                  className={styles.panelWordmark}
                   onClick={handleOracleClick}
                   aria-label="Ask the Oracle"
                   title="Ask the Oracle"

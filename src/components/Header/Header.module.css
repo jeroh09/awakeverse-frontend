@@ -1,86 +1,295 @@
 /* ==========================================================
-   AwakeVerse Header + Sidebar Navigation (FIXED LAYOUT)
-   âœ… Uses the working flexbox structure from your previous version
-   âœ… Keeps the current visual styling
-   âœ… UPDATED: Minimal hamburger with varying bar lengths
+   AwakeVerse — Floating Trigger + Detached Panel Nav
+   No header bar. AV pill top-left. Panel floats detached.
    ========================================================== */
 
-/* Fonts */
-@import url('https://fonts.googleapis.com/css2?family=Syne:wght@600;700;800&family=Inter:wght@400;500;600;700&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Caveat:wght@600&family=Syne:wght@700;800&family=Inter:wght@400;500;600&display=swap');
 
-:root {
-  --sidebar-width: 260px;
-}
+/* ── Trigger pill ──────────────────────────────────────────── */
 
-/* ============================================
-   TOP HEADER BAR (BRAND ONLY)
-   ============================================ */
-
-.header {
+.trigger {
   position: fixed;
-  top: 0;
-  left: 0;
-  right: 0;
+  top: 14px;
+  left: 14px;
   z-index: 510;
 
   display: flex;
   align-items: center;
-  justify-content: space-between;
-  padding: 0.55rem 1.5rem;
+  gap: 7px;
+  padding: 5px 12px 5px 9px;
 
-  background: radial-gradient(circle at top left, #020617 0%, #020617 50%, #020617 100%);
-  border-bottom: 1px solid rgba(148, 163, 184, 0.35);
-  box-shadow:
-    0 18px 40px rgba(15, 23, 42, 0.95),
-    0 0 0 1px rgba(15, 23, 42, 1);
+  background: rgba(10, 15, 26, 0.78);
+  border: 1px solid rgba(148, 163, 184, 0.22);
+  border-radius: 999px;
+  backdrop-filter: blur(18px);
+  -webkit-backdrop-filter: blur(18px);
+  box-shadow: 0 2px 16px rgba(0, 0, 0, 0.4);
 
-  color: #e5e7eb;
-  font-family: 'Inter', system-ui, sans-serif;
+  cursor: pointer;
+  transition: border-color 0.18s ease, box-shadow 0.18s ease;
+  font-family: 'Inter', sans-serif;
 }
 
-/* SHIFT TITLE RIGHT so hamburger never overlaps */
-.brandShell {
+.trigger:hover {
+  border-color: rgba(99, 102, 241, 0.5);
+  box-shadow: 0 2px 20px rgba(99, 102, 241, 0.18);
+}
+
+.triggerSep {
+  width: 1px;
+  height: 11px;
+  background: rgba(148, 163, 184, 0.22);
+  border-radius: 1px;
+  flex-shrink: 0;
+}
+
+.triggerHome {
+  font-family: 'Inter', sans-serif;
+  font-size: 11px;
+  font-weight: 500;
+  color: rgba(148, 163, 184, 0.65);
+  letter-spacing: 0.03em;
+  white-space: nowrap;
+}
+
+/* ── Wordmark (Caveat italic) ──────────────────────────────── */
+
+.wordmark {
+  font-family: 'Caveat', cursive !important;
+  font-style: italic !important;
+  font-weight: 600 !important;
+  letter-spacing: 0.03em !important;
+  line-height: 1 !important;
+  text-transform: none !important;
+  white-space: nowrap;
+}
+
+.wordmarkIvory { color: #f5f5dc; }
+.wordmarkIndigo { color: #6366f1; }
+
+.triggerWordmark {
+  font-size: 15px;
+}
+
+/* ── Overlay ───────────────────────────────────────────────── */
+
+.overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 511;
+  background: rgba(6, 10, 20, 0.52);
+  backdrop-filter: blur(3px);
+  -webkit-backdrop-filter: blur(3px);
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.22s ease;
+}
+
+.overlayOpen {
+  opacity: 1;
+  pointer-events: auto;
+}
+
+/* ── Panel wrapper (positions + animates) ──────────────────── */
+
+.panelWrap {
+  position: fixed;
+  top: 10px;
+  left: 10px;
+  z-index: 512;
+
+  opacity: 0;
+  pointer-events: none;
+  transform: translateX(-10px) scale(0.97);
+  transition:
+    opacity 0.24s cubic-bezier(0.32, 0.72, 0, 1),
+    transform 0.24s cubic-bezier(0.32, 0.72, 0, 1);
+}
+
+.panelWrapOpen {
+  opacity: 1;
+  pointer-events: auto;
+  transform: translateX(0) scale(1);
+}
+
+/* ── Double-border outer shell (onboarding .ob-panel technique) */
+
+.panelOuter {
+  padding: 4px;
+  border-radius: 22px;
+  border: 1px solid rgba(99, 102, 241, 0.28);
+  box-shadow:
+    0 0 0 4px rgba(15, 23, 42, 0.97),
+    0 0 0 5px rgba(99, 102, 241, 0.22),
+    0 24px 56px rgba(0, 0, 0, 0.72);
+}
+
+/* ── Panel inner card ──────────────────────────────────────── */
+
+.panel {
+  width: 232px;
+  background: rgba(10, 15, 26, 0.97);
+  border-radius: 18px;
+  border: 1px solid rgba(99, 102, 241, 0.45);
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+
+/* ── Panel header ──────────────────────────────────────────── */
+
+.panelHead {
+  padding: 14px 14px 10px;
+  border-bottom: 1px solid rgba(148, 163, 184, 0.09);
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 8px;
+}
+
+.panelHeadLeft {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.panelWordmark {
+  font-size: 18px;
+  cursor: pointer;
+  border: none;
+  background: none;
+  padding: 0;
+  margin: 0;
+  transition: opacity 0.15s;
+}
+.panelWordmark:hover { opacity: 0.72; }
+
+.panelSubtitle {
+  font-family: 'Inter', sans-serif;
+  font-size: 10px;
+  color: rgba(100, 116, 139, 0.75);
+  letter-spacing: 0.02em;
+}
+
+.panelClose {
+  width: 24px;
+  height: 24px;
+  border-radius: 50%;
+  background: rgba(148, 163, 184, 0.07);
+  border: 1px solid rgba(148, 163, 184, 0.12);
+  color: rgba(148, 163, 184, 0.55);
   display: flex;
   align-items: center;
-  margin-left: 2.75rem;
+  justify-content: center;
+  cursor: pointer;
+  font-size: 13px;
+  flex-shrink: 0;
+  transition: background 0.14s, color 0.14s;
+  margin-top: 1px;
+}
+.panelClose:hover {
+  background: rgba(148, 163, 184, 0.13);
+  color: rgba(148, 163, 184, 0.9);
 }
 
-.title {
-  font-family: 'Syne', system-ui, sans-serif;
-  font-size: 1rem;
-  font-weight: 800;
-  letter-spacing: 0.16em;
+/* ── Nav ───────────────────────────────────────────────────── */
+
+.nav {
+  padding: 6px 8px 4px;
+  display: flex;
+  flex-direction: column;
+  gap: 1px;
+}
+
+.sectionLabel {
+  font-family: 'Inter', sans-serif;
+  font-size: 9.5px;
+  font-weight: 600;
   text-transform: uppercase;
-  color: #f5f5dc;
+  letter-spacing: 0.14em;
+  color: rgba(100, 116, 139, 0.7);
+  padding: 7px 8px 3px;
 }
 
-/* Right side with avatar + profile btn */
-.userSection {
-  display: inline-flex;
+.navItem {
+  display: flex;
   align-items: center;
-  gap: 0.5rem;
+  gap: 9px;
+  width: 100%;
+  padding: 7px 9px;
+  border-radius: 10px;
+  background: transparent;
+  border: 1px solid transparent;
+  cursor: pointer;
+  font-family: 'Inter', sans-serif;
+  font-size: 12.5px;
+  font-weight: 500;
+  color: rgba(148, 163, 184, 0.8);
+  text-align: left;
+  transition: background 0.13s ease, border-color 0.13s ease, color 0.13s ease;
+}
 
-  padding: 0.25rem 0.6rem;
-  border-radius: 999px;
+.navItem:hover {
+  background: rgba(99, 102, 241, 0.08);
+  border-color: rgba(99, 102, 241, 0.18);
+  color: #c7d2fe;
+}
 
-  background: rgba(15, 23, 42, 0.96);
-  border: 1px solid rgba(148, 163, 184, 0.65);
+.navItemActive {
+  background: rgba(99, 102, 241, 0.13);
+  border-color: rgba(99, 102, 241, 0.32);
+  color: #a5b4fc;
+}
 
-  box-shadow:
-    0 6px 18px rgba(15, 23, 42, 0.9),
-    0 0 0 1px rgba(15, 23, 42, 1);
+.navIcon {
+  width: 16px;
+  height: 16px;
+  flex-shrink: 0;
+  color: currentColor;
+}
+
+.navLabel {
+  white-space: nowrap;
+}
+
+.navDivider {
+  height: 1px;
+  background: rgba(148, 163, 184, 0.07);
+  margin: 4px 8px;
+}
+
+/* ── Footer — profile row ──────────────────────────────────── */
+
+.footer {
+  padding: 6px 8px 10px;
+  border-top: 1px solid rgba(148, 163, 184, 0.09);
+  position: relative;
+}
+
+.userBtn {
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  width: 100%;
+  padding: 8px 9px;
+  border-radius: 12px;
+  background: rgba(15, 23, 42, 0.5);
+  border: 1px solid rgba(148, 163, 184, 0.1);
+  cursor: pointer;
+  transition: background 0.14s ease, border-color 0.14s ease;
+}
+.userBtn:hover {
+  background: rgba(99, 102, 241, 0.08);
+  border-color: rgba(99, 102, 241, 0.22);
 }
 
 .avatarShell {
-  width: 30px;
-  height: 30px;
-  border-radius: 999px;
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
   overflow: hidden;
-
-  box-shadow:
-    0 0 0 1px rgba(15, 23, 42, 1),
-    0 0 0 2px rgba(148, 163, 184, 0.8),
-    0 6px 12px rgba(15, 23, 42, 0.95);
+  flex-shrink: 0;
+  box-shadow: 0 0 0 1.5px rgba(99, 102, 241, 0.35);
 }
 
 .avatarImage {
@@ -93,477 +302,154 @@
   width: 100%;
   height: 100%;
   display: flex;
-  justify-content: center;
   align-items: center;
-
-  font-family: 'Syne', system-ui, sans-serif;
-  font-size: 0.8rem;
+  justify-content: center;
+  background: linear-gradient(135deg, #4f46e5, #0f172a);
+  font-family: 'Syne', sans-serif;
+  font-size: 11px;
   font-weight: 700;
   color: #f5f5dc;
-
-  background: radial-gradient(circle at 20% 0%, #4f46e5, #0f172a);
-}
-
-.retractButton {
-  border: none;
-  background: transparent;
-  color: #9ca3af;
-  cursor: pointer;
-  font-size: 0.9rem;
-}
-
-/* ============================================
-   SHOW HEADER BUTTON (when header hidden)
-   âœ… RESPONSIVE: Text on desktop, icon on mobile
-   ============================================ */
-
-.showButton {
-  position: fixed;
-  top: 0.35rem;
-  left: 50%;
-  transform: translateX(-50%);
-  z-index: 509;
-
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: 0.3rem;
-
-  padding: 0.25rem 0.9rem;
-  border-radius: 999px;
-
-  background: rgba(15, 23, 42, 0.95);
-  border: 1px solid rgba(148, 163, 184, 0.6);
-
-  font-family: 'Syne', system-ui, sans-serif;
-  font-size: 0.65rem;
-  letter-spacing: 0.18em;
-  text-transform: uppercase;
-  color: #f5f5dc;
-
-  cursor: pointer;
-  transition: all 0.2s ease-out;
-
-  box-shadow:
-    0 6px 20px rgba(15, 23, 42, 0.95),
-    0 0 0 1px rgba(15, 23, 42, 1);
-}
-
-.showButton:hover {
-  border-color: rgba(129, 140, 248, 0.9);
-  box-shadow:
-    0 6px 24px rgba(15, 23, 42, 0.98),
-    0 0 0 1px rgba(99, 102, 241, 0.3);
-}
-
-/* Desktop: Show text, hide icon */
-.showButtonText {
-  display: inline;
-}
-
-.showButtonIcon {
-  display: none;
-  width: 20px;
-  height: 20px;
-  color: #f5f5dc;
-}
-
-/* Mobile: Hide text, show icon */
-@media (max-width: 768px) {
-  .showButton {
-    padding: 0.4rem;
-    width: 40px;
-    height: 40px;
-  }
-
-  .showButtonText {
-    display: none;
-  }
-
-  .showButtonIcon {
-    display: block;
-  }
-}
-
-/* ============================================
-   HAMBURGER â€" MINIMAL FLOATING BARS (OPTION A)
-   ============================================ */
-
-.sidebarHandle {
-  position: fixed;
-  top: 1rem;
-  left: 0.75rem;
-  z-index: 515;
-
-  display: flex;
-  flex-direction: column;
-  align-items: flex-start;
-  justify-content: center;
-  gap: 4px;
-
-  padding: 0.4rem 0.3rem;
-  background: transparent;
-  border: none;
-
-  cursor: pointer;
-  transition: all 0.25s ease-out;
-}
-
-.sidebarHandle:hover .handleBar {
-  filter: drop-shadow(0 0 4px rgba(99, 102, 241, 0.8));
-}
-
-.handleBar {
-  height: 2.5px;
-  background: linear-gradient(to right, #6366f1, #818cf8);
-  border-radius: 999px;
-  transition: all 0.25s ease-out;
-}
-
-/* Varying bar lengths for visual interest */
-.handleBar:nth-child(1) {
-  width: 18px;
-}
-
-.handleBar:nth-child(2) {
-  width: 14px;
-}
-
-.handleBar:nth-child(3) {
-  width: 16px;
-}
-
-.sidebarHandleOpen {
-  transform: translateX(var(--sidebar-width));
-}
-
-.sidebarHandleOpen .handleBar {
-  filter: drop-shadow(0 0 6px rgba(99, 102, 241, 0.9));
-}
-
-/* ============================================
-   MOBILE OPTIMIZATIONS
-   ============================================ */
-
-@media (max-width: 768px) {
-  .sidebarHandle {
-    top: 0.9rem;
-    left: 0.6rem;
-    padding: 0.35rem 0.25rem;
-  }
-
-  .handleBar:nth-child(1) {
-    width: 16px;
-  }
-
-  .handleBar:nth-child(2) {
-    width: 12px;
-  }
-
-  .handleBar:nth-child(3) {
-    width: 14px;
-  }
-}
-
-/* For very small screens */
-@media (max-width: 480px) {
-  .sidebarHandle {
-    top: 0.8rem;
-    left: 0.5rem;
-  }
-}
-
-/* ============================================
-   SIDEBAR OVERLAY + PANEL (WORKING STRUCTURE)
-   ============================================ */
-
-.sidebarOverlay {
-  pointer-events: none;
-}
-
-.sidebarOverlayOpen {
-  pointer-events: auto;
-}
-
-.sidebarOverlayOpen::before {
-  content: '';
-  position: fixed;
-  inset: 0;
-  background: rgba(15, 23, 42, 0.82);
-  backdrop-filter: blur(6px);
-  z-index: 511;
-}
-
-/* Sidebar panel - USING WORKING FLEXBOX STRUCTURE */
-.sidebar {
-  position: fixed;
-  inset: 0 auto 0 0;
-  width: var(--sidebar-width);
-  max-width: 80vw;
-  z-index: 512;
-
-  display: flex;
-  flex-direction: column; /* âœ… CRITICAL: This was missing */
-
-  background: #020617;
-  border-right: 1px solid rgba(148, 163, 184, 0.35);
-
-  box-shadow:
-    0 0 0 1px rgba(15, 23, 42, 1),
-    15px 0 40px rgba(15, 23, 42, 0.9);
-
-  transform: translateX(-100%);
-  transition: transform 0.3s ease-out;
-}
-
-.sidebarOpen {
-  transform: translateX(0);
-}
-
-/* ============================================
-   âœ… FIXED: SIDEBAR HEADER (WORKING STRUCTURE)
-   ============================================ */
-
-.sidebarHeader {
-  padding: 1.2rem 1.3rem 0.8rem;
-  border-bottom: 1px solid rgba(148, 163, 184, 0.25);
-}
-
-.sidebarTitleBlock {
-  display: flex;
-  flex-direction: column;
-  gap: 0.15rem;
-}
-
-.sidebarTitle {
-  font-family: 'Syne', system-ui, sans-serif;
-  font-size: 1rem;
-  font-weight: 800;
-  letter-spacing: 0.18em;
-  text-transform: uppercase;
-  color: #f5f5dc;
-}
-
-.sidebarSubtitle {
-  font-family: 'Inter', system-ui, sans-serif;
-  font-size: 0.7rem;
-  color: #94a3b8;
-}
-
-/* ============================================
-   âœ… FIXED: SIDEBAR NAVIGATION (WORKING STRUCTURE)
-   ============================================ */
-
-.sidebarNav {
-  flex: 1; /* âœ… CRITICAL: This allows proper expansion */
-  padding: 0.75rem 0.9rem 0.9rem;
-  overflow-y: auto;
-}
-
-.sidebarSection {
-  margin-bottom: 0.75rem;
-}
-
-.sidebarSectionLabel {
-  font-family: 'Inter', system-ui, sans-serif;
-  font-size: 0.65rem;
-  text-transform: uppercase;
-  letter-spacing: 0.14em;
-  color: #64748b;
-  margin-bottom: 0.35rem;
-}
-
-.sidebarSectionItems {
-  display: flex;
-  flex-direction: column;
-  gap: 0.3rem;
-}
-
-/* Individual nav button */
-.sidebarNavItem {
-  display: flex;
-  align-items: center;
-  gap: 0.6rem;
-
-  width: 100%;
-  padding: 0.55rem 0.7rem;
-  border-radius: 0.7rem;
-
-  background: rgba(15, 23, 42, 0.9);
-  border: 1px solid transparent;
-
-  font-family: 'Inter', system-ui, sans-serif;
-  font-size: 0.8rem;
-  font-weight: 500;
-  color: #cbd5f5;
-
-  cursor: pointer;
-  transition: background 0.16s, border-color 0.16s, color 0.16s, transform 0.16s;
-}
-
-.sidebarNavItem:hover {
-  background: rgba(15, 23, 42, 0.98);
-  border-color: rgba(129, 140, 248, 0.9);
-  color: #f9fafb;
-  transform: translateX(1px);
-}
-
-/* ACTIVE STATE */
-.sidebarNavItemActive {
-  background-image: linear-gradient(135deg, #6366f1, #818cf8);
-  color: #fff;
-  border-color: transparent;
-}
-
-/* Icon */
-.sidebarNavIcon {
-  width: 18px;
-  height: 18px;
-  color: currentColor;
-  flex-shrink: 0;
-}
-
-.sidebarNavLabel {
-  white-space: nowrap;
-}
-
-/* ============================================
-   âœ… FIXED: SIDEBAR FOOTER (WORKING STRUCTURE)
-   ============================================ */
-
-.sidebarFooter {
-  padding: 0.75rem 1rem 1rem;
-  border-top: 1px solid rgba(148, 163, 184, 0.25);
-
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 0.75rem;
 }
 
 .userMeta {
-  display: flex;
-  flex-direction: column;
-  gap: 0.1rem;
+  flex: 1;
+  text-align: left;
+  min-width: 0;
 }
 
 .userName {
-  font-family: 'Syne', system-ui, sans-serif;
-  font-size: 0.85rem;
-  font-weight: 600;
+  font-family: 'Syne', sans-serif;
+  font-size: 12px;
+  font-weight: 700;
   color: #f5f5dc;
+  line-height: 1.2;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 
-.userEmail {
-  font-family: 'Inter', system-ui, sans-serif;
-  font-size: 0.7rem;
-  color: #64748b;
+.userHandle {
+  font-family: 'Inter', sans-serif;
+  font-size: 10px;
+  color: rgba(100, 116, 139, 0.85);
+  line-height: 1.3;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 
 .subscriptionBadge {
-  padding: 0.3rem 0.65rem;
+  padding: 2px 7px;
   border-radius: 999px;
-  border: 1px solid rgba(148, 163, 184, 0.6);
-
-  font-family: 'Inter', system-ui, sans-serif;
-  font-size: 0.7rem;
+  font-family: 'Inter', sans-serif;
+  font-size: 9.5px;
   font-weight: 600;
   letter-spacing: 0.1em;
   text-transform: uppercase;
-
-  color: #cbd5f5;
-  background: rgba(15, 23, 42, 0.96);
+  background: rgba(99, 102, 241, 0.1);
+  border: 1px solid rgba(148, 163, 184, 0.25);
+  color: rgba(148, 163, 184, 0.7);
+  flex-shrink: 0;
 }
 
 .subscriptionActive {
-  border-color: rgba(129, 140, 248, 0.95);
-  color: #e0e7ff;
+  background: rgba(99, 102, 241, 0.14);
+  border-color: rgba(99, 102, 241, 0.38);
+  color: #a5b4fc;
 }
 
-/* ============================================
-   MOBILE CLEANUP
-   ============================================ */
+.userChevron {
+  font-size: 12px;
+  color: rgba(148, 163, 184, 0.35);
+  flex-shrink: 0;
+  transition: transform 0.2s ease;
+}
+
+.userMenuOpen {
+  background: rgba(99, 102, 241, 0.08) !important;
+  border-color: rgba(99, 102, 241, 0.22) !important;
+}
+
+.userMenuOpen .userChevron {
+  transform: rotate(180deg);
+}
+
+/* ── Profile popup menu (opens upward) ────────────────────── */
+
+.profileMenu {
+  position: absolute;
+  bottom: calc(100% + 6px);
+  left: 8px;
+  right: 8px;
+  z-index: 10;
+
+  background: rgba(10, 15, 26, 0.98);
+  border: 1px solid rgba(99, 102, 241, 0.35);
+  border-radius: 14px;
+  overflow: hidden;
+  box-shadow:
+    0 0 0 4px rgba(15, 23, 42, 0.97),
+    0 0 0 5px rgba(99, 102, 241, 0.18),
+    0 -12px 32px rgba(0, 0, 0, 0.6);
+
+  opacity: 0;
+  pointer-events: none;
+  transform: translateY(6px) scale(0.97);
+  transition:
+    opacity 0.18s ease,
+    transform 0.18s cubic-bezier(0.32, 0.72, 0, 1);
+}
+
+.profileMenuOpen {
+  opacity: 1;
+  pointer-events: auto;
+  transform: translateY(0) scale(1);
+}
+
+.profileMenuItem {
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  width: 100%;
+  padding: 9px 12px;
+  background: transparent;
+  border: none;
+  border-bottom: 1px solid rgba(148, 163, 184, 0.06);
+  cursor: pointer;
+  font-family: 'Inter', sans-serif;
+  font-size: 12.5px;
+  font-weight: 500;
+  color: rgba(148, 163, 184, 0.8);
+  text-align: left;
+  transition: background 0.13s, color 0.13s;
+}
+.profileMenuItem:last-child { border-bottom: none; }
+.profileMenuItem:hover {
+  background: rgba(99, 102, 241, 0.08);
+  color: #c7d2fe;
+}
+
+.profileMenuItemDanger {
+  color: rgba(239, 68, 68, 0.75);
+}
+.profileMenuItemDanger:hover {
+  background: rgba(239, 68, 68, 0.08);
+  color: #fca5a5;
+}
+
+.profileMenuIcon {
+  font-size: 15px;
+  flex-shrink: 0;
+  color: currentColor;
+}
+
+/* ── Mobile ────────────────────────────────────────────────── */
 
 @media (max-width: 768px) {
-  .header {
-    padding: 0.5rem 1rem;
+  .panelOuter {
+    box-shadow:
+      0 0 0 4px rgba(15, 23, 42, 0.97),
+      0 0 0 5px rgba(99, 102, 241, 0.22),
+      0 16px 40px rgba(0, 0, 0, 0.8);
   }
-
-  .sidebar {
-    width: min(320px, 90vw);
-  }
-}
-/* ===== AwakeVerse Caveat Wordmark ===== */
-
-/* Add Caveat (if not already loaded globally) */
-@import url('https://fonts.googleapis.com/css2?family=Caveat:wght@500;600&display=swap');
-
-.wordmark,
-.wordmark * {
-  font-family: 'Caveat', cursive !important;
-  font-style: italic !important;
-  font-weight: 600 !important;
-
-  /* Override the existing uppercase / wide tracking styles used in title/showButton/sidebarTitle */
-  text-transform: none !important;
-  letter-spacing: 0.04em !important;
-  line-height: 1 !important;
-  white-space: nowrap;
-}
-
-/* Color splits */
-.wordmarkIvory {
-  color: #f5f5dc;
-}
-.wordmarkIndigo {
-  color: #6366f1;
-}
-
-/* Make sure the existing title container doesn’t force uppercase look */
-.title {
-  text-transform: none;
-  letter-spacing: normal;
-}
-/* === AwakeVerse Wordmark Size Boost (+15%) === */
-
-/* Base wordmark scale */
-.wordmark {
-  font-size: 1.15em; /* +15% */
-}
-
-/* Fine-tune specific contexts if needed */
-.title .wordmark {
-  font-size: 1.15em;
-}
-
-.showButtonText .wordmark {
-  font-size: 1.15em;
-}
-
-.sidebarTitle .wordmark {
-  font-size: 1.15em;
-}
-.sidebarSectionGetStarted {
-  margin-top: auto;
-  padding-top: 0.65rem;
-  border-top: 1px solid rgba(148, 163, 184, 0.12);
-}
-/* ── Oracle trigger — wordmark as clickable button ── */
-.sidebarTitleBtn {
-  display: inline-block;
-  background: none;
-  border: none;
-  padding: 0;
-  margin: 0;
-  cursor: pointer;
-  border-radius: 6px;
-  transition: opacity 0.15s ease;
-  line-height: 1;
-}
-
-.sidebarTitleBtn:hover { opacity: 0.72; }
-
-.sidebarTitleBtn:focus-visible {
-  outline: 2px solid rgba(99, 102, 241, 0.6);
-  outline-offset: 3px;
 }
