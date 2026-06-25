@@ -42,6 +42,7 @@ const TAB_LABELS  = {
   guide:    'Guide',
 };
 const SPEAKER_COLORS = ['#6366F1', '#10B981', '#F59E0B', '#EF4444'];
+const PAGE_SIZE = 8; // avatar and session pagination — 8 cards + 1 upload slot = 9 max
 const DEFAULT_GUEST_VOICE = 'pNInz6obpgDQGcFmaJgB'; // Adam — ElevenLabs neutral male
 const API_BASE = process.env.REACT_APP_API_URL || 'https://api.awakeverse.com';
 
@@ -220,9 +221,7 @@ export default function PodcastStudioPage({ context, onClose }) {
   const [sessionsLoading, setSessionsLoading] = useState(false);
 
   // ── Pagination — client-side, 8 per page (+ upload button = 9 slots) ─────
-  // avatars[] and sessions[] are loaded in full (max 50); we slice for display.
-  const PAGE_SIZE = 8;
-  const [avatarPage,  setAvatarPage]  = useState(0); // 0-indexed
+  const [avatarPage,  setAvatarPage]  = useState(0);
   const [sessionPage, setSessionPage] = useState(0);
 
   // ── Delete confirm state ──────────────────────────────────────────────────
@@ -253,14 +252,13 @@ export default function PodcastStudioPage({ context, onClose }) {
 
   // ── Mode select with consent recording ───────────────────────────────────
   const handleModeSelect = useCallback(async (mode) => {
-    // Record consent first — must complete before proceeding
     if (!consented) {
       const ok = await recordConsent();
-      if (!ok) return; // don't proceed if consent failed
+      if (!ok) return;
     }
     setPodcastMode(mode);
     if (mode === 'solo') setActiveTab('script');
-  }, [consented, recordConsent]);
+  }, [consented, recordConsent, setPodcastMode, setActiveTab]);
 
   // ── Script chat assistant ─────────────────────────────────────────────────
   // 'chat' = AI write mode (chat bubbles). 'lines' = edit lines mode (line cards).
