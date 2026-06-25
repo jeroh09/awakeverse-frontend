@@ -256,9 +256,19 @@ export default function PodcastStudioPage({ context, onClose }) {
   // recordingChunks: accumulates audio data chunks during recording
   const [recordingLineId,  setRecordingLineId]  = useState(null);
   const [recordingError,   setRecordingError]   = useState(null);
-  const [uploadingLineId,  setUploadingLineId]  = useState(null); // uploading indicator
-  const mediaRecorderRef = useRef(null);
-  const recordingChunks  = useRef([]);
+  const [uploadingLineId,  setUploadingLineId]  = useState(null);
+  const [recordingSeconds, setRecordingSeconds] = useState(0);   // live counter while recording
+  const [lineDurations,    setLineDurations]    = useState({});  // { [lineId]: "0:08" } after stop
+  const [lineBlobUrls,     setLineBlobUrls]     = useState({});  // { [lineId]: blobUrl } for playback
+  const [playingLineId,    setPlayingLineId]    = useState(null);// which line audio is playing
+  const mediaRecorderRef   = useRef(null);
+  const recordingChunks    = useRef([]);
+  const recordingTimerRef  = useRef(null);
+  const lineAudioRef       = useRef(null);                       // current playback Audio object
+
+  // ── Podcast player state ──────────────────────────────────────────────────
+  const [activeSession,    setActiveSession]    = useState(null);// session being played
+  const podcastVideoRef    = useRef(null);
 
   // ── Voice picker state ────────────────────────────────────────────────────
   // voiceGenderFilter: which gender tab is active in the picker ('female'|'male')
@@ -473,43 +483,51 @@ if (context.topic) setTopic(context.topic);
   const handleRecord = useCallback(async (lineId) => {
     setRecordingError(null);
 
-    // If already recording this line — stop
+    // ── Stop current recording ────────────────────────────────────────────
     if (recordingLineId === lineId) {
       mediaRecorderRef.current?.stop();
+      clearInterval(recordingTimerRef.current);
       return;
     }
 
-    // If recording a different line — stop that first
+    // Stop a different line's recording first
     if (recordingLineId && mediaRecorderRef.current) {
       mediaRecorderRef.current.stop();
+      clearInterval(recordingTimerRef.current);
     }
 
-    // Request mic access
+    // ── Request mic ───────────────────────────────────────────────────────
     let stream;
     try {
       stream = await navigator.mediaDevices.getUserMedia({ audio: true });
     } catch (e) {
-      setRecordingError('Microphone access denied. Please allow microphone in your browser settings.');
+      setRecordingError('Microphone access denied. Please allow microphone in browser settings.');
       return;
     }
 
     recordingChunks.current = [];
     const mimeType = MediaRecorder.isTypeSupported('audio/webm;codecs=opus')
-      ? 'audio/webm;codecs=opus'
-      : 'audio/webm';
+      ? 'audio/webm;codecs=opus' : 'audio/webm';
 
     const recorder = new MediaRecorder(stream, { mimeType });
     mediaRecorderRef.current = recorder;
+
+    // ── Start live counter ────────────────────────────────────────────────
+    setRecordingSeconds(0);
     setRecordingLineId(lineId);
+    recordingTimerRef.current = setInterval(() => {
+      setRecordingSeconds(s => s + 1);
+    }, 1000);
 
     recorder.ondataavailable = e => {
       if (e.data.size > 0) recordingChunks.current.push(e.data);
     };
 
     recorder.onstop = async () => {
-      // Stop all tracks
       stream.getTracks().forEach(t => t.stop());
+      clearInterval(recordingTimerRef.current);
       setRecordingLineId(null);
+      setRecordingSeconds(0);
 
       const blob = new Blob(recordingChunks.current, { type: mimeType });
       if (blob.size < 100) {
@@ -517,7 +535,25 @@ if (context.topic) setTopic(context.topic);
         return;
       }
 
-      // Upload (noise reduction happens server-side)
+      // ── Derive accurate duration via AudioContext ──────────────────────
+      try {
+        const arrayBuf = await blob.arrayBuffer();
+        const ctx      = new AudioContext();
+        const decoded  = await ctx.decodeAudioData(arrayBuf);
+        const secs     = Math.round(decoded.duration);
+        const fmt      = `${Math.floor(secs / 60)}:${String(secs % 60).padStart(2, '0')}`;
+        setLineDurations(prev => ({ ...prev, [lineId]: fmt }));
+        ctx.close();
+      } catch (_) {
+        // fallback: use counter value
+        setLineDurations(prev => ({ ...prev, [lineId]: `0:${String(recordingSeconds).padStart(2, '0')}` }));
+      }
+
+      // ── Store blob URL for local playback (no upload needed for preview) ─
+      const blobUrl = URL.createObjectURL(blob);
+      setLineBlobUrls(prev => ({ ...prev, [lineId]: blobUrl }));
+
+      // ── Upload (noise reduction server-side) ──────────────────────────
       setUploadingLineId(lineId);
       try {
         const audioUrl = await uploadAudio(blob);
@@ -531,7 +567,30 @@ if (context.topic) setTopic(context.topic);
     };
 
     recorder.start();
-  }, [recordingLineId, uploadAudio, dispatchLines]);
+  }, [recordingLineId, recordingSeconds, uploadAudio, dispatchLines]);
+
+  // ── Line audio playback ───────────────────────────────────────────────────
+  const handlePlayLine = useCallback((lineId) => {
+    // Stop current playback
+    if (lineAudioRef.current) {
+      lineAudioRef.current.pause();
+      lineAudioRef.current = null;
+    }
+    if (playingLineId === lineId) {
+      setPlayingLineId(null);
+      return;
+    }
+    const blobUrl = lineBlobUrls[lineId];
+    if (!blobUrl) return;
+    const audio = new Audio(blobUrl);
+    lineAudioRef.current = audio;
+    setPlayingLineId(lineId);
+    audio.play().catch(() => setPlayingLineId(null));
+    audio.onended = () => {
+      setPlayingLineId(null);
+      lineAudioRef.current = null;
+    };
+  }, [playingLineId, lineBlobUrls]);
 
   // ── Voice preview playback ────────────────────────────────────────────────
   // Play/stop ElevenLabs preview MP3 for a voice card.
@@ -1291,12 +1350,37 @@ if (context.topic) setTopic(context.topic);
                               onChange={e => dispatchLines({ type: 'UPDATE', id: line.id, patch: { text: e.target.value } })}
                               rows={2}
                             />
-                            {line.audioUrl && (
+                            {/* Live recording counter */}
+                            {recordingLineId === line.id && (
+                              <div className={styles.recordingCounter}>
+                                <span className={styles.recordingDot} />
+                                {`${Math.floor(recordingSeconds / 60)}:${String(recordingSeconds % 60).padStart(2, '0')}`}
+                                <span style={{ opacity: 0.6, fontSize: '0.62rem' }}>— tap stop when done</span>
+                              </div>
+                            )}
+                            {/* Recorded tag with duration + playback + clear */}
+                            {line.audioUrl && recordingLineId !== line.id && (
                               <div className={styles.audioTag}>
-                                🎤 Recorded
+                                <button
+                                  className={`${styles.audioPlayBtn} ${playingLineId === line.id ? styles.audioPlayBtnActive : ''}`}
+                                  onClick={() => handlePlayLine(line.id)}
+                                  title={playingLineId === line.id ? 'Stop' : 'Play recording'}
+                                  disabled={!lineBlobUrls[line.id]}
+                                >
+                                  {playingLineId === line.id ? '■' : '▶'}
+                                </button>
+                                🎤 {lineDurations[line.id] || 'Recorded'}
                                 <button
                                   className={styles.audioTagClear}
-                                  onClick={() => dispatchLines({ type: 'UPDATE', id: line.id, patch: { audioUrl: null } })}
+                                  onClick={() => {
+                                    dispatchLines({ type: 'UPDATE', id: line.id, patch: { audioUrl: null } });
+                                    setLineDurations(prev => { const n = {...prev}; delete n[line.id]; return n; });
+                                    setLineBlobUrls(prev => { const n = {...prev}; delete n[line.id]; return n; });
+                                    if (playingLineId === line.id) {
+                                      lineAudioRef.current?.pause();
+                                      setPlayingLineId(null);
+                                    }
+                                  }}
                                   title="Remove recording — use TTS instead"
                                 >✕</button>
                               </div>
@@ -1398,9 +1482,57 @@ if (context.topic) setTopic(context.topic);
           {/* ════ MY PODCASTS TAB ════ */}
           {activeTab === 'podcasts' && (
             <div className={styles.podcastsPage}>
+
+              {/* ── Video player — shown when a session is active ── */}
+              {activeSession && (
+                <div className={styles.podcastPlayer}>
+                  <video
+                    ref={podcastVideoRef}
+                    src={activeSession.final_url}
+                    className={styles.podcastPlayerVideo}
+                    controls
+                    autoPlay
+                    onEnded={() => {}}
+                  />
+                  <div className={styles.podcastPlayerBar}>
+                    <div className={styles.podcastPlayerMeta}>
+                      <span className={styles.podcastPlayerTitle}>
+                        {activeSession.speakers?.map(s => s.display_name).join(' + ') || 'Podcast'}
+                      </span>
+                      <span className={styles.podcastPlayerDate}>
+                        {fmtDate(activeSession.created_at)}
+                        {activeSession.total_seconds && ` · ${fmtDuration(activeSession.total_seconds)}`}
+                      </span>
+                    </div>
+                    <div style={{ display: 'flex', gap: '0.5rem', alignItems: 'center' }}>
+                      <a
+                        href={activeSession.final_url}
+                        download
+                        className={styles.podcastPlayerBtn}
+                        title="Download"
+                      >
+                        ⬇ Download
+                      </a>
+                      <button
+                        className={styles.podcastPlayerClose}
+                        onClick={() => {
+                          podcastVideoRef.current?.pause();
+                          setActiveSession(null);
+                        }}
+                        title="Close player"
+                      >
+                        ✕
+                      </button>
+                    </div>
+                  </div>
+                </div>
+              )}
+
+              {/* ── Grid header ── */}
               <div className={styles.cardLabel} style={{ padding: '0 0 0.65rem' }}>
                 {sessions.length} podcast{sessions.length !== 1 ? 's' : ''} generated
               </div>
+
               {sessionsLoading && <div className={styles.loadingHint}>Loading your podcasts…</div>}
               {!sessionsLoading && sessions.length === 0 && (
                 <div className={styles.emptyPodcasts}>
@@ -1409,18 +1541,38 @@ if (context.topic) setTopic(context.topic);
                   <small>Generate your first one in the Generate tab.</small>
                 </div>
               )}
+
+              {/* ── Podcast grid ── */}
               <div className={styles.podcastGrid}>
                 {sessions
                   .slice(sessionPage * PAGE_SIZE, (sessionPage + 1) * PAGE_SIZE)
                   .map(session => {
-                    const isConfirm = confirmDelete?.type === 'session' && confirmDelete?.id === session.session_id;
+                    const isConfirm  = confirmDelete?.type === 'session' && confirmDelete?.id === session.session_id;
+                    const isPlaying  = activeSession?.session_id === session.session_id;
                     return (
-                      <div key={session.session_id} className={styles.podcastCard} style={{ position: 'relative' }}>
-                        {session.final_url ? (
-                          <video src={session.final_url} className={styles.podcastThumb} muted />
-                        ) : (
-                          <div className={styles.podcastThumbPlaceholder}><Ic.Video /></div>
-                        )}
+                      <div
+                        key={session.session_id}
+                        className={`${styles.podcastCard} ${isPlaying ? styles.podcastCardActive : ''}`}
+                      >
+                        {/* Thumbnail — click to play */}
+                        <div
+                          className={styles.podcastThumbWrap}
+                          onClick={() => session.final_url && setActiveSession(session)}
+                          title="Play"
+                        >
+                          {session.final_url ? (
+                            <video src={session.final_url} className={styles.podcastThumb} muted />
+                          ) : (
+                            <div className={styles.podcastThumbPlaceholder}><Ic.Video /></div>
+                          )}
+                          {session.final_url && (
+                            <div className={styles.podcastPlayOverlay}>
+                              {isPlaying ? '■' : '▶'}
+                            </div>
+                          )}
+                        </div>
+
+                        {/* Meta */}
                         <div className={styles.podcastMeta}>
                           <div className={styles.podcastSpeakers}>
                             {session.speakers?.map(s => s.display_name).join(' + ') || 'Unknown'}
@@ -1430,13 +1582,28 @@ if (context.topic) setTopic(context.topic);
                             {session.total_seconds && ` · ${fmtDuration(session.total_seconds)}`}
                           </div>
                         </div>
-                        <div style={{ display: 'flex', gap: '0.4rem', alignItems: 'center' }}>
+
+                        {/* Actions — play, download, delete */}
+                        <div className={styles.podcastActions}>
                           {session.final_url && (
-                            <a href={session.final_url} target="_blank" rel="noreferrer" className={styles.podcastPlayBtn}>
-                              <Ic.Play /> Play
+                            <button
+                              className={styles.podcastActionBtn}
+                              onClick={() => setActiveSession(session)}
+                              title="Play"
+                            >
+                              <Ic.Play />
+                            </button>
+                          )}
+                          {session.final_url && (
+                            <a
+                              href={session.final_url}
+                              download
+                              className={styles.podcastActionBtn}
+                              title="Download"
+                            >
+                              ⬇
                             </a>
                           )}
-                          {/* Delete control */}
                           {isConfirm ? (
                             <button
                               className={styles.podcastDeleteConfirm}
@@ -1444,6 +1611,7 @@ if (context.topic) setTopic(context.topic);
                                 try {
                                   await deleteSession(session.session_id);
                                   setSessions(prev => prev.filter(s => s.session_id !== session.session_id));
+                                  if (isPlaying) setActiveSession(null);
                                   setConfirmDelete(null);
                                   const remaining = sessions.length - 1;
                                   if (sessionPage > 0 && sessionPage * PAGE_SIZE >= remaining) {
@@ -1458,7 +1626,7 @@ if (context.topic) setTopic(context.topic);
                             <button
                               className={styles.podcastDeleteBtn}
                               onClick={() => setConfirmDelete({ type: 'session', id: session.session_id })}
-                              title="Delete podcast"
+                              title="Delete"
                             >
                               <Ic.Trash />
                             </button>
@@ -1469,7 +1637,7 @@ if (context.topic) setTopic(context.topic);
                   })}
               </div>
 
-              {/* Session pagination */}
+              {/* Pagination */}
               {sessions.length > PAGE_SIZE && (
                 <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', paddingTop: '0.65rem', borderTop: '1px solid rgba(148,163,184,0.08)' }}>
                   <button
