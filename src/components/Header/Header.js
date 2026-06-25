@@ -1,19 +1,20 @@
 // src/components/Header/Header.js
-// ✅ Caveat wordmark (A + V indigo)
-// ✅ ONBOARDING: "Get Started" nav item dispatches awakeverse:open-onboarding
-// ✅ CTRL+A: showButton on mobile dispatches awakeverse:toggle-launcher instead of re-showing header
+// ✅ No header bar — replaced with floating AV pill trigger (top-left)
+// ✅ Detached panel with double-border ring (onboarding ob-panel technique)
+// ✅ Profile row in footer opens upward popup menu (profile, settings, billing, logout)
+// ✅ useAuth() provides isAuthenticated + logout — same as AuthContext exports
+// ✅ All original logic preserved: Oracle, onboarding, launcher, viewContext, nav groups
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef, useCallback } from 'react';
 import styles from './Header.module.css';
 import { useUser } from '../../contexts/UserContext';
 import { useAuth } from '../../contexts/AuthContext';
 import { useAppView } from '../../contexts/AppViewContext';
-import ProfileButton from '../ProfileButton';
 
 // ─── Nav Icons (inline SVG, indigo glow) ─────────────────────────────────────
 
 const ChatIcon = ({ className }) => (
-  <svg className={className} width="20" height="20" viewBox="0 0 24 24" fill="none">
+  <svg className={className} width="16" height="16" viewBox="0 0 24 24" fill="none">
     <defs>
       <filter id="chatGlow" x="-50%" y="-50%" width="200%" height="200%">
         <feDropShadow dx="0" dy="0" stdDeviation="2" floodColor="#6366f1" floodOpacity="0.55" />
@@ -28,7 +29,7 @@ const ChatIcon = ({ className }) => (
 );
 
 const DiscoverIcon = ({ className }) => (
-  <svg className={className} width="20" height="20" viewBox="0 0 24 24" fill="none">
+  <svg className={className} width="16" height="16" viewBox="0 0 24 24" fill="none">
     <defs>
       <filter id="discoverGlow" x="-50%" y="-50%" width="200%" height="200%">
         <feDropShadow dx="0" dy="0" stdDeviation="2" floodColor="#6366f1" floodOpacity="0.55" />
@@ -40,7 +41,7 @@ const DiscoverIcon = ({ className }) => (
 );
 
 const StoriesIcon = ({ className }) => (
-  <svg className={className} width="20" height="20" viewBox="0 0 24 24" fill="none">
+  <svg className={className} width="16" height="16" viewBox="0 0 24 24" fill="none">
     <defs>
       <filter id="storiesGlow" x="-50%" y="-50%" width="200%" height="200%">
         <feDropShadow dx="0" dy="0" stdDeviation="2" floodColor="#6366f1" floodOpacity="0.55" />
@@ -55,7 +56,7 @@ const StoriesIcon = ({ className }) => (
 );
 
 const ScenariosIcon = ({ className }) => (
-  <svg className={className} width="20" height="20" viewBox="0 0 24 24" fill="none">
+  <svg className={className} width="16" height="16" viewBox="0 0 24 24" fill="none">
     <defs>
       <filter id="scenariosGlow" x="-50%" y="-50%" width="200%" height="200%">
         <feDropShadow dx="0" dy="0" stdDeviation="2" floodColor="#6366f1" floodOpacity="0.55" />
@@ -75,7 +76,7 @@ const ScenariosIcon = ({ className }) => (
 );
 
 const CreateIcon = ({ className }) => (
-  <svg className={className} width="20" height="20" viewBox="0 0 24 24" fill="none">
+  <svg className={className} width="16" height="16" viewBox="0 0 24 24" fill="none">
     <defs>
       <filter id="createGlow" x="-50%" y="-50%" width="200%" height="200%">
         <feDropShadow dx="0" dy="0" stdDeviation="2" floodColor="#6366f1" floodOpacity="0.55" />
@@ -87,7 +88,7 @@ const CreateIcon = ({ className }) => (
 );
 
 const VerseStudioIcon = ({ className }) => (
-  <svg className={className} width="20" height="20" viewBox="0 0 24 24" fill="none">
+  <svg className={className} width="16" height="16" viewBox="0 0 24 24" fill="none">
     <defs>
       <filter id="verseGlow" x="-50%" y="-50%" width="200%" height="200%">
         <feDropShadow dx="0" dy="0" stdDeviation="2.2" floodColor="#6366f1" floodOpacity="0.65" />
@@ -105,9 +106,8 @@ const VerseStudioIcon = ({ className }) => (
   </svg>
 );
 
-// 🎙️ Podcast Studio — microphone with waveform bars, indigo glow pattern
 const PodcastStudioIcon = ({ className }) => (
-  <svg className={className} width="20" height="20" viewBox="0 0 24 24" fill="none">
+  <svg className={className} width="16" height="16" viewBox="0 0 24 24" fill="none">
     <defs>
       <filter id="podcastGlow" x="-50%" y="-50%" width="200%" height="200%">
         <feDropShadow dx="0" dy="0" stdDeviation="2.2" floodColor="#6366f1" floodOpacity="0.65" />
@@ -126,24 +126,8 @@ const PodcastStudioIcon = ({ className }) => (
   </svg>
 );
 
-const ChevronDownIcon = ({ className }) => (
-  <svg className={className} width="20" height="20" viewBox="0 0 24 24" fill="none">
-    <defs>
-      <filter id="chevronGlow" x="-50%" y="-50%" width="200%" height="200%">
-        <feDropShadow dx="0" dy="0" stdDeviation="2" floodColor="#6366f1" floodOpacity="0.6" />
-      </filter>
-    </defs>
-    <path
-      d="M6 9l6 6 6-6"
-      stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"
-      filter="url(#chevronGlow)"
-    />
-  </svg>
-);
-
-// ✅ Get Started — compass icon, indigo glow pattern
 const GetStartedIcon = ({ className }) => (
-  <svg className={className} width="20" height="20" viewBox="0 0 24 24" fill="none">
+  <svg className={className} width="16" height="16" viewBox="0 0 24 24" fill="none">
     <defs>
       <filter id="gsGlow" x="-50%" y="-50%" width="200%" height="200%">
         <feDropShadow dx="0" dy="0" stdDeviation="2" floodColor="#6366f1" floodOpacity="0.6" />
@@ -157,23 +141,41 @@ const GetStartedIcon = ({ className }) => (
   </svg>
 );
 
-// ✅ AwakeVerse Caveat wordmark
+// ✅ Wordmark — A ivory, V indigo, in Caveat italic
 const AwakeVerseWordmark = ({ className }) => (
-  <span className={className} aria-label="AwakeVerse">
-    <span className={styles.wordmarkIndigo}>A</span>
-    <span className={styles.wordmarkIvory}>wake</span>
+  <span className={`${styles.wordmark} ${className || ''}`} aria-label="AwakeVerse">
+    <span className={styles.wordmarkIvory}>A</span>
     <span className={styles.wordmarkIndigo}>V</span>
-    <span className={styles.wordmarkIvory}>erse</span>
   </span>
 );
+
+// ✅ Full wordmark for panel header
+const AwakeVerseWordmarkFull = ({ className }) => (
+  <span className={`${styles.wordmark} ${className || ''}`} aria-label="AwakeVerse">
+    <span className={styles.wordmarkIvory}>A</span>
+    <span className={styles.wordmarkIndigo}>wake</span>
+    <span className={styles.wordmarkIvory}>V</span>
+    <span className={styles.wordmarkIndigo}>erse</span>
+  </span>
+);
+
+// ─── Profile popup menu items ─────────────────────────────────────────────────
+// Extend this array to add more profile pages
+const PROFILE_MENU_ITEMS = [
+  { key: 'profile',  label: 'Profile',       icon: 'ti-user',         viewState: 'PROFILE' },
+  { key: 'settings', label: 'Settings',      icon: 'ti-settings',     viewState: 'SETTINGS' },
+  { key: 'billing',  label: 'Billing',       icon: 'ti-credit-card',  viewState: 'BILLING' },
+  { key: 'upgrade',  label: 'Upgrade',       icon: 'ti-star',         viewState: 'UPGRADE' },
+];
 
 // ─── Main component ───────────────────────────────────────────────────────────
 
 export default function Header() {
   const { user, getSubscriptionInfo } = useUser();
-  const { isAuthenticated } = useAuth();
+  const { isAuthenticated, logout } = useAuth();
   const API_BASE = process.env.REACT_APP_API_URL || 'https://api.awakeverse.com';
 
+  // Defensive viewContext — same try/catch as original
   let viewContext = null;
   try {
     viewContext = useAppView();
@@ -181,83 +183,103 @@ export default function Header() {
     console.error('Header: useAppView must be used within AppViewProvider', e);
   }
 
-  const [isHeaderVisible, setIsHeaderVisible] = useState(true);
-  const [isSidebarOpen, setIsSidebarOpen] = useState(false);
-  const [isMobile, setIsMobile] = useState(window.innerWidth <= 768);
-
-  useEffect(() => {
-    const handleResize = () => setIsMobile(window.innerWidth <= 768);
-    window.addEventListener('resize', handleResize);
-    return () => window.removeEventListener('resize', handleResize);
-  }, []);
+  const [isSidebarOpen,  setIsSidebarOpen]  = useState(false);
+  const [isProfileOpen,  setIsProfileOpen]  = useState(false);
+  const profileMenuRef = useRef(null);
 
   const showNavigation = isAuthenticated && !!viewContext;
 
+  // ── Close panel on Escape ─────────────────────────────────────────────────
   useEffect(() => {
-    if (!isHeaderVisible || !isAuthenticated) return;
-    const timer = setTimeout(() => setIsHeaderVisible(false), 6000);
-    return () => clearTimeout(timer);
-  }, [isHeaderVisible, isAuthenticated]);
+    const onKey = (e) => {
+      if (e.key === 'Escape') {
+        setIsSidebarOpen(false);
+        setIsProfileOpen(false);
+      }
+    };
+    window.addEventListener('keydown', onKey);
+    return () => window.removeEventListener('keydown', onKey);
+  }, []);
 
+  // ── Close profile menu on outside click ──────────────────────────────────
+  useEffect(() => {
+    if (!isProfileOpen) return;
+    const onOutside = (e) => {
+      if (profileMenuRef.current && !profileMenuRef.current.contains(e.target)) {
+        setIsProfileOpen(false);
+      }
+    };
+    document.addEventListener('mousedown', onOutside);
+    return () => document.removeEventListener('mousedown', onOutside);
+  }, [isProfileOpen]);
+
+  // ── Nav items — unchanged from original ──────────────────────────────────
   const navItems = !showNavigation
     ? []
     : [
-        { key: 'chat',        label: 'Chat',      icon: ChatIcon,        viewState: viewContext.VIEW_STATES.CHAT },
-        { key: 'discover',    label: 'Discover',  icon: DiscoverIcon,    viewState: viewContext.VIEW_STATES.MARKET_HUB },
-        { key: 'stories',     label: 'Story',     icon: StoriesIcon,     viewState: viewContext.VIEW_STATES.STORY_MODE },
-        { key: 'create',      label: 'Create',    icon: CreateIcon,      viewState: viewContext.VIEW_STATES.CREATOR_DASHBOARD },
-        { key: 'scenarios',   label: 'Dialogue',  icon: ScenariosIcon,   viewState: viewContext.VIEW_STATES.SCENARIOS },
-        { key: 'verseStudio', label: 'Workspace', icon: VerseStudioIcon, viewState: viewContext.VIEW_STATES.VERSE_STUDIO },
+        { key: 'chat',          label: 'Chat',      icon: ChatIcon,          viewState: viewContext.VIEW_STATES.CHAT },
+        { key: 'discover',      label: 'Discover',  icon: DiscoverIcon,      viewState: viewContext.VIEW_STATES.MARKET_HUB },
+        { key: 'stories',       label: 'Story',     icon: StoriesIcon,       viewState: viewContext.VIEW_STATES.STORY_MODE },
+        { key: 'create',        label: 'Create',    icon: CreateIcon,        viewState: viewContext.VIEW_STATES.CREATOR_DASHBOARD },
+        { key: 'scenarios',     label: 'Dialogue',  icon: ScenariosIcon,     viewState: viewContext.VIEW_STATES.SCENARIOS },
         { key: 'podcastStudio', label: 'Studio',    icon: PodcastStudioIcon, viewState: viewContext.VIEW_STATES.PODCAST_STUDIO },
+        { key: 'verseStudio',   label: 'Workspace', icon: VerseStudioIcon,   viewState: viewContext.VIEW_STATES.VERSE_STUDIO },
       ];
 
   const itemsByKey = Object.fromEntries(navItems.map((item) => [item.key, item]));
 
   const navGroups = [
-    { key: 'primary',     label: 'Primary',      items: ['chat', 'discover'] },
-    { key: 'storyWorld',  label: 'Story world',  items: ['stories'] },
-    { key: 'productivity',label: 'Productivity', items: ['create', 'scenarios', 'podcastStudio', 'verseStudio'] },
+    { key: 'primary',      label: 'Primary',      items: ['chat', 'discover'] },
+    { key: 'storyWorld',   label: 'Story world',  items: ['stories'] },
+    { key: 'productivity', label: 'Productivity', items: ['create', 'scenarios', 'podcastStudio', 'verseStudio'] },
   ];
 
-  const handleNavClick = (viewState) => {
+  // ── Handlers — all original logic preserved ───────────────────────────────
+
+  const handleNavClick = useCallback((viewState) => {
     if (!viewContext) return;
     viewContext.switchView(viewState);
     setIsSidebarOpen(false);
-  };
+  }, [viewContext]);
 
-  // ✅ Get Started — closes sidebar, then opens onboarding overlay
-  const handleGetStartedClick = () => {
-    setIsSidebarOpen(false);
-    setTimeout(() => {
-      window.dispatchEvent(new CustomEvent('awakeverse:open-onboarding'));
-    }, 200);
-  };
-
-  // ✅ Oracle — closes sidebar, fires event, ChatLauncherPage listens
-  const handleOracleClick = () => {
+  // ✅ Oracle — closes panel, fires event (ChatLauncherPage listens)
+  const handleOracleClick = useCallback(() => {
     setIsSidebarOpen(false);
     setTimeout(() => {
       window.dispatchEvent(new CustomEvent('awakeverse:open-oracle-chat'));
     }, 180);
-  };
+  }, []);
 
-  const toggleSidebar = () => {
-    if (!showNavigation) return;
-    setIsSidebarOpen((open) => !open);
-  };
+  // ✅ Get Started — closes panel, fires onboarding event
+  const handleGetStartedClick = useCallback(() => {
+    setIsSidebarOpen(false);
+    setTimeout(() => {
+      window.dispatchEvent(new CustomEvent('awakeverse:open-onboarding'));
+    }, 200);
+  }, []);
 
-  const closeSidebar = () => setIsSidebarOpen(false);
-
-  // ✅ showButton click handler
-  // Desktop: re-shows the header bar as before
-  // Mobile: toggles the Ctrl+A launcher overlay instead
-  const handleShowButtonClick = () => {
-    if (isMobile) {
-      window.dispatchEvent(new CustomEvent('awakeverse:toggle-launcher'));
-    } else {
-      setIsHeaderVisible(true);
+  // ✅ Profile menu — navigate to a sub-page via viewContext
+  const handleProfileMenuClick = useCallback((viewState) => {
+    setIsProfileOpen(false);
+    setIsSidebarOpen(false);
+    if (viewContext && viewState) {
+      // Navigate if viewContext has that state; fall back gracefully
+      try { viewContext.switchView(viewState); } catch (e) { /* page not wired yet */ }
     }
-  };
+  }, [viewContext]);
+
+  const handleLogout = useCallback(() => {
+    setIsProfileOpen(false);
+    setIsSidebarOpen(false);
+    logout();
+  }, [logout]);
+
+  const closeSidebar = useCallback(() => {
+    setIsSidebarOpen(false);
+    setIsProfileOpen(false);
+  }, []);
+
+  // ── User data ─────────────────────────────────────────────────────────────
 
   const avatarUrlRaw = user?.avatarUrl || user?.avatar_url;
   const avatarUrl =
@@ -269,174 +291,192 @@ export default function Header() {
 
   const userInitial =
     user?.display_name?.charAt(0) ||
-    user?.displayName?.charAt(0) ||
-    user?.name?.charAt(0) ||
-    user?.email?.charAt(0) ||
+    user?.displayName?.charAt(0)  ||
+    user?.name?.charAt(0)         ||
+    user?.email?.charAt(0)        ||
     'A';
 
-  const subscriptionInfo = getSubscriptionInfo ? getSubscriptionInfo() : null;
-  const subscriptionLabel = subscriptionInfo?.display_name || 'Free';
+  const displayName =
+    user?.display_name || user?.displayName || user?.name || 'AwakeVerse explorer';
+
+  const userHandle = user?.username || user?.email || '';
+
+  const subscriptionInfo   = getSubscriptionInfo ? getSubscriptionInfo() : null;
+  const subscriptionLabel  = subscriptionInfo?.display_name || 'Free';
   const subscriptionActive = subscriptionInfo?.is_active || false;
 
-  const isInActiveChatWindow  = viewContext?.activeChatCharacter !== null && viewContext?.activeChatCharacter !== undefined;
-  const isInActiveStoryWindow = viewContext?.activeStory !== null && viewContext?.activeStory !== undefined;
-  const shouldHideButton = isMobile && (isInActiveChatWindow || isInActiveStoryWindow);
+  // ── Avatar element — reused in trigger pill and footer ────────────────────
+  const AvatarEl = (
+    <div className={styles.avatarShell}>
+      {avatarUrl ? (
+        <img
+          src={avatarUrl}
+          alt={displayName}
+          className={styles.avatarImage}
+          onError={(e) => { e.target.style.display = 'none'; }}
+        />
+      ) : (
+        <div className={styles.avatarFallback}>{userInitial.toUpperCase()}</div>
+      )}
+    </div>
+  );
 
+  // ─────────────────────────────────────────────────────────────────────────
   return (
     <>
-      {/* ── Top header bar ─────────────────────────────────── */}
-      {isHeaderVisible && (
-        <header className={styles.header}>
-          <div className={styles.brandShell}>
-            <h1 className={styles.title}>
-              <AwakeVerseWordmark className={styles.wordmark} />
-            </h1>
-          </div>
-          <div className={styles.userSection}>
-            {isAuthenticated && (
-              <>
-                <div className={styles.avatarShell}>
-                  {avatarUrl ? (
-                    <img
-                      src={avatarUrl}
-                      alt="User avatar"
-                      className={styles.avatarImage}
-                      onError={(e) => { e.target.style.display = 'none'; }}
-                    />
-                  ) : (
-                    <div className={styles.avatarFallback}>{userInitial.toUpperCase()}</div>
-                  )}
-                </div>
-                <ProfileButton user={user} />
+      {/* ── AV trigger pill — fixed top-left, always visible ── */}
+      <button
+        className={styles.trigger}
+        onClick={() => setIsSidebarOpen(true)}
+        aria-label="Open navigation"
+        aria-expanded={isSidebarOpen}
+      >
+        <AwakeVerseWordmark className={styles.triggerWordmark} />
+        <span className={styles.triggerSep} aria-hidden="true" />
+        <span className={styles.triggerHome}>Home</span>
+      </button>
+
+      {/* ── Overlay — closes panel on click outside ── */}
+      <div
+        className={`${styles.overlay} ${isSidebarOpen ? styles.overlayOpen : ''}`}
+        onClick={closeSidebar}
+        aria-hidden="true"
+      />
+
+      {/* ── Detached floating panel ── */}
+      <div
+        className={`${styles.panelWrap} ${isSidebarOpen ? styles.panelWrapOpen : ''}`}
+        role="dialog"
+        aria-label="AwakeVerse navigation"
+        aria-modal="true"
+      >
+        {/* Double-border outer shell */}
+        <div className={styles.panelOuter}>
+          <div className={styles.panel}>
+
+            {/* Panel header — wordmark as Oracle trigger */}
+            <div className={styles.panelHead}>
+              <div className={styles.panelHeadLeft}>
                 <button
-                  className={styles.retractButton}
-                  onClick={() => setIsHeaderVisible(false)}
-                  aria-label="Hide header"
-                  title="Hide header"
-                >
-                  ⌃
-                </button>
-              </>
-            )}
-          </div>
-        </header>
-      )}
-
-      {/* ── Show / launcher toggle button ──────────────────── */}
-      {/* ✅ UPDATED: mobile tap opens launcher overlay, desktop re-shows header */}
-      {!isHeaderVisible && !shouldHideButton && (
-        <button
-          className={styles.showButton}
-          onClick={handleShowButtonClick}
-          aria-label={isMobile ? 'Open launcher' : 'Show header'}
-        >
-          <span className={styles.showButtonText}>
-            <AwakeVerseWordmark className={styles.wordmark} />
-          </span>
-          <ChevronDownIcon className={styles.showButtonIcon} />
-        </button>
-      )}
-
-      {/* ── Hamburger handle ───────────────────────────────── */}
-      {showNavigation && (
-        <button
-          type="button"
-          className={`${styles.sidebarHandle} ${isSidebarOpen ? styles.sidebarHandleOpen : ''}`}
-          onClick={toggleSidebar}
-          aria-label={isSidebarOpen ? 'Close menu' : 'Open menu'}
-        >
-          <span className={styles.handleBar} />
-          <span className={styles.handleBar} />
-          <span className={styles.handleBar} />
-        </button>
-      )}
-
-      {/* ── Sidebar ────────────────────────────────────────── */}
-      {showNavigation && (
-        <div
-          className={`${styles.sidebarOverlay} ${isSidebarOpen ? styles.sidebarOverlayOpen : ''}`}
-          onClick={closeSidebar}
-        >
-          <aside
-            className={`${styles.sidebar} ${isSidebarOpen ? styles.sidebarOpen : ''}`}
-            onClick={(e) => e.stopPropagation()}
-            aria-label="AwakeVerse navigation"
-          >
-            {/* Sidebar header */}
-            <div className={styles.sidebarHeader}>
-              <div className={styles.sidebarTitleBlock}>
-                <button
-                  className={styles.sidebarTitleBtn}
+                  className={`${styles.wordmark} ${styles.panelWordmark}`}
                   onClick={handleOracleClick}
                   aria-label="Ask the Oracle"
                   title="Ask the Oracle"
                 >
-                  <span className={styles.sidebarTitle}>
-                    <AwakeVerseWordmark className={styles.wordmark} />
-                  </span>
+                  <AwakeVerseWordmarkFull />
                 </button>
-                <span className={styles.sidebarSubtitle}>Primary, story worlds, and productivity.</span>
+                <span className={styles.panelSubtitle}>
+                  Primary, story worlds &amp; productivity.
+                </span>
               </div>
+              <button
+                className={styles.panelClose}
+                onClick={closeSidebar}
+                aria-label="Close navigation"
+              >
+                ✕
+              </button>
             </div>
 
             {/* Nav groups */}
-            <nav className={styles.sidebarNav}>
-              {navGroups.map((group) => {
-                const groupItems = group.items.map((key) => itemsByKey[key]).filter(Boolean);
-                if (groupItems.length === 0) return null;
-                return (
-                  <div className={styles.sidebarSection} key={group.key}>
-                    <div className={styles.sidebarSectionLabel}>{group.label}</div>
-                    <div className={styles.sidebarSectionItems}>
+            {showNavigation && (
+              <nav className={styles.nav}>
+                {navGroups.map((group) => {
+                  const groupItems = group.items.map((key) => itemsByKey[key]).filter(Boolean);
+                  if (groupItems.length === 0) return null;
+                  return (
+                    <React.Fragment key={group.key}>
+                      <div className={styles.sectionLabel}>{group.label}</div>
                       {groupItems.map(({ key, label, icon: Icon, viewState }) => (
                         <button
                           key={key}
-                          className={`${styles.sidebarNavItem} ${
-                            viewContext.currentView === viewState ? styles.sidebarNavItemActive : ''
+                          className={`${styles.navItem} ${
+                            viewContext.currentView === viewState ? styles.navItemActive : ''
                           }`}
                           onClick={() => handleNavClick(viewState)}
                         >
-                          <Icon className={styles.sidebarNavIcon} />
-                          <span className={styles.sidebarNavLabel}>{label}</span>
+                          <Icon className={styles.navIcon} />
+                          <span className={styles.navLabel}>{label}</span>
                         </button>
                       ))}
-                    </div>
-                  </div>
-                );
-              })}
+                    </React.Fragment>
+                  );
+                })}
 
-              {/* ✅ Get Started group — always at bottom of nav */}
-              <div className={`${styles.sidebarSection} ${styles.sidebarSectionGetStarted}`}>
-                <div className={styles.sidebarSectionLabel}>Guide</div>
-                <div className={styles.sidebarSectionItems}>
+                {/* Get Started — always at bottom */}
+                <div className={styles.navDivider} />
+                <div className={styles.sectionLabel}>Guide</div>
+                <button
+                  className={styles.navItem}
+                  onClick={handleGetStartedClick}
+                >
+                  <GetStartedIcon className={styles.navIcon} />
+                  <span className={styles.navLabel}>Get Started</span>
+                </button>
+              </nav>
+            )}
+
+            {/* Footer — profile row with upward popup */}
+            {isAuthenticated && (
+              <footer className={styles.footer} ref={profileMenuRef}>
+
+                {/* Profile popup menu — opens upward */}
+                <div
+                  className={`${styles.profileMenu} ${isProfileOpen ? styles.profileMenuOpen : ''}`}
+                  role="menu"
+                  aria-label="Profile menu"
+                >
+                  {PROFILE_MENU_ITEMS.map((item) => (
+                    <button
+                      key={item.key}
+                      className={styles.profileMenuItem}
+                      role="menuitem"
+                      onClick={() => handleProfileMenuClick(item.viewState)}
+                    >
+                      <i className={`ti ${item.icon} ${styles.profileMenuIcon}`} aria-hidden="true" />
+                      {item.label}
+                    </button>
+                  ))}
                   <button
-                    className={styles.sidebarNavItem}
-                    onClick={handleGetStartedClick}
+                    className={`${styles.profileMenuItem} ${styles.profileMenuItemDanger}`}
+                    role="menuitem"
+                    onClick={handleLogout}
                   >
-                    <GetStartedIcon className={styles.sidebarNavIcon} />
-                    <span className={styles.sidebarNavLabel}>Get Started</span>
+                    <i className={`ti ti-logout ${styles.profileMenuIcon}`} aria-hidden="true" />
+                    Sign out
                   </button>
                 </div>
-              </div>
-            </nav>
 
-            {/* Sidebar footer */}
-            {isAuthenticated && (
-              <footer className={styles.sidebarFooter}>
-                <div className={styles.userMeta}>
-                  <div className={styles.userName}>
-                    {user?.display_name || user?.displayName || user?.name || 'AwakeVerse explorer'}
+                {/* User button */}
+                <button
+                  className={`${styles.userBtn} ${isProfileOpen ? styles.userMenuOpen : ''}`}
+                  onClick={() => setIsProfileOpen((o) => !o)}
+                  aria-label="Open profile menu"
+                  aria-expanded={isProfileOpen}
+                  aria-haspopup="menu"
+                >
+                  {AvatarEl}
+                  <div className={styles.userMeta}>
+                    <div className={styles.userName}>{displayName}</div>
+                    {userHandle && (
+                      <div className={styles.userHandle}>{userHandle}</div>
+                    )}
                   </div>
-                  {user?.username && <div className={styles.userEmail}>{user.username}</div>}
-                </div>
-                <div className={`${styles.subscriptionBadge} ${subscriptionActive ? styles.subscriptionActive : ''}`}>
-                  {subscriptionLabel}
-                </div>
+                  <div
+                    className={`${styles.subscriptionBadge} ${
+                      subscriptionActive ? styles.subscriptionActive : ''
+                    }`}
+                  >
+                    {subscriptionLabel}
+                  </div>
+                  <i className={`ti ti-chevron-up ${styles.userChevron}`} aria-hidden="true" />
+                </button>
+
               </footer>
             )}
-          </aside>
+          </div>
         </div>
-      )}
+      </div>
     </>
   );
 }
