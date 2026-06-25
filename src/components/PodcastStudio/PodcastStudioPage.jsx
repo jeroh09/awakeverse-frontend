@@ -592,14 +592,18 @@ if (context.topic) setTopic(context.topic);
     };
   }, [playingLineId, lineBlobUrls]);
 
-  // ── Podcast download — blob pattern from MediaJobModal ───────────────────
-  // Direct href on a CDN URL opens in browser instead of downloading.
-  // Fetch as blob → create object URL → programmatic <a> click → revoke.
+  // ── Podcast download — proxy through backend to avoid Spaces CORS ───────
+  // Direct fetch() to DigitalOcean Spaces CDN is blocked by CORS.
+  // Backend endpoint GET /api/podcast/session/<id>/download streams the file
+  // back same-origin — identical pattern to content_routes.download_video.
   const handleDownloadPodcast = useCallback(async (session) => {
-    if (!session?.final_url) return;
+    if (!session?.session_id) return;
     try {
-      const res  = await fetch(session.final_url, { credentials: 'include' });
-      if (!res.ok) throw new Error(`Fetch failed: ${res.status}`);
+      const res = await fetch(
+        `${API_BASE}/api/podcast/session/${session.session_id}/download`,
+        { credentials: 'include' }
+      );
+      if (!res.ok) throw new Error(`Server error: ${res.status}`);
       const blob = await res.blob();
       const url  = URL.createObjectURL(blob);
       const a    = document.createElement('a');
