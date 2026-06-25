@@ -1006,9 +1006,32 @@ if (context.topic) setTopic(context.topic);
                         <div style={{ flex: 1, overflow: 'hidden', cursor: 'pointer' }}
                           onClick={async () => {
                             if (confirmDelete) { setConfirmDelete(null); return; }
+                            const displayName = context?.user?.displayName || av.displayName || 'You';
+
+                            // ── Check cache first ──────────────────────────
+                            // If this avatar has already been baked into the
+                            // selected environment, use the cached URL directly.
+                            // No Nano call needed.
+                            const cached = (av.bakedEnvs || []).find(b => b.envId === selectedEnvId);
+                            if (cached?.bakedRefUrl) {
+                              console.log(`⚡ Using cached bake: ${av.avatarId} × ${selectedEnvId}`);
+                              setAvatarBuilt(true);
+                              setAvatarRefUrl(cached.bakedRefUrl);
+                              setSpeakers(prev => {
+                                const entry = { speakerId: 'user', displayName,
+                                  avatarRefUrl: cached.bakedRefUrl,
+                                  voiceMode: 'tts', voiceId: '21m00Tcm4TlvDq8ikWAM',
+                                  gender: 'female', color: SPEAKER_COLORS[0],
+                                  isCharacter: false, role: 'host', savedAvatarId: av.avatarId };
+                                const already = prev.find(s => s.speakerId === 'user');
+                                return already ? prev.map(s => s.speakerId === 'user' ? entry : s) : [entry, ...prev];
+                              });
+                              return;
+                            }
+
+                            // ── Not cached — bake now ──────────────────────
                             const photoUrl = av.photoUrl;
                             if (!photoUrl) return;
-                            const displayName = context?.user?.displayName || av.displayName || 'You';
                             const result = await buildAvatar({ photoUrl, displayName, envId: selectedEnvId, position: 'right' })
                               .catch(e => { setBuildError(e.message); return null; });
                             if (!result) return;
