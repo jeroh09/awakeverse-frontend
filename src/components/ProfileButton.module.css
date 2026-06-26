@@ -1,4 +1,4 @@
-/* src/components/ProfileButton.module.css - UPDATED for AwakeVerse */
+/* src/components/ProfileButton.module.css - Updated for AwakeVerse sidebar */
 
 .container {
   position: relative;
@@ -6,76 +6,81 @@
   z-index: 10000;
 }
 
-.trigger {
-  background: rgba(15, 23, 42, 0.9);
-  border: 1px solid rgba(148, 163, 184, 0.3);
-  cursor: pointer;
-  padding: 0.5rem;
-  border-radius: 8px;
-  transition: all 0.3s ease;
-  color: #94A3B8;
-  
-  /* AwakeVerse styling */
-  backdrop-filter: blur(8px);
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
-  
-  position: relative;
-  z-index: 100;
-}
+/* ── Trigger button (fits sidebar footer) ────────────────── */
 
-.trigger svg {
+.trigger {
+  background: transparent;              /* let the row background show */
+  border: 1px solid rgba(148, 163, 184, 0.15);
+  cursor: pointer;
+  padding: 0.3rem 0.4rem;
+  border-radius: 8px;
+  transition: all 0.15s ease;
   color: #94A3B8;
-  transition: all 0.3s ease;
-  width: 18px;
-  height: 18px;
+  backdrop-filter: none;                /* no double blur */
+  box-shadow: none;
+  display: flex;
+  align-items: center;
+  justify-content: center;
 }
 
 .trigger:hover,
 .trigger:focus {
-  background: rgba(15, 23, 42, 0.95);
+  background: rgba(99, 102, 241, 0.08);
   border-color: #6366F1;
-  color: #F1F5F9;
-  box-shadow: 0 4px 12px rgba(99, 102, 241, 0.15);
-  transform: translateY(-1px);
-}
-
-.trigger:hover svg,
-.trigger:focus svg {
-  color: #6366F1;
-  transform: rotate(90deg);
+  color: #a5b4fc;
+  transform: none;
+  box-shadow: 0 0 12px rgba(99, 102, 241, 0.08);
 }
 
 .trigger:active {
-  transform: scale(0.98);
+  transform: scale(0.96);
 }
+
+.trigger svg {
+  width: 16px;
+  height: 16px;
+  transition: transform 0.2s ease;
+  color: currentColor;
+}
+
+.trigger:hover svg {
+  transform: rotate(90deg);
+}
+
+/* ── Dropdown (opens upward) ──────────────────────────────── */
 
 .dropdown {
   position: absolute;
-  top: calc(100% + 0.5rem);
+  bottom: calc(100% + 0.5rem);           /* open upward */
   right: 0;
   min-width: 200px;
-  
-  /* AwakeVerse cosmic styling */
-  background: #141B2E;
+
+  /* Glassmorphic panel matching sidebar */
+  background: rgba(10, 15, 26, 0.98);
   backdrop-filter: blur(12px);
-  border: 1px solid rgba(148, 163, 184, 0.3);
-  border-radius: 8px;
-  
-  box-shadow: 
-    0 8px 24px rgba(0, 0, 0, 0.3),
-    0 4px 12px rgba(99, 102, 241, 0.1);
-  
+  border: 1px solid rgba(99, 102, 241, 0.35);
+  border-radius: 14px;
+  box-shadow:
+    0 0 0 4px rgba(15, 23, 42, 0.97),
+    0 0 0 5px rgba(99, 102, 241, 0.18),
+    0 -12px 32px rgba(0, 0, 0, 0.6);
+
   padding: 0.5rem;
   display: flex;
   flex-direction: column;
   gap: 0.125rem;
   z-index: 10001;
 
+  /* Animation */
   opacity: 0;
-  transform: scale(0.95) translateY(-8px);
-  transform-origin: top right;
+  transform: scale(0.95) translateY(8px);
+  transform-origin: bottom right;        /* expand from bottom */
   pointer-events: none;
   transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+
+  /* Safety for long menus */
+  max-height: 70vh;
+  overflow-y: auto;
 }
 
 .dropdownOpen {
@@ -83,6 +88,8 @@
   transform: scale(1) translateY(0);
   pointer-events: auto;
 }
+
+/* ── Menu items ────────────────────────────────────────────── */
 
 .menuItem {
   background: none;
@@ -93,13 +100,13 @@
   display: flex;
   align-items: center;
   gap: 0.75rem;
-  
+
   font-family: 'Inter', system-ui, sans-serif;
   font-size: 0.875rem;
   font-weight: 500;
   color: #94A3B8;
   text-decoration: none;
-  
+
   transition: all 0.2s ease;
   position: relative;
   overflow: hidden;
@@ -112,6 +119,12 @@
   color: #F1F5F9;
   border-color: rgba(99, 102, 241, 0.2);
   transform: translateX(2px);
+}
+
+.menuItem:not(:last-child) {
+  border-bottom: 1px solid rgba(148, 163, 184, 0.08);
+  margin-bottom: 0.125rem;
+  padding-bottom: 0.75rem;
 }
 
 .menuLabel {
@@ -130,13 +143,8 @@
   color: #6366F1;
 }
 
-.menuItem:not(:last-child) {
-  border-bottom: 1px solid rgba(148, 163, 184, 0.1);
-  margin-bottom: 0.125rem;
-  padding-bottom: 0.75rem;
-}
+/* ── Focus states ───────────────────────────────────────────── */
 
-/* Enhanced focus states */
 .trigger:focus-visible {
   outline: 2px solid #6366F1;
   outline-offset: 2px;
@@ -147,33 +155,41 @@
   outline-offset: 1px;
 }
 
-/* Mobile responsive */
+/* ── Mobile responsive ──────────────────────────────────────── */
+
 @media (max-width: 768px) {
   .trigger {
-    padding: 0.4rem;
+    padding: 0.25rem 0.3rem;
   }
-  
+
+  .trigger svg {
+    width: 14px;
+    height: 14px;
+  }
+
   .dropdown {
     min-width: 180px;
     right: -0.5rem;
+    bottom: calc(100% + 0.3rem);
   }
-  
+
   .menuItem {
     padding: 0.625rem;
     font-size: 0.8rem;
   }
 }
 
-/* Reduced motion */
+/* ── Reduced motion ─────────────────────────────────────────── */
+
 @media (prefers-reduced-motion: reduce) {
   .trigger,
   .dropdown,
   .menuItem,
   .icon {
-    transition: none;
+    transition: none !important;
   }
-  
+
   .trigger:hover svg {
-    transform: none;
+    transform: none !important;
   }
 }
