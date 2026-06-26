@@ -269,15 +269,14 @@
   margin: 4px 8px;
 }
 
-/* ── Footer — profile row ──────────────────────────────────── */
+/* ── Footer — avatar info row + ProfileButton ───────────────── */
 
 .footer {
   padding: 6px 8px 10px;
   border-top: 1px solid rgba(148, 163, 184, 0.09);
-  position: relative;
 }
 
-.userBtn {
+.footerUserRow {
   display: flex;
   align-items: center;
   gap: 9px;
@@ -286,12 +285,6 @@
   border-radius: 12px;
   background: rgba(15, 23, 42, 0.5);
   border: 1px solid rgba(148, 163, 184, 0.1);
-  cursor: pointer;
-  transition: background 0.14s ease, border-color 0.14s ease;
-}
-.userBtn:hover {
-  background: rgba(99, 102, 241, 0.08);
-  border-color: rgba(99, 102, 241, 0.22);
 }
 
 .avatarShell {

@@ -6,11 +6,11 @@
 // ✅ All original logic preserved: Oracle, onboarding, launcher, viewContext, nav groups
 
 import React, { useState, useEffect, useRef, useCallback } from 'react';
-import { useNavigate } from 'react-router-dom';
 import styles from './Header.module.css';
 import { useUser } from '../../contexts/UserContext';
 import { useAuth } from '../../contexts/AuthContext';
 import { useAppView } from '../../contexts/AppViewContext';
+import ProfileButton from '../ProfileButton';
 
 // ─── Nav Icons (inline SVG, indigo glow) ─────────────────────────────────────
 
@@ -160,22 +160,11 @@ const AwakeVerseWordmarkFull = ({ className }) => (
   </span>
 );
 
-// ─── Profile menu items — navigate to /profile-settings?tab=<tab>
-// Mirrors the exact routes ProfileButton used before this redesign.
-// 'tab' values must match what ProfileSettingsPage expects in its query param.
-const PROFILE_MENU_ITEMS = [
-  { key: 'account',      label: 'Account',      icon: 'ti-user',         tab: 'account' },
-  { key: 'settings',     label: 'Settings',     icon: 'ti-settings',     tab: 'settings' },
-  { key: 'subscription', label: 'Subscription', icon: 'ti-credit-card',  tab: 'subscription' },
-  { key: 'creator',      label: 'Creator Hub',  icon: 'ti-sparkles',     tab: 'creator' },
-];
-
 // ─── Main component ───────────────────────────────────────────────────────────
 
 export default function Header() {
   const { user, getSubscriptionInfo } = useUser();
   const { isAuthenticated, logout } = useAuth();
-  const navigate = useNavigate();
   const API_BASE = process.env.REACT_APP_API_URL || 'https://api.awakeverse.com';
 
   // Defensive viewContext — same try/catch as original
@@ -187,34 +176,17 @@ export default function Header() {
   }
 
   const [isSidebarOpen,  setIsSidebarOpen]  = useState(false);
-  const [isProfileOpen,  setIsProfileOpen]  = useState(false);
-  const profileMenuRef = useRef(null);
 
   const showNavigation = isAuthenticated && !!viewContext;
 
   // ── Close panel on Escape ─────────────────────────────────────────────────
   useEffect(() => {
     const onKey = (e) => {
-      if (e.key === 'Escape') {
-        setIsSidebarOpen(false);
-        setIsProfileOpen(false);
-      }
+      if (e.key === 'Escape') setIsSidebarOpen(false);
     };
     window.addEventListener('keydown', onKey);
     return () => window.removeEventListener('keydown', onKey);
   }, []);
-
-  // ── Close profile menu on outside click ──────────────────────────────────
-  useEffect(() => {
-    if (!isProfileOpen) return;
-    const onOutside = (e) => {
-      if (profileMenuRef.current && !profileMenuRef.current.contains(e.target)) {
-        setIsProfileOpen(false);
-      }
-    };
-    document.addEventListener('mousedown', onOutside);
-    return () => document.removeEventListener('mousedown', onOutside);
-  }, [isProfileOpen]);
 
   // ── Nav items — unchanged from original ──────────────────────────────────
   const navItems = !showNavigation
@@ -261,19 +233,8 @@ export default function Header() {
     }, 200);
   }, []);
 
-  // ✅ Profile menu — navigate to /profile-settings?tab=<tab>
-  // Exact same route ProfileButton used before this redesign
-  const handleProfileMenuClick = useCallback((tab) => {
-    setIsProfileOpen(false);
-    setIsSidebarOpen(false);
-    navigate(`/profile-settings${tab ? `?tab=${tab}` : ''}`);
-  }, [navigate]);
-
-  const handleLogout = useCallback(() => {
-    setIsProfileOpen(false);
-    setIsSidebarOpen(false);
-    logout();
-  }, [logout]);
+  // ✅ Profile menu — handled entirely by ProfileButton + ProfileMenuConfig
+  // No navigation logic needed here; ProfileButton owns routes, logout, dark mode
 
   const closeSidebar = useCallback(() => {
     setIsSidebarOpen(false);
@@ -418,45 +379,10 @@ export default function Header() {
               </nav>
             )}
 
-            {/* Footer — profile row with upward popup */}
+            {/* Footer — ProfileButton owns all profile navigation via ProfileMenuConfig */}
             {isAuthenticated && (
-              <footer className={styles.footer} ref={profileMenuRef}>
-
-                {/* Profile popup menu — opens upward */}
-                <div
-                  className={`${styles.profileMenu} ${isProfileOpen ? styles.profileMenuOpen : ''}`}
-                  role="menu"
-                  aria-label="Profile menu"
-                >
-                  {PROFILE_MENU_ITEMS.map((item) => (
-                    <button
-                      key={item.key}
-                      className={styles.profileMenuItem}
-                      role="menuitem"
-                      onClick={() => handleProfileMenuClick(item.tab)}
-                    >
-                      <i className={`ti ${item.icon} ${styles.profileMenuIcon}`} aria-hidden="true" />
-                      {item.label}
-                    </button>
-                  ))}
-                  <button
-                    className={`${styles.profileMenuItem} ${styles.profileMenuItemDanger}`}
-                    role="menuitem"
-                    onClick={handleLogout}
-                  >
-                    <i className={`ti ti-logout ${styles.profileMenuIcon}`} aria-hidden="true" />
-                    Sign out
-                  </button>
-                </div>
-
-                {/* User button */}
-                <button
-                  className={`${styles.userBtn} ${isProfileOpen ? styles.userMenuOpen : ''}`}
-                  onClick={() => setIsProfileOpen((o) => !o)}
-                  aria-label="Open profile menu"
-                  aria-expanded={isProfileOpen}
-                  aria-haspopup="menu"
-                >
+              <footer className={styles.footer}>
+                <div className={styles.footerUserRow}>
                   {AvatarEl}
                   <div className={styles.userMeta}>
                     <div className={styles.userName}>{displayName}</div>
@@ -471,9 +397,8 @@ export default function Header() {
                   >
                     {subscriptionLabel}
                   </div>
-                  <i className={`ti ti-chevron-up ${styles.userChevron}`} aria-hidden="true" />
-                </button>
-
+                  <ProfileButton />
+                </div>
               </footer>
             )}
           </div>
