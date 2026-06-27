@@ -308,6 +308,11 @@ export default function PodcastStudioPage({ context, onClose }) {
   const [playingPreviewId,  setPlayingPreviewId]  = useState(null);
   const previewAudioRef = useRef(null);
 
+  // ── Voice confirmation (generate tab right panel) ────────────────────────────
+  // Which speaker's inline picker is expanded (null = all collapsed).
+  // One open at a time — clicking a different row closes the previous.
+  const [voiceConfirmOpen, setVoiceConfirmOpen] = useState(null);
+
   // ── Tab done state ────────────────────────────────────────────────────────
   const tabsDone = {
     avatar:   avatarBuilt || speakers.some(s => s.isCharacter && s.avatarRefUrl),
@@ -2071,8 +2076,168 @@ if (context.topic) setTopic(context.topic);
             </div>
           )}
 
+          {/* GENERATE TAB → Voice confirmation panel */}
+          {activeTab === 'generate' && (
+            <div className={styles.glassCard} style={{ height: '100%', display: 'flex', flexDirection: 'column', gap: '0.65rem' }}>
+              <div className={styles.cardLabel}>Confirm voices</div>
+              <p style={{ fontSize: '0.7rem', color: '#64748b', fontFamily: 'Inter,sans-serif', margin: 0, lineHeight: 1.5 }}>
+                Review and change each speaker's voice before rendering.
+              </p>
+
+              {/* Per-speaker voice rows */}
+              <div style={{ flex: 1, overflowY: 'auto', display: 'flex', flexDirection: 'column', gap: '0.75rem', minHeight: 0 }}>
+                {(speakers.length === 0
+                  ? [{ speakerId: 'user', displayName: 'You', role: 'host', voiceId: null }]
+                  : speakers
+                ).map(spk => {
+                  const assignedVoice  = voices.find(v => v.voiceId === spk.voiceId);
+                  const isExpanded     = voiceConfirmOpen === spk.speakerId;
+                  const isLocked       = state.status === 'rendering' || state.status === 'complete';
+                  const filteredVoices = voices.filter(v => v.gender === voiceGenderFilter);
+
+                  return (
+                    <div key={spk.speakerId} style={{ display: 'flex', flexDirection: 'column', gap: '0.4rem' }}>
+
+                      {/* Speaker header row */}
+                      <div style={{
+                        fontSize: '0.65rem', fontWeight: 700, letterSpacing: '0.1em',
+                        textTransform: 'uppercase', color: spk.color || '#6366f1',
+                        fontFamily: 'Inter,sans-serif',
+                      }}>
+                        {spk.displayName} · {spk.role === 'host' ? 'Host' : 'Guest'}
+                      </div>
+
+                      {/* Current voice chip + change button */}
+                      <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', flexWrap: 'wrap' }}>
+                        {assignedVoice ? (
+                          <div style={{
+                            display: 'flex', alignItems: 'center', gap: '0.4rem',
+                            padding: '0.3rem 0.65rem', borderRadius: 999,
+                            background: 'rgba(99,102,241,0.12)',
+                            border: '1px solid rgba(99,102,241,0.3)',
+                            fontSize: '0.72rem', fontFamily: 'Inter,sans-serif', color: '#c7d2fe',
+                          }}>
+                            <span>🎙</span>
+                            <span>{assignedVoice.displayName}</span>
+                            <span style={{ color: '#6366f1', opacity: 0.7 }}>·</span>
+                            <span style={{ color: '#94a3b8' }}>{assignedVoice.accent}</span>
+                          </div>
+                        ) : (
+                          <div style={{
+                            display: 'flex', alignItems: 'center', gap: '0.35rem',
+                            fontSize: '0.7rem', color: '#F59E0B', fontFamily: 'Inter,sans-serif',
+                          }}>
+                            ⚠ No voice selected
+                          </div>
+                        )}
+
+                        {/* Preview button — only when voice assigned */}
+                        {assignedVoice?.previewUrl && (
+                          <button
+                            onClick={() => handlePlayPreview(assignedVoice.voiceId, assignedVoice.previewUrl)}
+                            style={{
+                              background: 'none', border: '1px solid rgba(148,163,184,0.2)',
+                              borderRadius: 6, color: '#94a3b8', cursor: 'pointer',
+                              fontSize: '0.65rem', padding: '0.2rem 0.5rem',
+                              fontFamily: 'Inter,sans-serif',
+                            }}
+                          >
+                            {playingPreviewId === assignedVoice.voiceId ? '■ Stop' : '▶ Preview'}
+                          </button>
+                        )}
+
+                        {/* Change toggle */}
+                        {!isLocked && (
+                          <button
+                            onClick={() => setVoiceConfirmOpen(isExpanded ? null : spk.speakerId)}
+                            style={{
+                              background: isExpanded ? 'rgba(99,102,241,0.15)' : 'transparent',
+                              border: '1px solid rgba(99,102,241,0.3)',
+                              borderRadius: 6, color: '#818cf8', cursor: 'pointer',
+                              fontSize: '0.65rem', padding: '0.2rem 0.5rem',
+                              fontFamily: 'Inter,sans-serif', fontWeight: 600,
+                            }}
+                          >
+                            {isExpanded ? '✕ Close' : '↕ Change'}
+                          </button>
+                        )}
+                      </div>
+
+                      {/* Inline picker — expands on Change click */}
+                      {isExpanded && (
+                        <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
+
+                          {/* Gender filter */}
+                          <div className={styles.scriptModeToggle} style={{ alignSelf: 'stretch' }}>
+                            {['female', 'male'].map(g => (
+                              <button
+                                key={g}
+                                className={`${styles.scriptModeBtn} ${voiceGenderFilter === g ? styles.scriptModeBtnActive : ''}`}
+                                style={{ flex: 1, justifyContent: 'center' }}
+                                onClick={() => setVoiceGenderFilter(g)}
+                              >
+                                {g === 'female' ? '♀ Female' : '♂ Male'}
+                              </button>
+                            ))}
+                          </div>
+
+                          {/* Voice grid — compact */}
+                          <div className={styles.voiceGrid}>
+                            {filteredVoices.map(v => {
+                              const isSel     = spk.voiceId === v.voiceId;
+                              const isPlaying = playingPreviewId === v.voiceId;
+                              return (
+                                <div
+                                  key={v.voiceId}
+                                  className={`${styles.voiceCard} ${isSel ? styles.voiceCardSelected : ''}`}
+                                  onClick={() => {
+                                    handleSelectVoice(spk.speakerId, v.voiceId);
+                                    setVoiceConfirmOpen(null); // collapse after selection
+                                  }}
+                                >
+                                  <div className={styles.voiceCardTop}>
+                                    <div className={styles.voiceCardName}>{v.displayName}</div>
+                                    <button
+                                      className={`${styles.voicePreviewBtn} ${isPlaying ? styles.voicePreviewBtnPlaying : ''}`}
+                                      onClick={e => { e.stopPropagation(); handlePlayPreview(v.voiceId, v.previewUrl); }}
+                                      title={isPlaying ? 'Stop' : 'Preview'}
+                                    >
+                                      {isPlaying ? '■' : '▶'}
+                                    </button>
+                                  </div>
+                                  <div className={styles.voiceCardAccent}>{v.accent}</div>
+                                  <div className={styles.voiceCardVibe}>{v.vibe}</div>
+                                  {isSel && <div className={styles.voiceCardCheck}><Ic.Check /></div>}
+                                </div>
+                              );
+                            })}
+                          </div>
+                        </div>
+                      )}
+
+                    </div>
+                  );
+                })}
+              </div>
+
+              {/* All-good indicator */}
+              {speakers.length > 0 && speakers.every(s => s.voiceId) && (
+                <div style={{
+                  display: 'flex', alignItems: 'center', gap: '0.4rem',
+                  fontSize: '0.7rem', color: '#10B981', fontFamily: 'Inter,sans-serif',
+                  padding: '0.45rem 0.7rem',
+                  background: 'rgba(16,185,129,0.07)',
+                  border: '1px solid rgba(16,185,129,0.2)',
+                  borderRadius: 8,
+                }}>
+                  <Ic.Check /> All voices confirmed — ready to render
+                </div>
+              )}
+            </div>
+          )}
+
           {/* ALL OTHER TABS → Environment picker */}
-          {activeTab !== 'script' && activeTab !== 'podcasts' && activeTab !== 'guide' && (
+          {activeTab !== 'script' && activeTab !== 'podcasts' && activeTab !== 'guide' && activeTab !== 'generate' && (
             <div className={styles.glassCard} style={{ height: '100%' }}>
               <div className={styles.cardLabel}>Studio Backgrounds</div>
               {envsLoading ? (
