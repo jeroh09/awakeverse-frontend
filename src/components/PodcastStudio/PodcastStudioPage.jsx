@@ -868,16 +868,25 @@ if (context.topic) setTopic(context.topic);
       // Build payload in snake_case — matches backend _validate_session exactly.
       const payload = {
         environment_id: selectedEnvId,
-        speakers: speakers.map((s, i) => ({
-          speaker_id:     s.speakerId     || `s${i + 1}`,
-          display_name:   s.displayName,
-          avatar_ref_url: s.avatarRefUrl,
-          avatar_id:      s.savedAvatarId || null,
-          voice_mode:     s.voiceMode,
-          voice_id:       s.voiceId       || null,
-          gender:         s.gender        || 'neutral',
-          accent:         s.accent        || '',
-        })),
+        speakers: speakers.map((s, i) => {
+          // Always send a voice_id — never null or empty.
+          // Host default: Rachel (21m00Tcm4TlvDq8ikWAM)
+          // Guest default: Adam  (pNInz6obpgDQGcFmaJgB)
+          const isHost       = s.speakerId === 'user' || s.role === 'host';
+          const defaultVoice = isHost
+            ? '21m00Tcm4TlvDq8ikWAM'   // Rachel — matches host seed at line 392
+            : DEFAULT_GUEST_VOICE;       // Adam   — matches guest seed at line 807
+          return {
+            speaker_id:     s.speakerId     || `s${i + 1}`,
+            display_name:   s.displayName,
+            avatar_ref_url: s.avatarRefUrl,
+            avatar_id:      s.savedAvatarId || null,
+            voice_mode:     s.voiceMode     || 'tts',
+            voice_id:       s.voiceId       || defaultVoice,
+            gender:         s.gender        || 'neutral',
+            accent:         s.accent        || '',
+          };
+        }),
         lines: currentLines
           .filter(l => (l.text || '').trim() || l.audioUrl)
           .map(l => ({
@@ -914,6 +923,7 @@ if (context.topic) setTopic(context.topic);
       // Hand off to poll loop — NO second POST.
       // startPollingSession sets state to 'rendering' and begins the poll interval.
       startPollingSession(data.session_id);
+      setSubmitted(false);
       // Sessions list refreshed by the useEffect watching state.status === 'complete'
 
     } catch (e) {
