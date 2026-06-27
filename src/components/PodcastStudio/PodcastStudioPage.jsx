@@ -30,6 +30,8 @@ import React, {
   useState, useEffect, useRef, useCallback, useReducer
 } from 'react';
 import usePodcastStudio from '../../hooks/usePodcastStudio';
+import useVideoBudget from '../../hooks/useVideoBudget';
+import VideoBudgetBanner from './VideoBudgetBanner';
 import styles from './PodcastStudioPage.module.css';
 
 // ── Constants ────────────────────────────────────────────────────────────────
@@ -135,13 +137,6 @@ const linesReducer = (state, action) => {
     case 'ADD':    return [...state, { speakerId: action.speakerId, text: '', audioUrl: null, id: Date.now() }];
     case 'UPDATE': return state.map(l => l.id === action.id ? { ...l, ...action.patch } : l);
     case 'REMOVE': return state.filter(l => l.id !== action.id);
-    case 'MOVE': {
-      // Drag-to-reorder: move item at index `from` to index `to`
-      const next = [...state];
-      const [moved] = next.splice(action.from, 1);
-      next.splice(action.to, 0, moved);
-      return next;
-    }
     default:       return state;
   }
 };
@@ -179,6 +174,7 @@ export default function PodcastStudioPage({ context, onClose }) {
     getCharacterRef,
     uploadAudio,
     createSession,
+    startPollingSession,
     resetStudio,
     deleteAvatar,
     deleteSession,
@@ -187,6 +183,14 @@ export default function PodcastStudioPage({ context, onClose }) {
     cloneVoice,
     loadVoiceClone,
   } = usePodcastStudio();
+
+  const {
+    guardedFetch,
+    budgetState,
+    budgetDisplay,
+    handleUpgrade,
+    clearBudgetError,
+  } = useVideoBudget();
 
   // ── Navigation ────────────────────────────────────────────────────────────
   const [activeTab, setActiveTab] = useState('avatar');
@@ -849,23 +853,73 @@ if (context.topic) setTopic(context.topic);
       return;
     }
 
+    // Clear any previous budget error before a new attempt
+    clearBudgetError();
     setSubmitted(true);
+
     try {
-      await createSession({
-        environmentId: selectedEnvId,
+      const csrf = document.cookie.match(/(?:^|;\s*)av_csrf=([^;]+)/)?.[1] || '';
+
+      // Build payload in snake_case — matches backend _validate_session exactly.
+      const payload = {
+        environment_id: selectedEnvId,
         speakers: speakers.map((s, i) => ({
-          speakerId: s.speakerId || `s${i+1}`, displayName: s.displayName,
-          avatarRefUrl: s.avatarRefUrl, voiceMode: s.voiceMode,
-          voiceId: s.voiceId, gender: s.gender,
+          speaker_id:     s.speakerId     || `s${i + 1}`,
+          display_name:   s.displayName,
+          avatar_ref_url: s.avatarRefUrl,
+          avatar_id:      s.savedAvatarId || null,
+          voice_mode:     s.voiceMode,
+          voice_id:       s.voiceId       || null,
+          gender:         s.gender        || 'neutral',
+          accent:         s.accent        || '',
         })),
-        // Only send lines that have text AND whose speakerId matches a speaker
         lines: currentLines
           .filter(l => (l.text || '').trim() || l.audioUrl)
-          .map(l => ({ speakerId: l.speakerId, text: l.text || '', audioUrl: l.audioUrl || null })),
+          .map(l => ({
+            speaker_id: l.speakerId,
+            text:       l.text     || '',
+            audio_url:  l.audioUrl || null,
+          })),
+      };
+
+      // guardedFetch: same as fetch() but intercepts 403 budget errors.
+      // Returns null on budget hit → budgetState.hit → banner renders.
+      // Returns Response on success → extract session_id and start polling.
+      const res = await guardedFetch(`${API_BASE}/api/podcast/session`, {
+        method:      'POST',
+        headers:     { 'Content-Type': 'application/json', 'X-CSRF-Token': csrf },
+        credentials: 'include',
+        body:        JSON.stringify(payload),
       });
-      // Sessions list is refreshed by the useEffect watching state.status === 'complete'
-    } catch (e) { setSubmitted(false); }
-  }, [speakers, selectedEnvId, createSession, state.status, loadSessions]);
+
+      if (!res) {
+        // Budget hit — banner rendered via budgetState, re-enable button
+        setSubmitted(false);
+        return;
+      }
+
+      const data = await res.json();
+
+      if (!res.ok) {
+        console.error('❌ Podcast session error:', data);
+        setSubmitted(false);
+        return;
+      }
+
+      // Hand off to poll loop — NO second POST.
+      // startPollingSession sets state to 'rendering' and begins the poll interval.
+      startPollingSession(data.session_id);
+      // Sessions list refreshed by the useEffect watching state.status === 'complete'
+
+    } catch (e) {
+      console.error('❌ handleGenerate error:', e);
+      setSubmitted(false);
+    }
+  }, [
+    speakers, selectedEnvId,
+    startPollingSession, loadSessions,
+    clearBudgetError, guardedFetch,
+  ]);
 
   // ── Reload sessions when generate completes ───────────────────────────────
   useEffect(() => {
@@ -1582,6 +1636,14 @@ if (context.topic) setTopic(context.topic);
           {/* ════ GENERATE TAB ════ */}
           {activeTab === 'generate' && (
             <div className={styles.generatePage}>
+
+              {/* Budget banner — sits above progress steps, hidden until budget hit */}
+              <VideoBudgetBanner
+                budgetState={budgetState}
+                budgetDisplay={budgetDisplay}
+                onUpgrade={handleUpgrade}
+                onDismiss={clearBudgetError}
+              />
 
               {/* Progress steps */}
               <div className={styles.glassCard}>

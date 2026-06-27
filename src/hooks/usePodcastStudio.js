@@ -777,6 +777,35 @@ export default function usePodcastStudio() {
     }
   }, [stopPolling, startPolling]);
 
+// INSERT BETWEEN THEM:
+ 
+  /**
+   * startPollingSession — skip the POST, go straight to polling.
+   *
+   * Called by PodcastStudioPage.handleGenerate after it has already
+   * submitted the session via guardedFetch (budget-gated fetch).
+   * Sets the same rendering state createSession would set, then
+   * starts the poll loop exactly as createSession does.
+   *
+   * @param {string} sessionId — session_id returned by the backend
+   */
+  const startPollingSession = useCallback((sessionId) => {
+    if (!sessionId) {
+      console.error('❌ startPollingSession: sessionId is required');
+      return;
+    }
+    stopPolling();
+    setState({
+      status:    'rendering',
+      activeJob: { sessionId },
+      error:     null,
+      progress:  0,
+    });
+    console.log(`⏳ Podcast poll started (external submit): ${sessionId}`);
+    startPolling(sessionId);
+  }, [stopPolling, startPolling, setState]);
+ 
+
   // ── Delete avatar ─────────────────────────────────────────────────────────
   //
   // Frontend: avatarId (string UUID)
@@ -956,6 +985,7 @@ export default function usePodcastStudio() {
 
     // Session (render job)
     createSession,    // (session) → sessionId (starts polling)
+    startPollingSession, // (sessionId) → void — skip POST, start poll loop
     sendScriptMessage,// ({ messages, speakerName, topic, guestName }) → { reply, scriptBlock }
     deleteSession,    // (sessionId) → void
 

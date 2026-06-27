@@ -13,6 +13,7 @@ import SubscriptionService from '../../../services/SubscriptionService';
 import DebateModeToggle from '../DebateModeToggle';
 import { ArrowLeft, ChevronRight, ChevronDown } from 'lucide-react';
 import ScriptViewerModal from './ScriptViewerModal';
+import VideoBudgetBanner from './InfoPanel/VideoBudgetBanner';
 
 // Existing components - keeping for now
 // import ChatInput from './ChatInput'; // OLD - deprecated
@@ -37,6 +38,21 @@ import useKeyboardHeight from '../../../hooks/useKeyboardHeight'; // NEW: Mobile
 
 // Styles
 import styles from './ScenarioChatWindow.module.css'; // New layout styles
+
+// Tier display names — mirrors PaymentRouter.js TIER_CONFIG
+const TIER_DISPLAY = {
+  starter:   'EXPLORER',
+  pro:       'PROFESSIONAL',
+  unlimited: 'CREATOR',
+};
+ 
+// Format seconds → "Xm Ys" — mirrors useVideoBudget.js formatSeconds
+function formatSeconds(s) {
+  if (s == null) return '—';
+  const m = Math.floor(s / 60);
+  const r = s % 60;
+  return r > 0 ? `${m}m ${r}s` : `${m}m`;
+}
 
 export default function ScenarioChatWindow({
   scenario,
@@ -91,6 +107,18 @@ export default function ScenarioChatWindow({
 
   // ===== VIDEO GENERATION HOOK =====
   const contentGen = useContentGeneration(scenario.id); 
+  const { budgetError, clearBudgetError } = contentGen;
+  const handleContentUpgrade = useCallback(async (tier) => {
+    if (!tier) return;
+    try {
+      const { default: PaymentRouter } = await import(
+        '../../../services/PaymentRouter'
+      );
+      await PaymentRouter.quickUpgrade(tier, 'video_budget_limit');
+    } catch (e) {
+      console.error('❌ handleContentUpgrade failed:', e);
+    }
+  }, []);
   const [isCreatePanelOpen, setIsCreatePanelOpen] = useState(false);
   const [viewingJob, setViewingJob] = useState(null); 
 
@@ -611,7 +639,32 @@ export default function ScenarioChatWindow({
       </div>
 
       {/* RIGHT PANEL: Info Panel */}
-      <div className={`${styles.infoPanel} ${infoPanelCollapsed ? styles.collapsed : ''}`}>
+      <div className={`${styles.infoPanel} ${infoPanelCollapsed ? styles.collapsed : ''}`}> 
+          {/* Video budget banner — shown when content_jobs 403 budget fires */}
+          {budgetError.hit && (
+            <VideoBudgetBanner
+              budgetState={{
+                hit:           budgetError.hit,
+                secondsUsed:   budgetError.secondsUsed,
+                budget:        budgetError.budget,
+                suggestedTier: budgetError.suggestedTier,
+                upgrading:     false,   // managed locally inside banner
+              }}
+              budgetDisplay={{
+                secondsUsedLabel:   formatSeconds(budgetError.secondsUsed),
+                budgetLabel:        formatSeconds(budgetError.budget),
+                remainingLabel:     formatSeconds(
+                  budgetError.budget != null && budgetError.secondsUsed != null
+                    ? Math.max(0, budgetError.budget - budgetError.secondsUsed)
+                    : null
+                ),
+                suggestedTierLabel: TIER_DISPLAY[budgetError.suggestedTier]
+                  || budgetError.suggestedTier,
+              }}
+              onUpgrade={handleContentUpgrade}
+              onDismiss={clearBudgetError}
+            />
+          )}
         <InfoPanel
           scenarios={scenarios}
           currentScenarioId={scenario.id}

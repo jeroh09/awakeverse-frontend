@@ -17,11 +17,23 @@ const INITIAL_STATE = {
   progress:  0,           // 0.0 → 1.0, from job.progress during polling
 };
 
+const INITIAL_BUDGET_ERROR = {
+  hit:           false,
+  secondsUsed:   null,
+  budget:        null,
+  suggestedTier: null,
+};
+
 export default function useContentGeneration(scenarioId) {
 
   const [state,       setState]      = useState(INITIAL_STATE);
   const [jobs,        setJobs]       = useState([]);
   const [jobsLoading, setJobsLoading] = useState(false);
+  const [budgetError, setBudgetError] = useState(INITIAL_BUDGET_ERROR);
+ 
+  const clearBudgetError = useCallback(() => {
+    setBudgetError(INITIAL_BUDGET_ERROR);
+  }, []);
 
   const pollingRef   = useRef(null);   // setInterval handle
   const startTimeRef = useRef(null);   // when polling started
@@ -195,10 +207,36 @@ export default function useContentGeneration(scenarioId) {
       });
 
       const data = await response.json();
-
+ 
       if (!response.ok) {
+        // ── Budget gate: 403 with known shape ────────────────────────────────
+        // Identical response shape to podcast_routes.py so the same
+        // VideoBudgetBanner component and PaymentRouter flow works for both.
+        if (
+          response.status === 403 &&
+          data.error === 'Monthly video budget reached'
+        ) {
+          setBudgetError({
+            hit:           true,
+            secondsUsed:   data.seconds_used   ?? null,
+            budget:        data.budget          ?? null,
+            suggestedTier: data.suggested_tier  ?? null,
+          });
+          // Reset creating state — do not leave spinner running
+          setState(prev => ({
+            ...prev,
+            status:    'idle',
+            activeJob: null,
+            progress:  0,
+          }));
+          // Return undefined — caller (ScenarioChatWindow) checks budgetError.hit
+          return;
+        }
+ 
+        // All other errors — existing behaviour unchanged
         throw new Error(data.error || `Request failed: ${response.status}`);
       }
+ 
 
       // ── 201: Script — synchronous complete ───────────────────────────────
       if (response.status === 201) {
@@ -368,6 +406,7 @@ export default function useContentGeneration(scenarioId) {
     state,          // { status, activeJob, error, progress }
     jobs,           // ContentJob[] — past completed jobs
     jobsLoading,
+    budgetError,      // { hit, secondsUsed, budget, suggestedTier } — set on 403
     createContent,  // (params) => Promise<job>
     suggestMessages,// () => Promise<{ suggested_ids: number[] | null }>
     generatePoster, // (params) => Promise<job> — sync poster
@@ -375,5 +414,6 @@ export default function useContentGeneration(scenarioId) {
     deleteJob,      // (jobId) => void — delete a job + its media
     loadJobs,       // () => void — manual refresh
     resetContent,   // () => void
+    clearBudgetError, 
   };
 }
