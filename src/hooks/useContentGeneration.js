@@ -2,19 +2,24 @@
 // Complete rewrite — adds async polling for audio and video jobs.
 // Script (201) → immediate complete.
 // Audio/Video (202) → poll every 5s until complete or failed.
+//
+// ApiErrorService integrated — all user-facing error strings are
+// mapped through the service. Raw status codes and stack traces
+// never reach the UI. Backend continues to log everything server-side.
 
 import { useState, useCallback, useEffect, useRef } from 'react';
+import ApiErrorService from '../services/ApiErrorService';
 
 const API_BASE = process.env.REACT_APP_API_URL || 'https://api.awakeverse.com';
 
-const POLL_INTERVAL_MS = 5000;   // poll every 5s
-const POLL_TIMEOUT_MS  = 45 * 60 * 1000;  // 45min hard stop (matches job_timeout)
+const POLL_INTERVAL_MS = 5000;          // poll every 5s
+const POLL_TIMEOUT_MS  = 45 * 60 * 1000; // 45min hard stop (matches job_timeout)
 
 const INITIAL_STATE = {
-  status:    'idle',      // 'idle' | 'creating' | 'complete' | 'failed'
-  activeJob: null,        // full job dict
+  status:    'idle',   // 'idle' | 'creating' | 'complete' | 'failed'
+  activeJob: null,     // full job dict
   error:     null,
-  progress:  0,           // 0.0 → 1.0, from job.progress during polling
+  progress:  0,        // 0.0 → 1.0, from job.progress during polling
 };
 
 const INITIAL_BUDGET_ERROR = {
@@ -30,13 +35,13 @@ export default function useContentGeneration(scenarioId) {
   const [jobs,        setJobs]       = useState([]);
   const [jobsLoading, setJobsLoading] = useState(false);
   const [budgetError, setBudgetError] = useState(INITIAL_BUDGET_ERROR);
- 
+
   const clearBudgetError = useCallback(() => {
     setBudgetError(INITIAL_BUDGET_ERROR);
   }, []);
 
-  const pollingRef   = useRef(null);   // setInterval handle
-  const startTimeRef = useRef(null);   // when polling started
+  const pollingRef   = useRef(null); // setInterval handle
+  const startTimeRef = useRef(null); // when polling started
 
   // ── Polling cleanup ───────────────────────────────────────────────────────
 
@@ -93,7 +98,7 @@ export default function useContentGeneration(scenarioId) {
         setState(prev => ({
           ...prev,
           status: 'failed',
-          error:  'Generation timed out. Please try again.',
+          error:  'Generation timed out — please try again.',
         }));
         return;
       }
@@ -109,7 +114,7 @@ export default function useContentGeneration(scenarioId) {
           return;
         }
 
-        const job = await response.json();
+        const job       = await response.json();
         const jobStatus = job.status;
 
         // Always update progress
@@ -139,9 +144,11 @@ export default function useContentGeneration(scenarioId) {
           setState({
             status:    'failed',
             activeJob: null,
-            error:     job.error_message || 'Generation failed',
+            // job.error_message comes from the backend worker — already a safe string
+            error:     job.error_message || 'Generation failed — please try again.',
             progress:  0,
           });
+
         } else if (jobStatus === 'cancelled') {
           stopPolling();
           setState({ status: 'idle', activeJob: null, error: null, progress: 0 });
@@ -150,6 +157,7 @@ export default function useContentGeneration(scenarioId) {
         // 'processing' / 'pending' → keep polling
 
       } catch (e) {
+        // Polling errors are transient — log and retry on next interval
         console.warn('⚠️ Polling error (will retry):', e.message);
       }
     }, POLL_INTERVAL_MS);
@@ -178,7 +186,7 @@ export default function useContentGeneration(scenarioId) {
     stopPolling();
     setState({
       status:    'creating',
-      activeJob: { content_type: contentType, progress: 0 },  // known up-front so progress UI shows
+      activeJob: { content_type: contentType, progress: 0 }, // known up-front so progress UI shows
       error:     null,
       progress:  0,
     });
@@ -207,22 +215,20 @@ export default function useContentGeneration(scenarioId) {
       });
 
       const data = await response.json();
- 
+
       if (!response.ok) {
-        // ── Budget gate: 403 with known shape ────────────────────────────────
-        // Identical response shape to podcast_routes.py so the same
-        // VideoBudgetBanner component and PaymentRouter flow works for both.
-        if (
-          response.status === 403 &&
-          data.error === 'Monthly video budget reached'
-        ) {
+
+        // ── Budget gate — 403 with known shape ───────────────────────────────
+        // Populates budgetError state → VideoBudgetBanner renders in InfoPanel.
+        // Does NOT set state.error — the banner is the UI for this case.
+        if (ApiErrorService.isBudgetError(response.status, data)) {
           setBudgetError({
             hit:           true,
             secondsUsed:   data.seconds_used   ?? null,
             budget:        data.budget          ?? null,
             suggestedTier: data.suggested_tier  ?? null,
           });
-          // Reset creating state — do not leave spinner running
+          // Reset to idle — do not leave spinner running
           setState(prev => ({
             ...prev,
             status:    'idle',
@@ -232,11 +238,18 @@ export default function useContentGeneration(scenarioId) {
           // Return undefined — caller (ScenarioChatWindow) checks budgetError.hit
           return;
         }
- 
-        // All other errors — existing behaviour unchanged
-        throw new Error(data.error || `Request failed: ${response.status}`);
+
+        // ── fal / Nano / Hailuo credit exhaustion ────────────────────────────
+        // Logged server-side. Show a specific user message so they know it's us.
+        if (ApiErrorService.isFalCreditError(response.status, data)) {
+          ApiErrorService.log('useContentGeneration.createContent', response.status, data);
+          throw new Error(ApiErrorService.getMessage(response.status, data));
+        }
+
+        // ── All other errors ─────────────────────────────────────────────────
+        ApiErrorService.log('useContentGeneration.createContent', response.status, data);
+        throw new Error(ApiErrorService.getMessage(response.status, data));
       }
- 
 
       // ── 201: Script — synchronous complete ───────────────────────────────
       if (response.status === 201) {
@@ -273,9 +286,16 @@ export default function useContentGeneration(scenarioId) {
       return data;
 
     } catch (error) {
-      console.error('❌ createContent failed:', error);
+      // error.message is already user-friendly at this point —
+      // either mapped by ApiErrorService above or a network failure.
+      ApiErrorService.log('useContentGeneration.createContent [catch]', 0, { error: error.message });
       stopPolling();
-      setState({ status: 'failed', activeJob: null, error: error.message, progress: 0 });
+      setState({
+        status:    'failed',
+        activeJob: null,
+        error:     ApiErrorService.getNetworkMessage(error),
+        progress:  0,
+      });
       throw error;
     }
   }, [scenarioId, loadJobs, stopPolling, startPolling]);
@@ -287,7 +307,7 @@ export default function useContentGeneration(scenarioId) {
     setState(INITIAL_STATE);
   }, [stopPolling]);
 
-  // ── Cancel (stop) an in-flight job ──────────────────────────────────────────
+  // ── Cancel (stop) an in-flight job ───────────────────────────────────────
 
   const cancelContent = useCallback(async (jobId) => {
     console.log('🛑 cancelContent called with jobId=', jobId);
@@ -310,7 +330,7 @@ export default function useContentGeneration(scenarioId) {
     }
   }, [stopPolling, loadJobs]);
 
-  // ── Delete a job (+ its stored media) ───────────────────────────────────────
+  // ── Delete a job (+ its stored media) ────────────────────────────────────
 
   const deleteJob = useCallback(async (jobId) => {
     console.log('🗑️ deleteJob called with jobId=', jobId);
@@ -323,8 +343,9 @@ export default function useContentGeneration(scenarioId) {
         credentials: 'include',
       });
       if (!res.ok) {
-        const data = await res.json().catch(() => ({}));
-        throw new Error(data.error || `Delete failed: ${res.status}`);
+        const body = await res.json().catch(() => ({}));
+        ApiErrorService.log('useContentGeneration.deleteJob', res.status, body);
+        throw new Error(ApiErrorService.getMessage(res.status, body));
       }
       console.log(`🗑️ Deleted job ${jobId}`);
       // If we deleted the job currently shown, clear it.
@@ -338,7 +359,7 @@ export default function useContentGeneration(scenarioId) {
     }
   }, [loadJobs]);
 
-  // ── Generate a poster (sync; returns a content_type='poster' job) ──────────
+  // ── Generate a poster (sync; returns a content_type='poster' job) ─────────
 
   const generatePoster = useCallback(async ({
     title = '', aspect = 'portrait', videoStyle = 'realistic', prompt = '',
@@ -355,7 +376,10 @@ export default function useContentGeneration(scenarioId) {
         body: JSON.stringify({ title, aspect, video_style: videoStyle, prompt }),
       });
       const data = await res.json();
-      if (!res.ok) throw new Error(data.error || `Poster failed: ${res.status}`);
+      if (!res.ok) {
+        ApiErrorService.log('useContentGeneration.generatePoster', res.status, data);
+        throw new Error(ApiErrorService.getMessage(res.status, data));
+      }
 
       // Async (202): poster renders on the RQ worker → poll until complete.
       const jobId = data.job_id || data.id;
@@ -369,14 +393,19 @@ export default function useContentGeneration(scenarioId) {
       console.log(`⏳ Poster queued: ${jobId}`);
       return data;
     } catch (e) {
-      console.error('❌ generatePoster failed:', e);
+      ApiErrorService.log('useContentGeneration.generatePoster [catch]', 0, { error: e.message });
       stopPolling();
-      setState({ status: 'failed', activeJob: null, error: e.message, progress: 0 });
+      setState({
+        status:    'failed',
+        activeJob: null,
+        error:     ApiErrorService.getNetworkMessage(e),
+        progress:  0,
+      });
       throw e;
     }
   }, [scenarioId, startPolling, stopPolling]);
 
-  // ── Suggest critical messages (pre-select) ─────────────────────────────────
+  // ── Suggest critical messages (pre-select) ────────────────────────────────
   // GET the LLM-ranked critical message ids for the "choose what goes in" step.
   // Defensive: never throws. Returns { suggested_ids: number[] | null }.
   //   • array  → use these as the pre-checked set
@@ -403,17 +432,17 @@ export default function useContentGeneration(scenarioId) {
   }, [scenarioId]);
 
   return {
-    state,          // { status, activeJob, error, progress }
-    jobs,           // ContentJob[] — past completed jobs
+    state,            // { status, activeJob, error, progress }
+    jobs,             // ContentJob[] — past completed jobs
     jobsLoading,
-    budgetError,      // { hit, secondsUsed, budget, suggestedTier } — set on 403
-    createContent,  // (params) => Promise<job>
-    suggestMessages,// () => Promise<{ suggested_ids: number[] | null }>
-    generatePoster, // (params) => Promise<job> — sync poster
-    cancelContent,  // (jobId) => void — stop an in-flight job
-    deleteJob,      // (jobId) => void — delete a job + its media
-    loadJobs,       // () => void — manual refresh
-    resetContent,   // () => void
-    clearBudgetError, 
+    budgetError,      // { hit, secondsUsed, budget, suggestedTier } — set on budget 403
+    createContent,    // (params) => Promise<job> — returns undefined on budget hit
+    suggestMessages,  // () => Promise<{ suggested_ids: number[] | null }>
+    generatePoster,   // (params) => Promise<job>
+    cancelContent,    // (jobId) => void — stop an in-flight job
+    deleteJob,        // (jobId) => void — delete a job + its media
+    loadJobs,         // () => void — manual refresh
+    resetContent,     // () => void
+    clearBudgetError, // () => void — reset budget banner
   };
 }

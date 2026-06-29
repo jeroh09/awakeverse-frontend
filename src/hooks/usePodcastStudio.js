@@ -4,6 +4,10 @@
 // Mirrors useContentGeneration.js exactly — same state shape, same polling
 // pattern, same fetch-with-CSRF approach. No separate API file layer.
 //
+// ApiErrorService integrated — all user-facing error strings are
+// mapped through the service. Raw status codes never reach the UI.
+// Backend continues to log everything server-side.
+//
 // NAMING CONVENTIONS (Frontend Hook ←→ Backend Response):
 //
 //   Hook state / param      Backend field         Endpoint
@@ -47,6 +51,7 @@
 //   state.status            status                GET  /api/podcast/session/<id>
 
 import { useState, useCallback, useEffect, useRef } from 'react';
+import ApiErrorService from '../services/ApiErrorService';
 
 const API_BASE = process.env.REACT_APP_API_URL || 'https://api.awakeverse.com';
 
@@ -296,7 +301,7 @@ export default function usePodcastStudio() {
         setState(prev => ({
           ...prev,
           status: 'failed',
-          error:  'Render timed out. Please try again.',
+          error:  'Render timed out — please try again.',
         }));
         return;
       }
@@ -312,7 +317,7 @@ export default function usePodcastStudio() {
           return;
         }
 
-        const job = await res.json();
+        const job       = await res.json();
         const jobStatus = job.status;
 
         // Always update progress
@@ -352,6 +357,7 @@ export default function usePodcastStudio() {
           setState({
             status:    'failed',
             activeJob: null,
+            // job.error comes from the backend worker — already a safe string
             error:     job.error || 'Render failed — please try again.',
             progress:  0,
           });
@@ -359,6 +365,7 @@ export default function usePodcastStudio() {
         // 'queued' | 'processing' → keep polling
 
       } catch (e) {
+        // Polling errors are transient — log and retry on next interval
         console.warn('⚠️ Polling error (will retry):', e.message);
       }
     }, POLL_INTERVAL_MS);
@@ -440,7 +447,7 @@ export default function usePodcastStudio() {
                 setState(prev => ({
                   ...prev,
                   status: 'failed',
-                  error:  'Render timed out. Please try again.',
+                  error:  'Render timed out — please try again.',
                 }));
                 return;
               }
@@ -472,7 +479,12 @@ export default function usePodcastStudio() {
                 } else if (j.status === 'failed') {
                   stopPolling();
                   activeSessionId.current = null;
-                  setState({ status: 'failed', activeJob: null, error: j.error || 'Render failed — please try again.', progress: 0 });
+                  setState({
+                    status:    'failed',
+                    activeJob: null,
+                    error:     j.error || 'Render failed — please try again.',
+                    progress:  0,
+                  });
                 }
               } catch (e) {
                 console.warn('⚠️ Polling error (will retry):', e.message);
@@ -534,15 +546,21 @@ export default function usePodcastStudio() {
       });
 
       const data = await res.json();
-      if (!res.ok) throw new Error(data.error || `Upload failed: ${res.status}`);
+      if (!res.ok) {
+        ApiErrorService.log('usePodcastStudio.uploadPhoto', res.status, data);
+        throw new Error(ApiErrorService.getMessage(res.status, data));
+      }
 
       console.log(`📸 Photo uploaded → ${data.photo_url}`);
       setState(prev => ({ ...prev, status: 'idle' }));
-      return data.photo_url;  // photoUrl
+      return data.photo_url; // photoUrl
 
     } catch (e) {
-      console.error('❌ uploadPhoto failed:', e);
-      setState(prev => ({ ...prev, status: 'failed', error: e.message }));
+      setState(prev => ({
+        ...prev,
+        status: 'failed',
+        error:  e.message, // already mapped by getMessage above, or client validation string
+      }));
       throw e;
     }
   }, []);
@@ -568,13 +586,16 @@ export default function usePodcastStudio() {
       });
 
       const data = await res.json();
-      if (!res.ok) throw new Error(data.error || `Audio upload failed: ${res.status}`);
+      if (!res.ok) {
+        ApiErrorService.log('usePodcastStudio.uploadAudio', res.status, data);
+        throw new Error(ApiErrorService.getMessage(res.status, data));
+      }
 
       console.log(`🎤 Audio uploaded → ${data.audio_url}`);
-      return data.audio_url;  // audioUrl
+      return data.audio_url; // audioUrl
 
     } catch (e) {
-      console.error('❌ uploadAudio failed:', e);
+      // Re-throw — caller (PodcastStudioPage) handles UI state for audio upload
       throw e;
     }
   }, []);
@@ -622,7 +643,10 @@ export default function usePodcastStudio() {
       });
 
       const data = await res.json();
-      if (!res.ok) throw new Error(data.error || `Avatar build failed: ${res.status}`);
+      if (!res.ok) {
+        ApiErrorService.log('usePodcastStudio.buildAvatar', res.status, data);
+        throw new Error(ApiErrorService.getMessage(res.status, data));
+      }
 
       console.log(`✅ Avatar built: ${data.avatar_id}`);
 
@@ -633,15 +657,14 @@ export default function usePodcastStudio() {
 
       // Return normalised avatar object
       return {
-        avatarId:    data.avatar_id,
+        avatarId:     data.avatar_id,
         avatarRefUrl: data.avatar_ref_url,
-        displayName: displayName,
-        envId:       data.env_id,
-        previewUrl:  data.preview_url,
+        displayName:  displayName,
+        envId:        data.env_id,
+        previewUrl:   data.preview_url,
       };
 
     } catch (e) {
-      console.error('❌ buildAvatar failed:', e);
       setState(prev => ({ ...prev, status: 'failed', error: e.message }));
       throw e;
     }
@@ -666,7 +689,10 @@ export default function usePodcastStudio() {
       );
 
       const data = await res.json();
-      if (!res.ok) throw new Error(data.error || `Character ref failed: ${res.status}`);
+      if (!res.ok) {
+        ApiErrorService.log('usePodcastStudio.getCharacterRef', res.status, data);
+        throw new Error(ApiErrorService.getMessage(res.status, data));
+      }
 
       return {
         characterKey:         characterKey,
@@ -676,7 +702,7 @@ export default function usePodcastStudio() {
       };
 
     } catch (e) {
-      console.error('❌ getCharacterRef failed:', e);
+      // Re-throw — caller (PodcastStudioPage) handles gracefully
       throw e;
     }
   }, []);
@@ -726,7 +752,7 @@ export default function usePodcastStudio() {
         speaker_id:     s.speakerId,
         display_name:   s.displayName,
         avatar_ref_url: s.avatarRefUrl,
-        avatar_id:      s.savedAvatarId || null,  // UUID from podcast_avatars — enables fullbody cache
+        avatar_id:      s.savedAvatarId || null, // UUID from podcast_avatars — enables fullbody cache
         voice_mode:     s.voiceMode,
         voice_id:       s.voiceId     || null,
         gender:         s.gender      || 'neutral',
@@ -754,7 +780,10 @@ export default function usePodcastStudio() {
       });
 
       const data = await res.json();
-      if (!res.ok) throw new Error(data.error || `Session failed: ${res.status}`);
+      if (!res.ok) {
+        ApiErrorService.log('usePodcastStudio.createSession', res.status, data);
+        throw new Error(ApiErrorService.getMessage(res.status, data));
+      }
 
       const sessionId = data.session_id;
       console.log(`⏳ Podcast session queued: ${sessionId}`);
@@ -770,15 +799,12 @@ export default function usePodcastStudio() {
       return sessionId;
 
     } catch (e) {
-      console.error('❌ createSession failed:', e);
       stopPolling();
       setState({ status: 'failed', activeJob: null, error: e.message, progress: 0 });
       throw e;
     }
   }, [stopPolling, startPolling]);
 
-// INSERT BETWEEN THEM:
- 
   /**
    * startPollingSession — skip the POST, go straight to polling.
    *
@@ -804,7 +830,6 @@ export default function usePodcastStudio() {
     console.log(`⏳ Podcast poll started (external submit): ${sessionId}`);
     startPolling(sessionId);
   }, [stopPolling, startPolling, setState]);
- 
 
   // ── Delete avatar ─────────────────────────────────────────────────────────
   //
@@ -826,14 +851,16 @@ export default function usePodcastStudio() {
       });
 
       const data = await res.json();
-      if (!res.ok) throw new Error(data.error || `Delete failed: ${res.status}`);
+      if (!res.ok) {
+        ApiErrorService.log('usePodcastStudio.deleteAvatar', res.status, data);
+        throw new Error(ApiErrorService.getMessage(res.status, data));
+      }
 
       console.log(`🗑️ Avatar deleted: ${avatarId}`);
       // Refresh avatars list so grid updates immediately
       await loadAvatars();
 
     } catch (e) {
-      console.error('❌ deleteAvatar failed:', e);
       throw e;
     }
   }, [loadAvatars]);
@@ -858,17 +885,20 @@ export default function usePodcastStudio() {
       });
 
       const data = await res.json();
-      if (!res.ok) throw new Error(data.error || `Delete failed: ${res.status}`);
+      if (!res.ok) {
+        ApiErrorService.log('usePodcastStudio.deleteSession', res.status, data);
+        throw new Error(ApiErrorService.getMessage(res.status, data));
+      }
 
       console.log(`🗑️ Session deleted: ${sessionId}`);
 
     } catch (e) {
-      console.error('❌ deleteSession failed:', e);
       throw e;
     }
   }, []);
 
   // ── Voice clone ───────────────────────────────────────────────────────────
+
   const cloneVoice = useCallback(async (audioBlob, cloneName = 'My Voice') => {
     if (!audioBlob) throw new Error('audioBlob is required');
 
@@ -885,7 +915,10 @@ export default function usePodcastStudio() {
       });
 
       const data = await res.json();
-      if (!res.ok) throw new Error(data.error || `Clone failed: ${res.status}`);
+      if (!res.ok) {
+        ApiErrorService.log('usePodcastStudio.cloneVoice', res.status, data);
+        throw new Error(ApiErrorService.getMessage(res.status, data));
+      }
 
       const clone = { voiceId: data.voice_id, cloneName: data.clone_name };
       setVoiceClone(clone);
@@ -895,7 +928,6 @@ export default function usePodcastStudio() {
       return clone;
 
     } catch (e) {
-      console.error('❌ cloneVoice failed:', e);
       throw e;
     }
   }, [loadVoices]);
@@ -934,7 +966,10 @@ export default function usePodcastStudio() {
       });
 
       const data = await res.json();
-      if (!res.ok) throw new Error(data.error || `Script chat failed: ${res.status}`);
+      if (!res.ok) {
+        ApiErrorService.log('usePodcastStudio.sendScriptMessage', res.status, data);
+        throw new Error(ApiErrorService.getMessage(res.status, data));
+      }
 
       console.log(`🤖 Script assistant replied — has_script=${!!data.script_block}`);
 
@@ -944,7 +979,6 @@ export default function usePodcastStudio() {
       };
 
     } catch (e) {
-      console.error('❌ sendScriptMessage failed:', e);
       throw e;
     }
   }, []);
@@ -984,10 +1018,10 @@ export default function usePodcastStudio() {
     loadVoiceClone,   // () → void — refresh clone status
 
     // Session (render job)
-    createSession,    // (session) → sessionId (starts polling)
+    createSession,       // (session) → sessionId (starts polling)
     startPollingSession, // (sessionId) → void — skip POST, start poll loop
-    sendScriptMessage,// ({ messages, speakerName, topic, guestName }) → { reply, scriptBlock }
-    deleteSession,    // (sessionId) → void
+    sendScriptMessage,   // ({ messages, speakerName, topic, guestName }) → { reply, scriptBlock }
+    deleteSession,       // (sessionId) → void
 
     // Utilities
     loadEnvironments, // () → void — manual refresh

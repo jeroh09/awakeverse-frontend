@@ -33,6 +33,7 @@ import usePodcastStudio from '../../hooks/usePodcastStudio';
 import useVideoBudget from '../../hooks/useVideoBudget';
 import VideoBudgetBanner from './VideoBudgetBanner';
 import styles from './PodcastStudioPage.module.css';
+import ApiErrorService from '../../services/ApiErrorService';
 
 // ── Constants ────────────────────────────────────────────────────────────────
 const TABS        = ['avatar', 'script', 'generate', 'podcasts', 'guide'];
@@ -244,6 +245,7 @@ export default function PodcastStudioPage({ context, onClose }) {
   const [submitted, setSubmitted] = useState(false);
   const [dragIdx,   setDragIdx]   = useState(null);  // index being dragged
   const [dragOver,  setDragOver_l] = useState(null);  // index being hovered
+  const [generateError,  setGenerateError]  = useState(null); // user-friendly error for Generate tab
 
   // ── Podcast player state ──────────────────────────────────────────────────
   const [activeSession,    setActiveSession]    = useState(null);
@@ -860,6 +862,7 @@ if (context.topic) setTopic(context.topic);
 
     // Clear any previous budget error before a new attempt
     clearBudgetError();
+    setGenerateError(null);
     setSubmitted(true);
 
     try {
@@ -915,7 +918,8 @@ if (context.topic) setTopic(context.topic);
       const data = await res.json();
 
       if (!res.ok) {
-        console.error('❌ Podcast session error:', data);
+        ApiErrorService.log('PodcastStudioPage.handleGenerate', res.status, data);
+        setGenerateError(ApiErrorService.getMessage(res.status, data));
         setSubmitted(false);
         return;
       }
@@ -927,7 +931,8 @@ if (context.topic) setTopic(context.topic);
       // Sessions list refreshed by the useEffect watching state.status === 'complete'
 
     } catch (e) {
-      console.error('❌ handleGenerate error:', e);
+      ApiErrorService.log('PodcastStudioPage.handleGenerate [catch]', 0, { error: e.message });
+      setGenerateError(ApiErrorService.getNetworkMessage(e));
       setSubmitted(false);
     }
   }, [
@@ -1692,6 +1697,15 @@ if (context.topic) setTopic(context.topic);
                 ))}
                 {state.status === 'failed' && state.error && (
                   <div className={styles.errorBox}>{state.error}</div>
+                )}
+                {generateError && !budgetState.hit && (
+                  <div className={styles.errorBox} style={{ marginTop: '0.5rem' }}>
+                    {generateError}
+                    <button
+                      style={{ marginLeft: '0.5rem', background: 'none', border: 'none', cursor: 'pointer', color: 'inherit' }}
+                      onClick={() => setGenerateError(null)}
+                    >✕</button>
+                  </div>
                 )}
               </div>
 

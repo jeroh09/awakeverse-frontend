@@ -21,11 +21,11 @@ import './CreatorDashboard.css';
 
 // ─── Constants ────────────────────────────────────────────────────────────────
 const CATEGORIES = [
-  { key: 'all',       label: 'All',       color: '#6366F1' }, // every character the user owns
-  { key: 'published', label: 'Published', color: '#10B981' }, // is_market_featured === true
-  { key: 'approved',  label: 'Approved',  color: '#818CF8' }, // status === 'approved', not yet on market
-  { key: 'pending',   label: 'Pending',   color: '#F59E0B' }, // status === 'pending' (awaiting review)
-  { key: 'rejected',  label: 'Rejected',  color: '#EF4444' }, // status === 'rejected'
+  { key: 'all',     label: 'All',       color: '#6366F1' },
+  { key: 'live',    label: 'Published', color: '#10B981' },
+  { key: 'paused',  label: 'Paused',    color: '#F59E0B' },
+  { key: 'draft',   label: 'Draft',     color: '#475569' },
+  { key: 'premium', label: 'Premium',   color: '#818CF8' },
 ];
 
 const FILTERS = ['All', 'Most Viewed', 'Top Revenue', 'Recent', 'Chat Mode', 'Story Mode'];
@@ -72,11 +72,9 @@ function fmt(n) {
   return String(n ?? 0);
 }
 
-function statusColor(status, isPublished) {
-  if (isPublished)               return '#10B981'; // green  — live on Market Hub
-  if (status === 'approved')     return '#818CF8'; // indigo — approved, not yet published
-  if (status === 'pending')      return '#F59E0B'; // amber  — awaiting review
-  if (status === 'rejected')     return '#EF4444'; // red
+function statusColor(status) {
+  if (status === 'active' || status === 'live') return '#10B981';
+  if (status === 'paused')                      return '#F59E0B';
   return '#475569';
 }
 
@@ -101,23 +99,21 @@ function StatPill({ icon, label, value, delta, deltaDir }) {
 
 // ─── CharCard ─────────────────────────────────────────────────────────────────
 function CharCard({ char, onChat, onStory, onClick }) {
-  const name        = char.display_name || 'Character';
-  const initial     = name.charAt(0).toUpperCase();
-  const status      = char.status              || 'pending';
-  const isPublished = char.is_market_featured  || false;
-  const eng         = char.engagement          || {};
-  const views       = eng.total_views          ?? 0;
-  const likes       = eng.total_likes          ?? 0;
+  const name     = char.display_name || 'Character';
+  const initial  = name.charAt(0).toUpperCase();
+  const status   = char.status        || 'draft';
+  const level    = char.creator_level || 'newcomer';
+  const eng      = char.engagement    || {};
+  const views    = eng.total_views    ?? 0;
+  const likes    = eng.total_likes    ?? 0;
+  const isPremium = char.is_premium   || false;
 
-  const levelLabel = isPublished            ? 'Published'
-    : status === 'approved'                 ? 'Approved'
-    : status === 'pending'                  ? 'Pending'
-    : status === 'rejected'                 ? 'Rejected'
-    : 'Draft';
-
-  const levelClass = isPublished            ? 'cd-char-level-gold'
-    : status === 'approved'                 ? 'cd-char-level-indigo'
+  const levelClass = isPremium       ? 'cd-char-level-gold'
+    : level === 'pro'                ? 'cd-char-level-indigo'
     : 'cd-char-level-silver';
+
+  const levelLabel = isPremium ? 'Gold' : level === 'pro' ? 'Pro'
+    : level === 'newcomer' ? 'New' : level;
 
   return (
     <div className="cd-char-card" tabIndex={0} role="article"
@@ -130,8 +126,7 @@ function CharCard({ char, onChat, onStory, onClick }) {
           <span className="cd-char-initial">{initial}</span>
         </div>
       )}
-      <span className="cd-char-status" style={{ background: statusColor(status, isPublished) }}
-        title={isPublished ? 'Published to Market Hub' : status} />
+      <span className="cd-char-status" style={{ background: statusColor(status) }} />
       <div className="cd-char-overlay">
         <div className="cd-char-name">{name}</div>
         <div className="cd-char-stat-row">
@@ -292,10 +287,10 @@ const CreatorDashboard = () => {
 
   const filteredChars = useMemo(() => {
     let list = [...characters];
-    if (activeCat === 'published') list = list.filter(c => c.is_market_featured);
-    if (activeCat === 'approved')  list = list.filter(c => c.status === 'approved' && !c.is_market_featured);
-    if (activeCat === 'pending')   list = list.filter(c => c.status === 'pending');
-    if (activeCat === 'rejected')  list = list.filter(c => c.status === 'rejected');
+    if (activeCat === 'live')    list = list.filter(c => c.status === 'active' || c.status === 'live');
+    if (activeCat === 'paused')  list = list.filter(c => c.status === 'paused');
+    if (activeCat === 'draft')   list = list.filter(c => c.status === 'draft');
+    if (activeCat === 'premium') list = list.filter(c => c.is_premium);
     if (activeFilter === 'Most Viewed') list.sort((a,b) => (b.engagement?.total_views||0)-(a.engagement?.total_views||0));
     if (activeFilter === 'Top Revenue') list.sort((a,b) => (b.revenue||0)-(a.revenue||0));
     if (activeFilter === 'Recent')      list.sort((a,b) => new Date(b.created_at)-new Date(a.created_at));
@@ -303,11 +298,11 @@ const CreatorDashboard = () => {
   }, [characters, activeCat, activeFilter]);
 
   const catCounts = useMemo(() => ({
-    all:       characters.length,
-    published: characters.filter(c => c.is_market_featured).length,
-    approved:  characters.filter(c => c.status === 'approved' && !c.is_market_featured).length,
-    pending:   characters.filter(c => c.status === 'pending').length,
-    rejected:  characters.filter(c => c.status === 'rejected').length,
+    all:     characters.length,
+    live:    characters.filter(c => c.status==='active'||c.status==='live').length,
+    paused:  characters.filter(c => c.status==='paused').length,
+    draft:   characters.filter(c => c.status==='draft').length,
+    premium: characters.filter(c => c.is_premium).length,
   }), [characters]);
 
   const revBars = useMemo(() => {
