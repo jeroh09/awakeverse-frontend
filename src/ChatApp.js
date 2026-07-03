@@ -92,13 +92,16 @@ export default function ChatApp() {
     setOnboardingComplete(true);
     setShowOnboarding(false);
     switch (path) {
-      case 'discover':   switchView(VIEW_STATES.MARKET_HUB);      break;
-      case 'create':     switchView(VIEW_STATES.CREATOR_DASHBOARD); break;
-      case 'story':      switchView(VIEW_STATES.STORY_MODE);        break;
-      case 'workspace':  switchView(VIEW_STATES.VERSE_STUDIO);      break;
-      default:           switchView(VIEW_STATES.MARKET_HUB);
+      case 'discover':   switchView(VIEW_STATES.MARKET_HUB);  break;
+      case 'story':      switchView(VIEW_STATES.STORY_MODE);   break;
+      case 'workspace':  switchView(VIEW_STATES.VERSE_STUDIO); break;
+      case 'create':     // Intentional: create path → chat launcher
+      default:           // Catches 'skip', escape, and any unknown path
+        setSelectedCharacterKey(null);
+        switchView(VIEW_STATES.CHAT);
+        break;
     }
-  }, [switchView, VIEW_STATES]);
+  }, [switchView, VIEW_STATES, setSelectedCharacterKey]);
 
   // ─── Launcher overlay state ───────────────────────────────────────────────
   const [launcherOverlayOpen, setLauncherOverlayOpen] = useState(false);

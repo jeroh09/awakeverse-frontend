@@ -92,7 +92,7 @@ export default function OnboardingFlow({ onComplete }) {
     const onKey = (e) => {
       if (e.key === 'ArrowRight') navigate(1);
       if (e.key === 'ArrowLeft') navigate(-1);
-      if (e.key === 'Escape') handleComplete('discover');
+      if (e.key === 'Escape') handleComplete('skip');
     };
     window.addEventListener('keydown', onKey);
     return () => window.removeEventListener('keydown', onKey);
@@ -135,7 +135,7 @@ export default function OnboardingFlow({ onComplete }) {
             >
               ← Back
             </button>
-            <button className="ob-btn ob-btn--skip" onClick={() => handleComplete('discover')}>
+            <button className="ob-btn ob-btn--skip" onClick={() => handleComplete('skip')}>
               Skip
             </button>
             <button className="ob-btn ob-btn--primary" onClick={() => navigate(1)}>
