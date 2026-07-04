@@ -198,6 +198,37 @@ export default function PodcastStudioPage({ context, onClose }) {
 
   // ── Environment ───────────────────────────────────────────────────────────
   const [selectedEnvId, setSelectedEnvId] = useState('studio_tech');
+  // envMode controls the backgrounds toggle pill and max guest limit
+  // 'standard' → two-chair envs (guestCapacity=2), max 1 guest
+  // 'panel'    → three-chair envs (guestCapacity=3), max 2 guests
+  const [envMode, setEnvMode] = useState('standard');
+
+  // ── Derived guest limits from envMode ────────────────────────────────────
+  const maxGuests = envMode === 'panel' ? 2 : 1;
+  const currentGuestCount = speakers.filter(s => s.speakerId !== 'user').length;
+
+  // ── Environment mode switch ───────────────────────────────────────────────
+  const handleEnvModeSwitch = useCallback((mode) => {
+    setEnvMode(mode);
+    // Reset selectedEnvId to first env of that capacity
+    if (mode === 'panel') {
+      setSelectedEnvId('panel_living_c');   // default panel env
+    } else {
+      setSelectedEnvId('studio_tech');       // default standard env
+    }
+    // Remove guests beyond the new limit
+    if (mode === 'standard') {
+      setSpeakers(prev => {
+        const guests = prev.filter(s => s.speakerId !== 'user');
+        if (guests.length > 1) {
+          // Keep only first guest
+          const keepId = guests[0]?.speakerId;
+          return prev.filter(s => s.speakerId === 'user' || s.speakerId === keepId);
+        }
+        return prev;
+      });
+    }
+  }, []);
 
   // ── Speakers ──────────────────────────────────────────────────────────────
   const [speakers, setSpeakers] = useState([]);
@@ -1361,9 +1392,16 @@ if (context.topic) setTopic(context.topic);
                 </div>
               ))}
 
-              {/* Add custom guest — interview mode only, no AI character yet */}
-              {podcastMode === 'interview' && !speakers.some(s => s.isCharacter) && (
+              {/* Add guest — shown when:
+                    - panel mode: up to 2 guests allowed
+                    - standard mode: up to 1 guest, no AI character present
+                  Label adapts: "Add guest" → "Add 2nd guest" when 1 already present */}
+              {((envMode === 'panel' && currentGuestCount < maxGuests) ||
+                (envMode === 'standard' && podcastMode === 'interview' && !speakers.some(s => s.isCharacter) && currentGuestCount < 1)) && (
                 <div className={styles.glassCard}>
+                  <div className={styles.cardLabel}>
+                    {currentGuestCount >= 1 ? 'Add 2nd guest (optional)' : 'Add a real guest (optional)'}
+                  </div>
                   <input ref={guestFileRef} type="file"
                     accept="image/jpeg,image/jpg,image/png,image/webp" style={{ display: 'none' }}
                     onChange={e => {
@@ -1398,7 +1436,9 @@ if (context.topic) setTopic(context.topic);
                       </button>
                       {guestError && <div className={styles.errorBox}>{guestError}</div>}
                       {guestFile && guestName.trim() && (
-                        <button className={styles.actionChip} onClick={handleAddGuest}><Ic.Add /> Add guest</button>
+                        <button className={styles.actionChip} onClick={handleAddGuest}>
+                          <Ic.Add /> {currentGuestCount >= 1 ? 'Add 2nd guest' : 'Add guest'}
+                        </button>
                       )}
                     </div>
                   )}
@@ -2290,11 +2330,34 @@ if (context.topic) setTopic(context.topic);
           {activeTab !== 'script' && activeTab !== 'podcasts' && activeTab !== 'guide' && activeTab !== 'generate' && (
             <div className={styles.glassCard} style={{ height: '100%' }}>
               <div className={styles.cardLabel}>Studio Backgrounds</div>
+
+              {/* ── Guest mode toggle pill ── */}
+              <div className={styles.scriptModeToggle} style={{ marginBottom: '0.6rem', flexShrink: 0 }}>
+                <button
+                  className={`${styles.scriptModeBtn} ${envMode === 'standard' ? styles.scriptModeBtnActive : ''}`}
+                  onClick={() => handleEnvModeSwitch('standard')}
+                  title="1–2 person podcast — two-chair environments"
+                >
+                  1–2 Guests
+                </button>
+                <button
+                  className={`${styles.scriptModeBtn} ${envMode === 'panel' ? styles.scriptModeBtnActive : ''}`}
+                  onClick={() => handleEnvModeSwitch('panel')}
+                  title="3-person panel — three-chair environments"
+                >
+                  Panel · 3
+                </button>
+              </div>
+
               {envsLoading ? (
                 <div className={styles.loadingHint}>Loading…</div>
               ) : (
                 <div className={styles.envGrid}>
-                  {environments.map(env => (
+                  {environments
+                    .filter(env => envMode === 'panel'
+                      ? env.guestCapacity === 3
+                      : env.guestCapacity !== 3)
+                    .map(env => (
                     <div
                       key={env.envId}
                       className={`${styles.envCardWrap} ${selectedEnvId === env.envId ? styles.envCardWrapSelected : ''}`}
