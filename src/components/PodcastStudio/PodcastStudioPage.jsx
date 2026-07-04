@@ -445,7 +445,10 @@ if (context.topic) setTopic(context.topic);
     setScriptInput('');
     setScriptLoading(true);
 
-    const guestName = speakers.find(s => s.role === 'guest')?.displayName;
+    // Resolve all guest speakers for script-chat context
+    const allGuests      = speakers.filter(s => s.role === 'guest');
+    const guestName      = allGuests[0]?.displayName || '';
+    const guest2Name     = allGuests[1]?.displayName || '';
     const userDisplayName = context?.user?.displayName || 'You';
 
     try {
@@ -458,7 +461,8 @@ if (context.topic) setTopic(context.topic);
           messages:     newMessages,
           speaker_name: userDisplayName,
           topic:        topic || text,
-          ...(guestName ? { guest_name: guestName } : {}),
+          ...(guestName  ? { guest_name:  guestName  } : {}),
+          ...(guest2Name ? { guest2_name: guest2Name } : {}),  // triggers panel mode
         }),
       });
       const data = await res.json();
@@ -482,29 +486,51 @@ if (context.topic) setTopic(context.topic);
     if (!latestScriptBlock) return;
     try {
       const csrf = document.cookie.match(/(?:^|;\s*)av_csrf=([^;]+)/)?.[1] || '';
-      const guestName = speakers.find(s => s.role === 'guest')?.displayName || 'Guest';
+
+      // Resolve guest speakers from speakers[] — supports 1 or 2 guests
+      const guest1 = speakers.find(s => s.role === 'guest' && s.isCharacter !== false)
+                  || speakers.find(s => s.role === 'guest');
+      const guest2 = speakers.filter(s => s.role === 'guest').find((s, i) => i === 1);
+
+      const guestName  = guest1?.displayName || 'Guest';
+      const guest2Name = guest2?.displayName || '';
+      const charKey    = guest1?.speakerId   || 'guest';
+      const char2Key   = guest2?.speakerId   || 'guest2';
+
       const res = await fetch(`${API_BASE}/api/podcast/parse-script`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json', 'X-CSRF-Token': csrf },
         credentials: 'include',
         body: JSON.stringify({
-          script_text: latestScriptBlock,
-          host_name:   context?.user?.displayName || 'You',
-          guest_name:  guestName,
+          script_text:  latestScriptBlock,
+          host_name:    context?.user?.displayName || 'You',
+          guest_name:   guestName,
+          guest2_name:  guest2Name,   // empty string if only 1 guest
         }),
       });
       const data = await res.json();
       if (!res.ok) throw new Error(data.error || 'Parse failed');
-      const charKey = speakers.find(s => s.role === 'guest')?.speakerId || 'guest';
+
+      // Remap role strings → actual speakerIds
+      // Backend returns: speaker_id = 'host'|'guest'|'guest2'
+      // Frontend needs:  speakerId  = 'user'  |charKey|char2Key
       dispatchLines({
         type: 'SET',
-        lines: (data.lines || []).map((l, i) => ({
-          ...l,
-          id:         Date.now() + i,
-          audioUrl:   null,
-          speakerId:  (l.speaker_id || l.speakerId) === 'host' ? 'user' : charKey,
-          displayName:(l.speaker_id || l.speakerId) === 'host' ? 'You' : guestName,
-        })),
+        lines: (data.lines || []).map((l, i) => {
+          const role = l.speaker_id || l.speakerId;
+          let speakerId, displayName;
+          if (role === 'host') {
+            speakerId   = 'user';
+            displayName = 'You';
+          } else if (role === 'guest2') {
+            speakerId   = char2Key;
+            displayName = guest2Name || char2Key;
+          } else {
+            speakerId   = charKey;
+            displayName = guestName;
+          }
+          return { ...l, id: Date.now() + i, audioUrl: null, speakerId, displayName };
+        }),
       });
       setScriptMode('lines');
     } catch (e) {
