@@ -198,40 +198,18 @@ export default function PodcastStudioPage({ context, onClose }) {
 
   // ── Environment ───────────────────────────────────────────────────────────
   const [selectedEnvId, setSelectedEnvId] = useState('studio_tech');
-  // envMode controls the backgrounds toggle pill and max guest limit
+
+  // envMode controls backgrounds toggle + max guest limit
   // 'standard' → two-chair envs (guestCapacity=2), max 1 guest
   // 'panel'    → three-chair envs (guestCapacity=3), max 2 guests
   const [envMode, setEnvMode] = useState('standard');
 
-  // ── Derived guest limits from envMode ────────────────────────────────────
-  const maxGuests = envMode === 'panel' ? 2 : 1;
-  const currentGuestCount = speakers.filter(s => s.speakerId !== 'user').length;
-
-  // ── Environment mode switch ───────────────────────────────────────────────
-  const handleEnvModeSwitch = useCallback((mode) => {
-    setEnvMode(mode);
-    // Reset selectedEnvId to first env of that capacity
-    if (mode === 'panel') {
-      setSelectedEnvId('panel_living_c');   // default panel env
-    } else {
-      setSelectedEnvId('studio_tech');       // default standard env
-    }
-    // Remove guests beyond the new limit
-    if (mode === 'standard') {
-      setSpeakers(prev => {
-        const guests = prev.filter(s => s.speakerId !== 'user');
-        if (guests.length > 1) {
-          // Keep only first guest
-          const keepId = guests[0]?.speakerId;
-          return prev.filter(s => s.speakerId === 'user' || s.speakerId === keepId);
-        }
-        return prev;
-      });
-    }
-  }, []);
-
   // ── Speakers ──────────────────────────────────────────────────────────────
   const [speakers, setSpeakers] = useState([]);
+
+  // Derived from speakers + envMode — MUST be after speakers declaration
+  const maxGuests         = envMode === 'panel' ? 2 : 1;
+  const currentGuestCount = speakers.filter(s => s.speakerId !== 'user').length;
 
   // ── Avatar build ──────────────────────────────────────────────────────────
   const [photoFile,     setPhotoFile]     = useState(null);
@@ -303,6 +281,28 @@ export default function PodcastStudioPage({ context, onClose }) {
     setPodcastMode(mode);
     if (mode === 'solo') setActiveTab('script');
   }, [consented, recordConsent, setPodcastMode, setActiveTab]);
+
+  // ── Environment mode switch ───────────────────────────────────────────────
+  // Switches between standard (2-chair, max 1 guest) and panel (3-chair, max 2 guests)
+  // Resets selectedEnvId to the default for that mode
+  // Trims excess guests if switching down from panel to standard
+  const handleEnvModeSwitch = useCallback((mode) => {
+    setEnvMode(mode);
+    if (mode === 'panel') {
+      setSelectedEnvId('panel_living_c');
+    } else {
+      setSelectedEnvId('studio_tech');
+      // Remove 2nd guest if switching back to standard
+      setSpeakers(prev => {
+        const guests = prev.filter(s => s.speakerId !== 'user');
+        if (guests.length > 1) {
+          const keepId = guests[0]?.speakerId;
+          return prev.filter(s => s.speakerId === 'user' || s.speakerId === keepId);
+        }
+        return prev;
+      });
+    }
+  }, []);
 
   // ── Script chat assistant ─────────────────────────────────────────────────
   // 'chat' = AI write mode (chat bubbles). 'lines' = edit lines mode (line cards).
@@ -476,10 +476,7 @@ if (context.topic) setTopic(context.topic);
     setScriptInput('');
     setScriptLoading(true);
 
-    // Resolve all guest speakers for script-chat context
-    const allGuests      = speakers.filter(s => s.role === 'guest');
-    const guestName      = allGuests[0]?.displayName || '';
-    const guest2Name     = allGuests[1]?.displayName || '';
+    const guestName = speakers.find(s => s.role === 'guest')?.displayName;
     const userDisplayName = context?.user?.displayName || 'You';
 
     try {
@@ -492,8 +489,7 @@ if (context.topic) setTopic(context.topic);
           messages:     newMessages,
           speaker_name: userDisplayName,
           topic:        topic || text,
-          ...(guestName  ? { guest_name:  guestName  } : {}),
-          ...(guest2Name ? { guest2_name: guest2Name } : {}),  // triggers panel mode
+          ...(guestName ? { guest_name: guestName } : {}),
         }),
       });
       const data = await res.json();
@@ -517,51 +513,29 @@ if (context.topic) setTopic(context.topic);
     if (!latestScriptBlock) return;
     try {
       const csrf = document.cookie.match(/(?:^|;\s*)av_csrf=([^;]+)/)?.[1] || '';
-
-      // Resolve guest speakers from speakers[] — supports 1 or 2 guests
-      const guest1 = speakers.find(s => s.role === 'guest' && s.isCharacter !== false)
-                  || speakers.find(s => s.role === 'guest');
-      const guest2 = speakers.filter(s => s.role === 'guest').find((s, i) => i === 1);
-
-      const guestName  = guest1?.displayName || 'Guest';
-      const guest2Name = guest2?.displayName || '';
-      const charKey    = guest1?.speakerId   || 'guest';
-      const char2Key   = guest2?.speakerId   || 'guest2';
-
+      const guestName = speakers.find(s => s.role === 'guest')?.displayName || 'Guest';
       const res = await fetch(`${API_BASE}/api/podcast/parse-script`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json', 'X-CSRF-Token': csrf },
         credentials: 'include',
         body: JSON.stringify({
-          script_text:  latestScriptBlock,
-          host_name:    context?.user?.displayName || 'You',
-          guest_name:   guestName,
-          guest2_name:  guest2Name,   // empty string if only 1 guest
+          script_text: latestScriptBlock,
+          host_name:   context?.user?.displayName || 'You',
+          guest_name:  guestName,
         }),
       });
       const data = await res.json();
       if (!res.ok) throw new Error(data.error || 'Parse failed');
-
-      // Remap role strings → actual speakerIds
-      // Backend returns: speaker_id = 'host'|'guest'|'guest2'
-      // Frontend needs:  speakerId  = 'user'  |charKey|char2Key
+      const charKey = speakers.find(s => s.role === 'guest')?.speakerId || 'guest';
       dispatchLines({
         type: 'SET',
-        lines: (data.lines || []).map((l, i) => {
-          const role = l.speaker_id || l.speakerId;
-          let speakerId, displayName;
-          if (role === 'host') {
-            speakerId   = 'user';
-            displayName = 'You';
-          } else if (role === 'guest2') {
-            speakerId   = char2Key;
-            displayName = guest2Name || char2Key;
-          } else {
-            speakerId   = charKey;
-            displayName = guestName;
-          }
-          return { ...l, id: Date.now() + i, audioUrl: null, speakerId, displayName };
-        }),
+        lines: (data.lines || []).map((l, i) => ({
+          ...l,
+          id:         Date.now() + i,
+          audioUrl:   null,
+          speakerId:  (l.speaker_id || l.speakerId) === 'host' ? 'user' : charKey,
+          displayName:(l.speaker_id || l.speakerId) === 'host' ? 'You' : guestName,
+        })),
       });
       setScriptMode('lines');
     } catch (e) {
@@ -1392,16 +1366,15 @@ if (context.topic) setTopic(context.topic);
                 </div>
               ))}
 
-              {/* Add guest — shown when:
-                    - panel mode: up to 2 guests allowed
-                    - standard mode: up to 1 guest, no AI character present
-                  Label adapts: "Add guest" → "Add 2nd guest" when 1 already present */}
+              {/* Add guest card:
+                    standard mode: interview + no AI character + no real guest yet
+                    panel mode:    while currentGuestCount < maxGuests (max 2)
+                  Label adapts: "Add a real guest" → "Add 2nd guest" */}
               {((envMode === 'panel' && currentGuestCount < maxGuests) ||
-                (envMode === 'standard' && podcastMode === 'interview' && !speakers.some(s => s.isCharacter) && currentGuestCount < 1)) && (
+                (envMode === 'standard' && podcastMode === 'interview'
+                  && !speakers.some(s => s.isCharacter)
+                  && currentGuestCount < 1)) && (
                 <div className={styles.glassCard}>
-                  <div className={styles.cardLabel}>
-                    {currentGuestCount >= 1 ? 'Add 2nd guest (optional)' : 'Add a real guest (optional)'}
-                  </div>
                   <input ref={guestFileRef} type="file"
                     accept="image/jpeg,image/jpg,image/png,image/webp" style={{ display: 'none' }}
                     onChange={e => {
@@ -1412,6 +1385,10 @@ if (context.topic) setTopic(context.topic);
                       reader.readAsDataURL(f);
                       setGuestBuilt(false);
                     }} />
+                  <div className={styles.cardLabel} style={{ fontSize: '0.7rem', color: 'var(--text-muted)', marginBottom: '0.4rem' }}>
+                    {currentGuestCount >= 1 ? 'Add 2nd guest (optional)' : 'Add a real guest (optional)'}
+                  </div>
+
                   {guestBuilt ? (
                     <div className={styles.charCard}>
                       {guestPreview && <img src={guestPreview} alt={guestName} style={{ width: 40, height: 40, borderRadius: '50%', objectFit: 'cover' }} />}
@@ -2331,22 +2308,18 @@ if (context.topic) setTopic(context.topic);
             <div className={styles.glassCard} style={{ height: '100%' }}>
               <div className={styles.cardLabel}>Studio Backgrounds</div>
 
-              {/* ── Guest mode toggle pill ── */}
+              {/* Toggle pill — reuses existing scriptModeToggle CSS */}
               <div className={styles.scriptModeToggle} style={{ marginBottom: '0.6rem', flexShrink: 0 }}>
                 <button
                   className={`${styles.scriptModeBtn} ${envMode === 'standard' ? styles.scriptModeBtnActive : ''}`}
                   onClick={() => handleEnvModeSwitch('standard')}
-                  title="1–2 person podcast — two-chair environments"
-                >
-                  1–2 Guests
-                </button>
+                  title="1–2 person podcast"
+                >1–2 Guests</button>
                 <button
                   className={`${styles.scriptModeBtn} ${envMode === 'panel' ? styles.scriptModeBtnActive : ''}`}
                   onClick={() => handleEnvModeSwitch('panel')}
-                  title="3-person panel — three-chair environments"
-                >
-                  Panel · 3
-                </button>
+                  title="3-person panel"
+                >Panel · 3</button>
               </div>
 
               {envsLoading ? (
@@ -2356,7 +2329,7 @@ if (context.topic) setTopic(context.topic);
                   {environments
                     .filter(env => envMode === 'panel'
                       ? env.guestCapacity === 3
-                      : env.guestCapacity !== 3)
+                      : (env.guestCapacity ?? 2) !== 3)
                     .map(env => (
                     <div
                       key={env.envId}
