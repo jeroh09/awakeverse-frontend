@@ -477,7 +477,9 @@ if (context.topic) setTopic(context.topic);
     setScriptInput('');
     setScriptLoading(true);
 
-    const guestName = speakers.find(s => s.role === 'guest')?.displayName;
+    const allGuests       = speakers.filter(s => s.speakerId !== 'user');
+    const guestName       = allGuests[0]?.displayName || '';
+    const guest2Name      = allGuests[1]?.displayName || '';
     const userDisplayName = context?.user?.displayName || 'You';
 
     try {
@@ -490,7 +492,8 @@ if (context.topic) setTopic(context.topic);
           messages:     newMessages,
           speaker_name: userDisplayName,
           topic:        topic || text,
-          ...(guestName ? { guest_name: guestName } : {}),
+          ...(guestName  ? { guest_name:  guestName  } : {}),
+          ...(guest2Name ? { guest2_name: guest2Name } : {}),
         }),
       });
       const data = await res.json();
