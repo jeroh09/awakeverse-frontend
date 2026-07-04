@@ -198,12 +198,9 @@ export default function PodcastStudioPage({ context, onClose }) {
 
   // ── Environment ───────────────────────────────────────────────────────────
   const [selectedEnvId, setSelectedEnvId] = useState('studio_tech');
-  const [envMode, setEnvMode] = useState('standard');
 
   // ── Speakers ──────────────────────────────────────────────────────────────
   const [speakers, setSpeakers] = useState([]);
-  const maxGuests         = envMode === 'panel' ? 2 : 1;
-  const currentGuestCount = speakers.filter(s => s.speakerId !== 'user').length;
 
   // ── Avatar build ──────────────────────────────────────────────────────────
   const [photoFile,     setPhotoFile]     = useState(null);
@@ -216,7 +213,6 @@ export default function PodcastStudioPage({ context, onClose }) {
   const fileInputRef     = useRef(null);
 
   // ── Custom guest (real person, user-provided photo) ───────────────────────
-  // ── Guest 1 state ─────────────────────────────────────────────────────────
   const [guestFile,      setGuestFile]      = useState(null);
   const [guestPreview,   setGuestPreview]   = useState(null);
   const [guestName,      setGuestName]      = useState('');
@@ -224,15 +220,6 @@ export default function PodcastStudioPage({ context, onClose }) {
   const [guestBuilt,     setGuestBuilt]     = useState(false);
   const [guestError,     setGuestError]     = useState(null);
   const guestFileRef = useRef(null);
-
-  // ── Guest 2 state (panel mode only) ───────────────────────────────────────
-  const [guest2File,     setGuest2File]     = useState(null);
-  const [guest2Preview,  setGuest2Preview]  = useState(null);
-  const [guest2Name,     setGuest2Name]     = useState('');
-  const [guest2Building, setGuest2Building] = useState(false);
-  const [guest2Built,    setGuest2Built]    = useState(false);
-  const [guest2Error,    setGuest2Error]    = useState(null);
-  const guest2FileRef = useRef(null);
 
   // ── Script ────────────────────────────────────────────────────────────────
   const [lines, dispatchLines] = useReducer(linesReducer, []);
@@ -285,25 +272,6 @@ export default function PodcastStudioPage({ context, onClose }) {
     setPodcastMode(mode);
     if (mode === 'solo') setActiveTab('script');
   }, [consented, recordConsent, setPodcastMode, setActiveTab]);
-
-  const handleEnvModeSwitch = useCallback((mode) => {
-    setEnvMode(mode);
-    if (mode === 'panel') {
-      setSelectedEnvId('panel_living_c');
-    } else {
-      setSelectedEnvId('studio_tech');
-      setSpeakers(prev => {
-        const guests = prev.filter(s => s.speakerId !== 'user');
-        if (guests.length > 1) {
-          const keepId = guests[0]?.speakerId;
-          return prev.filter(s => s.speakerId === 'user' || s.speakerId === keepId);
-        }
-        return prev;
-      });
-      setGuest2File(null); setGuest2Preview(null);
-      setGuest2Name('');   setGuest2Built(false); setGuest2Error(null);
-    }
-  }, []);
 
   // ── Script chat assistant ─────────────────────────────────────────────────
   // 'chat' = AI write mode (chat bubbles). 'lines' = edit lines mode (line cards).
@@ -477,9 +445,7 @@ if (context.topic) setTopic(context.topic);
     setScriptInput('');
     setScriptLoading(true);
 
-    const allGuests       = speakers.filter(s => s.speakerId !== 'user');
-    const guestName       = allGuests[0]?.displayName || '';
-    const guest2Name      = allGuests[1]?.displayName || '';
+    const guestName = speakers.find(s => s.role === 'guest')?.displayName;
     const userDisplayName = context?.user?.displayName || 'You';
 
     try {
@@ -492,8 +458,7 @@ if (context.topic) setTopic(context.topic);
           messages:     newMessages,
           speaker_name: userDisplayName,
           topic:        topic || text,
-          ...(guestName  ? { guest_name:  guestName  } : {}),
-          ...(guest2Name ? { guest2_name: guest2Name } : {}),
+          ...(guestName ? { guest_name: guestName } : {}),
         }),
       });
       const data = await res.json();
@@ -517,29 +482,51 @@ if (context.topic) setTopic(context.topic);
     if (!latestScriptBlock) return;
     try {
       const csrf = document.cookie.match(/(?:^|;\s*)av_csrf=([^;]+)/)?.[1] || '';
-      const guestName = speakers.find(s => s.role === 'guest')?.displayName || 'Guest';
+
+      // Resolve all guest speakers — supports 1 or 2 guests
+      // Naming: speakers[].role === 'guest' for all non-host speakers
+      const allGuests      = speakers.filter(s => s.speakerId !== 'user');
+      const guest1         = allGuests[0];
+      const guest2         = allGuests[1];
+      const guestName      = guest1?.displayName || 'Guest';
+      const guest2Name     = guest2?.displayName || '';
+      const charKey        = guest1?.speakerId   || 'guest';
+      const char2Key       = guest2?.speakerId   || 'guest2';
+
       const res = await fetch(`${API_BASE}/api/podcast/parse-script`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json', 'X-CSRF-Token': csrf },
         credentials: 'include',
         body: JSON.stringify({
-          script_text: latestScriptBlock,
-          host_name:   context?.user?.displayName || 'You',
-          guest_name:  guestName,
+          script_text:  latestScriptBlock,
+          host_name:    context?.user?.displayName || 'You',
+          guest_name:   guestName,
+          guest2_name:  guest2Name,   // empty string if only 1 guest — backend ignores
         }),
       });
       const data = await res.json();
       if (!res.ok) throw new Error(data.error || 'Parse failed');
-      const charKey = speakers.find(s => s.role === 'guest')?.speakerId || 'guest';
+
+      // Remap backend role strings → actual speakerIds
+      // Backend returns: speaker_id = 'host' | 'guest' | 'guest2'
+      // Frontend needs:  speakerId  = 'user' | charKey | char2Key
       dispatchLines({
         type: 'SET',
-        lines: (data.lines || []).map((l, i) => ({
-          ...l,
-          id:         Date.now() + i,
-          audioUrl:   null,
-          speakerId:  (l.speaker_id || l.speakerId) === 'host' ? 'user' : charKey,
-          displayName:(l.speaker_id || l.speakerId) === 'host' ? 'You' : guestName,
-        })),
+        lines: (data.lines || []).map((l, i) => {
+          const role = l.speaker_id || l.speakerId;
+          let speakerId, displayName;
+          if (role === 'host') {
+            speakerId   = 'user';
+            displayName = context?.user?.displayName || 'You';
+          } else if (role === 'guest2') {
+            speakerId   = char2Key;
+            displayName = guest2Name || char2Key;
+          } else {
+            speakerId   = charKey;
+            displayName = guestName;
+          }
+          return { ...l, id: Date.now() + i, audioUrl: null, speakerId, displayName };
+        }),
       });
       setScriptMode('lines');
     } catch (e) {
@@ -855,35 +842,6 @@ if (context.topic) setTopic(context.topic);
       setGuestBuilding(false);
     }
   }, [guestFile, guestName, uploadPhoto]);
-
-  const handleAddGuest2 = useCallback(async () => {
-    if (!guest2File || !guest2Name.trim()) return;
-    setGuest2Building(true);
-    setGuest2Error(null);
-    try {
-      const photoUrl = await uploadPhoto(guest2File);
-      const guestId  = `custom_guest2_${Date.now()}`;
-      setSpeakers(prev => [
-        ...prev.filter(s => !s.speakerId.startsWith('custom_guest2_')),
-        {
-          speakerId:    guestId,
-          displayName:  guest2Name.trim(),
-          avatarRefUrl: photoUrl,
-          voiceId:      DEFAULT_GUEST_VOICE,
-          voiceMode:    'tts',
-          gender:       'neutral',
-          color:        SPEAKER_COLORS[2],
-          isCharacter:  false,
-          role:         'guest',
-        },
-      ]);
-      setGuest2Built(true);
-    } catch (e) {
-      setGuest2Error(e.message || 'Failed to add guest');
-    } finally {
-      setGuest2Building(false);
-    }
-  }, [guest2File, guest2Name, uploadPhoto]);
 
   // ── Line drag-to-reorder ──────────────────────────────────────────────────
   const handleDragStart = useCallback((e, idx) => {
@@ -1399,13 +1357,9 @@ if (context.topic) setTopic(context.topic);
                 </div>
               ))}
 
-              {/* Real guest slots */}
-              {((envMode === 'panel') ||
-                (podcastMode === 'interview' && !speakers.some(s => s.isCharacter))) && (
+              {/* Add custom guest — interview mode only, no AI character yet */}
+              {podcastMode === 'interview' && !speakers.some(s => s.isCharacter) && (
                 <div className={styles.glassCard}>
-                  <div className={styles.cardLabel}>
-                    {envMode === 'panel' ? 'Real Guests (optional)' : 'Real Guest (optional)'}
-                  </div>
                   <input ref={guestFileRef} type="file"
                     accept="image/jpeg,image/jpg,image/png,image/webp" style={{ display: 'none' }}
                     onChange={e => {
@@ -1413,96 +1367,37 @@ if (context.topic) setTopic(context.topic);
                       setGuestFile(f);
                       const reader = new FileReader();
                       reader.onload = ev => setGuestPreview(ev.target.result);
-                      reader.readAsDataURL(f); setGuestBuilt(false);
+                      reader.readAsDataURL(f);
+                      setGuestBuilt(false);
                     }} />
-                  <input ref={guest2FileRef} type="file"
-                    accept="image/jpeg,image/jpg,image/png,image/webp" style={{ display: 'none' }}
-                    onChange={e => {
-                      const f = e.target.files?.[0]; if (!f) return;
-                      setGuest2File(f);
-                      const reader = new FileReader();
-                      reader.onload = ev => setGuest2Preview(ev.target.result);
-                      reader.readAsDataURL(f); setGuest2Built(false);
-                    }} />
-
-                  <div className={envMode === 'panel' ? styles.guestRow : ''}>
-
-                    {/* Slot 1 */}
-                    <div className={envMode === 'panel' ? styles.guestSlot : ''}>
-                      {guestBuilt ? (
-                        <div className={styles.charCard}>
-                          {guestPreview
-                            ? <img src={guestPreview} alt={guestName} style={{ width: 32, height: 32, borderRadius: '50%', objectFit: 'cover', flexShrink: 0 }} />
-                            : <div className={styles.charAvatar} style={{ background: `linear-gradient(135deg, ${SPEAKER_COLORS[1]}, ${SPEAKER_COLORS[1]}88)` }}>{guestName?.slice(0,2).toUpperCase()}</div>
-                          }
-                          <div style={{ flex: 1, minWidth: 0 }}>
-                            <div className={styles.charName} style={{ fontSize: '0.75rem' }}>{guestName}</div>
-                            <div className={styles.charRole}>{envMode === 'panel' ? 'Guest 1' : 'Guest'}</div>
-                          </div>
-                          <button className={styles.rebuildLink} onClick={() => {
-                            setGuestBuilt(false); setGuestFile(null); setGuestPreview(null); setGuestName('');
-                            setSpeakers(prev => prev.filter(s => !s.speakerId.startsWith('custom_guest_') || s.speakerId.startsWith('custom_guest2_')));
-                          }}>✕</button>
-                        </div>
-                      ) : (
-                        <div className={styles.guestSlotEmpty}>
-                          <input className={styles.guestNameInput}
-                            placeholder={envMode === 'panel' ? 'Guest 1 name…' : 'Guest name…'}
-                            value={guestName} onChange={e => setGuestName(e.target.value)} />
-                          <button className={styles.addGuestPhotoBtn} onClick={() => guestFileRef.current?.click()}>
-                            {guestPreview
-                              ? <><img src={guestPreview} alt="g1" style={{ width: 16, height: 16, borderRadius: '50%', objectFit: 'cover', marginRight: 4 }} />Change</>
-                              : <><Ic.Upload /> Photo</>}
-                          </button>
-                          {guestError && <div className={styles.errorBox} style={{ fontSize: '0.65rem' }}>{guestError}</div>}
-                          {guestFile && guestName.trim() && (
-                            <button className={styles.actionChip} style={{ fontSize: '0.7rem', padding: '0.3rem 0.6rem' }} onClick={handleAddGuest}>
-                              <Ic.Add /> Add
-                            </button>
-                          )}
-                        </div>
+                  {guestBuilt ? (
+                    <div className={styles.charCard}>
+                      {guestPreview && <img src={guestPreview} alt={guestName} style={{ width: 40, height: 40, borderRadius: '50%', objectFit: 'cover' }} />}
+                      <div>
+                        <div className={styles.charName}>{guestName}</div>
+                        <div className={styles.charRole}>Real person · guest</div>
+                      </div>
+                      <span className={`${styles.badge} ${styles.badgeGuest}`}>Guest</span>
+                      <button className={styles.rebuildLink} onClick={() => {
+                        setGuestBuilt(false); setGuestFile(null); setGuestPreview(null); setGuestName('');
+                        setSpeakers(prev => prev.filter(s => s.role !== 'guest' || s.isCharacter));
+                      }}>Remove</button>
+                    </div>
+                  ) : (
+                    <div className={styles.addGuestForm}>
+                      <input className={styles.guestNameInput} placeholder="Guest name…"
+                        value={guestName} onChange={e => setGuestName(e.target.value)} />
+                      <button className={styles.addGuestPhotoBtn} onClick={() => guestFileRef.current?.click()}>
+                        {guestPreview
+                          ? <><img src={guestPreview} alt="Guest" style={{ width: 20, height: 20, borderRadius: '50%', objectFit: 'cover', marginRight: 6 }} />Change photo</>
+                          : <><Ic.Upload /> Upload photo</>}
+                      </button>
+                      {guestError && <div className={styles.errorBox}>{guestError}</div>}
+                      {guestFile && guestName.trim() && (
+                        <button className={styles.actionChip} onClick={handleAddGuest}><Ic.Add /> Add guest</button>
                       )}
                     </div>
-
-                    {/* Slot 2 — panel mode only */}
-                    {envMode === 'panel' && (
-                      <div className={styles.guestSlot}>
-                        {guest2Built ? (
-                          <div className={styles.charCard}>
-                            {guest2Preview
-                              ? <img src={guest2Preview} alt={guest2Name} style={{ width: 32, height: 32, borderRadius: '50%', objectFit: 'cover', flexShrink: 0 }} />
-                              : <div className={styles.charAvatar} style={{ background: `linear-gradient(135deg, ${SPEAKER_COLORS[2]}, ${SPEAKER_COLORS[2]}88)` }}>{guest2Name?.slice(0,2).toUpperCase()}</div>
-                            }
-                            <div style={{ flex: 1, minWidth: 0 }}>
-                              <div className={styles.charName} style={{ fontSize: '0.75rem' }}>{guest2Name}</div>
-                              <div className={styles.charRole}>Guest 2</div>
-                            </div>
-                            <button className={styles.rebuildLink} onClick={() => {
-                              setGuest2Built(false); setGuest2File(null); setGuest2Preview(null); setGuest2Name('');
-                              setSpeakers(prev => prev.filter(s => !s.speakerId.startsWith('custom_guest2_')));
-                            }}>✕</button>
-                          </div>
-                        ) : (
-                          <div className={styles.guestSlotEmpty}>
-                            <input className={styles.guestNameInput}
-                              placeholder="Guest 2 name…"
-                              value={guest2Name} onChange={e => setGuest2Name(e.target.value)} />
-                            <button className={styles.addGuestPhotoBtn} onClick={() => guest2FileRef.current?.click()}>
-                              {guest2Preview
-                                ? <><img src={guest2Preview} alt="g2" style={{ width: 16, height: 16, borderRadius: '50%', objectFit: 'cover', marginRight: 4 }} />Change</>
-                                : <><Ic.Upload /> Photo</>}
-                            </button>
-                            {guest2Error && <div className={styles.errorBox} style={{ fontSize: '0.65rem' }}>{guest2Error}</div>}
-                            {guest2File && guest2Name.trim() && (
-                              <button className={styles.actionChip} style={{ fontSize: '0.7rem', padding: '0.3rem 0.6rem' }} onClick={handleAddGuest2}>
-                                <Ic.Add /> Add
-                              </button>
-                            )}
-                          </div>
-                        )}
-                      </div>
-                    )}
-                  </div>
+                  )}
                 </div>
               )}
 
@@ -2391,19 +2286,11 @@ if (context.topic) setTopic(context.topic);
           {activeTab !== 'script' && activeTab !== 'podcasts' && activeTab !== 'guide' && activeTab !== 'generate' && (
             <div className={styles.glassCard} style={{ height: '100%' }}>
               <div className={styles.cardLabel}>Studio Backgrounds</div>
-              <div className={styles.scriptModeToggle} style={{ marginBottom: '0.6rem', flexShrink: 0 }}>
-                <button className={`${styles.scriptModeBtn} ${envMode === 'standard' ? styles.scriptModeBtnActive : ''}`}
-                  onClick={() => handleEnvModeSwitch('standard')} title="1–2 person podcast">1–2 Guests</button>
-                <button className={`${styles.scriptModeBtn} ${envMode === 'panel' ? styles.scriptModeBtnActive : ''}`}
-                  onClick={() => handleEnvModeSwitch('panel')} title="3-person panel">Panel · 3</button>
-              </div>
               {envsLoading ? (
                 <div className={styles.loadingHint}>Loading…</div>
               ) : (
                 <div className={styles.envGrid}>
-                  {environments
-                    .filter(env => envMode === 'panel' ? env.guestCapacity === 3 : (env.guestCapacity ?? 2) !== 3)
-                    .map(env => (
+                  {environments.map(env => (
                     <div
                       key={env.envId}
                       className={`${styles.envCardWrap} ${selectedEnvId === env.envId ? styles.envCardWrapSelected : ''}`}
