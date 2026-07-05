@@ -854,6 +854,7 @@
   display: flex;
   flex-direction: column;
   transition: border-color 0.15s;
+  max-width: 280px;
 }
 
 .podcastCard:hover { border-color: rgba(99,102,241,0.55); }
@@ -2297,23 +2298,55 @@
   accent-color: var(--accent-primary);
   cursor: pointer;
 }
-/* ── Two-slot guest row (panel mode) ────────────────────────────────────── */
-.guestRow {
+/* ── Podcast player overlay ──────────────────────────────────────────────── */
+.podcastOverlay {
+  position: fixed;
+  inset: 0;
+  z-index: 1000;
+  background: rgba(0,0,0,0.85);
   display: flex;
-  gap: 0.5rem;
+  align-items: center;
+  justify-content: center;
+  padding: 1.5rem;
+  backdrop-filter: blur(4px);
 }
-
-.guestSlot {
-  flex: 1;
-  min-width: 0;
+.podcastOverlayBox {
+  position: relative;
+  width: 100%;
+  max-width: 860px;
+  background: rgba(2,6,23,0.98);
+  border: 1px solid rgba(99,102,241,0.25);
+  border-radius: var(--radius-card);
+  overflow: hidden;
+  box-shadow: 0 24px 64px rgba(0,0,0,0.7);
 }
-
-.guestSlotEmpty {
+.podcastOverlayVideo {
+  width: 100%;
+  max-height: 70vh;
+  aspect-ratio: 16/9;
+  display: block;
+  background: #000;
+  object-fit: contain;
+}
+.podcastOverlayClose {
+  position: absolute;
+  top: 0.6rem;
+  right: 0.6rem;
+  z-index: 10;
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  background: rgba(0,0,0,0.6);
+  border: 1px solid rgba(255,255,255,0.15);
+  color: #fff;
+  cursor: pointer;
+  font-size: 0.75rem;
   display: flex;
-  flex-direction: column;
-  gap: 0.5rem;
-  padding: 0.5rem;
-  background: rgba(255,255,255,0.02);
-  border: 1px dashed rgba(255,255,255,0.1);
-  border-radius: 10px;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.15s;
+}
+.podcastOverlayClose:hover {
+  background: rgba(239,68,68,0.3);
+  border-color: rgba(239,68,68,0.5);
 }

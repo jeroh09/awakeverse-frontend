@@ -120,12 +120,11 @@ export default function usePodcastStudio() {
         // Normalise backend snake_case → frontend camelCase
         setEnvironments(
           (data.environments || []).map(e => ({
-            envId:         e.env_id,
-            name:          e.name,
-            description:   e.description,
-            previewUrl:    e.preview_url,
-            displayOrder:  e.display_order,
-            guestCapacity: e.guest_capacity ?? 2,  // NEW — 2=standard, 3=panel
+            envId:        e.env_id,
+            name:         e.name,
+            description:  e.description,
+            previewUrl:   e.preview_url,
+            displayOrder: e.display_order,
           }))
         );
         console.log(`🏗️  Environments loaded: ${data.environments?.length}`);
@@ -615,6 +614,18 @@ export default function usePodcastStudio() {
   //   env_id          → envId
   //   preview_url     → previewUrl
 
+  // buildAvatar — async 202 + polling pattern
+  // Naming conventions (Frontend ←→ Backend):
+  //   photoUrl        →  photo_url         POST body
+  //   displayName     →  display_name      POST body
+  //   envId           →  env_id            POST body
+  //   position        →  position          POST body
+  //   avatarJobId     ←  avatar_job_id     202 response
+  //   status          ←  status            poll response: queued|processing|complete|failed
+  //   avatarId        ←  avatar_id         poll response (on complete)
+  //   avatarRefUrl    ←  avatar_ref_url    poll response (on complete)
+  //   defaultEnvId    ←  default_env_id    poll response (on complete)
+  //   error           ←  error             poll response (on failed)
   const buildAvatar = useCallback(async ({
     photoUrl,
     displayName,
@@ -628,6 +639,7 @@ export default function usePodcastStudio() {
     console.log(`👤 Building avatar: ${displayName} in ${envId}…`);
 
     try {
+      // Step 1 — POST to enqueue, returns 202 immediately
       const res = await fetch(`${API_BASE}/api/podcast/avatar/build`, {
         method:      'POST',
         headers: {
@@ -643,27 +655,55 @@ export default function usePodcastStudio() {
         }),
       });
 
-      const data = await res.json();
+      const queued = await res.json();
       if (!res.ok) {
-        ApiErrorService.log('usePodcastStudio.buildAvatar', res.status, data);
-        throw new Error(ApiErrorService.getMessage(res.status, data));
+        ApiErrorService.log('usePodcastStudio.buildAvatar', res.status, queued);
+        throw new Error(ApiErrorService.getMessage(res.status, queued));
       }
 
-      console.log(`✅ Avatar built: ${data.avatar_id}`);
+      const avatarJobId = queued.avatar_job_id;
+      console.log(`🎨 Avatar job queued: ${avatarJobId}`);
 
-      // Refresh avatars list
-      await loadAvatars();
+      // Step 2 — Poll GET /api/podcast/avatar/job/<avatarJobId>
+      // Poll every 3s, timeout after 120s (40 attempts)
+      const POLL_INTERVAL_MS = 3000;
+      const MAX_ATTEMPTS     = 40;
 
-      setState(prev => ({ ...prev, status: 'ready', error: null }));
+      for (let attempt = 0; attempt < MAX_ATTEMPTS; attempt++) {
+        await new Promise(r => setTimeout(r, POLL_INTERVAL_MS));
 
-      // Return normalised avatar object
-      return {
-        avatarId:     data.avatar_id,
-        avatarRefUrl: data.avatar_ref_url,
-        displayName:  displayName,
-        envId:        data.env_id,
-        previewUrl:   data.preview_url,
-      };
+        const poll = await fetch(
+          `${API_BASE}/api/podcast/avatar/job/${avatarJobId}`,
+          { credentials: 'include' }
+        );
+        const pollData = await poll.json();
+
+        if (!poll.ok) throw new Error(pollData.error || 'Poll failed');
+
+        const { status } = pollData;
+
+        if (status === 'complete') {
+          console.log(`✅ Avatar built: ${pollData.avatar_id}`);
+          await loadAvatars();
+          setState(prev => ({ ...prev, status: 'ready', error: null }));
+          return {
+            avatarId:     pollData.avatar_id,
+            avatarRefUrl: pollData.avatar_ref_url,
+            displayName:  displayName,
+            envId:        pollData.default_env_id || envId,
+            previewUrl:   null,
+          };
+        }
+
+        if (status === 'failed') {
+          throw new Error(pollData.error || 'Avatar build failed');
+        }
+
+        // queued|processing — keep polling
+        console.log(`⏳ Avatar job ${status} (attempt ${attempt + 1}/${MAX_ATTEMPTS})`);
+      }
+
+      throw new Error('Avatar build timed out — please try again');
 
     } catch (e) {
       setState(prev => ({ ...prev, status: 'failed', error: e.message }));

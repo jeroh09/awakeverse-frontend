@@ -1896,43 +1896,43 @@ if (context.topic) setTopic(context.topic);
 
               {/* ── Video player — shown when a session is active ── */}
               {activeSession && (
-                <div className={styles.podcastPlayer}>
-                  <video
-                    ref={podcastVideoRef}
-                    src={activeSession.final_url}
-                    className={styles.podcastPlayerVideo}
-                    controls
-                    autoPlay
-                    onEnded={() => {}}
-                  />
-                  <div className={styles.podcastPlayerBar}>
-                    <div className={styles.podcastPlayerMeta}>
-                      <span className={styles.podcastPlayerTitle}>
-                        {activeSession.speakers?.map(s => s.display_name).join(' + ') || 'Podcast'}
-                      </span>
-                      <span className={styles.podcastPlayerDate}>
-                        {fmtDate(activeSession.created_at)}
-                        {activeSession.total_seconds && ` · ${fmtDuration(activeSession.total_seconds)}`}
-                      </span>
-                    </div>
-                    <div style={{ display: 'flex', gap: '0.5rem', alignItems: 'center' }}>
+                <div
+                  className={styles.podcastOverlay}
+                  onClick={e => {
+                    if (e.target === e.currentTarget) {
+                      podcastVideoRef.current?.pause();
+                      setActiveSession(null);
+                    }
+                  }}
+                >
+                  <div className={styles.podcastOverlayBox}>
+                    <button
+                      className={styles.podcastOverlayClose}
+                      onClick={() => { podcastVideoRef.current?.pause(); setActiveSession(null); }}
+                      title="Close"
+                    >✕</button>
+                    <video
+                      ref={podcastVideoRef}
+                      src={activeSession.final_url}
+                      className={styles.podcastOverlayVideo}
+                      controls
+                      autoPlay
+                    />
+                    <div className={styles.podcastPlayerBar}>
+                      <div className={styles.podcastPlayerMeta}>
+                        <span className={styles.podcastPlayerTitle}>
+                          {activeSession.speakers?.map(s => s.display_name).join(' + ') || 'Podcast'}
+                        </span>
+                        <span className={styles.podcastPlayerDate}>
+                          {fmtDate(activeSession.created_at)}
+                          {activeSession.total_seconds && ` · ${fmtDuration(activeSession.total_seconds)}`}
+                        </span>
+                      </div>
                       <button
                         className={styles.podcastPlayerBtn}
                         onClick={() => handleDownloadPodcast(activeSession)}
                         title="Download MP4"
-                      >
-                        ⬇ Download
-                      </button>
-                      <button
-                        className={styles.podcastPlayerClose}
-                        onClick={() => {
-                          podcastVideoRef.current?.pause();
-                          setActiveSession(null);
-                        }}
-                        title="Close player"
-                      >
-                        ✕
-                      </button>
+                      >⬇ Download</button>
                     </div>
                   </div>
                 </div>
