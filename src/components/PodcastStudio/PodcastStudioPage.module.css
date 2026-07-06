@@ -839,7 +839,7 @@
 .podcastGrid {
   flex: 1;
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+  grid-template-columns: repeat(auto-fill, minmax(200px, 280px));
   gap: var(--gap);
   overflow-y: auto;
   padding: 0.25rem 0;
@@ -2297,6 +2297,26 @@
   margin-top: 2px;
   accent-color: var(--accent-primary);
   cursor: pointer;
+}
+/* ── Two-slot guest row (panel mode) ────────────────────────────────────── */
+.guestRow {
+  display: flex;
+  gap: 0.5rem;
+}
+
+.guestSlot {
+  flex: 1;
+  min-width: 0;
+}
+
+.guestSlotEmpty {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  padding: 0.5rem;
+  background: rgba(255,255,255,0.02);
+  border: 1px dashed rgba(255,255,255,0.1);
+  border-radius: 10px;
 }
 /* ── Podcast player overlay ──────────────────────────────────────────────── */
 .podcastOverlay {
