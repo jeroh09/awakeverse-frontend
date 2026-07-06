@@ -120,11 +120,12 @@ export default function usePodcastStudio() {
         // Normalise backend snake_case → frontend camelCase
         setEnvironments(
           (data.environments || []).map(e => ({
-            envId:        e.env_id,
-            name:         e.name,
-            description:  e.description,
-            previewUrl:   e.preview_url,
-            displayOrder: e.display_order,
+            envId:         e.env_id,
+            name:          e.name,
+            description:   e.description,
+            previewUrl:    e.preview_url,
+            displayOrder:  e.display_order,
+            guestCapacity: e.guest_capacity ?? 2,  // 2=standard two-chair, 3=panel three-chair
           }))
         );
         console.log(`🏗️  Environments loaded: ${data.environments?.length}`);
