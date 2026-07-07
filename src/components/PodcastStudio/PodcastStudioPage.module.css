@@ -1140,6 +1140,187 @@
 .generateBtn:disabled { opacity: 0.5; cursor: not-allowed; }
 .generateBtn:not(:disabled):hover { opacity: 0.9; }
 
+/* ══ AVATAR TAB — GENERATE MODE ═════════════════════════════════════════════ */
+
+/* Upload/Generate toggle pill */
+.avatarModeToggle {
+  display: flex;
+  gap: 6px;
+  flex-shrink: 0;
+}
+
+.avatarModeBtn {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 5px;
+  padding: 7px 0;
+  border-radius: var(--radius-pill);
+  border: var(--ring-border);
+  background: rgba(148,163,184,0.06);
+  font-size: 0.72rem;
+  color: var(--text-muted);
+  cursor: pointer;
+  font-family: 'Inter', sans-serif;
+  transition: all 0.15s;
+}
+
+.avatarModeBtn:hover { background: rgba(148,163,184,0.12); }
+
+.avatarModeBtnActive {
+  border: 1.5px solid rgba(99,102,241,0.5);
+  background: rgba(99,102,241,0.12);
+  color: var(--indigo-light);
+  font-weight: 600;
+}
+
+/* Generate panel — full-width, sits where the upload tile would be */
+.genPanel {
+  display: flex;
+  flex-direction: column;
+  gap: 0.6rem;
+  flex-shrink: 0;
+}
+
+.genNameInput,
+.genDescInput {
+  width: 100%;
+  box-sizing: border-box;
+  background: rgba(148,163,184,0.06);
+  border: var(--ring-border);
+  border-radius: 8px;
+  padding: 0.5rem 0.7rem;
+  font-size: 0.78rem;
+  color: var(--text-primary, #e2e8f0);
+  font-family: 'Inter', sans-serif;
+}
+
+.genNameInput:focus,
+.genDescInput:focus {
+  outline: none;
+  border-color: rgba(99,102,241,0.5);
+}
+
+.genDescInput { resize: none; line-height: 1.4; }
+
+.genFooterRow {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.5rem;
+}
+
+.genRemaining {
+  font-size: 0.66rem;
+  color: var(--text-muted);
+  font-family: 'Inter', sans-serif;
+  white-space: nowrap;
+}
+
+.genSecondaryBtn {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  padding: 7px 16px;
+  border-radius: var(--radius-pill);
+  border: var(--ring-border);
+  background: rgba(148,163,184,0.06);
+  font-size: 0.75rem;
+  color: var(--text-muted);
+  cursor: pointer;
+  font-family: 'Inter', sans-serif;
+  transition: opacity 0.15s;
+}
+
+.genSecondaryBtn:disabled { opacity: 0.5; cursor: not-allowed; }
+.genSecondaryBtn:not(:disabled):hover { background: rgba(148,163,184,0.12); }
+
+/* Preview state */
+.genPreviewRow {
+  display: flex;
+  gap: 1rem;
+  align-items: flex-start;
+}
+
+.genPreviewImgBox {
+  width: 96px;
+  height: 128px;
+  border-radius: 10px;
+  overflow: hidden;
+  flex-shrink: 0;
+  border: var(--ring-border);
+  background: rgba(148,163,184,0.06);
+}
+
+.genPreviewImg {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.genPreviewActions {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.genPreviewPrompt {
+  font-size: 0.75rem;
+  color: var(--text-muted);
+  margin: 0 0 0.2rem;
+  font-family: 'Inter', sans-serif;
+}
+
+/* Rejection state — amber, distinct from the red errorBox (hard failure) */
+.genRejectBox {
+  padding: 0.6rem 0.75rem;
+  background: rgba(245,158,11,0.1);
+  border: 1px solid rgba(245,158,11,0.3);
+  border-radius: 8px;
+}
+
+.genRejectTitle {
+  font-size: 0.75rem;
+  font-weight: 600;
+  color: #FCD34D;
+  margin: 0 0 0.2rem;
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  font-family: 'Inter', sans-serif;
+}
+
+.genRejectDetail {
+  font-size: 0.68rem;
+  color: #FCD34D;
+  opacity: 0.85;
+  margin: 0;
+  line-height: 1.4;
+  font-family: 'Inter', sans-serif;
+}
+
+/* Exhausted state — reuses errorBox's red tone via a dedicated box for layout parity */
+.genExhaustedBox {
+  padding: 0.6rem 0.75rem;
+  background: rgba(239,68,68,0.1);
+  border: 1px solid rgba(239,68,68,0.25);
+  border-radius: 8px;
+}
+
+.genExhaustedBox p {
+  margin: 0;
+  font-size: 0.75rem;
+  font-weight: 600;
+  color: #FCA5A5;
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  font-family: 'Inter', sans-serif;
+}
+
 /* ══ SHARED UTILITIES ═════════════════════════════════════════════════════════ */
 .errorBox {
   padding: 0.42rem 0.65rem;

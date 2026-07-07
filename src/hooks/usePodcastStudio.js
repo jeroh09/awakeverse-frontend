@@ -26,6 +26,19 @@
 //   position                position              POST /api/podcast/avatar/build body
 //   displayName             display_name          POST /api/podcast/avatar/build body
 //
+//   description             description           POST /api/podcast/avatar/generate-preview body
+//   displayName             display_name          POST /api/podcast/avatar/generate-preview body
+//   attemptNumber           attempt_number        POST /api/podcast/avatar/generate-preview body
+//   previewUrl              preview_url           POST /api/podcast/avatar/generate-preview ← response
+//   attemptNumber           attempt_number        POST /api/podcast/avatar/generate-preview ← response
+//   (rejected)              rejected: true        POST /api/podcast/avatar/generate-preview ← 422 response
+//
+//   previewUrl              preview_url           POST /api/podcast/avatar/confirm-preview body
+//   displayName             display_name          POST /api/podcast/avatar/confirm-preview body
+//   envId                   env_id                POST /api/podcast/avatar/confirm-preview body
+//   position                position              POST /api/podcast/avatar/confirm-preview body
+//   (internal — polled via shared _pollAvatarJob, same as buildAvatar)
+//
 //   characterKey            character_key         GET  /api/podcast/character/<key>/ref
 //   characterRefUrl         avatar_ref_url        GET  /api/podcast/character/<key>/ref ← response
 //   characterVoiceId        voice_id              GET  /api/podcast/character/<key>/ref ← response
@@ -78,6 +91,60 @@ const INITIAL_STATE = {
 // ── CSRF helper — same pattern as useContentGeneration ────────────────────────
 const getCsrf = () =>
   document.cookie.match(/(?:^|;\s*)av_csrf=([^;]+)/)?.[1] || '';
+
+// ── Shared avatar-job poller ───────────────────────────────────────────────
+//
+// Single source of truth for the 202-and-poll pattern used by both the
+// photo-upload path (buildAvatar) and the generate-avatar path
+// (confirmAvatarPreview). Kept module-level (not a hook) — it has no
+// dependency on component state, only on avatarJobId + API_BASE.
+//
+// Naming (Frontend Hook ←→ Backend, GET /api/podcast/avatar/job/<id>):
+//   status        ←  status         poll response: queued|processing|complete|failed
+//   avatarId      ←  avatar_id      poll response (on complete)
+//   avatarRefUrl  ←  avatar_ref_url poll response (on complete)
+//   defaultEnvId  ←  default_env_id poll response (on complete)
+//   error         ←  error          poll response (on failed)
+//
+// Returns: { avatarId, avatarRefUrl, envId, previewUrl }
+// Throws:  Error on failed status, or timeout after MAX_ATTEMPTS.
+async function _pollAvatarJob(avatarJobId, fallbackEnvId = 'studio_tech') {
+  const POLL_INTERVAL_MS = 3000;
+  const MAX_ATTEMPTS     = 40; // 3s × 40 = 120s timeout
+
+  for (let attempt = 0; attempt < MAX_ATTEMPTS; attempt++) {
+    await new Promise(r => setTimeout(r, POLL_INTERVAL_MS));
+
+    const poll = await fetch(
+      `${API_BASE}/api/podcast/avatar/job/${avatarJobId}`,
+      { credentials: 'include' }
+    );
+    const pollData = await poll.json();
+
+    if (!poll.ok) throw new Error(pollData.error || 'Poll failed');
+
+    const { status } = pollData;
+
+    if (status === 'complete') {
+      console.log(`✅ Avatar job complete: ${pollData.avatar_id}`);
+      return {
+        avatarId:     pollData.avatar_id,
+        avatarRefUrl: pollData.avatar_ref_url,
+        envId:        pollData.default_env_id || fallbackEnvId,
+        previewUrl:   null,
+      };
+    }
+
+    if (status === 'failed') {
+      throw new Error(pollData.error || 'Avatar build failed');
+    }
+
+    // queued|processing — keep polling
+    console.log(`⏳ Avatar job ${avatarJobId} — ${status} (attempt ${attempt + 1}/${MAX_ATTEMPTS})`);
+  }
+
+  throw new Error('Avatar build timed out — please try again');
+}
 
 export default function usePodcastStudio() {
 
@@ -665,46 +732,12 @@ export default function usePodcastStudio() {
       const avatarJobId = queued.avatar_job_id;
       console.log(`🎨 Avatar job queued: ${avatarJobId}`);
 
-      // Step 2 — Poll GET /api/podcast/avatar/job/<avatarJobId>
-      // Poll every 3s, timeout after 120s (40 attempts)
-      const POLL_INTERVAL_MS = 3000;
-      const MAX_ATTEMPTS     = 40;
+      // Step 2 — delegate to shared poller (single source of truth)
+      const result = await _pollAvatarJob(avatarJobId, envId);
 
-      for (let attempt = 0; attempt < MAX_ATTEMPTS; attempt++) {
-        await new Promise(r => setTimeout(r, POLL_INTERVAL_MS));
-
-        const poll = await fetch(
-          `${API_BASE}/api/podcast/avatar/job/${avatarJobId}`,
-          { credentials: 'include' }
-        );
-        const pollData = await poll.json();
-
-        if (!poll.ok) throw new Error(pollData.error || 'Poll failed');
-
-        const { status } = pollData;
-
-        if (status === 'complete') {
-          console.log(`✅ Avatar built: ${pollData.avatar_id}`);
-          await loadAvatars();
-          setState(prev => ({ ...prev, status: 'ready', error: null }));
-          return {
-            avatarId:     pollData.avatar_id,
-            avatarRefUrl: pollData.avatar_ref_url,
-            displayName:  displayName,
-            envId:        pollData.default_env_id || envId,
-            previewUrl:   null,
-          };
-        }
-
-        if (status === 'failed') {
-          throw new Error(pollData.error || 'Avatar build failed');
-        }
-
-        // queued|processing — keep polling
-        console.log(`⏳ Avatar job ${status} (attempt ${attempt + 1}/${MAX_ATTEMPTS})`);
-      }
-
-      throw new Error('Avatar build timed out — please try again');
+      await loadAvatars();
+      setState(prev => ({ ...prev, status: 'ready', error: null }));
+      return { ...result, displayName };
 
     } catch (e) {
       setState(prev => ({ ...prev, status: 'failed', error: e.message }));
@@ -1025,6 +1058,135 @@ export default function usePodcastStudio() {
     }
   }, []);
 
+  // ── Generate avatar preview ────────────────────────────────────────────────
+  //
+  // Text description → Nano preview image. Preview only — no DB write, no
+  // bake job. User eyeballs the result and either approves it
+  // (confirmAvatarPreview) or regenerates (call this again, attemptNumber+1).
+  //
+  // Naming (Frontend Hook ←→ Backend):
+  //   description    →  description       text description of look
+  //   displayName    →  display_name      used in Spaces key
+  //   attemptNumber  →  attempt_number    1-3, tracked by caller (UI)
+  //   previewUrl     ←  preview_url       CDN URL — display as <img src>
+  //   attemptNumber  ←  attempt_number    echoed back
+  // Throws on failure. On Fal rejection (422), throws an Error with
+  // .rejected = true and .attemptNumber set, so the caller can distinguish
+  // "try a different description" from a hard failure.
+  const generateAvatarPreview = useCallback(async ({
+    description,
+    displayName,
+    attemptNumber = 1,
+  }) => {
+    if (!description?.trim()) throw new Error('Description is required');
+    if (!displayName?.trim()) throw new Error('Display name is required');
+
+    const res = await fetch(`${API_BASE}/api/podcast/avatar/generate-preview`, {
+      method:      'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'X-CSRF-Token': getCsrf(),
+      },
+      credentials: 'include',
+      body: JSON.stringify({
+        description,
+        display_name:   displayName,
+        attempt_number: attemptNumber,
+      }),
+    });
+
+    const data = await res.json();
+
+    if (res.status === 422 && data.rejected) {
+      console.warn(`⚠️ Avatar preview rejected: attempt ${attemptNumber}`);
+      const err = new Error(
+        data.error || "We couldn't generate this avatar. Please try a different description."
+      );
+      err.rejected      = true;
+      err.attemptNumber = data.attempt_number || attemptNumber;
+      throw err;
+    }
+
+    if (!res.ok) {
+      ApiErrorService.log('usePodcastStudio.generateAvatarPreview', res.status, data);
+      throw new Error(ApiErrorService.getMessage(res.status, data));
+    }
+
+    console.log(`🎨 Avatar preview generated: attempt ${data.attempt_number}`);
+    return {
+      previewUrl:    data.preview_url,
+      attemptNumber: data.attempt_number,
+    };
+  }, []);
+
+
+  // ── Confirm avatar preview ─────────────────────────────────────────────────
+  //
+  // User approved the generated preview → enqueue the same async bake job
+  // used by the photo-upload path, then poll to completion via the shared
+  // poller. Returns the SAME shape as buildAvatar — callers can treat the
+  // two paths identically once a previewUrl/photoUrl exists.
+  //
+  // Naming (Frontend Hook ←→ Backend):
+  //   previewUrl   →  preview_url    approved Spaces CDN URL (from generateAvatarPreview)
+  //   displayName  →  display_name
+  //   envId        →  env_id
+  //   position     →  position
+  //   avatarJobId  ←  avatar_job_id  (internal — used to poll, not returned to caller)
+  //   status       ←  'queued'       (internal)
+  //
+  // Returns: { avatarId, avatarRefUrl, envId, previewUrl, displayName }
+  const confirmAvatarPreview = useCallback(async ({
+    previewUrl,
+    displayName,
+    envId    = 'studio_tech',
+    position = 'center',
+  }) => {
+    if (!previewUrl)  throw new Error('previewUrl is required');
+    if (!displayName) throw new Error('displayName is required');
+
+    setState(prev => ({ ...prev, status: 'building', error: null }));
+    console.log(`👤 Confirming generated avatar: ${displayName} in ${envId}…`);
+
+    try {
+      const res = await fetch(`${API_BASE}/api/podcast/avatar/confirm-preview`, {
+        method:      'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'X-CSRF-Token': getCsrf(),
+        },
+        credentials: 'include',
+        body: JSON.stringify({
+          preview_url:  previewUrl,
+          display_name: displayName,
+          env_id:       envId,
+          position,
+        }),
+      });
+
+      const queued = await res.json();
+      if (!res.ok) {
+        ApiErrorService.log('usePodcastStudio.confirmAvatarPreview', res.status, queued);
+        throw new Error(ApiErrorService.getMessage(res.status, queued));
+      }
+
+      const avatarJobId = queued.avatar_job_id;
+      console.log(`🎨 Avatar job queued (from preview): ${avatarJobId}`);
+
+      // Same shared poller as buildAvatar — identical final shape.
+      const result = await _pollAvatarJob(avatarJobId, envId);
+
+      await loadAvatars();
+      setState(prev => ({ ...prev, status: 'ready', error: null }));
+      return { ...result, displayName };
+
+    } catch (e) {
+      setState(prev => ({ ...prev, status: 'failed', error: e.message }));
+      throw e;
+    }
+  }, [loadAvatars]);
+
+
   // ── Reset — mirrors useContentGeneration.resetContent ────────────────────
 
   const resetStudio = useCallback(() => {
@@ -1047,10 +1209,12 @@ export default function usePodcastStudio() {
     voiceClone,     // { voiceId, cloneName } | null — user's cloned voice
 
     // Avatar + photo
-    uploadPhoto,      // (File)   → photoUrl
-    buildAvatar,      // (params) → { avatarId, avatarRefUrl, envId, previewUrl }
-    getCharacterRef,  // (key)    → { characterRefUrl, characterVoiceId, characterDisplayName }
-    deleteAvatar,     // (avatarId) → void (refreshes avatars list)
+    uploadPhoto,            // (File)   → photoUrl
+    buildAvatar,            // (params) → { avatarId, avatarRefUrl, envId, previewUrl }
+    generateAvatarPreview,  // ({description, displayName, attemptNumber}) → { previewUrl, attemptNumber }
+    confirmAvatarPreview,   // ({previewUrl, displayName, envId, position}) → { avatarId, avatarRefUrl, envId, previewUrl } — same shape as buildAvatar
+    getCharacterRef,        // (key)    → { characterRefUrl, characterVoiceId, characterDisplayName }
+    deleteAvatar,           // (avatarId) → void (refreshes avatars list)
 
     // Audio (record mode)
     uploadAudio,      // (Blob)   → audioUrl

@@ -129,6 +129,20 @@ const Ic = {
       <rect x="1" y="5" width="15" height="14" rx="2"/>
     </svg>
   ),
+  Refresh: () => (
+    <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+      <polyline points="1 4 1 10 7 10"/>
+      <polyline points="23 20 23 14 17 14"/>
+      <path d="M20.49 9A9 9 0 005.64 5.64L1 10m22 4l-4.64 4.36A9 9 0 013.51 15" strokeLinecap="round"/>
+    </svg>
+  ),
+  Alert: () => (
+    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+      <path d="M12 9v4" strokeLinecap="round"/>
+      <path d="M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z"/>
+      <line x1="12" y1="17" x2="12.01" y2="17" strokeLinecap="round"/>
+    </svg>
+  ),
 };
 
 // ── Lines reducer ─────────────────────────────────────────────────────────────
@@ -172,6 +186,8 @@ export default function PodcastStudioPage({ context, onClose }) {
     voiceClone,
     uploadPhoto,
     buildAvatar,
+    generateAvatarPreview,
+    confirmAvatarPreview,
     getCharacterRef,
     uploadAudio,
     createSession,
@@ -216,6 +232,19 @@ export default function PodcastStudioPage({ context, onClose }) {
   const [buildError,    setBuildError]    = useState(null);
   const [avatarDragOver, setAvatarDragOver] = useState(false);
   const fileInputRef     = useRef(null);
+
+  // ── Avatar build — GENERATE mode (text description → Nano preview) ───────
+  // Mirrors the upload path 1:1 after a previewUrl exists — see
+  // handleUseGeneratedAvatar, which is handleBuildAvatar with the upload
+  // step skipped (previewUrl is already a Spaces CDN URL).
+  const [avatarInputMode, setAvatarInputMode] = useState('upload'); // 'upload' | 'generate'
+  const [genDescription,  setGenDescription]  = useState('');
+  const [genDisplayName,  setGenDisplayName]  = useState('');
+  const [genPreviewUrl,   setGenPreviewUrl]   = useState(null);
+  const [genAttempt,      setGenAttempt]      = useState(0);   // 0..3 — attempts used
+  const [genLoading,      setGenLoading]      = useState(false);
+  const [genError,        setGenError]        = useState(null);
+  const [genRejected,     setGenRejected]     = useState(false);
 
   // ── Custom guest (real person, user-provided photo) ───────────────────────
   // ── Guest 1 ────────────────────────────────────────────────────────────────
@@ -855,6 +884,82 @@ if (context.topic) setTopic(context.topic);
     }
   }, [photoFile, uploadPhoto, buildAvatar, selectedEnvId, context]);
 
+  // ── Generate avatar — call Nano with a text description ──────────────────
+  // Produces a preview only (genPreviewUrl). Nothing saved, nothing baked.
+  // 3 attempts max — enforced client-side, genAttempt tracks usage.
+  const handleGenerateAvatar = useCallback(async () => {
+    if (!genDescription.trim() || genAttempt >= 3) return;
+    setGenLoading(true);
+    setGenError(null);
+    setGenRejected(false);
+    try {
+      const displayName = genDisplayName.trim() || context?.user?.displayName || 'You';
+      const result = await generateAvatarPreview({
+        description:    genDescription.trim(),
+        displayName,
+        attemptNumber:  genAttempt + 1,
+      });
+      setGenPreviewUrl(result.previewUrl);
+      setGenAttempt(result.attemptNumber);
+    } catch (e) {
+      // Rejection (Fal content policy) still consumes an attempt.
+      setGenAttempt(e.attemptNumber || genAttempt + 1);
+      setGenRejected(!!e.rejected);
+      setGenError(e.message || 'Avatar generation failed. Please try again.');
+      setGenPreviewUrl(null);
+    } finally {
+      setGenLoading(false);
+    }
+  }, [genDescription, genDisplayName, genAttempt, generateAvatarPreview, context]);
+
+  // ── Regenerate — clear the rejected preview, keep description, try again ─
+  const handleRegenerateAvatar = useCallback(() => {
+    setGenPreviewUrl(null);
+    setGenError(null);
+    setGenRejected(false);
+    handleGenerateAvatar();
+  }, [handleGenerateAvatar]);
+
+  // ── Use generated avatar — IDENTICAL to handleBuildAvatar, upload skipped ─
+  // genPreviewUrl is already a Spaces CDN URL (from generateAvatarPreview),
+  // so we go straight to confirmAvatarPreview — same bake pipeline,
+  // same buildStage progression, same final state writes as the photo path.
+  const handleUseGeneratedAvatar = useCallback(async () => {
+    if (!genPreviewUrl) return;
+    setBuildError(null);
+    try {
+      setBuildStage('composing'); // no 'uploading' stage — preview is already hosted
+      const displayName = genDisplayName.trim() || context?.user?.displayName || 'You';
+      const result = await confirmAvatarPreview({
+        previewUrl: genPreviewUrl,
+        displayName,
+        envId:      selectedEnvId,
+        position:   'right',
+      });
+
+      setBuildStage('baking');
+      await new Promise(r => setTimeout(r, 600)); // same pause as upload path, for parity
+
+      setBuildStage('done');
+      setAvatarRefUrl(result.avatarRefUrl);
+      setAvatarBuilt(true);
+
+      setSpeakers(prev => {
+        const already = prev.find(s => s.speakerId === 'user');
+        if (already) return prev.map(s => s.speakerId === 'user' ? { ...s, avatarRefUrl: result.avatarRefUrl } : s);
+        return [{
+          speakerId: 'user', displayName, avatarRefUrl: result.avatarRefUrl,
+          voiceId: '21m00Tcm4TlvDq8ikWAM', voiceMode: 'tts',
+          gender: 'female', color: SPEAKER_COLORS[0], isCharacter: false, role: 'host',
+        }, ...prev];
+      });
+
+    } catch (e) {
+      setBuildError(e.message || 'Avatar build failed. Please try again.');
+      setBuildStage(null);
+    }
+  }, [genPreviewUrl, genDisplayName, confirmAvatarPreview, selectedEnvId, context]);
+
   // ── Add custom guest (lightweight — no build, worker handles at render) ──
   const handleAddGuest = useCallback(async () => {
     if (!guestFile || !guestName.trim()) return;
@@ -1184,7 +1289,9 @@ if (context.topic) setTopic(context.topic);
                 <div className={styles.buildOverlay}>
                   <div className={styles.buildOverlayCard}>
                     <div className={styles.buildPreviewRing}>
-                      {photoPreview && <img src={photoPreview} alt="Building" className={styles.buildPreviewImg} />}
+                      {(photoPreview || genPreviewUrl) && (
+                        <img src={photoPreview || genPreviewUrl} alt="Building" className={styles.buildPreviewImg} />
+                      )}
                       <div className={styles.buildRingAnim} />
                     </div>
                     <div className={styles.buildStages}>
@@ -1210,6 +1317,24 @@ if (context.topic) setTopic(context.topic);
               {/* ── Avatar grid — square cards, horizontal wrap ── */}
               <div className={`${styles.glassCard} ${styles.avatarGridCard}`}>
                 <div className={styles.cardLabel}>Your avatar</div>
+
+                {/* Upload / Generate toggle — only while creating a new avatar */}
+                {!avatarBuilt && (
+                  <div className={styles.avatarModeToggle}>
+                    <button
+                      className={`${styles.avatarModeBtn} ${avatarInputMode === 'upload' ? styles.avatarModeBtnActive : ''}`}
+                      onClick={() => setAvatarInputMode('upload')}
+                    >
+                      <Ic.Upload /> Upload photo
+                    </button>
+                    <button
+                      className={`${styles.avatarModeBtn} ${avatarInputMode === 'generate' ? styles.avatarModeBtnActive : ''}`}
+                      onClick={() => setAvatarInputMode('generate')}
+                    >
+                      <Ic.Mic /> Generate
+                    </button>
+                  </div>
+                )}
 
                 <div className={styles.avatarGrid}>
 
@@ -1325,8 +1450,8 @@ if (context.topic) setTopic(context.topic);
                     );
                   })}
 
-                  {/* Upload new — always last */}
-                  {!avatarBuilt && (
+                  {/* Upload new — always last, upload mode only */}
+                  {!avatarBuilt && avatarInputMode === 'upload' && (
                     <div
                       className={styles.avatarSquareAdd}
                       onClick={() => { setConfirmDelete(null); fileInputRef.current?.click(); }}
@@ -1379,6 +1504,105 @@ if (context.topic) setTopic(context.topic);
                   </div>
                 )}
 
+                {/* ── Generate-mode widget — 4 states, mirrors mockup exactly ── */}
+                {!avatarBuilt && avatarInputMode === 'generate' && (
+                  <div className={styles.genPanel}>
+
+                    {/* State 2: preview available (takes priority — user has something to act on) */}
+                    {genPreviewUrl && (
+                      <>
+                        <div className={styles.cardLabel}>Preview — generation {genAttempt} of 3</div>
+                        <div className={styles.genPreviewRow}>
+                          <div className={styles.genPreviewImgBox}>
+                            <img src={genPreviewUrl} alt="Generated avatar preview" className={styles.genPreviewImg} />
+                          </div>
+                          <div className={styles.genPreviewActions}>
+                            <p className={styles.genPreviewPrompt}>Does this look right?</p>
+                            <button className={styles.buildBtn} onClick={handleUseGeneratedAvatar} disabled={!!buildStage}>
+                              {buildStage ? <><span className={styles.spin}><Ic.Spin /></span> Building…</> : <><Ic.Check /> Use this</>}
+                            </button>
+                            {genAttempt < 3 && (
+                              <button className={styles.genSecondaryBtn} onClick={handleRegenerateAvatar} disabled={genLoading || !!buildStage}>
+                                {genLoading ? <><span className={styles.spin}><Ic.Spin /></span> Regenerating…</> : <><Ic.Refresh /> Regenerate</>}
+                              </button>
+                            )}
+                            <span className={styles.genRemaining}>{3 - genAttempt} generation{3 - genAttempt === 1 ? '' : 's'} remaining</span>
+                          </div>
+                        </div>
+                      </>
+                    )}
+
+                    {/* State 3/4: rejected — with or without attempts remaining */}
+                    {!genPreviewUrl && genRejected && (
+                      <>
+                        <div className={styles.cardLabel}>Generation {genAttempt} of 3</div>
+                        <div className={styles.genRejectBox}>
+                          <p className={styles.genRejectTitle}><Ic.Alert /> Couldn't generate this avatar</p>
+                          <p className={styles.genRejectDetail}>{genError}</p>
+                        </div>
+                        {genAttempt < 3 ? (
+                          <div className={styles.genFooterRow}>
+                            <button className={styles.genSecondaryBtn} onClick={handleRegenerateAvatar} disabled={genLoading}>
+                              {genLoading ? <><span className={styles.spin}><Ic.Spin /></span> Trying…</> : <><Ic.Refresh /> Try again</>}
+                            </button>
+                            <span className={styles.genRemaining}>{3 - genAttempt} generations remaining</span>
+                          </div>
+                        ) : (
+                          <button className={styles.genSecondaryBtn} onClick={() => setAvatarInputMode('upload')}>
+                            <Ic.Upload /> Upload photo
+                          </button>
+                        )}
+                      </>
+                    )}
+
+                    {/* State 4: exhausted, last attempt was NOT a rejection (still no preview though) */}
+                    {!genPreviewUrl && !genRejected && genAttempt >= 3 && (
+                      <>
+                        <div className={styles.cardLabel}>Generation 3 of 3</div>
+                        <div className={styles.genExhaustedBox}>
+                          <p><Ic.Alert /> No generations left — upload a photo instead</p>
+                        </div>
+                        <button className={styles.genSecondaryBtn} onClick={() => setAvatarInputMode('upload')}>
+                          <Ic.Upload /> Upload photo
+                        </button>
+                      </>
+                    )}
+
+                    {/* State 1: initial form — description + name */}
+                    {!genPreviewUrl && !genRejected && genAttempt < 3 && (
+                      <>
+                        <input
+                          type="text"
+                          className={styles.genNameInput}
+                          placeholder="Your display name…"
+                          value={genDisplayName}
+                          onChange={e => setGenDisplayName(e.target.value)}
+                        />
+                        <textarea
+                          className={styles.genDescInput}
+                          rows={3}
+                          placeholder="Describe your look — hair, build, style, what you're wearing. e.g. 'A tall woman in her 30s with natural locs, warm smile, wearing a navy blazer'"
+                          value={genDescription}
+                          onChange={e => setGenDescription(e.target.value)}
+                        />
+                        <div className={styles.genFooterRow}>
+                          <button
+                            className={styles.buildBtn}
+                            style={{ width: 'auto', padding: '0.5rem 1.1rem' }}
+                            onClick={handleGenerateAvatar}
+                            disabled={genLoading || !genDescription.trim()}
+                          >
+                            {genLoading ? <><span className={styles.spin}><Ic.Spin /></span> Generating…</> : <><Ic.Mic /> Generate</>}
+                          </button>
+                          <span className={styles.genRemaining}>{genAttempt} of 3 generations used</span>
+                        </div>
+                      </>
+                    )}
+
+                    {genError && !genRejected && <div className={styles.errorBox}>{genError}</div>}
+                  </div>
+                )}
+
                 {buildError && <div className={styles.errorBox}>{buildError}</div>}
                 {photoFile && !avatarBuilt && (
                   <button className={styles.buildBtn} onClick={handleBuildAvatar} disabled={!!buildStage}>
@@ -1387,7 +1611,12 @@ if (context.topic) setTopic(context.topic);
                 )}
                 {avatarBuilt && (
                   <button className={styles.rebuildLink} style={{ alignSelf: 'center' }}
-                    onClick={() => { setAvatarBuilt(false); setBuildStage(null); setPhotoFile(null); setPhotoPreview(null); }}>
+                    onClick={() => {
+                      setAvatarBuilt(false); setBuildStage(null);
+                      setPhotoFile(null); setPhotoPreview(null);
+                      setGenPreviewUrl(null); setGenAttempt(0); setGenError(null); setGenRejected(false);
+                      setAvatarInputMode('upload');
+                    }}>
                     Upload a different photo
                   </button>
                 )}
