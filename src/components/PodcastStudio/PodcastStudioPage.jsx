@@ -143,6 +143,13 @@ const Ic = {
       <line x1="12" y1="17" x2="12.01" y2="17" strokeLinecap="round"/>
     </svg>
   ),
+  ImageFrame: () => (
+    <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8">
+      <rect x="3" y="3" width="18" height="18" rx="2"/>
+      <circle cx="8.5" cy="8.5" r="1.5" fill="currentColor" stroke="none"/>
+      <path d="M21 15l-5-5L5 21" strokeLinecap="round" strokeLinejoin="round"/>
+    </svg>
+  ),
 };
 
 // ── Lines reducer ─────────────────────────────────────────────────────────────
@@ -1315,23 +1322,23 @@ if (context.topic) setTopic(context.topic);
               )}
 
               {/* ── Avatar grid — square cards, horizontal wrap ── */}
-              <div className={`${styles.glassCard} ${styles.avatarGridCard}`}>
+              <div className={`${styles.glassCard} ${styles.avatarGridCard} ${avatarInputMode === 'generate' && !avatarBuilt ? styles.avatarGridCardExpanded : ''}`}>
                 <div className={styles.cardLabel}>Your avatar</div>
 
-                {/* Upload / Generate toggle — only while creating a new avatar */}
+                {/* Upload / Generate toggle — reuses scriptModeToggle exactly (same pill used by Studio Backgrounds' 1-2 Guests/Panel-3 toggle) */}
                 {!avatarBuilt && (
-                  <div className={styles.avatarModeToggle}>
+                  <div className={styles.scriptModeToggle} style={{ marginBottom: '0.2rem', flexShrink: 0 }}>
                     <button
-                      className={`${styles.avatarModeBtn} ${avatarInputMode === 'upload' ? styles.avatarModeBtnActive : ''}`}
+                      className={`${styles.scriptModeBtn} ${avatarInputMode === 'upload' ? styles.scriptModeBtnActive : ''}`}
                       onClick={() => setAvatarInputMode('upload')}
                     >
                       <Ic.Upload /> Upload photo
                     </button>
                     <button
-                      className={`${styles.avatarModeBtn} ${avatarInputMode === 'generate' ? styles.avatarModeBtnActive : ''}`}
+                      className={`${styles.scriptModeBtn} ${avatarInputMode === 'generate' ? styles.scriptModeBtnActive : ''}`}
                       onClick={() => setAvatarInputMode('generate')}
                     >
-                      <Ic.Mic /> Generate
+                      <Ic.ImageFrame /> Generate
                     </button>
                   </div>
                 )}
@@ -1592,7 +1599,7 @@ if (context.topic) setTopic(context.topic);
                             onClick={handleGenerateAvatar}
                             disabled={genLoading || !genDescription.trim()}
                           >
-                            {genLoading ? <><span className={styles.spin}><Ic.Spin /></span> Generating…</> : <><Ic.Mic /> Generate</>}
+                            {genLoading ? <><span className={styles.spin}><Ic.Spin /></span> Generating…</> : <><Ic.ImageFrame /> Generate</>}
                           </button>
                           <span className={styles.genRemaining}>{genAttempt} of 3 generations used</span>
                         </div>
@@ -1768,11 +1775,11 @@ if (context.topic) setTopic(context.topic);
                 </div>
               )}
 
-              {speakers.filter(s => s.speakerId !== 'user').length === 0 && !photoPreview && podcastMode !== null && (
+              {speakers.filter(s => s.speakerId !== 'user').length === 0 && !photoPreview && !genPreviewUrl && podcastMode !== null && (
                 <div className={styles.emptyHint}>
                   {podcastMode === 'solo'
-                    ? 'Upload your photo to build your solo avatar.'
-                    : `Upload your photo above. ${context?.character?.display_name || 'Your guest'} will join as guest.`}
+                    ? 'Upload a photo or generate one to build your solo avatar.'
+                    : `Upload a photo above, or generate one. ${context?.character?.display_name || 'Your guest'} will join as guest.`}
                 </div>
               )}
             </div>

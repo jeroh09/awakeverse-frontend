@@ -193,6 +193,16 @@
   gap: 0.6rem;
   /* 2 rows of 160px cards + name label + gaps + padding ≈ 420px */
   max-height: 420px;
+  overflow: hidden; /* upload mode: never spill past the card border */
+}
+
+/* Generate mode needs room for the description form + preview — the fixed
+   420px cap (sized for the tile grid) would clip it. Lift the cap and let
+   the outer .avatarPage (already overflow-y:auto) scroll the page instead —
+   nothing hangs outside this card's border either way. */
+.avatarGridCardExpanded {
+  max-height: none;
+  overflow: visible;
 }
 
 /* Build overlay — fullscreen within the content area */
@@ -1141,39 +1151,9 @@
 .generateBtn:not(:disabled):hover { opacity: 0.9; }
 
 /* ══ AVATAR TAB — GENERATE MODE ═════════════════════════════════════════════ */
-
-/* Upload/Generate toggle pill */
-.avatarModeToggle {
-  display: flex;
-  gap: 6px;
-  flex-shrink: 0;
-}
-
-.avatarModeBtn {
-  flex: 1;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: 5px;
-  padding: 7px 0;
-  border-radius: var(--radius-pill);
-  border: var(--ring-border);
-  background: rgba(148,163,184,0.06);
-  font-size: 0.72rem;
-  color: var(--text-muted);
-  cursor: pointer;
-  font-family: 'Inter', sans-serif;
-  transition: all 0.15s;
-}
-
-.avatarModeBtn:hover { background: rgba(148,163,184,0.12); }
-
-.avatarModeBtnActive {
-  border: 1.5px solid rgba(99,102,241,0.5);
-  background: rgba(99,102,241,0.12);
-  color: var(--indigo-light);
-  font-weight: 600;
-}
+/* Upload/Generate toggle reuses .scriptModeToggle/.scriptModeBtn (defined
+   further down, shared with the Studio Backgrounds guest-count toggle) —
+   no separate toggle styles needed here. */
 
 /* Generate panel — full-width, sits where the upload tile would be */
 .genPanel {
