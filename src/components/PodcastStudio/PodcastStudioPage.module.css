@@ -608,15 +608,15 @@
   align-items: flex-start;
   gap: 0.55rem;
   padding: 0.6rem 0.7rem;
-  background: var(--glass-bg);
-  border: var(--ring-border);
-  box-shadow: var(--ring-shadow);
+  /* Idea 2 — borderless tinted row. Tint set inline per-line (host/guest color),
+     falls back to --glass-bg if a caller ever forgets to pass it. */
+  background: var(--line-tint, var(--glass-bg));
   border-radius: 12px;
-  transition: border-color 0.15s;
+  transition: background 0.15s;
   flex-shrink: 0;
 }
 
-.lineCard:hover { border-color: rgba(99,102,241,0.55); }
+.lineCard:hover { background: var(--line-tint-hover, var(--glass-bg)); }
 
 .lineDot {
   width: 7px;
@@ -645,8 +645,10 @@
   color: #CBD5E1;
   font-size: 0.78rem;
   font-family: 'Inter', sans-serif;
-  line-height: 1.5;
+  line-height: 1.55;
   resize: none;
+  max-height: 240px;   /* auto-grow cap — JS sizes height up to this, then scrolls */
+  overflow-y: hidden;  /* toggled to auto by JS once content exceeds max-height */
 }
 
 .lineTextarea::placeholder { color: var(--text-muted); }
@@ -672,9 +674,8 @@
   width: 24px;
   height: 24px;
   border-radius: 6px;
-  background: rgba(28,38,64,0.8);
-  border: var(--ring-border);
-  box-shadow: var(--ring-shadow);
+  background: transparent;
+  border: none;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -1418,8 +1419,8 @@
 .dragHandle:active { cursor: grabbing; }
 
 .lineCardDragOver {
-  border-color: rgba(99, 102, 241, 0.6) !important;
-  background: rgba(99, 102, 241, 0.08) !important;
+  border: 1.5px solid rgba(99, 102, 241, 0.6) !important;
+  background: rgba(99, 102, 241, 0.1) !important;
   box-shadow: 0 0 0 2px rgba(99, 102, 241, 0.2) !important;
 }
 /* ── Custom guest name input ─────────────────────────────────────────────── */
@@ -1962,13 +1963,19 @@
 
 .scriptInputBar {
   display: flex;
+  align-items: flex-end;
   gap: 0.45rem;
-  padding: 0.45rem;
+  padding: 0.5rem;
   background: var(--glass-bg);
-  border: var(--ring-border);
-  box-shadow: var(--ring-shadow);
-  border-radius: 12px;
+  border: 1px solid rgba(148, 163, 184, 0.18);
+  border-radius: 14px;
   flex-shrink: 0;
+  transition: border-color 0.15s ease, box-shadow 0.15s ease;
+}
+
+.scriptInputBar:focus-within {
+  border-color: rgba(99, 102, 241, 0.55);
+  box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.14);
 }
 
 .scriptInput {
@@ -1979,20 +1986,20 @@
   color: var(--text-primary);
   font-size: 0.78rem;
   font-family: 'Inter', sans-serif;
-  padding: 0.2rem 0.3rem;
+  padding: 0.3rem 0.4rem;
   resize: none;
   min-height: 22px;
-  max-height: 80px;
-  line-height: 1.5;
+  max-height: 160px;  /* auto-grow cap — was 80px, doubled for real multi-line room */
+  line-height: 1.55;
+  overflow-y: hidden;  /* toggled to auto by JS once content exceeds max-height */
 }
 
 .scriptInput::placeholder { color: var(--text-muted); }
 
 .scriptSendBtn {
-  padding: 0.35rem 0.85rem;
+  padding: 0.42rem 0.9rem;
   background: linear-gradient(135deg, rgba(99,102,241,0.9), rgba(129,140,248,0.9));
   border: 1px solid rgba(129, 140, 248, 0.3);
-  box-shadow: var(--ring-shadow);
   border-radius: var(--radius-btn);
   cursor: pointer;
   font-size: 0.72rem;
@@ -2189,7 +2196,7 @@
 /* ══ RECORDING STATES ════════════════════════════════════════════════════════ */
 .lineBtnRecording {
   color: #EF4444 !important;
-  border-color: rgba(239, 68, 68, 0.4) !important;
+  border: 1px solid rgba(239, 68, 68, 0.4) !important;
   background: rgba(239, 68, 68, 0.1) !important;
   animation: recordPulse 1s ease-in-out infinite;
 }

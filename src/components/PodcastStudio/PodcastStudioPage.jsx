@@ -152,6 +152,24 @@ const Ic = {
   ),
 };
 
+// ── Auto-grow helper — shared by the AI assistant input and every line
+// textarea. Grows height to fit content up to the CSS max-height, then lets
+// the textarea scroll internally past that. Defensive: wrapped in try/catch
+// so a measurement quirk (e.g. el not yet in the DOM) never blocks typing —
+// worst case, the textarea just keeps its normal CSS-defined height. ─────────
+function autoGrowTextarea(el) {
+  if (!el) return;
+  try {
+    el.style.height = 'auto';
+    const max = parseFloat(getComputedStyle(el).maxHeight) || Infinity;
+    const next = Math.min(el.scrollHeight, max);
+    el.style.height = `${next}px`;
+    el.style.overflowY = el.scrollHeight > max ? 'auto' : 'hidden';
+  } catch (e) {
+    // fail silently — textarea just behaves like a normal fixed-height box
+  }
+}
+
 // ── Lines reducer ─────────────────────────────────────────────────────────────
 const linesReducer = (state, action) => {
   switch (action.type) {
@@ -356,6 +374,13 @@ export default function PodcastStudioPage({ context, onClose }) {
   const [scriptLoading,    setScriptLoading]    = useState(false);
   const [latestScriptBlock, setLatestScriptBlock] = useState(null); // from ---SCRIPT--- marker
   const chatBubblesRef = useRef(null);
+  const scriptInputElRef = useRef(null);
+
+  // Auto-grow the AI input bar on every value change — covers live typing
+  // AND the programmatic setScriptInput('') reset after sending a message.
+  useEffect(() => {
+    autoGrowTextarea(scriptInputElRef.current);
+  }, [scriptInput]);
 
   // ── Recording state ───────────────────────────────────────────────────────
   // Per-line recording: one line records at a time.
@@ -1910,6 +1935,7 @@ if (context.topic) setTopic(context.topic);
                   {/* Input bar */}
                   <div className={styles.scriptInputBar}>
                     <textarea
+                      ref={scriptInputElRef}
                       className={styles.scriptInput}
                       placeholder={scriptMessages.length === 0 ? 'What\'s your podcast about?' : 'Refine the script…'}
                       value={scriptInput}
@@ -1944,6 +1970,10 @@ if (context.topic) setTopic(context.topic);
                       const lineColor = isHost ? '#6366F1' : '#10B981';
                       const lineName  = line.displayName || (isHost ? 'You' : 'Guest');
                       const lineRole  = isHost ? 'Host' : 'Guest';
+                      // Idea 2 — borderless tinted row. Same two speaker colors
+                      // already used by lineDot/lineTag, just at low opacity.
+                      const lineTint      = isHost ? 'rgba(99,102,241,0.07)' : 'rgba(16,185,129,0.06)';
+                      const lineTintHover = isHost ? 'rgba(99,102,241,0.11)' : 'rgba(16,185,129,0.10)';
                       const handleToggleSpeaker = () => {
                         const allSpeakers = speakers.length > 0
                           ? speakers
@@ -1956,6 +1986,7 @@ if (context.topic) setTopic(context.topic);
                       return (
                         <div key={line.id}
                           className={`${styles.lineCard} ${dragOver === i ? styles.lineCardDragOver : ''}`}
+                          style={{ '--line-tint': lineTint, '--line-tint-hover': lineTintHover }}
                           draggable
                           onDragStart={e => handleDragStart(e, i)}
                           onDragOver={e => handleDragOver(e, i)}
@@ -1974,10 +2005,14 @@ if (context.topic) setTopic(context.topic);
                               {lineName} · {lineRole}{speakers.length > 1 ? ' ↕' : ''}
                             </div>
                             <textarea
+                              ref={autoGrowTextarea}
                               className={styles.lineTextarea}
                               value={line.text}
                               placeholder="Type the line…"
-                              onChange={e => dispatchLines({ type: 'UPDATE', id: line.id, patch: { text: e.target.value } })}
+                              onChange={e => {
+                                dispatchLines({ type: 'UPDATE', id: line.id, patch: { text: e.target.value } });
+                                autoGrowTextarea(e.target);
+                              }}
                               rows={2}
                             />
                             {/* Live recording counter */}
