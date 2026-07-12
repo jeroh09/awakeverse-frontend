@@ -1,6 +1,15 @@
 /* ==========================================================
    AwakeVerse — Floating Trigger + Detached Panel Nav
    No header bar. AV pill top-left. Panel floats detached.
+
+   ✅ STEP 1 (viewport fix): .panelWrap / .panelOuter / .panel
+      now cap to the actual viewport height. .nav scrolls
+      internally if long; .footer (profile/billing/logout)
+      is pinned with flex-shrink:0 so it can never render
+      off-screen on short laptops.
+   ✅ STEP 2 (viewport fix): .profileMenu (upward popup) gets
+      the same max-height + overflow-y safety net so it can't
+      clip off the top of a short screen.
    ========================================================== */
 
 @import url('https://fonts.googleapis.com/css2?family=Caveat:wght@600&family=Syne:wght@700;800&family=Inter:wght@400;500;600&display=swap');
@@ -101,13 +110,19 @@
   pointer-events: auto;
 }
 
-/* ── Panel wrapper (positions + animates) ──────────────────── */
+/* ── Panel wrapper (positions + animates) ────────────────────
+   STEP 1: bottom:10px caps the wrapper to the viewport instead
+   of letting it grow forever from top:10px downward. display:flex
+   lets the panel below shrink to fit inside that capped space. */
 
 .panelWrap {
   position: fixed;
   top: 10px;
   left: 10px;
+  bottom: 10px;              /* NEW — hard viewport cap */
   z-index: 512;
+
+  display: flex;             /* NEW — allows children to respect max-height:100% */
 
   opacity: 0;
   pointer-events: none;
@@ -123,7 +138,9 @@
   transform: translateX(0) scale(1);
 }
 
-/* ── Double-border outer shell (onboarding .ob-panel technique) */
+/* ── Double-border outer shell (onboarding .ob-panel technique)
+   STEP 1: made flex + max-height:100% so it passes the cap down
+   to .panel instead of sizing itself off content alone. */
 
 .panelOuter {
   padding: 4px;
@@ -133,9 +150,16 @@
     0 0 0 4px rgba(15, 23, 42, 0.97),
     0 0 0 5px rgba(99, 102, 241, 0.22),
     0 24px 56px rgba(0, 0, 0, 0.72);
+
+  display: flex;              /* NEW */
+  max-height: 100%;           /* NEW */
 }
 
-/* ── Panel inner card ──────────────────────────────────────── */
+/* ── Panel inner card ──────────────────────────────────────── 
+   STEP 1: max-height:100% is the actual cap that stops the panel
+   from growing past the viewport. Combined with .nav (flexible,
+   scrollable) and .footer (flex-shrink:0, pinned), this guarantees
+   the profile/billing/logout footer is always visible. */
 
 .panel {
   width: 232px;
@@ -145,6 +169,7 @@
   display: flex;
   flex-direction: column;
   overflow: hidden;
+  max-height: 100%;            /* NEW */
 }
 
 /* ── Panel header ──────────────────────────────────────────── */
@@ -156,6 +181,7 @@
   align-items: flex-start;
   justify-content: space-between;
   gap: 8px;
+  flex-shrink: 0;              /* NEW — header never gets squeezed by nav/footer */
 }
 
 .panelHeadLeft {
@@ -203,13 +229,22 @@
   color: rgba(148, 163, 184, 0.9);
 }
 
-/* ── Nav ───────────────────────────────────────────────────── */
+/* ── Nav ───────────────────────────────────────────────────── 
+   STEP 1: this is the piece that now scrolls internally if the
+   nav list is ever taller than the space left after the header
+   and footer take their share. min-height:0 is required — without
+   it, flex children refuse to shrink below their content size in
+   Chrome/Firefox and overflow-y would silently do nothing. */
 
 .nav {
   padding: 6px 8px 4px;
   display: flex;
   flex-direction: column;
   gap: 1px;
+
+  flex: 1 1 auto;              /* NEW */
+  min-height: 0;               /* NEW */
+  overflow-y: auto;            /* NEW */
 }
 
 .sectionLabel {
@@ -269,11 +304,16 @@
   margin: 4px 8px;
 }
 
-/* ── Footer — avatar info row + ProfileButton ───────────────── */
+/* ── Footer — avatar info row + ProfileButton ───────────────── 
+   STEP 1: flex-shrink:0 is the key line — it guarantees the footer
+   (profile/billing/logout) can never be compressed or pushed out
+   of view by a long nav list. It always keeps its natural height
+   and stays fully visible at the bottom of the panel. */
 
 .footer {
   padding: 6px 8px 10px;
   border-top: 1px solid rgba(148, 163, 184, 0.09);
+  flex-shrink: 0;              /* NEW */
 }
 
 .footerUserRow {
@@ -285,6 +325,7 @@
   border-radius: 12px;
   background: rgba(15, 23, 42, 0.5);
   border: 1px solid rgba(148, 163, 184, 0.1);
+  position: relative;          /* NEW — anchors .profileMenu (position:absolute) correctly */
 }
 
 .avatarShell {
@@ -378,7 +419,12 @@
   transform: rotate(180deg);
 }
 
-/* ── Profile popup menu (opens upward) ────────────────────── */
+/* ── Profile popup menu (opens upward) ──────────────────────
+   STEP 2: max-height + overflow-y stop this popup from clipping
+   off the TOP of a short screen. The vh line is a safe fallback
+   for older browsers; the dvh line overrides it in modern ones
+   that track the real visible viewport (handles browser chrome,
+   zoom, etc. correctly). */
 
 .profileMenu {
   position: absolute;
@@ -402,6 +448,10 @@
   transition:
     opacity 0.18s ease,
     transform 0.18s cubic-bezier(0.32, 0.72, 0, 1);
+
+  max-height: calc(100vh - 40px);               /* NEW — fallback */
+  max-height: min(320px, calc(100dvh - 40px));   /* NEW — modern override */
+  overflow-y: auto;                              /* NEW */
 }
 
 .profileMenuOpen {
