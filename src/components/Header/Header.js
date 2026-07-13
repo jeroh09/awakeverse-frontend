@@ -160,6 +160,23 @@ const AwakeVerseWordmarkFull = ({ className }) => (
   </span>
 );
 
+// ✅ Sidebar-toggle glyph — universal "this panel slides" icon (panel + divider).
+// Was previously a Tabler Icons font glyph (`ti ti-layout-sidebar-left-expand`),
+// but that icon font was never imported anywhere in the project, so it silently
+// rendered nothing. Inline SVG instead — no external font dependency, matches
+// every other icon in this file.
+const SidebarToggleIcon = ({ className }) => (
+  <svg className={className} width="16" height="16" viewBox="0 0 24 24" fill="none">
+    <defs>
+      <filter id="sidebarGlow" x="-50%" y="-50%" width="200%" height="200%">
+        <feDropShadow dx="0" dy="0" stdDeviation="2" floodColor="#6366f1" floodOpacity="0.55" />
+      </filter>
+    </defs>
+    <rect x="3.5" y="5" width="17" height="14" rx="3" stroke="currentColor" strokeWidth="2" filter="url(#sidebarGlow)" />
+    <line x1="9.5" y1="5" x2="9.5" y2="19" stroke="currentColor" strokeWidth="2" filter="url(#sidebarGlow)" />
+  </svg>
+);
+
 // ─── Main component ───────────────────────────────────────────────────────────
 
 export default function Header() {
@@ -296,7 +313,7 @@ export default function Header() {
         <AwakeVerseWordmark className={styles.triggerWordmark} />
         <span className={styles.triggerSep} aria-hidden="true" />
         <span className={styles.triggerHome}>Home</span>
-        <i className={`ti ti-layout-sidebar-left-expand ${styles.triggerChevron}`} aria-hidden="true" />
+        <SidebarToggleIcon className={styles.triggerChevron} />
       </button>
 
       {/* ── Overlay — closes panel on click outside ── */}

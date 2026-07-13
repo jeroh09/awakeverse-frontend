@@ -62,7 +62,6 @@
 }
 
 .triggerChevron {
-  font-size: 13px;
   color: rgba(99, 102, 241, 0.6);
   flex-shrink: 0;
   transition: color 0.18s ease;
