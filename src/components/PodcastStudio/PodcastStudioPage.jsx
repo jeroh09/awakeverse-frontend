@@ -215,7 +215,7 @@ export default function PodcastStudioPage({ context, onClose }) {
     confirmAvatarPreview,
     bakeAvatarEnv,
     generateEnvironmentPreview,
-    confirmEnvironmentPreview,
+    deleteEnvironment,
     getCharacterRef,
     uploadAudio,
     createSession,
@@ -253,6 +253,7 @@ export default function PodcastStudioPage({ context, onClose }) {
   // sync app-wide, exactly as if the format toggle itself had been clicked.
   const [envPanelMode,     setEnvPanelMode]     = useState('browse'); // 'browse' | 'generate'
   const [genEnvCapacity,   setGenEnvCapacity]   = useState(null);     // null (sub-choice screen) | 2 | 3
+  const [genEnvId,         setGenEnvId]         = useState(null);     // set after first save — passed to regenerate IN PLACE
   const [genEnvDisplayName, setGenEnvDisplayName] = useState('');
   const [genEnvDescription, setGenEnvDescription] = useState('');
   const [genEnvPreviewUrl, setGenEnvPreviewUrl] = useState(null);
@@ -389,7 +390,24 @@ export default function PodcastStudioPage({ context, onClose }) {
     setGenEnvCapacity(capacity);
   }, [handleEnvModeSwitch]);
 
-  // ── Generate-environment: generate a preview ──────────────────────────────
+  // ── Generate-environment: change format — abandons the in-progress one ───
+  // A capacity change means a fundamentally different background, not an
+  // edit of the current one — reset genEnvId too so the next Generate
+  // creates a fresh row rather than overwriting the old one with a
+  // mismatched capacity.
+  const handleChangeGenFormat = useCallback(() => {
+    setGenEnvCapacity(null);
+    setGenEnvId(null);
+    setGenEnvPreviewUrl(null);
+    setGenEnvError(null);
+  }, []);
+
+  // ── Generate-environment: generate — AUTO-SAVES, usable immediately ───────
+  // No separate "Use this" step — backgrounds carry none of the
+  // likeness/rejection risk that gate exists for on the avatar side.
+  // Selecting it immediately means it's already the active choice the
+  // moment generation finishes; Regenerate below overwrites this same
+  // saved row rather than creating a new one each time.
   const handleGenerateEnvironment = useCallback(async () => {
     if (!genEnvDescription.trim() || !genEnvCapacity) return;
     setGenEnvLoading(true);
@@ -398,47 +416,45 @@ export default function PodcastStudioPage({ context, onClose }) {
       const result = await generateEnvironmentPreview({
         description:    genEnvDescription.trim(),
         guestCapacity:  genEnvCapacity,
+        displayName:    genEnvDisplayName.trim() || undefined,
+        envId:          genEnvId || undefined, // present on regenerate → overwrite in place
       });
-      setGenEnvPreviewUrl(result.previewUrl);
+      setGenEnvId(result.envId);
+      setGenEnvPreviewUrl(result.plateUrl);
+      setSelectedEnvId(result.envId); // already usable — select it right away
     } catch (e) {
       setGenEnvError(e.message || 'Background generation failed. Please try again.');
     } finally {
       setGenEnvLoading(false);
     }
-  }, [genEnvDescription, genEnvCapacity, generateEnvironmentPreview]);
+  }, [genEnvDescription, genEnvCapacity, genEnvDisplayName, genEnvId, generateEnvironmentPreview]);
 
-  // ── Generate-environment: regenerate (no attempt cap, unlike avatars) ────
+  // ── Generate-environment: regenerate — overwrites the SAME saved row ─────
   const handleRegenerateEnvironment = useCallback(() => {
     setGenEnvPreviewUrl(null);
     setGenEnvError(null);
     handleGenerateEnvironment();
   }, [handleGenerateEnvironment]);
 
-  // ── Generate-environment: approve — save it, select it, back to browse ───
-  const handleUseGeneratedEnvironment = useCallback(async () => {
-    if (!genEnvPreviewUrl) return;
-    setGenEnvLoading(true);
-    setGenEnvError(null);
+  // ── Generate-environment: done — back to browse, already saved+selected ──
+  const handleDoneGeneratingEnvironment = useCallback(() => {
+    setGenEnvCapacity(null);
+    setGenEnvId(null);
+    setGenEnvPreviewUrl(null);
+    setGenEnvDescription('');
+    setGenEnvDisplayName('');
+    setEnvPanelMode('browse'); // back to the grid — it's already there, tagged "Yours"
+  }, []);
+
+  // ── Delete a custom (user-generated) environment ──────────────────────────
+  const handleDeleteEnvironment = useCallback(async (envId) => {
     try {
-      const displayName = genEnvDisplayName.trim() || 'My Background';
-      const result = await confirmEnvironmentPreview({
-        previewUrl:     genEnvPreviewUrl,
-        displayName,
-        guestCapacity:  genEnvCapacity,
-        description:    genEnvDescription.trim(),
-      });
-      setSelectedEnvId(result.envId);
-      setGenEnvCapacity(null);
-      setGenEnvPreviewUrl(null);
-      setGenEnvDescription('');
-      setGenEnvDisplayName('');
-      setEnvPanelMode('browse'); // back to the grid — new background shows up highlighted
+      await deleteEnvironment(envId);
+      if (selectedEnvId === envId) setSelectedEnvId('studio_tech'); // fall back to a preset
     } catch (e) {
-      setGenEnvError(e.message || 'Failed to save background. Please try again.');
-    } finally {
-      setGenEnvLoading(false);
+      setGenEnvError(e.message || 'Failed to delete background.');
     }
-  }, [genEnvPreviewUrl, genEnvDisplayName, genEnvCapacity, genEnvDescription, confirmEnvironmentPreview]);
+  }, [deleteEnvironment, selectedEnvId]);
 
   // ── Script chat assistant ─────────────────────────────────────────────────
   // 'chat' = AI write mode (chat bubbles). 'lines' = edit lines mode (line cards).
@@ -2778,11 +2794,8 @@ if (context.topic) setTopic(context.topic);
             <div className={styles.glassCard} style={{ height: '100%' }}>
               <div className={styles.cardLabel}>Studio Backgrounds</div>
 
-              {/* Toggle pill — reuses existing scriptModeToggle CSS, now 3 options.
-                  envModeToggle widens it to fill the card (was width:fit-content,
-                  which overflowed once a 3rd item was added) and turns the
-                  Generate segment into a fixed-width icon-only square. */}
-              <div className={`${styles.scriptModeToggle} ${styles.envModeToggle}`} style={{ marginBottom: '0.6rem', flexShrink: 0 }}>
+              {/* Toggle pill — reuses existing scriptModeToggle CSS, now 3 options */}
+              <div className={styles.scriptModeToggle} style={{ marginBottom: '0.6rem', flexShrink: 0 }}>
                 <button
                   className={`${styles.scriptModeBtn} ${envPanelMode === 'browse' && envMode === 'standard' ? styles.scriptModeBtnActive : ''}`}
                   onClick={() => { handleEnvModeSwitch('standard'); setEnvPanelMode('browse'); }}
@@ -2792,7 +2805,7 @@ if (context.topic) setTopic(context.topic);
                   onClick={() => { handleEnvModeSwitch('panel'); setEnvPanelMode('browse'); }}
                   title="3-person panel">Panel · 3</button>
                 <button
-                  className={`${styles.scriptModeBtn} ${styles.envGenSeg} ${envPanelMode === 'generate' ? styles.scriptModeBtnActive : ''}`}
+                  className={`${styles.scriptModeBtn} ${envPanelMode === 'generate' ? styles.scriptModeBtnActive : ''}`}
                   onClick={() => {
                     // Only reset on a genuine fresh entry from browse mode —
                     // re-clicking Generate while already in it (e.g. after
@@ -2800,12 +2813,13 @@ if (context.topic) setTopic(context.topic);
                     // must NOT wipe an in-progress or already-generated preview.
                     if (envPanelMode !== 'generate') {
                       setGenEnvCapacity(null);
+                      setGenEnvId(null);
                       setGenEnvPreviewUrl(null);
                       setGenEnvError(null);
                     }
                     setEnvPanelMode('generate');
                   }}
-                  title="Generate your own background">+</button>
+                  title="Generate your own background"><Ic.ImageFrame /> Generate</button>
               </div>
 
               {envPanelMode === 'browse' ? (
@@ -2818,22 +2832,62 @@ if (context.topic) setTopic(context.topic);
                         .filter(env => envMode === 'panel'
                           ? env.guestCapacity === 3
                           : (env.guestCapacity ?? 2) !== 3)
-                        .map(env => (
-                        <div
-                          key={env.envId}
-                          className={`${styles.envCardWrap} ${selectedEnvId === env.envId ? styles.envCardWrapSelected : ''}`}
-                          onClick={() => activeTab !== 'generate' && setSelectedEnvId(env.envId)}
-                        >
-                          <div className={`${styles.envCard} ${selectedEnvId === env.envId ? styles.envCardSelected : ''} ${activeTab === 'generate' ? styles.envCardReadOnly : ''}`}>
-                            {env.previewUrl
-                              ? <img src={env.previewUrl} alt={env.name} className={styles.envImg} />
-                              : <div className={styles.envPlaceholder} />
-                            }
-                            {env.isCustom && <span className={styles.envCustomBadge}>Yours</span>}
+                        .map(env => {
+                          const isEnvConfirm = confirmDelete?.type === 'environment' && confirmDelete?.id === env.envId;
+                          return (
+                          <div
+                            key={env.envId}
+                            className={`${styles.envCardWrap} ${selectedEnvId === env.envId ? styles.envCardWrapSelected : ''}`}
+                            onClick={() => {
+                              if (confirmDelete) { setConfirmDelete(null); return; }
+                              if (activeTab !== 'generate') setSelectedEnvId(env.envId);
+                            }}
+                          >
+                            <div className={`${styles.envCard} ${selectedEnvId === env.envId ? styles.envCardSelected : ''} ${activeTab === 'generate' ? styles.envCardReadOnly : ''}`} style={{ position: 'relative' }}>
+                              {env.previewUrl
+                                ? <img src={env.previewUrl} alt={env.name} className={styles.envImg} />
+                                : <div className={styles.envPlaceholder} />
+                              }
+                              {env.isCustom && <span className={styles.envCustomBadge}>Yours</span>}
+
+                              {/* Delete control — custom environments only, same pattern as the avatar grid */}
+                              {env.isCustom && (isEnvConfirm ? (
+                                <button
+                                  style={{
+                                    position: 'absolute', bottom: 4, right: 4,
+                                    fontSize: '0.58rem', fontWeight: 700, padding: '0.15rem 0.4rem',
+                                    background: 'rgba(239,68,68,0.85)', color: '#fff',
+                                    border: '1px solid rgba(239,68,68,0.5)', borderRadius: 6,
+                                    cursor: 'pointer', fontFamily: 'Inter,sans-serif',
+                                  }}
+                                  onClick={async e => {
+                                    e.stopPropagation();
+                                    await handleDeleteEnvironment(env.envId);
+                                    setConfirmDelete(null);
+                                  }}
+                                >
+                                  Sure?
+                                </button>
+                              ) : (
+                                <button
+                                  style={{
+                                    position: 'absolute', bottom: 4, right: 4,
+                                    fontSize: '0.58rem', fontWeight: 700, padding: '0.15rem 0.4rem',
+                                    background: 'rgba(10,15,30,0.7)', color: '#64748b',
+                                    border: '1px solid rgba(148,163,184,0.15)', borderRadius: 6,
+                                    cursor: 'pointer', fontFamily: 'Inter,sans-serif',
+                                    opacity: 0,
+                                  }}
+                                  className={styles.avatarDeleteBtn}
+                                  onClick={e => { e.stopPropagation(); setConfirmDelete({ type: 'environment', id: env.envId }); }}
+                                >
+                                  ✕
+                                </button>
+                              ))}
+                            </div>
+                            <span className={styles.envName}>{env.name}</span>
                           </div>
-                          <span className={styles.envName}>{env.name}</span>
-                        </div>
-                      ))}
+                        );})}
                     </div>
                   )}
                   {selectedEnv && (
@@ -2888,7 +2942,7 @@ if (context.topic) setTopic(context.topic);
                         >
                           {genEnvLoading ? <><span className={styles.spin}><Ic.Spin /></span> Generating…</> : <><Ic.ImageFrame /> Generate</>}
                         </button>
-                        <button className={styles.genSecondaryBtn} onClick={() => setGenEnvCapacity(null)}>
+                        <button className={styles.genSecondaryBtn} onClick={handleChangeGenFormat}>
                           ← Change format
                         </button>
                       </div>
@@ -2896,15 +2950,18 @@ if (context.topic) setTopic(context.topic);
                     </>
                   )}
 
-                  {/* Preview — approve or regenerate, no attempt cap */}
+                  {/* Preview — already saved and selected the moment it appears */}
                   {genEnvPreviewUrl && (
                     <>
                       <div className={styles.genPreviewImgBox} style={{ width: '100%', height: 140 }}>
                         <img src={genEnvPreviewUrl} alt="Generated background preview" className={styles.genPreviewImg} />
                       </div>
+                      <p className={styles.genEnvIntro} style={{ margin: '0.4rem 0' }}>
+                        Saved and selected — regenerate if you want a different result.
+                      </p>
                       <div className={styles.genFooterRow}>
-                        <button className={styles.buildBtn} onClick={handleUseGeneratedEnvironment} disabled={genEnvLoading}>
-                          {genEnvLoading ? <><span className={styles.spin}><Ic.Spin /></span> Saving…</> : <><Ic.Check /> Use this</>}
+                        <button className={styles.buildBtn} onClick={handleDoneGeneratingEnvironment} disabled={genEnvLoading}>
+                          <Ic.Check /> Done
                         </button>
                         <button className={styles.genSecondaryBtn} onClick={handleRegenerateEnvironment} disabled={genEnvLoading}>
                           {genEnvLoading ? <><span className={styles.spin}><Ic.Spin /></span> Regenerating…</> : <><Ic.Refresh /> Regenerate</>}
