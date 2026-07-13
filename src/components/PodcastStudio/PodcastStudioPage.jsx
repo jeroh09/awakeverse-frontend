@@ -2196,18 +2196,18 @@ if (context.topic) setTopic(context.topic);
 
               {/* Progress steps */}
               <div className={styles.glassCard}>
-                <div className={styles.cardLabel}>Render progress</div>
+                <div className={styles.cardLabel}>Creating your podcast</div>
                 {[
-                  { label: 'Environment plate', detail: selectedEnv?.name || selectedEnvId, done: true },
-                  { label: 'Avatar composition', detail: `${speakers.length} speaker${speakers.length !== 1 ? 's' : ''} ready`, done: avatarBuilt },
+                  { label: 'Background', detail: selectedEnv?.name || selectedEnvId, done: true },
+                  { label: 'Your speakers', detail: `${speakers.length} speaker${speakers.length !== 1 ? 's' : ''} ready`, done: avatarBuilt },
                   {
-                    label: 'Rendering beats',
+                    label: 'Rendering video',
                     detail: state.status === 'rendering' ? `${Math.round(state.progress * 100)}% complete` : 'Waiting to start',
                     active: state.status === 'rendering',
                     done:   state.status === 'complete',
                     progress: state.status === 'rendering' ? state.progress : null,
                   },
-                  { label: 'Assembly', detail: 'Concat · ambient bed · captions', done: state.status === 'complete' },
+                  { label: 'Finishing touches', detail: 'Captions', done: state.status === 'complete' },
                 ].map((step, i) => (
                   <div key={i} className={styles.progStep}>
                     <div className={`${styles.stepIcon} ${step.done ? styles.sDone : step.active ? styles.sActive : styles.sPend}`}>

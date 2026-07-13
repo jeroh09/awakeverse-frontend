@@ -134,7 +134,7 @@
 
 /* ── Right environment panel ───────────────────────────────────────────────── */
 .envPanel {
-  width: 280px;
+  width: 330px; /* was 280px — +50px, .content (flex:1) absorbs the difference automatically */
   flex-shrink: 0;
   min-height: 0;
   display: flex;
