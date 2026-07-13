@@ -193,6 +193,7 @@ export default function usePodcastStudio() {
             previewUrl:    e.preview_url,
             displayOrder:  e.display_order,
             guestCapacity: e.guest_capacity ?? 2,  // 2=standard two-chair, 3=panel three-chair
+            isCustom:      !!e.is_custom,          // true = user-generated, only visible to its owner
           }))
         );
         console.log(`🏗️  Environments loaded: ${data.environments?.length}`);
@@ -1189,6 +1190,140 @@ export default function usePodcastStudio() {
 
   // ── Reset — mirrors useContentGeneration.resetContent ────────────────────
 
+  // ── Generate a background preview from a text description ────────────────
+  //
+  // Preview only — no DB write, nothing saved yet. Simpler than
+  // generateAvatarPreview: no attempt cap, no rejection state — a
+  // background carries essentially none of the likeness risk a person's
+  // face does. Seating/chair orientation is handled entirely server-side
+  // (guestCapacity is all this needs to send); nothing about it is left
+  // to the description.
+  //
+  // Naming (Frontend Hook ←→ Backend):
+  //   description    →  description       free-text scene description
+  //   guestCapacity  →  guest_capacity    2 or 3 — matches the sub-choice picked
+  //   previewUrl     ←  preview_url       CDN URL — display as <img src> in UI
+  const generateEnvironmentPreview = useCallback(async ({ description, guestCapacity = 2 }) => {
+    if (!description?.trim()) throw new Error('Description is required');
+
+    const res = await fetch(`${API_BASE}/api/podcast/environment/generate-preview`, {
+      method:      'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'X-CSRF-Token': getCsrf(),
+      },
+      credentials: 'include',
+      body: JSON.stringify({
+        description,
+        guest_capacity: guestCapacity,
+      }),
+    });
+
+    const data = await res.json();
+    if (!res.ok) {
+      ApiErrorService.log('usePodcastStudio.generateEnvironmentPreview', res.status, data);
+      throw new Error(ApiErrorService.getMessage(res.status, data));
+    }
+
+    console.log(`🖼️  Environment preview generated: capacity=${guestCapacity}`);
+    return { previewUrl: data.preview_url };
+  }, []);
+
+
+  // ── Confirm a background preview — saves it as a reusable environment ────
+  //
+  // Synchronous — no job/poll, this is a straight DB write. Refreshes
+  // `environments` afterward so the new one shows up in the grid
+  // immediately, same self-refreshing pattern as buildAvatar/bakeAvatarEnv.
+  //
+  // Naming (Frontend Hook ←→ Backend):
+  //   previewUrl     →  preview_url      approved CDN URL from generate-preview
+  //   displayName    →  display_name
+  //   guestCapacity  →  guest_capacity
+  //   description    →  description      original text, kept for audit/regenerate
+  //   envId          ←  env_id           usable immediately, same as any preset env_id
+  //   plateUrl       ←  plate_url
+  const confirmEnvironmentPreview = useCallback(async ({
+    previewUrl, displayName, guestCapacity = 2, description = '',
+  }) => {
+    if (!previewUrl)   throw new Error('previewUrl is required');
+    if (!displayName)  throw new Error('displayName is required');
+
+    const res = await fetch(`${API_BASE}/api/podcast/environment/confirm-preview`, {
+      method:      'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'X-CSRF-Token': getCsrf(),
+      },
+      credentials: 'include',
+      body: JSON.stringify({
+        preview_url:    previewUrl,
+        display_name:   displayName,
+        guest_capacity: guestCapacity,
+        description,
+      }),
+    });
+
+    const data = await res.json();
+    if (!res.ok) {
+      ApiErrorService.log('usePodcastStudio.confirmEnvironmentPreview', res.status, data);
+      throw new Error(ApiErrorService.getMessage(res.status, data));
+    }
+
+    console.log(`✅ Environment saved: ${data.env_id}`);
+    await loadEnvironments(); // refresh so it shows up in the grid immediately
+    return { envId: data.env_id, plateUrl: data.plate_url };
+  }, [loadEnvironments]);
+
+
+  // ── Bake an existing avatar into a (possibly new) environment ────────────
+  //
+  // This is the correct call for "select a saved avatar, but it hasn't been
+  // baked for the currently-selected environment yet." It hits the dedicated
+  // bake endpoint, which checks podcast_avatar_envs for this (avatarId, envId)
+  // pair server-side and reuses it if found — no new avatar_id is ever minted.
+  //
+  // Do NOT use buildAvatar for this — buildAvatar mints a brand-new avatar_id
+  // on every call, which is correct for "build a fresh avatar from a photo"
+  // but wrong here: it would silently create a duplicate avatar record for
+  // a photo that already has one, just because a different env was picked.
+  //
+  // Naming (Frontend Hook ←→ Backend, POST /api/podcast/avatar/<avatarId>/bake/<envId>):
+  //   avatarId     →  (URL param)
+  //   envId        →  (URL param)
+  //   avatarId     ←  avatar_id
+  //   envId        ←  env_id
+  //   bakedRefUrl  ←  baked_ref_url
+  //
+  // Synchronous — 200 response, no job/poll (unlike buildAvatar/confirmAvatarPreview).
+  const bakeAvatarEnv = useCallback(async ({ avatarId, envId }) => {
+    if (!avatarId) throw new Error('avatarId is required');
+    if (!envId)    throw new Error('envId is required');
+
+    const res = await fetch(
+      `${API_BASE}/api/podcast/avatar/${avatarId}/bake/${envId}`,
+      {
+        method:      'POST',
+        headers: { 'X-CSRF-Token': getCsrf() },
+        credentials: 'include',
+      }
+    );
+
+    const data = await res.json();
+    if (!res.ok) {
+      ApiErrorService.log('usePodcastStudio.bakeAvatarEnv', res.status, data);
+      throw new Error(ApiErrorService.getMessage(res.status, data));
+    }
+
+    console.log(`♻️  Avatar baked for env: ${data.avatar_id} × ${data.env_id}`);
+    await loadAvatars(); // refresh so this env is cached client-side next time
+    return {
+      avatarId:    data.avatar_id,
+      envId:       data.env_id,
+      bakedRefUrl: data.baked_ref_url,
+    };
+  }, [loadAvatars]);
+
   const resetStudio = useCallback(() => {
     stopPolling();
     activeSessionId.current = null;
@@ -1213,6 +1348,9 @@ export default function usePodcastStudio() {
     buildAvatar,            // (params) → { avatarId, avatarRefUrl, envId, previewUrl }
     generateAvatarPreview,  // ({description, displayName, attemptNumber}) → { previewUrl, attemptNumber }
     confirmAvatarPreview,   // ({previewUrl, displayName, envId, position}) → { avatarId, avatarRefUrl, envId, previewUrl } — same shape as buildAvatar
+    bakeAvatarEnv,          // ({avatarId, envId}) → { avatarId, envId, bakedRefUrl } — for re-baking a SAVED avatar into a new env, dedup'd server-side
+    generateEnvironmentPreview, // ({description, guestCapacity}) → { previewUrl }
+    confirmEnvironmentPreview,  // ({previewUrl, displayName, guestCapacity, description}) → { envId, plateUrl }
     getCharacterRef,        // (key)    → { characterRefUrl, characterVoiceId, characterDisplayName }
     deleteAvatar,           // (avatarId) → void (refreshes avatars list)
 

@@ -1034,6 +1034,65 @@
   background: linear-gradient(135deg, #0f0c29, #302b63);
 }
 
+/* Small corner tag distinguishing a user-generated background from a preset */
+.envCustomBadge {
+  position: absolute;
+  top: 5px;
+  right: 5px;
+  padding: 0.12rem 0.4rem;
+  border-radius: var(--radius-pill);
+  background: rgba(99,102,241,0.85);
+  color: #fff;
+  font-size: 0.58rem;
+  font-weight: 600;
+  font-family: 'Inter', sans-serif;
+  letter-spacing: 0.02em;
+}
+
+/* Generate-background sub-choice screen */
+.genEnvIntro {
+  font-size: 0.75rem;
+  color: var(--text-muted);
+  margin: 0 0 0.6rem;
+  font-family: 'Inter', sans-serif;
+}
+
+.genEnvCapacityChoices {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.genEnvCapacityCard {
+  text-align: left;
+  padding: 0.65rem 0.8rem;
+  border-radius: 10px;
+  border: var(--ring-border);
+  background: rgba(148,163,184,0.06);
+  cursor: pointer;
+  transition: all 0.15s;
+}
+
+.genEnvCapacityCard:hover {
+  border-color: rgba(99,102,241,0.5);
+  background: rgba(99,102,241,0.08);
+}
+
+.genEnvCapacityTitle {
+  font-size: 0.8rem;
+  font-weight: 600;
+  color: var(--indigo-light);
+  margin-bottom: 0.2rem;
+  font-family: 'Inter', sans-serif;
+}
+
+.genEnvCapacityDesc {
+  font-size: 0.7rem;
+  color: var(--text-muted);
+  line-height: 1.4;
+  font-family: 'Inter', sans-serif;
+}
+
 /* Name sits below the image, not overlaid */
 .envName {
   font-size: 0.62rem;
@@ -1970,12 +2029,11 @@
   border: 1px solid rgba(148, 163, 184, 0.18);
   border-radius: 14px;
   flex-shrink: 0;
-  transition: border-color 0.15s ease, box-shadow 0.15s ease;
+  transition: border-color 0.15s ease;
 }
 
 .scriptInputBar:focus-within {
-  border-color: rgba(99, 102, 241, 0.55);
-  box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.14);
+  border-color: rgba(99, 102, 241, 0.6);
 }
 
 .scriptInput {

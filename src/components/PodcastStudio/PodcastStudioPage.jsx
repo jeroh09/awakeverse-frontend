@@ -213,6 +213,9 @@ export default function PodcastStudioPage({ context, onClose }) {
     buildAvatar,
     generateAvatarPreview,
     confirmAvatarPreview,
+    bakeAvatarEnv,
+    generateEnvironmentPreview,
+    confirmEnvironmentPreview,
     getCharacterRef,
     uploadAudio,
     createSession,
@@ -241,6 +244,20 @@ export default function PodcastStudioPage({ context, onClose }) {
   const [selectedEnvId, setSelectedEnvId] = useState('studio_tech');
   // envMode: 'standard' = two-chair (max 1 guest), 'panel' = three-chair (max 2 guests)
   const [envMode, setEnvMode] = useState('standard');
+
+  // ── Environment — GENERATE mode (text description → custom background) ────
+  // envPanelMode is a UI-layer toggle only ('browse' the existing grid vs
+  // 'generate' a new one) — it does NOT carry capacity. Capacity is set by
+  // picking a sub-choice (handlePickGenCapacity), which also calls
+  // handleEnvModeSwitch so envMode/maxGuests/the guest slots all stay in
+  // sync app-wide, exactly as if the format toggle itself had been clicked.
+  const [envPanelMode,     setEnvPanelMode]     = useState('browse'); // 'browse' | 'generate'
+  const [genEnvCapacity,   setGenEnvCapacity]   = useState(null);     // null (sub-choice screen) | 2 | 3
+  const [genEnvDisplayName, setGenEnvDisplayName] = useState('');
+  const [genEnvDescription, setGenEnvDescription] = useState('');
+  const [genEnvPreviewUrl, setGenEnvPreviewUrl] = useState(null);
+  const [genEnvLoading,    setGenEnvLoading]    = useState(false);
+  const [genEnvError,      setGenEnvError]      = useState(null);
 
   // ── Speakers ──────────────────────────────────────────────────────────────
   const [speakers, setSpeakers] = useState([]);
@@ -362,6 +379,66 @@ export default function PodcastStudioPage({ context, onClose }) {
       setGuest2Name('');   setGuest2Built(false); setGuest2Error(null);
     }
   }, []);
+
+  // ── Generate-environment: pick a sub-choice (2 or 3 guests) ───────────────
+  // Reuses handleEnvModeSwitch so the rest of the app (maxGuests, guest
+  // slots, env grid filter) is already in sync the moment a sub-choice is
+  // picked — identical to what clicking the format toggle itself would do.
+  const handlePickGenCapacity = useCallback((capacity) => {
+    handleEnvModeSwitch(capacity === 3 ? 'panel' : 'standard');
+    setGenEnvCapacity(capacity);
+  }, [handleEnvModeSwitch]);
+
+  // ── Generate-environment: generate a preview ──────────────────────────────
+  const handleGenerateEnvironment = useCallback(async () => {
+    if (!genEnvDescription.trim() || !genEnvCapacity) return;
+    setGenEnvLoading(true);
+    setGenEnvError(null);
+    try {
+      const result = await generateEnvironmentPreview({
+        description:    genEnvDescription.trim(),
+        guestCapacity:  genEnvCapacity,
+      });
+      setGenEnvPreviewUrl(result.previewUrl);
+    } catch (e) {
+      setGenEnvError(e.message || 'Background generation failed. Please try again.');
+    } finally {
+      setGenEnvLoading(false);
+    }
+  }, [genEnvDescription, genEnvCapacity, generateEnvironmentPreview]);
+
+  // ── Generate-environment: regenerate (no attempt cap, unlike avatars) ────
+  const handleRegenerateEnvironment = useCallback(() => {
+    setGenEnvPreviewUrl(null);
+    setGenEnvError(null);
+    handleGenerateEnvironment();
+  }, [handleGenerateEnvironment]);
+
+  // ── Generate-environment: approve — save it, select it, back to browse ───
+  const handleUseGeneratedEnvironment = useCallback(async () => {
+    if (!genEnvPreviewUrl) return;
+    setGenEnvLoading(true);
+    setGenEnvError(null);
+    try {
+      const displayName = genEnvDisplayName.trim() || 'My Background';
+      const result = await confirmEnvironmentPreview({
+        previewUrl:     genEnvPreviewUrl,
+        displayName,
+        guestCapacity:  genEnvCapacity,
+        description:    genEnvDescription.trim(),
+      });
+      setSelectedEnvId(result.envId);
+      setGenEnvCapacity(null);
+      setGenEnvPreviewUrl(null);
+      setGenEnvDescription('');
+      setGenEnvDisplayName('');
+      setEnvPanelMode('browse'); // back to the grid — new background shows up highlighted
+    } catch (e) {
+      setGenEnvError(e.message || 'Failed to save background. Please try again.');
+    } finally {
+      setGenEnvLoading(false);
+    }
+  }, [genEnvPreviewUrl, genEnvDisplayName, genEnvCapacity, genEnvDescription, confirmEnvironmentPreview]);
 
   // ── Script chat assistant ─────────────────────────────────────────────────
   // 'chat' = AI write mode (chat bubbles). 'lines' = edit lines mode (line cards).
@@ -1407,16 +1484,21 @@ if (context.topic) setTopic(context.topic);
                               return;
                             }
 
-                            // ── Not cached — bake now ──────────────────────
-                            const photoUrl = av.photoUrl;
-                            if (!photoUrl) return;
-                            const result = await buildAvatar({ photoUrl, displayName, envId: selectedEnvId, position: 'right' })
-                              .catch(e => { setBuildError(e.message); return null; });
+                            // ── Not cached — bake THIS avatar into the new env ──
+                            // bakeAvatarEnv reuses av.avatarId and is deduped
+                            // server-side — it will never create a duplicate
+                            // avatar record. (Do not use buildAvatar here: that
+                            // path is for building a brand-new avatar from a
+                            // fresh photo, and mints a new avatarId every call.)
+                            setBuildStage('baking');
+                            const result = await bakeAvatarEnv({ avatarId: av.avatarId, envId: selectedEnvId })
+                              .catch(e => { setBuildError(e.message); return null; })
+                              .finally(() => setBuildStage(null));
                             if (!result) return;
                             setAvatarBuilt(true);
-                            setAvatarRefUrl(result.avatarRefUrl);
+                            setAvatarRefUrl(result.bakedRefUrl);
                             setSpeakers(prev => {
-                              const entry = { speakerId: 'user', displayName, avatarRefUrl: result.avatarRefUrl,
+                              const entry = { speakerId: 'user', displayName, avatarRefUrl: result.bakedRefUrl,
                                 voiceMode: 'tts', voiceId: '21m00Tcm4TlvDq8ikWAM', gender: 'female',
                                 color: SPEAKER_COLORS[0], isCharacter: false, role: 'host', savedAvatarId: av.avatarId };
                               const already = prev.find(s => s.speakerId === 'user');
@@ -2696,46 +2778,132 @@ if (context.topic) setTopic(context.topic);
             <div className={styles.glassCard} style={{ height: '100%' }}>
               <div className={styles.cardLabel}>Studio Backgrounds</div>
 
-              {/* Toggle pill — reuses existing scriptModeToggle CSS */}
+              {/* Toggle pill — reuses existing scriptModeToggle CSS, now 3 options */}
               <div className={styles.scriptModeToggle} style={{ marginBottom: '0.6rem', flexShrink: 0 }}>
                 <button
-                  className={`${styles.scriptModeBtn} ${envMode === 'standard' ? styles.scriptModeBtnActive : ''}`}
-                  onClick={() => handleEnvModeSwitch('standard')}
+                  className={`${styles.scriptModeBtn} ${envPanelMode === 'browse' && envMode === 'standard' ? styles.scriptModeBtnActive : ''}`}
+                  onClick={() => { handleEnvModeSwitch('standard'); setEnvPanelMode('browse'); }}
                   title="1–2 person podcast">1–2 Guests</button>
                 <button
-                  className={`${styles.scriptModeBtn} ${envMode === 'panel' ? styles.scriptModeBtnActive : ''}`}
-                  onClick={() => handleEnvModeSwitch('panel')}
+                  className={`${styles.scriptModeBtn} ${envPanelMode === 'browse' && envMode === 'panel' ? styles.scriptModeBtnActive : ''}`}
+                  onClick={() => { handleEnvModeSwitch('panel'); setEnvPanelMode('browse'); }}
                   title="3-person panel">Panel · 3</button>
+                <button
+                  className={`${styles.scriptModeBtn} ${envPanelMode === 'generate' ? styles.scriptModeBtnActive : ''}`}
+                  onClick={() => {
+                    setEnvPanelMode('generate');
+                    setGenEnvCapacity(null);
+                    setGenEnvPreviewUrl(null);
+                    setGenEnvError(null);
+                  }}
+                  title="Generate your own background"><Ic.ImageFrame /> Generate</button>
               </div>
 
-              {envsLoading ? (
-                <div className={styles.loadingHint}>Loading…</div>
-              ) : (
-                <div className={styles.envGrid}>
-                  {environments
-                    .filter(env => envMode === 'panel'
-                      ? env.guestCapacity === 3
-                      : (env.guestCapacity ?? 2) !== 3)
-                    .map(env => (
-                    <div
-                      key={env.envId}
-                      className={`${styles.envCardWrap} ${selectedEnvId === env.envId ? styles.envCardWrapSelected : ''}`}
-                      onClick={() => activeTab !== 'generate' && setSelectedEnvId(env.envId)}
-                    >
-                      <div className={`${styles.envCard} ${selectedEnvId === env.envId ? styles.envCardSelected : ''} ${activeTab === 'generate' ? styles.envCardReadOnly : ''}`}>
-                        {env.previewUrl
-                          ? <img src={env.previewUrl} alt={env.name} className={styles.envImg} />
-                          : <div className={styles.envPlaceholder} />
-                        }
-                      </div>
-                      <span className={styles.envName}>{env.name}</span>
+              {envPanelMode === 'browse' ? (
+                <>
+                  {envsLoading ? (
+                    <div className={styles.loadingHint}>Loading…</div>
+                  ) : (
+                    <div className={styles.envGrid}>
+                      {environments
+                        .filter(env => envMode === 'panel'
+                          ? env.guestCapacity === 3
+                          : (env.guestCapacity ?? 2) !== 3)
+                        .map(env => (
+                        <div
+                          key={env.envId}
+                          className={`${styles.envCardWrap} ${selectedEnvId === env.envId ? styles.envCardWrapSelected : ''}`}
+                          onClick={() => activeTab !== 'generate' && setSelectedEnvId(env.envId)}
+                        >
+                          <div className={`${styles.envCard} ${selectedEnvId === env.envId ? styles.envCardSelected : ''} ${activeTab === 'generate' ? styles.envCardReadOnly : ''}`}>
+                            {env.previewUrl
+                              ? <img src={env.previewUrl} alt={env.name} className={styles.envImg} />
+                              : <div className={styles.envPlaceholder} />
+                            }
+                            {env.isCustom && <span className={styles.envCustomBadge}>Yours</span>}
+                          </div>
+                          <span className={styles.envName}>{env.name}</span>
+                        </div>
+                      ))}
                     </div>
-                  ))}
-                </div>
-              )}
-              {selectedEnv && (
-                <div className={styles.envSelected}>
-                  Selected: <strong>{selectedEnv.name}</strong>
+                  )}
+                  {selectedEnv && (
+                    <div className={styles.envSelected}>
+                      Selected: <strong>{selectedEnv.name}</strong>
+                    </div>
+                  )}
+                </>
+              ) : (
+                <div className={styles.genPanel}>
+
+                  {/* Sub-choice screen — capacity not picked yet */}
+                  {genEnvCapacity === null && (
+                    <>
+                      <p className={styles.genEnvIntro}>Choose a format for your background:</p>
+                      <div className={styles.genEnvCapacityChoices}>
+                        <button className={styles.genEnvCapacityCard} onClick={() => handlePickGenCapacity(2)}>
+                          <div className={styles.genEnvCapacityTitle}>2 Guests</div>
+                          <div className={styles.genEnvCapacityDesc}>A cozy medium shot for you and one guest, side by side.</div>
+                        </button>
+                        <button className={styles.genEnvCapacityCard} onClick={() => handlePickGenCapacity(3)}>
+                          <div className={styles.genEnvCapacityTitle}>3 Guests · Panel</div>
+                          <div className={styles.genEnvCapacityDesc}>A wider panel shot with room for two guests alongside you.</div>
+                        </button>
+                      </div>
+                    </>
+                  )}
+
+                  {/* Form — capacity picked, no preview yet */}
+                  {genEnvCapacity !== null && !genEnvPreviewUrl && (
+                    <>
+                      <input
+                        type="text"
+                        className={styles.genNameInput}
+                        placeholder="Name this background…"
+                        value={genEnvDisplayName}
+                        onChange={e => setGenEnvDisplayName(e.target.value)}
+                      />
+                      <textarea
+                        className={styles.genDescInput}
+                        rows={3}
+                        placeholder="Describe the setting — e.g. 'A modern loft with exposed brick and string lights'"
+                        value={genEnvDescription}
+                        onChange={e => setGenEnvDescription(e.target.value)}
+                      />
+                      <div className={styles.genFooterRow}>
+                        <button
+                          className={styles.buildBtn}
+                          style={{ width: 'auto', padding: '0.5rem 1.1rem' }}
+                          onClick={handleGenerateEnvironment}
+                          disabled={genEnvLoading || !genEnvDescription.trim()}
+                        >
+                          {genEnvLoading ? <><span className={styles.spin}><Ic.Spin /></span> Generating…</> : <><Ic.ImageFrame /> Generate</>}
+                        </button>
+                        <button className={styles.genSecondaryBtn} onClick={() => setGenEnvCapacity(null)}>
+                          ← Change format
+                        </button>
+                      </div>
+                      {genEnvError && <div className={styles.errorBox}>{genEnvError}</div>}
+                    </>
+                  )}
+
+                  {/* Preview — approve or regenerate, no attempt cap */}
+                  {genEnvPreviewUrl && (
+                    <>
+                      <div className={styles.genPreviewImgBox} style={{ width: '100%', height: 140 }}>
+                        <img src={genEnvPreviewUrl} alt="Generated background preview" className={styles.genPreviewImg} />
+                      </div>
+                      <div className={styles.genFooterRow}>
+                        <button className={styles.buildBtn} onClick={handleUseGeneratedEnvironment} disabled={genEnvLoading}>
+                          {genEnvLoading ? <><span className={styles.spin}><Ic.Spin /></span> Saving…</> : <><Ic.Check /> Use this</>}
+                        </button>
+                        <button className={styles.genSecondaryBtn} onClick={handleRegenerateEnvironment} disabled={genEnvLoading}>
+                          {genEnvLoading ? <><span className={styles.spin}><Ic.Spin /></span> Regenerating…</> : <><Ic.Refresh /> Regenerate</>}
+                        </button>
+                      </div>
+                      {genEnvError && <div className={styles.errorBox}>{genEnvError}</div>}
+                    </>
+                  )}
                 </div>
               )}
             </div>
