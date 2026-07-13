@@ -2791,10 +2791,16 @@ if (context.topic) setTopic(context.topic);
                 <button
                   className={`${styles.scriptModeBtn} ${envPanelMode === 'generate' ? styles.scriptModeBtnActive : ''}`}
                   onClick={() => {
+                    // Only reset on a genuine fresh entry from browse mode —
+                    // re-clicking Generate while already in it (e.g. after
+                    // tabbing over to peek at the browse grid and back)
+                    // must NOT wipe an in-progress or already-generated preview.
+                    if (envPanelMode !== 'generate') {
+                      setGenEnvCapacity(null);
+                      setGenEnvPreviewUrl(null);
+                      setGenEnvError(null);
+                    }
                     setEnvPanelMode('generate');
-                    setGenEnvCapacity(null);
-                    setGenEnvPreviewUrl(null);
-                    setGenEnvError(null);
                   }}
                   title="Generate your own background"><Ic.ImageFrame /> Generate</button>
               </div>
