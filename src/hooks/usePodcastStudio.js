@@ -1190,20 +1190,31 @@ export default function usePodcastStudio() {
 
   // ── Reset — mirrors useContentGeneration.resetContent ────────────────────
 
-  // ── Generate a background preview from a text description ────────────────
+  // ── Generate a background — AUTO-SAVES immediately ────────────────────────
   //
-  // Preview only — no DB write, nothing saved yet. Simpler than
-  // generateAvatarPreview: no attempt cap, no rejection state — a
-  // background carries essentially none of the likeness risk a person's
-  // face does. Seating/chair orientation is handled entirely server-side
+  // No separate confirm step (unlike avatars, which gate on approval —
+  // backgrounds carry none of the likeness/rejection risk that gate exists
+  // for). Usable right away, same as any preset, the moment this resolves.
+  //
+  // Pass `envId` to regenerate an existing one IN PLACE (same row, same
+  // storage key overwritten) — this is what stops Regenerate from
+  // creating duplicate saved entries every time it's clicked.
+  //
+  // No attempt cap, no rejection state — simpler than generateAvatarPreview
+  // by design. Seating/chair orientation is handled entirely server-side
   // (guestCapacity is all this needs to send); nothing about it is left
   // to the description.
   //
   // Naming (Frontend Hook ←→ Backend):
   //   description    →  description       free-text scene description
   //   guestCapacity  →  guest_capacity    2 or 3 — matches the sub-choice picked
-  //   previewUrl     ←  preview_url       CDN URL — display as <img src> in UI
-  const generateEnvironmentPreview = useCallback(async ({ description, guestCapacity = 2 }) => {
+  //   displayName    →  display_name      defaults to "My Background" server-side
+  //   envId          →  env_id            optional — pass to regenerate IN PLACE
+  //   envId          ←  env_id            the saved (or updated) row's id
+  //   plateUrl       ←  plate_url         CDN URL — usable immediately
+  const generateEnvironmentPreview = useCallback(async ({
+    description, guestCapacity = 2, displayName, envId,
+  }) => {
     if (!description?.trim()) throw new Error('Description is required');
 
     const res = await fetch(`${API_BASE}/api/podcast/environment/generate-preview`, {
@@ -1216,6 +1227,8 @@ export default function usePodcastStudio() {
       body: JSON.stringify({
         description,
         guest_capacity: guestCapacity,
+        display_name:   displayName,
+        env_id:         envId,
       }),
     });
 
@@ -1225,54 +1238,38 @@ export default function usePodcastStudio() {
       throw new Error(ApiErrorService.getMessage(res.status, data));
     }
 
-    console.log(`🖼️  Environment preview generated: capacity=${guestCapacity}`);
-    return { previewUrl: data.preview_url };
-  }, []);
+    console.log(`🖼️  Environment saved: ${data.env_id} capacity=${guestCapacity}`);
+    await loadEnvironments(); // refresh so it shows up in the grid immediately
+    return { envId: data.env_id, plateUrl: data.plate_url };
+  }, [loadEnvironments]);
 
 
-  // ── Confirm a background preview — saves it as a reusable environment ────
+  // ── Delete a custom (user-generated) environment ──────────────────────────
   //
-  // Synchronous — no job/poll, this is a straight DB write. Refreshes
-  // `environments` afterward so the new one shows up in the grid
-  // immediately, same self-refreshing pattern as buildAvatar/bakeAvatarEnv.
+  // Presets can't be deleted through this — scoped server-side to rows the
+  // caller owns. Refreshes `environments` afterward, same self-refreshing
+  // pattern as everything else that mutates the list.
   //
   // Naming (Frontend Hook ←→ Backend):
-  //   previewUrl     →  preview_url      approved CDN URL from generate-preview
-  //   displayName    →  display_name
-  //   guestCapacity  →  guest_capacity
-  //   description    →  description      original text, kept for audit/regenerate
-  //   envId          ←  env_id           usable immediately, same as any preset env_id
-  //   plateUrl       ←  plate_url
-  const confirmEnvironmentPreview = useCallback(async ({
-    previewUrl, displayName, guestCapacity = 2, description = '',
-  }) => {
-    if (!previewUrl)   throw new Error('previewUrl is required');
-    if (!displayName)  throw new Error('displayName is required');
+  //   envId    →  (URL param)
+  //   deleted  ←  deleted: true
+  const deleteEnvironment = useCallback(async (envId) => {
+    if (!envId) throw new Error('envId is required');
 
-    const res = await fetch(`${API_BASE}/api/podcast/environment/confirm-preview`, {
-      method:      'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        'X-CSRF-Token': getCsrf(),
-      },
+    const res = await fetch(`${API_BASE}/api/podcast/environment/${envId}`, {
+      method:      'DELETE',
+      headers:     { 'X-CSRF-Token': getCsrf() },
       credentials: 'include',
-      body: JSON.stringify({
-        preview_url:    previewUrl,
-        display_name:   displayName,
-        guest_capacity: guestCapacity,
-        description,
-      }),
     });
 
-    const data = await res.json();
+    const data = await res.json().catch(() => ({}));
     if (!res.ok) {
-      ApiErrorService.log('usePodcastStudio.confirmEnvironmentPreview', res.status, data);
+      ApiErrorService.log('usePodcastStudio.deleteEnvironment', res.status, data);
       throw new Error(ApiErrorService.getMessage(res.status, data));
     }
 
-    console.log(`✅ Environment saved: ${data.env_id}`);
-    await loadEnvironments(); // refresh so it shows up in the grid immediately
-    return { envId: data.env_id, plateUrl: data.plate_url };
+    console.log(`🗑️  Environment deleted: ${envId}`);
+    await loadEnvironments();
   }, [loadEnvironments]);
 
 
@@ -1349,8 +1346,8 @@ export default function usePodcastStudio() {
     generateAvatarPreview,  // ({description, displayName, attemptNumber}) → { previewUrl, attemptNumber }
     confirmAvatarPreview,   // ({previewUrl, displayName, envId, position}) → { avatarId, avatarRefUrl, envId, previewUrl } — same shape as buildAvatar
     bakeAvatarEnv,          // ({avatarId, envId}) → { avatarId, envId, bakedRefUrl } — for re-baking a SAVED avatar into a new env, dedup'd server-side
-    generateEnvironmentPreview, // ({description, guestCapacity}) → { previewUrl }
-    confirmEnvironmentPreview,  // ({previewUrl, displayName, guestCapacity, description}) → { envId, plateUrl }
+    generateEnvironmentPreview, // ({description, guestCapacity, displayName, envId?}) → { envId, plateUrl } — AUTO-SAVES, pass envId to regenerate in place
+    deleteEnvironment,          // (envId) → void — refreshes environments list
     getCharacterRef,        // (key)    → { characterRefUrl, characterVoiceId, characterDisplayName }
     deleteAvatar,           // (avatarId) → void (refreshes avatars list)
 
