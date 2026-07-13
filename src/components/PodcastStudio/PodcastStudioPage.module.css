@@ -2046,7 +2046,7 @@
   font-family: 'Inter', sans-serif;
   padding: 0.3rem 0.4rem;
   resize: none;
-  min-height: 22px;
+  min-height: 46px;   /* was 22px — doubled so it reads as a compose box at rest, not a search field */
   max-height: 160px;  /* auto-grow cap — was 80px, doubled for real multi-line room */
   line-height: 1.55;
   overflow-y: hidden;  /* toggled to auto by JS once content exceeds max-height */
