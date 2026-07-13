@@ -1934,6 +1934,30 @@
   color: #A5B4FC;
 }
 
+/* ── Studio Backgrounds toggle (3 segments) ──────────────────────────────────
+   Scoped modifiers only — base .scriptModeToggle/.scriptModeBtn above stay
+   exactly as they were for the 2-button toggles used elsewhere (script chat
+   mode, avatar upload/generate). This variant fills the card width instead
+   of fit-content, so a 3rd segment can't push past the card's border. */
+.envModeToggle {
+  width: 100%;
+}
+
+.envModeToggle .scriptModeBtn {
+  flex: 1 1 0;
+  min-width: 0;
+  padding: 0.28rem 0.4rem;
+  text-align: center;
+}
+
+.envGenSeg {
+  flex: 0 0 30px !important;
+  padding: 0.28rem 0 !important;
+  font-size: 0.95rem;
+  font-weight: 700;
+  line-height: 1;
+}
+
 .chatBubbles {
   flex: 1;
   overflow-y: auto;

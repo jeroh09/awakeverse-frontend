@@ -2778,8 +2778,11 @@ if (context.topic) setTopic(context.topic);
             <div className={styles.glassCard} style={{ height: '100%' }}>
               <div className={styles.cardLabel}>Studio Backgrounds</div>
 
-              {/* Toggle pill — reuses existing scriptModeToggle CSS, now 3 options */}
-              <div className={styles.scriptModeToggle} style={{ marginBottom: '0.6rem', flexShrink: 0 }}>
+              {/* Toggle pill — reuses existing scriptModeToggle CSS, now 3 options.
+                  envModeToggle widens it to fill the card (was width:fit-content,
+                  which overflowed once a 3rd item was added) and turns the
+                  Generate segment into a fixed-width icon-only square. */}
+              <div className={`${styles.scriptModeToggle} ${styles.envModeToggle}`} style={{ marginBottom: '0.6rem', flexShrink: 0 }}>
                 <button
                   className={`${styles.scriptModeBtn} ${envPanelMode === 'browse' && envMode === 'standard' ? styles.scriptModeBtnActive : ''}`}
                   onClick={() => { handleEnvModeSwitch('standard'); setEnvPanelMode('browse'); }}
@@ -2789,7 +2792,7 @@ if (context.topic) setTopic(context.topic);
                   onClick={() => { handleEnvModeSwitch('panel'); setEnvPanelMode('browse'); }}
                   title="3-person panel">Panel · 3</button>
                 <button
-                  className={`${styles.scriptModeBtn} ${envPanelMode === 'generate' ? styles.scriptModeBtnActive : ''}`}
+                  className={`${styles.scriptModeBtn} ${styles.envGenSeg} ${envPanelMode === 'generate' ? styles.scriptModeBtnActive : ''}`}
                   onClick={() => {
                     // Only reset on a genuine fresh entry from browse mode —
                     // re-clicking Generate while already in it (e.g. after
@@ -2802,7 +2805,7 @@ if (context.topic) setTopic(context.topic);
                     }
                     setEnvPanelMode('generate');
                   }}
-                  title="Generate your own background"><Ic.ImageFrame /> Generate</button>
+                  title="Generate your own background">+</button>
               </div>
 
               {envPanelMode === 'browse' ? (
