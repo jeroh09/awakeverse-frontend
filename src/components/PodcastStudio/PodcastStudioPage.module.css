@@ -2058,6 +2058,17 @@
 
 .scriptInput::placeholder { color: var(--text-muted); }
 
+/* Explicit :focus override — a plain "outline: none" on .scriptInput above can
+   still lose to a global focus-outline accessibility rule elsewhere in the
+   app's styles.css if that rule has equal-or-higher specificity or loads
+   later. Scoping the reset to :focus specifically guarantees it wins,
+   regardless of where else in the cascade a focus ring gets applied. */
+.scriptInput:focus {
+  outline: none;
+  border: none;
+  box-shadow: none;
+}
+
 .scriptSendBtn {
   padding: 0.42rem 0.9rem;
   background: linear-gradient(135deg, rgba(99,102,241,0.9), rgba(129,140,248,0.9));
