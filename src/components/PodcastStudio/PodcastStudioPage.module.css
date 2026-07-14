@@ -1245,6 +1245,88 @@
 
 .genDescInput { resize: none; line-height: 1.4; }
 
+/* ── Upload tips checklist ───────────────────────────────────────────────── */
+.tipsBox {
+  background: rgba(16, 185, 129, 0.05);
+  border: 1px solid rgba(16, 185, 129, 0.22);
+  border-radius: 12px;
+  padding: 0.6rem 0.75rem;
+  flex-shrink: 0;
+}
+
+.tipsTitle {
+  font-size: 0.64rem;
+  font-weight: 700;
+  color: #6EE7B7;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  margin-bottom: 0.35rem;
+  font-family: 'Inter', sans-serif;
+}
+
+.tipsList {
+  display: flex;
+  flex-direction: column;
+  gap: 0.22rem;
+}
+
+.tipItem {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.4rem;
+  font-size: 0.68rem;
+  color: var(--text-secondary, #94a3b8);
+  line-height: 1.4;
+  font-family: 'Inter', sans-serif;
+}
+
+.tipCheck {
+  color: var(--green);
+  flex-shrink: 0;
+  font-size: 0.7rem;
+  margin-top: 0.05rem;
+}
+
+/* ── Generate-mode dropdown prompt builder ───────────────────────────────── */
+.genFieldRow {
+  display: flex;
+  gap: 0.5rem;
+}
+
+.genFieldCol {
+  flex: 1;
+  min-width: 0;
+}
+
+.genFieldLabel {
+  display: block;
+  font-size: 0.6rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: var(--text-muted);
+  margin-bottom: 0.25rem;
+  font-family: 'Inter', sans-serif;
+}
+
+.genSelect {
+  width: 100%;
+  box-sizing: border-box;
+  background: rgba(148, 163, 184, 0.06);
+  border: var(--ring-border);
+  border-radius: 8px;
+  padding: 0.4rem 0.5rem;
+  font-size: 0.72rem;
+  color: var(--text-primary, #e2e8f0);
+  font-family: 'Inter', sans-serif;
+  cursor: pointer;
+}
+
+.genSelect:focus {
+  outline: none;
+  border-color: rgba(99, 102, 241, 0.5);
+}
+
 .genFooterRow {
   display: flex;
   align-items: center;

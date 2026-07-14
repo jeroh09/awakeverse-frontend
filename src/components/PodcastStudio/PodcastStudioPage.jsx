@@ -170,6 +170,26 @@ function autoGrowTextarea(el) {
   }
 }
 
+// ── Assembles the avatar-generation dropdown selections + free text into a
+// single natural-language sentence. Sent through the existing `description`
+// field the backend already accepts — the backend itself needs no changes.
+// Every field is optional; entirely-empty attrs + empty text yields ''.
+function buildAssembledDescription(attrs, freeText) {
+  const traits = [];
+  if (attrs.ethnicity) traits.push(attrs.ethnicity);
+  if (attrs.build)     traits.push(`${attrs.build} build`);
+  if (attrs.hair)      traits.push(`${attrs.hair} hair`);
+
+  let sentence = attrs.age ? `A person in their ${attrs.age}` : (traits.length || attrs.style) ? 'A person' : '';
+  if (sentence && traits.length) sentence += `, ${traits.join(', ')}`;
+  if (sentence && attrs.style)   sentence += `, dressed in a ${attrs.style} style`;
+  if (sentence) sentence += '.';
+
+  const free = (freeText || '').trim();
+  if (sentence && free) return `${sentence} ${free}`;
+  return sentence || free;
+}
+
 // ── Lines reducer ─────────────────────────────────────────────────────────────
 const linesReducer = (state, action) => {
   switch (action.type) {
@@ -283,6 +303,11 @@ export default function PodcastStudioPage({ context, onClose }) {
   const [avatarInputMode, setAvatarInputMode] = useState('upload'); // 'upload' | 'generate'
   const [genDescription,  setGenDescription]  = useState('');
   const [genDisplayName,  setGenDisplayName]  = useState('');
+  // Optional dropdown selections for the generate-mode prompt builder —
+  // assembled with genDescription via buildAssembledDescription() at
+  // generate time. Never reset programmatically, same lifecycle as
+  // genDescription (only user interaction clears it).
+  const [genAttrs,        setGenAttrs]        = useState({ age: '', ethnicity: '', hair: '', build: '', style: '' });
   const [genPreviewUrl,   setGenPreviewUrl]   = useState(null);
   const [genAttempt,      setGenAttempt]      = useState(0);   // 0..3 — attempts used
   const [genLoading,      setGenLoading]      = useState(false);
@@ -1013,14 +1038,15 @@ if (context.topic) setTopic(context.topic);
   // Produces a preview only (genPreviewUrl). Nothing saved, nothing baked.
   // 3 attempts max — enforced client-side, genAttempt tracks usage.
   const handleGenerateAvatar = useCallback(async () => {
-    if (!genDescription.trim() || genAttempt >= 3) return;
+    const assembled = buildAssembledDescription(genAttrs, genDescription);
+    if (!assembled || genAttempt >= 3) return;
     setGenLoading(true);
     setGenError(null);
     setGenRejected(false);
     try {
       const displayName = genDisplayName.trim() || context?.user?.displayName || 'You';
       const result = await generateAvatarPreview({
-        description:    genDescription.trim(),
+        description:    assembled,
         displayName,
         attemptNumber:  genAttempt + 1,
       });
@@ -1035,7 +1061,7 @@ if (context.topic) setTopic(context.topic);
     } finally {
       setGenLoading(false);
     }
-  }, [genDescription, genDisplayName, genAttempt, generateAvatarPreview, context]);
+  }, [genDescription, genAttrs, genDisplayName, genAttempt, generateAvatarPreview, context]);
 
   // ── Regenerate — clear the rejected preview, keep description, try again ─
   const handleRegenerateAvatar = useCallback(() => {
@@ -1440,7 +1466,7 @@ if (context.topic) setTopic(context.topic);
               )}
 
               {/* ── Avatar grid — square cards, horizontal wrap ── */}
-              <div className={`${styles.glassCard} ${styles.avatarGridCard} ${avatarInputMode === 'generate' && !avatarBuilt ? styles.avatarGridCardExpanded : ''}`}>
+              <div className={`${styles.glassCard} ${styles.avatarGridCard} ${!avatarBuilt && (avatarInputMode === 'generate' || (avatarInputMode === 'upload' && !photoFile)) ? styles.avatarGridCardExpanded : ''}`}>
                 <div className={styles.cardLabel}>Your avatar</div>
 
                 {/* Upload / Generate toggle — reuses scriptModeToggle exactly (same pill used by Studio Backgrounds' 1-2 Guests/Panel-3 toggle) */}
@@ -1458,6 +1484,21 @@ if (context.topic) setTopic(context.topic);
                     >
                       <Ic.ImageFrame /> Generate
                     </button>
+                  </div>
+                )}
+
+                {/* Upload tips — shown whenever upload mode is open with no photo chosen yet.
+                    Purely informational, checkmarks are decorative (not a to-do list). */}
+                {!avatarBuilt && avatarInputMode === 'upload' && !photoFile && (
+                  <div className={styles.tipsBox}>
+                    <div className={styles.tipsTitle}>Tips for best results</div>
+                    <div className={styles.tipsList}>
+                      <div className={styles.tipItem}><span className={styles.tipCheck}>✓</span> Photo is clear and in focus</div>
+                      <div className={styles.tipItem}><span className={styles.tipCheck}>✓</span> Face is clearly visible</div>
+                      <div className={styles.tipItem}><span className={styles.tipCheck}>✓</span> Well-lit — natural or bright indoor light works best</div>
+                      <div className={styles.tipItem}><span className={styles.tipCheck}>✓</span> Full body or waist-up shown</div>
+                      <div className={styles.tipItem}><span className={styles.tipCheck}>✓</span> A plain, simple background works better than a busy one</div>
+                    </div>
                   </div>
                 )}
 
@@ -1708,10 +1749,95 @@ if (context.topic) setTopic(context.topic);
                           value={genDisplayName}
                           onChange={e => setGenDisplayName(e.target.value)}
                         />
+
+                        {/* Dropdown prompt builder — all optional. Assembled with the
+                            free-text box below via buildAssembledDescription() and sent
+                            through the same `description` field the backend already
+                            accepts, so no backend changes were needed for this. */}
+                        <div className={styles.genFieldRow}>
+                          <div className={styles.genFieldCol}>
+                            <label className={styles.genFieldLabel}>Age range</label>
+                            <select
+                              className={styles.genSelect}
+                              value={genAttrs.age}
+                              onChange={e => setGenAttrs(prev => ({ ...prev, age: e.target.value }))}
+                            >
+                              <option value="">Any</option>
+                              <option value="20s">20s</option>
+                              <option value="30s">30s</option>
+                              <option value="40s">40s</option>
+                              <option value="50s">50s+</option>
+                            </select>
+                          </div>
+                          <div className={styles.genFieldCol}>
+                            <label className={styles.genFieldLabel}>Ethnicity</label>
+                            <select
+                              className={styles.genSelect}
+                              value={genAttrs.ethnicity}
+                              onChange={e => setGenAttrs(prev => ({ ...prev, ethnicity: e.target.value }))}
+                            >
+                              <option value="">Any</option>
+                              <option value="African">African</option>
+                              <option value="East Asian">East Asian</option>
+                              <option value="South Asian">South Asian</option>
+                              <option value="Latine">Latine</option>
+                              <option value="Middle Eastern">Middle Eastern</option>
+                              <option value="White / European">White / European</option>
+                              <option value="mixed race">Mixed / Other</option>
+                            </select>
+                          </div>
+                        </div>
+                        <div className={styles.genFieldRow}>
+                          <div className={styles.genFieldCol}>
+                            <label className={styles.genFieldLabel}>Hair</label>
+                            <select
+                              className={styles.genSelect}
+                              value={genAttrs.hair}
+                              onChange={e => setGenAttrs(prev => ({ ...prev, hair: e.target.value }))}
+                            >
+                              <option value="">Any</option>
+                              <option value="short">Short</option>
+                              <option value="long">Long</option>
+                              <option value="curly">Curly</option>
+                              <option value="locs">Locs</option>
+                              <option value="bald">Bald</option>
+                            </select>
+                          </div>
+                          <div className={styles.genFieldCol}>
+                            <label className={styles.genFieldLabel}>Build</label>
+                            <select
+                              className={styles.genSelect}
+                              value={genAttrs.build}
+                              onChange={e => setGenAttrs(prev => ({ ...prev, build: e.target.value }))}
+                            >
+                              <option value="">Any</option>
+                              <option value="slim">Slim</option>
+                              <option value="athletic">Athletic</option>
+                              <option value="average">Average</option>
+                              <option value="heavyset">Heavyset</option>
+                            </select>
+                          </div>
+                          <div className={styles.genFieldCol}>
+                            <label className={styles.genFieldLabel}>Style</label>
+                            <select
+                              className={styles.genSelect}
+                              value={genAttrs.style}
+                              onChange={e => setGenAttrs(prev => ({ ...prev, style: e.target.value }))}
+                            >
+                              <option value="">Any</option>
+                              <option value="casual">Casual</option>
+                              <option value="business">Business</option>
+                              <option value="creative">Creative</option>
+                              <option value="streetwear">Streetwear</option>
+                            </select>
+                          </div>
+                        </div>
+
+                        <label className={styles.genFieldLabel}>Anything else?</label>
                         <textarea
                           className={styles.genDescInput}
-                          rows={3}
-                          placeholder="Describe your look — hair, build, style, what you're wearing. e.g. 'A tall woman in her 30s with natural locs, warm smile, wearing a navy blazer'"
+                          rows={2}
+                          placeholder="Optional — add anything the dropdowns don't cover, e.g. 'warm smile, wearing glasses'"
                           value={genDescription}
                           onChange={e => setGenDescription(e.target.value)}
                         />
@@ -1720,7 +1846,7 @@ if (context.topic) setTopic(context.topic);
                             className={styles.buildBtn}
                             style={{ width: 'auto', padding: '0.5rem 1.1rem' }}
                             onClick={handleGenerateAvatar}
-                            disabled={genLoading || !genDescription.trim()}
+                            disabled={genLoading || (!genDescription.trim() && !Object.values(genAttrs).some(Boolean))}
                           >
                             {genLoading ? <><span className={styles.spin}><Ic.Spin /></span> Generating…</> : <><Ic.ImageFrame /> Generate</>}
                           </button>
