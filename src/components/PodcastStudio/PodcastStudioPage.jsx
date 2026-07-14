@@ -46,6 +46,12 @@ const TAB_LABELS  = {
 };
 const SPEAKER_COLORS = ['#6366F1', '#10B981', '#F59E0B', '#EF4444'];
 const PAGE_SIZE = 8; // avatar and session pagination — 8 cards + 1 upload slot = 9 max
+
+// Reference script shown during voice-clone recording (focus overlay). Mixes
+// sharp consonants, smooth vowels, numbers, and a question to vary rhythm —
+// standard voice-sample coverage. ~115 words ≈ 45s at a natural pace, fits
+// the "record 30–60s" guidance already shown in the panel.
+const VOICE_CLONE_SCRIPT = `Hi, I'm recording my voice for AwakeVerse. This sample includes a mix of sounds — sharp consonants like p, t, and k, along with smooth vowels and natural pauses. The quick brown fox jumps over the lazy dog, while a curious cat watches quietly from the windowsill. I like to speak in a natural, conversational tone — not too fast, not too slow, the way I'd talk to a friend over coffee. A few numbers help too: one, two, three, four, five. And here's a question, just to change the rhythm — how's the weather where you are today? Thanks for listening, and welcome to my podcast.`;
 const DEFAULT_GUEST_VOICE = 'pNInz6obpgDQGcFmaJgB'; // Adam — ElevenLabs neutral male
 const API_BASE = process.env.REACT_APP_API_URL || 'https://api.awakeverse.com';
 
@@ -174,6 +180,63 @@ function autoGrowTextarea(el) {
 // single natural-language sentence. Sent through the existing `description`
 // field the backend already accepts — the backend itself needs no changes.
 // Every field is optional; entirely-empty attrs + empty text yields ''.
+// ── Custom dropdown — replaces native <select>. Native select popups are
+// OS/browser-rendered and mostly ignore author CSS (no rounded corners,
+// background often forced white regardless of styling), which is exactly
+// what broke the generate-avatar form. This is a small self-contained
+// listbox: closed-state button + an absolutely-positioned rounded menu,
+// fully within our own design system. Click-outside closes it defensively.
+function GenDropdown({ label, value, options, onChange }) {
+  const [open, setOpen] = useState(false);
+  const wrapRef = useRef(null);
+
+  useEffect(() => {
+    if (!open) return;
+    const handleOutside = e => {
+      if (wrapRef.current && !wrapRef.current.contains(e.target)) setOpen(false);
+    };
+    document.addEventListener('mousedown', handleOutside);
+    return () => document.removeEventListener('mousedown', handleOutside);
+  }, [open]);
+
+  const selectedLabel = options.find(o => o.value === value)?.label || 'Any';
+
+  return (
+    <div className={styles.genFieldCol} ref={wrapRef} style={{ position: 'relative' }}>
+      <label className={styles.genFieldLabel}>{label}</label>
+      <button
+        type="button"
+        className={styles.genDropdownTrigger}
+        onClick={() => setOpen(o => !o)}
+      >
+        <span>{selectedLabel}</span>
+        <span className={styles.genDropdownChevron}>▾</span>
+      </button>
+      {open && (
+        <div className={styles.genDropdownMenu}>
+          <button
+            type="button"
+            className={`${styles.genDropdownItem} ${!value ? styles.genDropdownItemActive : ''}`}
+            onClick={() => { onChange(''); setOpen(false); }}
+          >
+            Any
+          </button>
+          {options.map(opt => (
+            <button
+              key={opt.value}
+              type="button"
+              className={`${styles.genDropdownItem} ${value === opt.value ? styles.genDropdownItemActive : ''}`}
+              onClick={() => { onChange(opt.value); setOpen(false); }}
+            >
+              {opt.label}
+            </button>
+          ))}
+        </div>
+      )}
+    </div>
+  );
+}
+
 function buildAssembledDescription(attrs, freeText) {
   const traits = [];
   if (attrs.ethnicity) traits.push(attrs.ethnicity);
@@ -1755,82 +1818,67 @@ if (context.topic) setTopic(context.topic);
                             through the same `description` field the backend already
                             accepts, so no backend changes were needed for this. */}
                         <div className={styles.genFieldRow}>
-                          <div className={styles.genFieldCol}>
-                            <label className={styles.genFieldLabel}>Age range</label>
-                            <select
-                              className={styles.genSelect}
-                              value={genAttrs.age}
-                              onChange={e => setGenAttrs(prev => ({ ...prev, age: e.target.value }))}
-                            >
-                              <option value="">Any</option>
-                              <option value="20s">20s</option>
-                              <option value="30s">30s</option>
-                              <option value="40s">40s</option>
-                              <option value="50s">50s+</option>
-                            </select>
-                          </div>
-                          <div className={styles.genFieldCol}>
-                            <label className={styles.genFieldLabel}>Ethnicity</label>
-                            <select
-                              className={styles.genSelect}
-                              value={genAttrs.ethnicity}
-                              onChange={e => setGenAttrs(prev => ({ ...prev, ethnicity: e.target.value }))}
-                            >
-                              <option value="">Any</option>
-                              <option value="African">African</option>
-                              <option value="East Asian">East Asian</option>
-                              <option value="South Asian">South Asian</option>
-                              <option value="Latine">Latine</option>
-                              <option value="Middle Eastern">Middle Eastern</option>
-                              <option value="White / European">White / European</option>
-                              <option value="mixed race">Mixed / Other</option>
-                            </select>
-                          </div>
+                          <GenDropdown
+                            label="Age range"
+                            value={genAttrs.age}
+                            onChange={v => setGenAttrs(prev => ({ ...prev, age: v }))}
+                            options={[
+                              { value: '20s', label: '20s' },
+                              { value: '30s', label: '30s' },
+                              { value: '40s', label: '40s' },
+                              { value: '50s', label: '50s+' },
+                            ]}
+                          />
+                          <GenDropdown
+                            label="Ethnicity"
+                            value={genAttrs.ethnicity}
+                            onChange={v => setGenAttrs(prev => ({ ...prev, ethnicity: v }))}
+                            options={[
+                              { value: 'African', label: 'African' },
+                              { value: 'East Asian', label: 'East Asian' },
+                              { value: 'South Asian', label: 'South Asian' },
+                              { value: 'Latine', label: 'Latine' },
+                              { value: 'Middle Eastern', label: 'Middle Eastern' },
+                              { value: 'White / European', label: 'White / European' },
+                              { value: 'mixed race', label: 'Mixed / Other' },
+                            ]}
+                          />
                         </div>
                         <div className={styles.genFieldRow}>
-                          <div className={styles.genFieldCol}>
-                            <label className={styles.genFieldLabel}>Hair</label>
-                            <select
-                              className={styles.genSelect}
-                              value={genAttrs.hair}
-                              onChange={e => setGenAttrs(prev => ({ ...prev, hair: e.target.value }))}
-                            >
-                              <option value="">Any</option>
-                              <option value="short">Short</option>
-                              <option value="long">Long</option>
-                              <option value="curly">Curly</option>
-                              <option value="locs">Locs</option>
-                              <option value="bald">Bald</option>
-                            </select>
-                          </div>
-                          <div className={styles.genFieldCol}>
-                            <label className={styles.genFieldLabel}>Build</label>
-                            <select
-                              className={styles.genSelect}
-                              value={genAttrs.build}
-                              onChange={e => setGenAttrs(prev => ({ ...prev, build: e.target.value }))}
-                            >
-                              <option value="">Any</option>
-                              <option value="slim">Slim</option>
-                              <option value="athletic">Athletic</option>
-                              <option value="average">Average</option>
-                              <option value="heavyset">Heavyset</option>
-                            </select>
-                          </div>
-                          <div className={styles.genFieldCol}>
-                            <label className={styles.genFieldLabel}>Style</label>
-                            <select
-                              className={styles.genSelect}
-                              value={genAttrs.style}
-                              onChange={e => setGenAttrs(prev => ({ ...prev, style: e.target.value }))}
-                            >
-                              <option value="">Any</option>
-                              <option value="casual">Casual</option>
-                              <option value="business">Business</option>
-                              <option value="creative">Creative</option>
-                              <option value="streetwear">Streetwear</option>
-                            </select>
-                          </div>
+                          <GenDropdown
+                            label="Hair"
+                            value={genAttrs.hair}
+                            onChange={v => setGenAttrs(prev => ({ ...prev, hair: v }))}
+                            options={[
+                              { value: 'short', label: 'Short' },
+                              { value: 'long', label: 'Long' },
+                              { value: 'curly', label: 'Curly' },
+                              { value: 'locs', label: 'Locs' },
+                              { value: 'bald', label: 'Bald' },
+                            ]}
+                          />
+                          <GenDropdown
+                            label="Build"
+                            value={genAttrs.build}
+                            onChange={v => setGenAttrs(prev => ({ ...prev, build: v }))}
+                            options={[
+                              { value: 'slim', label: 'Slim' },
+                              { value: 'athletic', label: 'Athletic' },
+                              { value: 'average', label: 'Average' },
+                              { value: 'heavyset', label: 'Heavyset' },
+                            ]}
+                          />
+                          <GenDropdown
+                            label="Style"
+                            value={genAttrs.style}
+                            onChange={v => setGenAttrs(prev => ({ ...prev, style: v }))}
+                            options={[
+                              { value: 'casual', label: 'Casual' },
+                              { value: 'business', label: 'Business' },
+                              { value: 'creative', label: 'Creative' },
+                              { value: 'streetwear', label: 'Streetwear' },
+                            ]}
+                          />
                         </div>
 
                         <label className={styles.genFieldLabel}>Anything else?</label>
@@ -3147,6 +3195,24 @@ if (context.topic) setTopic(context.topic);
           </button>
         )}
       </div>
+
+      {/* Voice-clone recording focus overlay — shows only while actively
+          recording (cloningVoice), gives the script room to be readable. */}
+      {cloningVoice && (
+        <div className={styles.recordFocusOverlay}>
+          <div className={styles.recordFocusCard}>
+            <div className={styles.recordFocusTimer}>
+              <span className={styles.recordingDot} />
+              Recording — {Math.floor(cloneRecSeconds / 60)}:{String(cloneRecSeconds % 60).padStart(2, '0')}
+            </div>
+            <p className={styles.recordFocusScript}>{VOICE_CLONE_SCRIPT}</p>
+            <p className={styles.recordFocusHint}>Read naturally, like you're talking to a friend. Aim for 30–60 seconds.</p>
+            <button className={styles.recordFocusStopBtn} onClick={handleCloneRecord}>
+              ⏹ Stop recording
+            </button>
+          </div>
+        </div>
+      )}
 
     </div>
   );

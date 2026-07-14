@@ -1245,6 +1245,78 @@
 
 .genDescInput { resize: none; line-height: 1.4; }
 
+/* ── Voice-clone recording focus overlay ─────────────────────────────────────
+   Fixed to the viewport (not the narrow sidebar card) so the script has
+   room to be large and easy to read aloud. Appears the moment recording
+   starts (cloningVoice === true) and disappears the moment it stops —
+   no separate state needed, it rides the same flag the record button uses. */
+.recordFocusOverlay {
+  position: fixed;
+  inset: 0;
+  z-index: 900;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 2rem;
+  background: rgba(2, 6, 23, 0.9);
+  backdrop-filter: blur(14px);
+  -webkit-backdrop-filter: blur(14px);
+}
+
+.recordFocusCard {
+  width: 100%;
+  max-width: 620px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 1.25rem;
+  text-align: center;
+}
+
+.recordFocusTimer {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-family: 'Inter', sans-serif;
+  font-size: 0.85rem;
+  font-weight: 600;
+  color: #FCA5A5;
+}
+
+.recordFocusScript {
+  font-family: 'Inter', sans-serif;
+  font-size: 1.15rem;
+  line-height: 1.75;
+  color: var(--text-primary, #e2e8f0);
+  background: rgba(148, 163, 184, 0.05);
+  border: var(--ring-border);
+  border-radius: 16px;
+  padding: 1.5rem 1.75rem;
+}
+
+.recordFocusHint {
+  font-family: 'Inter', sans-serif;
+  font-size: 0.72rem;
+  color: var(--text-muted);
+}
+
+.recordFocusStopBtn {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+  padding: 0.6rem 1.4rem;
+  background: rgba(239, 68, 68, 0.15);
+  border: 1px solid rgba(239, 68, 68, 0.4);
+  border-radius: 999px;
+  color: #FCA5A5;
+  font-family: 'Inter', sans-serif;
+  font-size: 0.8rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background 0.15s;
+}
+.recordFocusStopBtn:hover { background: rgba(239, 68, 68, 0.25); }
+
 /* ── Upload tips checklist ───────────────────────────────────────────────── */
 .tipsBox {
   background: rgba(16, 185, 129, 0.05);
@@ -1309,9 +1381,13 @@
   font-family: 'Inter', sans-serif;
 }
 
-.genSelect {
+.genDropdownTrigger {
   width: 100%;
   box-sizing: border-box;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.4rem;
   background: rgba(148, 163, 184, 0.06);
   border: var(--ring-border);
   border-radius: 8px;
@@ -1320,11 +1396,67 @@
   color: var(--text-primary, #e2e8f0);
   font-family: 'Inter', sans-serif;
   cursor: pointer;
+  text-align: left;
 }
 
-.genSelect:focus {
+.genDropdownTrigger:hover,
+.genDropdownTrigger:focus {
   outline: none;
   border-color: rgba(99, 102, 241, 0.5);
+}
+
+.genDropdownChevron {
+  color: var(--text-muted);
+  font-size: 0.6rem;
+  flex-shrink: 0;
+}
+
+/* Rounded, dark, on-brand popup — same double-border-ring language as
+   Header's .profileMenu, instead of a native <select> list (which ignores
+   author CSS for border-radius/background in most browsers). */
+.genDropdownMenu {
+  position: absolute;
+  top: calc(100% + 4px);
+  left: 0;
+  right: 0;
+  z-index: 20;
+  max-height: 220px;
+  overflow-y: auto;
+
+  background: rgba(10, 15, 26, 0.98);
+  border: 1px solid rgba(99, 102, 241, 0.35);
+  border-radius: 12px;
+  box-shadow:
+    0 0 0 3px rgba(15, 23, 42, 0.9),
+    0 0 0 4px rgba(99, 102, 241, 0.16),
+    0 12px 28px rgba(0, 0, 0, 0.5);
+  padding: 4px;
+}
+
+.genDropdownItem {
+  display: block;
+  width: 100%;
+  text-align: left;
+  padding: 0.4rem 0.55rem;
+  border-radius: 8px;
+  background: transparent;
+  border: none;
+  cursor: pointer;
+  font-size: 0.72rem;
+  font-family: 'Inter', sans-serif;
+  color: rgba(148, 163, 184, 0.85);
+  transition: background 0.12s, color 0.12s;
+}
+
+.genDropdownItem:hover {
+  background: rgba(99, 102, 241, 0.1);
+  color: #c7d2fe;
+}
+
+.genDropdownItemActive {
+  background: rgba(99, 102, 241, 0.16);
+  color: #a5b4fc;
+  font-weight: 600;
 }
 
 .genFooterRow {
