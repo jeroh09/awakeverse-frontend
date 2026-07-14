@@ -850,7 +850,8 @@
 .podcastGrid {
   flex: 1;
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(200px, 280px));
+  grid-template-columns: repeat(auto-fill, 200px);  /* was minmax(200px, 280px) — that growth range let cards stretch to fill the row when few items existed */
+  justify-content: start;  /* leftover row space stays empty instead of being redistributed into card width */
   gap: var(--gap);
   overflow-y: auto;
   padding: 0.25rem 0;
@@ -865,7 +866,7 @@
   display: flex;
   flex-direction: column;
   transition: border-color 0.15s;
-  max-width: 280px;
+  width: 200px;   /* was max-width: 280px — now matches the fixed track size exactly */
 }
 
 .podcastCard:hover { border-color: rgba(99,102,241,0.55); }
@@ -2041,6 +2042,9 @@
   background: transparent;
   border: none;
   outline: none;
+  appearance: none;          /* NEW — removes the browser's own native textarea styling (a built-in inset ring separate from any CSS border/outline) */
+  -webkit-appearance: none;  /* NEW — Safari/older Chrome */
+  -moz-appearance: none;     /* NEW — Firefox */
   color: var(--text-primary);
   font-size: 0.78rem;
   font-family: 'Inter', sans-serif;
