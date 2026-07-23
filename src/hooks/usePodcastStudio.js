@@ -1287,10 +1287,10 @@ export default function usePodcastStudio() {
   //
   // Naming (Frontend Hook ←→ Backend, POST /api/podcast/avatar/<avatarId>/bake/<envId>):
   //   avatarId     →  (URL param)
-  //   envId        →  (URL param)
+  //   envId        →  (URL param)  
   //   avatarId     ←  avatar_id
   //   envId        ←  env_id
-  //   bakedRefUrl  ←  baked_ref_url
+  //   bakedRefUrl  ←  baked_ref_url  
   //
   // Synchronous — 200 response, no job/poll (unlike buildAvatar/confirmAvatarPreview).
   const bakeAvatarEnv = useCallback(async ({ avatarId, envId }) => {
