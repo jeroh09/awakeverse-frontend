@@ -1,5 +1,5 @@
 // src/components/ScenariosTab/DialoguePill/DialoguePill.jsx
-// Unified segmented pill: Verse Dialogues | My Dialogues | Dialogue Guide
+// Unified segmented pill: Verse Dialogues | My Dialogues | Dialogue Guide | Create Film
 // Defensive-first: safe prop defaults, no external deps, pure SVG icons
 
 import React from 'react';
@@ -56,13 +56,30 @@ const GuideIcon = () => (
   </svg>
 );
 
+// Create Film — a clapperboard (custom, matches the glow pattern)
+const FilmIcon = () => (
+  <svg width="13" height="13" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+    <defs>
+      <filter id="pill-film-glow" x="-50%" y="-50%" width="200%" height="200%">
+        <feDropShadow dx="0" dy="0" stdDeviation="2" floodColor="#6366f1" floodOpacity="0.5" />
+      </filter>
+    </defs>
+    <rect x="3" y="8" width="18" height="12" rx="1.8" stroke="currentColor" strokeWidth="1.8"
+      filter="url(#pill-film-glow)" />
+    <path d="M3.5 8l3-3.5 3 3.5M9.5 8l3-3.5 3 3.5M15.5 8l3-3.5 3 3.5"
+      stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round"
+      filter="url(#pill-film-glow)" />
+  </svg>
+);
+
 // ── Component ─────────────────────────────────────────────────────────────────
 
 export default function DialoguePill({
-  activeTab = 'templates',       // 'templates' | 'mine'
+  activeTab = 'templates',       // 'templates' | 'mine' | 'create-film'
   onTabChange = () => {},        // (tab: string) => void
   onOpenGuide = null,            // () => void — if null, guide segment is hidden
   myScenarioCount = 0,           // shows badge on My Dialogues
+  showCreateFilm = true,         // set false to hide the Create Film segment
 }) {
   const handleTabChange = (tab) => {
     if (tab === activeTab) return;
@@ -114,6 +131,22 @@ export default function DialoguePill({
             >
               <GuideIcon />
               <span className="dp-label">Dialogue Guide</span>
+            </button>
+          </>
+        )}
+
+        {/* Divider + Create Film — the free-form door */}
+        {showCreateFilm && (
+          <>
+            <span className="dp-divider" aria-hidden="true" />
+            <button
+              className={`dp-segment dp-segment--film ${activeTab === 'create-film' ? 'dp-segment--active' : ''}`}
+              onClick={() => handleTabChange('create-film')}
+              aria-pressed={activeTab === 'create-film'}
+              aria-label="Create Film — start a free-form film"
+            >
+              <FilmIcon />
+              <span className="dp-label">Create Film</span>
             </button>
           </>
         )}

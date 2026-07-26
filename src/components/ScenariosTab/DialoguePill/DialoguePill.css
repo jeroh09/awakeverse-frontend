@@ -194,3 +194,17 @@
     display: none;
   }
 }
+ 
+.dp-segment--film {
+  color: #818cf8;                    /* accent-secondary — reads as the new/primary door */
+}
+.dp-segment--film:hover:not(.dp-segment--active) {
+  color: #e0e7ff;
+  background: rgba(99, 102, 241, 0.1);
+}
+ 
+/* Light theme */
+.scenarios-tab-container:not(.theme-awakeverse) .dp-segment--film {
+  color: #6366f1;
+}
+ 

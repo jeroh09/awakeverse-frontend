@@ -2406,3 +2406,22 @@ html {
   scrollbar-width: thin;
   scrollbar-color: var(--modal-border-medium) var(--modal-bg-surface);
 }
+
+.film-workspace-host {
+  height: calc(100vh - 132px);       /* ← tune 132px to (header + pill) height */
+  min-height: 480px;
+  padding: 0 1rem 1rem;
+}
+ 
+/* Flex alternative — use INSTEAD of the height above if .scenarios-tab-container
+   is display:flex; flex-direction:column (then no magic number needed):
+.scenarios-tab-container { display: flex; flex-direction: column; }
+.film-workspace-host { flex: 1 1 auto; min-height: 0; padding: 0 1rem 1rem; }
+*/
+ 
+/* Small screens: use dynamic viewport height so mobile browser chrome doesn't
+   clip the workspace. */
+@media (max-width: 820px) {
+  .film-workspace-host { height: calc(100dvh - 120px); }
+}
+ 

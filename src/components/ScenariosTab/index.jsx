@@ -15,6 +15,7 @@ import UseCaseCarousel from './UseCaseCarousel';
 import ThemeToggle from './ThemeToggle';
 import DialogueGuide from './DialogueGuide';
 import DialoguePill from './DialoguePill/DialoguePill';  // ✅ NEW
+import FilmWorkspaceContainer from '../Film/FilmWorkspaceContainer';  // ✅ NEW — free-form film
 import './ScenariosTab.css';
 
 export default function ScenariosTab({
@@ -269,34 +270,42 @@ export default function ScenariosTab({
         myScenarioCount={myScenarios.length}
       />
 
-      {/* ✅ Single content area — tab-driven, no two-story scroll */}
-      <div className="scenarios-content">
+      {/* ✅ Single content area — tab-driven, no two-story scroll.
+          create-film mounts the full-height film workspace in place of the
+          scrolling scenarios content; every other tab renders as before. */}
+      {activeTab === 'create-film' ? (
+        <div className="film-workspace-host">
+          <FilmWorkspaceContainer durationSeconds={60} videoStyle="anime" />
+        </div>
+      ) : (
+        <div className="scenarios-content">
 
-        {activeTab === 'templates' && (
-          <>
-            <TemplatesGallery
-              isUnlimited={isUnlimited}
-              onUpgradeRequired={() => {}}
-              currentScenarioCount={myScenarios.length}
-              onScenarioCreated={handleScenarioCreated}
-              onOpenGuide={null}
+          {activeTab === 'templates' && (
+            <>
+              <TemplatesGallery
+                isUnlimited={isUnlimited}
+                onUpgradeRequired={() => {}}
+                currentScenarioCount={myScenarios.length}
+                onScenarioCreated={handleScenarioCreated}
+                onOpenGuide={null}
+              />
+              <UseCaseCarousel />
+            </>
+          )}
+
+          {activeTab === 'mine' && (
+            <MyScenariosPanel
+              userId={user?.id}
+              scenarios={myScenarios}
+              onRefresh={loadMyScenarios}
+              onCreateNew={handleCreateNew}
+              onStartDebate={handleStartDebate}
+              theme={currentTheme}
             />
-            <UseCaseCarousel />
-          </>
-        )}
+          )}
 
-        {activeTab === 'mine' && (
-          <MyScenariosPanel
-            userId={user?.id}
-            scenarios={myScenarios}
-            onRefresh={loadMyScenarios}
-            onCreateNew={handleCreateNew}
-            onStartDebate={handleStartDebate}
-            theme={currentTheme}
-          />
-        )}
-
-      </div>
+        </div>
+      )}
 
     </div>
   );
