@@ -19,25 +19,58 @@ const normBeat = b => ({
   softened: !!b.softened,
 });
 
-// manifest → storyboard cells. `expected` (from the review shot count) lets us
-// render "queued" placeholders for shots that haven't streamed in yet.
+// manifest → storyboard cells. The backend pushes { plan:[shot skeletons],
+// beats:[rendered-so-far w/ clip_url], live, total } the MOMENT the director
+// finishes — so we build the card grid from `plan` immediately (shot info, no
+// clips), then overlay `beats` clips by index as each shot renders. `expected`
+// (from a review count) is a fallback when no plan is present.
 function toCells(manifest, expected) {
+  const plan = (manifest && manifest.plan) || [];
   const beats = (manifest && manifest.beats) || [];
   const live = !!(manifest && manifest.live);
-  const byIndex = new Map(beats.map(b => [b.index, normBeat(b)]));
-  const total = Math.max(expected || 0, beats.length);
+  const rendered = new Map(beats.map(b => [b.index, normBeat(b)]));
+
+  // Prefer the plan for the skeleton; fall back to rendered beats or `expected`.
+  const total = Math.max(plan.length, beats.length, expected || 0);
   if (!total) return [];
+
+  // index → planned shot info (kind/seconds/speaker/caption/softened)
+  const planByIndex = new Map(plan.map(s => [s.index, s]));
+
+  // first index not yet rendered — shown as actively "rendering" while live
   let firstPending = null;
-  for (let i = 1; i <= total; i++) if (!byIndex.has(i)) { firstPending = i; break; }
+  for (let i = 1; i <= total; i++) if (!rendered.has(i)) { firstPending = i; break; }
+
   const cells = [];
   for (let i = 1; i <= total; i++) {
-    const b = byIndex.get(i);
-    if (b) cells.push({ ...b, status: 'done' });
-    else cells.push({
-      index: i, kind: 'pure_visual', seconds: 6, speaker: '', caption: '', clipUrl: null,
-      durable: false, softened: false,
-      status: (live && i === firstPending) ? 'rendering' : 'queued',
-    });
+    const done = rendered.get(i);
+    if (done) {
+      // keep planned text if the rendered beat didn't carry it
+      const p = planByIndex.get(i) || {};
+      cells.push({
+        ...done,
+        kind: done.kind || p.kind || 'pure_visual',
+        speaker: done.speaker || (p.speaker || '').trim(),
+        caption: done.caption || (p.caption || '').trim(),
+        softened: done.softened || !!p.softened,
+        status: 'done',
+      });
+    } else {
+      const p = planByIndex.get(i);
+      cells.push(p ? {
+        index: i,
+        kind: p.kind || 'pure_visual',
+        seconds: Math.round(p.seconds || 6),
+        speaker: (p.speaker || '').trim(),
+        caption: (p.caption || '').trim(),
+        clipUrl: null, durable: false, softened: !!p.softened,
+        status: (live && i === firstPending) ? 'rendering' : 'queued',
+      } : {
+        index: i, kind: 'pure_visual', seconds: 6, speaker: '', caption: '',
+        clipUrl: null, durable: false, softened: false,
+        status: (live && i === firstPending) ? 'rendering' : 'queued',
+      });
+    }
   }
   return cells;
 }
@@ -69,7 +102,7 @@ export default function useFilmJob() {
   const poll = useCallback((id) => {
     stop();
     startedRef.current = Date.now();
-    pollRef.current = setInterval(async () => {
+    const tick = async () => {
       if (Date.now() - startedRef.current > POLL_TIMEOUT_MS) {
         stop(); setStatus('failed'); setError('This is taking too long — please try again.');
         return;
@@ -92,7 +125,9 @@ export default function useFilmJob() {
         if (s === 404) { stop(); setStatus('failed'); setError('That job is no longer available.'); }
         // any other single failed poll: keep trying until timeout
       }
-    }, POLL_MS);
+    };
+    tick();                              // fire immediately so the plan/cards show at once
+    pollRef.current = setInterval(tick, POLL_MS);
   }, [stop]);
 
   const generate = useCallback(async ({ script, title, duration_seconds = 120, video_style = 'anime',
