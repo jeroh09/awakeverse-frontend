@@ -220,29 +220,21 @@ export default function MyFilmsView({
 
           <div className="film-feat-card film-feat-card--hero">
             <div className="film-feat-copy">
-              <h3>Start with a conversation,<br /><i>not a blank page</i></h3>
-              <p>Pitch your idea to our <i>AI writer</i> in the Writers' Room — it drafts the script, and the storyboard fills in as you talk.</p>
+              <h3>Start with a <i>conversation</i></h3>
+              <p>Pitch your idea to the <i>AI writer</i> and watch the storyboard fill in as you talk.</p>
             </div>
           </div>
 
           {[IMG.placeholder1, IMG.placeholder2, IMG.placeholder3, IMG.placeholder4].map((src, i) => (
             <div className="film-feat-card film-feat-card--ph" key={i}>
-              <img className="film-feat-photo film-feat-photo--dim" src={src} alt="" onError={hideOnError} />
-              <div className="film-feat-scrim" />
-              <div className="film-feat-copy">
-                <div className="film-feat-ph-name">Feature name</div>
-                <div className="film-feat-ph-tag">Coming soon</div>
-              </div>
+              <img className="film-feat-photo" src={src} alt="" onError={hideOnError} />
             </div>
           ))}
 
           <div className="film-feat-card film-feat-card--list">
             <div className="film-feat-copy">
               <h3>Full control, <i>shot by shot</i></h3>
-              <div className="film-feat-row"><span className="film-feat-dot" /><b>Regenerate</b>&nbsp;a shot that isn't landing</div>
-              <div className="film-feat-row"><span className="film-feat-dot" /><b>Cut</b>&nbsp;anything that's not working</div>
-              <div className="film-feat-row"><span className="film-feat-dot" /><b>Duplicate</b>&nbsp;a beat to stretch a moment</div>
-              <div className="film-feat-row"><span className="film-feat-dot" /><b>Optimise</b>&nbsp;pacing across the whole reel</div>
+              <p>Regenerate, cut, duplicate, or reorder any beat until the reel feels right.</p>
             </div>
           </div>
 
