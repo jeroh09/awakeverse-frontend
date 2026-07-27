@@ -96,16 +96,34 @@ export default function useFilmJob() {
   }, [stop]);
 
   const generate = useCallback(async ({ script, title, duration_seconds = 120, video_style = 'anime',
-                                        intro = false, outro_theme = null, expectedShots = 0 }) => {
+                                        intro = false, outro_theme = null, film_project_id = null,
+                                        expectedShots = 0 }) => {
     setError(null); setManifest(null); setOutputUrl(null); setStatus('processing');
     expectedRef.current = expectedShots || 0;
     try {
-      const data = await filmGenerate({ script, title, duration_seconds, video_style, intro, outro_theme });
+      const data = await filmGenerate({ script, title, duration_seconds, video_style, intro, outro_theme, film_project_id });
       const id = data.job_id;
       setJobId(id);
       poll(id);
       return id;
     } catch (e) { setStatus('failed'); setError(friendlyError(e)); return null; }
+  }, [poll]);
+
+  // Restore an existing render on resume (from GET /projects/:id → render block).
+  const adopt = useCallback((render) => {
+    if (!render || !render.job_id) return;
+    setJobId(render.job_id);
+    const s = render.status || 'processing';
+    setStatus(s);
+    if (render.output_url) setOutputUrl(render.output_url);
+    if (render.beats_manifest) {
+      try {
+        const m = typeof render.beats_manifest === 'string' ? JSON.parse(render.beats_manifest) : render.beats_manifest;
+        setManifest(m);
+        if (m && m.total) expectedRef.current = m.total;
+      } catch (_) {}
+    }
+    if (s !== 'complete' && s !== 'failed' && s !== 'cancelled') poll(render.job_id);
   }, [poll]);
 
   const cancel = useCallback(async () => {
@@ -142,5 +160,5 @@ export default function useFilmJob() {
   const progress = { done, total, etaText: etaText(done, total) };
 
   return { jobId, status, stage, cells, progress, outputUrl, error,
-    generate, cancel, reassemble, regenerate, reset };
+    generate, cancel, reassemble, regenerate, adopt, reset };
 }

@@ -42,7 +42,10 @@ export default function WritersRoom({
   return (
     <div className="film-pcontent">
       <div className="film-phead">
-        <div className="film-phead-ttl">Writers’ room{sub && <span className="film-sub">{sub}</span>}</div>
+        <div className="film-htabs">
+          <span className="film-htab is-on">Writers’ room</span>
+          {sub && <span className="film-hsub">{sub}</span>}
+        </div>
       </div>
 
       <div className="film-chatscroll" ref={scrollRef}>

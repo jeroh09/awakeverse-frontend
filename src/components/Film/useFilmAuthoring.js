@@ -57,6 +57,22 @@ export default function useFilmAuthoring() {
     return _send(text, sid);
   }, [_send]);
 
+  // Adopt an externally-created/restored session (from POST /projects or GET
+  // /projects/:id) instead of calling /assistant/start. Messages arrive as
+  // {role:'user'|'assistant', text} and map to the workspace's me/ai roles.
+  const adopt = useCallback(({ session_id, messages = [], title, script, scriptReady }) => {
+    sidRef.current = session_id || null;
+    setSessionId(session_id || null);
+    setMessages((messages || []).map(m => ({
+      role: (m.role === 'assistant' || m.role === 'ai') ? 'ai' : 'me',
+      text: m.text != null ? m.text : (m.content || ''),
+    })));
+    if (title) setTitle(title);
+    if (script) setScript(script);
+    if (typeof scriptReady === 'boolean') setScriptReady(scriptReady);
+    else if (script) setScriptReady(true);
+  }, []);
+
   const finalize = useCallback(async () => {
     const sid = sidRef.current;
     if (!sid) return null;
@@ -81,5 +97,5 @@ export default function useFilmAuthoring() {
     setScript(null); setShots(null); setError(null); setBusy(false);
   }, []);
 
-  return { sessionId, messages, scriptReady, script, shots, title, busy, error, start, send, finalize, reset };
+  return { sessionId, messages, scriptReady, script, shots, title, busy, error, start, send, finalize, adopt, reset };
 }

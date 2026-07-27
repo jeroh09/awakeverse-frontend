@@ -27,12 +27,12 @@
 .film-workspace *{box-sizing:border-box;}
 
 /* topbar */
-.film-topbar{flex:0 0 auto;display:flex;align-items:center;justify-content:space-between;padding:12px 6px;}
-.film-brand{font-family:var(--film-display);font-weight:800;font-size:18px;letter-spacing:.5px;
-  color:var(--film-ivory);display:flex;align-items:baseline;gap:9px;}
-.film-brand small{color:var(--film-t3);font-weight:600;font-size:10px;letter-spacing:2px;text-transform:uppercase;}
-.film-topbar .film-mid{color:var(--film-t2);font-size:13px;}
-.film-topbar .film-mid b{color:var(--film-t1);font-weight:600;}
+.film-topbar{flex:0 0 auto;display:flex;align-items:center;justify-content:space-between;padding:10px 6px;gap:12px;}
+.film-topbar-left{display:flex;align-items:center;gap:12px;min-width:0;}
+.film-title{font-family:var(--film-display);font-weight:700;font-size:16px;color:var(--film-t1);
+  letter-spacing:-.2px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:46vw;}
+.film-tg--back{color:var(--film-accent-hover);border-color:rgba(99,102,241,.4);}
+.film-tg--back:hover{background:rgba(99,102,241,.12);color:#fff;}
 .film-toggles{display:flex;gap:8px;}
 .film-tg{display:flex;align-items:center;gap:7px;font-family:var(--film-body);font-size:12px;font-weight:600;
   color:var(--film-t2);background:var(--film-surface);border:1px solid var(--film-bd-subtle);
@@ -69,8 +69,12 @@
 /* panel header */
 .film-phead{flex:0 0 auto;display:flex;align-items:center;justify-content:space-between;gap:10px;
   padding:13px 15px;border-bottom:1px solid var(--film-bd-subtle);}
-.film-phead-ttl{font-family:var(--film-display);font-weight:700;font-size:15px;display:flex;align-items:center;gap:9px;}
-.film-phead-ttl .film-sub{font-family:var(--film-body);font-weight:500;font-size:12px;color:var(--film-t3);}
+/* panel header as a pill (categorises the panel, echoing the dialogue pill) */
+.film-htabs{display:flex;align-items:center;gap:10px;min-width:0;}
+.film-htab{display:inline-flex;align-items:center;font-family:var(--film-body);font-weight:600;
+  font-size:12px;letter-spacing:.02em;color:#c7d2fe;background:rgba(99,102,241,.16);
+  border:1px solid rgba(99,102,241,.35);border-radius:var(--film-r-full);padding:5px 13px;white-space:nowrap;}
+.film-hsub{font-size:12px;color:var(--film-t3);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
 
 /* buttons */
 .film-btn{font-family:var(--film-body);font-weight:600;font-size:13px;border:0;cursor:pointer;
@@ -217,3 +221,73 @@
   .film-rail{flex-direction:row;}
   .film-rail-label{writing-mode:horizontal-tb;transform:none;}
 }
+
+/* ═══════════════════════════════════════════════════════════════════════════
+   FILM MODE — top-level mode container, My Films library, loading.
+   The mode fills the area below the app header. Set --film-header-h to your
+   header's height if it isn't ~64px; this is what gives the workspace a bounded
+   height so the composer pins FIRMLY to the panel bottom (not mid-panel).
+   ═══════════════════════════════════════════════════════════════════════════ */
+.film-mode-view-container{
+  height: calc(100dvh - var(--film-header-h, 64px));
+  min-height: 480px;
+  display: flex;
+}
+.film-mode-view-container > .film-workspace,
+.film-mode-view-container > .film-mode-root{ flex:1 1 auto; min-height:0; width:100%; }
+.film-mode-root{ display:flex; flex-direction:column; }
+
+/* loading window */
+.film-window--loading{align-items:center;justify-content:center;gap:14px;color:var(--film-t2);
+  font-size:14px;flex-direction:column;}
+
+/* ── My Films library ── */
+.film-lib{flex:1 1 auto;min-height:0;display:flex;flex-direction:column;padding:6px 18px 22px;overflow-y:auto;}
+.film-lib-head{flex:0 0 auto;display:flex;align-items:center;justify-content:space-between;gap:14px;
+  padding:14px 2px 18px;flex-wrap:wrap;}
+.film-lib-pill{display:inline-flex;align-items:center;font-family:var(--film-body);font-weight:600;
+  font-size:13px;color:#c7d2fe;background:rgba(99,102,241,.16);border:1px solid rgba(99,102,241,.35);
+  border-radius:var(--film-r-full);padding:7px 16px;}
+.film-lib-newbar{display:flex;align-items:center;gap:8px;flex-wrap:wrap;}
+
+/* segmented style/duration pills (New film) */
+.film-seg{display:flex;gap:2px;background:var(--film-canvas);border:1px solid var(--film-bd-subtle);
+  border-radius:var(--film-r-full);padding:3px;}
+.film-seg-btn{font-family:var(--film-body);font-size:12px;font-weight:600;color:var(--film-t2);
+  background:transparent;border:0;padding:6px 13px;border-radius:var(--film-r-full);cursor:pointer;transition:all .16s;}
+.film-seg-btn:hover{color:var(--film-t1);}
+.film-seg-btn.is-on{background:var(--film-accent);color:#fff;}
+
+.film-lib-error{flex:0 0 auto;margin:0 2px 12px;padding:10px 14px;border-radius:var(--film-r-md);
+  background:rgba(239,68,68,.1);border:1px solid rgba(239,68,68,.3);color:#fca5a5;font-size:13px;}
+
+.film-lib-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(210px,1fr));gap:16px;align-content:start;}
+.film-lib-card{position:relative;background:var(--film-surface);border:1px solid var(--film-bd-subtle);
+  border-radius:var(--film-r-lg);overflow:hidden;cursor:pointer;transition:border-color .18s,box-shadow .18s,transform .18s;}
+.film-lib-card:hover{border-color:var(--film-bd-med);box-shadow:var(--film-glow-sh);transform:translateY(-2px);}
+.film-lib-thumb{aspect-ratio:16/9;position:relative;display:grid;place-items:center;color:var(--film-t3);
+  background:var(--film-canvas);overflow:hidden;}
+.film-lib-thumb.is-ready{background:linear-gradient(135deg,#0d1424,#1b2440);}
+.film-lib-thumb video{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;opacity:.85;}
+.film-lib-play{position:relative;z-index:1;width:40px;height:40px;border-radius:50%;background:rgba(255,255,255,.14);
+  border:1px solid var(--film-bd-strong);display:grid;place-items:center;color:#fff;}
+.film-lib-status{position:absolute;top:8px;left:8px;z-index:1;font-size:9px;font-weight:700;letter-spacing:.5px;
+  text-transform:uppercase;padding:3px 8px;border-radius:var(--film-r-full);backdrop-filter:blur(6px);}
+.film-lib-status--draft{background:rgba(148,163,184,.2);color:var(--film-t2);}
+.film-lib-status--rendering{background:rgba(99,102,241,.3);color:#fff;}
+.film-lib-status--ready{background:rgba(16,185,129,.24);color:#a7f3d0;}
+.film-lib-status--failed{background:rgba(239,68,68,.24);color:#fca5a5;}
+.film-lib-meta{padding:11px 13px;}
+.film-lib-title{font-family:var(--film-display);font-weight:700;font-size:14px;color:var(--film-t1);
+  white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+.film-lib-sub{font-size:11px;color:var(--film-t3);margin-top:3px;text-transform:capitalize;}
+.film-lib-del{position:absolute;top:8px;right:8px;z-index:2;width:28px;height:28px;border-radius:var(--film-r-sm);
+  background:rgba(10,15,26,.6);border:1px solid var(--film-bd-subtle);color:var(--film-t3);cursor:pointer;
+  display:grid;place-items:center;opacity:0;transition:all .16s;backdrop-filter:blur(4px);}
+.film-lib-card:hover .film-lib-del{opacity:1;}
+.film-lib-del:hover{color:var(--film-error);border-color:var(--film-error);}
+
+.film-lib-empty{flex:1 1 auto;display:flex;flex-direction:column;align-items:center;justify-content:center;
+  text-align:center;gap:12px;color:var(--film-t3);padding:40px;}
+.film-lib-empty h3{font-family:var(--film-display);font-weight:700;font-size:17px;color:var(--film-t2);}
+.film-lib-empty p{font-size:13px;max-width:300px;line-height:1.5;}

@@ -27,6 +27,7 @@ import { useSearchParams } from 'react-router-dom';
 import StripeSuccessHandler from './components/StripeSuccessHandler';
 import VerseStudioTab from './components/VerseStudio/VerseStudioTab';
 import PodcastStudioPage from './components/PodcastStudio/PodcastStudioPage';
+import FilmMode from './components/Film/FilmMode';
 import OnboardingFlow, { isOnboardingComplete } from './components/Onboarding/OnboardingFlow';
 import './components/LauncherOverlay/LauncherOverlay.css';
 import './styles.css';
@@ -504,6 +505,12 @@ export default function ChatApp() {
           context={activePodcastContext}
           onClose={() => switchView(VIEW_STATES.CHAT)}
         />
+      )}
+
+      {currentView === VIEW_STATES.FILM && (
+        <div className="film-mode-view-container">
+          <FilmMode />
+        </div>
       )}
 
       {previewCharacterKey && (

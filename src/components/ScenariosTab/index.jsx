@@ -15,7 +15,6 @@ import UseCaseCarousel from './UseCaseCarousel';
 import ThemeToggle from './ThemeToggle';
 import DialogueGuide from './DialogueGuide';
 import DialoguePill from './DialoguePill/DialoguePill';  // ✅ NEW
-import FilmWorkspaceContainer from '../Film/FilmWorkspaceContainer';  // ✅ NEW — free-form film
 import './ScenariosTab.css';
 
 export default function ScenariosTab({
@@ -270,42 +269,34 @@ export default function ScenariosTab({
         myScenarioCount={myScenarios.length}
       />
 
-      {/* ✅ Single content area — tab-driven, no two-story scroll.
-          create-film mounts the full-height film workspace in place of the
-          scrolling scenarios content; every other tab renders as before. */}
-      {activeTab === 'create-film' ? (
-        <div className="film-workspace-host">
-          <FilmWorkspaceContainer durationSeconds={60} videoStyle="anime" />
-        </div>
-      ) : (
-        <div className="scenarios-content">
+      {/* ✅ Single content area — tab-driven, no two-story scroll */}
+      <div className="scenarios-content">
 
-          {activeTab === 'templates' && (
-            <>
-              <TemplatesGallery
-                isUnlimited={isUnlimited}
-                onUpgradeRequired={() => {}}
-                currentScenarioCount={myScenarios.length}
-                onScenarioCreated={handleScenarioCreated}
-                onOpenGuide={null}
-              />
-              <UseCaseCarousel />
-            </>
-          )}
-
-          {activeTab === 'mine' && (
-            <MyScenariosPanel
-              userId={user?.id}
-              scenarios={myScenarios}
-              onRefresh={loadMyScenarios}
-              onCreateNew={handleCreateNew}
-              onStartDebate={handleStartDebate}
-              theme={currentTheme}
+        {activeTab === 'templates' && (
+          <>
+            <TemplatesGallery
+              isUnlimited={isUnlimited}
+              onUpgradeRequired={() => {}}
+              currentScenarioCount={myScenarios.length}
+              onScenarioCreated={handleScenarioCreated}
+              onOpenGuide={null}
             />
-          )}
+            <UseCaseCarousel />
+          </>
+        )}
 
-        </div>
-      )}
+        {activeTab === 'mine' && (
+          <MyScenariosPanel
+            userId={user?.id}
+            scenarios={myScenarios}
+            onRefresh={loadMyScenarios}
+            onCreateNew={handleCreateNew}
+            onStartDebate={handleStartDebate}
+            theme={currentTheme}
+          />
+        )}
+
+      </div>
 
     </div>
   );
@@ -552,10 +543,10 @@ const EducationalUpgradeModal = ({ isOpen, onClose, onUpgradeWithStripe, onUpgra
           </div>
           <div className="dialogue-modal-pricing-actions">
             <button className="dialogue-modal-cta-button primary" onClick={onUpgradeWithStripe}>
-              💳 Upgrade with Stripe - £10.99/month
+              💳 Upgrade with Stripe - £11.99/month
             </button>
             <button className="dialogue-modal-cta-button secondary" onClick={onUpgradeWithPayPal}>
-              🅿️ Pay with PayPal - £10.99/month
+              🅿️ Pay with PayPal - £11.99/month
             </button>
             <button className="dialogue-modal-compare-button"
               onClick={() => window.open('/pricing', '_blank')}>

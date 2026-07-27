@@ -30,9 +30,9 @@ export const filmFinalize = (session_id) =>
   api.post('/film/assistant/finalize', { session_id }, { timeout: LLM_TIMEOUT }).then(r => r.data);
 
 // ── job (generate + poll + edit) ──
-export const filmGenerate = ({ script, title, duration_seconds, video_style, intro, outro_theme }) =>
+export const filmGenerate = ({ script, title, duration_seconds, video_style, intro, outro_theme, film_project_id }) =>
   api.post('/film/generate',
-    { script, title, duration_seconds, video_style, intro, outro_theme },
+    { script, title, duration_seconds, video_style, intro, outro_theme, film_project_id },
     { timeout: QUEUE_TIMEOUT }).then(r => r.data);
 
 export const filmGetJob   = (jobId) =>
@@ -50,6 +50,20 @@ export const filmRegenerate = (jobId, beat_index, note) =>
   api.post(`/film/jobs/${jobId}/regenerate`,
     { beat_index, note: note || null },
     { timeout: QUEUE_TIMEOUT }).then(r => r.data);
+
+// ── film projects (the "movie" record: chat + script + render history) ──
+export const filmCreateProject = ({ title, video_style, duration_seconds } = {}) =>
+  api.post('/film/projects',
+    { title, video_style, duration_seconds }, { timeout: QUEUE_TIMEOUT }).then(r => r.data);
+
+export const filmListProjects = () =>
+  api.get('/film/projects').then(r => r.data);
+
+export const filmGetProject = (projectId) =>
+  api.get(`/film/projects/${projectId}`).then(r => r.data);
+
+export const filmDeleteProject = (projectId) =>
+  api.delete(`/film/projects/${projectId}`, { timeout: QUEUE_TIMEOUT }).then(r => r.data);
 
 // Map an axios error to a user-safe message — never leak a raw 401/500/stack.
 export function friendlyError(e, fallback = 'Something went wrong. Please try again.') {

@@ -127,6 +127,21 @@ const PodcastStudioIcon = ({ className }) => (
   </svg>
 );
 
+const FilmIcon = ({ className }) => (
+  <svg className={className} width="16" height="16" viewBox="0 0 24 24" fill="none">
+    <defs>
+      <filter id="filmGlow" x="-50%" y="-50%" width="200%" height="200%">
+        <feDropShadow dx="0" dy="0" stdDeviation="2.2" floodColor="#6366f1" floodOpacity="0.65" />
+      </filter>
+    </defs>
+    <rect x="3" y="8" width="18" height="12" rx="2"
+      stroke="currentColor" strokeWidth="1.8" opacity="0.95" filter="url(#filmGlow)" />
+    <path d="M3.5 8l3-3.5 3 3.5M9.5 8l3-3.5 3 3.5M15.5 8l3-3.5 3 3.5"
+      stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round"
+      opacity="0.85" filter="url(#filmGlow)" />
+  </svg>
+);
+
 const GetStartedIcon = ({ className }) => (
   <svg className={className} width="16" height="16" viewBox="0 0 24 24" fill="none">
     <defs>
@@ -214,6 +229,7 @@ export default function Header() {
         { key: 'stories',       label: 'Story',     icon: StoriesIcon,       viewState: viewContext.VIEW_STATES.STORY_MODE },
         { key: 'create',        label: 'Create',    icon: CreateIcon,        viewState: viewContext.VIEW_STATES.CREATOR_DASHBOARD },
         { key: 'scenarios',     label: 'Dialogue',  icon: ScenariosIcon,     viewState: viewContext.VIEW_STATES.SCENARIOS },
+        { key: 'film',          label: 'Film',      icon: FilmIcon,          viewState: viewContext.VIEW_STATES.FILM },
         { key: 'podcastStudio', label: 'Studio',    icon: PodcastStudioIcon, viewState: viewContext.VIEW_STATES.PODCAST_STUDIO },
         { key: 'verseStudio',   label: 'Workspace', icon: VerseStudioIcon,   viewState: viewContext.VIEW_STATES.VERSE_STUDIO },
       ];
@@ -222,8 +238,10 @@ export default function Header() {
 
   const navGroups = [
     { key: 'primary',      label: 'Primary',      items: ['chat', 'discover'] },
-    { key: 'storyWorld',   label: 'Story world',  items: ['stories'] },
-    { key: 'productivity', label: 'Productivity', items: ['create', 'scenarios', 'podcastStudio', 'verseStudio'] },
+    // Story + Workspace intentionally NOT shown here for now — they remain in
+    // navItems above so their routes (#stories / #workspace) still resolve and
+    // the views stay in-app, just off the sidebar until they're ready.
+    { key: 'productivity', label: 'Productivity', items: ['create', 'scenarios', 'film', 'podcastStudio'] },
   ];
 
   // ── Handlers — all original logic preserved ───────────────────────────────

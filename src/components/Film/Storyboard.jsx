@@ -113,7 +113,10 @@ export default function Storyboard({
   return (
     <div className="film-pcontent">
       <div className="film-phead">
-        <div className="film-phead-ttl">Storyboard <span className="film-sub">{sub}</span></div>
+        <div className="film-htabs">
+          <span className="film-htab is-on">Storyboard</span>
+          <span className="film-hsub">{sub}</span>
+        </div>
         {cta}
       </div>
 

@@ -14,7 +14,8 @@ export const VIEW_STATES = {
   SCENARIOS: 'scenarios',
   STORY_MODE: 'story_mode',  // NEW
   VERSE_STUDIO: 'verse_studio',  // 🔹 Workspace / Verse Studio tab
-  PODCAST_STUDIO: 'podcast_studio'  // 🎙️ Podcast Studio
+  PODCAST_STUDIO: 'podcast_studio',  // 🎙️ Podcast Studio
+  FILM: 'film'  // 🎬 Film — own top-level mode (free-form film workspace)
 };
 
 const STORAGE_KEY = 'awakeverse_discovered_characters';
@@ -130,7 +131,8 @@ const VIEW_TO_HASH_MAP = {
   [VIEW_STATES.SCENARIOS]: 'scenarios',
   [VIEW_STATES.STORY_MODE]: 'stories',
   [VIEW_STATES.VERSE_STUDIO]: 'workspace',  // 🔹 URL: #workspace
-  [VIEW_STATES.PODCAST_STUDIO]: 'studio'   // 🎙️ URL: #studio
+  [VIEW_STATES.PODCAST_STUDIO]: 'studio',   // 🎙️ URL: #studio
+  [VIEW_STATES.FILM]: 'film'                // 🎬 URL: #film
 };
 
 /**
@@ -164,7 +166,9 @@ function getViewFromHash(hashString) {
     'workspace': VIEW_STATES.VERSE_STUDIO,
     'verse': VIEW_STATES.VERSE_STUDIO,
     'studio': VIEW_STATES.PODCAST_STUDIO,
-    'podcast_studio': VIEW_STATES.PODCAST_STUDIO  // Alias
+    'podcast_studio': VIEW_STATES.PODCAST_STUDIO,  // Alias
+
+    'film': VIEW_STATES.FILM  // 🎬 Film mode
   };
   return HASH_TO_VIEW_MAP[baseView] || VIEW_STATES.CHAT;
 }

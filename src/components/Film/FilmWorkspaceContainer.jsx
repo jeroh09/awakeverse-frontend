@@ -1,15 +1,15 @@
 // src/components/Film/FilmWorkspaceContainer.jsx
-// Smart wrapper: connects the two hooks to the presentational FilmWorkspace.
-// This is the component you mount (e.g. from ScenariosTab). It owns the small
-// bits of view state the hooks don't — which beat is pulled into the chat editor,
-// and the composed stageState (review comes from authoring, render/edit from the job).
+// Smart wrapper bound to ONE film project. Mounted by FilmMode with either a
+// freshly-created project (projectId + initialSessionId, empty chat) or an
+// existing one to resume (projectId only → GET /projects/:id restores chat +
+// render). Chat persists because the session is the project's bound session.
 
 import React, { useState, useMemo, useCallback, useEffect } from 'react';
 import FilmWorkspace from './FilmWorkspace';
 import useFilmAuthoring from './useFilmAuthoring';
 import useFilmJob from './useFilmJob';
+import { filmGetProject, friendlyError } from './filmApi';
 
-// directed shot (review) -> storyboard cell
 const shotToCell = s => ({
   index: s.index,
   kind: s.kind || 'pure_visual',
@@ -22,31 +22,55 @@ const shotToCell = s => ({
 });
 
 export default function FilmWorkspaceContainer({
-  premise = null,               // optional: seed the first chat turn
-  durationSeconds = 60,
-  videoStyle = 'anime',
-  onClose,                      // optional: back out of the workspace
+  projectId,
+  initialSessionId = null,     // set when the project was just created
+  onBackToFilms = () => {},
 }) {
   const authoring = useFilmAuthoring();
   const job = useFilmJob();
-  const [editing, setEditing] = useState(null);   // { index, kind, text }
-  const [editsByIndex, setEditsByIndex] = useState({}); // optimistic local text edits
+  const [editing, setEditing] = useState(null);
+  const [editsByIndex, setEditsByIndex] = useState({});
+  const [loading, setLoading] = useState(true);
+  const [meta, setMeta] = useState({ video_style: 'anime', duration_seconds: 60 });
 
-  // start a session on mount
-  useEffect(() => { authoring.start(premise); /* eslint-disable-next-line */ }, []);
+  // Mount: adopt the fresh session, or resume the project.
+  useEffect(() => {
+    let cancelled = false;
+    (async () => {
+      setLoading(true);
+      if (initialSessionId) {
+        authoring.adopt({ session_id: initialSessionId, messages: [] });
+        if (!cancelled) setLoading(false);
+        return;
+      }
+      try {
+        const p = await filmGetProject(projectId);
+        if (cancelled) return;
+        authoring.adopt({
+          session_id: p.session_id, messages: p.messages || [],
+          title: p.title, script: p.script, scriptReady: !!p.script,
+        });
+        setMeta({ video_style: p.video_style || 'anime', duration_seconds: p.duration_seconds || 60 });
+        if (p.render) job.adopt(p.render);
+      } catch (e) {
+        // authoring/job errors surface in their own state; nothing else to do
+      } finally {
+        if (!cancelled) setLoading(false);
+      }
+    })();
+    return () => { cancelled = true; };
+  }, [projectId, initialSessionId]);
 
-  // ── compose the stage state + the beats shown on the left ──
+  // ── stage composition ──
   const reviewCells = useMemo(
     () => (authoring.shots ? authoring.shots.map(shotToCell) : null),
     [authoring.shots]
   );
-
   const stageState =
     job.stage === 'edit' ? 'edit'
     : job.stage === 'render' ? 'render'
     : reviewCells ? 'review'
     : 'empty';
-
   const beats =
     stageState === 'review' ? reviewCells
     : (stageState === 'render' || stageState === 'edit') ? job.cells
@@ -56,8 +80,7 @@ export default function FilmWorkspaceContainer({
   const onSelectBeat = useCallback((index) => {
     const b = beats.find(x => x.index === index);
     if (!b) return;
-    const text = editsByIndex[index]
-      ?? (b.speaker ? `${b.speaker}: "${b.caption}"` : b.caption);
+    const text = editsByIndex[index] ?? (b.speaker ? `${b.speaker}: "${b.caption}"` : b.caption);
     setEditing({ index, kind: b.kind, text });
   }, [beats, editsByIndex]);
 
@@ -68,25 +91,22 @@ export default function FilmWorkspaceContainer({
     setEditing(null);
   }, [editing]);
 
-  const onBuildFilm = useCallback(async () => {
-    const rec = await authoring.finalize();
-    // If the backend dry-compiles on finalize, authoring.shots now drives the
-    // review storyboard. If it only returns script text, we skip straight to
-    // Generate (render fills the board live).
-    if (rec && !rec.shots && rec.script) {
-      job.generate({ script: rec.script, title: authoring.title,
-        duration_seconds: durationSeconds, video_style: videoStyle });
-    }
-  }, [authoring, job, durationSeconds, videoStyle]);
-
-  const onGenerate = useCallback(() => {
-    if (!authoring.script) return;
+  const doGenerate = useCallback((script) => {
     job.generate({
-      script: authoring.script, title: authoring.title,
-      duration_seconds: durationSeconds, video_style: videoStyle,
+      script, title: authoring.title, film_project_id: projectId,
+      duration_seconds: meta.duration_seconds, video_style: meta.video_style,
       expectedShots: reviewCells ? reviewCells.length : 0,
     });
-  }, [authoring.script, authoring.title, job, durationSeconds, videoStyle, reviewCells]);
+  }, [job, authoring.title, projectId, meta, reviewCells]);
+
+  const onBuildFilm = useCallback(async () => {
+    const rec = await authoring.finalize();
+    if (rec && !rec.shots && rec.script) doGenerate(rec.script);
+  }, [authoring, doGenerate]);
+
+  const onGenerate = useCallback(() => {
+    if (authoring.script) doGenerate(authoring.script);
+  }, [authoring.script, doGenerate]);
 
   const onRegenerateFromEdit = useCallback((text) => {
     if (!editing) return;
@@ -107,13 +127,11 @@ export default function FilmWorkspaceContainer({
   }, [job]);
 
   const onDuplicate = useCallback((index) => {
-    const src = job.cells.find(c => c.index === index);
-    if (!src) return;
     const out = [];
     job.cells.forEach(c => {
       out.push({ index: c.index, clip_url: c.clipUrl, seconds: c.seconds,
                  speaker: c.speaker, caption: c.caption, kind: c.kind, durable: c.durable });
-      if (c.index === index) out.push({ ...out[out.length - 1] }); // duplicate right after
+      if (c.index === index) out.push({ ...out[out.length - 1] });
     });
     job.reassemble(out);
   }, [job]);
@@ -125,6 +143,8 @@ export default function FilmWorkspaceContainer({
   return (
     <FilmWorkspace
       title={authoring.title}
+      loading={loading}
+      onBackToFilms={onBackToFilms}
       stageState={stageState}
       beats={beats}
       selectedBeat={editing ? editing.index : null}
