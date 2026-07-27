@@ -67,7 +67,8 @@ export default function FilmWorkspaceContainer({
     [authoring.shots]
   );
   const stageState =
-    job.stage === 'edit' ? 'edit'
+    job.editBusy ? 'edit'
+    : job.stage === 'edit' ? 'edit'
     : job.stage === 'render' ? 'render'
     : reviewCells ? 'review'
     : 'empty';
@@ -111,12 +112,15 @@ export default function FilmWorkspaceContainer({
   const onRegenerateFromEdit = useCallback((text) => {
     if (!editing) return;
     setEditsByIndex(m => ({ ...m, [editing.index]: text }));
-    job.regenerate(editing.index, text);
+    // Edited text drives a full re-plan: the director re-conceives this shot.
+    job.regenerate(editing.index, null, text);
     setEditing(null);
   }, [editing, job]);
 
   const onRegenerate = useCallback((index) => {
-    job.regenerate(index, editsByIndex[index] || null);
+    // Card "Regenerate" with no edit → a fresh re-conception of the same beat
+    // (any prior local text edit rides along as the re-plan text).
+    job.regenerate(index, null, editsByIndex[index] || null);
   }, [job, editsByIndex]);
 
   const onCut = useCallback((index) => {
@@ -142,13 +146,15 @@ export default function FilmWorkspaceContainer({
 
   return (
     <FilmWorkspace
-      title={authoring.title}
+      title={job.title || authoring.title}
       loading={loading}
       onBackToFilms={onBackToFilms}
       stageState={stageState}
       beats={beats}
       selectedBeat={editing ? editing.index : null}
       progress={job.progress}
+      finalUrl={job.outputUrl}
+      editBusy={job.editBusy}
       onSelectBeat={onSelectBeat}
       onGenerate={onGenerate}
       onExport={onExport}

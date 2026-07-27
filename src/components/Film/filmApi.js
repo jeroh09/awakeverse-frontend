@@ -46,9 +46,9 @@ export const filmReassemble = (jobId, beats, captions) =>
     { beats, ...(captions != null ? { captions } : {}) },
     { timeout: QUEUE_TIMEOUT }).then(r => r.data);
 
-export const filmRegenerate = (jobId, beat_index, note) =>
+export const filmRegenerate = (jobId, beat_index, note, edited_text) =>
   api.post(`/film/jobs/${jobId}/regenerate`,
-    { beat_index, note: note || null },
+    { beat_index, note: note || null, edited_text: edited_text || null },
     { timeout: QUEUE_TIMEOUT }).then(r => r.data);
 
 // ── film projects (the "movie" record: chat + script + render history) ──

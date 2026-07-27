@@ -20,6 +20,8 @@ export default function FilmWorkspace({
   beats = [],
   selectedBeat = null,
   progress = null,
+  finalUrl = null,
+  editBusy = null,
   onSelectBeat, onGenerate, onExport, onStop,
   onRegenerate, onDuplicate, onCut,
   // chat (right)
@@ -72,6 +74,8 @@ export default function FilmWorkspace({
               beats={beats}
               selectedBeat={selectedBeat}
               progress={progress}
+              finalUrl={finalUrl}
+              editBusy={editBusy}
               onSelectBeat={onSelectBeat}
               onGenerate={onGenerate}
               onExport={onExport}

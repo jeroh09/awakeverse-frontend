@@ -291,3 +291,49 @@
   text-align:center;gap:12px;color:var(--film-t3);padding:40px;}
 .film-lib-empty h3{font-family:var(--film-display);font-weight:700;font-size:17px;color:var(--film-t2);}
 .film-lib-empty p{font-size:13px;max-width:300px;line-height:1.5;}
+
+/* ═══════════════════════════════════════════════════════════════════════════
+   INLINE BEAT VIDEO + FINAL PLAYER
+   The clip must fill the 16:9 thumb (absolute + object-fit), NOT render at its
+   native size — otherwise the card grows to the video's height and the panel
+   doubles. All thumb overlays sit above the video.
+   ═══════════════════════════════════════════════════════════════════════════ */
+.film-thumb{ overflow:hidden; }
+.film-thumb-vid{ position:absolute; inset:0; width:100%; height:100%; object-fit:cover;
+  background:#0d1424; z-index:0; }
+.film-thumb .film-n,
+.film-thumb .film-chip,
+.film-thumb .film-dur,
+.film-thumb .film-play,
+.film-thumb .film-spin{ position:relative; z-index:1; }
+.film-thumb .film-n{ position:absolute; z-index:2; }
+.film-thumb .film-dur,
+.film-thumb .film-chip{ z-index:2; }
+.film-thumb .film-play{ cursor:pointer; border:1px solid var(--film-bd-strong);
+  background:rgba(0,0,0,.35); transition:background .16s, transform .16s; }
+.film-thumb .film-play:hover{ background:rgba(99,102,241,.5); transform:scale(1.06); }
+/* controls-on video should sit above the play button once playing */
+.film-thumb-vid[controls]{ z-index:3; }
+
+.film-head-actions{ display:flex; align-items:center; gap:8px; }
+
+/* final-film overlay player (plays inside the workspace, not a new tab) */
+.film-player-overlay{ position:absolute; inset:0; z-index:40; display:grid; place-items:center;
+  background:rgba(6,10,18,.78); backdrop-filter:blur(6px); padding:24px; }
+.film-panel--stage{ position:relative; }   /* overlay is scoped to the stage panel */
+.film-player-box{ position:relative; width:min(880px,92%); border-radius:var(--film-r-lg);
+  overflow:hidden; box-shadow:var(--film-glow-sh),0 30px 80px -20px rgba(0,0,0,.9);
+  border:1px solid var(--film-ring); background:#000; }
+.film-player-vid{ width:100%; display:block; aspect-ratio:16/9; background:#000; }
+.film-player-close{ position:absolute; top:8px; right:10px; z-index:2; width:34px; height:34px;
+  border-radius:50%; background:rgba(0,0,0,.55); border:1px solid var(--film-bd-strong);
+  color:#fff; font-size:20px; line-height:1; cursor:pointer; }
+.film-player-close:hover{ background:rgba(99,102,241,.6); }
+
+/* edit-in-progress overlay (cut / duplicate / regenerate feedback) */
+.film-edit-overlay{position:absolute;inset:0;z-index:35;display:grid;place-items:center;
+  background:rgba(6,10,18,.55);backdrop-filter:blur(3px);}
+.film-edit-card{display:flex;flex-direction:column;align-items:center;gap:10px;
+  background:var(--film-surface);border:1px solid var(--film-ring);border-radius:var(--film-r-lg);
+  padding:22px 30px;box-shadow:var(--film-glow-sh);color:var(--film-t1);font-size:14px;font-weight:600;}
+.film-edit-card small{color:var(--film-t3);font-weight:500;font-size:12px;}

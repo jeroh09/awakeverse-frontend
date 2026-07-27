@@ -30,14 +30,18 @@ function toCells(manifest, expected) {
   const live = !!(manifest && manifest.live);
   const rendered = new Map(beats.map(b => [b.index, normBeat(b)]));
 
-  // Prefer the plan for the skeleton; fall back to rendered beats or `expected`.
+  // NOT live → a completed or freshly-EDITED film: the durable beats ARE the
+  // truth (in their current order), so cut / duplicate / reorder reflect at once.
+  // The `plan` is only the live-render progress skeleton; ignore it here.
+  if (!live && beats.length) {
+    return beats.map((b, pos) => ({ ...normBeat(b), pos, status: 'done' }));
+  }
+
+  // Live render: build the card grid from the plan skeleton immediately, overlay
+  // rendered clips by index as each shot finishes.
   const total = Math.max(plan.length, beats.length, expected || 0);
   if (!total) return [];
-
-  // index → planned shot info (kind/seconds/speaker/caption/softened)
   const planByIndex = new Map(plan.map(s => [s.index, s]));
-
-  // first index not yet rendered — shown as actively "rendering" while live
   let firstPending = null;
   for (let i = 1; i <= total; i++) if (!rendered.has(i)) { firstPending = i; break; }
 
@@ -45,10 +49,9 @@ function toCells(manifest, expected) {
   for (let i = 1; i <= total; i++) {
     const done = rendered.get(i);
     if (done) {
-      // keep planned text if the rendered beat didn't carry it
       const p = planByIndex.get(i) || {};
       cells.push({
-        ...done,
+        ...done, pos: i - 1,
         kind: done.kind || p.kind || 'pure_visual',
         speaker: done.speaker || (p.speaker || '').trim(),
         caption: done.caption || (p.caption || '').trim(),
@@ -58,15 +61,13 @@ function toCells(manifest, expected) {
     } else {
       const p = planByIndex.get(i);
       cells.push(p ? {
-        index: i,
-        kind: p.kind || 'pure_visual',
-        seconds: Math.round(p.seconds || 6),
-        speaker: (p.speaker || '').trim(),
-        caption: (p.caption || '').trim(),
+        index: i, pos: i - 1,
+        kind: p.kind || 'pure_visual', seconds: Math.round(p.seconds || 6),
+        speaker: (p.speaker || '').trim(), caption: (p.caption || '').trim(),
         clipUrl: null, durable: false, softened: !!p.softened,
         status: (live && i === firstPending) ? 'rendering' : 'queued',
       } : {
-        index: i, kind: 'pure_visual', seconds: 6, speaker: '', caption: '',
+        index: i, pos: i - 1, kind: 'pure_visual', seconds: 6, speaker: '', caption: '',
         clipUrl: null, durable: false, softened: false,
         status: (live && i === firstPending) ? 'rendering' : 'queued',
       });
@@ -89,6 +90,7 @@ export default function useFilmJob() {
   const [rawProgress, setRawProgress] = useState(0);
   const [outputUrl, setOutputUrl]   = useState(null);
   const [error, setError]           = useState(null);
+  const [editBusy, setEditBusy]     = useState(null);   // null | label while an edit applies
 
   const pollRef = useRef(null);
   const startedRef = useRef(0);
@@ -116,9 +118,9 @@ export default function useFilmJob() {
           setManifest(m);
         }
         if (job.output_url) setOutputUrl(job.output_url);
-        if (job.status === 'complete') stop();
+        if (job.status === 'complete') { stop(); setEditBusy(null); }
         if (job.status === 'failed' || job.status === 'cancelled') {
-          stop(); setError(job.error_message || 'Render stopped.');
+          stop(); setEditBusy(null); setError(job.error_message || 'Render stopped.');
         }
       } catch (e) {
         const s = e && e.response && e.response.status;
@@ -168,22 +170,22 @@ export default function useFilmJob() {
 
   const reassemble = useCallback(async (editedBeats, captions) => {
     if (!jobId) return;
-    setError(null); setStatus('processing');
+    setError(null); setEditBusy('Reassembling your film…'); setStatus('processing');
     try { await filmReassemble(jobId, editedBeats, captions); poll(jobId); }
-    catch (e) { setError(friendlyError(e)); }
+    catch (e) { setError(friendlyError(e)); setEditBusy(null); }
   }, [jobId, poll]);
 
-  const regenerate = useCallback(async (beatIndex, note) => {
+  const regenerate = useCallback(async (beatIndex, note, editedText) => {
     if (!jobId) return;
-    setError(null); setStatus('processing');
-    try { await filmRegenerate(jobId, beatIndex, note); poll(jobId); }
-    catch (e) { setError(friendlyError(e)); }
+    setError(null); setEditBusy(`Regenerating shot ${beatIndex}…`); setStatus('processing');
+    try { await filmRegenerate(jobId, beatIndex, note, editedText); poll(jobId); }
+    catch (e) { setError(friendlyError(e)); setEditBusy(null); }
   }, [jobId, poll]);
 
   const reset = useCallback(() => {
     stop();
     setJobId(null); setStatus('idle'); setManifest(null); setRawProgress(0);
-    setOutputUrl(null); setError(null); expectedRef.current = 0;
+    setOutputUrl(null); setError(null); setEditBusy(null); expectedRef.current = 0;
   }, [stop]);
 
   const cells = toCells(manifest, expectedRef.current);
@@ -193,7 +195,8 @@ export default function useFilmJob() {
   const total = Math.max(expectedRef.current, cells.length);
   const done = cells.filter(c => c.status === 'done').length || Math.round(rawProgress * total);
   const progress = { done, total, etaText: etaText(done, total) };
+  const jobTitle = (manifest && manifest.source && manifest.source.title) || null;
 
-  return { jobId, status, stage, cells, progress, outputUrl, error,
+  return { jobId, status, stage, cells, progress, outputUrl, error, title: jobTitle, editBusy,
     generate, cancel, reassemble, regenerate, adopt, reset };
 }
