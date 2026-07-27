@@ -41,15 +41,17 @@ export default function FilmWorkspace({
   return (
     <div className="film-workspace theme-awakeverse">
       <div className="film-topbar">
-        <div className="film-topbar-left">
-          {onBackToFilms && (
-            <button className="film-tg film-tg--back" onClick={onBackToFilms}>
-              <IconBack s={15} /> My Films
-            </button>
-          )}
-          <span className="film-title" title={title}>{title || 'Untitled film'}</span>
-        </div>
+        <div className="film-topbar-spacer" />
+        <span className="film-title" title={title}>{title || 'Untitled film'}</span>
         <div className="film-focuspill">
+          {onBackToFilms && (
+            <>
+              <button className="film-focuspill-back" onClick={onBackToFilms}>
+                <IconBack s={13} /> My Films
+              </button>
+              <span className="film-focuspill-div" />
+            </>
+          )}
           <button
             className={focusPanel !== 'assistant' ? 'is-on' : ''}
             onClick={() => setFocusPanel('storyboard')}
