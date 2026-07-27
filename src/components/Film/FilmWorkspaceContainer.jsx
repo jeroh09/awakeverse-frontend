@@ -32,6 +32,10 @@ export default function FilmWorkspaceContainer({
   const [editsByIndex, setEditsByIndex] = useState({});
   const [loading, setLoading] = useState(true);
   const [meta, setMeta] = useState({ video_style: 'anime', duration_seconds: 60 });
+  // Per-beat busy flag — threaded to the individual Regenerate button (not just
+  // the stage overlay) so a click registers visibly the instant it's pressed.
+  // Fixes handover §2a: "Regenerate button shows no state".
+  const [regenBusyIndex, setRegenBusyIndex] = useState(null);
 
   // Mount: adopt the fresh session, or resume the project.
   useEffect(() => {
@@ -60,6 +64,12 @@ export default function FilmWorkspaceContainer({
     })();
     return () => { cancelled = true; };
   }, [projectId, initialSessionId]);
+
+  // Clear the button-level regen spinner once the job's overlay-level busy
+  // flag clears (regenerate completed, failed, or was superseded).
+  useEffect(() => {
+    if (!job.editBusy) setRegenBusyIndex(null);
+  }, [job.editBusy]);
 
   // ── stage composition ──
   const reviewCells = useMemo(
@@ -111,15 +121,18 @@ export default function FilmWorkspaceContainer({
 
   const onRegenerateFromEdit = useCallback((text) => {
     if (!editing) return;
-    setEditsByIndex(m => ({ ...m, [editing.index]: text }));
+    const idx = editing.index;
+    setEditsByIndex(m => ({ ...m, [idx]: text }));
+    setRegenBusyIndex(idx);
     // Edited text drives a full re-plan: the director re-conceives this shot.
-    job.regenerate(editing.index, null, text);
+    job.regenerate(idx, null, text);
     setEditing(null);
   }, [editing, job]);
 
   const onRegenerate = useCallback((index) => {
     // Card "Regenerate" with no edit → a fresh re-conception of the same beat
     // (any prior local text edit rides along as the re-plan text).
+    setRegenBusyIndex(index);
     job.regenerate(index, null, editsByIndex[index] || null);
   }, [job, editsByIndex]);
 
@@ -155,6 +168,7 @@ export default function FilmWorkspaceContainer({
       progress={job.progress}
       finalUrl={job.outputUrl}
       editBusy={job.editBusy}
+      regenBusyIndex={regenBusyIndex}
       onSelectBeat={onSelectBeat}
       onGenerate={onGenerate}
       onExport={onExport}
@@ -163,7 +177,9 @@ export default function FilmWorkspaceContainer({
       onDuplicate={onDuplicate}
       onCut={onCut}
       messages={authoring.messages}
-      chatSub={authoring.busy ? 'thinking…' : (job.error || authoring.error || '')}
+      chatSub={authoring.busy || authoring.streamingActive ? 'thinking…' : (job.error || authoring.error || '')}
+      streamingActive={authoring.streamingActive}
+      streamingText={authoring.streamingText}
       editingBeat={editing}
       onCloseEdit={onCloseEdit}
       onChangeEditText={onChangeEditText}

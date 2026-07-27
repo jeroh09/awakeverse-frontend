@@ -1,14 +1,16 @@
 // src/components/Film/FilmWorkspace.jsx
-// The film workspace shell: one indigo-bordered window with two floating,
-// individually-bordered panels — Storyboard (left) and WritersRoom (right).
-// Its own top-level mode now, so no product brand chrome — a slim bar with a
-// "My Films" return, the film's title (read from the script's own title), and
-// the collapse toggles. Presentational; data + handlers come from the container.
+// The film workspace shell: a plain flex row holding two individually-bordered
+// panels — Storyboard (left) and WritersRoom (right). No outer window border
+// anymore (that's now just panel-level borders). A single combined
+// "Storyboard | Assistant" pill drives which panel gets the wide flex-basis
+// (both panels always stay mounted and visible — this replaces the old
+// collapse/expand toggles). Presentational; data + handlers come from the
+// container.
 
 import React, { useState } from 'react';
 import Storyboard from './Storyboard';
 import WritersRoom from './WritersRoom';
-import { IconChevron, IconBack } from './filmIcons';
+import { IconBack } from './filmIcons';
 import './FilmWorkspace.css';
 
 export default function FilmWorkspace({
@@ -22,17 +24,19 @@ export default function FilmWorkspace({
   progress = null,
   finalUrl = null,
   editBusy = null,
+  regenBusyIndex = null,
   onSelectBeat, onGenerate, onExport, onStop,
   onRegenerate, onDuplicate, onCut,
   // chat (right)
   messages = [],
   chatSub = '',
+  streamingActive = false,
+  streamingText = '',
   editingBeat = null,
   onCloseEdit, onChangeEditText, onRegenerateFromEdit, onSaveEdit,
   onSend, scriptReady = false, onBuildFilm,
 }) {
-  const [leftCollapsed, setLeftCollapsed] = useState(false);
-  const [rightCollapsed, setRightCollapsed] = useState(false);
+  const [focusPanel, setFocusPanel] = useState('storyboard'); // 'storyboard' | 'assistant'
 
   return (
     <div className="film-workspace theme-awakeverse">
@@ -45,12 +49,18 @@ export default function FilmWorkspace({
           )}
           <span className="film-title" title={title}>{title || 'Untitled film'}</span>
         </div>
-        <div className="film-toggles">
-          <button className={`film-tg${leftCollapsed ? ' is-off' : ''}`} onClick={() => setLeftCollapsed(v => !v)}>
-            <IconChevron s={13} dir={leftCollapsed ? 'right' : 'left'} /> Storyboard
+        <div className="film-focuspill">
+          <button
+            className={focusPanel !== 'assistant' ? 'is-on' : ''}
+            onClick={() => setFocusPanel('storyboard')}
+          >
+            Storyboard
           </button>
-          <button className={`film-tg${rightCollapsed ? ' is-off' : ''}`} onClick={() => setRightCollapsed(v => !v)}>
-            Assistant <IconChevron s={13} dir={rightCollapsed ? 'left' : 'right'} />
+          <button
+            className={focusPanel === 'assistant' ? 'is-on' : ''}
+            onClick={() => setFocusPanel('assistant')}
+          >
+            Assistant
           </button>
         </div>
       </div>
@@ -60,15 +70,9 @@ export default function FilmWorkspace({
           <div className="film-spin" /><span>Opening your film…</span>
         </div>
       ) : (
-        <div className="film-window">
+        <div className="film-window" data-focus={focusPanel}>
           {/* LEFT — Storyboard */}
-          <section className={`film-panel film-panel--stage${leftCollapsed ? ' is-collapsed' : ''}`}>
-            <div className="film-rail">
-              <button className="film-rail-btn" onClick={() => setLeftCollapsed(false)} aria-label="Expand storyboard">
-                <IconChevron s={15} dir="right" />
-              </button>
-              <span className="film-rail-label">Storyboard</span>
-            </div>
+          <section className="film-panel film-panel--stage">
             <Storyboard
               stageState={stageState}
               beats={beats}
@@ -76,6 +80,7 @@ export default function FilmWorkspace({
               progress={progress}
               finalUrl={finalUrl}
               editBusy={editBusy}
+              regenBusyIndex={regenBusyIndex}
               onSelectBeat={onSelectBeat}
               onGenerate={onGenerate}
               onExport={onExport}
@@ -87,23 +92,21 @@ export default function FilmWorkspace({
           </section>
 
           {/* RIGHT — Writers' room */}
-          <section className={`film-panel film-panel--chat${rightCollapsed ? ' is-collapsed' : ''}`}>
-            <div className="film-rail">
-              <button className="film-rail-btn" onClick={() => setRightCollapsed(false)} aria-label="Expand assistant">
-                <IconChevron s={15} dir="left" />
-              </button>
-              <span className="film-rail-label">Assistant</span>
-            </div>
+          <section className="film-panel film-panel--chat">
             <WritersRoom
               messages={messages}
               sub={chatSub}
+              streamingActive={streamingActive}
+              streamingText={streamingText}
               editingBeat={editingBeat}
               onCloseEdit={onCloseEdit}
               onChangeEditText={onChangeEditText}
               onRegenerateFromEdit={onRegenerateFromEdit}
               onSaveEdit={onSaveEdit}
+              regenBusy={editingBeat ? regenBusyIndex === editingBeat.index : false}
               onSend={onSend}
               scriptReady={scriptReady}
+              showBuildBar={scriptReady && stageState === 'empty'}
               onBuildFilm={onBuildFilm}
             />
           </section>

@@ -13,6 +13,7 @@
 // Placement: src/components/Film/ importing the instance via '../../api'.
 
 import api from '../../api';
+import environment from '../../config/environment';
 
 const LLM_TIMEOUT = 125000;   // just over the backend's 120s Gemini ceiling
 const QUEUE_TIMEOUT = 30000;  // POSTs that only enqueue (return 202) — quick, but be generous
@@ -25,6 +26,38 @@ export const filmMessage  = (session_id, message, target_duration) =>
   api.post('/film/assistant/message',
     { session_id, message, ...(target_duration ? { target_duration } : {}) },
     { timeout: LLM_TIMEOUT }).then(r => r.data);
+
+// Streaming variant of filmMessage — bypasses the shared axios instance (axios
+// can't hand back a readable ReadableStream in the browser) exactly the way
+// api.js's postDebateMessage does for /debate/:id/message: raw fetch, CSRF
+// pulled by hand from the av_csrf cookie, credentials included manually.
+// Returns the raw Response so the caller (useFilmAuthoring) reads
+// response.body as a stream of NDJSON lines — see film_routes.py's
+// /assistant/message docstring for the line shapes.
+export const filmMessageStream = async (session_id, message, target_duration) => {
+  const API_BASE = environment.API_BASE_URL;
+  const csrf = document.cookie.match(/(?:^|;\s*)av_csrf=([^;]+)/)?.[1] || '';
+  const response = await fetch(`${API_BASE}/api/film/assistant/message`, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      'X-CSRF-Token': decodeURIComponent(csrf),
+    },
+    credentials: 'include',
+    body: JSON.stringify({ session_id, message, ...(target_duration ? { target_duration } : {}) }),
+  });
+
+  if (!response.ok) {
+    // Mirror axios's error shape closely enough for friendlyError() to still
+    // work unmodified: an object with .response.status / .response.data.
+    let data = {};
+    try { data = await response.json(); } catch (_) {}
+    const err = new Error(`HTTP ${response.status}`);
+    err.response = { status: response.status, data };
+    throw err;
+  }
+  return response; // caller reads response.body as a stream
+};
 
 export const filmFinalize = (session_id) =>
   api.post('/film/assistant/finalize', { session_id }, { timeout: LLM_TIMEOUT }).then(r => r.data);

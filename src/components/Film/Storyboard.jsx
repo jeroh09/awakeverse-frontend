@@ -1,7 +1,8 @@
 // src/components/Film/Storyboard.jsx
 // Left panel: the storyboard grid. One surface, three data states (review →
-// render → edit). Beats are a 2-column grid; cards stay a fixed 16:9 size in
-// every state (text-only or with a clip) so the panel never jumps height.
+// render → edit), plus a captivating animated empty state before any script
+// exists. Beats are a 3-column grid; cards stay a fixed 16:9 size in every
+// state (text-only or with a clip) so the panel never jumps height.
 // Rendered/final beats play INLINE inside their card; the finished film plays
 // in an in-panel overlay.
 
@@ -12,6 +13,25 @@ import {
 } from './filmIcons';
 
 const pad = n => String(n).padStart(2, '0');
+
+function EmptyStoryboard() {
+  return (
+    <div className="film-empty">
+      <div className="film-filmstrip">
+        <span className="film-sweep" />
+        {[0, 1, 2, 3, 4].map(i => (
+          <div key={i} className="film-frame" style={{ animationDelay: `${(i * 0.18).toFixed(2)}s` }}>
+            <span className="film-frame-dot tl" /><span className="film-frame-dot tr" />
+            <span className="film-frame-dot bl" /><span className="film-frame-dot br" />
+            <IconPlay s={16} />
+          </div>
+        ))}
+      </div>
+      <h3>The reel's loaded. Nothing's shot yet.</h3>
+      <p>Talk it through with the director on the right — once the script locks, every frame here fills in live.</p>
+    </div>
+  );
+}
 
 function Thumb({ beat, stageState }) {
   const { index, kind, seconds, clipUrl, status } = beat;
@@ -67,7 +87,7 @@ function Thumb({ beat, stageState }) {
   );
 }
 
-function Cell({ beat, stageState, selected, onSelect, onRegenerate, onDuplicate, onCut }) {
+function Cell({ beat, stageState, selected, regenBusy, onSelect, onRegenerate, onDuplicate, onCut }) {
   const { index, kind, speaker, caption, softened } = beat;
   const kindLabel = kind.replace('_', ' ');
   return (
@@ -83,7 +103,14 @@ function Cell({ beat, stageState, selected, onSelect, onRegenerate, onDuplicate,
         </div>
         {stageState === 'edit' && (
           <div className="film-cell-ctrls" onClick={e => e.stopPropagation()}>
-            <button className="film-ctrl film-ctrl--regen" onClick={() => onRegenerate(index)}><IconRegenerate s={13} /> Regenerate</button>
+            <button
+              className="film-ctrl film-ctrl--regen"
+              disabled={regenBusy}
+              onClick={() => onRegenerate(index)}
+            >
+              {regenBusy ? <span className="film-ctrl-spin" /> : <IconRegenerate s={13} />}
+              {regenBusy ? 'Regenerating…' : 'Regenerate'}
+            </button>
             <button className="film-ctrl" onClick={() => onDuplicate(index)}><IconDuplicate s={13} /> Duplicate</button>
             <button className="film-ctrl film-ctrl--cut" onClick={() => onCut(index)}><IconCut s={13} /> Cut</button>
             <span className="film-grip" title="Drag to reorder"><IconGrip s={15} /></span>
@@ -101,6 +128,7 @@ export default function Storyboard({
   progress = null,
   finalUrl = null,
   editBusy = null,
+  regenBusyIndex = null,
   onSelectBeat = () => {},
   onGenerate = () => {},
   onExport = () => {},
@@ -143,16 +171,13 @@ export default function Storyboard({
 
       <div className="film-stage">
         {stageState === 'empty' || total === 0 ? (
-          <div className="film-empty">
-            <div className="film-empty-mark"><IconVisual s={26} /></div>
-            <h3>Your storyboard appears here</h3>
-            <p>Write your film in the chat. When the script’s ready, build it and the shots land here to review.</p>
-          </div>
+          <EmptyStoryboard />
         ) : (
           <div className="film-grid">
             {beats.map((b, i) => (
               <Cell key={`${b.index}-${b.pos != null ? b.pos : i}`} beat={b} stageState={stageState}
-                selected={selectedBeat === b.index} onSelect={onSelectBeat}
+                selected={selectedBeat === b.index} regenBusy={regenBusyIndex === b.index}
+                onSelect={onSelectBeat}
                 onRegenerate={onRegenerate} onDuplicate={onDuplicate} onCut={onCut} />
             ))}
           </div>

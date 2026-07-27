@@ -63,6 +63,9 @@ export const IconTrash = ({ s = 15 }) => svg(s, <><polyline points="3 6 5 6 21 6
 // back arrow — return to My Films
 export const IconBack = ({ s = 16 }) => svg(s, <><line x1="19" y1="12" x2="5" y2="12" /><polyline points="12 19 5 12 12 5" /></>);
 
+// check — "Script ready" inline bar
+export const IconCheck = ({ s = 14 }) => svg(s, <polyline points="20 6 9 17 5 13" />);
+
 // ── kind glyphs (badges + empty thumbs) ──
 export const IconDialogue = ({ s = 18 }) => svg(s, <path d="M20 11.5a7.5 7.5 0 0 1-10.9 6.7L4 20l1.8-5.1A7.5 7.5 0 1 1 20 11.5z" />);
 export const IconVisual   = ({ s = 18 }) => svg(s, <><rect x="3" y="5" width="18" height="14" rx="2" /><line x1="3" y1="9.5" x2="21" y2="9.5" /><line x1="3" y1="14.5" x2="21" y2="14.5" /><line x1="8" y1="5" x2="8" y2="19" /><line x1="16" y1="5" x2="16" y2="19" /></>);

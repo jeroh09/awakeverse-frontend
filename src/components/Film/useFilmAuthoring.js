@@ -1,11 +1,27 @@
 // src/components/Film/useFilmAuthoring.js
 // Writers'-room chat state. Uses filmApi (shared axios instance → CSRF/creds/refresh
-// handled for us). start → message → finalize. The pill (scriptReady) turns on once
-// a draft script exists; reads an explicit script_ready flag if the backend sends
-// one, else a light heuristic until that flag is added.
+// handled for us) for everything EXCEPT the message turn itself, which now
+// streams: filmMessageStream() bypasses axios (can't hand back a readable
+// stream in the browser) exactly the way api.js's postDebateMessage does for
+// /debate/:id/message — raw fetch, CSRF pulled by hand from the av_csrf
+// cookie. The pill (scriptReady) turns on once a draft script exists; reads
+// an explicit script_ready flag if the backend sends one, else a light
+// heuristic until that flag is added.
+//
+// Streaming (README §3 — now real, not the word-reveal stopgap): film_routes.py's
+// /assistant/message returns NDJSON, one JSON object per line:
+//   {"type":"token","response":"..."}                    — append to streamingText
+//   {"type":"provider_start"}                             — provider fallback
+//                                                            boundary, informational only
+//   {"type":"reconciliation","note":"..."}                 — informational only
+//   {"type":"error","error":"..."}                          — terminal, no "done" follows
+//   {"type":"done","session_id":"...","response":"<full>"} — terminal, success
+// `streamingActive` / `streamingText` are the same two fields WritersRoom and
+// the container already read — swapping the stopgap for this didn't touch
+// anything downstream.
 
 import { useState, useCallback, useRef } from 'react';
-import { filmStart, filmMessage, filmFinalize, friendlyError } from './filmApi';
+import { filmStart, filmMessageStream, filmFinalize, friendlyError } from './filmApi';
 
 const looksLikeScript = (t = '') =>
   /^\s*(VISUAL:|INT\.|EXT\.|TITLE:)/im.test(t) || /\n[A-Z][A-Z '\-/]{1,30}\n/.test(t);
@@ -19,24 +35,79 @@ export default function useFilmAuthoring() {
   const [title, setTitle]   = useState('Untitled film');
   const [busy, setBusy]     = useState(false);
   const [error, setError]   = useState(null);
+  const [streamingActive, setStreamingActive] = useState(false);
+  const [streamingText, setStreamingText]     = useState('');
   const sidRef = useRef(null);
+  const streamTokenRef = useRef(0);   // invalidates a stale read if a new send starts
 
   const _send = useCallback(async (text, sid) => {
     setError(null);
     setMessages(m => [...m, { role: 'me', text }]);
     setBusy(true);
+    const myToken = ++streamTokenRef.current;
+
     try {
-      const data = await filmMessage(sid, text);
-      const reply = data.response || '';
-      setMessages(m => [...m, { role: 'ai', text: reply }]);
-      setScriptReady(prev =>
-        (typeof data.script_ready === 'boolean' ? data.script_ready : (prev || looksLikeScript(reply))));
-      if (data.title) setTitle(data.title);
+      const response = await filmMessageStream(sid, text);
+      setBusy(false);
+      setStreamingActive(true);
+      setStreamingText('');
+
+      const reader = response.body.getReader();
+      const decoder = new TextDecoder();
+      let buffer = '';
+      let fullText = '';
+      let streamError = null;
+
+      // eslint-disable-next-line no-constant-condition
+      while (true) {
+        const { done, value } = await reader.read();
+        if (streamTokenRef.current !== myToken) { reader.cancel(); return; }   // superseded by a newer send
+        if (done) break;
+
+        buffer += decoder.decode(value, { stream: true });
+        const lines = buffer.split('\n');
+        buffer = lines.pop();   // last element may be a partial line — keep it for next read
+
+        for (const line of lines) {
+          if (!line.trim()) continue;
+          let chunk;
+          try { chunk = JSON.parse(line); } catch (_) { continue; }   // skip a malformed line, don't kill the stream
+
+          if (chunk.type === 'token') {
+            fullText += chunk.response || '';
+            setStreamingText(prev => prev + (chunk.response || ''));
+          } else if (chunk.type === 'error') {
+            streamError = chunk.error || 'Something went wrong drafting that.';
+          } else if (chunk.type === 'done') {
+            fullText = chunk.response || fullText;   // backend's assembled text is authoritative
+          }
+          // provider_start / reconciliation: informational only, no UI action needed
+        }
+      }
+
+      if (streamTokenRef.current !== myToken) return;   // superseded while we were finishing up
+
+      setStreamingActive(false);
+      setStreamingText('');
+
+      if (streamError) {
+        setError(streamError);
+        setMessages(m => [...m, { role: 'ai', text: streamError }]);
+      } else {
+        setMessages(m => [...m, { role: 'ai', text: fullText }]);
+        setScriptReady(prev => prev || looksLikeScript(fullText));
+      }
     } catch (e) {
       const msg = friendlyError(e, 'Something went wrong drafting that. Try again.');
-      setError(msg);
-      setMessages(m => [...m, { role: 'ai', text: msg }]);
-    } finally { setBusy(false); }
+      if (streamTokenRef.current === myToken) {
+        setError(msg);
+        setStreamingActive(false);
+        setStreamingText('');
+        setMessages(m => [...m, { role: 'ai', text: msg }]);
+      }
+    } finally {
+      if (streamTokenRef.current === myToken) setBusy(false);
+    }
   }, []);
 
   const start = useCallback(async (premise) => {
@@ -92,10 +163,16 @@ export default function useFilmAuthoring() {
   }, []);
 
   const reset = useCallback(() => {
+    streamTokenRef.current += 1;
     sidRef.current = null;
     setSessionId(null); setMessages([]); setScriptReady(false);
     setScript(null); setShots(null); setError(null); setBusy(false);
+    setStreamingActive(false); setStreamingText('');
   }, []);
 
-  return { sessionId, messages, scriptReady, script, shots, title, busy, error, start, send, finalize, adopt, reset };
+  return {
+    sessionId, messages, scriptReady, script, shots, title, busy, error,
+    streamingActive, streamingText,
+    start, send, finalize, adopt, reset,
+  };
 }
