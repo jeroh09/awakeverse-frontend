@@ -68,9 +68,13 @@ export const filmDeleteProject = (projectId) =>
 // Map an axios error to a user-safe message — never leak a raw 401/500/stack.
 export function friendlyError(e, fallback = 'Something went wrong. Please try again.') {
   const status = e && e.response && e.response.status;
-  const detail = (e && e.response && e.response.data && e.response.data.error) || (e && e.message) || '';
+  const data = (e && e.response && e.response.data) || {};
+  const detail = data.error || (e && e.message) || '';
   if (e && e.code === 'ECONNABORTED')
     return 'That took longer than expected — it may still be working. Give it a moment and try again.';
+  // Shared video budget reached — show the informative hint, not a session error.
+  if (status === 403 && /budget/i.test(detail))
+    return data.hint || 'You’ve reached your monthly video budget. Upgrade to make more films.';
   if (status === 401 || status === 403 || /csrf|unauthor/i.test(detail))
     return 'Your session expired — please refresh and try again.';
   if (status === 429 || /rate/i.test(detail)) return 'The service is busy — try again in a moment.';
