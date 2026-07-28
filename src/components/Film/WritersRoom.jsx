@@ -120,6 +120,7 @@ export default function WritersRoom({
   onBuildFilm = () => {},
 }) {
   const [text, setText] = useState('');
+  const [scriptBarCollapsed, setScriptBarCollapsed] = useState(false);
   const scrollRef = useRef(null);
   const taRef = useRef(null);
 
@@ -198,10 +199,26 @@ export default function WritersRoom({
       )}
 
       {showBuildBar && (
-        <div className="film-scriptbar">
-          <span className="film-scriptbar-lbl"><IconCheck s={14} /> Script ready</span>
-          <button className="film-btn film-btn--primary" onClick={onBuildFilm}>Build the film</button>
-        </div>
+        scriptBarCollapsed ? (
+          <button className="film-scriptbar-pill" onClick={() => setScriptBarCollapsed(false)}>
+            <IconCheck s={12} /> Script ready
+          </button>
+        ) : (
+          <div className="film-scriptbar">
+            <span className="film-scriptbar-lbl"><IconCheck s={14} /> Script ready</span>
+            <div className="film-scriptbar-actions">
+              <button className="film-btn film-btn--primary" onClick={onBuildFilm}>Build the film</button>
+              <button
+                className="film-scriptbar-x"
+                onClick={() => setScriptBarCollapsed(true)}
+                aria-label="Collapse"
+                title="Collapse"
+              >
+                ×
+              </button>
+            </div>
+          </div>
+        )
       )}
 
       <div className="film-composer">

@@ -180,7 +180,7 @@
 /* user turn — keeps its bubble */
 .film-msgwrap{display:flex;}
 .film-msgwrap--me{justify-content:flex-end;}
-.film-msg{max-width:88%;padding:9px 12px;border-radius:var(--film-r-md);font-size:10px;line-height:1.55;
+.film-msg{max-width:88%;padding:9px 12px;border-radius:var(--film-r-md);font-size:9px;line-height:1.6;
   animation:film-rise .18s ease;}
 .film-msg--me{align-self:flex-end;background:var(--film-accent);color:#fff;border-bottom-right-radius:var(--film-r-sm);}
 .film-msg .film-who{font-size:8px;letter-spacing:1.3px;text-transform:uppercase;color:rgba(255,255,255,.7);
@@ -190,22 +190,22 @@
 .film-turn-ai{display:flex;flex-direction:column;gap:9px;animation:film-rise .18s ease;}
 .film-turn-ai > .film-who{font-size:8px;letter-spacing:1.3px;text-transform:uppercase;color:var(--film-t3);
   font-weight:700;}
-.film-flow{font-size:10px;line-height:1.6;color:var(--film-t1);}
+.film-flow{font-size:9px;line-height:1.65;color:var(--film-t1);}
 
 /* markdown — shared between the user bubble and the assistant's flowing text */
 .film-msg h1,.film-msg h2,.film-msg h3,.film-flow h1,.film-flow h2,.film-flow h3{
   margin:8px 0 3px;font-family:var(--film-display);}
 .film-msg h1:first-child,.film-msg h2:first-child,.film-msg h3:first-child,
 .film-flow h1:first-child,.film-flow h2:first-child,.film-flow h3:first-child{margin-top:0;}
-.film-msg h1,.film-flow h1{font-weight:700;font-size:12px;color:var(--film-t1);}
-.film-msg h2,.film-flow h2{font-weight:700;font-size:11px;color:var(--film-t1);}
-.film-msg h3,.film-flow h3{font-weight:700;font-size:10px;color:#c7d2fe;letter-spacing:.3px;text-transform:uppercase;}
-.film-msg p,.film-flow p{line-height:1.6;margin:0 0 8px;}
+.film-msg h1,.film-flow h1{font-weight:700;font-size:10.5px;color:var(--film-t1);}
+.film-msg h2,.film-flow h2{font-weight:700;font-size:9.5px;color:var(--film-t1);}
+.film-msg h3,.film-flow h3{font-weight:700;font-size:8.5px;color:#c7d2fe;letter-spacing:.3px;text-transform:uppercase;}
+.film-msg p,.film-flow p{line-height:1.65;margin:0 0 7px;}
 .film-msg p:last-child,.film-flow p:last-child{margin-bottom:0;}
-.film-msg li,.film-flow li{display:flex;gap:6px;margin:2px 0;line-height:1.6;list-style:none;}
+.film-msg li,.film-flow li{display:flex;gap:5px;margin:2px 0;line-height:1.65;list-style:none;}
 .film-msg li::before,.film-flow li::before{content:'–';color:var(--film-accent-hover);flex:0 0 auto;}
 .film-msg code,.film-flow code{background:var(--film-canvas);border:1px solid var(--film-bd-med);border-radius:4px;
-  padding:1px 5px;font-size:9.5px;}
+  padding:1px 4px;font-size:8px;}
 .film-msg--me code{background:rgba(0,0,0,.2);border-color:rgba(255,255,255,.25);}
 .film-flow i{color:var(--film-accent-hover);}
 .film-stream-text{white-space:pre-wrap;}
@@ -257,11 +257,23 @@
 .film-beatedit-actions{display:flex;gap:8px;padding:10px 12px;border-top:1px solid var(--film-bd-subtle);}
 
 /* inline "Script ready" bar — flush above the composer, not overlapping it.
-   Only shown when scriptReady && stage === 'empty'. */
+   Only shown when scriptReady && stage === 'empty'. Collapsible: collapses to
+   a small pill (film-scriptbar-pill) that re-expands the full bar on click. */
 .film-scriptbar{flex:0 0 auto;display:flex;align-items:center;justify-content:space-between;gap:10px;
   margin:0 15px 8px;padding:11px 14px;border:1px solid rgba(99,102,241,.4);border-radius:var(--film-r-md);
   background:rgba(99,102,241,.08);}
 .film-scriptbar-lbl{display:flex;align-items:center;gap:8px;font-size:12.5px;font-weight:600;color:#c7d2fe;}
+.film-scriptbar-actions{display:flex;align-items:center;gap:8px;}
+.film-scriptbar-x{width:22px;height:22px;border-radius:50%;background:transparent;border:1px solid rgba(99,102,241,.35);
+  color:var(--film-t2);font-size:14px;line-height:1;display:grid;place-items:center;cursor:pointer;
+  transition:all .15s;}
+.film-scriptbar-x:hover{color:var(--film-t1);border-color:rgba(99,102,241,.6);background:rgba(99,102,241,.14);}
+
+.film-scriptbar-pill{flex:0 0 auto;align-self:flex-start;display:flex;align-items:center;gap:6px;
+  margin:0 15px 8px;font-size:11px;font-weight:600;color:#c7d2fe;background:rgba(99,102,241,.1);
+  border:1px solid rgba(99,102,241,.35);border-radius:var(--film-r-full);padding:6px 12px;cursor:pointer;
+  transition:all .15s;}
+.film-scriptbar-pill:hover{background:rgba(99,102,241,.18);border-color:rgba(99,102,241,.55);}
 
 .film-composer{flex:0 0 auto;margin:auto 15px 16px;}
 .film-inputwrap{display:flex;gap:9px;align-items:flex-end;
