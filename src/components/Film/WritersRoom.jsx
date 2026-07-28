@@ -1,15 +1,21 @@
 // src/components/Film/WritersRoom.jsx
 // Right panel: the writers'-room chat. Composer sits pinned to the bottom,
-// auto-growing 96px→220px. Assistant (and user) messages render real markdown
-// (headers/bullets/bold/italic/code) via filmMarkdown — never dangerouslySetInnerHTML.
-// A transient "Director" bubble with a blinking cursor shows while a reply
-// streams in (word-by-word client-side stopgap until the backend streams —
-// see useFilmAuthoring). The floating pill is gone: "Script ready" is now an
-// inline ruled bar sitting flush above the composer, shown only when the
-// script is ready and nothing's been built yet.
+// auto-growing 96px→220px. User turns keep their bubble; assistant replies
+// flow directly on the panel background — no box, no border — via
+// MarkdownBlocks, real markdown (headers/bullets/bold/italic/code), never
+// dangerouslySetInnerHTML. When a message carries `scriptMeta` (set by
+// useFilmAuthoring when the backend's script_meta NDJSON event fires — see
+// film_routes.py's /assistant/message docstring), three things render right
+// after that reply's prose: a duration badge, character chips (name-only,
+// tap to reveal the description — keeps the panel usable even squished to
+// 34% width), and a collapsible script panel with the actual draft. The
+// <<<SCRIPT>>>/<<<END_SCRIPT>>> tags themselves never reach here — the
+// backend strips them and ships the script text separately.
+// "Script ready" is an inline ruled bar sitting flush above the composer,
+// shown only when the script is ready and nothing's been built yet.
 
 import React, { useEffect, useRef, useState } from 'react';
-import { IconSend, IconCheck } from './filmIcons';
+import { IconSend, IconCheck, IconClock, IconChevron } from './filmIcons';
 import { parseMarkdown } from './filmMarkdown';
 
 function Runs({ runs }) {
@@ -32,14 +38,67 @@ function MarkdownBlocks({ text }) {
   });
 }
 
-function Bubble({ role, text }) {
-  const isMe = role === 'me';
+function DurationBadge({ seconds }) {
+  if (seconds == null) return null;
+  return <span className="film-dur-badge"><IconClock s={11} /> ~{seconds}s draft</span>;
+}
+
+function CharacterChip({ name, desc }) {
+  const [open, setOpen] = useState(false);
   return (
-    <div className={`film-msgwrap${isMe ? ' film-msgwrap--me' : ''}`}>
-      <div className={`film-msg film-msg--${isMe ? 'me' : 'ai'}`}>
-        <div className="film-who">{isMe ? 'You' : 'Director'}</div>
-        <MarkdownBlocks text={text} />
+    <>
+      <button className={`film-char-chip${open ? ' is-open' : ''}`} onClick={() => setOpen(o => !o)}>
+        {name} <IconChevron s={8} dir={open ? 'down' : 'right'} />
+      </button>
+      {open && (
+        <div className="film-char-detail"><b>{name}</b> — {desc}</div>
+      )}
+    </>
+  );
+}
+
+function ScriptMeta({ meta }) {
+  const [scriptOpen, setScriptOpen] = useState(true);
+  if (!meta) return null;
+  const chars = Object.entries(meta.characters || {});
+  return (
+    <div className="film-scriptmeta">
+      <div className="film-meta-row">
+        <DurationBadge seconds={meta.durationSeconds} />
+        {chars.map(([name, desc]) => <CharacterChip key={name} name={name} desc={desc} />)}
       </div>
+      {meta.script && (
+        <div className="film-script-panel">
+          <div className="film-script-head">
+            <span className="t">📄 Script draft</span>
+            <button className="film-script-toggle" onClick={() => setScriptOpen(o => !o)}>
+              <IconChevron s={9} dir={scriptOpen ? 'down' : 'right'} />
+              {scriptOpen ? 'Collapse' : 'Expand'}
+            </button>
+          </div>
+          {scriptOpen && <pre className="film-script-body">{meta.script}</pre>}
+        </div>
+      )}
+    </div>
+  );
+}
+
+function Turn({ role, text, scriptMeta }) {
+  if (role === 'me') {
+    return (
+      <div className="film-msgwrap film-msgwrap--me">
+        <div className="film-msg film-msg--me">
+          <div className="film-who">You</div>
+          <MarkdownBlocks text={text} />
+        </div>
+      </div>
+    );
+  }
+  return (
+    <div className="film-turn-ai">
+      <div className="film-who">Director</div>
+      <div className="film-flow"><MarkdownBlocks text={text} /></div>
+      <ScriptMeta meta={scriptMeta} />
     </div>
   );
 }
@@ -101,12 +160,12 @@ export default function WritersRoom({
 
       <div className="film-chatscroll" ref={scrollRef}>
         {messages.map((m, i) => (
-          <Bubble key={i} role={m.role} text={m.text} />
+          <Turn key={i} role={m.role} text={m.text} scriptMeta={m.scriptMeta} />
         ))}
         {streamingActive && (
-          <div className="film-msgwrap">
-            <div className="film-msg film-msg--ai">
-              <div className="film-who">Director</div>
+          <div className="film-turn-ai">
+            <div className="film-who">Director</div>
+            <div className="film-flow">
               <span className="film-stream-text">{streamingText}</span>
               <span className="film-cursor">▍</span>
             </div>

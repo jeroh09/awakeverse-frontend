@@ -73,6 +73,9 @@ export const IconClose = ({ s = 14 }) => svg(s, <><line x1="18" y1="6" x2="6" y2
 export const IconHalf = ({ s = 13 }) => svg(s, <rect x="3" y="7" width="18" height="10" rx="1.5" />);
 export const IconFull = ({ s = 13 }) => svg(s, <rect x="3" y="3" width="18" height="18" rx="1.5" />);
 
+// clock — script-meta duration badge
+export const IconClock = ({ s = 12 }) => svg(s, <><circle cx="12" cy="12" r="9" /><path d="M12 7v5l3 3" /></>);
+
 // ── kind glyphs (badges + empty thumbs) ──
 export const IconDialogue = ({ s = 18 }) => svg(s, <path d="M20 11.5a7.5 7.5 0 0 1-10.9 6.7L4 20l1.8-5.1A7.5 7.5 0 1 1 20 11.5z" />);
 export const IconVisual   = ({ s = 18 }) => svg(s, <><rect x="3" y="5" width="18" height="14" rx="2" /><line x1="3" y1="9.5" x2="21" y2="9.5" /><line x1="3" y1="14.5" x2="21" y2="14.5" /><line x1="8" y1="5" x2="8" y2="19" /><line x1="16" y1="5" x2="16" y2="19" /></>);

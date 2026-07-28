@@ -14,8 +14,17 @@
 //   {"type":"provider_start"}                             — provider fallback
 //                                                            boundary, informational only
 //   {"type":"reconciliation","note":"..."}                 — informational only
+//   {"type":"script_meta","duration_seconds":n,"characters":{...},"script":"..."}
+//                                                          — emitted once, after a complete
+//                                                            script block streams. Attached to
+//                                                            the assistant message as
+//                                                            `scriptMeta` once pushed — see
+//                                                            WritersRoom's CharacterChips/
+//                                                            DurationBadge/ScriptPanel.
 //   {"type":"error","error":"..."}                          — terminal, no "done" follows
-//   {"type":"done","session_id":"...","response":"<full>"} — terminal, success
+//   {"type":"done","session_id":"...","response":"<full>"} — terminal, success. Already tag/
+//                                                            script-stripped server-side —
+//                                                            this is plain flowing commentary.
 // `streamingActive` / `streamingText` are the same two fields WritersRoom and
 // the container already read — swapping the stopgap for this didn't touch
 // anything downstream.
@@ -57,6 +66,7 @@ export default function useFilmAuthoring() {
       let buffer = '';
       let fullText = '';
       let streamError = null;
+      let scriptMeta = null;   // {duration_seconds, characters, script} — set if script_meta arrives
 
       // eslint-disable-next-line no-constant-condition
       while (true) {
@@ -76,6 +86,12 @@ export default function useFilmAuthoring() {
           if (chunk.type === 'token') {
             fullText += chunk.response || '';
             setStreamingText(prev => prev + (chunk.response || ''));
+          } else if (chunk.type === 'script_meta') {
+            scriptMeta = {
+              durationSeconds: chunk.duration_seconds ?? null,
+              characters: chunk.characters || {},
+              script: chunk.script || '',
+            };
           } else if (chunk.type === 'error') {
             streamError = chunk.error || 'Something went wrong drafting that.';
           } else if (chunk.type === 'done') {
@@ -94,8 +110,12 @@ export default function useFilmAuthoring() {
         setError(streamError);
         setMessages(m => [...m, { role: 'ai', text: streamError }]);
       } else {
-        setMessages(m => [...m, { role: 'ai', text: fullText }]);
-        setScriptReady(prev => prev || looksLikeScript(fullText));
+        setMessages(m => [...m, { role: 'ai', text: fullText, scriptMeta }]);
+        // script_meta only ever arrives after a genuinely complete, tagged
+        // script block — a hard signal, so it wins over the text heuristic
+        // (which stays as the fallback for adopted/legacy messages that
+        // never carried scriptMeta in the first place).
+        setScriptReady(prev => prev || !!scriptMeta || looksLikeScript(fullText));
       }
     } catch (e) {
       const msg = friendlyError(e, 'Something went wrong drafting that. Try again.');
@@ -130,18 +150,32 @@ export default function useFilmAuthoring() {
 
   // Adopt an externally-created/restored session (from POST /projects or GET
   // /projects/:id) instead of calling /assistant/start. Messages arrive as
-  // {role:'user'|'assistant', text} and map to the workspace's me/ai roles.
+  // {role:'user'|'assistant', text, scriptMeta?} and map to the workspace's
+  // me/ai roles. scriptMeta (if present) is {duration_seconds, characters,
+  // script} from the DB — normalized here to the same {durationSeconds,
+  // characters, script} shape the live script_meta event produces, so
+  // WritersRoom's ScriptMeta renders identically either way.
   const adopt = useCallback(({ session_id, messages = [], title, script, scriptReady }) => {
     sidRef.current = session_id || null;
     setSessionId(session_id || null);
-    setMessages((messages || []).map(m => ({
-      role: (m.role === 'assistant' || m.role === 'ai') ? 'ai' : 'me',
-      text: m.text != null ? m.text : (m.content || ''),
-    })));
+    let sawScriptMeta = false;
+    setMessages((messages || []).map(m => {
+      const sm = m.scriptMeta;
+      if (sm) sawScriptMeta = true;
+      return {
+        role: (m.role === 'assistant' || m.role === 'ai') ? 'ai' : 'me',
+        text: m.text != null ? m.text : (m.content || ''),
+        scriptMeta: sm ? {
+          durationSeconds: sm.duration_seconds ?? sm.durationSeconds ?? null,
+          characters: sm.characters || {},
+          script: sm.script || '',
+        } : null,
+      };
+    }));
     if (title) setTitle(title);
     if (script) setScript(script);
-    if (typeof scriptReady === 'boolean') setScriptReady(scriptReady);
-    else if (script) setScriptReady(true);
+    if (typeof scriptReady === 'boolean') setScriptReady(scriptReady || sawScriptMeta);
+    else setScriptReady(!!script || sawScriptMeta);
   }, []);
 
   const finalize = useCallback(async () => {
