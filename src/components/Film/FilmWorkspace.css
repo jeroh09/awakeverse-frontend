@@ -403,13 +403,19 @@
 
 /* ═══════════════════════════════════════════════════════════════════════════
    FILM MODE — top-level mode container, My Films library, loading.
-   The mode fills the area below the app header. Set --film-header-h to your
-   header's height if it isn't ~64px; this is what gives the workspace a bounded
-   height so the composer pins FIRMLY to the panel bottom (not mid-panel).
+   The mode fills the area below the app header. Instead of guessing the header
+   height with a 100dvh calc, it fills the flex column it lives in: .app-container
+   is a `display:flex; flex-direction:column; height:100vh` shell, and this is a
+   direct child, so `flex:1 1 auto` claims exactly the space left under <Header/>
+   — no --film-header-h to set, no viewport gap below the composer. min-height:0
+   is what lets the inner panels scroll rather than push this column taller; it
+   also chains the bounded height down (workspace → window → chat scroll) so the
+   composer pins FIRMLY to the true bottom edge.
    ═══════════════════════════════════════════════════════════════════════════ */
 .film-mode-view-container{
-  height: calc(100dvh - var(--film-header-h, 64px));
-  min-height: 480px;
+  flex: 1 1 auto;
+  min-height: 0;
+  height: auto;
   display: flex;
 }
 .film-mode-view-container > .film-workspace,
