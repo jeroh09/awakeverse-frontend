@@ -130,6 +130,7 @@ export default function FilmWorkspace({
               onSaveEdit={onSaveEdit}
               onSend={onSend}
               scriptReady={scriptReady}
+              showBuildBar={scriptReady}
               onBuildFilm={onBuildFilm}
             />
           </section>
