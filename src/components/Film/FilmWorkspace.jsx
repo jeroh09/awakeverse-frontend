@@ -1,16 +1,14 @@
 // src/components/Film/FilmWorkspace.jsx
-// The film workspace shell: a plain flex row holding two individually-bordered
-// panels — Storyboard (left) and WritersRoom (right). No outer window border
-// anymore (that's now just panel-level borders). A single combined
-// "Storyboard | Assistant" pill drives which panel gets the wide flex-basis
-// (both panels always stay mounted and visible — this replaces the old
-// collapse/expand toggles). Presentational; data + handlers come from the
-// container.
+// The film workspace shell: one indigo-bordered window with two floating,
+// individually-bordered panels — Storyboard (left) and WritersRoom (right).
+// Its own top-level mode now, so no product brand chrome — a slim bar with a
+// "My Films" return, the film's title (read from the script's own title), and
+// the collapse toggles. Presentational; data + handlers come from the container.
 
 import React, { useState } from 'react';
 import Storyboard from './Storyboard';
 import WritersRoom from './WritersRoom';
-import { IconBack } from './filmIcons';
+import { IconChevron, IconBack } from './filmIcons';
 import './FilmWorkspace.css';
 
 export default function FilmWorkspace({
@@ -24,45 +22,61 @@ export default function FilmWorkspace({
   progress = null,
   finalUrl = null,
   editBusy = null,
-  regenBusyIndex = null,
   onSelectBeat, onGenerate, onExport, onStop,
   onRegenerate, onDuplicate, onCut,
   // chat (right)
   messages = [],
   chatSub = '',
-  streamingActive = false,
-  streamingText = '',
   editingBeat = null,
   onCloseEdit, onChangeEditText, onRegenerateFromEdit, onSaveEdit,
   onSend, scriptReady = false, onBuildFilm,
 }) {
-  const [focusPanel, setFocusPanel] = useState('storyboard'); // 'storyboard' | 'assistant'
+  // Below 820px the two panels stack (see FilmWorkspace.css's accordion
+  // media query) — starting BOTH expanded there would just reproduce the old
+  // 50/50 squeeze, so on narrow viewports we default straight into Writers'
+  // Room at full height (Storyboard collapsed to its rail) since that's
+  // where a film actually starts. Desktop keeps the old default: both open,
+  // side by side. SSR-safe guard for `window` even though this app is
+  // client-only today.
+  const isNarrow = typeof window !== 'undefined' && window.innerWidth <= 820;
+  const [leftCollapsed, setLeftCollapsed] = useState(isNarrow);
+  const [rightCollapsed, setRightCollapsed] = useState(false);
+
+  // Toggling a panel open on a narrow viewport collapses its sibling —
+  // turns the two independent desktop toggles into a de facto tab pair
+  // without needing separate mobile-only state. Desktop behavior (both can
+  // be open, or both closed... though we still guard against that below)
+  // is unchanged.
+  const toggleLeft = () => setLeftCollapsed(prev => {
+    const next = !prev;
+    if (next && rightCollapsed) setRightCollapsed(false);          // don't collapse both
+    else if (!next && window.innerWidth <= 820) setRightCollapsed(true); // mobile: expanding one collapses the other
+    return next;
+  });
+  const toggleRight = () => setRightCollapsed(prev => {
+    const next = !prev;
+    if (next && leftCollapsed) setLeftCollapsed(false);
+    else if (!next && window.innerWidth <= 820) setLeftCollapsed(true);
+    return next;
+  });
 
   return (
     <div className="film-workspace theme-awakeverse">
       <div className="film-topbar">
-        <div className="film-topbar-spacer" />
-        <span className="film-title" title={title}>{title || 'Untitled film'}</span>
-        <div className="film-focuspill">
+        <div className="film-topbar-left">
           {onBackToFilms && (
-            <>
-              <button className="film-focuspill-back" onClick={onBackToFilms}>
-                <IconBack s={13} /> My Films
-              </button>
-              <span className="film-focuspill-div" />
-            </>
+            <button className="film-tg film-tg--back" onClick={onBackToFilms}>
+              <IconBack s={15} /> My Films
+            </button>
           )}
-          <button
-            className={focusPanel !== 'assistant' ? 'is-on' : ''}
-            onClick={() => setFocusPanel('storyboard')}
-          >
-            Storyboard
+          <span className="film-title" title={title}>{title || 'Untitled film'}</span>
+        </div>
+        <div className="film-toggles">
+          <button className={`film-tg${leftCollapsed ? ' is-off' : ''}`} onClick={toggleLeft}>
+            <IconChevron s={13} dir={leftCollapsed ? 'right' : 'left'} /> Storyboard
           </button>
-          <button
-            className={focusPanel === 'assistant' ? 'is-on' : ''}
-            onClick={() => setFocusPanel('assistant')}
-          >
-            Assistant
+          <button className={`film-tg${rightCollapsed ? ' is-off' : ''}`} onClick={toggleRight}>
+            Assistant <IconChevron s={13} dir={rightCollapsed ? 'left' : 'right'} />
           </button>
         </div>
       </div>
@@ -72,9 +86,15 @@ export default function FilmWorkspace({
           <div className="film-spin" /><span>Opening your film…</span>
         </div>
       ) : (
-        <div className="film-window" data-focus={focusPanel}>
+        <div className="film-window">
           {/* LEFT — Storyboard */}
-          <section className="film-panel film-panel--stage">
+          <section className={`film-panel film-panel--stage${leftCollapsed ? ' is-collapsed' : ''}`}>
+            <div className="film-rail">
+              <button className="film-rail-btn" onClick={toggleLeft} aria-label="Expand storyboard">
+                <IconChevron s={15} dir="right" />
+              </button>
+              <span className="film-rail-label">Storyboard</span>
+            </div>
             <Storyboard
               stageState={stageState}
               beats={beats}
@@ -82,7 +102,6 @@ export default function FilmWorkspace({
               progress={progress}
               finalUrl={finalUrl}
               editBusy={editBusy}
-              regenBusyIndex={regenBusyIndex}
               onSelectBeat={onSelectBeat}
               onGenerate={onGenerate}
               onExport={onExport}
@@ -94,21 +113,23 @@ export default function FilmWorkspace({
           </section>
 
           {/* RIGHT — Writers' room */}
-          <section className="film-panel film-panel--chat">
+          <section className={`film-panel film-panel--chat${rightCollapsed ? ' is-collapsed' : ''}`}>
+            <div className="film-rail">
+              <button className="film-rail-btn" onClick={toggleRight} aria-label="Expand assistant">
+                <IconChevron s={15} dir="left" />
+              </button>
+              <span className="film-rail-label">Assistant</span>
+            </div>
             <WritersRoom
               messages={messages}
               sub={chatSub}
-              streamingActive={streamingActive}
-              streamingText={streamingText}
               editingBeat={editingBeat}
               onCloseEdit={onCloseEdit}
               onChangeEditText={onChangeEditText}
               onRegenerateFromEdit={onRegenerateFromEdit}
               onSaveEdit={onSaveEdit}
-              regenBusy={editingBeat ? regenBusyIndex === editingBeat.index : false}
               onSend={onSend}
               scriptReady={scriptReady}
-              showBuildBar={scriptReady && stageState === 'empty'}
               onBuildFilm={onBuildFilm}
             />
           </section>
