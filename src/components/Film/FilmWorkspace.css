@@ -112,6 +112,52 @@
 .film-rail-label{writing-mode:vertical-rl;transform:rotate(180deg);font-family:var(--film-body);
   font-weight:600;font-size:11px;letter-spacing:.04em;color:var(--film-t3);white-space:nowrap;}
 
+/* ── DESKTOP peek-tab (>820px) ───────────────────────────────────────────────
+   Replaces the tall 44px floor-to-ceiling rail with a short pull-tab tucked
+   against the glass, vertically centred. The collapsed panel collapses to ZERO
+   width (not 44px) so the sibling reclaims the full width behind it; the tab is
+   absolutely positioned and floats at the edge, rounded only on its inner
+   corners so it reads as a tab, not a panel. Scoped to >820px on purpose — the
+   base rules above still drive ≤820px, where the max-width:820px block turns
+   them into the horizontal strip. Nothing here touches the mobile case. */
+@media (min-width:821px){
+  /* collapse to nothing; the tab overflows out of this zero-width box */
+  .film-panel.is-collapsed{flex:0 0 0px;width:0;margin:0;
+    position:relative;overflow:visible;background:transparent;border:0;}
+  /* both panels full-height so the two tabs centre on the same line */
+  .film-panel--stage.is-collapsed{margin-bottom:0;}
+
+  /* the tab itself */
+  .film-panel.is-collapsed .film-rail{
+    position:absolute;top:50%;transform:translateY(-50%);z-index:5;
+    display:flex;flex-direction:column;align-items:center;justify-content:center;gap:0;
+    width:30px;height:118px;padding:0;
+    background:var(--film-surface);border:1px solid rgba(99,102,241,.35);
+    cursor:pointer;transition:width .18s,background .18s,box-shadow .18s;}
+  .film-panel.is-collapsed .film-rail:hover{width:36px;background:var(--film-interactive);}
+
+  /* Assistant tab hugs the RIGHT edge, rounded on its left (inner) corners */
+  .film-panel--chat.is-collapsed .film-rail{right:0;border-right:0;
+    border-radius:var(--film-r-md) 0 0 var(--film-r-md);}
+  .film-panel--chat.is-collapsed .film-rail:hover{box-shadow:-6px 0 22px -10px rgba(99,102,241,.6);}
+  /* Storyboard tab hugs the LEFT edge, rounded on its right (inner) corners */
+  .film-panel--stage.is-collapsed .film-rail{left:0;border-left:0;
+    border-radius:0 var(--film-r-md) var(--film-r-md) 0;}
+  .film-panel--stage.is-collapsed .film-rail:hover{box-shadow:6px 0 22px -10px rgba(99,102,241,.6);}
+
+  /* the chevron button fills the whole tab so the entire tab is the click
+     target (no JSX change needed); chevron rides near the top */
+  .film-panel.is-collapsed .film-rail-btn{position:absolute;inset:0;width:100%;height:100%;
+    padding-top:15px;border:0;border-radius:inherit;background:transparent;color:var(--film-accent-hover);
+    display:flex;align-items:flex-start;justify-content:center;z-index:1;transition:color .15s;}
+  .film-panel.is-collapsed .film-rail:hover .film-rail-btn{color:var(--film-t1);}
+
+  /* label centred below the chevron, non-interactive so clicks fall through */
+  .film-panel.is-collapsed .film-rail-label{position:absolute;left:50%;top:56%;
+    transform:translate(-50%,-50%) rotate(180deg);pointer-events:none;color:var(--film-t2);z-index:2;}
+  .film-panel.is-collapsed .film-rail:hover .film-rail-label{color:var(--film-t1);}
+}
+
 /* expanded panels: the rail is hidden and .film-pcontent (WritersRoom's own
    root) or Storyboard's content fills the panel normally */
 .film-pcontent{display:flex;flex-direction:column;min-height:0;height:100%;}
@@ -341,10 +387,13 @@
   transition:all .15s;}
 .film-scriptbar-pill:hover{background:rgba(99,102,241,.18);border-color:rgba(99,102,241,.55);}
 
-/* pinned to the TRUE bottom edge of the window now that Writers' Room has
-   no box to sit inside — 8px is deliberately close to nothing, just enough
-   that the field itself doesn't touch the glass. */
-.film-composer{flex:0 0 auto;margin:0 10px 8px 0;}
+/* pinned to the bottom of the (boxless) Writers' Room. The bottom gap is
+   --film-gap (14px) — the SAME token that lifts .film-panel--stage off the
+   window's bottom edge — so the input box's bottom edge lands on exactly the
+   same line as the Storyboard card's bottom, instead of on its own slightly
+   different one. Change --film-gap once and both move together; nudge only
+   this value if you want the composer alone tighter/looser. */
+.film-composer{flex:0 0 auto;margin:0 10px var(--film-gap) 0;}
 .film-inputwrap{display:flex;gap:9px;align-items:flex-end;width:100%;
   background:var(--film-canvas);border:1px solid rgba(99,102,241,.4);border-radius:var(--film-r-md);
   padding:9px 9px 9px 16px;box-shadow:0 8px 24px -14px rgba(0,0,0,.8);}
