@@ -63,15 +63,16 @@ export default function FilmWorkspace({
   return (
     <div className="film-workspace theme-awakeverse">
       <div className="film-topbar">
-        <div className="film-topbar-left">
-          {onBackToFilms && (
-            <button className="film-tg film-tg--back" onClick={onBackToFilms}>
-              <IconBack s={15} /> My Films
-            </button>
-          )}
-          <span className="film-title" title={title}>{title || 'Untitled film'}</span>
-        </div>
+        <span className="film-title" title={title}>{title || 'Untitled film'}</span>
         <div className="film-toggles">
+          {onBackToFilms && (
+            <>
+              <button className="film-tg film-tg--back" onClick={onBackToFilms}>
+                <IconBack s={13} /> My Films
+              </button>
+              <span className="film-tg-div" />
+            </>
+          )}
           <button className={`film-tg${leftCollapsed ? ' is-off' : ''}`} onClick={toggleLeft}>
             <IconChevron s={13} dir={leftCollapsed ? 'right' : 'left'} /> Storyboard
           </button>
