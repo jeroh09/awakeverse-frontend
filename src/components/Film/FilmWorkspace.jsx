@@ -5,11 +5,19 @@
 // "My Films" return, the film's title (read from the script's own title), and
 // the collapse toggles. Presentational; data + handlers come from the container.
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import Storyboard from './Storyboard';
 import WritersRoom from './WritersRoom';
 import { IconChevron, IconBack } from './filmIcons';
 import './FilmWorkspace.css';
+
+// How far the composer's own bottom edge sits from the true viewport bottom
+// on this page (10px margin — see .composer in FilmWorkspace.css) plus the
+// composer's own height, plus a bit of clearance. SupportWidget.css reads
+// this via --support-bottom (default 24px everywhere else); we only ever
+// touch the CSS variable, never the widget's own file, and always put it
+// back on unmount so this is scoped to the Film workspace, not global.
+const SUPPORT_WIDGET_CLEARANCE_PX = 88;
 
 export default function FilmWorkspace({
   title = 'Untitled film',
@@ -59,6 +67,15 @@ export default function FilmWorkspace({
     else if (!next && window.innerWidth <= 820) setLeftCollapsed(true);
     return next;
   });
+
+  // Lift the (globally-mounted, position:fixed) support widget clear of the
+  // composer, which now sits at the true bottom of this page. Scoped to
+  // Film only — the variable resets to SupportWidget.css's own 24px default
+  // the moment this component unmounts, so every other page is untouched.
+  useEffect(() => {
+    document.documentElement.style.setProperty('--support-bottom', `${SUPPORT_WIDGET_CLEARANCE_PX}px`);
+    return () => { document.documentElement.style.removeProperty('--support-bottom'); };
+  }, []);
 
   return (
     <div className="film-workspace theme-awakeverse">

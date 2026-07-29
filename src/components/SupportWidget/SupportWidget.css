@@ -3,12 +3,18 @@
    Variable is set in right_panel_layout.css on :root.
    Dynamic update: call document.documentElement.style.setProperty('--feed-w', val)
    from the feed toggle handler when that component is built.
+
+   --support-bottom (v2.1): same pattern, vertical this time. Defaults to 24px
+   (today's behavior, unchanged everywhere). FilmWorkspace.jsx sets it higher
+   while mounted so the trigger clears the Writers' Room composer (which now
+   sits at the true bottom of that page), and clears it again on unmount —
+   scoped to that one page, not a global reposition.
 */
 
 /* ── Trigger ──────────────────────────────────────────────────────────── */
 .sw-trigger {
   position: fixed;
-  bottom: 24px;
+  bottom: var(--support-bottom, 24px);
   right: calc(var(--feed-w, 0px) + 16px);  /* shifts left when feed is open */
   z-index: 9000;
   background: transparent;
@@ -23,7 +29,8 @@
   transition:
     opacity 0.15s ease,
     transform 0.15s ease,
-    right 0.3s cubic-bezier(0.4, 0, 0.2, 1);  /* smooth slide when feed toggles */
+    right 0.3s cubic-bezier(0.4, 0, 0.2, 1),  /* smooth slide when feed toggles */
+    bottom 0.3s cubic-bezier(0.4, 0, 0.2, 1); /* smooth lift on entering/leaving Film */
 }
 
 .sw-trigger:hover  { opacity: 1; transform: translateY(-2px); }
@@ -32,7 +39,7 @@
 /* ── Modal ────────────────────────────────────────────────────────────── */
 .sw-modal {
   position: fixed;
-  bottom: 56px;
+  bottom: calc(var(--support-bottom, 24px) + 32px);  /* same 32px gap above the trigger as before */
   right: calc(var(--feed-w, 0px) + 16px);  /* tracks trigger */
   z-index: 9001;
   width: 340px;
@@ -45,7 +52,7 @@
   gap: 12px;
   transform-origin: bottom right;
   animation: sw-open 0.18s ease forwards;
-  transition: right 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  transition: right 0.3s cubic-bezier(0.4, 0, 0.2, 1), bottom 0.3s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
 .sw-modal.sw-closing {
