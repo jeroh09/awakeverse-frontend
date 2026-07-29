@@ -11,14 +11,6 @@ import WritersRoom from './WritersRoom';
 import { IconChevron, IconBack } from './filmIcons';
 import './FilmWorkspace.css';
 
-// How far the composer's own bottom edge sits from the true viewport bottom
-// on this page (10px margin — see .composer in FilmWorkspace.css) plus the
-// composer's own height, plus a bit of clearance. SupportWidget.css reads
-// this via --support-bottom (default 24px everywhere else); we only ever
-// touch the CSS variable, never the widget's own file, and always put it
-// back on unmount so this is scoped to the Film workspace, not global.
-const SUPPORT_WIDGET_CLEARANCE_PX = 88;
-
 export default function FilmWorkspace({
   title = 'Untitled film',
   loading = false,
@@ -68,13 +60,14 @@ export default function FilmWorkspace({
     return next;
   });
 
-  // Lift the (globally-mounted, position:fixed) support widget clear of the
-  // composer, which now sits at the true bottom of this page. Scoped to
-  // Film only — the variable resets to SupportWidget.css's own 24px default
-  // the moment this component unmounts, so every other page is untouched.
+  // Hide the (globally-mounted) support widget entirely while Film is open —
+  // repositioning it turned out not to be worth the trouble it caused, and
+  // this page has its own help/edit affordances anyway. Scoped via a body
+  // class so SupportWidget.jsx itself never needs to know Film exists;
+  // removed on unmount so every other page is unaffected.
   useEffect(() => {
-    document.documentElement.style.setProperty('--support-bottom', `${SUPPORT_WIDGET_CLEARANCE_PX}px`);
-    return () => { document.documentElement.style.removeProperty('--support-bottom'); };
+    document.body.classList.add('film-mode-active');
+    return () => { document.body.classList.remove('film-mode-active'); };
   }, []);
 
   return (
