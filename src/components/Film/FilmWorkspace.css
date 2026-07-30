@@ -396,6 +396,13 @@
    a couple px of bottom here if you'd rather leave a sliver of breathing room
    than scrape the border exactly.) */
 .film-composer{flex:0 0 auto;margin:0 10px 0 0;}
+
+/* AI disclaimer — a thin, quiet line pinned under the composer, at the very
+   bottom of the Writers' Room (Film's own; every page carries its own). Small
+   and low-contrast so it reads as a footnote, not chrome. */
+.film-disclaimer{flex:0 0 auto;margin:6px 10px 4px 0;text-align:center;
+  font-family:var(--film-body);font-size:10.5px;line-height:1.2;color:var(--film-t3);
+  letter-spacing:.01em;user-select:none;}
 .film-inputwrap{display:flex;gap:9px;align-items:flex-end;width:100%;
   background:var(--film-canvas);border:1px solid rgba(99,102,241,.4);border-radius:var(--film-r-md);
   padding:9px 9px 9px 16px;box-shadow:0 8px 24px -14px rgba(0,0,0,.8);}
