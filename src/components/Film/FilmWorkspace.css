@@ -387,13 +387,15 @@
   transition:all .15s;}
 .film-scriptbar-pill:hover{background:rgba(99,102,241,.18);border-color:rgba(99,102,241,.55);}
 
-/* pinned to the bottom of the (boxless) Writers' Room. The bottom gap is
-   --film-gap (14px) — the SAME token that lifts .film-panel--stage off the
-   window's bottom edge — so the input box's bottom edge lands on exactly the
-   same line as the Storyboard card's bottom, instead of on its own slightly
-   different one. Change --film-gap once and both move together; nudge only
-   this value if you want the composer alone tighter/looser. */
-.film-composer{flex:0 0 auto;margin:0 10px var(--film-gap) 0;}
+/* pinned to the TRUE bottom of the window. The Writers' Room is boxless on
+   purpose so the composer can fall all the way to the outer app-card border
+   (the one scraping the viewport edge) — NOT the Storyboard card's inner
+   bottom, which floats 14px higher on its own margin. So: no bottom margin.
+   The composer sits flush at the window's bottom, and the window fills to the
+   app card's inner edge. (Right 10px keeps the field off the right glass; add
+   a couple px of bottom here if you'd rather leave a sliver of breathing room
+   than scrape the border exactly.) */
+.film-composer{flex:0 0 auto;margin:0 10px 0 0;}
 .film-inputwrap{display:flex;gap:9px;align-items:flex-end;width:100%;
   background:var(--film-canvas);border:1px solid rgba(99,102,241,.4);border-radius:var(--film-r-md);
   padding:9px 9px 9px 16px;box-shadow:0 8px 24px -14px rgba(0,0,0,.8);}
