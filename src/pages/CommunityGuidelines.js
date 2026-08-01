@@ -117,7 +117,7 @@ export default function CommunityGuidelines() {
           <a href="/sources">Sources &amp; Licences</a>
         </nav>
         <h1 id="cg-title">AwakeVerse — Community Guidelines</h1>
-        <p className="meta">Effective: 19 August 2025 • Last updated: 19 August 2025</p>
+        <p className="meta">Effective: 19 August 2025 • Last updated: 29 July 2026</p>
         <div className="intro-card">
           AwakeVerse is a place to explore ideas with historic and fictional personas. 
           These guidelines keep the experience welcoming, safe, and creatively honest.
@@ -153,7 +153,7 @@ export default function CommunityGuidelines() {
 
         <h2 id="age">4) Age &amp; Sensitive Topics</h2>
         <ul>
-          <li>AwakeVerse is for users <strong>13+</strong>. If you are under 18, obtain guardian consent.</li>
+          <li>AwakeVerse is for users <strong>17+</strong>.</li>
           <li>Adult/NSFW requests are restricted. Romantic themes may be allowed with boundaries.</li>
         </ul>
 

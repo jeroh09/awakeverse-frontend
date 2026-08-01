@@ -100,7 +100,7 @@ export default function TermsOfService() {
           <a href="/sources">Sources &amp; Licences</a>
         </nav>
         <h1 id="tos-title">AwakeVerse — Terms of Service</h1>
-        <p className="meta">Effective: 19 August 2025 &nbsp;•&nbsp; Last updated: 19 August 2025</p>
+        <p className="meta">Effective: 19 August 2025 &nbsp;•&nbsp; Last updated: 29 July 2026</p>
         <div className="intro-card">
           Welcome to AwakeVerse, an AI platform for conversations with historical, cultural, and fictional personas. 
           By accessing or using our services, you agree to these Terms.
@@ -113,7 +113,7 @@ export default function TermsOfService() {
 
         <h2 id="eligibility">2) Eligibility</h2>
         <ul>
-          <li>You must be at least <strong>13</strong> years old to use AwakeVerse. If you are under 18, you must have consent from a parent/guardian.</li>
+          <li>You must be at least <strong>17</strong> years old to use AwakeVerse.</li>
           <li>You represent that all registration information you submit is accurate and you will keep it up to date.</li>
         </ul>
 

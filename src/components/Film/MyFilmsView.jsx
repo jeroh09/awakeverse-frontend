@@ -12,7 +12,7 @@
 // Storyboard/Writers' Room.
 
 import React, { useCallback, useRef, useState } from 'react';
-import { IconPlus, IconTrash, IconPlay, IconVisual, IconClose, IconHalf, IconFull, IconQuill } from './filmIcons';
+import { IconPlus, IconTrash, IconPlay, IconVisual, IconClose, IconHalf, IconFull, IconQuill, IconCheck } from './filmIcons';
 
 const STYLES = [
   { key: 'anime',       label: 'Anime' },
@@ -56,6 +56,10 @@ function FilmCard({ film, onOpen, onDelete, onPlay }) {
   const cardRef = useRef(null);
   const status = film.status || 'draft';
   const ready = status === 'ready' && film.output_url;
+  // key_art_url: the AI-composed "Netflix key art" poster (title/cast/location
+  // composed via Nano Banana). thumbnail_url: a real extracted video frame —
+  // used only until key art exists, or if key art generation failed for this film.
+  const cardArt = film.key_art_url || film.thumbnail_url;
 
   const handleClick = (e) => {
     if (cardRef.current) addRipple(e, cardRef.current);
@@ -72,9 +76,9 @@ function FilmCard({ film, onOpen, onDelete, onPlay }) {
     <article ref={cardRef} className="film-lib-card" onClick={handleClick}>
       <div
         className={`film-lib-thumb${ready ? ' is-ready' : ''}`}
-        style={film.thumbnail_url ? { backgroundImage: `url(${film.thumbnail_url})` } : undefined}
+        style={cardArt ? { backgroundImage: `url(${cardArt})` } : undefined}
       >
-        {!film.thumbnail_url && <span className="film-lib-thumb-mark"><IconVisual s={26} /></span>}
+        {!cardArt && <span className="film-lib-thumb-mark"><IconVisual s={26} /></span>}
         <span className={`film-lib-status film-lib-status--${status}`}>{STATUS_LABEL[status] || status}</span>
         {ready && <button className="film-lib-play" aria-label="Play"><IconPlay s={14} /></button>}
       </div>
@@ -233,8 +237,12 @@ export default function MyFilmsView({
 
           <div className="film-feat-card film-feat-card--list">
             <div className="film-feat-copy">
-              <h3>Full control, <i>shot by shot</i></h3>
-              <p>Regenerate, cut, duplicate, or reorder any beat until the reel feels right.</p>
+              <h3>Full Control Shot by Shot</h3>
+              <ul className="film-feat-steps">
+                <li><span className="film-feat-step-check"><IconCheck s={9} /></span>Select a film style</li>
+                <li><span className="film-feat-step-check"><IconCheck s={9} /></span>Select a duration 60/120/180s</li>
+                <li><span className="film-feat-step-check"><IconCheck s={9} /></span>Click Start.</li>
+              </ul>
             </div>
           </div>
 
