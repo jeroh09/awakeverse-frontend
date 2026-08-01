@@ -235,8 +235,6 @@ export default function WritersRoom({
           </button>
         </div>
       </div>
-
-      <div className="film-disclaimer">AwakeVerse is AI and can make mistakes</div>
     </div>
   );
 }
