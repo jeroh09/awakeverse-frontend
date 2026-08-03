@@ -45,11 +45,20 @@ function Thumb({ beat, stageState }) {
     e.stopPropagation();
     const v = videoRef.current;
     if (!v) return;
+    // The src carries #t=0.1 so Safari/WebKit paints a real first frame as the
+    // poster (preload="metadata" alone leaves it blank on macOS). That fragment
+    // can leave the playhead at 0.1s, so rewind to 0 before playing.
+    try { if (v.currentTime > 0) v.currentTime = 0; } catch (_) {}
     v.play().then(() => setPlaying(true)).catch(() => {});
   }, []);
 
   const N = <span className="film-n">{pad(index)}</span>;
   const Dur = <span className="film-dur">{seconds}s</span>;
+  // Safari/WebKit shows a blank poster for <video preload="metadata"> until it's
+  // told to seek — appending #t=0.1 makes it decode and paint that frame, so the
+  // thumbnail shows on macOS the way it already does on Windows/Chrome. Works on
+  // existing clips (no re-render needed). play() rewinds to 0 first.
+  const posterSrc = clipUrl ? `${clipUrl}#t=0.1` : clipUrl;
 
   // review: plan placeholder (never a clip)
   if (stageState === 'review') {
@@ -64,7 +73,7 @@ function Thumb({ beat, stageState }) {
     if (status === 'done' && clipUrl) {
       return (
         <div className="film-thumb film-thumb--preview">
-          <video ref={videoRef} className="film-thumb-vid" src={clipUrl} playsInline preload="metadata"
+          <video ref={videoRef} className="film-thumb-vid" src={posterSrc} playsInline preload="metadata"
                  controls={playing} onEnded={() => setPlaying(false)} />
           {N}
           {!playing && <button className="film-play" onClick={play} aria-label="Play preview"><IconPlay s={16} /></button>}
@@ -79,7 +88,7 @@ function Thumb({ beat, stageState }) {
   // edit: final clip, plays inline
   return (
     <div className="film-thumb film-thumb--final">
-      {clipUrl && <video ref={videoRef} className="film-thumb-vid" src={clipUrl} playsInline preload="metadata"
+      {clipUrl && <video ref={videoRef} className="film-thumb-vid" src={posterSrc} playsInline preload="metadata"
                          controls={playing} onEnded={() => setPlaying(false)} />}
       {N}
       {clipUrl && !playing && <button className="film-play" onClick={play} aria-label="Play shot"><IconPlay s={16} /></button>}
