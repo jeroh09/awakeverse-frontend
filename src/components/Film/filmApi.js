@@ -112,6 +112,18 @@ export const filmApproveRender = (jobId) =>
 export const filmUploadConsent = () =>
   api.post('/film/upload-consent', null, { timeout: QUEUE_TIMEOUT }).then(r => r.data);
 
+// Upload a raw image file → Spaces, returns { photo_url }. Reuses the existing,
+// proven photo-upload endpoint (multipart; JPEG/PNG/WebP, 10MB max). The stylize
+// pass re-hosts the result under the film cache, so the storage namespace here is
+// immaterial. This is the file→URL step character-upload needs (it takes a URL).
+export const filmUploadPhoto = (file) => {
+  const form = new FormData();
+  form.append('photo', file);
+  return api.post('/podcast/photo/upload', form,
+    { timeout: LLM_TIMEOUT, headers: { 'Content-Type': 'multipart/form-data' } })
+    .then(r => r.data);   // { photo_url }
+};
+
 // Replace a reviewable character's plate with a STYLIZED version of an uploaded
 // photo (photo already hosted → pass its URL). SYNCHRONOUS stylize on the backend
 // → LLM timeout. Consent-gated (see filmUploadConsent).

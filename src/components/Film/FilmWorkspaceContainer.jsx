@@ -8,7 +8,7 @@ import React, { useState, useMemo, useCallback, useEffect } from 'react';
 import FilmWorkspace from './FilmWorkspace';
 import useFilmAuthoring from './useFilmAuthoring';
 import useFilmJob from './useFilmJob';
-import { filmGetProject, friendlyError } from './filmApi';
+import { filmGetProject, filmUploadPhoto, filmUploadConsent, friendlyError } from './filmApi';
 
 const shotToCell = s => ({
   index: s.index,
@@ -140,8 +140,13 @@ export default function FilmWorkspaceContainer({
   // Cast review actions (only meaningful while stageState === 'plate_review').
   const onRedrawCast = useCallback((name, description) =>
     job.regeneratePlate(name, description), [job]);
-  const onUploadCastPhoto = useCallback((name, photoUrl) =>
-    job.uploadCharacterImage(name, photoUrl), [job]);
+  // Photo upload: the endpoint takes a URL, so upload the File to storage first,
+  // then hand the resulting photo_url to the stylize endpoint.
+  const onUploadCastPhoto = useCallback(async (name, file) => {
+    const { photo_url } = await filmUploadPhoto(file);
+    return job.uploadCharacterImage(name, photo_url);
+  }, [job]);
+  const onAcceptUploadConsent = useCallback(() => filmUploadConsent(), []);
   const onApproveCast = useCallback(() => job.approveRender(), [job]);
 
   const onGenerate = useCallback(() => {
@@ -198,6 +203,7 @@ export default function FilmWorkspaceContainer({
       planningCast={job.planningPlates}
       onRedrawCast={onRedrawCast}
       onUploadCastPhoto={onUploadCastPhoto}
+      onAcceptUploadConsent={onAcceptUploadConsent}
       onApproveCast={onApproveCast}
       selectedBeat={editing ? editing.index : null}
       progress={job.progress}

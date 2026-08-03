@@ -21,7 +21,7 @@ export default function FilmWorkspace({
   aspectRatio = '9:16',
   cast = null,
   planningCast = false,
-  onRedrawCast, onUploadCastPhoto, onApproveCast,
+  onRedrawCast, onUploadCastPhoto, onApproveCast, onAcceptUploadConsent,
   selectedBeat = null,
   progress = null,
   finalUrl = null,
@@ -118,6 +118,7 @@ export default function FilmWorkspace({
               planningCast={planningCast}
               onRedrawCast={onRedrawCast}
               onUploadCastPhoto={onUploadCastPhoto}
+              onAcceptUploadConsent={onAcceptUploadConsent}
               onApproveCast={onApproveCast}
               selectedBeat={selectedBeat}
               progress={progress}

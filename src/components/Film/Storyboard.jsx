@@ -201,6 +201,7 @@ export default function Storyboard({
   planningCast = false,
   onRedrawCast = () => {},
   onUploadCastPhoto = () => {},
+  onAcceptUploadConsent = () => {},
   onApproveCast = () => {},
   selectedBeat = null,
   progress = null,
@@ -222,6 +223,9 @@ export default function Storyboard({
   // Cast review interactions.
   const [busyMember, setBusyMember] = useState(null);   // name currently drawing
   const [consentFor, setConsentFor] = useState(null);   // name awaiting consent before upload
+  const [uploadingMember, setUploadingMember] = useState(null);  // name whose photo is uploading
+  const fileInputRef = useRef(null);
+  const pendingNameRef = useRef(null);   // which cast member the picked file belongs to
   const castList = cast ? Object.entries(cast) : [];
 
   // The film's frame shape drives the storyboard card proportion so the preview
@@ -233,13 +237,36 @@ export default function Storyboard({
     setBusyMember(name);
     try { await onRedrawCast(name, desc); } finally { setBusyMember(null); }
   };
-  // "Use your own photo" always passes through the consent gate first. The actual
-  // file→hosted-URL step is the app's existing uploader; here we open consent and,
-  // on agree, hand off (the container calls the consent-gated upload endpoint).
+
+  // "Use your own photo": consent gate first. Agreeing records consent, then opens
+  // the file picker. The picked file is uploaded to storage, and its URL is handed
+  // to the container's upload handler (the backend takes a photo_url, not bytes).
   const handleUploadClick = (name) => setConsentFor(name);
-  const handleConsentAgree = () => {
-    const name = consentFor; setConsentFor(null);
-    onUploadCastPhoto(name);   // container runs consent-accept + upload picker
+
+  const handleConsentAgree = async () => {
+    const name = consentFor;
+    setConsentFor(null);
+    // Record consent BEFORE any upload — the backend refuses uploads until this
+    // is stamped. If it fails, don't open the picker.
+    try { await onAcceptUploadConsent(); }
+    catch (_) { return; }
+    pendingNameRef.current = name;
+    if (fileInputRef.current) { fileInputRef.current.value = ''; fileInputRef.current.click(); }
+  };
+
+  const handleFilePicked = async (e) => {
+    const file = e.target.files && e.target.files[0];
+    const name = pendingNameRef.current;
+    pendingNameRef.current = null;
+    if (!file || !name) return;
+    setUploadingMember(name);
+    setBusyMember(name);
+    try {
+      await onUploadCastPhoto(name, file);   // container: file → Spaces URL → stylize
+    } finally {
+      setUploadingMember(null);
+      setBusyMember(null);
+    }
   };
 
   const sub =
@@ -316,6 +343,8 @@ export default function Storyboard({
       {consentFor && (
         <ConsentModal onAgree={handleConsentAgree} onCancel={() => setConsentFor(null)} />
       )}
+      <input ref={fileInputRef} type="file" accept="image/jpeg,image/png,image/webp"
+             style={{ display: 'none' }} onChange={handleFilePicked} />
 
       {stageState === 'render' && progress && (
         <div className="film-prog">
