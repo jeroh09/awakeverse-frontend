@@ -85,6 +85,11 @@ export const filmRegenerate = (jobId, beat_index, note, edited_text) =>
     { timeout: QUEUE_TIMEOUT }).then(r => r.data);
 
 // ── plate review (Plan & review lifecycle: plan → awaiting_review → regenerate → approve) ──
+// Save an edited script to the project (before render). The render path reads
+// film_projects.script and condense_script fits it to the chosen duration.
+export const filmSaveScript = (projectId, script) =>
+  api.patch(`/film/projects/${projectId}/script`, { script }, { timeout: QUEUE_TIMEOUT }).then(r => r.data);
+
 // filmPlan is filmGenerate with review:true — the backend routes it to the PLAN
 // phase (director + character plates) and pauses at awaiting_review instead of
 // rendering straight through. Same body/timeout as filmGenerate.

@@ -57,10 +57,30 @@ function CharacterChip({ name, desc }) {
   );
 }
 
-function ScriptMeta({ meta }) {
+function ScriptMeta({ meta, editable = false, onSaveScript }) {
   const [scriptOpen, setScriptOpen] = useState(true);
+  const [editing, setEditing] = useState(false);
+  const [draft, setDraft] = useState(meta && meta.script ? meta.script : '');
+  const [saving, setSaving] = useState(false);
+  const [saved, setSaved] = useState(false);
+  const [copied, setCopied] = useState(false);
+  useEffect(() => { setDraft(meta && meta.script ? meta.script : ''); }, [meta && meta.script]);
   if (!meta) return null;
   const chars = Object.entries(meta.characters || {});
+
+  const copy = async () => {
+    try { await navigator.clipboard.writeText(meta.script || ''); setCopied(true); setTimeout(() => setCopied(false), 1600); }
+    catch (_) {}
+  };
+  const save = async () => {
+    if (!onSaveScript || !draft.trim()) return;
+    setSaving(true); setSaved(false);
+    try {
+      const ok = await onSaveScript(draft.trim());
+      if (ok !== false) { setSaved(true); setEditing(false); setTimeout(() => setSaved(false), 1800); }
+    } finally { setSaving(false); }
+  };
+
   return (
     <div className="film-scriptmeta">
       <div className="film-meta-row">
@@ -71,19 +91,44 @@ function ScriptMeta({ meta }) {
         <div className="film-script-panel">
           <div className="film-script-head">
             <span className="t">📄 Script draft</span>
-            <button className="film-script-toggle" onClick={() => setScriptOpen(o => !o)}>
-              <IconChevron s={9} dir={scriptOpen ? 'down' : 'right'} />
-              {scriptOpen ? 'Collapse' : 'Expand'}
-            </button>
+            <div className="film-script-headbtns">
+              <button className="film-script-toggle" onClick={copy} title="Copy script">
+                {copied ? 'Copied' : 'Copy'}
+              </button>
+              {editable && !editing && (
+                <button className="film-script-toggle" onClick={() => { setDraft(meta.script); setEditing(true); setScriptOpen(true); }}>
+                  Edit
+                </button>
+              )}
+              <button className="film-script-toggle" onClick={() => setScriptOpen(o => !o)}>
+                <IconChevron s={9} dir={scriptOpen ? 'down' : 'right'} />
+                {scriptOpen ? 'Collapse' : 'Expand'}
+              </button>
+            </div>
           </div>
-          {scriptOpen && <pre className="film-script-body">{meta.script}</pre>}
+          {scriptOpen && !editing && <pre className="film-script-body">{meta.script}</pre>}
+          {scriptOpen && editing && (
+            <div className="film-script-edit">
+              <textarea className="film-script-textarea" value={draft} spellCheck={false}
+                onChange={e => setDraft(e.target.value)} />
+              <div className="film-script-editbar">
+                <span className="film-script-hint">Saved edits are used when you make the film. Length is auto-fitted to your chosen duration.</span>
+                <div className="film-script-editbtns">
+                  <button className="film-btn film-btn--ghost" onClick={() => setEditing(false)} disabled={saving}>Cancel</button>
+                  <button className="film-btn film-btn--primary" onClick={save} disabled={saving || !draft.trim()}>
+                    {saving ? 'Saving…' : saved ? 'Saved' : 'Save script'}
+                  </button>
+                </div>
+              </div>
+            </div>
+          )}
         </div>
       )}
     </div>
   );
 }
 
-function Turn({ role, text, scriptMeta }) {
+function Turn({ role, text, scriptMeta, editable = false, onSaveScript }) {
   if (role === 'me') {
     return (
       <div className="film-msgwrap film-msgwrap--me">
@@ -98,7 +143,7 @@ function Turn({ role, text, scriptMeta }) {
     <div className="film-turn-ai">
       <div className="film-who">Director</div>
       <div className="film-flow"><MarkdownBlocks text={text} /></div>
-      <ScriptMeta meta={scriptMeta} />
+      <ScriptMeta meta={scriptMeta} editable={editable} onSaveScript={onSaveScript} />
     </div>
   );
 }
@@ -119,6 +164,7 @@ export default function WritersRoom({
   showBuildBar = false,
   onBuildFilm = () => {},
   onReviewCast = () => {},
+  onSaveScript,
 }) {
   const [text, setText] = useState('');
   const [scriptBarCollapsed, setScriptBarCollapsed] = useState(false);
@@ -161,9 +207,16 @@ export default function WritersRoom({
       </div>
 
       <div className="film-chatscroll" ref={scrollRef}>
-        {messages.map((m, i) => (
-          <Turn key={i} role={m.role} text={m.text} scriptMeta={m.scriptMeta} />
-        ))}
+        {(() => {
+          // Only the MOST RECENT script draft is editable — older turns are history.
+          let lastScriptIdx = -1;
+          messages.forEach((m, i) => { if (m.scriptMeta && m.scriptMeta.script) lastScriptIdx = i; });
+          return messages.map((m, i) => (
+            <Turn key={i} role={m.role} text={m.text} scriptMeta={m.scriptMeta}
+              editable={i === lastScriptIdx && !!onSaveScript}
+              onSaveScript={onSaveScript} />
+          ));
+        })()}
         {streamingActive && (
           <div className="film-turn-ai">
             <div className="film-who">Director</div>

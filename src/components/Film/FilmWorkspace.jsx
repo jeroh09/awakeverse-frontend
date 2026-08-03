@@ -33,7 +33,7 @@ export default function FilmWorkspace({
   chatSub = '',
   editingBeat = null,
   onCloseEdit, onChangeEditText, onRegenerateFromEdit, onSaveEdit,
-  onSend, scriptReady = false, onBuildFilm, onReviewCast,
+  onSend, scriptReady = false, onBuildFilm, onReviewCast, onSaveScript,
 }) {
   // Below 820px the two panels stack (see FilmWorkspace.css's accordion
   // media query) — starting BOTH expanded there would just reproduce the old
@@ -155,6 +155,7 @@ export default function FilmWorkspace({
               showBuildBar={scriptReady}
               onBuildFilm={onBuildFilm}
               onReviewCast={onReviewCast}
+              onSaveScript={onSaveScript}
             />
           </section>
         </div>

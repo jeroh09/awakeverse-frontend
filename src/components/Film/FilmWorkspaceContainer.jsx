@@ -8,7 +8,7 @@ import React, { useState, useMemo, useCallback, useEffect } from 'react';
 import FilmWorkspace from './FilmWorkspace';
 import useFilmAuthoring from './useFilmAuthoring';
 import useFilmJob from './useFilmJob';
-import { filmGetProject, filmUploadPhoto, filmUploadConsent, friendlyError } from './filmApi';
+import { filmGetProject, filmUploadPhoto, filmUploadConsent, filmSaveScript, friendlyError } from './filmApi';
 
 const shotToCell = s => ({
   index: s.index,
@@ -32,6 +32,7 @@ export default function FilmWorkspaceContainer({
   const [editsByIndex, setEditsByIndex] = useState({});
   const [loading, setLoading] = useState(true);
   const [meta, setMeta] = useState({ video_style: 'anime', duration_seconds: 60, aspect_ratio: '9:16' });
+  const [savedScript, setSavedScript] = useState(null);   // user's saved script edits (win over finalize)
   // Per-beat busy flag — threaded to the individual Regenerate button (not just
   // the stage overlay) so a click registers visibly the instant it's pressed.
   // Fixes handover §2a: "Regenerate button shows no state".
@@ -125,17 +126,30 @@ export default function FilmWorkspaceContainer({
   }, [job, authoring.title, projectId, meta, reviewCells]);
 
   const onBuildFilm = useCallback(async () => {
+    // A saved edited script wins over re-finalizing (the user hand-tuned it).
+    if (savedScript) { doGenerate(savedScript); return; }
     const rec = await authoring.finalize();
     if (rec && !rec.shots && rec.script) doGenerate(rec.script);
-  }, [authoring, doGenerate]);
+  }, [authoring, doGenerate, savedScript]);
 
   // "Review cast first": finalize the script, then run the plan phase (which
   // pauses at Meet the cast) instead of making the film straight through.
   const onReviewCast = useCallback(async () => {
+    if (savedScript) { doPlan(savedScript); return; }
     const rec = await authoring.finalize();
     const script = (rec && rec.script) || authoring.script;
     if (script) doPlan(script);
-  }, [authoring, doPlan]);
+  }, [authoring, doPlan, savedScript]);
+
+  // Save an edited script to the project. The saved text then takes precedence
+  // for Make/Review; the render's condense_script fits it to the chosen duration.
+  const onSaveScript = useCallback(async (script) => {
+    try {
+      await filmSaveScript(projectId, script);
+      setSavedScript(script);
+      return true;
+    } catch (e) { return false; }
+  }, [projectId]);
 
   // Cast review actions (only meaningful while stageState === 'plate_review').
   const onRedrawCast = useCallback((name, description) =>
@@ -237,6 +251,7 @@ export default function FilmWorkspaceContainer({
       scriptReady={authoring.scriptReady}
       onBuildFilm={onBuildFilm}
       onReviewCast={onReviewCast}
+      onSaveScript={onSaveScript}
     />
   );
 }
