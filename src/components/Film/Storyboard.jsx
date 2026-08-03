@@ -243,14 +243,17 @@ export default function Storyboard({
   // to the container's upload handler (the backend takes a photo_url, not bytes).
   const handleUploadClick = (name) => setConsentFor(name);
 
-  const handleConsentAgree = async () => {
+  const handleConsentAgree = () => {
     const name = consentFor;
     setConsentFor(null);
-    // Record consent BEFORE any upload — the backend refuses uploads until this
-    // is stamped. If it fails, don't open the picker.
-    try { await onAcceptUploadConsent(); }
-    catch (_) { return; }
     pendingNameRef.current = name;
+    // Record consent in parallel — do NOT await before opening the picker.
+    // Browsers only allow input.click() from within the user-gesture call
+    // stack; an intervening `await` (a network round-trip) detaches it and the
+    // file dialog silently never opens. Consent is a fast POST that completes
+    // well before the user picks a file, and the upload endpoint re-checks the
+    // gate server-side regardless, so firing it alongside is safe.
+    Promise.resolve(onAcceptUploadConsent()).catch(() => {});
     if (fileInputRef.current) { fileInputRef.current.value = ''; fileInputRef.current.click(); }
   };
 

@@ -141,10 +141,17 @@ export default function FilmWorkspaceContainer({
   const onRedrawCast = useCallback((name, description) =>
     job.regeneratePlate(name, description), [job]);
   // Photo upload: the endpoint takes a URL, so upload the File to storage first,
-  // then hand the resulting photo_url to the stylize endpoint.
+  // then hand the resulting photo_url to the stylize endpoint. If the (parallel)
+  // consent POST hadn't landed yet, the stylize call returns consentRequired —
+  // record consent and retry once so a fast picker doesn't lose the upload.
   const onUploadCastPhoto = useCallback(async (name, file) => {
     const { photo_url } = await filmUploadPhoto(file);
-    return job.uploadCharacterImage(name, photo_url);
+    let res = await job.uploadCharacterImage(name, photo_url);
+    if (res && res.consentRequired) {
+      await filmUploadConsent();
+      res = await job.uploadCharacterImage(name, photo_url);
+    }
+    return res;
   }, [job]);
   const onAcceptUploadConsent = useCallback(() => filmUploadConsent(), []);
   const onApproveCast = useCallback(() => job.approveRender(), [job]);
