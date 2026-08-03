@@ -117,6 +117,17 @@ export const filmApproveRender = (jobId) =>
 export const filmUploadConsent = () =>
   api.post('/film/upload-consent', null, { timeout: QUEUE_TIMEOUT }).then(r => r.data);
 
+// Upload a script file → extract text + sections. The FILE becomes the message
+// attachment (chip); the returned text is delivered to the director invisibly.
+// A flagged (injection) doc returns text:null — caller must not send it onward.
+export const filmUploadAttachment = (file) => {
+  const form = new FormData();
+  form.append('file', file);
+  return api.post('/film/attachment', form,
+    { timeout: LLM_TIMEOUT, headers: { 'Content-Type': 'multipart/form-data' } })
+    .then(r => r.data);   // { url, filename, file_type, char_count, sections, injection_detected, text }
+};
+
 // Upload a raw image file → Spaces, returns { photo_url }. Reuses the existing,
 // proven photo-upload endpoint (multipart; JPEG/PNG/WebP, 10MB max). The stylize
 // pass re-hosts the result under the film cache, so the storage namespace here is

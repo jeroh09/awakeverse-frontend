@@ -49,14 +49,28 @@ export default function useFilmAuthoring() {
   const sidRef = useRef(null);
   const streamTokenRef = useRef(0);   // invalidates a stale read if a new send starts
 
-  const _send = useCallback(async (text, sid) => {
+  const _send = useCallback(async (text, sid, attachment = null) => {
     setError(null);
-    setMessages(m => [...m, { role: 'me', text }]);
+    // The displayed message shows the user's note + a file chip (attachment),
+    // NOT the raw extracted script. The director, however, receives the full
+    // script text so it can react — assembled into `directorText` below.
+    setMessages(m => [...m, { role: 'me', text, attachment: attachment ? {
+      filename: attachment.filename, url: attachment.url, file_type: attachment.file_type,
+    } : null }]);
     setBusy(true);
     const myToken = ++streamTokenRef.current;
 
+    // What the DIRECTOR sees: the user's note plus the attached script's text
+    // (invisible in the chat). A flagged/injection doc has text===null and is
+    // never forwarded — the note goes alone.
+    let directorText = text;
+    if (attachment && attachment.text) {
+      const note = text && text.trim() ? `${text.trim()}\n\n` : '';
+      directorText = `${note}[The user attached a script file "${attachment.filename}". Its content:]\n\n${attachment.text}`;
+    }
+
     try {
-      const response = await filmMessageStream(sid, text);
+      const response = await filmMessageStream(sid, directorText);
       setBusy(false);
       setStreamingActive(true);
       setStreamingText('');
@@ -142,10 +156,10 @@ export default function useFilmAuthoring() {
     finally { setBusy(false); }
   }, [_send]);
 
-  const send = useCallback((text) => {
+  const send = useCallback((text, attachment = null) => {
     const sid = sidRef.current;
     if (!sid) { setError('Start a film first.'); return; }
-    return _send(text, sid);
+    return _send(text, sid, attachment);
   }, [_send]);
 
   // Adopt an externally-created/restored session (from POST /projects or GET
@@ -165,6 +179,7 @@ export default function useFilmAuthoring() {
       return {
         role: (m.role === 'assistant' || m.role === 'ai') ? 'ai' : 'me',
         text: m.text != null ? m.text : (m.content || ''),
+        attachment: m.attachment || null,
         scriptMeta: sm ? {
           durationSeconds: sm.duration_seconds ?? sm.durationSeconds ?? null,
           characters: sm.characters || {},

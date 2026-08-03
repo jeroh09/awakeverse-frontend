@@ -747,3 +747,29 @@
 .film-script-editbar{display:flex;align-items:flex-end;justify-content:space-between;gap:12px;margin-top:9px;}
 .film-script-hint{font-size:11px;color:var(--film-t3);line-height:1.4;max-width:34ch;}
 .film-script-editbtns{display:flex;gap:7px;flex:0 0 auto;}
+
+/* ═══ Script attachment (writers'-room composer) ═════════════════════════════ */
+.film-attach-btn{flex:0 0 auto;width:34px;height:34px;border-radius:8px;
+  border:1px solid var(--film-bd-med);background:var(--film-interactive);color:var(--film-t2);
+  display:grid;place-items:center;cursor:pointer;transition:.15s;align-self:flex-end;}
+.film-attach-btn:hover:not(:disabled){background:var(--film-peak);color:var(--film-t1);border-color:var(--film-ring);}
+.film-attach-btn:disabled{opacity:.5;cursor:default;}
+.film-spin--sm{width:14px;height:14px;border-width:2px;}
+.film-attach-err{font-size:11px;color:var(--film-error);margin-left:6px;}
+
+.film-attach-chip{display:inline-flex;align-items:center;gap:8px;max-width:100%;
+  background:var(--film-interactive);border:1px solid var(--film-bd-med);border-radius:var(--film-r-sm);
+  padding:6px 8px 6px 10px;margin-bottom:8px;font-size:12.5px;color:var(--film-t1);}
+.film-attach-chip-ico{flex:0 0 auto;font-size:13px;}
+.film-attach-chip-name{overflow:hidden;text-overflow:ellipsis;white-space:nowrap;max-width:220px;}
+.film-attach-chip-x{flex:0 0 auto;border:0;background:transparent;color:var(--film-t3);cursor:pointer;
+  font-size:15px;line-height:1;padding:0 2px;}
+.film-attach-chip-x:hover{color:var(--film-t1);}
+.film-attach-notice{font-size:11.5px;color:var(--film-warning);margin-bottom:8px;line-height:1.4;}
+
+/* attachment chip inside a sent message bubble */
+.film-msg-attach{display:inline-flex;align-items:center;gap:7px;margin-bottom:6px;
+  background:rgba(99,102,241,.12);border:1px solid rgba(99,102,241,.3);border-radius:var(--film-r-sm);
+  padding:5px 9px;font-size:12px;color:var(--film-accent-hover);text-decoration:none;max-width:100%;}
+.film-msg-attach:hover{border-color:var(--film-ring);}
+.film-msg-attach .film-attach-chip-name{max-width:200px;}

@@ -16,6 +16,8 @@
 
 import React, { useEffect, useRef, useState } from 'react';
 import { IconSend, IconCheck, IconClock, IconChevron } from './filmIcons';
+import AttachButton from './AttachButton';
+import { filmUploadAttachment } from './filmApi';
 import { parseMarkdown } from './filmMarkdown';
 
 function Runs({ runs }) {
@@ -61,15 +63,19 @@ function ScriptMeta({ meta, editable = false, onSaveScript }) {
   const [scriptOpen, setScriptOpen] = useState(true);
   const [editing, setEditing] = useState(false);
   const [draft, setDraft] = useState(meta && meta.script ? meta.script : '');
+  const [localScript, setLocalScript] = useState(null);   // saved edit — wins over meta.script for display
   const [saving, setSaving] = useState(false);
   const [saved, setSaved] = useState(false);
   const [copied, setCopied] = useState(false);
-  useEffect(() => { setDraft(meta && meta.script ? meta.script : ''); }, [meta && meta.script]);
+  // If the underlying message script changes (new director turn), drop the local
+  // override so the fresh draft shows; otherwise the saved edit persists on screen.
+  useEffect(() => { setDraft(meta && meta.script ? meta.script : ''); setLocalScript(null); }, [meta && meta.script]);
   if (!meta) return null;
   const chars = Object.entries(meta.characters || {});
+  const shownScript = localScript != null ? localScript : meta.script;   // edited text wins
 
   const copy = async () => {
-    try { await navigator.clipboard.writeText(meta.script || ''); setCopied(true); setTimeout(() => setCopied(false), 1600); }
+    try { await navigator.clipboard.writeText(shownScript || ''); setCopied(true); setTimeout(() => setCopied(false), 1600); }
     catch (_) {}
   };
   const save = async () => {
@@ -77,7 +83,7 @@ function ScriptMeta({ meta, editable = false, onSaveScript }) {
     setSaving(true); setSaved(false);
     try {
       const ok = await onSaveScript(draft.trim());
-      if (ok !== false) { setSaved(true); setEditing(false); setTimeout(() => setSaved(false), 1800); }
+      if (ok !== false) { setLocalScript(draft.trim()); setSaved(true); setEditing(false); setTimeout(() => setSaved(false), 1800); }
     } finally { setSaving(false); }
   };
 
@@ -96,7 +102,7 @@ function ScriptMeta({ meta, editable = false, onSaveScript }) {
                 {copied ? 'Copied' : 'Copy'}
               </button>
               {editable && !editing && (
-                <button className="film-script-toggle" onClick={() => { setDraft(meta.script); setEditing(true); setScriptOpen(true); }}>
+                <button className="film-script-toggle" onClick={() => { setDraft(shownScript); setEditing(true); setScriptOpen(true); }}>
                   Edit
                 </button>
               )}
@@ -106,7 +112,7 @@ function ScriptMeta({ meta, editable = false, onSaveScript }) {
               </button>
             </div>
           </div>
-          {scriptOpen && !editing && <pre className="film-script-body">{meta.script}</pre>}
+          {scriptOpen && !editing && <pre className="film-script-body">{shownScript}</pre>}
           {scriptOpen && editing && (
             <div className="film-script-edit">
               <textarea className="film-script-textarea" value={draft} spellCheck={false}
@@ -128,13 +134,20 @@ function ScriptMeta({ meta, editable = false, onSaveScript }) {
   );
 }
 
-function Turn({ role, text, scriptMeta, editable = false, onSaveScript }) {
+function Turn({ role, text, attachment, scriptMeta, editable = false, onSaveScript }) {
   if (role === 'me') {
     return (
       <div className="film-msgwrap film-msgwrap--me">
         <div className="film-msg film-msg--me">
           <div className="film-who">You</div>
-          <MarkdownBlocks text={text} />
+          {attachment && (
+            <a className="film-msg-attach" href={attachment.url || undefined}
+               target="_blank" rel="noopener noreferrer">
+              <span className="film-attach-chip-ico">📄</span>
+              <span className="film-attach-chip-name">{attachment.filename}</span>
+            </a>
+          )}
+          {text && <MarkdownBlocks text={text} />}
         </div>
       </div>
     );
@@ -167,6 +180,8 @@ export default function WritersRoom({
   onSaveScript,
 }) {
   const [text, setText] = useState('');
+  const [pendingAttachment, setPendingAttachment] = useState(null);   // {filename,url,file_type,text,sections,injection_detected}
+  const [attachNotice, setAttachNotice] = useState(null);             // flagged-doc / info notice
   const [scriptBarCollapsed, setScriptBarCollapsed] = useState(false);
   const scrollRef = useRef(null);
   const taRef = useRef(null);
@@ -184,10 +199,25 @@ export default function WritersRoom({
 
   const send = () => {
     const t = text.trim();
-    if (!t) return;
-    onSend(t);
+    // Allow sending an attachment with no note (the file is the message).
+    if (!t && !pendingAttachment) return;
+    onSend(t, pendingAttachment || null);
     setText('');
+    setPendingAttachment(null);
+    setAttachNotice(null);
     requestAnimationFrame(() => grow(taRef.current));
+  };
+
+  // When a script file finishes uploading+extracting, hold it as a pending
+  // attachment (chip in the composer) until the user sends. A flagged doc is
+  // still attached (user sees their file) but its text is withheld server-side,
+  // so we note that it won't be read into the script.
+  const onAttachmentReady = (result /*, file */) => {
+    if (!result) return;
+    setPendingAttachment(result);
+    setAttachNotice(result.injection_detected
+      ? "This file couldn't be read into your script for safety reasons, but it's attached."
+      : null);
   };
 
   const onKeyDown = (e) => {
@@ -212,7 +242,7 @@ export default function WritersRoom({
           let lastScriptIdx = -1;
           messages.forEach((m, i) => { if (m.scriptMeta && m.scriptMeta.script) lastScriptIdx = i; });
           return messages.map((m, i) => (
-            <Turn key={i} role={m.role} text={m.text} scriptMeta={m.scriptMeta}
+            <Turn key={i} role={m.role} text={m.text} attachment={m.attachment} scriptMeta={m.scriptMeta}
               editable={i === lastScriptIdx && !!onSaveScript}
               onSaveScript={onSaveScript} />
           ));
@@ -277,7 +307,22 @@ export default function WritersRoom({
       )}
 
       <div className="film-composer">
+        {pendingAttachment && (
+          <div className="film-attach-chip">
+            <span className="film-attach-chip-ico">📄</span>
+            <span className="film-attach-chip-name" title={pendingAttachment.filename}>{pendingAttachment.filename}</span>
+            <button className="film-attach-chip-x" onClick={() => { setPendingAttachment(null); setAttachNotice(null); }}
+              aria-label="Remove attachment" title="Remove">×</button>
+          </div>
+        )}
+        {attachNotice && <div className="film-attach-notice">{attachNotice}</div>}
         <div className="film-inputwrap">
+          <AttachButton
+            upload={filmUploadAttachment}
+            onDone={onAttachmentReady}
+            disabled={!!pendingAttachment}
+            title="Attach a script (PDF, Word, or text)"
+          />
           <textarea
             ref={taRef}
             value={text}
