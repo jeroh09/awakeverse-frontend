@@ -3,7 +3,9 @@
 // regenerate (all act on the SAME job, so one poll reflects them). Uses filmApi.
 
 import { useState, useCallback, useRef, useEffect } from 'react';
-import { filmGenerate, filmGetJob, filmCancel, filmReassemble, filmRegenerate, friendlyError } from './filmApi';
+import { filmGenerate, filmGetJob, filmCancel, filmReassemble, filmRegenerate,
+         filmPlan, filmRegeneratePlate, filmApproveRender, filmUploadCharacterImage,
+         friendlyError } from './filmApi';
 
 const POLL_MS = 5000;
 const POLL_TIMEOUT_MS = 45 * 60 * 1000;
@@ -119,6 +121,11 @@ export default function useFilmJob() {
         }
         if (job.output_url) setOutputUrl(job.output_url);
         if (job.status === 'complete') { stop(); setEditBusy(null); }
+        // awaiting_review is a PAUSE, not a terminal state: the plan + character
+        // plates are ready and nothing changes until the user acts (regenerate /
+        // approve). Stop polling so we don't spin for 45 min on a paused job; the
+        // manifest (with manifest.review) is already set above for the review UI.
+        if (job.status === 'awaiting_review') { stop(); setEditBusy(null); }
         if (job.status === 'failed' || job.status === 'cancelled') {
           stop(); setEditBusy(null); setError(job.error_message || 'Render stopped.');
         }
@@ -146,6 +153,75 @@ export default function useFilmJob() {
     } catch (e) { setStatus('failed'); setError(friendlyError(e)); return null; }
   }, [poll]);
 
+  // ── Plate-review lifecycle (Plan & review) ──────────────────────────────────
+  // plan(): director + character plates, then PAUSE at awaiting_review. Same body
+  // as generate() but routed to the plan phase; the poll drives us THROUGH
+  // processing (skeleton + "building plates" pill) and STOPS at awaiting_review.
+  const plan = useCallback(async ({ script, title, duration_seconds = 120, video_style = 'anime',
+                                    aspect_ratio = '9:16', intro = false, outro_theme = null,
+                                    film_project_id = null, expectedShots = 0 }) => {
+    setError(null); setManifest(null); setOutputUrl(null); setStatus('processing');
+    expectedRef.current = expectedShots || 0;
+    try {
+      const data = await filmPlan({ script, title, duration_seconds, video_style, aspect_ratio, intro, outro_theme, film_project_id });
+      const id = data.job_id;
+      setJobId(id);
+      poll(id);
+      return id;
+    } catch (e) { setStatus('failed'); setError(friendlyError(e)); return null; }
+  }, [poll]);
+
+  // regeneratePlate(): synchronous single-plate rebuild from an edited description.
+  // Returns the new { name, description, plate_url } so the caller can update its
+  // local review state immediately; on failure returns { error } (string) inline.
+  const regeneratePlate = useCallback(async (name, description) => {
+    if (!jobId) return { error: 'No plan to review yet.' };
+    try {
+      const r = await filmRegeneratePlate(jobId, name, description);
+      // Reflect the new plate in the manifest so any manifest-driven view updates.
+      setManifest(m => {
+        if (!m) return m;
+        const review = { ...(m.review || {}) };
+        const chars = { ...(review.characters || {}) };
+        chars[name] = { ...(chars[name] || {}), description, plate_url: r.plate_url };
+        review.characters = chars;
+        return { ...m, review };
+      });
+      return r;
+    } catch (e) { return { error: friendlyError(e) }; }
+  }, [jobId]);
+
+  // uploadCharacterImage(): replace a reviewable character's plate with a stylized
+  // upload (photo already hosted → pass its URL). Consent-gated on the backend;
+  // a 403 { consent_required } surfaces so the caller can show the agreement.
+  const uploadCharacterImage = useCallback(async (name, photoUrl) => {
+    if (!jobId) return { error: 'No plan to review yet.' };
+    try {
+      const r = await filmUploadCharacterImage(jobId, name, photoUrl);
+      setManifest(m => {
+        if (!m) return m;
+        const review = { ...(m.review || {}) };
+        const chars = { ...(review.characters || {}) };
+        chars[name] = { ...(chars[name] || {}), plate_url: r.plate_url, source: 'upload' };
+        review.characters = chars;
+        return { ...m, review };
+      });
+      return r;
+    } catch (e) {
+      const consentRequired = !!(e && e.response && e.response.data && e.response.data.consent_required);
+      return { error: friendlyError(e), consentRequired };
+    }
+  }, [jobId]);
+
+  // approveRender(): commit the reviewed plan → full render (Phase 3). The job
+  // flips to processing and the normal render poll resumes.
+  const approveRender = useCallback(async () => {
+    if (!jobId) return;
+    setError(null); setStatus('processing');
+    try { await filmApproveRender(jobId); poll(jobId); }
+    catch (e) { setError(friendlyError(e)); }
+  }, [jobId, poll]);
+
   // Restore an existing render on resume (from GET /projects/:id → render block).
   const adopt = useCallback((render) => {
     if (!render || !render.job_id) return;
@@ -160,7 +236,9 @@ export default function useFilmJob() {
         if (m && m.total) expectedRef.current = m.total;
       } catch (_) {}
     }
-    if (s !== 'complete' && s !== 'failed' && s !== 'cancelled') poll(render.job_id);
+    // awaiting_review resumes WITHOUT polling — it's a pause; the manifest we just
+    // set carries the review block, and the user's next action drives the change.
+    if (s !== 'complete' && s !== 'failed' && s !== 'cancelled' && s !== 'awaiting_review') poll(render.job_id);
   }, [poll]);
 
   const cancel = useCallback(async () => {
@@ -189,14 +267,26 @@ export default function useFilmJob() {
   }, [stop]);
 
   const cells = toCells(manifest, expectedRef.current);
-  const stage = status === 'complete' ? 'edit'
+  // Distinguish the plate-review PAUSE from an active render. While a plan job is
+  // still 'processing' it shows the render skeleton + a "building character plates"
+  // pill (planningPlates); once it reaches awaiting_review, stage is 'plate_review'.
+  const phase = (manifest && manifest.phase) || null;
+  const isPlanPhase = phase === 'plate_review';   // set by the backend's plan job
+  const stage = status === 'awaiting_review' ? 'plate_review'
+    : status === 'complete' ? 'edit'
     : status === 'processing' ? 'render'
     : status === 'failed' ? 'failed' : 'idle';
+  // "Plates are building" pill: a plan job still processing, not yet paused.
+  const planningPlates = isPlanPhase && status === 'processing';
+  const reviewCharacters = (manifest && manifest.review && manifest.review.characters) || null;
+
   const total = Math.max(expectedRef.current, cells.length);
   const done = cells.filter(c => c.status === 'done').length || Math.round(rawProgress * total);
   const progress = { done, total, etaText: etaText(done, total) };
   const jobTitle = (manifest && manifest.source && manifest.source.title) || null;
 
   return { jobId, status, stage, cells, progress, outputUrl, error, title: jobTitle, editBusy,
-    generate, cancel, reassemble, regenerate, adopt, reset };
+    reviewCharacters, planningPlates,
+    generate, plan, regeneratePlate, uploadCharacterImage, approveRender,
+    cancel, reassemble, regenerate, adopt, reset };
 }
