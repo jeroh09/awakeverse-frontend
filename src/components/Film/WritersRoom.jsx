@@ -118,6 +118,7 @@ export default function WritersRoom({
   scriptReady = false,
   showBuildBar = false,
   onBuildFilm = () => {},
+  onReviewCast = () => {},
 }) {
   const [text, setText] = useState('');
   const [scriptBarCollapsed, setScriptBarCollapsed] = useState(false);
@@ -207,7 +208,8 @@ export default function WritersRoom({
           <div className="film-scriptbar">
             <span className="film-scriptbar-lbl"><IconCheck s={14} /> Script ready</span>
             <div className="film-scriptbar-actions">
-              <button className="film-btn film-btn--primary" onClick={onBuildFilm}>Build the film</button>
+              <button className="film-btn film-btn--ghost" onClick={onReviewCast}>Review cast first</button>
+              <button className="film-btn film-btn--primary" onClick={onBuildFilm}>Make the film</button>
               <button
                 className="film-scriptbar-x"
                 onClick={() => setScriptBarCollapsed(true)}

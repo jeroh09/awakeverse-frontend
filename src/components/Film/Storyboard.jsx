@@ -9,8 +9,10 @@
 import React, { useRef, useState, useCallback } from 'react';
 import {
   IconPlay, IconRegenerate, IconCut, IconDuplicate, IconGrip, IconStop,
-  IconSoftened, IconVisual, KIND_ICON,
+  IconSoftened, IconVisual, IconCheck, IconUpload, KIND_ICON,
 } from './filmIcons';
+// Redraw reuses the regenerate glyph (a redraw IS a regenerate, user-facing name).
+const IconRedraw = IconRegenerate;
 
 const pad = n => String(n).padStart(2, '0');
 
@@ -121,9 +123,76 @@ function Cell({ beat, stageState, selected, regenBusy, onSelect, onRegenerate, o
   );
 }
 
+// ── Meet the cast — the review pause (stageState === 'plate_review') ──────────
+// User-facing language throughout: "cast" not "character plates", "Redraw" not
+// "regenerate", "make the film" not "render". Each member: their look, a Redraw,
+// and "Use your own photo" (which opens the consent gate first).
+function CastMember({ name, info, busy, onRedraw, onUpload }) {
+  const [desc, setDesc] = useState(info.description || '');
+  const uploaded = info.source === 'upload';
+  return (
+    <div className={`film-cast-card${busy ? ' is-busy' : ''}`}>
+      <div className="film-cast-portrait">
+        {info.plate_url
+          ? <img src={info.plate_url} alt={name} className="film-cast-img" />
+          : <div className="film-cast-img film-cast-img--empty" />}
+        {uploaded && <span className="film-cast-badge">From your photo</span>}
+        {busy && <div className="film-cast-veil"><span className="film-spin" /> Drawing…</div>}
+      </div>
+      <div className="film-cast-body">
+        <div className="film-cast-name">{name}</div>
+        <textarea className="film-cast-desc" value={desc} spellCheck={false}
+          onChange={e => setDesc(e.target.value)}
+          placeholder="Describe how they look…" />
+        <div className="film-cast-actions">
+          <button className="film-cast-btn" disabled={busy} onClick={() => onRedraw(name, desc)}>
+            <IconRedraw s={14} /> Redraw
+          </button>
+          <button className="film-cast-btn film-cast-btn--up" disabled={busy} onClick={() => onUpload(name)}>
+            <IconUpload s={14} /> Use your own photo
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function ConsentModal({ onAgree, onCancel }) {
+  const [agreed, setAgreed] = useState(false);
+  return (
+    <div className="film-modal-scrim" onClick={onCancel}>
+      <div className="film-modal" onClick={e => e.stopPropagation()}>
+        <div className="film-modal-k">Before you upload</div>
+        <h2 className="film-modal-h">Use your own images</h2>
+        <p className="film-modal-p">You can turn a photo into a character. Every image you upload is
+          redrawn in the film's style — it becomes a painted character, not a photo of a real person.</p>
+        <div className="film-modal-terms">
+          By continuing you confirm you <b>own or have permission to use</b> each image you upload,
+          and that it doesn't show anyone who hasn't agreed to appear. You're responsible for the
+          images you provide.
+        </div>
+        <label className="film-modal-check">
+          <input type="checkbox" checked={agreed} onChange={e => setAgreed(e.target.checked)} />
+          <span>I understand, and I have the right to use the images I upload.</span>
+        </label>
+        <div className="film-modal-foot">
+          <button className="film-btn film-btn--ghost" onClick={onCancel}>Cancel</button>
+          <button className="film-btn film-btn--primary" disabled={!agreed} onClick={onAgree}>Agree &amp; continue</button>
+        </div>
+      </div>
+    </div>
+  );
+}
+
 export default function Storyboard({
   stageState = 'empty',
   beats = [],
+  aspectRatio = '9:16',
+  cast = null,
+  planningCast = false,
+  onRedrawCast = () => {},
+  onUploadCastPhoto = () => {},
+  onApproveCast = () => {},
   selectedBeat = null,
   progress = null,
   finalUrl = null,
@@ -141,14 +210,45 @@ export default function Storyboard({
   const total = beats.length;
   const totalSecs = beats.reduce((a, b) => a + (b.seconds || 0), 0);
 
+  // Cast review interactions.
+  const [busyMember, setBusyMember] = useState(null);   // name currently drawing
+  const [consentFor, setConsentFor] = useState(null);   // name awaiting consent before upload
+  const castList = cast ? Object.entries(cast) : [];
+
+  // The film's frame shape drives the storyboard card proportion so the preview
+  // tells the truth about the output (a 9:16 film shows tall cards, not 16:9).
+  const arValue = { '9:16': '9 / 16', '1:1': '1 / 1', '16:9': '16 / 9' }[aspectRatio] || '16 / 9';
+  const gridStyle = { '--film-card-ar': arValue };
+
+  const handleRedraw = async (name, desc) => {
+    setBusyMember(name);
+    try { await onRedrawCast(name, desc); } finally { setBusyMember(null); }
+  };
+  // "Use your own photo" always passes through the consent gate first. The actual
+  // file→hosted-URL step is the app's existing uploader; here we open consent and,
+  // on agree, hand off (the container calls the consent-gated upload endpoint).
+  const handleUploadClick = (name) => setConsentFor(name);
+  const handleConsentAgree = () => {
+    const name = consentFor; setConsentFor(null);
+    onUploadCastPhoto(name);   // container runs consent-accept + upload picker
+  };
+
   const sub =
-    stageState === 'review' ? `${total} shots · ~${totalSecs}s · nothing rendered yet`
-    : stageState === 'render' ? `${(progress && progress.done) || 0}/${(progress && progress.total) || total} rendered`
+    stageState === 'plate_review' ? `${castList.length} characters · check before making the film`
+    : stageState === 'review' ? `${total} shots · ~${totalSecs}s · not made yet`
+    : stageState === 'render' ? (planningCast ? 'sketching the cast…' : `${(progress && progress.done) || 0}/${(progress && progress.total) || total} rendered`)
     : stageState === 'edit' ? `${total} shots · ${totalSecs}s`
     : 'no shots yet';
 
   const cta =
-    stageState === 'review' ? <button className="film-btn film-btn--primary" onClick={onGenerate}>Generate film</button>
+    stageState === 'plate_review' ? (
+        <div className="film-head-actions">
+          <button className="film-btn film-btn--primary" onClick={onApproveCast}>
+            <IconCheck s={14} /> Looks good — make the film
+          </button>
+        </div>
+      )
+    : stageState === 'review' ? <button className="film-btn film-btn--primary" onClick={onGenerate}>Make the film</button>
     : stageState === 'edit' ? (
         <div className="film-head-actions">
           {finalUrl && <button className="film-btn film-btn--primary" onClick={() => setWatching(true)}><IconPlay s={14} /> Play film</button>}
@@ -170,10 +270,30 @@ export default function Storyboard({
       </div>
 
       <div className="film-stage">
-        {stageState === 'empty' || total === 0 ? (
+        {stageState === 'plate_review' ? (
+          <div className="film-cast-wrap">
+            <div className="film-cast-lead">
+              <h3>Meet the cast</h3>
+              <p>These are the characters in your film. Tweak how one looks and redraw them, or use your
+                own photo — then make the film when they look right.</p>
+            </div>
+            <div className="film-cast-grid">
+              {castList.map(([name, info]) => (
+                <CastMember key={name} name={name} info={info}
+                  busy={busyMember === name}
+                  onRedraw={handleRedraw} onUpload={handleUploadClick} />
+              ))}
+            </div>
+          </div>
+        ) : stageState === 'empty' || total === 0 ? (
           <EmptyStoryboard />
         ) : (
-          <div className="film-grid">
+          <div className="film-grid" style={gridStyle}>
+            {planningCast && (
+              <div className="film-buildpill-row">
+                <span className="film-buildpill"><span className="film-buildpill-dot" /> Sketching the cast…</span>
+              </div>
+            )}
             {beats.map((b, i) => (
               <Cell key={`${b.index}-${b.pos != null ? b.pos : i}`} beat={b} stageState={stageState}
                 selected={selectedBeat === b.index} regenBusy={regenBusyIndex === b.index}
@@ -183,6 +303,10 @@ export default function Storyboard({
           </div>
         )}
       </div>
+
+      {consentFor && (
+        <ConsentModal onAgree={handleConsentAgree} onCancel={() => setConsentFor(null)} />
+      )}
 
       {stageState === 'render' && progress && (
         <div className="film-prog">

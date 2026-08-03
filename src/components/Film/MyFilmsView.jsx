@@ -26,6 +26,23 @@ const DURATIONS = [
   { key: 180, label: '3 min' },
 ];
 
+// Frame shape — fixed for the film's whole life (set once here, shown as a
+// read-only tag in the workspace, never editable after). Plain-language labels
+// over the raw ratios; the little glyph shows the shape at a glance. Vertical is
+// first/default — it's the shorts-native shape most new films want.
+const ASPECTS = [
+  { key: '9:16', label: 'Vertical',   w: 9,  h: 15 },
+  { key: '1:1',  label: 'Square',     w: 13, h: 13 },
+  { key: '16:9', label: 'Widescreen', w: 18, h: 10 },
+];
+const AspectGlyph = ({ w, h }) => (
+  <svg width="20" height="16" viewBox="0 0 20 16" fill="none" aria-hidden="true"
+       style={{ flex: '0 0 auto' }}>
+    <rect x={(20 - w) / 2} y={(16 - h) / 2} width={w} height={h} rx="2"
+          stroke="currentColor" strokeWidth="1.6" />
+  </svg>
+);
+
 const STATUS_LABEL = { draft: 'Draft', rendering: 'Rendering', ready: 'Ready', failed: 'Failed' };
 
 // Static asset paths — served from public/assets/film/, referenced as plain
@@ -135,10 +152,11 @@ export default function MyFilmsView({
   const [picking, setPicking] = useState(false);
   const [style, setStyle] = useState('anime');
   const [duration, setDuration] = useState(60);
+  const [aspect, setAspect] = useState('9:16');   // frame shape — fixed at creation
   const [playing, setPlaying] = useState(null);      // the film object being watched, or null
   const [playerSize, setPlayerSize] = useState('half');
 
-  const startNew = () => { onNew({ video_style: style, duration_seconds: duration }); };
+  const startNew = () => { onNew({ video_style: style, duration_seconds: duration, aspect_ratio: aspect }); };
 
   const handlePlay = useCallback((film) => { setPlaying(film); setPlayerSize('half'); }, []);
   const handleClosePlayer = useCallback(() => setPlaying(null), []);
@@ -173,6 +191,15 @@ export default function MyFilmsView({
                 <button key={d.key}
                   className={`film-seg-btn${duration === d.key ? ' is-on' : ''}`}
                   onClick={() => setDuration(d.key)}>{d.label}</button>
+              ))}
+            </div>
+            <div className="film-seg">
+              {ASPECTS.map(a => (
+                <button key={a.key}
+                  className={`film-seg-btn film-seg-btn--aspect${aspect === a.key ? ' is-on' : ''}`}
+                  onClick={() => setAspect(a.key)} title={a.key}>
+                  <AspectGlyph w={a.w} h={a.h} /> {a.label}
+                </button>
               ))}
             </div>
             <button className="film-btn film-btn--primary" disabled={busy} onClick={startNew}>

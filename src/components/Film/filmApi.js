@@ -63,9 +63,9 @@ export const filmFinalize = (session_id) =>
   api.post('/film/assistant/finalize', { session_id }, { timeout: LLM_TIMEOUT }).then(r => r.data);
 
 // ── job (generate + poll + edit) ──
-export const filmGenerate = ({ script, title, duration_seconds, video_style, intro, outro_theme, film_project_id }) =>
+export const filmGenerate = ({ script, title, duration_seconds, video_style, aspect_ratio, intro, outro_theme, film_project_id }) =>
   api.post('/film/generate',
-    { script, title, duration_seconds, video_style, intro, outro_theme, film_project_id },
+    { script, title, duration_seconds, video_style, aspect_ratio, intro, outro_theme, film_project_id },
     { timeout: QUEUE_TIMEOUT }).then(r => r.data);
 
 export const filmGetJob   = (jobId) =>
@@ -84,10 +84,44 @@ export const filmRegenerate = (jobId, beat_index, note, edited_text) =>
     { beat_index, note: note || null, edited_text: edited_text || null },
     { timeout: QUEUE_TIMEOUT }).then(r => r.data);
 
+// ── plate review (Plan & review lifecycle: plan → awaiting_review → regenerate → approve) ──
+// filmPlan is filmGenerate with review:true — the backend routes it to the PLAN
+// phase (director + character plates) and pauses at awaiting_review instead of
+// rendering straight through. Same body/timeout as filmGenerate.
+export const filmPlan = ({ script, title, duration_seconds, video_style, aspect_ratio, intro, outro_theme, film_project_id }) =>
+  api.post('/film/generate',
+    { script, title, duration_seconds, video_style, aspect_ratio, intro, outro_theme, film_project_id, review: true },
+    { timeout: QUEUE_TIMEOUT }).then(r => r.data);
+
+// Regenerate ONE character's plate from an edited description. SYNCHRONOUS on the
+// backend (a live Nano call), so it gets the LLM timeout, not the queue one.
+export const filmRegeneratePlate = (jobId, name, description) =>
+  api.post(`/film/jobs/${jobId}/plate`, { name, description }, { timeout: LLM_TIMEOUT }).then(r => r.data);
+
+// Approve the reviewed plan → starts the full render (Phase 3). Returns 202; the
+// job flips to processing and the normal render poll takes over.
+export const filmApproveRender = (jobId) =>
+  api.post(`/film/jobs/${jobId}/approve`, null, { timeout: QUEUE_TIMEOUT }).then(r => r.data);
+
+// ── image-to-film (internal; consent-gated) ──
+// Record acceptance of the image-upload agreement. REQUIRED before any upload —
+// the consent record is a standing liability cover, independent of Seedance's
+// likeness gate (a render passing that gate does not establish the user's right
+// to the face). The backend refuses uploads with a 403 { consent_required:true }
+// until this is called.
+export const filmUploadConsent = () =>
+  api.post('/film/upload-consent', null, { timeout: QUEUE_TIMEOUT }).then(r => r.data);
+
+// Replace a reviewable character's plate with a STYLIZED version of an uploaded
+// photo (photo already hosted → pass its URL). SYNCHRONOUS stylize on the backend
+// → LLM timeout. Consent-gated (see filmUploadConsent).
+export const filmUploadCharacterImage = (jobId, name, photo_url) =>
+  api.post(`/film/jobs/${jobId}/character-upload`, { name, photo_url }, { timeout: LLM_TIMEOUT }).then(r => r.data);
+
 // ── film projects (the "movie" record: chat + script + render history) ──
-export const filmCreateProject = ({ title, video_style, duration_seconds } = {}) =>
+export const filmCreateProject = ({ title, video_style, duration_seconds, aspect_ratio } = {}) =>
   api.post('/film/projects',
-    { title, video_style, duration_seconds }, { timeout: QUEUE_TIMEOUT }).then(r => r.data);
+    { title, video_style, duration_seconds, aspect_ratio }, { timeout: QUEUE_TIMEOUT }).then(r => r.data);
 
 export const filmListProjects = () =>
   api.get('/film/projects').then(r => r.data);

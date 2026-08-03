@@ -31,7 +31,7 @@ export default function FilmWorkspaceContainer({
   const [editing, setEditing] = useState(null);
   const [editsByIndex, setEditsByIndex] = useState({});
   const [loading, setLoading] = useState(true);
-  const [meta, setMeta] = useState({ video_style: 'anime', duration_seconds: 60 });
+  const [meta, setMeta] = useState({ video_style: 'anime', duration_seconds: 60, aspect_ratio: '9:16' });
   // Per-beat busy flag — threaded to the individual Regenerate button (not just
   // the stage overlay) so a click registers visibly the instant it's pressed.
   // Fixes handover §2a: "Regenerate button shows no state".
@@ -54,7 +54,8 @@ export default function FilmWorkspaceContainer({
           session_id: p.session_id, messages: p.messages || [],
           title: p.title, script: p.script, scriptReady: !!p.script,
         });
-        setMeta({ video_style: p.video_style || 'anime', duration_seconds: p.duration_seconds || 60 });
+        setMeta({ video_style: p.video_style || 'anime', duration_seconds: p.duration_seconds || 60,
+                  aspect_ratio: p.aspect_ratio || '9:16' });
         if (p.render) job.adopt(p.render);
       } catch (e) {
         // authoring/job errors surface in their own state; nothing else to do
@@ -79,6 +80,7 @@ export default function FilmWorkspaceContainer({
   const stageState =
     job.editBusy ? 'edit'
     : job.stage === 'edit' ? 'edit'
+    : job.stage === 'plate_review' ? 'plate_review'   // paused: Meet the cast
     : job.stage === 'render' ? 'render'
     : reviewCells ? 'review'
     : 'empty';
@@ -106,6 +108,18 @@ export default function FilmWorkspaceContainer({
     job.generate({
       script, title: authoring.title, film_project_id: projectId,
       duration_seconds: meta.duration_seconds, video_style: meta.video_style,
+      aspect_ratio: meta.aspect_ratio,
+      expectedShots: reviewCells ? reviewCells.length : 0,
+    });
+  }, [job, authoring.title, projectId, meta, reviewCells]);
+
+  // "Review cast first" — same inputs as doGenerate, routed to the plan phase
+  // (director + cast, then pause for review before the full film is made).
+  const doPlan = useCallback((script) => {
+    job.plan({
+      script, title: authoring.title, film_project_id: projectId,
+      duration_seconds: meta.duration_seconds, video_style: meta.video_style,
+      aspect_ratio: meta.aspect_ratio,
       expectedShots: reviewCells ? reviewCells.length : 0,
     });
   }, [job, authoring.title, projectId, meta, reviewCells]);
@@ -114,6 +128,21 @@ export default function FilmWorkspaceContainer({
     const rec = await authoring.finalize();
     if (rec && !rec.shots && rec.script) doGenerate(rec.script);
   }, [authoring, doGenerate]);
+
+  // "Review cast first": finalize the script, then run the plan phase (which
+  // pauses at Meet the cast) instead of making the film straight through.
+  const onReviewCast = useCallback(async () => {
+    const rec = await authoring.finalize();
+    const script = (rec && rec.script) || authoring.script;
+    if (script) doPlan(script);
+  }, [authoring, doPlan]);
+
+  // Cast review actions (only meaningful while stageState === 'plate_review').
+  const onRedrawCast = useCallback((name, description) =>
+    job.regeneratePlate(name, description), [job]);
+  const onUploadCastPhoto = useCallback((name, photoUrl) =>
+    job.uploadCharacterImage(name, photoUrl), [job]);
+  const onApproveCast = useCallback(() => job.approveRender(), [job]);
 
   const onGenerate = useCallback(() => {
     if (authoring.script) doGenerate(authoring.script);
@@ -164,6 +193,12 @@ export default function FilmWorkspaceContainer({
       onBackToFilms={onBackToFilms}
       stageState={stageState}
       beats={beats}
+      aspectRatio={meta.aspect_ratio}
+      cast={job.reviewCharacters}
+      planningCast={job.planningPlates}
+      onRedrawCast={onRedrawCast}
+      onUploadCastPhoto={onUploadCastPhoto}
+      onApproveCast={onApproveCast}
       selectedBeat={editing ? editing.index : null}
       progress={job.progress}
       finalUrl={job.outputUrl}
@@ -188,6 +223,7 @@ export default function FilmWorkspaceContainer({
       onSend={authoring.send}
       scriptReady={authoring.scriptReady}
       onBuildFilm={onBuildFilm}
+      onReviewCast={onReviewCast}
     />
   );
 }

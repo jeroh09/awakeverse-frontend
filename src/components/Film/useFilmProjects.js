@@ -26,11 +26,11 @@ export default function useFilmProjects() {
 
   useEffect(() => { refresh(); }, [refresh]);
 
-  const create = useCallback(async ({ title, video_style, duration_seconds } = {}) => {
+  const create = useCallback(async ({ title, video_style, duration_seconds, aspect_ratio } = {}) => {
     setError(null); setBusy(true);
     try {
-      const proj = await filmCreateProject({ title, video_style, duration_seconds });
-      return proj;                     // { project_id, session_id, title, ... }
+      const proj = await filmCreateProject({ title, video_style, duration_seconds, aspect_ratio });
+      return proj;                     // { project_id, session_id, title, aspect_ratio, ... }
     } catch (e) {
       setError(friendlyError(e, 'Could not start a new film.'));
       return null;

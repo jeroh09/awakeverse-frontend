@@ -18,6 +18,10 @@ export default function FilmWorkspace({
   // stage (left)
   stageState = 'empty',
   beats = [],
+  aspectRatio = '9:16',
+  cast = null,
+  planningCast = false,
+  onRedrawCast, onUploadCastPhoto, onApproveCast,
   selectedBeat = null,
   progress = null,
   finalUrl = null,
@@ -29,7 +33,7 @@ export default function FilmWorkspace({
   chatSub = '',
   editingBeat = null,
   onCloseEdit, onChangeEditText, onRegenerateFromEdit, onSaveEdit,
-  onSend, scriptReady = false, onBuildFilm,
+  onSend, scriptReady = false, onBuildFilm, onReviewCast,
 }) {
   // Below 820px the two panels stack (see FilmWorkspace.css's accordion
   // media query) — starting BOTH expanded there would just reproduce the old
@@ -109,6 +113,12 @@ export default function FilmWorkspace({
             <Storyboard
               stageState={stageState}
               beats={beats}
+              aspectRatio={aspectRatio}
+              cast={cast}
+              planningCast={planningCast}
+              onRedrawCast={onRedrawCast}
+              onUploadCastPhoto={onUploadCastPhoto}
+              onApproveCast={onApproveCast}
               selectedBeat={selectedBeat}
               progress={progress}
               finalUrl={finalUrl}
@@ -143,6 +153,7 @@ export default function FilmWorkspace({
               scriptReady={scriptReady}
               showBuildBar={scriptReady}
               onBuildFilm={onBuildFilm}
+              onReviewCast={onReviewCast}
             />
           </section>
         </div>

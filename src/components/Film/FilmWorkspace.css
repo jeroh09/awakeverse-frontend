@@ -671,3 +671,68 @@
   background:var(--film-surface);border:1px solid var(--film-ring);border-radius:var(--film-r-lg);
   padding:22px 30px;box-shadow:var(--film-glow-sh);color:var(--film-t1);font-size:14px;font-weight:600;}
 .film-edit-card small{color:var(--film-t3);font-weight:500;font-size:12px;}
+/* ═══ Aspect-aware storyboard cards ═══════════════════════════════════════════
+   The film's frame shape (set once at creation) drives the card proportion so the
+   storyboard preview matches the real output. --film-card-ar is set on .film-grid
+   by Storyboard.jsx from the project's aspect_ratio; defaults to 16/9. */
+.film-grid{--film-card-ar:16 / 9;}
+.film-grid .film-thumb{aspect-ratio:var(--film-card-ar);}
+/* Vertical/square films: 2-up reads better than 3-up cramped tall cards. */
+.film-grid:has(.film-thumb[style]){}          /* no-op guard for :has support */
+
+/* ═══ Sketching-the-cast pill (plan phase, still building) ════════════════════ */
+.film-buildpill-row{grid-column:1 / -1;display:flex;justify-content:center;margin:2px 0 10px;}
+.film-buildpill{display:inline-flex;align-items:center;gap:9px;font-family:var(--film-body);
+  font-weight:500;font-size:12.5px;color:var(--film-success);
+  background:rgba(16,185,129,.12);border:1px solid rgba(16,185,129,.3);
+  border-radius:var(--film-r-full);padding:7px 14px;}
+.film-buildpill-dot{width:7px;height:7px;border-radius:50%;background:var(--film-success);
+  animation:film-pulse 1.6s infinite;}
+@keyframes film-pulse{0%{box-shadow:0 0 0 0 rgba(16,185,129,.5);}
+  70%{box-shadow:0 0 0 7px rgba(16,185,129,0);}100%{box-shadow:0 0 0 0 rgba(16,185,129,0);}}
+
+/* ═══ Meet the cast — the review pause ════════════════════════════════════════ */
+.film-cast-wrap{padding:2px;}
+.film-cast-lead{margin:0 2px 16px;}
+.film-cast-lead h3{font-family:var(--film-display);font-weight:600;font-size:16px;margin:0 0 4px;color:var(--film-t1);}
+.film-cast-lead p{margin:0;font-size:13px;color:var(--film-t2);max-width:56ch;line-height:1.5;}
+.film-cast-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:14px;}
+@media (max-width:1080px){.film-cast-grid{grid-template-columns:1fr;}}
+.film-cast-card{display:grid;grid-template-columns:120px 1fr;background:var(--film-surface);
+  border:1px solid var(--film-bd-subtle);border-radius:var(--film-r-md);overflow:hidden;}
+.film-cast-card.is-busy{opacity:.97;}
+.film-cast-portrait{position:relative;aspect-ratio:9/16;background:var(--film-canvas);
+  border-right:1px solid var(--film-bd-subtle);overflow:hidden;}
+.film-cast-img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;}
+.film-cast-img--empty{background:linear-gradient(135deg,var(--film-interactive),var(--film-canvas));}
+.film-cast-badge{position:absolute;left:6px;top:6px;font-size:9.5px;font-weight:600;color:var(--film-info);
+  background:rgba(10,15,26,.8);border:1px solid rgba(59,130,246,.4);border-radius:6px;padding:2px 6px;}
+.film-cast-veil{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;gap:8px;
+  background:rgba(10,15,26,.72);color:var(--film-success);font-size:12px;font-weight:500;}
+.film-cast-body{padding:12px 13px;display:flex;flex-direction:column;min-width:0;}
+.film-cast-name{font-family:var(--film-display);font-weight:600;font-size:14px;color:var(--film-t1);}
+.film-cast-desc{margin-top:9px;background:var(--film-canvas);border:1px solid var(--film-bd-subtle);
+  border-radius:var(--film-r-sm);color:var(--film-t1);font:400 12.5px/1.45 var(--film-body);
+  padding:8px 10px;resize:none;width:100%;min-height:62px;}
+.film-cast-desc:focus{outline:none;border-color:var(--film-accent);box-shadow:0 0 0 3px var(--film-glow);}
+.film-cast-actions{display:flex;gap:7px;margin-top:10px;flex-wrap:wrap;}
+.film-cast-btn{font:500 12px/1 var(--film-body);cursor:pointer;color:var(--film-t1);
+  background:var(--film-peak);border:1px solid var(--film-bd-med);border-radius:var(--film-r-sm);
+  padding:8px 10px;display:inline-flex;align-items:center;gap:7px;transition:.15s;}
+.film-cast-btn:hover{border-color:var(--film-ring);}
+.film-cast-btn:disabled{opacity:.55;cursor:default;}
+.film-cast-btn--up{color:var(--film-info);}
+
+/* ═══ Upload consent modal ════════════════════════════════════════════════════ */
+.film-modal-scrim{position:absolute;inset:0;z-index:20;display:flex;align-items:center;justify-content:center;
+  padding:20px;background:rgba(7,8,11,.72);backdrop-filter:blur(3px);}
+.film-modal{width:min(500px,100%);background:var(--film-surface);border:1px solid var(--film-bd-strong);
+  border-radius:var(--film-r-lg);padding:20px;box-shadow:0 30px 80px -30px #000;}
+.film-modal-k{font-size:11px;letter-spacing:.06em;text-transform:uppercase;color:var(--film-info);}
+.film-modal-h{font-family:var(--film-display);font-weight:600;font-size:19px;margin:7px 0 0;color:var(--film-t1);}
+.film-modal-p{margin:11px 0;font-size:13px;color:var(--film-t2);line-height:1.5;}
+.film-modal-terms{background:var(--film-canvas);border:1px solid var(--film-bd-subtle);border-radius:var(--film-r-sm);
+  padding:12px 13px;font-size:12.5px;color:var(--film-t1);line-height:1.5;}
+.film-modal-check{display:flex;gap:10px;align-items:flex-start;margin:14px 0 4px;font-size:12.5px;color:var(--film-t1);}
+.film-modal-check input{margin-top:2px;width:16px;height:16px;accent-color:var(--film-info);}
+.film-modal-foot{display:flex;gap:9px;justify-content:flex-end;margin-top:16px;}
