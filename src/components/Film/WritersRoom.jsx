@@ -168,7 +168,8 @@ export default function WritersRoom({
   streamingText = '',
   editingBeat = null,
   onCloseEdit = () => {},
-  onChangeEditText = () => {},
+  onChangeEditVisual = () => {},
+  onChangeEditVo = () => {},
   onRegenerateFromEdit = () => {},
   onSaveEdit = () => {},
   regenBusy = false,
@@ -264,15 +265,31 @@ export default function WritersRoom({
             <span className="t">Editing shot {String(editingBeat.index).padStart(2, '0')}</span>
             <button className="film-x" onClick={onCloseEdit} aria-label="Close">×</button>
           </div>
+
+          <label className="film-beatedit-label">Shot — what we see</label>
           <textarea
-            value={editingBeat.text}
-            onChange={(e) => onChangeEditText(e.target.value)}
+            className="film-beatedit-field"
+            value={editingBeat.visual || ''}
+            placeholder="Describe the shot: who's in frame, what they're doing, the setting…"
+            onChange={(e) => onChangeEditVisual(e.target.value)}
           />
+
+          <label className="film-beatedit-label">
+            Voiceover — what we hear{editingBeat.speaker ? ` (${editingBeat.speaker})` : ''}
+            <span className="film-beatedit-hint"> · leave empty for a silent shot</span>
+          </label>
+          <textarea
+            className="film-beatedit-field film-beatedit-field--vo"
+            value={editingBeat.vo || ''}
+            placeholder="The spoken line or narration for this shot (optional)"
+            onChange={(e) => onChangeEditVo(e.target.value)}
+          />
+
           <div className="film-beatedit-actions">
             <button
               className="film-btn film-btn--primary"
               disabled={regenBusy}
-              onClick={() => onRegenerateFromEdit(editingBeat.text)}
+              onClick={onRegenerateFromEdit}
             >
               {regenBusy ? <span className="film-ctrl-spin" /> : null}
               {regenBusy ? 'Regenerating…' : 'Regenerate with changes'}

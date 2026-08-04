@@ -15,6 +15,13 @@ const shotToCell = s => ({
   kind: s.kind || 'pure_visual',
   seconds: Math.round(s.seconds || s.duration || 6),
   speaker: (s.speaker || '').trim(),
+  // Keep the shot description (visual/action) and the spoken/voiced line SEPARATE
+  // so they can be edited independently — collapsing them into one field is why
+  // text typed as a shot description used to come out as VO. `caption` stays as a
+  // display-only convenience (what shows under the thumbnail).
+  visual: (s.action || '').trim(),
+  vo: (s.dialogue || s.vo || '').trim(),
+  voKind: s.dialogue ? 'dialogue' : (s.vo ? 'vo' : ''),   // spoken vs voiceover
   caption: (s.dialogue || s.vo || s.action || '').trim(),
   softened: !!s.softened,
   clipUrl: null,
@@ -94,14 +101,20 @@ export default function FilmWorkspaceContainer({
   const onSelectBeat = useCallback((index) => {
     const b = beats.find(x => x.index === index);
     if (!b) return;
-    const text = editsByIndex[index] ?? (b.speaker ? `${b.speaker}: "${b.caption}"` : b.caption);
-    setEditing({ index, kind: b.kind, text });
+    const saved = editsByIndex[index];
+    setEditing({
+      index, kind: b.kind, speaker: b.speaker, voKind: b.voKind,
+      // Prefer a saved edit for each field; else the beat's own values.
+      visual: saved ? (saved.visual ?? b.visual) : b.visual,
+      vo:     saved ? (saved.vo     ?? b.vo)     : b.vo,
+    });
   }, [beats, editsByIndex]);
 
-  const onChangeEditText = useCallback((text) => setEditing(e => e && { ...e, text }), []);
+  const onChangeEditVisual = useCallback((visual) => setEditing(e => e && { ...e, visual }), []);
+  const onChangeEditVo = useCallback((vo) => setEditing(e => e && { ...e, vo }), []);
   const onCloseEdit = useCallback(() => setEditing(null), []);
   const onSaveEdit = useCallback(() => {
-    if (editing) setEditsByIndex(m => ({ ...m, [editing.index]: editing.text }));
+    if (editing) setEditsByIndex(m => ({ ...m, [editing.index]: { visual: editing.visual, vo: editing.vo } }));
     setEditing(null);
   }, [editing]);
 
@@ -174,22 +187,45 @@ export default function FilmWorkspaceContainer({
     if (authoring.script) doGenerate(authoring.script);
   }, [authoring.script, doGenerate]);
 
-  const onRegenerateFromEdit = useCallback((text) => {
+  // Recombine the two edited fields into the labeled script grammar the segmenter
+  // understands, so a regenerate keeps the shot description as VISUAL and the
+  // spoken line as speech — instead of the old single blob where anything typed
+  // became VO. Speaker + voKind decide how the spoken line is labeled.
+  const composeBeatScript = (visual, vo, speaker, voKind) => {
+    const lines = [];
+    if (visual && visual.trim()) lines.push(`VISUAL: ${visual.trim()}`);
+    if (vo && vo.trim()) {
+      const who = (speaker || '').trim().toUpperCase();
+      if (voKind === 'vo' || !who) lines.push(`${who || 'NARRATOR'} (V.O.)\n${vo.trim()}`);
+      else lines.push(`${who}\n${vo.trim()}`);
+    }
+    return lines.join('\n');
+  };
+
+  const onRegenerateFromEdit = useCallback(() => {
     if (!editing) return;
     const idx = editing.index;
-    setEditsByIndex(m => ({ ...m, [idx]: text }));
+    setEditsByIndex(m => ({ ...m, [idx]: { visual: editing.visual, vo: editing.vo } }));
     setRegenBusyIndex(idx);
-    // Edited text drives a full re-plan: the director re-conceives this shot.
+    // Edited fields → labeled beat script → the director re-conceives this shot.
+    const text = composeBeatScript(editing.visual, editing.vo, editing.speaker, editing.voKind);
     job.regenerate(idx, null, text);
     setEditing(null);
   }, [editing, job]);
 
   const onRegenerate = useCallback((index) => {
-    // Card "Regenerate" with no edit → a fresh re-conception of the same beat
-    // (any prior local text edit rides along as the re-plan text).
+    // Card "Regenerate" with no open edit → re-conceive the same beat. Any saved
+    // field edits ride along, recomposed into the labeled grammar.
     setRegenBusyIndex(index);
-    job.regenerate(index, null, editsByIndex[index] || null);
-  }, [job, editsByIndex]);
+    const saved = editsByIndex[index];
+    const b = beats.find(x => x.index === index);
+    let text = null;
+    if (saved) {
+      text = composeBeatScript(saved.visual ?? (b && b.visual), saved.vo ?? (b && b.vo),
+                               b && b.speaker, b && b.voKind);
+    }
+    job.regenerate(index, null, text);
+  }, [job, editsByIndex, beats]);
 
   const onCut = useCallback((index) => {
     const next = job.cells.filter(c => c.index !== index)
@@ -244,7 +280,8 @@ export default function FilmWorkspaceContainer({
       streamingText={authoring.streamingText}
       editingBeat={editing}
       onCloseEdit={onCloseEdit}
-      onChangeEditText={onChangeEditText}
+      onChangeEditVisual={onChangeEditVisual}
+      onChangeEditVo={onChangeEditVo}
       onRegenerateFromEdit={onRegenerateFromEdit}
       onSaveEdit={onSaveEdit}
       onSend={authoring.send}
