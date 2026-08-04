@@ -15,8 +15,18 @@ import {
 } from 'lucide-react';
 
 import useBilling from '../../hooks/useBilling';
+import useCredits from '../../hooks/useCredits';
 import PaymentRouter from '../../services/PaymentRouter';
 import './BillingDashboard.css';
+
+// ── Credits helpers (billing-native, no film tokens) ────────────────────────
+const fmtCredits = (n) => (n == null ? '—' : Number(n).toLocaleString());
+const BUCKET_LABEL = { free: 'Monthly allowance', initial: 'Signup bonus', paid: 'Purchased' };
+const creditExpiry = (d) =>
+  d == null ? 'no expiry'
+  : d <= 0  ? 'expires today'
+  : d === 1 ? 'expires tomorrow'
+  : `expires in ${d} days`;
 
 // ============================================================================
 // MAIN COMPONENT
@@ -26,6 +36,7 @@ const BillingDashboard = () => {
   const navigate = useNavigate();
   const { user } = useUser();
   const billing = useBilling();
+  const credits = useCredits();
   const showDebug = window.location.search.includes('debug=true');
   
   // Core state
@@ -318,8 +329,8 @@ const BillingDashboard = () => {
             Back
           </button>
           <div className="header-title">
-            <h1>Billing & Subscription</h1>
-            <p>Manage your AwakeVerse subscription and payment history</p>
+            <h1>Billing</h1>
+            <p>Manage your subscription, credits, and payment history</p>
           </div>
         </div>
       </div>
@@ -458,6 +469,49 @@ const BillingDashboard = () => {
                   <strong>Subscription Cancelled</strong>
                   <p>You'll have access until {new Date(subscription.billing_cycle_end).toLocaleDateString('en-GB')}</p>
                 </div>
+              </div>
+            )}
+          </div>
+
+          {/* Credits Card */}
+          <div className="billing-card">
+            <div className="card-header">
+              <h2 className="card-title">
+                <Zap size={24} />
+                Credits
+              </h2>
+              <span className="card-badge active">
+                {(credits.tier || 'free').toUpperCase()}
+              </span>
+            </div>
+
+            <div className="subscription-info">
+              <div className="info-block">
+                <div className="info-label">Available</div>
+                <div className="info-value large">{fmtCredits(credits.balance)}</div>
+                <div className="info-subvalue">credits</div>
+              </div>
+
+              <div className="info-block">
+                <div className="info-label">Reserved</div>
+                <div className="info-value">{fmtCredits(credits.held)}</div>
+                <div className="info-subvalue">
+                  {credits.held > 0 ? 'in renders now' : 'none in flight'}
+                </div>
+              </div>
+            </div>
+
+            {credits.buckets && credits.buckets.length > 0 && (
+              <div className="credit-buckets">
+                {credits.buckets.map((b) => (
+                  <div className="credit-bucket" key={b.bucket}>
+                    <span className="credit-bucket-name">
+                      {BUCKET_LABEL[b.bucket] || b.bucket}
+                    </span>
+                    <span className="credit-bucket-pts">{fmtCredits(b.points)}</span>
+                    <span className="credit-bucket-exp">{creditExpiry(b.expires_in_days)}</span>
+                  </div>
+                ))}
               </div>
             )}
           </div>

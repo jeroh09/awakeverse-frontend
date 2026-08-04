@@ -176,3 +176,35 @@ export function friendlyError(e, fallback = 'Something went wrong. Please try ag
   if (/timeout|network/i.test(String(e && e.message))) return 'Connection hiccup — try that again.';
   return fallback;
 }
+
+// ── credits / points ledger ──
+// Balance chip + expiry nudge.
+export const filmCredits = () =>
+  api.get('/credits').then(r => r.data);
+
+// Pre-render cost + affordability, for the confirm UI.
+// price('film','180') or price('podcast','default', 13)
+export const filmPrice = (content_type, tier, n_beats) =>
+  api.get('/credits/price', {
+    params: { content_type, tier, ...(n_beats ? { n_beats } : {}) },
+  }).then(r => r.data);
+
+// Ledger history — where credits went.
+export const filmCreditHistory = (limit = 50) =>
+  api.get('/credits/history', { params: { limit } }).then(r => r.data);
+
+// A 402 from a render POST carries { needed, available, short_by, message }.
+// Detect it so the UI can show the top-up state instead of a generic error.
+export function creditsBlocked(e) {
+  const status = e && e.response && e.response.status;
+  const data = (e && e.response && e.response.data) || {};
+  if (status === 402 || data.error === 'insufficient_credits') {
+    return {
+      blocked: true,
+      needed: data.needed, available: data.available, shortBy: data.short_by,
+      title: data.title || 'Not enough credits',
+      message: data.message || 'You need more credits to make this.',
+    };
+  }
+  return { blocked: false };
+}

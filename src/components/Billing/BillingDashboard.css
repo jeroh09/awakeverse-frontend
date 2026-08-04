@@ -14,7 +14,7 @@
 .billing-header {
   background: rgba(10, 15, 26, 0.8);
   border-bottom: 1px solid rgba(99, 102, 241, 0.2);
-  padding: 1.5rem 2rem;
+  padding: 0.9rem 2rem;              /* compact — was 1.5rem 2rem */
   backdrop-filter: blur(10px);
   position: sticky;
   top: 0;
@@ -28,10 +28,10 @@
 
 .header-title h1 {
   font-family: 'Syne', sans-serif;
-  font-size: 2rem;
+  font-size: 1.5rem;                 /* compact — was 2rem */
   font-weight: 700;
   color: #F1F5F9;
-  margin-bottom: 0.3rem;
+  margin-bottom: 0.15rem;            /* compact — was 0.3rem */
   background: linear-gradient(135deg, #F1F5F9, #94A3B8);
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
@@ -39,7 +39,7 @@
 
 .header-title p {
   color: rgba(255, 255, 255, 0.7);
-  font-size: 0.95rem;
+  font-size: 0.85rem;                /* compact — was 0.95rem */
 }
 
 .back-button {
@@ -49,13 +49,13 @@
   background: transparent;
   border: 1px solid rgba(99, 102, 241, 0.2);
   color: rgba(255, 255, 255, 0.8);
-  padding: 0.7rem 1.2rem;
+  padding: 0.5rem 1rem;              /* compact — was 0.7rem 1.2rem */
   border-radius: 8px;
   font-family: 'Inter', sans-serif;
   font-weight: 500;
   cursor: pointer;
   transition: all 0.3s ease;
-  margin-bottom: 1rem;
+  margin-bottom: 0.7rem;             /* compact — was 1rem */
 }
 
 .back-button:hover {
@@ -1270,4 +1270,41 @@
   .mobile-only {
     display: none;
   }
+}
+/* ── Credits card: bucket breakdown (matches billing tokens) ────────────────── */
+.credit-buckets {
+  margin-top: 1rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.credit-bucket {
+  display: grid;
+  grid-template-columns: 1fr auto auto;
+  align-items: baseline;
+  gap: 0.75rem;
+  padding: 0.6rem 0.75rem;
+  background: rgba(99, 102, 241, 0.05);
+  border: 1px solid rgba(99, 102, 241, 0.12);
+  border-radius: 10px;
+}
+
+.credit-bucket-name {
+  font-family: 'Inter', sans-serif;
+  font-size: 0.85rem;
+  color: #F1F5F9;
+}
+
+.credit-bucket-pts {
+  font-family: 'Syne', sans-serif;
+  font-weight: 700;
+  font-size: 0.95rem;
+  color: #6366F1;
+}
+
+.credit-bucket-exp {
+  font-family: 'Inter', sans-serif;
+  font-size: 0.72rem;
+  color: rgba(255, 255, 255, 0.55);
 }
