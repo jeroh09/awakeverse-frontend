@@ -27,11 +27,11 @@
 //   sessions[]       → sessions[]             GET  /api/podcast/sessions
 
 import React, {
-  useState, useEffect, useRef, useCallback, useReducer
+  useState, useEffect, useRef, useCallback, useReducer, useMemo
 } from 'react';
 import usePodcastStudio from '../../hooks/usePodcastStudio';
-import useVideoBudget from '../../hooks/useVideoBudget';
-import VideoBudgetBanner from './VideoBudgetBanner';
+import useCredits from '../../hooks/useCredits';
+import InsufficientCreditsBanner from './InsufficientCreditsBanner';
 import styles from './PodcastStudioPage.module.css';
 import ApiErrorService from '../../services/ApiErrorService';
 
@@ -312,13 +312,8 @@ export default function PodcastStudioPage({ context, onClose }) {
     loadVoiceClone,
   } = usePodcastStudio();
 
-  const {
-    guardedFetch,
-    budgetState,
-    budgetDisplay,
-    handleUpgrade,
-    clearBudgetError,
-  } = useVideoBudget();
+  const credits = useCredits();
+  const [creditBlock, setCreditBlock] = useState(null);   // 402 insufficient-credits info
 
   // ── Navigation ────────────────────────────────────────────────────────────
   const [activeTab, setActiveTab] = useState('avatar');
@@ -400,6 +395,18 @@ export default function PodcastStudioPage({ context, onClose }) {
   const [lines, dispatchLines] = useReducer(linesReducer, []);
   const linesRef = useRef(lines);          // always-current lines for handleGenerate
   useEffect(() => { linesRef.current = lines; }, [lines]);
+
+  // ── Credits: pre-render cost. Podcast is line-driven — n_beats = spoken lines +
+  // wide bookends (2 for ≤5 lines, else 3), matching the backend's price basis.
+  const nBeats = useMemo(() => {
+    const n = lines.filter(l => (l.text || '').trim() || l.audioUrl).length;
+    return n > 0 ? n + (n <= 5 ? 2 : 3) : 0;
+  }, [lines]);
+  const [renderCost, setRenderCost] = useState(null);   // { price, affordable, ... }
+  useEffect(() => {
+    if (nBeats > 0) credits.priceFor('podcast', 'default', nBeats).then(setRenderCost);
+    else setRenderCost(null);
+  }, [nBeats, credits.balance]);
   const [topic, setTopic]      = useState('');
   const linesInitialised = useRef(false);  // guard: only SET lines once on mount
 
@@ -1273,8 +1280,8 @@ if (context.topic) setTopic(context.topic);
       return;
     }
 
-    // Clear any previous budget error before a new attempt
-    clearBudgetError();
+    // Clear any previous credit block before a new attempt
+    setCreditBlock(null);
     setGenerateError(null);
     setSubmitted(true);
 
@@ -1312,23 +1319,24 @@ if (context.topic) setTopic(context.topic);
           })),
       };
 
-      // guardedFetch: same as fetch() but intercepts 403 budget errors.
-      // Returns null on budget hit → budgetState.hit → banner renders.
-      // Returns Response on success → extract session_id and start polling.
-      const res = await guardedFetch(`${API_BASE}/api/podcast/session`, {
+      const res = await fetch(`${API_BASE}/api/podcast/session`, {
         method:      'POST',
         headers:     { 'Content-Type': 'application/json', 'X-CSRF-Token': csrf },
         credentials: 'include',
         body:        JSON.stringify(payload),
       });
 
-      if (!res) {
-        // Budget hit — banner rendered via budgetState, re-enable button
+      const data = await res.json().catch(() => ({}));
+
+      // Insufficient credits (402) — show the top-up banner, not a generic error.
+      if (res.status === 402 || data.error === 'insufficient_credits') {
+        setCreditBlock({
+          needed: data.needed, available: data.available, shortBy: data.short_by,
+          title: data.title, message: data.message,
+        });
         setSubmitted(false);
         return;
       }
-
-      const data = await res.json();
 
       if (!res.ok) {
         ApiErrorService.log('PodcastStudioPage.handleGenerate', res.status, data);
@@ -1351,12 +1359,13 @@ if (context.topic) setTopic(context.topic);
   }, [
     speakers, selectedEnvId,
     startPollingSession, loadSessions,
-    clearBudgetError, guardedFetch,
   ]);
 
   // ── Reload sessions when generate completes ───────────────────────────────
   useEffect(() => {
     if (state.status === 'complete') loadSessions();
+    // Refresh the balance once the render settles (charged) or fails (refunded).
+    if (state.status === 'complete' || state.status === 'failed') credits.refresh();
   }, [state.status, loadSessions]);
 
   // ── Shared env (selected env object) ─────────────────────────────────────
@@ -2360,12 +2369,11 @@ if (context.topic) setTopic(context.topic);
           {activeTab === 'generate' && (
             <div className={styles.generatePage}>
 
-              {/* Budget banner — sits above progress steps, hidden until budget hit */}
-              <VideoBudgetBanner
-                budgetState={budgetState}
-                budgetDisplay={budgetDisplay}
-                onUpgrade={handleUpgrade}
-                onDismiss={clearBudgetError}
+              {/* Insufficient-credits banner — sits above progress steps, hidden until a 402 */}
+              <InsufficientCreditsBanner
+                block={creditBlock}
+                onUpgrade={() => { window.location.href = '/billing'; }}
+                onDismiss={() => setCreditBlock(null)}
               />
 
               {/* Progress steps */}
@@ -2401,7 +2409,7 @@ if (context.topic) setTopic(context.topic);
                 {state.status === 'failed' && state.error && (
                   <div className={styles.errorBox}>{state.error}</div>
                 )}
-                {generateError && !budgetState.hit && (
+                {generateError && !creditBlock && (
                   <div className={styles.errorBox} style={{ marginTop: '0.5rem' }}>
                     {generateError}
                     <button
@@ -3174,17 +3182,29 @@ if (context.topic) setTopic(context.topic);
         </div>
 
         {activeTab === 'generate' ? (
-          <button
-            className={styles.generateBtn}
-            onClick={handleGenerate}
-            disabled={submitted || state.status === 'rendering' || state.status === 'complete' || !speakers.length || !lines.length}
-          >
-            {state.status === 'rendering'
-              ? <><span className={styles.spin}><Ic.Spin /></span> Rendering…</>
-              : state.status === 'complete' ? '✓ Complete'
-              : '▶ Generate video'
-            }
-          </button>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '0.7rem' }}>
+            {renderCost && (
+              <span style={{
+                fontFamily: "'Inter', sans-serif", fontSize: '0.72rem', fontWeight: 600,
+                whiteSpace: 'nowrap',
+                color: renderCost.affordable === false ? '#f59e0b' : '#818cf8',
+              }}>
+                ~{Number(renderCost.price).toLocaleString()} credits
+                {credits.balance != null && ` · ${Number(credits.balance).toLocaleString()} left`}
+              </span>
+            )}
+            <button
+              className={styles.generateBtn}
+              onClick={handleGenerate}
+              disabled={submitted || state.status === 'rendering' || state.status === 'complete' || !speakers.length || !lines.length}
+            >
+              {state.status === 'rendering'
+                ? <><span className={styles.spin}><Ic.Spin /></span> Rendering…</>
+                : state.status === 'complete' ? '✓ Complete'
+                : '▶ Generate video'
+              }
+            </button>
+          </div>
         ) : activeTab === 'podcasts' || activeTab === 'guide' ? (
           <button className={styles.nextBtn} onClick={() => setActiveTab('avatar')}>
             ← Start creating
