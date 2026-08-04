@@ -103,18 +103,38 @@ export default function FilmWorkspaceContainer({
     if (!b) return;
     const saved = editsByIndex[index];
     setEditing({
-      index, kind: b.kind, speaker: b.speaker, voKind: b.voKind,
-      // Prefer a saved edit for each field; else the beat's own values.
+      index, kind: b.kind,
       visual: saved ? (saved.visual ?? b.visual) : b.visual,
-      vo:     saved ? (saved.vo     ?? b.vo)     : b.vo,
+      present: b.present || [],
+      lines: saved ? (saved.lines ?? b.lines ?? []) : (b.lines || []),
+      activeSpeaker: null,   // which name chip's line box is open (null = none)
     });
   }, [beats, editsByIndex]);
 
   const onChangeEditVisual = useCallback((visual) => setEditing(e => e && { ...e, visual }), []);
-  const onChangeEditVo = useCallback((vo) => setEditing(e => e && { ...e, vo }), []);
+
+  // Click a name chip → open that speaker's line box (Narrator always allowed).
+  const onPickSpeaker = useCallback((speaker) =>
+    setEditing(e => e && { ...e, activeSpeaker: e.activeSpeaker === speaker ? null : speaker }), []);
+
+  // Edit the active speaker's line text. Empty text = that speaker is silent
+  // (their line is dropped from the list on change).
+  const onChangeLine = useCallback((text) => setEditing(e => {
+    if (!e || !e.activeSpeaker) return e;
+    const who = e.activeSpeaker;
+    const isNarrator = who === 'Narrator';
+    const others = e.lines.filter(l => l.speaker !== who);
+    const trimmed = text;
+    const nextLines = trimmed.trim()
+      ? [...others, { speaker: who, text: trimmed, kind: isNarrator ? 'vo' : 'dialogue' }]
+      : others;   // cleared → silent
+    return { ...e, lines: nextLines };
+  }), []);
+
   const onCloseEdit = useCallback(() => setEditing(null), []);
   const onSaveEdit = useCallback(() => {
-    if (editing) setEditsByIndex(m => ({ ...m, [editing.index]: { visual: editing.visual, vo: editing.vo } }));
+    if (editing) setEditsByIndex(m => ({ ...m,
+      [editing.index]: { visual: editing.visual, lines: editing.lines } }));
     setEditing(null);
   }, [editing]);
 
@@ -187,42 +207,40 @@ export default function FilmWorkspaceContainer({
     if (authoring.script) doGenerate(authoring.script);
   }, [authoring.script, doGenerate]);
 
-  // Recombine the two edited fields into the labeled script grammar the segmenter
-  // understands, so a regenerate keeps the shot description as VISUAL and the
-  // spoken line as speech — instead of the old single blob where anything typed
-  // became VO. Speaker + voKind decide how the spoken line is labeled.
-  const composeBeatScript = (visual, vo, speaker, voKind) => {
-    const lines = [];
-    if (visual && visual.trim()) lines.push(`VISUAL: ${visual.trim()}`);
-    if (vo && vo.trim()) {
-      const who = (speaker || '').trim().toUpperCase();
-      if (voKind === 'vo' || !who) lines.push(`${who || 'NARRATOR'} (V.O.)\n${vo.trim()}`);
-      else lines.push(`${who}\n${vo.trim()}`);
-    }
-    return lines.join('\n');
+  // Recompose the visual + the attributed lines into the labeled script grammar,
+  // each line emitted as its speaker's cue so the director re-plans with correct
+  // attribution (a present character speaks dialogue; Narrator/named speaker for
+  // V.O.). A line always belongs to whoever the user opened the box for, so it
+  // can't orphan.
+  const composeBeatScript = (visual, lines) => {
+    const out = [];
+    if (visual && visual.trim()) out.push(`VISUAL: ${visual.trim()}`);
+    (lines || []).forEach(l => {
+      const who = (l.speaker || '').trim().toUpperCase();
+      if (!l.text || !l.text.trim()) return;
+      if (l.kind === 'vo' || who === 'NARRATOR') out.push(`${who || 'NARRATOR'} (V.O.)\n${l.text.trim()}`);
+      else out.push(`${who}\n${l.text.trim()}`);
+    });
+    return out.join('\n');
   };
 
   const onRegenerateFromEdit = useCallback(() => {
     if (!editing) return;
     const idx = editing.index;
-    setEditsByIndex(m => ({ ...m, [idx]: { visual: editing.visual, vo: editing.vo } }));
+    setEditsByIndex(m => ({ ...m, [idx]: { visual: editing.visual, lines: editing.lines } }));
     setRegenBusyIndex(idx);
-    // Edited fields → labeled beat script → the director re-conceives this shot.
-    const text = composeBeatScript(editing.visual, editing.vo, editing.speaker, editing.voKind);
+    const text = composeBeatScript(editing.visual, editing.lines);
     job.regenerate(idx, null, text);
     setEditing(null);
   }, [editing, job]);
 
   const onRegenerate = useCallback((index) => {
-    // Card "Regenerate" with no open edit → re-conceive the same beat. Any saved
-    // field edits ride along, recomposed into the labeled grammar.
     setRegenBusyIndex(index);
     const saved = editsByIndex[index];
     const b = beats.find(x => x.index === index);
     let text = null;
     if (saved) {
-      text = composeBeatScript(saved.visual ?? (b && b.visual), saved.vo ?? (b && b.vo),
-                               b && b.speaker, b && b.voKind);
+      text = composeBeatScript(saved.visual ?? (b && b.visual), saved.lines ?? (b && b.lines));
     }
     job.regenerate(index, null, text);
   }, [job, editsByIndex, beats]);
@@ -281,7 +299,8 @@ export default function FilmWorkspaceContainer({
       editingBeat={editing}
       onCloseEdit={onCloseEdit}
       onChangeEditVisual={onChangeEditVisual}
-      onChangeEditVo={onChangeEditVo}
+      onPickSpeaker={onPickSpeaker}
+      onChangeLine={onChangeLine}
       onRegenerateFromEdit={onRegenerateFromEdit}
       onSaveEdit={onSaveEdit}
       onSend={authoring.send}

@@ -32,7 +32,7 @@ export default function FilmWorkspace({
   messages = [],
   chatSub = '',
   editingBeat = null,
-  onCloseEdit, onChangeEditVisual, onChangeEditVo, onRegenerateFromEdit, onSaveEdit,
+  onCloseEdit, onChangeEditVisual, onPickSpeaker, onChangeLine, onRegenerateFromEdit, onSaveEdit,
   onSend, scriptReady = false, onBuildFilm, onReviewCast, onSaveScript,
 }) {
   // Below 820px the two panels stack (see FilmWorkspace.css's accordion
@@ -148,7 +148,8 @@ export default function FilmWorkspace({
               editingBeat={editingBeat}
               onCloseEdit={onCloseEdit}
               onChangeEditVisual={onChangeEditVisual}
-              onChangeEditVo={onChangeEditVo}
+              onPickSpeaker={onPickSpeaker}
+              onChangeLine={onChangeLine}
               onRegenerateFromEdit={onRegenerateFromEdit}
               onSaveEdit={onSaveEdit}
               onSend={onSend}

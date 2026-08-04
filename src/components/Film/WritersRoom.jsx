@@ -169,7 +169,8 @@ export default function WritersRoom({
   editingBeat = null,
   onCloseEdit = () => {},
   onChangeEditVisual = () => {},
-  onChangeEditVo = () => {},
+  onPickSpeaker = () => {},
+  onChangeLine = () => {},
   onRegenerateFromEdit = () => {},
   onSaveEdit = () => {},
   regenBusy = false,
@@ -259,7 +260,12 @@ export default function WritersRoom({
         )}
       </div>
 
-      {editingBeat && (
+      {editingBeat && (() => {
+        const cast = [...(editingBeat.present || []), 'Narrator'];
+        const lineFor = (who) => (editingBeat.lines || []).find(l => l.speaker === who);
+        const active = editingBeat.activeSpeaker;
+        const activeLine = active ? lineFor(active) : null;
+        return (
         <div className="film-beatedit">
           <div className="film-beatedit-head">
             <span className="t">Editing shot {String(editingBeat.index).padStart(2, '0')}</span>
@@ -275,15 +281,37 @@ export default function WritersRoom({
           />
 
           <label className="film-beatedit-label">
-            Voiceover — what we hear{editingBeat.speaker ? ` (${editingBeat.speaker})` : ''}
-            <span className="film-beatedit-hint"> · leave empty for a silent shot</span>
+            Voices — tap a name to add or edit their line
+            <span className="film-beatedit-hint"> · green dot = has a line</span>
           </label>
-          <textarea
-            className="film-beatedit-field film-beatedit-field--vo"
-            value={editingBeat.vo || ''}
-            placeholder="The spoken line or narration for this shot (optional)"
-            onChange={(e) => onChangeEditVo(e.target.value)}
-          />
+          <div className="film-cast-chiprow">
+            {cast.map((name) => {
+              const has = !!(lineFor(name) && lineFor(name).text);
+              return (
+                <button key={name} type="button"
+                  className={`film-cast-chip${active === name ? ' is-active' : ''}${has ? ' has-line' : ''}`}
+                  onClick={() => onPickSpeaker(name)}>
+                  {has && <span className="film-cast-chip-dot" />}
+                  {name}
+                </button>
+              );
+            })}
+          </div>
+
+          {active && (
+            <div className="film-line-box">
+              <div className="film-line-who">{active}{active === 'Narrator' ? ' (voiceover)' : ''}</div>
+              <textarea
+                className="film-beatedit-field film-beatedit-field--vo"
+                value={activeLine ? activeLine.text : ''}
+                placeholder={active === 'Narrator'
+                  ? 'Narration over this shot…'
+                  : `${active}'s line in this shot… (clear it to make them silent)`}
+                onChange={(e) => onChangeLine(e.target.value)}
+                autoFocus
+              />
+            </div>
+          )}
 
           <div className="film-beatedit-actions">
             <button
@@ -297,7 +325,8 @@ export default function WritersRoom({
             <button className="film-btn film-btn--ghost" onClick={onSaveEdit}>Save</button>
           </div>
         </div>
-      )}
+        );
+      })()}
 
       {showBuildBar && (
         scriptBarCollapsed ? (

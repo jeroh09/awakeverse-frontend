@@ -16,6 +16,14 @@ const normBeat = b => ({
   seconds: Math.round(b.seconds || 6),
   speaker: (b.speaker || '').trim(),
   caption: (b.caption || '').trim(),
+  // Shot description + the attributed cast/lines so the editor shows the beat
+  // exactly as the director set it (who's present, whose line is whose).
+  visual: (b.visual || b.action || '').trim(),
+  present: Array.isArray(b.present_cast) ? b.present_cast.slice() : [],
+  lines: Array.isArray(b.lines)
+    ? b.lines.map(l => ({ speaker: (l.speaker || '').trim(), text: (l.text || '').trim(),
+                          kind: l.kind || 'dialogue' }))
+    : [],
   clipUrl: b.clip_url || null,
   durable: !!b.durable,
   softened: !!b.softened,
@@ -57,6 +65,12 @@ function toCells(manifest, expected) {
         kind: done.kind || p.kind || 'pure_visual',
         speaker: done.speaker || (p.speaker || '').trim(),
         caption: done.caption || (p.caption || '').trim(),
+        visual: done.visual || (p.visual || p.action || '').trim(),
+        present: (done.present && done.present.length) ? done.present
+                 : (Array.isArray(p.present_cast) ? p.present_cast.slice() : []),
+        lines: (done.lines && done.lines.length) ? done.lines
+               : (Array.isArray(p.lines) ? p.lines.map(l => ({ speaker: (l.speaker||'').trim(),
+                   text: (l.text||'').trim(), kind: l.kind || 'dialogue' })) : []),
         softened: done.softened || !!p.softened,
         status: 'done',
       });
@@ -66,6 +80,10 @@ function toCells(manifest, expected) {
         index: i, pos: i - 1,
         kind: p.kind || 'pure_visual', seconds: Math.round(p.seconds || 6),
         speaker: (p.speaker || '').trim(), caption: (p.caption || '').trim(),
+        visual: (p.visual || p.action || '').trim(),
+        present: Array.isArray(p.present_cast) ? p.present_cast.slice() : [],
+        lines: Array.isArray(p.lines) ? p.lines.map(l => ({ speaker: (l.speaker||'').trim(),
+                 text: (l.text||'').trim(), kind: l.kind || 'dialogue' })) : [],
         clipUrl: null, durable: false, softened: !!p.softened,
         status: (live && i === firstPending) ? 'rendering' : 'queued',
       } : {
