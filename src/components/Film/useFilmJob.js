@@ -103,6 +103,21 @@ function etaText(done, total, secsPerShot = 130) {
   return m >= 1 ? `~${m} min left` : '<1 min left';
 }
 
+// Detect a 402 insufficient-credits response from generate/plan so the caller can
+// show the top-up card instead of a generic error. Shape matches InsufficientCard.
+function creditsBlock(e) {
+  const status = e && e.response && e.response.status;
+  const data = (e && e.response && e.response.data) || {};
+  if (status === 402 || data.error === 'insufficient_credits') {
+    return {
+      needed: data.needed, available: data.available, shortBy: data.short_by,
+      title: data.title || 'Not enough credits',
+      message: data.message || 'You need more credits to make this.',
+    };
+  }
+  return null;
+}
+
 export default function useFilmJob() {
   const [jobId, setJobId]           = useState(null);
   const [status, setStatus]         = useState('idle');   // idle|processing|complete|failed
@@ -110,6 +125,7 @@ export default function useFilmJob() {
   const [rawProgress, setRawProgress] = useState(0);
   const [outputUrl, setOutputUrl]   = useState(null);
   const [error, setError]           = useState(null);
+  const [blocked, setBlocked]       = useState(null);   // 402 insufficient-credits info
   const [editBusy, setEditBusy]     = useState(null);   // null | label while an edit applies
 
   const pollRef = useRef(null);
@@ -168,7 +184,11 @@ export default function useFilmJob() {
       setJobId(id);
       poll(id);
       return id;
-    } catch (e) { setStatus('failed'); setError(friendlyError(e)); return null; }
+    } catch (e) {
+      const b = creditsBlock(e);
+      if (b) { setStatus('idle'); setBlocked(b); return null; }
+      setStatus('failed'); setError(friendlyError(e)); return null;
+    }
   }, [poll]);
 
   // ── Plate-review lifecycle (Plan & review) ──────────────────────────────────
@@ -186,7 +206,11 @@ export default function useFilmJob() {
       setJobId(id);
       poll(id);
       return id;
-    } catch (e) { setStatus('failed'); setError(friendlyError(e)); return null; }
+    } catch (e) {
+      const b = creditsBlock(e);
+      if (b) { setStatus('idle'); setBlocked(b); return null; }
+      setStatus('failed'); setError(friendlyError(e)); return null;
+    }
   }, [poll]);
 
   // regeneratePlate(): synchronous single-plate rebuild from an edited description.
@@ -281,7 +305,7 @@ export default function useFilmJob() {
   const reset = useCallback(() => {
     stop();
     setJobId(null); setStatus('idle'); setManifest(null); setRawProgress(0);
-    setOutputUrl(null); setError(null); setEditBusy(null); expectedRef.current = 0;
+    setOutputUrl(null); setError(null); setBlocked(null); setEditBusy(null); expectedRef.current = 0;
   }, [stop]);
 
   const cells = toCells(manifest, expectedRef.current);
@@ -304,7 +328,7 @@ export default function useFilmJob() {
   const jobTitle = (manifest && manifest.source && manifest.source.title) || null;
 
   return { jobId, status, stage, cells, progress, outputUrl, error, title: jobTitle, editBusy,
-    reviewCharacters, planningPlates,
+    reviewCharacters, planningPlates, blocked, clearBlocked: () => setBlocked(null),
     generate, plan, regeneratePlate, uploadCharacterImage, approveRender,
     cancel, reassemble, regenerate, adopt, reset };
 }

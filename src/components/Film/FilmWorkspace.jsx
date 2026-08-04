@@ -9,6 +9,8 @@ import React, { useState, useEffect } from 'react';
 import Storyboard from './Storyboard';
 import WritersRoom from './WritersRoom';
 import { IconChevron, IconBack } from './filmIcons';
+import { CreditsChip } from './CreditsUI';
+import './CreditsUI.css';
 import './FilmWorkspace.css';
 
 export default function FilmWorkspace({
@@ -19,6 +21,10 @@ export default function FilmWorkspace({
   stageState = 'empty',
   beats = [],
   aspectRatio = '9:16',
+  credits = null,
+  onShowCredits = () => {},
+  cost = null,
+  costAffordable = null,
   cast = null,
   planningCast = false,
   onRedrawCast, onUploadCastPhoto, onApproveCast, onAcceptUploadConsent,
@@ -78,6 +84,13 @@ export default function FilmWorkspace({
     <div className="film-workspace theme-awakeverse">
       <div className="film-topbar">
         <span className="film-title" title={title}>{title || 'Untitled film'}</span>
+        {credits && (
+          <CreditsChip
+            balance={credits.balance}
+            expiringSoon={credits.expiringSoon}
+            onClick={onShowCredits}
+          />
+        )}
         <div className="film-toggles">
           {onBackToFilms && (
             <>
@@ -114,6 +127,8 @@ export default function FilmWorkspace({
               stageState={stageState}
               beats={beats}
               aspectRatio={aspectRatio}
+              cost={cost}
+              costAffordable={costAffordable}
               cast={cast}
               planningCast={planningCast}
               onRedrawCast={onRedrawCast}

@@ -197,6 +197,8 @@ export default function Storyboard({
   stageState = 'empty',
   beats = [],
   aspectRatio = '9:16',
+  cost = null,
+  costAffordable = null,
   cast = null,
   planningCast = false,
   onRedrawCast = () => {},
@@ -305,7 +307,17 @@ export default function Storyboard({
           <span className="film-htab is-on">Storyboard</span>
           <span className="film-hsub">{sub}</span>
         </div>
-        {cta}
+        <div className="film-phead-right">
+          {cost != null && (stageState === 'review' || stageState === 'plate_review') && (
+            <span
+              className={`film-cost-badge${costAffordable === false ? ' is-short' : ''}`}
+              title="What making this film will use"
+            >
+              ~{Number(cost).toLocaleString()} credits
+            </span>
+          )}
+          {cta}
+        </div>
       </div>
 
       <div className="film-stage">

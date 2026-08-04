@@ -5,9 +5,12 @@
 // render). Chat persists because the session is the project's bound session.
 
 import React, { useState, useMemo, useCallback, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
 import FilmWorkspace from './FilmWorkspace';
 import useFilmAuthoring from './useFilmAuthoring';
 import useFilmJob from './useFilmJob';
+import useCredits from '../../hooks/useCredits';
+import { InsufficientCard } from './CreditsUI';
 import { filmGetProject, filmUploadPhoto, filmUploadConsent, filmSaveScript, friendlyError } from './filmApi';
 
 const shotToCell = s => ({
@@ -35,6 +38,10 @@ export default function FilmWorkspaceContainer({
 }) {
   const authoring = useFilmAuthoring();
   const job = useFilmJob();
+  const credits = useCredits();
+  const navigate = useNavigate();
+  const [blockInfo, setBlockInfo] = useState(null);   // 402 → InsufficientCard
+  const [renderCost, setRenderCost] = useState(null); // {price, affordable, ...} for the header badge
   const [editing, setEditing] = useState(null);
   const [editsByIndex, setEditsByIndex] = useState({});
   const [loading, setLoading] = useState(true);
@@ -79,6 +86,22 @@ export default function FilmWorkspaceContainer({
   useEffect(() => {
     if (!job.editBusy) setRegenBusyIndex(null);
   }, [job.editBusy]);
+
+  // Refresh the balance whenever a render reaches a terminal state (it just
+  // settled or refunded), so the chip reflects the charge without a reload.
+  useEffect(() => {
+    if (['ready', 'complete', 'failed', 'cancelled'].includes(job.status)) credits.refresh();
+  }, [job.status]);
+
+  // Surface a 402 block from generate/plan as the insufficient card.
+  useEffect(() => { if (job.blocked) setBlockInfo(job.blocked); }, [job.blocked]);
+
+  // Pre-compute the render cost for the storyboard header (flat by duration tier).
+  // Recomputes when the duration or the live balance changes so affordability stays honest.
+  useEffect(() => {
+    const tier = meta.duration_seconds <= 60 ? '60' : meta.duration_seconds <= 120 ? '120' : '180';
+    credits.priceFor('film', tier).then(setRenderCost);
+  }, [meta.duration_seconds, credits.balance]);
 
   // ── stage composition ──
   const reviewCells = useMemo(
@@ -267,6 +290,7 @@ export default function FilmWorkspaceContainer({
   }, [job.outputUrl]);
 
   return (
+    <>
     <FilmWorkspace
       title={job.title || authoring.title}
       loading={loading}
@@ -274,6 +298,10 @@ export default function FilmWorkspaceContainer({
       stageState={stageState}
       beats={beats}
       aspectRatio={meta.aspect_ratio}
+      credits={credits}
+      onShowCredits={() => navigate('/billing')}
+      cost={renderCost ? renderCost.price : null}
+      costAffordable={renderCost ? renderCost.affordable : null}
       cast={job.reviewCharacters}
       planningCast={job.planningPlates}
       onRedrawCast={onRedrawCast}
@@ -309,5 +337,25 @@ export default function FilmWorkspaceContainer({
       onReviewCast={onReviewCast}
       onSaveScript={onSaveScript}
     />
+    {blockInfo && (
+      <div
+        className="film-modal-scrim"
+        onClick={() => { setBlockInfo(null); job.clearBlocked && job.clearBlocked(); }}
+      >
+        <div className="film-modal-body" onClick={(e) => e.stopPropagation()}>
+          <InsufficientCard
+            needed={blockInfo.needed}
+            available={blockInfo.available}
+            shortBy={blockInfo.shortBy}
+            title={blockInfo.title}
+            message={blockInfo.message}
+            onTopUp={() => navigate('/billing')}
+            onUpgrade={() => navigate('/billing')}
+            onCancel={() => { setBlockInfo(null); job.clearBlocked && job.clearBlocked(); }}
+          />
+        </div>
+      </div>
+    )}
+    </>
   );
 }

@@ -799,3 +799,11 @@
 .film-line-who{font:600 11.5px/1 var(--film-body);color:var(--film-accent-hover);
   text-transform:uppercase;letter-spacing:.04em;margin-bottom:7px;}
 .film-line-box .film-beatedit-field--vo{margin:0;border:1px solid var(--film-bd-subtle);}
+/* ── Storyboard header cost badge (sits beside the "Make the film" CTA) ─────── */
+.film-phead-right{display:flex;align-items:center;gap:8px;flex:0 0 auto;}
+.film-cost-badge{display:inline-flex;align-items:center;font-family:var(--film-body);font-weight:700;
+  font-size:12px;color:var(--film-accent-hover);background:rgba(99,102,241,.14);
+  border:1px solid rgba(99,102,241,.35);border-radius:var(--film-r-full);
+  padding:4px 11px;white-space:nowrap;}
+.film-cost-badge.is-short{color:var(--film-warning);background:rgba(245,158,11,.12);
+  border-color:rgba(245,158,11,.4);}
