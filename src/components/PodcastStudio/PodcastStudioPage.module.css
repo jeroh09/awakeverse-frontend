@@ -1951,7 +1951,23 @@
   flex-wrap: wrap;
   gap: 0.75rem;
   padding: 0.25rem 0.1rem 0.5rem;
+  /* Scroll within the card once avatars pass ~2 rows, so a 6th (or Nth) avatar
+     never grows the grid and pushes the Build button below the fold. This holds
+     in both the normal (capped) card and the expanded (max-height:none) state. */
+  max-height: 360px;
+  overflow-y: auto;
+  overflow-x: hidden;
+  min-height: 0;
 }
+
+/* Subtle scrollbar so the scroll reads as intentional, not clipped. */
+.avatarGrid::-webkit-scrollbar { width: 6px; }
+.avatarGrid::-webkit-scrollbar-track { background: transparent; }
+.avatarGrid::-webkit-scrollbar-thumb {
+  background: rgba(99, 102, 241, 0.35);
+  border-radius: 3px;
+}
+.avatarGrid::-webkit-scrollbar-thumb:hover { background: rgba(99, 102, 241, 0.55); }
 
 .avatarSquareCard {
   width: 160px;

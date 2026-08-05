@@ -396,17 +396,28 @@ export default function PodcastStudioPage({ context, onClose }) {
   const linesRef = useRef(lines);          // always-current lines for handleGenerate
   useEffect(() => { linesRef.current = lines; }, [lines]);
 
-  // ── Credits: pre-render cost. Podcast is line-driven — n_beats = spoken lines +
-  // wide bookends (2 for ≤5 lines, else 3), matching the backend's price basis.
-  const nBeats = useMemo(() => {
-    const n = lines.filter(l => (l.text || '').trim() || l.audioUrl).length;
-    return n > 0 ? n + (n <= 5 ? 2 : 3) : 0;
+  // ── Credits: pre-render cost. Podcast is priced by SPOKEN DURATION (parity with
+  // film), estimated from the script text — mirrors credits_hooks._podcast_est_seconds
+  // exactly (TTS ~150 wpm = 2.5 words/sec, + wide bookends) so the shown cost equals
+  // what the backend reserves.
+  const estSeconds = useMemo(() => {
+    const spoken = lines.filter(l => (l.text || '').trim() || l.audioUrl);
+    const n = spoken.length;
+    if (n === 0) return 0;
+    let words = 0, audioOnly = 0;
+    spoken.forEach(l => {
+      const t = (l.text || '').trim();
+      if (t) words += t.split(/\s+/).filter(Boolean).length;
+      else if (l.audioUrl) audioOnly += 1;
+    });
+    const wides = n <= 5 ? 2 : 3;
+    return Math.ceil(words / 2.5 + audioOnly * 8 + wides * 4);
   }, [lines]);
   const [renderCost, setRenderCost] = useState(null);   // { price, affordable, ... }
   useEffect(() => {
-    if (nBeats > 0) credits.priceFor('podcast', 'default', nBeats).then(setRenderCost);
+    if (estSeconds > 0) credits.priceFor('podcast', 'default', estSeconds).then(setRenderCost);
     else setRenderCost(null);
-  }, [nBeats, credits.balance]);
+  }, [estSeconds, credits.balance]);
   const [topic, setTopic]      = useState('');
   const linesInitialised = useRef(false);  // guard: only SET lines once on mount
 
@@ -3190,6 +3201,7 @@ if (context.topic) setTopic(context.topic);
                 color: renderCost.affordable === false ? '#f59e0b' : '#818cf8',
               }}>
                 ~{Number(renderCost.price).toLocaleString()} credits
+                {estSeconds > 0 && ` · ~${estSeconds >= 60 ? `${Math.round(estSeconds / 60)} min` : `${estSeconds}s`}`}
                 {credits.balance != null && ` · ${Number(credits.balance).toLocaleString()} left`}
               </span>
             )}
