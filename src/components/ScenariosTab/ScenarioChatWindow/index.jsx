@@ -14,6 +14,7 @@ import DebateModeToggle from '../DebateModeToggle';
 import { ArrowLeft, ChevronRight, ChevronDown } from 'lucide-react';
 import ScriptViewerModal from './ScriptViewerModal';
 import VideoBudgetBanner from './InfoPanel/VideoBudgetBanner';
+import InsufficientCreditsBanner from './InfoPanel/InsufficientCreditsBanner';
 
 // Existing components - keeping for now
 // import ChatInput from './ChatInput'; // OLD - deprecated
@@ -107,7 +108,7 @@ export default function ScenarioChatWindow({
 
   // ===== VIDEO GENERATION HOOK =====
   const contentGen = useContentGeneration(scenario.id); 
-  const { budgetError, clearBudgetError } = contentGen;
+  const { budgetError, clearBudgetError, creditBlock, clearCreditBlock } = contentGen;
   const handleContentUpgrade = useCallback(async (tier) => {
     if (!tier) return;
     try {
@@ -663,6 +664,14 @@ export default function ScenarioChatWindow({
               }}
               onUpgrade={handleContentUpgrade}
               onDismiss={clearBudgetError}
+            />
+          )}
+          {/* Insufficient credits (402) — the points ledger's gate */}
+          {creditBlock && (
+            <InsufficientCreditsBanner
+              block={creditBlock}
+              onUpgrade={() => { window.location.href = '/billing'; }}
+              onDismiss={clearCreditBlock}
             />
           )}
         <InfoPanel

@@ -8,10 +8,12 @@ import usePremiumCharacters from '../../../hooks/usePremiumCharacters';
 import useScenarioChat from '../../../hooks/useScenarioChat';
 import useContentGeneration from '../../../hooks/useContentGeneration';
 import { useUser } from '../../../contexts/UserContext';
+import { useAppView } from '../../../contexts/AppViewContext';
 import SubscriptionService from '../../../services/SubscriptionService';
 import DebateModeToggle from '../DebateModeToggle';
 import { ArrowLeft, ChevronRight, ChevronDown } from 'lucide-react';
 import ScriptViewerModal from './ScriptViewerModal';
+import VideoBudgetBanner from './InfoPanel/VideoBudgetBanner';
 
 // Existing components - keeping for now
 // import ChatInput from './ChatInput'; // OLD - deprecated
@@ -37,6 +39,21 @@ import useKeyboardHeight from '../../../hooks/useKeyboardHeight'; // NEW: Mobile
 // Styles
 import styles from './ScenarioChatWindow.module.css'; // New layout styles
 
+// Tier display names — mirrors PaymentRouter.js TIER_CONFIG
+const TIER_DISPLAY = {
+  starter:   'EXPLORER',
+  pro:       'PROFESSIONAL',
+  unlimited: 'CREATOR',
+};
+ 
+// Format seconds → "Xm Ys" — mirrors useVideoBudget.js formatSeconds
+function formatSeconds(s) {
+  if (s == null) return '—';
+  const m = Math.floor(s / 60);
+  const r = s % 60;
+  return r > 0 ? `${m}m ${r}s` : `${m}m`;
+}
+
 export default function ScenarioChatWindow({
   scenario,
   scenarios = [], // NEW: List of all user scenarios for info panel
@@ -60,6 +77,7 @@ export default function ScenarioChatWindow({
   const { keyboardHeight, isKeyboardVisible } = useKeyboardHeight();
 
   const { user } = useUser();
+  const { switchView, VIEW_STATES, setActivePodcastContext } = useAppView();
   const { userCharacters = [] } = usePremiumCharacters();
 
   // Get scenario chat hook with usage tracking
@@ -89,8 +107,26 @@ export default function ScenarioChatWindow({
 
   // ===== VIDEO GENERATION HOOK =====
   const contentGen = useContentGeneration(scenario.id); 
+  const { budgetError, clearBudgetError } = contentGen;
+  const handleContentUpgrade = useCallback(async (tier) => {
+    if (!tier) return;
+    try {
+      const { default: PaymentRouter } = await import(
+        '../../../services/PaymentRouter'
+      );
+      await PaymentRouter.quickUpgrade(tier, 'video_budget_limit');
+    } catch (e) {
+      console.error('❌ handleContentUpgrade failed:', e);
+    }
+  }, []);
   const [isCreatePanelOpen, setIsCreatePanelOpen] = useState(false);
   const [viewingJob, setViewingJob] = useState(null); 
+
+  // ===== MESSAGE SELECTION (script generation) =====
+  // selectionMode: bubbles show an include/exclude toggle.
+  // selectedMessageIds: Set<VerseMessage.id> currently chosen for the script.
+  const [selectionMode, setSelectionMode] = useState(false);
+  const [selectedMessageIds, setSelectedMessageIds] = useState(() => new Set());
 
   // Defensive checks
   if (!scenario || !onBack) {
@@ -248,18 +284,6 @@ export default function ScenarioChatWindow({
   };
 
   // ✅ NEW: Handle stop message generation
-  //const handleStop = () => {
-    //console.log('🛑 Stop button clicked - stopping message generation');
-
-    // OPTION A: If useScenarioChat has a stopGeneration method
-    // stopGeneration(); // Uncomment if available
-
-    // OPTION B: If using AbortController pattern (check useScenarioChat hook)
-    // The hook should expose a stop/cancel method
-    // For now, log a warning
-    //console.warn('⚠️ handleStop called but no stop method available in useScenarioChat');
-    //console.warn('⚠️ You may need to add AbortController pattern to useScenarioChat hook');
-  //};
   const handleStop = () => {
     if (debateMode === 'auto') {
       stopDebate();
@@ -281,22 +305,51 @@ export default function ScenarioChatWindow({
   // ===== VIDEO GENERATION HANDLERS =====
     // ===== CONTENT CREATION HANDLERS =====
  
-  // ✨ Create button in MessageBubble opens the Create panel in InfoPanel.
-  // It does NOT trigger generation directly — the user picks type/duration first.
-  const handleOpenCreate = useCallback(() => {
-    console.log('✨ Opening Create panel');
+  // ✨ Create button in MessageBubble opens the Create panel AND turns on
+  // message selection (pre-checked from the suggest call). The user adjusts
+  // ticks on the bubbles, then picks type/duration in the panel.
+  const handleOpenCreate = useCallback(async () => {
+    console.log('✨ Opening Create panel + selection');
     setIsCreatePanelOpen(true);
+    setSelectionMode(true);
     // Auto-expand InfoPanel if it was collapsed
     if (infoPanelCollapsed) {
       setInfoPanelCollapsed(false);
     }
-  }, [infoPanelCollapsed]);
+
+    // Safe default: everything selected (== today's behaviour). Then refine
+    // from the suggest call if it returns a usable set.
+    const allIds = messages.filter(m => m.id != null).map(m => m.id);
+    setSelectedMessageIds(new Set(allIds));
+
+    try {
+      const { suggested_ids } = await contentGen.suggestMessages();
+      if (Array.isArray(suggested_ids) && suggested_ids.length > 0) {
+        setSelectedMessageIds(new Set(suggested_ids));
+      }
+      // null / empty → keep the all-selected fallback
+    } catch (e) {
+      console.warn('🎯 pre-select failed; keeping all selected', e);
+    }
+  }, [infoPanelCollapsed, messages, contentGen]);
  
   // Called by InfoPanel's close/back button
   const handleCloseCreate = useCallback(() => {
     setIsCreatePanelOpen(false);
+    setSelectionMode(false);
     contentGen.resetContent();
   }, [contentGen]);
+
+  // Toggle a single message in/out of the selection.
+  const handleToggleMessageSelect = useCallback((id) => {
+    if (id == null) return;
+    setSelectedMessageIds(prev => {
+      const next = new Set(prev);
+      if (next.has(id)) next.delete(id);
+      else next.add(id);
+      return next;
+    });
+  }, []);
  
   // Minimum non-user messages required to enable Create button
   const canCreateContent = useMemo(() => {
@@ -304,7 +357,6 @@ export default function ScenarioChatWindow({
     return aiMessages.length >= 5;
   }, [messages]);
  
-
 
   // ✅ NEW: Handle scenario switch
   // Defensive: Just navigate back and let parent handle scenario selection
@@ -385,6 +437,50 @@ export default function ScenarioChatWindow({
           </div>
         </div>
       </div>
+    );
+  }
+
+  // ===== FULL-PAGE VIEWS =====
+  // When a job is selected, the full component swaps to a full-page view.
+  // This replaces the previous overlay modal pattern.
+  // All props flow through unchanged — no logic difference from the modal version.
+
+  if (viewingJob && (viewingJob.content_type === 'script' || viewingJob.content_type === 'poster')) {
+    return (
+      <ScriptViewerModal
+        job={viewingJob}
+        scenarioTitle={scenario.title}
+        hasPoster={(contentGen.jobs || []).some(
+          j => j.content_type === 'poster' && j.status === 'complete' && j.output_url
+        )}
+        onClose={() => setViewingJob(null)}
+        onJobUpdated={(updatedJob) => {
+          setViewingJob(updatedJob);
+          contentGen.loadJobs();
+        }}
+        onRenderVideo={async (videoStyle, includeIntro, includeOutro) => {
+          const scriptJob = viewingJob;
+          setViewingJob(null); // return to chat; progress shows in InfoPanel
+          await contentGen.createContent({
+            contentType:     'video',
+            storyStyle:      scriptJob.story_style || 'debate',
+            videoStyle,
+            durationSeconds: scriptJob.duration_seconds || 180,
+            intro:           !!includeIntro,
+            outro:           !!includeOutro,
+          });
+        }}
+      />
+    );
+  }
+
+  if (viewingJob && ['audio', 'video'].includes(viewingJob.content_type)) {
+    return (
+      <MediaJobModal
+        job={viewingJob}
+        scenarioTitle={scenario.title}
+        onClose={() => setViewingJob(null)}
+      />
     );
   }
 
@@ -508,6 +604,9 @@ export default function ScenarioChatWindow({
               onOpenCreate={handleOpenCreate}
               isCreating={contentGen.state.status === 'creating'}
               canCreateContent={canCreateContent}
+              selectionMode={selectionMode}
+              selectedMessageIds={selectedMessageIds}
+              onToggleMessageSelect={handleToggleMessageSelect}
               theme={theme}
               containerRef={messagesContainerRef}
               onScroll={handleMessagesScroll}
@@ -540,7 +639,32 @@ export default function ScenarioChatWindow({
       </div>
 
       {/* RIGHT PANEL: Info Panel */}
-      <div className={`${styles.infoPanel} ${infoPanelCollapsed ? styles.collapsed : ''}`}>
+      <div className={`${styles.infoPanel} ${infoPanelCollapsed ? styles.collapsed : ''}`}> 
+          {/* Video budget banner — shown when content_jobs 403 budget fires */}
+          {budgetError.hit && (
+            <VideoBudgetBanner
+              budgetState={{
+                hit:           budgetError.hit,
+                secondsUsed:   budgetError.secondsUsed,
+                budget:        budgetError.budget,
+                suggestedTier: budgetError.suggestedTier,
+                upgrading:     false,   // managed locally inside banner
+              }}
+              budgetDisplay={{
+                secondsUsedLabel:   formatSeconds(budgetError.secondsUsed),
+                budgetLabel:        formatSeconds(budgetError.budget),
+                remainingLabel:     formatSeconds(
+                  budgetError.budget != null && budgetError.secondsUsed != null
+                    ? Math.max(0, budgetError.budget - budgetError.secondsUsed)
+                    : null
+                ),
+                suggestedTierLabel: TIER_DISPLAY[budgetError.suggestedTier]
+                  || budgetError.suggestedTier,
+              }}
+              onUpgrade={handleContentUpgrade}
+              onDismiss={clearBudgetError}
+            />
+          )}
         <InfoPanel
           scenarios={scenarios}
           currentScenarioId={scenario.id}
@@ -553,7 +677,24 @@ export default function ScenarioChatWindow({
           onOpenCreate={handleOpenCreate}
           onCloseCreate={handleCloseCreate}
           onCreateContent={contentGen.createContent}
-          onViewJob={(job) => setViewingJob(job)} 
+          selectedMessageIds={Array.from(selectedMessageIds)}
+          onViewJob={(job) => setViewingJob(job)}
+          onDeleteJob={contentGen.deleteJob}
+          onCancelJob={contentGen.cancelContent}
+          onGeneratePoster={contentGen.generatePoster}
+          onSendToStudio={({ lines, topic, scriptText, jobId }) => {
+            setActivePodcastContext({
+              character:      null,
+              characterKey:   null,
+              chatHistory:    [],
+              topic:          topic || scenario?.title || '',
+              startTab:       'script',
+              preloadedLines: lines || [],
+              scriptText:     scriptText || '',
+              jobId:          jobId || null,
+            });
+            switchView(VIEW_STATES.PODCAST_STUDIO);
+          }}
         />
       </div>
 
@@ -564,27 +705,6 @@ export default function ScenarioChatWindow({
           theme={theme}
           questionsUsed={usageData.questionsAsked}
           limit={usageData.limit}
-        />
-      )}
-      {/* Script viewer */}
-      {viewingJob && viewingJob.content_type === 'script' && (
-        <ScriptViewerModal
-          job={viewingJob}
-          scenarioTitle={scenario.title}
-          onClose={() => setViewingJob(null)}
-          onJobUpdated={(updatedJob) => {
-            setViewingJob(updatedJob);
-            contentGen.loadJobs();
-          }}
-        />
-      )}
- 
-      {/* Audio / Video download modal */}
-      {viewingJob && ['audio', 'video'].includes(viewingJob.content_type) && (
-        <MediaJobModal
-          job={viewingJob}
-          scenarioTitle={scenario.title}
-          onClose={() => setViewingJob(null)}
         />
       )}
     </div>
@@ -646,7 +766,7 @@ function UpgradeModal({ onClose, theme, questionsUsed, limit }) {
 
           <div className="upgrade-pricing">
             <div className="pricing-amount">
-              <span className="price">£10.99</span>
+              <span className="price">£11.99</span>
               <span className="period">/month</span>
             </div>
             <p className="pricing-guarantee">

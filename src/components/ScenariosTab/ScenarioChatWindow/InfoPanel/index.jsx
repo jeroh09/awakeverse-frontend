@@ -7,6 +7,7 @@
 
 import React, { useState, useEffect } from 'react';
 import ScenarioListItem from './ScenarioListItem';
+import useCredits from '../../../../hooks/useCredits';
 import styles from './InfoPanel.module.css';
 
 const API_BASE = process.env.REACT_APP_API_URL || 'https://api.awakeverse.com';
@@ -420,6 +421,23 @@ export default function InfoPanel({
   const [posterTitle,        setPosterTitle]        = useState('');
   const [posterAspect,       setPosterAspect]       = useState('portrait');
 
+  // ── Per-scene spend: the video render cost for the chosen duration (video is
+  // priced by duration tier: 60/120/180 → 360/680/1000). Shown so the user knows
+  // what rendering this scene will use before they commit.
+  const credits = useCredits();
+  const [sceneCost, setSceneCost] = useState(null);   // { price, affordable, ... }
+  useEffect(() => {
+    const tier = selectedDuration <= 60 ? '60' : selectedDuration <= 120 ? '120' : '180';
+    credits.priceFor('video', tier).then(setSceneCost);
+  }, [selectedDuration, credits.balance]);
+
+  // Refresh the balance when a render settles/fails so the per-scene cost's
+  // affordability + the shown "available" stay current without a reload.
+  useEffect(() => {
+    const s = contentState?.status;
+    if (s === 'complete' || s === 'failed') credits.refresh();
+  }, [contentState?.status]);
+
   const validScenarios = Array.isArray(scenarios) ? scenarios : [];
   const activeScenario = validScenarios.find(s => s.id === currentScenarioId);
 
@@ -820,6 +838,21 @@ export default function InfoPanel({
                     </button>
                   ))}
                 </div>
+
+                {sceneCost && (
+                  <p
+                    className={styles.fieldLabel}
+                    style={{
+                      display: 'flex', gap: '0.4rem', alignItems: 'baseline',
+                      color: sceneCost.affordable === false ? '#f59e0b' : '#818cf8',
+                    }}
+                  >
+                    <span>Scene render ≈ {Number(sceneCost.price).toLocaleString()} credits</span>
+                    {credits.balance != null && (
+                      <span style={{ opacity: 0.7 }}>· {Number(credits.balance).toLocaleString()} available</span>
+                    )}
+                  </p>
+                )}
 
                 <p className={styles.fieldLabel}>Format</p>
                 <div className={styles.typeSelector}>

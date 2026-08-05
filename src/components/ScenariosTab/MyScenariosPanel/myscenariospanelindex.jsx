@@ -195,12 +195,6 @@ export default function MyScenariosPanel({
         <div className="panel-header">
           <h3>My Dialogues</h3>
           <div className="panel-header-right">
-            {user?.credits_balance != null && (
-              <div className="credits-counter">
-                <span className="credits-counter-dot" />
-                {Number(user.credits_balance).toLocaleString()} credits
-              </div>
-            )}
             <div className="scenario-counter">0 / 5 Dialogues</div>
             <CreateButton onClick={onCreateNew} variant="primary" />
           </div>
@@ -223,12 +217,6 @@ export default function MyScenariosPanel({
       <div className="panel-header">
         <h3>My Dialogues</h3>
         <div className="panel-header-right">
-          {user?.credits_balance != null && (
-            <div className="credits-counter">
-              <span className="credits-counter-dot" />
-              {Number(user.credits_balance).toLocaleString()} credits
-            </div>
-          )}
           <div className="scenario-counter">{scenarios.length} / 5 Dialogues</div>
           {scenarios.length < 5 && (
             <CreateButton onClick={onCreateNew} variant="primary" />
