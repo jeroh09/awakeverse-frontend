@@ -35,6 +35,7 @@ export default function useContentGeneration(scenarioId) {
   const [jobs,        setJobs]       = useState([]);
   const [jobsLoading, setJobsLoading] = useState(false);
   const [budgetError, setBudgetError] = useState(INITIAL_BUDGET_ERROR);
+  const [creditBlock, setCreditBlock] = useState(null);   // 402 insufficient-credits info
 
   const clearBudgetError = useCallback(() => {
     setBudgetError(INITIAL_BUDGET_ERROR);
@@ -218,9 +219,23 @@ export default function useContentGeneration(scenarioId) {
 
       if (!response.ok) {
 
-        // ── Budget gate — 403 with known shape ───────────────────────────────
-        // Populates budgetError state → VideoBudgetBanner renders in InfoPanel.
-        // Does NOT set state.error — the banner is the UI for this case.
+        // ── Insufficient credits (402) — the points ledger's gate ────────────
+        // Replaces the retired seconds-budget 403. Populates creditBlock →
+        // caller renders the InsufficientCreditsBanner. Does NOT set state.error.
+        if (response.status === 402 || data.error === 'insufficient_credits') {
+          setCreditBlock({
+            needed:    data.needed,
+            available: data.available,
+            shortBy:   data.short_by,
+            title:     data.title,
+            message:   data.message,
+          });
+          setState(prev => ({ ...prev, status: 'idle', activeJob: null, progress: 0 }));
+          return;
+        }
+
+        // ── Budget gate — 403 with known shape (RETIRED: backend no longer 403s
+        // on budget; kept as a harmless fallback so any legacy path still surfaces). ─
         if (ApiErrorService.isBudgetError(response.status, data)) {
           setBudgetError({
             hit:           true,
@@ -435,14 +450,16 @@ export default function useContentGeneration(scenarioId) {
     state,            // { status, activeJob, error, progress }
     jobs,             // ContentJob[] — past completed jobs
     jobsLoading,
-    budgetError,      // { hit, secondsUsed, budget, suggestedTier } — set on budget 403
-    createContent,    // (params) => Promise<job> — returns undefined on budget hit
+    budgetError,      // { hit, ... } — legacy seconds-budget (retired; no longer fires)
+    creditBlock,      // { needed, available, shortBy, title, message } — set on a 402
+    createContent,    // (params) => Promise<job> — returns undefined on a credit block
     suggestMessages,  // () => Promise<{ suggested_ids: number[] | null }>
     generatePoster,   // (params) => Promise<job>
     cancelContent,    // (jobId) => void — stop an in-flight job
     deleteJob,        // (jobId) => void — delete a job + its media
     loadJobs,         // () => void — manual refresh
     resetContent,     // () => void
-    clearBudgetError, // () => void — reset budget banner
+    clearBudgetError, // () => void — reset (legacy) budget banner
+    clearCreditBlock: () => setCreditBlock(null),   // () => void — reset the 402 banner
   };
 }

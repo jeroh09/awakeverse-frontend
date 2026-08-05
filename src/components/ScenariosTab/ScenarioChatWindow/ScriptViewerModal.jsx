@@ -2,6 +2,7 @@
 // UPDATED: full-page view — no overlay wrapper. Root div IS the page.
 
 import React, { useState, useEffect, useCallback, useRef } from 'react';
+import useCredits from '../../../hooks/useCredits';
 import styles from './ScriptViewerModal.module.css';
 
 const API_BASE = process.env.REACT_APP_API_URL || 'https://api.awakeverse.com';
@@ -36,6 +37,16 @@ export default function ScriptViewerModal({ job, scenarioTitle, onClose, onJobUp
   const [isRendering,  setIsRendering]  = useState(false);
   const [includeIntro, setIncludeIntro] = useState(hasPoster);
   const [includeOutro, setIncludeOutro] = useState(true);
+
+  // ── Render cost (video is priced by duration tier: 60/120/180 → 360/680/1000).
+  // Exact price, so we can gate the button on affordability and offer a top-up path
+  // rather than let a click 402 behind this full-page modal.
+  const credits = useCredits();
+  const [sceneCost, setSceneCost] = useState(null);   // { price, affordable, ... }
+  useEffect(() => {
+    const tier = duration <= 60 ? '60' : duration <= 120 ? '120' : '180';
+    credits.priceFor('video', tier).then(setSceneCost);
+  }, [duration, credits.balance]);
 
   useEffect(() => {
     if (isEditing && textareaRef.current) {
@@ -345,14 +356,36 @@ export default function ScriptViewerModal({ job, scenarioTitle, onClose, onJobUp
             </span>
           </label>
 
-          <button
-            className={styles.renderButton}
-            onClick={handleRenderVideo}
-            disabled={isRendering}
-            title="Generate the video from this screenplay"
-          >
-            {isRendering ? 'Starting…' : '▶  Render Video'}
-          </button>
+          <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-end', gap: '0.35rem' }}>
+            {sceneCost && (
+              <span style={{
+                fontFamily: "'Inter', system-ui, sans-serif", fontSize: '0.68rem',
+                fontWeight: 600, whiteSpace: 'nowrap',
+                color: sceneCost.affordable === false ? '#F59E0B' : '#818CF8',
+              }}>
+                ~{Number(sceneCost.price).toLocaleString()} credits
+                {credits.balance != null && ` · ${Number(credits.balance).toLocaleString()} left`}
+                {sceneCost.affordable === false && (
+                  <>{' · '}
+                    <span
+                      onClick={() => { window.location.href = '/billing'; }}
+                      style={{ textDecoration: 'underline', cursor: 'pointer' }}
+                    >Top up</span>
+                  </>
+                )}
+              </span>
+            )}
+            <button
+              className={styles.renderButton}
+              onClick={handleRenderVideo}
+              disabled={isRendering || sceneCost?.affordable === false}
+              title={sceneCost?.affordable === false
+                ? 'Not enough credits — top up to render'
+                : 'Generate the video from this screenplay'}
+            >
+              {isRendering ? 'Starting…' : '▶  Render Video'}
+            </button>
+          </div>
 
 
         </div>
