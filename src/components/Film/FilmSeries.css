@@ -234,3 +234,21 @@
 .fs-rc .fs-rbody{ padding:10px 11px }
 .fs-rlocked{ margin-top:9px; text-align:center; font-size:11.5px; color:var(--muted-2); font-weight:600;
   padding:7px; background:rgba(99,102,241,.05); border-radius:8px }
+
+/* ── fixes: pill position (#5), robust close (#4), takeover player (#3), delete ── */
+.fs-pillrow{ display:flex; justify-content:center; margin-bottom:2px }   /* clear the app breadcrumb on the left */
+.fs-book.is-open{ cursor:default }
+.fs-book.is-open .fs-spine{ pointer-events:none }                        /* don't let the hidden spine swallow cover clicks */
+.fs-cbtn--del{ flex:0 0 auto; width:34px; padding:7px 0; background:rgba(2,6,23,.55); border-color:rgba(255,255,255,.12); color:#cbd5e1 }
+.fs-cbtn--del:hover{ background:rgba(127,29,29,.55); border-color:rgba(248,113,113,.5); color:#fecaca }
+
+/* takeover video player for finished films (My Films → Play) */
+.fs-player-scrim{ position:fixed; inset:0; z-index:70; display:flex; align-items:center; justify-content:center;
+  padding:32px; background:rgba(2,6,23,.9); backdrop-filter:blur(8px); animation:fs-fade .2s ease }
+.fs-player-box{ position:relative; width:min(1100px,100%); max-height:90vh; border-radius:16px; overflow:hidden;
+  border:1px solid var(--line); box-shadow:0 0 0 1px var(--line-soft), 0 40px 90px -20px #000; background:#000 }
+.fs-player-vid{ display:block; width:100%; max-height:90vh; background:#000 }
+.fs-player-close{ position:absolute; top:12px; right:12px; z-index:2; width:36px; height:36px; border-radius:50%;
+  border:none; cursor:pointer; background:rgba(2,6,23,.6); color:#fff; font-size:22px; line-height:1;
+  display:grid; place-items:center; transition:.15s }
+.fs-player-close:hover{ background:rgba(99,102,241,.6) }

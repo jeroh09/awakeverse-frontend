@@ -114,6 +114,7 @@ export default function MyFilmsView({
             onNewEpisode={(s) => setModal({ type: 'chain', series: s })}
             onPromote={(film) => setModal({ type: 'promote', film })}
             onRefreshPlate={(s, c) => setModal({ type: 'refresh', series: s, character: c })}
+            onDelete={onDelete}
           />
         )}
       </div>
