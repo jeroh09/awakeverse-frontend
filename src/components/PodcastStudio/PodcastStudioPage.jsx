@@ -30,6 +30,7 @@ import React, {
   useState, useEffect, useRef, useCallback, useReducer, useMemo
 } from 'react';
 import usePodcastStudio from '../../hooks/usePodcastStudio';
+import { useAppView } from '../../contexts/AppViewContext';
 import useCredits from '../../hooks/useCredits';
 import InsufficientCreditsBanner from './InsufficientCreditsBanner';
 import styles from './PodcastStudioPage.module.css';
@@ -284,6 +285,7 @@ const fmtDate = (iso) => {
 // ════════════════════════════════════════════════════════════════════════════
 
 export default function PodcastStudioPage({ context, onClose }) {
+  const { setActivePodcastRender } = useAppView();
   const {
     state,
     environments,
@@ -1359,6 +1361,9 @@ if (context.topic) setTopic(context.topic);
       // Hand off to poll loop — NO second POST.
       // startPollingSession sets state to 'rendering' and begins the poll interval.
       startPollingSession(data.session_id);
+      // Universal tracker — separate from the line above, lets the pill in
+      // ChatApp show render status even after navigating away from this page.
+      setActivePodcastRender({ sessionId: data.session_id, status: 'processing', progress: 0 });
       setSubmitted(false);
       // Sessions list refreshed by the useEffect watching state.status === 'complete'
 
@@ -1369,7 +1374,7 @@ if (context.topic) setTopic(context.topic);
     }
   }, [
     speakers, selectedEnvId,
-    startPollingSession, loadSessions,
+    startPollingSession, loadSessions, setActivePodcastRender,
   ]);
 
   // ── Reload sessions when generate completes ───────────────────────────────

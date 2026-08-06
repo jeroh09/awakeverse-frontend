@@ -208,6 +208,16 @@ export const AppViewProvider = ({ children }) => {
   const [activePodcastContext, setActivePodcastContext] = useState(null);
 
   // ============================================================================
+  // 🎙️ NEW: Universal podcast render tracker — survives navigating away from
+  // Podcast Studio (unlike the LOCAL tracker in usePodcastStudio, which is
+  // scoped to PodcastStudioPage's lifecycle and dies when it unmounts). This
+  // is additive, not a replacement — the local page-level progress UI is
+  // untouched.
+  // Shape: { sessionId, status, progress, finalUrl, totalSeconds, error } | null
+  // ============================================================================
+  const [activePodcastRender, setActivePodcastRender] = useState(null);
+
+  // ============================================================================
   // LOCALSTORAGE CACHE LAYER (Instant load, offline support)
   // ============================================================================
 
@@ -537,6 +547,61 @@ export const AppViewProvider = ({ children }) => {
   }, []);
 
   // ============================================================================
+  // 🎙️ NEW: Universal podcast render tracker — setter
+  // ============================================================================
+
+  const setActivePodcastRenderData = useCallback((render) => {
+    console.log('🎙️ Setting active podcast render:', render?.sessionId, render?.status);
+    setActivePodcastRender(render);
+  }, []);
+
+  // ============================================================================
+  // 🎙️ NEW: Universal podcast render polling
+  // Only active while activePodcastRender is set AND still in-flight — stops
+  // itself once status is 'complete' or 'failed'. This is what makes the
+  // notification pill work regardless of which view is currently active:
+  // the poll lives here, in the provider, not inside PodcastStudioPage.
+  // ============================================================================
+
+  useEffect(() => {
+    if (!activePodcastRender?.sessionId) return;
+    if (activePodcastRender.status === 'complete' || activePodcastRender.status === 'failed') return;
+
+    let cancelled = false;
+
+    const poll = async () => {
+      try {
+        const res = await api.get(`/podcast/session/${activePodcastRender.sessionId}`);
+        if (cancelled) return;
+        setActivePodcastRender(prev => {
+          // Guard against a stale response landing after the tracked session changed
+          if (!prev || prev.sessionId !== res.data.session_id) return prev;
+          return {
+            ...prev,
+            status:       res.data.status,
+            progress:     res.data.progress,
+            finalUrl:     res.data.final_url,
+            totalSeconds: res.data.total_seconds,
+            error:        res.data.error,
+          };
+        });
+      } catch (e) {
+        // DEFENSIVE: a single failed poll (network blip) shouldn't clear the
+        // pill — keep showing the last known state and retry next interval.
+        console.warn('Podcast render poll failed:', e);
+      }
+    };
+
+    poll(); // immediate check — don't wait a full interval to show fresh status
+    const interval = setInterval(poll, 5000);
+
+    return () => {
+      cancelled = true;
+      clearInterval(interval);
+    };
+  }, [activePodcastRender?.sessionId, activePodcastRender?.status]);
+
+  // ============================================================================
   // MANUAL SYNC (for pull-to-refresh or settings)
   // ============================================================================
 
@@ -591,7 +656,11 @@ export const AppViewProvider = ({ children }) => {
 
     // 🎙️ NEW: Podcast Studio context values
     activePodcastContext,
-    setActivePodcastContext: setActivePodcastContextData
+    setActivePodcastContext: setActivePodcastContextData,
+
+    // 🎙️ NEW: Universal podcast render tracker (survives navigation)
+    activePodcastRender,
+    setActivePodcastRender: setActivePodcastRenderData
   };
 
   return (

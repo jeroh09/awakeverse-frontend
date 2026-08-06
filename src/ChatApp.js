@@ -27,6 +27,7 @@ import { useSearchParams } from 'react-router-dom';
 import StripeSuccessHandler from './components/StripeSuccessHandler';
 import VerseStudioTab from './components/VerseStudio/VerseStudioTab';
 import PodcastStudioPage from './components/PodcastStudio/PodcastStudioPage';
+import PodcastRenderPill from './components/PodcastStudio/PodcastRenderPill';
 import FilmMode from './components/Film/FilmMode';
 import OnboardingFlow, { isOnboardingComplete } from './components/Onboarding/OnboardingFlow';
 import './components/LauncherOverlay/LauncherOverlay.css';
@@ -520,6 +521,10 @@ export default function ChatApp() {
           onStartChat={() => handleCharacterSelection(previewCharacterKey, 'preview_start')}
         />
       )}
+
+      {/* Universal render-status pill — visible regardless of currentView,
+          suppressed only while already on Podcast Studio itself. */}
+      <PodcastRenderPill />
     </div>
   );
 }

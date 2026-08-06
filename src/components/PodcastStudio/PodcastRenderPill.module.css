@@ -1,0 +1,99 @@
+/* Self-contained tokens — deliberately NOT relying on PodcastStudioPage's
+   :root custom properties loading first. Same values, no cross-file coupling. */
+.pill {
+  --indigo:       #6366F1;
+  --indigo-light: #818CF8;
+  --red:          #EF4444;
+  --green:        #10B981;
+
+  position: fixed;
+  bottom: 20px;
+  right: 20px;
+  z-index: 500;
+
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.55rem 0.7rem 0.55rem 0.9rem;
+  border-radius: 999px;
+  background: rgba(10, 15, 30, 0.92);
+  border: 1px solid rgba(99, 102, 241, 0.38);
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.35), 0 0 0 3px rgba(99, 102, 241, 0.08);
+  backdrop-filter: blur(8px);
+  font-family: 'Inter', sans-serif;
+  cursor: pointer;
+  user-select: none;
+  animation: slideIn 0.25s ease-out;
+  max-width: 280px;
+}
+
+.pill:hover {
+  border-color: rgba(99, 102, 241, 0.6);
+}
+
+@keyframes slideIn {
+  from { transform: translateY(12px); opacity: 0; }
+  to   { transform: translateY(0);    opacity: 1; }
+}
+
+.icon {
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 18px;
+  height: 18px;
+}
+
+.spin {
+  animation: rotate 1s linear infinite;
+}
+@keyframes rotate {
+  from { transform: rotate(0deg); }
+  to   { transform: rotate(360deg); }
+}
+
+.text {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 1px;
+}
+
+.label {
+  font-size: 0.76rem;
+  font-weight: 500;
+  color: #E2E8F0;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.labelComplete { color: var(--green); }
+.labelFailed   { color: var(--red); }
+
+.sublabel {
+  font-size: 0.65rem;
+  color: #94A3B8;
+}
+
+.dismissBtn {
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 18px;
+  height: 18px;
+  border-radius: 50%;
+  border: none;
+  background: rgba(148, 163, 184, 0.12);
+  color: #94A3B8;
+  font-size: 0.65rem;
+  cursor: pointer;
+  transition: background 0.15s;
+}
+.dismissBtn:hover {
+  background: rgba(148, 163, 184, 0.25);
+  color: #E2E8F0;
+}
