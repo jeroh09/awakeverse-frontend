@@ -16,7 +16,8 @@ import {
 
 const hash = (s = '') => { let h = 0; for (let i = 0; i < s.length; i++) h = (h * 31 + s.charCodeAt(i)) | 0; return Math.abs(h); };
 const cover = (item) => {
-  if (item?.thumbnail_url || item?.key_art_url) return `url(${item.thumbnail_url || item.key_art_url})`;
+  const art = item?.key_art_url || item?.thumbnail_url;
+  if (art) return `url(${art})`;
   const h = hash(item?.title || 'x'); const a = h % 360, b = (a + 40) % 360;
   return `linear-gradient(150deg, hsl(${a} 55% 55%), hsl(${b} 45% 30%))`;
 };
