@@ -5,12 +5,14 @@
 
 import React, { useState, useCallback } from 'react';
 import useFilmProjects from './useFilmProjects';
+import { useFilmSeries } from './useFilmSeries';
 import MyFilmsView from './MyFilmsView';
 import FilmWorkspaceContainer from './FilmWorkspaceContainer';
 import './FilmWorkspace.css';
 
 export default function FilmMode() {
   const projects = useFilmProjects();
+  const series = useFilmSeries();
   const [open, setOpen] = useState(null);   // { projectId, sessionId } | null
 
   const openFilm = useCallback((projectId, sessionId = null) =>
@@ -19,7 +21,8 @@ export default function FilmMode() {
   const backToFilms = useCallback(() => {
     setOpen(null);
     projects.refresh();     // pick up any status/title changes from the render
-  }, [projects]);
+    series.refresh();       // and any new series / episodes / harvested cast
+  }, [projects, series]);
 
   const onNew = useCallback(async (opts) => {
     const proj = await projects.create(opts);
@@ -50,8 +53,11 @@ export default function FilmMode() {
         busy={projects.busy}
         error={projects.error}
         onOpen={(id) => openFilm(id)}
+        onOpenFilm={openFilm}
         onNew={onNew}
         onDelete={onDelete}
+        series={series.series}
+        seriesActions={series}
       />
     </div>
   );

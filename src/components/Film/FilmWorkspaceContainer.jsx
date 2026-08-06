@@ -11,7 +11,8 @@ import useFilmAuthoring from './useFilmAuthoring';
 import useFilmJob from './useFilmJob';
 import useCredits from '../../hooks/useCredits';
 import { InsufficientCard } from './CreditsUI';
-import { filmGetProject, filmUploadPhoto, filmUploadConsent, filmSaveScript, friendlyError } from './filmApi';
+import FilmSeriesModals from './FilmSeriesModals';
+import { filmGetProject, filmUploadPhoto, filmUploadConsent, filmSaveScript, filmPromoteToSeries, friendlyError } from './filmApi';
 
 const shotToCell = s => ({
   index: s.index,
@@ -51,6 +52,11 @@ export default function FilmWorkspaceContainer({
   // the stage overlay) so a click registers visibly the instant it's pressed.
   // Fixes handover §2a: "Regenerate button shows no state".
   const [regenBusyIndex, setRegenBusyIndex] = useState(null);
+  // Series awareness: seriesId stays `undefined` for a fresh session (we can't
+  // know yet) and is set from GET /projects on resume. `null` = confirmed
+  // standalone → promotable once rendered; a number = an episode → not promotable.
+  const [seriesId, setSeriesId] = useState(undefined);
+  const [promoteOpen, setPromoteOpen] = useState(false);
 
   // Mount: adopt the fresh session, or resume the project.
   useEffect(() => {
@@ -71,6 +77,7 @@ export default function FilmWorkspaceContainer({
         });
         setMeta({ video_style: p.video_style || 'anime', duration_seconds: p.duration_seconds || 60,
                   aspect_ratio: p.aspect_ratio || '9:16' });
+        setSeriesId(p.series_id ?? null);   // confirmed standalone (null) or an episode (id)
         if (p.render) job.adopt(p.render);
       } catch (e) {
         // authoring/job errors surface in their own state; nothing else to do
@@ -289,6 +296,12 @@ export default function FilmWorkspaceContainer({
     if (job.outputUrl) window.open(job.outputUrl, '_blank', 'noopener');
   }, [job.outputUrl]);
 
+  // Promote is offered only for a CONFIRMED standalone film that has rendered —
+  // a look is locked at its first Seedance render, not before, and an episode is
+  // already in a series. (Fresh in-session films have seriesId===undefined → the
+  // affordance appears on their next open, via the resume path.)
+  const canPromote = seriesId === null && job.status === 'ready';
+
   return (
     <>
     <FilmWorkspace
@@ -320,6 +333,8 @@ export default function FilmWorkspaceContainer({
       onRegenerate={onRegenerate}
       onDuplicate={onDuplicate}
       onCut={onCut}
+      canPromote={canPromote}
+      onPromote={() => setPromoteOpen(true)}
       messages={authoring.messages}
       chatSub={authoring.busy || authoring.streamingActive ? 'thinking…' : (job.error || authoring.error || '')}
       streamingActive={authoring.streamingActive}
@@ -355,6 +370,13 @@ export default function FilmWorkspaceContainer({
           />
         </div>
       </div>
+    )}
+    {promoteOpen && (
+      <FilmSeriesModals
+        modal={{ type: 'promote', film: { project_id: projectId, title: job.title || authoring.title } }}
+        onClose={() => setPromoteOpen(false)}
+        actions={{ promote: (id, opts) => filmPromoteToSeries(id, opts).then((r) => { setTimeout(onBackToFilms, 0); return r; }) }}
+      />
     )}
     </>
   );

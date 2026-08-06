@@ -34,6 +34,7 @@ export default function FilmWorkspace({
   editBusy = null,
   onSelectBeat, onGenerate, onExport, onStop,
   onRegenerate, onDuplicate, onCut,
+  canPromote = false, onPromote = () => {},
   // chat (right)
   messages = [],
   chatSub = '',
@@ -146,6 +147,8 @@ export default function FilmWorkspace({
               onRegenerate={onRegenerate}
               onDuplicate={onDuplicate}
               onCut={onCut}
+              canPromote={canPromote}
+              onPromote={onPromote}
             />
           </section>
 

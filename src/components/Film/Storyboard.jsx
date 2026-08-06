@@ -9,7 +9,7 @@
 import React, { useRef, useState, useCallback } from 'react';
 import {
   IconPlay, IconRegenerate, IconCut, IconDuplicate, IconGrip, IconStop,
-  IconSoftened, IconVisual, IconCheck, IconUpload, KIND_ICON,
+  IconSoftened, IconVisual, IconCheck, IconUpload, KIND_ICON, IconSeries,
 } from './filmIcons';
 // Redraw reuses the regenerate glyph (a redraw IS a regenerate, user-facing name).
 const IconRedraw = IconRegenerate;
@@ -139,28 +139,47 @@ function Cell({ beat, stageState, selected, regenBusy, onSelect, onRegenerate, o
 function CastMember({ name, info, busy, onRedraw, onUpload }) {
   const [desc, setDesc] = useState(info.description || '');
   const uploaded = info.source === 'upload';
+  const recurring = !!info.recurring;   // series-aware: a locked, reused character
   return (
-    <div className={`film-cast-card${busy ? ' is-busy' : ''}`}>
+    <div className={`film-cast-card${busy ? ' is-busy' : ''}`}
+         style={recurring ? { borderColor: 'rgba(52,211,153,.32)' } : undefined}>
       <div className="film-cast-portrait">
         {info.plate_url
           ? <img src={info.plate_url} alt={name} className="film-cast-img" />
           : <div className="film-cast-img film-cast-img--empty" />}
-        {uploaded && <span className="film-cast-badge">From your photo</span>}
+        {recurring
+          ? <span className="film-cast-badge" style={{ background: 'rgba(16,64,48,.85)', color: '#bff0dc' }}>Reused</span>
+          : uploaded && <span className="film-cast-badge">From your photo</span>}
         {busy && <div className="film-cast-veil"><span className="film-spin" /> Drawing…</div>}
       </div>
       <div className="film-cast-body">
         <div className="film-cast-name">{name}</div>
-        <textarea className="film-cast-desc" value={desc} spellCheck={false}
-          onChange={e => setDesc(e.target.value)}
-          placeholder="Describe how they look…" />
-        <div className="film-cast-actions">
-          <button className="film-cast-btn" disabled={busy} onClick={() => onRedraw(name, desc)}>
-            <IconRedraw s={14} /> Redraw
-          </button>
-          <button className="film-cast-btn film-cast-btn--up" disabled={busy} onClick={() => onUpload(name)}>
-            <IconUpload s={14} /> Use your own photo
-          </button>
-        </div>
+        {recurring ? (
+          // Locked: returning cast keeps its canonical look so it stays identical
+          // across episodes. No per-episode redraw (that would diverge them);
+          // change a series character's look from My Series → Refresh look.
+          <>
+            <div style={{ fontSize: 12, color: '#94a3b8', lineHeight: 1.4, padding: '2px 0' }}>{desc}</div>
+            <div style={{ marginTop: 8, textAlign: 'center', fontSize: 11.5, fontWeight: 600,
+                          color: '#64748b', padding: 7, background: 'rgba(99,102,241,.05)', borderRadius: 8 }}>
+              Locked · from your series
+            </div>
+          </>
+        ) : (
+          <>
+            <textarea className="film-cast-desc" value={desc} spellCheck={false}
+              onChange={e => setDesc(e.target.value)}
+              placeholder="Describe how they look…" />
+            <div className="film-cast-actions">
+              <button className="film-cast-btn" disabled={busy} onClick={() => onRedraw(name, desc)}>
+                <IconRedraw s={14} /> Redraw
+              </button>
+              <button className="film-cast-btn film-cast-btn--up" disabled={busy} onClick={() => onUpload(name)}>
+                <IconUpload s={14} /> Use your own photo
+              </button>
+            </div>
+          </>
+        )}
       </div>
     </div>
   );
@@ -217,6 +236,8 @@ export default function Storyboard({
   onRegenerate = () => {},
   onDuplicate = () => {},
   onCut = () => {},
+  canPromote = false,
+  onPromote = () => {},
 }) {
   const [watching, setWatching] = useState(false);
   const total = beats.length;
@@ -293,6 +314,11 @@ export default function Storyboard({
     : stageState === 'edit' ? (
         <div className="film-head-actions">
           {finalUrl && <button className="film-btn film-btn--primary" onClick={() => setWatching(true)}><IconPlay s={14} /> Play film</button>}
+          {finalUrl && canPromote && (
+            <button className="film-btn film-btn--ghost" onClick={onPromote} title="Turn this film into Episode 1 of a series">
+              <IconSeries s={14} /> Start a series
+            </button>
+          )}
           <button className="film-btn film-btn--ghost" onClick={onExport}>Export</button>
         </div>
       )
