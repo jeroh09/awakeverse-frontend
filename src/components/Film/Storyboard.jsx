@@ -16,6 +16,11 @@ const IconRedraw = IconRegenerate;
 
 const pad = n => String(n).padStart(2, '0');
 
+// Friendly style labels. Backend "stylized_real" and "realistic" are the same
+// thing and both read as "Realistic" in the UX.
+const STYLE_LABEL = { stylized_real: 'Realistic', realistic: 'Realistic', anime: 'Anime', cartoon: 'Cartoon', comic_book: 'Comic' };
+const styleLabel = (s) => STYLE_LABEL[s] || String(s || '').replace('_', ' ');
+
 function EmptyStoryboard() {
   return (
     <div className="film-empty">
@@ -216,6 +221,7 @@ export default function Storyboard({
   stageState = 'empty',
   beats = [],
   aspectRatio = '9:16',
+  videoStyle = null,
   cost = null,
   costAffordable = null,
   cast = null,
@@ -332,6 +338,14 @@ export default function Storyboard({
         <div className="film-htabs">
           <span className="film-htab is-on">Storyboard</span>
           <span className="film-hsub">{sub}</span>
+          {videoStyle && (
+            <span className="film-hstyle" title="Style · frame"
+              style={{ marginLeft: 10, fontSize: 12, fontWeight: 600, color: '#818cf8',
+                       background: 'rgba(99,102,241,.1)', border: '1px solid rgba(99,102,241,.3)',
+                       borderRadius: 999, padding: '3px 10px', whiteSpace: 'nowrap' }}>
+              {styleLabel(videoStyle)} · {aspectRatio}
+            </span>
+          )}
         </div>
         <div className="film-phead-right">
           {cost != null && (stageState === 'review' || stageState === 'plate_review') && (

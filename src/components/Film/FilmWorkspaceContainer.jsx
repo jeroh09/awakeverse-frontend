@@ -311,6 +311,7 @@ export default function FilmWorkspaceContainer({
       stageState={stageState}
       beats={beats}
       aspectRatio={meta.aspect_ratio}
+      videoStyle={meta.video_style}
       credits={credits}
       onShowCredits={() => navigate('/billing')}
       cost={renderCost ? renderCost.price : null}

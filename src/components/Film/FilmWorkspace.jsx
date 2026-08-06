@@ -21,6 +21,7 @@ export default function FilmWorkspace({
   stageState = 'empty',
   beats = [],
   aspectRatio = '9:16',
+  videoStyle = null,
   credits = null,
   onShowCredits = () => {},
   cost = null,
@@ -128,6 +129,7 @@ export default function FilmWorkspace({
               stageState={stageState}
               beats={beats}
               aspectRatio={aspectRatio}
+              videoStyle={videoStyle}
               cost={cost}
               costAffordable={costAffordable}
               cast={cast}

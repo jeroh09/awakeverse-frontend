@@ -174,12 +174,12 @@ export default function useFilmJob() {
   }, [stop]);
 
   const generate = useCallback(async ({ script, title, duration_seconds = 120, video_style = 'anime',
-                                        intro = false, outro_theme = null, film_project_id = null,
-                                        expectedShots = 0 }) => {
+                                        aspect_ratio = '9:16', intro = false, outro_theme = null,
+                                        film_project_id = null, expectedShots = 0 }) => {
     setError(null); setManifest(null); setOutputUrl(null); setStatus('processing');
     expectedRef.current = expectedShots || 0;
     try {
-      const data = await filmGenerate({ script, title, duration_seconds, video_style, intro, outro_theme, film_project_id });
+      const data = await filmGenerate({ script, title, duration_seconds, video_style, aspect_ratio, intro, outro_theme, film_project_id });
       const id = data.job_id;
       setJobId(id);
       poll(id);

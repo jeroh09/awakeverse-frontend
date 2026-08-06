@@ -24,6 +24,9 @@ const bind = (item) => { const h = hash((item?.title || 'x') + 'b') % 360; retur
 const dot  = (item) => `hsl(${hash(item?.title || 'x') % 360} 60% 60%)`;
 const stKey  = (s) => (s === 'ready' ? 'ready' : s === 'rendering' ? 'rendering' : s === 'awaiting_review' ? 'review' : 'draft');
 const stText = (s) => (s === 'ready' ? 'Ready' : s === 'rendering' ? 'Rendering' : s === 'awaiting_review' ? 'Awaiting review' : 'Draft');
+// "stylized_real" and "realistic" are the same thing → both read "Realistic".
+const STYLE_LABEL = { stylized_real: 'Realistic', realistic: 'Realistic', anime: 'Anime', cartoon: 'Cartoon', comic_book: 'Comic' };
+const styleLabel = (s) => STYLE_LABEL[s] || String(s || '').replace('_', ' ');
 
 /* one book: a spine that opens into its cover */
 function Book({ item, ordinal, openId, setOpenId, onOpen, onWatch, onPromote, onDelete }) {
@@ -75,7 +78,7 @@ function Shelf({ s, onOpen, onWatch, onNewEpisode, onManage }) {
         <span className="fs-badge"><IconSeries s={12} /> Series</span>
         <h3>{s.title}</h3>
         <span className="fs-info">
-          <span>{s.video_style}</span><span>{s.aspect_ratio}</span>
+          <span>{styleLabel(s.video_style)}</span><span>{s.aspect_ratio}</span>
           <span>{s.episode_count} episode{s.episode_count === 1 ? '' : 's'}</span>
         </span>
         <button className="fs-manage" onClick={() => onManage(s)}>Manage series <IconChevron s={13} dir="right" /></button>
@@ -142,7 +145,7 @@ function MySeries({ series, onNewEpisode, onOpen, onRefreshPlate }) {
         <div className="fs-detail-head">
           <div>
             <h2>{cur.title}</h2>
-            <span className="fs-info"><span>{cur.video_style}</span><span>{cur.aspect_ratio}</span><span>{cur.episode_count} episodes</span></span>
+            <span className="fs-info"><span>{styleLabel(cur.video_style)}</span><span>{cur.aspect_ratio}</span><span>{cur.episode_count} episodes</span></span>
           </div>
           <button className="fs-newep" onClick={() => onNewEpisode(cur)}><IconPlus s={15} /> New Episode</button>
         </div>

@@ -16,8 +16,8 @@ import './FilmSeries.css';
 import { IconPlus, IconChain, IconRefreshLook } from './filmIcons';
 import { friendlyError } from './filmApi';
 
-const STYLES = ['stylized_real', 'anime', 'cartoon', 'comic_book', 'realistic'];
-const STYLE_LABEL = { stylized_real: 'Stylized real', anime: 'Anime', cartoon: 'Cartoon', comic_book: 'Comic', realistic: 'Realistic' };
+const STYLES = ['anime', 'cartoon', 'comic_book', 'realistic'];
+const STYLE_LABEL = { anime: 'Anime', cartoon: 'Cartoon', comic_book: 'Comic', realistic: 'Realistic', stylized_real: 'Realistic' };
 const DURATIONS = [{ v: 60, l: '60s' }, { v: 120, l: '2 min' }, { v: 180, l: '3 min' }];
 const ASPECTS = [{ v: '9:16', l: 'Vertical', w: 9, h: 15 }, { v: '1:1', l: 'Square', w: 13, h: 13 }, { v: '16:9', l: 'Widescreen', w: 18, h: 10 }];
 
@@ -67,7 +67,7 @@ function Footer({ busy, onClose, submitLabel, onSubmit, disabled }) {
 /* ── New Series ── */
 function NewSeries({ actions, onClose, onToast }) {
   const [title, setTitle] = useState('');
-  const [style, setStyle] = useState('stylized_real');
+  const [style, setStyle] = useState('realistic');
   const [aspect, setAspect] = useState('9:16');
   const [bible, setBible] = useState('');
   const [busy, setBusy] = useState(false);
