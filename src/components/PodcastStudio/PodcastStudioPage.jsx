@@ -3103,8 +3103,8 @@ if (context.topic) setTopic(context.topic);
                       <p className={styles.genEnvIntro}>Choose a format for your background:</p>
                       <div className={styles.genEnvCapacityChoices}>
                         <button className={styles.genEnvCapacityCard} onClick={() => handlePickGenCapacity(2)}>
-                          <div className={styles.genEnvCapacityTitle}>2 Guests</div>
-                          <div className={styles.genEnvCapacityDesc}>A cozy medium shot for you and one guest, side by side.</div>
+                          <div className={styles.genEnvCapacityTitle}>1-2 Guests</div>
+                          <div className={styles.genEnvCapacityDesc}>A cozy medium shot for a solo podcast or you and one guest, side by side.</div>
                         </button>
                         <button className={styles.genEnvCapacityCard} onClick={() => handlePickGenCapacity(3)}>
                           <div className={styles.genEnvCapacityTitle}>3 Guests · Panel</div>
