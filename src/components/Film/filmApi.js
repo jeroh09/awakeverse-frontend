@@ -208,3 +208,35 @@ export function creditsBlocked(e) {
   }
   return { blocked: false };
 }
+// ── Series endpoints — append to src/components/Film/filmApi.js ──────────────
+// Same shared `api` axios instance as every other film call, so the CSRF
+// interceptor, cookie credentials, and token refresh all apply unchanged. No new
+// credit paths: creating a series/episode or promoting/refreshing produces no
+// video, so nothing is charged until an episode actually renders (which goes
+// through the existing filmGenerate/filmPlan/filmApproveRender flow).
+
+export const filmListSeries = () =>
+  api.get('/film/series').then(r => r.data);
+
+export const filmCreateSeries = ({ title, video_style, aspect_ratio, canonical_bible } = {}) =>
+  api.post('/film/series',
+    { title, video_style, aspect_ratio, canonical_bible },
+    { timeout: QUEUE_TIMEOUT }).then(r => r.data);
+
+// Returns { project_id, session_id, episode_ordinal, ... } — open the workspace
+// with (project_id, session_id) exactly like a new standalone film.
+export const filmCreateEpisode = (seriesId, { title, prior_episode_ids, duration_seconds } = {}) =>
+  api.post(`/film/series/${seriesId}/episodes`,
+    { title, prior_episode_ids, duration_seconds },
+    { timeout: QUEUE_TIMEOUT }).then(r => r.data);
+
+// Promote a finished (Ready) film into a new series — it becomes Episode 1.
+export const filmPromoteToSeries = (projectId, { title } = {}) =>
+  api.post(`/film/projects/${projectId}/promote-to-series`,
+    { title }, { timeout: QUEUE_TIMEOUT }).then(r => r.data);
+
+// Re-approve a series character's canonical plate. Body is either
+// { plate_url } (set an approved URL) or { regenerate: true, description? }.
+export const filmRefreshCharacterPlate = (seriesId, characterId, body = {}) =>
+  api.post(`/film/series/${seriesId}/characters/${characterId}/refresh-plate`,
+    body, { timeout: QUEUE_TIMEOUT }).then(r => r.data);

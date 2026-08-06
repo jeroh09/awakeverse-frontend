@@ -92,3 +92,44 @@ export const KIND_ICON = {
   crowd: IconCrowd,
   graphic: IconGraphic,
 };
+// ── Series icons — append to src/components/Film/filmIcons.jsx ───────────────
+// Same `svg(s, children)` helper, 24×24 viewBox, currentColor, stroke 1.8. No
+// icon library — hand-drawn to stay on-brand (matches your #4).
+
+// series — stacked spines (a shelf of books, end-on)
+export const IconSeries = ({ s = 16 }) => svg(s, <>
+  <rect x="4" y="4" width="3.5" height="16" rx="1" />
+  <rect x="9" y="4" width="3.5" height="16" rx="1" />
+  <path d="M15.2 4.6l3.4.9a1 1 0 0 1 .7 1.2l-3 12" />
+</>);
+
+// book — a single spine/cover (an episode)
+export const IconBook = ({ s = 16 }) => svg(s, <>
+  <path d="M5 4h11a2 2 0 0 1 2 2v14H7a2 2 0 0 1-2-2V4z" />
+  <path d="M5 4a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2" />
+  <line x1="9" y1="4" x2="9" y2="20" />
+</>);
+
+// chain — continuity link (chain earlier episodes)
+export const IconChain = ({ s = 16 }) => svg(s, <>
+  <path d="M9.5 13.5a3.5 3.5 0 0 0 5 0l2-2a3.5 3.5 0 0 0-5-5l-1 1" />
+  <path d="M14.5 10.5a3.5 3.5 0 0 0-5 0l-2 2a3.5 3.5 0 0 0 5 5l1-1" />
+</>);
+
+// lock — a locked/reused character plate
+export const IconLock = ({ s = 14 }) => svg(s, <>
+  <rect x="5" y="11" width="14" height="9" rx="2" />
+  <path d="M8 11V8a4 4 0 0 1 8 0v3" />
+</>);
+
+// sparkle — a NEW character introduced this episode
+export const IconSparkle = ({ s = 14 }) => svg(s, <>
+  <path d="M12 3l1.6 5.4L19 10l-5.4 1.6L12 17l-1.6-5.4L5 10l5.4-1.6L12 3z" />
+</>);
+
+// refresh look — arrows curving around a face dot (a refresh, not a redraw)
+export const IconRefreshLook = ({ s = 15 }) => svg(s, <>
+  <path d="M20 11a8 8 0 1 0-.5 3" />
+  <polyline points="20 5 20 11 14 11" />
+  <circle cx="12" cy="12" r="1.3" fill="currentColor" stroke="none" />
+</>);
