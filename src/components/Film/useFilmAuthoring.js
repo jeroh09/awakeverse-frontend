@@ -173,7 +173,7 @@ export default function useFilmAuthoring() {
     sidRef.current = session_id || null;
     setSessionId(session_id || null);
     let sawScriptMeta = false;
-    setMessages((messages || []).map(m => {
+    setMessages((messages || []).filter(m => m.role !== 'system').map(m => {
       const sm = m.scriptMeta;
       if (sm) sawScriptMeta = true;
       return {

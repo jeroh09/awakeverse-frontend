@@ -45,7 +45,7 @@ function Book({ item, ordinal, openId, setOpenId, onOpen, onWatch, onPromote, on
         <span className="fs-vt">{item.title || 'Untitled'}</span>
         <span className="fs-dot" style={{ background: dot(item) }} />
       </div>
-      <div className="fs-cover">
+      <div className="fs-cover" onClick={isOpen ? () => setOpenId(null) : undefined}>
         <span className={`fs-st ${stKey(item.status)}`}>{stText(item.status)}</span>
         <button type="button" className="fs-cx" onClick={stop(() => setOpenId(null))} aria-label="Back to shelf">
           <IconChevron s={14} dir="left" />
@@ -243,8 +243,9 @@ export default function FilmLibrary({
         </div>
       </div>
 
+      <div className="fs-scroll">
       {view === 'films' ? (
-        <div style={{ marginTop: 20 }}>
+        <div>
           <div className="fs-lead">
             <h2>My Films</h2>
             <p>Series sit on their own shelf in episode order. Standalone films live on Singles. Tap a spine to open it.</p>
@@ -261,7 +262,7 @@ export default function FilmLibrary({
           )}
         </div>
       ) : (
-        <div style={{ marginTop: 20 }}>
+        <div>
           <div className="fs-lead">
             <h2>My Series</h2>
             <p>The cast and bible each series carries forward — and where the next episode begins.</p>
@@ -269,6 +270,7 @@ export default function FilmLibrary({
           <MySeries series={series} onNewEpisode={onNewEpisode} onOpen={open} onRefreshPlate={onRefreshPlate} />
         </div>
       )}
+      </div>
 
       {watching && <PlayerOverlay item={watching} onClose={() => setWatching(null)} />}
     </div>

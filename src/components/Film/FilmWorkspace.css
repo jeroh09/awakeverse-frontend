@@ -807,3 +807,26 @@
   padding:4px 11px;white-space:nowrap;}
 .film-cost-badge.is-short{color:var(--film-warning);background:rgba(245,158,11,.12);
   border-color:rgba(245,158,11,.4);}
+  /* ─────────────────────────────────────────────────────────────────────────────
+   APPEND to the END of src/components/Film/FilmWorkspace.css
+   #4 — Writers' room user messages: brighter + italic handwritten style so the
+   text reads clearly against the indigo bubble. Placed last so it wins over the
+   base .film-msg / .film-msg--me rules. (Caveat is already loaded for the
+   onboarding wordmark; it falls back to a system cursive if not.)
+   ───────────────────────────────────────────────────────────────────────────── */
+.film-msg--me{
+  color:#ffffff;
+  font-family:'Caveat','Segoe Script',cursive;
+  font-style:italic;
+  font-size:19px;
+  line-height:1.35;
+  font-weight:600;
+  letter-spacing:.2px;
+}
+/* keep the attachment chip in the normal UI font (not cursive) */
+.film-msg--me .film-msg-attach{
+  font-family:'Inter',system-ui,sans-serif;
+  font-style:normal;
+  font-size:12px;
+  font-weight:600;
+}
