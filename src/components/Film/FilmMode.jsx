@@ -5,7 +5,7 @@
 
 import React, { useState, useCallback } from 'react';
 import useFilmProjects from './useFilmProjects';
-import { useFilmSeries } from './useFilmSeries';
+import useFilmSeries from './useFilmSeries';
 import MyFilmsView from './MyFilmsView';
 import FilmWorkspaceContainer from './FilmWorkspaceContainer';
 import './FilmWorkspace.css';
