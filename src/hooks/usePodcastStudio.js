@@ -47,6 +47,10 @@
 //   audioBlob (Blob)        audio (form field)    POST /api/podcast/audio/upload
 //   audioUrl                audio_url             POST /api/podcast/audio/upload ← response
 //
+//   insertFile (File)       insert (form field)   POST /api/podcast/insert/upload
+//   insertUrl               insert_url            POST /api/podcast/insert/upload ← response
+//   session.lines[].insertUrl insert_url          POST /api/podcast/session body
+//
 //   session.speakers[].speakerId   speaker_id     POST /api/podcast/session body
 //   session.speakers[].displayName display_name   POST /api/podcast/session body
 //   session.speakers[].avatarRefUrl avatar_ref_url POST /api/podcast/session body
@@ -669,10 +673,80 @@ export default function usePodcastStudio() {
     }
   }, []);
 
-  // ── Build avatar ──────────────────────────────────────────────────────────
+  // ── Upload cutaway insert image ──────────────────────────────────────────
   //
-  // Frontend params:
-  //   photoUrl     → photo_url     (from uploadPhoto)
+  // A chart / product shot / screenshot the user attaches to a line. At
+  // render time that line becomes a cutaway (image on screen, speaker audio
+  // playing under it) instead of a talking head. See podcast_video.py.
+  //
+  // Frontend: insertFile (File from the line's attach picker)
+  // Backend:  'insert' form field → returns { insert_url }
+  // Returns:  insertUrl string
+  //
+  // Re-throws like uploadAudio — the page component owns the per-line UI
+  // state (insertingLineId, insertError), not the hook.
+  const uploadInsert = useCallback(async (insertFile) => {
+    if (!insertFile) throw new Error('No image provided');
+
+    const allowed = ['image/jpeg', 'image/jpg', 'image/png', 'image/webp'];
+    if (!allowed.includes(insertFile.type)) {
+      throw new Error('Please upload a JPEG, PNG, or WebP image.');
+    }
+    if (insertFile.size > 10 * 1024 * 1024) {
+      throw new Error('Image must be under 10MB.');
+    }
+
+    const formData = new FormData();
+    formData.append('insert', insertFile);
+
+    try {
+      const res = await fetch(`${API_BASE}/api/podcast/insert/upload`, {
+        method:      'POST',
+        headers:     { 'X-CSRF-Token': getCsrf() },
+        credentials: 'include',
+        body:        formData,
+      });
+
+      const data = await res.json();
+      if (!res.ok) {
+        ApiErrorService.log('usePodcastStudio.uploadInsert', res.status, data);
+        throw new Error(ApiErrorService.getMessage(res.status, data));
+      }
+
+      // New overlay route returns image_url; legacy cutaway route returns
+      // insert_url. Accept either so both paths work.
+      const url = data.image_url || data.insert_url;
+      console.log(`🖼️  Overlay/insert uploaded → ${url}`);
+      return url;
+
+    } catch (e) {
+      throw e;
+    }
+  }, []);
+
+  // ── Auto-suggest overlays from script lines ──────────────────────────────
+  //   lines (string[])  → lines           POST /api/podcast/suggest-overlays
+  //   suggestions       ← suggestions[]   [{ line_index, type, term, reason }]
+  // Returns the suggestions array (in line order). Never throws — suggestions
+  // are optional, so on any error we return an empty array and the editor
+  // simply shows no chips.
+  const suggestOverlays = useCallback(async (lines) => {
+    try {
+      const res = await fetch(`${API_BASE}/api/podcast/suggest-overlays`, {
+        method:      'POST',
+        headers:     { 'Content-Type': 'application/json', 'X-CSRF-Token': getCsrf() },
+        credentials: 'include',
+        body:        JSON.stringify({ lines }),
+      });
+      if (!res.ok) return [];
+      const data = await res.json();
+      return Array.isArray(data.suggestions) ? data.suggestions : [];
+    } catch (e) {
+      return [];
+    }
+  }, []);
+
+  // ── Build avatar ──────────────────────────────────────────────────────────
   //   displayName  → display_name
   //   envId        → env_id
   //   position     → position      ("left" | "right" | "center")
@@ -1353,6 +1427,10 @@ export default function usePodcastStudio() {
 
     // Audio (record mode)
     uploadAudio,      // (Blob)   → audioUrl
+
+    // Overlays (on-screen media integrated into the video)
+    uploadInsert,     // (File)   → imageUrl (or legacy insertUrl)
+    suggestOverlays,  // (string[]) → [{ line_index, type, term, reason }]
 
     // Voice clone (IVC)
     cloneVoice,       // (audioBlob, cloneName?) → { voiceId, cloneName }

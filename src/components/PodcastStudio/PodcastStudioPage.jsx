@@ -312,6 +312,8 @@ export default function PodcastStudioPage({ context, onClose }) {
     recordConsent,
     cloneVoice,
     loadVoiceClone,
+    uploadInsert,
+    suggestOverlays,
   } = usePodcastStudio();
 
   const credits = useCredits();
@@ -612,6 +614,15 @@ export default function PodcastStudioPage({ context, onClose }) {
   // Which speaker's inline picker is expanded (null = all collapsed).
   // One open at a time — clicking a different row closes the previous.
   const [voiceConfirmOpen, setVoiceConfirmOpen] = useState(null);
+
+  // ── Overlay editor state (on-screen media per line) ──────────────────────────
+  // overlayLineId: which line's visual editor is open. When set, the right
+  // panel swaps from Voice → Overlay for that line. null = panel shows Voice.
+  const [overlayLineId, setOverlayLineId] = useState(null);
+  // overlaySuggestions: { [lineId]: { type, term, reason } } from /suggest-overlays.
+  // Populated debounced after script edits (recommendation B). type 'none' = no chip.
+  const [overlaySuggestions, setOverlaySuggestions] = useState({});
+  const [overlayUploading, setOverlayUploading] = useState(false);
 
   // ── Tab done state ────────────────────────────────────────────────────────
   const tabsDone = {
@@ -954,6 +965,78 @@ if (context.topic) setTopic(context.topic);
       lineAudioRef.current = null;
     };
   }, [playingLineId, lineBlobUrls]);
+
+  // ── Overlay: accept an AI suggestion → seed the overlay spec + open editor ──
+  // product → product_in_hand mode (name pre-filled from the term).
+  // stat/chart → overlay mode, card shape, default small preset for the layout.
+  const acceptSuggestion = useCallback((lineId, sug) => {
+    const multi = speakers.length > 1;
+    const seed = sug.type === 'product'
+      ? { mode: 'product_in_hand', shape: 'card', productName: sug.term || '', imageUrl: null,
+          preset: null }
+      : { mode: 'overlay', shape: 'card', productName: '', imageUrl: null,
+          preset: multi ? 'corner_small_tr' : 'corner_card_tr' };
+    dispatchLines({ type: 'UPDATE', id: lineId, patch: { overlay: seed } });
+    setOverlayLineId(lineId);
+  }, [speakers, dispatchLines]);
+
+  // Patch the open line's overlay spec.
+  const patchOverlay = useCallback((patch) => {
+    if (!overlayLineId) return;
+    dispatchLines({ type: 'UPDATE', id: overlayLineId,
+      patch: { overlay: { ...(lines.find(l => l.id === overlayLineId)?.overlay || {}), ...patch } } });
+  }, [overlayLineId, lines, dispatchLines]);
+
+  const clearOverlay = useCallback((lineId) => {
+    dispatchLines({ type: 'UPDATE', id: lineId, patch: { overlay: null } });
+    setOverlayLineId(null);
+  }, [dispatchLines]);
+
+  // Upload an overlay image → /insert/upload → set imageUrl on the open line.
+  const handleOverlayUpload = useCallback(async (file) => {
+    if (!file || !overlayLineId) return;
+    setOverlayUploading(true);
+    try {
+      const url = await uploadInsert(file);
+      patchOverlay({ imageUrl: url });
+    } catch (e) {
+      console.warn('⚠️ overlay upload:', e.message);
+    } finally {
+      setOverlayUploading(false);
+    }
+  }, [overlayLineId, uploadInsert, patchOverlay]);
+
+  // ── Overlay: debounced auto-suggest (recommendation B) ──────────────────────
+  // ~1.5s after the user stops editing the script, ask the backend which lines
+  // could use a visual. Silent — populates chips, never blocks. Skips lines the
+  // user already gave an overlay or already dismissed.
+  useEffect(() => {
+    const withText = lines.filter(l => (l.text || '').trim().length > 0);
+    if (withText.length === 0) return;
+    const t = setTimeout(async () => {
+      try {
+        const texts = lines.map(l => l.text || '');
+        const suggestions = await suggestOverlays(texts);
+        if (!Array.isArray(suggestions)) return;
+        setOverlaySuggestions(prev => {
+          const next = { ...prev };
+          suggestions.forEach((s, i) => {
+            const line = lines[i];
+            if (!line) return;
+            // don't override a dismissed ('none') or an already-attached line
+            if (line.overlay) return;
+            if (prev[line.id]?.type === 'none') return;
+            next[line.id] = { type: s.type, term: s.term, reason: s.reason };
+          });
+          return next;
+        });
+      } catch (e) {
+        // suggestions are optional — never surface an error
+      }
+    }, 1500);
+    return () => clearTimeout(t);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [lines.map(l => l.text).join('\u0001')]);
 
   // ── Podcast download — proxy through backend to avoid Spaces CORS ───────
   // Direct fetch() to DigitalOcean Spaces CDN is blocked by CORS.
@@ -1325,11 +1408,37 @@ if (context.topic) setTopic(context.topic);
         }),
         lines: currentLines
           .filter(l => (l.text || '').trim() || l.audioUrl)
-          .map(l => ({
-            speaker_id: l.speakerId,
-            text:       l.text     || '',
-            audio_url:  l.audioUrl || null,
-          })),
+          .map(l => {
+            const row = {
+              speaker_id: l.speakerId,
+              text:       l.text     || '',
+              audio_url:  l.audioUrl || null,
+            };
+            // Per-line overlay (on-screen media) → snake_case for the backend.
+            // Only include a complete, valid spec so a half-filled editor never
+            // sends a broken overlay that the session validator would reject.
+            const o = l.overlay;
+            if (o && o.imageUrl) {
+              if (o.mode === 'product_in_hand') {
+                if ((o.productName || '').trim()) {
+                  row.overlay = {
+                    image_url:    o.imageUrl,
+                    mode:         'product_in_hand',
+                    shape:        'card',
+                    product_name: o.productName.trim(),
+                  };
+                }
+              } else if (o.preset) {
+                row.overlay = {
+                  image_url: o.imageUrl,
+                  mode:      'overlay',
+                  shape:     o.shape || 'card',
+                  preset:    o.preset,
+                };
+              }
+            }
+            return row;
+          }),
       };
 
       const res = await fetch(`${API_BASE}/api/podcast/session`, {
@@ -1939,26 +2048,15 @@ if (context.topic) setTopic(context.topic);
                   </button>
                 )}
                 {avatarBuilt && (
-                  <div style={{ display: 'flex', gap: '0.5rem', alignSelf: 'center', flexWrap: 'wrap', justifyContent: 'center' }}>
-                    <button className={styles.rebuildLink}
-                      onClick={() => {
-                        setAvatarBuilt(false); setBuildStage(null);
-                        setPhotoFile(null); setPhotoPreview(null);
-                        setGenPreviewUrl(null); setGenAttempt(0); setGenError(null); setGenRejected(false);
-                        setAvatarInputMode('upload');
-                      }}>
-                      Upload a different photo
-                    </button>
-                    <button className={styles.rebuildLink}
-                      onClick={() => {
-                        setAvatarBuilt(false); setBuildStage(null);
-                        setPhotoFile(null); setPhotoPreview(null);
-                        setGenPreviewUrl(null); setGenAttempt(0); setGenError(null); setGenRejected(false);
-                        setAvatarInputMode('generate');
-                      }}>
-                      Generate with AI instead
-                    </button>
-                  </div>
+                  <button className={styles.rebuildLink} style={{ alignSelf: 'center' }}
+                    onClick={() => {
+                      setAvatarBuilt(false); setBuildStage(null);
+                      setPhotoFile(null); setPhotoPreview(null);
+                      setGenPreviewUrl(null); setGenAttempt(0); setGenError(null); setGenRejected(false);
+                      setAvatarInputMode('upload');
+                    }}>
+                    Upload a different photo
+                  </button>
                 )}
               </div>
 
@@ -2323,6 +2421,48 @@ if (context.topic) setTopic(context.topic);
                               }}
                               rows={2}
                             />
+                            {/* Overlay: AI suggestion chip (tap to accept) or attached indicator */}
+                            {(() => {
+                              const sug = overlaySuggestions[line.id];
+                              if (line.overlay) {
+                                const modeLabel = line.overlay.mode === 'product_in_hand'
+                                  ? 'In hand'
+                                  : line.overlay.shape === 'cutout' ? 'Cutout' : 'Card';
+                                return (
+                                  <button
+                                    className={styles.overlayAttached}
+                                    onClick={() => setOverlayLineId(line.id)}
+                                    title="Edit this visual"
+                                  >
+                                    <span className={styles.overlayThumb}>
+                                      {line.overlay.productName ? '✋' : '▣'}
+                                    </span>
+                                    {modeLabel}{line.overlay.productName ? ` · ${line.overlay.productName}` : ''} — attached
+                                  </button>
+                                );
+                              }
+                              if (sug && sug.type && sug.type !== 'none') {
+                                const icon = sug.type === 'product' ? '✋' : sug.type === 'stat' ? '▣' : '▤';
+                                const verb = sug.type === 'product' ? 'Hold product' : sug.type === 'stat' ? 'Show stat' : 'Show chart';
+                                return (
+                                  <div className={`${styles.overlayChip} ${styles['overlayChip_' + sug.type] || ''}`}>
+                                    <button
+                                      className={styles.overlayChipMain}
+                                      onClick={() => acceptSuggestion(line.id, sug)}
+                                      title="Accept — opens the visual editor"
+                                    >
+                                      {icon} {verb}{sug.term ? `: ${sug.term}` : ''}?
+                                    </button>
+                                    <button
+                                      className={styles.overlayChipX}
+                                      onClick={() => setOverlaySuggestions(prev => ({ ...prev, [line.id]: { type: 'none' } }))}
+                                      title="Dismiss"
+                                    >✕</button>
+                                  </div>
+                                );
+                              }
+                              return null;
+                            })()}
                             {/* Live recording counter */}
                             {recordingLineId === line.id && (
                               <div className={styles.recordingCounter}>
@@ -2360,6 +2500,13 @@ if (context.topic) setTopic(context.topic);
                             )}
                           </div>
                           <div className={styles.lineButtons}>
+                            <button
+                              className={`${styles.lineBtn} ${overlayLineId === line.id ? styles.lineBtnActive : ''} ${line.overlay ? styles.lineBtnHasOverlay : ''}`}
+                              title={line.overlay ? 'Edit visual' : 'Add a visual'}
+                              onClick={() => setOverlayLineId(overlayLineId === line.id ? null : line.id)}
+                            >
+                              <Ic.Add />
+                            </button>
                             <button
                               className={`${styles.lineBtn} ${recordingLineId === line.id ? styles.lineBtnRecording : ''}`}
                               title={recordingLineId === line.id ? 'Stop recording' : uploadingLineId === line.id ? 'Uploading…' : 'Record line'}
@@ -2549,23 +2696,7 @@ if (context.topic) setTopic(context.topic);
                           title="Play"
                         >
                           {session.final_url ? (
-                            /* Safari/WebKit (Mac + iOS) does NOT preload video
-                               frames like Chrome — a bare <video> shows blank.
-                               The proven cross-browser fix is a media-fragment
-                               #t=0.001 on a <source> element, which forces even
-                               Safari to fetch + paint that first frame. No JS
-                               seek (it can make Safari re-blank). A real poster
-                               (thumbnail_url) still wins when present. */
-                            <video
-                              key={session.session_id}
-                              poster={session.thumbnail_url || undefined}
-                              className={styles.podcastThumb}
-                              preload="metadata"
-                              muted
-                              playsInline
-                            >
-                              <source src={`${session.final_url}#t=0.001`} type="video/mp4" />
-                            </video>
+                            <video src={session.final_url} className={styles.podcastThumb} muted />
                           ) : (
                             <div className={styles.podcastThumbPlaceholder}><Ic.Video /></div>
                           )}
@@ -2697,8 +2828,97 @@ if (context.topic) setTopic(context.topic);
         {/* ── RIGHT PANEL — contextual by tab ── */}
         <div className={styles.envPanel}>
 
-          {/* SCRIPT TAB → Voice picker */}
-          {activeTab === 'script' && (
+          {/* SCRIPT TAB → Voice picker, OR Overlay editor when a line's ＋ is open */}
+          {activeTab === 'script' && overlayLineId && (() => {
+            const oLine = lines.find(l => l.id === overlayLineId);
+            const ov = oLine?.overlay || {};
+            const multi = speakers.length > 1;
+            const presets = multi
+              ? [['corner_small_tl','tl'],['corner_small_tr','tr'],['corner_small_bl','bl'],['corner_small_br','br'],['lower_third_small_left','lt-l'],['lower_third_small_right','lt-r']]
+              : [['side_panel_left','sp-l'],['side_panel_right','sp-r'],['corner_card_tl','tl'],['corner_card_tr','tr'],['corner_card_bl','bl'],['corner_card_br','br'],['lower_third','lt']];
+            return (
+              <div className={styles.glassCard} style={{ height: '100%', display: 'flex', flexDirection: 'column', gap: '0.65rem' }}>
+                <div className={styles.overlayPanelHead}>
+                  <span className={styles.cardLabel} style={{ margin: 0 }}>Visual</span>
+                  <button className={styles.overlayPanelClose} onClick={() => setOverlayLineId(null)} title="Back to Voice">✕</button>
+                </div>
+                <div className={styles.overlaySwapTag}>↔ swapped from Voice</div>
+                {oLine?.text && <div className={styles.overlayLineQuote}>"{oLine.text.slice(0, 70)}{oLine.text.length > 70 ? '…' : ''}"</div>}
+
+                {/* Type */}
+                <div className={styles.overlaySeg}>Type</div>
+                <div className={styles.overlayTypes}>
+                  {[['card','▣','Glass card'],['cutout','✂','Cutout'],['product_in_hand','✋','In hand']].map(([val, ic, lbl]) => {
+                    const isOn = val === 'product_in_hand'
+                      ? ov.mode === 'product_in_hand'
+                      : ov.mode !== 'product_in_hand' && (ov.shape || 'card') === val;
+                    return (
+                      <button key={val}
+                        className={`${styles.overlayType} ${isOn ? styles.overlayTypeOn : ''}`}
+                        onClick={() => {
+                          if (val === 'product_in_hand') patchOverlay({ mode: 'product_in_hand', shape: 'card' });
+                          else patchOverlay({ mode: 'overlay', shape: val, preset: ov.preset || (multi ? 'corner_small_tr' : 'corner_card_tr') });
+                        }}>
+                        <span style={{ fontSize: '1.1rem' }}>{ic}</span><br/>{lbl}
+                      </button>
+                    );
+                  })}
+                </div>
+
+                {/* Product name (product_in_hand only) */}
+                {ov.mode === 'product_in_hand' && (
+                  <>
+                    <div className={styles.overlaySeg}>Product name</div>
+                    <input
+                      className={styles.overlayInput}
+                      value={ov.productName || ''}
+                      placeholder="e.g. AURA serum"
+                      onChange={e => patchOverlay({ productName: e.target.value })}
+                    />
+                  </>
+                )}
+
+                {/* Position (overlay/card & cutout only, layout-gated) */}
+                {ov.mode !== 'product_in_hand' && (
+                  <>
+                    <div className={styles.overlaySeg}>Position <span style={{ fontWeight: 400, color: 'var(--text-muted)' }}>· {multi ? '2 speakers → small' : 'solo'}</span></div>
+                    <div className={styles.overlayPosGrid}>
+                      {presets.map(([val]) => (
+                        <button key={val}
+                          className={`${styles.overlayPos} ${ov.preset === val ? styles.overlayPosOn : ''}`}
+                          onClick={() => patchOverlay({ preset: val })}
+                          title={val}>
+                          <span className={styles.overlayPosDot}
+                            data-pos={val.includes('left') || val.endsWith('_tl') || val.endsWith('_bl') ? 'l' : 'r'} />
+                        </button>
+                      ))}
+                    </div>
+                  </>
+                )}
+
+                {/* Image */}
+                <div className={styles.overlaySeg}>Image</div>
+                {ov.imageUrl ? (
+                  <div className={styles.overlayImageSet}>
+                    <img src={ov.imageUrl} alt="overlay" className={styles.overlayImagePreview} />
+                    <button className={styles.overlayReplace} onClick={() => patchOverlay({ imageUrl: null })}>Replace</button>
+                  </div>
+                ) : (
+                  <label className={styles.overlayDrop}>
+                    {overlayUploading ? 'Uploading…' : (ov.mode === 'product_in_hand' ? 'Upload the product image' : 'Upload chart / image')}
+                    <input type="file" accept="image/png,image/jpeg,image/webp" style={{ display: 'none' }}
+                      onChange={e => handleOverlayUpload(e.target.files?.[0])} />
+                  </label>
+                )}
+
+                {/* Remove */}
+                <button className={styles.overlayRemove} onClick={() => clearOverlay(overlayLineId)}>Remove visual from this line</button>
+              </div>
+            );
+          })()}
+
+          {/* SCRIPT TAB → Voice picker (default when no overlay line is open) */}
+          {activeTab === 'script' && !overlayLineId && (
             <div className={styles.glassCard} style={{ height: '100%', display: 'flex', flexDirection: 'column', gap: '0.65rem' }}>
               <div className={styles.cardLabel}>Voice</div>
 
