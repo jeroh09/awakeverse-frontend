@@ -1010,6 +1010,12 @@ if (context.topic) setTopic(context.topic);
   // ~1.5s after the user stops editing the script, ask the backend which lines
   // could use a visual. Silent — populates chips, never blocks. Skips lines the
   // user already gave an overlay or already dismissed.
+  // scriptSignature changes only when line TEXT changes (not on every render),
+  // so the effect re-runs on real edits, not on unrelated state updates.
+  const scriptSignature = useMemo(
+    () => lines.map(l => l.text || '').join('\u0001'),
+    [lines]
+  );
   useEffect(() => {
     const withText = lines.filter(l => (l.text || '').trim().length > 0);
     if (withText.length === 0) return;
@@ -1035,8 +1041,7 @@ if (context.topic) setTopic(context.topic);
       }
     }, 1500);
     return () => clearTimeout(t);
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [lines.map(l => l.text).join('\u0001')]);
+  }, [scriptSignature]);
 
   // ── Podcast download — proxy through backend to avoid Spaces CORS ───────
   // Direct fetch() to DigitalOcean Spaces CDN is blocked by CORS.
