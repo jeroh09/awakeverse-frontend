@@ -1939,15 +1939,26 @@ if (context.topic) setTopic(context.topic);
                   </button>
                 )}
                 {avatarBuilt && (
-                  <button className={styles.rebuildLink} style={{ alignSelf: 'center' }}
-                    onClick={() => {
-                      setAvatarBuilt(false); setBuildStage(null);
-                      setPhotoFile(null); setPhotoPreview(null);
-                      setGenPreviewUrl(null); setGenAttempt(0); setGenError(null); setGenRejected(false);
-                      setAvatarInputMode('upload');
-                    }}>
-                    Upload a different photo
-                  </button>
+                  <div style={{ display: 'flex', gap: '0.5rem', alignSelf: 'center', flexWrap: 'wrap', justifyContent: 'center' }}>
+                    <button className={styles.rebuildLink}
+                      onClick={() => {
+                        setAvatarBuilt(false); setBuildStage(null);
+                        setPhotoFile(null); setPhotoPreview(null);
+                        setGenPreviewUrl(null); setGenAttempt(0); setGenError(null); setGenRejected(false);
+                        setAvatarInputMode('upload');
+                      }}>
+                      Upload a different photo
+                    </button>
+                    <button className={styles.rebuildLink}
+                      onClick={() => {
+                        setAvatarBuilt(false); setBuildStage(null);
+                        setPhotoFile(null); setPhotoPreview(null);
+                        setGenPreviewUrl(null); setGenAttempt(0); setGenError(null); setGenRejected(false);
+                        setAvatarInputMode('generate');
+                      }}>
+                      Generate with AI instead
+                    </button>
+                  </div>
                 )}
               </div>
 
@@ -2538,7 +2549,23 @@ if (context.topic) setTopic(context.topic);
                           title="Play"
                         >
                           {session.final_url ? (
-                            <video src={session.final_url} className={styles.podcastThumb} muted />
+                            /* Safari/WebKit (Mac + iOS) does NOT preload video
+                               frames like Chrome — a bare <video> shows blank.
+                               The proven cross-browser fix is a media-fragment
+                               #t=0.001 on a <source> element, which forces even
+                               Safari to fetch + paint that first frame. No JS
+                               seek (it can make Safari re-blank). A real poster
+                               (thumbnail_url) still wins when present. */
+                            <video
+                              key={session.session_id}
+                              poster={session.thumbnail_url || undefined}
+                              className={styles.podcastThumb}
+                              preload="metadata"
+                              muted
+                              playsInline
+                            >
+                              <source src={`${session.final_url}#t=0.001`} type="video/mp4" />
+                            </video>
                           ) : (
                             <div className={styles.podcastThumbPlaceholder}><Ic.Video /></div>
                           )}
