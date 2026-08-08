@@ -418,6 +418,21 @@ export default function PodcastStudioPage({ context, onClose }) {
     return Math.ceil(words / 2.5 + audioOnly * 8 + wides * 4);
   }, [lines]);
   const [renderCost, setRenderCost] = useState(null);   // { price, affordable, ... }
+
+  // ── Voice enforcement (frontend gate) ────────────────────────────────────
+  // A speaker's voice is VALID only if its voiceId is present in the loaded
+  // voices list. This catches BOTH a phantom default id (never in the list) and
+  // a defunct id (removed from the list) — same rule the backend enforces.
+  // 'record' speakers need no voice. Until voices load, don't flag (avoid a
+  // false "invalid" flash).
+  const voiceGate = useMemo(() => {
+    if (!voices || voices.length === 0) return { ready: true, missing: [] };
+    const validIds = new Set(voices.map(v => v.voiceId));
+    const missing = speakers.filter(s =>
+      (s.voiceMode || 'tts') === 'tts' && !validIds.has(s.voiceId)
+    );
+    return { ready: missing.length === 0, missing };
+  }, [speakers, voices]);
   useEffect(() => {
     if (estSeconds > 0) credits.priceFor('podcast', 'default', estSeconds).then(setRenderCost);
     else setRenderCost(null);
@@ -1141,9 +1156,14 @@ if (context.topic) setTopic(context.topic);
 
   // ── Assign voice to speaker ───────────────────────────────────────────────
   const handleSelectVoice = useCallback((speakerId, voiceId) => {
-    setSpeakers(prev => prev.map(s =>
-      s.speakerId === speakerId ? { ...s, voiceId } : s
-    ));
+    console.log('🔊 [voice] click → speakerId:', speakerId, 'voiceId:', voiceId);
+    setSpeakers(prev => {
+      const next = prev.map(s =>
+        s.speakerId === speakerId ? { ...s, voiceId } : s
+      );
+      console.log('🔊 [voice] speakers after set:', next.map(s => ({ id: s.speakerId, voiceId: s.voiceId })));
+      return next;
+    });
     // Stop any playing preview
     if (previewAudioRef.current) {
       previewAudioRef.current.pause();
@@ -1381,6 +1401,19 @@ if (context.topic) setTopic(context.topic);
       return;
     }
 
+    // Hard voice guard — never submit a render with a speaker missing a real
+    // voice (matches the backend gate). The button is normally disabled for
+    // this, but guard here too so nothing slips through.
+    if (voices && voices.length > 0) {
+      const validIds = new Set(voices.map(v => v.voiceId));
+      const noVoice = speakers.filter(s => (s.voiceMode || 'tts') === 'tts' && !validIds.has(s.voiceId));
+      if (noVoice.length) {
+        setBuildError(`${noVoice.map(s => s.displayName || 'A speaker').join(', ')} needs a voice. Pick one on the Script tab before generating.`);
+        setActiveTab('script');
+        return;
+      }
+    }
+
     // Clear any previous credit block before a new attempt
     setCreditBlock(null);
     setGenerateError(null);
@@ -1487,7 +1520,7 @@ if (context.topic) setTopic(context.topic);
       setSubmitted(false);
     }
   }, [
-    speakers, selectedEnvId,
+    speakers, selectedEnvId, voices,
     startPollingSession, loadSessions, setActivePodcastRender,
   ]);
 
@@ -2842,7 +2875,7 @@ if (context.topic) setTopic(context.topic);
               ? [['corner_small_tl','tl'],['corner_small_tr','tr'],['corner_small_bl','bl'],['corner_small_br','br'],['lower_third_small_left','lt-l'],['lower_third_small_right','lt-r']]
               : [['side_panel_left','sp-l'],['side_panel_right','sp-r'],['corner_card_tl','tl'],['corner_card_tr','tr'],['corner_card_bl','bl'],['corner_card_br','br'],['lower_third','lt']];
             return (
-              <div className={styles.glassCard} style={{ height: '100%', display: 'flex', flexDirection: 'column', gap: '0.65rem' }}>
+              <div className={styles.glassCard} style={{ height: '100%', display: 'flex', flexDirection: 'column', gap: '0.65rem', overflowY: 'auto', minHeight: 0 }}>
                 <div className={styles.overlayPanelHead}>
                   <span className={styles.cardLabel} style={{ margin: 0 }}>Visual</span>
                   <button className={styles.overlayPanelClose} onClick={() => setOverlayLineId(null)} title="Back to Voice">✕</button>
@@ -3023,6 +3056,7 @@ if (context.topic) setTopic(context.topic);
                 ).map(spk => {
                   const filteredVoices = voices.filter(v => v.gender === voiceGenderFilter);
                   const selectedVoiceId = spk.voiceId;
+                  console.log('🔊 [voice] render — speaker', spk.speakerId, 'voiceId:', selectedVoiceId, '| grid voiceIds:', filteredVoices.map(v => v.voiceId), '| filter:', voiceGenderFilter);
                   return (
                     <div key={spk.speakerId}>
                       <div style={{
@@ -3462,10 +3496,16 @@ if (context.topic) setTopic(context.topic);
                 {credits.balance != null && ` · ${Number(credits.balance).toLocaleString()} left`}
               </span>
             )}
+            {!voiceGate.ready && (
+              <div className={styles.voiceGateWarn}>
+                ⚠ {voiceGate.missing.map(s => s.displayName || 'A speaker').join(', ')}
+                {voiceGate.missing.length === 1 ? ' needs' : ' need'} a voice — pick one on the Script tab before generating.
+              </div>
+            )}
             <button
               className={styles.generateBtn}
               onClick={handleGenerate}
-              disabled={submitted || state.status === 'rendering' || state.status === 'complete' || !speakers.length || !lines.length}
+              disabled={submitted || state.status === 'rendering' || state.status === 'complete' || !speakers.length || !lines.length || !voiceGate.ready}
             >
               {state.status === 'rendering'
                 ? <><span className={styles.spin}><Ic.Spin /></span> Rendering…</>
