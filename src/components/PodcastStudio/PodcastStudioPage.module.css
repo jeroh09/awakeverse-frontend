@@ -2981,26 +2981,43 @@
 }
 .overlayInput:focus { border-color: var(--indigo); }
 .overlayPosGrid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 0.35rem; }
+
+/* Shape-accurate position thumbnail — depicts where the visual actually lands */
 .overlayPos {
-  aspect-ratio: 16/9;
+  aspect-ratio: 16/10;
   border: 1px solid rgba(148,163,184,0.3);
   border-radius: 6px;
   background: transparent;
   position: relative;
   cursor: pointer;
   transition: all 0.15s;
+  overflow: hidden;
 }
 .overlayPos:hover { border-color: rgba(99,102,241,0.5); }
 .overlayPosOn { border: 2px solid var(--indigo); background: rgba(99,102,241,0.12); }
-.overlayPosDot {
+.overlayPosShape { position: absolute; background: var(--indigo); border-radius: 2px; display: block; }
+/* corners */
+.overlayPosShape[data-shape="tl"] { top: 12%; left: 8%;  width: 32%; height: 34%; }
+.overlayPosShape[data-shape="tr"] { top: 12%; right: 8%; width: 32%; height: 34%; }
+.overlayPosShape[data-shape="bl"] { bottom: 26%; left: 8%;  width: 32%; height: 34%; }
+.overlayPosShape[data-shape="br"] { bottom: 26%; right: 8%; width: 32%; height: 34%; }
+/* tall side panels */
+.overlayPosShape[data-shape="panel-l"] { top: 12%; left: 8%;  width: 26%; height: 62%; }
+.overlayPosShape[data-shape="panel-r"] { top: 12%; right: 8%; width: 26%; height: 62%; }
+/* wide bottom bars (lower-third) */
+.overlayPosShape[data-shape="bar"]   { bottom: 24%; left: 12%; right: 12%; height: 22%; }
+.overlayPosShape[data-shape="bar-l"] { bottom: 24%; left: 12%; width: 44%;  height: 22%; }
+.overlayPosShape[data-shape="bar-r"] { bottom: 24%; right: 12%; width: 44%; height: 22%; }
+.overlayPosLabel {
   position: absolute;
-  width: 30%; height: 34%;
-  background: var(--indigo);
-  border-radius: 2px;
-  top: 3px;
+  bottom: 2px; left: 0; right: 0;
+  text-align: center;
+  font-size: 0.52rem;
+  color: var(--text-muted);
+  font-family: 'Inter', sans-serif;
+  line-height: 1;
 }
-.overlayPosDot[data-pos="l"] { left: 3px; }
-.overlayPosDot[data-pos="r"] { right: 3px; }
+.overlayPosOn .overlayPosLabel { color: var(--indigo-light); }
 .overlayDrop {
   display: block;
   border: 1.5px dashed rgba(148,163,184,0.3);
@@ -3052,6 +3069,55 @@
   border-radius: 8px;
   padding: 0.5rem 0.75rem;
   margin-bottom: 0.5rem;
+  font-family: 'Inter', sans-serif;
+  line-height: 1.4;
+}
+
+/* Overlay image generation UI */
+.overlayGenDivider {
+  text-align: center;
+  font-size: 0.68rem;
+  color: var(--text-muted);
+  font-family: 'Inter', sans-serif;
+  margin: 0.2rem 0;
+}
+.overlayGenPrompt {
+  width: 100%;
+  background: rgba(20,27,46,0.6);
+  border: 1px solid rgba(148,163,184,0.3);
+  border-radius: 8px;
+  padding: 0.5rem 0.65rem;
+  color: var(--text-primary);
+  font-size: 0.78rem;
+  font-family: 'Inter', sans-serif;
+  outline: none;
+  resize: vertical;
+}
+.overlayGenPrompt:focus { border-color: var(--indigo); }
+.overlayGenBtn {
+  width: 100%;
+  background: rgba(99,102,241,0.15);
+  border: 1px solid var(--indigo);
+  border-radius: 8px;
+  color: var(--indigo-light);
+  font-size: 0.78rem;
+  font-weight: 600;
+  padding: 0.5rem;
+  cursor: pointer;
+  font-family: 'Inter', sans-serif;
+  transition: all 0.15s;
+}
+.overlayGenBtn:hover:not(:disabled) { background: rgba(99,102,241,0.25); }
+.overlayGenBtn:disabled { opacity: 0.5; cursor: not-allowed; }
+.overlayGenHint {
+  font-size: 0.62rem;
+  color: var(--text-muted);
+  font-family: 'Inter', sans-serif;
+  text-align: center;
+}
+.overlayGenError {
+  font-size: 0.68rem;
+  color: #F59E0B;
   font-family: 'Inter', sans-serif;
   line-height: 1.4;
 }

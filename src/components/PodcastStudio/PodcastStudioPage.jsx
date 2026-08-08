@@ -56,6 +56,26 @@ const VOICE_CLONE_SCRIPT = `Hi, I'm recording my voice for AwakeVerse. This samp
 const DEFAULT_GUEST_VOICE = 'pNInz6obpgDQGcFmaJgB'; // Adam — ElevenLabs neutral male
 const API_BASE = process.env.REACT_APP_API_URL || 'https://api.awakeverse.com';
 
+// Maps each overlay preset to a thumbnail shape key, so the position picker
+// draws where the visual actually lands (corner card, tall side panel, or the
+// wide lower-third bar) rather than an ambiguous dot.
+const POSITION_SHAPE = {
+  side_panel_left: 'panel-l', side_panel_right: 'panel-r',
+  corner_card_tl: 'tl', corner_card_tr: 'tr', corner_card_bl: 'bl', corner_card_br: 'br',
+  corner_small_tl: 'tl', corner_small_tr: 'tr', corner_small_bl: 'bl', corner_small_br: 'br',
+  lower_third: 'bar', lower_third_small_left: 'bar-l', lower_third_small_right: 'bar-r',
+};
+
+// Ideal image size per card shape (from real card geometry at 1280x720).
+// Shown as guidance so uploaded images fill the card cleanly under cover-fit.
+const IMAGE_SIZE_HINT = {
+  tl: 'wide 16:9 (~660×370)', tr: 'wide 16:9 (~660×370)',
+  bl: 'wide 16:9 (~660×370)', br: 'wide 16:9 (~660×370)',
+  'panel-l': 'portrait (~435×520)', 'panel-r': 'portrait (~435×520)',
+  bar: 'very wide banner (~1280×160)',
+  'bar-l': 'wide banner (~700×110)', 'bar-r': 'wide banner (~700×110)',
+};
+
 // ── Avatar build stages (mirrors ScanLegendModal stage pattern) ───────────────
 const BUILD_STAGES = [
   { key: 'uploading',  label: 'Uploading photo…'          },
@@ -314,6 +334,7 @@ export default function PodcastStudioPage({ context, onClose }) {
     loadVoiceClone,
     uploadInsert,
     suggestOverlays,
+    generateOverlayImage,
   } = usePodcastStudio();
 
   const credits = useCredits();
@@ -638,6 +659,9 @@ export default function PodcastStudioPage({ context, onClose }) {
   // Populated debounced after script edits (recommendation B). type 'none' = no chip.
   const [overlaySuggestions, setOverlaySuggestions] = useState({});
   const [overlayUploading, setOverlayUploading] = useState(false);
+  const [overlayGenPrompt, setOverlayGenPrompt] = useState('');
+  const [overlayGenerating, setOverlayGenerating] = useState(false);
+  const [overlayGenError, setOverlayGenError] = useState(null);
 
   // ── Tab done state ────────────────────────────────────────────────────────
   const tabsDone = {
@@ -1021,6 +1045,28 @@ if (context.topic) setTopic(context.topic);
     }
   }, [overlayLineId, uploadInsert, patchOverlay]);
 
+  // Generate an overlay image from a prompt, shape-matched to the position.
+  const handleOverlayGenerate = useCallback(async () => {
+    if (!overlayLineId || !overlayGenPrompt.trim()) return;
+    const oLine = lines.find(l => l.id === overlayLineId);
+    const ov = oLine?.overlay || {};
+    setOverlayGenerating(true);
+    setOverlayGenError(null);
+    try {
+      const url = await generateOverlayImage({
+        prompt: overlayGenPrompt.trim(),
+        preset: ov.preset || null,
+        shape:  ov.shape || 'card',
+      });
+      patchOverlay({ imageUrl: url });
+      setOverlayGenPrompt('');
+    } catch (e) {
+      setOverlayGenError(e.message || 'Generation failed');
+    } finally {
+      setOverlayGenerating(false);
+    }
+  }, [overlayLineId, overlayGenPrompt, lines, generateOverlayImage, patchOverlay]);
+
   // ── Overlay: debounced auto-suggest (recommendation B) ──────────────────────
   // ~1.5s after the user stops editing the script, ask the backend which lines
   // could use a visual. Silent — populates chips, never blocks. Skips lines the
@@ -1156,14 +1202,9 @@ if (context.topic) setTopic(context.topic);
 
   // ── Assign voice to speaker ───────────────────────────────────────────────
   const handleSelectVoice = useCallback((speakerId, voiceId) => {
-    console.log('🔊 [voice] click → speakerId:', speakerId, 'voiceId:', voiceId);
-    setSpeakers(prev => {
-      const next = prev.map(s =>
-        s.speakerId === speakerId ? { ...s, voiceId } : s
-      );
-      console.log('🔊 [voice] speakers after set:', next.map(s => ({ id: s.speakerId, voiceId: s.voiceId })));
-      return next;
-    });
+    setSpeakers(prev => prev.map(s =>
+      s.speakerId === speakerId ? { ...s, voiceId } : s
+    ));
     // Stop any playing preview
     if (previewAudioRef.current) {
       previewAudioRef.current.pause();
@@ -2872,8 +2913,23 @@ if (context.topic) setTopic(context.topic);
             const ov = oLine?.overlay || {};
             const multi = speakers.length > 1;
             const presets = multi
-              ? [['corner_small_tl','tl'],['corner_small_tr','tr'],['corner_small_bl','bl'],['corner_small_br','br'],['lower_third_small_left','lt-l'],['lower_third_small_right','lt-r']]
-              : [['side_panel_left','sp-l'],['side_panel_right','sp-r'],['corner_card_tl','tl'],['corner_card_tr','tr'],['corner_card_bl','bl'],['corner_card_br','br'],['lower_third','lt']];
+              ? [
+                  ['corner_small_tl', 'tl', 'Top left',    'Small card, top-left · fills best with a wide 16:9 image (~460×260)'],
+                  ['corner_small_tr', 'tr', 'Top right',   'Small card, top-right · wide 16:9 image (~460×260)'],
+                  ['corner_small_bl', 'bl', 'Bottom left', 'Small card, bottom-left · wide 16:9 image (~460×260)'],
+                  ['corner_small_br', 'br', 'Bottom right','Small card, bottom-right · wide 16:9 image (~460×260)'],
+                  ['lower_third_small_left',  'lt-l', 'Lower left',  'Short caption strip, lower-left · very wide banner (~700×110)'],
+                  ['lower_third_small_right', 'lt-r', 'Lower right', 'Short caption strip, lower-right · very wide banner (~700×110)'],
+                ]
+              : [
+                  ['side_panel_left',  'sp-l', 'Left panel',  'Tall panel down the left · portrait image (~435×520) — best for charts'],
+                  ['side_panel_right', 'sp-r', 'Right panel', 'Tall panel down the right · portrait image (~435×520) — best for charts'],
+                  ['corner_card_tl', 'tl', 'Top left',    'Card top-left · wide 16:9 image (~660×370)'],
+                  ['corner_card_tr', 'tr', 'Top right',   'Card top-right · wide 16:9 image (~660×370)'],
+                  ['corner_card_bl', 'bl', 'Bottom left', 'Card bottom-left · wide 16:9 image (~660×370)'],
+                  ['corner_card_br', 'br', 'Bottom right','Card bottom-right · wide 16:9 image (~660×370)'],
+                  ['lower_third', 'lt', 'Bottom bar', 'Wide strip across the bottom · very wide banner (~1280×160) — best for a headline or stat'],
+                ];
             return (
               <div className={styles.glassCard} style={{ height: '100%', display: 'flex', flexDirection: 'column', gap: '0.65rem', overflowY: 'auto', minHeight: 0 }}>
                 <div className={styles.overlayPanelHead}>
@@ -2886,13 +2942,18 @@ if (context.topic) setTopic(context.topic);
                 {/* Type */}
                 <div className={styles.overlaySeg}>Type</div>
                 <div className={styles.overlayTypes}>
-                  {[['card','▣','Glass card'],['cutout','✂','Cutout'],['product_in_hand','✋','In hand']].map(([val, ic, lbl]) => {
+                  {[
+                    ['card','▣','Glass card','A tilted frosted-glass panel beside the speaker — best for charts, stats, or quotes'],
+                    ['cutout','✂','Cutout','The image with its background removed, floating free (no card) — best for products or logos'],
+                    ['product_in_hand','✋','In hand','The speaker is composed holding the product as they talk — best for a physical item'],
+                  ].map(([val, ic, lbl, hint]) => {
                     const isOn = val === 'product_in_hand'
                       ? ov.mode === 'product_in_hand'
                       : ov.mode !== 'product_in_hand' && (ov.shape || 'card') === val;
                     return (
                       <button key={val}
                         className={`${styles.overlayType} ${isOn ? styles.overlayTypeOn : ''}`}
+                        title={hint}
                         onClick={() => {
                           if (val === 'product_in_hand') patchOverlay({ mode: 'product_in_hand', shape: 'card' });
                           else patchOverlay({ mode: 'overlay', shape: val, preset: ov.preset || (multi ? 'corner_small_tr' : 'corner_card_tr') });
@@ -2921,13 +2982,13 @@ if (context.topic) setTopic(context.topic);
                   <>
                     <div className={styles.overlaySeg}>Position <span style={{ fontWeight: 400, color: 'var(--text-muted)' }}>· {multi ? '2 speakers → small' : 'solo'}</span></div>
                     <div className={styles.overlayPosGrid}>
-                      {presets.map(([val]) => (
+                      {presets.map(([val, , label, hint]) => (
                         <button key={val}
                           className={`${styles.overlayPos} ${ov.preset === val ? styles.overlayPosOn : ''}`}
                           onClick={() => patchOverlay({ preset: val })}
-                          title={val}>
-                          <span className={styles.overlayPosDot}
-                            data-pos={val.includes('left') || val.endsWith('_tl') || val.endsWith('_bl') ? 'l' : 'r'} />
+                          title={hint}>
+                          <span className={styles.overlayPosShape} data-shape={POSITION_SHAPE[val] || 'tr'} />
+                          <span className={styles.overlayPosLabel}>{label}</span>
                         </button>
                       ))}
                     </div>
@@ -2935,18 +2996,51 @@ if (context.topic) setTopic(context.topic);
                 )}
 
                 {/* Image */}
-                <div className={styles.overlaySeg}>Image</div>
+                <div className={styles.overlaySeg}>Image
+                  {ov.mode !== 'product_in_hand' && ov.preset && (
+                    <span style={{ fontWeight: 400, color: 'var(--text-muted)' }}>
+                      {' · '}{IMAGE_SIZE_HINT[POSITION_SHAPE[ov.preset]] || ''}
+                    </span>
+                  )}
+                </div>
                 {ov.imageUrl ? (
                   <div className={styles.overlayImageSet}>
                     <img src={ov.imageUrl} alt="overlay" className={styles.overlayImagePreview} />
                     <button className={styles.overlayReplace} onClick={() => patchOverlay({ imageUrl: null })}>Replace</button>
                   </div>
                 ) : (
-                  <label className={styles.overlayDrop}>
-                    {overlayUploading ? 'Uploading…' : (ov.mode === 'product_in_hand' ? 'Upload the product image' : 'Upload chart / image')}
-                    <input type="file" accept="image/png,image/jpeg,image/webp" style={{ display: 'none' }}
-                      onChange={e => handleOverlayUpload(e.target.files?.[0])} />
-                  </label>
+                  <>
+                    <label className={styles.overlayDrop}>
+                      {overlayUploading ? 'Uploading…' : (ov.mode === 'product_in_hand' ? 'Upload the product image' : 'Upload chart / image')}
+                      <input type="file" accept="image/png,image/jpeg,image/webp" style={{ display: 'none' }}
+                        onChange={e => handleOverlayUpload(e.target.files?.[0])} />
+                    </label>
+                    <div className={styles.overlayGenDivider}>or generate one</div>
+                    <textarea
+                      className={styles.overlayGenPrompt}
+                      value={overlayGenPrompt}
+                      placeholder={ov.mode === 'product_in_hand'
+                        ? 'Describe the product… e.g. a sleek matte-black water bottle'
+                        : ov.shape === 'cutout'
+                          ? 'Describe the object… e.g. a glowing AI robot mascot'
+                          : 'Describe the visual… e.g. a bar chart trending upward'}
+                      rows={2}
+                      onChange={e => setOverlayGenPrompt(e.target.value)}
+                    />
+                    {overlayGenError && <div className={styles.overlayGenError}>{overlayGenError}</div>}
+                    <button
+                      className={styles.overlayGenBtn}
+                      disabled={overlayGenerating || !overlayGenPrompt.trim()}
+                      onClick={handleOverlayGenerate}
+                    >
+                      {overlayGenerating ? 'Generating…' : '✨ Generate image'}
+                    </button>
+                    <div className={styles.overlayGenHint}>
+                      {ov.mode !== 'product_in_hand' && ov.preset
+                        ? `Sized to fit ${(POSITION_SHAPE[ov.preset] || '').startsWith('panel') ? 'the tall panel' : (POSITION_SHAPE[ov.preset] || '').startsWith('bar') ? 'the wide bar' : 'the square card'}`
+                        : 'Pick a position first to match the shape'}
+                    </div>
+                  </>
                 )}
 
                 {/* Remove */}
@@ -3056,7 +3150,6 @@ if (context.topic) setTopic(context.topic);
                 ).map(spk => {
                   const filteredVoices = voices.filter(v => v.gender === voiceGenderFilter);
                   const selectedVoiceId = spk.voiceId;
-                  console.log('🔊 [voice] render — speaker', spk.speakerId, 'voiceId:', selectedVoiceId, '| grid voiceIds:', filteredVoices.map(v => v.voiceId), '| filter:', voiceGenderFilter);
                   return (
                     <div key={spk.speakerId}>
                       <div style={{
