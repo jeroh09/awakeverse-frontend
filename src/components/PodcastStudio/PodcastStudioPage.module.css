@@ -3030,20 +3030,23 @@
   transition: all 0.15s;
 }
 .overlayDrop:hover { border-color: rgba(99,102,241,0.5); color: var(--text-sec); }
-.overlayImageSet { display: flex; align-items: center; gap: 0.5rem; }
+.overlayImageSet { display: flex; flex-direction: column; gap: 0.5rem; }
 .overlayImagePreview {
-  width: 56px; height: 56px;
-  object-fit: cover;
+  width: 100%;
+  max-height: 160px;
+  object-fit: contain;
   border-radius: 8px;
   border: 1px solid rgba(148,163,184,0.3);
+  background: rgba(10,15,26,0.5);
 }
 .overlayReplace {
+  width: 100%;
   background: transparent;
   border: 1px solid rgba(148,163,184,0.3);
   border-radius: 7px;
   color: var(--text-sec);
-  font-size: 0.72rem;
-  padding: 0.35rem 0.7rem;
+  font-size: 0.75rem;
+  padding: 0.45rem 0.7rem;
   cursor: pointer;
 }
 .overlayReplace:hover { border-color: var(--indigo); color: var(--indigo-light); }
@@ -3074,50 +3077,88 @@
 }
 
 /* Overlay image generation UI */
-.overlayGenDivider {
+/* ── Image input: Upload card + Generate card ── */
+.overlayUploadCard {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.25rem;
+  border: 1.5px dashed rgba(148,163,184,0.35);
+  border-radius: 10px;
+  padding: 1rem 0.9rem;
   text-align: center;
-  font-size: 0.68rem;
-  color: var(--text-muted);
-  font-family: 'Inter', sans-serif;
+  cursor: pointer;
+  transition: all 0.15s;
+  background: rgba(20,27,46,0.35);
+}
+.overlayUploadCard:hover { border-color: var(--indigo); background: rgba(99,102,241,0.08); }
+.overlayUploadIcon { color: var(--indigo-light); display: flex; margin-bottom: 0.15rem; }
+.overlayUploadMain { font-size: 0.82rem; font-weight: 600; color: var(--text-primary); font-family: 'Inter', sans-serif; }
+.overlayUploadSub  { font-size: 0.66rem; color: var(--text-muted); font-family: 'Inter', sans-serif; }
+
+.overlayOrRow {
+  display: flex; align-items: center; gap: 0.6rem;
   margin: 0.2rem 0;
+}
+.overlayOrRow::before, .overlayOrRow::after {
+  content: ''; flex: 1; height: 1px; background: rgba(148,163,184,0.2);
+}
+.overlayOrRow span { font-size: 0.66rem; color: var(--text-muted); font-family: 'Inter', sans-serif; white-space: nowrap; }
+
+.overlayGenCard {
+  display: flex;
+  flex-direction: column;
+  gap: 0.55rem;
+  border: 1px solid rgba(99,102,241,0.25);
+  border-radius: 10px;
+  padding: 0.8rem;
+  background: rgba(99,102,241,0.05);
 }
 .overlayGenPrompt {
   width: 100%;
-  background: rgba(20,27,46,0.6);
+  background: rgba(10,15,26,0.6);
   border: 1px solid rgba(148,163,184,0.3);
   border-radius: 8px;
-  padding: 0.5rem 0.65rem;
+  padding: 0.6rem 0.7rem;
   color: var(--text-primary);
-  font-size: 0.78rem;
+  font-size: 0.8rem;
+  line-height: 1.45;
   font-family: 'Inter', sans-serif;
   outline: none;
   resize: vertical;
+  min-height: 4.5rem;
 }
+.overlayGenPrompt::placeholder { color: var(--text-muted); }
 .overlayGenPrompt:focus { border-color: var(--indigo); }
 .overlayGenBtn {
   width: 100%;
-  background: rgba(99,102,241,0.15);
-  border: 1px solid var(--indigo);
+  display: flex; align-items: center; justify-content: center; gap: 0.4rem;
+  background: var(--indigo);
+  border: none;
   border-radius: 8px;
-  color: var(--indigo-light);
-  font-size: 0.78rem;
+  color: #fff;
+  font-size: 0.82rem;
   font-weight: 600;
-  padding: 0.5rem;
+  padding: 0.6rem;
   cursor: pointer;
   font-family: 'Inter', sans-serif;
   transition: all 0.15s;
 }
-.overlayGenBtn:hover:not(:disabled) { background: rgba(99,102,241,0.25); }
-.overlayGenBtn:disabled { opacity: 0.5; cursor: not-allowed; }
+.overlayGenBtn:hover:not(:disabled) { background: var(--indigo-hover, #818CF8); }
+.overlayGenBtn:disabled { opacity: 0.45; cursor: not-allowed; }
 .overlayGenHint {
-  font-size: 0.62rem;
+  font-size: 0.64rem;
   color: var(--text-muted);
   font-family: 'Inter', sans-serif;
   text-align: center;
 }
 .overlayGenError {
-  font-size: 0.68rem;
+  font-size: 0.7rem;
   color: #F59E0B;
   font-family: 'Inter', sans-serif;
   line-height: 1.4;
+  background: rgba(245,158,11,0.1);
+  border: 1px solid rgba(245,158,11,0.3);
+  border-radius: 7px;
+  padding: 0.4rem 0.55rem;
 }

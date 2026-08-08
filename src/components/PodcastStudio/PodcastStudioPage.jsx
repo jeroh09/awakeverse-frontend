@@ -2933,7 +2933,7 @@ if (context.topic) setTopic(context.topic);
             return (
               <div className={styles.glassCard} style={{ height: '100%', display: 'flex', flexDirection: 'column', gap: '0.65rem', overflowY: 'auto', minHeight: 0 }}>
                 <div className={styles.overlayPanelHead}>
-                  <span className={styles.cardLabel} style={{ margin: 0 }}>Visual</span>
+                  <span className={styles.cardLabel} style={{ margin: 0 }}>Interactive Visuals</span>
                   <button className={styles.overlayPanelClose} onClick={() => setOverlayLineId(null)} title="Back to Voice">✕</button>
                 </div>
                 <div className={styles.overlaySwapTag}>↔ swapped from Voice</div>
@@ -3006,39 +3006,53 @@ if (context.topic) setTopic(context.topic);
                 {ov.imageUrl ? (
                   <div className={styles.overlayImageSet}>
                     <img src={ov.imageUrl} alt="overlay" className={styles.overlayImagePreview} />
-                    <button className={styles.overlayReplace} onClick={() => patchOverlay({ imageUrl: null })}>Replace</button>
+                    <button className={styles.overlayReplace} onClick={() => patchOverlay({ imageUrl: null })}>Replace image</button>
                   </div>
                 ) : (
                   <>
-                    <label className={styles.overlayDrop}>
-                      {overlayUploading ? 'Uploading…' : (ov.mode === 'product_in_hand' ? 'Upload the product image' : 'Upload chart / image')}
+                    {/* Upload card */}
+                    <label className={styles.overlayUploadCard}>
+                      <span className={styles.overlayUploadIcon}><Ic.Upload /></span>
+                      <span className={styles.overlayUploadMain}>
+                        {overlayUploading ? 'Uploading…' : (ov.mode === 'product_in_hand' ? 'Upload the product image' : 'Upload chart or image')}
+                      </span>
+                      <span className={styles.overlayUploadSub}>PNG, JPG or WebP · up to 10MB</span>
                       <input type="file" accept="image/png,image/jpeg,image/webp" style={{ display: 'none' }}
                         onChange={e => handleOverlayUpload(e.target.files?.[0])} />
                     </label>
-                    <div className={styles.overlayGenDivider}>or generate one</div>
-                    <textarea
-                      className={styles.overlayGenPrompt}
-                      value={overlayGenPrompt}
-                      placeholder={ov.mode === 'product_in_hand'
-                        ? 'Describe the product… e.g. a sleek matte-black water bottle'
-                        : ov.shape === 'cutout'
-                          ? 'Describe the object… e.g. a glowing AI robot mascot'
-                          : 'Describe the visual… e.g. a bar chart trending upward'}
-                      rows={2}
-                      onChange={e => setOverlayGenPrompt(e.target.value)}
-                    />
-                    {overlayGenError && <div className={styles.overlayGenError}>{overlayGenError}</div>}
-                    <button
-                      className={styles.overlayGenBtn}
-                      disabled={overlayGenerating || !overlayGenPrompt.trim()}
-                      onClick={handleOverlayGenerate}
-                    >
-                      {overlayGenerating ? 'Generating…' : '✨ Generate image'}
-                    </button>
-                    <div className={styles.overlayGenHint}>
-                      {ov.mode !== 'product_in_hand' && ov.preset
-                        ? `Sized to fit ${(POSITION_SHAPE[ov.preset] || '').startsWith('panel') ? 'the tall panel' : (POSITION_SHAPE[ov.preset] || '').startsWith('bar') ? 'the wide bar' : 'the square card'}`
-                        : 'Pick a position first to match the shape'}
+
+                    <div className={styles.overlayOrRow}><span>or generate with AI</span></div>
+
+                    {/* Generate card */}
+                    <div className={styles.overlayGenCard}>
+                      <textarea
+                        className={styles.overlayGenPrompt}
+                        value={overlayGenPrompt}
+                        placeholder={ov.mode === 'product_in_hand'
+                          ? 'Describe the product…\ne.g. a sleek matte-black water bottle, studio lighting'
+                          : ov.shape === 'cutout'
+                            ? 'Describe the object…\ne.g. a glowing blue AI robot mascot, friendly pose'
+                            : 'Describe the visual…\ne.g. a clean bar chart trending upward, indigo bars'}
+                        rows={4}
+                        onChange={e => setOverlayGenPrompt(e.target.value)}
+                      />
+                      {overlayGenError && <div className={styles.overlayGenError}>{overlayGenError}</div>}
+                      <button
+                        className={styles.overlayGenBtn}
+                        disabled={overlayGenerating || !overlayGenPrompt.trim()}
+                        onClick={handleOverlayGenerate}
+                      >
+                        {overlayGenerating
+                          ? <><span className={styles.spin}><Ic.Spin /></span> Generating…</>
+                          : '✨ Generate image'}
+                      </button>
+                      <div className={styles.overlayGenHint}>
+                        {ov.mode === 'product_in_hand'
+                          ? 'Composed into the shot — the avatar will hold it'
+                          : ov.preset
+                            ? `Sized to fill ${(POSITION_SHAPE[ov.preset] || '').startsWith('panel') ? 'the tall panel' : (POSITION_SHAPE[ov.preset] || '').startsWith('bar') ? 'the wide bar' : 'the 16:9 card'} · free`
+                            : 'Pick a position first to match the shape'}
+                      </div>
                     </div>
                   </>
                 )}
