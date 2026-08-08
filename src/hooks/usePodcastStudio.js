@@ -746,10 +746,23 @@ export default function usePodcastStudio() {
     }
   }, []);
 
+  // ── Generate an overlay image from a prompt (text-to-image) ──────────────
+  //   prompt/preset/shape → POST /generate-overlay-image → { image_url }
+  // Throws on failure (caller shows UI state), like uploadInsert. On Fal
+  // content rejection the thrown error carries the friendly message.
+  const generateOverlayImage = useCallback(async ({ prompt, preset, shape }) => {
+    const res = await fetch(`${API_BASE}/api/podcast/generate-overlay-image`, {
+      method:      'POST',
+      headers:     { 'Content-Type': 'application/json', 'X-CSRF-Token': getCsrf() },
+      credentials: 'include',
+      body:        JSON.stringify({ prompt, preset, shape }),
+    });
+    const data = await res.json().catch(() => ({}));
+    if (!res.ok) throw new Error(data.error || 'Image generation failed');
+    return data.image_url;
+  }, []);
+
   // ── Build avatar ──────────────────────────────────────────────────────────
-  //   displayName  → display_name
-  //   envId        → env_id
-  //   position     → position      ("left" | "right" | "center")
   //
   // Backend response → normalised:
   //   avatar_id       → avatarId
@@ -1431,6 +1444,7 @@ export default function usePodcastStudio() {
     // Overlays (on-screen media integrated into the video)
     uploadInsert,     // (File)   → imageUrl (or legacy insertUrl)
     suggestOverlays,  // (string[]) → [{ line_index, type, term, reason }]
+    generateOverlayImage,  // ({prompt,preset,shape}) → image_url
 
     // Voice clone (IVC)
     cloneVoice,       // (audioBlob, cloneName?) → { voiceId, cloneName }
