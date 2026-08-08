@@ -746,10 +746,12 @@ export default function usePodcastStudio() {
     }
   }, []);
 
-  // ── Generate an overlay image from a prompt (text-to-image) ──────────────
-  //   prompt/preset/shape → POST /generate-overlay-image → { image_url }
-  // Throws on failure (caller shows UI state), like uploadInsert. On Fal
-  // content rejection the thrown error carries the friendly message.
+  // ── Generate an overlay image from a prompt (async: enqueue + poll) ──────
+  //   POST /generate-overlay-image → { job_id }, then poll
+  //   GET  /generate-overlay-image/status/{job_id} until complete|failed.
+  // Generation takes ~2 min (longer than the gateway timeout), so it MUST be
+  // async — a direct request would 504. Returns image_url on success; throws
+  // with a friendly message on failure/rejection.
   const generateOverlayImage = useCallback(async ({ prompt, preset, shape }) => {
     const res = await fetch(`${API_BASE}/api/podcast/generate-overlay-image`, {
       method:      'POST',
@@ -757,9 +759,29 @@ export default function usePodcastStudio() {
       credentials: 'include',
       body:        JSON.stringify({ prompt, preset, shape }),
     });
-    const data = await res.json().catch(() => ({}));
-    if (!res.ok) throw new Error(data.error || 'Image generation failed');
-    return data.image_url;
+    const start = await res.json().catch(() => ({}));
+    if (!res.ok || !start.job_id) {
+      throw new Error(start.error || 'Could not start image generation');
+    }
+    const jobId = start.job_id;
+
+    // Poll status. ~2 min typical; cap at ~4 min (80 × 3s) before giving up.
+    for (let i = 0; i < 80; i++) {
+      await new Promise(r => setTimeout(r, 3000));
+      let st;
+      try {
+        const sres = await fetch(
+          `${API_BASE}/api/podcast/generate-overlay-image/status/${jobId}`,
+          { credentials: 'include' });
+        st = await sres.json();
+      } catch (e) {
+        continue;   // transient network blip — keep polling
+      }
+      if (st.status === 'complete' && st.image_url) return st.image_url;
+      if (st.status === 'failed') throw new Error(st.error || 'Image generation failed');
+      // else 'processing' — keep polling
+    }
+    throw new Error('Image generation timed out. Please try again.');
   }, []);
 
   // ── Build avatar ──────────────────────────────────────────────────────────

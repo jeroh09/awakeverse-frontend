@@ -2933,7 +2933,7 @@ if (context.topic) setTopic(context.topic);
             return (
               <div className={styles.glassCard} style={{ height: '100%', display: 'flex', flexDirection: 'column', gap: '0.65rem', overflowY: 'auto', minHeight: 0 }}>
                 <div className={styles.overlayPanelHead}>
-                  <span className={styles.cardLabel} style={{ margin: 0 }}>Interactive Visuals</span>
+                  <span className={styles.cardLabel} style={{ margin: 0 }}>Visual</span>
                   <button className={styles.overlayPanelClose} onClick={() => setOverlayLineId(null)} title="Back to Voice">✕</button>
                 </div>
                 <div className={styles.overlaySwapTag}>↔ swapped from Voice</div>
@@ -3043,7 +3043,7 @@ if (context.topic) setTopic(context.topic);
                         onClick={handleOverlayGenerate}
                       >
                         {overlayGenerating
-                          ? <><span className={styles.spin}><Ic.Spin /></span> Generating…</>
+                          ? <><span className={styles.spin}><Ic.Spin /></span> Generating… (~2 min)</>
                           : '✨ Generate image'}
                       </button>
                       <div className={styles.overlayGenHint}>
