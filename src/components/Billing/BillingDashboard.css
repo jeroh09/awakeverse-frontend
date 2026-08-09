@@ -1478,3 +1478,40 @@
   .billing-header.compact .header-title { flex-direction: column; gap: 0; align-items: flex-start; }
   .billing-header.compact .header-title p { white-space: normal; }
 }
+
+/* ── Current-plan / usage panel (top-tier users, in place of the dead-end message) ── */
+.current-plan-card {
+  background: rgba(20, 27, 46, 0.9);
+  border: 1px solid rgba(99, 102, 241, 0.2);
+  border-radius: 16px;
+  padding: 1.25rem 1.4rem;
+  box-shadow: 0 12px 34px rgba(0, 0, 0, 0.35);
+}
+.cpc-head { display: flex; flex-wrap: wrap; align-items: center; gap: 0.6rem; }
+.cpc-icon {
+  width: 40px; height: 40px; border-radius: 10px; display: grid; place-items: center;
+  color: #fff; background: linear-gradient(135deg, #10B981, #6366F1); flex-shrink: 0;
+}
+.cpc-title { display: flex; align-items: center; gap: 0.6rem; }
+.cpc-title h3 { font-family: 'Syne', sans-serif; font-size: 1.15rem; font-weight: 700; margin: 0; }
+.cpc-sub { width: 100%; font-size: 0.8rem; color: rgba(255, 255, 255, 0.6); margin: 0.15rem 0 0; }
+
+.cpc-stats {
+  display: grid; grid-template-columns: repeat(3, 1fr); gap: 1rem;
+  margin-top: 1.1rem; padding-top: 1.1rem; border-top: 1px solid rgba(99, 102, 241, 0.12);
+}
+.cpc-stat { display: flex; flex-direction: column; gap: 0.2rem; }
+.cpc-label { font-size: 0.68rem; text-transform: uppercase; letter-spacing: 0.6px; color: rgba(255,255,255,0.55); font-weight: 600; }
+.cpc-value { font-family: 'Syne', sans-serif; font-weight: 700; font-size: 1.2rem; color: #F1F5F9; }
+.cpc-value.accent { color: #6366F1; }
+
+.cpc-buckets { margin-top: 1.1rem; padding-top: 1.1rem; border-top: 1px solid rgba(99, 102, 241, 0.12); }
+.cpc-buckets ul { list-style: none; margin: 0.5rem 0 0; padding: 0; display: flex; flex-direction: column; gap: 0.4rem; }
+.cpc-buckets li { display: flex; align-items: center; gap: 0.6rem; font-size: 0.82rem; }
+.cpc-bucket-name { text-transform: capitalize; color: rgba(255,255,255,0.85); min-width: 70px; }
+.cpc-bucket-pts { font-family: 'Syne', sans-serif; font-weight: 700; color: #F1F5F9; }
+.cpc-bucket-exp { font-size: 0.72rem; color: rgba(255,255,255,0.5); }
+
+@media (max-width: 960px) {
+  .cpc-stats { grid-template-columns: 1fr 1fr; }
+}

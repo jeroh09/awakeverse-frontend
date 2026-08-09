@@ -498,10 +498,55 @@ const BillingDashboard = () => {
               </div>
             </>
           ) : (
-            <div className="empty-state">
-              <Crown size={48} className="empty-icon" />
-              <h3>You're on the top plan</h3>
-              <p>You already have access to everything AwakeVerse offers.</p>
+            <div className="current-plan-card">
+              <div className="cpc-head">
+                <div className="cpc-icon"><Crown size={22} /></div>
+                <div className="cpc-title">
+                  <h3>{subscription?.tier_display || 'Your plan'}</h3>
+                  <span className={`card-badge ${isCancelled ? 'cancelled' : 'active'}`}>
+                    {isCancelled ? 'Cancelled' : 'Active'}
+                  </span>
+                </div>
+                <p className="cpc-sub">You're on our top plan — here's your usage this cycle.</p>
+              </div>
+
+              <div className="cpc-stats">
+                <div className="cpc-stat">
+                  <span className="cpc-label">Credits available</span>
+                  <span className="cpc-value accent">{fmtCredits(credits.balance)}</span>
+                </div>
+                <div className="cpc-stat">
+                  <span className="cpc-label">Reserved</span>
+                  <span className="cpc-value">{fmtCredits(credits.held || 0)}</span>
+                </div>
+                <div className="cpc-stat">
+                  <span className="cpc-label">{isCancelled ? 'Access until' : 'Renews'}</span>
+                  <span className="cpc-value">
+                    {subscription?.billing_cycle_end
+                      ? new Date(subscription.billing_cycle_end).toLocaleDateString('en-GB', {
+                          day: 'numeric', month: 'short', year: 'numeric'
+                        })
+                      : '—'}
+                  </span>
+                </div>
+              </div>
+
+              {Array.isArray(credits.buckets) && credits.buckets.length > 0 && (
+                <div className="cpc-buckets">
+                  <span className="cpc-label">Credit breakdown</span>
+                  <ul>
+                    {credits.buckets.map((b, i) => (
+                      <li key={i}>
+                        <span className="cpc-bucket-name">{b.bucket}</span>
+                        <span className="cpc-bucket-pts">{fmtCredits(b.points)}</span>
+                        {b.expires_in_days != null && (
+                          <span className="cpc-bucket-exp">expires in {b.expires_in_days}d</span>
+                        )}
+                      </li>
+                    ))}
+                  </ul>
+                </div>
+              )}
             </div>
           )
         )}
