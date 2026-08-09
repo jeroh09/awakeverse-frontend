@@ -178,11 +178,13 @@ export function UserProvider({ children }) {
   }, [user]);
 
   const getTierDisplayName = useCallback((tier) => {
+    // Canonical display names — must match SUBSCRIPTION_TIERS on the backend:
+    // starter=EXPLORER, pro=PROFESSIONAL, unlimited=CREATOR.
     const tierMap = {
       'free': 'Free',
-      'starter': 'Starter',
+      'starter': 'EXPLORER',
       'pro': 'PROFESSIONAL',
-      'unlimited': 'Unlimited'
+      'unlimited': 'CREATOR'
     };
     return tierMap[tier?.toLowerCase()] || 'Free';
   }, []);
