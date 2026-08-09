@@ -496,10 +496,6 @@ const BillingDashboard = () => {
                   />
                 ))}
               </div>
-              <p className="tier-note">
-                <sup className="video-beat-info">i</sup>
-                A video is one 5-second beat.
-              </p>
             </>
           ) : (
             <div className="empty-state">
