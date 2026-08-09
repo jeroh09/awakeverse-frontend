@@ -323,17 +323,15 @@ const BillingDashboard = () => {
     <div className="billing-container">
       {showDebug && <BillingDebugPanel user={user} billing={billing} />}
       
-      {/* Header */}
-      <div className="billing-header">
-        <div className="header-content">
-          <button onClick={() => navigate(-1)} className="back-button">
-            <ArrowLeft size={18} />
-            Back
-          </button>
-          <div className="header-title">
-            <h1>Billing</h1>
-            <p>Manage your subscription, credits, and payment history</p>
-          </div>
+      {/* Header — compact single row: Back inline with title */}
+      <div className="billing-header compact">
+        <button onClick={() => navigate(-1)} className="back-button">
+          <ArrowLeft size={18} />
+          Back
+        </button>
+        <div className="header-title">
+          <h1>Billing</h1>
+          <p>Manage your subscription, credits, and payment history</p>
         </div>
       </div>
 
@@ -624,49 +622,53 @@ const UpgradeCard = ({ tier, onUpgrade }) => {
 
   return (
     <div className={`upgrade-card ${tier.recommended ? 'popular' : ''}`}>
-      {tier.recommended && <div className="popular-badge">POPULAR</div>}
+      {/* POPULAR as a full-width top ribbon — its own row, never overlaps the name */}
+      {tier.recommended && <div className="popular-ribbon">★ POPULAR</div>}
 
-      <div className="tier-header">
-        <div className="tier-icon">
-          {tier.tier_name === 'unlimited' ? <Crown size={24} /> : <Sparkles size={24} />}
+      <div className={`upgrade-card-body ${tier.recommended ? '' : 'no-ribbon'}`}>
+        <div className="tier-header">
+          <div className="tier-icon">
+            {tier.tier_name === 'unlimited' ? <Crown size={24} /> : <Sparkles size={24} />}
+          </div>
+          <div className="tier-name">{tier.tier_display}</div>
         </div>
-        <div className="tier-name">{tier.tier_display}</div>
+
+        <div className="tier-price">
+          <span className="price-amount">£{tier.price_gbp}</span>
+          <span className="price-period">/month</span>
+        </div>
+
+        {tier.tagline && <div className="tier-tagline">{tier.tagline}</div>}
+
+        {/* CTA on top — above the feature list, so it's reachable without scrolling the card */}
+        <button
+          onClick={() => onUpgrade(tier.tier_name)}
+          className="btn btn-primary full-width"
+        >
+          Upgrade to {tier.tier_display}
+          <ArrowUpRight size={18} />
+        </button>
+
+        <ul className="tier-features">
+          {tier.features && tier.features.map((feature, index) => (
+            <li key={index}>
+              <CheckCircle size={16} />
+              <span>
+                {feature}
+                {isVideoFeature(feature) && (
+                  <sup
+                    className="video-beat-info"
+                    title={`1 video = one ${beatSeconds}-second beat`}
+                    aria-label={`A video is one ${beatSeconds}-second beat`}
+                  >
+                    i
+                  </sup>
+                )}
+              </span>
+            </li>
+          ))}
+        </ul>
       </div>
-
-      <div className="tier-price">
-        <span className="price-amount">£{tier.price_gbp}</span>
-        <span className="price-period">/month</span>
-      </div>
-
-      {tier.tagline && <div className="tier-tagline">{tier.tagline}</div>}
-
-      <ul className="tier-features">
-        {tier.features && tier.features.map((feature, index) => (
-          <li key={index}>
-            <CheckCircle size={16} />
-            <span>
-              {feature}
-              {isVideoFeature(feature) && (
-                <sup
-                  className="video-beat-info"
-                  title={`1 video = one ${beatSeconds}-second beat`}
-                  aria-label={`A video is one ${beatSeconds}-second beat`}
-                >
-                  i
-                </sup>
-              )}
-            </span>
-          </li>
-        ))}
-      </ul>
-
-      <button
-        onClick={() => onUpgrade(tier.tier_name)}
-        className="btn btn-primary full-width"
-      >
-        Upgrade to {tier.tier_display}
-        <ArrowUpRight size={18} />
-      </button>
     </div>
   );
 };
