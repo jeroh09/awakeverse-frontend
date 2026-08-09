@@ -1394,7 +1394,9 @@
   border-radius: 14px;
   padding: 0.75rem 1.25rem;
   box-shadow: 0 12px 34px rgba(0, 0, 0, 0.35);
-  flex-shrink: 0;
+  flex: 0 0 auto;      /* never grow/shrink vertically */
+  min-height: 0;       /* defeat any global min-height (e.g. section{min-height:100vh}) */
+  height: auto;
 }
 .strip-stat { display: flex; flex-direction: column; gap: 0.1rem; min-width: 0; }
 .strip-stat + .strip-stat { border-left: 1px solid rgba(99, 102, 241, 0.12); padding-left: 1.2rem; }

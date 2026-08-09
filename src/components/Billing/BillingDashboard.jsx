@@ -350,8 +350,10 @@ const BillingDashboard = () => {
       {/* Main Content — compact, single-viewport: plan strip on top, pay CTAs above the fold */}
       <div className="billing-content compact">
 
-        {/* Account strip: Current Plan + Credits + Payment condensed to one bar */}
-        <section className="account-strip">
+        {/* Account strip: Current Plan + Credits + Payment condensed to one bar.
+            NOTE: must NOT be a <section> — a global `section { min-height: 100vh }`
+            app rule stretches it to full height. A plain div avoids that. */}
+        <div className="account-strip">
           <div className="strip-stat">
             <span className="strip-label">Current plan</span>
             <div className="strip-row">
@@ -440,7 +442,7 @@ const BillingDashboard = () => {
               </button>
             </div>
           )}
-        </section>
+        </div>
 
         {/* Cancelled notice (compact) */}
         {isCancelled && (
