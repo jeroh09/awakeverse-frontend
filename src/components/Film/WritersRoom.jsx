@@ -31,13 +31,54 @@ function Runs({ runs }) {
 
 function MarkdownBlocks({ text }) {
   const blocks = parseMarkdown(text);
-  return blocks.map((b, i) => {
-    if (b.type === 'h1') return <h1 key={i}>{b.text}</h1>;
-    if (b.type === 'h2') return <h2 key={i}>{b.text}</h2>;
-    if (b.type === 'h3') return <h3 key={i}>{b.text}</h3>;
-    if (b.type === 'li') return <li key={i}><Runs runs={b.runs} /></li>;
-    return <p key={i}><Runs runs={b.runs} /></p>;
+  const out = [];
+  let listBuf = null;   // batch consecutive <li> into one <ul>/<ol>
+
+  const flushList = (key) => {
+    if (!listBuf) return;
+    const Tag = listBuf.ordered ? 'ol' : 'ul';
+    out.push(<Tag key={`l${key}`} className="film-md-list">{listBuf.items}</Tag>);
+    listBuf = null;
+  };
+
+  blocks.forEach((b, i) => {
+    if (b.type === 'li') {
+      const ordered = !!b.ordered;
+      if (!listBuf || listBuf.ordered !== ordered) { flushList(i); listBuf = { ordered, items: [] }; }
+      listBuf.items.push(<li key={i}><Runs runs={b.runs} /></li>);
+      return;
+    }
+    flushList(i);
+    if (b.type === 'h1') out.push(<h1 key={i}>{b.text}</h1>);
+    else if (b.type === 'h2') out.push(<h2 key={i}>{b.text}</h2>);
+    else if (b.type === 'h3') out.push(<h3 key={i}>{b.text}</h3>);
+    else if (b.type === 'hr') out.push(<hr key={i} className="film-md-hr" />);
+    else if (b.type === 'quote') out.push(<blockquote key={i} className="film-md-quote"><Runs runs={b.runs} /></blockquote>);
+    else if (b.type === 'code') out.push(<pre key={i} className="film-md-code"><code>{b.text}</code></pre>);
+    else if (b.type === 'table') {
+      out.push(
+        <div key={i} className="film-md-tablewrap">
+          <table className="film-md-table">
+            <thead>
+              <tr>{b.header.map((cell, c) => (
+                <th key={c} style={{ textAlign: b.align[c] || 'left' }}><Runs runs={cell} /></th>
+              ))}</tr>
+            </thead>
+            <tbody>
+              {b.rows.map((row, r) => (
+                <tr key={r}>{row.map((cell, c) => (
+                  <td key={c} style={{ textAlign: b.align[c] || 'left' }}><Runs runs={cell} /></td>
+                ))}</tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      );
+    }
+    else out.push(<p key={i}><Runs runs={b.runs} /></p>);
   });
+  flushList('end');
+  return out;
 }
 
 function DurationBadge({ seconds }) {
@@ -47,13 +88,18 @@ function DurationBadge({ seconds }) {
 
 function CharacterChip({ name, desc }) {
   const [open, setOpen] = useState(false);
+  // Defensive: names should already be clean (backend strips markdown from the
+  // script), but strip here too so a stray ** never shows in a chip.
+  const clean = (s) => (s || '').replace(/\*\*([^*]+?)\*\*/g, '$1')
+    .replace(/\*([^*]+?)\*/g, '$1').replace(/`([^`]+?)`/g, '$1').trim();
+  const cn = clean(name), cd = clean(desc);
   return (
     <>
       <button className={`film-char-chip${open ? ' is-open' : ''}`} onClick={() => setOpen(o => !o)}>
-        {name} <IconChevron s={8} dir={open ? 'down' : 'right'} />
+        {cn} <IconChevron s={8} dir={open ? 'down' : 'right'} />
       </button>
       {open && (
-        <div className="film-char-detail"><b>{name}</b> — {desc}</div>
+        <div className="film-char-detail"><b>{cn}</b> — {cd}</div>
       )}
     </>
   );
