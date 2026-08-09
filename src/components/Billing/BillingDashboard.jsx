@@ -7,11 +7,10 @@ import { useNavigate } from 'react-router-dom';
 import { useUser } from '../../contexts/UserContext';
 import BillingDebugPanel from './BillingDebugPanel';
 import { 
-  CreditCard, Calendar, TrendingUp, Download, 
-  AlertCircle, CheckCircle, XCircle, 
-  RefreshCw, Receipt, Shield, Zap,
+  CreditCard, CheckCircle, XCircle, 
+  RefreshCw, Receipt,
   Clock, Crown, Sparkles, ArrowUpRight,
-  ArrowLeft, X, ChevronDown, ExternalLink
+  ArrowLeft, X, ChevronDown, AlertCircle
 } from 'lucide-react';
 
 import useBilling from '../../hooks/useBilling';
@@ -52,6 +51,9 @@ const BillingDashboard = () => {
   
   // Provider selection state
   const [selectedProvider, setSelectedProvider] = useState('stripe');
+
+  // Compact layout: which panel is showing (plans on top so pay CTAs are above the fold)
+  const [activeTab, setActiveTab] = useState('plans');
   
   // Cancel modal state
   const [showCancelModal, setShowCancelModal] = useState(false);
@@ -347,265 +349,173 @@ const BillingDashboard = () => {
         </div>
       )}
 
-      {/* Main Content */}
-      <div className="billing-content">
-        
-        {/* Grid Layout */}
-        <div className="billing-grid">
-          
-          {/* Current Subscription Card */}
-          <div className="billing-card">
-            <div className="card-header">
-              <h2 className="card-title">
-                <CreditCard size={24} />
-                Current Plan
-              </h2>
+      {/* Main Content — compact, single-viewport: plan strip on top, pay CTAs above the fold */}
+      <div className="billing-content compact">
+
+        {/* Account strip: Current Plan + Credits + Payment condensed to one bar */}
+        <section className="account-strip">
+          <div className="strip-stat">
+            <span className="strip-label">Current plan</span>
+            <div className="strip-row">
+              <span className="strip-value">{subscription?.tier_display || 'Free'}</span>
               <span className={`card-badge ${isCancelled ? 'cancelled' : 'active'}`}>
                 {isCancelled ? 'Cancelled' : 'Active'}
               </span>
             </div>
-
-            <div className="subscription-info">
-              <div className="info-block">
-                <div className="info-label">Your Plan</div>
-                <div className="info-value large">
-                  {subscription?.tier_display || 'Free'}
-                </div>
-                {!isFree && subscription?.price && (
-                  <div className="info-subvalue">
-                    £{subscription.price}/month
-                  </div>
-                )}
-              </div>
-
-              <div className="info-block">
-                <div className="info-label">
-                  {subscription?.unlimited ? 'Messages This Month' : 'Usage This Month'}
-                </div>
-                <div className="info-value">
-                  {subscription?.messages_used || 0}
-                  {!subscription?.unlimited && ` / ${subscription?.message_limit || 150}`}
-                </div>
-                {subscription?.unlimited && (
-                  <div className="info-subvalue">Unlimited</div>
-                )}
-              </div>
-            </div>
-
-            {/* Usage Bar (only if not unlimited) */}
-            {!subscription?.unlimited && subscription?.message_limit && (
-              <div className="usage-bar">
-                <div className="usage-label">
-                  <span>Message Usage</span>
-                  <strong>
-                    {Math.round((subscription.messages_used / subscription.message_limit) * 100)}%
-                  </strong>
-                </div>
-                <div className="progress-bar">
-                  <div 
-                    className="progress-fill"
-                    style={{ 
-                      width: `${Math.min((subscription.messages_used / subscription.message_limit) * 100, 100)}%` 
-                    }}
-                  />
-                </div>
-              </div>
-            )}
-
-            {/* Next Billing Date */}
-            {!isFree && subscription?.billing_cycle_end && (
-              <div className="billing-info">
-                <Calendar size={18} />
-                <div>
-                  <div className="billing-label">
-                    {isCancelled ? 'Access Until' : 'Next Billing Date'}
-                  </div>
-                  <div className="billing-date">
-                    {new Date(subscription.billing_cycle_end).toLocaleDateString('en-GB', {
-                      day: 'numeric',
-                      month: 'long',
-                      year: 'numeric'
-                    })}
-                  </div>
-                </div>
-              </div>
-            )}
-
-            {/* Action Buttons */}
-            {!isFree && isActive && (
-              <div className="button-group">
-                <button 
-                  onClick={handleUpdatePayment}
-                  className="btn btn-secondary"
-                  disabled={updatingPayment}
-                >
-                  {updatingPayment ? (
-                    <>
-                      <RefreshCw size={18} className="spinning" />
-                      Loading...
-                    </>
-                  ) : (
-                    <>
-                      <CreditCard size={18} />
-                      Update Payment
-                    </>
-                  )}
-                </button>
-                <button 
-                  onClick={handleOpenCancelModal}
-                  className="btn btn-danger"
-                  disabled={cancelling}
-                >
-                  <XCircle size={18} />
-                  Cancel Subscription
-                </button>
-              </div>
-            )}
-
-            {isCancelled && (
-              <div className="cancelled-notice">
-                <AlertCircle size={20} />
-                <div>
-                  <strong>Subscription Cancelled</strong>
-                  <p>You'll have access until {new Date(subscription.billing_cycle_end).toLocaleDateString('en-GB')}</p>
-                </div>
-              </div>
+            {!isFree && subscription?.billing_cycle_end ? (
+              <span className="strip-sub">
+                {isCancelled ? 'Access until ' : 'Renews '}
+                {new Date(subscription.billing_cycle_end).toLocaleDateString('en-GB', {
+                  day: 'numeric', month: 'short', year: 'numeric'
+                })}
+              </span>
+            ) : (
+              <span className="strip-sub">Upgrade to unlock more</span>
             )}
           </div>
 
-          {/* Credits Card */}
-          <div className="billing-card">
-            <div className="card-header">
-              <h2 className="card-title">
-                <Zap size={24} />
-                Credits
-              </h2>
-              <span className="card-badge active">
-                {(credits.tier || 'free').toUpperCase()}
+          <div className="strip-stat">
+            <span className="strip-label">Credits</span>
+            <div className="strip-row">
+              <span className="strip-value accent">{fmtCredits(credits.balance)}</span>
+              <span className="strip-sub">
+                {credits.held > 0 ? `${fmtCredits(credits.held)} reserved` : 'available'}
               </span>
             </div>
-
-            <div className="subscription-info">
-              <div className="info-block">
-                <div className="info-label">Available</div>
-                <div className="info-value large">{fmtCredits(credits.balance)}</div>
-                <div className="info-subvalue">credits</div>
-              </div>
-
-              <div className="info-block">
-                <div className="info-label">Reserved</div>
-                <div className="info-value">{fmtCredits(credits.held)}</div>
-                <div className="info-subvalue">
-                  {credits.held > 0 ? 'in renders now' : 'none in flight'}
-                </div>
-              </div>
-            </div>
-
-            {credits.buckets && credits.buckets.length > 0 && (
-              <div className="credit-buckets">
-                {credits.buckets.map((b) => (
-                  <div className="credit-bucket" key={b.bucket}>
-                    <span className="credit-bucket-name">
-                      {BUCKET_LABEL[b.bucket] || b.bucket}
-                    </span>
-                    <span className="credit-bucket-pts">{fmtCredits(b.points)}</span>
-                    <span className="credit-bucket-exp">{creditExpiry(b.expires_in_days)}</span>
-                  </div>
-                ))}
-              </div>
-            )}
+            <span className="strip-sub">{(credits.tier || 'free').toUpperCase()} allowance</span>
           </div>
 
-          {/* Payment Method Card */}
-          {!isFree && subscription?.payment_provider && (
-            <div className="billing-card">
-              <div className="card-header">
-                <h2 className="card-title">
-                  <Shield size={24} />
-                  Payment Method
-                </h2>
+          {!isFree && subscription?.payment_provider ? (
+            <div className="strip-stat">
+              <span className="strip-label">Payment</span>
+              <div className="strip-row">
+                <span className="strip-value sm">
+                  {subscription.payment_provider === 'stripe' ? 'Stripe' : 'PayPal'}
+                </span>
               </div>
-
-              <div className="info-block payment-provider">
-                <div className="info-label">Provider</div>
-                <div className="provider-display">
-                  {subscription.payment_provider === 'stripe' ? (
-                    <CreditCard size={24} className="provider-icon" />
-                  ) : (
-                    <div className="paypal-badge">PayPal</div>
-                  )}
-                  <span className="provider-name">
-                    {subscription.payment_provider === 'stripe' ? 'Stripe' : 'PayPal'}
-                  </span>
-                </div>
-              </div>
-
               {subscription.last_payment_date && (
-                <div className="info-block">
-                  <div className="info-label">Last Payment</div>
-                  <div className="payment-detail">
-                    {subscription.last_payment_amount && (
-                      <div className="payment-amount">£{subscription.last_payment_amount}</div>
-                    )}
-                    <div className="info-subvalue">
-                      {new Date(subscription.last_payment_date).toLocaleDateString('en-GB')} • Successful
-                    </div>
-                  </div>
-                </div>
+                <span className="strip-sub">
+                  {subscription.last_payment_amount ? `Last £${subscription.last_payment_amount} · ` : ''}
+                  {new Date(subscription.last_payment_date).toLocaleDateString('en-GB')}
+                </span>
               )}
-
-              <div className="button-group">
-                <button 
-                  onClick={handleUpdatePayment}
-                  className="btn btn-secondary full-width"
-                  disabled={updatingPayment}
-                >
-                  {updatingPayment ? 'Loading...' : 'Update Payment Method'}
-                </button>
+            </div>
+          ) : (
+            <div className="strip-stat">
+              <span className="strip-label">Usage this month</span>
+              <div className="strip-row">
+                <span className="strip-value sm">
+                  {subscription?.messages_used || 0}
+                  {!subscription?.unlimited && ` / ${subscription?.message_limit || 150}`}
+                </span>
               </div>
+              <span className="strip-sub">{subscription?.unlimited ? 'Unlimited' : 'messages'}</span>
             </div>
           )}
 
-          {/* Upgrade Options (Full Width) */}
-          {hasUpgrades && (
-            <div className="billing-card full-width">
-              <div className="card-header">
-                <h2 className="card-title">
-                  <TrendingUp size={24} />
-                  {isFree ? 'Choose Your Plan' : 'Upgrade Your Plan'}
-                </h2>
-              </div>
+          {!isFree && isActive && (
+            <div className="strip-actions">
+              <button
+                onClick={handleUpdatePayment}
+                className="btn btn-secondary sm"
+                disabled={updatingPayment}
+              >
+                {updatingPayment ? (
+                  <>
+                    <RefreshCw size={15} className="spinning" />
+                    Loading…
+                  </>
+                ) : (
+                  <>
+                    <CreditCard size={15} />
+                    Update payment
+                  </>
+                )}
+              </button>
+              <button
+                onClick={handleOpenCancelModal}
+                className="btn btn-danger sm"
+                disabled={cancelling}
+              >
+                <XCircle size={15} />
+                Cancel
+              </button>
+            </div>
+          )}
+        </section>
 
-              {/* Provider Selector */}
-              <ProviderSelector 
-                selectedProvider={selectedProvider}
-                onSelectProvider={setSelectedProvider}
-              />
+        {/* Cancelled notice (compact) */}
+        {isCancelled && (
+          <div className="cancelled-notice compact">
+            <AlertCircle size={18} />
+            <div>
+              <strong>Subscription cancelled</strong>
+              <p>You'll have access until {new Date(subscription.billing_cycle_end).toLocaleDateString('en-GB')}</p>
+            </div>
+          </div>
+        )}
 
-              {/* Upgrade Cards */}
-              <div className="upgrade-grid">
+        {/* Control row: Plans / History tabs + provider segmented control */}
+        <div className="control-row">
+          <div className="tab-switch">
+            <button
+              type="button"
+              className={`tab ${activeTab === 'plans' ? 'active' : ''}`}
+              onClick={() => setActiveTab('plans')}
+            >
+              {isFree ? 'Choose your plan' : 'Plans'}
+            </button>
+            <button
+              type="button"
+              className={`tab ${activeTab === 'history' ? 'active' : ''}`}
+              onClick={() => setActiveTab('history')}
+            >
+              Transaction history
+              {transactions.length > 0 && <span className="tab-count">{transactions.length}</span>}
+            </button>
+          </div>
+
+          {activeTab === 'plans' && hasUpgrades && (
+            <ProviderSelector
+              selectedProvider={selectedProvider}
+              onSelectProvider={setSelectedProvider}
+            />
+          )}
+        </div>
+
+        {/* PLANS panel — tier cards with the pay CTAs, on top */}
+        {activeTab === 'plans' && (
+          hasUpgrades ? (
+            <>
+              <div className="upgrade-grid compact">
                 {upgradeOptions.map(tier => (
-                  <UpgradeCard 
+                  <UpgradeCard
                     key={tier.tier_name}
                     tier={tier}
                     onUpgrade={handleUpgrade}
                   />
                 ))}
               </div>
-
-              {/* Legend: clarifies the video unit (hover tooltips don't work on touch) */}
               <p className="tier-note">
                 <sup className="video-beat-info">i</sup>
                 A video is one 5-second beat.
               </p>
+            </>
+          ) : (
+            <div className="empty-state">
+              <Crown size={48} className="empty-icon" />
+              <h3>You're on the top plan</h3>
+              <p>You already have access to everything AwakeVerse offers.</p>
             </div>
-          )}
+          )
+        )}
 
-          {/* Transaction History (Full Width) */}
-          <div className="billing-card full-width">
+        {/* HISTORY panel — same transaction table, tab-swapped so it never forces a scroll */}
+        {activeTab === 'history' && (
+          <div className="billing-card">
             <div className="card-header">
               <h2 className="card-title">
-                <Receipt size={24} />
+                <Receipt size={20} />
                 Transaction History
               </h2>
               {transactions.length > 0 && (
@@ -619,15 +529,14 @@ const BillingDashboard = () => {
               <EmptyTransactions isFree={isFree} />
             ) : (
               <>
-                <TransactionTable 
+                <TransactionTable
                   transactions={transactions}
                   onViewReceipt={billing.openReceipt}
                 />
-                
-                {/* Load More Button */}
+
                 {transactions.length >= transactionLimit && transactionLimit < 200 && (
                   <div className="load-more-section">
-                    <button 
+                    <button
                       onClick={handleLoadMore}
                       className="btn btn-secondary"
                       disabled={loadingMore}
@@ -652,8 +561,8 @@ const BillingDashboard = () => {
               </>
             )}
           </div>
+        )}
 
-        </div>
       </div>
 
       {/* Cancel Modal */}
@@ -681,34 +590,24 @@ const BillingDashboard = () => {
 // ============================================================================
 
 const ProviderSelector = ({ selectedProvider, onSelectProvider }) => (
-  <div className="provider-selector">
-    <div className="provider-selector-header">
-      <Shield size={20} className="provider-icon" />
-      <label>Select Payment Method</label>
-    </div>
-    <div className="provider-options">
+  <div className="provider-seg">
+    <span className="provider-seg-label">Pay with</span>
+    <div className="seg">
       <button
-        className={`provider-button ${selectedProvider === 'stripe' ? 'active' : ''}`}
+        type="button"
+        className={`seg-btn ${selectedProvider === 'stripe' ? 'active' : ''}`}
         onClick={() => onSelectProvider('stripe')}
       >
-        <CreditCard size={18} />
-        <div className="provider-info">
-          <span className="provider-name">Stripe</span>
-          <span className="provider-desc">Credit/Debit Card</span>
-        </div>
-        {selectedProvider === 'stripe' && <CheckCircle size={18} className="check-icon" />}
+        <CreditCard size={15} />
+        <span>Stripe</span>
       </button>
-      
       <button
-        className={`provider-button ${selectedProvider === 'paypal' ? 'active' : ''}`}
+        type="button"
+        className={`seg-btn ${selectedProvider === 'paypal' ? 'active' : ''}`}
         onClick={() => onSelectProvider('paypal')}
       >
-        <div className="paypal-icon">PP</div>
-        <div className="provider-info">
-          <span className="provider-name">PayPal</span>
-          <span className="provider-desc">PayPal Account</span>
-        </div>
-        {selectedProvider === 'paypal' && <CheckCircle size={18} className="check-icon" />}
+        <span className="pp-tag">PP</span>
+        <span>PayPal</span>
       </button>
     </div>
   </div>
