@@ -592,6 +592,12 @@ const BillingDashboard = () => {
                   />
                 ))}
               </div>
+
+              {/* Legend: clarifies the video unit (hover tooltips don't work on touch) */}
+              <p className="tier-note">
+                <sup className="video-beat-info">i</sup>
+                A video is one 5-second beat.
+              </p>
             </div>
           )}
 
@@ -712,42 +718,59 @@ const ProviderSelector = ({ selectedProvider, onSelectProvider }) => (
 // UPGRADE CARD COMPONENT
 // ============================================================================
 
-const UpgradeCard = ({ tier, onUpgrade }) => (
-  <div className={`upgrade-card ${tier.recommended ? 'popular' : ''}`}>
-    {tier.recommended && <div className="popular-badge">POPULAR</div>}
-    
-    <div className="tier-header">
-      <div className="tier-icon">
-        {tier.tier_name === 'unlimited' ? <Crown size={24} /> : <Sparkles size={24} />}
+const UpgradeCard = ({ tier, onUpgrade }) => {
+  // A "video" = one N-second beat. Beat length comes from the tier's quota (fallback 5s).
+  const beatSeconds = (tier.quota && tier.quota.beat_seconds) || 5;
+  const isVideoFeature = (text) => /\bvideos?\b/i.test(text);
+
+  return (
+    <div className={`upgrade-card ${tier.recommended ? 'popular' : ''}`}>
+      {tier.recommended && <div className="popular-badge">POPULAR</div>}
+
+      <div className="tier-header">
+        <div className="tier-icon">
+          {tier.tier_name === 'unlimited' ? <Crown size={24} /> : <Sparkles size={24} />}
+        </div>
+        <div className="tier-name">{tier.tier_display}</div>
       </div>
-      <div className="tier-name">{tier.tier_display}</div>
+
+      <div className="tier-price">
+        <span className="price-amount">£{tier.price_gbp}</span>
+        <span className="price-period">/month</span>
+      </div>
+
+      {tier.tagline && <div className="tier-tagline">{tier.tagline}</div>}
+
+      <ul className="tier-features">
+        {tier.features && tier.features.map((feature, index) => (
+          <li key={index}>
+            <CheckCircle size={16} />
+            <span>
+              {feature}
+              {isVideoFeature(feature) && (
+                <sup
+                  className="video-beat-info"
+                  title={`1 video = one ${beatSeconds}-second beat`}
+                  aria-label={`A video is one ${beatSeconds}-second beat`}
+                >
+                  i
+                </sup>
+              )}
+            </span>
+          </li>
+        ))}
+      </ul>
+
+      <button
+        onClick={() => onUpgrade(tier.tier_name)}
+        className="btn btn-primary full-width"
+      >
+        Upgrade to {tier.tier_display}
+        <ArrowUpRight size={18} />
+      </button>
     </div>
-    
-    <div className="tier-price">
-      <span className="price-amount">£{tier.price_gbp}</span>
-      <span className="price-period">/month</span>
-    </div>
-    
-    {tier.tagline && <div className="tier-tagline">{tier.tagline}</div>}
-    
-    <ul className="tier-features">
-      {tier.features && tier.features.map((feature, index) => (
-        <li key={index}>
-          <CheckCircle size={16} />
-          <span>{feature}</span>
-        </li>
-      ))}
-    </ul>
-    
-    <button 
-      onClick={() => onUpgrade(tier.tier_name)}
-      className="btn btn-primary full-width"
-    >
-      Upgrade to {tier.tier_display}
-      <ArrowUpRight size={18} />
-    </button>
-  </div>
-);
+  );
+};
 
 // ============================================================================
 // TRANSACTION TABLE COMPONENT

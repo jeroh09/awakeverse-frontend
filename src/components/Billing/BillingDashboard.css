@@ -1308,3 +1308,37 @@
   font-size: 0.72rem;
   color: rgba(255, 255, 255, 0.55);
 }
+/* ── Video beat marker + legend (a "video" = one 5-second beat) ──────────────── */
+.video-beat-info {
+  display: inline-grid;
+  place-items: center;
+  width: 14px;
+  height: 14px;
+  margin-left: 4px;
+  border-radius: 50%;
+  font-family: 'Syne', sans-serif;
+  font-size: 0.62rem;
+  font-weight: 800;
+  font-style: italic;
+  line-height: 1;
+  color: #818CF8;
+  background: rgba(99, 102, 241, 0.18);
+  border: 1px solid rgba(99, 102, 241, 0.35);
+  cursor: help;
+  vertical-align: super;
+}
+
+.tier-note {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.45rem;
+  margin-top: 1.25rem;
+  font-family: 'Inter', sans-serif;
+  font-size: 0.8rem;
+  color: rgba(255, 255, 255, 0.55);
+}
+
+.tier-note .video-beat-info {
+  cursor: default;
+}
