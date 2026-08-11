@@ -17,6 +17,7 @@ import PremiumCharacterCard from '../components/PremiumCharacterCard';
 import theme from '../design-system/tokens';
 import { getFirstName } from '../utils/getFirstName';
 import LauncherPlaque from '../components/launcher/LauncherPlaque';
+import ActionPill from '../components/launcher/ActionPill';
 import ScrollShell from '../components/ScrollShell';
 import NetflixRightPanel from '../components/NetflixRightPanel';
 import LegendsMapPanel from '../components/LegendsMapPanel/LegendsMapPanel';
@@ -1497,236 +1498,21 @@ const ChatLauncherPage = ({ onStartChat, discoveredCharacters = [] }) => {
             )}
             </LauncherPlaque>
 
-            {/* ADD BUTTONS CONTAINER */}
-            <div style={{
-              display: 'flex',
-              gap: theme.spacing.md,
-              marginTop: theme.spacing.lg,
-              width: '100%',
-              maxWidth: '400px'
-            }}>
-              {/* CREATE Button */}
-              <button
-                onClick={() => {
-                  const myCharsCategory = enhancedCategories.find(c => c.key === 'my_characters');
-                  if (myCharsCategory) {
-                    handleCreateCharacterClick();
-                  }
-                }}
-                style={{
-                  flex: 1,
-                  padding: `${theme.spacing.md} ${theme.spacing.lg}`,
-                  borderRadius: theme.borderRadius.md,
-                  fontSize: theme.typography.sizes.body,
-                  fontWeight: theme.typography.weights.semibold,
-                  fontFamily: theme.typography.fonts.body,
-                  cursor: 'pointer',
-                  transition: theme.transitions.normal,
-                  border: 'none',
-                  outline: 'none',
-                  background: `linear-gradient(135deg, ${theme.colors.accent.primary} 0%, ${theme.colors.accent.hover} 100%)`,
-                  color: '#fff',
-                  boxShadow: theme.shadows.elevation02
-                }}
-                onMouseEnter={(e) => {
-                  e.currentTarget.style.transform = 'translateY(-2px)';
-                  e.currentTarget.style.boxShadow = `${theme.shadows.elevation03}, ${theme.shadows.glow}`;
-                }}
-                onMouseLeave={(e) => {
-                  e.currentTarget.style.transform = 'translateY(0)';
-                  e.currentTarget.style.boxShadow = theme.shadows.elevation02;
-                }}
-              >
-                Create
-              </button>
-
-              {/* DISCOVER Button */}
-              <button
-                onClick={() => switchView(VIEW_STATES.MARKET_HUB)}
-                style={{
-                  flex: 1,
-                  padding: `${theme.spacing.md} ${theme.spacing.lg}`,
-                  borderRadius: theme.borderRadius.md,
-                  fontSize: theme.typography.sizes.body,
-                  fontWeight: theme.typography.weights.semibold,
-                  fontFamily: theme.typography.fonts.body,
-                  cursor: 'pointer',
-                  transition: theme.transitions.normal,
-                  border: `1px solid ${theme.colors.border.strong}`,
-                  outline: 'none',
-                  background: theme.colors.background.interactive,
-                  color: theme.colors.text.primary,
-                  boxShadow: theme.shadows.elevation01
-                }}
-                onMouseEnter={(e) => {
-                  e.currentTarget.style.transform = 'translateY(-2px)';
-                  e.currentTarget.style.background = theme.colors.background.peak;
-                  e.currentTarget.style.borderColor = theme.colors.accent.primary;
-                }}
-                onMouseLeave={(e) => {
-                  e.currentTarget.style.transform = 'translateY(0)';
-                  e.currentTarget.style.background = theme.colors.background.interactive;
-                  e.currentTarget.style.borderColor = theme.colors.border.strong;
-                }}
-              >
-                Discover
-              </button>
-
-              {/* Map/Scan Toggle Pill */}
-              <div style={{ flex: 1, position: 'relative' }}>
-                {toolHint && (
-                  <div style={{
-                    position: 'absolute',
-                    bottom: 'calc(100% + 7px)',
-                    left: '50%',
-                    transform: 'translateX(-50%)',
-                    background: theme.colors.background.surface,
-                    border: `1px solid ${theme.colors.border.medium}`,
-                    borderRadius: theme.borderRadius.sm,
-                    padding: '4px 10px',
-                    fontSize: theme.typography.sizes.caption,
-                    fontFamily: theme.typography.fonts.body,
-                    color: theme.colors.text.secondary,
-                    whiteSpace: 'nowrap',
-                    pointerEvents: 'none',
-                    boxShadow: theme.shadows.elevation02,
-                    zIndex: 10,
-                  }}>
-                    {toolHint === 'map' ? 'Explore myths and legends.' : 'Upload myths and icons.'}
-                  </div>
-                )}
-                <div style={{
-                  display: 'flex',
-                  alignItems: 'center',
-                  background: theme.colors.background.interactive,
-                  border: `1px solid ${theme.colors.border.strong}`,
-                  borderRadius: '9999px',
-                  padding: '3px',
-                  gap: '2px',
-                  boxShadow: theme.shadows.elevation01,
-                  transition: theme.transitions.normal,
-                  minWidth: 0,
-                }}>
-                  <button
-                    onClick={() => {
-                      setActiveToolToggle('map');
-                      setMapOpen(true);
-                    }}
-                    onMouseEnter={() => setToolHint('map')}
-                    onMouseLeave={() => setToolHint(null)}
-                    aria-label="Legends Map"
-                    style={{
-                      flex: 1,
-                      display: 'flex',
-                      alignItems: 'center',
-                      justifyContent: 'center',
-                      gap: '0.35rem',
-                      padding: '0.48rem 0.6rem',
-                      borderRadius: '9999px',
-                      border: 'none',
-                      outline: 'none',
-                      cursor: 'pointer',
-                      fontFamily: theme.typography.fonts.body,
-                      fontSize: theme.typography.sizes.bodySmall,
-                      fontWeight: theme.typography.weights.semibold,
-                      transition: theme.transitions.fast,
-                      whiteSpace: 'nowrap',
-                      ...(activeToolToggle === 'map' ? {
-                        background: `linear-gradient(135deg, ${theme.colors.accent.primary}, ${theme.colors.accent.hover})`,
-                        color: '#fff',
-                        boxShadow: '0 2px 12px rgba(99,102,241,0.4)',
-                      } : {
-                        background: 'transparent',
-                        color: theme.colors.text.secondary,
-                      }),
-                    }}
-                    onMouseEnter={(e) => {
-                      if (activeToolToggle !== 'map') {
-                        e.currentTarget.style.background = theme.colors.background.peak;
-                        e.currentTarget.style.color = theme.colors.text.primary;
-                      }
-                    }}
-                    onMouseLeave={(e) => {
-                      if (activeToolToggle !== 'map') {
-                        e.currentTarget.style.background = 'transparent';
-                        e.currentTarget.style.color = theme.colors.text.secondary;
-                      }
-                    }}
-                  >
-                    <svg viewBox="0 0 18 18" fill="none" stroke="currentColor" strokeWidth="1.6"
-                      strokeLinecap="round" strokeLinejoin="round" width="13" height="13"
-                      style={{ flexShrink: 0 }}>
-                      <circle cx="9" cy="9" r="7"/>
-                      <path d="M9 2c-1.5 1.5-2.5 3.8-2.5 7s1 5.5 2.5 7"/>
-                      <path d="M9 2c1.5 1.5 2.5 3.8 2.5 7s-1 5.5-2.5 7"/>
-                      <line x1="2.5" y1="9" x2="15.5" y2="9"/>
-                      <line x1="3.2" y1="6" x2="14.8" y2="6"/>
-                      <line x1="3.2" y1="12" x2="14.8" y2="12"/>
-                    </svg>
-                    Map
-                  </button>
-
-                  <button
-                    onClick={() => {
-                      setActiveToolToggle('scan');
-                      setScanOpen(true);
-                    }}
-                    onMouseEnter={() => setToolHint('scan')}
-                    onMouseLeave={() => setToolHint(null)}
-                    aria-label="Scan a Legend"
-                    style={{
-                      flex: 1,
-                      display: 'flex',
-                      alignItems: 'center',
-                      justifyContent: 'center',
-                      gap: '0.35rem',
-                      padding: '0.48rem 0.6rem',
-                      borderRadius: '9999px',
-                      border: 'none',
-                      outline: 'none',
-                      cursor: 'pointer',
-                      fontFamily: theme.typography.fonts.body,
-                      fontSize: theme.typography.sizes.bodySmall,
-                      fontWeight: theme.typography.weights.semibold,
-                      transition: theme.transitions.fast,
-                      whiteSpace: 'nowrap',
-                      ...(activeToolToggle === 'scan' ? {
-                        background: `linear-gradient(135deg, ${theme.colors.accent.primary}, ${theme.colors.accent.hover})`,
-                        color: '#fff',
-                        boxShadow: '0 2px 12px rgba(99,102,241,0.4)',
-                      } : {
-                        background: 'transparent',
-                        color: theme.colors.text.secondary,
-                      }),
-                    }}
-                    onMouseEnter={(e) => {
-                      if (activeToolToggle !== 'scan') {
-                        e.currentTarget.style.background = theme.colors.background.peak;
-                        e.currentTarget.style.color = theme.colors.text.primary;
-                      }
-                    }}
-                    onMouseLeave={(e) => {
-                      if (activeToolToggle !== 'scan') {
-                        e.currentTarget.style.background = 'transparent';
-                        e.currentTarget.style.color = theme.colors.text.secondary;
-                      }
-                    }}
-                  >
-                    <svg viewBox="0 0 18 18" fill="none" stroke="currentColor" strokeWidth="1.6"
-                      strokeLinecap="round" strokeLinejoin="round" width="13" height="13"
-                      style={{ flexShrink: 0 }}>
-                      <circle cx="8.5" cy="8.5" r="4.5"/>
-                      <line x1="12" y1="12" x2="16" y2="16"/>
-                      <line x1="8.5" y1="3.5" x2="8.5" y2="4.5"/>
-                      <line x1="13.5" y1="8.5" x2="12.5" y2="8.5"/>
-                      <line x1="8.5" y1="13.5" x2="8.5" y2="12.5"/>
-                      <line x1="3.5" y1="8.5" x2="4.5" y2="8.5"/>
-                    </svg>
-                    Scan
-                  </button>
-                </div>
-              </div>
-            </div>
+            {/* ACTION PILL (Create · Discover · Map · Scan) */}
+            <ActionPill
+              onCreate={() => {
+                const myCharsCategory = enhancedCategories.find(c => c.key === 'my_characters');
+                if (myCharsCategory) {
+                  handleCreateCharacterClick();
+                }
+              }}
+              onDiscover={() => switchView(VIEW_STATES.MARKET_HUB)}
+              onMap={() => { setActiveToolToggle('map'); setMapOpen(true); }}
+              onScan={() => { setActiveToolToggle('scan'); setScanOpen(true); }}
+              activeTool={activeToolToggle}
+              toolHint={toolHint}
+              setToolHint={setToolHint}
+            />
           </>
         )}
       </div>
