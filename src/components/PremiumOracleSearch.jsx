@@ -120,7 +120,7 @@ const PremiumOracleSearch = ({
         onChange={onChange}
         onFocus={handleFocus}
         onBlur={handleBlur}
-        placeholder={ORACLE_PROMPTS[placeholderIndex]}
+        placeholder={isMobile ? ORACLE_PROMPTS[placeholderIndex] : ''}
         style={inputStyle}
       />
 
