@@ -317,6 +317,12 @@ export default function Register() {
                 )}
               </div>
             )}
+
+            {(oauthAvailable.google || oauthAvailable.apple) && (
+              <div className="oauth-divider">
+                <span>or</span>
+              </div>
+            )}
             
             <div className="form-group">
               <label htmlFor="displayName">Display Name</label>

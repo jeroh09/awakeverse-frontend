@@ -774,59 +774,47 @@
 }
 /* ============================================================
    Unified OAuth rail — Google + Apple sign-in
+   White/ivory buttons matching the original Google button.
+   Used by Login.js and Register.js.
    ============================================================ */
 .oauth-rail {
-  position: relative;
   display: flex;
   flex-direction: column;
-  align-items: center;
   gap: 10px;
   margin: var(--space-md, 16px) 0;
 }
 
-.oauth-rail::before {
-  content: "";
-  position: absolute;
-  left: 0;
-  right: 0;
-  top: 50%;
-  height: 1px;
-  background: linear-gradient(
-    to right,
-    transparent,
-    rgba(99, 102, 241, 0.5) 20%,
-    rgba(99, 102, 241, 0.5) 80%,
-    transparent
-  );
-  z-index: 0;
-}
-
 .oauth-mark {
-  position: relative;
-  z-index: 1;
   width: 100%;
   display: flex;
   align-items: center;
   justify-content: center;
-  gap: 10px;
-  height: 42px;
-  background: rgba(99, 102, 241, 0.1);
-  border: 1px solid rgba(99, 102, 241, 0.55);
-  border-radius: 999px;
-  color: var(--brand-ivory, #f7f4ec);
+  gap: 8px;
+  padding: 10px 12px;
+  background: rgba(255, 255, 255, 0.95);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  border-radius: var(--radius-md);
+  color: #1f1f1f;
   font-family: var(--font-body);
-  font-size: 0.85rem;
   font-weight: 600;
+  font-size: 0.9rem;
+  white-space: nowrap;
   cursor: pointer;
-  transition: background var(--transition-base, 0.2s ease),
-              border-color var(--transition-base, 0.2s ease),
-              transform var(--transition-base, 0.2s ease);
+  transition: all var(--transition-base);
+}
+
+.oauth-mark span {
+  white-space: nowrap;
+}
+
+.oauth-mark svg {
+  flex-shrink: 0;
 }
 
 .oauth-mark:hover:not(:disabled) {
-  background: rgba(99, 102, 241, 0.2);
-  border-color: rgba(99, 102, 241, 1);
+  background: rgba(255, 255, 255, 1);
   transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
 }
 
 .oauth-mark:disabled {
@@ -834,6 +822,26 @@
   cursor: not-allowed;
 }
 
-.oauth-mark svg {
-  flex-shrink: 0;
+/* "or" divider — lines flanking the word, matches the old design */
+.oauth-divider {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin: var(--space-md, 16px) 0;
+}
+
+.oauth-divider::before,
+.oauth-divider::after {
+  content: "";
+  flex: 1;
+  height: 1px;
+  background: var(--border-medium);
+}
+
+.oauth-divider span {
+  font-size: 0.75rem;
+  font-weight: 500;
+  letter-spacing: 0.5px;
+  text-transform: uppercase;
+  color: var(--text-tertiary);
 }
