@@ -40,7 +40,7 @@ export default function Login() {
   const [verificationStatus, setVerificationStatus] = useState(null);
   const [showResendVerification, setShowResendVerification] = useState(false);
   const [showSetPassword, setShowSetPassword] = useState(false); // ✅ NEW: OAuth account prompt
-  const [oauthAvailable, setOauthAvailable] = useState(false);
+  const [oauthAvailable, setOauthAvailable] = useState({ google: false, apple: false });
   
   const isMobile = useMobileDetection();
   const { login } = useAuth();
@@ -57,9 +57,12 @@ export default function Login() {
       try {
         const res = await fetch(`${API}/api/auth/oauth/health`);
         const data = await res.json();
-        setOauthAvailable(data.google?.available || false);
+        setOauthAvailable({
+          google: data.google?.available || false,
+          apple: data.apple?.available || false,
+        });
       } catch (err) {
-        setOauthAvailable(false);
+        setOauthAvailable({ google: false, apple: false });
       }
     };
     checkOAuth();
@@ -143,6 +146,12 @@ export default function Login() {
     setLoading(true);
     setError('');
     window.location.href = `${API}/api/auth/google`;
+  };
+
+  const handleAppleLogin = () => {
+    setLoading(true);
+    setError('');
+    window.location.href = `${API}/api/auth/apple`;
   };
 
   const handleSubmit = async (e) => {
@@ -369,82 +378,41 @@ export default function Login() {
               </div>
             )}
             
-            {/* GOOGLE OAUTH BUTTON */}
-            {oauthAvailable && (
-              <>
-                <button
-                  type="button"
-                  onClick={handleGoogleLogin}
-                  disabled={loading}
-                  className="google-oauth-button"
-                  style={{
-                    width: '100%',
-                    padding: '10px',
-                    background: 'rgba(255, 255, 255, 0.95)',
-                    border: '1px solid rgba(255, 255, 255, 0.2)',
-                    borderRadius: 'var(--radius-md)',
-                    color: '#1f1f1f',
-                    fontFamily: 'var(--font-body)',
-                    fontWeight: 600,
-                    fontSize: '0.9rem',
-                    cursor: loading ? 'not-allowed' : 'pointer',
-                    transition: 'all var(--transition-base)',
-                    display: 'flex',
-                    alignItems: 'center',
-                    justifyContent: 'center',
-                    gap: '8px',
-                    marginBottom: 'var(--space-md)',
-                    opacity: loading ? 0.6 : 1
-                  }}
-                  onMouseEnter={(e) => {
-                    if (!loading) {
-                      e.target.style.background = 'rgba(255, 255, 255, 1)';
-                      e.target.style.transform = 'translateY(-1px)';
-                      e.target.style.boxShadow = '0 4px 12px rgba(0, 0, 0, 0.15)';
-                    }
-                  }}
-                  onMouseLeave={(e) => {
-                    e.target.style.background = 'rgba(255, 255, 255, 0.95)';
-                    e.target.style.transform = 'translateY(0)';
-                    e.target.style.boxShadow = 'none';
-                  }}
-                >
-                  <svg width="18" height="18" viewBox="0 0 18 18" xmlns="http://www.w3.org/2000/svg">
-                    <path d="M17.64 9.2c0-.637-.057-1.251-.164-1.84H9v3.481h4.844c-.209 1.125-.843 2.078-1.796 2.717v2.258h2.908c1.702-1.567 2.684-3.874 2.684-6.615z" fill="#4285F4"/>
-                    <path d="M9.003 18c2.43 0 4.467-.806 5.956-2.18L12.05 13.56c-.806.54-1.836.86-3.047.86-2.344 0-4.328-1.584-5.036-3.711H.96v2.332C2.44 15.983 5.485 18 9.003 18z" fill="#34A853"/>
-                    <path d="M3.964 10.712c-.18-.54-.282-1.117-.282-1.71 0-.593.102-1.17.282-1.71V4.96H.957C.347 6.175 0 7.55 0 9.002c0 1.452.348 2.827.957 4.042l3.007-2.332z" fill="#FBBC05"/>
-                    <path d="M9.003 3.58c1.321 0 2.508.454 3.44 1.345l2.582-2.58C13.464.891 11.426 0 9.003 0 5.485 0 2.44 2.017.96 4.958L3.967 7.29c.708-2.127 2.692-3.71 5.036-3.71z" fill="#EA4335"/>
-                  </svg>
-                  Continue with Google
-                </button>
-                
-                {/* OR DIVIDER */}
-                <div style={{
-                  display: 'flex',
-                  alignItems: 'center',
-                  margin: 'var(--space-md) 0',
-                  gap: '12px'
-                }}>
-                  <div style={{
-                    flex: 1,
-                    height: '1px',
-                    background: 'var(--border-medium)'
-                  }}></div>
-                  <span style={{
-                    fontSize: '0.75rem',
-                    color: 'var(--text-tertiary)',
-                    fontFamily: 'var(--font-body)',
-                    fontWeight: 500,
-                    textTransform: 'uppercase',
-                    letterSpacing: '0.5px'
-                  }}>or</span>
-                  <div style={{
-                    flex: 1,
-                    height: '1px',
-                    background: 'var(--border-medium)'
-                  }}></div>
-                </div>
-              </>
+            {/* UNIFIED OAUTH RAIL — Google + Apple */}
+            {(oauthAvailable.google || oauthAvailable.apple) && (
+              <div className="oauth-rail">
+                {oauthAvailable.google && (
+                  <button
+                    type="button"
+                    onClick={handleGoogleLogin}
+                    disabled={loading}
+                    className="oauth-mark"
+                    aria-label="Continue with Google"
+                  >
+                    <svg width="18" height="18" viewBox="0 0 18 18" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+                      <path d="M17.64 9.2c0-.637-.057-1.251-.164-1.84H9v3.481h4.844c-.209 1.125-.843 2.078-1.796 2.717v2.258h2.908c1.702-1.567 2.684-3.874 2.684-6.615z" fill="#4285F4"/>
+                      <path d="M9.003 18c2.43 0 4.467-.806 5.956-2.18L12.05 13.56c-.806.54-1.836.86-3.047.86-2.344 0-4.328-1.584-5.036-3.711H.96v2.332C2.44 15.983 5.485 18 9.003 18z" fill="#34A853"/>
+                      <path d="M3.964 10.712c-.18-.54-.282-1.117-.282-1.71 0-.593.102-1.17.282-1.71V4.96H.957C.347 6.175 0 7.55 0 9.002c0 1.452.348 2.827.957 4.042l3.007-2.332z" fill="#FBBC05"/>
+                      <path d="M9.003 3.58c1.321 0 2.508.454 3.44 1.345l2.582-2.58C13.464.891 11.426 0 9.003 0 5.485 0 2.44 2.017.96 4.958L3.967 7.29c.708-2.127 2.692-3.71 5.036-3.71z" fill="#EA4335"/>
+                    </svg>
+                    <span>Continue with Google</span>
+                  </button>
+                )}
+                {oauthAvailable.apple && (
+                  <button
+                    type="button"
+                    onClick={handleAppleLogin}
+                    disabled={loading}
+                    className="oauth-mark"
+                    aria-label="Continue with Apple"
+                  >
+                    <svg width="15" height="17" viewBox="0 0 16 18" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+                      <path d="M13.09 9.54c-.02-2.02 1.65-2.99 1.72-3.04-.94-1.37-2.4-1.56-2.92-1.58-1.24-.13-2.42.73-3.05.73-.63 0-1.6-.71-2.63-.69-1.35.02-2.6.79-3.29 2-1.4 2.43-.36 6.02 1 8 .67.97 1.46 2.05 2.5 2.01 1.01-.04 1.39-.65 2.6-.65 1.21 0 1.56.65 2.62.63 1.08-.02 1.77-.99 2.43-1.96.77-1.12 1.08-2.21 1.1-2.27-.02-.01-2.11-.81-2.13-3.21zM11.13 3.5c.56-.68.94-1.62.83-2.56-.81.03-1.79.54-2.37 1.21-.52.6-.97 1.56-.85 2.48.9.07 1.83-.46 2.39-1.13z" fill="currentColor"/>
+                    </svg>
+                    <span>Continue with Apple</span>
+                  </button>
+                )}
+              </div>
             )}
             
             <div className="form-group">
