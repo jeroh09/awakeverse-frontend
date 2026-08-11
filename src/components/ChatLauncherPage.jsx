@@ -15,6 +15,8 @@ import PremiumCategoryCard from './PremiumCategoryCard';
 import { useAppView, VIEW_STATES } from '../contexts/AppViewContext';
 import PremiumCharacterCard from '../components/PremiumCharacterCard';
 import theme from '../design-system/tokens';
+import { getFirstName } from '../utils/getFirstName';
+import LauncherPlaque from '../components/launcher/LauncherPlaque';
 import ScrollShell from '../components/ScrollShell';
 import NetflixRightPanel from '../components/NetflixRightPanel';
 import LegendsMapPanel from '../components/LegendsMapPanel/LegendsMapPanel';
@@ -1178,26 +1180,29 @@ const ChatLauncherPage = ({ onStartChat, discoveredCharacters = [] }) => {
         alignItems: 'center',
         padding: '4rem 2rem 2rem 2rem',
         position: 'relative',
-        borderRight: '1px solid rgba(255, 215, 0, 0.2)'
+        borderRight: '2px solid transparent',
+        borderImage: 'linear-gradient(90deg, rgba(0,0,0,0.5) 0 1px, rgba(148,163,184,0.14) 1px 2px) 1' // engraved groove (replaces old gold)
       }}>
         {oracleChatMode ? (
           <OracleChat
             onBack={() => setOracleChatMode(false)}
-            userName={user?.displayName || user?.display_name || 'Seeker'}
+            userName={getFirstName(user)}
           />
         ) : (
           <>
+            <LauncherPlaque>
             {/* Welcome Section */}
             <div style={{ textAlign: 'center', marginBottom: '1.5rem' }}>
               <h1 style={{
                 fontFamily: theme.typography.fonts.display,
-                fontSize: '30',
+                fontSize: theme.typography.sizes.h2, // '30px' — was '30' (invalid, silently ignored)
                 fontWeight: theme.typography.weights.bold,
                 color: theme.colors.brand.ivory,
                 letterSpacing: '-1px',
-                marginBottom: '8px'
+                marginBottom: '8px',
+                textShadow: '0 1px 2px rgba(0,0,0,0.85), 0 -1px 0 rgba(245,245,220,0.08)' // letterpress on the burst
               }}>
-                Welcome, {user?.displayName || user?.display_name || 'Seeker'}
+                Welcome, {getFirstName(user)}
               </h1>
               <p style={{
                 fontFamily: theme.typography.fonts.body,
@@ -1214,8 +1219,8 @@ const ChatLauncherPage = ({ onStartChat, discoveredCharacters = [] }) => {
                 <div style={{
                   marginTop: theme.spacing.md,
                   padding: `${theme.spacing.sm} ${theme.spacing.md}`,
-                  background: `linear-gradient(135deg, ${theme.colors.accent.glow} 0%, rgba(99, 102, 241, 0.15) 100%)`,
-                  border: `1px solid ${theme.colors.accent.primary}40`,
+                  background: 'transparent',
+                  border: `1px solid ${theme.colors.accent.primary}`,
                   borderRadius: theme.borderRadius.lg,
                   fontSize: theme.typography.sizes.bodySmall,
                   color: theme.colors.accent.primary,
@@ -1490,6 +1495,7 @@ const ChatLauncherPage = ({ onStartChat, discoveredCharacters = [] }) => {
                 isMobile={false}
               />
             )}
+            </LauncherPlaque>
 
             {/* ADD BUTTONS CONTAINER */}
             <div style={{
