@@ -774,14 +774,14 @@
 }
 /* ============================================================
    Unified OAuth rail — Google + Apple sign-in
-   White/ivory buttons matching the original Google button.
-   Used by Login.js and Register.js.
+   Ivory-white buttons, black text/icon. Slim on both Login
+   and Register. Self-contained — append to end of file.
    ============================================================ */
 .oauth-rail {
   display: flex;
   flex-direction: column;
-  gap: 10px;
-  margin: var(--space-md, 16px) 0;
+  gap: var(--space-sm);
+  margin: var(--space-md) 0;
 }
 
 .oauth-mark {
@@ -790,31 +790,32 @@
   align-items: center;
   justify-content: center;
   gap: 8px;
-  padding: 10px 12px;
-  background: rgba(255, 255, 255, 0.95);
-  border: 1px solid rgba(255, 255, 255, 0.2);
+  padding: 7px 12px;
+  background: var(--brand-ivory);
+  border: 1px solid var(--brand-ivory-dim);
   border-radius: var(--radius-md);
-  color: #1f1f1f;
+  color: #111111;
   font-family: var(--font-body);
   font-weight: 600;
-  font-size: 0.9rem;
+  font-size: 0.8rem;
+  line-height: 1.2;
   white-space: nowrap;
   cursor: pointer;
   transition: all var(--transition-base);
 }
 
-.oauth-mark span {
-  white-space: nowrap;
-}
+.oauth-mark span { white-space: nowrap; }
 
 .oauth-mark svg {
   flex-shrink: 0;
+  width: 15px;
+  height: 15px;
 }
 
 .oauth-mark:hover:not(:disabled) {
-  background: rgba(255, 255, 255, 1);
+  background: var(--brand-ivory-dim);
   transform: translateY(-1px);
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+  box-shadow: var(--elevation-02);
 }
 
 .oauth-mark:disabled {
@@ -822,12 +823,12 @@
   cursor: not-allowed;
 }
 
-/* "or" divider — lines flanking the word, matches the old design */
+/* "or" divider — lines flanking the word */
 .oauth-divider {
   display: flex;
   align-items: center;
   gap: 12px;
-  margin: var(--space-md, 16px) 0;
+  margin: var(--space-md) 0;
 }
 
 .oauth-divider::before,
@@ -839,9 +840,35 @@
 }
 
 .oauth-divider span {
-  font-size: 0.75rem;
+  font-size: 0.7rem;
   font-weight: 500;
   letter-spacing: 0.5px;
   text-transform: uppercase;
   color: var(--text-tertiary);
+}
+
+/* If your initial CSS keeps the .register-page 80% scale system,
+   nudge the marks down to match the scaled inputs beside them.
+   Harmless if .register-page scaling isn't present. */
+.register-page .oauth-mark {
+  padding: 6px 10px;
+  font-size: 0.72rem;
+  gap: 6px;
+}
+
+.register-page .oauth-mark svg {
+  width: 13px;
+  height: 13px;
+}
+
+@media (max-width: 768px) {
+  .register-page .oauth-mark {
+    padding: 7px 12px;
+    font-size: 0.8rem;
+    gap: 8px;
+  }
+  .register-page .oauth-mark svg {
+    width: 15px;
+    height: 15px;
+  }
 }
