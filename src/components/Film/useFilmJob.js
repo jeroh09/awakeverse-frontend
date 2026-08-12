@@ -295,10 +295,10 @@ export default function useFilmJob() {
     catch (e) { setError(friendlyError(e)); setEditBusy(null); }
   }, [jobId, poll]);
 
-  const regenerate = useCallback(async (beatIndex, note, editedText) => {
+  const regenerate = useCallback(async (beatIndex, note, editedText, present) => {
     if (!jobId) return;
     setError(null); setEditBusy(`Regenerating shot ${beatIndex}…`); setStatus('processing');
-    try { await filmRegenerate(jobId, beatIndex, note, editedText); poll(jobId); }
+    try { await filmRegenerate(jobId, beatIndex, note, editedText, present); poll(jobId); }
     catch (e) { setError(friendlyError(e)); setEditBusy(null); }
   }, [jobId, poll]);
 

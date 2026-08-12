@@ -79,9 +79,10 @@ export const filmReassemble = (jobId, beats, captions) =>
     { beats, ...(captions != null ? { captions } : {}) },
     { timeout: QUEUE_TIMEOUT }).then(r => r.data);
 
-export const filmRegenerate = (jobId, beat_index, note, edited_text) =>
+export const filmRegenerate = (jobId, beat_index, note, edited_text, present) =>
   api.post(`/film/jobs/${jobId}/regenerate`,
-    { beat_index, note: note || null, edited_text: edited_text || null },
+    { beat_index, note: note || null, edited_text: edited_text || null,
+      ...(Array.isArray(present) ? { present } : {}) },
     { timeout: QUEUE_TIMEOUT }).then(r => r.data);
 
 // ── plate review (Plan & review lifecycle: plan → awaiting_review → regenerate → approve) ──

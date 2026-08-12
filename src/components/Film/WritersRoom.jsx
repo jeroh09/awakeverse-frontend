@@ -216,6 +216,7 @@ export default function WritersRoom({
   onCloseEdit = () => {},
   onChangeEditVisual = () => {},
   onPickSpeaker = () => {},
+  onRemovePresent = () => {},
   onChangeLine = () => {},
   onRegenerateFromEdit = () => {},
   onSaveEdit = () => {},
@@ -333,13 +334,21 @@ export default function WritersRoom({
           <div className="film-cast-chiprow">
             {cast.map((name) => {
               const has = !!(lineFor(name) && lineFor(name).text);
+              const isNarrator = name === 'Narrator';
               return (
-                <button key={name} type="button"
-                  className={`film-cast-chip${active === name ? ' is-active' : ''}${has ? ' has-line' : ''}`}
-                  onClick={() => onPickSpeaker(name)}>
-                  {has && <span className="film-cast-chip-dot" />}
-                  {name}
-                </button>
+                <span key={name}
+                  className={`film-cast-chip${active === name ? ' is-active' : ''}${has ? ' has-line' : ''}`}>
+                  <button type="button" className="film-cast-chip-main"
+                    onClick={() => onPickSpeaker(name)}>
+                    {has && <span className="film-cast-chip-dot" />}
+                    {name}
+                  </button>
+                  {!isNarrator && (
+                    <button type="button" className="film-cast-chip-x"
+                      title={`Remove ${name} from this shot`}
+                      onClick={(e) => { e.stopPropagation(); onRemovePresent(name); }}>×</button>
+                  )}
+                </span>
               );
             })}
           </div>
