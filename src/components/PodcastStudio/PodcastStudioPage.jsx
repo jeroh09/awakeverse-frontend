@@ -35,6 +35,7 @@ import useCredits from '../../hooks/useCredits';
 import InsufficientCreditsBanner from './InsufficientCreditsBanner';
 import styles from './PodcastStudioPage.module.css';
 import ApiErrorService from '../../services/ApiErrorService';
+import VoiceBrowser from './VoiceBrowser';
 
 // ── Constants ────────────────────────────────────────────────────────────────
 const TABS        = ['avatar', 'script', 'generate', 'podcasts', 'guide'];
@@ -650,6 +651,9 @@ export default function PodcastStudioPage({ context, onClose }) {
   // Which speaker's inline picker is expanded (null = all collapsed).
   // One open at a time — clicking a different row closes the previous.
   const [voiceConfirmOpen, setVoiceConfirmOpen] = useState(null);
+
+  // Which speaker the voice-browser overlay is open for (null = closed).
+  const [browserSpeakerId, setBrowserSpeakerId] = useState(null);
 
   // ── Overlay editor state (on-screen media per line) ──────────────────────────
   // overlayLineId: which line's visual editor is open. When set, the right
@@ -3063,107 +3067,23 @@ if (context.topic) setTopic(context.topic);
             );
           })()}
 
-          {/* SCRIPT TAB → Voice picker (default when no overlay line is open) */}
+          {/* SCRIPT TAB → Voice picker (compact rows; browsing happens in the overlay) */}
           {activeTab === 'script' && !overlayLineId && (
             <div className={styles.glassCard} style={{ height: '100%', display: 'flex', flexDirection: 'column', gap: '0.65rem' }}>
               <div className={styles.cardLabel}>Voice</div>
 
-              {/* ── My Voice clone card ── */}
-              <div style={{
-                padding: '0.7rem 0.8rem',
-                background: 'rgba(99,102,241,0.05)',
-                border: '1px solid rgba(99,102,241,0.2)',
-                boxShadow: '0 0 0 1px rgba(99,102,241,0.08)',
-                borderRadius: 12,
-                flexShrink: 0,
-              }}>
-                {voiceClone ? (
-                  // Clone exists — show as selectable card
-                  <div
-                    className={`${styles.voiceCard} ${
-                      speakers.some(s => s.voiceId === voiceClone.voiceId) ? styles.voiceCardSelected : ''
-                    }`}
-                    style={{ margin: 0 }}
-                    onClick={() => {
-                      const hostSpk = speakers.find(s => s.speakerId === 'user') || speakers[0];
-                      if (hostSpk) handleSelectVoice(hostSpk.speakerId, voiceClone.voiceId);
-                    }}
-                  >
-                    <div className={styles.voiceCardTop}>
-                      <div className={styles.voiceCardName}>🎙 {voiceClone.cloneName}</div>
-                    </div>
-                    <div className={styles.voiceCardAccent}>your voice</div>
-                    <div className={styles.voiceCardVibe}>Cloned from your recording</div>
-                    <button
-                      style={{
-                        marginTop: '0.45rem', fontSize: '0.65rem', color: '#64748b',
-                        background: 'none', border: 'none', cursor: 'pointer',
-                        fontFamily: 'Inter,sans-serif', padding: 0, textAlign: 'left',
-                      }}
-                      onClick={e => { e.stopPropagation(); handleCloneRecord(); }}
-                    >
-                      {cloningVoice
-                        ? `⏹ Stop (${cloneRecSeconds}s)`
-                        : cloneSubmitting ? '⏳ Cloning…' : '↺ Re-record voice'}
-                    </button>
-                  </div>
-                ) : (
-                  // No clone yet — show record prompt
-                  <div>
-                    <div style={{ fontSize: '0.72rem', fontWeight: 700, color: '#e0e7ff', fontFamily: 'Syne,sans-serif', marginBottom: '0.3rem' }}>
-                      🎙 Clone your voice
-                    </div>
-                    <div style={{ fontSize: '0.68rem', color: 'var(--text-muted)', fontFamily: 'Inter,sans-serif', marginBottom: '0.5rem', lineHeight: 1.45 }}>
-                      Record 30–60s of natural speech. We'll clone it for all your podcasts.
-                    </div>
-                    {cloningVoice && (
-                      <div className={styles.recordingCounter} style={{ marginBottom: '0.4rem' }}>
-                        <span className={styles.recordingDot} />
-                        {`${Math.floor(cloneRecSeconds / 60)}:${String(cloneRecSeconds % 60).padStart(2, '0')}`}
-                        <span style={{ opacity: 0.6, fontSize: '0.62rem' }}>— tap stop when done</span>
-                      </div>
-                    )}
-                    {cloneError && (
-                      <div style={{ fontSize: '0.68rem', color: '#EF4444', fontFamily: 'Inter,sans-serif', marginBottom: '0.4rem' }}>
-                        {cloneError}
-                      </div>
-                    )}
-                    <button
-                      className={styles.actionChip}
-                      onClick={handleCloneRecord}
-                      disabled={cloneSubmitting}
-                      style={cloningVoice ? { color: '#EF4444', borderColor: 'rgba(239,68,68,0.4)' } : {}}
-                    >
-                      {cloneSubmitting ? '⏳ Cloning…'
-                        : cloningVoice ? `⏹ Stop recording (${cloneRecSeconds}s)`
-                        : '⏺ Record my voice'}
-                    </button>
-                  </div>
-                )}
-              </div>
-
-              {/* Gender filter toggle */}
-              <div className={styles.scriptModeToggle} style={{ alignSelf: 'stretch' }}>
-                {['female', 'male'].map(g => (
-                  <button
-                    key={g}
-                    className={`${styles.scriptModeBtn} ${voiceGenderFilter === g ? styles.scriptModeBtnActive : ''}`}
-                    style={{ flex: 1, justifyContent: 'center' }}
-                    onClick={() => setVoiceGenderFilter(g)}
-                  >
-                    {g === 'female' ? '♀ Female' : '♂ Male'}
-                  </button>
-                ))}
-              </div>
-
-              {/* Per-speaker sections */}
-              <div style={{ flex: 1, overflowY: 'auto', display: 'flex', flexDirection: 'column', gap: '1rem', minHeight: 0 }}>
+              <div style={{ flex: 1, overflowY: 'auto', display: 'flex', flexDirection: 'column', gap: '0.75rem', minHeight: 0 }}>
                 {(speakers.length === 0
-                  ? [{ speakerId: 'user', displayName: 'You', role: 'host' }]
+                  ? [{ speakerId: 'user', displayName: 'You', role: 'host', gender: 'female', voiceId: null }]
                   : speakers
                 ).map(spk => {
-                  const filteredVoices = voices.filter(v => v.gender === voiceGenderFilter);
-                  const selectedVoiceId = spk.voiceId;
+                  const v = spk.voiceId
+                    ? (voices.find(x => x.voiceId === spk.voiceId)
+                        || (voiceClone && voiceClone.voiceId === spk.voiceId
+                              ? { displayName: voiceClone.cloneName || 'My Voice', accent: 'your voice', voiceId: voiceClone.voiceId, previewUrl: null }
+                              : null))
+                    : null;
+                  const isPlaying = v && playingPreviewId === v.voiceId;
                   return (
                     <div key={spk.speakerId}>
                       <div style={{
@@ -3173,52 +3093,71 @@ if (context.topic) setTopic(context.topic);
                       }}>
                         {spk.displayName} · {spk.role === 'host' ? 'Host' : 'Guest'}
                       </div>
-                      {!selectedVoiceId && (
-                        <div style={{
-                          fontSize: '0.68rem', color: '#F59E0B', fontFamily: 'Inter,sans-serif',
-                          marginBottom: '0.4rem', display: 'flex', alignItems: 'center', gap: '0.3rem',
-                        }}>
-                          ⚠ Pick a voice below
-                        </div>
-                      )}
-                      <div className={styles.voiceGrid}>
-                        {filteredVoices.length === 0 && (
-                          <div style={{ fontSize: '0.7rem', color: 'var(--text-muted)', fontFamily: 'Inter,sans-serif' }}>
-                            No voices loaded.
-                          </div>
+                      <button
+                        type="button"
+                        onClick={() => setBrowserSpeakerId(spk.speakerId)}
+                        style={{
+                          display: 'flex', alignItems: 'center', gap: '0.55rem', width: '100%',
+                          textAlign: 'left', background: 'rgba(15,23,42,0.8)', cursor: 'pointer',
+                          border: v ? '1px solid rgba(99,102,241,0.22)' : '1px dashed rgba(245,158,11,0.5)',
+                          borderRadius: 12, padding: '0.6rem 0.7rem', fontFamily: 'Inter,sans-serif',
+                        }}
+                      >
+                        <span style={{ flex: 1, minWidth: 0 }}>
+                          {v ? (
+                            <>
+                              <span style={{ fontFamily: 'Syne,sans-serif', fontWeight: 700, fontSize: '0.82rem', color: '#e0e7ff', display: 'block' }}>{v.displayName}</span>
+                              <span style={{ fontSize: '0.64rem', color: '#94a3b8', textTransform: 'capitalize' }}>{v.accent}{spk.gender ? ` · ${spk.gender}` : ''}</span>
+                            </>
+                          ) : (
+                            <>
+                              <span style={{ fontWeight: 600, fontSize: '0.76rem', color: '#F59E0B', display: 'block' }}>⚠ Choose a voice</span>
+                              <span style={{ fontSize: '0.64rem', color: '#94a3b8' }}>Tap to browse &amp; preview</span>
+                            </>
+                          )}
+                        </span>
+                        {v && v.previewUrl && (
+                          <span
+                            role="button" tabIndex={0}
+                            aria-label={`Preview ${v.displayName}`}
+                            onClick={e => { e.stopPropagation(); handlePlayPreview(v.voiceId, v.previewUrl); }}
+                            onKeyDown={e => { if (e.key === ' ' || e.key === 'Enter') { e.preventDefault(); e.stopPropagation(); handlePlayPreview(v.voiceId, v.previewUrl); } }}
+                            className={`${styles.voicePreviewBtn} ${isPlaying ? styles.voicePreviewBtnPlaying : ''}`}
+                          >
+                            {isPlaying ? '■' : '▶'}
+                          </span>
                         )}
-                        {filteredVoices.map(v => {
-                          const isSelected = selectedVoiceId === v.voiceId;
-                          const isPlaying  = playingPreviewId === v.voiceId;
-                          return (
-                            <div
-                              key={v.voiceId}
-                              className={`${styles.voiceCard} ${isSelected ? styles.voiceCardSelected : ''}`}
-                              onClick={() => handleSelectVoice(spk.speakerId, v.voiceId)}
-                            >
-                              <div className={styles.voiceCardTop}>
-                                <div className={styles.voiceCardName}>{v.displayName}</div>
-                                <button
-                                  className={`${styles.voicePreviewBtn} ${isPlaying ? styles.voicePreviewBtnPlaying : ''}`}
-                                  onClick={e => { e.stopPropagation(); handlePlayPreview(v.voiceId, v.previewUrl); }}
-                                  title={isPlaying ? 'Stop' : 'Preview'}
-                                >
-                                  {isPlaying ? '■' : '▶'}
-                                </button>
-                              </div>
-                              <div className={styles.voiceCardAccent}>{v.accent}</div>
-                              <div className={styles.voiceCardVibe}>{v.vibe}</div>
-                              {isSelected && <div className={styles.voiceCardCheck}><Ic.Check /></div>}
-                            </div>
-                          );
-                        })}
-                      </div>
+                        <span style={{ flexShrink: 0, fontSize: '0.64rem', fontWeight: 600, color: '#818CF8', whiteSpace: 'nowrap' }}>
+                          {v ? 'Change' : 'Browse ▸'}
+                        </span>
+                      </button>
                     </div>
                   );
                 })}
               </div>
             </div>
           )}
+
+          {/* Voice browser overlay — position:fixed, so DOM location doesn't matter */}
+          <VoiceBrowser
+            speaker={
+              (speakers.length === 0
+                ? [{ speakerId: 'user', displayName: 'You', role: 'host', gender: 'female', voiceId: null }]
+                : speakers
+              ).find(s => s.speakerId === browserSpeakerId) || null
+            }
+            voices={voices}
+            voiceClone={voiceClone}
+            playingPreviewId={playingPreviewId}
+            onPreview={handlePlayPreview}
+            onSelect={handleSelectVoice}
+            onClose={() => setBrowserSpeakerId(null)}
+            cloningVoice={cloningVoice}
+            cloneRecSeconds={cloneRecSeconds}
+            cloneSubmitting={cloneSubmitting}
+            cloneError={cloneError}
+            onCloneRecord={handleCloneRecord}
+          />
 
           {/* GENERATE TAB → Voice confirmation panel */}
           {activeTab === 'generate' && (
