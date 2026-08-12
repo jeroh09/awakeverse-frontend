@@ -66,7 +66,7 @@ function Book({ item, ordinal, isOpen, onToggle, onOpen, onWatch, onPromote, onD
         <span className="fs-vt">{item.title || 'Untitled'}</span>
         {item.status === 'rendering' && <span className="fs-dot" style={{ color: '#F59E0B', background: '#F59E0B' }} />}
       </div>
-      <div className="fs-card" onClick={isOpen ? () => onToggle(null) : undefined}>
+      <div className="fs-card" onClick={() => onOpen(item)}>
         <div className="fs-cover" style={{ '--cv': cover(item) }}>
           <span className={`fs-chip ${stKey(item.status)}`}>{stText(item.status)}</span>
           <span className="fs-rowbtns">
@@ -82,9 +82,7 @@ function Book({ item, ordinal, isOpen, onToggle, onOpen, onWatch, onPromote, onD
         <div className="fs-ctitle">{ordinal ? `Ep ${ordinal} · ` : ''}{item.title || 'Untitled'}</div>
         <div className="fs-cmeta">{ordinal ? `Episode ${ordinal}` : `${styleLabel(item.video_style)} · ${item.aspect_ratio || '9:16'}`}</div>
         <div className="fs-cta">
-          {ready
-            ? <button type="button" className="fs-cbtn play" onClick={stop(() => onOpen(item))}>Edit</button>
-            : <button type="button" className="fs-cbtn ghost" onClick={stop(() => onOpen(item))}>Open</button>}
+          <button type="button" className="fs-cbtn play" onClick={stop(() => onOpen(item))}>{ready ? 'Open' : 'Continue'}</button>
           {ready && item.standalone && (
             <button type="button" className="fs-cbtn ghost" onClick={stop(() => onPromote(item))}><IconPlus s={12} /> Series</button>
           )}
@@ -187,11 +185,17 @@ function MySeries({ series, onNewEpisode, onOpen, onRefreshPlate }) {
             <p className="fs-seclabel">Series bible</p>
             <div className="fs-bible">
               {cur.canonical_bible
-                ? cur.canonical_bible.split('\n').filter(Boolean).map((ln, i) => {
-                    const [k, ...rest] = ln.split(':');
-                    return <div className="fs-row" key={i}><span className="fs-k">{k}</span><span className="fs-v">{rest.join(':').trim()}</span></div>;
+                ? cur.canonical_bible.split('\n').map((l) => l.trim()).filter(Boolean).map((ln, i) => {
+                    const ci = ln.indexOf(':');
+                    const label = ci > 0 ? ln.slice(0, ci).trim() : '';
+                    // only treat as a "Label: value" row when the label is short (a real
+                    // field like Premise/Tone), otherwise it's free-form prose.
+                    const labeled = ci > 0 && label.length <= 20 && label.split(/\s+/).length <= 3;
+                    return labeled
+                      ? <div className="fs-row" key={i}><span className="fs-k">{label}</span><span className="fs-v">{ln.slice(ci + 1).trim()}</span></div>
+                      : <p className="fs-bible-p" key={i}>{ln}</p>;
                   })
-                : <div className="fs-row"><span className="fs-v" style={{ color: 'var(--muted)' }}>Bible saved.</span></div>}
+                : <p className="fs-bible-p" style={{ color: 'var(--muted)' }}>Bible saved.</p>}
             </div>
           </>
         ) : null}
@@ -202,7 +206,11 @@ function MySeries({ series, onNewEpisode, onOpen, onRefreshPlate }) {
             <div className="fs-roster">
               {cur.cast.map((c) => (
                 <div className="fs-cast" key={c.name}>
-                  <div className="fs-plate" style={{ '--pc': c.plate_url ? `url(${c.plate_url})` : cover({ title: c.name }) }}>
+                  <div className="fs-plate" style={{ background: cover({ title: c.name }) }}>
+                    {c.plate_url && (
+                      <img src={c.plate_url} alt={c.name} className="fs-plate-img"
+                           onError={(e) => { e.currentTarget.style.display = 'none'; }} />
+                    )}
                     {c.plate_url && <span className="fs-lock"><IconLock s={11} /> Locked</span>}
                   </div>
                   <div className="fs-cbody">
