@@ -16,7 +16,7 @@
 //
 // Open/close is driven by the parent: pass `speaker` to open, null to close.
 
-import React, { useEffect, useMemo, useRef, useState } from 'react';
+import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import styles from './VoiceBrowser.module.css';
 
 export default function VoiceBrowser({
@@ -56,6 +56,12 @@ export default function VoiceBrowser({
     return () => clearTimeout(t);
   }, [open, speaker]);
 
+  const handleClose = useCallback(() => {
+    onClose?.();
+    const el = restoreFocusRef.current;
+    if (el && typeof el.focus === 'function') setTimeout(() => el.focus(), 0);
+  }, [onClose]);
+
   // Esc to close + basic focus trap while open.
   useEffect(() => {
     if (!open) return;
@@ -73,13 +79,7 @@ export default function VoiceBrowser({
     };
     document.addEventListener('keydown', onKey);
     return () => document.removeEventListener('keydown', onKey);
-  }, [open]); // eslint-disable-line react-hooks/exhaustive-deps
-
-  const handleClose = () => {
-    onClose?.();
-    const el = restoreFocusRef.current;
-    if (el && typeof el.focus === 'function') setTimeout(() => el.focus(), 0);
-  };
+  }, [open, handleClose]);
 
   // Distinct accents for the chip strip (library voices only, current gender).
   const accents = useMemo(() => {
