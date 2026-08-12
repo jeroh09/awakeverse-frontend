@@ -115,6 +115,14 @@
 .actionChip:focus-visible { outline: none; box-shadow: var(--ring-shadow); }
 .actionChipRec { color: var(--red); border-color: rgba(239,68,68,0.45); }
 
+.rerecBtn {
+  margin-top: 0.45rem; font-size: 0.65rem; color: var(--text-sec);
+  background: none; border: none; cursor: pointer; font-family: inherit; padding: 0; text-align: left;
+}
+.rerecBtn:hover { color: var(--text-primary); }
+.rerecBtn:disabled { opacity: 0.6; cursor: default; }
+.rerecBtn:focus-visible { outline: none; box-shadow: var(--ring-shadow); border-radius: 4px; }
+
 .empty { text-align: center; padding: 26px 12px; color: var(--text-sec); font-size: 0.76rem; }
 .empty strong { display: block; color: var(--text-primary); margin-bottom: 4px; }
 

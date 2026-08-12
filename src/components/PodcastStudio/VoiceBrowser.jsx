@@ -127,6 +127,7 @@ export default function VoiceBrowser({
         tabIndex={checked ? 0 : -1}
         onClick={(e) => { if (e.target.closest(`.${styles.previewBtn}`)) return; pick(v.voiceId); }}
         onKeyDown={(e) => {
+          if (e.target !== e.currentTarget) return;
           if (e.key === ' ' || e.key === 'Enter') { e.preventDefault(); pick(v.voiceId); }
         }}
       >
@@ -227,12 +228,36 @@ export default function VoiceBrowser({
               aria-checked={selectedId === voiceClone.voiceId}
               tabIndex={selectedId === voiceClone.voiceId ? 0 : -1}
               onClick={() => pick(voiceClone.voiceId)}
-              onKeyDown={(e) => { if (e.key === ' ' || e.key === 'Enter') { e.preventDefault(); pick(voiceClone.voiceId); } }}
+              onKeyDown={(e) => { if (e.target !== e.currentTarget) return; if (e.key === ' ' || e.key === 'Enter') { e.preventDefault(); pick(voiceClone.voiceId); } }}
             >
               <div className={styles.vMeta}>
                 <div className={styles.vName}>🎙 {voiceClone.cloneName || 'My Voice'}</div>
                 <div className={styles.vSub}>your voice</div>
                 <div className={styles.vVibe}>Cloned from your recording</div>
+
+                {/* Re-record is host-only (it's the host's voice), mirrors the
+                    original My Voice card. stopPropagation so it never selects. */}
+                {isHost && cloningVoice ? (
+                  <div className={styles.recCounter} role="status" aria-live="assertive">
+                    <span className={styles.recDot} aria-hidden="true" />
+                    {`${Math.floor(cloneRecSeconds / 60)}:${String(cloneRecSeconds % 60).padStart(2, '0')}`}
+                    <span className={styles.recHint}>— tap stop when done</span>
+                  </div>
+                ) : null}
+                {isHost && cloneError ? <div className={styles.recError}>{cloneError}</div> : null}
+                {isHost ? (
+                  <button
+                    type="button"
+                    className={styles.rerecBtn}
+                    disabled={cloneSubmitting}
+                    onClick={(e) => { e.stopPropagation(); onCloneRecord?.(); }}
+                    onKeyDown={(e) => e.stopPropagation()}
+                  >
+                    {cloningVoice ? `⏹ Stop (${cloneRecSeconds}s)`
+                      : cloneSubmitting ? '⏳ Cloning…'
+                      : '↺ Re-record voice'}
+                  </button>
+                ) : null}
               </div>
               {selectedId === voiceClone.voiceId ? (
                 <svg className={styles.checkTick} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" aria-hidden="true"><path d="M20 6 9 17l-5-5" /></svg>
