@@ -147,18 +147,6 @@ export default function FilmWorkspaceContainer({
   const onPickSpeaker = useCallback((speaker) =>
     setEditing(e => e && { ...e, activeSpeaker: e.activeSpeaker === speaker ? null : speaker }), []);
 
-  // Remove a character from THIS shot: drop them from present AND drop any line
-  // they had (a line needs a present speaker). One action, both effects.
-  const onRemovePresent = useCallback((name) => setEditing(e => {
-    if (!e) return e;
-    return {
-      ...e,
-      present: (e.present || []).filter(n => n !== name),
-      lines: (e.lines || []).filter(l => l.speaker !== name),
-      activeSpeaker: e.activeSpeaker === name ? null : e.activeSpeaker,
-    };
-  }), []);
-
   // Edit the active speaker's line text. Empty text = that speaker is silent
   // (their line is dropped from the list on change).
   const onChangeLine = useCallback((text) => setEditing(e => {
@@ -269,13 +257,10 @@ export default function FilmWorkspaceContainer({
   const onRegenerateFromEdit = useCallback(() => {
     if (!editing) return;
     const idx = editing.index;
-    setEditsByIndex(m => ({ ...m,
-      [idx]: { visual: editing.visual, lines: editing.lines, present: editing.present } }));
+    setEditsByIndex(m => ({ ...m, [idx]: { visual: editing.visual, lines: editing.lines } }));
     setRegenBusyIndex(idx);
     const text = composeBeatScript(editing.visual, editing.lines);
-    // Send the explicit present list so a removed character stays out (backend
-    // treats it as authoritative over the stored subjects).
-    job.regenerate(idx, null, text, editing.present);
+    job.regenerate(idx, null, text);
     setEditing(null);
   }, [editing, job]);
 
@@ -352,14 +337,22 @@ export default function FilmWorkspaceContainer({
       canPromote={canPromote}
       onPromote={() => setPromoteOpen(true)}
       messages={authoring.messages}
-      chatSub={authoring.busy || authoring.streamingActive ? 'thinking…' : (job.error || authoring.error || '')}
+      chatSub={authoring.busy || authoring.streamingActive
+        ? 'thinking…'
+        : (() => {
+            const msg = job.error || authoring.error || '';
+            // The header subtitle is a single tight line; a long backend error
+            // (e.g. the regenerate-needs-re-render message) would stretch it and
+            // break the header. Cap it here — the full error still renders in the
+            // chat message list, and CSS ellipsis (below) handles the rest.
+            return msg.length > 90 ? msg.slice(0, 88).trimEnd() + '…' : msg;
+          })()}
       streamingActive={authoring.streamingActive}
       streamingText={authoring.streamingText}
       editingBeat={editing}
       onCloseEdit={onCloseEdit}
       onChangeEditVisual={onChangeEditVisual}
       onPickSpeaker={onPickSpeaker}
-      onRemovePresent={onRemovePresent}
       onChangeLine={onChangeLine}
       onRegenerateFromEdit={onRegenerateFromEdit}
       onSaveEdit={onSaveEdit}

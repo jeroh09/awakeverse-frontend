@@ -828,3 +828,44 @@
 .film-cast-chip-x{background:none;border:0;border-left:1px solid var(--film-bd-med);
   color:var(--film-t3);cursor:pointer;padding:0 9px;font-size:15px;line-height:1;transition:.15s;}
 .film-cast-chip-x:hover{background:var(--film-danger,#dc2626);color:#fff;}
+/* ─────────────────────────────────────────────────────────────────────────────
+   APPEND to the END of src/components/Film/FilmWorkspace.css
+   #4 — Writers' room user messages: brighter + italic handwritten style so the
+   text reads clearly against the indigo bubble. Placed last so it wins over the
+   base .film-msg / .film-msg--me rules. (Caveat is already loaded for the
+   onboarding wordmark; it falls back to a system cursive if not.)
+   ───────────────────────────────────────────────────────────────────────────── */
+.film-msg--me{
+  color:#ffffff;
+  font-family:'Caveat','Segoe Script',cursive;
+  font-style:italic;
+  font-size:19px;
+  line-height:1.35;
+  font-weight:600;
+  letter-spacing:.2px;
+}
+/* keep the attachment chip in the normal UI font (not cursive) */
+.film-msg--me .film-msg-attach{
+  font-family:'Inter',system-ui,sans-serif;
+  font-style:normal;
+  font-size:12px;
+  font-weight:600;
+}
+
+/* ── New-Film picker cleared of the fixed sidebar breadcrumb ──
+   The style / duration / frame picker (.film-lib-newbar) rendered at the very
+   top of the library and its first row sat UNDER the universal sidebar
+   breadcrumb, hiding a choice. Drop it below the breadcrumb. Tune the value to
+   your breadcrumb's height if 56px isn't exact. */
+.film-lib-newbar{ margin-top:56px; }
+
+/* ── Writers'-room header subtitle can't break the header ──
+   The subtitle (.film-hsub) carries transient status/errors (e.g. the
+   regenerate-needs-re-render message). It ALREADY has nowrap+ellipsis, but as a
+   flex child it grew to fit its text (default min-width:auto) and stretched the
+   header instead of truncating. min-width:0 + flex:0 1 auto lets it shrink so
+   the existing ellipsis finally engages; the title (.film-htab) stays fixed.
+   Belt-and-braces with the source cap in FilmWorkspaceContainer. */
+.film-phead{ min-width:0; }
+.film-htab{ flex:0 0 auto; }
+.film-hsub{ flex:0 1 auto; min-width:0; }
