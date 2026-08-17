@@ -64,7 +64,21 @@ export default function FilmWorkspaceContainer({
     (async () => {
       setLoading(true);
       if (initialSessionId) {
+        // Fresh room (brand-new film/episode): there are no messages to load, but
+        // we STILL must hydrate meta from the just-created project — otherwise meta
+        // keeps its initial default (video_style:'anime') and the style/duration/
+        // frame the user picked are lost. Without this, every newly-created film or
+        // episode opened as anime regardless of the chosen style.
         authoring.adopt({ session_id: initialSessionId, messages: [] });
+        try {
+          const p = await filmGetProject(projectId);
+          if (!cancelled && p) {
+            setMeta({ video_style: p.video_style || 'anime',
+                      duration_seconds: p.duration_seconds || 60,
+                      aspect_ratio: p.aspect_ratio || '9:16' });
+            setSeriesId(p.series_id ?? null);
+          }
+        } catch (e) { /* keep defaults if the fetch fails */ }
         if (!cancelled) setLoading(false);
         return;
       }
@@ -146,6 +160,18 @@ export default function FilmWorkspaceContainer({
   // Click a name chip → open that speaker's line box (Narrator always allowed).
   const onPickSpeaker = useCallback((speaker) =>
     setEditing(e => e && { ...e, activeSpeaker: e.activeSpeaker === speaker ? null : speaker }), []);
+
+  // Remove a character from THIS shot: drop them from present AND drop any line
+  // they had (a line needs a present speaker). One action, both effects.
+  const onRemovePresent = useCallback((name) => setEditing(e => {
+    if (!e) return e;
+    return {
+      ...e,
+      present: (e.present || []).filter(n => n !== name),
+      lines: (e.lines || []).filter(l => l.speaker !== name),
+      activeSpeaker: e.activeSpeaker === name ? null : e.activeSpeaker,
+    };
+  }), []);
 
   // Edit the active speaker's line text. Empty text = that speaker is silent
   // (their line is dropped from the list on change).
@@ -257,10 +283,13 @@ export default function FilmWorkspaceContainer({
   const onRegenerateFromEdit = useCallback(() => {
     if (!editing) return;
     const idx = editing.index;
-    setEditsByIndex(m => ({ ...m, [idx]: { visual: editing.visual, lines: editing.lines } }));
+    setEditsByIndex(m => ({ ...m,
+      [idx]: { visual: editing.visual, lines: editing.lines, present: editing.present } }));
     setRegenBusyIndex(idx);
     const text = composeBeatScript(editing.visual, editing.lines);
-    job.regenerate(idx, null, text);
+    // Send the explicit present list so a removed character stays out (backend
+    // treats it as authoritative over the stored subjects).
+    job.regenerate(idx, null, text, editing.present);
     setEditing(null);
   }, [editing, job]);
 
@@ -341,11 +370,10 @@ export default function FilmWorkspaceContainer({
         ? 'thinking…'
         : (() => {
             const msg = job.error || authoring.error || '';
-            // The header subtitle is a single tight line; a long backend error
-            // (e.g. the regenerate-needs-re-render message) would stretch it and
-            // break the header. Cap it here — the full error still renders in the
-            // chat message list, and CSS ellipsis (below) handles the rest.
-            return msg.length > 90 ? msg.slice(0, 88).trimEnd() + '…' : msg;
+            // Header subtitle is one tight line; a long backend error would stretch
+            // it and break the header. Cap here — full error still shows in chat,
+            // and the .film-hsub ellipsis (CSS) handles the rest.
+            return msg.length > 90 ? msg.slice(0, 88).trimEnd() + '\u2026' : msg;
           })()}
       streamingActive={authoring.streamingActive}
       streamingText={authoring.streamingText}
@@ -353,6 +381,7 @@ export default function FilmWorkspaceContainer({
       onCloseEdit={onCloseEdit}
       onChangeEditVisual={onChangeEditVisual}
       onPickSpeaker={onPickSpeaker}
+      onRemovePresent={onRemovePresent}
       onChangeLine={onChangeLine}
       onRegenerateFromEdit={onRegenerateFromEdit}
       onSaveEdit={onSaveEdit}
