@@ -1759,7 +1759,9 @@
 
 .pickerCard {
   width: 100%;
-  max-width: 520px;
+  /* was 520px — too narrow to seat three format cards in one row, which
+     wrapped the third card below and made the entry choice scroll */
+  max-width: 920px;
   background: rgba(15, 23, 42, 0.97);
   border: 1px solid rgba(148, 163, 184, 0.14);
   box-shadow:
@@ -1801,10 +1803,13 @@
 
 .pickerOptions {
   display: grid;
-  /* was 1fr 1fr — auto-fit lets the third "From your docs" card join the row
-     on desktop and wrap to its own row on narrow screens */
-  grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+  /* exactly three across on desktop — the entry choice must never scroll.
+     minmax(0,1fr) lets cards shrink instead of overflowing. */
+  grid-template-columns: repeat(3, minmax(0, 1fr));
   gap: 0.85rem;
+}
+@media (max-width: 760px) {
+  .pickerOptions { grid-template-columns: minmax(0, 1fr); }
 }
 
 .pickerOption {
