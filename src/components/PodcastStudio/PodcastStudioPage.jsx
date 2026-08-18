@@ -36,6 +36,8 @@ import InsufficientCreditsBanner from './InsufficientCreditsBanner';
 import styles from './PodcastStudioPage.module.css';
 import ApiErrorService from '../../services/ApiErrorService';
 import VoiceBrowser from './VoiceBrowser';
+import SourcesPanel from './SourcesPanel';
+import CitationChips from './CitationChips';
 
 // ── Constants ────────────────────────────────────────────────────────────────
 const TABS        = ['avatar', 'script', 'generate', 'podcasts', 'guide'];
@@ -503,6 +505,18 @@ export default function PodcastStudioPage({ context, onClose }) {
       const ok = await recordConsent();
       if (!ok) return;
     }
+    if (mode === 'docs') {
+      // Sources Mode ("From your docs"): format defaults to interview
+      // (host + guest) — the solo/interview segue stays the single source of
+      // format truth; a solo doc-briefing = pick Solo, then the Sources pill.
+      // NOTE: setScriptMode is intentionally NOT in the deps — it's a stable
+      // useState setter declared later in the file (TDZ if referenced in the
+      // deps array at render time; safe inside the closure body).
+      setPodcastMode('interview');
+      setActiveTab('script');
+      setScriptMode('sources');
+      return;
+    }
     setPodcastMode(mode);
     if (mode === 'solo') setActiveTab('script');
   }, [consented, recordConsent, setPodcastMode, setActiveTab]);
@@ -891,6 +905,39 @@ if (context.topic) setTopic(context.topic);
       console.error('❌ convert-to-lines:', e);
     }
   }, [latestScriptBlock, speakers, context, dispatchLines]);
+
+  // ── Sources Mode → Edit Lines handoff ──────────────────────────────────────
+  // Deliberate mirror of handleConvertToLines' remap, minus the parse fetch —
+  // SourcesPanel delivers lines already structured, with citations riding on
+  // each line (so chips survive reorder/delete; no index-keyed map).
+  // ONE GUEST: generation emits a single GUEST voice (expansion notes live in
+  // podcast_generate.py). No guest avatar yet → speakerId 'guest' fallback,
+  // exactly like the chat path's charKey fallback; render validation holds
+  // the gate until a real speaker exists.
+  const handleSourcesScriptReady = useCallback((genLines, meta) => {
+    const allGuests = speakers.filter(sp => sp.speakerId !== 'user');
+    const guest1    = allGuests[0];
+    const guestName = guest1?.displayName || 'Guest';
+    const charKey   = guest1?.speakerId   || 'guest';
+    const hostName  = context?.user?.displayName || 'You';
+
+    dispatchLines({
+      type: 'SET',
+      lines: genLines.map((l, i) => ({
+        id:          Date.now() + i,
+        text:        l.text,
+        audioUrl:    null,
+        speakerId:   l.speaker === 'host' ? 'user' : charKey,
+        displayName: l.speaker === 'host' ? hostName : guestName,
+        citations:   l.citations || [],
+        citationsEdited: false,
+      })),
+    });
+    setScriptMode('lines');
+    console.log(`📚 Sources script "${meta?.title || 'Untitled'}" → ${genLines.length} lines (scriptId ${meta?.scriptId})`);
+    // meta.scriptId persists server-side (GET /api/podcast/source-script/<id>)
+    // if a "regenerate from the same sources" affordance is wanted later.
+  }, [speakers, context, dispatchLines]);
 
   // ── Per-line recording ────────────────────────────────────────────────────
   // Toggle record on a line. Press once to start, press again to stop + upload.
@@ -1674,6 +1721,30 @@ if (context.topic) setTopic(context.topic);
                           </div>
                         </div>
                       </button>
+                      {/* From your docs — Sources Mode */}
+                      <button
+                        className={styles.pickerOption}
+                        onClick={() => handleModeSelect('docs')}
+                        disabled={!consented && !consentGiven}
+                        style={{ opacity: (!consented && !consentGiven) ? 0.45 : 1, cursor: (!consented && !consentGiven) ? 'not-allowed' : 'pointer' }}
+                      >
+                        <div className={styles.pickerOptionImg}>
+                          <img src="/images/from_your_docs.jpg" alt="From your docs"
+                            onError={e => { e.currentTarget.style.display='none'; e.currentTarget.nextSibling.style.display='flex'; }} />
+                          <div className={styles.pickerOptionImgFallback} style={{ display: 'none' }}>
+                            <span>📄</span>
+                            <span className={styles.pickerOptionImgFilename}>from_your_docs.jpg</span>
+                          </div>
+                        </div>
+                        <div className={styles.pickerOptionBody}>
+                          <div className={styles.pickerOptionName}>From your docs</div>
+                          <div className={styles.pickerOptionDesc}>Drop in a report, link, or recording. We turn it into the episode.</div>
+                          <div className={styles.pickerOptionCta}>
+                            Add sources
+                            <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" aria-hidden="true"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
+                          </div>
+                        </div>
+                      </button>
                     </div>
 
                     {/* Consent checkboxes — only shown if not yet consented */}
@@ -2318,6 +2389,12 @@ if (context.topic) setTopic(context.topic);
                   >
                     ≡ Edit Lines {lines.length > 0 && `(${lines.length})`}
                   </button>
+                  <button
+                    className={`${styles.scriptModeBtn} ${scriptMode === 'sources' ? styles.scriptModeBtnActive : ''}`}
+                    onClick={() => setScriptMode('sources')}
+                  >
+                    📚 Sources
+                  </button>
                 </div>
                 {/* Import from chat — lines mode only */}
                 {scriptMode === 'lines' && context?.chatHistory?.length > 0 && (
@@ -2335,6 +2412,18 @@ if (context.topic) setTopic(context.topic);
                   </button>
                 )}
               </div>
+
+              {/* ── SOURCES MODE — docs-to-episode. SourcesPanel owns the whole
+                   view (own hook, own CSS module); this page only receives the
+                   generated lines via handleSourcesScriptReady. ── */}
+              {scriptMode === 'sources' && (
+                <SourcesPanel
+                  mode={podcastMode === 'solo' ? 'solo' : 'interview'}
+                  hostName={context?.user?.displayName || 'You'}
+                  guestName={speakers.find(sp => sp.speakerId !== 'user')?.displayName || null}
+                  onScriptReady={handleSourcesScriptReady}
+                />
+              )}
 
               {/* ── CHAT MODE ── */}
               {scriptMode === 'chat' && (
@@ -2499,11 +2588,19 @@ if (context.topic) setTopic(context.topic);
                               value={line.text}
                               placeholder="Type the line…"
                               onChange={e => {
-                                dispatchLines({ type: 'UPDATE', id: line.id, patch: { text: e.target.value } });
+                                // Editing a cited line invalidates its verdicts —
+                                // chips flip to the dashed "edited, unverified" state.
+                                dispatchLines({ type: 'UPDATE', id: line.id,
+                                  patch: { text: e.target.value,
+                                           ...(line.citations?.length ? { citationsEdited: true } : {}) } });
                                 autoGrowTextarea(e.target);
                               }}
                               rows={2}
                             />
+                            {/* Citation chips — Sources Mode lines only */}
+                            {line.citations?.length ? (
+                              <CitationChips citations={line.citations} edited={!!line.citationsEdited} />
+                            ) : null}
                             {/* Overlay: AI suggestion chip (tap to accept) or attached indicator */}
                             {(() => {
                               const sug = overlaySuggestions[line.id];
