@@ -24,17 +24,20 @@
   -webkit-backdrop-filter: blur(16px);
 }
 
-/* Ambient backdrop — dark studio still + legibility overlay ON TOP.
-   Image: add /images/podcast_studio_ambience.jpg to the frontend public path.
-   If the file is missing, the gradients alone carry the look (no broken UI). */
-.panel::before {
+/* Ambient backdrop. The IMAGE is set at runtime in SourcesPanel.jsx (a div
+   with an inline backgroundImage pointing at public/images/…) — it must NOT
+   live in a CSS url(): webpack's css-loader compiles url() paths as module
+   imports relative to this file, and public/ is outside the module graph,
+   which is exactly the "Can't resolve" build error. This ::after is the
+   legibility overlay that paints ABOVE the image div and BELOW the content;
+   if the image file is missing, the gradients alone carry the look. */
+.panel::after {
   content: ''; position: absolute; inset: 0; z-index: 0; pointer-events: none;
   background:
     radial-gradient(ellipse 60% 45% at 12% -5%,  rgba(99,102,241,0.2),  transparent 60%),
     radial-gradient(ellipse 45% 40% at 95% 15%,  rgba(129,140,248,0.1), transparent 55%),
     radial-gradient(ellipse 55% 50% at 80% 105%, rgba(16,185,129,0.06), transparent 60%),
-    linear-gradient(rgba(7,11,26,0.82), rgba(7,11,26,0.88)),
-    url('/images/podcast_studio_ambience.jpg') center / cover no-repeat;
+    linear-gradient(rgba(7,11,26,0.82), rgba(7,11,26,0.88));
 }
 .panel > * { position: relative; z-index: 1; }
 

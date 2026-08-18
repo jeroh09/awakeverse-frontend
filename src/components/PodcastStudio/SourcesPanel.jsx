@@ -118,6 +118,11 @@ const ClockIcon = () => (
   <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 3"/></svg>
 );
 
+// Backdrop image lives in public/images/ and is referenced at RUNTIME so
+// webpack never tries to resolve it (CSS url() would — see the note in the
+// CSS module). PUBLIC_URL keeps sub-path deployments working.
+const BACKDROP_URL = `${process.env.PUBLIC_URL || ''}/images/podcast_studio_ambience.jpg`;
+
 export default function SourcesPanel({ mode = 'interview', hostName = 'You', guestName, onScriptReady }) {
   const {
     sources, sourcesLoading, addError,
@@ -249,6 +254,15 @@ export default function SourcesPanel({ mode = 'interview', hostName = 'You', gue
   // ── render ───────────────────────────────────────────────────────────────
   return (
     <div className={styles.panel}>
+      {/* ambient studio still — under the ::after gradient overlay, under all content */}
+      <div
+        aria-hidden="true"
+        style={{
+          position: 'absolute', inset: 0, zIndex: 0, pointerEvents: 'none',
+          backgroundImage: `url(${BACKDROP_URL})`,
+          backgroundSize: 'cover', backgroundPosition: 'center',
+        }}
+      />
       <div className={styles.grid}>
 
         {/* ════ SOURCES ════ */}
