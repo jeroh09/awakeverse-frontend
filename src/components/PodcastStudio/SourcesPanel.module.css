@@ -16,12 +16,16 @@
   position: relative;
   font-family: 'Inter', system-ui, sans-serif;
   color: var(--tp);
-  border: 1px solid var(--line-md);
-  border-radius: var(--radius-lg);
-  overflow: hidden;
-  background: rgba(10,15,34,0.78);
-  backdrop-filter: blur(16px);
-  -webkit-backdrop-filter: blur(16px);
+  /* Transparent wrapper — the two panels + footer are SEPARATE glass cards.
+     Fills its slot top-to-bottom so page-level vertical centering can't
+     float the content to the middle; bounded so panels scroll internally. */
+  display: flex;
+  flex-direction: column;
+  gap: 13px;
+  width: 100%;
+  height: 100%;
+  min-height: 480px;
+  max-height: calc(100vh - 215px);   /* tune to the page chrome if needed */
 }
 
 /* Ambient backdrop. The IMAGE is set at runtime in SourcesPanel.jsx (a div
@@ -33,6 +37,7 @@
    if the image file is missing, the gradients alone carry the look. */
 .panel::after {
   content: ''; position: absolute; inset: 0; z-index: 0; pointer-events: none;
+  border-radius: var(--radius-lg);
   background:
     radial-gradient(ellipse 60% 45% at 12% -5%,  rgba(99,102,241,0.2),  transparent 60%),
     radial-gradient(ellipse 45% 40% at 95% 15%,  rgba(129,140,248,0.1), transparent 55%),
@@ -41,18 +46,35 @@
 }
 .panel > * { position: relative; z-index: 1; }
 
-/* ── layout ── */
-.grid { display: grid; grid-template-columns: 1.06fr 1fr; }
+/* ── layout: two independent glass panels ── */
+.grid {
+  display: grid; grid-template-columns: 1.06fr 1fr; gap: 13px;
+  flex: 1 1 auto; min-height: 0; align-items: stretch;
+}
 @media (max-width: 840px) { .grid { grid-template-columns: 1fr; } }
-.col  { min-width: 0; }
-.colL { border-right: 1px solid var(--line); }
-@media (max-width: 840px) { .colL { border-right: none; border-bottom: 1px solid var(--line); } }
+.col {
+  min-width: 0; min-height: 0;
+  display: flex; flex-direction: column;
+  border: 1px solid var(--line-md); border-radius: 16px; overflow: hidden;
+  background: rgba(10,15,34,0.72);
+  backdrop-filter: blur(14px); -webkit-backdrop-filter: blur(14px);
+}
+.colL { }
 
 /* panel headers */
-.panelHead { display: flex; align-items: baseline; gap: 10px; padding: 15px 20px 12px; border-bottom: 1px solid var(--line); }
+.panelHead {
+  display: flex; align-items: baseline; gap: 10px;
+  padding: 14px 18px 11px; border-bottom: 1px solid var(--line);
+  flex-shrink: 0;   /* header stays pinned at the top of the pane */
+}
 .panelTitle { margin: 0; font-family: 'Syne', sans-serif; font-weight: 700; font-size: 0.94rem; color: var(--tp); }
 .panelSub   { font-size: 0.7rem; color: var(--tm); margin-left: auto; font-variant-numeric: tabular-nums; }
-.panelBody  { padding: 16px 20px 18px; }
+.panelBody {
+  padding: 15px 18px 16px;
+  flex: 1 1 auto; min-height: 0;
+  overflow-y: auto;                      /* the pane scrolls, not the page */
+  scrollbar-width: thin; scrollbar-color: rgba(99,102,241,0.3) transparent;
+}
 
 /* ── drop area (solid double ring) ── */
 .drop {
@@ -85,11 +107,7 @@
 .urlInput:focus-visible { outline: none; border-color: var(--indigo); box-shadow: var(--ring2); }
 
 /* ── source rows: rigid anatomy — a filename can NEVER stretch this ── */
-.srcList {
-  display: flex; flex-direction: column; gap: 7px;
-  max-height: 250px; overflow-y: auto;
-  scrollbar-width: thin; scrollbar-color: rgba(99,102,241,0.3) transparent;
-}
+.srcList { display: flex; flex-direction: column; gap: 7px; }
 .src {
   display: grid;
   grid-template-columns: 30px minmax(0, 1fr) 92px 22px; /* icon | bounded name | fixed pill | ✕ */
@@ -161,7 +179,7 @@
 
 /* ── episode settings ── */
 .speakers {
-  display: flex; align-items: center; gap: 12px;
+  display: flex; align-items: center; gap: 12px; flex-wrap: wrap; min-width: 0;
   border: 1px solid var(--indigo); box-shadow: var(--ring2);
   border-radius: var(--radius-md); padding: 12px 14px; margin-bottom: 14px;
   background: rgba(99,102,241,0.06);
@@ -179,9 +197,15 @@
 .spkTag  { margin-left: auto; font-size: 0.58rem; color: var(--tm); white-space: nowrap; }
 
 /* setting cards */
-.cards { display: grid; grid-template-columns: repeat(3, 1fr); gap: 9px; margin-bottom: 13px; }
-@media (max-width: 1100px) { .cards { grid-template-columns: 1fr; } }
+.cards {
+  display: grid; gap: 9px; margin-bottom: 13px;
+  /* minmax(0,1fr): tracks may shrink below content width — a long value
+     truncates instead of expanding the track past the panel edge */
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+}
+@media (max-width: 1180px) { .cards { grid-template-columns: minmax(0, 1fr); } }
 .setCard {
+  min-width: 0;
   display: flex; flex-direction: column; gap: 7px; text-align: left;
   font-family: inherit; cursor: pointer;
   border: 1px solid var(--line-md); border-radius: var(--radius-md);
@@ -196,7 +220,8 @@
   display: flex; align-items: center; justify-content: center; color: var(--indigo-l);
 }
 .cardLbl { font-size: 0.66rem; font-weight: 600; color: var(--ts); }
-.cardVal { font-size: 0.76rem; font-weight: 700; color: #e0e7ff; display: flex; align-items: center; gap: 6px; }
+.cardVal { font-size: 0.76rem; font-weight: 700; color: #e0e7ff; display: flex; align-items: center; gap: 6px; min-width: 0; }
+.cardValTxt { min-width: 0; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 .cardVal svg { color: var(--tm); flex-shrink: 0; }
 
 .fieldLabel {
@@ -230,9 +255,11 @@
 
 /* ── footer: the one action ── */
 .foot {
-  border-top: 1px solid var(--line);
-  padding: 15px 20px; display: flex; align-items: center; gap: 16px;
-  background: rgba(99,102,241,0.03);
+  flex-shrink: 0;
+  border: 1px solid var(--line-md); border-radius: 16px;
+  padding: 14px 18px; display: flex; align-items: center; gap: 16px;
+  background: rgba(10,15,34,0.72);
+  backdrop-filter: blur(14px); -webkit-backdrop-filter: blur(14px);
 }
 .footHint { flex: 1; font-size: 0.72rem; color: var(--tm); margin: 0; }
 .footHint b { color: var(--indigo-xl); }

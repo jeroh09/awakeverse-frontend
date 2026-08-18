@@ -384,17 +384,17 @@ export default function SourcesPanel({ mode = 'interview', hostName = 'You', gue
               <button type="button" className={styles.setCard} onClick={() => setModal('style')}>
                 <span className={styles.cardIc}><BubbleIcon /></span>
                 <span className={styles.cardLbl}>Conversation style</span>
-                <span className={styles.cardVal}>{style.name} <ChevIcon /></span>
+                <span className={styles.cardVal}><span className={styles.cardValTxt}>{style.name}</span> <ChevIcon /></span>
               </button>
               <button type="button" className={styles.setCard} onClick={() => setModal('tone')}>
                 <span className={styles.cardIc}><SlidersIcon /></span>
                 <span className={styles.cardLbl}>Tone</span>
-                <span className={styles.cardVal}>{tone.name} <ChevIcon /></span>
+                <span className={styles.cardVal}><span className={styles.cardValTxt}>{tone.name}</span> <ChevIcon /></span>
               </button>
               <button type="button" className={styles.setCard} onClick={() => setModal('length')}>
                 <span className={styles.cardIc}><ClockIcon /></span>
                 <span className={styles.cardLbl}>Length</span>
-                <span className={styles.cardVal}>{length.name} <ChevIcon /></span>
+                <span className={styles.cardVal}><span className={styles.cardValTxt}>{length.name}</span> <ChevIcon /></span>
               </button>
             </div>
 
