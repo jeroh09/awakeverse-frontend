@@ -21,11 +21,11 @@
      float the content to the middle; bounded so panels scroll internally. */
   display: flex;
   flex-direction: column;
-  gap: 13px;
+  gap: 10px;
   width: 100%;
   height: 100%;
   min-height: 480px;
-  max-height: calc(100vh - 215px);   /* tune to the page chrome if needed */
+  max-height: calc(100vh - 185px);   /* tune to the page chrome if needed */
 }
 
 /* Ambient backdrop. The IMAGE is set at runtime in SourcesPanel.jsx (a div
@@ -48,7 +48,7 @@
 
 /* ── layout: two independent glass panels ── */
 .grid {
-  display: grid; grid-template-columns: 1.06fr 1fr; gap: 13px;
+  display: grid; grid-template-columns: 1.06fr 1fr; gap: 10px;
   flex: 1 1 auto; min-height: 0; align-items: stretch;
 }
 @media (max-width: 840px) { .grid { grid-template-columns: 1fr; } }
@@ -64,13 +64,17 @@
 /* panel headers */
 .panelHead {
   display: flex; align-items: baseline; gap: 10px;
-  padding: 14px 18px 11px; border-bottom: 1px solid var(--line);
+  padding: 10px 16px 9px; border-bottom: 1px solid var(--line);
   flex-shrink: 0;   /* header stays pinned at the top of the pane */
 }
-.panelTitle { margin: 0; font-family: 'Syne', sans-serif; font-weight: 700; font-size: 0.94rem; color: var(--tp); }
+.panelTitle {
+  margin: 0; padding: 0; text-align: left;
+  font-family: 'Syne', sans-serif; font-weight: 700; font-size: 0.88rem; color: var(--tp);
+  /* rendered as a div (role=heading) so global h2 chrome can't reach it */
+}
 .panelSub   { font-size: 0.7rem; color: var(--tm); margin-left: auto; font-variant-numeric: tabular-nums; }
 .panelBody {
-  padding: 15px 18px 16px;
+  padding: 12px 16px 14px;
   flex: 1 1 auto; min-height: 0;
   overflow-y: auto;                      /* the pane scrolls, not the page */
   scrollbar-width: thin; scrollbar-color: rgba(99,102,241,0.3) transparent;
@@ -80,13 +84,13 @@
 .drop {
   border: 1px solid var(--line-strong); box-shadow: var(--ring2);
   border-radius: var(--radius-md); background: rgba(99,102,241,0.05);
-  padding: 14px; text-align: center; margin-bottom: 13px;
+  padding: 11px 12px; text-align: center; margin-bottom: 11px;
   transition: background 0.15s;
 }
 .dropActive { background: rgba(99,102,241,0.15); }
-.dropHint { margin: 0 0 9px; font-size: 0.76rem; color: var(--ts); }
+.dropHint { margin: 0 0 7px; font-size: 0.72rem; color: var(--ts); }
 .dropBtns { display: flex; justify-content: center; gap: 6px; flex-wrap: wrap; }
-.formats  { font-size: 0.6rem; color: var(--tm); margin: 9px 0 0; }
+.formats  { font-size: 0.58rem; color: var(--tm); margin: 7px 0 0; }
 
 .chipBtn {
   display: inline-flex; align-items: center; gap: 6px;
@@ -171,7 +175,7 @@
 .pulseDot { width: 6px; height: 6px; border-radius: 50%; background: currentColor; animation: spPulse 1.1s ease-in-out infinite; }
 @keyframes spPulse { 0%,100% { opacity: 1 } 50% { opacity: 0.25 } }
 
-.pickHint { font-size: 0.66rem; color: var(--tm); margin: 11px 0 0; text-align: center; }
+.pickHint { font-size: 0.64rem; color: var(--tm); margin: 9px 0 0; text-align: center; }
 .pickHint b { color: #6ee7b7; }
 
 .emptyLib { padding: 24px 12px; text-align: center; color: var(--ts); font-size: 0.78rem; line-height: 1.5; }
@@ -181,7 +185,7 @@
 .speakers {
   display: flex; align-items: center; gap: 12px; flex-wrap: wrap; min-width: 0;
   border: 1px solid var(--indigo); box-shadow: var(--ring2);
-  border-radius: var(--radius-md); padding: 12px 14px; margin-bottom: 14px;
+  border-radius: var(--radius-md); padding: 10px 12px; margin-bottom: 11px;
   background: rgba(99,102,241,0.06);
 }
 .avatarC {
@@ -203,13 +207,14 @@
      truncates instead of expanding the track past the panel edge */
   grid-template-columns: repeat(3, minmax(0, 1fr));
 }
+
 @media (max-width: 1180px) { .cards { grid-template-columns: minmax(0, 1fr); } }
 .setCard {
   min-width: 0;
   display: flex; flex-direction: column; gap: 7px; text-align: left;
   font-family: inherit; cursor: pointer;
   border: 1px solid var(--line-md); border-radius: var(--radius-md);
-  background: var(--card); padding: 12px 13px;
+  background: var(--card); padding: 10px 11px;
   transition: border-color 0.15s, box-shadow 0.15s;
 }
 .setCard:hover { border-color: var(--indigo); box-shadow: var(--ring2); }
@@ -233,12 +238,12 @@
 .focusInput {
   width: 100%; box-sizing: border-box; font-family: inherit; font-size: 0.76rem; color: var(--tp);
   background: var(--card); border: 1px solid var(--line-md); border-radius: var(--radius-sm);
-  padding: 10px 12px; margin-bottom: 12px;
+  padding: 9px 11px; margin-bottom: 10px;
 }
 .focusInput::placeholder { color: var(--tm); }
 .focusInput:focus-visible { outline: none; border-color: var(--indigo); box-shadow: var(--ring2); }
 
-.receipt { display: flex; gap: 8px; align-items: baseline; font-size: 0.68rem; color: var(--ts); line-height: 1.55; margin: 0 0 6px; }
+.receipt { display: flex; gap: 7px; align-items: baseline; font-size: 0.66rem; color: var(--ts); line-height: 1.5; margin: 0; }
 .receiptQ { color: var(--indigo-l); font-size: 0.85rem; }
 .rchip {
   display: inline-flex; align-items: center; gap: 4px;
@@ -256,15 +261,15 @@
 /* ── footer: the one action ── */
 .foot {
   flex-shrink: 0;
-  border: 1px solid var(--line-md); border-radius: 16px;
-  padding: 14px 18px; display: flex; align-items: center; gap: 16px;
+  border: 1px solid var(--line-md); border-radius: 14px;
+  padding: 9px 14px; display: flex; align-items: center; gap: 12px;
   background: rgba(10,15,34,0.72);
   backdrop-filter: blur(14px); -webkit-backdrop-filter: blur(14px);
 }
-.footHint { flex: 1; font-size: 0.72rem; color: var(--tm); margin: 0; }
+.footHint { flex: 1; font-size: 0.68rem; color: var(--tm); margin: 0; }
 .footHint b { color: var(--indigo-xl); }
 
-.steps { display: flex; gap: 15px; flex: 1; flex-wrap: wrap; }
+.steps { display: flex; gap: 12px; flex: 1; flex-wrap: wrap; }
 .step { display: flex; align-items: center; gap: 6px; font-size: 0.68rem; color: var(--tm); }
 .stepB {
   width: 15px; height: 15px; border-radius: 50%; border: 1px solid var(--line-md);
@@ -279,9 +284,9 @@
 
 .writeBtn {
   display: inline-flex; align-items: center; gap: 9px;
-  font-family: 'Syne', sans-serif; font-weight: 800; font-size: 0.88rem; color: #fff;
+  font-family: 'Syne', sans-serif; font-weight: 800; font-size: 0.8rem; color: #fff;
   background: var(--indigo); border: none; border-radius: var(--radius-pill);
-  padding: 12px 26px; cursor: pointer; flex-shrink: 0;
+  padding: 9px 21px; cursor: pointer; flex-shrink: 0;
   box-shadow: 0 0 0 1px rgba(99,102,241,0.4), 0 8px 28px -8px rgba(99,102,241,0.55);
   transition: background 0.15s, transform 0.1s;
 }

@@ -268,7 +268,7 @@ export default function SourcesPanel({ mode = 'interview', hostName = 'You', gue
         {/* ════ SOURCES ════ */}
         <section className={`${styles.col} ${styles.colL}`} aria-label="Sources">
           <div className={styles.panelHead}>
-            <h2 className={styles.panelTitle}>Sources</h2>
+            <div role="heading" aria-level={3} className={styles.panelTitle}>Sources</div>
             <span className={styles.panelSub}>{selected.size} of {MAX_SELECTED} picked</span>
           </div>
           <div className={styles.panelBody}>
@@ -359,7 +359,7 @@ export default function SourcesPanel({ mode = 'interview', hostName = 'You', gue
         {/* ════ EPISODE SETTINGS ════ */}
         <section className={styles.col} aria-label="Episode settings">
           <div className={styles.panelHead}>
-            <h2 className={styles.panelTitle}>Episode settings</h2>
+            <div role="heading" aria-level={3} className={styles.panelTitle}>Episode settings</div>
           </div>
           <div className={styles.panelBody}>
 
@@ -408,8 +408,7 @@ export default function SourcesPanel({ mode = 'interview', hostName = 'You', gue
 
             <p className={styles.receipt}>
               <span className={styles.receiptQ} aria-hidden="true">❝</span>
-              Every factual line arrives wearing a small receipt, like{' '}
-              <span className={styles.rchip}>❝ whitepaper · p.4</span> — tap it in the editor to read the exact passage.
+              Factual lines carry receipts back to your sources — tap one in the editor to read the exact passage.
             </p>
 
             {genState.error ? <div className={styles.errorBanner} role="alert">{genState.error}</div> : null}
@@ -451,7 +450,7 @@ export default function SourcesPanel({ mode = 'interview', hostName = 'You', gue
           <div className={styles.modal} role="dialog" aria-modal="true" aria-label={modalDef.title}>
             <div className={styles.mHead}>
               <span>
-                <h3 className={styles.mTitle}>{modalDef.title}</h3>
+                <div role="heading" aria-level={3} className={styles.mTitle}>{modalDef.title}</div>
                 <p className={styles.mDesc}>{modalDef.desc}</p>
               </span>
               <button type="button" className={styles.mClose} aria-label="Close" onClick={() => setModal(null)}>✕</button>
