@@ -41,6 +41,7 @@ import UseCaseDebate from './pages/UseCases/UseCaseDebate';
 import VsLLMs from './pages/VsLLMs';
 import UseCasesIndex from './pages/UseCases/UseCasesIndex';
 import WorldCupPage from './pages/WorldCupPage';
+import PodcastCreatorPage from './pages/PodcastCreatorPage';
 
 
 
@@ -92,6 +93,7 @@ export default function App() {
         {/* Creators & pricing */}
         <Route path="/creators" element={<CreatorsLanding />} />
         <Route path="/pricing" element={<PricingPage />} />
+        <Route path="/podcast-studio" element={<PodcastCreatorPage />} />
 
 
         {/* Use-Cases */}
