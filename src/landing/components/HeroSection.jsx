@@ -1,97 +1,33 @@
 // src/landing/components/HeroSection.jsx
-import React, { useState, useEffect } from 'react';
+import React from 'react';
 import { Link } from 'react-router-dom';
 import { useIntersectionObserver } from '../hooks/useIntersectionObserver';
+import StageHero from './StageHero';
 import '../styles/hero.css';
 
+// Central stage image (four sets, sequential spotlights). Uploaded to Spaces:
+const STAGE_IMAGE =
+  'https://awakeverse-blog.lon1.cdn.digitaloceanspaces.com/content/campaign/stage-four-sets.jpg';
+
 export default function HeroSection() {
-  const [typedText, setTypedText] = useState('');
-  const [isDeleting, setIsDeleting] = useState(false);
-  const [messageIndex, setMessageIndex] = useState(0);
   const [sectionRef, isVisible] = useIntersectionObserver();
-  
-  const messages = [
-    "Sherlock, I think my friend is lying..",
-    "Hey Tesla, should I buy Bitcoin?",
-    "Hi da Vinci, rate my idea!",
-    "Cleopatra, how do I deal with toxic coworkers?",
-    "Harriet, my plan feels risky. Am I ready?"
-  ];
-  
-  const currentMessage = messages[messageIndex];
-  const typingSpeed = 80;
-  const deletingSpeed = 50;
-  const pauseAfterComplete = 2000;
-  const pauseAfterDelete = 500;
-
-  // Typing animation effect
-  useEffect(() => {
-    let timeout;
-
-    if (!isDeleting && typedText === currentMessage) {
-      // Finished typing - pause then start deleting
-      timeout = setTimeout(() => setIsDeleting(true), pauseAfterComplete);
-    } else if (isDeleting && typedText === '') {
-      // Finished deleting - move to next message
-      timeout = setTimeout(() => {
-        setIsDeleting(false);
-        setMessageIndex((prev) => (prev + 1) % messages.length);
-      }, pauseAfterDelete);
-    } else {
-      // Continue typing or deleting
-      const speed = isDeleting ? deletingSpeed : typingSpeed;
-      timeout = setTimeout(() => {
-        setTypedText(prev => {
-          if (isDeleting) {
-            return currentMessage.substring(0, prev.length - 1);
-          } else {
-            return currentMessage.substring(0, prev.length + 1);
-          }
-        });
-      }, speed);
-    }
-
-    return () => clearTimeout(timeout);
-  }, [typedText, isDeleting, currentMessage, messages.length]);
 
   return (
-    <section 
-      id="hero" 
+    <section
+      id="hero"
       ref={sectionRef}
       className={`hero-section ${isVisible ? 'animate-in' : ''}`}
     >
       <div className="hero-container">
-        
-        {/* Hero Scene with Image */}
+
+        {/* Hero Scene — stage image with synced spotlights + morphing input deck.
+            Replaces the old <img> + .chat-overlay. Create button is decorative
+            and routes to /login. */}
         <div className="hero-scene">
-          <img 
-            src="/images/heroscene.jpeg"
-            alt="Historical figures in conversation"
-            className="hero-image"
-            loading="eager"
-            width="1200"
-            height="675"
-          />
-          
-          {/* Chat UI Overlay */}
-          <div className="chat-overlay">
-            <div className="chat-input-box">
-              <input 
-                type="text" 
-                value={typedText}
-                readOnly
-                placeholder="Ask anything..."
-                aria-label="Chat input preview"
-              />
-              <span className="typing-cursor">|</span>
-              <Link to="/register" className="start-chat-button">
-                Start Chat
-              </Link>
-            </div>
-          </div>
+          <StageHero imageUrl={STAGE_IMAGE} createTo="/login" />
         </div>
 
-        {/* Hero Text Content */}
+        {/* Hero Text Content — unchanged */}
         <div className="hero-content">
           <h1 className="hero-title">The Conversation AI</h1>
           <p className="hero-subtitle">
