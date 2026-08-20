@@ -3169,3 +3169,60 @@
   border-radius: 7px;
   padding: 0.4rem 0.55rem;
 }
+/* ══════════════════════════════════════════════════════════════════════════
+   AMBIENT LIGHT — slow drift. Paste into PodcastStudioPage_module.css,
+   right after the .page { … } rule (around line 44).
+
+   One fixed layer behind everything: two soft radial pools (indigo top-right,
+   green bottom-left) that breathe on slow, offset loops. pointer-events:none
+   so it never intercepts clicks. Respects prefers-reduced-motion.
+   ══════════════════════════════════════════════════════════════════════════ */
+
+.ambient {
+  position: absolute;
+  inset: 0;
+  z-index: 0;                 /* behind panels (which we lift to z-index:1) */
+  pointer-events: none;
+  overflow: hidden;
+}
+.ambient::before,
+.ambient::after {
+  content: '';
+  position: absolute;
+  inset: -12%;                /* overscan so the drift never reveals an edge */
+  will-change: transform;
+}
+/* indigo pool — top-right */
+.ambient::before {
+  background: radial-gradient(680px 420px at 82% 8%,
+              rgba(99,102,241,0.42), transparent 60%);
+  animation: ambientDrift1 26s ease-in-out infinite;
+}
+/* green pool — bottom-left, quieter */
+.ambient::after {
+  background: radial-gradient(620px 460px at 12% 96%,
+              rgba(16,185,129,0.22), transparent 62%);
+  animation: ambientDrift2 30s ease-in-out infinite;
+}
+@keyframes ambientDrift1 {
+  0%, 100% { transform: translate(0, 0) scale(1); }
+  50%      { transform: translate(-6%, 4%) scale(1.12); }
+}
+@keyframes ambientDrift2 {
+  0%, 100% { transform: translate(0, 0) scale(1); }
+  50%      { transform: translate(7%, -5%) scale(1.15); }
+}
+
+/* Lift the studio's own layers above the light without editing each panel.
+   These are the direct children of .page. */
+.page > .tabPill,
+.page > .body,
+.page > .footer {
+  position: relative;
+  z-index: 1;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .ambient::before,
+  .ambient::after { animation: none; }
+}

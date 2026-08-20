@@ -1632,6 +1632,9 @@ if (context.topic) setTopic(context.topic);
   return (
     <div className={styles.page}>
 
+      {/* ── Ambient light (slow drift) — behind all panels ── */}
+      <div className={styles.ambient} aria-hidden="true" />
+
       {/* ── Floating tab pill ── */}
       <div className={styles.tabPill}>
         {TABS.map((tab, i) => (
