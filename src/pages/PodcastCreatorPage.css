@@ -263,19 +263,29 @@
 .podcast-creator-container .indiv-tiles .tile { background:var(--card); border-radius:18px; padding:1.4rem; display:flex; flex-direction:column; gap:.55rem; transition:.3s; }
 .podcast-creator-container .indiv-tiles .tile:hover { transform:translateY(-4px); }
 
-/* ── Environments grid ──────────────────────────────────────── */
-/* Grid, not a scroll strip. auto-fill + minmax gives 4 across on
-   desktop, 3 on tablet, 2 on mobile — every plate visible, no
-   clipped/centered carousel. Cards are ~3× the old footprint. */
+/* ── Environments carousel ──────────────────────────────────── */
+/* Horizontal scroll-snap: shows 4 cards per view on desktop, snaps
+   card-to-card. Each card is a fixed fraction of the viewport width so
+   exactly 4 sit in frame; the rest scroll in. Not a vertical stack. */
 .podcast-creator-container .envs {
-  display:grid;
-  grid-template-columns:repeat(auto-fill, minmax(250px, 1fr));
-  gap:1.1rem;
-  padding:.3rem 0 1rem;
+  display:flex; gap:1.1rem;
+  overflow-x:auto; overflow-y:hidden;
+  scroll-snap-type:x mandatory;
+  -webkit-overflow-scrolling:touch;
+  padding:.3rem .2rem 1.2rem;
+  scrollbar-width:thin; scrollbar-color:var(--line-2) transparent;
 }
+.podcast-creator-container .envs::-webkit-scrollbar { height:8px; }
+.podcast-creator-container .envs::-webkit-scrollbar-thumb {
+  background:var(--line-2); border-radius:20px;
+}
+.podcast-creator-container .envs::-webkit-scrollbar-track { background:transparent; }
 .podcast-creator-container .env {
-  aspect-ratio:16/10;            /* bigger, responsive height (no fixed 126px) */
-  min-height:170px;              /* Safari <15 fallback for aspect-ratio */
+  /* 4 across: quarter of the container minus the gaps. flex-shrink:0 is
+     what stops the old collapse-to-one-card bug. */
+  flex:0 0 calc((100% - 3 * 1.1rem) / 4);
+  scroll-snap-align:start;
+  aspect-ratio:16/10; min-height:170px;
   border-radius:16px; position:relative; overflow:hidden;
   border:1px solid var(--line); transition:transform .25s, border-color .25s;
   background-size:cover; background-position:center; background-color:#141B2E;
@@ -322,10 +332,14 @@
   .podcast-creator-container .player:nth-child(1),
   .podcast-creator-container .player:nth-child(3) { transform:none; }
   .podcast-creator-container .player:nth-child(2) { transform:none; width:min(340px,80vw); }
+  /* Carousel: show ~2.5 cards so it's clearly scrollable and still large */
+  .podcast-creator-container .env { flex:0 0 calc((100% - 1.5 * 1.1rem) / 2.5); }
 }
 @media (max-width:600px){
   .podcast-creator-container .nav a:not(.btn) { display:none; }
   .podcast-creator-container .pipeline { grid-template-columns:1fr; }
+  /* Carousel: ~1.3 cards on phones — peek of the next card hints scroll */
+  .podcast-creator-container .env { flex:0 0 calc((100% - 0.3 * 1.1rem) / 1.3); }
 }
 @media (prefers-reduced-motion:reduce){
   .podcast-creator-container * { animation:none!important; transition:none!important; }
