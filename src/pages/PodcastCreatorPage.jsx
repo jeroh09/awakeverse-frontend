@@ -278,6 +278,45 @@ const PodcastCreatorPage = () => {
               </div>
             </div>
           </div>
+          <div className="dcard dbl rv">
+            <div className="dhead">Voice · pick a sound</div>
+            <div className="dbody">
+              <div className="vrow clone">
+                <div className="vplay" />
+                <div className="vmeta">
+                  <div className="vname">Your voice</div>
+                  <div className="vtag">Cloned · 42s sample</div>
+                </div>
+                <span className="vpick you">You</span>
+              </div>
+              <div className="vrow sel">
+                <div className="vplay" />
+                <div className="vmeta">
+                  <div className="vname">Rachel</div>
+                  <div className="vtag">Warm · Female</div>
+                </div>
+                <span className="vpick">Host</span>
+              </div>
+              <div className="vrow">
+                <div className="vplay" />
+                <div className="vmeta">
+                  <div className="vname">Adam</div>
+                  <div className="vtag">Neutral · Male</div>
+                </div>
+              </div>
+              <div className="vrow">
+                <div className="vplay" />
+                <div className="vmeta">
+                  <div className="vname">Domi</div>
+                  <div className="vtag">Confident · Female</div>
+                </div>
+              </div>
+              <div className="gnote">
+                Clone your own from a 30-second reading, or assign any line a
+                library voice. Tap ▶ to preview.
+              </div>
+            </div>
+          </div>
         </div>
       </section>
 

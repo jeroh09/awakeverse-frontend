@@ -199,7 +199,7 @@
 .podcast-creator-container .pipedemo {
   display:grid; grid-template-columns:1fr; gap:1.25rem; margin-top:1.75rem; text-align:left;
 }
-@media (min-width:900px){ .podcast-creator-container .pipedemo { grid-template-columns:.9fr 1.1fr; } }
+@media (min-width:1000px){ .podcast-creator-container .pipedemo { grid-template-columns:1fr 1.2fr .82fr; } }
 .podcast-creator-container .dcard { background:var(--card); border-radius:18px; overflow:hidden; display:flex; flex-direction:column; }
 .podcast-creator-container .dcard .dhead {
   padding:.75rem 1.1rem; font-family:var(--disp);
@@ -248,6 +248,35 @@
 }
 .podcast-creator-container .gnote { font-size:.68rem; color:var(--mute-2); line-height:1.6; }
 .podcast-creator-container .gnote b { color:#fcd34d; font-weight:600; }
+
+/* Voice card (third column of the pipe demo) */
+.podcast-creator-container .vrow {
+  display:flex; align-items:center; gap:.6rem; padding:.55rem .65rem; border-radius:11px;
+  background:rgba(10,15,26,.55); border:1px solid var(--line);
+}
+.podcast-creator-container .vrow.sel { border-color:var(--line-2); background:rgba(99,102,241,.08); }
+.podcast-creator-container .vrow.clone { border-color:rgba(99,102,241,.4); background:rgba(99,102,241,.1); }
+.podcast-creator-container .vplay {
+  width:30px; height:30px; border-radius:50%; flex-shrink:0;
+  display:flex; align-items:center; justify-content:center;
+  background:rgba(99,102,241,.14); border:1px solid var(--line-2);
+}
+.podcast-creator-container .vplay::after {
+  content:''; margin-left:2px;
+  border-left:8px solid var(--indigo-2); border-top:5px solid transparent; border-bottom:5px solid transparent;
+}
+.podcast-creator-container .vmeta { min-width:0; }
+.podcast-creator-container .vname { font-size:.78rem; font-weight:600; color:var(--ink); line-height:1.2; }
+.podcast-creator-container .vtag { font-size:.62rem; color:var(--mute-2); margin-top:1px; }
+.podcast-creator-container .vpick {
+  margin-left:auto; font-family:var(--disp); font-size:.54rem; font-weight:700;
+  letter-spacing:.4px; text-transform:uppercase; white-space:nowrap;
+  padding:.18rem .45rem; border-radius:20px;
+  color:#6ee7b7; background:rgba(16,185,129,.12); border:1px solid rgba(16,185,129,.3);
+}
+.podcast-creator-container .vpick.you {
+  color:var(--indigo-2); background:rgba(99,102,241,.12); border-color:var(--line-2);
+}
 
 /* ── Individuals: 3 tiles + portrait panel ──────────────────── */
 .podcast-creator-container .indiv { display:grid; grid-template-columns:1fr; gap:1.25rem; align-items:stretch; }
