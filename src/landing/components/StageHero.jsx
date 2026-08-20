@@ -46,7 +46,7 @@ export default function StageHero({
       <div className="stage-hero__spot s1" /><div className="stage-hero__spot s2" />
       <div className="stage-hero__spot s3" /><div className="stage-hero__spot s4" />
 
-      <div className="stage-hero__label l1">Chat</div>
+      <div className="stage-hero__label l1">Interview</div>
       <div className="stage-hero__label l2">Podcast</div>
       <div className="stage-hero__label l3">Film</div>
       <div className="stage-hero__label l4">Earn</div>
@@ -119,7 +119,7 @@ export default function StageHero({
         .stage-hero__label.l4{left:87%;color:#c7d2fe;animation-delay:9s}
         .stage-hero--nolabels .stage-hero__label{display:none}
 
-        .stage-hero__deck{position:absolute;left:50%;bottom:11%;transform:translateX(-50%);z-index:3;width:min(74%,560px);display:flex;flex-direction:column;align-items:center}
+        .stage-hero__deck{position:absolute;left:50%;bottom:26px;transform:translateX(-50%);z-index:3;width:min(74%,560px);display:flex;flex-direction:column;align-items:center}
 
         .stage-hero__verbpill{position:relative;margin-bottom:.7rem;display:inline-grid;place-items:center;
           padding:.4rem 1.4rem;border-radius:999px;background:rgba(10,15,26,.78);-webkit-backdrop-filter:blur(8px);backdrop-filter:blur(8px);
@@ -176,7 +176,7 @@ export default function StageHero({
         @keyframes shBeat{0%{opacity:0}3%{opacity:1}23%{opacity:1}27%{opacity:0}100%{opacity:0}}
 
         @media (max-width:768px){
-          .stage-hero__deck{width:min(88%,560px);bottom:9%}
+          .stage-hero__deck{width:min(88%,560px);bottom:16px}
           .stage-hero__reeltxt,.stage-hero__done{font-size:.72rem}
           .stage-hero__ctext{font-size:.8rem}
         }

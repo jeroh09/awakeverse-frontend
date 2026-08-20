@@ -31,18 +31,16 @@
   position: relative;
   width: 100%;
   max-width: 1200px;
-  max-height: 450px; /* Reduced from 600px to fit in viewport */
   margin: 0 auto;
-  border-radius: var(--radius-xl);
-  overflow: hidden;
-  box-shadow: var(--elevation-04);
-  border: 1px solid var(--border-subtle);
+  /* StageHero renders its own rounded frame, border, and shadow, so the
+     wrapper no longer clips or draws a frame — this prevents the input
+     deck's bottom border from being sliced off. */
+  overflow: visible;
   transition: all var(--transition-slow);
 }
 
 .hero-scene:hover {
-  box-shadow: var(--elevation-04), var(--glow-indigo-strong);
-  border-color: var(--accent-primary);
+  /* StageHero owns the frame now; wrapper hover intentionally does nothing. */
 }
 
 /* Hero Image */
@@ -307,7 +305,6 @@
 
   .hero-scene {
     max-width: 900px;
-    max-height: 400px; /* Reduced from 500px */
   }
 
   .hero-image {
@@ -339,8 +336,7 @@
   }
 
   .hero-scene {
-    border-radius: var(--radius-lg);
-    max-height: 320px; /* Reduced from 400px */
+    /* max-height cap removed — StageHero sizes to the image aspect ratio */
   }
 
   .hero-image {
@@ -402,7 +398,7 @@
   }
 
   .hero-scene {
-    max-height: 280px; /* Reduced from 350px */
+    /* max-height cap removed */
   }
 
   .hero-image {
