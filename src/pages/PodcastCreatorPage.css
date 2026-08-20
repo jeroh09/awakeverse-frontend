@@ -263,33 +263,39 @@
 .podcast-creator-container .indiv-tiles .tile { background:var(--card); border-radius:18px; padding:1.4rem; display:flex; flex-direction:column; gap:.55rem; transition:.3s; }
 .podcast-creator-container .indiv-tiles .tile:hover { transform:translateY(-4px); }
 
-/* ── Environments strip ─────────────────────────────────────── */
+/* ── Environments grid ──────────────────────────────────────── */
+/* Grid, not a scroll strip. auto-fill + minmax gives 4 across on
+   desktop, 3 on tablet, 2 on mobile — every plate visible, no
+   clipped/centered carousel. Cards are ~3× the old footprint. */
 .podcast-creator-container .envs {
-  display:flex; gap:.9rem; overflow-x:auto; padding:.3rem .2rem 1rem;
-  scrollbar-width:none; -webkit-overflow-scrolling:touch;
+  display:grid;
+  grid-template-columns:repeat(auto-fill, minmax(250px, 1fr));
+  gap:1.1rem;
+  padding:.3rem 0 1rem;
 }
-.podcast-creator-container .envs::-webkit-scrollbar { display:none; }
 .podcast-creator-container .env {
-  flex:0 0 200px; height:126px; border-radius:14px; position:relative; overflow:hidden;
-  border:1px solid var(--line); transition:transform .25s;
+  aspect-ratio:16/10;            /* bigger, responsive height (no fixed 126px) */
+  min-height:170px;              /* Safari <15 fallback for aspect-ratio */
+  border-radius:16px; position:relative; overflow:hidden;
+  border:1px solid var(--line); transition:transform .25s, border-color .25s;
   background-size:cover; background-position:center; background-color:#141B2E;
 }
-.podcast-creator-container .env:hover { transform:translateY(-4px); }
+.podcast-creator-container .env:hover { transform:translateY(-4px); border-color:var(--line-2); }
 .podcast-creator-container .env span {
-  position:absolute; left:12px; bottom:10px; font-size:.68rem; font-weight:600;
-  letter-spacing:.4px; color:var(--ink); text-shadow:0 1px 6px rgba(0,0,0,.7);
+  position:absolute; left:14px; bottom:12px; font-size:.9rem; font-weight:700;
+  letter-spacing:.2px; color:var(--ink); text-shadow:0 1px 8px rgba(0,0,0,.8);
 }
 .podcast-creator-container .env.custom {
   border:1px dashed var(--line-2); background:var(--fill);
   display:flex; align-items:center; justify-content:center;
 }
-.podcast-creator-container .env.custom span { position:static; color:var(--indigo-2); text-shadow:none; font-size:.72rem; }
+.podcast-creator-container .env.custom span { position:static; color:var(--indigo-2); text-shadow:none; font-size:.85rem; }
 .podcast-creator-container .env .cap-tag {
-  position:absolute; top:8px; right:8px; left:auto; bottom:auto;
-  font-family:var(--disp); font-size:.54rem; font-weight:700; letter-spacing:.4px;
+  position:absolute; top:10px; right:10px; left:auto; bottom:auto;
+  font-family:var(--disp); font-size:.6rem; font-weight:700; letter-spacing:.4px;
   text-transform:uppercase; color:#6ee7b7;
-  background:rgba(16,185,129,.15); border:1px solid rgba(16,185,129,.35);
-  padding:.16rem .45rem; border-radius:20px; text-shadow:none;
+  background:rgba(16,185,129,.18); border:1px solid rgba(16,185,129,.4);
+  padding:.2rem .5rem; border-radius:20px; text-shadow:none;
 }
 
 /* ── CTA band ───────────────────────────────────────────────── */
