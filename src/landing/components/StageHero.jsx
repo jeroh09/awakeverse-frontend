@@ -19,7 +19,7 @@
 import React from 'react';
 import { Link } from 'react-router-dom';
 
-const CHAT_LINE = 'Interview Marcus Aurelius on virtue';
+const CHAT_LINE = 'Chat with AI Characters on anything';
 
 const VERBS = [
   { t: 'Say it',   cls: 'v1' },
@@ -46,7 +46,7 @@ export default function StageHero({
       <div className="stage-hero__spot s1" /><div className="stage-hero__spot s2" />
       <div className="stage-hero__spot s3" /><div className="stage-hero__spot s4" />
 
-      <div className="stage-hero__label l1">Interview</div>
+      <div className="stage-hero__label l1">Chat</div>
       <div className="stage-hero__label l2">Podcast</div>
       <div className="stage-hero__label l3">Film</div>
       <div className="stage-hero__label l4">Earn</div>

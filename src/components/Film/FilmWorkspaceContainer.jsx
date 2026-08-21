@@ -283,26 +283,33 @@ export default function FilmWorkspaceContainer({
   const onRegenerateFromEdit = useCallback(() => {
     if (!editing) return;
     const idx = editing.index;
+    const b = beats.find(x => x.index === idx);
+    const text = composeBeatScript(editing.visual, editing.lines);
+    // Honest payload (2026-08-21 incident): send edited_text only when the
+    // composition actually DIFFERS from the beat's current text — an unchanged
+    // beat is a fresh take, not a re-direction. Same for present: only when a
+    // pill was actually toggled, and never an empty list (removing everyone is
+    // never the intent of a regenerate).
+    const unchanged = b && text === composeBeatScript(b.visual, b.lines);
+    const presentChanged = b && JSON.stringify((editing.present || []).slice().sort())
+                             !== JSON.stringify((b.present || []).slice().sort());
     setEditsByIndex(m => ({ ...m,
       [idx]: { visual: editing.visual, lines: editing.lines, present: editing.present } }));
     setRegenBusyIndex(idx);
-    const text = composeBeatScript(editing.visual, editing.lines);
-    // Send the explicit present list so a removed character stays out (backend
-    // treats it as authoritative over the stored subjects).
-    job.regenerate(idx, null, text, editing.present);
+    job.regenerate(idx, null,
+      unchanged ? null : text,
+      (presentChanged && (editing.present || []).length) ? editing.present : undefined);
     setEditing(null);
-  }, [editing, job]);
+  }, [editing, job, beats]);
 
   const onRegenerate = useCallback((index) => {
+    // Bare regenerate = "roll these dice again": same authored beat, no text,
+    // no override. Any saved edit was already applied by the edit-regenerate
+    // that saved it — re-sending it here made every retry a re-direction
+    // (the 2026-08-21 biscuit-Wicklow loop).
     setRegenBusyIndex(index);
-    const saved = editsByIndex[index];
-    const b = beats.find(x => x.index === index);
-    let text = null;
-    if (saved) {
-      text = composeBeatScript(saved.visual ?? (b && b.visual), saved.lines ?? (b && b.lines));
-    }
-    job.regenerate(index, null, text);
-  }, [job, editsByIndex, beats]);
+    job.regenerate(index, null, null);
+  }, [job]);
 
   const onCut = useCallback((index) => {
     const next = job.cells.filter(c => c.index !== index)

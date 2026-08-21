@@ -82,7 +82,10 @@ export const filmReassemble = (jobId, beats, captions) =>
 export const filmRegenerate = (jobId, beat_index, note, edited_text, present) =>
   api.post(`/film/jobs/${jobId}/regenerate`,
     { beat_index, note: note || null, edited_text: edited_text || null,
-      ...(Array.isArray(present) ? { present } : {}) },
+      // an empty present list is never a valid instruction — it reads as
+      // "cast of nobody" downstream (2026-08-21 narrator-wipe); omit unless
+      // there are actual names
+      ...(Array.isArray(present) && present.length ? { present } : {}) },
     { timeout: QUEUE_TIMEOUT }).then(r => r.data);
 
 // ── plate review (Plan & review lifecycle: plan → awaiting_review → regenerate → approve) ──
