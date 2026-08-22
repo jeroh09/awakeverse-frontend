@@ -8,6 +8,7 @@
 import React, { useState } from 'react';
 import { IconCheck } from './filmIcons';
 import FilmLibrary from './FilmLibrary';
+import FilmVideoWall from './FilmVideoWall';
 import FilmSeriesModals from './FilmSeriesModals';
 
 const STYLES = [
@@ -67,6 +68,9 @@ export default function MyFilmsView({
     <div className="film-lib">
       {/* ── LEFT 60% — the user's films (series-aware library) ── */}
       <div className="film-lib-left">
+        {/* Ambient looping film reel behind the shelf (see film-video-wall.css) */}
+        <FilmVideoWall />
+
         {picking && (
           <div className="film-lib-newbar">
             <div className="film-seg">

@@ -869,3 +869,61 @@
 .film-phead{ min-width:0; }
 .film-htab{ flex:0 0 auto; }
 .film-hsub{ flex:0 1 auto; min-width:0; }
+/* ══════════════════════════════════════════════════════════════════════════
+   FILM VIDEO WALL — ambient reel behind the My Films library (left column).
+   Paste into FilmWorkspace.css. Two parts:
+
+   PART A — make .film-lib-left a positioning host and lift its children.
+   PART B — the video wall layer + scrim.
+   ══════════════════════════════════════════════════════════════════════════ */
+
+/* ── PART A ──────────────────────────────────────────────────────────────
+   .film-lib-left is currently: flex:1 1 60%; min-width:0; display:flex;
+   flex-direction:column; border-right:… — add position:relative + overflow
+   clip so the absolute wall anchors here and can't spill past the column. */
+.film-lib-left {
+  position: relative;   /* anchor for .film-video-wall */
+  overflow: hidden;     /* clip the wall to the column */
+}
+/* Lift the column's real content above the wall. These are the direct
+   children rendered inside .film-lib-left (newbar, error, empty, and the
+   FilmLibrary root). A blanket child lift keeps us from editing each one. */
+.film-lib-left > *:not(.film-video-wall) {
+  position: relative;
+  z-index: 1;
+}
+
+/* ── PART B ──────────────────────────────────────────────────────────────
+   The wall itself: fills the column, sits behind content, never clickable. */
+.film-video-wall {
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+  pointer-events: none;
+  overflow: hidden;
+}
+.film-video-wall video,
+.film-video-wall__still {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;              /* wide column → cover crops cleanly */
+  background-size: cover;
+  background-position: center;
+  /* Low opacity so it reads as ambient texture, not content. The encode is
+     already darkened; this is the final tame. Tune 0.18 up/down to taste. */
+  opacity: 0.18;
+}
+/* Dark scrim over the video so glass cards + white text stay legible.
+   Slightly heavier toward the top where the New-Film bar/labels sit. */
+.film-video-wall__scrim {
+  position: absolute;
+  inset: 0;
+  background:
+    linear-gradient(180deg, rgba(2,6,23,0.55) 0%, rgba(2,6,23,0.30) 40%, rgba(2,6,23,0.55) 100%);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  /* Component already renders a static frame; nothing extra needed here. */
+}
