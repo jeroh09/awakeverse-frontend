@@ -222,6 +222,8 @@ export default function Storyboard({
   beats = [],
   aspectRatio = '9:16',
   videoStyle = null,
+  durationSeconds = null,
+  onDurationChange = null,
   cost = null,
   costAffordable = null,
   cast = null,
@@ -345,6 +347,22 @@ export default function Storyboard({
                        borderRadius: 999, padding: '3px 10px', whiteSpace: 'nowrap' }}>
               {styleLabel(videoStyle)} · {aspectRatio}
             </span>
+          )}
+          {durationSeconds != null && onDurationChange && (
+            <select
+              className="film-hduration"
+              value={durationSeconds}
+              disabled={stageState === 'rendering'}
+              onChange={(e) => onDurationChange(Number(e.target.value))}
+              title="Film length — the script is fitted to this before directing; too short and connective scenes get condensed away"
+              style={{ marginLeft: 8, fontSize: 12, fontWeight: 600, color: '#818cf8',
+                       background: 'rgba(99,102,241,.1)', border: '1px solid rgba(99,102,241,.3)',
+                       borderRadius: 999, padding: '3px 10px', cursor: 'pointer',
+                       appearance: 'none', WebkitAppearance: 'none' }}>
+              <option value={60}>~1 min</option>
+              <option value={120}>~2 min</option>
+              <option value={180}>~3 min</option>
+            </select>
           )}
         </div>
         <div className="film-phead-right">

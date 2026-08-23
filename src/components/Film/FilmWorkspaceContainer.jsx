@@ -340,21 +340,6 @@ export default function FilmWorkspaceContainer({
 
   return (
     <>
-    <>
-    <div className="film-duration-bar">
-      <label htmlFor="film-duration-select">Film length</label>
-      <select
-        id="film-duration-select"
-        value={meta.duration_seconds}
-        onChange={(e) => setMeta(m => ({ ...m, duration_seconds: Number(e.target.value) }))}
-        title="Target length. The script is fitted to this before directing — too short and connective scenes get condensed away (job 255's street rides)."
-      >
-        <option value={60}>~1 minute</option>
-        <option value={120}>~2 minutes</option>
-        <option value={180}>~3 minutes</option>
-      </select>
-      {renderCost ? <span className="film-duration-cost">{renderCost.price}</span> : null}
-    </div>
     <FilmWorkspace
       title={job.title || authoring.title}
       loading={loading}
@@ -363,6 +348,8 @@ export default function FilmWorkspaceContainer({
       beats={beats}
       aspectRatio={meta.aspect_ratio}
       videoStyle={meta.video_style}
+      durationSeconds={meta.duration_seconds}
+      onDurationChange={(v) => setMeta(m => ({ ...m, duration_seconds: v }))}
       credits={credits}
       onShowCredits={() => navigate('/billing')}
       cost={renderCost ? renderCost.price : null}
@@ -413,7 +400,6 @@ export default function FilmWorkspaceContainer({
       onReviewCast={onReviewCast}
       onSaveScript={onSaveScript}
     />
-    </>
     {blockInfo && (
       <div
         className="film-modal-scrim"
