@@ -20,6 +20,19 @@ import AttachButton from './AttachButton';
 import { filmUploadAttachment } from './filmApi';
 import { parseMarkdown } from './filmMarkdown';
 
+// Movie-camera glyph for the in-chat thinking indicator. Kept inline (rather
+// than added to filmIcons) so this feature is self-contained; stroke-based to
+// match the other film icons.
+function IconMovieCamera({ s = 16 }) {
+  return (
+    <svg width={s} height={s} viewBox="0 0 24 24" fill="none" stroke="currentColor"
+      strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+      <path d="m22 8-6 4 6 4V8Z" />
+      <rect x="2" y="6" width="14" height="12" rx="2" />
+    </svg>
+  );
+}
+
 function Runs({ runs }) {
   return runs.map((r) => {
     if (r.type === 'b') return <b key={r.key}>{r.text}</b>;
@@ -210,6 +223,7 @@ function Turn({ role, text, attachment, scriptMeta, editable = false, onSaveScri
 export default function WritersRoom({
   messages = [],
   sub = '',
+  thinking = false,
   streamingActive = false,
   streamingText = '',
   editingBeat = null,
@@ -238,7 +252,7 @@ export default function WritersRoom({
   useEffect(() => {
     const el = scrollRef.current;
     if (el) el.scrollTop = el.scrollHeight;
-  }, [messages, streamingActive, streamingText]);
+  }, [messages, thinking, streamingActive, streamingText]);
 
   const grow = (el) => {
     if (!el) return;
@@ -296,15 +310,37 @@ export default function WritersRoom({
               onSaveScript={onSaveScript} />
           ));
         })()}
-        {streamingActive && (
-          <div className="film-turn-ai">
-            <div className="film-who">Director</div>
-            <div className="film-flow">
-              <span className="film-stream-text">{streamingText}</span>
-              <span className="film-cursor">▍</span>
-            </div>
-          </div>
-        )}
+        {(() => {
+          // The gap between "sent" and the first streamed token: show the
+          // camera + dots. `thinking` (from the container's authoring.busy) is
+          // the reliable signal; the streaming fallback covers the brief moment
+          // a stream is active but no text has landed yet. Once real tokens
+          // arrive we fall through to the streaming turn below.
+          const isThinking = thinking || (streamingActive && !streamingText.trim());
+          if (isThinking) {
+            return (
+              <div className="film-turn-ai">
+                <div className="film-who">Director</div>
+                <div className="film-thinking" role="status" aria-label="Director is thinking">
+                  <span className="film-thinking-cam"><IconMovieCamera s={16} /></span>
+                  <span className="film-thinking-dots" aria-hidden="true"><i /><i /><i /></span>
+                </div>
+              </div>
+            );
+          }
+          if (streamingActive) {
+            return (
+              <div className="film-turn-ai">
+                <div className="film-who">Director</div>
+                <div className="film-flow">
+                  <span className="film-stream-text">{streamingText}</span>
+                  <span className="film-cursor">▍</span>
+                </div>
+              </div>
+            );
+          }
+          return null;
+        })()}
       </div>
 
       {editingBeat && (() => {

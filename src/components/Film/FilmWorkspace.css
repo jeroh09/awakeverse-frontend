@@ -160,7 +160,14 @@
 
 /* expanded panels: the rail is hidden and .film-pcontent (WritersRoom's own
    root) or Storyboard's content fills the panel normally */
-.film-pcontent{display:flex;flex-direction:column;min-height:0;height:100%;}
+/* width:100% is load-bearing. Each .film-panel is a <section>, and an app-wide
+   global `section{align-items:center}` leaks onto it (the panel sets display/
+   direction but never resets align-items). That shrink-wraps + centres this
+   column, so before the first message — when the widest child is the composer
+   itself — the whole Writers' Room collapsed to ~2/3 width and floated centred,
+   only snapping to full width once a wide reply forced it open. Pinning the
+   width makes the column (composer included) fill the panel in every state. */
+.film-pcontent{display:flex;flex-direction:column;min-height:0;height:100%;width:100%;}
 
 /* panel header — Storyboard keeps the pill badge look ("Storyboard · no
    shots yet"). Writers' Room overrides .film-htab further down to a plain
@@ -322,6 +329,25 @@
 .film-flow i{color:var(--film-accent-hover);}
 .film-stream-text{white-space:pre-wrap;}
 .film-cursor{animation:film-cursor 1s step-start infinite;}
+
+/* in-chat "Director is thinking" — a movie camera followed by three bouncing
+   dots, shown in the gap between the user's send and the first streamed token
+   (the header's "thinking…" mirrored into the conversation itself). Lives at the
+   foot of .film-chatscroll and hands off to .film-stream-text + .film-cursor the
+   instant real tokens arrive. Camera pulses, dots stagger. (Both animations are
+   disabled by the global prefers-reduced-motion rule below, leaving a legible
+   static camera + dots.) */
+.film-thinking{display:inline-flex;align-items:center;gap:9px;padding:2px 0;}
+.film-thinking-cam{flex:0 0 auto;color:var(--film-accent-hover);display:inline-flex;
+  animation:film-thinkcam 1.5s ease-in-out infinite;}
+.film-thinking-cam svg{display:block;}
+.film-thinking-dots{display:inline-flex;gap:5px;align-items:center;}
+.film-thinking-dots i{width:6px;height:6px;border-radius:50%;background:var(--film-accent-hover);
+  animation:film-thinkdot 1.25s ease-in-out infinite;}
+.film-thinking-dots i:nth-child(2){animation-delay:.16s;}
+.film-thinking-dots i:nth-child(3){animation-delay:.32s;}
+@keyframes film-thinkdot{0%,60%,100%{transform:translateY(0);opacity:.4}30%{transform:translateY(-5px);opacity:1}}
+@keyframes film-thinkcam{0%,100%{opacity:.6;transform:scale(1)}50%{opacity:1;transform:scale(1.06)}}
 
 /* ── script-meta cluster: duration badge + character chips ── */
 .film-scriptmeta{display:flex;flex-direction:column;gap:9px;}
