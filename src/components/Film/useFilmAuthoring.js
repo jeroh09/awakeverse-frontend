@@ -46,6 +46,11 @@ export default function useFilmAuthoring() {
   const [error, setError]   = useState(null);
   const [streamingActive, setStreamingActive] = useState(false);
   const [streamingText, setStreamingText]     = useState('');
+  // True from the instant a message is sent until its reply begins streaming
+  // (or errors). This is what drives the in-chat "Director is thinking" turn.
+  // Deliberately narrower than `busy`: `busy` also covers start()/finalize(),
+  // where no chat reply is being composed and the indicator shouldn't show.
+  const [thinking, setThinking] = useState(false);
   const sidRef = useRef(null);
   const streamTokenRef = useRef(0);   // invalidates a stale read if a new send starts
 
@@ -58,6 +63,7 @@ export default function useFilmAuthoring() {
       filename: attachment.filename, url: attachment.url, file_type: attachment.file_type,
     } : null }]);
     setBusy(true);
+    setThinking(true);
     const myToken = ++streamTokenRef.current;
 
     // What the DIRECTOR sees: the user's note plus the attached script's text
@@ -72,6 +78,7 @@ export default function useFilmAuthoring() {
     try {
       const response = await filmMessageStream(sid, directorText);
       setBusy(false);
+      setThinking(false);
       setStreamingActive(true);
       setStreamingText('');
 
@@ -135,12 +142,13 @@ export default function useFilmAuthoring() {
       const msg = friendlyError(e, 'Something went wrong drafting that. Try again.');
       if (streamTokenRef.current === myToken) {
         setError(msg);
+        setThinking(false);
         setStreamingActive(false);
         setStreamingText('');
         setMessages(m => [...m, { role: 'ai', text: msg }]);
       }
     } finally {
-      if (streamTokenRef.current === myToken) setBusy(false);
+      if (streamTokenRef.current === myToken) { setBusy(false); setThinking(false); }
     }
   }, []);
 
@@ -216,12 +224,13 @@ export default function useFilmAuthoring() {
     sidRef.current = null;
     setSessionId(null); setMessages([]); setScriptReady(false);
     setScript(null); setShots(null); setError(null); setBusy(false);
+    setThinking(false);
     setStreamingActive(false); setStreamingText('');
   }, []);
 
   return {
     sessionId, messages, scriptReady, script, shots, title, busy, error,
-    streamingActive, streamingText,
+    thinking, streamingActive, streamingText,
     start, send, finalize, adopt, reset,
   };
 }

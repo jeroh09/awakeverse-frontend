@@ -39,6 +39,9 @@ export default function FilmWorkspace({
   // chat (right)
   messages = [],
   chatSub = '',
+  thinking = false,
+  streamingActive = false,
+  streamingText = '',
   editingBeat = null,
   onCloseEdit, onChangeEditVisual, onPickSpeaker, onRemovePresent, onChangeLine, onRegenerateFromEdit, onSaveEdit,
   onSend, scriptReady = false, onBuildFilm, onReviewCast, onSaveScript,
@@ -165,6 +168,9 @@ export default function FilmWorkspace({
             <WritersRoom
               messages={messages}
               sub={chatSub}
+              thinking={thinking}
+              streamingActive={streamingActive}
+              streamingText={streamingText}
               editingBeat={editingBeat}
               onCloseEdit={onCloseEdit}
               onChangeEditVisual={onChangeEditVisual}

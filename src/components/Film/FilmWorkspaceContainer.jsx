@@ -386,6 +386,7 @@ export default function FilmWorkspaceContainer({
           })()}
       streamingActive={authoring.streamingActive}
       streamingText={authoring.streamingText}
+      thinking={authoring.thinking}
       editingBeat={editing}
       onCloseEdit={onCloseEdit}
       onChangeEditVisual={onChangeEditVisual}

@@ -20,15 +20,18 @@ import AttachButton from './AttachButton';
 import { filmUploadAttachment } from './filmApi';
 import { parseMarkdown } from './filmMarkdown';
 
-// Movie-camera glyph for the in-chat thinking indicator. Kept inline (rather
-// than added to filmIcons) so this feature is self-contained; stroke-based to
-// match the other film icons.
-function IconMovieCamera({ s = 16 }) {
+// Clapperboard glyph for the in-chat thinking indicator. Original path data
+// (not from any icon library); kept inline so the feature is self-contained,
+// stroke-based to match the other film icons.
+function IconClapper({ s = 16 }) {
   return (
     <svg width={s} height={s} viewBox="0 0 24 24" fill="none" stroke="currentColor"
-      strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
-      <path d="m22 8-6 4 6 4V8Z" />
-      <rect x="2" y="6" width="14" height="12" rx="2" />
+      strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+      <rect x="3" y="10.5" width="18" height="9.5" rx="1.5" />
+      <path d="M3.4 10.5 4.5 6.7 21 7.2 20.4 10.5Z" />
+      <line x1="8.4" y1="6.85" x2="6.9" y2="10.5" />
+      <line x1="13.2" y1="7" x2="11.7" y2="10.5" />
+      <line x1="18" y1="7.15" x2="16.5" y2="10.5" />
     </svg>
   );
 }
@@ -312,9 +315,9 @@ export default function WritersRoom({
         })()}
         {(() => {
           // The gap between "sent" and the first streamed token: show the
-          // camera + dots. `thinking` (from the container's authoring.busy) is
-          // the reliable signal; the streaming fallback covers the brief moment
-          // a stream is active but no text has landed yet. Once real tokens
+          // clapperboard + dots. `thinking` (from the hook's authoring.thinking)
+          // is the reliable signal; the streaming fallback covers the brief
+          // moment a stream is open but no text has landed yet. Once real tokens
           // arrive we fall through to the streaming turn below.
           const isThinking = thinking || (streamingActive && !streamingText.trim());
           if (isThinking) {
@@ -322,7 +325,7 @@ export default function WritersRoom({
               <div className="film-turn-ai">
                 <div className="film-who">Director</div>
                 <div className="film-thinking" role="status" aria-label="Director is thinking">
-                  <span className="film-thinking-cam"><IconMovieCamera s={16} /></span>
+                  <span className="film-thinking-cam"><IconClapper s={16} /></span>
                   <span className="film-thinking-dots" aria-hidden="true"><i /><i /><i /></span>
                 </div>
               </div>
