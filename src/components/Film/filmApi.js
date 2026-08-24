@@ -244,3 +244,18 @@ export const filmPromoteToSeries = (projectId, { title } = {}) =>
 export const filmRefreshCharacterPlate = (seriesId, characterId, body = {}) =>
   api.post(`/film/series/${seriesId}/characters/${characterId}/refresh-plate`,
     body, { timeout: QUEUE_TIMEOUT }).then(r => r.data);
+
+// Delete ONE episode of a series (delete_project semantics server-side: chat
+// cascades away, rendered videos survive in My Videos, series canon untouched).
+// A 409 means an episode render is in flight — cancel first; friendlyError
+// surfaces the server's message as-is.
+export const filmDeleteEpisode = (seriesId, projectId) =>
+  api.delete(`/film/series/${seriesId}/episodes/${projectId}`,
+    { timeout: QUEUE_TIMEOUT }).then(r => r.data);
+
+// Delete a WHOLE series — every episode plus its locked cast & locations, one
+// transaction server-side; irreversible. Resolves with casualty counts
+// ({ episodes_deleted, characters_deleted, locations_deleted }) for the toast.
+// Never touches stored media (shared plate cache) — see film_routes cascade notes.
+export const filmDeleteSeries = (seriesId) =>
+  api.delete(`/film/series/${seriesId}`, { timeout: QUEUE_TIMEOUT }).then(r => r.data);
