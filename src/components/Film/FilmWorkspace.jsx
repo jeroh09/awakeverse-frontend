@@ -85,8 +85,24 @@ export default function FilmWorkspace({
     return () => { document.body.classList.remove('film-mode-active'); };
   }, []);
 
+  // THE STRAY-SPACE BUG (2026-08-24): native <button>s KEEP FOCUS after a
+  // mouse click, and a focused button re-activates on Space/Enter — so
+  // "click Make the film, later press space" built the film again, and Space
+  // after clicking Send re-sent. Almost no button in this workspace blurs or
+  // opts out, so instead of touching dozens of call sites, one delegated
+  // capture here blurs whichever button was MOUSE/TOUCH-activated (e.detail>0;
+  // keyboard activations arrive with detail===0 and keep focus, so keyboard
+  // users' position is preserved — no a11y regression). rAF defers the blur
+  // until after the click handler has run.
+  const blurAfterPointerClick = (e) => {
+    if (e.detail > 0) {
+      const b = e.target.closest && e.target.closest('button');
+      if (b) requestAnimationFrame(() => b.blur());
+    }
+  };
+
   return (
-    <div className="film-workspace theme-awakeverse">
+    <div className="film-workspace theme-awakeverse" onClickCapture={blurAfterPointerClick}>
       <div className="film-topbar">
         <span className="film-title" title={title}>{title || 'Untitled film'}</span>
         {credits && (

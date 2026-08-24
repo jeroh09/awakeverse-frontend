@@ -9,6 +9,7 @@ import { useState, useEffect, useCallback } from 'react';
 import {
   filmListSeries, filmCreateSeries, filmCreateEpisode,
   filmPromoteToSeries, filmRefreshCharacterPlate, friendlyError,
+  filmDeleteEpisode, filmDeleteSeries,
 } from './filmApi';
 
 export default function useFilmSeries() {
@@ -50,13 +51,30 @@ export default function useFilmSeries() {
     return res;                       // { series_id, ... }
   }, [refresh]);
 
+  // Deletion (2026-08-24). Same thin pattern as create*: call, refresh, return
+  // the server payload — deleteSeries's includes casualty counts
+  // ({ episodes_deleted, characters_deleted, locations_deleted }) for a toast.
+  // Errors throw (incl. the 409 still-rendering refusal); callers catch.
+  const deleteEpisode = useCallback(async (seriesId, projectId) => {
+    const res = await filmDeleteEpisode(seriesId, projectId);
+    await refresh();
+    return res;
+  }, [refresh]);
+
+  const deleteSeries = useCallback(async (seriesId) => {
+    const res = await filmDeleteSeries(seriesId);
+    await refresh();
+    return res;
+  }, [refresh]);
+
   const refreshCharacterPlate = useCallback(async (seriesId, characterId, body) => {
     const res = await filmRefreshCharacterPlate(seriesId, characterId, body);
     await refresh();
     return res;
   }, [refresh]);
 
-  return { series, loading, error, refresh, createSeries, createEpisode, promote, refreshCharacterPlate };
+  return { series, loading, error, refresh, createSeries, createEpisode, promote,
+           refreshCharacterPlate, deleteEpisode, deleteSeries };
 }
 
 // Also available as a named import, for flexibility.

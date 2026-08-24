@@ -272,3 +272,44 @@
 
 @media (max-width:760px){ .fs-series-wrap{ grid-template-columns:1fr; } .fs-pill{ flex-wrap:wrap; } }
 @media (prefers-reduced-motion:reduce){ .fs *{ transition:none!important; animation:none!important; } }
+
+/* ── episode / series deletion (2026-08-24) ─────────────────────────────── */
+.fs-ep { position: relative; cursor: pointer; }
+.fs-ep-x {
+  margin-left: 8px; width: 22px; height: 22px; line-height: 20px;
+  border-radius: 6px; border: 1px solid rgba(255,255,255,.14);
+  background: transparent; color: rgba(255,255,255,.45);
+  font-size: 14px; cursor: pointer; flex: 0 0 auto;
+  opacity: 0; transition: opacity .12s ease, color .12s ease, border-color .12s ease;
+}
+.fs-ep:hover .fs-ep-x, .fs-ep:focus-within .fs-ep-x { opacity: 1; }
+.fs-ep-x:hover { color: #ff6b6b; border-color: rgba(255,107,107,.5); }
+.fs-ep--confirm { border-color: rgba(255,107,107,.45); background: rgba(255,107,107,.06); }
+.fs-ep--confirm .fs-et { white-space: normal; font-size: 12px; opacity: .9; }
+.fs-ep-yes, .fs-ep-no {
+  flex: 0 0 auto; padding: 5px 10px; border-radius: 7px; font-size: 12px;
+  cursor: pointer; border: 1px solid rgba(255,255,255,.16); background: transparent;
+  color: rgba(255,255,255,.8);
+}
+.fs-ep-yes { border-color: rgba(255,107,107,.6); color: #ff8585; }
+.fs-ep-yes:hover { background: rgba(255,107,107,.14); }
+.fs-ep-no:hover { background: rgba(255,255,255,.08); }
+.fs-delseries {
+  margin-top: 14px; padding: 7px 12px; border-radius: 8px; font-size: 12px;
+  border: 1px solid rgba(255,255,255,.12); background: transparent;
+  color: rgba(255,255,255,.42); cursor: pointer; align-self: flex-start;
+}
+.fs-delseries:hover { color: #ff8585; border-color: rgba(255,107,107,.45); }
+.fs-delseries--confirm {
+  display: flex; gap: 10px; align-items: center; flex-wrap: wrap;
+  border-color: rgba(255,107,107,.45); background: rgba(255,107,107,.06);
+  color: rgba(255,255,255,.85); cursor: default; font-size: 12px;
+}
+/* film-lib-note — success strip for the delete-series casualty report.
+   Sibling of .film-lib-error; append to wherever that rule lives
+   (FilmWorkspace.css or the library stylesheet) if not already present. */
+.film-lib-note {
+  margin: 8px 0; padding: 8px 12px; border-radius: 8px; font-size: 12.5px;
+  border: 1px solid rgba(120, 220, 160, .35); background: rgba(120, 220, 160, .08);
+  color: rgba(220, 255, 235, .9);
+}

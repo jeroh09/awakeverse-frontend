@@ -143,8 +143,14 @@ function SinglesShelf({ films, onOpen, onWatch, onPromote, onDelete }) {
 }
 
 /* My Series — glass management panel (bible · locked cast · locked locations · episodes) */
-function MySeries({ series, onNewEpisode, onOpen, onRefreshPlate }) {
+function MySeries({ series, onNewEpisode, onOpen, onRefreshPlate,
+                    onDeleteEpisode = () => {}, onDeleteSeries = () => {} }) {
   const [sel, setSel] = useState(series[0]?.series_id ?? null);
+  // Two-step inline confirms (no window.confirm): arming state holds WHICH
+  // thing is pending. Deletes are irreversible server-side, so nothing fires
+  // on the first click of either affordance.
+  const [confirmEp, setConfirmEp] = useState(null);        // project_id or null
+  const [confirmSeries, setConfirmSeries] = useState(false);
   const cur = series.find((x) => x.series_id === sel) || series[0];
   if (!series.length) return (
     <div className="fs-empty fs-glass">
@@ -241,14 +247,48 @@ function MySeries({ series, onNewEpisode, onOpen, onRefreshPlate }) {
         <p className="fs-seclabel">Episodes</p>
         <div className="fs-eplist">
           {(cur.episodes || []).map((ep) => (
-            <button className="fs-ep" key={ep.project_id} onClick={() => onOpen(ep)}>
-              <span className="fs-ord">{ep.episode_ordinal}</span>
-              <span className="fs-et">{ep.title || 'Untitled'}</span>
-              <span className={`fs-est ${stKey(ep.status)}`}>{stText(ep.status)}</span>
-              <span className="fs-open">Open →</span>
-            </button>
+            confirmEp === ep.project_id ? (
+              <div className="fs-ep fs-ep--confirm" key={ep.project_id}>
+                <span className="fs-ord">{ep.episode_ordinal}</span>
+                <span className="fs-et">Delete "{ep.title || `Episode ${ep.episode_ordinal}`}"? Its chat goes with it; rendered videos stay in My Videos.</span>
+                <button type="button" className="fs-ep-yes"
+                        onClick={() => { setConfirmEp(null); onDeleteEpisode(cur.series_id, ep.project_id); }}>
+                  Delete
+                </button>
+                <button type="button" className="fs-ep-no" onClick={() => setConfirmEp(null)}>Keep</button>
+              </div>
+            ) : (
+              <div className="fs-ep" key={ep.project_id} role="button" tabIndex={0}
+                   onClick={() => onOpen(ep)}
+                   onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); onOpen(ep); } }}>
+                <span className="fs-ord">{ep.episode_ordinal}</span>
+                <span className="fs-et">{ep.title || 'Untitled'}</span>
+                <span className={`fs-est ${stKey(ep.status)}`}>{stText(ep.status)}</span>
+                <span className="fs-open">Open →</span>
+                <button type="button" className="fs-ep-x" aria-label={`Delete episode ${ep.episode_ordinal}`}
+                        title="Delete episode"
+                        onClick={(e) => { e.stopPropagation(); setConfirmEp(ep.project_id); }}>
+                  ×
+                </button>
+              </div>
+            )
           ))}
         </div>
+
+        {confirmSeries ? (
+          <div className="fs-delseries fs-delseries--confirm">
+            <span>Delete the whole series "{cur.title}" — all {(cur.episodes || []).length} episode(s) and its locked cast &amp; locations? This can't be undone. Rendered videos stay in My Videos.</span>
+            <button type="button" className="fs-ep-yes"
+                    onClick={() => { setConfirmSeries(false); onDeleteSeries(cur.series_id); }}>
+              Delete series
+            </button>
+            <button type="button" className="fs-ep-no" onClick={() => setConfirmSeries(false)}>Keep</button>
+          </div>
+        ) : (
+          <button type="button" className="fs-delseries" onClick={() => setConfirmSeries(true)}>
+            Delete series…
+          </button>
+        )}
       </div>
     </div>
   );
@@ -270,6 +310,7 @@ export default function FilmLibrary({
   onOpenFilm = () => {}, onNewFilm = () => {}, onNewSeries = () => {},
   onNewEpisode = () => {}, onPromote = () => {}, onRefreshPlate = () => {},
   onDelete = () => {}, onManageSeries,
+  onDeleteEpisode = () => {}, onDeleteSeries = () => {},
 }) {
   const [view, setView] = useState('films');
   const [watching, setWatching] = useState(null);
@@ -319,7 +360,8 @@ export default function FilmLibrary({
               <h2>My Series</h2>
               <p>The cast, locations and bible each series carries forward — and where the next episode begins.</p>
             </div>
-            <MySeries series={series} onNewEpisode={onNewEpisode} onOpen={open} onRefreshPlate={onRefreshPlate} />
+            <MySeries series={series} onNewEpisode={onNewEpisode} onOpen={open} onRefreshPlate={onRefreshPlate}
+                      onDeleteEpisode={onDeleteEpisode} onDeleteSeries={onDeleteSeries} />
           </div>
         )}
       </div>

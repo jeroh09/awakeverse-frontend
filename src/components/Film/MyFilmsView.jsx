@@ -7,6 +7,7 @@
 
 import React, { useState } from 'react';
 import { IconCheck } from './filmIcons';
+import { friendlyError } from './filmApi';
 import FilmLibrary from './FilmLibrary';
 import FilmVideoWall from './FilmVideoWall';
 import FilmSeriesModals from './FilmSeriesModals';
@@ -58,6 +59,34 @@ export default function MyFilmsView({
   const [duration, setDuration] = useState(60);
   const [aspect, setAspect] = useState('9:16');   // frame shape — fixed at creation
   const [modal, setModal] = useState(null);        // series pop-outs
+  const [actionError, setActionError] = useState(null);  // delete failures (incl. 409 still-rendering)
+  const [actionNote, setActionNote] = useState(null);    // delete-series casualty report
+
+  // Deletion wiring (2026-08-24): FilmLibrary's confirms are the consent step;
+  // these just call the hook (via seriesActions) and surface the outcome in
+  // the existing error strip. The 409 "still rendering — cancel first" refusal
+  // arrives here as a thrown error and reads as-is.
+  const delEpisode = async (seriesId, projectId) => {
+    setActionError(null); setActionNote(null);
+    try {
+      await seriesActions.deleteEpisode?.(seriesId, projectId);
+    } catch (e) {
+      setActionError(friendlyError(e, "Couldn't delete the episode."));
+    }
+  };
+  const delSeries = async (seriesId) => {
+    setActionError(null); setActionNote(null);
+    try {
+      const res = await seriesActions.deleteSeries?.(seriesId);
+      if (res && typeof res.episodes_deleted === 'number') {
+        setActionNote(`Series deleted — ${res.episodes_deleted} episode(s), `
+          + `${res.characters_deleted} character(s), ${res.locations_deleted} location(s) removed. `
+          + 'Rendered videos remain in My Videos.');
+      }
+    } catch (e) {
+      setActionError(friendlyError(e, "Couldn't delete the series."));
+    }
+  };
 
   const startNew = () => {
     setPicking(false);
@@ -103,7 +132,8 @@ export default function MyFilmsView({
           </div>
         )}
 
-        {error && <div className="film-lib-error">{error}</div>}
+        {(error || actionError) && <div className="film-lib-error">{error || actionError}</div>}
+        {actionNote && <div className="film-lib-note">{actionNote}</div>}
 
         {loading ? (
           <div className="film-lib-empty"><div className="film-spin" /><p>Loading your films…</p></div>
@@ -119,6 +149,8 @@ export default function MyFilmsView({
             onPromote={(film) => setModal({ type: 'promote', film })}
             onRefreshPlate={(s, c) => setModal({ type: 'refresh', series: s, character: c })}
             onDelete={onDelete}
+            onDeleteEpisode={delEpisode}
+            onDeleteSeries={delSeries}
           />
         )}
       </div>
