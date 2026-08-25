@@ -352,7 +352,7 @@ export default function FilmWorkspaceContainer({
   // see the editor's space" report). editorMode.active is the server's own
   // confirmation from the stream's mode line — trust it as a third unlock.
   const editorAvailable = (['ready', 'complete'].includes(job.status) && beats.length > 0)
-                          || authoring.editorMode.active;
+                          || !!(authoring.editorMode && authoring.editorMode.active);
   const onApplyEditIntent = useCallback((proposalId, intentIdx, intent) => {
     if (!intent) return;
     if (intent.action === 'regenerate') {
