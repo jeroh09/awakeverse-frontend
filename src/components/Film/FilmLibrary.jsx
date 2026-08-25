@@ -6,6 +6,7 @@
 // output_url in a takeover, and the right marketing column is untouched.
 
 import React, { useState, useRef, useEffect } from 'react';
+import { createPortal } from 'react-dom';
 import './FilmSeries.css';
 import {
   IconSeries, IconBook, IconPlus, IconLock, IconRefreshLook, IconPlay, IconChevron, IconTrash,
@@ -295,13 +296,32 @@ function MySeries({ series, onNewEpisode, onOpen, onRefreshPlate,
 }
 
 function PlayerOverlay({ item, onClose }) {
-  return (
+  // THE SEEP-THROUGH BUG (2026-08-24): this scrim is position:fixed/z-70, but
+  // it rendered INSIDE the library column — and any ancestor with a transform,
+  // filter, or backdrop-filter (the shelf hovers, the ambient video wall) turns
+  // position:fixed into position:absolute-within-that-ancestor AND caps its
+  // z-index to the ancestor's own stacking context. Result: the right feature
+  // grid, a LATER SIBLING, painted over the "takeover" player and clipped it.
+  // The structural fix is a PORTAL to document.body: no ancestor can ever trap
+  // or out-stack it, regardless of what CSS the library grows next. Escape on
+  // Esc rides along since the player is now the top layer by construction.
+  useEffect(() => {
+    const onKey = (e) => { if (e.key === 'Escape') onClose(); };
+    window.addEventListener('keydown', onKey);
+    document.body.style.overflow = 'hidden';          // no library scroll behind
+    return () => {
+      window.removeEventListener('keydown', onKey);
+      document.body.style.overflow = '';
+    };
+  }, [onClose]);
+  return createPortal(
     <div className="fs-player-scrim" onClick={onClose}>
       <div className="fs-player-box" onClick={(e) => e.stopPropagation()}>
         <button type="button" className="fs-player-close" onClick={onClose} aria-label="Close">×</button>
         <video src={item.output_url} controls autoPlay playsInline className="fs-player-vid" />
       </div>
-    </div>
+    </div>,
+    document.body
   );
 }
 

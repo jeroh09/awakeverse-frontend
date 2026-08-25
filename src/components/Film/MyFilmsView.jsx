@@ -16,7 +16,14 @@ const STYLES = [
   { key: 'anime',       label: 'Anime' },
   { key: 'cartoon',     label: 'Cartoon' },
   { key: 'comic_book',  label: 'Comic' },
-  { key: 'realistic',   label: 'Realistic' },
+  // 'realistic' has ALWAYS rendered the painterly stylized_real look (the
+  // backend remaps it) — the label now says what it does. Existing projects
+  // and series keep this key and render identically forever.
+  { key: 'realistic',   label: 'Painterly' },
+  // The Veo tier (2026-08-24): true photographic realism, probe-validated.
+  // Passes through unremapped; routed by VEO_STYLES on the worker. Keep it
+  // LAST in the row until pricing lands — it will carry a credit multiplier.
+  { key: 'photoreal',   label: 'Realistic' },
 ];
 const DURATIONS = [
   { key: 60,  label: '60s' },

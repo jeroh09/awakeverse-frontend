@@ -260,7 +260,7 @@
 .fs-merr{ color:#fca5a5; font-size:12.5px; margin-top:10px; }
 
 /* ── takeover video player ── */
-.fs-player-scrim{ position:fixed; inset:0; z-index:70; display:flex; align-items:center; justify-content:center;
+.fs-player-scrim{ position:fixed; inset:0; z-index:1000; /* body-level via portal — must clear ALL app chrome, not just library siblings */ display:flex; align-items:center; justify-content:center;
   padding:32px; background:rgba(2,6,23,.9); backdrop-filter:blur(8px); animation:fs-fade .2s ease; }
 .fs-player-box{ position:relative; width:min(1100px,100%); max-height:90vh; border-radius:16px; overflow:hidden;
   border:1px solid rgba(245,245,220,.2); box-shadow:0 0 0 1px var(--line-soft), 0 40px 90px -20px #000; background:#000; }
@@ -304,12 +304,4 @@
   display: flex; gap: 10px; align-items: center; flex-wrap: wrap;
   border-color: rgba(255,107,107,.45); background: rgba(255,107,107,.06);
   color: rgba(255,255,255,.85); cursor: default; font-size: 12px;
-}
-/* film-lib-note — success strip for the delete-series casualty report.
-   Sibling of .film-lib-error; append to wherever that rule lives
-   (FilmWorkspace.css or the library stylesheet) if not already present. */
-.film-lib-note {
-  margin: 8px 0; padding: 8px 12px; border-radius: 8px; font-size: 12.5px;
-  border: 1px solid rgba(120, 220, 160, .35); background: rgba(120, 220, 160, .08);
-  color: rgba(220, 255, 235, .9);
 }
