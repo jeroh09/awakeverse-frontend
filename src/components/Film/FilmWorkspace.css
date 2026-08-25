@@ -189,19 +189,23 @@
   background-image:linear-gradient(90deg,var(--film-ivory),var(--film-accent-hover));
   -webkit-background-clip:text;background-clip:text;color:transparent;}
 
-/* Editor's Room tab pair (2026-08-25): the plain-text override above was
-   designed for ONE static label; with a rendered film the strip becomes two
-   BUTTONS (Writers' Room | Editor's Room). Inside the chat header they keep
-   the plain-text register — the ACTIVE tab wears the ivory→indigo gradient,
-   the inactive one sits muted with a pointer; an accent underline marks
-   is-on. Single-label films look exactly as before (the lone tab is is-on).
-   Widths are fluid, so the pair survives the panel's expand/collapse and the
-   narrow-viewport accordion unchanged. */
-.film-panel--chat button.film-htab{cursor:pointer;position:relative;padding-bottom:2px;}
-.film-panel--chat .film-htab:not(.is-on){background-image:none;color:var(--film-t3);}
-.film-panel--chat .film-htab:not(.is-on):hover{color:var(--film-t2);}
-.film-panel--chat .film-htab.is-on::after{content:"";position:absolute;left:0;right:0;bottom:-3px;
-  height:2px;border-radius:2px;background:var(--film-accent);opacity:.8;}
+/* Editor's Room tab pair as a CAPSULE PILL (2026-08-25, owner's aesthetic
+   call — mirrors the approved mockup): the strip becomes a rounded capsule,
+   active tab filled accent, inactive muted text. These rules must UNDO the
+   plain-text override above for the tab buttons — including background-clip:
+   text, which would otherwise clip the accent fill to the glyphs. The lone-
+   tab state (unrendered film) renders as a single-pill capsule — same
+   language, quieter. Fluid widths: survives expand/collapse + the accordion. */
+.film-panel--chat .film-htabs{background:var(--film-canvas);border:1px solid rgba(99,102,241,.35);
+  border-radius:var(--film-r-full);padding:3px;gap:2px;}
+.film-panel--chat .film-htab{display:inline-flex;align-items:center;border:0;
+  background-image:none;background-color:transparent;
+  -webkit-background-clip:border-box;background-clip:border-box;
+  color:var(--film-t3);border-radius:var(--film-r-full);padding:4px 12px;
+  font-family:var(--film-display);font-weight:700;font-size:12px;letter-spacing:.02em;}
+.film-panel--chat button.film-htab{cursor:pointer;transition:color .15s,background-color .15s;}
+.film-panel--chat .film-htab:not(.is-on):hover{color:var(--film-t1);}
+.film-panel--chat .film-htab.is-on{background-color:var(--film-accent);color:#fff;}
 .film-panel--chat .film-htab-dot{width:5px;height:5px;margin-right:4px;}
 
 /* buttons */
@@ -1027,3 +1031,22 @@
   border:1px solid var(--film-bd-subtle,rgba(148,163,184,.1));border-radius:var(--film-r-full,9999px);
   font-size:11px;padding:4px 11px;cursor:pointer;}
 .fw-sheet-dismiss:hover{color:var(--film-t1,#F1F5F9);}
+
+/* ── FILM STATE strip (Editor's Room layer 1, 2026-08-25) ──────────────── */
+.fw-digest{flex:0 0 auto;margin:8px 12px 0;border:1px solid var(--film-bd-subtle,rgba(148,163,184,.1));
+  border-radius:var(--film-r-sm,8px);background:rgba(99,102,241,.05);overflow:hidden;}
+.fw-digest-bar{width:100%;display:flex;align-items:center;gap:8px;border:0;background:transparent;
+  padding:6px 10px;color:var(--film-t2,#94A3B8);font-size:11px;text-align:left;cursor:pointer;}
+.fw-digest-bar b{font-family:var(--film-display,'Syne',sans-serif);font-size:10px;
+  letter-spacing:.08em;color:var(--film-t2,#94A3B8);}
+.fw-digest-bar span{overflow:hidden;text-overflow:ellipsis;white-space:nowrap;min-width:0;}
+.fw-digest-chev{margin-left:auto;flex:0 0 auto;transition:transform .18s;color:var(--film-t3,#64748B);}
+.fw-digest.is-open .fw-digest-chev{transform:rotate(180deg);}
+.fw-digest-body{padding:2px 10px 8px;}
+.fw-digest-row{display:flex;flex-wrap:wrap;gap:4px;}
+.fw-bpill{font-family:var(--film-mono,monospace);font-size:10px;color:var(--film-t2,#94A3B8);
+  background:var(--film-interactive,#1C2640);border:1px solid var(--film-bd-subtle,rgba(148,163,184,.1));
+  border-radius:5px;padding:2px 6px;}
+.fw-bpill b{color:var(--film-accent-hover,#818CF8);font-weight:500;}
+.fw-digest-cast{margin-top:5px;font-size:10.5px;color:var(--film-t3,#64748B);}
+.fw-digest-cast em{color:var(--film-t2,#94A3B8);font-style:normal;}

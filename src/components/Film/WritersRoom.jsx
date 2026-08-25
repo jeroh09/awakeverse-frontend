@@ -224,6 +224,44 @@ function Turn({ role, text, attachment, scriptMeta, editable = false, onSaveScri
 }
 
 
+/* ── LAYER 1 — the FILM STATE strip (2026-08-25, from the approved mockup):
+   the editor's knowledge of the film, laid bare as beat pills. Collapsed by
+   default — the trust signal is available, not shouting. Built client-side
+   from the SAME beats the storyboard renders, so the strip and the stage can
+   never disagree. ── */
+function FilmDigestStrip({ beats, filmTitle }) {
+  const [open, setOpen] = useState(false);
+  if (!beats?.length) return null;
+  const cast = [...new Set(beats.flatMap(b => b.present_cast || []))];
+  return (
+    <div className={`fw-digest${open ? ' is-open' : ''}`}>
+      <button type="button" className="fw-digest-bar" aria-expanded={open}
+              onClick={() => setOpen(o => !o)}>
+        <b>FILM STATE</b>
+        <span>{filmTitle ? `"${filmTitle}" · ` : ''}{beats.length} beat{beats.length === 1 ? '' : 's'} — the editor knows every one</span>
+        <span className="fw-digest-chev">▾</span>
+      </button>
+      {open && (
+        <div className="fw-digest-body">
+          <div className="fw-digest-row">
+            {beats.map((b, i) => (
+              <span className="fw-bpill" key={i}>
+                <b>{b.index ?? i + 1}</b>
+                {b.location ? ` · ${b.location.replace(/_/g, ' ')}` : ''}
+                {' · '}{(b.present_cast || b.present || []).join(', ') || '—'}
+                {' · '}{b.kind === 'vo' ? 'V.O. ' : b.lines?.length ? 'speaks ' : ''}{Math.round(b.seconds || 0)}s
+              </span>
+            ))}
+          </div>
+          {cast.length > 0 && (
+            <div className="fw-digest-cast">Cast <em>{cast.join(' · ')}</em></div>
+          )}
+        </div>
+      )}
+    </div>
+  );
+}
+
 /* ── EDITORS' ROOM call sheet (2026-08-25): the assistant's proposed edits,
    rendered as the same contract the storyboard buttons speak. Per-intent
    Apply (one job operation each — matching the pipeline's one-op reality);
@@ -290,6 +328,7 @@ export default function WritersRoom({
   onSaveEdit = () => {},
   regenBusy = false,
   editorAvailable = false,
+  filmBeats = [],
   editorMode = { active: false, filmTitle: '' },
   editProposal = null,
   chatMode = 'auto',
@@ -351,15 +390,17 @@ export default function WritersRoom({
     }
   };
 
+  // Active tab: the user's explicit choice wins; otherwise mirror the server
+  // (mode line) with editorAvailable as the pre-first-reply guess.
+  const isEditing = chatMode === 'write' ? false
+    : (chatMode === 'edit' ? true : (editorMode.active || editorAvailable));
+
   return (
     <div className="film-pcontent">
       <div className="film-phead">
         <div className="film-htabs">
           {(() => {
-            // Active tab: the user's explicit choice wins; otherwise mirror the
-            // server (mode line) with editorAvailable as the pre-first-reply guess.
-            const editing = chatMode === 'write' ? false
-              : (chatMode === 'edit' ? true : (editorMode.active || editorAvailable));
+            const editing = isEditing;
             return (<>
               <button type="button" className={`film-htab ${!editing ? 'is-on' : ''}`}
                       onClick={() => onSetChatMode('write')}>
@@ -374,9 +415,13 @@ export default function WritersRoom({
               )}
             </>);
           })()}
-          <span className="film-hsub">{sub}</span>
+          <span className="film-hsub">{isEditing
+            ? `Editing${editorMode.filmTitle ? ` "${editorMode.filmTitle}"` : ' this film'} · ${filmBeats.length} beat${filmBeats.length === 1 ? '' : 's'}`
+            : sub}</span>
         </div>
       </div>
+
+      {isEditing && <FilmDigestStrip beats={filmBeats} filmTitle={editorMode.filmTitle} />}
 
       <div className="film-chatscroll" ref={scrollRef}>
         {(() => {
@@ -547,7 +592,9 @@ export default function WritersRoom({
             value={text}
             onChange={(e) => { setText(e.target.value); grow(e.target.value ? e.target : taRef.current); }}
             onKeyDown={onKeyDown}
-            placeholder="Write the next beat, or push back on the last one…"
+            placeholder={isEditing
+              ? "Tell the editor what to change — a beat, a line, a whole sequence…"
+              : "Write the next beat, or push back on the last one…"}
           />
           <button className="film-send" onClick={send} aria-label="Send">
             <IconSend s={17} />

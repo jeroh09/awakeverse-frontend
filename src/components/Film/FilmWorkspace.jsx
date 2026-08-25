@@ -208,6 +208,7 @@ export default function FilmWorkspace({
               onSaveEdit={onSaveEdit}
               onSend={onSend}
               editorAvailable={editorAvailable}
+              filmBeats={beats}
               editorMode={editorMode}
               editProposal={editProposal}
               chatMode={chatMode}

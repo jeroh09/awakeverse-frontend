@@ -16,6 +16,7 @@ const normBeat = b => ({
   seconds: Math.round(b.seconds || 6),
   speaker: (b.speaker || '').trim(),
   caption: (b.caption || '').trim(),
+  location: (b.location || '').trim(),
   // Shot description + the attributed cast/lines so the editor shows the beat
   // exactly as the director set it (who's present, whose line is whose).
   visual: (b.visual || b.action || '').trim(),
