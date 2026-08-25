@@ -24,7 +24,7 @@ const accent = (item) => {
   if (item?.status && item.status !== 'ready' && item.status !== 'rendering') return '#64748B';
   return `hsl(${hash(item?.title || 'x') % 360} 68% 63%)`;
 };
-const STYLE_LABEL = { stylized_real: 'Realistic', realistic: 'Realistic', anime: 'Anime', cartoon: 'Cartoon', comic_book: 'Comic' };
+const STYLE_LABEL = { stylized_real: 'Painterly', realistic: 'Painterly', photoreal: 'Realistic', anime: 'Anime', cartoon: 'Cartoon', comic_book: 'Comic' };
 const styleLabel = (s) => STYLE_LABEL[s] || String(s || '').replace('_', ' ');
 const stKey  = (s) => (s === 'ready' ? 'ready' : s === 'rendering' ? 'render' : 'draft');
 const stText = (s) => (s === 'ready' ? 'Ready' : s === 'rendering' ? 'Rendering' : s === 'awaiting_review' ? 'Review' : 'Draft');
