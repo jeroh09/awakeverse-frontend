@@ -189,6 +189,21 @@
   background-image:linear-gradient(90deg,var(--film-ivory),var(--film-accent-hover));
   -webkit-background-clip:text;background-clip:text;color:transparent;}
 
+/* Editor's Room tab pair (2026-08-25): the plain-text override above was
+   designed for ONE static label; with a rendered film the strip becomes two
+   BUTTONS (Writers' Room | Editor's Room). Inside the chat header they keep
+   the plain-text register — the ACTIVE tab wears the ivory→indigo gradient,
+   the inactive one sits muted with a pointer; an accent underline marks
+   is-on. Single-label films look exactly as before (the lone tab is is-on).
+   Widths are fluid, so the pair survives the panel's expand/collapse and the
+   narrow-viewport accordion unchanged. */
+.film-panel--chat button.film-htab{cursor:pointer;position:relative;padding-bottom:2px;}
+.film-panel--chat .film-htab:not(.is-on){background-image:none;color:var(--film-t3);}
+.film-panel--chat .film-htab:not(.is-on):hover{color:var(--film-t2);}
+.film-panel--chat .film-htab.is-on::after{content:"";position:absolute;left:0;right:0;bottom:-3px;
+  height:2px;border-radius:2px;background:var(--film-accent);opacity:.8;}
+.film-panel--chat .film-htab-dot{width:5px;height:5px;margin-right:4px;}
+
 /* buttons */
 .film-btn{font-family:var(--film-body);font-weight:600;font-size:13px;border:0;cursor:pointer;
   border-radius:var(--film-r-sm);padding:9px 15px;transition:all .18s;display:inline-flex;align-items:center;gap:7px;}

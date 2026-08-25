@@ -45,6 +45,17 @@ export default function FilmWorkspace({
   editingBeat = null,
   onCloseEdit, onChangeEditVisual, onPickSpeaker, onRemovePresent, onChangeLine, onRegenerateFromEdit, onSaveEdit,
   onSend, scriptReady = false, onBuildFilm, onReviewCast, onSaveScript,
+  // Editor's Room (2026-08-25): the shell is presentational and forwards
+  // explicitly — these MUST be threaded here or they die between the
+  // container and WritersRoom (the severed-link bug: the tab never showed
+  // because this file silently dropped the props).
+  editorAvailable = false,
+  editorMode = { active: false, filmTitle: '' },
+  editProposal = null,
+  chatMode = 'auto',
+  onSetChatMode = () => {},
+  onApplyEditIntent = () => {},
+  onDismissProposal = () => {},
 }) {
   // Below 820px the two panels stack (see FilmWorkspace.css's accordion
   // media query) — starting BOTH expanded there would just reproduce the old
@@ -196,6 +207,13 @@ export default function FilmWorkspace({
               onRegenerateFromEdit={onRegenerateFromEdit}
               onSaveEdit={onSaveEdit}
               onSend={onSend}
+              editorAvailable={editorAvailable}
+              editorMode={editorMode}
+              editProposal={editProposal}
+              chatMode={chatMode}
+              onSetChatMode={onSetChatMode}
+              onApplyEditIntent={onApplyEditIntent}
+              onDismissProposal={onDismissProposal}
               scriptReady={scriptReady}
               showBuildBar={scriptReady}
               onBuildFilm={onBuildFilm}
