@@ -1050,3 +1050,8 @@
 .fw-bpill b{color:var(--film-accent-hover,#818CF8);font-weight:500;}
 .fw-digest-cast{margin-top:5px;font-size:10.5px;color:var(--film-t3,#64748B);}
 .fw-digest-cast em{color:var(--film-t2,#94A3B8);font-style:normal;}
+
+/* Editor's welcome empty-state (2026-08-25) */
+.fw-welcome{background:var(--film-interactive,#1C2640);color:var(--film-t1,#F1F5F9);
+  border-radius:var(--film-r-md,12px);border-bottom-left-radius:4px;padding:10px 13px;
+  font-size:13.5px;line-height:1.5;max-width:88%;}

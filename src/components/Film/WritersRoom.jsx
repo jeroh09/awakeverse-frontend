@@ -395,6 +395,11 @@ export default function WritersRoom({
   const isEditing = chatMode === 'write' ? false
     : (chatMode === 'edit' ? true : (editorMode.active || editorAvailable));
 
+  // Share the brain, separate the rooms (2026-08-25): each tab displays only
+  // its own messages (untagged/adopted history reads as writers'). The server
+  // history stays unified — the LLM always sees everything.
+  const roomMessages = messages.filter(m => (m.room || 'write') === (isEditing ? 'edit' : 'write'));
+
   return (
     <div className="film-pcontent">
       <div className="film-phead">
@@ -424,11 +429,26 @@ export default function WritersRoom({
       {isEditing && <FilmDigestStrip beats={filmBeats} filmTitle={editorMode.filmTitle} />}
 
       <div className="film-chatscroll" ref={scrollRef}>
+        {isEditing && roomMessages.length === 0 && (
+          /* Canned welcome (2026-08-25): an EMPTY-STATE, not a message and not
+             an LLM call — renders whenever the editor's transcript is empty,
+             disappears the moment a real exchange exists. Idempotent across
+             tab switches by construction. */
+          <div className="film-turn-ai">
+            <div className="film-who">Editor</div>
+            <div className="fw-welcome">
+              I've screened the film — {filmBeats.length ? `all ${filmBeats.length} beats, ` : ''}every
+              line and location is in the FILM STATE above. Tell me what to change:
+              tighten a sequence, cut a beat, restage a shot, sharpen a line. I'll
+              propose the edit as a card and nothing renders until you apply it.
+            </div>
+          </div>
+        )}
         {(() => {
           // Only the MOST RECENT script draft is editable — older turns are history.
           let lastScriptIdx = -1;
-          messages.forEach((m, i) => { if (m.scriptMeta && m.scriptMeta.script) lastScriptIdx = i; });
-          return messages.map((m, i) => (
+          roomMessages.forEach((m, i) => { if (m.scriptMeta && m.scriptMeta.script) lastScriptIdx = i; });
+          return roomMessages.map((m, i) => (
             <Turn key={i} role={m.role} text={m.text} attachment={m.attachment} scriptMeta={m.scriptMeta}
               editable={i === lastScriptIdx && !!onSaveScript}
               onSaveScript={onSaveScript} />

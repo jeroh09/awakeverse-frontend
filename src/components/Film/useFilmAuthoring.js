@@ -68,7 +68,14 @@ export default function useFilmAuthoring() {
     // The displayed message shows the user's note + a file chip (attachment),
     // NOT the raw extracted script. The director, however, receives the full
     // script text so it can react — assembled into `directorText` below.
-    setMessages(m => [...m, { role: 'me', text, attachment: attachment ? {
+    // Room tagging (2026-08-25, share-the-brain/separate-the-rooms): each
+    // message remembers which room spoke it; WritersRoom filters the display
+    // per tab while the SERVER keeps one unified history (the editor knows
+    // what the writer discussed, and vice versa). v1 limit: tags are frontend
+    // state — on a full reload, adopted history has no tags and folds into
+    // the writers' view; the editor's transcript starts clean again.
+    const room = (chatMode === 'edit' || (chatMode === 'auto' && editorMode.active)) ? 'edit' : 'write';
+    setMessages(m => [...m, { role: 'me', room, text, attachment: attachment ? {
       filename: attachment.filename, url: attachment.url, file_type: attachment.file_type,
     } : null }]);
     setBusy(true);
@@ -125,6 +132,7 @@ export default function useFilmAuthoring() {
               script: chunk.script || '',
             };
           } else if (chunk.type === 'mode') {
+            window.__fw_last_mode = chunk.mode;   // per-turn room hint for the reply tag
             setEditorMode({ active: chunk.mode === 'editors_room',
                             filmTitle: chunk.film_title || '' });
           } else if (chunk.type === 'edit_intent') {
@@ -148,9 +156,13 @@ export default function useFilmAuthoring() {
 
       if (streamError) {
         setError(streamError);
-        setMessages(m => [...m, { role: 'ai', text: streamError }]);
+        setMessages(m => [...m, { role: 'ai', room, text: streamError }]);
       } else {
-        setMessages(m => [...m, { role: 'ai', text: fullText, scriptMeta }]);
+        // The reply's room follows the MODE LINE when the server sent one
+        // (authoritative), else the room the user spoke from.
+        setMessages(m => [...m, { role: 'ai',
+          room: (window.__fw_last_mode === 'editors_room') ? 'edit' : room,
+          text: fullText, scriptMeta }]);
         // script_meta only ever arrives after a genuinely complete, tagged
         // script block — a hard signal, so it wins over the text heuristic
         // (which stays as the fallback for adopted/legacy messages that
@@ -205,6 +217,7 @@ export default function useFilmAuthoring() {
       if (sm) sawScriptMeta = true;
       return {
         role: (m.role === 'assistant' || m.role === 'ai') ? 'ai' : 'me',
+        room: m.room === 'edit' ? 'edit' : 'write',   // persisted tab (2026-08-25)
         text: m.text != null ? m.text : (m.content || ''),
         attachment: m.attachment || null,
         scriptMeta: sm ? {
