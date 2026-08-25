@@ -345,7 +345,14 @@ export default function FilmWorkspaceContainer({
   // 1:1 onto filmRegenerate's signature), cut/duplicate reuse onCut/onDuplicate
   // verbatim. Chat is a natural-language front end to existing operations;
   // nothing new can happen to a film from here that a button couldn't do.
-  const editorAvailable = job.status === 'ready' && beats.length > 0;
+  // 'ready' is the in-session render-finished status; an EXISTING film adopted
+  // into the workspace reports 'complete' (both appear in the credits-refresh
+  // list above) — the tab must unlock for BOTH, or the Editor's Room only ever
+  // exists for films rendered in the current session (the 2026-08-25 "can't
+  // see the editor's space" report). editorMode.active is the server's own
+  // confirmation from the stream's mode line — trust it as a third unlock.
+  const editorAvailable = (['ready', 'complete'].includes(job.status) && beats.length > 0)
+                          || authoring.editorMode.active;
   const onApplyEditIntent = useCallback((proposalId, intentIdx, intent) => {
     if (!intent) return;
     if (intent.action === 'regenerate') {
