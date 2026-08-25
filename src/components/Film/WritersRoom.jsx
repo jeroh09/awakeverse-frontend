@@ -223,6 +223,57 @@ function Turn({ role, text, attachment, scriptMeta, editable = false, onSaveScri
   );
 }
 
+
+/* ── EDITORS' ROOM call sheet (2026-08-25): the assistant's proposed edits,
+   rendered as the same contract the storyboard buttons speak. Per-intent
+   Apply (one job operation each — matching the pipeline's one-op reality);
+   nothing renders or spends until a row is applied. ── */
+function EditCallSheet({ proposal, onApply, onDismiss }) {
+  if (!proposal || !proposal.intents?.length) return null;
+  const OP = { regenerate: 'REGENERATE', cut: 'CUT', duplicate: 'DUPLICATE' };
+  return (
+    <div className="fw-sheet-stack">
+      {proposal.intents.map((it, n) => {
+        const applied = !!proposal.applied?.[n];
+        return (
+          <div className={`fw-sheet ${applied ? 'is-applied' : ''}`} key={n}>
+            <div className="fw-sheet-head">
+              <span className="fw-sheet-op">{OP[it.action] || it.action}</span>
+              <span className="fw-sheet-beat">BEAT {it.beat_index}</span>
+            </div>
+            <div className="fw-sheet-body">
+              {it.edited_text ? (
+                <><span className="fw-f">VISUAL</span>
+                  <span className="fw-v fw-v-mono">{it.edited_text}</span></>
+              ) : null}
+              {it.note ? (
+                <><span className="fw-f">NOTE</span><span className="fw-v">{it.note}</span></>
+              ) : null}
+              {it.present?.length ? (
+                <><span className="fw-f">PRESENT</span>
+                  <span className="fw-v fw-chips">
+                    {it.present.map(p => <span className="fw-chip" key={p}>{p}</span>)}
+                  </span></>
+              ) : null}
+            </div>
+            {applied ? (
+              <div className="fw-sheet-applied">✓ Applied — the film updates when the render lands</div>
+            ) : (
+              <div className="fw-sheet-cta">
+                <button type="button" className="fw-sheet-apply"
+                        onClick={() => onApply(proposal.id, n, it)}>
+                  Apply{it.action === 'regenerate' ? ' & re-render' : ''}
+                </button>
+              </div>
+            )}
+          </div>
+        );
+      })}
+      <button type="button" className="fw-sheet-dismiss" onClick={onDismiss}>Dismiss proposal</button>
+    </div>
+  );
+}
+
 export default function WritersRoom({
   messages = [],
   sub = '',
@@ -238,6 +289,13 @@ export default function WritersRoom({
   onRegenerateFromEdit = () => {},
   onSaveEdit = () => {},
   regenBusy = false,
+  editorAvailable = false,
+  editorMode = { active: false, filmTitle: '' },
+  editProposal = null,
+  chatMode = 'auto',
+  onSetChatMode = () => {},
+  onApplyEditIntent = () => {},
+  onDismissProposal = () => {},
   onSend = () => {},
   scriptReady = false,
   showBuildBar = false,
@@ -297,7 +355,25 @@ export default function WritersRoom({
     <div className="film-pcontent">
       <div className="film-phead">
         <div className="film-htabs">
-          <span className="film-htab is-on">Writers' Room</span>
+          {(() => {
+            // Active tab: the user's explicit choice wins; otherwise mirror the
+            // server (mode line) with editorAvailable as the pre-first-reply guess.
+            const editing = chatMode === 'write' ? false
+              : (chatMode === 'edit' ? true : (editorMode.active || editorAvailable));
+            return (<>
+              <button type="button" className={`film-htab ${!editing ? 'is-on' : ''}`}
+                      onClick={() => onSetChatMode('write')}>
+                Writers' Room
+              </button>
+              {editorAvailable && (
+                <button type="button" className={`film-htab ${editing ? 'is-on' : ''}`}
+                        onClick={() => onSetChatMode('edit')}
+                        title="Chat edits: regenerate, cut, duplicate — applied only when you confirm">
+                  <span className="film-htab-dot" /> Editor's Room
+                </button>
+              )}
+            </>);
+          })()}
           <span className="film-hsub">{sub}</span>
         </div>
       </div>
@@ -313,6 +389,9 @@ export default function WritersRoom({
               onSaveScript={onSaveScript} />
           ));
         })()}
+        <EditCallSheet proposal={editProposal}
+                       onApply={onApplyEditIntent}
+                       onDismiss={onDismissProposal} />
         {(() => {
           // The gap between "sent" and the first streamed token: show the
           // clapperboard + dots. `thinking` (from the hook's authoring.thinking)

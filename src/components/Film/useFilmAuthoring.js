@@ -51,6 +51,15 @@ export default function useFilmAuthoring() {
   // Deliberately narrower than `busy`: `busy` also covers start()/finalize(),
   // where no chat reply is being composed and the indicator shouldn't show.
   const [thinking, setThinking] = useState(false);
+  // ── EDITORS' ROOM (2026-08-25, assistant/director sync) ──
+  // editorMode: what the SERVER said this session is (mode line, first in the
+  // stream). editProposal: the newest validated intent block — one active
+  // proposal; a new send supersedes it (stale proposals must never apply
+  // against a film that later edits have changed). chatMode: the user's tab —
+  // 'auto' lets the server pick (edit when rendered), 'write' forces authoring.
+  const [editorMode, setEditorMode] = useState({ active: false, filmTitle: '' });
+  const [editProposal, setEditProposal] = useState(null);  // {id, intents, applied:{}}
+  const [chatMode, setChatMode] = useState('auto');
   const sidRef = useRef(null);
   const streamTokenRef = useRef(0);   // invalidates a stale read if a new send starts
 
@@ -64,6 +73,7 @@ export default function useFilmAuthoring() {
     } : null }]);
     setBusy(true);
     setThinking(true);
+    setEditProposal(null);   // a new turn supersedes any unapplied proposal
     const myToken = ++streamTokenRef.current;
 
     // What the DIRECTOR sees: the user's note plus the attached script's text
@@ -76,7 +86,8 @@ export default function useFilmAuthoring() {
     }
 
     try {
-      const response = await filmMessageStream(sid, directorText);
+      const response = await filmMessageStream(sid, directorText, undefined,
+                                               chatMode === 'auto' ? undefined : chatMode);
       setBusy(false);
       setThinking(false);
       setStreamingActive(true);
@@ -113,6 +124,14 @@ export default function useFilmAuthoring() {
               characters: chunk.characters || {},
               script: chunk.script || '',
             };
+          } else if (chunk.type === 'mode') {
+            setEditorMode({ active: chunk.mode === 'editors_room',
+                            filmTitle: chunk.film_title || '' });
+          } else if (chunk.type === 'edit_intent') {
+            // Server-validated: every intent is executable. One active proposal.
+            setEditProposal({ id: Date.now(), intents: chunk.intents || [], applied: {} });
+          } else if (chunk.type === 'edit_intent_problems') {
+            console.warn('edit intent problems:', chunk.problems);
           } else if (chunk.type === 'error') {
             streamError = chunk.error || 'Something went wrong drafting that.';
           } else if (chunk.type === 'done') {
@@ -228,9 +247,19 @@ export default function useFilmAuthoring() {
     setStreamingActive(false); setStreamingText('');
   }, []);
 
+  // Per-intent apply bookkeeping — the container performs the actual job call;
+  // this just marks the row so the card can show its applied state.
+  const markIntentApplied = useCallback((proposalId, intentIdx) => {
+    setEditProposal(p => (p && p.id === proposalId)
+      ? { ...p, applied: { ...p.applied, [intentIdx]: true } } : p);
+  }, []);
+  const dismissProposal = useCallback(() => setEditProposal(null), []);
+
   return {
     sessionId, messages, scriptReady, script, shots, title, busy, error,
     thinking, streamingActive, streamingText,
+    editorMode, editProposal, chatMode, setChatMode,
+    markIntentApplied, dismissProposal,
     start, send, finalize, adopt, reset,
   };
 }

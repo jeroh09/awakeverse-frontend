@@ -34,7 +34,7 @@ export const filmMessage  = (session_id, message, target_duration) =>
 // Returns the raw Response so the caller (useFilmAuthoring) reads
 // response.body as a stream of NDJSON lines — see film_routes.py's
 // /assistant/message docstring for the line shapes.
-export const filmMessageStream = async (session_id, message, target_duration) => {
+export const filmMessageStream = async (session_id, message, target_duration, mode) => {
   const API_BASE = environment.API_BASE_URL;
   const csrf = document.cookie.match(/(?:^|;\s*)av_csrf=([^;]+)/)?.[1] || '';
   const response = await fetch(`${API_BASE}/api/film/assistant/message`, {
@@ -44,7 +44,8 @@ export const filmMessageStream = async (session_id, message, target_duration) =>
       'X-CSRF-Token': decodeURIComponent(csrf),
     },
     credentials: 'include',
-    body: JSON.stringify({ session_id, message, ...(target_duration ? { target_duration } : {}) }),
+    body: JSON.stringify({ session_id, message, ...(target_duration ? { target_duration } : {}),
+                           ...(mode ? { mode } : {}) }),   // 'edit'|'write'; omitted -> server 'auto'
   });
 
   if (!response.ok) {

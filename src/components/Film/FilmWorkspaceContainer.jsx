@@ -338,6 +338,29 @@ export default function FilmWorkspaceContainer({
   // affordance appears on their next open, via the resume path.)
   const canPromote = seriesId === null && job.status === 'ready';
 
+  // ── EDITORS' ROOM wiring (2026-08-25) ──
+  // The tab unlocks when a rendered film with beats exists; the chat's intents
+  // apply through the SAME machinery the storyboard buttons use — regenerate
+  // goes through job.regenerate with the intent's contract fields (which map
+  // 1:1 onto filmRegenerate's signature), cut/duplicate reuse onCut/onDuplicate
+  // verbatim. Chat is a natural-language front end to existing operations;
+  // nothing new can happen to a film from here that a button couldn't do.
+  const editorAvailable = job.status === 'ready' && beats.length > 0;
+  const onApplyEditIntent = useCallback((proposalId, intentIdx, intent) => {
+    if (!intent) return;
+    if (intent.action === 'regenerate') {
+      setRegenBusyIndex(intent.beat_index);
+      job.regenerate(intent.beat_index, intent.note || null,
+                     intent.edited_text || null,
+                     (intent.present && intent.present.length) ? intent.present : undefined);
+    } else if (intent.action === 'cut') {
+      onCut(intent.beat_index);
+    } else if (intent.action === 'duplicate') {
+      onDuplicate(intent.beat_index);
+    }
+    authoring.markIntentApplied(proposalId, intentIdx);
+  }, [job, onCut, onDuplicate, authoring]);
+
   return (
     <>
     <FilmWorkspace
@@ -387,6 +410,13 @@ export default function FilmWorkspaceContainer({
       streamingActive={authoring.streamingActive}
       streamingText={authoring.streamingText}
       thinking={authoring.thinking}
+      editorAvailable={editorAvailable}
+      editorMode={authoring.editorMode}
+      editProposal={authoring.editProposal}
+      chatMode={authoring.chatMode}
+      onSetChatMode={authoring.setChatMode}
+      onApplyEditIntent={onApplyEditIntent}
+      onDismissProposal={authoring.dismissProposal}
       editingBeat={editing}
       onCloseEdit={onCloseEdit}
       onChangeEditVisual={onChangeEditVisual}
