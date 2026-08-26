@@ -181,7 +181,14 @@ export default function useFilmAuthoring() {
     } finally {
       if (streamTokenRef.current === myToken) { setBusy(false); setThinking(false); }
     }
-  }, []);
+  }, [chatMode, editorMode.active]);
+  // ^ THE CROSSED-WIRES FIX (2026-08-25): _send computes the message's room
+  // tag from chatMode/editorMode, but its dependency array was the original
+  // [] — a STALE CLOSURE pinned to mount-time values ('auto', inactive), so
+  // every outgoing message tagged 'write' and appeared in the Writers' Room
+  // while its reply (tagged via the server's mode line, read at receive time)
+  // landed in the Editor's Room. Reloads looked correct because the SERVER
+  // persists the true room. The deps make the closure follow the tab.
 
   const start = useCallback(async (premise) => {
     setError(null); setBusy(true);

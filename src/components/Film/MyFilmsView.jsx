@@ -11,6 +11,7 @@ import { friendlyError } from './filmApi';
 import FilmLibrary from './FilmLibrary';
 import FilmVideoWall from './FilmVideoWall';
 import FilmSeriesModals from './FilmSeriesModals';
+import StylePreview from './StylePreview';
 
 const STYLES = [
   { key: 'anime',       label: 'Anime' },
@@ -106,6 +107,12 @@ export default function MyFilmsView({
       <div className="film-lib-left">
         {/* Ambient looping film reel behind the shelf (see film-video-wall.css) */}
         <FilmVideoWall />
+
+        {/* Live style preview — sits just above the picker controls and reflects
+            the current style + aspect. Rendered as a sibling of the newbar (not a
+            child) so it can't affect the newbar's own layout. Reads picker state
+            only; the create payload in startNew() is unchanged. */}
+        {picking && <StylePreview styleKey={style} aspect={aspect} />}
 
         {picking && (
           <div className="film-lib-newbar">
