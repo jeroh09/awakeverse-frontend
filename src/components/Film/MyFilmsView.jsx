@@ -11,7 +11,7 @@ import { friendlyError } from './filmApi';
 import FilmLibrary from './FilmLibrary';
 import FilmVideoWall from './FilmVideoWall';
 import FilmSeriesModals from './FilmSeriesModals';
-import StylePreview from './StylePreview';
+import NewFilmModal from './NewFilmModal';
 
 const STYLES = [
   { key: 'anime',       label: 'Anime' },
@@ -108,42 +108,25 @@ export default function MyFilmsView({
         {/* Ambient looping film reel behind the shelf (see film-video-wall.css) */}
         <FilmVideoWall />
 
-        {/* Live style preview — sits just above the picker controls and reflects
-            the current style + aspect. Rendered as a sibling of the newbar (not a
-            child) so it can't affect the newbar's own layout. Reads picker state
-            only; the create payload in startNew() is unchanged. */}
-        {picking && <StylePreview styleKey={style} aspect={aspect} />}
-
+        {/* New Film picker — a dedicated popout (live preview + controls). Reads
+            and sets the same style/duration/aspect state the inline bar used and
+            calls the unchanged startNew(), so the create payload is untouched. */}
         {picking && (
-          <div className="film-lib-newbar">
-            <div className="film-seg">
-              {STYLES.map(s => (
-                <button key={s.key}
-                  className={`film-seg-btn${style === s.key ? ' is-on' : ''}`}
-                  onClick={() => setStyle(s.key)}>{s.label}</button>
-              ))}
-            </div>
-            <div className="film-seg">
-              {DURATIONS.map(d => (
-                <button key={d.key}
-                  className={`film-seg-btn${duration === d.key ? ' is-on' : ''}`}
-                  onClick={() => setDuration(d.key)}>{d.label}</button>
-              ))}
-            </div>
-            <div className="film-seg">
-              {ASPECTS.map(a => (
-                <button key={a.key}
-                  className={`film-seg-btn film-seg-btn--aspect${aspect === a.key ? ' is-on' : ''}`}
-                  onClick={() => setAspect(a.key)} title={a.key}>
-                  <AspectGlyph w={a.w} h={a.h} /> {a.label}
-                </button>
-              ))}
-            </div>
-            <button className="film-btn film-btn--primary" disabled={busy} onClick={startNew}>
-              {busy ? 'Creating…' : 'Start'}
-            </button>
-            <button className="film-btn film-btn--ghost" onClick={() => setPicking(false)}>Cancel</button>
-          </div>
+          <NewFilmModal
+            styles={STYLES}
+            durations={DURATIONS}
+            aspects={ASPECTS}
+            AspectGlyph={AspectGlyph}
+            style={style}
+            duration={duration}
+            aspect={aspect}
+            onStyle={setStyle}
+            onDuration={setDuration}
+            onAspect={setAspect}
+            busy={busy}
+            onStart={startNew}
+            onClose={() => setPicking(false)}
+          />
         )}
 
         {(error || actionError) && <div className="film-lib-error">{error || actionError}</div>}

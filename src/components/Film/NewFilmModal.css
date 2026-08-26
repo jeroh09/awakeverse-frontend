@@ -1,0 +1,175 @@
+/* src/components/Film/NewFilmModal.css
+   Self-contained styling for the New Film popout. Token fallbacks are inline so
+   it renders correctly on the launcher, which doesn't load FilmWorkspace.css. */
+
+.nf-scrim {
+  position: fixed;
+  inset: 0;
+  z-index: 4000;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 24px;
+  background: rgba(6, 10, 20, .66);
+  backdrop-filter: blur(6px);
+  -webkit-backdrop-filter: blur(6px);
+  animation: nf-fade .16s ease;
+}
+
+.nf-modal {
+  position: relative;
+  width: 100%;
+  max-width: 860px;
+  max-height: calc(100vh - 48px);
+  overflow: auto;
+  padding: 26px 26px 22px;
+  background: var(--film-surface, #141B2E);
+  border: 1px solid rgba(99, 102, 241, .5);
+  border-radius: var(--film-r-xl, 20px);
+  box-shadow: 0 40px 120px -30px #000, 0 0 60px -22px rgba(99, 102, 241, .5);
+  animation: nf-pop .18s cubic-bezier(.2, .7, .3, 1);
+}
+
+@keyframes nf-fade { from { opacity: 0; } to { opacity: 1; } }
+@keyframes nf-pop  { from { opacity: 0; transform: translateY(10px) scale(.985); } to { opacity: 1; transform: none; } }
+
+.nf-x {
+  position: absolute;
+  top: 12px;
+  right: 14px;
+  width: 30px;
+  height: 30px;
+  border-radius: 50%;
+  border: 1px solid var(--film-bd-med, rgba(148, 163, 184, .2));
+  background: transparent;
+  color: var(--film-t2, #94A3B8);
+  font-size: 18px;
+  line-height: 1;
+  cursor: pointer;
+  transition: color .15s, border-color .15s;
+}
+.nf-x:hover { color: var(--film-t1, #F1F5F9); border-color: var(--film-accent, #6366F1); }
+
+.nf-head { padding-right: 34px; }
+.nf-title {
+  margin: 0;
+  font-family: var(--film-display, 'Syne', sans-serif);
+  font-weight: 800;
+  font-size: 22px;
+  color: var(--film-t1, #F1F5F9);
+  letter-spacing: -.01em;
+}
+.nf-sub { margin: 4px 0 0; font-size: 13px; color: var(--film-t2, #94A3B8); }
+
+/* studio: preview | controls */
+.nf-studio {
+  display: grid;
+  grid-template-columns: auto 1fr;
+  gap: 26px;
+  align-items: start;
+  margin-top: 18px;
+}
+
+.nf-stage { display: flex; flex-direction: column; align-items: center; gap: 12px; }
+
+/* Enlarge the shared StylePreview inside the modal (its own CSS caps it small
+   for the compact picker; here we want a proper preview). */
+.nf-stage .film-style-preview.ar-9x16 { width: 244px; }
+.nf-stage .film-style-preview.ar-1x1  { width: 340px; }
+.nf-stage .film-style-preview.ar-16x9 { width: 430px; max-width: 100%; }
+
+.nf-cap {
+  font-family: var(--film-display, 'Syne', sans-serif);
+  font-weight: 700;
+  font-size: 14px;
+  color: var(--film-ivory, #F5F5DC);
+  text-align: center;
+}
+.nf-cap small {
+  display: block;
+  margin-top: 3px;
+  font-family: var(--film-body, 'Inter', sans-serif);
+  font-weight: 400;
+  font-size: 12px;
+  color: var(--film-t3, #64748B);
+}
+
+.nf-controls { display: flex; flex-direction: column; gap: 18px; min-width: 0; }
+.nf-glabel {
+  margin-bottom: 9px;
+  font-size: 11px;
+  letter-spacing: .1em;
+  text-transform: uppercase;
+  font-weight: 700;
+  color: var(--film-t3, #64748B);
+}
+.nf-opt { font-weight: 500; letter-spacing: 0; text-transform: none; color: var(--film-tm, #475569); }
+
+.nf-styles { display: flex; flex-wrap: wrap; gap: 8px; }
+.nf-style {
+  border: 1px solid var(--film-bd-med, rgba(148, 163, 184, .2));
+  background: var(--film-canvas, #0A0F1A);
+  color: var(--film-t2, #94A3B8);
+  font-family: var(--film-body, 'Inter', sans-serif);
+  font-weight: 600;
+  font-size: 13px;
+  padding: 8px 14px;
+  border-radius: 9999px;
+  cursor: pointer;
+  transition: color .15s, border-color .15s, background .15s;
+}
+.nf-style:hover { color: var(--film-t1, #F1F5F9); border-color: var(--film-bd-strong, rgba(148, 163, 184, .3)); }
+.nf-style.is-on { background: rgba(99, 102, 241, .16); border-color: var(--film-accent, #6366F1); color: #fff; }
+
+.nf-seg { display: flex; flex-wrap: wrap; gap: 6px; }
+.nf-segbtn {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  border: 1px solid var(--film-bd-med, rgba(148, 163, 184, .2));
+  background: var(--film-canvas, #0A0F1A);
+  color: var(--film-t2, #94A3B8);
+  font-family: var(--film-body, 'Inter', sans-serif);
+  font-weight: 600;
+  font-size: 13px;
+  padding: 8px 13px;
+  border-radius: 10px;
+  cursor: pointer;
+  transition: color .15s, border-color .15s, background .15s;
+}
+.nf-segbtn:hover { color: var(--film-t1, #F1F5F9); border-color: var(--film-bd-strong, rgba(148, 163, 184, .3)); }
+.nf-segbtn.is-on { background: rgba(99, 102, 241, .16); border-color: var(--film-accent, #6366F1); color: #fff; }
+
+.nf-foot { display: flex; justify-content: flex-end; gap: 10px; margin-top: 4px; }
+.nf-btn {
+  border: 0;
+  border-radius: 10px;
+  font-family: var(--film-body, 'Inter', sans-serif);
+  font-weight: 600;
+  font-size: 14px;
+  padding: 10px 20px;
+  cursor: pointer;
+  transition: transform .15s, box-shadow .15s, color .15s, border-color .15s;
+}
+.nf-btn.primary {
+  background: linear-gradient(135deg, var(--film-accent, #6366F1), var(--film-accent-hover, #818CF8));
+  color: #fff;
+}
+.nf-btn.primary:hover { transform: translateY(-1px); box-shadow: 0 10px 24px -12px var(--film-accent, #6366F1); }
+.nf-btn.ghost {
+  background: transparent;
+  border: 1px solid var(--film-bd-strong, rgba(148, 163, 184, .3));
+  color: var(--film-t2, #94A3B8);
+}
+.nf-btn.ghost:hover { color: var(--film-t1, #F1F5F9); border-color: var(--film-accent, #6366F1); }
+.nf-btn:disabled { opacity: .6; cursor: default; transform: none; box-shadow: none; }
+
+/* Stack on narrow viewports so nothing squishes. */
+@media (max-width: 760px) {
+  .nf-studio { grid-template-columns: 1fr; gap: 18px; }
+  .nf-stage .film-style-preview.ar-16x9 { width: 100%; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .nf-scrim, .nf-modal { animation: none; }
+}
