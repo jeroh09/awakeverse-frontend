@@ -1196,3 +1196,32 @@
 .film-workspace .film-stream-text{
   font-family:'Newsreader',Georgia,serif !important;
 }
+
+/* ─────────────────────────────────────────────────────────────────────────────
+   "Building your cast" skeletons (castPhase === 'cast_rendering'). Reuse the real
+   .film-cast-card / .film-cast-grid / .film-cast-portrait so a finished portrait
+   drops into the identical slot; these rules only dress the not-yet-drawn state.
+   Presentation only. (Shimmers are disabled by the global reduced-motion rule,
+   leaving a legible static placeholder.)
+   ───────────────────────────────────────────────────────────────────────────── */
+.film-cast-card--skel{ pointer-events:none; }
+.film-cast-card--skel .film-cast-portrait{ display:grid; place-items:center; overflow:hidden; }
+.film-cast-skel-sil{ width:42%; height:42%; color:var(--film-tm); opacity:.55; }
+.film-cast-skel-shine{
+  position:absolute; inset:0;
+  background:linear-gradient(100deg,transparent 30%,rgba(129,140,248,.16) 50%,transparent 70%);
+  transform:translateX(-100%); animation:film-castshine 1.8s ease-in-out infinite;
+}
+.film-cast-card--skel:nth-child(2) .film-cast-skel-shine{ animation-delay:.25s; }
+.film-cast-card--skel:nth-child(3) .film-cast-skel-shine{ animation-delay:.5s; }
+@keyframes film-castshine{ 0%{transform:translateX(-100%)} 60%,100%{transform:translateX(100%)} }
+
+.film-cast-card--skel .film-cast-body{ justify-content:center; gap:0; }
+.film-cast-skel-line{
+  display:block; height:9px; width:80%; border-radius:5px; margin-top:9px;
+  background:linear-gradient(90deg,var(--film-interactive) 0%,var(--film-peak) 50%,var(--film-interactive) 100%);
+  background-size:200% 100%; animation:film-skelpulse 1.6s linear infinite;
+}
+.film-cast-skel-line--title{ height:13px; width:58%; margin-top:0; margin-bottom:2px; }
+.film-cast-skel-line--short{ width:46%; }
+@keyframes film-skelpulse{ 0%{background-position:200% 0} 100%{background-position:-200% 0} }

@@ -190,6 +190,62 @@ function CastMember({ name, info, busy, onRedraw, onUpload }) {
   );
 }
 
+// ── Building your cast — the render pause (castPhase === 'cast_rendering') ─────
+// Placeholder slots that show WHERE (and, once names are known, WHO) is being
+// drawn, so the wait reads as progress and no one re-clicks the funnel. Reuses
+// the real .film-cast-card / .film-cast-grid, so a finished portrait drops into
+// the exact same slot — each slot swaps to the real image the moment its
+// plate_url exists (progressive), and if the cast list isn't populated yet we
+// show 3 generic slots. Presentational only; no cast/render logic here.
+function CastBuilding({ castList }) {
+  const slots = castList.length > 0 ? castList : [[null, null], [null, null], [null, null]];
+  return (
+    <div className="film-cast-wrap">
+      <div className="film-lifebanner film-lifebanner--cast_rendering" role="status" aria-live="polite">
+        <span className="film-spin film-spin--sm" />
+        <div className="film-lifebanner-txt">
+          <b>Building your cast…</b>
+          <span>This takes a minute — no need to click again. Your cast appears right here as it's ready.</span>
+        </div>
+      </div>
+      <div className="film-cast-grid">
+        {slots.map(([name, info], i) => {
+          const ready = !!(info && info.plate_url);
+          return (
+            <div key={name || `slot-${i}`}
+                 className={`film-cast-card film-cast-card--skel${ready ? ' is-ready' : ''}`}>
+              <div className="film-cast-portrait">
+                {ready ? (
+                  <img src={info.plate_url} alt={name || ''} className="film-cast-img" />
+                ) : (
+                  <>
+                    <svg className="film-cast-skel-sil" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
+                      <circle cx="12" cy="8.5" r="4" />
+                      <path d="M4.5 20.5c0-3.6 3.4-5.8 7.5-5.8s7.5 2.2 7.5 5.8z" />
+                    </svg>
+                    <span className="film-cast-skel-shine" aria-hidden="true" />
+                  </>
+                )}
+              </div>
+              <div className="film-cast-body">
+                {name
+                  ? <div className="film-cast-name">{name}</div>
+                  : <span className="film-cast-skel-line film-cast-skel-line--title" aria-hidden="true" />}
+                {!ready && (
+                  <>
+                    <span className="film-cast-skel-line" aria-hidden="true" />
+                    <span className="film-cast-skel-line film-cast-skel-line--short" aria-hidden="true" />
+                  </>
+                )}
+              </div>
+            </div>
+          );
+        })}
+      </div>
+    </div>
+  );
+}
+
 function ConsentModal({ onAgree, onCancel }) {
   const [agreed, setAgreed] = useState(false);
   return (
@@ -386,25 +442,18 @@ export default function Storyboard({
             miss, driven by the same castPhase the funnel button reads, so the
             two never disagree. Cast/film renders only; plate_review keeps its
             own "Meet the cast" lead below. */}
-        {(castPhase === 'cast_rendering' || castPhase === 'film_rendering') && (
-          <div className={`film-lifebanner film-lifebanner--${castPhase}`} role="status" aria-live="polite">
+        {castPhase === 'film_rendering' && (
+          <div className="film-lifebanner film-lifebanner--film_rendering" role="status" aria-live="polite">
             <span className="film-spin film-spin--sm" />
             <div className="film-lifebanner-txt">
-              {castPhase === 'cast_rendering' ? (
-                <>
-                  <b>Building your cast…</b>
-                  <span>This takes a minute — no need to click again. Your cast appears right here when it's ready.</span>
-                </>
-              ) : (
-                <>
-                  <b>Making your film…</b>
-                  <span>Each shot appears below as it finishes. You can leave this page — it keeps rendering.</span>
-                </>
-              )}
+              <b>Making your film…</b>
+              <span>Each shot appears below as it finishes. You can leave this page — it keeps rendering.</span>
             </div>
           </div>
         )}
-        {stageState === 'plate_review' ? (
+        {(castPhase === 'cast_rendering' && stageState !== 'plate_review') ? (
+          <CastBuilding castList={castList} />
+        ) : stageState === 'plate_review' ? (
           <div className="film-cast-wrap">
             <div className="film-cast-lead">
               <h3>Meet the cast</h3>
