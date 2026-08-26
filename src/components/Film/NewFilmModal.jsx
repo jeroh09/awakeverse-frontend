@@ -64,14 +64,17 @@ export default function NewFilmModal({
             </div>
           </div>
 
-          {/* RIGHT — controls */}
+          {/* RIGHT — controls. Each group is a contained pill-group; the
+              selected option fills indigo. The style group wraps within its pill
+              so the 5th option (Photoreal) never overflows in the narrow
+              widescreen layout (note 2). */}
           <div className="nf-controls">
             <div className="nf-group">
               <div className="nf-glabel">Style</div>
-              <div className="nf-styles">
+              <div className="nf-pillgroup nf-pillgroup--wrap">
                 {styles.map(s => (
                   <button key={s.key} type="button"
-                    className={`nf-style${style === s.key ? ' is-on' : ''}`}
+                    className={`nf-pill${style === s.key ? ' is-on' : ''}`}
                     onClick={() => onStyle(s.key)}>{s.label}</button>
                 ))}
               </div>
@@ -79,10 +82,10 @@ export default function NewFilmModal({
 
             <div className="nf-group">
               <div className="nf-glabel">Frame <span className="nf-opt">· fixed for the whole film</span></div>
-              <div className="nf-seg">
+              <div className="nf-pillgroup">
                 {aspects.map(a => (
                   <button key={a.key} type="button"
-                    className={`nf-segbtn${aspect === a.key ? ' is-on' : ''}`}
+                    className={`nf-pill nf-pill--icon${aspect === a.key ? ' is-on' : ''}`}
                     onClick={() => onAspect(a.key)} title={a.key}>
                     <AspectGlyph w={a.w} h={a.h} /> {a.label}
                   </button>
@@ -92,10 +95,10 @@ export default function NewFilmModal({
 
             <div className="nf-group">
               <div className="nf-glabel">Length</div>
-              <div className="nf-seg">
+              <div className="nf-pillgroup">
                 {durations.map(d => (
                   <button key={d.key} type="button"
-                    className={`nf-segbtn${duration === d.key ? ' is-on' : ''}`}
+                    className={`nf-pill${duration === d.key ? ' is-on' : ''}`}
                     onClick={() => onDuration(d.key)}>{d.label}</button>
                 ))}
               </div>

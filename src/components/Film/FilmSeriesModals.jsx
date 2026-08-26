@@ -23,8 +23,8 @@ import { friendlyError } from './filmApi';
 // series is photoreal for life — exactly like the other four.
 const STYLES = ['anime', 'cartoon', 'comic_book', 'realistic', 'photoreal'];
 const STYLE_LABEL = { anime: 'Anime', cartoon: 'Cartoon', comic_book: 'Comic',
-                      realistic: 'Painterly', stylized_real: 'Painterly',
-                      photoreal: 'Realistic' };
+                      realistic: 'Realistic', stylized_real: 'Realistic',
+                      photoreal: 'Photoreal' };
 const DURATIONS = [{ v: 60, l: '60s' }, { v: 120, l: '2 min' }, { v: 180, l: '3 min' }];
 const ASPECTS = [{ v: '9:16', l: 'Vertical', w: 9, h: 15 }, { v: '1:1', l: 'Square', w: 13, h: 13 }, { v: '16:9', l: 'Widescreen', w: 18, h: 10 }];
 
