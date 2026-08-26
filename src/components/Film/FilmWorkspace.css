@@ -1127,3 +1127,43 @@
 .film-workspace .film-stream-text{
   font-family:'Newsreader',Georgia,serif;
 }
+
+/* ─────────────────────────────────────────────────────────────────────────────
+   Reading column: in the EXPANDED room (Storyboard collapsed) the chat panel
+   goes full-window and messages / script / composer stretched edge-to-edge.
+   Cap everything to one centred column so it reads like a document instead of a
+   2000px-wide line — mirrors a normal chat's centred measure. Width-capped, so
+   the docked/narrow state is unchanged (panel already sits under the cap).
+   Presentation only; no layout/collapse logic touched.
+   ───────────────────────────────────────────────────────────────────────────── */
+.film-workspace{ --fw-col:46rem; }
+
+/* messages, script draft and the user bubble → one centred column */
+.film-workspace .film-chatscroll > *{
+  width:100%; max-width:var(--fw-col); align-self:center;
+}
+/* prose fills the column now (supersedes the earlier 64ch cap) so its left edge
+   lines up with the script panel and the user bubble */
+.film-workspace .film-flow{ max-width:100%; }
+
+/* header (tabs + subtitle) and the FILM STATE digest align to the same column */
+.film-workspace .film-panel--chat .film-phead{
+  max-width:var(--fw-col); margin-left:auto; margin-right:auto;
+}
+.film-workspace .fw-digest{
+  max-width:var(--fw-col); margin-left:auto; margin-right:auto;
+}
+
+/* beat editor + "Script ready" bar share the column */
+.film-workspace .film-beatedit{ max-width:var(--fw-col); margin:0 auto 4px; }
+.film-workspace .film-scriptbar{ max-width:var(--fw-col); margin-left:auto; margin-right:auto; }
+.film-workspace .film-scriptbar-pill{ align-self:center; }
+
+/* the input area — capped + centred so it stops spanning the whole window */
+.film-workspace .film-composer .film-inputwrap{
+  max-width:var(--fw-col); margin-left:auto; margin-right:auto;
+}
+.film-workspace .film-composer .film-attach-notice,
+.film-workspace .film-disclaimer{
+  max-width:var(--fw-col); margin-left:auto; margin-right:auto;
+}
