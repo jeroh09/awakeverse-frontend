@@ -219,6 +219,7 @@ function ConsentModal({ onAgree, onCancel }) {
 
 export default function Storyboard({
   stageState = 'empty',
+  castPhase = 'idle',
   beats = [],
   aspectRatio = '9:16',
   videoStyle = null,
@@ -379,6 +380,30 @@ export default function Storyboard({
       </div>
 
       <div className="film-stage">
+        {/* Lifecycle banner (2026-08-26): the sub-line under the Storyboard tab
+            wasn't loud enough — users kept re-clicking the funnel while a render
+            was already running. This is the in-stage state change they can't
+            miss, driven by the same castPhase the funnel button reads, so the
+            two never disagree. Cast/film renders only; plate_review keeps its
+            own "Meet the cast" lead below. */}
+        {(castPhase === 'cast_rendering' || castPhase === 'film_rendering') && (
+          <div className={`film-lifebanner film-lifebanner--${castPhase}`} role="status" aria-live="polite">
+            <span className="film-spin film-spin--sm" />
+            <div className="film-lifebanner-txt">
+              {castPhase === 'cast_rendering' ? (
+                <>
+                  <b>Building your cast…</b>
+                  <span>This takes a minute — no need to click again. Your cast appears right here when it's ready.</span>
+                </>
+              ) : (
+                <>
+                  <b>Making your film…</b>
+                  <span>Each shot appears below as it finishes. You can leave this page — it keeps rendering.</span>
+                </>
+              )}
+            </div>
+          </div>
+        )}
         {stageState === 'plate_review' ? (
           <div className="film-cast-wrap">
             <div className="film-cast-lead">

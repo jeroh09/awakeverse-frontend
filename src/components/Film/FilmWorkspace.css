@@ -434,6 +434,26 @@
   transition:all .15s;}
 .film-scriptbar-pill:hover{background:rgba(99,102,241,.18);border-color:rgba(99,102,241,.55);}
 
+/* single morphing funnel CTA (2026-08-26): fixed min-width so the label swap
+   (Review cast → Reviewing the cast… → Make the film → Making the film…) doesn't
+   jog the bar layout. Disabled visuals come from .film-btn:disabled; the busy
+   spinner is tinted for the filled (primary) button. */
+.film-funnel-cta{min-width:150px;justify-content:center;}
+.film-funnel-cta .film-ctrl-spin{border-color:rgba(255,255,255,.4);border-top-color:#fff;}
+
+/* in-stage lifecycle banner (2026-08-26): the loud state-change the sub-line
+   couldn't be. Two variants — cast (indigo) and film (green, matching the
+   render/success palette used elsewhere). */
+.film-lifebanner{display:flex;align-items:center;gap:12px;margin:0 0 14px;padding:12px 15px;
+  border-radius:var(--film-r-md);border:1px solid rgba(99,102,241,.4);
+  background:rgba(99,102,241,.1);animation:film-lifebanner-in .25s ease;}
+.film-lifebanner .film-spin{flex:0 0 auto;}
+.film-lifebanner-txt{display:flex;flex-direction:column;gap:2px;min-width:0;}
+.film-lifebanner-txt b{font-family:var(--film-display);font-size:13.5px;font-weight:600;color:var(--film-t1);}
+.film-lifebanner-txt span{font-size:12px;color:var(--film-t2);line-height:1.45;}
+.film-lifebanner--film_rendering{border-color:rgba(52,211,153,.32);background:rgba(16,64,48,.22);}
+@keyframes film-lifebanner-in{from{opacity:0;transform:translateY(-4px);}to{opacity:1;transform:none;}}
+
 /* pinned to the TRUE bottom of the window. The Writers' Room is boxless on
    purpose so the composer can fall all the way to the outer app-card border
    (the one scraping the viewport edge) — NOT the Storyboard card's inner

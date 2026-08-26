@@ -338,8 +338,10 @@ export default function WritersRoom({
   onSend = () => {},
   scriptReady = false,
   showBuildBar = false,
-  onBuildFilm = () => {},
+  onBuildFilm = () => {},           // retired from the funnel bar (kept for contract)
   onReviewCast = () => {},
+  onApproveCast = () => {},
+  castPhase = 'idle',
   onSaveScript,
 }) {
   const [text, setText] = useState('');
@@ -566,8 +568,25 @@ export default function WritersRoom({
         );
       })()}
 
-      {showBuildBar && (
-        scriptBarCollapsed ? (
+      {/* ONE funnel button, morphing across the render lifecycle (2026-08-26).
+          Replaces the old competing "Review cast first" / "Make the film" pair:
+          users clicked Make-the-film and waited on nothing. Now the single CTA
+          runs the cast review first (plan phase); once the cast is ready it
+          becomes the approve action — the SAME operation the storyboard's
+          "Looks good — make the film" fires, so the two surfaces never disagree.
+          Greyed states are un-clickable (the double-click fix), and the state is
+          job-derived (castPhase) so a reload mid-render returns to the correct
+          label rather than back to entry. Hidden once the film is done — the
+          storyboard + Editor's Room own a finished film. */}
+      {showBuildBar && castPhase !== 'done' && (() => {
+        const CTA = ({
+          idle:           { label: 'Review cast',         disabled: false, busy: false, onClick: onReviewCast },
+          cast_rendering: { label: 'Reviewing the cast…', disabled: true,  busy: true,  onClick: null },
+          cast_ready:     { label: 'Make the film',       disabled: false, busy: false, onClick: onApproveCast },
+          film_rendering: { label: 'Making the film…',    disabled: true,  busy: true,  onClick: null },
+        })[castPhase] || { label: 'Review cast', disabled: false, busy: false, onClick: onReviewCast };
+
+        return scriptBarCollapsed ? (
           <button className="film-scriptbar-pill" onClick={() => setScriptBarCollapsed(false)}>
             <IconCheck s={12} /> Script ready
           </button>
@@ -575,8 +594,14 @@ export default function WritersRoom({
           <div className="film-scriptbar">
             <span className="film-scriptbar-lbl"><IconCheck s={14} /> Script ready</span>
             <div className="film-scriptbar-actions">
-              <button className="film-btn film-btn--ghost" onClick={onReviewCast}>Review cast first</button>
-              <button className="film-btn film-btn--primary" onClick={onBuildFilm}>Make the film</button>
+              <button
+                className="film-btn film-btn--primary film-funnel-cta"
+                disabled={CTA.disabled}
+                onClick={CTA.onClick || undefined}
+              >
+                {CTA.busy && <span className="film-ctrl-spin" />}
+                {CTA.label}
+              </button>
               <button
                 className="film-scriptbar-x"
                 onClick={() => setScriptBarCollapsed(true)}
@@ -587,8 +612,8 @@ export default function WritersRoom({
               </button>
             </div>
           </div>
-        )
-      )}
+        );
+      })()}
 
       <div className="film-composer">
         {pendingAttachment && (

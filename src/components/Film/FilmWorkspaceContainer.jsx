@@ -57,6 +57,16 @@ export default function FilmWorkspaceContainer({
   // standalone → promotable once rendered; a number = an episode → not promotable.
   const [seriesId, setSeriesId] = useState(undefined);
   const [promoteOpen, setPromoteOpen] = useState(false);
+  // Transient "the funnel was just clicked" flag. onReviewCast awaits
+  // authoring.finalize() (an LLM call, several seconds) BEFORE job.plan() sets
+  // status='processing' — during that gap job.status is still 'idle', so a
+  // purely job-derived button would read "enabled" and users re-click (the exact
+  // double-click report). This greys the button the instant it's pressed; it is
+  // NOT the lifecycle source of truth (that's job.status/live below) and is
+  // deliberately transient — it must NOT survive a reload, since nothing was
+  // enqueued yet. Cleared the moment the real job leaves 'idle'.
+  const [castKickoff, setCastKickoff] = useState(false);
+  useEffect(() => { if (job.status !== 'idle') setCastKickoff(false); }, [job.status]);
 
   // Mount: adopt the fresh session, or resume the project.
   useEffect(() => {
@@ -224,10 +234,19 @@ export default function FilmWorkspaceContainer({
   // "Review cast first": finalize the script, then run the plan phase (which
   // pauses at Meet the cast) instead of making the film straight through.
   const onReviewCast = useCallback(async () => {
-    if (savedScript) { doPlan(savedScript); return; }
-    const rec = await authoring.finalize();
-    const script = (rec && rec.script) || authoring.script;
-    if (script) doPlan(script);
+    // Grey the funnel synchronously, before the await, so the finalize() gap
+    // can't invite a second click. If we never reach doPlan (finalize failed, or
+    // no script came back), release the flag so the button returns to entry.
+    setCastKickoff(true);
+    try {
+      if (savedScript) { doPlan(savedScript); return; }
+      const rec = await authoring.finalize();
+      const script = (rec && rec.script) || authoring.script;
+      if (script) doPlan(script);
+      else setCastKickoff(false);
+    } catch (e) {
+      setCastKickoff(false);
+    }
   }, [authoring, doPlan, savedScript]);
 
   // Save an edited script to the project. The saved text then takes precedence
@@ -368,6 +387,24 @@ export default function FilmWorkspaceContainer({
     authoring.markIntentApplied(proposalId, intentIdx);
   }, [job, onCut, onDuplicate, authoring]);
 
+  // ── the single-funnel lifecycle (2026-08-26) ──
+  // ONE morphing CTA replaces the old competing "Review cast" / "Make the film"
+  // pair. Its state derives from the job (reload-safe) — job.status leads, and
+  // job.live splits the two processing renders (cast plan vs approved film). The
+  // transient castKickoff only fills the pre-status finalize() gap. Order is
+  // load-bearing: check the durable job states first, kickoff last.
+  //   entry          → enabled  "Review cast"     → onReviewCast (plan phase)
+  //   cast_rendering → greyed   "Reviewing the cast…"
+  //   cast_ready     → enabled  "Make the film"   → onApproveCast (approve plan)
+  //   film_rendering → greyed   "Making the film…"
+  //   done           → bar hidden (storyboard + Editor's Room take over)
+  const castPhase =
+      job.status === 'awaiting_review' ? 'cast_ready'
+    : job.status === 'complete'        ? 'done'
+    : job.status === 'processing'      ? (job.live ? 'film_rendering' : 'cast_rendering')
+    : castKickoff                      ? 'cast_rendering'   // click→finalize gap
+    : 'idle';   // idle | failed → entry (failed offers a retry)
+
   return (
     <>
     <FilmWorkspace
@@ -436,6 +473,7 @@ export default function FilmWorkspaceContainer({
       scriptReady={authoring.scriptReady}
       onBuildFilm={onBuildFilm}
       onReviewCast={onReviewCast}
+      castPhase={castPhase}
       onSaveScript={onSaveScript}
     />
     {blockInfo && (

@@ -44,7 +44,7 @@ export default function FilmWorkspace({
   streamingText = '',
   editingBeat = null,
   onCloseEdit, onChangeEditVisual, onPickSpeaker, onRemovePresent, onChangeLine, onRegenerateFromEdit, onSaveEdit,
-  onSend, scriptReady = false, onBuildFilm, onReviewCast, onSaveScript,
+  onSend, scriptReady = false, onBuildFilm, onReviewCast, castPhase = 'idle', onSaveScript,
   // Editor's Room (2026-08-25): the shell is presentational and forwards
   // explicitly — these MUST be threaded here or they die between the
   // container and WritersRoom (the severed-link bug: the tab never showed
@@ -157,6 +157,7 @@ export default function FilmWorkspace({
             </div>
             <Storyboard
               stageState={stageState}
+              castPhase={castPhase}
               beats={beats}
               aspectRatio={aspectRatio}
               videoStyle={videoStyle}
@@ -219,6 +220,8 @@ export default function FilmWorkspace({
               showBuildBar={scriptReady}
               onBuildFilm={onBuildFilm}
               onReviewCast={onReviewCast}
+              onApproveCast={onApproveCast}
+              castPhase={castPhase}
               onSaveScript={onSaveScript}
             />
           </section>

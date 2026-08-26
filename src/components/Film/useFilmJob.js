@@ -322,6 +322,13 @@ export default function useFilmJob() {
   // "Plates are building" pill: a plan job still processing, not yet paused.
   const planningPlates = isPlanPhase && status === 'processing';
   const reviewCharacters = (manifest && manifest.review && manifest.review.characters) || null;
+  // The single honest "the FILM render spine is up" signal. The approved render
+  // (queue_film_render_planned) overwrites the manifest with { live:true, ... }
+  // and NO phase key; the plan pause writes { live:false, phase:'plate_review' }.
+  // So during status==='processing', `live` cleanly separates "rendering the
+  // film" (true) from "rendering the cast" (false) — and it's read straight from
+  // the manifest, so it survives a reload mid-render (unlike any local flag).
+  const live = !!(manifest && manifest.live);
 
   const total = Math.max(expectedRef.current, cells.length);
   const done = cells.filter(c => c.status === 'done').length || Math.round(rawProgress * total);
@@ -329,7 +336,7 @@ export default function useFilmJob() {
   const jobTitle = (manifest && manifest.source && manifest.source.title) || null;
 
   return { jobId, status, stage, cells, progress, outputUrl, error, title: jobTitle, editBusy,
-    reviewCharacters, planningPlates, blocked, clearBlocked: () => setBlocked(null),
+    reviewCharacters, planningPlates, live, blocked, clearBlocked: () => setBlocked(null),
     generate, plan, regeneratePlate, uploadCharacterImage, approveRender,
     cancel, reassemble, regenerate, adopt, reset };
 }
