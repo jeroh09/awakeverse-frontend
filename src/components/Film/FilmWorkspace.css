@@ -1,3 +1,5 @@
+@import url('https://fonts.googleapis.com/css2?family=Courier+Prime:ital,wght@0,400;0,700;1,400&family=Newsreader:opsz,wght@6..72,400;6..72,500;6..72,600&display=swap');
+
 /* src/components/Film/FilmWorkspace.css
    Two floating panels (each its own indigo border) inside a wider indigo-bordered
    window, with a gap so nothing touches. Window never scrolls; each panel scrolls
@@ -1075,3 +1077,42 @@
 .fw-welcome{background:var(--film-interactive,#1C2640);color:var(--film-t1,#F1F5F9);
   border-radius:var(--film-r-md,12px);border-bottom-left-radius:4px;padding:10px 13px;
   font-size:13.5px;line-height:1.5;max-width:88%;}
+/* ─────────────────────────────────────────────────────────────────────────────
+   Writers'/Editor's Room — "Manuscript" reading pass.
+   PRESENTATION ONLY. No JSX or handlers touched: the script panel's
+   copy / edit / collapse controls, the Editor's Room, and all buttons are
+   unchanged. No left accent bars added (the script keeps its existing all-round
+   border; the Storyboard/left panel is untouched). Selectors are prefixed with
+   .film-workspace so they win by specificity regardless of source order.
+   Fonts (Newsreader + Courier Prime) come from the @import at the top of file.
+   ───────────────────────────────────────────────────────────────────────────── */
+
+/* Director / assistant prose → reading serif, comfortable size + measure. */
+.film-workspace .film-flow{
+  font-family:'Newsreader',Georgia,serif;
+  font-size:15px; line-height:1.72; color:#e8edf5; max-width:64ch;
+}
+.film-workspace .film-flow p{ font-size:15px; line-height:1.72; margin:0 0 12px; }
+.film-workspace .film-flow p:last-child{ margin-bottom:0; }
+.film-workspace .film-flow li{ font-size:15px; line-height:1.7; }
+.film-workspace .film-flow h1{ font-size:20px; }
+.film-workspace .film-flow h2{ font-size:17px; }
+.film-workspace .film-flow h3{ font-size:13px; }
+.film-workspace .film-flow code{ font-size:12.5px; }
+.film-workspace .film-flow strong,
+.film-workspace .film-flow b{ color:#fff; font-weight:600; }
+
+/* Screenplay text → Courier Prime (industry standard). Panel chrome and the
+   copy / edit / collapse controls are left exactly as they are. */
+.film-workspace .film-script-body,
+.film-workspace .film-script-textarea{
+  font-family:'Courier Prime',ui-monospace,'SF Mono',Menlo,monospace;
+  font-size:12.5px; line-height:1.6;
+}
+
+/* User message → a rounded, indigo-OUTLINED bubble. No accent highlight strip,
+   no squared tail corner. Keeps the existing fill + handwritten face. */
+.film-workspace .film-msg--me{
+  border:1px solid rgba(99,102,241,.65);
+  border-radius:var(--film-r-md);
+}
