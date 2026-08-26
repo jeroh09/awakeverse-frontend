@@ -96,6 +96,21 @@ export default function FilmWorkspace({
     return () => { document.body.classList.remove('film-mode-active'); };
   }, []);
 
+  // Load the room's reading fonts (Newsreader for director prose, Courier Prime
+  // for the screenplay) via an injected <link>. A CSS @import inside a bundled
+  // component stylesheet is unreliable — once concatenated it can fall after
+  // other rules and the browser drops it — so we add the stylesheet link once,
+  // idempotently, here. Additive only; left in <head> so remounts don't refetch.
+  useEffect(() => {
+    const id = 'fw-room-fonts';
+    if (document.getElementById(id)) return;
+    const link = document.createElement('link');
+    link.id = id;
+    link.rel = 'stylesheet';
+    link.href = 'https://fonts.googleapis.com/css2?family=Courier+Prime:ital,wght@0,400;0,700;1,400&family=Newsreader:opsz,wght@6..72,400;6..72,500;6..72,600&display=swap';
+    document.head.appendChild(link);
+  }, []);
+
   // THE STRAY-SPACE BUG (2026-08-24): native <button>s KEEP FOCUS after a
   // mouse click, and a focused button re-activates on Space/Enter — so
   // "click Make the film, later press space" built the film again, and Space

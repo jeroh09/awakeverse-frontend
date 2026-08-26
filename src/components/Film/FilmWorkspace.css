@@ -1116,3 +1116,14 @@
   border:1px solid rgba(99,102,241,.65);
   border-radius:var(--film-r-md);
 }
+
+/* Fix (fonts weren't taking): markdown renders <p>/<li>/<blockquote>, and a
+   global element rule for those beats the family inherited from .film-flow.
+   Set the serif on the text elements themselves so it actually wins. Headings
+   keep their Syne display face on purpose. */
+.film-workspace .film-flow p,
+.film-workspace .film-flow li,
+.film-workspace .film-flow blockquote,
+.film-workspace .film-stream-text{
+  font-family:'Newsreader',Georgia,serif;
+}
