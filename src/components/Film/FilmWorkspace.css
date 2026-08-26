@@ -1167,3 +1167,32 @@
 .film-workspace .film-disclaimer{
   max-width:var(--fw-col); margin-left:auto; margin-right:auto;
 }
+
+/* ─────────────────────────────────────────────────────────────────────────────
+   HARDEN the director/assistant reading serif (fixes the font "snap" on commit).
+   During streaming the text sits in one .film-stream-text span (already serif);
+   on commit MarkdownBlocks re-renders it as <p><span>…</span></p>, and a global
+   element rule can out-reach the family inherited from .film-flow. Lock the serif
+   on every TEXT descendant of .film-flow so both paths render identically.
+
+   Scope + exclusions are deliberate:
+   • Only .film-flow (director prose) — the user bubble (Caveat) is untouched.
+   • Headings are NOT listed → they keep Syne (var(--film-display)).
+   • <code>/<pre> are NOT listed → inline code + the Courier Prime script panel
+     keep their monospace (the script panel isn't inside .film-flow anyway).
+   • Local !important only: guarantees the prose font without touching the global
+     stylesheet, which would ripple to other pages. Font-family only — sizes,
+     colours and line-heights still come from the rules above. */
+.film-workspace .film-flow,
+.film-workspace .film-flow p,
+.film-workspace .film-flow li,
+.film-workspace .film-flow blockquote,
+.film-workspace .film-flow span,
+.film-workspace .film-flow b,
+.film-workspace .film-flow strong,
+.film-workspace .film-flow i,
+.film-workspace .film-flow em,
+.film-workspace .film-flow a,
+.film-workspace .film-stream-text{
+  font-family:'Newsreader',Georgia,serif !important;
+}
