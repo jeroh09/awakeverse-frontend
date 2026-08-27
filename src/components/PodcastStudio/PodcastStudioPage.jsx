@@ -309,6 +309,20 @@ const fmtDate = (iso) => {
 
 export default function PodcastStudioPage({ context, onClose }) {
   const { setActivePodcastRender } = useAppView();
+
+  // Load the reading serif (Newsreader) so podcast lines match the film's
+  // reading treatment. Injected as a <link> rather than a CSS @import (which is
+  // unreliable once a component stylesheet is bundled). Idempotent + shares the
+  // same id as the film loader, so the font is fetched at most once app-wide.
+  useEffect(() => {
+    const id = 'fw-room-fonts';
+    if (document.getElementById(id)) return;
+    const link = document.createElement('link');
+    link.id = id;
+    link.rel = 'stylesheet';
+    link.href = 'https://fonts.googleapis.com/css2?family=Courier+Prime:ital,wght@0,400;0,700;1,400&family=Newsreader:opsz,wght@6..72,400;6..72,500;6..72,600&display=swap';
+    document.head.appendChild(link);
+  }, []);
   const {
     state,
     environments,

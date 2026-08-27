@@ -643,9 +643,9 @@
   border: none;
   outline: none;
   color: #CBD5E1;
-  font-size: 0.78rem;
-  font-family: 'Inter', sans-serif;
-  line-height: 1.55;
+  font-size: 0.95rem;                         /* matches the film's reading prose */
+  font-family: 'Newsreader', Georgia, serif;  /* same reading serif as the film lines */
+  line-height: 1.6;
   resize: none;
   max-height: 240px;   /* auto-grow cap — JS sizes height up to this, then scrolls */
   overflow-y: hidden;  /* toggled to auto by JS once content exceeds max-height */
@@ -2218,7 +2218,7 @@
   font-size: 0.78rem;
   color: var(--text-primary);
   line-height: 1.55;
-  font-family: 'Inter', sans-serif;
+  font-family: 'Newsreader', Georgia, serif;   /* same reading serif as the film */
 }
 
 .bubbleUser {
@@ -2231,7 +2231,8 @@
   font-size: 0.78rem;
   color: var(--text-primary);
   line-height: 1.55;
-  font-family: 'Inter', sans-serif;
+  font-family: 'Newsreader', Georgia, serif;   /* serif, italic — matches the film's user voice */
+  font-style: italic;
 }
 
 .bubbleThinking {
