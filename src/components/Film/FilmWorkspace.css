@@ -767,6 +767,22 @@
 
 /* ═══ Meet the cast — the review pause ════════════════════════════════════════ */
 .film-cast-wrap{padding:2px;}
+
+/* photoreal adults-only block card (2026-08-27): a minor tripped the photoreal
+   pathway. Warm, non-punitive — a clear "here's why + two ways forward", not an
+   error dump. Amber (caution) not red (failure), since it's a choice to make. */
+.film-blockcard{max-width:60ch;margin:8px auto;padding:22px 24px;border-radius:var(--film-r-md);
+  border:1px solid rgba(214,158,46,.4);background:rgba(60,44,12,.28);text-align:left;}
+.film-blockcard-badge{display:inline-block;font-size:11px;font-weight:700;letter-spacing:.06em;
+  text-transform:uppercase;color:#f0c674;background:rgba(214,158,46,.16);
+  border:1px solid rgba(214,158,46,.4);border-radius:999px;padding:3px 10px;margin-bottom:12px;}
+.film-blockcard h3{font-family:var(--film-display);font-weight:600;font-size:17px;margin:0 0 8px;color:var(--film-t1);}
+.film-blockcard-msg{margin:0 0 14px;font-size:13.5px;line-height:1.55;color:var(--film-t1);}
+.film-blockcard-who{display:flex;flex-wrap:wrap;gap:6px;margin:0 0 14px;}
+.film-blockcard-chip{font-size:12px;font-weight:600;color:#f0c674;background:rgba(214,158,46,.12);
+  border:1px solid rgba(214,158,46,.32);border-radius:6px;padding:3px 9px;}
+.film-blockcard-hint{margin:0;font-size:12.5px;line-height:1.55;color:var(--film-t2);}
+
 .film-cast-lead{margin:0 2px 16px;}
 .film-cast-lead h3{font-family:var(--film-display);font-weight:600;font-size:16px;margin:0 0 4px;color:var(--film-t1);}
 .film-cast-lead p{margin:0;font-size:13px;color:var(--film-t2);max-width:56ch;line-height:1.5;}

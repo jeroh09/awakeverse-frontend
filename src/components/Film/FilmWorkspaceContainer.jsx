@@ -140,7 +140,8 @@ export default function FilmWorkspaceContainer({
     [authoring.shots]
   );
   const stageState =
-    job.editBusy ? 'edit'
+    job.contentBlock ? 'blocked'                       // photoreal adults-only block — show the card
+    : job.editBusy ? 'edit'
     : job.stage === 'edit' ? 'edit'
     : job.stage === 'plate_review' ? 'plate_review'   // paused: Meet the cast
     : job.stage === 'render' ? 'render'
@@ -412,6 +413,7 @@ export default function FilmWorkspaceContainer({
       loading={loading}
       onBackToFilms={onBackToFilms}
       stageState={stageState}
+      contentBlock={job.contentBlock}
       beats={beats}
       aspectRatio={meta.aspect_ratio}
       videoStyle={meta.video_style}

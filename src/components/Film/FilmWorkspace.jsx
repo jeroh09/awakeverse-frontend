@@ -19,6 +19,7 @@ export default function FilmWorkspace({
   onBackToFilms,
   // stage (left)
   stageState = 'empty',
+  contentBlock = null,
   beats = [],
   aspectRatio = '9:16',
   videoStyle = null,
@@ -172,6 +173,7 @@ export default function FilmWorkspace({
             </div>
             <Storyboard
               stageState={stageState}
+              contentBlock={contentBlock}
               castPhase={castPhase}
               beats={beats}
               aspectRatio={aspectRatio}

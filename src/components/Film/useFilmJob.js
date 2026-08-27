@@ -329,14 +329,18 @@ export default function useFilmJob() {
   // film" (true) from "rendering the cast" (false) — and it's read straight from
   // the manifest, so it survives a reload mid-render (unlike any local flag).
   const live = !!(manifest && manifest.live);
-
+  // Photoreal adults-only block (2026-08-27): a plan blocked for a minor writes
+  // beats_manifest = { block: { reason:'minor_photoreal', characters, message } }
+  // and fails the job. Surface it structured so the storyboard can render a
+  // dedicated "adults-only" card (naming the character) instead of a generic error.
+  const contentBlock = (manifest && manifest.block) || null;
   const total = Math.max(expectedRef.current, cells.length);
   const done = cells.filter(c => c.status === 'done').length || Math.round(rawProgress * total);
   const progress = { done, total, etaText: etaText(done, total) };
   const jobTitle = (manifest && manifest.source && manifest.source.title) || null;
 
   return { jobId, status, stage, cells, progress, outputUrl, error, title: jobTitle, editBusy,
-    reviewCharacters, planningPlates, live, blocked, clearBlocked: () => setBlocked(null),
+    reviewCharacters, planningPlates, live, contentBlock, blocked, clearBlocked: () => setBlocked(null),
     generate, plan, regeneratePlate, uploadCharacterImage, approveRender,
     cancel, reassemble, regenerate, adopt, reset };
 }
