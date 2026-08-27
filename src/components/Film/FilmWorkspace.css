@@ -1225,3 +1225,43 @@
 .film-cast-skel-line--title{ height:13px; width:58%; margin-top:0; margin-bottom:2px; }
 .film-cast-skel-line--short{ width:46%; }
 @keyframes film-skelpulse{ 0%{background-position:200% 0} 100%{background-position:-200% 0} }
+
+/* ─────────────────────────────────────────────────────────────────────────────
+   User messages → our reading serif, kept ITALIC (was Caveat). Same family as
+   the director prose so the two read as a pair; italic keeps the user's voice
+   distinct. Sized to sit alongside the 15px director prose. Text descendants are
+   listed so the markdown <p><span> can't fall back; the "You" label and the
+   attachment chip stay in the UI font. Local !important, scoped to .film-msg--me.
+   ───────────────────────────────────────────────────────────────────────────── */
+.film-workspace .film-msg--me{
+  font-family:var(--film-body,'Inter',sans-serif);   /* container → "You"/chip inherit UI font */
+  font-style:normal;
+  font-size:15.5px; line-height:1.6; font-weight:500; letter-spacing:normal;
+}
+.film-workspace .film-msg--me p,
+.film-workspace .film-msg--me li,
+.film-workspace .film-msg--me blockquote,
+.film-workspace .film-msg--me span,
+.film-workspace .film-msg--me b,
+.film-workspace .film-msg--me strong,
+.film-workspace .film-msg--me i,
+.film-workspace .film-msg--me em{
+  font-family:'Newsreader',Georgia,serif !important;
+  font-style:italic !important;
+}
+.film-workspace .film-msg--me .film-who,
+.film-workspace .film-msg--me .film-msg-attach,
+.film-workspace .film-msg--me .film-msg-attach *{
+  font-family:var(--film-body,'Inter',sans-serif) !important;
+  font-style:normal !important;
+}
+
+/* ─────────────────────────────────────────────────────────────────────────────
+   Editor's Room call sheet on our type system. NOTE/value text → reading serif;
+   the edited VISUAL line → Courier Prime (it's screenplay). Field labels + chips
+   stay in the UI font. The editor's messages already use the serif via .film-flow
+   / .film-msg--me above, so this just brings the proposal cards in line.
+   ───────────────────────────────────────────────────────────────────────────── */
+.film-workspace .fw-v{ font-family:'Newsreader',Georgia,serif; line-height:1.5; }
+.film-workspace .fw-v.fw-v-mono{ font-family:'Courier Prime',ui-monospace,'SF Mono',Menlo,monospace; }
+.film-workspace .fw-chip{ font-family:var(--film-body,'Inter',sans-serif); }
