@@ -457,6 +457,12 @@ export default function PodcastStudioPage({ context, onClose }) {
   }, [lines]);
   const [renderCost, setRenderCost] = useState(null);   // { price, affordable, ... }
 
+  // ── Comparison mode (solo): two glass rails, points reveal line-by-line ──
+  const [compareOn,     setCompareOn]     = useState(false);
+  const [compareLeft,   setCompareLeft]   = useState({ name: '', logo: '' });
+  const [compareRight,  setCompareRight]  = useState({ name: '', logo: '' });
+  const [comparePoints, setComparePoints] = useState([{ label: '', left: '', right: '', revealAtLine: '' }]);
+
   // ── Voice enforcement (frontend gate) ────────────────────────────────────
   // A speaker's voice is VALID only if its voiceId is present in the loaded
   // voices list. This catches BOTH a phantom default id (never in the list) and
@@ -1585,6 +1591,38 @@ if (context.topic) setTopic(context.topic);
           }),
       };
 
+      // ── Comparison mode → session-level "comparison" block (snake_case) ──
+      // Only sent when enabled with both subjects named and ≥1 titled point.
+      // reveal_at_line is optional per point; the backend auto-distributes any
+      // left blank. Guarded so a half-filled editor never sends a broken spec.
+      if (compareOn && compareLeft.name.trim() && compareRight.name.trim()) {
+        const pts = comparePoints
+          .filter(p => (p.label || '').trim())
+          .slice(0, 6)
+          .map(p => {
+            const row = {
+              label: p.label.trim(),
+              left:  (p.left  || '').trim(),
+              right: (p.right || '').trim(),
+            };
+            const rl = String(p.revealAtLine).trim();
+            if (rl !== '' && !Number.isNaN(parseInt(rl, 10))) {
+              row.reveal_at_line = parseInt(rl, 10);
+            }
+            return row;
+          });
+        if (pts.length) {
+          payload.comparison = {
+            layout: 'extended',
+            left:  { name: compareLeft.name.trim(),
+                     logo: (compareLeft.logo || compareLeft.name.trim()[0] || '').slice(0, 2) },
+            right: { name: compareRight.name.trim(),
+                     logo: (compareRight.logo || compareRight.name.trim()[0] || '').slice(0, 2) },
+            points: pts,
+          };
+        }
+      }
+
       const res = await fetch(`${API_BASE}/api/podcast/session`, {
         method:      'POST',
         headers:     { 'Content-Type': 'application/json', 'X-CSRF-Token': csrf },
@@ -1627,6 +1665,7 @@ if (context.topic) setTopic(context.topic);
     }
   }, [
     speakers, selectedEnvId, voices,
+    compareOn, compareLeft, compareRight, comparePoints,
     startPollingSession, loadSessions, setActivePodcastRender,
   ]);
 
@@ -3430,6 +3469,73 @@ if (context.topic) setTopic(context.topic);
                   <Ic.Check /> All voices confirmed — ready to render
                 </div>
               )}
+            </div>
+          )}
+
+          {/* GENERATE TAB → Comparison mode (optional, solo) */}
+          {activeTab === 'generate' && (
+            <div className={styles.glassCard} style={{ display: 'flex', flexDirection: 'column', gap: '0.6rem', marginTop: '0.65rem' }}>
+              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '0.6rem' }}>
+                <div className={styles.cardLabel} style={{ margin: 0 }}>Comparison rails</div>
+                <label style={{ display: 'inline-flex', alignItems: 'center', gap: '0.45rem', cursor: 'pointer', fontSize: '0.72rem', color: '#94a3b8', fontFamily: 'Inter,sans-serif' }}>
+                  <input type="checkbox" checked={compareOn} onChange={e => setCompareOn(e.target.checked)} />
+                  {compareOn ? 'On' : 'Off'}
+                </label>
+              </div>
+              <p style={{ fontSize: '0.7rem', color: '#64748b', fontFamily: 'Inter,sans-serif', margin: 0, lineHeight: 1.5 }}>
+                Two glass rails (left vs right) for a solo “X vs Y” episode. Points reveal as the host reaches each line.
+              </p>
+
+              {compareOn && (() => {
+                const inp = {
+                  width: '100%', background: 'rgba(15,23,42,0.8)', color: '#e2e8f0',
+                  border: '1px solid rgba(99,102,241,0.22)', borderRadius: 8,
+                  padding: '0.42rem 0.55rem', fontFamily: 'Inter,sans-serif', fontSize: '0.8rem',
+                };
+                const lbl = { fontSize: '0.6rem', fontFamily: "'JetBrains Mono',monospace", letterSpacing: '0.1em', textTransform: 'uppercase', color: '#818cf8', marginBottom: 3, display: 'block' };
+                const upd = (i, f, v) => setComparePoints(ps => ps.map((p, idx) => idx === i ? { ...p, [f]: v } : p));
+                return (
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: '0.7rem' }}>
+                    {/* subjects */}
+                    <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '0.6rem' }}>
+                      {[['left', compareLeft, setCompareLeft, '#818cf8', 'Left (A)'],
+                        ['right', compareRight, setCompareRight, '#34d399', 'Right (B)']].map(([side, val, setter, accent, tag]) => (
+                        <div key={side} style={{ border: `1px solid ${accent}33`, borderRadius: 10, padding: '0.6rem', display: 'flex', flexDirection: 'column', gap: '0.45rem' }}>
+                          <span style={{ ...lbl, color: accent }}>{tag}</span>
+                          <div><span style={lbl}>Name</span><input style={inp} value={val.name} placeholder={side === 'left' ? 'Claude' : 'ChatGPT'} onChange={e => setter(v => ({ ...v, name: e.target.value }))} /></div>
+                          <div><span style={lbl}>Logo (1–2 chars)</span><input style={inp} value={val.logo} maxLength={2} placeholder={side === 'left' ? 'C' : 'G'} onChange={e => setter(v => ({ ...v, logo: e.target.value }))} /></div>
+                        </div>
+                      ))}
+                    </div>
+
+                    {/* points */}
+                    <div>
+                      <span style={lbl}>Comparison points (max 6)</span>
+                      <div style={{ display: 'flex', flexDirection: 'column', gap: '0.4rem' }}>
+                        {comparePoints.map((p, i) => (
+                          <div key={i} style={{ display: 'grid', gridTemplateColumns: '1.1fr 1fr 1fr 56px 26px', gap: '0.35rem', alignItems: 'center' }}>
+                            <input style={inp} value={p.label}   placeholder="Label (Reasoning)" onChange={e => upd(i, 'label', e.target.value)} />
+                            <input style={inp} value={p.left}    placeholder="Left value"  onChange={e => upd(i, 'left', e.target.value)} />
+                            <input style={inp} value={p.right}   placeholder="Right value" onChange={e => upd(i, 'right', e.target.value)} />
+                            <input style={inp} value={p.revealAtLine} inputMode="numeric" placeholder="line" title="Reveal at line # (blank = auto)" onChange={e => upd(i, 'revealAtLine', e.target.value.replace(/[^0-9]/g, ''))} />
+                            <button type="button" title="Remove" onClick={() => setComparePoints(ps => ps.filter((_, idx) => idx !== i))}
+                              style={{ background: 'rgba(148,163,184,0.12)', border: 'none', color: '#94a3b8', borderRadius: 6, cursor: 'pointer', height: 30 }}>✕</button>
+                          </div>
+                        ))}
+                      </div>
+                      {comparePoints.length < 6 && (
+                        <button type="button" onClick={() => setComparePoints(ps => [...ps, { label: '', left: '', right: '', revealAtLine: '' }])}
+                          style={{ marginTop: '0.5rem', background: 'rgba(99,102,241,0.12)', border: '1px solid rgba(99,102,241,0.35)', color: '#818cf8', borderRadius: 8, padding: '0.35rem 0.8rem', fontFamily: 'Inter,sans-serif', fontSize: '0.74rem', cursor: 'pointer' }}>
+                          + Add point
+                        </button>
+                      )}
+                      <p style={{ fontSize: '0.66rem', color: '#64748b', fontFamily: 'Inter,sans-serif', margin: '0.55rem 0 0', lineHeight: 1.5 }}>
+                        “line” = the line number (0-based) where that point should appear. Leave blank to space them evenly across the episode.
+                      </p>
+                    </div>
+                  </div>
+                );
+              })()}
             </div>
           )}
 
