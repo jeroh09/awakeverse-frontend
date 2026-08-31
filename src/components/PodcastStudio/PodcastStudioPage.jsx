@@ -3109,15 +3109,19 @@ if (context.topic) setTopic(context.topic);
                     ['card','▣','Glass card','A tilted frosted-glass panel beside the speaker — best for charts, stats, or quotes'],
                     ['cutout','✂','Cutout','The image with its background removed, floating free (no card) — best for products or logos'],
                     ['product_in_hand','✋','In hand','The speaker is composed holding the product as they talk — best for a physical item'],
+                    ['__compare__','⚖️','Compare','Two glass rails comparing A vs B across the whole episode — opens the comparison setup'],
                   ].map(([val, ic, lbl, hint]) => {
-                    const isOn = val === 'product_in_hand'
-                      ? ov.mode === 'product_in_hand'
-                      : ov.mode !== 'product_in_hand' && (ov.shape || 'card') === val;
+                    const isOn = val === '__compare__'
+                      ? compareOn
+                      : val === 'product_in_hand'
+                        ? ov.mode === 'product_in_hand'
+                        : ov.mode !== 'product_in_hand' && (ov.shape || 'card') === val;
                     return (
                       <button key={val}
                         className={`${styles.overlayType} ${isOn ? styles.overlayTypeOn : ''}`}
                         title={hint}
                         onClick={() => {
+                          if (val === '__compare__') { setCompareOpen(true); return; }
                           if (val === 'product_in_hand') patchOverlay({ mode: 'product_in_hand', shape: 'card' });
                           else patchOverlay({ mode: 'overlay', shape: val, preset: ov.preset || (multi ? 'corner_small_tr' : 'corner_card_tr') });
                         }}>
@@ -3491,39 +3495,6 @@ if (context.topic) setTopic(context.topic);
                 </div>
               )}
             </div>
-          )}
-
-          {/* GENERATE TAB → Comparison trigger (opens the pop-out setup) */}
-          {activeTab === 'generate' && (
-            <button
-              type="button"
-              onClick={() => setCompareOpen(true)}
-              className={styles.glassCard}
-              style={{
-                display: 'flex', alignItems: 'center', gap: '0.7rem', width: '100%',
-                textAlign: 'left', cursor: 'pointer', marginTop: '0.65rem',
-                border: compareOn ? '1px solid rgba(99,102,241,0.5)' : '1px solid rgba(99,102,241,0.18)',
-              }}
-            >
-              <span style={{
-                width: 38, height: 38, borderRadius: 11, flexShrink: 0, display: 'flex',
-                alignItems: 'center', justifyContent: 'center', fontSize: '1.15rem',
-                background: 'linear-gradient(135deg, rgba(99,102,241,0.2), rgba(16,185,129,0.16))',
-              }}>⚖️</span>
-              <span style={{ flex: 1, minWidth: 0 }}>
-                <span style={{ display: 'block', fontFamily: 'Syne,sans-serif', fontWeight: 700, fontSize: '0.85rem', color: '#e0e7ff' }}>
-                  Comparison rails
-                </span>
-                <span style={{ fontSize: '0.68rem', color: '#94a3b8' }}>
-                  {compareOn
-                    ? `On · ${compareLeft.name || 'A'} vs ${compareRight.name || 'B'} · ${comparePoints.filter(p => (p.label || '').trim()).length} points`
-                    : 'Solo A-vs-B glass rails — tap to set up'}
-                </span>
-              </span>
-              <span style={{ flexShrink: 0, fontSize: '0.64rem', fontWeight: 600, color: '#818cf8', whiteSpace: 'nowrap' }}>
-                {compareOn ? 'Edit' : 'Set up ▸'}
-              </span>
-            </button>
           )}
 
           {/* ALL OTHER TABS → Environment picker */}

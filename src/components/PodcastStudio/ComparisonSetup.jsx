@@ -4,29 +4,96 @@
 //   LEFT  — live preview of the rails over a mock host frame (updates as you type)
 //   RIGHT — the setup: two subjects (name + logo under the name) and points.
 //
-// Logo is optional: monogram letter by default; Upload swaps in an image via
-// the existing uploadInsert() (POST /api/podcast/insert/upload → url). Any bad
-// image falls back to the monogram, so the card can't break.
+// IMPORTANT: Chip / Rail / Subject are defined at MODULE scope (not inside the
+// component). Defining them inside the render gives them a new identity every
+// keystroke, so React remounts the <input> and steals focus after one letter.
+// Module scope keeps their identity stable so inputs keep focus while typing.
 //
-// State is LIFTED to PodcastStudioPage (enabled/left/right/points) so handleGenerate
-// reads the same values it sends. The reveal slider here is preview-only.
-//
-// NOTE: the rail COLOURS mirror podcast_compare.py's VISUAL DESIGN TOKENS block
-// (the renderer is authoritative). Keep the two in sync — see ComparisonSetup.module.css.
+// Logo is optional: a letter by default; Upload swaps in an image via the existing
+// uploadInsert(). Any bad/removed image falls back to the letter, so the card
+// can't break. Rail COLOURS mirror podcast_compare.py's VISUAL DESIGN TOKENS.
 
 import React, { useCallback, useEffect, useRef, useState } from 'react';
 import styles from './ComparisonSetup.module.css';
 
+const monogram = (s) => (s.logo || s.name?.[0] || '?').slice(0, 2).toUpperCase();
+
+function Chip({ s, side }) {
+  return (
+    <span className={`${styles.chip} ${styles['chip_' + side]}`}>
+      {s.logoUrl
+        ? <img src={s.logoUrl} alt="" onError={(e) => { e.currentTarget.style.display = 'none'; }} />
+        : monogram(s)}
+    </span>
+  );
+}
+
+function Rail({ s, side, tag, points, reveal }) {
+  return (
+    <div className={`${styles.rail} ${styles['rail_' + side]}`}>
+      <div className={styles.rhead}>
+        <Chip s={s} side={side} />
+        <div className={styles.rmeta}>
+          <div className={styles.rtag}>{tag}</div>
+          <div className={styles.rname}>{s.name || '—'}</div>
+        </div>
+      </div>
+      <div className={styles.rrows}>
+        {points.map((p, i) => {
+          if (i >= reveal) return <div key={i} className={styles.rowOff} />;
+          const hl = i === reveal - 1 ? styles['hl_' + side] : '';
+          const val = side === 'left' ? p.left : p.right;
+          return (
+            <div key={i} className={`${styles.row} ${hl}`}>
+              <div className={styles.rk}>{(p.label || '—').toUpperCase()}</div>
+              <div className={styles.rv}>{val || '—'}</div>
+            </div>
+          );
+        })}
+      </div>
+    </div>
+  );
+}
+
+function Subject({ side, val, setter, tag, uploading, onLogo }) {
+  return (
+    <div className={`${styles.subj} ${styles['subj_' + side]}`}>
+      <span className={styles.stag}>{tag}</span>
+      <label className={styles.flabel}>Name</label>
+      <input className={styles.input} value={val.name} placeholder={side === 'left' ? 'Claude' : 'ChatGPT'}
+             onChange={e => setter(v => ({ ...v, name: e.target.value }))} />
+      {/* logo row - directly under the name */}
+      <label className={styles.flabel}>Logo</label>
+      <div className={styles.logoRow}>
+        <Chip s={val} side={side} />
+        <input className={styles.mono} value={val.logo || ''} maxLength={2}
+               placeholder={side === 'left' ? 'C' : 'G'}
+               onChange={e => setter(v => ({ ...v, logo: e.target.value }))} />
+        <label className={styles.uploadBtn}>
+          <input type="file" accept="image/*" hidden
+                 onChange={e => onLogo(side, e.target.files?.[0])} />
+          {uploading === side ? 'Uploading…' : val.logoUrl ? 'Change' : 'Upload'}
+        </label>
+        {val.logoUrl && (
+          <button type="button" className={styles.clearLogo} title="Remove image"
+                  onClick={() => setter(v => ({ ...v, logoUrl: '' }))}>✕</button>
+        )}
+      </div>
+      <span className={styles.hint}>Upload a logo - you're responsible for rights to images you add.</span>
+    </div>
+  );
+}
+
 export default function ComparisonSetup({
   open, onClose,
   enabled, setEnabled,
-  left, setLeft,        // { name, logo, logoUrl }
-  right, setRight,      // { name, logo, logoUrl }
-  points, setPoints,    // [{ label, left, right, revealAtLine }]
-  uploadInsert,         // async (File) => url
+  left, setLeft,
+  right, setRight,
+  points, setPoints,
+  uploadInsert,
 }) {
   const [reveal, setReveal]       = useState(points.length);
-  const [uploading, setUploading] = useState(null);   // 'left' | 'right' | null
+  const [uploading, setUploading] = useState(null);
   const dialogRef = useRef(null);
   const restoreRef = useRef(null);
 
@@ -72,75 +139,9 @@ export default function ComparisonSetup({
     try {
       const url = await uploadInsert(file);
       (side === 'left' ? setLeft : setRight)(v => ({ ...v, logoUrl: url }));
-    } catch (_e) {
-      /* keep monogram on failure */
-    } finally {
-      setUploading(null);
-    }
+    } catch (_e) { /* keep letter on failure */ }
+    finally { setUploading(null); }
   };
-
-  const monogram = (s) => (s.logo || s.name?.[0] || '?').slice(0, 2).toUpperCase();
-
-  const Chip = ({ s, side }) => (
-    <span className={`${styles.chip} ${styles['chip_' + side]}`}>
-      {s.logoUrl
-        ? <img src={s.logoUrl} alt="" onError={(e) => { e.currentTarget.style.display = 'none'; }} />
-        : null}
-      {!s.logoUrl && monogram(s)}
-    </span>
-  );
-
-  const Rail = ({ s, side, tag }) => (
-    <div className={`${styles.rail} ${styles['rail_' + side]}`}>
-      <div className={styles.rhead}>
-        <Chip s={s} side={side} />
-        <div className={styles.rmeta}>
-          <div className={styles.rtag}>{tag}</div>
-          <div className={styles.rname}>{s.name || '—'}</div>
-        </div>
-      </div>
-      <div className={styles.rrows}>
-        {points.map((p, i) => {
-          if (i >= reveal) return <div key={i} className={styles.rowOff} />;
-          const hl = i === reveal - 1 ? styles['hl_' + side] : '';
-          const val = side === 'left' ? p.left : p.right;
-          return (
-            <div key={i} className={`${styles.row} ${hl}`}>
-              <div className={styles.rk}>{(p.label || '—').toUpperCase()}</div>
-              <div className={styles.rv}>{val || '—'}</div>
-            </div>
-          );
-        })}
-      </div>
-    </div>
-  );
-
-  const Subject = ({ side, val, setter, tag }) => (
-    <div className={`${styles.subj} ${styles['subj_' + side]}`}>
-      <span className={styles.stag}>{tag}</span>
-      <label className={styles.flabel}>Name</label>
-      <input className={styles.input} value={val.name} placeholder={side === 'left' ? 'Claude' : 'ChatGPT'}
-             onChange={e => setter(v => ({ ...v, name: e.target.value }))} />
-      {/* logo row — directly under the name */}
-      <label className={styles.flabel}>Logo</label>
-      <div className={styles.logoRow}>
-        <Chip s={val} side={side} />
-        <input className={styles.mono} value={val.logo || ''} maxLength={2}
-               placeholder={side === 'left' ? 'C' : 'G'}
-               onChange={e => setter(v => ({ ...v, logo: e.target.value }))} />
-        <label className={styles.uploadBtn}>
-          <input type="file" accept="image/*" hidden
-                 onChange={e => handleLogo(side, e.target.files?.[0])} />
-          {uploading === side ? 'Uploading…' : val.logoUrl ? 'Change' : 'Upload'}
-        </label>
-        {val.logoUrl && (
-          <button type="button" className={styles.clearLogo} title="Remove image"
-                  onClick={() => setter(v => ({ ...v, logoUrl: '' }))}>✕</button>
-        )}
-      </div>
-      <span className={styles.hint}>Monogram by default. Upload a logo — you're responsible for rights to images you add.</span>
-    </div>
-  );
 
   return (
     <div className={styles.backdrop} onMouseDown={e => { if (e.target === e.currentTarget) handleClose(); }}>
@@ -151,13 +152,18 @@ export default function ComparisonSetup({
         </div>
 
         <div className={styles.split}>
-          {/* LEFT — live preview */}
           <div className={styles.preview}>
-            <div className={styles.cap}>Live preview — how it looks on screen</div>
+            <div className={styles.cap}>Live preview - how it looks on screen</div>
             <div className={styles.stage}>
-              <div className={styles.host}><div className={styles.avatar} /><div className={styles.hl}>HOST VIDEO</div></div>
-              <Rail s={left}  side="left"  tag="OPTION A" />
-              <Rail s={right} side="right" tag="OPTION B" />
+              <div className={styles.host}>
+                <svg className={styles.avatar} viewBox="0 0 80 80" aria-hidden="true">
+                  <circle cx="40" cy="27" r="15" fill="rgba(148,163,184,0.4)" />
+                  <path d="M13 78 C13 55, 67 55, 67 78 Z" fill="rgba(148,163,184,0.4)" />
+                </svg>
+                <div className={styles.hl}>HOST VIDEO</div>
+              </div>
+              <Rail s={left}  side="left"  tag="OPTION A" points={points} reveal={reveal} />
+              <Rail s={right} side="right" tag="OPTION B" points={points} reveal={reveal} />
             </div>
             <div className={styles.scrub}>
               <span>Reveal</span>
@@ -168,12 +174,11 @@ export default function ComparisonSetup({
             <div className={styles.note}>Drag to preview how points appear line-by-line as the host talks. Newest is highlighted.</div>
           </div>
 
-          {/* RIGHT — controls */}
           <div className={styles.controls}>
             <div className={styles.grpLabel}>The two subjects</div>
             <div className={styles.subjects}>
-              <Subject side="left"  val={left}  setter={setLeft}  tag="Left · A" />
-              <Subject side="right" val={right} setter={setRight} tag="Right · B" />
+              <Subject side="left"  val={left}  setter={setLeft}  tag="Left · A"  uploading={uploading} onLogo={handleLogo} />
+              <Subject side="right" val={right} setter={setRight} tag="Right · B" uploading={uploading} onLogo={handleLogo} />
             </div>
 
             <div className={styles.grpLabel} style={{ marginTop: 16 }}>Comparison points (max 6)</div>
