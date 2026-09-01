@@ -466,6 +466,9 @@ export default function PodcastStudioPage({ context, onClose }) {
   const [compareLeft,   setCompareLeft]   = useState({ name: '', logo: '', logoUrl: '' });
   const [compareRight,  setCompareRight]  = useState({ name: '', logo: '', logoUrl: '' });
   const [comparePoints, setComparePoints] = useState([{ label: '', left: '', right: '', revealAtLine: '' }]);
+  // compareStyle: the rails look (comparison.style). null = module default; a
+  // recipe object { recipe } overrides it for the whole episode.
+  const [compareStyle,  setCompareStyle]  = useState(null);
 
   // ── Voice enforcement (frontend gate) ────────────────────────────────────
   // A speaker's voice is VALID only if its voiceId is present in the loaded
@@ -1635,6 +1638,8 @@ if (context.topic) setTopic(context.topic);
             right:  subj(compareRight),
             points: pts,
           };
+          // Rails look — omitted when Default, so rails inherit the module look.
+          if (compareStyle) payload.comparison.style = compareStyle;
         }
       }
 
@@ -1680,7 +1685,7 @@ if (context.topic) setTopic(context.topic);
     }
   }, [
     speakers, selectedEnvId, voices,
-    compareOn, compareLeft, compareRight, comparePoints,
+    compareOn, compareLeft, compareRight, comparePoints, compareStyle,
     startPollingSession, loadSessions, setActivePodcastRender,
   ]);
 
@@ -3376,6 +3381,8 @@ if (context.topic) setTopic(context.topic);
             setRight={setCompareRight}
             points={comparePoints}
             setPoints={setComparePoints}
+            railStyle={compareStyle}
+            setRailStyle={setCompareStyle}
             uploadInsert={uploadInsert}
           />
 

@@ -19,6 +19,15 @@ import HostAvatar from './HostAvatar';
 
 const monogram = (s) => (s.logo || s.name?.[0] || '?').slice(0, 2).toUpperCase();
 
+// Rail look options → comparison.style. "Default" sends nothing (module look).
+const RAIL_LOOKS = [
+  ['default', 'Default'],
+  ['sticker', 'Sticker'],
+  ['embedded_glass', 'Embedded'],
+  ['in_the_room', 'In-room'],
+  ['broadcast_clean', 'Broadcast'],
+];
+
 function Chip({ s, side }) {
   return (
     <span className={`${styles.chip} ${styles['chip_' + side]}`}>
@@ -91,6 +100,7 @@ export default function ComparisonSetup({
   left, setLeft,
   right, setRight,
   points, setPoints,
+  railStyle = null, setRailStyle = () => {},
   uploadInsert,
 }) {
   const [reveal, setReveal]       = useState(points.length);
@@ -173,6 +183,23 @@ export default function ComparisonSetup({
           </div>
 
           <div className={styles.controls}>
+            <div className={styles.grpLabel}>Rail look</div>
+            <div className={styles.lookPill}>
+              {RAIL_LOOKS.map(([id, label]) => {
+                const on = (railStyle?.recipe || 'default') === id;
+                return (
+                  <button key={id} type="button"
+                    className={`${styles.lookBtn} ${on ? styles.lookOn : ''}`}
+                    onClick={() => setRailStyle(id === 'default' ? null : { recipe: id })}>
+                    {label}
+                  </button>
+                );
+              })}
+            </div>
+            <p className={styles.hint} style={{ marginBottom: 12 }}>
+              Default keeps the studio look. Applies to both rails for the whole episode.
+            </p>
+
             <div className={styles.grpLabel}>The two subjects</div>
             <div className={styles.subjects}>
               <Subject side="left"  val={left}  setter={setLeft}  tag="Left · A"  uploading={uploading} onLogo={handleLogo} />

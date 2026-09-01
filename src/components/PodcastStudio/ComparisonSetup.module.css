@@ -75,6 +75,13 @@
 /* RIGHT — controls */
 .controls { padding: 16px 18px; overflow-y: auto; }
 .grpLabel { font-family: 'JetBrains Mono', monospace; font-size: 0.62rem; letter-spacing: 0.12em; text-transform: uppercase; color: var(--indigo-light); margin-bottom: 8px; }
+
+/* Rail look pill — one full-width horizontal strip, equal segments, no wrap */
+.lookPill { display: flex; gap: 3px; padding: 4px; background: rgba(15,23,42,0.7); border: 1px solid var(--line); border-radius: 12px; margin-bottom: 6px; }
+.lookBtn { flex: 1 1 0; min-width: 0; background: none; border: none; color: var(--sub); font-family: 'Inter', sans-serif; font-size: 0.72rem; padding: 0.45rem 0.35rem; border-radius: 9px; cursor: pointer; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; transition: color 0.12s; }
+.lookBtn:hover { color: var(--paper); }
+.lookBtn:focus-visible { outline: none; box-shadow: var(--ring); }
+.lookOn { background: linear-gradient(180deg, var(--indigo-light), var(--indigo)); color: #fff; box-shadow: 0 4px 12px -4px rgba(99,102,241,0.6); }
 .subjects { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
 .subj { border: 1px solid var(--line); border-radius: 12px; padding: 12px; display: flex; flex-direction: column; gap: 6px; }
 .subj_left  { border-color: rgba(99,102,241,0.4); }
