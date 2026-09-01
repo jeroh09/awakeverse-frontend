@@ -42,9 +42,22 @@
 .hl { font-family: 'JetBrains Mono', monospace; font-size: 0.62rem; color: rgba(148,163,184,0.55); }
 
 /* rails (light grounds; dark text; nothing translucent) */
-.rail { position: absolute; top: 5%; height: 62%; width: 27%; border-radius: 12px; box-shadow: 0 12px 30px -10px rgba(0,0,0,0.55); overflow: hidden; display: flex; flex-direction: column; }
+.rail { position: absolute; top: 5%; height: 62%; width: 27%; border-radius: 12px; box-shadow: 0 12px 30px -10px rgba(0,0,0,0.55); overflow: hidden; display: flex; flex-direction: column; transition: background 0.15s, box-shadow 0.15s, transform 0.15s, backdrop-filter 0.15s; }
 .rail_left  { left: 3%;  background: var(--ground-l); border: 2px solid var(--indigo); }
 .rail_right { right: 3%; background: var(--ground-r); border: 2px solid var(--green); }
+
+/* specular sheen streak (behind the text, so it never hurts legibility) */
+.sheen { position: absolute; inset: 0; pointer-events: none; z-index: 0;
+  background: linear-gradient(120deg, transparent 34%, rgba(255,255,255,0.32) 46%, transparent 60%); }
+.rhead, .rrows { position: relative; z-index: 1; }
+
+/* VS connector node between the rails (matches the render) */
+.vs { position: absolute; left: 50%; top: 44%; transform: translate(-50%, -50%);
+  width: 34px; height: 34px; border-radius: 50%; z-index: 5;
+  background: linear-gradient(160deg, var(--indigo), var(--green)); border: 2px solid #fff;
+  display: flex; align-items: center; justify-content: center;
+  font-family: 'Syne', sans-serif; font-weight: 800; color: #fff; font-size: 0.72rem;
+  box-shadow: 0 8px 18px -6px rgba(0,0,0,0.6); }
 .rhead { display: flex; align-items: center; gap: 8px; padding: 9px 10px; border-bottom: 1px solid rgba(15,23,42,0.12); }
 .rail_right .rhead { flex-direction: row-reverse; text-align: right; }
 .rmeta { min-width: 0; }

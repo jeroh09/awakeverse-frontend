@@ -21,12 +21,22 @@ const monogram = (s) => (s.logo || s.name?.[0] || '?').slice(0, 2).toUpperCase()
 
 // Rail look options → comparison.style. "Default" sends nothing (module look).
 const RAIL_LOOKS = [
-  ['default', 'Default'],
-  ['sticker', 'Sticker'],
-  ['embedded_glass', 'Embedded'],
-  ['in_the_room', 'In-room'],
-  ['broadcast_clean', 'Broadcast'],
+  ['default',        'Default',   'Studio default — frosted glass rails (same as Embedded / Broadcast).'],
+  ['sticker',        'Sticker',   'Flat, opaque panels — the original look. No glass, blur, or sheen.'],
+  ['embedded_glass', 'Embedded',  'Frosted glass: the blurred room shows through, with sheen, rim and a grounded shadow.'],
+  ['in_the_room',    'In-room',   'Max realism — more see-through, with heavier background blur.'],
+  ['broadcast_clean','Broadcast', 'Crisp frosted glass (identical to Embedded on the rails).'],
 ];
+
+// Preview look per recipe — mirrors RAIL_PRESETS in podcast_compare.py closely
+// enough that the setup preview reflects the choice. The rendered video is
+// authoritative; this is a faithful approximation using CSS backdrop-filter.
+function railLook(railStyle) {
+  const r = railStyle?.recipe || 'default';
+  if (r === 'sticker')     return { glass: false, tint: 1,    blur: 0,  sheen: false, rim: false, tilt: 8, twoLayer: false };
+  if (r === 'in_the_room') return { glass: true,  tint: 0.50, blur: 12, sheen: true,  rim: true,  tilt: 8, twoLayer: true  };
+  return                          { glass: true,  tint: 0.62, blur: 8,  sheen: true,  rim: true,  tilt: 8, twoLayer: true  };
+}
 
 function Chip({ s, side }) {
   return (
@@ -38,9 +48,24 @@ function Chip({ s, side }) {
   );
 }
 
-function Rail({ s, side, tag, points, reveal }) {
+function Rail({ s, side, tag, points, reveal, look }) {
+  const grounds = side === 'left' ? '236,238,253' : '231,250,243';
+  const tiltDeg = look.tilt ? (side === 'left' ? look.tilt : -look.tilt) : 0;
+  const shadow = (look.twoLayer
+    ? '0 2px 4px rgba(0,0,0,0.5), 0 20px 40px -14px rgba(0,0,0,0.6)'
+    : '0 12px 30px -10px rgba(0,0,0,0.55)')
+    + (look.rim ? ', inset 0 2px 0 rgba(255,255,255,0.55), inset 0 -18px 26px -18px rgba(0,0,0,0.3)' : '');
+  const style = {
+    background: look.glass ? `rgba(${grounds},${look.tint})` : `rgb(${grounds})`,
+    backdropFilter: look.glass && look.blur ? `blur(${look.blur}px)` : undefined,
+    WebkitBackdropFilter: look.glass && look.blur ? `blur(${look.blur}px)` : undefined,
+    transform: `perspective(720px) rotateY(${tiltDeg}deg)`,
+    transformOrigin: side === 'left' ? 'left center' : 'right center',
+    boxShadow: shadow,
+  };
   return (
-    <div className={`${styles.rail} ${styles['rail_' + side]}`}>
+    <div className={`${styles.rail} ${styles['rail_' + side]}`} style={style}>
+      {look.sheen && <span className={styles.sheen} aria-hidden="true" />}
       <div className={styles.rhead}>
         <Chip s={s} side={side} />
         <div className={styles.rmeta}>
@@ -170,8 +195,9 @@ export default function ComparisonSetup({
                 <HostAvatar className={styles.avatar} />
                 <div className={styles.hl}>HOST VIDEO</div>
               </div>
-              <Rail s={left}  side="left"  tag="OPTION A" points={points} reveal={reveal} />
-              <Rail s={right} side="right" tag="OPTION B" points={points} reveal={reveal} />
+              <Rail s={left}  side="left"  tag="OPTION A" points={points} reveal={reveal} look={railLook(railStyle)} />
+              <Rail s={right} side="right" tag="OPTION B" points={points} reveal={reveal} look={railLook(railStyle)} />
+              <div className={styles.vs} aria-hidden="true">VS</div>
             </div>
             <div className={styles.scrub}>
               <span>Reveal</span>
@@ -185,10 +211,10 @@ export default function ComparisonSetup({
           <div className={styles.controls}>
             <div className={styles.grpLabel}>Rail look</div>
             <div className={styles.lookPill}>
-              {RAIL_LOOKS.map(([id, label]) => {
+              {RAIL_LOOKS.map(([id, label, tip]) => {
                 const on = (railStyle?.recipe || 'default') === id;
                 return (
-                  <button key={id} type="button"
+                  <button key={id} type="button" title={tip}
                     className={`${styles.lookBtn} ${on ? styles.lookOn : ''}`}
                     onClick={() => setRailStyle(id === 'default' ? null : { recipe: id })}>
                     {label}
