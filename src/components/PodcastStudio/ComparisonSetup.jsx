@@ -15,6 +15,7 @@
 
 import React, { useCallback, useEffect, useRef, useState } from 'react';
 import styles from './ComparisonSetup.module.css';
+import HostAvatar from './HostAvatar';
 
 const monogram = (s) => (s.logo || s.name?.[0] || '?').slice(0, 2).toUpperCase();
 
@@ -156,10 +157,7 @@ export default function ComparisonSetup({
             <div className={styles.cap}>Live preview - how it looks on screen</div>
             <div className={styles.stage}>
               <div className={styles.host}>
-                <svg className={styles.avatar} viewBox="0 0 80 80" aria-hidden="true">
-                  <circle cx="40" cy="27" r="15" fill="rgba(148,163,184,0.4)" />
-                  <path d="M13 78 C13 55, 67 55, 67 78 Z" fill="rgba(148,163,184,0.4)" />
-                </svg>
+                <HostAvatar className={styles.avatar} />
                 <div className={styles.hl}>HOST VIDEO</div>
               </div>
               <Rail s={left}  side="left"  tag="OPTION A" points={points} reveal={reveal} />

@@ -37,6 +37,8 @@ import styles from './PodcastStudioPage.module.css';
 import ApiErrorService from '../../services/ApiErrorService';
 import VoiceBrowser from './VoiceBrowser';
 import ComparisonSetup from './ComparisonSetup';
+import OverlayTypePopover from './OverlayTypePopover';
+import { RECIPE_OPTIONS, currentRecipe } from './overlayStyle';
 import SourcesPanel from './SourcesPanel';
 import CitationChips from './CitationChips';
 
@@ -695,6 +697,10 @@ export default function PodcastStudioPage({ context, onClose }) {
   // overlayLineId: which line's visual editor is open. When set, the right
   // panel swaps from Voice → Overlay for that line. null = panel shows Voice.
   const [overlayLineId, setOverlayLineId] = useState(null);
+  // typePopoverOpen: the per-type options pop-out (position + look) for the
+  // active card/cutout. Opened by the Type buttons; closed on Done / X / backdrop.
+  const [typePopoverOpen, setTypePopoverOpen] = useState(false);
+  useEffect(() => { setTypePopoverOpen(false); }, [overlayLineId]);
   // overlaySuggestions: { [lineId]: { type, term, reason } } from /suggest-overlays.
   // Populated debounced after script edits (recommendation B). type 'none' = no chip.
   const [overlaySuggestions, setOverlaySuggestions] = useState({});
@@ -1586,6 +1592,9 @@ if (context.topic) setTopic(context.topic);
                   mode:      'overlay',
                   shape:     o.shape || 'card',
                   preset:    o.preset,
+                  // Per-beat look ({ recipe, ...overrides }); omitted = inherit
+                  // the episode default. Consumed by build_overlay(style=).
+                  ...(o.style ? { style: o.style } : {}),
                 };
               }
             }
@@ -3094,10 +3103,11 @@ if (context.topic) setTopic(context.topic);
                   ['lower_third', 'lt', 'Bottom bar', 'Wide strip across the bottom · very wide banner (~1280×160) — best for a headline or stat'],
                 ];
             return (
+              <>
               <div className={styles.glassCard} style={{ height: '100%', display: 'flex', flexDirection: 'column', gap: '0.65rem', overflowY: 'auto', minHeight: 0 }}>
                 <div className={styles.overlayPanelHead}>
                   <span className={styles.cardLabel} style={{ margin: 0 }}>Visual</span>
-                  <button className={styles.overlayPanelClose} onClick={() => setOverlayLineId(null)} title="Back to Voice">✕</button>
+                  <button className={styles.overlayPanelClose} onClick={() => { setTypePopoverOpen(false); setOverlayLineId(null); }} title="Back to Voice">✕</button>
                 </div>
                 <div className={styles.overlaySwapTag}>↔ swapped from Voice</div>
                 {oLine?.text && <div className={styles.overlayLineQuote}>"{oLine.text.slice(0, 70)}{oLine.text.length > 70 ? '…' : ''}"</div>}
@@ -3121,9 +3131,10 @@ if (context.topic) setTopic(context.topic);
                         className={`${styles.overlayType} ${isOn ? styles.overlayTypeOn : ''}`}
                         title={hint}
                         onClick={() => {
-                          if (val === '__compare__') { setCompareOpen(true); return; }
-                          if (val === 'product_in_hand') patchOverlay({ mode: 'product_in_hand', shape: 'card' });
-                          else patchOverlay({ mode: 'overlay', shape: val, preset: ov.preset || (multi ? 'corner_small_tr' : 'corner_card_tr') });
+                          if (val === '__compare__') { setTypePopoverOpen(false); setCompareOpen(true); return; }
+                          if (val === 'product_in_hand') { patchOverlay({ mode: 'product_in_hand', shape: 'card' }); setTypePopoverOpen(false); return; }
+                          patchOverlay({ mode: 'overlay', shape: val, preset: ov.preset || (multi ? 'corner_small_tr' : 'corner_card_tr') });
+                          setTypePopoverOpen(true);   // open this type's position + look pop-out
                         }}>
                         <span style={{ fontSize: '1.1rem' }}>{ic}</span><br/>{lbl}
                       </button>
@@ -3144,23 +3155,31 @@ if (context.topic) setTopic(context.topic);
                   </>
                 )}
 
-                {/* Position (overlay/card & cutout only, layout-gated) */}
-                {ov.mode !== 'product_in_hand' && (
-                  <>
-                    <div className={styles.overlaySeg}>Position <span style={{ fontWeight: 400, color: 'var(--text-muted)' }}>· {multi ? '2 speakers → small' : 'solo'}</span></div>
-                    <div className={styles.overlayPosGrid}>
-                      {presets.map(([val, , label, hint]) => (
-                        <button key={val}
-                          className={`${styles.overlayPos} ${ov.preset === val ? styles.overlayPosOn : ''}`}
-                          onClick={() => patchOverlay({ preset: val })}
-                          title={hint}>
-                          <span className={styles.overlayPosShape} data-shape={POSITION_SHAPE[val] || 'tr'} />
-                          <span className={styles.overlayPosLabel}>{label}</span>
-                        </button>
-                      ))}
-                    </div>
-                  </>
-                )}
+                {/* Position + look → summary chip that reopens the pop-out
+                    (card & cutout only; in-hand has neither). */}
+                {ov.mode !== 'product_in_hand' && (() => {
+                  const posLabel = (presets.find(p => p[0] === ov.preset) || [])[2] || 'Pick a position';
+                  const recId = currentRecipe(ov.style);
+                  const recLabel = (RECIPE_OPTIONS.find(r => r.id === recId) || {}).label || 'Episode default';
+                  return (
+                    <>
+                      <div className={styles.overlaySeg}>Position &amp; look</div>
+                      <button type="button"
+                        onClick={() => setTypePopoverOpen(true)}
+                        title="Open position and look options"
+                        style={{
+                          display: 'flex', alignItems: 'center', gap: '0.5rem', width: '100%',
+                          background: 'rgba(99,102,241,0.10)', border: '1px solid rgba(99,102,241,0.28)',
+                          borderRadius: 10, padding: '0.55rem 0.7rem', color: 'var(--text-primary, #F1F5F9)',
+                          fontFamily: 'inherit', fontSize: '0.8rem', cursor: 'pointer', textAlign: 'left',
+                        }}>
+                        <span style={{ opacity: 0.85 }}>{ov.shape === 'cutout' ? '✂' : '▣'}</span>
+                        <span><b>{posLabel}</b> · {recLabel}</span>
+                        <span style={{ marginLeft: 'auto', color: 'var(--accent-primary, #818CF8)', fontSize: '0.72rem' }}>edit ▸</span>
+                      </button>
+                    </>
+                  );
+                })()}
 
                 {/* Image */}
                 <div className={styles.overlaySeg}>Image
@@ -3227,6 +3246,29 @@ if (context.topic) setTopic(context.topic);
                 {/* Remove */}
                 <button className={styles.overlayRemove} onClick={() => clearOverlay(overlayLineId)}>Remove visual from this line</button>
               </div>
+
+              {/* Per-type options pop-out (position + look) for card / cutout */}
+              {typePopoverOpen && ov.mode !== 'product_in_hand' && (
+                <div
+                  onMouseDown={(e) => { if (e.target === e.currentTarget) setTypePopoverOpen(false); }}
+                  style={{
+                    position: 'fixed', inset: 0, zIndex: 1100,
+                    background: 'rgba(2,6,23,0.74)', backdropFilter: 'blur(4px)',
+                    display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 22,
+                  }}>
+                  <div style={{ width: 'min(720px, 94vw)', maxHeight: '88vh', overflow: 'auto' }}>
+                    <OverlayTypePopover
+                      type={ov.shape === 'cutout' ? 'cutout' : 'card'}
+                      ov={ov}
+                      multi={multi}
+                      onPatch={patchOverlay}
+                      onClose={() => setTypePopoverOpen(false)}
+                      onOpenCompare={() => { setTypePopoverOpen(false); setCompareOpen(true); }}
+                    />
+                  </div>
+                </div>
+              )}
+              </>
             );
           })()}
 
