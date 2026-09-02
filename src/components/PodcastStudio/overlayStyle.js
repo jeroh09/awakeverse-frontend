@@ -11,6 +11,12 @@
 //     { recipe: 'embedded_glass',    → preset + a few tweaks
 //       warm_tint_alpha: 40 }
 //
+// `material` is an ORTHOGONAL axis (dark_glass | liquid_glass) that selects the
+// glass surface rendered by card_render.py. It rides on the same object:
+//     { recipe: 'embedded_glass', material: 'liquid_glass' }
+// recipe/knobs are intensity; material is the surface. They compose freely, and
+// the PIL fallback ignores material (it's consumed by the HTML face renderer).
+//
 // The episode-wide default is the same object shape, sent as payload.overlay_style.
 
 export const RECIPE_INHERIT = '__inherit__';
@@ -40,6 +46,21 @@ export const STYLE_PRESETS = {
 
 // The default a beat inherits / the sensible base when someone starts tweaking.
 export const DEFAULT_RECIPE = 'embedded_glass';
+
+// ── MATERIAL AXIS ──────────────────────────────────────────────────────────
+// The glass SURFACE, orthogonal to the recipe. Consumed by card_render.py's
+// style_to_face(); the legacy PIL path ignores it. Keep ids in sync with
+// card_render.MATERIAL_DARK / MATERIAL_LIQUID.
+export const MATERIALS = { DARK: 'dark_glass', LIQUID: 'liquid_glass' };
+export const DEFAULT_MATERIAL = 'dark_glass';
+
+// Options for the material segmented control (two swatches, shown first).
+export const MATERIAL_OPTIONS = [
+  { id: 'dark_glass',   label: 'Dark glass',   swatch: 'dark',
+    tip: 'Smoked navy glass — cinematic, text reads without help. Safe default over any footage.' },
+  { id: 'liquid_glass', label: 'Liquid glass', swatch: 'liquid',
+    tip: 'Near-clear refractive glass (visionOS-style). Brighter and glossier; text carries a soft scrim.' },
+];
 
 // Options for the recipe pill (order matters — single horizontal strip).
 export const RECIPE_OPTIONS = [
@@ -80,7 +101,9 @@ export function resolveStyle(styleObj) {
     !recipe || recipe === RECIPE_INHERIT
       ? STYLE_PRESETS[DEFAULT_RECIPE]
       : STYLE_PRESETS[recipe] || STYLE_PRESETS[DEFAULT_RECIPE];
-  return { ...base, ...stripRecipe(styleObj) };
+  const resolved = { ...base, ...stripRecipe(styleObj) };
+  resolved.material = styleObj?.material || DEFAULT_MATERIAL;
+  return resolved;
 }
 
 // The current recipe id for pill highlighting.
@@ -89,17 +112,32 @@ export function currentRecipe(styleObj) {
   return styleObj.recipe;
 }
 
+// The current material id for segmented-control highlighting.
+export function currentMaterial(styleObj) {
+  return styleObj?.material || DEFAULT_MATERIAL;
+}
+
 // Build the next style object when the user picks a recipe from the pill.
-export function withRecipe(recipe) {
-  return recipe === RECIPE_INHERIT ? undefined : { recipe };
+// `styleObj` is optional and only used to carry an explicit material override
+// across the recipe change (recipe and material are orthogonal).
+export function withRecipe(recipe, styleObj) {
+  const mat = styleObj?.material;
+  if (recipe === RECIPE_INHERIT) return mat ? { material: mat } : undefined;
+  return mat ? { recipe, material: mat } : { recipe };
+}
+
+// Build the next style object when the user picks a material. Material is
+// orthogonal, so this preserves recipe + any knob overrides untouched.
+export function withMaterial(styleObj, material) {
+  return { ...(styleObj || {}), material };
 }
 
 // Build the next style object when the user changes one knob. Starting from
-// inherit adopts the default recipe as the base, then layers the override.
+// inherit adopts the default recipe as the base, then layers the override —
+// preserving an explicit material (and any prior overrides) across the change.
 export function withKnob(styleObj, key, value) {
-  const base =
-    styleObj && styleObj.recipe !== undefined && styleObj.recipe !== RECIPE_INHERIT
-      ? styleObj
-      : { recipe: DEFAULT_RECIPE };
+  const hasRecipe =
+    styleObj && styleObj.recipe !== undefined && styleObj.recipe !== RECIPE_INHERIT;
+  const base = hasRecipe ? { ...styleObj } : { ...(styleObj || {}), recipe: DEFAULT_RECIPE };
   return { ...base, [key]: value };
 }

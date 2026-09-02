@@ -47,6 +47,21 @@
 .pillOn { background: linear-gradient(180deg, var(--indigo-light), var(--indigo)); color: #fff;
   box-shadow: 0 4px 12px -4px rgba(99,102,241,0.6); }
 
+/* ── Material segmented control (glass surface: dark vs liquid) ──────────── */
+.matStrip { display: flex; gap: 4px; margin: 14px 16px 0; padding: 4px;
+  background: rgba(15,23,42,0.7); border: 1px solid var(--line); border-radius: 12px; }
+.matBtn { flex: 1 1 0; min-width: 0; display: flex; align-items: center; justify-content: center;
+  gap: 8px; background: none; border: none; color: var(--sub); font-family: var(--body);
+  font-size: 0.76rem; padding: 0.55rem 0.5rem; border-radius: 9px; cursor: pointer;
+  white-space: nowrap; transition: 0.12s; }
+.matBtn:hover { color: var(--paper); }
+.matOn { background: var(--peak, #243152); color: #fff;
+  box-shadow: inset 0 0 0 1px rgba(148,163,184,0.28); }
+.matSwatch { width: 20px; height: 20px; border-radius: 6px; flex: 0 0 20px;
+  box-shadow: inset 0 0 0 1px rgba(255,255,255,0.22); }
+.swDark { background: linear-gradient(160deg, #2b3557, #141B2E); }
+.swLiquid { background: linear-gradient(160deg, rgba(255,255,255,0.55), rgba(255,255,255,0.12)); }
+
 .body { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; padding: 14px 16px 4px; }
 @media (max-width: 620px) { .body { grid-template-columns: 1fr; } }
 .grp { font-family: var(--mono); font-size: 0.58rem; letter-spacing: 0.1em; text-transform: uppercase;

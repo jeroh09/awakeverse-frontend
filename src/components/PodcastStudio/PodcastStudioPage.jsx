@@ -386,7 +386,7 @@ export default function PodcastStudioPage({ context, onClose }) {
   // ── Speakers ──────────────────────────────────────────────────────────────
   const [speakers, setSpeakers] = useState([]);
   // Derived AFTER speakers — max guests and current count based on envMode
-  const maxGuests         = envMode === 'panel' ? 2 : 1;
+  const maxGuests         = envMode === 'panel' ? 2 : envMode === 'solo' ? 0 : 1;
   const currentGuestCount = speakers.filter(s => s.speakerId !== 'user').length;
 
   // ── Avatar build ──────────────────────────────────────────────────────────
@@ -553,6 +553,12 @@ export default function PodcastStudioPage({ context, onClose }) {
     setEnvMode(mode);
     if (mode === 'panel') {
       setSelectedEnvId('panel_living_c');
+    } else if (mode === 'solo') {
+      setSelectedEnvId('solo_studio');
+      // Solo = host only — drop every guest.
+      setSpeakers(prev => prev.filter(s => s.speakerId === 'user'));
+      setGuest2File(null); setGuest2Preview(null);
+      setGuest2Name('');   setGuest2Built(false); setGuest2Error(null);
     } else {
       setSelectedEnvId('studio_tech');
       // Trim to max 1 guest when switching down
@@ -574,7 +580,7 @@ export default function PodcastStudioPage({ context, onClose }) {
   // slots, env grid filter) is already in sync the moment a sub-choice is
   // picked — identical to what clicking the format toggle itself would do.
   const handlePickGenCapacity = useCallback((capacity) => {
-    handleEnvModeSwitch(capacity === 3 ? 'panel' : 'standard');
+    handleEnvModeSwitch(capacity === 3 ? 'panel' : capacity === 1 ? 'solo' : 'standard');
     setGenEnvCapacity(capacity);
   }, [handleEnvModeSwitch]);
 
@@ -2327,7 +2333,7 @@ if (context.topic) setTopic(context.topic);
               ))}
 
               {/* Real guest slots — standard: 1 slot, panel: 2 slots side by side */}
-              {((envMode === 'panel') ||
+              {(envMode !== 'solo') && ((envMode === 'panel') ||
                 (podcastMode === 'interview' && !speakers.some(s => s.isCharacter))) && (
                 <div className={styles.glassCard}>
                   <div className={styles.cardLabel}>
@@ -3554,13 +3560,17 @@ if (context.topic) setTopic(context.topic);
               {/* Toggle pill — reuses existing scriptModeToggle CSS, now 3 options */}
               <div className={styles.scriptModeToggle} style={{ marginBottom: '0.6rem', flexShrink: 0 }}>
                 <button
+                  className={`${styles.scriptModeBtn} ${envPanelMode === 'browse' && envMode === 'solo' ? styles.scriptModeBtnActive : ''}`}
+                  onClick={() => { handleEnvModeSwitch('solo'); setEnvPanelMode('browse'); }}
+                  title="Solo host — one chair">Solo</button>
+                <button
                   className={`${styles.scriptModeBtn} ${envPanelMode === 'browse' && envMode === 'standard' ? styles.scriptModeBtnActive : ''}`}
                   onClick={() => { handleEnvModeSwitch('standard'); setEnvPanelMode('browse'); }}
-                  title="1–2 person podcast">1–2 Guests</button>
+                  title="You + one guest">Duo</button>
                 <button
                   className={`${styles.scriptModeBtn} ${envPanelMode === 'browse' && envMode === 'panel' ? styles.scriptModeBtnActive : ''}`}
                   onClick={() => { handleEnvModeSwitch('panel'); setEnvPanelMode('browse'); }}
-                  title="3-person panel">Panel · 3</button>
+                  title="3-person panel">Panel</button>
                 <button
                   className={`${styles.scriptModeBtn} ${envPanelMode === 'generate' ? styles.scriptModeBtnActive : ''}`}
                   onClick={() => {
@@ -3586,9 +3596,12 @@ if (context.topic) setTopic(context.topic);
                   ) : (
                     <div className={styles.envGrid}>
                       {environments
-                        .filter(env => envMode === 'panel'
-                          ? env.guestCapacity === 3
-                          : (env.guestCapacity ?? 2) !== 3)
+                        .filter(env => {
+                          const cap = env.guestCapacity ?? 2;
+                          if (envMode === 'solo')  return cap === 1;
+                          if (envMode === 'panel') return cap === 3;
+                          return cap === 2;
+                        })
                         .map(env => {
                           const isEnvConfirm = confirmDelete?.type === 'environment' && confirmDelete?.id === env.envId;
                           return (
@@ -3661,12 +3674,16 @@ if (context.topic) setTopic(context.topic);
                     <>
                       <p className={styles.genEnvIntro}>Choose a format for your background:</p>
                       <div className={styles.genEnvCapacityChoices}>
+                        <button className={styles.genEnvCapacityCard} onClick={() => handlePickGenCapacity(1)}>
+                          <div className={styles.genEnvCapacityTitle}>Solo · 1</div>
+                          <div className={styles.genEnvCapacityDesc}>A single-chair close-up for a solo host — no empty seats behind you.</div>
+                        </button>
                         <button className={styles.genEnvCapacityCard} onClick={() => handlePickGenCapacity(2)}>
-                          <div className={styles.genEnvCapacityTitle}>1-2 Guests</div>
-                          <div className={styles.genEnvCapacityDesc}>A cozy medium shot for a solo podcast or you and one guest, side by side.</div>
+                          <div className={styles.genEnvCapacityTitle}>Duo · 2</div>
+                          <div className={styles.genEnvCapacityDesc}>A cozy medium shot for you and one guest, side by side.</div>
                         </button>
                         <button className={styles.genEnvCapacityCard} onClick={() => handlePickGenCapacity(3)}>
-                          <div className={styles.genEnvCapacityTitle}>3 Guests · Panel</div>
+                          <div className={styles.genEnvCapacityTitle}>Panel · 3</div>
                           <div className={styles.genEnvCapacityDesc}>A wider panel shot with room for two guests alongside you.</div>
                         </button>
                       </div>

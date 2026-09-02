@@ -15,8 +15,8 @@ import React, { useState } from 'react';
 import styles from './OverlayTypePopover.module.css';
 import HostAvatar from './HostAvatar';
 import {
-  RECIPE_OPTIONS, RECIPE_INHERIT, KNOB_TIPS,
-  resolveStyle, currentRecipe, withRecipe, withKnob,
+  RECIPE_OPTIONS, RECIPE_INHERIT, KNOB_TIPS, MATERIAL_OPTIONS,
+  resolveStyle, currentRecipe, currentMaterial, withRecipe, withKnob, withMaterial,
 } from './overlayStyle';
 
 // preset → thumbnail shape (mirror of POSITION_SHAPE in PodcastStudioPage)
@@ -105,10 +105,12 @@ export default function OverlayTypePopover({
   const styleObj = ov.style;
   const view = resolveStyle(styleObj);
   const recipe = currentRecipe(styleObj);
+  const material = currentMaterial(styleObj);
 
   const setPreset = (p) => onPatch?.({ preset: p });
-  const setRecipe = (r) => onPatch?.({ style: withRecipe(r) });
+  const setRecipe = (r) => onPatch?.({ style: withRecipe(r, styleObj) });
   const setKnob = (k, v) => onPatch?.({ style: withKnob(styleObj, k, v) });
+  const setMaterial = (m) => onPatch?.({ style: withMaterial(styleObj, m) });
 
   const [ic, title, sub] = HEAD[type] || HEAD.card;
   const posList = multi ? PRESETS_MULTI : PRESETS_SINGLE;
@@ -153,6 +155,25 @@ export default function OverlayTypePopover({
     </div>
   );
 
+  // Glass material — the surface axis, shown first (above the intensity pill).
+  const MaterialToggle = () => (
+    <div className={styles.matStrip} role="group" aria-label="Glass material">
+      {MATERIAL_OPTIONS.map((m) => (
+        <button
+          key={m.id}
+          type="button"
+          className={`${styles.matBtn} ${material === m.id ? styles.matOn : ''} ${styles.tip}`}
+          data-tip={m.tip}
+          aria-pressed={material === m.id}
+          onClick={() => setMaterial(m.id)}
+        >
+          <span className={`${styles.matSwatch} ${styles[m.swatch === 'liquid' ? 'swLiquid' : 'swDark']}`} />
+          {m.label}
+        </button>
+      ))}
+    </div>
+  );
+
   const FineTune = ({ label, children }) => (
     <div className={styles.finetune}>
       <button type="button" className={styles.ftbtn} onClick={() => setFtOpen((v) => !v)}>
@@ -167,6 +188,7 @@ export default function OverlayTypePopover({
   if (type === 'card') {
     body = (
       <>
+        <MaterialToggle />
         <RecipePill />
         <div className={styles.body}>
           <div className={styles.col}>
@@ -264,6 +286,7 @@ export default function OverlayTypePopover({
   } else { // compare
     body = (
       <>
+        <MaterialToggle />
         <RecipePill />
         <div className={styles.body}>
           <div className={styles.col}>
