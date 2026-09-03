@@ -305,7 +305,7 @@ const ChatLauncherPage = ({ onStartChat, discoveredCharacters = [] }) => {
     {
       key: 'studio',
       title: 'Podcast Studio',
-      desc: 'Turn a conversation into an AI video podcast.',
+      desc: 'Create your solo podcasts or with guests.',
       badge: 'NEW',
       icon: 'studio',
       // Swap png <-> webp freely; provide either or both. <picture> prefers webp.
@@ -317,7 +317,7 @@ const ChatLauncherPage = ({ onStartChat, discoveredCharacters = [] }) => {
     {
       key: 'film',
       title: 'Film',
-      desc: 'Generate a scene or short film from your story.',
+      desc: 'Generate a scene or short film series.',
       badge: 'NEW',
       icon: 'film',
       media: { webp: '/images/launcher/film.webp', png: '/images/launcher/film.png' },

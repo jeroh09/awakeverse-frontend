@@ -315,6 +315,63 @@
   flex-shrink: 0;              /* NEW */
 }
 
+/* ── Credits wallet row (sits above the profile row) ───────────────────────── */
+.creditsRow {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  width: 100%;
+  padding: 8px 10px;
+  margin-bottom: 6px;
+  border-radius: 12px;
+  background: rgba(99, 102, 241, 0.10);
+  border: 1px solid rgba(99, 102, 241, 0.28);
+  cursor: pointer;
+  font-family: 'Inter', sans-serif;
+  transition: background 0.14s ease, border-color 0.14s ease;
+}
+.creditsRow:hover {
+  background: rgba(99, 102, 241, 0.16);
+  border-color: rgba(99, 102, 241, 0.45);
+}
+.creditsIcon {
+  color: #818cf8;
+  font-size: 10px;
+  flex-shrink: 0;
+}
+.creditsAmount {
+  font-family: 'Syne', sans-serif;
+  font-weight: 700;
+  font-size: 13px;
+  color: #f5f5dc;
+  line-height: 1;
+}
+.creditsUnit {
+  font-size: 11px;
+  color: rgba(148, 163, 184, 0.75);
+}
+.creditsManage {
+  margin-left: auto;
+  font-size: 10px;
+  font-weight: 600;
+  letter-spacing: 0.02em;
+  color: #a5b4fc;
+  white-space: nowrap;
+}
+
+/* Low balance (< 500): amber tint + top-up nudge. */
+.creditsRowLow {
+  background: rgba(245, 158, 11, 0.10);
+  border-color: rgba(245, 158, 11, 0.32);
+}
+.creditsRowLow:hover {
+  background: rgba(245, 158, 11, 0.16);
+  border-color: rgba(245, 158, 11, 0.5);
+}
+.creditsRowLow .creditsIcon { color: #f59e0b; }
+.creditsRowLow .creditsManage { color: #fbbf24; }
+.creditsLow { color: #f59e0b; }
+
 .footerUserRow {
   display: flex;
   align-items: center;

@@ -417,6 +417,22 @@ export default function Header() {
             {/* Footer — ProfileButton owns all profile navigation via ProfileMenuConfig */}
             {isAuthenticated && (
               <footer className={styles.footer}>
+                {user?.credits_balance != null && (
+                  <button
+                    className={`${styles.creditsRow} ${user.credits_balance < 500 ? styles.creditsRowLow : ''}`}
+                    onClick={() => { window.location.href = '/billing'; }}
+                    title="Your credits"
+                  >
+                    <span className={styles.creditsIcon} aria-hidden="true">◆</span>
+                    <span className={`${styles.creditsAmount} ${user.credits_balance < 500 ? styles.creditsLow : ''}`}>
+                      {Number(user.credits_balance).toLocaleString()}
+                    </span>
+                    <span className={styles.creditsUnit}>credits</span>
+                    <span className={styles.creditsManage}>
+                      {user.credits_balance < 500 ? 'Top up →' : 'Manage →'}
+                    </span>
+                  </button>
+                )}
                 <div className={styles.footerUserRow}>
                   {AvatarEl}
                   <div className={styles.userMeta}>
