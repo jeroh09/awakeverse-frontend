@@ -18,6 +18,7 @@ import theme from '../design-system/tokens';
 import { getFirstName } from '../utils/getFirstName';
 import LauncherPlaque from '../components/launcher/LauncherPlaque';
 import ActionPill from '../components/launcher/ActionPill';
+import CreationModeTiles from '../components/launcher/CreationModeTiles';
 import ScrollShell from '../components/ScrollShell';
 import NetflixRightPanel from '../components/NetflixRightPanel';
 import LegendsMapPanel from '../components/LegendsMapPanel/LegendsMapPanel';
@@ -285,6 +286,46 @@ const ChatLauncherPage = ({ onStartChat, discoveredCharacters = [] }) => {
   const { user } = useUser();
   // In your component:
   const { switchView } = useAppView();
+
+  // Open a top-level view by its VIEW_STATES key name. Guarded: if the key isn't
+  // defined it warns instead of throwing, so a wrong/renamed key can't break the
+  // launcher — you fix it in one place (the tile onClick keys below).
+  const openViewByKey = (key) => {
+    const target = VIEW_STATES?.[key];
+    if (!target) {
+      console.warn(`[ChatLauncher] VIEW_STATES.${key} is not defined — set the correct key for the Studio/Film tile.`);
+      return;
+    }
+    switchView(target);
+  };
+
+  // Creation-mode discovery tiles (Podcast Studio & Film). Defined once; placement
+  // depends on whether the user is new (see desktop render below).
+  const creationTiles = [
+    {
+      key: 'studio',
+      title: 'Podcast Studio',
+      desc: 'Turn a conversation into an AI video podcast.',
+      badge: 'NEW',
+      icon: 'studio',
+      // Swap png <-> webp freely; provide either or both. <picture> prefers webp.
+      media: { webp: '/images/launcher/podcast-studio.webp', png: '/images/launcher/podcast-studio.png' },
+      fallbackGradient:
+        'radial-gradient(120% 90% at 72% 8%, rgba(99,102,241,0.55), transparent 55%), radial-gradient(90% 80% at 18% 95%, rgba(245,158,11,0.28), transparent 60%), #0d1424',
+      onClick: () => openViewByKey('PODCAST_STUDIO')
+    },
+    {
+      key: 'film',
+      title: 'Film',
+      desc: 'Generate a scene or short film from your story.',
+      badge: 'NEW',
+      icon: 'film',
+      media: { webp: '/images/launcher/film.webp', png: '/images/launcher/film.png' },
+      fallbackGradient:
+        'radial-gradient(120% 90% at 28% 8%, rgba(59,130,246,0.55), transparent 55%), radial-gradient(90% 80% at 90% 92%, rgba(239,68,68,0.24), transparent 60%), #0d1424',
+      onClick: () => openViewByKey('FILM')
+    }
+  ];
 
   // Character creation flow state
   const [showTemplates, setShowTemplates] = useState(false);
@@ -1177,8 +1218,10 @@ const ChatLauncherPage = ({ onStartChat, discoveredCharacters = [] }) => {
         height: '100%',
         display: 'flex',
         flexDirection: 'column',
-        justifyContent: 'flex-start',
+        justifyContent: 'safe center', // centers when it fits, top-aligns when tall — never clips the top
         alignItems: 'center',
+        overflowY: 'auto',             // scroll internally on short screens instead of being clipped
+        overscrollBehavior: 'contain',
         padding: '4rem 2rem 2rem 2rem',
         position: 'relative',
         borderRight: '2px solid transparent',
@@ -1498,6 +1541,11 @@ const ChatLauncherPage = ({ onStartChat, discoveredCharacters = [] }) => {
             )}
             </LauncherPlaque>
 
+            {/* CREATION MODE TILES — new users: prominent, filling the empty For-You slot */}
+            {!shouldShowForYou && (
+              <CreationModeTiles tiles={creationTiles} heading="Start creating" />
+            )}
+
             {/* ACTION PILL (Create · Discover · Map · Scan) */}
             <ActionPill
               onCreate={() => {
@@ -1513,6 +1561,11 @@ const ChatLauncherPage = ({ onStartChat, discoveredCharacters = [] }) => {
               toolHint={toolHint}
               setToolHint={setToolHint}
             />
+
+            {/* CREATION MODE TILES — returning users: quiet, below the pill */}
+            {shouldShowForYou && (
+              <CreationModeTiles tiles={creationTiles} />
+            )}
           </>
         )}
       </div>
