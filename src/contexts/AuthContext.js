@@ -210,7 +210,7 @@ export function AuthProvider({ children }) {
   }
 
   // Enhanced register function - FIXED WITH CSRF
-  async function register({ email, password, displayName }) {
+  async function register({ email, password, displayName, captchaToken }) {
     try {
       const controller = new AbortController();
       const timeoutId = setTimeout(() => controller.abort(), 15000);
@@ -227,7 +227,8 @@ export function AuthProvider({ children }) {
         body: JSON.stringify({ 
           username: email, 
           password, 
-          display_name: displayName 
+          display_name: displayName,
+          cf_turnstile_response: captchaToken || "" 
         }),
         credentials: 'include',
         signal: controller.signal

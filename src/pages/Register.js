@@ -1,6 +1,7 @@
 // src/pages/Register.jsx - WITH OAUTH QUIZ SUPPORT
 import React, { useState, useEffect } from 'react';
 import { Link, useNavigate, useSearchParams } from 'react-router-dom';
+import TurnstileWidget from '../components/TurnstileWidget';
 import '../style/AuthPageStyles.css';
 
 const API = process.env.REACT_APP_API_URL || "https://api.awakeverse.com";
@@ -14,6 +15,8 @@ export default function Register() {
   const [registrationStep, setRegistrationStep] = useState('form');
   const [successMessage, setSuccessMessage] = useState('');
   const [oauthAvailable, setOauthAvailable] = useState({ google: false, apple: false });
+  const [captchaToken, setCaptchaToken] = useState('');
+  const [captchaAvailable, setCaptchaAvailable] = useState(false);
   
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
@@ -28,8 +31,10 @@ export default function Register() {
           google: data.google?.available || false,
           apple: data.apple?.available || false,
         });
+        setCaptchaAvailable(data.captcha?.available || false);
       } catch (err) {
         setOauthAvailable({ google: false, apple: false });
+        setCaptchaAvailable(false);
       }
     };
     checkOAuth();
@@ -85,7 +90,8 @@ export default function Register() {
           username: userData.email, 
           password: userData.password, 
           display_name: userData.displayName,
-          quiz_session_id: quizSessionId  // ← Existing
+          quiz_session_id: quizSessionId,  // ← Existing
+          cf_turnstile_response: captchaToken
         }),
       });
 
@@ -121,6 +127,11 @@ export default function Register() {
 
     if (!email.includes('@') || !email.includes('.')) {
       setError('Please enter a valid email address');
+      return;
+    }
+
+    if (captchaAvailable && !captchaToken) {
+      setError('Please complete the captcha');
       return;
     }
 
@@ -370,6 +381,14 @@ export default function Register() {
                 Password must contain: uppercase, lowercase, number, 8+ characters
               </small>
             </div>
+            
+            {captchaAvailable && (
+              <TurnstileWidget
+                onToken={setCaptchaToken}
+                onExpire={() => setCaptchaToken('')}
+                onError={() => setCaptchaToken('')}
+              />
+            )}
             
             <button type="submit" disabled={loading}>
               {loading ? 'Creating Account...' : 'Create Account'}
