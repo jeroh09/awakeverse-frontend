@@ -545,8 +545,11 @@ export default function PodcastStudioPage({ context, onClose }) {
       return;
     }
     setPodcastMode(mode);
-    if (mode === 'solo') setActiveTab('script');
-  }, [consented, recordConsent, setPodcastMode, setActiveTab]);
+    if (mode === 'solo') {
+      setActiveTab('script');
+      setSelectedEnvId('solo_studio');   // default env for solo, like panel/standard do
+    }
+  }, [consented, recordConsent, setPodcastMode, setActiveTab, setSelectedEnvId]);
 
   // Switch between standard (2-chair) and panel (3-chair) env modes
   const handleEnvModeSwitch = useCallback((mode) => {
