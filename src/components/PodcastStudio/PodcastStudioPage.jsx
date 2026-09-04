@@ -2686,6 +2686,18 @@ if (context.topic) setTopic(context.topic);
                             {line.citations?.length ? (
                               <CitationChips citations={line.citations} edited={!!line.citationsEdited} />
                             ) : null}
+                            {/* Episode comparison — shown on every line since it applies episode-wide */}
+                            {compareOn ? (
+                              <button
+                                className={styles.overlayAttached}
+                                onClick={() => setCompareOpen(true)}
+                                title="Edit the episode comparison"
+                                style={{ borderColor: 'rgba(16,185,129,0.45)' }}
+                              >
+                                <span className={styles.overlayThumb}>⚖️</span>
+                                Comparison: {compareLeft.name || 'A'} vs {compareRight.name || 'B'} — all lines
+                              </button>
+                            ) : null}
                             {/* Overlay: AI suggestion chip (tap to accept) or attached indicator */}
                             {(() => {
                               const sug = overlaySuggestions[line.id];
@@ -3133,19 +3145,15 @@ if (context.topic) setTopic(context.topic);
                     ['card','▣','Glass card','A tilted frosted-glass panel beside the speaker — best for charts, stats, or quotes'],
                     ['cutout','✂','Cutout','The image with its background removed, floating free (no card) — best for products or logos'],
                     ['product_in_hand','✋','In hand','The speaker is composed holding the product as they talk — best for a physical item'],
-                    ['__compare__','⚖️','Compare','Two glass rails comparing A vs B across the whole episode — opens the comparison setup'],
                   ].map(([val, ic, lbl, hint]) => {
-                    const isOn = val === '__compare__'
-                      ? compareOn
-                      : val === 'product_in_hand'
-                        ? ov.mode === 'product_in_hand'
-                        : ov.mode !== 'product_in_hand' && (ov.shape || 'card') === val;
+                    const isOn = val === 'product_in_hand'
+                      ? ov.mode === 'product_in_hand'
+                      : ov.mode !== 'product_in_hand' && (ov.shape || 'card') === val;
                     return (
                       <button key={val}
                         className={`${styles.overlayType} ${isOn ? styles.overlayTypeOn : ''}`}
                         title={hint}
                         onClick={() => {
-                          if (val === '__compare__') { setTypePopoverOpen(false); setCompareOpen(true); return; }
                           if (val === 'product_in_hand') { patchOverlay({ mode: 'product_in_hand', shape: 'card' }); setTypePopoverOpen(false); return; }
                           patchOverlay({ mode: 'overlay', shape: val, preset: ov.preset || (multi ? 'corner_small_tr' : 'corner_card_tr') });
                           setTypePopoverOpen(true);   // open this type's position + look pop-out
@@ -3155,6 +3163,18 @@ if (context.topic) setTopic(context.topic);
                     );
                   })}
                 </div>
+
+                {/* Episode-wide — separate from the per-line shapes above */}
+                <div className={styles.overlaySeg}>Episode-wide</div>
+                <button
+                  type="button"
+                  className={`${styles.overlayType} ${compareOn ? styles.overlayTypeOn : ''}`}
+                  style={{ width: '100%', textAlign: 'left', display: 'flex', alignItems: 'center', gap: '0.5rem' }}
+                  title="Two glass rails comparing A vs B across the whole episode"
+                  onClick={() => { setTypePopoverOpen(false); setCompareOpen(true); }}>
+                  <span style={{ fontSize: '1.1rem' }}>⚖️</span>
+                  {compareOn ? 'Comparison · on — edit' : 'Comparison rails — set up'}
+                </button>
 
                 {/* Product name (product_in_hand only) */}
                 {ov.mode === 'product_in_hand' && (
@@ -3166,6 +3186,14 @@ if (context.topic) setTopic(context.topic);
                       placeholder="e.g. AURA serum"
                       onChange={e => patchOverlay({ productName: e.target.value })}
                     />
+                    {(!ov.imageUrl || !(ov.productName || '').trim()) && (
+                      <div style={{ fontSize: '0.68rem', color: '#F59E0B', marginTop: 6, lineHeight: 1.4 }}>
+                        ⚠ In-hand needs a product image and a name to render —
+                        {!(ov.productName || '').trim() ? ' add a product name' : ''}
+                        {(!ov.imageUrl && !(ov.productName || '').trim()) ? ' and' : ''}
+                        {!ov.imageUrl ? ' upload the product image below' : ''}.
+                      </div>
+                    )}
                   </>
                 )}
 
