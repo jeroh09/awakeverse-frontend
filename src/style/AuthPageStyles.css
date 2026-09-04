@@ -872,3 +872,40 @@
     height: 15px;
   }
 }
+/* ============================================================
+   REGISTER PAGE — reveal all options after Turnstile was added
+   The register card now stacks OAuth (Google + Apple) + 3 fields
+   + the Turnstile widget. That pushed the vertically-centered
+   card taller than its 490px slot and hid the OAuth rail off the
+   top. Fix: cap the card to the viewport and let it scroll
+   internally, so the Google/Apple buttons sit at the top (seen
+   first) and everything below stays reachable — it "slides".
+   Desktop only; mobile already page-scrolls. Scoped to
+   .register-page so Login is untouched.
+   ============================================================ */
+.register-page .auth-form {
+  max-height: calc(100vh - 40px);
+  overflow-y: auto;
+  overflow-x: hidden;
+  scrollbar-width: thin;                              /* Firefox */
+  scrollbar-color: var(--border-strong) transparent; /* Firefox */
+}
+
+/* Subtle WebKit scrollbar so it blends with the glass card */
+.register-page .auth-form::-webkit-scrollbar { width: 6px; }
+.register-page .auth-form::-webkit-scrollbar-track { background: transparent; }
+.register-page .auth-form::-webkit-scrollbar-thumb {
+  background: var(--border-strong);
+  border-radius: 3px;
+}
+
+/* Safety: never let the page itself trap top overflow */
+.auth-page { overflow-y: auto; }
+
+/* Mobile already stacks and page-scrolls — no inner scroll there */
+@media (max-width: 768px) {
+  .register-page .auth-form {
+    max-height: none;
+    overflow: visible;
+  }
+}
