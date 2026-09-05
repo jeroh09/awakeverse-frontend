@@ -1,0 +1,386 @@
+/* src/components/ScenariosTab/DialogueGuide.css
+   Dialogue Guide modal — light/dark mode
+   Uses same CSS variable pattern as ScenariosTab.css
+*/
+
+/* ─── Overlay ─────────────────────────────────────────────── */
+.dg-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 600;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 1rem;
+  animation: dg-overlay-in 0.2s ease;
+}
+
+@keyframes dg-overlay-in {
+  from { opacity: 0; }
+  to   { opacity: 1; }
+}
+
+/* Dark backdrop */
+.dg--dark {
+  background: rgba(2, 6, 23, 0.88);
+  backdrop-filter: blur(8px);
+}
+
+/* Light backdrop */
+.dg--light {
+  background: rgba(15, 23, 42, 0.55);
+  backdrop-filter: blur(6px);
+}
+
+/* ─── Modal ───────────────────────────────────────────────── */
+.dg-modal {
+  position: relative;
+  width: 100%;
+  max-width: 560px;
+  max-height: calc(100vh - 2rem);
+  overflow-y: auto;
+  border-radius: 20px;
+  display: flex;
+  flex-direction: column;
+  gap: 0;
+}
+
+/* Dark mode modal */
+.dg--dark .dg-modal {
+  background: rgba(15, 23, 42, 0.98);
+  /* Double border */
+  border: 1px solid rgba(99, 102, 241, 0.28);
+  box-shadow:
+    0 0 0 4px rgba(99, 102, 241, 0.06),
+    0 0 0 5px rgba(99, 102, 241, 0.03),
+    0 28px 70px rgba(0, 0, 0, 0.8);
+}
+
+/* Light mode modal */
+.dg--light .dg-modal {
+  background: #ffffff;
+  /* Double border — subtle grey */
+  border: 1px solid rgba(99, 102, 241, 0.25);
+  box-shadow:
+    0 0 0 4px rgba(99, 102, 241, 0.05),
+    0 0 0 5px rgba(99, 102, 241, 0.02),
+    0 20px 60px rgba(0, 0, 0, 0.18);
+}
+
+/* Animations */
+.dg-modal--enter {
+  animation: dg-in 0.28s ease;
+}
+@keyframes dg-in {
+  from { opacity: 0; transform: translateY(12px) scale(0.98); }
+  to   { opacity: 1; transform: translateY(0)   scale(1);    }
+}
+.dg-modal--exit-fwd  { opacity: 0; transform: translateX(-16px) scale(0.98); transition: all 0.22s ease; }
+.dg-modal--exit-back { opacity: 0; transform: translateX(16px)  scale(0.98); transition: all 0.22s ease; }
+
+/* ─── Header ──────────────────────────────────────────────── */
+.dg-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 1.25rem 1.5rem 0.75rem;
+}
+
+.dg-header__left {
+  display: flex;
+  align-items: center;
+  gap: 0.65rem;
+}
+
+.dg-header__title {
+  font-family: 'Syne', sans-serif;
+  font-size: 0.82rem;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+.dg--dark .dg-header__title { color: #6366f1; }
+.dg--light .dg-header__title { color: #4f46e5; }
+
+.dg-header__count {
+  font-family: 'Inter', sans-serif;
+  font-size: 0.72rem;
+  font-weight: 500;
+  padding: 0.15rem 0.5rem;
+  border-radius: 999px;
+}
+.dg--dark .dg-header__count {
+  background: rgba(99, 102, 241, 0.12);
+  color: #818cf8;
+  border: 1px solid rgba(99, 102, 241, 0.2);
+}
+.dg--light .dg-header__count {
+  background: rgba(99, 102, 241, 0.08);
+  color: #4f46e5;
+  border: 1px solid rgba(99, 102, 241, 0.2);
+}
+
+.dg-close {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 30px;
+  height: 30px;
+  border-radius: 8px;
+  border: none;
+  cursor: pointer;
+  transition: all 0.15s ease;
+  background: transparent;
+}
+.dg--dark  .dg-close { color: #475569; }
+.dg--light .dg-close { color: #94a3b8; }
+.dg--dark  .dg-close:hover { background: rgba(148,163,184,0.1); color: #94a3b8; }
+.dg--light .dg-close:hover { background: rgba(99,102,241,0.08); color: #4f46e5; }
+
+/* ─── Progress dots ───────────────────────────────────────── */
+.dg-dots {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  padding: 0 1.5rem 0.85rem;
+}
+
+.dg-dot {
+  /* Explicit size — overrides browser button min-width default */
+  width: 6px;
+  height: 6px;
+  min-width: 6px;   /* prevent flex stretch */
+  min-height: 6px;
+  flex-shrink: 0;
+  border-radius: 999px;
+  border: none;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  padding: 0;
+  appearance: none;
+  -webkit-appearance: none;
+}
+.dg--dark  .dg-dot { background: rgba(148, 163, 184, 0.2); }
+.dg--light .dg-dot { background: rgba(148, 163, 184, 0.4); }
+
+.dg-dot--active {
+  width: 20px;
+  min-width: 20px;
+  background: #6366f1 !important;
+  box-shadow: 0 0 8px rgba(99, 102, 241, 0.55);
+}
+.dg-dot--done { background: rgba(99, 102, 241, 0.4) !important; }
+
+/* Mobile: hide dots, show step counter text instead */
+.dg-dots-mobile {
+  display: none;
+  font-family: "Inter", sans-serif;
+  font-size: 0.72rem;
+  font-weight: 500;
+  padding: 0 1.25rem 0.7rem;
+}
+.dg--dark  .dg-dots-mobile { color: #64748b; }
+.dg--light .dg-dots-mobile { color: #94a3b8; }
+
+/* ─── Image ───────────────────────────────────────────────── */
+.dg-img-wrap {
+  width: 100%;
+  /* 16:9 — screenshots look best at this ratio */
+  aspect-ratio: 16 / 9;
+  overflow: hidden;
+  /* Double border on image panel — inner card */
+  margin: 0 1.25rem;
+  width: calc(100% - 2.5rem);
+  border-radius: 12px;
+  flex-shrink: 0;
+}
+.dg--dark .dg-img-wrap {
+  border: 1px solid rgba(99, 102, 241, 0.2);
+  box-shadow:
+    0 0 0 3px rgba(99, 102, 241, 0.05),
+    0 4px 18px rgba(0, 0, 0, 0.4);
+}
+.dg--light .dg-img-wrap {
+  border: 1px solid rgba(99, 102, 241, 0.15);
+  box-shadow:
+    0 0 0 3px rgba(99, 102, 241, 0.04),
+    0 4px 12px rgba(0, 0, 0, 0.1);
+}
+
+.dg-img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+  /* Start invisible — fades in once loaded, prevents flash between steps */
+  opacity: 0;
+  transition: opacity 0.2s ease;
+}
+
+/* Triggered by onLoad via dg-img--loaded class */
+.dg-img--loaded {
+  opacity: 1;
+}
+
+.dg-img-fallback {
+  width: 100%;
+  height: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+.dg--dark  .dg-img-fallback { background: linear-gradient(135deg, rgba(99,102,241,0.1), rgba(2,6,23,0.9)); }
+.dg--light .dg-img-fallback { background: linear-gradient(135deg, rgba(99,102,241,0.06), rgba(248,249,250,0.9)); }
+
+.dg-img-fallback__label {
+  font-family: 'Syne', sans-serif;
+  font-size: 0.75rem;
+  font-weight: 700;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+}
+.dg--dark  .dg-img-fallback__label { color: rgba(99,102,241,0.45); }
+.dg--light .dg-img-fallback__label { color: rgba(99,102,241,0.35); }
+
+/* ─── Content ─────────────────────────────────────────────── */
+.dg-content {
+  display: flex;
+  flex-direction: column;
+  gap: 0.55rem;
+  padding: 1.1rem 1.5rem 0.75rem;
+}
+
+.dg-content__top {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+}
+
+.dg-eyebrow {
+  font-family: 'Inter', sans-serif;
+  font-size: 0.65rem;
+  font-weight: 600;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  color: #6366f1;
+}
+
+.dg-badge {
+  font-family: 'Inter', sans-serif;
+  font-size: 0.62rem;
+  font-weight: 600;
+  padding: 0.12rem 0.5rem;
+  border-radius: 999px;
+}
+.dg--dark .dg-badge {
+  background: rgba(245, 158, 11, 0.12);
+  color: #fbbf24;
+  border: 1px solid rgba(245, 158, 11, 0.25);
+}
+.dg--light .dg-badge {
+  background: rgba(245, 158, 11, 0.08);
+  color: #d97706;
+  border: 1px solid rgba(245, 158, 11, 0.2);
+}
+
+.dg-title {
+  font-family: 'Syne', sans-serif;
+  font-size: 1.3rem;
+  font-weight: 700;
+  line-height: 1.2;
+  margin: 0;
+}
+.dg--dark  .dg-title { color: #f5f5dc; }
+.dg--light .dg-title { color: #1e293b; }
+
+.dg-body {
+  font-family: 'Inter', sans-serif;
+  font-size: 0.875rem;
+  line-height: 1.7;
+  margin: 0;
+}
+.dg--dark  .dg-body { color: #94a3b8; }
+.dg--light .dg-body { color: #475569; }
+
+/* ─── Tip ─────────────────────────────────────────────────── */
+.dg-tip {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.55rem;
+  padding: 0.6rem 0.8rem;
+  border-radius: 9px;
+  margin-top: 0.2rem;
+}
+.dg--dark .dg-tip {
+  background: rgba(99, 102, 241, 0.07);
+  border: 1px solid rgba(99, 102, 241, 0.18);
+}
+.dg--light .dg-tip {
+  background: rgba(99, 102, 241, 0.05);
+  border: 1px solid rgba(99, 102, 241, 0.15);
+}
+
+.dg-tip__icon { font-size: 0.85rem; flex-shrink: 0; margin-top: 1px; }
+
+.dg-tip__text {
+  font-family: 'Inter', sans-serif;
+  font-size: 0.78rem;
+  line-height: 1.5;
+  font-style: italic;
+}
+.dg--dark  .dg-tip__text { color: #818cf8; }
+.dg--light .dg-tip__text { color: #4f46e5; }
+
+/* ─── Footer ──────────────────────────────────────────────── */
+.dg-footer {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0.85rem 1.5rem 1.4rem;
+  border-top: 1px solid;
+  margin-top: 0.25rem;
+}
+.dg--dark  .dg-footer { border-color: rgba(148, 163, 184, 0.08); }
+.dg--light .dg-footer { border-color: rgba(148, 163, 184, 0.2); }
+
+.dg-btn {
+  font-family: 'Inter', sans-serif;
+  font-size: 0.82rem;
+  font-weight: 600;
+  padding: 0.52rem 1.2rem;
+  border-radius: 9px;
+  border: none;
+  cursor: pointer;
+  transition: all 0.18s ease;
+}
+
+.dg-btn--primary {
+  background: linear-gradient(135deg, #6366f1, #818cf8);
+  color: #fff;
+  box-shadow: 0 2px 14px rgba(99, 102, 241, 0.4);
+}
+.dg-btn--primary:hover {
+  box-shadow: 0 4px 22px rgba(99, 102, 241, 0.55);
+  transform: translateY(-1px);
+}
+
+.dg-btn--ghost { background: transparent; }
+.dg--dark  .dg-btn--ghost { color: #64748b; border: 1px solid transparent; }
+.dg--light .dg-btn--ghost { color: #94a3b8; border: 1px solid transparent; }
+.dg--dark  .dg-btn--ghost:hover { color: #94a3b8; border-color: rgba(148,163,184,0.2); }
+.dg--light .dg-btn--ghost:hover { color: #64748b; border-color: rgba(148,163,184,0.3); }
+
+/* guide button styles live in TemplatesGallery.css as .gallery-guide-btn */
+
+/* ─── Mobile ──────────────────────────────────────────────── */
+@media (max-width: 600px) {
+  .dg-modal { border-radius: 16px; }
+  .dg-header { padding: 1rem 1.25rem 0.6rem; }
+  .dg-dots { display: none; } /* hide dots on mobile */
+  .dg-dots-mobile { display: block; } /* show step counter instead */
+  .dg-img-wrap { margin: 0 0.85rem; width: calc(100% - 1.7rem); }
+  .dg-content { padding: 0.9rem 1.25rem 0.6rem; }
+  .dg-title { font-size: 1.1rem; }
+  .dg-footer { padding: 0.75rem 1.25rem 1.1rem; }
+  .scenarios-tab-breadcrumb { padding: 1.5rem 1.25rem 0.75rem; }
+}

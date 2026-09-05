@@ -1,200 +1,192 @@
-// src/components/UnifiedMobileAuth.jsx - Step 1: Restructured for sticky footer
+// src/components/UnifiedMobileAuth.jsx - SIMPLIFIED FOR NEW DESIGN
 import React, { useState } from 'react';
+import { Link } from 'react-router-dom';
 import './EnhancedMobileAuth.css';
 
-// Sample characters for mobile demo
-const MOBILE_CHARACTERS = [
-  { id: 'sherlock', name: 'Sherlock Holmes' },
-  { id: 'cleopatra', name: 'Cleopatra' },
-  { id: 'socrates', name: 'Socrates' },
-  { id: 'nostradamus', name: 'Nostradamus' },
-  { id: 'loki', name: 'Loki' },
-  { id: 'boudica', name: 'Boudica' }
-];
-
-export default function UnifiedMobileAuth({ mode, onSubmit, error, loading }) {
+export default function UnifiedMobileAuth({ 
+  mode = 'login', 
+  onSubmit, 
+  error, 
+  loading,
+  showResendVerification,
+  onResendVerification,
+  email 
+}) {
   const [formData, setFormData] = useState({
     email: '',
     password: '',
     displayName: ''
   });
-  const [showForm, setShowForm] = useState(false);
-  const [selectedCharacter, setSelectedCharacter] = useState(null);
 
-  const handleInputChange = (field, value) => {
-    setFormData(prev => ({ ...prev, [field]: value }));
+  const handleInputChange = (e) => {
+    setFormData({
+      ...formData,
+      [e.target.name]: e.target.value
+    });
   };
 
-  const handleFormSubmit = (e) => {
+  const handleSubmit = (e) => {
     e.preventDefault();
     onSubmit(formData);
   };
 
-  const handleCharacterSelect = (character) => {
-    setSelectedCharacter(character);
-    setTimeout(() => setShowForm(true), 300);
-  };
-
-  const isLogin = mode === 'login';
-
+  // For mobile, we use the same scene+form layout but simplified
   return (
-    <div className="unified-mobile-auth">
-      <div className="mobile-device-frame">
-        <div className="mobile-screen">
-          
-          {!showForm ? (
-            // Character Selection View (unchanged)
-            <div className="character-selection-view">
-              <div className="mobile-header">
-                <h2>{isLogin ? 'Welcome Back' : 'Choose Your Guide'}</h2>
-                <p>{isLogin ? 'Select a character to continue' : 'Pick a legendary figure to begin'}</p>
-              </div>
-              
-              <div className="mobile-characters-grid">
-                {MOBILE_CHARACTERS.map(character => (
-                  <div 
-                    key={character.id}
-                    className={`mobile-character-card ${selectedCharacter?.id === character.id ? 'selected' : ''}`}
-                    onClick={() => handleCharacterSelect(character)}
-                  >
-                    <div className="mobile-character-avatar">
-                      <img
-                        src={`/images/${character.id}.jpg`}
-                        alt={character.name}
-                        onError={(e) => {
-                          e.target.src = '/images/default-character.jpg';
-                        }}
-                      />
-                      <div className="character-glow"></div>
-                    </div>
-                    <span className="mobile-character-name">{character.name}</span>
-                  </div>
-                ))}
-              </div>
-              
-              <div className="mobile-continue-hint">
-                <p>Tap a character to {isLogin ? 'sign in' : 'begin your journey'}</p>
-              </div>
-            </div>
-          ) : (
-            // ✅ RESTRUCTURED Form View with sticky footer
-            <div className="form-view">
-              {/* Fixed Header */}
-              <div className="form-header">
+    <div className="auth-page">
+      {/* BRAND IN TOP LEFT */}
+      <div style={{
+        position: 'absolute',
+        top: 'var(--space-lg)',
+        left: 'var(--space-lg)',
+        zIndex: 100
+      }}>
+        <h1 style={{
+          fontFamily: 'var(--font-display)',
+          fontSize: '1.5rem',
+          fontWeight: 700,
+          color: 'var(--brand-ivory)',
+          textShadow: '0 0 20px var(--accent-glow)',
+          margin: 0
+        }}>
+          AwakeVerse
+        </h1>
+      </div>
+
+      <div className="auth-container">
+        {/* SCENE PANEL */}
+        <div 
+          className="auth-scene-panel"
+          style={{
+            background: `url(${process.env.PUBLIC_URL}/images/auth-scene.jpeg) center/cover`
+          }}
+        ></div>
+        
+        {/* FLOATING AUTH FORM */}
+        <div className="auth-form-container">
+          <form className="auth-form" onSubmit={handleSubmit}>
+            {error && <div className="error-text">{error}</div>}
+            
+            {showResendVerification && (
+              <div style={{ 
+                background: 'rgba(99, 102, 241, 0.1)', 
+                border: '1px solid rgba(99, 102, 241, 0.3)',
+                borderRadius: 'var(--radius-md)',
+                padding: 'var(--space-md)',
+                marginBottom: 'var(--space-md)',
+                textAlign: 'center'
+              }}>
+                <p style={{ margin: '0 0 8px 0', color: 'var(--text-primary)', fontSize: '0.9rem' }}>
+                  Need to verify your email?
+                </p>
                 <button 
-                  className="back-btn"
-                  onClick={() => setShowForm(false)}
+                  type="button"
+                  onClick={() => onResendVerification(formData.email)}
+                  disabled={loading}
+                  style={{
+                    background: 'none',
+                    border: 'none',
+                    color: 'var(--accent-primary)',
+                    textDecoration: 'underline',
+                    cursor: 'pointer',
+                    fontSize: '0.9rem'
+                  }}
                 >
-                  ← Back
+                  Resend verification email
                 </button>
-                <h2>{isLogin ? 'Welcome Back' : 'Join the Realm'}</h2>
               </div>
-              
-              {/* Scrollable Content Area */}
-              <div className="form-content">
-                {selectedCharacter && (
-                  <div className="selected-guide">
-                    <img
-                      src={`/images/${selectedCharacter.id}.jpg`}
-                      alt={selectedCharacter.name}
-                      className="guide-avatar"
-                    />
-                    <p>Guided by <strong>{selectedCharacter.name}</strong></p>
-                  </div>
-                )}
-                
-                <form onSubmit={handleFormSubmit} className="mobile-auth-form">
-                  {error && <div className="mobile-error">{error}</div>}
-                  
-                  {!isLogin && (
-                    <div className="form-group">
-                      <label>Your Name in the Realm</label>
-                      <input
-                        type="text"
-                        value={formData.displayName}
-                        onChange={(e) => handleInputChange('displayName', e.target.value)}
-                        placeholder="Choose your identity"
-                        disabled={loading}
-                        required
-                      />
-                    </div>
-                  )}
-                  
-                  <div className="form-group">
-                    <label>Email</label>
-                    <input
-                      type="email"
-                      value={formData.email}
-                      onChange={(e) => handleInputChange('email', e.target.value)}
-                      placeholder="Email address"
-                      disabled={loading}
-                      required
-                    />
-                  </div>
-                  
-                  <div className="form-group">
-                    <label>Password</label>
-                    <input
-                      type="password"
-                      value={formData.password}
-                      onChange={(e) => handleInputChange('password', e.target.value)}
-                      placeholder={isLogin ? "Enter your password" : "Create your secret key (min 6)"}
-                      disabled={loading}
-                      required
-                    />
-                  </div>
-                  
-                  <button 
-                    type="submit" 
-                    className="mobile-submit-btn"
-                    disabled={loading}
-                  >
-                    {loading 
-                      ? (isLogin ? 'Awakening...' : 'Creating Realm...') 
-                      : (isLogin ? 'Enter the Realm' : 'Begin Journey')
-                    }
-                  </button>
-                </form>
-                
-                {/* ✅ NEW: Terms and Privacy for mobile - only show on register */}
-                {!isLogin && (
-                  <div className="mobile-legal-text">
-                    <p>
-                      By creating an account, you agree to our{' '}
-                      <a 
-                        href="https://www.awakeverse.com/terms" 
-                        target="_blank" 
-                        rel="noopener noreferrer"
-                      >
-                        Terms of Service
-                      </a>{' '}
-                      and{' '}
-                      <a 
-                        href="https://www.awakeverse.com/privacy" 
-                        target="_blank" 
-                        rel="noopener noreferrer"
-                      >
-                        Privacy Policy
-                      </a>
-                      .
-                    </p>
-                  </div>
-                )}
+            )}
+            
+            {mode === 'register' && (
+              <div className="form-group">
+                <label htmlFor="displayName">Display Name</label>
+                <input
+                  id="displayName"
+                  name="displayName"
+                  type="text"
+                  value={formData.displayName}
+                  onChange={handleInputChange}
+                  placeholder="Choose your display name"
+                  disabled={loading}
+                  required
+                />
               </div>
-              
-              {/* ✅ STICKY FOOTER - Moved outside scrollable content */}
-              <div className="form-footer">
-                <div className="mobile-switch-mode">
-                  <p>
-                    {isLogin ? "New to the realm? " : "Already awakened? "}
-                    <a href={isLogin ? "/register" : "/login"}>
-                      {isLogin ? "Begin your journey" : "Return to your realm"}
-                    </a>
-                  </p>
-                </div>
-              </div>
+            )}
+            
+            <div className="form-group">
+              <label htmlFor="email">Email</label>
+              <input
+                id="email"
+                name="email"
+                type="email"
+                value={formData.email}
+                onChange={handleInputChange}
+                placeholder="Your email"
+                disabled={loading}
+                required
+              />
             </div>
-          )}
+            
+            <div className="form-group">
+              <label htmlFor="password">Password</label>
+              <input
+                id="password"
+                name="password"
+                type="password"
+                value={formData.password}
+                onChange={handleInputChange}
+                placeholder={mode === 'register' ? 'Create a password' : 'Your password'}
+                disabled={loading}
+                required
+              />
+            </div>
+            
+            {mode === 'register' && (
+              <div className="password-requirements">
+                <small>
+                  Password must contain: uppercase, lowercase, number, 8+ characters
+                </small>
+              </div>
+            )}
+            
+            <button type="submit" disabled={loading}>
+              {loading 
+                ? (mode === 'register' ? 'Creating Account...' : 'Signing In...') 
+                : (mode === 'register' ? 'Create Account' : 'Continue')
+              }
+            </button>
+            
+            <div className="auth-links">
+              {mode === 'login' ? (
+                <>
+                  <Link to="/forgot-password">Forgot password?</Link>
+                  <Link to="/register">Create account</Link>
+                </>
+              ) : (
+                <Link to="/login">Already have an account?</Link>
+              )}
+            </div>
+            
+            <div className="auth-legal-text">
+              <p>
+                By {mode === 'register' ? 'creating an account' : 'continuing'}, you agree with our{' '}
+                <a 
+                  href="https://www.awakeverse.com/terms" 
+                  target="_blank" 
+                  rel="noopener noreferrer"
+                >
+                  Terms
+                </a>{' '}
+                and{' '}
+                <a 
+                  href="https://www.awakeverse.com/privacy" 
+                  target="_blank" 
+                  rel="noopener noreferrer"
+                >
+                  Privacy Policy
+                </a>
+              </p>
+            </div>
+          </form>
         </div>
       </div>
     </div>

@@ -1,0 +1,1283 @@
+@import url('https://fonts.googleapis.com/css2?family=Courier+Prime:ital,wght@0,400;0,700;1,400&family=Newsreader:opsz,wght@6..72,400;6..72,500;6..72,600&display=swap');
+
+/* src/components/Film/FilmWorkspace.css
+   Two floating panels (each its own indigo border) inside a wider indigo-bordered
+   window, with a gap so nothing touches. Window never scrolls; each panel scrolls
+   inside itself. Tokens mirror the app design system, scoped as --film-*. */
+
+.film-workspace.theme-awakeverse{
+  --film-canvas:#0A0F1A; --film-surface:#141B2E; --film-interactive:#1C2640; --film-peak:#243152;
+  --film-accent:#6366F1; --film-accent-hover:#818CF8;
+  --film-glow:rgba(99,102,241,.22); --film-glow-strong:rgba(99,102,241,.32);
+  --film-ring:rgba(99,102,241,.55);
+  --film-ivory:#F5F5DC;
+  --film-success:#10B981; --film-warning:#F59E0B; --film-error:#EF4444; --film-info:#3B82F6;
+  --film-t1:#F1F5F9; --film-t2:#94A3B8; --film-t3:#64748B; --film-tm:#475569;
+  --film-bd-subtle:rgba(148,163,184,.1); --film-bd-med:rgba(148,163,184,.2); --film-bd-strong:rgba(148,163,184,.3);
+  --film-r-sm:8px; --film-r-md:12px; --film-r-lg:16px; --film-r-full:9999px;
+  --film-glow-sh:0 0 20px -5px rgba(99,102,241,.25);
+  --film-display:'Syne',-apple-system,sans-serif; --film-body:'Inter',system-ui,sans-serif;
+  --film-gap:14px;
+}
+
+.film-workspace{
+  height:100%; min-height:0; display:flex; flex-direction:column;
+  color:var(--film-t1); font-family:var(--film-body); font-size:15px;
+  background:var(--film-canvas);
+  background-image:radial-gradient(1100px 560px at 85% -12%,rgba(99,102,241,.07),transparent 60%);
+}
+.film-workspace *{box-sizing:border-box;}
+
+/* topbar — kept deliberately short (~44px inner height) so panels get the
+   vertical space, not the chrome. .film-title is centered absolutely on the
+   FULL bar width (not dependent on sibling widths) so it can't be shoved
+   left/clipped by whatever app-level nav sits before this component.
+   .film-toggles is now the ONE pill on the right — My Films | Storyboard |
+   Assistant together, matching the original design — so with title taken
+   out of flow, .film-toggles is topbar's only real flex child and gets
+   pushed to the right via justify-content. */
+.film-topbar{position:relative;flex:0 0 auto;display:flex;align-items:center;justify-content:flex-end;
+  padding:8px 20px;gap:12px;border-bottom:1px solid var(--film-bd-subtle);z-index:1;}
+
+.film-title{position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);
+  font-family:var(--film-display);font-weight:700;font-size:14.5px;color:var(--film-t1);
+  letter-spacing:-.2px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;
+  max-width:36vw;pointer-events:none;}
+
+.film-toggles{flex:0 0 auto;display:inline-flex;align-items:center;gap:3px;background:var(--film-canvas);
+  border:1px solid rgba(99,102,241,.35);border-radius:var(--film-r-full);padding:4px;}
+.film-tg-div{width:1px;align-self:stretch;margin:2px 1px;background:var(--film-bd-med);}
+
+/* .film-tg is the shared base for all three segments. Storyboard/Assistant
+   fill solid accent when active (the toggle state); .film-tg--back (My
+   Films) is excluded from that fill — it's an action, not a toggle, so it
+   stays plain text with just a hover highlight, same as the pill's original
+   look. */
+.film-tg{display:inline-flex;align-items:center;gap:6px;font-family:var(--film-body);font-weight:600;
+  font-size:12px;color:var(--film-t2);background:transparent;border:0;border-radius:var(--film-r-full);
+  padding:7px 13px;cursor:pointer;transition:all .16s;white-space:nowrap;}
+.film-tg:hover{color:var(--film-t1);background:rgba(99,102,241,.14);}
+.film-tg.is-off{color:var(--film-t3);}
+.film-toggles .film-tg:not(.is-off):not(.film-tg--back){background:var(--film-accent);color:#fff;}
+.film-toggles .film-tg:not(.is-off):not(.film-tg--back):hover{background:var(--film-accent-hover);}
+
+.film-tg--back{color:var(--film-accent-hover);}
+.film-tg--back:hover{color:#fff;background:rgba(99,102,241,.16);}
+
+/* the window is a plain flex row — no outer border/padding/box-shadow of its
+   own. Left padding here insets the STAGE box from the viewport edge; the
+   stage panel carries its own bottom margin below (rather than the window
+   supplying right/bottom padding for both children equally) specifically so
+   Writers' Room — which has no box at all — can reach the true right and
+   bottom edges instead of being inset by the same amount as the stage. */
+.film-window{flex:1 1 auto;min-height:0;display:flex;gap:var(--film-gap);
+  padding:0 0 0 14px;overflow:hidden;}
+
+/* each panel scrolls internally. Default split (both expanded) is a stable
+   62/38 — no longer dependent on a data-focus attribute the component
+   doesn't set. .film-panel is the shared base (Storyboard uses it as-is);
+   Writers' Room overrides it further down to drop the box entirely. */
+.film-panel{display:flex;flex-direction:column;min-height:0;min-width:0;
+  background:var(--film-surface);border:1px solid rgba(99,102,241,.35);border-radius:var(--film-r-md);
+  overflow:hidden;transition:flex-basis .25s cubic-bezier(.4,0,.2,1),flex-grow .25s cubic-bezier(.4,0,.2,1);}
+.film-panel--stage{flex:1 1 62%;margin-bottom:14px;}
+
+/* Writers' Room: no box. Sits directly on the page canvas, flush to the
+   real right and bottom edges of the window (the composer inside pins to
+   the true bottom — see .film-composer below). Left padding replaces the
+   old border as the visual separation from the Storyboard box. */
+.film-panel--chat{flex:1 1 38%;background:transparent;border:0;border-radius:0;
+  overflow:visible;padding-left:20px;}
+
+/* collapsed rail needs its own visible surface regardless of whether the
+   parent panel has a box (Writers' Room doesn't, once expanded) */
+.film-rail{background:var(--film-surface);border:1px solid rgba(99,102,241,.3);border-radius:var(--film-r-md);}
+
+/* collapsed → narrow fixed rail (order-independent: flex-grow:1 on whichever
+   panel ISN'T collapsed simply absorbs whatever space the fixed-44px one
+   gives up, regardless of DOM order). */
+.film-panel.is-collapsed{flex:0 0 44px;}
+.film-window > .film-panel:not(.is-collapsed){flex-grow:1;}
+
+/* collapsed rail — vertical label, single expand affordance. The panel's
+   real content (Storyboard / WritersRoom) stays mounted but is hidden
+   outright rather than just clipped by overflow, so nothing interactive
+   or visible peeks out of the 44px strip. */
+.film-panel.is-collapsed .film-rail{display:flex;flex:1 1 auto;flex-direction:column;align-items:center;
+  justify-content:flex-start;gap:10px;padding:12px 0;}
+.film-panel.is-collapsed > *:not(.film-rail){display:none;}
+.film-panel:not(.is-collapsed) .film-rail{display:none;}
+.film-rail-btn{flex:0 0 auto;width:26px;height:26px;border-radius:7px;border:1px solid var(--film-bd-med);
+  background:var(--film-interactive);color:var(--film-t2);display:grid;place-items:center;cursor:pointer;
+  transition:all .15s;}
+.film-rail-btn:hover{background:var(--film-peak);color:var(--film-t1);border-color:rgba(99,102,241,.5);}
+.film-rail-label{writing-mode:vertical-rl;transform:rotate(180deg);font-family:var(--film-body);
+  font-weight:600;font-size:11px;letter-spacing:.04em;color:var(--film-t3);white-space:nowrap;}
+
+/* ── DESKTOP peek-tab (>820px) ───────────────────────────────────────────────
+   Replaces the tall 44px floor-to-ceiling rail with a short pull-tab tucked
+   against the glass, vertically centred. The collapsed panel collapses to ZERO
+   width (not 44px) so the sibling reclaims the full width behind it; the tab is
+   absolutely positioned and floats at the edge, rounded only on its inner
+   corners so it reads as a tab, not a panel. Scoped to >820px on purpose — the
+   base rules above still drive ≤820px, where the max-width:820px block turns
+   them into the horizontal strip. Nothing here touches the mobile case. */
+@media (min-width:821px){
+  /* collapse to nothing; the tab overflows out of this zero-width box */
+  .film-panel.is-collapsed{flex:0 0 0px;width:0;margin:0;
+    position:relative;overflow:visible;background:transparent;border:0;}
+  /* both panels full-height so the two tabs centre on the same line */
+  .film-panel--stage.is-collapsed{margin-bottom:0;}
+
+  /* the tab itself */
+  .film-panel.is-collapsed .film-rail{
+    position:absolute;top:50%;transform:translateY(-50%);z-index:5;
+    display:flex;flex-direction:column;align-items:center;justify-content:center;gap:0;
+    width:30px;height:118px;padding:0;
+    background:var(--film-surface);border:1px solid rgba(99,102,241,.35);
+    cursor:pointer;transition:width .18s,background .18s,box-shadow .18s;}
+  .film-panel.is-collapsed .film-rail:hover{width:36px;background:var(--film-interactive);}
+
+  /* Assistant tab hugs the RIGHT edge, rounded on its left (inner) corners */
+  .film-panel--chat.is-collapsed .film-rail{right:0;border-right:0;
+    border-radius:var(--film-r-md) 0 0 var(--film-r-md);}
+  .film-panel--chat.is-collapsed .film-rail:hover{box-shadow:-6px 0 22px -10px rgba(99,102,241,.6);}
+  /* Storyboard tab hugs the LEFT edge, rounded on its right (inner) corners */
+  .film-panel--stage.is-collapsed .film-rail{left:0;border-left:0;
+    border-radius:0 var(--film-r-md) var(--film-r-md) 0;}
+  .film-panel--stage.is-collapsed .film-rail:hover{box-shadow:6px 0 22px -10px rgba(99,102,241,.6);}
+
+  /* the chevron button fills the whole tab so the entire tab is the click
+     target (no JSX change needed); chevron rides near the top */
+  .film-panel.is-collapsed .film-rail-btn{position:absolute;inset:0;width:100%;height:100%;
+    padding-top:15px;border:0;border-radius:inherit;background:transparent;color:var(--film-accent-hover);
+    display:flex;align-items:flex-start;justify-content:center;z-index:1;transition:color .15s;}
+  .film-panel.is-collapsed .film-rail:hover .film-rail-btn{color:var(--film-t1);}
+
+  /* label centred below the chevron, non-interactive so clicks fall through */
+  .film-panel.is-collapsed .film-rail-label{position:absolute;left:50%;top:56%;
+    transform:translate(-50%,-50%) rotate(180deg);pointer-events:none;color:var(--film-t2);z-index:2;}
+  .film-panel.is-collapsed .film-rail:hover .film-rail-label{color:var(--film-t1);}
+}
+
+/* expanded panels: the rail is hidden and .film-pcontent (WritersRoom's own
+   root) or Storyboard's content fills the panel normally */
+/* width:100% is load-bearing. Each .film-panel is a <section>, and an app-wide
+   global `section{align-items:center}` leaks onto it (the panel sets display/
+   direction but never resets align-items). That shrink-wraps + centres this
+   column, so before the first message — when the widest child is the composer
+   itself — the whole Writers' Room collapsed to ~2/3 width and floated centred,
+   only snapping to full width once a wide reply forced it open. Pinning the
+   width makes the column (composer included) fill the panel in every state. */
+.film-pcontent{display:flex;flex-direction:column;min-height:0;height:100%;width:100%;}
+
+/* panel header — Storyboard keeps the pill badge look ("Storyboard · no
+   shots yet"). Writers' Room overrides .film-htab further down to a plain
+   ivory→indigo gradient text label instead — no background/border box. */
+.film-phead{flex:0 0 auto;display:flex;align-items:center;justify-content:space-between;gap:10px;
+  padding:6px 15px;border-bottom:1px solid var(--film-bd-subtle);}
+/* panel header as a pill (categorises the panel, echoing the dialogue pill) */
+.film-htabs{display:flex;align-items:center;gap:10px;min-width:0;}
+.film-htab{display:inline-flex;align-items:center;font-family:var(--film-body);font-weight:600;
+  font-size:12px;letter-spacing:.02em;color:#c7d2fe;background:rgba(99,102,241,.16);
+  border:1px solid rgba(99,102,241,.35);border-radius:var(--film-r-full);padding:4px 12px;white-space:nowrap;}
+.film-hsub{font-size:12px;color:var(--film-t3);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+
+/* Writers' Room: header strip is back, but as plain text — no pill box.
+   Ivory fading into indigo across the label via a clipped gradient. */
+.film-panel--chat .film-phead{padding:5px 10px 6px 0;}
+.film-panel--chat .film-htab{display:inline-block;background-color:transparent;border:0;padding:0;
+  border-radius:0;font-family:var(--film-display);font-weight:700;font-size:13px;letter-spacing:.01em;
+  background-image:linear-gradient(90deg,var(--film-ivory),var(--film-accent-hover));
+  -webkit-background-clip:text;background-clip:text;color:transparent;}
+
+/* Editor's Room tab pair as a CAPSULE PILL (2026-08-25, owner's aesthetic
+   call — mirrors the approved mockup): the strip becomes a rounded capsule,
+   active tab filled accent, inactive muted text. These rules must UNDO the
+   plain-text override above for the tab buttons — including background-clip:
+   text, which would otherwise clip the accent fill to the glyphs. The lone-
+   tab state (unrendered film) renders as a single-pill capsule — same
+   language, quieter. Fluid widths: survives expand/collapse + the accordion. */
+.film-panel--chat .film-htabs{background:var(--film-canvas);border:1px solid rgba(99,102,241,.35);
+  border-radius:var(--film-r-full);padding:3px;gap:2px;}
+.film-panel--chat .film-htab{display:inline-flex;align-items:center;border:0;
+  background-image:none;background-color:transparent;
+  -webkit-background-clip:border-box;background-clip:border-box;
+  color:var(--film-t3);border-radius:var(--film-r-full);padding:4px 12px;
+  font-family:var(--film-display);font-weight:700;font-size:12px;letter-spacing:.02em;}
+.film-panel--chat button.film-htab{cursor:pointer;transition:color .15s,background-color .15s;}
+.film-panel--chat .film-htab:not(.is-on):hover{color:var(--film-t1);}
+.film-panel--chat .film-htab.is-on{background-color:var(--film-accent);color:#fff;}
+.film-panel--chat .film-htab-dot{width:5px;height:5px;margin-right:4px;}
+
+/* buttons */
+.film-btn{font-family:var(--film-body);font-weight:600;font-size:13px;border:0;cursor:pointer;
+  border-radius:var(--film-r-sm);padding:9px 15px;transition:all .18s;display:inline-flex;align-items:center;gap:7px;}
+.film-btn--primary{background:var(--film-accent);color:#fff;box-shadow:var(--film-glow-sh);}
+.film-btn--primary:hover{background:var(--film-accent-hover);}
+.film-btn--ghost{background:var(--film-interactive);color:var(--film-t1);border:1px solid var(--film-bd-med);}
+.film-btn--ghost:hover{background:var(--film-peak);}
+.film-btn:disabled{opacity:.5;cursor:default;}
+
+/* ── STAGE (left): storyboard grid ── */
+.film-stage{flex:1 1 auto;min-height:0;overflow-y:auto;padding:15px;}
+.film-empty{height:100%;display:flex;flex-direction:column;align-items:center;justify-content:center;
+  text-align:center;gap:30px;color:var(--film-t3);}
+.film-empty-mark{width:56px;height:56px;border-radius:var(--film-r-lg);background:var(--film-canvas);
+  border:1px solid var(--film-bd-subtle);display:grid;place-items:center;color:var(--film-t2);}
+.film-empty h3{font-family:var(--film-display);font-weight:800;font-size:21px;color:var(--film-t1);
+  letter-spacing:-.3px;margin:0;}
+.film-empty p{font-size:13.5px;max-width:310px;line-height:1.65;color:var(--film-t2);margin:0;}
+
+/* floating filmstrip — the "nothing shot yet" empty state */
+.film-filmstrip{position:relative;display:flex;gap:10px;padding:14px 18px;overflow:hidden;}
+.film-sweep{position:absolute;top:0;bottom:0;left:0;width:70px;
+  background:linear-gradient(100deg,transparent,rgba(129,140,248,.55),transparent);
+  animation:film-sweep 3.4s ease-in-out infinite;}
+.film-frame{width:52px;height:34px;border-radius:6px;position:relative;
+  background:linear-gradient(135deg,#141B2E,#1C2640);border:1px solid rgba(99,102,241,.3);
+  display:grid;place-items:center;color:var(--film-accent);opacity:.95;
+  animation:film-float 2.6s ease-in-out infinite;}
+.film-frame svg{opacity:.75;}
+.film-frame-dot{position:absolute;width:3px;height:3px;border-radius:50%;background:rgba(148,163,184,.5);}
+.film-frame-dot.tl{left:3px;top:3px;} .film-frame-dot.tr{right:3px;top:3px;}
+.film-frame-dot.bl{left:3px;bottom:3px;} .film-frame-dot.br{right:3px;bottom:3px;}
+
+.film-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:12px;}
+.film-cell{background:var(--film-surface);border:1px solid var(--film-bd-subtle);border-radius:var(--film-r-md);
+  overflow:hidden;cursor:pointer;transition:border-color .18s,box-shadow .18s;display:flex;flex-direction:column;}
+.film-cell:hover{border-color:var(--film-bd-med);}
+.film-cell.is-sel{border-color:var(--film-accent);box-shadow:var(--film-glow-sh);}
+
+.film-thumb{aspect-ratio:16/9;position:relative;display:grid;place-items:center;color:var(--film-t3);}
+.film-thumb .film-n{position:absolute;top:7px;left:8px;font-family:var(--film-display);font-weight:800;
+  font-size:13px;color:#fff;text-shadow:0 1px 4px rgba(0,0,0,.6);}
+.film-thumb .film-dur{position:absolute;bottom:7px;right:8px;font-size:10px;font-weight:600;color:#fff;
+  background:rgba(0,0,0,.45);padding:2px 7px;border-radius:var(--film-r-full);backdrop-filter:blur(4px);}
+.film-thumb .film-chip{position:absolute;bottom:7px;left:8px;font-size:9px;font-weight:700;letter-spacing:.5px;
+  padding:2px 7px;border-radius:var(--film-r-full);backdrop-filter:blur(6px);}
+.film-thumb--plan{background:var(--film-canvas);border-bottom:1px dashed var(--film-bd-med);}
+.film-thumb--plan .film-chip{background:rgba(148,163,184,.14);color:var(--film-t3);}
+.film-thumb--preview,.film-thumb--final{color:#fff;background:
+    radial-gradient(120% 120% at 30% 20%,rgba(99,102,241,.22),transparent 55%),linear-gradient(135deg,#0d1424,#1b2440);}
+.film-thumb--preview .film-chip{background:rgba(99,102,241,.28);color:#fff;}
+.film-thumb--final .film-chip{background:rgba(16,185,129,.22);color:#a7f3d0;}
+.film-thumb--queued{background:var(--film-canvas);opacity:.5;}
+.film-thumb--queued .film-chip{background:rgba(148,163,184,.1);color:var(--film-t3);}
+.film-thumb--rendering{background:var(--film-interactive);box-shadow:inset 0 0 26px -8px var(--film-glow-strong);}
+.film-thumb--rendering .film-chip{background:rgba(99,102,241,.28);color:#fff;}
+.film-thumb .film-play{width:34px;height:34px;border-radius:50%;background:rgba(255,255,255,.12);
+  border:1px solid var(--film-bd-strong);display:grid;place-items:center;color:#fff;}
+.film-spin{width:22px;height:22px;border-radius:50%;border:3px solid rgba(99,102,241,.2);
+  border-top-color:var(--film-accent-hover);animation:film-spin .8s linear infinite;}
+
+.film-cfoot{padding:9px 11px;display:flex;flex-direction:column;gap:6px;}
+.film-cfoot-row{display:flex;align-items:center;gap:7px;}
+.film-badge{display:inline-flex;align-items:center;gap:5px;font-size:9px;font-weight:700;letter-spacing:.5px;
+  text-transform:uppercase;padding:3px 7px;border-radius:var(--film-r-full);}
+.film-badge--dialogue{background:rgba(59,130,246,.14);color:#93c5fd;}
+.film-badge--pure_visual,.film-badge--vo_broll{background:rgba(129,140,248,.16);color:#c7cbff;}
+.film-badge--crowd{background:rgba(16,185,129,.14);color:#6ee7b7;}
+.film-badge--graphic{background:rgba(245,158,11,.14);color:#fcd34d;}
+.film-soft{display:inline-flex;align-items:center;gap:4px;font-size:9px;font-weight:700;letter-spacing:.3px;
+  text-transform:uppercase;color:#fcd34d;background:rgba(245,158,11,.12);border:1px solid rgba(245,158,11,.3);
+  padding:2px 6px;border-radius:var(--film-r-full);margin-left:auto;}
+.film-cap{font-size:12px;color:var(--film-t2);line-height:1.4;display:-webkit-box;-webkit-line-clamp:2;
+  -webkit-box-orient:vertical;overflow:hidden;}
+.film-cap .film-spk{color:var(--film-accent-hover);font-weight:600;}
+
+/* per-cell edit controls (edit state) */
+.film-cell-ctrls{display:flex;gap:5px;flex-wrap:wrap;align-items:center;}
+.film-ctrl{display:inline-flex;align-items:center;gap:5px;font-family:var(--film-body);font-size:11px;font-weight:600;
+  color:var(--film-t2);background:var(--film-interactive);border:1px solid var(--film-bd-subtle);
+  border-radius:var(--film-r-sm);padding:6px 9px;cursor:pointer;transition:all .16s;}
+.film-ctrl:hover{color:var(--film-t1);border-color:var(--film-bd-med);}
+.film-ctrl--regen:hover{color:var(--film-accent-hover);border-color:var(--film-accent);}
+.film-ctrl--cut:hover{color:var(--film-error);border-color:var(--film-error);}
+.film-ctrl:disabled{opacity:.65;cursor:default;color:var(--film-accent-hover);border-color:var(--film-accent);}
+.film-ctrl-spin{width:10px;height:10px;border-radius:50%;border:2px solid rgba(99,102,241,.3);
+  border-top-color:var(--film-accent-hover);animation:film-spin .7s linear infinite;display:inline-block;}
+.film-grip{margin-left:auto;color:var(--film-tm);cursor:grab;display:grid;place-items:center;}
+
+/* live progress strip (render) */
+.film-prog{flex:0 0 auto;display:flex;align-items:center;gap:12px;padding:10px 15px;
+  border-top:1px solid var(--film-bd-subtle);}
+.film-prog-bar{flex:1;height:5px;background:var(--film-interactive);border-radius:var(--film-r-full);overflow:hidden;}
+.film-prog-bar > i{display:block;height:100%;background:linear-gradient(90deg,var(--film-accent),var(--film-accent-hover));
+  transition:width .4s ease;}
+.film-prog-lbl{font-size:12px;color:var(--film-t2);white-space:nowrap;}
+.film-prog-lbl b{color:var(--film-t1);}
+.film-live{display:inline-flex;align-items:center;gap:6px;font-size:10px;font-weight:700;letter-spacing:1px;
+  text-transform:uppercase;color:var(--film-accent-hover);}
+.film-live::before{content:"";width:6px;height:6px;border-radius:50%;background:var(--film-accent-hover);
+  animation:film-pulse 1.4s infinite;}
+
+/* ── CHAT (right) ── */
+.film-chatscroll{flex:1 1 auto;min-height:0;overflow-y:auto;padding:15px 10px 15px 0;display:flex;flex-direction:column;gap:14px;}
+
+/* user turn — keeps its bubble */
+.film-msgwrap{display:flex;}
+.film-msgwrap--me{justify-content:flex-end;}
+.film-msg{max-width:88%;padding:9px 12px;border-radius:var(--film-r-md);font-size:9px;line-height:1.6;
+  animation:film-rise .18s ease;}
+.film-msg--me{align-self:flex-end;background:var(--film-interactive);color:var(--film-ivory);
+  border:1px solid var(--film-bd-med);border-bottom-right-radius:var(--film-r-sm);}
+.film-msg--me .film-who{color:var(--film-t2);}
+.film-msg .film-who{font-size:8px;letter-spacing:1.3px;text-transform:uppercase;color:rgba(255,255,255,.7);
+  margin-bottom:4px;font-weight:600;}
+
+/* assistant turn — flows directly on the panel background, no bubble */
+.film-turn-ai{display:flex;flex-direction:column;gap:9px;animation:film-rise .18s ease;}
+.film-turn-ai > .film-who{font-size:8px;letter-spacing:1.3px;text-transform:uppercase;color:var(--film-t3);
+  font-weight:700;}
+.film-flow{font-size:9px;line-height:1.65;color:var(--film-t1);}
+
+/* markdown — shared between the user bubble and the assistant's flowing text */
+.film-msg h1,.film-msg h2,.film-msg h3,.film-flow h1,.film-flow h2,.film-flow h3{
+  margin:8px 0 3px;font-family:var(--film-display);}
+.film-msg h1:first-child,.film-msg h2:first-child,.film-msg h3:first-child,
+.film-flow h1:first-child,.film-flow h2:first-child,.film-flow h3:first-child{margin-top:0;}
+.film-msg h1,.film-flow h1{font-weight:700;font-size:10.5px;color:var(--film-t1);}
+.film-msg h2,.film-flow h2{font-weight:700;font-size:9.5px;color:var(--film-t1);}
+.film-msg h3,.film-flow h3{font-weight:700;font-size:8.5px;color:#c7d2fe;letter-spacing:.3px;text-transform:uppercase;}
+.film-msg p,.film-flow p{line-height:1.65;margin:0 0 7px;}
+.film-msg p:last-child,.film-flow p:last-child{margin-bottom:0;}
+.film-msg li,.film-flow li{display:flex;gap:5px;margin:2px 0;line-height:1.65;list-style:none;}
+.film-msg li::before,.film-flow li::before{content:'–';color:var(--film-accent-hover);flex:0 0 auto;}
+.film-msg code,.film-flow code{background:var(--film-canvas);border:1px solid var(--film-bd-med);border-radius:4px;
+  padding:1px 4px;font-size:8px;}
+.film-msg--me code{background:rgba(0,0,0,.2);border-color:rgba(255,255,255,.25);}
+.film-flow i{color:var(--film-accent-hover);}
+.film-stream-text{white-space:pre-wrap;}
+.film-cursor{animation:film-cursor 1s step-start infinite;}
+
+/* in-chat "Director is thinking" — a movie camera followed by three bouncing
+   dots, shown in the gap between the user's send and the first streamed token
+   (the header's "thinking…" mirrored into the conversation itself). Lives at the
+   foot of .film-chatscroll and hands off to .film-stream-text + .film-cursor the
+   instant real tokens arrive. Camera pulses, dots stagger. (Both animations are
+   disabled by the global prefers-reduced-motion rule below, leaving a legible
+   static camera + dots.) */
+.film-thinking{display:inline-flex;align-items:center;gap:9px;padding:2px 0;}
+.film-thinking-cam{flex:0 0 auto;color:var(--film-accent-hover);display:inline-flex;
+  animation:film-thinkcam 1.5s ease-in-out infinite;}
+.film-thinking-cam svg{display:block;}
+.film-thinking-dots{display:inline-flex;gap:5px;align-items:center;}
+.film-thinking-dots i{width:6px;height:6px;border-radius:50%;background:var(--film-accent-hover);
+  animation:film-thinkdot 1.25s ease-in-out infinite;}
+.film-thinking-dots i:nth-child(2){animation-delay:.16s;}
+.film-thinking-dots i:nth-child(3){animation-delay:.32s;}
+@keyframes film-thinkdot{0%,60%,100%{transform:translateY(0);opacity:.4}30%{transform:translateY(-5px);opacity:1}}
+@keyframes film-thinkcam{0%,100%{opacity:.6;transform:scale(1)}50%{opacity:1;transform:scale(1.06)}}
+
+/* ── script-meta cluster: duration badge + character chips ── */
+.film-scriptmeta{display:flex;flex-direction:column;gap:9px;}
+.film-meta-row{display:flex;align-items:center;gap:7px;flex-wrap:wrap;}
+.film-dur-badge{display:inline-flex;align-items:center;gap:5px;font-size:9px;font-weight:700;color:var(--film-ivory);
+  background:rgba(245,245,220,.08);border:1px solid rgba(245,245,220,.25);border-radius:var(--film-r-full);
+  padding:5px 10px;white-space:nowrap;}
+
+.film-char-chip{display:inline-flex;align-items:center;gap:5px;font-family:var(--film-display);
+  font-weight:700;font-size:9px;letter-spacing:.2px;color:var(--film-ivory);background:var(--film-canvas);
+  border:1px solid rgba(99,102,241,.3);border-radius:var(--film-r-full);padding:6px 10px;cursor:pointer;
+  transition:all .15s;white-space:nowrap;}
+.film-char-chip:hover{border-color:rgba(99,102,241,.6);}
+.film-char-chip.is-open{background:rgba(99,102,241,.14);border-color:var(--film-accent-hover);}
+.film-char-detail{width:100%;background:var(--film-canvas);border:1px solid rgba(99,102,241,.3);
+  border-radius:var(--film-r-sm);padding:8px 10px;font-size:9px;color:var(--film-t2);line-height:1.5;
+  margin-top:-1px;animation:film-rise .15s ease;}
+.film-char-detail b{color:var(--film-ivory);}
+
+/* ── script panel — visually distinct from the flowing prose ── */
+.film-script-panel{border:1px solid var(--film-bd-med);border-radius:var(--film-r-md);
+  background:var(--film-canvas);overflow:hidden;}
+.film-script-head{display:flex;align-items:center;justify-content:space-between;padding:8px 12px;
+  border-bottom:1px solid var(--film-bd-subtle);background:var(--film-interactive);}
+.film-script-head .t{display:flex;align-items:center;gap:6px;font-family:var(--film-display);font-weight:700;
+  font-size:10px;color:var(--film-t1);}
+.film-script-toggle{font-size:9px;font-weight:600;color:var(--film-accent-hover);background:none;border:0;
+  display:flex;align-items:center;gap:4px;cursor:pointer;}
+.film-script-body{max-height:280px;overflow-y:auto;margin:0;padding:12px 14px;
+  font-family:ui-monospace,'SF Mono','Cascadia Code','Roboto Mono',Consolas,monospace;
+  font-size:9px;line-height:1.75;color:var(--film-t2);white-space:pre-wrap;word-break:break-word;}
+
+
+/* a beat pulled into the chat for editing */
+.film-beatedit{flex:0 0 auto;margin:0 15px 4px;border:1px solid var(--film-accent);border-radius:var(--film-r-md);
+  background:var(--film-canvas);overflow:hidden;box-shadow:var(--film-glow-sh);}
+.film-beatedit-head{display:flex;align-items:center;justify-content:space-between;padding:9px 12px;
+  border-bottom:1px solid var(--film-bd-subtle);}
+.film-beatedit-head .t{font-size:12px;font-weight:600;color:var(--film-t1);display:flex;align-items:center;gap:8px;}
+.film-x{background:none;border:0;color:var(--film-t3);cursor:pointer;font-size:16px;line-height:1;padding:2px;}
+.film-x:hover{color:var(--film-t1);}
+.film-beatedit textarea{width:100%;background:transparent;border:0;color:var(--film-t1);font-family:var(--film-body);
+  font-size:13px;line-height:1.5;padding:12px;resize:none;min-height:66px;}
+.film-beatedit textarea:focus{outline:none;}
+.film-beatedit-actions{display:flex;gap:8px;padding:10px 12px;border-top:1px solid var(--film-bd-subtle);}
+
+/* inline "Script ready" bar — flush above the composer, not overlapping it.
+   Only shown when scriptReady && stage === 'empty'. Collapsible: collapses to
+   a small pill (film-scriptbar-pill) that re-expands the full bar on click.
+   Both compacted vertically — this sits between the message list and the
+   composer, so it shouldn't eat more height than it needs. */
+.film-scriptbar{flex:0 0 auto;display:flex;align-items:center;justify-content:space-between;gap:10px;
+  margin:0 10px 6px 0;padding:7px 14px;border:1px solid rgba(99,102,241,.4);border-radius:var(--film-r-md);
+  background:rgba(99,102,241,.08);}
+.film-scriptbar-lbl{display:flex;align-items:center;gap:8px;font-size:12.5px;font-weight:600;color:#c7d2fe;}
+.film-scriptbar-actions{display:flex;align-items:center;gap:8px;}
+.film-scriptbar-x{width:20px;height:20px;border-radius:50%;background:transparent;border:1px solid rgba(99,102,241,.35);
+  color:var(--film-t2);font-size:14px;line-height:1;display:grid;place-items:center;cursor:pointer;
+  transition:all .15s;}
+.film-scriptbar-x:hover{color:var(--film-t1);border-color:rgba(99,102,241,.6);background:rgba(99,102,241,.14);}
+
+.film-scriptbar-pill{flex:0 0 auto;align-self:flex-start;display:flex;align-items:center;gap:6px;
+  margin:0 10px 6px 0;font-size:11px;font-weight:600;color:#c7d2fe;background:rgba(99,102,241,.1);
+  border:1px solid rgba(99,102,241,.35);border-radius:var(--film-r-full);padding:4px 12px;cursor:pointer;
+  transition:all .15s;}
+.film-scriptbar-pill:hover{background:rgba(99,102,241,.18);border-color:rgba(99,102,241,.55);}
+
+/* single morphing funnel CTA (2026-08-26): fixed min-width so the label swap
+   (Review cast → Reviewing the cast… → Make the film → Making the film…) doesn't
+   jog the bar layout. Disabled visuals come from .film-btn:disabled; the busy
+   spinner is tinted for the filled (primary) button. */
+.film-funnel-cta{min-width:150px;justify-content:center;}
+.film-funnel-cta .film-ctrl-spin{border-color:rgba(255,255,255,.4);border-top-color:#fff;}
+
+/* in-stage lifecycle banner (2026-08-26): the loud state-change the sub-line
+   couldn't be. Two variants — cast (indigo) and film (green, matching the
+   render/success palette used elsewhere). */
+.film-lifebanner{display:flex;align-items:center;gap:12px;margin:0 0 14px;padding:12px 15px;
+  border-radius:var(--film-r-md);border:1px solid rgba(99,102,241,.4);
+  background:rgba(99,102,241,.1);animation:film-lifebanner-in .25s ease;}
+.film-lifebanner .film-spin{flex:0 0 auto;}
+.film-lifebanner-txt{display:flex;flex-direction:column;gap:2px;min-width:0;}
+.film-lifebanner-txt b{font-family:var(--film-display);font-size:13.5px;font-weight:600;color:var(--film-t1);}
+.film-lifebanner-txt span{font-size:12px;color:var(--film-t2);line-height:1.45;}
+.film-lifebanner--film_rendering{border-color:rgba(52,211,153,.32);background:rgba(16,64,48,.22);}
+@keyframes film-lifebanner-in{from{opacity:0;transform:translateY(-4px);}to{opacity:1;transform:none;}}
+
+/* pinned to the TRUE bottom of the window. The Writers' Room is boxless on
+   purpose so the composer can fall all the way to the outer app-card border
+   (the one scraping the viewport edge) — NOT the Storyboard card's inner
+   bottom, which floats 14px higher on its own margin. So: no bottom margin.
+   The composer sits flush at the window's bottom, and the window fills to the
+   app card's inner edge. (Right 10px keeps the field off the right glass; add
+   a couple px of bottom here if you'd rather leave a sliver of breathing room
+   than scrape the border exactly.) */
+.film-composer{flex:0 0 auto;margin:0 10px 0 0;}
+
+/* AI disclaimer — a thin, quiet line pinned under the composer, at the very
+   bottom of the Writers' Room (Film's own; every page carries its own). Small
+   and low-contrast so it reads as a footnote, not chrome. */
+.film-disclaimer{flex:0 0 auto;margin:6px 10px 4px 0;text-align:center;
+  font-family:var(--film-body);font-size:10.5px;line-height:1.2;color:var(--film-t3);
+  letter-spacing:.01em;user-select:none;}
+.film-inputwrap{display:flex;gap:9px;align-items:flex-end;width:100%;
+  background:var(--film-canvas);border:1px solid rgba(99,102,241,.4);border-radius:var(--film-r-md);
+  padding:9px 9px 9px 16px;box-shadow:0 8px 24px -14px rgba(0,0,0,.8);}
+.film-inputwrap:focus-within{border-color:rgba(99,102,241,.7);}
+.film-inputwrap textarea{flex:1;width:100%;background:transparent;border:0;color:var(--film-t1);font-family:var(--film-body);
+  font-size:14px;line-height:1.5;resize:none;min-height:24px;max-height:220px;padding:6px 0;}
+.film-inputwrap textarea:focus{outline:none;}
+.film-inputwrap textarea::placeholder{color:var(--film-tm);}
+.film-send{flex:0 0 auto;width:42px;height:42px;border-radius:var(--film-r-sm);background:var(--film-accent);
+  border:0;color:#fff;cursor:pointer;display:grid;place-items:center;transition:background .18s;}
+.film-send:hover{background:var(--film-accent-hover);}
+
+@keyframes film-spin{to{transform:rotate(360deg)}}
+@keyframes film-pulse{0%,100%{opacity:1}50%{opacity:.3}}
+@keyframes film-shimmer{0%{background-position:0% 50%}100%{background-position:200% 50%}}
+@keyframes film-rise{from{opacity:0;transform:translateY(4px)}to{opacity:1;transform:translateY(0)}}
+@keyframes film-float{0%,100%{transform:translateY(0)}50%{transform:translateY(-6px)}}
+@keyframes film-sweep{0%{transform:translateX(-120%)}100%{transform:translateX(420%)}}
+@keyframes film-cursor{0%,49%{opacity:1}50%,100%{opacity:0}}
+@media (prefers-reduced-motion:reduce){.film-workspace *{animation:none!important;transition:none!important}}
+
+.film-stage::-webkit-scrollbar,.film-chatscroll::-webkit-scrollbar{width:8px}
+.film-stage::-webkit-scrollbar-thumb,.film-chatscroll::-webkit-scrollbar-thumb{background:var(--film-interactive);border-radius:4px}
+
+/* iPad / narrow-web accordion: stacked, one panel full height, the other
+   collapsed to a thin horizontal rail. Relies entirely on the SAME
+   leftCollapsed/rightCollapsed state the desktop toggles already drive —
+   FilmWorkspace.jsx makes the two mutually exclusive below this width (see
+   toggleLeft/toggleRight) and defaults to Storyboard collapsed / Writers'
+   Room expanded on first mount, so a new film opens straight into chat
+   at full height instead of a 50/50 split. */
+@media (max-width:820px){
+  .film-window{flex-direction:column;}
+  .film-panel--stage,
+  .film-panel--chat{flex:1 1 auto;}
+  .film-panel.is-collapsed{flex:0 0 44px;}
+  .film-window > .film-panel:not(.is-collapsed){flex-grow:1;flex-basis:0;}
+
+  /* stacked, not side-by-side — the window's own gap already separates
+     stage/chat vertically now, so stage's desktop bottom-margin (there to
+     clear the window's bottom edge in a ROW layout) would double up here */
+  .film-panel--stage{margin-bottom:0;}
+  /* chat's left padding existed to clear the stage box horizontally;
+     stacked, it just needs an ordinary side inset */
+  .film-panel--chat{padding-left:15px;}
+
+  /* rail flips to a horizontal strip when panels are stacked instead of
+     side-by-side — label reads normally, no vertical text on a phone */
+  .film-panel.is-collapsed .film-rail{flex-direction:row;justify-content:center;padding:0;height:44px;}
+  .film-rail-label{writing-mode:horizontal-tb;transform:none;}
+
+  .film-topbar{padding:7px 12px;}
+  .film-title{font-size:13.5px;}
+  .film-tg{padding:6px 10px;font-size:11.5px;}
+}
+
+/* ═══════════════════════════════════════════════════════════════════════════
+   FILM MODE — top-level mode container, My Films library, loading.
+   The mode fills the area below the app header. Instead of guessing the header
+   height with a 100dvh calc, it fills the flex column it lives in: .app-container
+   is a `display:flex; flex-direction:column; height:100vh` shell, and this is a
+   direct child, so `flex:1 1 auto` claims exactly the space left under <Header/>
+   — no --film-header-h to set, no viewport gap below the composer. min-height:0
+   is what lets the inner panels scroll rather than push this column taller; it
+   also chains the bounded height down (workspace → window → chat scroll) so the
+   composer pins FIRMLY to the true bottom edge.
+   ═══════════════════════════════════════════════════════════════════════════ */
+.film-mode-view-container{
+  flex: 1 1 auto;
+  min-height: 0;
+  height: auto;
+  display: flex;
+}
+.film-mode-view-container > .film-workspace,
+.film-mode-view-container > .film-mode-root{ flex:1 1 auto; min-height:0; width:100%; }
+.film-mode-root{ display:flex; flex-direction:column; }
+
+/* loading window */
+.film-window--loading{align-items:center;justify-content:center;gap:14px;color:var(--film-t2);
+  font-size:14px;flex-direction:column;}
+
+/* ── My Films — 60/40 split: films (own scroll) | feature grid (fills, no scroll) ── */
+.film-lib{flex:1 1 auto;min-height:0;display:flex;overflow:hidden;}
+
+/* left 60% — the user's films */
+.film-lib-left{flex:1 1 60%;min-width:0;display:flex;flex-direction:column;border-right:1px solid var(--film-bd-subtle);}
+.film-lib-head{flex:0 0 auto;display:flex;justify-content:flex-end;padding:18px 22px 14px;}
+.film-lib-pill{display:inline-flex;align-items:center;gap:2px;background:var(--film-canvas);
+  border:1px solid rgba(99,102,241,.4);border-radius:var(--film-r-full);padding:4px;}
+.film-lib-pill-label{font-family:var(--film-body);font-size:12.5px;font-weight:600;color:var(--film-t2);
+  padding:8px 14px;white-space:nowrap;}
+.film-lib-pill-label b{color:var(--film-ivory);font-weight:700;}
+.film-lib-pill-new{display:flex;align-items:center;gap:7px;font-family:var(--film-body);font-size:12.5px;
+  font-weight:700;color:#fff;background:var(--film-accent);border:0;border-radius:var(--film-r-full);
+  padding:8px 15px;cursor:pointer;transition:background .15s;white-space:nowrap;}
+.film-lib-pill-new:hover{background:var(--film-accent-hover);}
+
+/* segmented style/duration pills (New film) */
+.film-lib-newbar{flex:0 0 auto;display:flex;align-items:center;gap:8px;flex-wrap:wrap;justify-content:flex-end;
+  padding:0 22px 14px;}
+.film-seg{display:flex;gap:2px;background:var(--film-canvas);border:1px solid var(--film-bd-subtle);
+  border-radius:var(--film-r-full);padding:3px;}
+.film-seg-btn{font-family:var(--film-body);font-size:12px;font-weight:600;color:var(--film-t2);
+  background:transparent;border:0;padding:6px 13px;border-radius:var(--film-r-full);cursor:pointer;transition:all .16s;}
+.film-seg-btn:hover{color:var(--film-t1);}
+.film-seg-btn.is-on{background:var(--film-accent);color:#fff;}
+
+.film-lib-error{flex:0 0 auto;margin:0 22px 12px;padding:10px 14px;border-radius:var(--film-r-md);
+  background:rgba(239,68,68,.1);border:1px solid rgba(239,68,68,.3);color:#fca5a5;font-size:13px;}
+
+/* Success sibling of .film-lib-error — the delete-series casualty report
+   ("Series deleted — 3 episode(s)…"). Same box, green. */
+.film-lib-note{flex:0 0 auto;margin:0 22px 12px;padding:10px 14px;border-radius:var(--film-r-md);
+  background:rgba(52,211,153,.1);border:1px solid rgba(52,211,153,.3);color:#6ee7b7;font-size:13px;}
+
+.film-lib-body{flex:1 1 auto;min-height:0;overflow-y:auto;padding:2px 22px 22px;}
+
+/* inline player — lives inside the LEFT (films) column only. Grid keeps
+   scrolling below it; never touches the feature grid, never navigates away. */
+.film-lib-player{flex:0 0 auto;margin:0 0 18px;border-radius:var(--film-r-lg);overflow:hidden;
+  border:1px solid rgba(99,102,241,.4);background:#000;position:relative;
+  box-shadow:0 20px 50px -20px rgba(99,102,241,.35);}
+.film-lib-player.is-half{aspect-ratio:16/9;}
+.film-lib-player.is-full{height:calc(100vh - var(--film-header-h, 64px) - 160px);}
+.film-lib-player video{display:block;width:100%;height:100%;object-fit:contain;background:#000;}
+.film-lib-player-bar{position:absolute;top:0;left:0;right:0;z-index:2;display:flex;align-items:center;
+  justify-content:space-between;padding:11px 13px;background:linear-gradient(180deg,rgba(6,10,18,.85),transparent);}
+.film-lib-player-title{font-family:var(--film-display);font-weight:700;font-size:13px;color:var(--film-t1);
+  white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:52%;}
+.film-lib-player-actions{display:flex;align-items:center;gap:6px;}
+.film-lib-player-edit{display:flex;align-items:center;gap:6px;font-family:var(--film-body);font-size:11.5px;
+  font-weight:700;color:#fff;background:var(--film-accent);border:0;border-radius:var(--film-r-sm);
+  padding:6px 11px;cursor:pointer;transition:background .15s;}
+.film-lib-player-edit:hover{background:var(--film-accent-hover);}
+.film-lib-player-btn{width:28px;height:28px;border-radius:7px;background:rgba(255,255,255,.1);
+  border:1px solid rgba(255,255,255,.2);color:#fff;cursor:pointer;display:grid;place-items:center;
+  transition:background .15s;}
+.film-lib-player-btn:hover{background:rgba(129,140,248,.35);}
+.film-lib-player-btn.is-on{background:var(--film-accent);border-color:var(--film-accent);}
+
+.film-lib-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:16px;align-content:start;}
+.film-lib-card{position:relative;background:var(--film-surface);border:1px solid var(--film-bd-subtle);
+  border-radius:var(--film-r-md);overflow:hidden;cursor:pointer;isolation:isolate;
+  transition:border-color .2s,box-shadow .2s,transform .2s;}
+.film-lib-card:hover{border-color:rgba(99,102,241,.55);box-shadow:0 14px 30px -14px rgba(99,102,241,.4);
+  transform:translateY(-3px);}
+.film-lib-card:active{transform:translateY(-1px);}
+/* indigo ripple — injected on pointerdown, expands from the pointer and fades */
+.film-lib-ripple{position:absolute;border-radius:50%;background:rgba(129,140,248,.38);
+  transform:scale(0);pointer-events:none;z-index:5;animation:film-ripple .6s ease-out forwards;}
+@keyframes film-ripple{to{transform:scale(1);opacity:0;}}
+
+.film-lib-thumb{aspect-ratio:16/9;position:relative;display:grid;place-items:center;color:var(--film-t3);
+  background:var(--film-canvas);background-size:cover;background-position:center;overflow:hidden;
+  transition:transform .35s ease;}
+.film-lib-card:hover .film-lib-thumb{transform:scale(1.04);}
+.film-lib-thumb.is-ready{background-color:#0d1424;}
+.film-lib-thumb-mark{color:var(--film-t3);z-index:1;}
+.film-lib-thumb video{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;opacity:.85;}
+.film-lib-play{position:absolute;bottom:9px;right:9px;z-index:2;width:30px;height:30px;border-radius:50%;
+  background:rgba(255,255,255,.16);border:1px solid rgba(255,255,255,.35);display:grid;place-items:center;color:#fff;}
+.film-lib-status{position:absolute;top:8px;left:8px;z-index:1;font-size:9px;font-weight:700;letter-spacing:.5px;
+  text-transform:uppercase;padding:3px 8px;border-radius:var(--film-r-full);backdrop-filter:blur(6px);}
+.film-lib-status--draft{background:rgba(148,163,184,.2);color:var(--film-t2);}
+.film-lib-status--rendering{background:rgba(99,102,241,.3);color:#fff;}
+.film-lib-status--ready{background:rgba(16,185,129,.24);color:#a7f3d0;}
+.film-lib-status--failed{background:rgba(239,68,68,.24);color:#fca5a5;}
+.film-lib-meta{padding:11px 13px;}
+.film-lib-title{font-family:var(--film-display);font-weight:700;font-size:13.5px;color:var(--film-t1);
+  white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+.film-lib-sub{font-size:11px;color:var(--film-t3);margin-top:3px;text-transform:capitalize;}
+.film-lib-del{position:absolute;top:8px;right:8px;z-index:2;width:28px;height:28px;border-radius:var(--film-r-sm);
+  background:rgba(10,15,26,.6);border:1px solid var(--film-bd-subtle);color:var(--film-t3);cursor:pointer;
+  display:grid;place-items:center;opacity:0;transition:all .16s;backdrop-filter:blur(4px);}
+.film-lib-card:hover .film-lib-del{opacity:1;}
+.film-lib-del:hover{color:var(--film-error);border-color:var(--film-error);}
+
+.film-lib-empty{flex:1 1 auto;display:flex;flex-direction:column;align-items:center;justify-content:center;
+  text-align:center;gap:12px;color:var(--film-t3);padding:40px;}
+.film-lib-empty h3{font-family:var(--film-display);font-weight:700;font-size:17px;color:var(--film-t2);}
+.film-lib-empty p{font-size:13px;max-width:300px;line-height:1.5;}
+
+/* right 40% — designed intro cards + placeholders, 2x3, fills exactly, no scroll */
+.film-lib-right{flex:1 1 40%;min-width:0;display:flex;flex-direction:column;padding:20px 20px 20px 18px;}
+.film-feat-grid{flex:1 1 auto;min-height:0;display:grid;grid-template-columns:1fr 1fr;
+  grid-template-rows:repeat(3,1fr);gap:14px;}
+.film-feat-card{border-radius:var(--film-r-lg);position:relative;overflow:hidden;
+  transition:transform .2s,border-color .2s,box-shadow .2s;}
+.film-feat-card:hover{transform:translateY(-3px);}
+.film-feat-photo{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;
+  transition:transform .35s ease;}
+.film-feat-card:hover .film-feat-photo{transform:scale(1.045);}
+.film-feat-copy{position:relative;z-index:1;height:100%;padding:18px 20px;display:flex;
+  flex-direction:column;justify-content:flex-end;gap:6px;}
+
+.film-feat-card--hero{background:radial-gradient(120% 140% at 15% 15%, rgba(99,102,241,.32), transparent 60%),
+  linear-gradient(135deg,var(--film-surface),var(--film-interactive));border:1px solid rgba(99,102,241,.4);}
+.film-feat-card--hero:hover{border-color:rgba(99,102,241,.7);box-shadow:0 16px 34px -16px rgba(99,102,241,.45);}
+.film-feat-card--hero .film-feat-copy{justify-content:center;}
+.film-feat-card--hero h3{font-family:var(--film-display);font-weight:800;font-size:17px;line-height:1.25;
+  margin:0;color:var(--film-t1);}
+.film-feat-card--hero h3 i{color:var(--film-ivory);font-style:italic;}
+.film-feat-card--hero p{font-size:12px;color:var(--film-t2);line-height:1.5;margin:2px 0 0;max-width:92%;}
+.film-feat-card--hero p i{color:var(--film-accent-hover);font-style:italic;}
+
+.film-feat-card--list{background:linear-gradient(135deg,#12182a,#171f36);border:1px solid var(--film-bd-med);}
+.film-feat-card--list:hover{border-color:rgba(99,102,241,.5);box-shadow:0 16px 34px -16px rgba(99,102,241,.35);}
+.film-feat-card--list .film-feat-copy{justify-content:center;}
+.film-feat-card--list h3{font-family:var(--film-display);font-weight:800;font-size:15px;margin:0 0 3px;
+  color:var(--film-ivory);}
+.film-feat-card--list h3 i{color:var(--film-accent-hover);font-style:italic;}
+.film-feat-card--list p{font-size:12px;color:var(--film-t2);line-height:1.5;margin:2px 0 0;max-width:92%;}
+.film-feat-card--list p i{color:var(--film-accent-hover);font-style:italic;}
+.film-feat-steps{list-style:none;margin:6px 0 0;padding:0;display:flex;flex-direction:column;gap:6px;}
+.film-feat-steps li{display:flex;align-items:center;gap:9px;font-size:12px;color:var(--film-t2);}
+.film-feat-step-check{flex:0 0 auto;width:16px;height:16px;border-radius:50%;background:var(--film-accent);
+  color:#fff;display:grid;place-items:center;box-shadow:0 0 0 1px rgba(99,102,241,.4);}
+
+.film-feat-card--ph{background:var(--film-surface);border:1px dashed var(--film-bd-med);}
+.film-feat-card--ph:hover{border-color:rgba(99,102,241,.45);}
+
+@media (max-width:900px){
+  .film-lib{flex-direction:column;overflow-y:auto;}
+  .film-lib-left{border-right:0;border-bottom:1px solid var(--film-bd-subtle);}
+  .film-lib-right{padding-top:8px;}
+  .film-feat-grid{min-height:480px;}
+}
+
+/* ═══════════════════════════════════════════════════════════════════════════
+   INLINE BEAT VIDEO + FINAL PLAYER
+   The clip must fill the 16:9 thumb (absolute + object-fit), NOT render at its
+   native size — otherwise the card grows to the video's height and the panel
+   doubles. All thumb overlays sit above the video.
+   ═══════════════════════════════════════════════════════════════════════════ */
+.film-thumb{ overflow:hidden; }
+.film-thumb-vid{ position:absolute; inset:0; width:100%; height:100%; object-fit:cover;
+  background:#0d1424; z-index:0; }
+.film-thumb .film-n,
+.film-thumb .film-chip,
+.film-thumb .film-dur,
+.film-thumb .film-play,
+.film-thumb .film-spin{ position:relative; z-index:1; }
+.film-thumb .film-n{ position:absolute; z-index:2; }
+.film-thumb .film-dur,
+.film-thumb .film-chip{ z-index:2; }
+.film-thumb .film-play{ cursor:pointer; border:1px solid var(--film-bd-strong);
+  background:rgba(0,0,0,.35); transition:background .16s, transform .16s; }
+.film-thumb .film-play:hover{ background:rgba(99,102,241,.5); transform:scale(1.06); }
+/* controls-on video should sit above the play button once playing */
+.film-thumb-vid[controls]{ z-index:3; }
+
+.film-head-actions{ display:flex; align-items:center; gap:8px; }
+
+/* final-film overlay player (plays inside the workspace, not a new tab) */
+.film-player-overlay{ position:absolute; inset:0; z-index:40; display:grid; place-items:center;
+  background:rgba(6,10,18,.78); backdrop-filter:blur(6px); padding:24px; }
+.film-panel--stage{ position:relative; }   /* overlay is scoped to the stage panel */
+.film-player-box{ position:relative; width:min(880px,92%); border-radius:var(--film-r-lg);
+  overflow:hidden; box-shadow:var(--film-glow-sh),0 30px 80px -20px rgba(0,0,0,.9);
+  border:1px solid var(--film-ring); background:#000; }
+.film-player-vid{ width:100%; display:block; aspect-ratio:16/9; background:#000; }
+.film-player-close{ position:absolute; top:8px; right:10px; z-index:2; width:34px; height:34px;
+  border-radius:50%; background:rgba(0,0,0,.55); border:1px solid var(--film-bd-strong);
+  color:#fff; font-size:20px; line-height:1; cursor:pointer; }
+.film-player-close:hover{ background:rgba(99,102,241,.6); }
+
+/* edit-in-progress overlay (cut / duplicate / regenerate feedback) */
+.film-edit-overlay{position:absolute;inset:0;z-index:35;display:grid;place-items:center;
+  background:rgba(6,10,18,.55);backdrop-filter:blur(3px);}
+.film-edit-card{display:flex;flex-direction:column;align-items:center;gap:10px;
+  background:var(--film-surface);border:1px solid var(--film-ring);border-radius:var(--film-r-lg);
+  padding:22px 30px;box-shadow:var(--film-glow-sh);color:var(--film-t1);font-size:14px;font-weight:600;}
+.film-edit-card small{color:var(--film-t3);font-weight:500;font-size:12px;}
+/* ═══ Aspect-aware storyboard cards ═══════════════════════════════════════════
+   The film's frame shape (set once at creation) drives the card proportion so the
+   storyboard preview matches the real output. --film-card-ar is set on .film-grid
+   by Storyboard.jsx from the project's aspect_ratio; defaults to 16/9. */
+.film-grid{--film-card-ar:16 / 9;}
+.film-grid .film-thumb{aspect-ratio:var(--film-card-ar);}
+/* Vertical/square films: 2-up reads better than 3-up cramped tall cards. */
+.film-grid:has(.film-thumb[style]){}          /* no-op guard for :has support */
+
+/* ═══ Sketching-the-cast pill (plan phase, still building) ════════════════════ */
+.film-buildpill-row{grid-column:1 / -1;display:flex;justify-content:center;margin:2px 0 10px;}
+.film-buildpill{display:inline-flex;align-items:center;gap:9px;font-family:var(--film-body);
+  font-weight:500;font-size:12.5px;color:var(--film-success);
+  background:rgba(16,185,129,.12);border:1px solid rgba(16,185,129,.3);
+  border-radius:var(--film-r-full);padding:7px 14px;}
+.film-buildpill-dot{width:7px;height:7px;border-radius:50%;background:var(--film-success);
+  animation:film-pulse 1.6s infinite;}
+@keyframes film-pulse{0%{box-shadow:0 0 0 0 rgba(16,185,129,.5);}
+  70%{box-shadow:0 0 0 7px rgba(16,185,129,0);}100%{box-shadow:0 0 0 0 rgba(16,185,129,0);}}
+
+/* ═══ Meet the cast — the review pause ════════════════════════════════════════ */
+.film-cast-wrap{padding:2px;}
+
+/* photoreal adults-only block card (2026-08-27): a minor tripped the photoreal
+   pathway. Warm, non-punitive — a clear "here's why + two ways forward", not an
+   error dump. Amber (caution) not red (failure), since it's a choice to make. */
+.film-blockcard{max-width:60ch;margin:8px auto;padding:22px 24px;border-radius:var(--film-r-md);
+  border:1px solid rgba(214,158,46,.4);background:rgba(60,44,12,.28);text-align:left;}
+.film-blockcard-badge{display:inline-block;font-size:11px;font-weight:700;letter-spacing:.06em;
+  text-transform:uppercase;color:#f0c674;background:rgba(214,158,46,.16);
+  border:1px solid rgba(214,158,46,.4);border-radius:999px;padding:3px 10px;margin-bottom:12px;}
+.film-blockcard h3{font-family:var(--film-display);font-weight:600;font-size:17px;margin:0 0 8px;color:var(--film-t1);}
+.film-blockcard-msg{margin:0 0 14px;font-size:13.5px;line-height:1.55;color:var(--film-t1);}
+.film-blockcard-who{display:flex;flex-wrap:wrap;gap:6px;margin:0 0 14px;}
+.film-blockcard-chip{font-size:12px;font-weight:600;color:#f0c674;background:rgba(214,158,46,.12);
+  border:1px solid rgba(214,158,46,.32);border-radius:6px;padding:3px 9px;}
+.film-blockcard-hint{margin:0;font-size:12.5px;line-height:1.55;color:var(--film-t2);}
+
+.film-cast-lead{margin:0 2px 16px;}
+.film-cast-lead h3{font-family:var(--film-display);font-weight:600;font-size:16px;margin:0 0 4px;color:var(--film-t1);}
+.film-cast-lead p{margin:0;font-size:13px;color:var(--film-t2);max-width:56ch;line-height:1.5;}
+.film-cast-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:14px;}
+@media (max-width:1080px){.film-cast-grid{grid-template-columns:1fr;}}
+.film-cast-card{display:grid;grid-template-columns:120px 1fr;background:var(--film-surface);
+  border:1px solid var(--film-bd-subtle);border-radius:var(--film-r-md);overflow:hidden;}
+.film-cast-card.is-busy{opacity:.97;}
+.film-cast-portrait{position:relative;aspect-ratio:9/16;background:var(--film-canvas);
+  border-right:1px solid var(--film-bd-subtle);overflow:hidden;}
+.film-cast-img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;}
+.film-cast-img--empty{background:linear-gradient(135deg,var(--film-interactive),var(--film-canvas));}
+.film-cast-badge{position:absolute;left:6px;top:6px;font-size:9.5px;font-weight:600;color:var(--film-info);
+  background:rgba(10,15,26,.8);border:1px solid rgba(59,130,246,.4);border-radius:6px;padding:2px 6px;}
+.film-cast-veil{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;gap:8px;
+  background:rgba(10,15,26,.72);color:var(--film-success);font-size:12px;font-weight:500;}
+.film-cast-body{padding:12px 13px;display:flex;flex-direction:column;min-width:0;}
+.film-cast-name{font-family:var(--film-display);font-weight:600;font-size:14px;color:var(--film-t1);}
+.film-cast-desc{margin-top:9px;background:var(--film-canvas);border:1px solid var(--film-bd-subtle);
+  border-radius:var(--film-r-sm);color:var(--film-t1);font:400 12.5px/1.45 var(--film-body);
+  padding:8px 10px;resize:none;width:100%;min-height:62px;}
+.film-cast-desc:focus{outline:none;border-color:var(--film-accent);box-shadow:0 0 0 3px var(--film-glow);}
+.film-cast-actions{display:flex;gap:7px;margin-top:10px;flex-wrap:wrap;}
+.film-cast-btn{font:500 12px/1 var(--film-body);cursor:pointer;color:var(--film-t1);
+  background:var(--film-peak);border:1px solid var(--film-bd-med);border-radius:var(--film-r-sm);
+  padding:8px 10px;display:inline-flex;align-items:center;gap:7px;transition:.15s;}
+.film-cast-btn:hover{border-color:var(--film-ring);}
+.film-cast-btn:disabled{opacity:.55;cursor:default;}
+.film-cast-btn--up{color:var(--film-info);}
+
+/* ═══ Upload consent modal ════════════════════════════════════════════════════ */
+.film-modal-scrim{position:absolute;inset:0;z-index:20;display:flex;align-items:center;justify-content:center;
+  padding:20px;background:rgba(7,8,11,.72);backdrop-filter:blur(3px);}
+.film-modal{width:min(500px,100%);background:var(--film-surface);border:1px solid var(--film-bd-strong);
+  border-radius:var(--film-r-lg);padding:20px;box-shadow:0 30px 80px -30px #000;}
+.film-modal-k{font-size:11px;letter-spacing:.06em;text-transform:uppercase;color:var(--film-info);}
+.film-modal-h{font-family:var(--film-display);font-weight:600;font-size:19px;margin:7px 0 0;color:var(--film-t1);}
+.film-modal-p{margin:11px 0;font-size:13px;color:var(--film-t2);line-height:1.5;}
+.film-modal-terms{background:var(--film-canvas);border:1px solid var(--film-bd-subtle);border-radius:var(--film-r-sm);
+  padding:12px 13px;font-size:12.5px;color:var(--film-t1);line-height:1.5;}
+.film-modal-check{display:flex;gap:10px;align-items:flex-start;margin:14px 0 4px;font-size:12.5px;color:var(--film-t1);}
+.film-modal-check input{margin-top:2px;width:16px;height:16px;accent-color:var(--film-info);}
+.film-modal-foot{display:flex;gap:9px;justify-content:flex-end;margin-top:16px;}
+
+/* ═══ Editable script panel (edit + save before making the film) ══════════════ */
+.film-script-headbtns{display:inline-flex;gap:6px;align-items:center;}
+.film-script-edit{padding:0;}
+.film-script-textarea{width:100%;min-height:220px;background:var(--film-canvas);
+  border:1px solid var(--film-bd-subtle);border-radius:var(--film-r-sm);color:var(--film-t1);
+  font:400 12.5px/1.5 ui-monospace,'SF Mono',Menlo,monospace;padding:11px 12px;resize:vertical;}
+.film-script-textarea:focus{outline:none;border-color:var(--film-accent);box-shadow:0 0 0 3px var(--film-glow);}
+.film-script-editbar{display:flex;align-items:flex-end;justify-content:space-between;gap:12px;margin-top:9px;}
+.film-script-hint{font-size:11px;color:var(--film-t3);line-height:1.4;max-width:34ch;}
+.film-script-editbtns{display:flex;gap:7px;flex:0 0 auto;}
+
+/* ═══ Script attachment (writers'-room composer) ═════════════════════════════ */
+.film-attach-btn{flex:0 0 auto;width:34px;height:34px;border-radius:8px;
+  border:1px solid var(--film-bd-med);background:var(--film-interactive);color:var(--film-t2);
+  display:grid;place-items:center;cursor:pointer;transition:.15s;align-self:flex-end;}
+.film-attach-btn:hover:not(:disabled){background:var(--film-peak);color:var(--film-t1);border-color:var(--film-ring);}
+.film-attach-btn:disabled{opacity:.5;cursor:default;}
+.film-spin--sm{width:14px;height:14px;border-width:2px;}
+.film-attach-err{font-size:11px;color:var(--film-error);margin-left:6px;}
+
+.film-attach-chip{display:inline-flex;align-items:center;gap:8px;max-width:100%;
+  background:var(--film-interactive);border:1px solid var(--film-bd-med);border-radius:var(--film-r-sm);
+  padding:6px 8px 6px 10px;margin-bottom:8px;font-size:12.5px;color:var(--film-t1);}
+.film-attach-chip-ico{flex:0 0 auto;font-size:13px;}
+.film-attach-chip-name{overflow:hidden;text-overflow:ellipsis;white-space:nowrap;max-width:220px;}
+.film-attach-chip-x{flex:0 0 auto;border:0;background:transparent;color:var(--film-t3);cursor:pointer;
+  font-size:15px;line-height:1;padding:0 2px;}
+.film-attach-chip-x:hover{color:var(--film-t1);}
+.film-attach-notice{font-size:11.5px;color:var(--film-warning);margin-bottom:8px;line-height:1.4;}
+
+/* attachment chip inside a sent message bubble */
+.film-msg-attach{display:inline-flex;align-items:center;gap:7px;margin-bottom:6px;
+  background:rgba(99,102,241,.12);border:1px solid rgba(99,102,241,.3);border-radius:var(--film-r-sm);
+  padding:5px 9px;font-size:12px;color:var(--film-accent-hover);text-decoration:none;max-width:100%;}
+.film-msg-attach:hover{border-color:var(--film-ring);}
+.film-msg-attach .film-attach-chip-name{max-width:200px;}
+
+/* ═══ Beat editor — separate Shot (visual) + Voiceover fields ═════════════════ */
+.film-beatedit-label{display:block;font:600 11px/1.3 var(--film-body);color:var(--film-t2);
+  text-transform:uppercase;letter-spacing:.04em;margin:10px 2px 5px;}
+.film-beatedit-hint{font-weight:400;text-transform:none;letter-spacing:0;color:var(--film-t3);}
+.film-beatedit-field{width:100%;background:var(--film-canvas);border:1px solid var(--film-bd-subtle);
+  border-radius:var(--film-r-sm);color:var(--film-t1);font:400 13px/1.5 var(--film-body);
+  padding:9px 11px;resize:vertical;min-height:70px;}
+.film-beatedit-field--vo{min-height:52px;}
+.film-beatedit-field:focus{outline:none;border-color:var(--film-accent);box-shadow:0 0 0 3px var(--film-glow);}
+
+/* ═══ Beat editor — cast chips + one active line box ═════════════════════════ */
+.film-cast-chiprow{display:flex;flex-wrap:wrap;gap:7px;margin:2px 0 4px;}
+.film-cast-chip{display:inline-flex;align-items:center;gap:6px;font:500 12.5px/1 var(--film-body);
+  color:var(--film-t1);background:var(--film-interactive);border:1px solid var(--film-bd-med);
+  border-radius:var(--film-r-full);padding:7px 12px;cursor:pointer;transition:.15s;}
+.film-cast-chip:hover{border-color:var(--film-ring);}
+.film-cast-chip.is-active{background:var(--film-accent);border-color:var(--film-accent);color:#fff;
+  box-shadow:0 0 0 3px var(--film-glow);}
+.film-cast-chip-dot{width:7px;height:7px;border-radius:50%;background:var(--film-success);flex:0 0 auto;}
+.film-cast-chip.is-active .film-cast-chip-dot{background:#fff;}
+.film-line-box{margin-top:9px;background:var(--film-canvas);border:1px solid var(--film-bd-subtle);
+  border-radius:var(--film-r-sm);padding:10px 11px;}
+.film-line-who{font:600 11.5px/1 var(--film-body);color:var(--film-accent-hover);
+  text-transform:uppercase;letter-spacing:.04em;margin-bottom:7px;}
+.film-line-box .film-beatedit-field--vo{margin:0;border:1px solid var(--film-bd-subtle);}
+
+/* ═══ Writers'-room markdown — tables, quotes, code, lists ═══════════════════ */
+.film-md-list{margin:6px 0 6px 2px;padding-left:18px;}
+.film-md-list li{margin:3px 0;line-height:1.5;}
+.film-md-hr{border:0;border-top:1px solid var(--film-bd-subtle);margin:12px 0;}
+.film-md-quote{margin:8px 0;padding:6px 12px;border-left:3px solid var(--film-accent);
+  background:var(--film-interactive);color:var(--film-t2);border-radius:0 var(--film-r-sm) var(--film-r-sm) 0;}
+.film-md-code{margin:8px 0;padding:10px 12px;background:var(--film-canvas);
+  border:1px solid var(--film-bd-subtle);border-radius:var(--film-r-sm);overflow-x:auto;
+  font:12.5px/1.5 var(--film-mono,monospace);color:var(--film-t1);white-space:pre;}
+.film-md-tablewrap{margin:10px 0;overflow-x:auto;border:1px solid var(--film-bd-subtle);
+  border-radius:var(--film-r-sm);}
+.film-md-table{border-collapse:collapse;width:100%;font-size:13px;}
+.film-md-table th,.film-md-table td{padding:7px 11px;border-bottom:1px solid var(--film-bd-subtle);
+  border-right:1px solid var(--film-bd-subtle);}
+.film-md-table th:last-child,.film-md-table td:last-child{border-right:0;}
+.film-md-table thead th{background:var(--film-interactive);color:var(--film-t1);font-weight:600;
+  position:sticky;top:0;}
+.film-md-table tbody tr:last-child td{border-bottom:0;}
+.film-md-table tbody tr:hover{background:var(--film-interactive);}
+/* ── Cast chip: split main + remove (×) ────────────────────────────────────── */
+.film-cast-chip{display:inline-flex;align-items:stretch;padding:0;overflow:hidden;}
+.film-cast-chip-main{display:inline-flex;align-items:center;gap:6px;background:none;border:0;
+  color:inherit;font:inherit;cursor:pointer;padding:7px 10px;}
+.film-cast-chip-x{background:none;border:0;border-left:1px solid var(--film-bd-med);
+  color:var(--film-t3);cursor:pointer;padding:0 9px;font-size:15px;line-height:1;transition:.15s;}
+.film-cast-chip-x:hover{background:var(--film-danger,#dc2626);color:#fff;}
+/* ─────────────────────────────────────────────────────────────────────────────
+   APPEND to the END of src/components/Film/FilmWorkspace.css
+   #4 — Writers' room user messages: brighter + italic handwritten style so the
+   text reads clearly against the indigo bubble. Placed last so it wins over the
+   base .film-msg / .film-msg--me rules. (Caveat is already loaded for the
+   onboarding wordmark; it falls back to a system cursive if not.)
+   ───────────────────────────────────────────────────────────────────────────── */
+.film-msg--me{
+  color:#ffffff;
+  font-family:'Caveat','Segoe Script',cursive;
+  font-style:italic;
+  font-size:19px;
+  line-height:1.35;
+  font-weight:600;
+  letter-spacing:.2px;
+}
+/* keep the attachment chip in the normal UI font (not cursive) */
+.film-msg--me .film-msg-attach{
+  font-family:'Inter',system-ui,sans-serif;
+  font-style:normal;
+  font-size:12px;
+  font-weight:600;
+}
+
+/* ── New-Film picker cleared of the fixed sidebar breadcrumb ──
+   The style / duration / frame picker (.film-lib-newbar) rendered at the very
+   top of the library and its first row sat UNDER the universal sidebar
+   breadcrumb, hiding a choice. Drop it below the breadcrumb. Tune the value to
+   your breadcrumb's height if 56px isn't exact. */
+.film-lib-newbar{ margin-top:56px; }
+
+/* ── Writers'-room header subtitle can't break the header ──
+   The subtitle (.film-hsub) carries transient status/errors (e.g. the
+   regenerate-needs-re-render message). It ALREADY has nowrap+ellipsis, but as a
+   flex child it grew to fit its text (default min-width:auto) and stretched the
+   header instead of truncating. min-width:0 + flex:0 1 auto lets it shrink so
+   the existing ellipsis finally engages; the title (.film-htab) stays fixed.
+   Belt-and-braces with the source cap in FilmWorkspaceContainer. */
+.film-phead{ min-width:0; }
+.film-htab{ flex:0 0 auto; }
+.film-hsub{ flex:0 1 auto; min-width:0; }
+/* ══════════════════════════════════════════════════════════════════════════
+   FILM VIDEO WALL — ambient reel behind the My Films library (left column).
+   Paste into FilmWorkspace.css. Two parts:
+
+   PART A — make .film-lib-left a positioning host and lift its children.
+   PART B — the video wall layer + scrim.
+   ══════════════════════════════════════════════════════════════════════════ */
+
+/* ── PART A ──────────────────────────────────────────────────────────────
+   .film-lib-left is currently: flex:1 1 60%; min-width:0; display:flex;
+   flex-direction:column; border-right:… — add position:relative + overflow
+   clip so the absolute wall anchors here and can't spill past the column. */
+.film-lib-left {
+  position: relative;   /* anchor for .film-video-wall */
+  overflow: hidden;     /* clip the wall to the column */
+}
+/* Lift the column's real content above the wall. These are the direct
+   children rendered inside .film-lib-left (newbar, error, empty, and the
+   FilmLibrary root). A blanket child lift keeps us from editing each one. */
+.film-lib-left > *:not(.film-video-wall) {
+  position: relative;
+  z-index: 1;
+}
+
+/* ── PART B ──────────────────────────────────────────────────────────────
+   The wall itself: fills the column, sits behind content, never clickable. */
+.film-video-wall {
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+  pointer-events: none;
+  overflow: hidden;
+}
+.film-video-wall video,
+.film-video-wall__still {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;              /* wide column → cover crops cleanly */
+  background-size: cover;
+  background-position: center;
+  /* Low opacity so it reads as ambient texture, not content. The encode is
+     already darkened; this is the final tame. Tune 0.18 up/down to taste. */
+  opacity: 0.18;
+}
+/* Dark scrim over the video so glass cards + white text stay legible.
+   Slightly heavier toward the top where the New-Film bar/labels sit. */
+.film-video-wall__scrim {
+  position: absolute;
+  inset: 0;
+  background:
+    linear-gradient(180deg, rgba(2,6,23,0.55) 0%, rgba(2,6,23,0.30) 40%, rgba(2,6,23,0.55) 100%);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  /* Component already renders a static frame; nothing extra needed here. */
+}
+/* ── duration bar (2026-08-23: the choice that never existed — job 255
+   rendered at the 60s workspace default and the condenser cut the
+   connective scenes) ── */
+.film-duration-bar {
+  display: flex; align-items: center; gap: 10px;
+  padding: 8px 16px; font-size: 13px;
+  background: rgba(255,255,255,0.03);
+  border-bottom: 1px solid rgba(255,255,255,0.07);
+}
+.film-duration-bar label { opacity: 0.7; }
+.film-duration-bar select {
+  background: rgba(255,255,255,0.06); color: inherit;
+  border: 1px solid rgba(255,255,255,0.15); border-radius: 6px;
+  padding: 4px 8px; font-size: 13px;
+}
+.film-duration-cost { margin-left: auto; opacity: 0.6; }
+
+/* ── Editor's Room (2026-08-25): tab dot + the call-sheet cards ─────────── */
+.film-htab-dot{display:inline-block;width:6px;height:6px;border-radius:50%;
+  background:var(--film-success,#10B981);box-shadow:0 0 6px var(--film-success,#10B981);
+  margin-right:5px;vertical-align:1px;}
+.fw-sheet-stack{display:flex;flex-direction:column;gap:8px;margin:10px 0 4px;}
+.fw-sheet{position:relative;background:var(--film-canvas,#0A0F1A);
+  border:1px solid var(--film-bd-med,rgba(148,163,184,.2));border-radius:var(--film-r-md,12px);
+  overflow:hidden;}
+.fw-sheet::before{content:"";position:absolute;inset:0 auto 0 0;width:5px;
+  background:repeating-linear-gradient(-45deg,var(--film-accent,#6366F1) 0 7px,
+  var(--film-canvas,#0A0F1A) 7px 14px);}
+.fw-sheet-head{display:flex;align-items:baseline;gap:8px;padding:8px 12px 6px 17px;
+  border-bottom:1px dashed var(--film-bd-med,rgba(148,163,184,.2));}
+.fw-sheet-op{font-family:var(--film-display,'Syne',sans-serif);font-weight:800;font-size:11px;
+  letter-spacing:.1em;color:var(--film-ivory,#F5F5DC);}
+.fw-sheet-beat{font-size:11px;color:var(--film-accent-hover,#818CF8);letter-spacing:.04em;}
+.fw-sheet-body{padding:7px 12px 9px 17px;display:grid;grid-template-columns:58px 1fr;gap:4px 10px;}
+.fw-f{font-family:var(--film-display,'Syne',sans-serif);font-size:9px;letter-spacing:.1em;
+  color:var(--film-t3,#64748B);padding-top:2px;}
+.fw-v{font-size:12.5px;color:var(--film-t1,#F1F5F9);line-height:1.4;}
+.fw-v-mono{font-family:var(--film-mono,monospace);font-size:11.5px;color:var(--film-t2,#94A3B8);
+  background:var(--film-interactive,#1C2640);border-radius:6px;padding:5px 8px;
+  border:1px solid var(--film-bd-subtle,rgba(148,163,184,.1));}
+.fw-chips{display:flex;flex-wrap:wrap;gap:4px;}
+.fw-chip{font-size:11px;padding:2px 8px;border-radius:var(--film-r-full,9999px);
+  background:rgba(99,102,241,.14);color:var(--film-accent-hover,#818CF8);
+  border:1px solid rgba(99,102,241,.3);}
+.fw-sheet-cta{padding:0 12px 10px 17px;}
+.fw-sheet-apply{font-size:12px;font-weight:600;padding:6px 12px;border-radius:var(--film-r-sm,8px);
+  border:0;background:linear-gradient(135deg,#6366F1,#818CF8);color:#fff;cursor:pointer;}
+.fw-sheet-apply:hover{filter:brightness(1.08);}
+.fw-sheet.is-applied{opacity:.82;}
+.fw-sheet-applied{padding:0 12px 10px 17px;color:var(--film-success,#10B981);font-size:12px;}
+.fw-sheet-dismiss{align-self:flex-start;background:transparent;color:var(--film-t3,#64748B);
+  border:1px solid var(--film-bd-subtle,rgba(148,163,184,.1));border-radius:var(--film-r-full,9999px);
+  font-size:11px;padding:4px 11px;cursor:pointer;}
+.fw-sheet-dismiss:hover{color:var(--film-t1,#F1F5F9);}
+
+/* ── FILM STATE strip (Editor's Room layer 1, 2026-08-25) ──────────────── */
+.fw-digest{flex:0 0 auto;margin:8px 12px 0;border:1px solid var(--film-bd-subtle,rgba(148,163,184,.1));
+  border-radius:var(--film-r-sm,8px);background:rgba(99,102,241,.05);overflow:hidden;}
+.fw-digest-bar{width:100%;display:flex;align-items:center;gap:8px;border:0;background:transparent;
+  padding:6px 10px;color:var(--film-t2,#94A3B8);font-size:11px;text-align:left;cursor:pointer;}
+.fw-digest-bar b{font-family:var(--film-display,'Syne',sans-serif);font-size:10px;
+  letter-spacing:.08em;color:var(--film-t2,#94A3B8);}
+.fw-digest-bar span{overflow:hidden;text-overflow:ellipsis;white-space:nowrap;min-width:0;}
+.fw-digest-chev{margin-left:auto;flex:0 0 auto;transition:transform .18s;color:var(--film-t3,#64748B);}
+.fw-digest.is-open .fw-digest-chev{transform:rotate(180deg);}
+.fw-digest-body{padding:2px 10px 8px;}
+.fw-digest-row{display:flex;flex-wrap:wrap;gap:4px;}
+.fw-bpill{font-family:var(--film-mono,monospace);font-size:10px;color:var(--film-t2,#94A3B8);
+  background:var(--film-interactive,#1C2640);border:1px solid var(--film-bd-subtle,rgba(148,163,184,.1));
+  border-radius:5px;padding:2px 6px;}
+.fw-bpill b{color:var(--film-accent-hover,#818CF8);font-weight:500;}
+.fw-digest-cast{margin-top:5px;font-size:10.5px;color:var(--film-t3,#64748B);}
+.fw-digest-cast em{color:var(--film-t2,#94A3B8);font-style:normal;}
+
+/* Editor's welcome empty-state (2026-08-25) */
+.fw-welcome{background:var(--film-interactive,#1C2640);color:var(--film-t1,#F1F5F9);
+  border-radius:var(--film-r-md,12px);border-bottom-left-radius:4px;padding:10px 13px;
+  font-size:13.5px;line-height:1.5;max-width:88%;}
+/* ─────────────────────────────────────────────────────────────────────────────
+   Writers'/Editor's Room — "Manuscript" reading pass.
+   PRESENTATION ONLY. No JSX or handlers touched: the script panel's
+   copy / edit / collapse controls, the Editor's Room, and all buttons are
+   unchanged. No left accent bars added (the script keeps its existing all-round
+   border; the Storyboard/left panel is untouched). Selectors are prefixed with
+   .film-workspace so they win by specificity regardless of source order.
+   Fonts (Newsreader + Courier Prime) come from the @import at the top of file.
+   ───────────────────────────────────────────────────────────────────────────── */
+
+/* Director / assistant prose → reading serif, comfortable size + measure. */
+.film-workspace .film-flow{
+  font-family:'Newsreader',Georgia,serif;
+  font-size:15px; line-height:1.72; color:#e8edf5; max-width:64ch;
+}
+.film-workspace .film-flow p{ font-size:15px; line-height:1.72; margin:0 0 12px; }
+.film-workspace .film-flow p:last-child{ margin-bottom:0; }
+.film-workspace .film-flow li{ font-size:15px; line-height:1.7; }
+.film-workspace .film-flow h1{ font-size:20px; }
+.film-workspace .film-flow h2{ font-size:17px; }
+.film-workspace .film-flow h3{ font-size:13px; }
+.film-workspace .film-flow code{ font-size:12.5px; }
+.film-workspace .film-flow strong,
+.film-workspace .film-flow b{ color:#fff; font-weight:600; }
+
+/* Screenplay text → Courier Prime (industry standard). Panel chrome and the
+   copy / edit / collapse controls are left exactly as they are. */
+.film-workspace .film-script-body,
+.film-workspace .film-script-textarea{
+  font-family:'Courier Prime',ui-monospace,'SF Mono',Menlo,monospace;
+  font-size:12.5px; line-height:1.6;
+}
+
+/* User message → a rounded, indigo-OUTLINED bubble. No accent highlight strip,
+   no squared tail corner. Keeps the existing fill + handwritten face. */
+.film-workspace .film-msg--me{
+  border:1px solid rgba(99,102,241,.65);
+  border-radius:var(--film-r-md);
+}
+
+/* Fix (fonts weren't taking): markdown renders <p>/<li>/<blockquote>, and a
+   global element rule for those beats the family inherited from .film-flow.
+   Set the serif on the text elements themselves so it actually wins. Headings
+   keep their Syne display face on purpose. */
+.film-workspace .film-flow p,
+.film-workspace .film-flow li,
+.film-workspace .film-flow blockquote,
+.film-workspace .film-stream-text{
+  font-family:'Newsreader',Georgia,serif;
+}
+
+/* ─────────────────────────────────────────────────────────────────────────────
+   Reading column: in the EXPANDED room (Storyboard collapsed) the chat panel
+   goes full-window and messages / script / composer stretched edge-to-edge.
+   Cap everything to one centred column so it reads like a document instead of a
+   2000px-wide line — mirrors a normal chat's centred measure. Width-capped, so
+   the docked/narrow state is unchanged (panel already sits under the cap).
+   Presentation only; no layout/collapse logic touched.
+   ───────────────────────────────────────────────────────────────────────────── */
+.film-workspace{ --fw-col:46rem; }
+
+/* messages, script draft and the user bubble → one centred column */
+.film-workspace .film-chatscroll > *{
+  width:100%; max-width:var(--fw-col); align-self:center;
+}
+/* prose fills the column now (supersedes the earlier 64ch cap) so its left edge
+   lines up with the script panel and the user bubble */
+.film-workspace .film-flow{ max-width:100%; }
+
+/* header (tabs + subtitle) and the FILM STATE digest align to the same column */
+.film-workspace .film-panel--chat .film-phead{
+  max-width:var(--fw-col); margin-left:auto; margin-right:auto;
+}
+.film-workspace .fw-digest{
+  max-width:var(--fw-col); margin-left:auto; margin-right:auto;
+}
+
+/* beat editor + "Script ready" bar share the column */
+.film-workspace .film-beatedit{ max-width:var(--fw-col); margin:0 auto 4px; }
+.film-workspace .film-scriptbar{ max-width:var(--fw-col); margin-left:auto; margin-right:auto; }
+.film-workspace .film-scriptbar-pill{ align-self:center; }
+
+/* the input area — capped + centred so it stops spanning the whole window */
+.film-workspace .film-composer .film-inputwrap{
+  max-width:var(--fw-col); margin-left:auto; margin-right:auto;
+}
+.film-workspace .film-composer .film-attach-notice,
+.film-workspace .film-disclaimer{
+  max-width:var(--fw-col); margin-left:auto; margin-right:auto;
+}
+
+/* ─────────────────────────────────────────────────────────────────────────────
+   HARDEN the director/assistant reading serif (fixes the font "snap" on commit).
+   During streaming the text sits in one .film-stream-text span (already serif);
+   on commit MarkdownBlocks re-renders it as <p><span>…</span></p>, and a global
+   element rule can out-reach the family inherited from .film-flow. Lock the serif
+   on every TEXT descendant of .film-flow so both paths render identically.
+
+   Scope + exclusions are deliberate:
+   • Only .film-flow (director prose) — the user bubble (Caveat) is untouched.
+   • Headings are NOT listed → they keep Syne (var(--film-display)).
+   • <code>/<pre> are NOT listed → inline code + the Courier Prime script panel
+     keep their monospace (the script panel isn't inside .film-flow anyway).
+   • Local !important only: guarantees the prose font without touching the global
+     stylesheet, which would ripple to other pages. Font-family only — sizes,
+     colours and line-heights still come from the rules above. */
+.film-workspace .film-flow,
+.film-workspace .film-flow p,
+.film-workspace .film-flow li,
+.film-workspace .film-flow blockquote,
+.film-workspace .film-flow span,
+.film-workspace .film-flow b,
+.film-workspace .film-flow strong,
+.film-workspace .film-flow i,
+.film-workspace .film-flow em,
+.film-workspace .film-flow a,
+.film-workspace .film-stream-text{
+  font-family:'Newsreader',Georgia,serif !important;
+}
+
+/* ─────────────────────────────────────────────────────────────────────────────
+   "Building your cast" skeletons (castPhase === 'cast_rendering'). Reuse the real
+   .film-cast-card / .film-cast-grid / .film-cast-portrait so a finished portrait
+   drops into the identical slot; these rules only dress the not-yet-drawn state.
+   Presentation only. (Shimmers are disabled by the global reduced-motion rule,
+   leaving a legible static placeholder.)
+   ───────────────────────────────────────────────────────────────────────────── */
+.film-cast-card--skel{ pointer-events:none; }
+.film-cast-card--skel .film-cast-portrait{ display:grid; place-items:center; overflow:hidden; }
+.film-cast-skel-sil{ width:42%; height:42%; color:var(--film-tm); opacity:.55; }
+.film-cast-skel-shine{
+  position:absolute; inset:0;
+  background:linear-gradient(100deg,transparent 30%,rgba(129,140,248,.16) 50%,transparent 70%);
+  transform:translateX(-100%); animation:film-castshine 1.8s ease-in-out infinite;
+}
+.film-cast-card--skel:nth-child(2) .film-cast-skel-shine{ animation-delay:.25s; }
+.film-cast-card--skel:nth-child(3) .film-cast-skel-shine{ animation-delay:.5s; }
+@keyframes film-castshine{ 0%{transform:translateX(-100%)} 60%,100%{transform:translateX(100%)} }
+
+.film-cast-card--skel .film-cast-body{ justify-content:center; gap:0; }
+.film-cast-skel-line{
+  display:block; height:9px; width:80%; border-radius:5px; margin-top:9px;
+  background:linear-gradient(90deg,var(--film-interactive) 0%,var(--film-peak) 50%,var(--film-interactive) 100%);
+  background-size:200% 100%; animation:film-skelpulse 1.6s linear infinite;
+}
+.film-cast-skel-line--title{ height:13px; width:58%; margin-top:0; margin-bottom:2px; }
+.film-cast-skel-line--short{ width:46%; }
+@keyframes film-skelpulse{ 0%{background-position:200% 0} 100%{background-position:-200% 0} }
+
+/* ─────────────────────────────────────────────────────────────────────────────
+   User messages → our reading serif, kept ITALIC (was Caveat). Same family as
+   the director prose so the two read as a pair; italic keeps the user's voice
+   distinct. Sized to sit alongside the 15px director prose. Text descendants are
+   listed so the markdown <p><span> can't fall back; the "You" label and the
+   attachment chip stay in the UI font. Local !important, scoped to .film-msg--me.
+   ───────────────────────────────────────────────────────────────────────────── */
+.film-workspace .film-msg--me{
+  font-family:var(--film-body,'Inter',sans-serif);   /* container → "You"/chip inherit UI font */
+  font-style:normal;
+  font-size:15.5px; line-height:1.6; font-weight:500; letter-spacing:normal;
+}
+.film-workspace .film-msg--me p,
+.film-workspace .film-msg--me li,
+.film-workspace .film-msg--me blockquote,
+.film-workspace .film-msg--me span,
+.film-workspace .film-msg--me b,
+.film-workspace .film-msg--me strong,
+.film-workspace .film-msg--me i,
+.film-workspace .film-msg--me em{
+  font-family:'Newsreader',Georgia,serif !important;
+  font-style:italic !important;
+}
+.film-workspace .film-msg--me .film-who,
+.film-workspace .film-msg--me .film-msg-attach,
+.film-workspace .film-msg--me .film-msg-attach *{
+  font-family:var(--film-body,'Inter',sans-serif) !important;
+  font-style:normal !important;
+}
+
+/* ─────────────────────────────────────────────────────────────────────────────
+   Editor's Room call sheet on our type system. NOTE/value text → reading serif;
+   the edited VISUAL line → Courier Prime (it's screenplay). Field labels + chips
+   stay in the UI font. The editor's messages already use the serif via .film-flow
+   / .film-msg--me above, so this just brings the proposal cards in line.
+   ───────────────────────────────────────────────────────────────────────────── */
+.film-workspace .fw-v{ font-family:'Newsreader',Georgia,serif; line-height:1.5; }
+.film-workspace .fw-v.fw-v-mono{ font-family:'Courier Prime',ui-monospace,'SF Mono',Menlo,monospace; }
+.film-workspace .fw-chip{ font-family:var(--film-body,'Inter',sans-serif); }

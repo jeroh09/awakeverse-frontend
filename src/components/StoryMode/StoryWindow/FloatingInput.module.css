@@ -1,0 +1,301 @@
+/* src/components/StoryMode/StoryWindow/FloatingInput.module.css */
+/* REFACTORED: Modern floating input matching ScenarioChatWindow design */
+
+@import '../styles/story-variables.css';
+
+/* ============================================================================
+   FLOATING INPUT CONTAINER (Transparent wrapper with gradient)
+   ============================================================================ */
+.floatingInputContainer {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  right: 320px; /* Info panel width */
+  z-index: 50;
+  padding: var(--spacing-xl, 2rem) var(--spacing-lg, 1.5rem);
+  
+  /* Transparent gradient fade - doesn't obscure messages */
+  background: transparent;
+  
+  pointer-events: none; /* Allow clicks through gradient */
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-md, 1rem);
+}
+
+/* When info panel is collapsed - extend to right edge */
+.floatingInputContainer.infoCollapsed {
+  right: 0;
+}
+
+/* Mobile: Full width, no right offset */
+@media (max-width: 768px) {
+  .floatingInputContainer {
+    right: 0;
+    padding: var(--spacing-md, 1rem);
+    gap: var(--spacing-sm, 0.5rem);
+  }
+  
+  .floatingInputContainer.infoCollapsed {
+    right: 0;
+  }
+}
+
+/* ============================================================================
+   FLOATING INPUT WRAPPER (Gets keyboard offset)
+   ============================================================================ */
+.floatingInputWrapper {
+  width: 80%;        /* ← 3x wider, responsive */
+  max-width: none;
+  margin: 0 auto;
+  pointer-events: all; /* Re-enable clicks for input */
+  transition: transform 0.2s ease-out; /* Smooth keyboard offset */
+}
+
+/* ============================================================================
+   FLOATING INPUT (Unified night blue background)
+   ============================================================================ */
+.floatingInput {
+  background: var(--bg-surface) !important; /* #141B2E - unified night blue */
+  border: 1px solid var(--border-medium) !important;
+  border-radius: var(--radius-xl, 1.25rem);
+  display: flex;
+  align-items: flex-end;
+  gap: var(--spacing-sm, 0.75rem);
+  padding: var(--spacing-sm, 0.85rem);
+  transition: var(--transition-fast, all 0.15s ease);
+  box-shadow: none !important;
+}
+
+.floatingInput:focus-within {
+  border-color: var(--accent-primary) !important;
+  box-shadow: none !important;
+  outline: none !important;
+  background: var(--bg-surface) !important; /* Keep night blue on focus */
+}
+
+/* Mobile: Smaller border-radius */
+@media (max-width: 768px) {
+  .floatingInput {
+    border-radius: var(--radius-lg, 1rem);
+    padding: var(--spacing-sm, 0.75rem);
+  }
+}
+
+/* ============================================================================
+   TEXTAREA (Transparent - shows container background)
+   ============================================================================ */
+.inputTextarea {
+  flex: 1;
+  background: transparent !important;
+  border: none;
+  outline: none;
+  resize: none;
+  font-family: var(--font-body);
+  font-size: var(--font-size-body, 1rem);
+  line-height: var(--line-height-body, 1.5);
+  color: var(--text-primary);
+  padding: var(--spacing-sm, 0.5rem);
+  min-height: 24px;
+  max-height: 120px;
+  overflow-y: auto;
+  scrollbar-width: thin;
+  
+  /* Remove all browser defaults */
+  -webkit-appearance: none;
+  -moz-appearance: none;
+  appearance: none;
+  margin: 0;
+}
+
+.inputTextarea::placeholder {
+  color: var(--text-tertiary);
+}
+
+.inputTextarea:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.inputTextarea:focus,
+.inputTextarea:focus-within,
+.inputTextarea:focus-visible {
+  outline: none !important;
+  border: none !important;
+  background: transparent !important;
+}
+
+/* Textarea scrollbar */
+.inputTextarea::-webkit-scrollbar {
+  width: 4px;
+}
+
+.inputTextarea::-webkit-scrollbar-thumb {
+  background: var(--border-medium);
+  border-radius: var(--border-radius-sm, 0.5rem);
+}
+
+.inputTextarea::-webkit-scrollbar-thumb:hover {
+  background: var(--accent-primary);
+}
+
+/* Mobile: 16px font prevents iOS auto-zoom */
+@media (max-width: 768px) {
+  .inputTextarea {
+    font-size: 16px; /* Critical for iOS */
+    padding: 8px;
+  }
+}
+
+/* ============================================================================
+   SEND BUTTON (Default State - Indigo Gradient)
+   ============================================================================ */
+.sendButton {
+  width: 44px;
+  height: 44px;
+  min-width: 44px;
+  min-height: 44px;
+  border-radius: var(--border-radius-full, 50%);
+  background: linear-gradient(135deg, var(--accent-primary), var(--accent-hover));
+  border: none;
+  color: white;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: var(--transition-fast, all 0.15s ease);
+  box-shadow: var(--shadow-elevation02);
+  flex-shrink: 0; /* Prevent squishing */
+  padding: 0;
+}
+
+.sendButton:hover:not(:disabled) {
+  box-shadow: var(--shadow-glow);
+  transform: scale(1.05);
+}
+
+.sendButton:active:not(:disabled) {
+  transform: scale(0.95);
+}
+
+.sendButton:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+  background: var(--bg-peak);
+}
+
+.sendButton:focus-visible {
+  outline: 2px solid var(--accent-primary);
+  outline-offset: 2px;
+}
+
+/* Mobile: Maintain professional size, never squished */
+@media (max-width: 768px) {
+  .sendButton {
+    width: 42px;
+    height: 42px;
+    min-width: 42px;
+    min-height: 42px;
+  }
+}
+
+/* ============================================================================
+   STOP BUTTON (When isStreaming = true - Orange/Red Gradient)
+   ============================================================================ */
+.stopButton {
+  background: linear-gradient(135deg, #F59E0B, #EF4444) !important; /* Orange to Red */
+}
+
+.stopButton:hover:not(:disabled) {
+  box-shadow: 0 0 20px -5px rgba(239, 68, 68, 0.3) !important; /* Red glow */
+  transform: scale(1.05);
+}
+
+.stopButton:focus-visible {
+  outline: 2px solid #EF4444;
+  outline-offset: 2px;
+}
+
+/* Stop button is never disabled (always clickable when streaming) */
+.stopButton:disabled {
+  opacity: 1;
+  cursor: pointer;
+  background: linear-gradient(135deg, #F59E0B, #EF4444) !important;
+}
+
+/* ============================================================================
+   SENDING SPINNER
+   ============================================================================ */
+.sendingSpinner {
+  width: 20px;
+  height: 20px;
+  border: 2px solid rgba(255, 255, 255, 0.3);
+  border-top-color: white;
+  border-radius: 50%;
+  animation: spin 0.6s linear infinite;
+}
+
+@keyframes spin {
+  to { transform: rotate(360deg); }
+}
+
+/* ============================================================================
+   ACCESSIBILITY & REDUCED MOTION
+   ============================================================================ */
+@media (prefers-reduced-motion: reduce) {
+  .floatingInputWrapper {
+    transition: none !important;
+  }
+  
+  .sendButton:hover:not(:disabled),
+  .sendButton:active:not(:disabled),
+  .stopButton:hover {
+    transform: none !important;
+  }
+  
+  .sendingSpinner {
+    animation: none;
+  }
+}
+
+/* High contrast mode */
+@media (prefers-contrast: high) {
+  .floatingInput {
+    border-width: 2px;
+  }
+  
+  .sendButton,
+  .stopButton {
+    border: 2px solid white;
+  }
+}
+
+/* ============================================================================
+   DEFENSIVE FALLBACKS
+   ============================================================================ */
+
+/* Ensure proper box-sizing */
+.floatingInputContainer * {
+  box-sizing: border-box;
+}
+
+/* Prevent overflow issues */
+.floatingInput {
+  min-width: 0; /* Allows flex items to shrink properly */
+}
+
+/* Fallback if CSS variables aren't loaded */
+@supports not (color: var(--bg-canvas)) {
+  .floatingInput {
+    background: #141B2E !important;
+    border: 1px solid rgba(148, 163, 184, 0.2);
+  }
+  
+  .sendButton {
+    background: linear-gradient(135deg, #6366F1, #818CF8);
+  }
+  
+  .stopButton {
+    background: linear-gradient(135deg, #F59E0B, #EF4444) !important;
+  }
+}

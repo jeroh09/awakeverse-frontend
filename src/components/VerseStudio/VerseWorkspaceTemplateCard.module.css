@@ -1,0 +1,210 @@
+/* src/components/VerseStudio/VerseWorkspaceTemplateCard.module.css */
+
+.card{
+  position: relative;
+  border-radius: 16px;
+  overflow: hidden;
+
+  /* Full-card background image */
+  background-size: cover;
+  background-position: center;
+  background-repeat: no-repeat;
+
+  /* If no image, fallback keeps it premium */
+  background-color: rgba(10, 15, 26, 0.98);
+
+  border: 1px solid var(--vs-border-subtle);
+  box-shadow: 0 0 0 1px rgba(10, 15, 26, 0.96);
+  transition: transform 0.18s ease-out, box-shadow 0.18s ease-out, border-color 0.18s ease-out;
+  min-height: 168px;
+}
+
+/* When there's no image, add a subtle gradient so it doesn't feel flat */
+.card[data-has-image="false"]{
+  background-image: radial-gradient(circle at 0 0, var(--vs-accent-glow), transparent 55%),
+                    linear-gradient(145deg, rgba(20, 27, 46, 0.98), rgba(10, 15, 26, 0.98));
+}
+
+.overlay{
+  position: absolute;
+  inset: 0;
+
+  /* Makes text readable while preserving the image */
+  background:
+    linear-gradient(180deg, rgba(10, 15, 26, 0.20) 0%, rgba(10, 15, 26, 0.62) 55%, rgba(10, 15, 26, 0.92) 100%);
+
+  z-index: 0;
+}
+
+.glow{
+  position: absolute;
+  inset: -40%;
+  opacity: 0;
+  background: radial-gradient(circle at 0 0, var(--vs-accent-glow), transparent 55%);
+  transition: opacity 0.18s ease-out;
+  pointer-events: none;
+  z-index: 1;
+}
+
+.card:hover{
+  transform: translateY(-1px);
+  border-color: var(--vs-accent-primary);
+  box-shadow:
+    0 0 0 1px rgba(99, 102, 241, 0.6),
+    0 18px 42px -18px rgba(15, 23, 42, 0.92);
+}
+
+.card:hover .glow{
+  opacity: 1;
+}
+
+.content{
+  position: relative;
+  z-index: 2;
+  padding: 12px 12px 12px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  height: 100%;
+}
+
+.tagRow{
+  display: flex;
+  gap: 6px;
+  align-items: center;
+}
+
+.tag,
+.tagSecondary{
+  font-size: 10px;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  padding: 3px 8px;
+  border-radius: 999px;
+  border: 1px solid rgba(148, 163, 184, 0.22);
+  background: rgba(15, 23, 42, 0.72);
+  color: var(--vs-text-secondary);
+  backdrop-filter: blur(6px);
+}
+
+.tagSecondary{
+  border-color: rgba(99, 102, 241, 0.55);
+}
+
+.title{
+  margin: 0;
+  font-family: "Syne", system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+  font-size: 16px;
+  font-weight: 600;
+  letter-spacing: 0.02em;
+  color: var(--vs-text-ivory);
+  text-shadow: 0 10px 30px rgba(0,0,0,0.55);
+}
+
+.desc{
+  margin: 0;
+  font-size: 12px;
+  color: rgba(241, 245, 249, 0.90);
+  line-height: 1.4;
+  max-width: 48ch;
+}
+
+.footer{
+  margin-top: auto;
+}
+
+.cta{
+  width: 100%;
+  border-radius: 999px;
+  border: 1px solid rgba(99, 102, 241, 0.85);
+  background: rgba(10, 15, 26, 0.58);
+  color: var(--vs-text-ivory);
+  font-size: 12px;
+  font-weight: 600;
+  padding: 8px 10px;
+  cursor: pointer;
+  transition: transform 0.18s ease-out, box-shadow 0.18s ease-out, border-color 0.18s ease-out;
+  backdrop-filter: blur(10px);
+  box-shadow: 0 0 0 1px rgba(10, 15, 26, 0.55);
+}
+
+.cta:hover{
+  transform: translateY(-1px);
+  box-shadow: 0 14px 30px rgba(99, 102, 241, 0.45);
+}
+
+.ctaLocked{
+  border-color: rgba(148, 163, 184, 0.30);
+  background: rgba(15, 23, 42, 0.65);
+  color: var(--vs-text-muted);
+  box-shadow: none;
+}
+/* ===== Polish: premium hover + focus ===== */
+
+.card{
+  transform: translateZ(0);
+}
+
+.card::before{
+  /* subtle shine sweep */
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(
+    120deg,
+    rgba(255,255,255,0) 0%,
+    rgba(255,255,255,0.08) 18%,
+    rgba(255,255,255,0) 36%
+  );
+  transform: translateX(-120%);
+  transition: transform 0.6s ease-out;
+  z-index: 1;
+  pointer-events: none;
+  mix-blend-mode: overlay;
+}
+
+.card:hover::before{
+  transform: translateX(120%);
+}
+
+.card[data-has-image="true"]{
+  /* allow a subtle zoom by animating background-size */
+  background-size: 102%;
+  transition:
+    transform 0.18s ease-out,
+    box-shadow 0.18s ease-out,
+    border-color 0.18s ease-out,
+    background-size 0.35s ease-out;
+}
+
+.card[data-has-image="true"]:hover{
+  background-size: 108%;
+}
+
+.card:focus-within{
+  border-color: var(--vs-accent-primary);
+  box-shadow:
+    0 0 0 1px rgba(99, 102, 241, 0.7),
+    0 18px 42px -18px rgba(15, 23, 42, 0.92);
+}
+
+.cta:focus-visible{
+  outline: none;
+  box-shadow:
+    0 0 0 2px rgba(99, 102, 241, 0.45),
+    0 14px 30px rgba(99, 102, 241, 0.35);
+}
+
+/* Locked state feels intentional */
+.ctaLocked{
+  position: relative;
+}
+
+.ctaLocked::after{
+  content: "🔒";
+  position: absolute;
+  right: 12px;
+  top: 50%;
+  transform: translateY(-50%);
+  opacity: 0.85;
+}

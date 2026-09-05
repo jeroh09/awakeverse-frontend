@@ -1,0 +1,170 @@
+/* src/components/ScenariosTab/TemplatesGallery/CategoryFilter.css
+   ✅ REDESIGNED: double-border pill group matching DialoguePill
+   ✅ Wraps gracefully when categories exceed one line
+*/
+
+/* ── Outer wrapper — centres the pill, handles overflow ──────────────────── */
+.cf-wrapper {
+  display: flex;
+  justify-content: center;
+  margin-bottom: 2rem;
+  padding: 0.25rem 0.5rem;
+  overflow-x: auto;
+  scrollbar-width: none;
+  -ms-overflow-style: none;
+}
+.cf-wrapper::-webkit-scrollbar { display: none; }
+
+/* ── Pill shell — double border, matches DialoguePill exactly ────────────── */
+.cf-pill {
+  display: inline-flex;
+  align-items: center;
+  flex-wrap: wrap;           /* wraps to second line if many categories */
+  gap: 0;
+  border-radius: 999px;
+  background: rgba(15, 23, 42, 0.97);
+
+  /* Double border */
+  border: 1px solid rgba(99, 102, 241, 0.45);
+  box-shadow:
+    0 0 0 4px rgba(15, 23, 42, 0.97),
+    0 0 0 5px rgba(99, 102, 241, 0.22),
+    0 8px 24px rgba(0, 0, 0, 0.4);
+
+  padding: 3px;
+}
+
+/* When wrapping, use a slightly looser radius so it looks natural */
+@media (max-width: 768px) {
+  .cf-pill {
+    border-radius: 16px;
+  }
+}
+
+/* ── Divider between segments ────────────────────────────────────────────── */
+.cf-divider {
+  width: 1px;
+  height: 18px;
+  background: rgba(99, 102, 241, 0.22);
+  flex-shrink: 0;
+  align-self: center;
+}
+
+/* ── Segments ────────────────────────────────────────────────────────────── */
+.cf-segment {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  padding: 0.38rem 0.9rem;
+  border-radius: 999px;
+  border: none;
+  background: transparent;
+  color: #64748b;
+  font-family: 'Inter', system-ui, sans-serif;
+  font-size: 0.76rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: color 0.15s ease, background 0.15s ease;
+  white-space: nowrap;
+  letter-spacing: 0.01em;
+  line-height: 1;
+}
+
+.cf-segment:hover:not(.cf-segment--active) {
+  color: #94a3b8;
+  background: rgba(99, 102, 241, 0.06);
+}
+
+.cf-segment:focus-visible {
+  outline: 2px solid rgba(99, 102, 241, 0.6);
+  outline-offset: 2px;
+}
+
+/* Active segment — filled capsule inside the pill */
+.cf-segment--active {
+  background: rgba(99, 102, 241, 0.18);
+  color: #c7d2fe;
+  box-shadow: inset 0 0 0 1px rgba(99, 102, 241, 0.35);
+}
+
+/* ── Count badge ─────────────────────────────────────────────────────────── */
+.cf-count {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 17px;
+  height: 17px;
+  padding: 0 4px;
+  border-radius: 999px;
+  background: rgba(99, 102, 241, 0.2);
+  color: #818cf8;
+  font-size: 0.62rem;
+  font-weight: 700;
+  line-height: 1;
+  border: 1px solid rgba(99, 102, 241, 0.25);
+}
+
+.cf-segment--active .cf-count {
+  background: rgba(99, 102, 241, 0.4);
+  color: #e0e7ff;
+  border-color: rgba(99, 102, 241, 0.5);
+}
+
+/* ── Light theme overrides ───────────────────────────────────────────────── */
+.scenarios-tab-container:not(.theme-awakeverse) .cf-pill {
+  background: rgba(255, 255, 255, 0.98);
+  border-color: rgba(99, 102, 241, 0.28);
+  box-shadow:
+    0 0 0 4px rgba(255, 255, 255, 0.98),
+    0 0 0 5px rgba(99, 102, 241, 0.12),
+    0 4px 14px rgba(0, 0, 0, 0.08);
+}
+
+.scenarios-tab-container:not(.theme-awakeverse) .cf-divider {
+  background: rgba(99, 102, 241, 0.15);
+}
+
+.scenarios-tab-container:not(.theme-awakeverse) .cf-segment {
+  color: #94a3b8;
+}
+
+.scenarios-tab-container:not(.theme-awakeverse) .cf-segment:hover:not(.cf-segment--active) {
+  color: #4f46e5;
+  background: rgba(99, 102, 241, 0.06);
+}
+
+.scenarios-tab-container:not(.theme-awakeverse) .cf-segment--active {
+  background: rgba(99, 102, 241, 0.1);
+  color: #4338ca;
+  box-shadow: inset 0 0 0 1px rgba(99, 102, 241, 0.25);
+}
+
+.scenarios-tab-container:not(.theme-awakeverse) .cf-count {
+  background: rgba(99, 102, 241, 0.1);
+  color: #4f46e5;
+  border-color: rgba(99, 102, 241, 0.18);
+}
+
+.scenarios-tab-container:not(.theme-awakeverse) .cf-segment--active .cf-count {
+  background: rgba(99, 102, 241, 0.22);
+  color: #3730a3;
+}
+
+/* ── Mobile ──────────────────────────────────────────────────────────────── */
+@media (max-width: 640px) {
+  .cf-wrapper {
+    justify-content: flex-start;
+    margin-bottom: 1.5rem;
+  }
+
+  .cf-segment {
+    padding: 0.35rem 0.75rem;
+    font-size: 0.72rem;
+  }
+
+  .cf-count {
+    font-size: 0.58rem;
+    min-width: 15px;
+    height: 15px;
+  }
+}

@@ -1,0 +1,117 @@
+/* src/components/StoryMode/styles/story-variables.css
+ *
+ * Design tokens for AwakeVerse Story Mode
+ * Palette: Night Blue + Indigo + Ivory
+ * Typography: Syne (display), Inter (body)
+ */
+
+/* You can also include these fonts globally (e.g. in index.html or a global CSS file):
+ *
+ *   https://fonts.googleapis.com/css2?family=Syne:wght@500;600;700&family=Inter:wght@400;500;600;700&display=swap
+ */
+
+:root {
+  /* ===========================
+   * COLOR PALETTE
+   * ===========================
+   */
+
+  /* Backgrounds - Night Blue Spectrum */
+  --bg-canvas: #0A0F1A;        /* Base page background */
+  --bg-surface: #141B2E;       /* Card/panel backgrounds */
+  --bg-interactive: #1C2640;   /* Hover states */
+  --bg-peak: #243152;          /* Active/selected states */
+
+  /* Accents - Indigo (NOT basic blue) */
+  --accent-primary: #6366F1;   /* Primary actions */
+  --accent-hover: #818CF8;     /* Hover states */
+
+  /* Brand - Ivory */
+  --brand-ivory: #F5F5DC;      /* Logo, special highlights */
+
+  /* Text Hierarchy */
+  --text-primary: #F1F5F9;     /* Main text, headings */
+  --text-secondary: #94A3B8;   /* Descriptions */
+  --text-tertiary: #64748B;    /* De-emphasized */
+  --text-muted: #475569;       /* Ultra-subtle */
+
+  /* Borders */
+  --border-subtle: rgba(148, 163, 184, 0.1);
+  --border-medium: rgba(148, 163, 184, 0.2);
+  --border-strong: rgba(148, 163, 184, 0.3);
+
+  /* ===========================
+   * TYPOGRAPHY
+   * ===========================
+   */
+
+  /* Font stacks */
+  --font-display: 'Syne', system-ui, -apple-system, BlinkMacSystemFont, 'SF Pro Text', 'Segoe UI', sans-serif;
+  --font-body: 'Inter', system-ui, -apple-system, BlinkMacSystemFont, 'SF Pro Text', 'Segoe UI', sans-serif;
+
+  /* Sizes */
+  --font-size-hero: clamp(36px, 6vw, 64px);
+  --font-size-h1: clamp(32px, 5vw, 48px);
+  --font-size-h2: clamp(28px, 4vw, 40px);
+  --font-size-h3: clamp(24px, 3vw, 32px);
+  --font-size-body-lg: 18px;
+  --font-size-body: 16px;
+  --font-size-body-sm: 14px;
+
+  /* Weights */
+  --font-weight-regular: 400;
+  --font-weight-medium: 500;
+  --font-weight-semibold: 600;
+  --font-weight-bold: 700;
+  --font-weight-extrabold: 800;
+
+  /* ===========================
+   * SHADOWS & EFFECTS
+   * ===========================
+   */
+
+  /* Elevation */
+  --elevation-01: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
+  --elevation-02: 0 2px 8px -2px rgba(0, 0, 0, 0.1),
+                  0 4px 12px -4px rgba(99, 102, 241, 0.1);
+  --elevation-03: 0 4px 16px -4px rgba(0, 0, 0, 0.15),
+                  0 8px 24px -8px rgba(99, 102, 241, 0.15);
+  --elevation-04: 0 8px 32px -8px rgba(0, 0, 0, 0.2),
+                  0 16px 48px -12px rgba(99, 102, 241, 0.2);
+
+  /* Indigo glow */
+  --glow-indigo: 0 0 20px -5px rgba(99, 102, 241, 0.2);
+  --glow-indigo-strong: 0 0 24px -4px rgba(99, 102, 241, 0.3);
+
+  /* ===========================
+   * RADII & SPACING
+   * ===========================
+   */
+
+  /* Corners */
+  --radius-sm: 0.5rem;
+  --radius-md: 0.75rem;
+  --radius-lg: 1rem;
+  --radius-xl: 1.25rem;
+  --radius-pill: 999px;
+
+  /* Spacing scale */
+  --space-2: 0.5rem;
+  --space-3: 0.75rem;
+  --space-4: 1rem;
+  --space-5: 1.25rem;
+  --space-6: 1.5rem;
+  --space-8: 2rem;
+  --space-10: 2.5rem;
+
+  /* ===========================
+   * STORY MODE HELPERS
+   * ===========================
+   */
+
+  /* Subtle cosmic canvas */
+  --storymode-canvas-gradient:
+    radial-gradient(circle at top left, rgba(99, 102, 241, 0.18), transparent 55%),
+    radial-gradient(circle at bottom right, rgba(15, 23, 42, 0.7), transparent 55%),
+    var(--bg-canvas);
+}

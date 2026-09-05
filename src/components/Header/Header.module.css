@@ -1,400 +1,565 @@
-@import url('https://fonts.googleapis.com/css2?family=Cinzel+Decorative:wght@400;700&family=Lora:ital,wght@0,400;0,500;1,400&display=swap');
+/* ==========================================================
+   AwakeVerse — Floating Trigger + Detached Panel Nav
+   No header bar. AV pill top-left. Panel floats detached.
 
-.header {
-  position: relative;
-  /* Enhanced cosmic gradient with more depth */
-  background: linear-gradient(
-    135deg,
-    rgba(20, 20, 35, 0.95) 0%,
-    rgba(15, 15, 30, 0.9) 25%,
-    rgba(25, 20, 40, 0.9) 50%,
-    rgba(10, 10, 25, 0.95) 100%
-  );
-  
-  /* Animated golden border with glow */
-  border-bottom: 1px solid gold;
-  box-shadow: 
-    0 1px 4px rgba(0, 0, 0, 0.3),
-    0 0 8px rgba(255, 215, 0, 0.1),
-    inset 0 1px 0 rgba(255, 215, 0, 0.05);
-  
-  backdrop-filter: blur(8px);
-  -webkit-backdrop-filter: blur(8px);
-  
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  padding: 0.4rem 0.8rem;  /* Much more compact */
-  min-height: 36px;        /* Significantly reduced */
-  
-  /* Smooth but stable transition - no erratic behavior */
-  transition: transform 1s cubic-bezier(0.19, 1, 0.22, 1);
-  z-index: 1000;
-}
+   ✅ STEP 1 (viewport fix): .panelWrap / .panelOuter / .panel
+      now cap to the actual viewport height. .nav scrolls
+      internally if long; .footer (profile/billing/logout)
+      is pinned with flex-shrink:0 so it can never render
+      off-screen on short laptops.
+   ✅ STEP 2 (viewport fix): .profileMenu (upward popup) gets
+      the same max-height + overflow-y safety net so it can't
+      clip off the top of a short screen.
+   ========================================================== */
 
-.header::before {
-  content: '';
-  position: absolute;
-  top: 0;
-  left: 0;
-  right: 0;
-  bottom: 0;
-  background: 
-    radial-gradient(circle at 20% 50%, rgba(255, 215, 0, 0.02) 0%, transparent 50%),
-    radial-gradient(circle at 80% 20%, rgba(255, 215, 0, 0.015) 0%, transparent 50%);
-  pointer-events: none;
-  z-index: 1;
-}
+@import url('https://fonts.googleapis.com/css2?family=Caveat:wght@600&family=Syne:wght@700;800&family=Inter:wght@400;500;600&display=swap');
 
-.header > * {
-  position: relative;
-  z-index: 2;
-}
+/* ── Trigger pill ──────────────────────────────────────────── */
 
-.title {
-  font-family: 'Cinzel Decorative', serif;
-  font-size: 1.1rem;       /* Much smaller */
-  font-weight: 700;
-  color: gold;
-  text-shadow: 
-    0 0 6px rgba(255, 215, 0, 0.4),
-    0 0 12px rgba(255, 215, 0, 0.2),
-    0 1px 2px rgba(0, 0, 0, 0.5);
-  
-  /* Subtle glow animation */
-  animation: titleGlow 4s ease-in-out infinite alternate;
-  
-  /* Letter spacing for elegance */
-  letter-spacing: 1px;     /* Reduced */
-  margin: 0;
-  
-  /* Responsive scaling */
-  @media (max-width: 768px) {
-    font-size: 1rem;
-    letter-spacing: 0.5px;
-  }
-}
-
-@keyframes titleGlow {
-  0% {
-    text-shadow: 
-      0 0 6px rgba(255, 215, 0, 0.4),
-      0 0 12px rgba(255, 215, 0, 0.2),
-      0 1px 2px rgba(0, 0, 0, 0.5);
-  }
-  100% {
-    text-shadow: 
-      0 0 8px rgba(255, 215, 0, 0.6),
-      0 0 15px rgba(255, 215, 0, 0.3),
-      0 1px 3px rgba(0, 0, 0, 0.6);
-  }
-}
-
-.userSection {
-  display: flex;
-  align-items: center;
-  gap: 0.5rem;             /* Reduced gap */
-  
-  /* Elegant container styling */
-  background: rgba(255, 215, 0, 0.04);
-  padding: 0.25rem 0.6rem; /* Much more compact */
-  border-radius: 16px;     /* Smaller radius */
-  border: 1px solid rgba(255, 215, 0, 0.15);
-  backdrop-filter: blur(4px);
-  
-  transition: all 0.3s ease;
-  position: relative;
-  z-index: 1001;           /* Higher than header for dropdown */
-}
-
-.userSection:hover {
-  background: rgba(255, 215, 0, 0.06);
-  border-color: rgba(255, 215, 0, 0.25);
-  box-shadow: 0 0 8px rgba(255, 215, 0, 0.15);
-}
-
-.avatar {
-  width: 22px;             /* Much smaller */
-  height: 22px;            /* Much smaller */
-  border-radius: 50%;
-  object-fit: cover;
-  
-  /* Elegant border with glow */
-  border: 1px solid gold;  /* Thinner border */
-  box-shadow: 
-    0 0 4px rgba(255, 215, 0, 0.3),
-    0 1px 2px rgba(0, 0, 0, 0.3);
-  
-  transition: all 0.3s ease;
-  cursor: pointer;
-}
-
-.avatar:hover {
-  transform: scale(1.05);  /* Smaller scale */
-  box-shadow: 
-    0 0 6px rgba(255, 215, 0, 0.5),
-    0 2px 4px rgba(0, 0, 0, 0.4);
-  border-color: rgba(255, 215, 0, 0.9);
-}
-
-.placeholder {
-  font-family: 'Lora', serif;
-  font-size: 0.75rem;      /* Smaller text */
-  font-weight: 500;
-  color: rgba(255, 215, 0, 0.7);
-  text-shadow: 0 1px 1px rgba(0, 0, 0, 0.5);
-  padding: 0.25rem 0.4rem; /* Much smaller padding */
-  
-  /* Subtle background for better visibility */
-  background: rgba(255, 215, 0, 0.08);
-  border-radius: 8px;      /* Smaller radius */
-  border: 1px solid rgba(255, 215, 0, 0.15);
-  
-  transition: all 0.3s ease;
-}
-
-.placeholder:hover {
-  color: rgba(255, 215, 0, 0.9);
-  background: rgba(255, 215, 0, 0.12);
-}
-
-/* Simplified star field for performance */
-.header::after {
-  content: '';
-  position: absolute;
-  top: 0;
-  left: 0;
-  right: 0;
-  bottom: 0;
-  background-image: 
-    radial-gradient(0.5px 0.5px at 15px 20px, rgba(255, 215, 0, 0.2), transparent),
-    radial-gradient(0.5px 0.5px at 35px 45px, rgba(255, 215, 0, 0.15), transparent),
-    radial-gradient(0.5px 0.5px at 75px 25px, rgba(255, 215, 0, 0.2), transparent);
-  background-repeat: repeat;
-  background-size: 100px 60px; /* Smaller pattern */
-  animation: starfield 15s linear infinite;
-  opacity: 0.3;            /* Less prominent */
-  pointer-events: none;
-  z-index: 1;
-}
-
-@keyframes starfield {
-  0% { transform: translateX(0); }
-  100% { transform: translateX(-100px); }
-}
-
-/* Enhanced responsive design */
-@media (max-width: 768px) {
-  .header {
-    padding: 0.3rem 0.6rem;
-    min-height: 32px;      /* Even smaller on mobile */
-  }
-  
-  .userSection {
-    gap: 0.4rem;
-    padding: 0.2rem 0.5rem;
-  }
-  
-  .avatar {
-    width: 20px;
-    height: 20px;
-  }
-  
-  .placeholder {
-    font-size: 0.7rem;
-    padding: 0.2rem 0.3rem;
-  }
-}
-
-@media (max-width: 480px) {
-  .header {
-    padding: 0.25rem 0.5rem;
-    min-height: 30px;
-  }
-  
-  .title {
-    font-size: 0.9rem;
-    letter-spacing: 0.3px;
-  }
-  
-  .userSection {
-    gap: 0.3rem;
-    padding: 0.15rem 0.4rem;
-  }
-  
-  .avatar {
-    width: 18px;
-    height: 18px;
-  }
-}
-
-/* Dark mode enhancements */
-@media (prefers-color-scheme: dark) {
-  .header {
-    background: linear-gradient(
-      135deg,
-      rgba(15, 15, 25, 0.95) 0%,
-      rgba(10, 10, 20, 0.9) 25%,
-      rgba(20, 15, 35, 0.9) 50%,
-      rgba(5, 5, 20, 0.95) 100%
-    );
-  }
-}
-
-/* Reduced motion for accessibility */
-@media (prefers-reduced-motion: reduce) {
-  .title {
-    animation: none;
-  }
-  
-  .header::after {
-    animation: none;
-  }
-  
-  .avatar,
-  .userSection,
-  .placeholder {
-    transition: none;
-  }
-}
-
-/* ===== FIXED RETRACTABLE HEADER STYLES ===== */
-
-/* ✅ STABLE RETRACTION - No erratic behavior */
-.header.retracted {
-  transform: translateY(-85%);
-  opacity: 0.3;
-  /* Fixed positioning prevents layout shift */
+.trigger {
   position: fixed;
-  top: 0;
-  left: 0;
-  right: 0;
-  z-index: 1000;
-  /* ✅ NO AUTOMATIC RETURN - Only manual trigger */
-  pointer-events: none; /* Prevents accidental hovers from triggering return */
-}
+  top: 14px;
+  left: 14px;
+  z-index: 510;
 
-/* ✅ ONLY show button area remains interactive when retracted */
-.header.retracted .showButton {
-  pointer-events: auto; /* Only the show button is clickable */
-}
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  padding: 5px 12px 5px 9px;
 
-/* ✅ NEVER automatically return on hover - STABLE */
-.header.retracted:hover {
-  /* Remove all hover effects that could cause erratic behavior */
-  transform: translateY(-85%);
-  opacity: 0.3;
-}
+  background: rgba(10, 15, 26, 0.78);
+  border: 1px solid rgba(148, 163, 184, 0.22);
+  border-radius: 999px;
+  backdrop-filter: blur(18px);
+  -webkit-backdrop-filter: blur(18px);
+  box-shadow: 0 2px 16px rgba(0, 0, 0, 0.4);
 
-/* Breathing indicator when retracted - subtle and stable */
-.header.retracted::after {
-  content: '';
-  position: absolute;
-  bottom: 0;
-  left: 50%;
-  transform: translateX(-50%);
-  width: 20px;
-  height: 2px;
-  background: linear-gradient(90deg, transparent, gold, transparent);
-  animation: breathe 3s ease-in-out infinite; /* Slower, more subtle */
-  z-index: 3;
-  pointer-events: none;
-}
-
-@keyframes breathe {
-  0%, 100% {
-    opacity: 0.4; /* More subtle */
-    transform: translateX(-50%) scaleX(1);
-  }
-  50% {
-    opacity: 0.8; /* Less intense */
-    transform: translateX(-50%) scaleX(1.1); /* Less dramatic */
-  }
-}
-
-/* ✅ STABLE SHOW BUTTON - Only way to return header */
-.showButton {
-  position: absolute;
-  bottom: -12px;
-  left: 50%;
-  transform: translateX(-50%);
-  background: rgba(20, 20, 35, 0.95);
-  border: 1px solid gold;
-  border-radius: 0 0 8px 8px;
-  color: gold;
-  font-size: 14px;
-  padding: 4px 12px; /* Slightly larger for easier clicking */
   cursor: pointer;
-  backdrop-filter: blur(8px);
-  transition: all 0.3s ease;
-  z-index: 1002;
-  
-  /* ✅ Make it more prominent when header is retracted */
-  box-shadow: 0 2px 8px rgba(255, 215, 0, 0.2);
+  transition: border-color 0.18s ease, box-shadow 0.18s ease;
+  font-family: 'Inter', sans-serif;
 }
 
-.showButton:hover {
-  background: rgba(30, 30, 45, 0.98);
-  box-shadow: 0 4px 12px rgba(255, 215, 0, 0.4);
-  transform: translateX(-50%) scale(1.05);
-  border-color: rgba(255, 215, 0, 0.8);
+.trigger:hover {
+  border-color: rgba(99, 102, 241, 0.5);
+  box-shadow: 0 2px 20px rgba(99, 102, 241, 0.18);
 }
 
-/* ✅ Clear visual feedback for show button */
-.showButton:active {
-  transform: translateX(-50%) scale(0.95);
-  background: rgba(40, 40, 55, 1);
+.triggerSep {
+  width: 1px;
+  height: 11px;
+  background: rgba(148, 163, 184, 0.22);
+  border-radius: 1px;
+  flex-shrink: 0;
 }
 
-/* Mobile adjustments for retraction */
+.triggerHome {
+  font-family: 'Inter', sans-serif;
+  font-size: 11px;
+  font-weight: 500;
+  color: rgba(148, 163, 184, 0.65);
+  letter-spacing: 0.03em;
+  white-space: nowrap;
+}
+
+.triggerChevron {
+  color: rgba(99, 102, 241, 0.6);
+  flex-shrink: 0;
+  transition: color 0.18s ease;
+}
+
+.trigger:hover .triggerChevron {
+  color: rgba(99, 102, 241, 0.95);
+}
+
+/* ── Wordmark (Caveat italic) ──────────────────────────────── */
+
+.wordmark {
+  font-family: 'Caveat', cursive !important;
+  font-style: italic !important;
+  font-weight: 600 !important;
+  letter-spacing: 0.03em !important;
+  line-height: 1 !important;
+  text-transform: none !important;
+  white-space: nowrap;
+}
+
+.wordmarkIvory { color: #f5f5dc; }
+.wordmarkIndigo { color: #6366f1; }
+
+.triggerWordmark {
+  font-size: 15px;
+}
+
+/* ── Overlay ───────────────────────────────────────────────── */
+
+.overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 511;
+  background: rgba(6, 10, 20, 0.52);
+  backdrop-filter: blur(3px);
+  -webkit-backdrop-filter: blur(3px);
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.22s ease;
+}
+
+.overlayOpen {
+  opacity: 1;
+  pointer-events: auto;
+}
+
+/* ── Panel wrapper (positions + animates) ────────────────────
+   STEP 1: bottom:10px caps the wrapper to the viewport instead
+   of letting it grow forever from top:10px downward. display:flex
+   lets the panel below shrink to fit inside that capped space. */
+
+.panelWrap {
+  position: fixed;
+  top: 10px;
+  left: 10px;
+  bottom: 10px;              /* NEW — hard viewport cap */
+  z-index: 512;
+
+  display: flex;             /* NEW — allows children to respect max-height:100% */
+
+  opacity: 0;
+  pointer-events: none;
+  transform: translateX(-10px) scale(0.97);
+  transition:
+    opacity 0.24s cubic-bezier(0.32, 0.72, 0, 1),
+    transform 0.24s cubic-bezier(0.32, 0.72, 0, 1);
+}
+
+.panelWrapOpen {
+  opacity: 1;
+  pointer-events: auto;
+  transform: translateX(0) scale(1);
+}
+
+/* ── Double-border outer shell (onboarding .ob-panel technique)
+   STEP 1: made flex + max-height:100% so it passes the cap down
+   to .panel instead of sizing itself off content alone. */
+
+.panelOuter {
+  padding: 4px;
+  border-radius: 22px;
+  border: 1px solid rgba(99, 102, 241, 0.28);
+  box-shadow:
+    0 0 0 4px rgba(15, 23, 42, 0.97),
+    0 0 0 5px rgba(99, 102, 241, 0.22),
+    0 24px 56px rgba(0, 0, 0, 0.72);
+
+  display: flex;              /* NEW */
+  max-height: 100%;           /* NEW */
+}
+
+/* ── Panel inner card ──────────────────────────────────────── 
+   STEP 1: max-height:100% is the actual cap that stops the panel
+   from growing past the viewport. Combined with .nav (flexible,
+   scrollable) and .footer (flex-shrink:0, pinned), this guarantees
+   the profile/billing/logout footer is always visible. */
+
+.panel {
+  width: 232px;
+  background: rgba(10, 15, 26, 0.97);
+  border-radius: 18px;
+  border: 1px solid rgba(99, 102, 241, 0.45);
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  max-height: 100%;            /* NEW */
+}
+
+/* ── Panel header ──────────────────────────────────────────── */
+
+.panelHead {
+  padding: 14px 14px 10px;
+  border-bottom: 1px solid rgba(148, 163, 184, 0.09);
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 8px;
+  flex-shrink: 0;              /* NEW — header never gets squeezed by nav/footer */
+}
+
+.panelHeadLeft {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.panelWordmark {
+  font-size: 18px;
+  cursor: pointer;
+  border: none;
+  background: none;
+  padding: 0;
+  margin: 0;
+  transition: opacity 0.15s;
+}
+.panelWordmark:hover { opacity: 0.72; }
+
+.panelSubtitle {
+  font-family: 'Inter', sans-serif;
+  font-size: 10px;
+  color: rgba(100, 116, 139, 0.75);
+  letter-spacing: 0.02em;
+}
+
+.panelClose {
+  width: 24px;
+  height: 24px;
+  border-radius: 50%;
+  background: rgba(148, 163, 184, 0.07);
+  border: 1px solid rgba(148, 163, 184, 0.12);
+  color: rgba(148, 163, 184, 0.55);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  font-size: 13px;
+  flex-shrink: 0;
+  transition: background 0.14s, color 0.14s;
+  margin-top: 1px;
+}
+.panelClose:hover {
+  background: rgba(148, 163, 184, 0.13);
+  color: rgba(148, 163, 184, 0.9);
+}
+
+/* ── Nav ───────────────────────────────────────────────────── 
+   STEP 1: this is the piece that now scrolls internally if the
+   nav list is ever taller than the space left after the header
+   and footer take their share. min-height:0 is required — without
+   it, flex children refuse to shrink below their content size in
+   Chrome/Firefox and overflow-y would silently do nothing. */
+
+.nav {
+  padding: 6px 8px 4px;
+  display: flex;
+  flex-direction: column;
+  gap: 1px;
+
+  flex: 1 1 auto;              /* NEW */
+  min-height: 0;               /* NEW */
+  overflow-y: auto;            /* NEW */
+}
+
+.sectionLabel {
+  font-family: 'Inter', sans-serif;
+  font-size: 9.5px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.14em;
+  color: rgba(100, 116, 139, 0.7);
+  padding: 7px 8px 3px;
+}
+
+.navItem {
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  width: 100%;
+  padding: 7px 9px;
+  border-radius: 10px;
+  background: transparent;
+  border: 1px solid transparent;
+  cursor: pointer;
+  font-family: 'Inter', sans-serif;
+  font-size: 12.5px;
+  font-weight: 500;
+  color: rgba(148, 163, 184, 0.8);
+  text-align: left;
+  transition: background 0.13s ease, border-color 0.13s ease, color 0.13s ease;
+}
+
+.navItem:hover {
+  background: rgba(99, 102, 241, 0.08);
+  border-color: rgba(99, 102, 241, 0.18);
+  color: #c7d2fe;
+}
+
+.navItemActive {
+  background: rgba(99, 102, 241, 0.13);
+  border-color: rgba(99, 102, 241, 0.32);
+  color: #a5b4fc;
+}
+
+.navIcon {
+  width: 16px;
+  height: 16px;
+  flex-shrink: 0;
+  color: currentColor;
+}
+
+.navLabel {
+  white-space: nowrap;
+}
+
+.navDivider {
+  height: 1px;
+  background: rgba(148, 163, 184, 0.07);
+  margin: 4px 8px;
+}
+
+/* ── Footer — avatar info row + ProfileButton ───────────────── 
+   STEP 1: flex-shrink:0 is the key line — it guarantees the footer
+   (profile/billing/logout) can never be compressed or pushed out
+   of view by a long nav list. It always keeps its natural height
+   and stays fully visible at the bottom of the panel. */
+
+.footer {
+  padding: 6px 8px 10px;
+  border-top: 1px solid rgba(148, 163, 184, 0.09);
+  flex-shrink: 0;              /* NEW */
+}
+
+/* ── Credits wallet row (sits above the profile row) ───────────────────────── */
+.creditsRow {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  width: 100%;
+  padding: 8px 10px;
+  margin-bottom: 6px;
+  border-radius: 12px;
+  background: rgba(99, 102, 241, 0.10);
+  border: 1px solid rgba(99, 102, 241, 0.28);
+  cursor: pointer;
+  font-family: 'Inter', sans-serif;
+  transition: background 0.14s ease, border-color 0.14s ease;
+}
+.creditsRow:hover {
+  background: rgba(99, 102, 241, 0.16);
+  border-color: rgba(99, 102, 241, 0.45);
+}
+.creditsIcon {
+  color: #818cf8;
+  font-size: 10px;
+  flex-shrink: 0;
+}
+.creditsAmount {
+  font-family: 'Syne', sans-serif;
+  font-weight: 700;
+  font-size: 13px;
+  color: #f5f5dc;
+  line-height: 1;
+}
+.creditsUnit {
+  font-size: 11px;
+  color: rgba(148, 163, 184, 0.75);
+}
+.creditsManage {
+  margin-left: auto;
+  font-size: 10px;
+  font-weight: 600;
+  letter-spacing: 0.02em;
+  color: #a5b4fc;
+  white-space: nowrap;
+}
+
+/* Low balance (< 500): amber tint + top-up nudge. */
+.creditsRowLow {
+  background: rgba(245, 158, 11, 0.10);
+  border-color: rgba(245, 158, 11, 0.32);
+}
+.creditsRowLow:hover {
+  background: rgba(245, 158, 11, 0.16);
+  border-color: rgba(245, 158, 11, 0.5);
+}
+.creditsRowLow .creditsIcon { color: #f59e0b; }
+.creditsRowLow .creditsManage { color: #fbbf24; }
+.creditsLow { color: #f59e0b; }
+
+.footerUserRow {
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  width: 100%;
+  padding: 8px 9px;
+  border-radius: 12px;
+  background: rgba(15, 23, 42, 0.5);
+  border: 1px solid rgba(148, 163, 184, 0.1);
+  position: relative;          /* NEW — anchors .profileMenu (position:absolute) correctly */
+}
+
+.avatarShell {
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  overflow: hidden;
+  flex-shrink: 0;
+  box-shadow: 0 0 0 1.5px rgba(99, 102, 241, 0.35);
+}
+
+.avatarImage {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.avatarFallback {
+  width: 100%;
+  height: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: linear-gradient(135deg, #4f46e5, #0f172a);
+  font-family: 'Syne', sans-serif;
+  font-size: 11px;
+  font-weight: 700;
+  color: #f5f5dc;
+}
+
+.userMeta {
+  flex: 1;
+  text-align: left;
+  min-width: 0;
+}
+
+.userName {
+  font-family: 'Syne', sans-serif;
+  font-size: 12px;
+  font-weight: 700;
+  color: #f5f5dc;
+  line-height: 1.2;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.userHandle {
+  font-family: 'Inter', sans-serif;
+  font-size: 10px;
+  color: rgba(100, 116, 139, 0.85);
+  line-height: 1.3;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.subscriptionBadge {
+  padding: 2px 7px;
+  border-radius: 999px;
+  font-family: 'Inter', sans-serif;
+  font-size: 9.5px;
+  font-weight: 600;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  background: rgba(99, 102, 241, 0.1);
+  border: 1px solid rgba(148, 163, 184, 0.25);
+  color: rgba(148, 163, 184, 0.7);
+  flex-shrink: 0;
+}
+
+.subscriptionActive {
+  background: rgba(99, 102, 241, 0.14);
+  border-color: rgba(99, 102, 241, 0.38);
+  color: #a5b4fc;
+}
+
+.userChevron {
+  font-size: 12px;
+  color: rgba(148, 163, 184, 0.35);
+  flex-shrink: 0;
+  transition: transform 0.2s ease;
+}
+
+.userMenuOpen {
+  background: rgba(99, 102, 241, 0.08) !important;
+  border-color: rgba(99, 102, 241, 0.22) !important;
+}
+
+.userMenuOpen .userChevron {
+  transform: rotate(180deg);
+}
+
+/* ── Profile popup menu (opens upward) ──────────────────────
+   STEP 2: max-height + overflow-y stop this popup from clipping
+   off the TOP of a short screen. The vh line is a safe fallback
+   for older browsers; the dvh line overrides it in modern ones
+   that track the real visible viewport (handles browser chrome,
+   zoom, etc. correctly). */
+
+.profileMenu {
+  position: absolute;
+  bottom: calc(100% + 6px);
+  left: 8px;
+  right: 8px;
+  z-index: 10;
+
+  background: rgba(10, 15, 26, 0.98);
+  border: 1px solid rgba(99, 102, 241, 0.35);
+  border-radius: 14px;
+  overflow: hidden;
+  box-shadow:
+    0 0 0 4px rgba(15, 23, 42, 0.97),
+    0 0 0 5px rgba(99, 102, 241, 0.18),
+    0 -12px 32px rgba(0, 0, 0, 0.6);
+
+  opacity: 0;
+  pointer-events: none;
+  transform: translateY(6px) scale(0.97);
+  transition:
+    opacity 0.18s ease,
+    transform 0.18s cubic-bezier(0.32, 0.72, 0, 1);
+
+  max-height: calc(100vh - 40px);               /* NEW — fallback */
+  max-height: min(320px, calc(100dvh - 40px));   /* NEW — modern override */
+  overflow-y: auto;                              /* NEW */
+}
+
+.profileMenuOpen {
+  opacity: 1;
+  pointer-events: auto;
+  transform: translateY(0) scale(1);
+}
+
+.profileMenuItem {
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  width: 100%;
+  padding: 9px 12px;
+  background: transparent;
+  border: none;
+  border-bottom: 1px solid rgba(148, 163, 184, 0.06);
+  cursor: pointer;
+  font-family: 'Inter', sans-serif;
+  font-size: 12.5px;
+  font-weight: 500;
+  color: rgba(148, 163, 184, 0.8);
+  text-align: left;
+  transition: background 0.13s, color 0.13s;
+}
+.profileMenuItem:last-child { border-bottom: none; }
+.profileMenuItem:hover {
+  background: rgba(99, 102, 241, 0.08);
+  color: #c7d2fe;
+}
+
+.profileMenuItemDanger {
+  color: rgba(239, 68, 68, 0.75);
+}
+.profileMenuItemDanger:hover {
+  background: rgba(239, 68, 68, 0.08);
+  color: #fca5a5;
+}
+
+.profileMenuIcon {
+  font-size: 15px;
+  flex-shrink: 0;
+  color: currentColor;
+}
+
+/* ── Mobile ────────────────────────────────────────────────── */
+
 @media (max-width: 768px) {
-  .header.retracted {
-    transform: translateY(-90%);
+  .panelOuter {
+    box-shadow:
+      0 0 0 4px rgba(15, 23, 42, 0.97),
+      0 0 0 5px rgba(99, 102, 241, 0.22),
+      0 16px 40px rgba(0, 0, 0, 0.8);
   }
-  
-  .header.retracted::after {
-    width: 16px;
-    height: 1.5px;
-  }
-  
-  .showButton {
-    bottom: -10px;
-    font-size: 12px;
-    padding: 3px 8px;
-  }
-}
-
-@media (max-width: 480px) {
-  .header.retracted {
-    transform: translateY(-92%);
-  }
-  
-  .header.retracted::after {
-    width: 14px;
-  }
-  
-  .showButton {
-    padding: 2px 6px;
-  }
-}
-
-/* Disable retraction animations for reduced motion users */
-@media (prefers-reduced-motion: reduce) {
-  .header {
-    transition: none;
-  }
-  
-  .showButton {
-    transition: none;
-  }
-  
-  .header.retracted::after {
-    animation: none;
-    opacity: 0.6;
-  }
-}
-
-/* ✅ ENSURE MAIN CONTENT ADJUSTS PROPERLY */
-.header:not(.retracted) {
-  position: relative; /* Normal positioning when shown */
 }

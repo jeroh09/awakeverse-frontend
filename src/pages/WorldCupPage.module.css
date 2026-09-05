@@ -1,0 +1,595 @@
+/* WorldCupPage.module.css
+   Mirrors QuizPage.module.css structure exactly.
+   Uses CSS vars bound in WorldCupPage.jsx from design tokens. */
+
+/* ── Layout shell ─────────────────────────────────────────────────────── */
+
+.page {
+  background: var(--wc-bg0);
+  min-height: 100dvh;
+  font-family: var(--wc-font);
+  color: var(--wc-ivory);
+  display: flex;
+  flex-direction: column;
+}
+
+.appFrame {
+  display: flex;
+  flex-direction: column;
+  height: 100dvh;
+  max-width: 680px;
+  margin: 0 auto;
+  width: 100%;
+}
+
+/* ── Header ───────────────────────────────────────────────────────────── */
+
+.header {
+  flex-shrink: 0;
+  background: var(--wc-surface);
+  border-bottom: 1px solid var(--wc-line);
+  padding: 16px 20px 0;
+}
+
+.headerRow {
+  margin-bottom: 12px;
+}
+
+.brand {}
+
+.h1 {
+  font-family: var(--wc-display);
+  font-size: 18px;
+  font-weight: 700;
+  color: var(--wc-ivory);
+  margin: 0 0 2px;
+  letter-spacing: 2px;
+}
+
+.tag {
+  font-size: 12px;
+  color: var(--wc-muted);
+}
+
+/* ── Tabs ─────────────────────────────────────────────────────────────── */
+
+.tabs {
+  display: flex;
+  gap: 0;
+  border-bottom: 1px solid var(--wc-line);
+  margin: 0 -20px;
+  padding: 0 20px;
+}
+
+.tabBtn {
+  background: none;
+  border: none;
+  border-bottom: 2px solid transparent;
+  color: var(--wc-muted);
+  font-family: var(--wc-font);
+  font-size: 13px;
+  font-weight: 500;
+  padding: 10px 16px 10px;
+  cursor: pointer;
+  transition: color 0.15s, border-color 0.15s;
+  white-space: nowrap;
+  margin-bottom: -1px;
+}
+
+.tabBtn:hover {
+  color: var(--wc-ivory);
+}
+
+.tabActive {
+  color: var(--wc-accent);
+  border-bottom-color: var(--wc-accent);
+}
+
+/* ── Content ──────────────────────────────────────────────────────────── */
+
+.content {
+  flex: 1;
+  overflow-y: auto;
+  -webkit-overflow-scrolling: touch;
+  padding: 16px 20px;
+}
+
+.tabContent {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+/* ── Fixtures ─────────────────────────────────────────────────────────── */
+
+.fixtureGroup {}
+
+.groupLabel {
+  font-family: var(--wc-display);
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 2px;
+  text-transform: uppercase;
+  color: var(--wc-muted);
+  margin: 0 0 8px;
+}
+
+.fixtureCard {
+  width: 100%;
+  background: var(--wc-surface);
+  border: 1px solid var(--wc-line);
+  border-radius: 12px;
+  padding: 14px 16px;
+  cursor: pointer;
+  text-align: left;
+  transition: background 0.15s, border-color 0.15s;
+  margin-bottom: 8px;
+}
+
+.fixtureCard:hover {
+  background: var(--wc-inter);
+  border-color: rgba(99,102,241,0.3);
+}
+
+.fixtureSelected {
+  background: var(--wc-inter);
+  border-color: var(--wc-accent);
+}
+
+.fixtureMeta {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 10px;
+}
+
+.fixtureRound {
+  font-size: 11px;
+  color: var(--wc-muted);
+}
+
+.fixtureBadges {
+  display: flex;
+  gap: 6px;
+}
+
+.badgeToday {
+  background: rgba(16,185,129,0.15);
+  border: 1px solid rgba(16,185,129,0.3);
+  color: var(--wc-ok);
+  font-size: 9px;
+  font-weight: 700;
+  padding: 2px 7px;
+  border-radius: 20px;
+  letter-spacing: 0.5px;
+}
+
+.badgeScore {
+  background: rgba(99,102,241,0.15);
+  border: 1px solid rgba(99,102,241,0.3);
+  color: var(--wc-accent);
+  font-size: 9px;
+  font-weight: 700;
+  padding: 2px 7px;
+  border-radius: 20px;
+}
+
+.fixtureTeams {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+}
+
+.fixtureTeam {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.fixtureTeamRight {
+  text-align: right;
+  align-items: flex-end;
+}
+
+.fixtureSymbol {
+  font-size: 20px;
+}
+
+.fixtureName {
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--wc-ivory);
+}
+
+.fixtureTag {
+  font-size: 11px;
+  color: var(--wc-muted);
+}
+
+.fixtureVs {
+  font-size: 16px;
+  font-weight: 700;
+  color: var(--wc-muted);
+  flex-shrink: 0;
+}
+
+/* ── Team sections (legends) ──────────────────────────────────────────── */
+
+.teamSection {
+  margin-bottom: 8px;
+}
+
+.teamHeader {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 12px;
+  padding: 12px 16px;
+  background: var(--wc-surface);
+  border-radius: 10px;
+  border: 1px solid var(--wc-line);
+}
+
+.teamSymbol {
+  font-size: 24px;
+}
+
+.teamName {
+  font-size: 16px;
+  font-weight: 700;
+  color: var(--wc-ivory);
+  margin: 0;
+}
+
+.teamTag {
+  font-size: 11px;
+  color: var(--wc-accent);
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  margin: 0;
+}
+
+/* ── Legend cards ─────────────────────────────────────────────────────── */
+
+.legendCard {
+  background: var(--wc-surface);
+  border: 1px solid var(--wc-line);
+  border-radius: 12px;
+  padding: 14px 16px;
+  margin-bottom: 8px;
+}
+
+.legendHeader {
+  display: flex;
+  gap: 12px;
+  margin-bottom: 12px;
+}
+
+.legendIcon {
+  width: 42px;
+  height: 42px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 20px;
+  flex-shrink: 0;
+}
+
+.legendInfo {
+  flex: 1;
+}
+
+.legendName {
+  font-size: 15px;
+  font-weight: 700;
+  color: var(--wc-ivory);
+  margin: 0 0 2px;
+}
+
+.legendRole {
+  font-size: 11px;
+  color: var(--wc-accent);
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  margin: 0 0 6px;
+}
+
+.legendOneliner {
+  font-size: 13px;
+  color: var(--wc-muted);
+  line-height: 1.6;
+  margin: 0;
+  font-style: italic;
+}
+
+/* ── Image grid ───────────────────────────────────────────────────────── */
+
+.imageGrid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 8px;
+  margin-top: 10px;
+}
+
+.imageBox {
+  aspect-ratio: 1;
+  border-radius: 8px;
+  overflow: hidden;
+  background: var(--wc-bg0);
+  border: 1px solid var(--wc-line);
+  position: relative;
+}
+
+.generatedImage {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+}
+
+.imageLabel {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  background: rgba(10,15,26,0.85);
+  color: var(--wc-muted);
+  font-size: 9px;
+  padding: 4px 8px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.imageError {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  height: 100%;
+  padding: 8px;
+  text-align: center;
+  gap: 4px;
+  font-size: 10px;
+  color: var(--wc-err);
+}
+
+.imageLoading {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  height: 100%;
+  gap: 6px;
+  font-size: 10px;
+  color: var(--wc-muted);
+}
+
+/* ── Image comparison section ─────────────────────────────────────────── */
+
+.imageSection {
+  margin-bottom: 20px;
+}
+
+.imageLegendName {
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--wc-ivory);
+  margin: 0 0 10px;
+}
+
+.modelNote {
+  font-size: 12px;
+  color: var(--wc-muted);
+  text-align: center;
+  padding: 12px 0;
+  line-height: 1.6;
+}
+
+/* ── Prompt details ───────────────────────────────────────────────────── */
+
+.promptDetails {
+  margin-top: 10px;
+}
+
+.promptSummary {
+  font-size: 11px;
+  color: var(--wc-muted);
+  cursor: pointer;
+  user-select: none;
+}
+
+.promptText {
+  font-size: 11px;
+  color: var(--wc-muted);
+  font-family: monospace;
+  line-height: 1.6;
+  background: var(--wc-bg0);
+  padding: 8px 10px;
+  border-radius: 6px;
+  margin: 6px 0 0;
+}
+
+/* ── Utility ──────────────────────────────────────────────────────────── */
+
+.centered {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 40px 20px;
+  gap: 10px;
+  color: var(--wc-muted);
+  font-size: 14px;
+  text-align: center;
+}
+
+.emptyState {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 16px;
+  padding: 40px 20px;
+  color: var(--wc-muted);
+  font-size: 14px;
+  text-align: center;
+}
+
+.matchupLabel {
+  font-size: 18px;
+  font-weight: 700;
+  color: var(--wc-ivory);
+}
+
+.matchupLabel span {
+  color: var(--wc-muted);
+}
+
+.notice {
+  background: rgba(245,158,11,0.1);
+  border: 1px solid rgba(245,158,11,0.25);
+  color: var(--wc-warn);
+  font-size: 12px;
+  padding: 10px 14px;
+  border-radius: 8px;
+}
+
+.smallNote {
+  font-size: 12px;
+  color: var(--wc-muted);
+  margin: 0;
+}
+
+.spinner {
+  width: 24px;
+  height: 24px;
+  border: 2px solid rgba(148,163,184,0.2);
+  border-top-color: var(--wc-accent);
+  border-radius: 50%;
+  animation: spin 0.8s linear infinite;
+  flex-shrink: 0;
+}
+
+@keyframes spin {
+  to { transform: rotate(360deg); }
+}
+
+/* ── Buttons ──────────────────────────────────────────────────────────── */
+
+.primaryBtn {
+  background: var(--wc-accent);
+  color: #fff;
+  border: none;
+  border-radius: 10px;
+  padding: 12px 24px;
+  font-family: var(--wc-font);
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background 0.15s, opacity 0.15s;
+  white-space: nowrap;
+}
+
+.primaryBtn:hover:not(:disabled) {
+  background: var(--wc-hover);
+}
+
+.primaryBtn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.ghostBtn {
+  background: transparent;
+  border: 1px solid var(--wc-line);
+  color: var(--wc-muted);
+  border-radius: 8px;
+  padding: 8px 16px;
+  font-family: var(--wc-font);
+  font-size: 13px;
+  cursor: pointer;
+  transition: color 0.15s, border-color 0.15s;
+}
+
+.ghostBtn:hover {
+  color: var(--wc-ivory);
+  border-color: rgba(148,163,184,0.4);
+}
+
+/* ── Footer ───────────────────────────────────────────────────────────── */
+
+.footer {
+  flex-shrink: 0;
+  background: var(--wc-surface);
+  border-top: 1px solid var(--wc-line);
+  padding: 14px 20px;
+  display: flex;
+  gap: 10px;
+  align-items: center;
+  justify-content: flex-end;
+}
+
+/* ── Mobile ───────────────────────────────────────────────────────────── */
+
+@media (max-width: 480px) {
+  .h1 {
+    font-size: 15px;
+  }
+
+  .tabBtn {
+    font-size: 12px;
+    padding: 8px 12px;
+  }
+
+  .imageGrid {
+    grid-template-columns: repeat(3, 1fr);
+    gap: 6px;
+  }
+
+  .fixtureName {
+    font-size: 13px;
+  }
+}
+
+/* ── Carousel result ──────────────────────────────────────────────────── */
+
+.carouselResult {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 16px;
+  padding: 8px 0 24px;
+}
+
+.carouselImage {
+  width: 100%;
+  max-width: 540px;
+  border-radius: 8px;
+  box-shadow: 0 0 40px rgba(99,102,241,0.2);
+  display: block;
+}
+
+.carouselActions {
+  display: flex;
+  gap: 10px;
+  align-items: center;
+}
+
+.sceneLinks {
+  display: flex;
+  gap: 16px;
+}
+
+.sceneLink {
+  font-size: 11px;
+  color: var(--wc-accent);
+  text-decoration: none;
+  letter-spacing: 0.5px;
+}
+
+.sceneLink:hover {
+  color: var(--wc-hover);
+}

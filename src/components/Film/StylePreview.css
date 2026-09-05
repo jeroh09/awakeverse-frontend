@@ -1,0 +1,34 @@
+/* src/components/Film/StylePreview.css
+   Scoped styles for the New Film / New Series looping style preview. Shipped as
+   its own file (imported by StylePreview.jsx) rather than folded into
+   FilmWorkspace.css, because the launcher screen does not load that stylesheet.
+   Token fallbacks are inline so it renders correctly even where the --film-*
+   custom properties aren't in scope. */
+
+.film-style-preview {
+  position: relative;
+  margin: 0 auto 12px;
+  border-radius: var(--film-r-lg, 14px);
+  overflow: hidden;
+  border: 1px solid var(--film-bd-subtle, rgba(99, 102, 241, .22));
+  background: #000;
+  box-shadow: 0 10px 30px -14px rgba(0, 0, 0, .6);
+}
+
+.film-style-preview video {
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;        /* crop the square master to the chosen aspect */
+}
+
+/* Frame shapes — width-capped so previews stay compact in the picker. */
+.film-style-preview.ar-9x16 { width: 150px; aspect-ratio: 9 / 16; }
+.film-style-preview.ar-1x1  { width: 220px; aspect-ratio: 1 / 1; }
+.film-style-preview.ar-16x9 { width: 300px; aspect-ratio: 16 / 9; }
+
+/* The clip is decorative; the poster still conveys the look on its own, so
+   nothing playback-specific is required for reduced-motion users. */
+@media (prefers-reduced-motion: reduce) {
+  /* poster shows; playback is incidental. */
+}
