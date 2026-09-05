@@ -3173,7 +3173,7 @@ if (context.topic) setTopic(context.topic);
                   title="Two glass rails comparing A vs B across the whole episode"
                   onClick={() => { setTypePopoverOpen(false); setCompareOpen(true); }}>
                   <span style={{ fontSize: '1.1rem' }}>⚖️</span>
-                  {compareOn ? 'Comparison · on — edit' : 'Comparison rails — set up'}
+                  {'Comparison'}
                 </button>
 
                 {/* Product name (product_in_hand only) */}
