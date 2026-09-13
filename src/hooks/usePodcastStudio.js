@@ -752,12 +752,12 @@ export default function usePodcastStudio() {
   // Generation takes ~2 min (longer than the gateway timeout), so it MUST be
   // async — a direct request would 504. Returns image_url on success; throws
   // with a friendly message on failure/rejection.
-  const generateOverlayImage = useCallback(async ({ prompt, preset, shape }) => {
+  const generateOverlayImage = useCallback(async ({ prompt, preset, shape, mode }) => {
     const res = await fetch(`${API_BASE}/api/podcast/generate-overlay-image`, {
       method:      'POST',
       headers:     { 'Content-Type': 'application/json', 'X-CSRF-Token': getCsrf() },
       credentials: 'include',
-      body:        JSON.stringify({ prompt, preset, shape }),
+      body:        JSON.stringify({ prompt, preset, shape, mode }),
     });
     const start = await res.json().catch(() => ({}));
     if (!res.ok || !start.job_id) {

@@ -1148,6 +1148,7 @@ if (context.topic) setTopic(context.topic);
         prompt: overlayGenPrompt.trim(),
         preset: ov.preset || null,
         shape:  ov.shape || 'card',
+        mode:   ov.mode || 'overlay',
       });
       patchOverlay({ imageUrl: url });
       setOverlayGenPrompt('');
