@@ -583,3 +583,89 @@
   color: #64748B;
   margin-bottom: 1.25rem;
 }
+/* ─── MODE PICKER (create form) ─────────────────────────────── */
+.biz-mode-picker {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 0.5rem;
+}
+
+.biz-mode-option {
+  display: flex;
+  flex-direction: column;
+  gap: 0.28rem;
+  text-align: left;
+  padding: 0.7rem 0.8rem;
+  border-radius: 12px;
+  border: 1px solid rgba(148,163,184,0.18);
+  box-shadow:
+    0 0 0 3px rgba(10,15,26,0.95),
+    0 0 0 4px rgba(148,163,184,0.07);
+  background: #1C2640;
+  color: #94A3B8;
+  cursor: pointer;
+  transition: all 0.15s cubic-bezier(0.4,0,0.2,1);
+}
+
+.biz-mode-option:hover {
+  border-color: rgba(99,102,241,0.28);
+  background: #243152;
+}
+
+.biz-mode-option.active {
+  border-color: #6366F1;
+  background: #243152;
+  color: #F1F5F9;
+  box-shadow:
+    0 0 0 3px rgba(10,15,26,0.95),
+    0 0 0 5px rgba(99,102,241,0.38),
+    0 0 18px rgba(99,102,241,0.14);
+}
+
+.biz-mode-option-head {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+  font-family: 'Syne', -apple-system, sans-serif;
+  font-size: 0.82rem;
+  font-weight: 700;
+  color: #F1F5F9;
+}
+
+.biz-mode-option.active .biz-mode-option-head { color: #C7D2FE; }
+
+.biz-mode-option-sub {
+  font-size: 0.72rem;
+  line-height: 1.4;
+  color: #64748B;
+}
+
+/* Stack the two options on narrow panels */
+@media (max-width: 640px) {
+  .biz-mode-picker { grid-template-columns: 1fr; }
+}
+
+/* ─── MODE TAG (scenario list) ──────────────────────────────── */
+.biz-mode-tag {
+  display: inline-block;
+  padding: 0.06rem 0.4rem;
+  border-radius: 6px;
+  font-size: 0.64rem;
+  font-weight: 700;
+  letter-spacing: 0.03em;
+  text-transform: uppercase;
+  margin-right: 0.45rem;
+  vertical-align: 1px;
+}
+
+.biz-mode-tag--business {
+  color: #818CF8;
+  background: rgba(99,102,241,0.13);
+  border: 1px solid rgba(99,102,241,0.28);
+}
+
+.biz-mode-tag--creator {
+  color: #F0ABFC;
+  background: rgba(217,70,239,0.12);
+  border: 1px solid rgba(217,70,239,0.30);
+}

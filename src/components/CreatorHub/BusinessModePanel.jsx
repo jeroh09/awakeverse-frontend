@@ -71,6 +71,59 @@ const CalendarIcon = () => (
   </svg>
 );
 
+const SparkleIcon = () => (
+  <svg width="13" height="13" viewBox="0 0 24 24" fill="none">
+    <path d="M12 3l1.8 5.2L19 10l-5.2 1.8L12 17l-1.8-5.2L5 10l5.2-1.8L12 3z" stroke="currentColor" strokeWidth="1.8" strokeLinejoin="round"/>
+    <path d="M18 15l.7 2 2 .7-2 .7-.7 2-.7-2-2-.7 2-.7.7-2z" stroke="currentColor" strokeWidth="1.4" strokeLinejoin="round"/>
+  </svg>
+);
+
+/* ─── Mode copy ─────────────────────────────────────────────────
+   One source of truth for every label that differs between a
+   business-intel scenario and a creator-content scenario. Keyed by
+   brief_type; unknown/missing values fall back to 'business'.
+──────────────────────────────────────────────────────────────── */
+const MODE_COPY = {
+  business: {
+    label:            'Business intel',
+    listTag:          'Intel',
+    pickerTitle:      'Market intelligence',
+    pickerSub:        'Strategic brief on your sector — risks, competitors, what to act on.',
+    keywordsLabel:    'Keywords to track',
+    keywordsPlace:    'freight, supply chain, tariffs',
+    keywordsHint:     'Comma-separated — used to score topic relevance.',
+    competitorsLabel: 'Competitors (optional)',
+    competitorsPlace: 'DHL, FedEx',
+    competitorsHint:  '',
+    scenarioPlace:    'e.g. UK Logistics Weekly',
+    briefSuffix:      'Weekly Brief',
+    summaryLabel:     'Executive Summary',
+    rolesLine:        'Running Analyst → Strategist → Critic…',
+    emptySub:         "Generate your first brief — Analyst, Strategist and Critic will synthesise this week's topics for you.",
+    notePlace:        'e.g. Jet fuel angle is relevant — follow up with ops team',
+  },
+  creator: {
+    label:            'Creator content',
+    listTag:          'Content',
+    pickerTitle:      'Content ideas',
+    pickerSub:        'Post ideas from your space — hooks, formats, what beats the competition.',
+    keywordsLabel:    'Topics / content pillars',
+    keywordsPlace:    'PS5 repair, HDMI port, stick drift',
+    keywordsHint:     'Comma-separated — the themes you make content about.',
+    competitorsLabel: 'Rival creators / channels (optional)',
+    competitorsPlace: 'TronicsFix, iFixit',
+    competitorsHint:  'Channels or accounts already covering your space.',
+    scenarioPlace:    'e.g. Weekly repair content ideas',
+    briefSuffix:      'Content Brief',
+    summaryLabel:     'Top Post Ideas',
+    rolesLine:        'Finding topics → shaping angles → cutting the weak ones…',
+    emptySub:         "Generate your first brief — we'll scan your space and turn this week's stories into post ideas you can make.",
+    notePlace:        'e.g. Save the teardown angle for next week',
+  },
+};
+
+const modeCopy = (briefType) => MODE_COPY[briefType] || MODE_COPY.business;
+
 /* ─── Helpers ───────────────────────────────────────────────── */
 function fmtDate(iso) {
   if (!iso) return '—';
@@ -94,11 +147,11 @@ const EmptyScenarios = ({ onAdd }) => (
   </div>
 );
 
-const EmptySnapshot = ({ scenarioName, onGenerate, generating }) => (
+const EmptySnapshot = ({ scenarioName, onGenerate, generating, copy }) => (
   <div className="biz-empty">
     <div className="biz-empty-icon">📄</div>
     <div className="biz-empty-title">No brief yet for {scenarioName}</div>
-    <div className="biz-empty-sub">Generate your first brief — Analyst, Strategist and Critic will synthesise this week's topics for you.</div>
+    <div className="biz-empty-sub">{(copy || MODE_COPY.business).emptySub}</div>
     <button
       className="biz-btn biz-btn-primary"
       onClick={onGenerate}
@@ -123,6 +176,7 @@ export default function BusinessModePanel() {
   const [savingNote, setSavingNote]         = useState(false);
 
   const [formData, setFormData] = useState({
+    brief_type:       'business',
     business_name:    '',
     name:             '',
     sector:           '',
@@ -130,6 +184,9 @@ export default function BusinessModePanel() {
     keyword_filters:  '',
     competitor_names: '',
   });
+
+  /* Copy for the form currently being filled in */
+  const formCopy = modeCopy(formData.brief_type);
 
   /* Load scenarios on mount */
   useEffect(() => {
@@ -149,6 +206,7 @@ export default function BusinessModePanel() {
 
   const handleCreateSubmit = useCallback(async () => {
     const payload = {
+      brief_type:       formData.brief_type === 'creator' ? 'creator' : 'business',
       business_name:    formData.business_name.trim() || null,
       name:             formData.name.trim(),
       sector:           formData.sector.trim(),
@@ -159,14 +217,14 @@ export default function BusinessModePanel() {
     const created = await smb.createScenario(payload);
     if (created) {
       setShowCreateForm(false);
-      setFormData({ business_name:'', name:'', sector:'', geography:'UK', keyword_filters:'', competitor_names:'' });
+      setFormData({ brief_type:'business', business_name:'', name:'', sector:'', geography:'UK', keyword_filters:'', competitor_names:'' });
       smb.selectScenario(created);
     }
   }, [formData, smb]);
 
   const handleCancelCreate = useCallback(() => {
     setShowCreateForm(false);
-    setFormData({ business_name:'', name:'', sector:'', geography:'UK', keyword_filters:'', competitor_names:'' });
+    setFormData({ brief_type:'business', business_name:'', name:'', sector:'', geography:'UK', keyword_filters:'', competitor_names:'' });
   }, []);
 
   /* ── Snapshot note save ── */
@@ -221,7 +279,12 @@ export default function BusinessModePanel() {
                       </div>
                       <ScenarioBadge scenario={s} snapshots={smb.snapshots} activeId={smb.activeScenario?.id} generating={smb.generating} />
                     </div>
-                    <div className="biz-scenario-meta">{s.sector}{s.geography ? ` · ${s.geography}` : ''}</div>
+                    <div className="biz-scenario-meta">
+                      <span className={`biz-mode-tag biz-mode-tag--${(s.brief_type === 'creator') ? 'creator' : 'business'}`}>
+                        {modeCopy(s.brief_type).listTag}
+                      </span>
+                      {s.sector}{s.geography ? ` · ${s.geography}` : ''}
+                    </div>
                   </div>
                 ))}
               </div>
@@ -244,21 +307,55 @@ export default function BusinessModePanel() {
 
               <div className="biz-create-form">
                 <div className="biz-form-field">
+                  <div className="biz-form-label">Brief type</div>
+                  <div className="biz-mode-picker" role="radiogroup" aria-label="Brief type">
+                    <button
+                      type="button"
+                      role="radio"
+                      aria-checked={formData.brief_type === 'business'}
+                      className={`biz-mode-option${formData.brief_type === 'business' ? ' active' : ''}`}
+                      onClick={() => handleFormChange('brief_type', 'business')}
+                    >
+                      <span className="biz-mode-option-head">
+                        <ScenarioIcon /> {MODE_COPY.business.pickerTitle}
+                      </span>
+                      <span className="biz-mode-option-sub">{MODE_COPY.business.pickerSub}</span>
+                    </button>
+                    <button
+                      type="button"
+                      role="radio"
+                      aria-checked={formData.brief_type === 'creator'}
+                      className={`biz-mode-option${formData.brief_type === 'creator' ? ' active' : ''}`}
+                      onClick={() => handleFormChange('brief_type', 'creator')}
+                    >
+                      <span className="biz-mode-option-head">
+                        <SparkleIcon /> {MODE_COPY.creator.pickerTitle}
+                      </span>
+                      <span className="biz-mode-option-sub">{MODE_COPY.creator.pickerSub}</span>
+                    </button>
+                  </div>
+                </div>
+
+                <div className="biz-form-field">
                   <div className="biz-form-label">Business name</div>
                   <input
                     className="biz-form-input"
-                    placeholder="e.g. Acme Logistics Ltd"
+                    placeholder={formData.brief_type === 'creator' ? 'e.g. FixItFrank' : 'e.g. Acme Logistics Ltd'}
                     value={formData.business_name}
                     onChange={e => handleFormChange('business_name', e.target.value)}
                   />
-                  <div className="biz-form-hint">Used to personalise briefs and emails.</div>
+                  <div className="biz-form-hint">
+                    {formData.brief_type === 'creator'
+                      ? 'Your name, channel or brand — used to personalise ideas.'
+                      : 'Used to personalise briefs and emails.'}
+                  </div>
                 </div>
 
                 <div className="biz-form-field">
                   <div className="biz-form-label">Scenario name</div>
                   <input
                     className="biz-form-input"
-                    placeholder="e.g. UK Logistics Weekly"
+                    placeholder={formCopy.scenarioPlace}
                     value={formData.name}
                     onChange={e => handleFormChange('name', e.target.value)}
                   />
@@ -285,24 +382,27 @@ export default function BusinessModePanel() {
                 </div>
 
                 <div className="biz-form-field">
-                  <div className="biz-form-label">Keywords to track</div>
+                  <div className="biz-form-label">{formCopy.keywordsLabel}</div>
                   <input
                     className="biz-form-input"
-                    placeholder="freight, supply chain, tariffs"
+                    placeholder={formCopy.keywordsPlace}
                     value={formData.keyword_filters}
                     onChange={e => handleFormChange('keyword_filters', e.target.value)}
                   />
-                  <div className="biz-form-hint">Comma-separated — used to score topic relevance.</div>
+                  <div className="biz-form-hint">{formCopy.keywordsHint}</div>
                 </div>
 
                 <div className="biz-form-field">
-                  <div className="biz-form-label">Competitors (optional)</div>
+                  <div className="biz-form-label">{formCopy.competitorsLabel}</div>
                   <input
                     className="biz-form-input"
-                    placeholder="DHL, FedEx"
+                    placeholder={formCopy.competitorsPlace}
                     value={formData.competitor_names}
                     onChange={e => handleFormChange('competitor_names', e.target.value)}
                   />
+                  {formCopy.competitorsHint && (
+                    <div className="biz-form-hint">{formCopy.competitorsHint}</div>
+                  )}
                 </div>
 
                 <div className="biz-form-actions">
@@ -356,6 +456,7 @@ export default function BusinessModePanel() {
                     scenarioName={smb.activeScenario.business_name || smb.activeScenario.name}
                     onGenerate={handleGenerate}
                     generating={smb.generating}
+                    copy={modeCopy(smb.activeScenario.brief_type)}
                   />
                 </div>
               )}
@@ -386,7 +487,7 @@ export default function BusinessModePanel() {
                   <div className="biz-generate-row">
                     <button className="biz-btn biz-btn-ghost" disabled>Generating…</button>
                     <div className="biz-spinner" />
-                    <span className="biz-generate-meta">Running Analyst → Strategist → Critic…</span>
+                    <span className="biz-generate-meta">{modeCopy(smb.activeScenario.brief_type).rolesLine}</span>
                   </div>
                 ) : (
                   <div className="biz-generate-row">
@@ -467,6 +568,7 @@ function SnapshotReviewCard({
   savingNote, onSaveNote, onApprove, onDismiss, onDownload,
 }) {
   const isActing = actionLoading === snapshot.id;
+  const copy = modeCopy(scenario.brief_type);
 
   return (
     <div className="biz-snapshot-card">
@@ -475,7 +577,7 @@ function SnapshotReviewCard({
           {scenario.business_name && (
             <div className="biz-snapshot-business">{scenario.business_name}</div>
           )}
-          <div className="biz-snapshot-title">{scenario.name} — Weekly Brief</div>
+          <div className="biz-snapshot-title">{scenario.name} — {copy.briefSuffix}</div>
           <div className="biz-snapshot-week">Week of {fmtWeek(snapshot.week_of)} · Ready for review</div>
         </div>
         <span className="biz-badge biz-badge-pending">Review ready</span>
@@ -497,7 +599,7 @@ function SnapshotReviewCard({
       {/* Summary bullets */}
       {snapshot.summary_bullets?.length > 0 && (
         <>
-          <div className="biz-section-label">Executive Summary</div>
+          <div className="biz-section-label">{copy.summaryLabel}</div>
           <ul className="biz-bullets-list">
             {snapshot.summary_bullets.map((b, i) => (
               <li key={i}>
@@ -514,7 +616,7 @@ function SnapshotReviewCard({
       <div className="biz-note-row">
         <input
           className="biz-note-input"
-          placeholder="e.g. Jet fuel angle is relevant — follow up with ops team"
+          placeholder={copy.notePlace}
           value={snapshotNote}
           onChange={e => setSnapshotNote(e.target.value)}
           onKeyDown={e => { if (e.key === 'Enter') onSaveNote(); }}
