@@ -181,6 +181,11 @@
 .cd-canvas--business {
   grid-template-columns: 1fr;
   padding-top: 66px;
+  /* Business/creator panel content can exceed one viewport (e.g. the create
+     form with the brief-type picker). The base .cd-canvas clips overflow to
+     pin the 3-column creator layout; here we must let it scroll instead. */
+  overflow-y: auto;
+  overflow-x: hidden;
 }
 
 /* ══════════════════════════════════════════════════════════════════════════════
