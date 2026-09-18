@@ -36,6 +36,7 @@ import InsufficientCreditsBanner from './InsufficientCreditsBanner';
 import styles from './PodcastStudioPage.module.css';
 import ApiErrorService from '../../services/ApiErrorService';
 import VoiceBrowser from './VoiceBrowser';
+import OutfitPicker from './OutfitPicker';
 import ComparisonSetup from './ComparisonSetup';
 import OverlayTypePopover from './OverlayTypePopover';
 import { RECIPE_OPTIONS, currentRecipe } from './overlayStyle';
@@ -339,6 +340,10 @@ export default function PodcastStudioPage({ context, onClose }) {
     generateAvatarPreview,
     confirmAvatarPreview,
     bakeAvatarEnv,
+    loadOutfits,
+    generateOutfitPreview,
+    confirmOutfit,
+    deleteOutfit,
     generateEnvironmentPreview,
     deleteEnvironment,
     getCharacterRef,
@@ -386,7 +391,7 @@ export default function PodcastStudioPage({ context, onClose }) {
   // ── Speakers ──────────────────────────────────────────────────────────────
   const [speakers, setSpeakers] = useState([]);
   // Derived AFTER speakers — max guests and current count based on envMode
-  const maxGuests         = envMode === 'panel' ? 2 : envMode === 'solo' ? 0 : 1;
+  const maxGuests         = envMode === 'panel' ? 2 : 1;
   const currentGuestCount = speakers.filter(s => s.speakerId !== 'user').length;
 
   // ── Avatar build ──────────────────────────────────────────────────────────
@@ -545,23 +550,14 @@ export default function PodcastStudioPage({ context, onClose }) {
       return;
     }
     setPodcastMode(mode);
-    if (mode === 'solo') {
-      setActiveTab('script');
-      setSelectedEnvId('solo_studio');   // default env for solo, like panel/standard do
-    }
-  }, [consented, recordConsent, setPodcastMode, setActiveTab, setSelectedEnvId]);
+    if (mode === 'solo') setActiveTab('script');
+  }, [consented, recordConsent, setPodcastMode, setActiveTab]);
 
   // Switch between standard (2-chair) and panel (3-chair) env modes
   const handleEnvModeSwitch = useCallback((mode) => {
     setEnvMode(mode);
     if (mode === 'panel') {
       setSelectedEnvId('panel_living_c');
-    } else if (mode === 'solo') {
-      setSelectedEnvId('solo_studio');
-      // Solo = host only — drop every guest.
-      setSpeakers(prev => prev.filter(s => s.speakerId === 'user'));
-      setGuest2File(null); setGuest2Preview(null);
-      setGuest2Name('');   setGuest2Built(false); setGuest2Error(null);
     } else {
       setSelectedEnvId('studio_tech');
       // Trim to max 1 guest when switching down
@@ -583,7 +579,7 @@ export default function PodcastStudioPage({ context, onClose }) {
   // slots, env grid filter) is already in sync the moment a sub-choice is
   // picked — identical to what clicking the format toggle itself would do.
   const handlePickGenCapacity = useCallback((capacity) => {
-    handleEnvModeSwitch(capacity === 3 ? 'panel' : capacity === 1 ? 'solo' : 'standard');
+    handleEnvModeSwitch(capacity === 3 ? 'panel' : 'standard');
     setGenEnvCapacity(capacity);
   }, [handleEnvModeSwitch]);
 
@@ -704,6 +700,8 @@ export default function PodcastStudioPage({ context, onClose }) {
 
   // Which speaker the voice-browser overlay is open for (null = closed).
   const [browserSpeakerId, setBrowserSpeakerId] = useState(null);
+  // Which speaker the outfit picker is open for (null = closed).
+  const [outfitSpeakerId, setOutfitSpeakerId] = useState(null);
 
   // ── Overlay editor state (on-screen media per line) ──────────────────────────
   // overlayLineId: which line's visual editor is open. When set, the right
@@ -1148,7 +1146,6 @@ if (context.topic) setTopic(context.topic);
         prompt: overlayGenPrompt.trim(),
         preset: ov.preset || null,
         shape:  ov.shape || 'card',
-        mode:   ov.mode || 'overlay',
       });
       patchOverlay({ imageUrl: url });
       setOverlayGenPrompt('');
@@ -1303,6 +1300,14 @@ if (context.topic) setTopic(context.topic);
       previewAudioRef.current = null;
       setPlayingPreviewId(null);
     }
+  }, []);
+
+  // Per-episode outfit choice for a real-person speaker. refUrl=null → Original
+  // (no outfit). Stored on the speaker; serialized as outfit_ref_url at generate.
+  const handleSelectOutfit = useCallback((speakerId, refUrl, label) => {
+    setSpeakers(prev => prev.map(s =>
+      s.speakerId === speakerId ? { ...s, outfitRefUrl: refUrl || null, outfitLabel: label || null } : s
+    ));
   }, []);
 
   // ── File handling ─────────────────────────────────────────────────────────
@@ -1575,6 +1580,8 @@ if (context.topic) setTopic(context.topic);
             voice_id:       s.voiceId       || defaultVoice,
             gender:         s.gender        || 'neutral',
             accent:         s.accent        || '',
+            // Per-episode outfit; absent → original avatar look (unchanged path).
+            ...(s.outfitRefUrl ? { outfit_ref_url: s.outfitRefUrl } : {}),
           };
         }),
         lines: currentLines
@@ -2337,7 +2344,7 @@ if (context.topic) setTopic(context.topic);
               ))}
 
               {/* Real guest slots — standard: 1 slot, panel: 2 slots side by side */}
-              {(envMode !== 'solo') && ((envMode === 'panel') ||
+              {((envMode === 'panel') ||
                 (podcastMode === 'interview' && !speakers.some(s => s.isCharacter))) && (
                 <div className={styles.glassCard}>
                   <div className={styles.cardLabel}>
@@ -2686,18 +2693,6 @@ if (context.topic) setTopic(context.topic);
                             {/* Citation chips — Sources Mode lines only */}
                             {line.citations?.length ? (
                               <CitationChips citations={line.citations} edited={!!line.citationsEdited} />
-                            ) : null}
-                            {/* Episode comparison — shown on every line since it applies episode-wide */}
-                            {compareOn ? (
-                              <button
-                                className={styles.overlayAttached}
-                                onClick={() => setCompareOpen(true)}
-                                title="Edit the episode comparison"
-                                style={{ borderColor: 'rgba(16,185,129,0.45)' }}
-                              >
-                                <span className={styles.overlayThumb}>⚖️</span>
-                                Comparison: {compareLeft.name || 'A'} vs {compareRight.name || 'B'} — all lines
-                              </button>
                             ) : null}
                             {/* Overlay: AI suggestion chip (tap to accept) or attached indicator */}
                             {(() => {
@@ -3146,15 +3141,19 @@ if (context.topic) setTopic(context.topic);
                     ['card','▣','Glass card','A tilted frosted-glass panel beside the speaker — best for charts, stats, or quotes'],
                     ['cutout','✂','Cutout','The image with its background removed, floating free (no card) — best for products or logos'],
                     ['product_in_hand','✋','In hand','The speaker is composed holding the product as they talk — best for a physical item'],
+                    ['__compare__','⚖️','Compare','Two glass rails comparing A vs B across the whole episode — opens the comparison setup'],
                   ].map(([val, ic, lbl, hint]) => {
-                    const isOn = val === 'product_in_hand'
-                      ? ov.mode === 'product_in_hand'
-                      : ov.mode !== 'product_in_hand' && (ov.shape || 'card') === val;
+                    const isOn = val === '__compare__'
+                      ? compareOn
+                      : val === 'product_in_hand'
+                        ? ov.mode === 'product_in_hand'
+                        : ov.mode !== 'product_in_hand' && (ov.shape || 'card') === val;
                     return (
                       <button key={val}
                         className={`${styles.overlayType} ${isOn ? styles.overlayTypeOn : ''}`}
                         title={hint}
                         onClick={() => {
+                          if (val === '__compare__') { setTypePopoverOpen(false); setCompareOpen(true); return; }
                           if (val === 'product_in_hand') { patchOverlay({ mode: 'product_in_hand', shape: 'card' }); setTypePopoverOpen(false); return; }
                           patchOverlay({ mode: 'overlay', shape: val, preset: ov.preset || (multi ? 'corner_small_tr' : 'corner_card_tr') });
                           setTypePopoverOpen(true);   // open this type's position + look pop-out
@@ -3164,18 +3163,6 @@ if (context.topic) setTopic(context.topic);
                     );
                   })}
                 </div>
-
-                {/* Episode-wide — separate from the per-line shapes above */}
-                <div className={styles.overlaySeg}>Episode-wide</div>
-                <button
-                  type="button"
-                  className={`${styles.overlayType} ${compareOn ? styles.overlayTypeOn : ''}`}
-                  style={{ width: '100%', textAlign: 'left', display: 'flex', alignItems: 'center', gap: '0.5rem' }}
-                  title="Two glass rails comparing A vs B across the whole episode"
-                  onClick={() => { setTypePopoverOpen(false); setCompareOpen(true); }}>
-                  <span style={{ fontSize: '1.1rem' }}>⚖️</span>
-                  {'Comparison'}
-                </button>
 
                 {/* Product name (product_in_hand only) */}
                 {ov.mode === 'product_in_hand' && (
@@ -3187,14 +3174,6 @@ if (context.topic) setTopic(context.topic);
                       placeholder="e.g. AURA serum"
                       onChange={e => patchOverlay({ productName: e.target.value })}
                     />
-                    {(!ov.imageUrl || !(ov.productName || '').trim()) && (
-                      <div style={{ fontSize: '0.68rem', color: '#F59E0B', marginTop: 6, lineHeight: 1.4 }}>
-                        ⚠ In-hand needs a product image and a name to render —
-                        {!(ov.productName || '').trim() ? ' add a product name' : ''}
-                        {(!ov.imageUrl && !(ov.productName || '').trim()) ? ' and' : ''}
-                        {!ov.imageUrl ? ' upload the product image below' : ''}.
-                      </div>
-                    )}
                   </>
                 )}
 
@@ -3379,6 +3358,33 @@ if (context.topic) setTopic(context.topic);
                           {v ? 'Change' : 'Browse ▸'}
                         </span>
                       </button>
+
+                      {/* Outfit — real-person avatars only (needs a saved avatar_id);
+                          AI characters carry their own wardrobe and are skipped. */}
+                      {!spk.isCharacter && spk.savedAvatarId && (
+                        <button
+                          type="button"
+                          onClick={() => setOutfitSpeakerId(spk.speakerId)}
+                          title="Choose or create an outfit for this episode"
+                          style={{
+                            display: 'flex', alignItems: 'center', gap: '0.5rem', width: '100%',
+                            marginTop: '0.4rem', textAlign: 'left', cursor: 'pointer',
+                            background: 'rgba(15,23,42,0.8)', border: '1px solid rgba(99,102,241,0.22)',
+                            borderRadius: 12, padding: '0.5rem 0.7rem', fontFamily: 'Inter,sans-serif',
+                          }}
+                        >
+                          <span aria-hidden="true">👗</span>
+                          <span style={{ flex: 1, minWidth: 0, fontSize: '0.64rem', color: '#94a3b8' }}>
+                            Outfit
+                            <span style={{ color: spk.outfitRefUrl ? '#A5B4FC' : '#e0e7ff', fontWeight: 600 }}>
+                              {'  '}{spk.outfitRefUrl ? (spk.outfitLabel || 'Custom') : 'Original'}
+                            </span>
+                          </span>
+                          <span style={{ flexShrink: 0, fontSize: '0.64rem', fontWeight: 600, color: '#818CF8', whiteSpace: 'nowrap' }}>
+                            {spk.outfitRefUrl ? 'Change' : 'Add ▸'}
+                          </span>
+                        </button>
+                      )}
                     </div>
                   );
                 })}
@@ -3407,6 +3413,25 @@ if (context.topic) setTopic(context.topic);
             onCloneRecord={handleCloneRecord}
           />
 
+          {/* Outfit picker overlay — per real-person speaker (position:fixed) */}
+          {(() => {
+            const spk = speakers.find(s => s.speakerId === outfitSpeakerId);
+            if (!spk) return null;
+            return (
+              <OutfitPicker
+                open={!!outfitSpeakerId}
+                onClose={() => setOutfitSpeakerId(null)}
+                avatarId={spk.savedAvatarId}
+                speakerLabel={spk.displayName || (spk.role === 'host' ? 'Host' : 'Guest')}
+                currentRefUrl={spk.outfitRefUrl || null}
+                onSelect={(refUrl, label) => handleSelectOutfit(spk.speakerId, refUrl, label)}
+                loadOutfits={loadOutfits}
+                generateOutfitPreview={generateOutfitPreview}
+                confirmOutfit={confirmOutfit}
+                deleteOutfit={deleteOutfit}
+              />
+            );
+          })()}
           {/* Comparison setup pop-out (opens from the Comparison trigger) */}
           <ComparisonSetup
             open={compareOpen}
@@ -3592,17 +3617,13 @@ if (context.topic) setTopic(context.topic);
               {/* Toggle pill — reuses existing scriptModeToggle CSS, now 3 options */}
               <div className={styles.scriptModeToggle} style={{ marginBottom: '0.6rem', flexShrink: 0 }}>
                 <button
-                  className={`${styles.scriptModeBtn} ${envPanelMode === 'browse' && envMode === 'solo' ? styles.scriptModeBtnActive : ''}`}
-                  onClick={() => { handleEnvModeSwitch('solo'); setEnvPanelMode('browse'); }}
-                  title="Solo host — one chair">Solo</button>
-                <button
                   className={`${styles.scriptModeBtn} ${envPanelMode === 'browse' && envMode === 'standard' ? styles.scriptModeBtnActive : ''}`}
                   onClick={() => { handleEnvModeSwitch('standard'); setEnvPanelMode('browse'); }}
-                  title="You + one guest">Duo</button>
+                  title="1–2 person podcast">1–2 Guests</button>
                 <button
                   className={`${styles.scriptModeBtn} ${envPanelMode === 'browse' && envMode === 'panel' ? styles.scriptModeBtnActive : ''}`}
                   onClick={() => { handleEnvModeSwitch('panel'); setEnvPanelMode('browse'); }}
-                  title="3-person panel">Panel</button>
+                  title="3-person panel">Panel · 3</button>
                 <button
                   className={`${styles.scriptModeBtn} ${envPanelMode === 'generate' ? styles.scriptModeBtnActive : ''}`}
                   onClick={() => {
@@ -3628,12 +3649,9 @@ if (context.topic) setTopic(context.topic);
                   ) : (
                     <div className={styles.envGrid}>
                       {environments
-                        .filter(env => {
-                          const cap = env.guestCapacity ?? 2;
-                          if (envMode === 'solo')  return cap === 1;
-                          if (envMode === 'panel') return cap === 3;
-                          return cap === 2;
-                        })
+                        .filter(env => envMode === 'panel'
+                          ? env.guestCapacity === 3
+                          : (env.guestCapacity ?? 2) !== 3)
                         .map(env => {
                           const isEnvConfirm = confirmDelete?.type === 'environment' && confirmDelete?.id === env.envId;
                           return (
@@ -3706,16 +3724,12 @@ if (context.topic) setTopic(context.topic);
                     <>
                       <p className={styles.genEnvIntro}>Choose a format for your background:</p>
                       <div className={styles.genEnvCapacityChoices}>
-                        <button className={styles.genEnvCapacityCard} onClick={() => handlePickGenCapacity(1)}>
-                          <div className={styles.genEnvCapacityTitle}>Solo · 1</div>
-                          <div className={styles.genEnvCapacityDesc}>A single-chair close-up for a solo host — no empty seats behind you.</div>
-                        </button>
                         <button className={styles.genEnvCapacityCard} onClick={() => handlePickGenCapacity(2)}>
-                          <div className={styles.genEnvCapacityTitle}>Duo · 2</div>
-                          <div className={styles.genEnvCapacityDesc}>A cozy medium shot for you and one guest, side by side.</div>
+                          <div className={styles.genEnvCapacityTitle}>1-2 Guests</div>
+                          <div className={styles.genEnvCapacityDesc}>A cozy medium shot for a solo podcast or you and one guest, side by side.</div>
                         </button>
                         <button className={styles.genEnvCapacityCard} onClick={() => handlePickGenCapacity(3)}>
-                          <div className={styles.genEnvCapacityTitle}>Panel · 3</div>
+                          <div className={styles.genEnvCapacityTitle}>3 Guests · Panel</div>
                           <div className={styles.genEnvCapacityDesc}>A wider panel shot with room for two guests alongside you.</div>
                         </button>
                       </div>

@@ -752,12 +752,12 @@ export default function usePodcastStudio() {
   // Generation takes ~2 min (longer than the gateway timeout), so it MUST be
   // async — a direct request would 504. Returns image_url on success; throws
   // with a friendly message on failure/rejection.
-  const generateOverlayImage = useCallback(async ({ prompt, preset, shape, mode }) => {
+  const generateOverlayImage = useCallback(async ({ prompt, preset, shape }) => {
     const res = await fetch(`${API_BASE}/api/podcast/generate-overlay-image`, {
       method:      'POST',
       headers:     { 'Content-Type': 'application/json', 'X-CSRF-Token': getCsrf() },
       credentials: 'include',
-      body:        JSON.stringify({ prompt, preset, shape, mode }),
+      body:        JSON.stringify({ prompt, preset, shape }),
     });
     const start = await res.json().catch(() => ({}));
     if (!res.ok || !start.job_id) {
@@ -1229,6 +1229,103 @@ export default function usePodcastStudio() {
     };
   }, []);
 
+  // ── Outfits (per-avatar wardrobe) ─────────────────────────────────────────
+  // Real-person avatars only. Endpoints live under /avatar/<avatarId>/outfit(s).
+  // The chosen outfit's outfitRefUrl is attached to the session speaker at render.
+
+  const loadOutfits = useCallback(async (avatarId) => {
+    if (!avatarId) return [];
+    try {
+      const res = await fetch(`${API_BASE}/api/podcast/avatar/${avatarId}/outfits`, {
+        credentials: 'include',
+      });
+      if (!res.ok) { console.warn('⚠️ loadOutfits non-OK:', res.status); return []; }
+      const data = await res.json();
+      return (data.outfits || []).map(o => ({
+        outfitId:       o.outfit_id,
+        label:          o.label,
+        description:    o.description,
+        fullbodyRefUrl: o.fullbody_ref_url,   // doubles as the picker thumbnail
+        outfitRefUrl:   o.outfit_ref_url,     // what the speaker carries at render
+        createdAt:      o.created_at,
+      }));
+    } catch (e) {
+      console.warn('⚠️ loadOutfits error:', e.message);
+      return [];
+    }
+  }, []);
+
+  // Mirrors generateAvatarPreview: sync, one Nano pass, 422 → likeness rejection.
+  const generateOutfitPreview = useCallback(async ({ avatarId, description, label, attemptNumber = 1 }) => {
+    if (!avatarId)            throw new Error('avatarId is required');
+    if (!description?.trim()) throw new Error('Description is required');
+
+    const res = await fetch(`${API_BASE}/api/podcast/avatar/${avatarId}/outfit/generate-preview`, {
+      method:      'POST',
+      headers:     { 'Content-Type': 'application/json', 'X-CSRF-Token': getCsrf() },
+      credentials: 'include',
+      body: JSON.stringify({ description, label: label || '', attempt_number: attemptNumber }),
+    });
+    const data = await res.json();
+
+    if (res.status === 422 && data.rejected) {
+      console.warn(`⚠️ Outfit preview rejected: attempt ${attemptNumber}`);
+      const err = new Error(
+        data.error || "We couldn't generate this outfit. Please try a different description."
+      );
+      err.rejected      = true;
+      err.attemptNumber = data.attempt_number || attemptNumber;
+      throw err;
+    }
+    if (!res.ok) {
+      ApiErrorService.log('usePodcastStudio.generateOutfitPreview', res.status, data);
+      throw new Error(ApiErrorService.getMessage(res.status, data));
+    }
+    console.log(`👗 Outfit preview generated: attempt ${data.attempt_number}`);
+    return { previewUrl: data.preview_url, attemptNumber: data.attempt_number };
+  }, []);
+
+  const confirmOutfit = useCallback(async ({ avatarId, previewUrl, description, label }) => {
+    if (!avatarId)   throw new Error('avatarId is required');
+    if (!previewUrl) throw new Error('previewUrl is required');
+
+    const res = await fetch(`${API_BASE}/api/podcast/avatar/${avatarId}/outfit/confirm`, {
+      method:      'POST',
+      headers:     { 'Content-Type': 'application/json', 'X-CSRF-Token': getCsrf() },
+      credentials: 'include',
+      body: JSON.stringify({ preview_url: previewUrl, description: description || '', label: label || '' }),
+    });
+    const data = await res.json();
+    if (!res.ok) {
+      ApiErrorService.log('usePodcastStudio.confirmOutfit', res.status, data);
+      throw new Error(ApiErrorService.getMessage(res.status, data));
+    }
+    console.log(`👗 Outfit saved: ${data.outfit_id}`);
+    return {
+      outfitId:       data.outfit_id,
+      label:          data.label,
+      description:    data.description,
+      fullbodyRefUrl: data.fullbody_ref_url,
+      outfitRefUrl:   data.outfit_ref_url,
+    };
+  }, []);
+
+  const deleteOutfit = useCallback(async ({ avatarId, outfitId }) => {
+    if (!avatarId || !outfitId) throw new Error('avatarId and outfitId are required');
+    const res = await fetch(`${API_BASE}/api/podcast/avatar/${avatarId}/outfit/${outfitId}`, {
+      method:      'DELETE',
+      headers:     { 'X-CSRF-Token': getCsrf() },
+      credentials: 'include',
+    });
+    const data = await res.json().catch(() => ({}));
+    if (!res.ok) {
+      ApiErrorService.log('usePodcastStudio.deleteOutfit', res.status, data);
+      throw new Error(ApiErrorService.getMessage(res.status, data));
+    }
+    console.log(`🗑️ Outfit deleted: ${outfitId}`);
+    return true;
+  }, []);
+
 
   // ── Confirm avatar preview ─────────────────────────────────────────────────
   //
@@ -1484,6 +1581,12 @@ export default function usePodcastStudio() {
     loadVoices,       // () → void — manual refresh
     loadConsent,      // () → void — check consent status
     recordConsent,    // () → bool — record consent, returns true on success
+    // Outfits (wardrobe)
+    loadOutfits,           // (avatarId) → [{ outfitId, label, fullbodyRefUrl, outfitRefUrl, … }]
+    generateOutfitPreview, // ({ avatarId, description, label, attemptNumber }) → { previewUrl, attemptNumber }
+    confirmOutfit,         // ({ avatarId, previewUrl, description, label }) → { outfitId, label, fullbodyRefUrl, outfitRefUrl }
+    deleteOutfit,          // ({ avatarId, outfitId }) → true
+
     resetStudio,      // () → void
   };
 }
