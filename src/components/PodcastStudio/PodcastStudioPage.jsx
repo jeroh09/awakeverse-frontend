@@ -345,6 +345,7 @@ export default function PodcastStudioPage({ context, onClose }) {
     confirmOutfit,
     deleteOutfit,
     generateEnvironmentPreview,
+    generateEnvironmentFromImage,
     deleteEnvironment,
     getCharacterRef,
     uploadAudio,
@@ -384,6 +385,10 @@ export default function PodcastStudioPage({ context, onClose }) {
   const [genEnvId,         setGenEnvId]         = useState(null);     // set after first save — passed to regenerate IN PLACE
   const [genEnvDisplayName, setGenEnvDisplayName] = useState('');
   const [genEnvDescription, setGenEnvDescription] = useState('');
+  // Background create sub-mode: 'describe' (text→plate) | 'upload' (photo→plate).
+  const [envCreateMode, setEnvCreateMode] = useState('describe');
+  const [envImgBusy,    setEnvImgBusy]    = useState(false);
+  const [envImgError,   setEnvImgError]   = useState(null);
   const [genEnvPreviewUrl, setGenEnvPreviewUrl] = useState(null);
   const [genEnvLoading,    setGenEnvLoading]    = useState(false);
   const [genEnvError,      setGenEnvError]      = useState(null);
@@ -630,6 +635,29 @@ export default function PodcastStudioPage({ context, onClose }) {
       setGenEnvLoading(false);
     }
   }, [genEnvDescription, genEnvCapacity, genEnvDisplayName, genEnvId, generateEnvironmentPreview]);
+
+  // ── Generate-environment from an uploaded photo — mirrors handleGenerateEnvironment ──
+  // Step 1: uploadPhoto(file) → CDN source_url. Step 2: async build+poll. On
+  // complete: refresh grid + select, then drop back to Browse (tagged "Yours").
+  const handleUploadEnvironment = useCallback(async (file) => {
+    if (!file || !genEnvCapacity) return;
+    setEnvImgBusy(true); setEnvImgError(null);
+    try {
+      const sourceUrl = await uploadPhoto(file);
+      const result = await generateEnvironmentFromImage({
+        sourceUrl,
+        displayName:   genEnvDisplayName.trim() || undefined,
+        guestCapacity: genEnvCapacity,
+      });
+      setSelectedEnvId(result.envId);   // already usable — select it right away
+      setEnvPanelMode('browse');        // back to the grid, tagged "Yours"
+      setGenEnvCapacity(null);          // reset the create flow
+    } catch (e) {
+      setEnvImgError(e.message || 'Could not build a background from that photo. Please try another.');
+    } finally {
+      setEnvImgBusy(false);
+    }
+  }, [genEnvCapacity, genEnvDisplayName, uploadPhoto, generateEnvironmentFromImage]);
 
   // ── Generate-environment: regenerate — overwrites the SAME saved row ─────
   const handleRegenerateEnvironment = useCallback(() => {
@@ -3789,6 +3817,18 @@ if (context.topic) setTopic(context.topic);
                   {/* Form — capacity picked, no preview yet */}
                   {genEnvCapacity !== null && !genEnvPreviewUrl && (
                     <>
+                      {/* Describe / Upload toggle — reuses the scriptModeToggle pill */}
+                      <div className={styles.scriptModeToggle} style={{ marginBottom: '0.4rem', flexShrink: 0 }}>
+                        <button
+                          className={`${styles.scriptModeBtn} ${envCreateMode === 'describe' ? styles.scriptModeBtnActive : ''}`}
+                          onClick={() => { setEnvCreateMode('describe'); setEnvImgError(null); }}
+                        >Describe it</button>
+                        <button
+                          className={`${styles.scriptModeBtn} ${envCreateMode === 'upload' ? styles.scriptModeBtnActive : ''}`}
+                          onClick={() => { setEnvCreateMode('upload'); setGenEnvError(null); }}
+                        >Upload a photo</button>
+                      </div>
+
                       <input
                         type="text"
                         className={styles.genNameInput}
@@ -3796,27 +3836,59 @@ if (context.topic) setTopic(context.topic);
                         value={genEnvDisplayName}
                         onChange={e => setGenEnvDisplayName(e.target.value)}
                       />
-                      <textarea
-                        className={styles.genDescInput}
-                        rows={3}
-                        placeholder="Describe the setting — e.g. 'A modern loft with exposed brick and string lights'"
-                        value={genEnvDescription}
-                        onChange={e => setGenEnvDescription(e.target.value)}
-                      />
-                      <div className={styles.genFooterRow}>
-                        <button
-                          className={styles.buildBtn}
-                          style={{ width: 'auto', padding: '0.5rem 1.1rem' }}
-                          onClick={handleGenerateEnvironment}
-                          disabled={genEnvLoading || !genEnvDescription.trim()}
-                        >
-                          {genEnvLoading ? <><span className={styles.spin}><Ic.Spin /></span> Generating…</> : <><Ic.ImageFrame /> Generate</>}
-                        </button>
-                        <button className={styles.genSecondaryBtn} onClick={handleChangeGenFormat}>
-                          ← Change format
-                        </button>
-                      </div>
-                      {genEnvError && <div className={styles.errorBox}>{genEnvError}</div>}
+
+                      {envCreateMode === 'describe' ? (
+                        <>
+                          <textarea
+                            className={styles.genDescInput}
+                            rows={3}
+                            placeholder="Describe the setting — e.g. 'A modern loft with exposed brick and string lights'"
+                            value={genEnvDescription}
+                            onChange={e => setGenEnvDescription(e.target.value)}
+                          />
+                          <div className={styles.genFooterRow}>
+                            <button
+                              className={styles.buildBtn}
+                              style={{ width: 'auto', padding: '0.5rem 1.1rem' }}
+                              onClick={handleGenerateEnvironment}
+                              disabled={genEnvLoading || !genEnvDescription.trim()}
+                            >
+                              {genEnvLoading ? <><span className={styles.spin}><Ic.Spin /></span> Generating…</> : <><Ic.ImageFrame /> Generate</>}
+                            </button>
+                            <button className={styles.genSecondaryBtn} onClick={handleChangeGenFormat}>
+                              ← Change format
+                            </button>
+                          </div>
+                          {genEnvError && <div className={styles.errorBox}>{genEnvError}</div>}
+                        </>
+                      ) : (
+                        <>
+                          <label
+                            style={{
+                              display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '0.5rem',
+                              width: '100%', minHeight: 96, textAlign: 'center', cursor: envImgBusy ? 'default' : 'pointer',
+                              border: '1.5px dashed rgba(99,102,241,0.4)', borderRadius: 12, padding: '1rem',
+                              background: 'rgba(99,102,241,0.06)', color: '#A5B4FC', fontSize: '0.8rem',
+                              fontFamily: 'Inter,sans-serif', fontWeight: 600,
+                            }}
+                          >
+                            <input type="file" accept="image/*" hidden disabled={envImgBusy}
+                              onChange={e => handleUploadEnvironment(e.target.files?.[0])} />
+                            {envImgBusy
+                              ? <><span className={styles.spin}><Ic.Spin /></span> Building your studio… (~1–2 min)</>
+                              : <><Ic.ImageFrame /> Upload a photo of your space</>}
+                          </label>
+                          <p className={styles.genEnvIntro} style={{ margin: '0.4rem 0' }}>
+                            We rebuild your photo as a studio with {genEnvCapacity === 1 ? 'a camera-facing chair' : `${genEnvCapacity} camera-facing chairs`}. You’re responsible for rights to images you upload.
+                          </p>
+                          <div className={styles.genFooterRow}>
+                            <button className={styles.genSecondaryBtn} onClick={handleChangeGenFormat} disabled={envImgBusy}>
+                              ← Change format
+                            </button>
+                          </div>
+                          {envImgError && <div className={styles.errorBox}>{envImgError}</div>}
+                        </>
+                      )}
                     </>
                   )}
 

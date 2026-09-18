@@ -1449,6 +1449,57 @@ export default function usePodcastStudio() {
     return { envId: data.env_id, plateUrl: data.plate_url };
   }, [loadEnvironments]);
 
+  // ── Background from an uploaded photo (async: enqueue + poll) ──────────────
+  //   Step 1 (caller): uploadPhoto(file) → sourceUrl (our CDN).
+  //   Step 2 (here): POST /environment/from-image → 202 { env_job_id }, then
+  //   poll GET /environment/job/<id> until complete. This fusion pass is heavier
+  //   than a text→env, so it MUST be async (a direct call would time out).
+  //   On complete it refreshes the grid and returns the new plate, exactly like
+  //   generateEnvironmentPreview — so the caller selects it the same way.
+  const generateEnvironmentFromImage = useCallback(async ({ sourceUrl, displayName, guestCapacity = 2 }) => {
+    if (!sourceUrl) throw new Error('sourceUrl is required');
+
+    const res = await fetch(`${API_BASE}/api/podcast/environment/from-image`, {
+      method:      'POST',
+      headers:     { 'Content-Type': 'application/json', 'X-CSRF-Token': getCsrf() },
+      credentials: 'include',
+      body: JSON.stringify({
+        source_url:     sourceUrl,
+        display_name:   displayName,
+        guest_capacity: guestCapacity,
+      }),
+    });
+    const start = await res.json().catch(() => ({}));
+    if (!res.ok || !start.env_job_id) {
+      ApiErrorService.log('usePodcastStudio.generateEnvironmentFromImage', res.status, start);
+      throw new Error(start.error || ApiErrorService.getMessage(res.status, start));
+    }
+    const jobId = start.env_job_id;
+    console.log(`🖼️  Env-from-image queued: ${jobId}`);
+
+    // Poll status. Cap ~5 min (100 × 3s) before giving up.
+    for (let i = 0; i < 100; i++) {
+      await new Promise(r => setTimeout(r, 3000));
+      let st;
+      try {
+        const sres = await fetch(`${API_BASE}/api/podcast/environment/job/${jobId}`, { credentials: 'include' });
+        st = await sres.json();
+      } catch (e) {
+        continue;   // transient network blip — keep polling
+      }
+      if (st.status === 'complete' && st.env_id) {
+        await loadEnvironments();   // refresh grid so the new plate appears
+        console.log(`🖼️  Env-from-image complete: ${st.env_id}`);
+        return { envId: st.env_id, plateUrl: st.plate_url };
+      }
+      if (st.status === 'failed') {
+        throw new Error(st.error || 'Background build failed. Please try again.');
+      }
+      // queued | processing → keep polling
+    }
+    throw new Error('Background build timed out. Please try again.');
+  }, [loadEnvironments]);
+
 
   // ── Delete a custom (user-generated) environment ──────────────────────────
   //
@@ -1553,6 +1604,7 @@ export default function usePodcastStudio() {
     confirmAvatarPreview,   // ({previewUrl, displayName, envId, position}) → { avatarId, avatarRefUrl, envId, previewUrl } — same shape as buildAvatar
     bakeAvatarEnv,          // ({avatarId, envId}) → { avatarId, envId, bakedRefUrl } — for re-baking a SAVED avatar into a new env, dedup'd server-side
     generateEnvironmentPreview, // ({description, guestCapacity, displayName, envId?}) → { envId, plateUrl } — AUTO-SAVES, pass envId to regenerate in place
+    generateEnvironmentFromImage, // ({sourceUrl, displayName, guestCapacity}) → { envId, plateUrl } — async upload→plate, AUTO-SAVES
     deleteEnvironment,          // (envId) → void — refreshes environments list
     getCharacterRef,        // (key)    → { characterRefUrl, characterVoiceId, characterDisplayName }
     deleteAvatar,           // (avatarId) → void (refreshes avatars list)
