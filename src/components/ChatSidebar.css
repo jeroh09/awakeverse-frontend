@@ -43,7 +43,7 @@
   justify-content: center;
   cursor: pointer;
   box-shadow: 0 0 8px rgba(255,215,0,0.3); /* Enhanced gold glow */
-  font-family: 'Cinzel Decorative', serif;
+  font-family: 'Playfair Display', serif;
   color: gold;
   z-index: 1000;
   transition: all 0.25s ease; /* Smooth all properties */

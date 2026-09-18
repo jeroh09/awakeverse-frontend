@@ -1,18 +1,20 @@
 // src/contexts/CharacterContext.js
 import React, { createContext, useContext, useState, useCallback } from 'react';
+import { useUser } from './UserContext';
+
 import api from '../api';
-import { useAuth } from './AuthContext';
+
 
 const CharacterContext = createContext(null);
 
 export function CharacterProvider({ children }) {
   const [selectedCharacterKey, setSelectedCharacterKey] = useState(null);
   const [previewCharacterKey, setPreviewCharacterKey] = useState(null);
-  const { token } = useAuth();
+  const { user } = useUser();
 
   // 1. Add interaction tracking method
   const trackInteraction = useCallback(async (characterKey) => {
-    if (!token) {
+    if (!user) {
       console.warn('No token available for interaction tracking');
       return false;
     }
@@ -27,7 +29,7 @@ export function CharacterProvider({ children }) {
       console.error('❌ Failed to track interaction:', error);
       return false;
     }
-  }, [token]);
+  }, [user]);
 
   // 2. Create wrapped version of setSelectedCharacterKey
   const selectCharacter = useCallback(async (key) => {

@@ -1,0 +1,294 @@
+/* src/components/ScenariosTab/MyScenariosPanel/MyScenariosPanel.css
+   ✅ REDESIGNED: double-border panel shell, styled header, empty state, error banner
+   ✅ PRESERVED: all existing class names — ScenarioCard and CreateButton depend on them
+*/
+
+/* ── Panel wrapper ───────────────────────────────────────────────────────── */
+.my-scenarios-panel {
+  margin-top: 2rem;
+  padding-top: 2rem;
+  border-top: 1px solid rgba(99, 102, 241, 0.18);
+  display: flex;
+  flex-direction: column;
+  gap: 1.25rem;
+}
+
+/* ── Header ──────────────────────────────────────────────────────────────── */
+.panel-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 1rem;
+}
+
+.panel-header h3 {
+  font-family: 'Syne', system-ui, sans-serif;
+  font-size: 1.3rem;
+  font-weight: 700;
+  color: #e0e7ff;
+  margin: 0;
+  line-height: 1;
+}
+
+/* Right side: counter + create button grouped together */
+.panel-header-right {
+  display: flex;
+  align-items: center;
+  gap: 0.65rem;
+  flex-shrink: 0;
+}
+
+.scenario-counter {
+  font-size: 0.7rem;
+  font-weight: 700;
+  color: #818cf8;
+  background: rgba(99, 102, 241, 0.12);
+  border: 1px solid rgba(99, 102, 241, 0.25);
+  padding: 0.28rem 0.75rem;
+  border-radius: 999px;
+  letter-spacing: 0.02em;
+}
+
+/* ── Error banner ────────────────────────────────────────────────────────── */
+.panel-error-banner {
+  display: flex;
+  align-items: center;
+  gap: 0.65rem;
+  padding: 0.75rem 1rem;
+  border-radius: 10px;
+  background: rgba(239, 68, 68, 0.08);
+  border: 1px solid rgba(239, 68, 68, 0.28);
+  color: #f87171;
+  font-size: 0.82rem;
+}
+
+.error-message {
+  flex: 1;
+  font-weight: 500;
+}
+
+.dismiss-error {
+  width: 26px;
+  height: 26px;
+  border-radius: 6px;
+  border: 1px solid rgba(239, 68, 68, 0.25);
+  background: transparent;
+  color: #f87171;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  transition: background 0.15s;
+  margin-left: auto;
+  padding: 0;
+}
+
+.dismiss-error:hover {
+  background: rgba(239, 68, 68, 0.12);
+}
+
+/* ── Scenarios grid ──────────────────────────────────────────────────────── */
+.scenarios-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 1.25rem;
+}
+
+@media (min-width: 1200px) {
+  .scenarios-grid { grid-template-columns: repeat(3, 1fr); }
+}
+
+@media (max-width: 1024px) {
+  .scenarios-grid { grid-template-columns: repeat(2, 1fr); }
+}
+
+@media (max-width: 640px) {
+  .scenarios-grid { grid-template-columns: 1fr; gap: 1rem; }
+}
+
+/* Ensure cards stretch to fill grid cell */
+.scenarios-grid .scenario-card {
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+}
+
+/* ── Empty state ─────────────────────────────────────────────────────────── */
+.empty-scenarios {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 0.75rem;
+  padding: 3.5rem 2rem;
+  text-align: center;
+  border-radius: 14px;
+  background: rgba(15, 23, 42, 0.5);
+  border: 1px dashed rgba(99, 102, 241, 0.28);
+  grid-column: 1 / -1;
+}
+
+/* CreateButton inside empty state — centred with auto width */
+.empty-scenarios .create-button {
+  margin-top: 0.25rem;
+}
+
+.empty-title {
+  font-family: 'Syne', system-ui, sans-serif;
+  font-size: 1rem;
+  font-weight: 700;
+  color: #e0e7ff;
+  margin: 0;
+}
+
+.hint {
+  font-size: 0.8rem;
+  color: #475569;
+  margin: 0;
+  max-width: 300px;
+  line-height: 1.55;
+  opacity: 1;
+}
+
+/* create-new-section removed — button now lives in panel-header-right */
+
+/* ── Max scenarios message ───────────────────────────────────────────────── */
+.max-scenarios-message {
+  display: flex;
+  align-items: center;
+  gap: 0.85rem;
+  padding: 1rem 1.25rem;
+  border-radius: 10px;
+  background: rgba(239, 68, 68, 0.05);
+  border: 1px solid rgba(239, 68, 68, 0.2);
+  margin-top: 0.5rem;
+}
+
+.max-scenarios-message p {
+  margin: 0;
+  font-size: 0.85rem;
+  font-weight: 600;
+  color: #f87171;
+}
+
+.max-scenarios-message .hint {
+  font-size: 0.75rem;
+  color: #64748b;
+  margin-top: 0.15rem;
+}
+
+/* ── Light theme overrides ───────────────────────────────────────────────── */
+.scenarios-tab-container:not(.theme-awakeverse) .my-scenarios-panel {
+  border-top-color: rgba(99, 102, 241, 0.15);
+}
+
+.scenarios-tab-container:not(.theme-awakeverse) .panel-header h3 {
+  color: #1e1b4b;
+}
+
+.scenarios-tab-container:not(.theme-awakeverse) .scenario-counter {
+  color: #4f46e5;
+  background: rgba(99, 102, 241, 0.07);
+  border-color: rgba(99, 102, 241, 0.18);
+}
+
+.scenarios-tab-container:not(.theme-awakeverse) .empty-scenarios {
+  background: rgba(255, 255, 255, 0.7);
+  border-color: rgba(99, 102, 241, 0.2);
+}
+
+.scenarios-tab-container:not(.theme-awakeverse) .empty-title {
+  color: #1e1b4b;
+}
+
+.scenarios-tab-container:not(.theme-awakeverse) .hint {
+  color: #94a3b8;
+}
+
+.scenarios-tab-container:not(.theme-awakeverse) .create-new-section {
+  border-top-color: rgba(99, 102, 241, 0.1);
+}
+
+/* Loading / error fallback states (kept for safety) */
+.panel-loading,
+.panel-error {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 2rem;
+  text-align: center;
+}
+
+.loading-spinner {
+  width: 32px;
+  height: 32px;
+  border: 3px solid var(--scenarios-border-color);
+  border-top: 3px solid var(--scenarios-accent-primary);
+  border-radius: 50%;
+  animation: msp-spin 1s linear infinite;
+  margin-bottom: 1rem;
+}
+
+@keyframes msp-spin {
+  to { transform: rotate(360deg); }
+}
+
+.retry-button {
+  padding: 0.75rem 1.5rem;
+  background: var(--scenarios-accent-primary);
+  color: white;
+  border: none;
+  border-radius: 8px;
+  cursor: pointer;
+  margin-top: 1rem;
+}
+
+.retry-button:hover {
+  background: var(--scenarios-accent-secondary);
+}
+
+/* Mobile */
+@media (max-width: 768px) {
+  .panel-header {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 0.65rem;
+  }
+  .panel-header-right {
+    align-self: flex-start;
+  }
+  .scenario-counter { align-self: flex-start; }
+  .empty-scenarios  { padding: 2.5rem 1rem; }
+}
+/* ── Credits counter (available balance, beside the scenario counter) ───────── */
+.credits-counter {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  font-size: 0.7rem;
+  font-weight: 700;
+  color: #a5b4fc;
+  background: rgba(99, 102, 241, 0.12);
+  border: 1px solid rgba(99, 102, 241, 0.25);
+  padding: 0.28rem 0.75rem;
+  border-radius: 999px;
+  letter-spacing: 0.02em;
+  white-space: nowrap;
+}
+
+.credits-counter-dot {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: #22c55e;
+  box-shadow: 0 0 6px rgba(34, 197, 94, 0.7);
+  flex-shrink: 0;
+}
+
+.scenarios-tab-container:not(.theme-awakeverse) .credits-counter {
+  color: #4f46e5;
+  background: rgba(99, 102, 241, 0.07);
+  border-color: rgba(99, 102, 241, 0.18);
+}

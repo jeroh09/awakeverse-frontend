@@ -1,0 +1,326 @@
+/* ScenarioChatWindow.module.css */
+/* Phase 2: Two-Panel Layout with Design Tokens */
+
+/* Import design tokens - LOCAL to ScenarioChatWindow only */
+@import '../../../design-system/variabless.css';
+
+/* ===== MAIN CONTAINER ===== */
+.container {
+  position: fixed;  /* ✅ Break out of parent */
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  width: 100%;
+  height: 100vh;
+  z-index: 100;    /* ✅ Above everything */
+  display: flex;
+  gap: var(--spacing-lg);
+  padding: var(--spacing-lg);
+  background: var(--bg-canvas);
+  overflow: hidden;
+}
+
+/* Mobile: No padding, no gap */
+@media (max-width: 768px) {
+  .container {
+    padding: 0;
+    gap: 0;
+  }
+}
+
+/* ===== LEFT PANEL: CHAT PANEL ===== */
+.chatPanel {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  background: var(--bg-surface);
+  border-radius: var(--border-radius-xl);
+  overflow: hidden;
+  box-shadow: var(--shadow-elevation03);
+  transition: var(--transition-normal);
+  position: relative;
+}
+
+/* When info panel is collapsed, chat panel stays same (flex: 1 handles it) */
+.chatPanel.expanded {
+  /* Optional: Could add subtle animation/glow when expanded */
+}
+
+/* Mobile: Full width, no border-radius */
+@media (max-width: 768px) {
+  .chatPanel {
+    border-radius: 0;
+    box-shadow: none;
+  }
+}
+
+/* ===== RIGHT PANEL: INFO PANEL ===== */
+.infoPanel {
+  width: 320px;
+  min-width: 320px;
+  background: var(--bg-surface);
+  border-radius: var(--border-radius-xl);
+  display: flex;
+  flex-direction: column;
+  box-shadow: var(--shadow-elevation03);
+  transition: var(--transition-normal);
+  position: relative;
+  overflow: hidden;
+}
+
+/* Collapsed state - hidden */
+.infoPanel.collapsed {
+  width: 0;
+  min-width: 0;
+  opacity: 0;
+  pointer-events: none;
+  overflow: hidden;
+}
+
+/* Mobile: Completely hidden */
+@media (max-width: 768px) {
+  .infoPanel {
+    display: none !important;
+  }
+}
+
+/* ===== BREADCRUMB TOGGLE ===== */
+.breadcrumb {
+  position: absolute;
+  top: var(--spacing-lg);
+  right: var(--spacing-lg);
+  width: 44px;
+  height: 44px;
+  background: var(--bg-interactive);
+  border-radius: var(--border-radius-full);
+  border: 1px solid var(--border-subtle);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1020; /* --z-sticky equivalent */
+  cursor: pointer;
+  transition: var(--transition-fast);
+}
+
+.breadcrumb:hover {
+  background: var(--bg-peak);
+  border-color: var(--accent-primary);
+  box-shadow: var(--shadow-glow);
+}
+
+.breadcrumb:active {
+  transform: scale(0.95);
+}
+
+.breadcrumbIcon {
+  color: var(--text-secondary);
+  transition: var(--transition-fast);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.breadcrumb:hover .breadcrumbIcon {
+  color: var(--accent-primary);
+}
+
+.breadcrumb.collapsed .breadcrumbIcon {
+  transform: rotate(180deg);
+}
+
+/* Tooltip */
+.breadcrumb::after {
+  content: attr(data-tooltip);
+  position: absolute;
+  top: 100%;
+  right: 0;
+  margin-top: var(--spacing-sm);
+  padding: var(--spacing-sm) var(--spacing-md);
+  background: var(--bg-peak);
+  border: 1px solid var(--border-medium);
+  border-radius: var(--border-radius-sm);
+  color: var(--text-primary);
+  font-size: var(--font-size-caption);
+  font-weight: var(--font-weight-medium);
+  white-space: nowrap;
+  opacity: 0;
+  pointer-events: none;
+  transition: var(--transition-fast);
+  box-shadow: var(--shadow-elevation02);
+  z-index: 1070; /* --z-tooltip equivalent */
+}
+
+.breadcrumb:hover::after {
+  opacity: 1;
+}
+
+/* Mobile: Hide breadcrumb */
+@media (max-width: 768px) {
+  .breadcrumb {
+    display: none !important;
+  }
+}
+
+/* ===== CHAT PANEL INNER LAYOUT ===== */
+/* Two-column layout: Avatars on left, Chat content on right */
+
+.chatPanelInner {
+  display: flex;
+  width: 100%;
+  height: 100%;
+}
+
+/* Left column for avatars (handled by AvatarsColumn component) */
+/* Right column for chat content */
+.chatContent {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  min-width: 0; /* Allows flex item to shrink properly */
+  position: relative; /* For floating input absolute positioning */
+  overflow: hidden; /* Prevent content overflow */
+}
+
+/* ===== TEMPORARY PLACEHOLDERS (for existing components) ===== */
+/* These will be replaced in subsequent phases */
+
+.chatPanelContent {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  position: relative;
+}
+
+.infoPanelContent {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  overflow-y: auto;
+}
+
+/* ===== DEFENSIVE FALLBACKS ===== */
+
+/* If CSS variables aren't loaded, provide fallbacks */
+@supports not (color: var(--bg-canvas)) {
+  .container {
+    background: #0A0F1A;
+  }
+  
+  .chatPanel,
+  .infoPanel {
+    background: #141B2E;
+    border-radius: 20px;
+  }
+}
+
+/* Ensure container never breaks layout */
+.container * {
+  box-sizing: border-box;
+}
+
+/* Prevent overflow issues */
+.chatPanel,
+.infoPanel {
+  min-width: 0; /* Allows flex items to shrink below content size */
+  min-height: 0;
+}
+/* ===== CHAT HEADER — compact, single-line truncation ===== */
+.chatContent :global(.chat-header) {
+  padding: 0.65rem 1.25rem 0.65rem 1rem;
+  border-bottom: 1px solid var(--border-subtle);
+  background: var(--bg-surface);
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  flex-shrink: 0;
+  /* constrain to same height as InfoPanel header */
+  min-height: 0;
+  overflow: hidden;
+}
+
+.chatContent :global(.scenario-title) {
+  font-family: var(--font-display);
+  font-size: 1rem;
+  font-weight: var(--font-weight-bold);
+  color: var(--text-primary);
+  margin: 0 0 0.2rem 0;
+  line-height: 1.25;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+@media (max-width: 768px) {
+  .chatContent :global(.scenario-title) {
+    font-size: 0.9rem;
+    line-height: 1.2;
+  }
+}
+
+.chatContent :global(.scenario-description) {
+  font-size: 0.78rem;
+  color: var(--text-secondary);
+  margin: 0;
+  line-height: 1.35;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.chatContent :global(.usage-indicator) {
+  margin-top: 0.4rem;
+  padding: 0.28rem 0.6rem;
+  background: var(--bg-interactive);
+  border-radius: var(--border-radius-md);
+  display: inline-flex;
+  align-items: center;
+  align-self: flex-start;
+  gap: var(--spacing-sm);
+  font-size: 0.75rem;
+}
+
+/* headerTitleRow: title + Q&A toggle on same row, title must not push toggle off */
+.headerTitleRow {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--spacing-md);
+  flex-wrap: nowrap;
+  min-width: 0;         /* allow flex children to shrink */
+  overflow: hidden;
+}
+/* ===== SCROLL TO BOTTOM BUTTON ===== */
+.scrollToBottomButton {
+  position: absolute;
+  bottom: 190px; /* above floating input — adjust if input height changes */
+  right: var(--spacing-lg);
+  width: 36px;
+  height: 36px;
+  min-width: 36px;
+  border-radius: var(--border-radius-full);
+  background: var(--bg-interactive);
+  border: 1px solid var(--border-medium);
+  color: var(--text-secondary);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  z-index: 101;
+  transition: var(--transition-fast);
+  box-shadow: var(--shadow-elevation02);
+  animation: fadeInSlide 0.2s ease-out;
+}
+
+.scrollToBottomButton:hover {
+  background: var(--bg-peak);
+  border-color: var(--accent-primary);
+  color: var(--accent-primary);
+  box-shadow: var(--shadow-glow);
+  transform: translateY(-2px);
+}
+
+@keyframes fadeInSlide {
+  from { opacity: 0; transform: translateY(8px); }
+  to   { opacity: 1; transform: translateY(0);   }
+}

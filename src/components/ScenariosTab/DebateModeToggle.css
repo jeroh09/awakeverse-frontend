@@ -1,0 +1,215 @@
+/* src/components/ScenariosTab/DebateModeToggle.css
+ *
+ * All values mapped to tokens.js:
+ *   background.surface:     #141B2E
+ *   background.interactive: #1C2640
+ *   background.peak:        #243152
+ *   accent.primary:         #6366F1
+ *   accent.hover:           #818CF8
+ *   accent.glow:            rgba(99,102,241,0.2)
+ *   accent.glowStrong:      rgba(99,102,241,0.3)
+ *   text.primary:           #F1F5F9
+ *   text.secondary:         #94A3B8
+ *   text.tertiary:          #64748B
+ *   border.medium:          rgba(148,163,184,0.2)
+ *   border.strong:          rgba(148,163,184,0.3)
+ *   border.subtle:          rgba(148,163,184,0.1)
+ *   semantic.error:         #EF4444
+ *   semantic.warning:       #F59E0B
+ *   shadow.glow:            0 0 20px -5px rgba(99,102,241,0.2)
+ *   shadow.glowStrong:      0 0 24px -4px rgba(99,102,241,0.3)
+ *   transition.fast:        all 0.15s cubic-bezier(0.4,0,0.2,1)
+ *   transition.normal:      all 0.3s cubic-bezier(0.4,0,0.2,1)
+ *   radius.full:            9999px
+ *   font.body:              'Inter', system-ui, sans-serif
+ */
+
+/* ── Container ──────────────────────────────────────────────────────────── */
+.debate-mode-toggle {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-shrink: 0;
+  font-family: 'Inter', system-ui, sans-serif;
+}
+
+/* ── Mode pill ──────────────────────────────────────────────────────────── */
+.mode-pill {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 5px 10px 5px 8px;
+  border: 1px solid rgba(148, 163, 184, 0.2);
+  border-radius: 9999px;
+  background: #141B2E;
+  color: #94A3B8;
+  font-size: 12px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.15s cubic-bezier(0.4, 0, 0.2, 1);
+  white-space: nowrap;
+  line-height: 1;
+}
+
+.mode-pill:hover:not(:disabled) {
+  background: #1C2640;
+  border-color: rgba(148, 163, 184, 0.3);
+  color: #F1F5F9;
+}
+
+.mode-pill:disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
+}
+
+/* Auto mode — indigo accent */
+.debate-mode-toggle.auto .mode-pill {
+  border-color: #6366F1;
+  background: #243152;
+  color: #818CF8;
+  box-shadow: 0 0 20px -5px rgba(99, 102, 241, 0.2);
+}
+
+.debate-mode-toggle.auto .mode-pill:hover:not(:disabled) {
+  background: #1C2640;
+  box-shadow: 0 0 24px -4px rgba(99, 102, 241, 0.3);
+}
+
+.mode-icon  { font-size: 13px; line-height: 1; }
+.mode-label { font-size: 11px; letter-spacing: 0.04em; font-weight: 600; }
+
+/* ── Toggle track ───────────────────────────────────────────────────────── */
+.toggle-track {
+  position: relative;
+  width: 28px;
+  height: 15px;
+  border-radius: 9999px;
+  background: rgba(148, 163, 184, 0.2);
+  transition: background 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  flex-shrink: 0;
+}
+
+.debate-mode-toggle.auto .toggle-track {
+  background: #6366F1;
+}
+
+.toggle-thumb {
+  position: absolute;
+  top: 2px;
+  left: 2px;
+  width: 11px;
+  height: 11px;
+  border-radius: 9999px;
+  background: #F1F5F9;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.4);
+  transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.debate-mode-toggle.auto .toggle-thumb {
+  transform: translateX(13px);
+}
+
+/* ── Auto status ────────────────────────────────────────────────────────── */
+.auto-status {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 11px;
+  color: #64748B;
+  white-space: nowrap;
+}
+
+/* Pulsing dot — indigo, glowing */
+.pulse-dot {
+  width: 6px;
+  height: 6px;
+  border-radius: 9999px;
+  background: #6366F1;
+  box-shadow: 0 0 6px rgba(99, 102, 241, 0.5);
+  animation: av-pulse 1.4s cubic-bezier(0.4, 0, 0.2, 1) infinite;
+  flex-shrink: 0;
+}
+
+@keyframes av-pulse {
+  0%, 100% { opacity: 1;   transform: scale(1);    }
+  50%       { opacity: 0.3; transform: scale(0.65); }
+}
+
+.turn-counter {
+  font-weight: 600;
+  font-size: 11px;
+  color: #818CF8;
+  font-variant-numeric: tabular-nums;
+  min-width: 28px;
+}
+
+/* Progress bar — indigo gradient */
+.turn-progress-bar {
+  display: none;
+  width: 56px;
+  height: 3px;
+  border-radius: 9999px;
+  background: rgba(148, 163, 184, 0.1);
+  overflow: hidden;
+}
+
+.turn-progress-bar::after {
+  content: '';
+  display: block;
+  height: 100%;
+  width: var(--progress, 0%);
+  background: linear-gradient(90deg, #6366F1, #818CF8);
+  border-radius: 9999px;
+  transition: width 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.stopped-label {
+  color: #F59E0B;
+  font-weight: 600;
+  font-size: 11px;
+}
+
+.ready-label {
+  color: #64748B;
+  font-size: 11px;
+}
+
+/* ── Stop button ────────────────────────────────────────────────────────── */
+.stop-btn {
+  padding: 4px 10px;
+  border: 1px solid rgba(239, 68, 68, 0.4);
+  border-radius: 9999px;
+  background: rgba(239, 68, 68, 0.08);
+  color: #EF4444;
+  font-size: 11px;
+  font-weight: 700;
+  font-family: 'Inter', system-ui, sans-serif;
+  cursor: pointer;
+  transition: all 0.15s cubic-bezier(0.4, 0, 0.2, 1);
+  white-space: nowrap;
+  letter-spacing: 0.04em;
+}
+
+.stop-btn:hover {
+  background: rgba(239, 68, 68, 0.16);
+  border-color: #EF4444;
+  box-shadow: 0 0 12px -4px rgba(239, 68, 68, 0.3);
+}
+
+.stop-btn:active {
+  transform: scale(0.96);
+}
+
+/* ── Responsive ─────────────────────────────────────────────────────────── */
+
+@media (min-width: 500px) {
+  .turn-progress-bar { display: block; }
+}
+
+@media (max-width: 380px) {
+  .mode-label   { display: none; }
+  .mode-pill    { padding: 5px 8px; }
+  .auto-status  { gap: 4px; }
+  .stop-btn     { padding: 4px 8px; font-size: 10px; }
+  .turn-counter { min-width: 24px; }
+}

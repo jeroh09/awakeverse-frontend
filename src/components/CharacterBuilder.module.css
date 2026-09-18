@@ -1,0 +1,75 @@
+
+.scanBanner {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem;
+  margin: 0.75rem 2rem 0;
+  padding: 0.65rem 1rem 0.65rem 1.1rem;
+  background: rgba(99, 102, 241, 0.07);
+  border: 1px solid rgba(99, 102, 241, 0.28);
+  border-radius: 10px;
+  flex-shrink: 0;
+}
+
+.scanBannerLeft {
+  display: flex;
+  align-items: center;
+  gap: 0.55rem;
+  flex: 1;
+  min-width: 0;
+}
+
+.scanBannerIcon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  color: #818cf8;
+  filter: drop-shadow(0 0 5px rgba(99, 102, 241, 0.45));
+}
+
+.scanBannerText {
+  font-family: 'Inter', system-ui, sans-serif;
+  font-size: 0.75rem;
+  color: #818cf8;
+  margin: 0;
+  line-height: 1.45;
+  min-width: 0;
+}
+
+.scanBannerText strong {
+  color: #e0e7ff;
+  font-weight: 600;
+}
+
+.scanBannerDismiss {
+  background: none;
+  border: none;
+  color: #475569;
+  font-size: 1rem;
+  cursor: pointer;
+  padding: 0 0.2rem;
+  line-height: 1;
+  flex-shrink: 0;
+  transition: color 0.15s ease;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.scanBannerDismiss:hover {
+  color: #94a3b8;
+}
+
+/* ── Mobile ── */
+@media (max-width: 640px) {
+  .scanBanner {
+    margin: 0.6rem 1rem 0;
+    padding: 0.55rem 0.75rem 0.55rem 0.85rem;
+  }
+
+  .scanBannerText {
+    font-size: 0.7rem;
+  }
+}

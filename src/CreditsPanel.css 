@@ -1,0 +1,40 @@
+/* CreditsPanel.css — account Credits panel. Reuses the film design tokens (--film-*)
+   so it matches CreditsUI.css. Pair with CreditsPanel.jsx. */
+
+.film-credits-panel{font-family:var(--film-body);color:var(--film-t1);
+  background:var(--film-surface);border:1px solid rgba(99,102,241,.3);
+  border-radius:var(--film-r-md);padding:20px;max-width:520px;}
+
+/* ── Header: big balance + tier pill ───────────────────────────────────────── */
+.fcp-head{display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:14px;}
+.fcp-balance{font-family:var(--film-display);font-weight:800;font-size:34px;line-height:1;
+  color:var(--film-t1);}
+.fcp-balance-unit{font-size:12px;color:var(--film-t2);margin-top:4px;}
+.fcp-tier{font-size:11px;font-weight:700;letter-spacing:.06em;color:var(--film-accent-hover);
+  background:rgba(99,102,241,.16);border:1px solid rgba(99,102,241,.3);
+  border-radius:var(--film-r-full);padding:4px 10px;white-space:nowrap;}
+
+.fcp-held{font-size:12px;color:var(--film-warning);margin-bottom:14px;}
+
+/* ── Buckets ───────────────────────────────────────────────────────────────── */
+.fcp-buckets{display:flex;flex-direction:column;gap:8px;margin-bottom:20px;}
+.fcp-bucket{display:grid;grid-template-columns:1fr auto auto;align-items:baseline;gap:12px;
+  padding:10px 12px;background:var(--film-interactive);border-radius:var(--film-r-md);}
+.fcp-bucket-name{font-size:13px;color:var(--film-t1);}
+.fcp-bucket-pts{font-family:var(--film-display);font-weight:700;font-size:15px;color:var(--film-t1);}
+.fcp-bucket-exp{font-size:11px;color:var(--film-t2);}
+
+/* ── History ───────────────────────────────────────────────────────────────── */
+.fcp-history-head{font-size:12px;font-weight:700;letter-spacing:.04em;color:var(--film-t2);
+  text-transform:uppercase;margin-bottom:8px;}
+.fcp-rows{list-style:none;margin:0;padding:0;}
+.fcp-row{display:grid;grid-template-columns:1fr auto auto;align-items:baseline;gap:12px;
+  padding:8px 0;border-bottom:1px solid var(--film-tm);}
+.fcp-row:last-child{border-bottom:none;}
+.fcp-row-reason{font-size:13px;color:var(--film-t1);}
+.fcp-row-date{font-size:12px;color:var(--film-t2);}
+.fcp-row-pts{font-family:var(--film-display);font-weight:700;font-size:13.5px;}
+.fcp-row-pts.is-pos{color:var(--film-success);}
+.fcp-row-pts.is-neg{color:var(--film-t2);}
+
+.fcp-empty{font-size:13px;color:var(--film-t2);padding:10px 0;}

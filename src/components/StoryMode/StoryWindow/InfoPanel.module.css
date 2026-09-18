@@ -1,0 +1,655 @@
+/* src/components/StoryMode/StoryWindow/InfoPanel.module.css */
+/* Info Panel - Retractable right panel with story metadata */
+
+@import '../styles/story-variables.css';
+
+/* ============================================================================
+   INFO PANEL - RIGHT PANEL (RETRACTABLE)
+   ============================================================================ */
+.infoPanel {
+  width: 320px;
+  background: var(--bg-surface);
+  border: 1px solid var(--border-medium);
+  border-radius: var(--radius-xl, 1.25rem);
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  transform: translateX(0);
+  opacity: 1;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  box-shadow: 0 2px 8px -2px rgba(0, 0, 0, 0.1), 
+              0 4px 12px -4px rgba(99, 102, 241, 0.1);
+  position: relative;
+  flex-shrink: 0;
+}
+
+.infoPanel.collapsed {
+  width: 0;
+  min-width: 0;
+  padding: 0;
+  border: none;
+  opacity: 0;
+  pointer-events: none;
+}
+
+/* ============================================================================
+   BREADCRUMB TOGGLE BUTTON - ALWAYS VISIBLE, POSITIONED INDEPENDENTLY
+   ============================================================================ */
+.infoPanelToggle {
+  position: fixed;
+  right: calc(320px + 2.25rem); /* Panel width + gap + offset */
+  top: 50%;
+  transform: translateY(-50%);
+  width: 40px;
+  height: 40px;
+  background: var(--bg-surface);
+  border: 1px solid var(--border-medium);
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  color: var(--text-secondary);
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  box-shadow: 0 2px 8px -2px rgba(0, 0, 0, 0.1), 
+              0 4px 12px -4px rgba(99, 102, 241, 0.1);
+  z-index: 100;
+}
+
+/* When panel is collapsed, move toggle to right edge */
+.infoPanelToggle.toggleCollapsed {
+  right: 1.5rem;
+}
+
+.infoPanelToggle:hover {
+  background: var(--bg-interactive);
+  border-color: var(--accent-primary);
+  color: var(--accent-hover);
+  box-shadow: 0 0 20px -5px rgba(99, 102, 241, 0.2);
+  transform: translateY(-50%) scale(1.05);
+}
+
+.infoPanelToggle:focus-visible {
+  outline: 2px solid var(--accent-primary);
+  outline-offset: 3px;
+}
+
+.breadcrumbIcon {
+  width: 20px;
+  height: 20px;
+  transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+/* ============================================================================
+   MOBILE RESPONSIVE - TOGGLE BUTTON
+   ============================================================================ */
+@media (max-width: 768px) {
+  .infoPanelToggle {
+    right: 1rem; /* Always on right edge on mobile */
+    width: 48px; /* Larger touch target */
+    height: 48px;
+    z-index: 200; /* Higher z-index on mobile to prevent overlap */
+  }
+  
+  .infoPanelToggle.toggleCollapsed {
+    right: 1rem; /* Same position on mobile */
+  }
+  
+  .breadcrumbIcon {
+    width: 24px;
+    height: 24px;
+  }
+}
+
+/* ============================================================================
+   INFO PANEL HEADER - MATCH CHAT HEADER HEIGHT
+   ============================================================================ */
+.infoPanelHeader {
+  padding: 1rem 1.5rem;
+  min-height: 100px; /* ✅ Match chat header height (was 180px) */
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-end; /* Align content to bottom like chat header */
+  border-bottom: 1px solid var(--border-medium);
+  background: var(--bg-surface);
+  position: relative; /* For mobile X button positioning */
+}
+
+/* Top row: Title + Home button inline */
+.headerTopRow {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+}
+
+.infoPanelTitle {
+  font-family: var(--font-display);
+  font-size: 1.1rem;
+  font-weight: 600;
+  color: var(--text-primary);
+  margin: 0; /* Remove bottom margin, now inline */
+}
+
+/* Home Button - Compact, inline with title */
+.infoHomeButton {
+  padding: 0.5rem 0.85rem;
+  background: transparent;
+  border: 1px solid var(--border-medium);
+  border-radius: var(--radius-md, 0.75rem);
+  color: var(--text-secondary);
+  font-family: var(--font-body);
+  font-size: 0.85rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+  white-space: nowrap; /* Prevent text wrapping */
+  flex-shrink: 0; /* Don't shrink */
+}
+
+.infoHomeButton:hover {
+  background: var(--bg-interactive);
+  border-color: var(--accent-primary);
+  color: var(--accent-hover);
+  box-shadow: 0 0 20px -5px rgba(99, 102, 241, 0.2);
+}
+
+.infoHomeButton:focus-visible {
+  outline: 2px solid var(--accent-primary);
+  outline-offset: 2px;
+}
+
+/* Mobile Close Button (X icon) */
+.mobileCloseButton {
+  position: absolute;
+  top: 1rem;
+  right: 1rem;
+  width: 48px;
+  height: 48px;
+  background: var(--bg-surface);
+  border: 2px solid var(--border-medium);
+  border-radius: 50%;
+  color: var(--text-secondary);
+  cursor: pointer;
+  display: none; /* Hidden by default */
+  align-items: center;
+  justify-content: center;
+  transition: all 0.3s ease;
+  z-index: 10;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
+}
+
+.mobileCloseButton:hover {
+  background: var(--bg-interactive);
+  border-color: var(--accent-primary);
+  color: var(--accent-hover);
+  transform: scale(1.05);
+}
+
+.mobileCloseButton:active {
+  transform: scale(0.95);
+}
+
+/* Responsive visibility helpers */
+.mobileOnly {
+  display: none;
+}
+
+@media (max-width: 768px) {
+  .mobileOnly {
+    display: flex; /* Show mobile close (X) button */
+  }
+  
+  .infoPanelHeader {
+    position: sticky;
+    top: 0;
+    z-index: 10;
+    min-height: 100px; /* ✅ Match desktop and chat header */
+    padding-right: 60px; /* Make room for X button */
+  }
+  
+  /* Home button already compact from base styles */
+  .infoHomeButton {
+    padding: 0.45rem 0.75rem;
+    font-size: 0.8rem;
+    gap: 0.35rem;
+  }
+  
+  /* Icon-only on very small screens */
+  @media (max-width: 400px) {
+    .homeButtonText {
+      display: none; /* Icon-only on very small screens */
+    }
+    
+    .infoHomeButton {
+      padding: 0.5rem;
+      justify-content: center;
+      min-width: 36px;
+    }
+  }
+}
+
+/* ============================================================================
+   INFO PANEL CONTENT
+   ============================================================================ */
+.infoPanelContent {
+  flex: 1;
+  overflow-y: auto;
+  padding: 1.5rem;
+}
+
+/* ============================================================================
+   PRIMARY OBJECTIVE SECTION
+   ============================================================================ */
+.panelMainObjective {
+  margin-bottom: 16px;
+  font-size: 14px;
+  font-family: var(--font-body, 'Inter', system-ui, sans-serif);
+  line-height: 1.5;
+  color: var(--text-primary, #F1F5F9);
+}
+
+.panelMainObjective strong {
+  display: block;
+  font-size: 12px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: var(--text-secondary, #94A3B8);
+  margin-bottom: 6px;
+}
+
+/* ============================================================================
+   ACT PROGRESS SECTION
+   ============================================================================ */
+.panelProgressSection {
+  margin-bottom: 16px;
+  padding: 12px;
+  background: rgba(15, 23, 42, 0.6);
+  border: 1px solid rgba(148, 163, 184, 0.2);
+  border-radius: 12px;
+}
+
+.panelActLine {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 8px;
+}
+
+.panelActTitle {
+  font-size: 13px;
+  font-family: var(--font-display, 'Syne', sans-serif);
+  font-weight: 600;
+  color: var(--text-primary, #F1F5F9);
+}
+
+.panelActBadge {
+  padding: 2px 8px;
+  border-radius: 6px;
+  background: rgba(15, 23, 42, 0.9);
+  border: 1px solid rgba(148, 163, 184, 0.3);
+  font-size: 10px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: var(--text-secondary, #94A3B8);
+}
+
+.panelProgressTrack {
+  position: relative;
+  width: 100%;
+  height: 6px;
+  border-radius: 999px;
+  background: rgba(15, 23, 42, 0.95);
+  overflow: hidden;
+  margin: 8px 0;
+}
+
+.panelProgressFill {
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(90deg, var(--accent-primary, #6366F1), var(--accent-hover, #818CF8));
+  border-radius: inherit;
+  transition: width 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+  box-shadow: 0 0 10px rgba(99, 102, 241, 0.4);
+}
+
+.panelMetaRow {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  font-size: 11px;
+  color: var(--text-secondary, #94A3B8);
+}
+
+.panelMetaPill {
+  padding: 3px 8px;
+  border-radius: 6px;
+  border: 1px solid var(--accent-primary, #6366F1);
+  background: rgba(99, 102, 241, 0.15);
+  color: var(--text-primary, #F1F5F9);
+  font-size: 11px;
+  font-weight: 600;
+}
+
+/* ============================================================================
+   MILESTONES SECTION
+   ============================================================================ */
+.milestonesHeader {
+  font-size: 11px;
+  font-family: var(--font-body, 'Inter', system-ui, sans-serif);
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.12em;
+  color: var(--text-secondary, #94A3B8);
+  margin-bottom: 8px;
+}
+
+.milestonesList {
+  flex: 1;
+  min-height: 0;
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  padding-right: 4px;
+}
+
+/* Smooth scrollbar for milestones */
+.milestonesList::-webkit-scrollbar {
+  width: 6px;
+}
+
+.milestonesList::-webkit-scrollbar-track {
+  background: rgba(15, 23, 42, 0.5);
+  border-radius: 3px;
+}
+
+.milestonesList::-webkit-scrollbar-thumb {
+  background: rgba(99, 102, 241, 0.5);
+  border-radius: 3px;
+}
+
+.milestonesList::-webkit-scrollbar-thumb:hover {
+  background: rgba(99, 102, 241, 0.7);
+}
+
+.milestoneCard {
+  padding: 12px;
+  background: rgba(15, 23, 42, 0.6);
+  border: 1px solid rgba(148, 163, 184, 0.2);
+  border-radius: 8px;
+  transition: all 0.2s ease;
+}
+
+.milestoneCard.current {
+  border-color: var(--accent-primary, #6366F1);
+  background: rgba(99, 102, 241, 0.1);
+  box-shadow: 0 0 12px rgba(99, 102, 241, 0.2);
+}
+
+.milestoneCard.complete {
+  opacity: 0.7;
+}
+
+.milestoneHeader {
+  display: flex;
+  align-items: flex-start;
+  gap: 8px;
+  margin-bottom: 8px;
+}
+
+.milestoneIcon {
+  font-size: 14px;
+  line-height: 1;
+  flex-shrink: 0;
+}
+
+.milestoneDescription {
+  flex: 1;
+  font-size: 13px;
+  line-height: 1.4;
+  color: var(--text-primary, #F1F5F9);
+}
+
+.milestoneFooter {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 11px;
+}
+
+.milestoneStatus {
+  padding: 2px 6px;
+  border-radius: 4px;
+  background: rgba(15, 23, 42, 0.9);
+  color: var(--text-secondary, #94A3B8);
+  font-weight: 500;
+}
+
+.milestoneProgress {
+  margin-left: auto;
+  color: var(--accent-primary, #6366F1);
+  font-weight: 600;
+}
+
+.milestoneTurns {
+  color: var(--text-muted, #64748B);
+}
+
+.milestoneProgressBar {
+  margin-top: 8px;
+  height: 4px;
+  background: rgba(15, 23, 42, 0.95);
+  border-radius: 999px;
+  overflow: hidden;
+}
+
+.milestoneProgressFill {
+  height: 100%;
+  background: linear-gradient(90deg, var(--accent-primary, #6366F1), var(--accent-hover, #818CF8));
+  border-radius: inherit;
+  transition: width 0.4s ease;
+}
+
+.infoSection {
+  margin-bottom: 1.75rem;
+}
+
+.infoSection:last-child {
+  margin-bottom: 0;
+}
+
+.infoSectionTitle {
+  font-family: var(--font-display);
+  font-size: 0.85rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: var(--text-tertiary);
+  margin-bottom: 0.75rem;
+}
+
+/* ============================================================================
+   ACT CARDS
+   ============================================================================ */
+.actCard {
+  background: var(--bg-interactive);
+  border: 1px solid var(--border-medium);
+  border-radius: var(--radius-md, 0.75rem);
+  padding: 0.85rem;
+  margin-bottom: 0.65rem;
+  cursor: pointer;
+  transition: all 0.3s ease;
+}
+
+.actCard:hover {
+  background: var(--bg-peak);
+  border-color: var(--accent-primary);
+  box-shadow: 0 0 20px -5px rgba(99, 102, 241, 0.2);
+  transform: translateY(-1px);
+}
+
+.actCard.active {
+  background: var(--bg-peak);
+  border-color: var(--accent-primary);
+}
+
+.actNumber {
+  font-family: var(--font-display);
+  font-size: 0.8rem;
+  font-weight: 600;
+  color: var(--accent-primary);
+  margin-bottom: 0.25rem;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+.actTitle {
+  font-family: var(--font-body);
+  font-size: 0.95rem;
+  font-weight: 500;
+  color: var(--text-primary);
+  margin-bottom: 0.35rem;
+}
+
+.actProgress {
+  font-family: var(--font-body);
+  font-size: 0.75rem;
+  color: var(--text-tertiary);
+}
+
+/* ============================================================================
+   MILESTONE ITEMS
+   ============================================================================ */
+.milestoneItem {
+  background: var(--bg-interactive);
+  border: 1px solid var(--border-medium);
+  border-radius: var(--radius-md, 0.75rem);
+  padding: 0.75rem;
+  margin-bottom: 0.65rem;
+  cursor: pointer;
+  transition: all 0.3s ease;
+}
+
+.milestoneItem:hover {
+  background: var(--bg-peak);
+  border-color: var(--accent-primary);
+  transform: translateY(-1px);
+}
+
+.milestoneItem.current {
+  border-color: var(--accent-primary);
+  background: rgba(99, 102, 241, 0.1);
+}
+
+.milestoneHeader {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.milestoneIcon {
+  font-size: 1rem;
+  flex-shrink: 0;
+}
+
+.milestoneTitle {
+  font-family: var(--font-body);
+  font-size: 0.85rem;
+  font-weight: 500;
+  color: var(--text-primary);
+  flex: 1;
+  line-height: 1.4;
+}
+
+.milestoneStatus {
+  font-family: var(--font-body);
+  font-size: 0.7rem;
+  padding: 0.15rem 0.4rem;
+  background: var(--bg-surface);
+  border-radius: var(--radius-pill, 999px);
+  color: var(--text-tertiary);
+  flex-shrink: 0;
+}
+
+/* ============================================================================
+   EMPTY STATE
+   ============================================================================ */
+.emptyState {
+  text-align: center;
+  padding: 2rem 1rem;
+  color: var(--text-tertiary);
+  font-family: var(--font-body);
+  font-size: 0.85rem;
+  font-style: italic;
+}
+
+/* ============================================================================
+   SCROLLBAR STYLING
+   ============================================================================ */
+.infoPanelContent::-webkit-scrollbar {
+  width: 6px;
+}
+
+.infoPanelContent::-webkit-scrollbar-track {
+  background: var(--bg-surface);
+}
+
+.infoPanelContent::-webkit-scrollbar-thumb {
+  background: var(--text-muted);
+  border-radius: 4px;
+}
+
+.infoPanelContent::-webkit-scrollbar-thumb:hover {
+  background: var(--text-tertiary);
+}
+
+/* ============================================================================
+   MOBILE RESPONSIVE - FULL-SCREEN OVERLAY
+   ============================================================================ */
+@media (max-width: 768px) {
+  .infoPanel {
+    position: fixed;
+    top: 0;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    width: 100%;
+    max-width: 100%;
+    border-radius: 0;
+    transform: translateX(100%);
+    z-index: 1000;
+  }
+  
+  .infoPanel:not(.collapsed) {
+    transform: translateX(0);
+  }
+  
+  /* Reposition toggle button on mobile */
+  .infoPanelToggle {
+    left: auto;
+    right: 1rem;
+    top: 1rem;
+    transform: none;
+  }
+  
+  .infoPanelToggle:hover {
+    transform: scale(1.05);
+  }
+  
+  /* Larger touch targets on mobile */
+  .infoHomeButton {
+    padding: 1rem;
+    font-size: 1rem;
+  }
+  
+  .actCard,
+  .milestoneItem {
+    padding: 1rem;
+  }
+}
