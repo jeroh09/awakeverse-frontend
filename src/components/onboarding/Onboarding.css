@@ -1,415 +1,466 @@
-/* ===== DEVICE FRAME WITH PROPER CONTAINMENT ===== */
-.device-frame {
-  position: relative;
-  width: 323px;           /* Was 380px, now 85% */
-  height: 578px;          /* Was 680px, now 85% */
-  background: #111;
-  border-radius: 31px;    /* Was 36px, now 85% */
-  box-shadow: 
-    0 0 0 7px #0a0a0a,    /* Was 8px, now 85% */
-    0 0 0 9px gold,       /* Was 10px, now 85% */
-    0 3px 26px rgba(0, 0, 0, 0.5); /* Was 4px 30px, now 85% */
-  padding: 14px;          /* Was 16px, now 85% */
-  overflow: hidden;       /* ENSURE NOTHING ESCAPES */
-  border: 1px solid rgba(255, 215, 0, 0.3);
-}
+/* src/components/Onboarding/OnboardingFlow.css
+   AwakeVerse Onboarding — Night Blue / Indigo
+   Fonts: Syne (headings) · Inter (body) · Caveat (wordmark)
+*/
 
-.device-screen {
-  width: 100%;
-  height: 100%;
-  background: rgba(20, 20, 30, 0.95);
-  backdrop-filter: blur(7px);    /* Was 8px, now 85% */
-  border-radius: 20px;           /* Was 24px, now 85% */
-  overflow: hidden;              /* ENSURE PROPER CLIPPING */
+/* ─── Shell ───────────────────────────────────────────────── */
+.ob-shell {
+  position: fixed;
+  inset: 0;
+  z-index: 1000;
   display: flex;
-  flex-direction: column;
-  border: 1px solid rgba(255, 215, 0, 0.1);
-}
-
-/* ===== AVATAR GRID - 15% REDUCED WITH GOLD RING EFFECTS ===== */
-.avatars-grid {
-  display: grid;
-  grid-template-columns: repeat(3, 1fr);
-  gap: 1.3rem;           /* Was 1.5rem, now 85% */
-  padding: 1.3rem;       /* Was 1.5rem, now 85% */
-  place-items: center;
-}
-
-.avatar-card {
-  display: flex;
-  flex-direction: column;
   align-items: center;
-  cursor: pointer;
+  justify-content: center;
+  padding: 1rem;
+  background: #020617;
+  overflow: hidden;
+}
+
+.ob-bg {
+  position: absolute;
+  inset: 0;
+  background:
+    radial-gradient(ellipse 60% 50% at 20% 20%, rgba(99,102,241,0.11) 0%, transparent 68%),
+    radial-gradient(ellipse 50% 40% at 80% 80%, rgba(129,140,248,0.07) 0%, transparent 68%);
+  pointer-events: none;
+}
+
+/* ─── Card ────────────────────────────────────────────────── */
+.ob-card {
   position: relative;
+  width: 100%;
+  max-width: 660px;
+  background: rgba(15, 23, 42, 0.97);
+  border: 1px solid rgba(148,163,184,0.14);
+  border-radius: 22px;
+  box-shadow:
+    0 0 0 1px rgba(99,102,241,0.06),
+    0 28px 70px rgba(0,0,0,0.75);
+  display: flex;
+  flex-direction: column;
+  padding: 2rem 2.25rem 1.6rem;
+  backdrop-filter: blur(20px);
+  max-height: calc(100vh - 2rem);
+  overflow-y: auto;
+}
+
+.ob-card--enter {
+  animation: ob-in 0.32s ease;
+}
+@keyframes ob-in {
+  from { opacity: 0; transform: translateY(12px) scale(0.98); }
+  to   { opacity: 1; transform: translateY(0)   scale(1);    }
+}
+.ob-card--exit-fwd  { opacity: 0; transform: translateX(-20px) scale(0.98); transition: all 0.26s ease; }
+.ob-card--exit-back { opacity: 0; transform: translateX(20px)  scale(0.98); transition: all 0.26s ease; }
+
+/* ─── Dots ────────────────────────────────────────────────── */
+.ob-dots {
+  display: flex;
+  gap: 6px;
+  margin-bottom: 1.5rem;
+}
+.ob-dot {
+  width: 6px; height: 6px;
+  border-radius: 999px;
+  background: rgba(148,163,184,0.22);
   transition: all 0.3s ease;
-  padding-bottom: 21px;  /* Was 25px, now 85% */
+}
+.ob-dot--active { width: 22px; background: #6366f1; box-shadow: 0 0 8px rgba(99,102,241,0.55); }
+.ob-dot--done   { background: rgba(99,102,241,0.4); }
+
+/* ─── Body ────────────────────────────────────────────────── */
+.ob-body { flex: 1; display: flex; flex-direction: column; }
+
+.ob-step {
+  display: flex;
+  flex-direction: column;
+  gap: 0.7rem;
+  flex: 1;
 }
 
-.avatar-frame,
-.avatar-img-container {
-  position: relative;
-  width: 68px;           /* Was 80px, now 85% */
-  height: 68px;          /* Was 80px, now 85% */
-  border-radius: 50%;
-  padding: 3px;          /* Was 4px, now 85% */
-  transition: all 0.3s ease;
-  background: transparent;
+/* ─── Typography ──────────────────────────────────────────── */
+.ob-eyebrow {
+  font-family: 'Inter', sans-serif;
+  font-size: 0.68rem;
+  font-weight: 600;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  color: #6366f1;
+  margin: 0;
+}
+.ob-heading {
+  font-family: 'Syne', sans-serif;
+  font-size: 1.5rem;
+  font-weight: 700;
+  color: #f5f5dc;
+  line-height: 1.2;
+  margin: 0;
+}
+.ob-tagline {
+  font-family: 'Syne', sans-serif;
+  font-size: 1.2rem;
+  font-weight: 600;
+  color: #e0e7ff;
+  margin: 0;
+}
+.ob-text {
+  font-family: 'Inter', sans-serif;
+  font-size: 0.875rem;
+  line-height: 1.7;
+  color: #94a3b8;
+  margin: 0;
+}
+.ob-hint {
+  font-family: 'Inter', sans-serif;
+  font-size: 0.73rem;
+  color: #475569;
+  font-style: italic;
+  margin: 0;
 }
 
-/* ===== SUBTLE GOLD RING HOVER EFFECTS ===== */
-.avatar-card:hover .avatar-frame,
-.avatar-card:hover .avatar-img-container {
-  border: 1px solid gold;
-  box-shadow: 0 0 8px rgba(255, 215, 0, 0.3);
-  transform: scale(1.02);
+/* ─── Welcome ─────────────────────────────────────────────── */
+.ob-step--welcome { gap: 0.8rem; }
+
+.ob-wordmark {
+  font-family: 'Caveat', cursive;
+  font-style: italic;
+  font-weight: 600;
+  font-size: 2.5rem;
+  letter-spacing: 0.04em;
+  line-height: 1;
+}
+.ob-wm--indigo { color: #6366f1; }
+.ob-wm--ivory  { color: #f5f5dc; }
+
+.ob-pills { display: flex; flex-wrap: wrap; gap: 0.4rem; margin-top: 0.15rem; }
+.ob-pill {
+  font-family: 'Inter', sans-serif;
+  font-size: 0.7rem;
+  font-weight: 500;
+  padding: 0.25rem 0.7rem;
+  border-radius: 999px;
+  border: 1px solid rgba(99,102,241,0.32);
+  color: #818cf8;
+  background: rgba(99,102,241,0.07);
 }
 
-/* ===== SUBTLE SELECTED STATE GOLD RING ===== */
-.avatar-card.selected .avatar-frame,
-.avatar-card.selected .avatar-img-container {
-  border: 1px solid gold !important;
-  box-shadow: 0 0 10px rgba(255, 215, 0, 0.4) !important;
-  transform: scale(1.03) !important;
+/* ─── Image Panel ─────────────────────────────────────────── */
+.ob-img-panel {
+  width: 100%;
+  /* 16:10 aspect ratio — tall enough to be captivating */
+  aspect-ratio: 16 / 10;
+  border-radius: 12px;
+  overflow: hidden;
+  background: rgba(2, 6, 23, 0.9);
+  border: 1px solid rgba(99,102,241,0.18);
+  flex-shrink: 0;
 }
-
-.avatar-image,
-.avatar-img {
+.ob-img-panel__img {
   width: 100%;
   height: 100%;
-  border-radius: 50%;
   object-fit: cover;
-  position: relative;
-  z-index: 2;
-  border: 2px solid transparent;
-  transition: all 0.3s ease;
+  display: block;
+  transition: transform 0.3s ease;
+}
+.ob-panel:hover .ob-img-panel__img,
+.ob-path-panel:hover .ob-img-panel__img {
+  transform: scale(1.03);
 }
 
-/* ===== SUBTLE GLOW EFFECTS ===== */
-.avatar-glow {
-  position: absolute;
-  top: -3px;
-  left: -3px;
-  width: calc(100% + 6px);
-  height: calc(100% + 6px);
-  border-radius: 50%;
-  background: radial-gradient(circle, rgba(255, 215, 0, 0.15), transparent 70%);
-  opacity: 0;
-  transform: scale(0.9);
-  transition: all 0.3s ease;
-  z-index: 1;
-  filter: blur(4px);
-}
-
-.avatar-card:hover .avatar-glow {
-  opacity: 1;
-  transform: scale(1.1);
-}
-
-.avatar-card.selected .avatar-glow {
-  opacity: 1 !important;
-  transform: scale(1.15) !important;
-  background: radial-gradient(circle, rgba(255, 215, 0, 0.2), transparent 70%) !important;
-}
-
-/* ===== GOLD CHARACTER NAME LABELS ===== */
-.avatar-name,
-.avatar-label {
-  position: absolute;
-  bottom: -5px;
-  left: 50%;
-  transform: translateX(-50%);
-  opacity: 0;
-  font-size: 0.68rem;    /* Was 0.8rem, now 85% */
-  color: gold !important; /* FORCE GOLD COLOR */
-  text-align: center;
-  width: max-content;
-  max-width: 85px;       /* Was 100px, now 85% */
-  transition: all 0.3s ease;
-  pointer-events: none;
-  text-overflow: ellipsis;
-  overflow: hidden;
-  white-space: nowrap;
-  background: rgba(0, 0, 0, 0.8);
-  padding: 3px 8px;
-  border-radius: 6px;
-  border: 1px solid rgba(255, 215, 0, 0.3);
-  backdrop-filter: blur(4px);
-}
-
-.avatar-card:hover .avatar-name,
-.avatar-card:hover .avatar-label,
-.avatar-card.selected .avatar-name,
-.avatar-card.selected .avatar-label {
-  opacity: 1;
-  transform: translateX(-50%) translateY(8px); /* Was 5px, now enhanced */
-  color: gold !important; /* FORCE GOLD COLOR */
-  text-shadow: 0 0 4px rgba(255, 215, 0, 0.8);
-  border-color: gold;
-  background: rgba(0, 0, 0, 0.9);
-}
-
-/* ===== SUBTLE RIPPLE EFFECT ON CLICK ===== */
-.avatar-card:active .avatar-frame::after {
-  content: '';
-  position: absolute;
-  top: 50%;
-  left: 50%;
-  width: 0;
-  height: 0;
-  border-radius: 50%;
-  background: rgba(255, 215, 0, 0.2); /* More subtle */
-  transform: translate(-50%, -50%);
-  animation: ripple 0.4s ease-out; /* Faster animation */
-  z-index: 0;
-}
-
-@keyframes ripple {
-  to {
-    width: 100px;  /* Smaller ripple */
-    height: 100px;
-    opacity: 0;
-  }
-}
-
-/* ===== CHAT BUBBLES - 15% REDUCED ===== */
-.chat-row {
+/* Fallback when image missing */
+.ob-img-panel__fallback {
+  width: 100%;
+  height: 100%;
   display: flex;
-  margin-bottom: 14px;   /* Was 16px, now 85% */
-  align-items: flex-start;
+  align-items: center;
+  justify-content: center;
+  background: linear-gradient(135deg, rgba(99,102,241,0.12), rgba(2,6,23,0.9));
+}
+.ob-img-panel__fallback-label {
+  font-family: 'Syne', sans-serif;
+  font-size: 0.8rem;
+  font-weight: 700;
+  color: rgba(99,102,241,0.5);
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
 }
 
-.user-row {
-  justify-content: flex-end;
+/* ─── 2-panel grid (Steps 2 & 3) ─────────────────────────── */
+.ob-panels-2 {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 0.85rem;
 }
 
-.chat-bubble {
-  position: relative;
-  padding: 10px 14px;    /* Was 12px 16px, now 85% */
-  border-radius: 15px;   /* Was 18px, now 85% */
-  max-width: 75%;
-  line-height: 1.4;
-  text-transform: none !important;
-  font-variant: normal !important;
+.ob-panel {
+  display: flex;
+  flex-direction: column;
+  gap: 0;
+  border-radius: 14px;
+  overflow: hidden;
+  /* Double border: inner line + outer ring via box-shadow */
+  border: 1px solid rgba(99,102,241,0.22);
+  box-shadow:
+    0 0 0 1px rgba(99,102,241,0.06),
+    0 4px 18px rgba(0,0,0,0.35);
+  background: rgba(15, 23, 42, 0.9);
+  transition: border-color 0.2s ease, box-shadow 0.2s ease;
+}
+.ob-panel:hover {
+  border-color: rgba(99,102,241,0.55);
+  box-shadow:
+    0 0 0 1px rgba(99,102,241,0.18),
+    0 8px 28px rgba(99,102,241,0.12);
 }
 
-.chat-bubble.ai {
-  background: rgba(255, 255, 255, 0.08);
-  border: 1px solid rgba(255, 215, 0, 0.3);
-  color: #fff;
+.ob-panel__text {
+  display: flex;
+  flex-direction: column;
+  gap: 0.2rem;
+  padding: 0.75rem 0.9rem;
+}
+.ob-panel__name {
+  font-family: 'Syne', sans-serif;
+  font-size: 0.9rem;
+  font-weight: 700;
+  color: #e0e7ff;
+}
+.ob-panel__desc {
+  font-family: 'Inter', sans-serif;
+  font-size: 0.73rem;
+  line-height: 1.45;
+  color: #64748b;
 }
 
-.chat-bubble.ai::before {
-  content: "";
-  position: absolute;
-  left: -7px;            /* Was -8px, now 85% */
-  top: 10px;             /* Was 12px, now 85% */
-  border: 7px solid transparent; /* Was 8px, now 85% */
-  border-right-color: rgba(255, 255, 255, 0.08);
-  border-left: 0;
+/* ─── Callout (Step 3) ────────────────────────────────────── */
+.ob-callout {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  padding: 0.6rem 0.9rem;
+  background: rgba(99,102,241,0.06);
+  border: 1px solid rgba(99,102,241,0.2);
+  border-radius: 9px;
+  font-family: 'Inter', sans-serif;
+  font-size: 0.75rem;
+  color: #818cf8;
 }
-
-.chat-bubble.user {
-  background: rgba(255, 215, 0, 0.15);
-  border: 1px solid rgba(255, 215, 0, 0.5);
-  color: #fff;
-}
-
-.chat-bubble.user::before {
-  content: "";
-  position: absolute;
-  right: -7px;           /* Was -8px, now 85% */
-  top: 10px;             /* Was 12px, now 85% */
-  border: 7px solid transparent; /* Was 8px, now 85% */
-  border-left-color: rgba(255, 215, 0, 0.15);
-  border-right: 0;
-}
-
-/* ===== AVATARS IN CHAT - 15% REDUCED ===== */
-.chat-avatar {
-  width: 37px;           /* Was 44px, now 85% */
-  height: 37px;          /* Was 44px, now 85% */
+.ob-callout__dot {
+  width: 6px; height: 6px;
   border-radius: 50%;
-  object-fit: cover;
-  border: 1px solid rgba(255, 215, 0, 0.3);
-  margin-right: 10px;    /* Was 12px, now 85% */
+  background: #6366f1;
+  flex-shrink: 0;
+  box-shadow: 0 0 6px rgba(99,102,241,0.8);
 }
 
-.user-avatar {
-  width: 37px;           /* Was 44px, now 85% */
-  height: 37px;          /* Was 44px, now 85% */
-  border-radius: 50%;
-  object-fit: cover;
-  border: 1px solid rgba(0, 150, 255, 0.5);
-  margin-left: 10px;     /* Was 12px, now 85% */
-}
-
-/* ===== HEADER & NAVIGATION - 15% REDUCED ===== */
-.app-header {
-  padding: 14px;         /* Was 16px, now 85% */
-  border-bottom: 1px solid rgba(255, 215, 0, 0.1);
+/* ─── Command step ────────────────────────────────────────── */
+.ob-step--command {
+  align-items: center;
   text-align: center;
-  font-size: 0.94rem;    /* Was 1.1rem, now 85% */
-  color: gold;
-  position: relative;
+  gap: 0.85rem;
+}
+.ob-step--command .ob-heading,
+.ob-step--command .ob-text { text-align: center; max-width: 380px; }
+
+.ob-kbd {
+  display: inline-block;
+  font-family: 'Inter', sans-serif;
+  font-size: 0.8rem;
+  font-weight: 700;
+  padding: 0.12rem 0.5rem;
+  border-radius: 5px;
+  border: 1px solid rgba(99,102,241,0.45);
+  background: rgba(99,102,241,0.1);
+  color: #818cf8;
+  margin: 0 2px;
 }
 
-.back-button {
-  position: absolute;
-  left: 14px;            /* Was 16px, now 85% */
+.ob-keys {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  margin: 0.5rem 0 0.25rem;
+}
+.ob-key {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 88px;
+  height: 88px;
+  background: rgba(15,23,42,0.9);
+  border: 1.5px solid rgba(99,102,241,0.3);
+  border-radius: 16px;
+  font-family: 'Inter', sans-serif;
+  font-size: 1.4rem;
+  font-weight: 700;
+  color: #94a3b8;
+  box-shadow:
+    0 4px 0 rgba(99,102,241,0.2),
+    0 8px 20px rgba(0,0,0,0.5),
+    inset 0 1px 0 rgba(255,255,255,0.04);
+}
+.ob-key--highlight {
+  border-color: #6366f1;
+  color: #e0e7ff;
+  background: rgba(99,102,241,0.15);
+  box-shadow:
+    0 4px 0 rgba(99,102,241,0.45),
+    0 8px 28px rgba(99,102,241,0.22),
+    0 0 18px rgba(99,102,241,0.14),
+    inset 0 1px 0 rgba(255,255,255,0.07);
+}
+.ob-key-plus {
+  font-size: 1.4rem;
+  font-weight: 300;
+  color: #334155;
+}
+.ob-keys-label {
+  font-family: 'Inter', sans-serif;
+  font-size: 0.78rem;
+  color: #475569;
+  margin: 0;
+}
+
+/* ─── Step 5: Path panels (4-up horizontal) ───────────────── */
+.ob-step--path { gap: 0.65rem; }
+
+.ob-panels-4 {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 0.7rem;
+}
+
+.ob-path-panel {
+  display: flex;
+  flex-direction: column;
+  gap: 0;
+  background: rgba(15,23,42,0.9);
+  /* Double border: inner line + outer ring via box-shadow */
+  border: 1px solid rgba(99,102,241,0.22);
+  box-shadow:
+    0 0 0 1px rgba(99,102,241,0.06),
+    0 4px 18px rgba(0,0,0,0.35);
+  border-radius: 14px;
+  overflow: hidden;
+  cursor: pointer;
+  text-align: left;
+  transition: all 0.18s ease;
+  color: inherit;
+  padding: 0;
+}
+.ob-path-panel:hover {
+  border-color: rgba(129,140,248,0.6);
+  box-shadow:
+    0 0 0 1px rgba(99,102,241,0.18),
+    0 10px 28px rgba(99,102,241,0.15);
+  background: rgba(99,102,241,0.07);
+  transform: translateY(-3px);
+}
+.ob-path-panel:active { transform: translateY(-1px) scale(0.99); }
+
+.ob-path-panel__text {
+  display: flex;
+  flex-direction: column;
+  gap: 0.2rem;
+  padding: 0.65rem 0.75rem 0.7rem;
+}
+.ob-path-panel__name {
+  font-family: 'Syne', sans-serif;
+  font-size: 0.82rem;
+  font-weight: 700;
+  color: #e0e7ff;
+}
+.ob-path-panel__desc {
+  font-family: 'Inter', sans-serif;
+  font-size: 0.68rem;
+  color: #64748b;
+  line-height: 1.4;
+}
+.ob-path-panel__arrow {
+  color: #6366f1;
+  margin-top: 0.3rem;
+  display: flex;
+  transition: transform 0.18s ease;
+}
+.ob-path-panel:hover .ob-path-panel__arrow { transform: translateX(3px); }
+
+/* ─── Footer ──────────────────────────────────────────────── */
+.ob-footer {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-top: 1.4rem;
+  padding-top: 1.1rem;
+  border-top: 1px solid rgba(148,163,184,0.08);
+}
+.ob-footer--last {
+  border-top: none;
+  margin-top: 0.5rem;
+  padding-top: 0;
+  justify-content: flex-start;
+}
+
+.ob-btn {
+  font-family: 'Inter', sans-serif;
+  font-size: 0.82rem;
+  font-weight: 600;
+  padding: 0.52rem 1.2rem;
+  border-radius: 9px;
+  border: none;
+  cursor: pointer;
+  transition: all 0.18s ease;
+}
+.ob-btn--primary {
+  background: linear-gradient(135deg, #6366f1, #818cf8);
+  color: #fff;
+  box-shadow: 0 2px 14px rgba(99,102,241,0.4);
+}
+.ob-btn--primary:hover {
+  box-shadow: 0 4px 22px rgba(99,102,241,0.55);
+  transform: translateY(-1px);
+}
+.ob-btn--ghost {
+  background: transparent;
+  color: #64748b;
+  border: 1px solid transparent;
+}
+.ob-btn--ghost:hover { color: #94a3b8; border-color: rgba(148,163,184,0.18); }
+.ob-btn--skip {
   background: transparent;
   border: none;
-  color: gold;
-  font-size: 1.02rem;    /* Was 1.2rem, now 85% */
   cursor: pointer;
+  font-family: 'Inter', sans-serif;
+  font-size: 0.73rem;
+  font-weight: 500;
+  color: #475569;
+  padding: 0.4rem 0.65rem;
+  transition: color 0.15s;
 }
+.ob-btn--skip:hover { color: #64748b; }
 
-/* ===== INPUT AREA - 15% REDUCED ===== */
-.chat-input-area {
-  display: flex;
-  gap: 7px;              /* Was 8px, now 85% */
-  padding: 10px;         /* Was 12px, now 85% */
-  background: rgba(10, 10, 20, 0.7);
-  border-top: 1px solid rgba(255, 215, 0, 0.1);
-}
-
-.chat-input-area input {
-  flex: 1;
-  padding: 9px 14px;     /* Was 10px 16px, now 85% */
-  border-radius: 17px;   /* Was 20px, now 85% */
-  border: 1px solid rgba(255, 215, 0, 0.3);
-  background: rgba(0, 0, 0, 0.4);
-  color: white;
-  outline: none;
-  font-size: 0.85rem;    /* Was 1rem, now 85% */
-}
-
-.chat-input-area button {
-  background: rgba(255, 215, 0, 0.2);
-  border: 1px solid gold;
-  color: gold;
-  padding: 0 17px;       /* Was 0 20px, now 85% */
-  border-radius: 17px;   /* Was 20px, now 85% */
-  cursor: pointer;
-  transition: all 0.2s;
-  font-size: 0.85rem;    /* Was 1rem, now 85% */
-}
-
-.chat-input-area button:hover {
-  background: rgba(255, 215, 0, 0.3);
-}
-
-/* ===== INVITE OPTIONS - 15% REDUCED ===== */
-.invite-options {
-  display: flex;
-  gap: 10px;             /* Was 12px, now 85% */
-  justify-content: center;
-  margin: 14px 0;        /* Was 16px, now 85% */
-  animation: fadeIn 0.3s ease;
-}
-
-.invite-options button {
-  background: rgba(255, 215, 0, 0.2);
-  border: 1px solid gold;
-  color: gold;
-  padding: 7px 14px;     /* Was 8px 16px, now 85% */
-  border-radius: 17px;   /* Was 20px, now 85% */
-  cursor: pointer;
-  transition: all 0.2s;
-  font-size: 0.85rem;    /* Was 1rem, now 85% */
-}
-
-.invite-options button:hover {
-  background: rgba(255, 215, 0, 0.3);
-}
-
-/* ===== CONTENT AREA - HIDDEN SCROLLBARS ===== */
-.app-content {
-  flex: 1;
-  overflow-y: auto;
-  overflow-x: hidden;
-  padding: 8px;          /* Was 10px, now 85% */
-  /* HIDE SCROLLBARS WHILE KEEPING FUNCTIONALITY */
-  scrollbar-width: none; /* Firefox */
-  -ms-overflow-style: none; /* IE and Edge */
-}
-
-.app-content::-webkit-scrollbar {
-  display: none; /* Chrome, Safari, Opera */
-}
-
-.chat-view {
-  height: 100%;
-  display: flex;
-  flex-direction: column;
-}
-
-.chat-messages {
-  flex: 1;
-  padding: 14px;         /* Was 16px, now 85% */
-  overflow-y: auto;
-  overflow-x: hidden;
-  /* HIDE SCROLLBARS WHILE KEEPING FUNCTIONALITY */
-  scrollbar-width: none; /* Firefox */
-  -ms-overflow-style: none; /* IE and Edge */
-}
-
-.chat-messages::-webkit-scrollbar {
-  display: none; /* Chrome, Safari, Opera */
-}
-
-/* ===== FORCE TEXT NORMALIZATION ===== */
-.chat-bubble,
-.chat-bubble *,
-.chat-bubble p,
-.chat-bubble span,
-.chat-bubble div,
-div[class*="chat-bubble"],
-div[class*="chat-bubble"] *,
-div[class*="chat-bubble"] p {
-  text-transform: none !important;
-  font-variant: normal !important;
-  font-feature-settings: normal !important;
-  text-decoration: none !important;
-  font-style: normal !important;
-  font-family: 'Lora', serif !important;
-}
-
-/* Override any uppercase from parent fonts */
-.device-frame *,
-.device-screen *,
-.chat-view *,
-.chat-messages * {
-  text-transform: none !important;
-}
-
-@keyframes fadeIn {
-  from { opacity: 0; transform: translateY(9px); }  /* Was 10px, now 85% */
-  to { opacity: 1; transform: translateY(0); }
-}
-
-/* ===== RESPONSIVE ADJUSTMENTS - 15% REDUCED ===== */
-@media (max-width: 768px) {
-  .device-frame {
-    width: 274px;         /* Was 323px, further reduced for mobile */
-    height: 491px;        /* Was 578px, further reduced for mobile */
-    padding: 12px;        /* Was 14px, further reduced */
+/* ─── Mobile ──────────────────────────────────────────────── */
+@media (max-width: 640px) {
+  .ob-card {
+    padding: 1.6rem 1.25rem 1.35rem;
+    border-radius: 18px;
+    max-height: calc(100vh - 1rem);
   }
-  
-  .avatars-grid {
-    gap: 1rem;            /* Was 1.3rem, further reduced */
-    padding: 1rem;        /* Was 1.3rem, further reduced */
-    grid-template-columns: repeat(3, 1fr); /* Keep 3 columns */
-  }
-  
-  .avatar-frame,
-  .avatar-img-container {
-    width: 58px;          /* Was 68px, further reduced */
-    height: 58px;         /* Was 68px, further reduced */
-  }
-  
-  .avatar-name,
-  .avatar-label {
-    font-size: 0.6rem;   /* Smaller text on mobile */
-    max-width: 70px;     /* Smaller max width */
-  }
+  .ob-heading { font-size: 1.2rem; }
+  .ob-wordmark { font-size: 2rem; }
+
+  /* Steps 2 & 3: stack panels vertically on mobile */
+  .ob-panels-2 { grid-template-columns: 1fr; gap: 0.65rem; }
+
+  /* Step 5: 2x2 grid on mobile */
+  .ob-panels-4 { grid-template-columns: 1fr 1fr; gap: 0.6rem; }
+
+  .ob-key { min-width: 72px; height: 72px; font-size: 1.1rem; border-radius: 12px; }
+
+  .ob-footer { margin-top: 1rem; padding-top: 0.9rem; }
+}
+
+@media (max-width: 380px) {
+  /* Step 5: single column on very small screens */
+  .ob-panels-4 { grid-template-columns: 1fr; }
 }

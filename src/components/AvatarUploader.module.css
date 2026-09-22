@@ -1,24 +1,236 @@
+/* AvatarUploader.module.css - UPDATED TO NEW DESIGN SYSTEM */
 .uploader {
   display: flex;
-  justify-content: center;
-  margin: 1rem 0;
+  flex-direction: column;
+  align-items: center;
+  gap: 1.5rem;
+  margin: 2rem 0;
+  padding: 2rem;
+  background: rgba(20, 27, 46, 0.6);
+  border: 1px solid rgba(99, 102, 241, 0.2);
+  border-radius: 16px;
+  backdrop-filter: blur(10px);
 }
+
+.uploadHeader {
+  text-align: center;
+  margin-bottom: 1rem;
+}
+
+.uploadTitle {
+  font-family: 'Syne', sans-serif;
+  font-size: 1.5rem;
+  font-weight: 700;
+  color: #F1F5F9;
+  margin-bottom: 0.5rem;
+}
+
+.uploadSubtitle {
+  color: rgba(255, 255, 255, 0.7);
+  font-size: 0.9rem;
+  font-family: 'Inter', sans-serif;
+}
+
+.previewContainer {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 1rem;
+}
+
 .preview {
   display: block;
-  width: 80px;
-  height: 80px;
-  border: 2px dashed var(--border);
+  width: 120px;
+  height: 120px;
+  border: 2px dashed rgba(99, 102, 241, 0.4);
   border-radius: 50%;
   overflow: hidden;
   cursor: pointer;
   text-align: center;
-  line-height: 80px;
+  transition: all 0.3s ease;
+  position: relative;
+  background: rgba(99, 102, 241, 0.05);
 }
+
+.preview:hover {
+  border-color: #6366F1;
+  background: rgba(99, 102, 241, 0.1);
+  transform: scale(1.02);
+}
+
 .preview img {
   width: 100%;
   height: 100%;
   object-fit: cover;
 }
+
 .preview input {
   display: none;
+}
+
+.placeholder {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  height: 100%;
+  color: rgba(99, 102, 241, 0.7);
+  font-family: 'Inter', sans-serif;
+  font-size: 0.8rem;
+  gap: 0.5rem;
+}
+
+.placeholderIcon {
+  font-size: 1.5rem;
+  opacity: 0.7;
+}
+
+.uploadRules {
+  background: rgba(99, 102, 241, 0.08);
+  border: 1px solid rgba(99, 102, 241, 0.2);
+  border-radius: 12px;
+  padding: 1.5rem;
+  max-width: 400px;
+  width: 100%;
+}
+
+.rulesTitle {
+  font-family: 'Syne', sans-serif;
+  font-size: 1rem;
+  font-weight: 600;
+  color: #6366F1;
+  margin-bottom: 1rem;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.rulesList {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0.8rem;
+}
+
+.ruleItem {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.8rem;
+  color: rgba(255, 255, 255, 0.8);
+  font-size: 0.85rem;
+  font-family: 'Inter', sans-serif;
+  line-height: 1.4;
+}
+
+.ruleIcon {
+  color: #6366F1;
+  font-size: 0.9rem;
+  margin-top: 0.1rem;
+  flex-shrink: 0;
+}
+
+.statusContainer {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.8rem;
+  min-height: 60px;
+}
+
+.status {
+  display: flex;
+  align-items: center;
+  gap: 0.8rem;
+  padding: 0.8rem 1.5rem;
+  background: rgba(99, 102, 241, 0.1);
+  border: 1px solid rgba(99, 102, 241, 0.3);
+  border-radius: 10px;
+  color: #6366F1;
+  font-family: 'Inter', sans-serif;
+  font-size: 0.9rem;
+  font-weight: 500;
+}
+
+.statusSpinner {
+  width: 16px;
+  height: 16px;
+  border: 2px solid rgba(99, 102, 241, 0.3);
+  border-top: 2px solid #6366F1;
+  border-radius: 50%;
+  animation: spin 1s linear infinite;
+}
+
+.error {
+  display: flex;
+  align-items: center;
+  gap: 0.8rem;
+  padding: 0.8rem 1.5rem;
+  background: rgba(239, 68, 68, 0.1);
+  border: 1px solid rgba(239, 68, 68, 0.3);
+  border-radius: 10px;
+  color: #EF4444;
+  font-family: 'Inter', sans-serif;
+  font-size: 0.9rem;
+  font-weight: 500;
+}
+
+.success {
+  display: flex;
+  align-items: center;
+  gap: 0.8rem;
+  padding: 0.8rem 1.5rem;
+  background: rgba(34, 197, 94, 0.1);
+  border: 1px solid rgba(34, 197, 94, 0.3);
+  border-radius: 10px;
+  color: #22C55E;
+  font-family: 'Inter', sans-serif;
+  font-size: 0.9rem;
+  font-weight: 500;
+}
+
+@keyframes spin {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
+}
+
+/* Responsive Design */
+@media (max-width: 768px) {
+  .uploader {
+    padding: 1.5rem;
+    margin: 1rem 0;
+  }
+  
+  .preview {
+    width: 100px;
+    height: 100px;
+  }
+  
+  .uploadTitle {
+    font-size: 1.3rem;
+  }
+  
+  .uploadRules {
+    padding: 1rem;
+  }
+}
+
+@media (max-width: 480px) {
+  .uploader {
+    padding: 1rem;
+  }
+  
+  .preview {
+    width: 80px;
+    height: 80px;
+  }
+  
+  .placeholder {
+    font-size: 0.7rem;
+  }
+  
+  .placeholderIcon {
+    font-size: 1.2rem;
+  }
 }

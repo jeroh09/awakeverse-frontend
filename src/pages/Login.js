@@ -1,11 +1,35 @@
-// src/pages/Login.jsx - Enhanced with retry logic and better error handling
+// src/pages/Login.jsx - MODIFIED VERSION with OAuth Error Notifications
+// REPLACE YOUR CURRENT Login.js with this version
+
 import React, { useState, useEffect } from 'react';
-import { Link, useNavigate, useLocation } from 'react-router-dom';
+import { Link, useNavigate, useLocation, useSearchParams } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
-import ElegantCharacterPortraits from '../components/ElegantCharacterPortraits';
-import UnifiedMobileAuth from '../components/UnifiedMobileAuth';
-import '../components/ElegantCharacterPortraits.css';
+import { sanitizeError } from '../utils/errorUtils';
 import '../style/AuthPageStyles.css';
+
+// ✅ ADD THESE TWO IMPORTS
+import { useOAuthErrorHandler } from '../hooks/useOAuthErrorHandler';
+import { OAuthErrorNotification } from '../components/OAuthErrorNotification';
+
+const API = process.env.NODE_ENV === 'development' ? '' : 'https://api.awakeverse.com';
+
+// Mobile detection hook
+function useMobileDetection() {
+  const [isMobile, setIsMobile] = useState(false);
+
+  useEffect(() => {
+    const checkMobile = () => {
+      setIsMobile(window.innerWidth <= 768);
+    };
+
+    checkMobile();
+    window.addEventListener('resize', checkMobile);
+    
+    return () => window.removeEventListener('resize', checkMobile);
+  }, []);
+
+  return isMobile;
+}
 
 export default function Login() {
   const [email, setEmail] = useState('');
@@ -13,56 +37,124 @@ export default function Login() {
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
   const [successMessage, setSuccessMessage] = useState('');
-  const [currentCharacter, setCurrentCharacter] = useState(null);
-  const [retryCount, setRetryCount] = useState(0);
+  const [verificationStatus, setVerificationStatus] = useState(null);
+  const [showResendVerification, setShowResendVerification] = useState(false);
+  const [showSetPassword, setShowSetPassword] = useState(false); // ✅ NEW: OAuth account prompt
+  const [oauthAvailable, setOauthAvailable] = useState({ google: false, apple: false });
   
+  const isMobile = useMobileDetection();
   const { login } = useAuth();
   const navigate = useNavigate();
   const location = useLocation();
+  const [searchParams] = useSearchParams();
+  
+  // ✅ ADD THIS LINE - Initialize OAuth error handler
+  const { oauthError, clearOAuthError } = useOAuthErrorHandler();
 
-  // Check for success message from registration
+  // Check OAuth availability
+  useEffect(() => {
+    const checkOAuth = async () => {
+      try {
+        const res = await fetch(`${API}/api/auth/oauth/health`);
+        const data = await res.json();
+        setOauthAvailable({
+          google: data.google?.available || false,
+          apple: data.apple?.available || false,
+        });
+      } catch (err) {
+        setOauthAvailable({ google: false, apple: false });
+      }
+    };
+    checkOAuth();
+  }, []);
+
+  // ❌ REMOVE THIS OLD OAUTH ERROR HANDLING (lines 58-75 in your current file)
+  // The new useOAuthErrorHandler hook handles this automatically
+  /*
+  useEffect(() => {
+    const oauthError = searchParams.get('error');
+    if (oauthError) {
+      const errorMessages = {
+        'oauth_denied': 'Google sign-in was cancelled',
+        'oauth_failed': 'Google sign-in failed. Please try again',
+        ...
+      };
+      setError(errorMessages[oauthError] || 'Google sign-in failed');
+      window.history.replaceState({}, '', '/login');
+    }
+  }, [searchParams]);
+  */
+
+  // ✅ KEEP THIS - Check for verified email and quiz session
+  useEffect(() => {
+    const verified = searchParams.get('verified');
+    const quizSession = searchParams.get('quiz_session');
+    
+    if (verified === 'true') {
+      setSuccessMessage('✅ Email verified! Please sign in to continue.');
+    }
+    
+    if (quizSession) {
+      sessionStorage.setItem('pending_quiz_after_login', quizSession);
+      console.log('📝 Stored quiz session for post-login:', quizSession);
+    }
+  }, [searchParams]);
+
+  // ✅ KEEP THIS - Check for email verification token in URL
+  useEffect(() => {
+    const token = searchParams.get('token');
+    if (token) {
+      handleEmailVerification(token);
+    }
+  }, [searchParams]);
+
+  // ✅ KEEP THIS - Check for success message from registration or password reset
   useEffect(() => {
     if (location.state?.message) {
       setSuccessMessage(location.state.message);
-      // Clear the message after showing it
       navigate(location.pathname, { replace: true });
     }
   }, [location, navigate]);
 
-  // 🔧 NEW: Enhanced submit handler with better error management
-  const handleSubmit = async (formData) => {
-    setLoading(true);
-    setError('');
+  // ✅ KEEP ALL YOUR EXISTING FUNCTIONS
+  const handleEmailVerification = async (token) => {
+    setVerificationStatus('processing');
 
     try {
-      await login({ 
-        email: formData.email || email, 
-        password: formData.password || password 
+      const res = await fetch(`${API}/api/auth/verify-email`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ token }),
       });
-      
-      // Reset retry count on successful login
-      setRetryCount(0);
-      navigate('/app');
+
+      const data = await res.json();
+
+      if (res.ok) {
+        setVerificationStatus('success');
+        setSuccessMessage('Email verified successfully! You can now sign in.');
+      } else {
+        setVerificationStatus('error');
+        setError(data.error || 'Email verification failed');
+      }
     } catch (err) {
-      console.error('Login error caught in component:', err);
-      
-      // Increment retry count
-      setRetryCount(prev => prev + 1);
-      
-      // Show user-friendly error message (no more "internal server error")
-      setError(err.message || 'Login failed. Please try again.');
-      
-      // 🔧 NEW: Auto-clear error after 5 seconds to improve UX
-      setTimeout(() => {
-        setError('');
-      }, 5000);
-      
-    } finally {
-      setLoading(false);
+      setVerificationStatus('error');
+      setError('Verification failed. Please try again.');
     }
   };
 
-  const handleDesktopSubmit = async (e) => {
+  const handleGoogleLogin = () => {
+    setLoading(true);
+    setError('');
+    window.location.href = `${API}/api/auth/google`;
+  };
+
+  const handleAppleLogin = () => {
+    setLoading(true);
+    setError('');
+    window.location.href = `${API}/api/auth/apple`;
+  };
+
+  const handleSubmit = async (e) => {
     e.preventDefault();
     
     if (!email || !password) {
@@ -70,140 +162,322 @@ export default function Login() {
       return;
     }
 
-    // Basic email validation
     if (!email.includes('@')) {
       setError('Please enter a valid email address');
       return;
     }
 
-    await handleSubmit({ email, password });
-  };
+    setLoading(true);
+    setError('');
+    setShowResendVerification(false);
+    setShowSetPassword(false); // ✅ NEW: reset on each attempt
 
-  // Handle character changes from the portrait component
-  const handleCharacterChange = (character) => {
-    setCurrentCharacter(character);
-  };
+    try {
+      await login({ email, password });
+      
+      const pendingQuizFromUrl = sessionStorage.getItem('pending_quiz_after_login');
+      sessionStorage.removeItem('pending_quiz_after_login');
+      
+      if (pendingQuizFromUrl) {
+        console.log(`🎯 Redirecting to template with quiz: ${pendingQuizFromUrl}`);
+        navigate(`/app?quiz_session=${pendingQuizFromUrl}&view=create`);
+      } else {
+        navigate('/app');
+      }
+      
+    } catch (err) {
+      console.error('Login error:', err);
+      const msg = err.message || '';
 
-  // Dynamic form title based on current character
-  const getFormTitle = () => {
-    if (currentCharacter) {
-      return `Welcome, ${currentCharacter.name} awaits`;
+      // ✅ NEW: OAuth-only account — guide to set password
+      if (msg.includes('Google Sign-In') || msg.includes('oauth_account_no_password')) {
+        setShowSetPassword(true);
+        setError('');
+
+      // Existing: email not verified
+      } else if (msg.includes('verify your email') || msg.includes('requires_verification')) {
+        setError('Please verify your email address before signing in.');
+        setShowResendVerification(true);
+
+      // Existing: everything else — FIXED: single setError, no overwrite
+      } else {
+        setError(sanitizeError(err));
+      }
+
+    } finally {
+      setLoading(false);
     }
-    return 'Welcome Back';
   };
 
-  // 🔧 NEW: Get dynamic loading message
-  const getLoadingMessage = () => {
-    if (retryCount > 0) {
-      return 'Retrying connection...';
+  const handleResendVerification = async () => {
+    if (!email) {
+      setError('Please enter your email address first');
+      return;
     }
-    return 'Awakening...';
-  };
 
-  // 🔧 NEW: Show retry info if there have been retries
-  const showRetryInfo = retryCount > 0 && !loading && !error;
+    setLoading(true);
+    setError('');
+
+    try {
+      const res = await fetch(`${API}/api/auth/resend-verification`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ email }),
+      });
+
+      const data = await res.json();
+
+      if (res.ok) {
+        setSuccessMessage('Verification email sent! Please check your inbox.');
+        setShowResendVerification(false);
+      } else {
+        setError(data.error || 'Failed to resend verification');
+      }
+    } catch (err) {
+      setError('Failed to resend verification email');
+    } finally {
+      setLoading(false);
+    }
+  };
 
   return (
     <div className="auth-page">
-      {/* MOBILE: Enhanced mobile auth component */}
-      <UnifiedMobileAuth 
-        mode="login"
-        onSubmit={handleSubmit}
-        error={error}
-        loading={loading}
-      />
-
-      {/* DESKTOP: Side-by-side layout */}
-      {/* Left side: Elegant character portraits */}
-      <div className="auth-demo-container">
-        <ElegantCharacterPortraits 
-          autoAdvanceInterval={12000}
-          onCharacterChange={handleCharacterChange}
+      {/* ✅ ADD THIS - OAuth Error Notification at the top */}
+      {oauthError && (
+        <OAuthErrorNotification 
+          error={oauthError} 
+          onDismiss={clearOAuthError}
         />
-      </div>
+      )}
 
-      {/* Right side: Floating auth form */}
-      <form className="auth-form" onSubmit={handleDesktopSubmit}>
-        <h2>{getFormTitle()}</h2>
+      {/* ✅ KEEP ALL YOUR EXISTING JSX */}
+      {!isMobile ? (
+        <div style={{
+          position: 'absolute',
+          top: 'var(--space-xl)',
+          left: 'var(--space-xl)',
+          zIndex: 100
+        }}>
+          <h1 style={{
+            fontFamily: 'var(--font-display)',
+            fontSize: '1.5rem',
+            fontWeight: 700,
+            color: 'var(--brand-ivory)',
+            textShadow: '0 0 20px var(--accent-glow)',
+            margin: 0
+          }}>
+            AwakeVerse
+          </h1>
+        </div>
+      ) : (
+        <div style={{
+          position: 'absolute',
+          top: 'var(--space-lg)',
+          left: 'var(--space-lg)',
+          zIndex: 100
+        }}>
+          <h1 style={{
+            fontFamily: 'var(--font-display)',
+            fontSize: '1.25rem',
+            fontWeight: 700,
+            color: 'var(--brand-ivory)',
+            textShadow: '0 0 20px var(--accent-glow)',
+            margin: 0
+          }}>
+            AwakeVerse
+          </h1>
+        </div>
+      )}
+
+      <div className="auth-container">
+        <div 
+          className="auth-scene-panel"
+          style={{
+            background: `url(${process.env.PUBLIC_URL}/images/auth-scene.jpeg) center/cover`
+          }}
+        ></div>
         
-        {successMessage && (
-          <div className="success-text">{successMessage}</div>
-        )}
-        
-        {/* 🔧 ENHANCED: Better error display with retry info */}
-        {error && (
-          <div className="error-text">
-            {error}
-            {error.includes('Server is temporarily unavailable') && (
-              <div style={{ marginTop: '8px', fontSize: '0.9em', opacity: 0.8 }}>
-                We're working to resolve this. Please try again in a moment.
+        <div className="auth-form-container">
+          <form className="auth-form" onSubmit={handleSubmit}>
+            {verificationStatus === 'processing' && (
+              <div className="info-text">
+                Verifying your email address...
               </div>
             )}
-          </div>
-        )}
-        
-        {/* 🔧 NEW: Show retry success message */}
-        {showRetryInfo && (
-          <div className="info-text" style={{ color: '#666', fontSize: '0.9em', marginBottom: '10px' }}>
-            Connection restored. You can try logging in again.
-          </div>
-        )}
-        
-        <label htmlFor="email">Email</label>
-        <input
-          id="email"
-          type="email"
-          autoComplete="email"
-          value={email}
-          onChange={(e) => setEmail(e.target.value)}
-          placeholder="Enter your email"
-          disabled={loading}
-          style={{
-            borderColor: error && error.includes('email') ? '#ff6b6b' : undefined
-          }}
-        />
-        
-        <label htmlFor="password">Password</label>
-        <input
-          id="password"
-          type="password"
-          autoComplete="current-password"
-          value={password}
-          onChange={(e) => setPassword(e.target.value)}
-          placeholder="Enter your password"
-          disabled={loading}
-          style={{
-            borderColor: error && error.includes('password') ? '#ff6b6b' : undefined
-          }}
-        />
-        
-        <button 
-          type="submit" 
-          disabled={loading || !email || !password}
-          style={{
-            opacity: loading ? 0.7 : 1,
-            cursor: loading ? 'not-allowed' : 'pointer'
-          }}
-        >
-          {loading ? getLoadingMessage() : 'Enter the Realm'}
-        </button>
-        
-        {/* 🔧 NEW: Connection status hint */}
-        {loading && (
-          <div style={{ 
-            marginTop: '10px', 
-            fontSize: '0.8em', 
-            color: '#666', 
-            textAlign: 'center' 
-          }}>
-            {retryCount > 0 ? 'Attempting to reconnect...' : 'Connecting to server...'}
-          </div>
-        )}
-        
-        <p>
-          New to Awakeverse? <Link to="/register">Begin your journey</Link>
-        </p>
-      </form>
+            
+            {successMessage && (
+              <div className="success-text">{successMessage}</div>
+            )}
+            
+            {error && (
+              <div className="error-text">
+                {error}
+                {error.includes('Server is temporarily unavailable') && (
+                  <div style={{ marginTop: '8px', fontSize: '0.9em', opacity: 0.8 }}>
+                    We're working to resolve this. Please try again in a moment.
+                  </div>
+                )}
+              </div>
+            )}
+            
+            {showResendVerification && (
+              <div style={{ 
+                background: 'rgba(99, 102, 241, 0.1)', 
+                border: '1px solid rgba(99, 102, 241, 0.3)',
+                borderRadius: 'var(--radius-md)',
+                padding: 'var(--space-md)',
+                marginBottom: 'var(--space-md)',
+                textAlign: 'center'
+              }}>
+                <p style={{ margin: '0 0 8px 0', color: 'var(--text-primary)', fontSize: '0.9rem' }}>
+                  Need to verify your email?
+                </p>
+                <button 
+                  type="button"
+                  onClick={handleResendVerification}
+                  disabled={loading}
+                  style={{
+                    background: 'none',
+                    border: 'none',
+                    color: 'var(--accent-primary)',
+                    textDecoration: 'underline',
+                    cursor: 'pointer',
+                    fontSize: '0.9rem'
+                  }}
+                >
+                  Resend verification email
+                </button>
+              </div>
+            )}
+
+            {/* ✅ NEW: OAuth account — no password set */}
+            {showSetPassword && (
+              <div style={{ 
+                background: 'rgba(99, 102, 241, 0.1)', 
+                border: '1px solid rgba(99, 102, 241, 0.3)',
+                borderRadius: 'var(--radius-md)',
+                padding: 'var(--space-md)',
+                marginBottom: 'var(--space-md)',
+                textAlign: 'center'
+              }}>
+                <p style={{ margin: '0 0 8px 0', color: 'var(--text-primary)', fontSize: '0.9rem' }}>
+                  This account uses Google Sign-In. Set a password to use email login.
+                </p>
+                <Link
+                  to="/forgot-password"
+                  state={{ prefillEmail: email }}
+                  style={{
+                    color: 'var(--accent-primary)',
+                    fontSize: '0.9rem',
+                    fontWeight: 600,
+                    textDecoration: 'underline'
+                  }}
+                >
+                  Set a password →
+                </Link>
+              </div>
+            )}
+            
+            {/* UNIFIED OAUTH RAIL — Google + Apple */}
+            {(oauthAvailable.google || oauthAvailable.apple) && (
+              <div className="oauth-rail">
+                {oauthAvailable.google && (
+                  <button
+                    type="button"
+                    onClick={handleGoogleLogin}
+                    disabled={loading}
+                    className="oauth-mark"
+                    aria-label="Continue with Google"
+                  >
+                    <svg width="18" height="18" viewBox="0 0 18 18" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+                      <path d="M17.64 9.2c0-.637-.057-1.251-.164-1.84H9v3.481h4.844c-.209 1.125-.843 2.078-1.796 2.717v2.258h2.908c1.702-1.567 2.684-3.874 2.684-6.615z" fill="#4285F4"/>
+                      <path d="M9.003 18c2.43 0 4.467-.806 5.956-2.18L12.05 13.56c-.806.54-1.836.86-3.047.86-2.344 0-4.328-1.584-5.036-3.711H.96v2.332C2.44 15.983 5.485 18 9.003 18z" fill="#34A853"/>
+                      <path d="M3.964 10.712c-.18-.54-.282-1.117-.282-1.71 0-.593.102-1.17.282-1.71V4.96H.957C.347 6.175 0 7.55 0 9.002c0 1.452.348 2.827.957 4.042l3.007-2.332z" fill="#FBBC05"/>
+                      <path d="M9.003 3.58c1.321 0 2.508.454 3.44 1.345l2.582-2.58C13.464.891 11.426 0 9.003 0 5.485 0 2.44 2.017.96 4.958L3.967 7.29c.708-2.127 2.692-3.71 5.036-3.71z" fill="#EA4335"/>
+                    </svg>
+                    <span>Continue with Google</span>
+                  </button>
+                )}
+                {oauthAvailable.apple && (
+                  <button
+                    type="button"
+                    onClick={handleAppleLogin}
+                    disabled={loading}
+                    className="oauth-mark"
+                    aria-label="Continue with Apple"
+                  >
+                    <svg width="15" height="17" viewBox="0 0 16 18" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+                      <path d="M13.09 9.54c-.02-2.02 1.65-2.99 1.72-3.04-.94-1.37-2.4-1.56-2.92-1.58-1.24-.13-2.42.73-3.05.73-.63 0-1.6-.71-2.63-.69-1.35.02-2.6.79-3.29 2-1.4 2.43-.36 6.02 1 8 .67.97 1.46 2.05 2.5 2.01 1.01-.04 1.39-.65 2.6-.65 1.21 0 1.56.65 2.62.63 1.08-.02 1.77-.99 2.43-1.96.77-1.12 1.08-2.21 1.1-2.27-.02-.01-2.11-.81-2.13-3.21zM11.13 3.5c.56-.68.94-1.62.83-2.56-.81.03-1.79.54-2.37 1.21-.52.6-.97 1.56-.85 2.48.9.07 1.83-.46 2.39-1.13z" fill="currentColor"/>
+                    </svg>
+                    <span>Continue with Apple</span>
+                  </button>
+                )}
+              </div>
+            )}
+            
+            <div className="form-group">
+              <label htmlFor="email">Email</label>
+              <input
+                id="email"
+                type="email"
+                autoComplete="email"
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+                placeholder="Your email"
+                disabled={loading}
+                required
+              />
+            </div>
+            
+            <div className="form-group">
+              <label htmlFor="password">Password</label>
+              <input
+                id="password"
+                type="password"
+                autoComplete="current-password"
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+                placeholder="Your password"
+                disabled={loading}
+                required
+              />
+            </div>
+            
+            <button 
+              type="submit" 
+              disabled={loading || !email || !password}
+            >
+              {loading ? 'Signing In...' : 'Continue'}
+            </button>
+            
+            <div className="auth-links">
+              <Link to="/forgot-password">Forgot password?</Link>
+              <Link to="/register">Create account</Link>
+            </div>
+            
+            <div className="auth-legal-text">
+              <p>
+                By continuing, you agree with our{' '}
+                <a 
+                  href="https://www.awakeverse.com/terms" 
+                  target="_blank" 
+                  rel="noopener noreferrer"
+                >
+                  Terms
+                </a>{' '}
+                and{' '}
+                <a 
+                  href="https://www.awakeverse.com/privacy" 
+                  target="_blank" 
+                  rel="noopener noreferrer"
+                >
+                  Privacy Policy
+                </a>
+              </p>
+            </div>
+          </form>
+        </div>
+      </div>
     </div>
   );
 }

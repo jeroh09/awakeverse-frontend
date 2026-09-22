@@ -1,0 +1,118 @@
+/* src/components/ScenariosTab/ThemeToggle/ThemeToggle.css */
+
+/* ============================================================================
+   THEME TOGGLE BUTTON - MATCHING GATED CONTENT DESIGN
+   ============================================================================ */
+.scenarios-theme-toggle {
+  position: fixed;
+  top: 1.5rem;
+  right: 1.5rem;
+  z-index: 90; /* Below scroll arrow (100) but above content */
+  
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.75rem 1.25rem;
+  
+  background: var(--scenarios-bg-card);
+  border: 1px solid var(--scenarios-border-color);
+  border-radius: 9999px; /* Fully rounded */
+  
+  color: var(--scenarios-text-primary);
+  font-size: 0.9rem;
+  font-weight: 500;
+  
+  cursor: pointer;
+  transition: all 0.3s ease;
+  
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+}
+
+.scenarios-theme-toggle:hover {
+  background: var(--scenarios-bg-interactive, var(--scenarios-bg-secondary));
+  border-color: var(--scenarios-accent-primary);
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px var(--scenarios-shadow);
+}
+
+.scenarios-theme-toggle:active {
+  transform: translateY(0);
+}
+
+/* SVG Icon */
+.scenarios-theme-toggle svg {
+  flex-shrink: 0;
+  color: var(--scenarios-accent-primary);
+  transition: transform 0.3s ease;
+}
+
+.scenarios-theme-toggle:hover svg {
+  transform: rotate(15deg);
+}
+
+/* Text Label */
+.scenarios-theme-toggle span {
+  white-space: nowrap;
+  transition: color 0.3s ease;
+}
+
+/* ============================================================================
+   DARK THEME OVERRIDES
+   ============================================================================ */
+.scenarios-tab-container.theme-awakeverse .scenarios-theme-toggle {
+  background: rgba(20, 27, 46, 0.8);
+  backdrop-filter: blur(10px);
+  border-color: rgba(99, 102, 241, 0.3);
+  box-shadow: 0 2px 8px rgba(99, 102, 241, 0.2);
+}
+
+.scenarios-tab-container.theme-awakeverse .scenarios-theme-toggle:hover {
+  background: rgba(36, 49, 82, 0.9);
+  border-color: #6366F1;
+  box-shadow: 0 4px 12px rgba(99, 102, 241, 0.3);
+}
+
+.scenarios-tab-container.theme-awakeverse .scenarios-theme-toggle svg {
+  color: #818CF8;
+}
+
+/* ============================================================================
+   RESPONSIVE
+   ============================================================================ */
+@media (max-width: 768px) {
+  .scenarios-theme-toggle {
+    top: 1rem;
+    right: 1rem;
+    padding: 0.6rem 1rem;
+    font-size: 0.85rem;
+  }
+  
+  .scenarios-theme-toggle svg {
+    width: 14px;
+    height: 14px;
+  }
+  
+  /* Hide text label on very small screens */
+  @media (max-width: 480px) {
+    .scenarios-theme-toggle span {
+      display: none;
+    }
+    
+    .scenarios-theme-toggle {
+      padding: 0.75rem;
+      width: 44px;
+      height: 44px;
+      justify-content: center;
+    }
+  }
+}
+
+/* Accessibility - Keyboard focus */
+.scenarios-theme-toggle:focus {
+  outline: 2px solid var(--scenarios-accent-primary);
+  outline-offset: 2px;
+}
+
+.scenarios-theme-toggle:focus:not(:focus-visible) {
+  outline: none;
+}

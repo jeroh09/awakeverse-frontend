@@ -106,38 +106,38 @@ export default function CopyrightPolicy() {
           <a href="/privacy">Privacy</a>
           <a href="/sources">Sources &amp; Licences</a>
         </nav>
-        <h1 id="ip-title">Awakeverse — Copyright &amp; IP Policy</h1>
+        <h1 id="ip-title">AwakeVerse — Copyright &amp; IP Policy</h1>
         <p className="meta">Effective: 19 August 2025 • Last updated: 19 August 2025</p>
         <div className="intro-card">
-          This policy explains what you can do with Awakeverse content, what we can do with your content, and how to report infringement.
+          This policy explains what you can do with AwakeVerse content, what we can do with your content, and how to report infringement.
         </div>
       </header>
 
       <main className="document-main">
         <h2 id="ours">1) Our IP</h2>
         <ul>
-          <li>Trademarks: the Awakeverse™ name, logos, and taglines.</li>
-          <li>Copyright: site code, UI/UX, animations, avatars, persona definitions, prompts, generative text and images produced by Awakeverse.</li>
+          <li>Trademarks: the AwakeVerse™ name, logos, and taglines.</li>
+          <li>Copyright: site code, UI/UX, animations, avatars, persona definitions, prompts, generative text and images produced by AwakeVerse.</li>
           <li>Patents/Trade Secrets: proprietary algorithms (contextual memory, invite logic, etc.).</li>
         </ul>
-        <p>You receive a limited, revocable, non‑exclusive licence to view and share non‑commercial snippets of outputs with attribution to Awakeverse. No sublicensing or resale. Don't remove branding or watermarks.</p>
+        <p>You receive a limited, revocable, non‑exclusive licence to view and share non‑commercial snippets of outputs with attribution to AwakeVerse. No sublicensing or resale. Don't remove branding or watermarks.</p>
 
         <h2 id="yours">2) Your Content</h2>
         <ul>
-          <li><strong>You own your inputs</strong> (prompts, text, uploads). By using the service, you grant Awakeverse a worldwide, royalty‑free licence to host, process, display, and use your inputs to operate, maintain, secure, and improve the platform.</li>
+          <li><strong>You own your inputs</strong> (prompts, text, uploads). By using the service, you grant AwakeVerse a worldwide, royalty‑free licence to host, process, display, and use your inputs to operate, maintain, secure, and improve the platform.</li>
           <li>If you submit feedback, you grant us permission to use it without obligation.</li>
         </ul>
 
         <h2 id="ai-outputs">3) AI Outputs &amp; Responsibility</h2>
         <ul>
-          <li>AI outputs may resemble existing works; Awakeverse does not guarantee non‑infringement.</li>
-          <li>For commercial use of outputs outside Awakeverse, you are responsible for ensuring rights clearance where applicable.</li>
+          <li>AI outputs may resemble existing works; AwakeVerse does not guarantee non‑infringement.</li>
+          <li>For commercial use of outputs outside AwakeVerse, you are responsible for ensuring rights clearance where applicable.</li>
         </ul>
 
         <h2 id="third-party">4) Third‑Party Content &amp; Licences</h2>
         <ul>
           <li><strong>Public Domain</strong> sources (e.g., Project Gutenberg) are freely usable.</li>
-          <li>Open‑source components used by Awakeverse remain under their original licences.</li>
+          <li>Open‑source components used by AwakeVerse remain under their original licences.</li>
         </ul>
 
         <h2 id="use-restrictions">5) Use Restrictions</h2>
@@ -150,7 +150,7 @@ export default function CopyrightPolicy() {
         <h2 id="trademarks">6) Trademark Guidelines</h2>
         <ul>
           <li>Do not use our marks in a way that suggests sponsorship or endorsement.</li>
-          <li>Descriptive or nominative fair use is allowed (e.g., "compatible with Awakeverse").</li>
+          <li>Descriptive or nominative fair use is allowed (e.g., "compatible with AwakeVerse").</li>
         </ul>
 
         <h2 id="notice">7) Alleged Infringement (Notice &amp; Takedown)</h2>
@@ -168,7 +168,7 @@ export default function CopyrightPolicy() {
       </main>
 
       <footer className="document-footer">
-        <p>© {currentYear} Awakeverse Ltd. All rights reserved.</p>
+        <p>© {currentYear} AwakeVerse Ltd. All rights reserved.</p>
       </footer>
     </div>
   );

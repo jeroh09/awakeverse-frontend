@@ -1,0 +1,102 @@
+/* src/components/LauncherOverlay/LauncherOverlay.css
+   Ctrl+A launcher overlay — wraps ChatLauncherPage as a modal
+   Minimal: only handles the shell, backdrop, and close button
+   ChatLauncherPage handles all its own internal styles
+*/
+
+/* ─── Overlay shell ───────────────────────────────────────────────────────── */
+.launcher-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 500; /* Above all views, below modals (onboarding is 1000) */
+  animation: lo-in 0.22s ease;
+}
+
+@keyframes lo-in {
+  from { opacity: 0; }
+  to   { opacity: 1; }
+}
+
+.launcher-overlay--closing {
+  animation: lo-out 0.2s ease forwards;
+}
+
+@keyframes lo-out {
+  from { opacity: 1; }
+  to   { opacity: 0; }
+}
+
+/* ─── Subtle top indicator bar ────────────────────────────────────────────── */
+/* Tells the user they're in overlay mode — thin indigo line at top */
+.launcher-overlay__indicator {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 2px;
+  background: linear-gradient(90deg, #6366f1, #818cf8, transparent);
+  z-index: 501;
+  pointer-events: none;
+}
+
+/* ─── Close button ────────────────────────────────────────────────────────── */
+.launcher-overlay__close {
+  position: fixed;
+  top: 1rem;
+  right: 1rem;
+  z-index: 502;
+
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.4rem;
+
+  padding: 0.35rem 0.85rem;
+  border-radius: 8px;
+  border: 1px solid rgba(148, 163, 184, 0.25);
+  background: rgba(15, 23, 42, 0.92);
+  backdrop-filter: blur(12px);
+
+  font-family: 'Inter', system-ui, sans-serif;
+  font-size: 0.72rem;
+  font-weight: 600;
+  color: #64748b;
+  letter-spacing: 0.04em;
+  cursor: pointer;
+
+  transition: all 0.18s ease;
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.4);
+}
+
+.launcher-overlay__close:hover {
+  border-color: rgba(99, 102, 241, 0.45);
+  color: #94a3b8;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.5);
+}
+
+.launcher-overlay__close-kbd {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0.1rem 0.38rem;
+  border-radius: 4px;
+  border: 1px solid rgba(99, 102, 241, 0.35);
+  background: rgba(99, 102, 241, 0.1);
+  color: #6366f1;
+  font-size: 0.65rem;
+  font-weight: 700;
+  line-height: 1.4;
+}
+
+/* ─── Mobile: hide kbd hint, adjust close button ──────────────────────────── */
+@media (max-width: 600px) {
+  .launcher-overlay__close {
+    top: 0.65rem;
+    right: 0.65rem;
+    padding: 0.35rem 0.65rem;
+  }
+
+  .launcher-overlay__close-kbd {
+    display: none;
+  }
+}

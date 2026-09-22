@@ -36,10 +36,10 @@ export default function SourcesLicences() {
           <a href="/privacy">Privacy</a>
           <a href="/community-guidelines">Community</a>
         </nav>
-        <h1>Awakeverse — Sources & Licences</h1>
+        <h1>AwakeVerse — Sources & Licences</h1>
         <p className="meta">Effective: 19 August 2025 • Last updated: 19 August 2025</p>
         <div className="intro-card">
-          This page lists the open source software, training data sources, and third-party licences used by Awakeverse.
+          This page lists the open source software, training data sources, and third-party licences used by AwakeVerse.
         </div>
       </header>
 
@@ -59,7 +59,7 @@ export default function SourcesLicences() {
         </ul>
 
         <h2>3) Open Source Dependencies</h2>
-        <p>Awakeverse uses numerous open source libraries. Key dependencies include:</p>
+        <p>AwakeVerse uses numerous open source libraries. Key dependencies include:</p>
         
         <h3>Backend (Python)</h3>
         <ul>
@@ -105,7 +105,7 @@ export default function SourcesLicences() {
       </main>
 
       <footer className="document-footer">
-        <p>© {currentYear} Awakeverse Ltd. All rights reserved.</p>
+        <p>© {currentYear} AwakeVerse Ltd. All rights reserved.</p>
       </footer>
     </div>
   );

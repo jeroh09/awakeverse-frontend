@@ -1,0 +1,410 @@
+/* UnifiedContentCard.module.css - Cinematic, design-system aligned
+   Uses global CSS variables from the AwakeVerse design system:
+   --bg-canvas, --bg-surface, --bg-elevated
+   --accent-primary, --accent-hover
+   --text-primary, --text-secondary
+   --border-subtle, --border-medium, --border-strong
+   --font-display, --font-body
+*/
+
+.card {
+  position: relative;
+  overflow: hidden;
+  border-radius: 16px;
+  background: radial-gradient(
+      circle at top left,
+      rgba(99, 102, 241, 0.12),
+      transparent 50%
+    ),
+    var(--bg-surface, #141b2e);
+  border: 1px solid var(--border-subtle, rgba(148, 163, 184, 0.12));
+  box-shadow:
+    0 2px 8px -2px rgba(0, 0, 0, 0.4),
+    0 4px 12px -4px rgba(99, 102, 241, 0.25);
+  cursor: pointer;
+  transition:
+    transform 0.22s cubic-bezier(0.4, 0, 0.2, 1),
+    box-shadow 0.22s cubic-bezier(0.4, 0, 0.2, 1),
+    border-color 0.22s cubic-bezier(0.4, 0, 0.2, 1),
+    background 0.22s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.card:hover {
+  transform: translateY(-4px);
+  box-shadow:
+    0 4px 16px -4px rgba(0, 0, 0, 0.6),
+    0 10px 30px -10px rgba(99, 102, 241, 0.4);
+  border-color: rgba(99, 102, 241, 0.5);
+}
+
+/* Scenic background layer */
+.cardBackground {
+  position: absolute;
+  inset: 0;
+  background-size: cover;
+  background-position: center;
+  background-repeat: no-repeat;
+  filter: brightness(0.9);
+  transform: scale(1.04);
+  transform-origin: center;
+  transition: transform 0.22s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.card:hover .cardBackground {
+  transform: scale(1.07);
+}
+
+/* Cinematic gradient overlay for legibility */
+.cardGradient {
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(
+    to top,
+    rgba(10, 15, 26, 0.96) 0%,
+    rgba(10, 15, 26, 0.8) 40%,
+    rgba(10, 15, 26, 0.55) 70%,
+    rgba(10, 15, 26, 0.2) 100%
+  );
+  pointer-events: none;
+}
+
+/* Inner content container */
+.cardInner {
+  position: relative;
+  z-index: 1;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  min-height: 230px;
+  padding: 16px 16px 14px;
+  gap: 10px;
+}
+
+/* Header layout */
+.cardHeader {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  margin-bottom: 4px;
+}
+
+.headerMain {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  min-width: 0;
+}
+
+.headerText {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0;
+}
+
+/* Avatar (characters) */
+.avatar {
+  width: 44px;
+  height: 44px;
+  border-radius: 999px;
+  object-fit: cover;
+  border: 2px solid rgba(148, 163, 184, 0.4);
+  box-shadow:
+    0 0 0 1px rgba(15, 23, 42, 0.8),
+    0 4px 10px rgba(0, 0, 0, 0.5);
+  background: var(--bg-elevated, #1c2640);
+}
+
+/* Scenario icon placeholder */
+.scenarioIcon {
+  width: 48px;
+  height: 48px;
+  border-radius: 999px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 26px;
+  background: radial-gradient(
+      circle at 0% 0%,
+      rgba(99, 102, 241, 0.4),
+      transparent 55%
+    ),
+    radial-gradient(
+      circle at 100% 100%,
+      rgba(56, 189, 248, 0.28),
+      transparent 55%
+    );
+  border: 1px solid rgba(148, 163, 184, 0.5);
+  box-shadow:
+    0 0 0 1px rgba(15, 23, 42, 0.9),
+    0 4px 10px rgba(0, 0, 0, 0.6);
+}
+
+/* Badges */
+.badge {
+  border-radius: 999px;
+  padding: 4px 10px;
+  font-size: 0.7rem;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  font-family: var(--font-body, 'Inter', system-ui, sans-serif);
+  color: var(--text-secondary, #94a3b8);
+  background: rgba(15, 23, 42, 0.75);
+  border: 1px solid rgba(148, 163, 184, 0.45);
+  white-space: nowrap;
+}
+
+.scenarioBadge {
+  background: radial-gradient(
+      circle at 0 0,
+      rgba(129, 140, 248, 0.35),
+      transparent 60%
+    ),
+    rgba(15, 23, 42, 0.85);
+  border-color: rgba(129, 140, 248, 0.7);
+  color: var(--text-primary, #f1f5f9);
+}
+
+/* Typography */
+.title {
+  font-family: var(--font-display, 'Syne', system-ui, sans-serif);
+  font-size: 1rem;
+  font-weight: 700;
+  letter-spacing: 0.01em;
+  color: var(--text-primary, #f1f5f9);
+  margin: 0;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.domain {
+  font-family: var(--font-body, 'Inter', system-ui, sans-serif);
+  font-size: 0.75rem;
+  font-weight: 500;
+  color: var(--text-secondary, #94a3b8);
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+}
+
+.description {
+  font-family: var(--font-body, 'Inter', system-ui, sans-serif);
+  font-size: 0.86rem;
+  line-height: 1.5;
+  color: var(--text-secondary, #94a3b8);
+  margin: 4px 0 6px;
+  max-height: 4.2em;
+  display: -webkit-box;
+  -webkit-line-clamp: 3;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+
+/* Meta row */
+.meta {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-top: 2px;
+}
+
+.metaItem {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 3px 9px;
+  border-radius: 999px;
+  font-family: var(--font-body, 'Inter', system-ui, sans-serif);
+  font-size: 0.72rem;
+  color: var(--text-secondary, #94a3b8);
+  background: rgba(15, 23, 42, 0.8);
+  border: 1px solid rgba(148, 163, 184, 0.4);
+}
+
+/* Scenario-specific layout */
+.scenarioCard .cardInner {
+  min-height: 220px;
+}
+
+/* Character thumbnail strip (scenario participants) */
+.characterThumbnails {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin-top: 8px;
+}
+
+.characterThumb {
+  width: 32px;
+  height: 32px;
+  min-width: 32px;
+  border-radius: 999px;
+  position: relative;
+  overflow: hidden;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-family: var(--font-display, 'Syne', system-ui, sans-serif);
+  font-size: 0.8rem;
+  font-weight: 700;
+  color: #e5e7eb;
+  background: radial-gradient(
+      circle at 0 0,
+      rgba(129, 140, 248, 0.6),
+      transparent 60%
+    ),
+    radial-gradient(
+      circle at 100% 100%,
+      rgba(56, 189, 248, 0.4),
+      transparent 60%
+    );
+  border: 2px solid rgba(129, 140, 248, 0.9);
+  box-shadow:
+    0 2px 6px rgba(0, 0, 0, 0.6),
+    0 0 0 1px rgba(15, 23, 42, 0.9);
+}
+
+.thumbImg {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  border-radius: inherit;
+  position: absolute;
+  inset: 0;
+}
+
+.thumbFallback {
+  position: relative;
+  z-index: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.more {
+  font-family: var(--font-body, 'Inter', system-ui, sans-serif);
+  font-size: 0.75rem;
+  color: var(--text-secondary, #94a3b8);
+  padding-left: 4px;
+}
+
+/* Actions row */
+.actions {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-top: 10px;
+}
+
+.actionBtn {
+  flex: 0 0 auto;
+  border-radius: 999px;
+  padding: 6px 10px;
+  font-family: var(--font-body, 'Inter', system-ui, sans-serif);
+  font-size: 0.78rem;
+  font-weight: 500;
+  border: 1px solid var(--border-medium, rgba(148, 163, 184, 0.22));
+  background: rgba(15, 23, 42, 0.85);
+  color: var(--text-secondary, #94a3b8);
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  cursor: pointer;
+  transition:
+    background 0.18s cubic-bezier(0.4, 0, 0.2, 1),
+    border-color 0.18s cubic-bezier(0.4, 0, 0.2, 1),
+    color 0.18s cubic-bezier(0.4, 0, 0.2, 1),
+    transform 0.18s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.actionBtn:hover {
+  background: var(--bg-elevated, #1c2640);
+  border-color: rgba(129, 140, 248, 0.7);
+  color: var(--text-primary, #f1f5f9);
+  transform: translateY(-1px);
+}
+
+/* Primary CTA aligned with design-system primary button */
+.primaryBtn {
+  flex: 1 0 auto;
+  justify-content: center;
+  border-radius: 999px;
+  padding: 6px 14px;
+  font-family: var(--font-body, 'Inter', system-ui, sans-serif);
+  font-size: 0.82rem;
+  font-weight: 600;
+  border: none;
+  background-image: linear-gradient(
+    to right,
+    var(--accent-primary, #6366f1),
+    var(--accent-hover, #818cf8)
+  );
+  color: #ffffff;
+  box-shadow:
+    0 2px 8px rgba(15, 23, 42, 0.7),
+    0 0 18px rgba(99, 102, 241, 0.4);
+  cursor: pointer;
+  transition:
+    transform 0.18s cubic-bezier(0.4, 0, 0.2, 1),
+    box-shadow 0.18s cubic-bezier(0.4, 0, 0.2, 1),
+    filter 0.18s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.primaryBtn:hover {
+  transform: translateY(-2px);
+  box-shadow:
+    0 4px 14px rgba(15, 23, 42, 0.85),
+    0 0 22px rgba(129, 140, 248, 0.6);
+  filter: brightness(1.05);
+}
+
+/* Share success state */
+.shareSuccess {
+  background: rgba(22, 163, 74, 0.18);
+  border-color: rgba(22, 163, 74, 0.7);
+  color: #bbf7d0;
+}
+
+/* Responsive tweaks */
+@media (max-width: 768px) {
+  .cardInner {
+    min-height: 210px;
+    padding: 12px 12px 10px;
+    gap: 8px;
+  }
+
+  .cardHeader {
+    align-items: flex-start;
+  }
+
+  .avatar,
+  .scenarioIcon {
+    width: 40px;
+    height: 40px;
+  }
+
+  .title {
+    font-size: 0.95rem;
+  }
+
+  .description {
+    font-size: 0.82rem;
+    -webkit-line-clamp: 3;
+  }
+
+  .meta {
+    gap: 6px;
+  }
+
+  .actions {
+    gap: 6px;
+  }
+
+  .actionBtn,
+  .primaryBtn {
+    font-size: 0.75rem;
+    padding: 5px 9px;
+  }
+}

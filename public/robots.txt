@@ -1,3 +1,56 @@
-# https://www.robotstxt.org/robotstxt.html
+# AwakeVerse robots.txt
+# https://awakeverse.com
+
+# ── Allow all major search engines ──────────────────────────
+User-agent: Googlebot
+Allow: /
+
+User-agent: Bingbot
+Allow: /
+
+User-agent: Slurp
+Allow: /
+
+User-agent: DuckDuckBot
+Allow: /
+
+# ── Allow all major AI crawlers ──────────────────────────────
+User-agent: GPTBot
+Allow: /
+
+User-agent: ClaudeBot
+Allow: /
+
+User-agent: anthropic-ai
+Allow: /
+
+User-agent: PerplexityBot
+Allow: /
+
+User-agent: Applebot
+Allow: /
+
+User-agent: cohere-ai
+Allow: /
+
+User-agent: meta-externalagent
+Allow: /
+
+User-agent: Diffbot
+Allow: /
+
+# ── Default: allow all ──────────────────────────────────────
 User-agent: *
-Disallow:
+Allow: /
+
+# ── Disallow private/internal paths ─────────────────────────
+User-agent: *
+Disallow: /admin
+Disallow: /api/internal
+Disallow: /dashboard
+Disallow: /settings
+Disallow: /system-management-dashboard-2025/
+
+# ── Sitemaps ─────────────────────────────────────────────────
+Sitemap: https://awakeverse.com/sitemap.xml
+Sitemap: https://docs.awakeverse.com/sitemap.xml

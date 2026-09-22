@@ -83,7 +83,7 @@ export default function StoryPanel({ slide }) {
     case 'placeholder':
       return (
         <div className="placeholder-panel glossy">
-          <p>Panel 4: Your guide to navigating Awakeverse (coming soon!)</p>
+          <p>Panel 4: Your guide to navigating AwakeVerse (coming soon!)</p>
         </div>
       );
 

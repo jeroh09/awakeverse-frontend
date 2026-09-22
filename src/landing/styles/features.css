@@ -1,0 +1,478 @@
+/* src/landing/styles/features.css */
+/* Features Carousel Section Styles */
+
+.features-section {
+  background: var(--bg-surface);
+  position: relative;
+  min-height: 100vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: var(--space-2xl) var(--space-lg); /* Reduced from 4xl to fit more content */
+}
+
+.features-container {
+  max-width: 1400px;
+  width: 100%;
+  margin: 0 auto;
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-xl); /* Reduced from 3xl (60px to 32px) */
+}
+
+/* ================================
+   SECTION HEADER
+   ================================ */
+
+.features-header {
+  text-align: center;
+  margin-bottom: 0; /* Removed extra margin, using container gap instead */
+}
+
+.features-title {
+  font-family: var(--font-display);
+  font-size: var(--font-size-h1);
+  font-weight: var(--font-weight-bold);
+  color: var(--text-primary);
+  margin-bottom: var(--space-md);
+}
+
+.features-subtitle {
+  font-family: var(--font-body);
+  font-size: var(--font-size-body-lg);
+  font-weight: var(--font-weight-medium);
+  color: var(--text-secondary);
+}
+
+/* ================================
+   CAROUSEL WRAPPER
+   ================================ */
+
+.carousel-wrapper {
+  position: relative;
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: var(--space-3xl);
+  align-items: center;
+  max-width: 1200px;
+  margin: 0 auto;
+  width: 100%;
+  padding: var(--space-xl);
+  background: rgba(20, 27, 46, 0.5); /* Subtle background */
+  border-radius: var(--radius-xl);
+  border: 1px solid var(--border-subtle);
+  box-shadow: 
+    var(--elevation-02),
+    0 0 40px -10px rgba(99, 102, 241, 0.3), /* Indigo outer glow */
+    0 0 80px -20px rgba(99, 102, 241, 0.2); /* Extended glow */
+  transition: all var(--transition-slow);
+}
+
+.carousel-wrapper:hover {
+  box-shadow: 
+    var(--elevation-03),
+    0 0 60px -10px rgba(99, 102, 241, 0.4), /* Stronger glow on hover */
+    0 0 100px -20px rgba(99, 102, 241, 0.3);
+  border-color: rgba(99, 102, 241, 0.3);
+}
+
+/* ================================
+   FEATURE IMAGE
+   ================================ */
+
+.feature-image-container {
+  position: relative;
+  width: 100%;
+  aspect-ratio: 4 / 3;
+  border-radius: var(--radius-xl);
+  overflow: hidden;
+  box-shadow: var(--elevation-03);
+  border: 1px solid var(--border-subtle);
+  transition: all var(--transition-base);
+}
+
+.feature-image-container:hover {
+  box-shadow: var(--elevation-04), var(--glow-indigo);
+  border-color: var(--accent-primary);
+}
+
+.feature-image {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  object-position: center;
+  display: block;
+  animation: fade-in-scale 0.6s ease-out;
+}
+
+@keyframes fade-in-scale {
+  from {
+    opacity: 0;
+    transform: scale(0.95);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+/* ================================
+   CAROUSEL ARROWS
+   ================================ */
+
+.carousel-arrow {
+  position: absolute;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 48px;
+  height: 48px;
+  border-radius: 50%;
+  background: rgba(10, 15, 26, 0.8);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border: 1px solid var(--border-medium);
+  color: var(--text-primary);
+  font-size: 24px;
+  font-weight: var(--font-weight-bold);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: all var(--transition-base);
+  z-index: 10;
+}
+
+.carousel-arrow:hover {
+  background: var(--bg-interactive);
+  border-color: var(--accent-primary);
+  color: var(--accent-primary);
+  transform: translateY(-50%) scale(1.1);
+}
+
+.carousel-arrow.prev {
+  left: var(--space-md);
+}
+
+.carousel-arrow.next {
+  right: var(--space-md);
+}
+
+/* ================================
+   FEATURE CONTENT
+   ================================ */
+
+.feature-content {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-lg);
+  animation: slide-in-right 0.6s ease-out;
+}
+
+@keyframes slide-in-right {
+  from {
+    opacity: 0;
+    transform: translateX(30px);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}
+
+.feature-title {
+  font-family: var(--font-display);
+  font-size: var(--font-size-h2);
+  font-weight: var(--font-weight-bold);
+  color: var(--brand-ivory); /* Ivory, NOT gold */
+  margin: 0;
+}
+
+/* Ensure no override */
+.feature-content .feature-title {
+  color: var(--brand-ivory) !important;
+}
+
+.feature-subtitle {
+  font-family: var(--font-body);
+  font-size: var(--font-size-body-lg);
+  font-weight: var(--font-weight-semibold);
+  color: var(--text-primary);
+  margin: 0;
+  margin-top: calc(-1 * var(--space-sm));
+}
+
+.feature-description {
+  font-family: var(--font-body);
+  font-size: var(--font-size-body);
+  font-weight: var(--font-weight-regular);
+  color: var(--text-secondary);
+  line-height: var(--line-height-relaxed);
+  margin: 0;
+}
+
+/* Feature CTA Button */
+.feature-cta {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-sm);
+  padding: var(--space-md) var(--space-xl);
+  font-family: var(--font-body);
+  font-size: var(--font-size-body);
+  font-weight: var(--font-weight-semibold);
+  color: var(--text-primary);
+  background: var(--bg-interactive);
+  border: 1px solid var(--border-medium);
+  border-radius: var(--radius-md);
+  text-decoration: none;
+  cursor: pointer;
+  box-shadow: var(--elevation-01);
+  transition: all var(--transition-base);
+  width: fit-content;
+}
+
+.feature-cta:hover {
+  background: var(--bg-peak);
+  border-color: var(--accent-primary);
+  color: var(--text-primary);
+  transform: translateX(4px);
+  box-shadow: var(--elevation-02);
+}
+
+.feature-cta span {
+  transition: transform var(--transition-base);
+}
+
+.feature-cta:hover span {
+  transform: translateX(4px);
+}
+
+/* ================================
+   CAROUSEL DOTS
+   ================================ */
+
+.carousel-dots {
+  position: absolute;
+  bottom: calc(-1 * var(--space-3xl));
+  left: 50%;
+  transform: translateX(-50%);
+  display: flex;
+  gap: var(--space-md);
+  align-items: center;
+}
+
+.carousel-dot {
+  width: 12px;
+  height: 12px;
+  border-radius: 50%;
+  background: var(--border-medium);
+  border: 2px solid var(--bg-surface);
+  cursor: pointer;
+  transition: all var(--transition-base);
+  padding: 0;
+}
+
+.carousel-dot:hover {
+  background: var(--accent-hover);
+  transform: scale(1.2);
+}
+
+.carousel-dot.active {
+  background: var(--accent-primary);
+  box-shadow: var(--glow-indigo);
+  transform: scale(1.3);
+}
+
+/* ================================
+   RESPONSIVE DESIGN
+   ================================ */
+
+@media (max-width: 1024px) {
+  .features-section {
+    padding: var(--space-3xl) var(--space-lg);
+  }
+
+  .carousel-wrapper {
+    gap: var(--space-2xl);
+  }
+
+  .feature-title {
+    font-size: var(--font-size-h3);
+  }
+
+  .feature-subtitle {
+    font-size: var(--font-size-body);
+  }
+}
+
+@media (max-width: 768px) {
+  .features-section {
+    padding: var(--space-xl) var(--space-md); /* Reduced from 2xl */
+  }
+
+  .features-container {
+    gap: var(--space-lg); /* Reduced from 2xl */
+  }
+
+  .features-header {
+    margin-bottom: 0;
+  }
+
+  .features-title {
+    font-size: var(--font-size-h2);
+  }
+
+  .features-subtitle {
+    font-size: var(--font-size-body);
+  }
+
+  /* Stack layout on mobile */
+  .carousel-wrapper {
+    grid-template-columns: 1fr;
+    gap: var(--space-xl);
+    padding: var(--space-lg); /* Reduced padding on mobile */
+  }
+
+  .feature-image-container {
+    aspect-ratio: 16 / 10;
+  }
+
+  .carousel-arrow {
+    width: 40px;
+    height: 40px;
+    font-size: 20px;
+  }
+
+  .carousel-arrow.prev {
+    left: var(--space-sm);
+  }
+
+  .carousel-arrow.next {
+    right: var(--space-sm);
+  }
+
+  .feature-content {
+    gap: var(--space-md);
+    text-align: center;
+    align-items: center;
+  }
+
+  .feature-title {
+    font-size: var(--font-size-h3);
+  }
+
+  .feature-subtitle {
+    font-size: var(--font-size-body-sm);
+  }
+
+  .feature-description {
+    font-size: var(--font-size-body-sm);
+  }
+
+  .carousel-dots {
+    bottom: calc(-1 * var(--space-2xl));
+  }
+}
+
+@media (max-width: 480px) {
+  .features-section {
+    padding: var(--space-lg) var(--space-sm); /* Reduced from xl */
+  }
+
+  .features-container {
+    gap: var(--space-md); /* Reduced from xl */
+  }
+
+  .carousel-wrapper {
+    gap: var(--space-lg);
+    padding: var(--space-md); /* Reduced padding */
+  }
+
+  .feature-image-container {
+    aspect-ratio: 1 / 1;
+  }
+
+  .carousel-arrow {
+    width: 36px;
+    height: 36px;
+    font-size: 18px;
+  }
+
+  .feature-content {
+    gap: var(--space-sm);
+  }
+
+  .feature-title {
+    font-size: var(--font-size-h4);
+  }
+
+  .feature-cta {
+    width: 100%;
+    justify-content: center;
+  }
+
+  .carousel-dots {
+    bottom: calc(-1 * var(--space-xl));
+  }
+}
+
+/* ================================
+   ACCESSIBILITY
+   ================================ */
+
+.carousel-arrow:focus-visible,
+.carousel-dot:focus-visible,
+.feature-cta:focus-visible {
+  outline: 2px solid var(--accent-primary);
+  outline-offset: 4px;
+}
+
+/* Reduced motion preference */
+@media (prefers-reduced-motion: reduce) {
+  .feature-image,
+  .feature-content {
+    animation: none;
+  }
+  
+  .carousel-arrow:hover,
+  .carousel-dot:hover,
+  .feature-cta:hover {
+    transform: none;
+  }
+}
+/* Force feature titles to use Syne font */
+.feature-title {
+  font-family: 'Syne', sans-serif !important;
+  color: #F5F5DC !important;
+}
+/* ================================
+   TOUCH DEVICE OPTIMIZATION
+   ================================ */
+
+/* Remove hover effects on touch devices */
+@media (hover: none) and (pointer: coarse) {
+  /* Replace hover transforms with tap feedback */
+  .pillar-card:hover,
+  .creator-card:hover,
+  .feature-cta:hover {
+    transform: none;
+  }
+  
+  .pillar-card:active,
+  .creator-card:active {
+    transform: scale(0.98);
+    transition: transform 0.1s ease;
+  }
+  
+  /* Buttons */
+  .pillar-cta:hover,
+  .creator-cta:hover,
+  .feature-cta:hover {
+    transform: none;
+  }
+  
+  .pillar-cta:active,
+  .creator-cta:active,
+  .feature-cta:active {
+    transform: scale(0.98);
+  }
+}

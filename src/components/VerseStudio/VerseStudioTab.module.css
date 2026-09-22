@@ -1,0 +1,1137 @@
+/* src/components/VerseStudio/VerseStudioTab.module.css */
+
+/* Root container */
+.verseStudioTab {
+  --vs-bg-primary: #0A0F1A;           /* colors.background.canvas */
+  --vs-bg-surface: #141B2E;           /* colors.background.surface */
+  --vs-bg-card: #1C2640;              /* colors.background.interactive */
+  --vs-bg-peak: #243152;              /* colors.background.peak */
+
+  --vs-text-primary: #F1F5F9;         /* text.primary */
+  --vs-text-secondary: #94A3B8;       /* text.secondary */
+  --vs-text-muted: #64748B;           /* text.muted */
+  --vs-text-ivory: #F5F5DC;           /* brand ivory */
+
+  --vs-border-subtle: rgba(148, 163, 184, 0.18);
+  --vs-border-medium: rgba(148, 163, 184, 0.32);
+
+  --vs-accent-primary: #6366F1;       /* accent.primary */
+  --vs-accent-hover: #818CF8;         /* accent.hover */
+  --vs-accent-glow: rgba(99, 102, 241, 0.35);
+
+  --vs-shadow-soft: 0 2px 8px -2px rgba(0, 0, 0, 0.4),
+                    0 18px 50px -24px rgba(15, 23, 42, 0.9);
+
+  min-height: 100vh;
+  box-sizing: border-box;
+  padding: 16px 20px 24px;
+  background:
+    radial-gradient(circle at top left, rgba(99, 102, 241, 0.18), transparent 45%),
+    radial-gradient(circle at bottom right, rgba(148, 163, 184, 0.18), transparent 45%),
+    var(--vs-bg-primary);
+  color: var(--vs-text-primary);
+  font-family: "Inter", system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+}
+
+/* ===== HEADER ===== */
+.pageHeader {
+  max-width: 1280px;
+  margin: 0 auto 18px auto;
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 16px;
+}
+
+.titleBlock {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.eyebrow {
+  font-size: 11px;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--vs-text-secondary);
+}
+
+.titleRow {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+
+.pageTitle {
+  margin: 0;
+  font-family: "Syne", system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+  font-size: 26px;
+  font-weight: 600;
+  letter-spacing: 0.03em;
+  color: var(--vs-text-ivory);
+}
+
+.titlePill {
+  font-size: 11px;
+  text-transform: uppercase;
+  letter-spacing: 0.16em;
+  padding: 3px 10px;
+  border-radius: 999px;
+  border: 1px solid var(--vs-border-medium);
+  background: radial-gradient(circle at 0 0, var(--vs-accent-glow), transparent 55%);
+  color: var(--vs-text-secondary);
+}
+
+.subtitle {
+  margin: 0;
+  max-width: 520px;
+  font-size: 14px;
+  color: var(--vs-text-secondary);
+}
+
+/* Usage pill */
+.usagePill {
+  display: inline-flex;
+  flex-shrink: 0;
+  align-items: center;
+  gap: 10px;
+  padding: 10px 14px;
+  border-radius: 999px;
+  background: rgba(15, 23, 42, 0.92);
+  border: 1px solid var(--vs-border-medium);
+  box-shadow: 0 0 0 1px rgba(15, 23, 42, 0.9);
+  font-size: 12px;
+  color: var(--vs-text-secondary);
+}
+
+.usageDot {
+  width: 9px;
+  height: 9px;
+  border-radius: 999px;
+  background: var(--vs-accent-primary);
+  box-shadow: 0 0 14px rgba(99, 102, 241, 0.9);
+}
+
+.usageText strong {
+  color: var(--vs-text-primary);
+}
+
+.usageBar {
+  width: 90px;
+  height: 4px;
+  border-radius: 999px;
+  background: rgba(15, 23, 42, 0.7);
+  overflow: hidden;
+  position: relative;
+}
+
+.usageFill {
+  position: absolute;
+  inset: 0;
+  transform-origin: left;
+  transform: scaleX(0);
+  background: linear-gradient(90deg, var(--vs-accent-primary), var(--vs-accent-hover));
+  box-shadow: 0 0 12px rgba(99, 102, 241, 0.85);
+  transition: transform 0.22s ease-out;
+}
+
+.usageStatus {
+  font-size: 11px;
+  color: #fecaca;
+}
+
+/* ===== ERROR BANNER ===== */
+.errorBanner {
+  max-width: 1280px;
+  margin: 0 auto 12px auto;
+  padding: 10px 12px;
+  border-radius: 12px;
+  border: 1px solid rgba(248, 113, 113, 0.6);
+  background: rgba(127, 29, 29, 0.2);
+  color: #fee2e2;
+  font-size: 12px;
+}
+
+.errorTitle {
+  font-weight: 600;
+  margin-bottom: 2px;
+}
+
+.errorBody {
+  margin: 0;
+}
+
+/* ===== MAIN GRID ===== */
+.mainGrid {
+  max-width: 1280px;
+  margin: 0 auto;
+  display: grid;
+  grid-template-columns: 1.4fr 1fr;
+  gap: 16px;
+  align-items: start;                   /* each column only as tall as its content */
+}
+
+/* Columns */
+.templatesColumn,
+.tasksColumn {
+  background: radial-gradient(circle at top right, rgba(99, 102, 241, 0.12), transparent 55%),
+              rgba(20, 27, 46, 0.96);
+  border-radius: 18px;
+  border: 1px solid var(--vs-border-subtle);
+  padding: 14px 14px 12px;
+  box-shadow: var(--vs-shadow-soft);
+  display: flex;
+  flex-direction: column;
+}
+
+.columnHeader {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  margin-bottom: 10px;
+}
+
+.columnTitle {
+  margin: 0;
+  font-family: "Syne", system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+  font-size: 16px;
+  font-weight: 600;
+  color: var(--vs-text-primary);
+}
+
+.columnSubtitle {
+  margin: 2px 0 0 0;
+  font-size: 12px;
+  color: var(--vs-text-secondary);
+}
+
+/* ===== LOADING & EMPTY STATES ===== */
+.loadingBox {
+  margin-top: 12px;
+  padding: 16px 10px;
+  border-radius: 12px;
+  border: 1px solid var(--vs-border-subtle);
+  background: rgba(15, 23, 42, 0.96);
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.loadingSpinner {
+  width: 16px;
+  height: 16px;
+  border-radius: 999px;
+  border: 2px solid rgba(148, 163, 184, 0.4);
+  border-top-color: var(--vs-accent-primary);
+  animation: vs-spin 0.9s linear infinite;
+}
+
+.loadingText {
+  font-size: 12px;
+  color: var(--vs-text-secondary);
+}
+
+@keyframes vs-spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+.emptyTemplates,
+.emptyTasks {
+  margin-top: 12px;
+  padding: 14px 12px;
+  border-radius: 12px;
+  border: 1px dashed var(--vs-border-subtle);
+  background: rgba(15, 23, 42, 0.96);
+}
+
+.emptyTitle {
+  font-size: 14px;
+  font-weight: 500;
+  color: var(--vs-text-ivory);
+}
+
+.emptyBody {
+  margin: 4px 0 0 0;
+  font-size: 12px;
+  color: var(--vs-text-secondary);
+}
+
+/* ===== TEMPLATES GRID ===== */
+.templatesGrid {
+  margin-top: 6px;
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 10px;
+}
+
+.templateCard {
+  position: relative;
+  border-radius: 14px;
+  padding: 10px 10px 12px;
+  background: linear-gradient(145deg, rgba(20, 27, 46, 0.98), rgba(10, 15, 26, 0.98));
+  border: 1px solid var(--vs-border-subtle);
+  box-shadow: 0 0 0 1px rgba(10, 15, 26, 0.96);
+  overflow: hidden;
+  transition: all 0.18s ease-out;
+}
+
+.templateCard::before {
+  content: "";
+  position: absolute;
+  inset: -40%;
+  opacity: 0;
+  background: radial-gradient(circle at 0 0, var(--vs-accent-glow), transparent 55%);
+  transition: opacity 0.18s ease-out;
+  pointer-events: none;
+}
+
+.templateCard:hover {
+  border-color: var(--vs-accent-primary);
+  box-shadow: 0 0 0 1px rgba(99, 102, 241, 0.6),
+              0 18px 42px -18px rgba(15, 23, 42, 0.92);
+  transform: translateY(-1px);
+}
+
+.templateCard:hover::before {
+  opacity: 1;
+}
+
+.templateTagRow {
+  display: flex;
+  gap: 6px;
+  align-items: center;
+  margin-bottom: 4px;
+}
+
+.templateTag,
+.templateTagSecondary {
+  font-size: 10px;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  padding: 3px 8px;
+  border-radius: 999px;
+  border: 1px solid var(--vs-border-subtle);
+  background: rgba(15, 23, 42, 0.96);
+  color: var(--vs-text-secondary);
+}
+
+.templateTagSecondary {
+  border-color: rgba(99, 102, 241, 0.7);
+}
+
+.templateTitle {
+  margin: 0;
+  font-size: 15px;
+  font-weight: 500;
+  color: var(--vs-text-ivory);
+  font-family: "Syne", system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+}
+
+.templateDesc {
+  margin: 4px 0 0 0;
+  font-size: 12px;
+  color: var(--vs-text-secondary);
+  line-height: 1.4;
+}
+
+.templateRoles {
+  margin-top: 8px;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+.rolePill {
+  font-size: 11px;
+  padding: 3px 8px;
+  border-radius: 999px;
+  border: 1px solid var(--vs-border-subtle);
+  background: rgba(15, 23, 42, 0.96);
+  color: var(--vs-text-secondary);
+}
+
+.roleMore {
+  font-size: 11px;
+  color: var(--vs-text-secondary);
+}
+
+/* Use template CTA */
+.useTemplateButton {
+  margin-top: 8px;
+  width: 100%;
+  padding: 7px 10px;
+  border-radius: 999px;
+  border: 1px solid var(--vs-accent-primary);
+  background: radial-gradient(circle at 0 0, var(--vs-accent-glow), transparent 55%),
+              rgba(15, 23, 42, 0.98);
+  color: var(--vs-text-ivory);
+  font-size: 12px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.18s ease-out;
+  box-shadow: 0 0 0 1px rgba(10, 15, 26, 0.95);
+  position: relative;
+  z-index: 2;
+  pointer-events: auto; /* explicit, in case anything inherited weirdness */
+}
+
+.useTemplateButton:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 14px 30px rgba(99, 102, 241, 0.6);
+}
+
+.useTemplateButtonLocked {
+  border-color: var(--vs-border-medium);
+  background: rgba(15, 23, 42, 0.96);
+  color: var(--vs-text-muted);
+  cursor: not-allowed;
+  box-shadow: none;
+}
+
+/* ===== TASKS LIST ===== */
+.tasksList {
+  margin-top: 8px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.taskCard {
+  padding: 9px 10px;
+  border-radius: 12px;
+  background: linear-gradient(145deg, rgba(15, 23, 42, 0.98), rgba(10, 15, 26, 0.98));
+  border: 1px solid var(--vs-border-subtle);
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  gap: 10px;
+  align-items: center;
+}
+
+.taskMeta {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+}
+
+.taskName {
+  font-size: 14px;
+  font-weight: 500;
+  color: var(--vs-text-ivory);
+}
+
+.taskSub {
+  font-size: 11px;
+  color: var(--vs-text-secondary);
+}
+
+.taskActions {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+}
+
+.taskButton {
+  font-size: 11px;
+  padding: 5px 9px;
+  border-radius: 999px;
+  border: 1px solid var(--vs-border-medium);
+  background: rgba(15, 23, 42, 0.96);
+  color: var(--vs-text-secondary);
+  cursor: pointer;
+}
+
+.taskButtonDisabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+/* Trial banner */
+.trialBanner {
+  margin-top: 10px;
+  padding: 8px 10px;
+  border-radius: 10px;
+  border: 1px solid rgba(248, 113, 113, 0.7);
+  background: rgba(127, 29, 29, 0.24);
+  display: flex;
+  gap: 8px;
+  align-items: center;
+  font-size: 11px;
+  color: #fee2e2;
+}
+
+.trialDot {
+  width: 8px;
+  height: 8px;
+  border-radius: 999px;
+  background: #f97373;
+  box-shadow: 0 0 10px rgba(248, 113, 113, 0.9);
+}
+
+.trialText {
+  flex: 1;
+}
+
+/* ===== UPGRADE MODAL ===== */
+.upgradeOverlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(15, 23, 42, 0.75);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1400;
+}
+
+.upgradeModal {
+  width: 100%;
+  max-width: 420px;
+  padding: 20px 18px 16px;
+  border-radius: 18px;
+  background: linear-gradient(145deg, rgba(15, 23, 42, 0.98), rgba(10, 15, 26, 0.98));
+  border: 1px solid var(--vs-border-medium);
+  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.7);
+}
+
+.upgradeTitle {
+  margin: 0 0 6px 0;
+  font-size: 16px;
+  font-weight: 600;
+  color: var(--vs-text-ivory);
+}
+
+.upgradeBody {
+  margin: 0 0 12px 0;
+  font-size: 13px;
+  color: var(--vs-text-secondary);
+}
+
+.upgradeActions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 8px;
+}
+
+.upgradePrimary,
+.upgradeSecondary {
+  border-radius: 999px;
+  border: 1px solid transparent;
+  padding: 6px 10px;
+  font-size: 12px;
+  cursor: pointer;
+}
+
+.upgradePrimary {
+  background: var(--vs-accent-primary);
+  border-color: var(--vs-accent-primary);
+  color: #f9fafb;
+}
+
+.upgradeSecondary {
+  background: transparent;
+  border-color: var(--vs-border-medium);
+  color: var(--vs-text-secondary);
+}
+
+/* ===== RESPONSIVE ===== */
+@media (max-width: 960px) {
+  .verseStudioTab {
+    padding: 12px;
+  }
+
+  .pageHeader {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 10px;
+  }
+
+  .mainGrid {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .templatesGrid {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}
+/* ============================================================
+   Verse Workspace — My Tasks Column (APPEND ONLY)
+   ============================================================ */
+
+.tasksColumn {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+.columnHeader {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 1rem;
+}
+
+.columnTitle {
+  font-family: var(--font-display);
+  font-size: 1.05rem;
+  color: var(--text-primary);
+  margin: 0;
+}
+
+.columnSubtitle {
+  font-size: 0.75rem;
+  color: var(--text-muted);
+  margin-top: 0.15rem;
+}
+
+/* ---------- Task list ---------- */
+
+.tasksList {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+
+/* ---------- Task card ---------- */
+
+.taskCard {
+  all: unset;
+  cursor: pointer;
+  display: flex;
+  flex-direction: column;
+  gap: 0.6rem;
+
+  padding: 0.75rem 0.85rem;
+  border-radius: 12px;
+
+  background: var(--bg-surface);
+  border: 1px solid var(--border-subtle);
+
+  transition: background 0.15s ease, border-color 0.15s ease;
+}
+
+.taskCard:hover {
+  background: var(--bg-surface-hover);
+  border-color: var(--border-emphasis);
+}
+
+.taskCardTop {
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+}
+
+.taskTitleRow {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.taskTitle {
+  font-family: var(--font-display);
+  font-size: 0.85rem;
+  color: var(--text-primary);
+  line-height: 1.2;
+}
+
+.taskDescription {
+  font-size: 0.7rem;
+  color: var(--text-muted);
+  line-height: 1.35;
+}
+
+/* ---------- Status pill ---------- */
+
+.taskStatusPill {
+  font-size: 0.6rem;
+  padding: 0.2rem 0.45rem;
+  border-radius: 999px;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+
+  background: var(--bg-muted);
+  color: var(--text-muted);
+}
+
+/* ---------- Meta row ---------- */
+
+.taskMetaRow {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+/* ---------- Role chips ---------- */
+
+.roleChips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.35rem;
+}
+
+.roleChip {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.3rem;
+
+  font-size: 0.6rem;
+  padding: 0.2rem 0.45rem;
+  border-radius: 999px;
+
+  background: var(--bg-muted);
+  color: var(--text-primary);
+}
+
+.roleChipMuted {
+  font-size: 0.6rem;
+  padding: 0.2rem 0.45rem;
+  border-radius: 999px;
+
+  background: transparent;
+  border: 1px dashed var(--border-subtle);
+  color: var(--text-muted);
+}
+
+/* ---------- CTA ---------- */
+
+.taskCta {
+  font-size: 0.65rem;
+  color: var(--accent-primary);
+  white-space: nowrap;
+}
+
+/* ---------- Empty & loading ---------- */
+
+.emptyTasks {
+  padding: 2rem 1rem;
+  text-align: center;
+  color: var(--text-muted);
+}
+
+.emptyTitle {
+  font-family: var(--font-display);
+  font-size: 0.9rem;
+  color: var(--text-primary);
+  margin-bottom: 0.25rem;
+}
+
+.emptyBody {
+  font-size: 0.75rem;
+}
+
+.loadingBox {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.75rem;
+  padding: 2rem 1rem;
+}
+
+.loadingText {
+  font-size: 0.75rem;
+  color: var(--text-muted);
+}
+/* ============================================================
+   Readability improvements
+   ============================================================ */
+
+.taskDescription {
+  color: var(--text-secondary);
+}
+
+.columnSubtitle,
+.templateLabel,
+.emptyBody {
+  color: var(--text-secondary);
+}
+
+.roleChip {
+  color: var(--text-primary);
+}
+
+.modelPill,
+.taskMetaTime {
+  color: var(--text-secondary);
+}
+/* ============================================================
+   Status emphasis
+   ============================================================ */
+
+.taskStatusPill {
+  background: var(--bg-muted);
+}
+
+.taskStatusPill.active {
+  background: rgba(99, 102, 241, 0.15); /* indigo glow */
+  color: var(--accent-primary);
+  font-weight: 600;
+}
+/* ============================================================
+   Resume loading feedback
+   ============================================================ */
+
+.taskCard[aria-busy="true"] {
+  opacity: 0.75;
+  pointer-events: none;
+}
+
+.taskCta {
+  transition: opacity 0.15s ease;
+}
+/* ============================================================
+   Task meta date — demoted (quiet metadata)
+   ============================================================ */
+
+.taskMetaTime {
+  font-size: 0.65rem;              /* smaller than title & template */
+  line-height: 1.2;
+  color: var(--text-muted);        /* subdued grey */
+  margin-top: 0.15rem;
+  font-weight: 400;
+}
+/* ============================================================
+   Task status — ACTIVE emphasis only
+   ============================================================ */
+
+.taskStatusPill {
+  font-size: 0.6rem;
+  font-weight: 500;
+  background: var(--bg-muted);
+  color: var(--text-muted);
+}
+
+.taskStatusPill.active {
+  background: rgba(99, 102, 241, 0.18); /* indigo tint */
+  color: var(--accent-primary);
+  font-weight: 600;
+}
+/* ============================================================
+   Step 2: Free-form Create Workspace entry point
+   ============================================================ */
+
+.createWorkspaceButton {
+  all: unset;
+  cursor: pointer;
+
+  display: inline-flex;
+  align-items: center;
+  gap: 0.45rem;
+
+  padding: 0.38rem 0.65rem 0.38rem 0.42rem;
+  border-radius: 8px;
+
+  background: var(--bg-surface);
+  border: 1px solid var(--border-subtle);
+
+  transition: background 0.15s ease, border-color 0.15s ease, transform 0.12s ease;
+}
+
+.createWorkspaceButton:hover {
+  background: var(--bg-surface-hover);
+  border-color: var(--border-emphasis);
+}
+
+.createWorkspaceButton:active {
+  transform: translateY(1px);
+}
+
+.createWorkspaceButton:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.createWorkspaceIcon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+
+  width: 20px;
+  height: 20px;
+  border-radius: 6px;
+
+  background: var(--bg-muted);
+  color: var(--text-primary);
+  font-size: 0.82rem;
+  line-height: 1;
+  flex-shrink: 0;
+}
+
+.createWorkspaceText {
+  font-family: var(--font-display);
+  font-size: 0.78rem;
+  font-weight: 600;
+  color: var(--text-primary);
+  white-space: nowrap;
+}
+
+.createWorkspaceHint {
+  display: none;                        /* demoted to title tooltip — not shown inline */
+}
+/* src/components/VerseStudio/VerseStudioTab.module.css */
+
+/* keep all your existing styles as-is — only the grid/card-related bits are adjusted */
+
+.verseStudioTab{
+  width: 100%;
+}
+
+/* (Everything above stays whatever you already have in your file) */
+
+/* ===== TEMPLATES GRID ===== */
+/* Make grid align better for full-background cards */
+.templatesGrid{
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 12px;
+}
+
+/* If you previously had .templateCard/.templateTitle/.templateDesc styles,
+   you can leave them (harmless), but they’re now unused. */
+
+/* Responsive */
+@media (max-width: 980px){
+  .templatesGrid{
+    grid-template-columns: 1fr;
+  }
+}
+/* =========================
+   Info button + help modal
+========================= */
+
+.infoButton{
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 6px 10px;
+  border-radius: 999px;
+  border: 1px solid rgba(148, 163, 184, 0.22);
+  background: rgba(10, 15, 26, 0.45);
+  color: rgba(241, 245, 249, 0.92);
+  cursor: pointer;
+  transition: var(--transition-fast);
+  font-size: 12px;
+  line-height: 1;
+  backdrop-filter: blur(10px);
+}
+
+.infoButton:hover{
+  border-color: rgba(99, 102, 241, 0.55);
+  box-shadow: 0 0 0 1px rgba(99, 102, 241, 0.25);
+  transform: translateY(-1px);
+}
+
+.infoLabel{
+  font-weight: 600;
+}
+
+/* Overlay */
+.infoOverlay{
+  position: fixed;
+  inset: 0;
+  z-index: 2000;
+  background: rgba(0, 0, 0, 0.58);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 16px;
+}
+
+/* Modal */
+.infoModal{
+  width: min(860px, 96vw);
+  max-height: min(86vh, 860px);
+  overflow: hidden;
+  border-radius: 18px;
+  border: 1px solid rgba(99, 102, 241, 0.35);
+  background:
+    radial-gradient(circle at top left, rgba(99, 102, 241, 0.18), transparent 55%),
+    rgba(10, 15, 26, 0.92);
+  box-shadow: 0 40px 120px rgba(0,0,0,0.6);
+  display: flex;
+  flex-direction: column;
+}
+
+.infoHeader{
+  padding: 14px 16px 12px;
+  border-bottom: 1px solid rgba(148, 163, 184, 0.14);
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.infoTitle{
+  font-family: "Syne", system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+  font-size: 18px;
+  font-weight: 650;
+  color: rgba(245, 245, 220, 0.96);
+  letter-spacing: 0.02em;
+}
+
+.infoSubtitle{
+  margin-top: 2px;
+  font-size: 12px;
+  color: rgba(148, 163, 184, 0.95);
+}
+
+.infoClose{
+  width: 40px;
+  height: 40px;
+  border-radius: 999px;
+  border: 1px solid rgba(148, 163, 184, 0.22);
+  background: rgba(15, 23, 42, 0.55);
+  color: rgba(241, 245, 249, 0.92);
+  cursor: pointer;
+  transition: var(--transition-fast);
+}
+
+.infoClose:hover{
+  border-color: rgba(99, 102, 241, 0.55);
+  box-shadow: 0 0 0 1px rgba(99, 102, 241, 0.25);
+}
+
+/* Scroll body */
+.infoBody{
+  padding: 14px 16px;
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+.infoSection{
+  border: 1px solid rgba(148, 163, 184, 0.14);
+  background: rgba(15, 23, 42, 0.40);
+  border-radius: 14px;
+  padding: 12px 12px;
+}
+
+.infoSectionTitle{
+  font-size: 12px;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: rgba(148, 163, 184, 0.95);
+  margin-bottom: 8px;
+}
+
+.infoList{
+  margin: 0;
+  padding-left: 18px;
+  color: rgba(241, 245, 249, 0.92);
+  font-size: 13px;
+  line-height: 1.5;
+}
+
+.infoList li{
+  margin: 6px 0;
+}
+
+.infoList code{
+  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
+  font-size: 12px;
+  padding: 0.12em 0.38em;
+  border-radius: 8px;
+  border: 1px solid rgba(148, 163, 184, 0.2);
+  background: rgba(10, 15, 26, 0.45);
+}
+
+.infoCallout{
+  border-radius: 14px;
+  border: 1px solid rgba(99, 102, 241, 0.28);
+  background: rgba(10, 15, 26, 0.55);
+  padding: 12px 12px;
+  color: rgba(241, 245, 249, 0.92);
+  font-size: 13px;
+  line-height: 1.45;
+}
+
+/* Footer actions */
+.infoFooter{
+  padding: 12px 16px 14px;
+  border-top: 1px solid rgba(148, 163, 184, 0.14);
+  display: flex;
+  justify-content: flex-end;
+  gap: 10px;
+}
+
+.infoPrimary,
+.infoSecondary{
+  border-radius: 999px;
+  border: 1px solid rgba(148, 163, 184, 0.22);
+  background: rgba(15, 23, 42, 0.55);
+  color: rgba(241, 245, 249, 0.92);
+  padding: 8px 12px;
+  cursor: pointer;
+  transition: var(--transition-fast);
+  font-size: 12px;
+  font-weight: 650;
+}
+
+.infoPrimary{
+  border-color: rgba(99, 102, 241, 0.65);
+  box-shadow: 0 14px 30px rgba(99, 102, 241, 0.20);
+}
+
+.infoPrimary:hover,
+.infoSecondary:hover{
+  border-color: rgba(99, 102, 241, 0.55);
+  box-shadow: 0 0 0 1px rgba(99, 102, 241, 0.25);
+  transform: translateY(-1px);
+}
+/* ===== Upgrade Actions: 3-pill row (Upgrade · Provider · Close) ===== */
+.upgradeActionsTernary{
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 10px; /* ensures the provider pill isn't an appendage */
+}
+
+/* Provider breadcrumb pill */
+.providerPill{
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+
+  padding: 6px 10px;
+  border-radius: 999px;
+  border: 1px solid var(--vs-border-medium);
+  background: rgba(15, 23, 42, 0.55);
+  color: var(--vs-text-secondary);
+
+  box-shadow: 0 0 0 1px rgba(10, 15, 26, 0.55);
+}
+
+/* clickable breadcrumb options */
+.providerOption{
+  appearance: none;
+  border: none;
+  background: transparent;
+  color: var(--vs-text-secondary);
+  font-size: 12px;
+  font-weight: 600;
+  cursor: pointer;
+  padding: 2px 6px;
+  border-radius: 999px;
+  transition: all 0.15s ease;
+}
+
+.providerOption:hover{
+  color: var(--vs-text-ivory);
+  background: rgba(99, 102, 241, 0.12);
+}
+
+.providerOptionActive{
+  color: var(--vs-text-ivory);
+  background: rgba(99, 102, 241, 0.18);
+  box-shadow: 0 0 0 1px rgba(99, 102, 241, 0.28);
+}
+
+.providerDivider{
+  opacity: 0.55;
+  font-size: 12px;
+  line-height: 1;
+}

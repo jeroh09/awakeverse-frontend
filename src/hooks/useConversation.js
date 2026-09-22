@@ -3,15 +3,17 @@ import { useContextData } from "../hooks/useContext";
 export function useConversation() {
   const { setActiveContext } = useContextData();
 
-  async function* sendConversationMessage(character, message, token, signal) {
+  async function* sendConversationMessage(character, message, signal) {
     let res;
+    const csrf = document.cookie.match(/(?:^|;\s*)av_csrf=([^;]+)/)?.[1] || '';
     try {
       res = await fetch("https://api.awakeverse.com/chat", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
-          Authorization: `Bearer ${token}`
+          "X-CSRF-Token": csrf
         },
+        credentials: 'include',
         body: JSON.stringify({ character, message }),
         signal
       });

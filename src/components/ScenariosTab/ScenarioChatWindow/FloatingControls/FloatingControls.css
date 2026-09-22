@@ -1,0 +1,229 @@
+/* 
+ * FloatingControls.css
+ * Small footprint navigation controls
+ * Fixed positioning with mobile optimization
+ */
+
+/* ===== HOME BUTTON (Primary Navigation) ===== */
+.floating-home-button {
+  position: fixed;
+  top: 1rem;
+  right: 1rem;
+  width: 48px;
+  height: 48px;
+  background: var(--chat-bg-card, #ffffff);
+  border: 2px solid var(--chat-border-color, #dee2e6);
+  border-radius: 12px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  color: var(--chat-accent-primary, #3498db);
+  z-index: 1000;
+  box-shadow: 0 2px 8px var(--chat-shadow, rgba(0, 0, 0, 0.1));
+}
+
+.floating-home-button:hover {
+  background: var(--chat-accent-light, rgba(52, 152, 219, 0.1));
+  border-color: var(--chat-accent-primary, #3498db);
+  transform: scale(1.1);
+  box-shadow: 0 4px 16px var(--chat-shadow, rgba(0, 0, 0, 0.15));
+}
+
+.floating-home-button:active {
+  transform: scale(0.95);
+}
+
+/* Mobile: Smaller button */
+@media (max-width: 768px) {
+  .floating-home-button {
+    width: 40px;
+    height: 40px;
+    top: 0.75rem;
+    right: 0.75rem;
+  }
+  
+  .floating-home-button svg {
+    width: 20px;
+    height: 20px;
+  }
+}
+
+/* ===== BACK BUTTON (Secondary Navigation) ===== */
+.floating-back-button {
+  position: fixed;
+  top: 1rem;
+  left: 1rem;
+  width: 44px;
+  height: 44px;
+  background: var(--chat-bg-card, #ffffff);
+  border: 1px solid var(--chat-border-color, #dee2e6);
+  border-radius: 10px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  color: var(--chat-text-secondary, #6c757d);
+  z-index: 1000;
+  box-shadow: 0 2px 8px var(--chat-shadow, rgba(0, 0, 0, 0.1));
+}
+
+.floating-back-button:hover {
+  background: var(--chat-accent-light, rgba(52, 152, 219, 0.1));
+  border-color: var(--chat-accent-primary, #3498db);
+  color: var(--chat-accent-primary, #3498db);
+  transform: translateX(-2px);
+  box-shadow: 0 4px 16px var(--chat-shadow, rgba(0, 0, 0, 0.15));
+}
+
+.floating-back-button:active {
+  transform: translateX(0);
+}
+
+/* Mobile: Smaller button */
+@media (max-width: 768px) {
+  .floating-back-button {
+    width: 36px;
+    height: 36px;
+    top: 0.75rem;
+    left: 0.75rem;
+  }
+  
+  .floating-back-button svg {
+    width: 16px;
+    height: 16px;
+  }
+}
+
+/* ===== THEME VARIANTS ===== */
+
+/* AwakeVerse (Dark) Theme */
+.theme-awakeverse.floating-home-button {
+  background: var(--chat-bg-card, rgba(27, 38, 59, 0.9));
+  border-color: var(--chat-border-color, rgba(52, 152, 219, 0.3));
+  box-shadow: 0 2px 8px rgba(52, 152, 219, 0.3);
+}
+
+.theme-awakeverse.floating-home-button:hover {
+  background: var(--chat-accent-light, rgba(52, 152, 219, 0.15));
+  border-color: var(--chat-accent-primary, #3498db);
+  box-shadow: 0 4px 16px rgba(52, 152, 219, 0.4);
+}
+
+.theme-awakeverse.floating-back-button {
+  background: var(--chat-bg-card, rgba(27, 38, 59, 0.9));
+  border-color: var(--chat-border-color, rgba(52, 152, 219, 0.3));
+  color: var(--chat-text-secondary, #a8c5da);
+  box-shadow: 0 2px 8px rgba(52, 152, 219, 0.3);
+}
+
+.theme-awakeverse.floating-back-button:hover {
+  background: var(--chat-accent-light, rgba(52, 152, 219, 0.15));
+  color: var(--chat-accent-primary, #3498db);
+  box-shadow: 0 4px 16px rgba(52, 152, 219, 0.4);
+}
+
+/* ===== ACCESSIBILITY ===== */
+
+/* Reduce motion */
+@media (prefers-reduced-motion: reduce) {
+  .floating-home-button,
+  .floating-back-button {
+    transition: none !important;
+  }
+  
+  .floating-home-button:hover,
+  .floating-back-button:hover {
+    transform: none !important;
+  }
+}
+
+/* Focus states */
+.floating-home-button:focus-visible {
+  outline: 2px solid var(--chat-accent-primary, #3498db);
+  outline-offset: 2px;
+}
+
+.floating-back-button:focus-visible {
+  outline: 2px solid var(--chat-accent-primary, #3498db);
+  outline-offset: 2px;
+}
+
+/* High contrast mode */
+@media (prefers-contrast: high) {
+  .floating-home-button,
+  .floating-back-button {
+    border-width: 3px;
+  }
+}
+
+/* ===== TOUCH TARGETS (Mobile) ===== */
+@media (max-width: 768px) {
+  /* Ensure minimum 44x44 touch target */
+  .floating-home-button,
+  .floating-back-button {
+    min-width: 44px;
+    min-height: 44px;
+  }
+}
+
+/* ===== STACKING CONTEXT ===== */
+/* Ensure controls stay above chat content but below modals */
+.floating-home-button,
+.floating-back-button {
+  z-index: 1000;
+}
+
+/* If modals are present, they should be z-index: 1100+ */
+
+/* ===== ANIMATION ON MOUNT ===== */
+.floating-home-button,
+.floating-back-button {
+  animation: fadeInSlide 0.3s ease-out;
+}
+
+@keyframes fadeInSlide {
+  from {
+    opacity: 0;
+    transform: translateY(-10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* ===== HOVER TOOLTIP (Optional Enhancement) ===== */
+.floating-home-button::after,
+.floating-back-button::after {
+  content: attr(title);
+  position: absolute;
+  bottom: -35px;
+  left: 50%;
+  transform: translateX(-50%);
+  padding: 0.5rem 0.75rem;
+  background: rgba(0, 0, 0, 0.8);
+  color: white;
+  border-radius: 6px;
+  font-size: 0.75rem;
+  white-space: nowrap;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.2s ease;
+  z-index: 1001;
+}
+
+.floating-home-button:hover::after,
+.floating-back-button:hover::after {
+  opacity: 1;
+}
+
+/* Hide tooltips on mobile (touch devices) */
+@media (max-width: 768px) {
+  .floating-home-button::after,
+  .floating-back-button::after {
+    display: none;
+  }
+}
