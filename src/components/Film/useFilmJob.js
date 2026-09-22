@@ -53,21 +53,43 @@ function toCells(manifest, expected) {
     // everything Storyboard needs, so no new props thread through the shell
     // (the severed-link lesson, applied preemptively).
     const partial = manifest && manifest.partial;
-    const srcShots = (manifest && manifest.source && manifest.source.shots) || [];
-    if (partial && partial.planned > done.length && srcShots.length) {
+    // LOCKED TEASERS (2026-09-22, single-shot preview fix): gate on planned >
+    // rendered, NOT on any shot-text source existing. `partial.planned` rides in
+    // editor.partial and DOES survive into the completed manifest; `source.shots`
+    // rides the live-render manifest and does NOT. If we keyed off source.shots we
+    // built zero locked cells for a finished preview → no teaser grid, no "Finish
+    // your film" banner → a lone clip that reads as a broken film. Now the preview
+    // is a SINGLE shot, that was guaranteed. Shot text only ENRICHES the locks.
+    // Data source, best → worst: partial.locked (captions persisted for this) →
+    // source.shots → the planned COUNT (generic locks). Any of them renders the
+    // hook; the count fallback guarantees it always does.
+    const lockedSrc = (partial && Array.isArray(partial.locked) && partial.locked.length)
+      ? partial.locked
+      : ((manifest && manifest.source && manifest.source.shots) || []);
+    if (partial && partial.planned > done.length) {
       const have = new Set(beats.map(b => b.index));
-      const locked = srcShots
+      const named = lockedSrc
         .filter(s => s.index && !have.has(s.index))
         .sort((a, b) => a.index - b.index)
         .map((s, i) => ({
           index: s.index, pos: done.length + i, status: 'locked',
           kind: s.kind || 'pure_visual',
-          seconds: Math.round(s.duration || 6),
+          seconds: Math.round(s.seconds || s.duration || 6),
           speaker: (s.speaker || '').trim(),
-          caption: (s.dialogue || s.vo || s.action || '').trim().slice(0, 90),
+          caption: (s.caption || s.dialogue || s.vo || s.action || '').trim().slice(0, 90),
           visual: (s.action || '').trim(), lines: [], present: [],
           clipUrl: null, durable: false, softened: false,
         }));
+      // Fallback: no per-shot text survived → generic locks from the count so the
+      // teaser grid + CTA still render (no caption/kind, but the lock + banner
+      // carry "the rest of your film is written and waiting").
+      const locked = named.length ? named
+        : Array.from({ length: partial.planned - done.length }, (_, i) => ({
+            index: done.length + i + 1, pos: done.length + i, status: 'locked',
+            kind: 'pure_visual', seconds: 6, speaker: '', caption: '',
+            visual: '', lines: [], present: [],
+            clipUrl: null, durable: false, softened: false,
+          }));
       return [...done, ...locked];
     }
     return done;
