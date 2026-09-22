@@ -106,6 +106,25 @@ function Thumb({ beat, stageState }) {
 function Cell({ beat, stageState, selected, regenBusy, onSelect, onRegenerate, onDuplicate, onCut }) {
   const { index, kind, speaker, caption, softened } = beat;
   const kindLabel = kind.replace('_', ' ');
+  // PREVIEW WALL: a locked cell is a teaser of the un-rendered plan — caption
+  // and kind visible, no thumb, no controls, not selectable. The pull is the
+  // user's own next scene, sitting right there.
+  if (beat.status === 'locked') {
+    return (
+      <article className="film-cell is-locked" aria-disabled="true">
+        <div className="film-lockthumb"><span className="film-lockicon">🔒</span>
+          <span className="film-locksecs">{beat.seconds}s</span></div>
+        <div className="film-cfoot">
+          <div className="film-cfoot-row">
+            <span className={`film-badge film-badge--${kind}`}>{kindLabel}</span>
+          </div>
+          <div className="film-cap film-cap--locked">
+            {speaker ? <><span className="film-spk">{speaker}:</span> “{caption}”</> : caption}
+          </div>
+        </div>
+      </article>
+    );
+  }
   return (
     <article className={`film-cell${selected ? ' is-sel' : ''}`} onClick={() => onSelect(index)}>
       <Thumb beat={beat} stageState={stageState} />
@@ -471,6 +490,24 @@ export default function Storyboard({
         ) : stageState === 'empty' || total === 0 ? (
           <EmptyStoryboard />
         ) : (
+          <>
+          {(() => {
+            const lockedN = beats.filter(b => b.status === 'locked').length;
+            if (!lockedN) return null;
+            const doneN = beats.length - lockedN;
+            return (
+              <div className="film-lifebanner film-lifebanner--partial" role="status">
+                <div className="film-lifebanner-txt">
+                  <b>Preview — {doneN} of {beats.length} shots rendered.</b>{' '}
+                  The rest of your film is written and waiting.
+                </div>
+                <button type="button" className="film-btn film-btn--primary"
+                        onClick={() => { window.location.hash = 'credits'; }}>
+                  Finish your film
+                </button>
+              </div>
+            );
+          })()}
           <div className="film-grid" style={gridStyle}>
             {planningCast && (
               <div className="film-buildpill-row">
@@ -484,6 +521,7 @@ export default function Storyboard({
                 onRegenerate={onRegenerate} onDuplicate={onDuplicate} onCut={onCut} />
             ))}
           </div>
+          </>
         )}
       </div>
 

@@ -1281,3 +1281,93 @@
 .film-workspace .fw-v{ font-family:'Newsreader',Georgia,serif; line-height:1.5; }
 .film-workspace .fw-v.fw-v-mono{ font-family:'Courier Prime',ui-monospace,'SF Mono',Menlo,monospace; }
 .film-workspace .fw-chip{ font-family:var(--film-body,'Inter',sans-serif); }
+/* ══════════════════════════════════════════════════════════════════════════
+   PREVIEW WALL (2026-09-16) — append to FilmWorkspace.css.
+   All class names are NEW (locked cells + partial banner), so this block is
+   safe to append to any revision of the file — no existing rule is touched.
+   ══════════════════════════════════════════════════════════════════════════ */
+
+/* A locked cell: same card chrome as its siblings, visibly dormant. */
+.film-cell.is-locked {
+  cursor: default;
+  opacity: 0.92;
+}
+.film-cell.is-locked:hover {
+  transform: none;
+  box-shadow: none;
+}
+
+/* The thumb area a rendered cell fills with video/poster — here, a quiet
+   locked panel with the shot's duration, so the teaser reads as a real,
+   waiting shot rather than an error. */
+.film-lockthumb {
+  position: relative;
+  aspect-ratio: 9 / 16;
+  width: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 10px 10px 0 0;
+  background:
+    linear-gradient(160deg, rgba(255, 255, 255, 0.045), rgba(255, 255, 255, 0.012) 55%),
+    rgba(10, 12, 34, 0.55);
+  border-bottom: 1px dashed rgba(255, 255, 255, 0.10);
+}
+.film-lockicon {
+  font-size: 26px;
+  filter: grayscale(35%);
+  opacity: 0.85;
+}
+.film-locksecs {
+  position: absolute;
+  right: 8px;
+  bottom: 8px;
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.02em;
+  color: rgba(255, 255, 255, 0.72);
+  background: rgba(0, 0, 0, 0.38);
+  padding: 2px 7px;
+  border-radius: 999px;
+}
+.film-cap--locked {
+  opacity: 0.66;
+  font-style: italic;
+}
+
+/* The banner above the grid: the conversion surface. Reuses the lifebanner
+   family's placement; the --partial variant carries its own look. */
+.film-lifebanner--partial {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  justify-content: space-between;
+  padding: 12px 16px;
+  margin: 0 0 12px;
+  border-radius: 12px;
+  background:
+    linear-gradient(120deg, rgba(99, 102, 241, 0.16), rgba(99, 102, 241, 0.05) 70%);
+  border: 1px solid rgba(124, 127, 251, 0.35);
+}
+.film-lifebanner--partial .film-lifebanner-txt {
+  font-size: 13px;
+  line-height: 1.45;
+  color: rgba(255, 255, 255, 0.88);
+}
+.film-lifebanner--partial .film-btn {
+  flex: 0 0 auto;
+  white-space: nowrap;
+}
+
+/* Narrow layouts: banner stacks, button full-width — the CTA stays thumbable. */
+@media (max-width: 560px) {
+  .film-lifebanner--partial {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 10px;
+  }
+  .film-lifebanner--partial .film-btn {
+    width: 100%;
+    justify-content: center;
+  }
+}

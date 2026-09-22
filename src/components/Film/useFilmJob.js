@@ -45,7 +45,32 @@ function toCells(manifest, expected) {
   // truth (in their current order), so cut / duplicate / reorder reflect at once.
   // The `plan` is only the live-render progress skeleton; ignore it here.
   if (!live && beats.length) {
-    return beats.map((b, pos) => ({ ...normBeat(b), pos, status: 'done' }));
+    const done = beats.map((b, pos) => ({ ...normBeat(b), pos, status: 'done' }));
+    // PREVIEW WALL (2026-09-16): a budget-limited film completes with fewer
+    // rendered beats than planned. The un-rendered shots become LOCKED cells
+    // built from the plan that survived in source.shots — captioned, kinded,
+    // un-clickable teasers of the rest of THEIR OWN film. Locked cells carry
+    // everything Storyboard needs, so no new props thread through the shell
+    // (the severed-link lesson, applied preemptively).
+    const partial = manifest && manifest.partial;
+    const srcShots = (manifest && manifest.source && manifest.source.shots) || [];
+    if (partial && partial.planned > done.length && srcShots.length) {
+      const have = new Set(beats.map(b => b.index));
+      const locked = srcShots
+        .filter(s => s.index && !have.has(s.index))
+        .sort((a, b) => a.index - b.index)
+        .map((s, i) => ({
+          index: s.index, pos: done.length + i, status: 'locked',
+          kind: s.kind || 'pure_visual',
+          seconds: Math.round(s.duration || 6),
+          speaker: (s.speaker || '').trim(),
+          caption: (s.dialogue || s.vo || s.action || '').trim().slice(0, 90),
+          visual: (s.action || '').trim(), lines: [], present: [],
+          clipUrl: null, durable: false, softened: false,
+        }));
+      return [...done, ...locked];
+    }
+    return done;
   }
 
   // Live render: build the card grid from the plan skeleton immediately, overlay
