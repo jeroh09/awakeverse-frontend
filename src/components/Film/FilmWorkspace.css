@@ -1371,3 +1371,14 @@
     justify-content: center;
   }
 }
+
+/* CTA renders as an <a> (SPA link to /pricing) but must look/behave like the
+   primary button — anchors don't inherit button reset, so pin the essentials. */
+.film-btn--cta {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  text-decoration: none;
+  line-height: 1;
+}
+.film-btn--cta:hover { text-decoration: none; }

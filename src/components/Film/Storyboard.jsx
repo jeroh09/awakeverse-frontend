@@ -501,10 +501,9 @@ export default function Storyboard({
                   <b>Preview — {doneN} of {beats.length} shots rendered.</b>{' '}
                   The rest of your film is written and waiting.
                 </div>
-                <button type="button" className="film-btn film-btn--primary"
-                        onClick={() => { window.location.hash = 'credits'; }}>
+                <a href="/billing" className="film-btn film-btn--primary film-btn--cta">
                   Finish your film
-                </button>
+                </a>
               </div>
             );
           })()}
