@@ -342,6 +342,7 @@ export default function WritersRoom({
   onReviewCast = () => {},
   onApproveCast = () => {},
   castPhase = 'idle',
+  busyLabel = null,                  // live editBusy label, e.g. "Regenerating shot 5…"
   onSaveScript,
 }) {
   const [text, setText] = useState('');
@@ -584,6 +585,9 @@ export default function WritersRoom({
           cast_rendering: { label: 'Reviewing the cast…', disabled: true,  busy: true,  onClick: null },
           cast_ready:     { label: 'Make the film',       disabled: false, busy: false, onClick: onApproveCast },
           film_rendering: { label: 'Making the film…',    disabled: true,  busy: true,  onClick: null },
+          // A shot regenerate is NOT a cast build. Wear the live job label so the
+          // locked button names the actual work ("Regenerating shot 5…").
+          editing:        { label: busyLabel || 'Working…', disabled: true, busy: true, onClick: null },
         })[castPhase] || { label: 'Review cast', disabled: false, busy: false, onClick: onReviewCast };
 
         return scriptBarCollapsed ? (

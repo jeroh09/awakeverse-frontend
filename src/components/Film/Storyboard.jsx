@@ -209,6 +209,60 @@ function CastMember({ name, info, busy, onRedraw, onUpload }) {
   );
 }
 
+// ── Photoreal adults-only block (stageState === 'blocked') ────────────────────
+// content_jobs.plan_film_for_job gates BEFORE any plate spend: a character that
+// reads as a minor on the Veo/photoreal pathway hard-stops the plan, writes
+//   beats_manifest = { block: { reason:'minor_photoreal', characters, message } }
+// and fails the job (which also refunds the reservation, so nothing is charged).
+// Without this card the blocked plan fell through to <EmptyStoryboard /> and the
+// user saw an empty grid with no reason — the gate worked, the explanation did
+// not. Amber, not red: this is a choice to make, not a failure to mourn.
+// Scoped to photoreal only (the VEO_STYLES set); Seedance styles are untouched.
+//
+// COPY OWNERSHIP: `message` is the backend's own wording (content_jobs `_msg`) and
+// already carries both ways forward, so it is rendered VERBATIM and never
+// rewritten here. The hint below adds only what the backend does NOT say — that
+// nothing was charged — and falls back to a full explanation only when no message
+// arrives at all.
+//
+// Shape is confirmed (`characters` is a list of plain name strings), but object
+// forms and missing keys are tolerated: a block must never crash the stage.
+function ContentBlockCard({ block, videoStyle }) {
+  const who = (Array.isArray(block.characters) ? block.characters : [])
+    .map(c => (typeof c === 'string' ? c : (c && (c.name || c.character)) || ''))
+    .map(s => String(s).trim())
+    .filter(Boolean);
+  const isMinor = block.reason === 'minor_photoreal';
+  const styleName = videoStyle ? styleLabel(videoStyle) : 'photorealistic';
+  const StyleName = styleName.charAt(0).toUpperCase() + styleName.slice(1);  // sentence-initial
+  return (
+    <div className="film-blockcard" role="alert">
+      <span className="film-blockcard-badge">Adults only</span>
+      <h3>{isMinor
+        ? (videoStyle ? `This film can’t be made in ${StyleName}`
+                      : 'This film can’t be made photorealistically')
+        : 'This film can’t be made as written'}</h3>
+      <p className="film-blockcard-msg">
+        {block.message || (isMinor
+          ? `${StyleName} films are adults-only, and ${who.length === 1 ? 'a character reads' : 'some characters read'} as a minor. `
+            + 'Age them up in the script, or switch to a stylized style to keep them as they are.'
+          : 'Something in this script can’t be filmed as written.')}
+      </p>
+      {who.length > 0 && (
+        <div className="film-blockcard-who">
+          {who.map((name, i) => (
+            <span key={`${name}-${i}`} className="film-blockcard-chip">{name}</span>
+          ))}
+        </div>
+      )}
+      <p className="film-blockcard-hint">
+        We stopped before making anything, so you haven’t been charged — edit the script
+        in the Writers&nbsp;Room and build again whenever you’re ready.
+      </p>
+    </div>
+  );
+}
+
 // ── Building your cast — the render pause (castPhase === 'cast_rendering') ─────
 // Placeholder slots that show WHERE (and, once names are known, WHO) is being
 // drawn, so the wait reads as progress and no one re-clicks the funnel. Reuses
@@ -294,6 +348,7 @@ function ConsentModal({ onAgree, onCancel }) {
 
 export default function Storyboard({
   stageState = 'empty',
+  contentBlock = null,               // { reason, characters, message } — photoreal gate
   castPhase = 'idle',
   beats = [],
   aspectRatio = '9:16',
@@ -470,7 +525,18 @@ export default function Storyboard({
             </div>
           </div>
         )}
-        {(castPhase === 'cast_rendering' && stageState !== 'plate_review') ? (
+        {/* castPhase === 'editing' deliberately has NO in-stage banner: the
+            .film-edit-overlay at the foot of this file already scrims the stage
+            and names the exact work ("Regenerating shot 5…"). A banner here would
+            sit behind that blur saying the same thing twice. The 'editing' phase
+            still matters — it's what keeps CastBuilding from hijacking the grid
+            below and keeps the funnel CTA honest. */}
+        {/* 'blocked' leads the chain, mirroring the container's own precedence
+            (stageState = job.contentBlock ? 'blocked' : …). A blocked plan has
+            failed, so no other branch should get a chance to claim the stage. */}
+        {stageState === 'blocked' && contentBlock ? (
+          <ContentBlockCard block={contentBlock} videoStyle={videoStyle} />
+        ) : (castPhase === 'cast_rendering' && stageState !== 'plate_review') ? (
           <CastBuilding castList={castList} />
         ) : stageState === 'plate_review' ? (
           <div className="film-cast-wrap">

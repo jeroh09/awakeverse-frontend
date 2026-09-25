@@ -398,9 +398,18 @@ export default function FilmWorkspaceContainer({
   //   cast_rendering → greyed   "Reviewing the cast…"
   //   cast_ready     → enabled  "Make the film"   → onApproveCast (approve plan)
   //   film_rendering → greyed   "Making the film…"
+  //   editing        → greyed   "Regenerating shot N…" (the live editBusy label)
   //   done           → bar hidden (storyboard + Editor's Room take over)
+  //
+  // editBusy is checked FIRST and is load-bearing (2026-09-25). A regenerate sets
+  // status='processing' locally while the manifest is still the FINISHED film's
+  // (live:false), so without this branch the chain fell through to
+  // 'cast_rendering' — the locked CTA read "Reviewing the cast…" and the
+  // storyboard swapped the shot grid for the "Building your cast…" skeleton,
+  // both wrong: no cast is being built, one shot is being remade.
   const castPhase =
-      job.status === 'awaiting_review' ? 'cast_ready'
+      job.editBusy                     ? 'editing'
+    : job.status === 'awaiting_review' ? 'cast_ready'
     : job.status === 'complete'        ? 'done'
     : job.status === 'processing'      ? (job.live ? 'film_rendering' : 'cast_rendering')
     : castKickoff                      ? 'cast_rendering'   // click→finalize gap
@@ -433,6 +442,7 @@ export default function FilmWorkspaceContainer({
       progress={job.progress}
       finalUrl={job.outputUrl}
       editBusy={job.editBusy}
+      busyLabel={job.editBusy}
       regenBusyIndex={regenBusyIndex}
       onSelectBeat={onSelectBeat}
       onGenerate={onGenerate}

@@ -45,7 +45,7 @@ export default function FilmWorkspace({
   streamingText = '',
   editingBeat = null,
   onCloseEdit, onChangeEditVisual, onPickSpeaker, onRemovePresent, onChangeLine, onRegenerateFromEdit, onSaveEdit,
-  onSend, scriptReady = false, onBuildFilm, onReviewCast, castPhase = 'idle', onSaveScript,
+  onSend, scriptReady = false, onBuildFilm, onReviewCast, castPhase = 'idle', busyLabel = null, onSaveScript,
   // Editor's Room (2026-08-25): the shell is presentational and forwards
   // explicitly — these MUST be threaded here or they die between the
   // container and WritersRoom (the severed-link bug: the tab never showed
@@ -239,6 +239,7 @@ export default function FilmWorkspace({
               onReviewCast={onReviewCast}
               onApproveCast={onApproveCast}
               castPhase={castPhase}
+              busyLabel={busyLabel}
               onSaveScript={onSaveScript}
             />
           </section>
