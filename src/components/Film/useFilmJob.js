@@ -5,7 +5,7 @@
 import { useState, useCallback, useRef, useEffect } from 'react';
 import { filmGenerate, filmGetJob, filmCancel, filmReassemble, filmRegenerate,
          filmPlan, filmRegeneratePlate, filmApproveRender, filmUploadCharacterImage,
-         friendlyError } from './filmApi';
+         filmFinishProject, friendlyError } from './filmApi';
 
 const POLL_MS = 5000;
 const POLL_TIMEOUT_MS = 45 * 60 * 1000;
@@ -303,6 +303,34 @@ export default function useFilmJob() {
     }
   }, [jobId]);
 
+  // finish(projectId): promote a completed PREVIEW into the full 720p render.
+  // The server makes a NEW job (clean billing — the preview's ledger is already
+  // settled), reserves the FULL price, and repoints the project at it. On success
+  // we switch this hook to the new job and poll it; a live:true stub manifest is
+  // set IMMEDIATELY so the UI shows the full-render view at once (no "building
+  // cast" flash while the first poll is in flight). A 402 sets `blocked` (→ the
+  // top-up card) and leaves status/manifest untouched, so the completed preview
+  // and its "Finish your film" banner stay put for a retry after top-up.
+  const finish = useCallback(async (projectId) => {
+    if (!projectId) return null;
+    setError(null);
+    try {
+      const data = await filmFinishProject(projectId);
+      const id = data.job_id;
+      setJobId(id);
+      setOutputUrl(null);
+      expectedRef.current = data.total || expectedRef.current || 0;
+      setManifest({ live: true, plan: [], beats: [], total: data.total || 0 });
+      setStatus('processing');
+      poll(id);
+      return id;
+    } catch (e) {
+      const b = creditsBlock(e);
+      if (b) { setBlocked(b); return null; }   // status stays 'complete' → preview + banner remain
+      setError(friendlyError(e)); return null; // surfaces in chatSub; preview remains
+    }
+  }, [poll]);
+
   // approveRender(): commit the reviewed plan → full render (Phase 3). The job
   // flips to processing and the normal render poll resumes.
   const approveRender = useCallback(async () => {
@@ -388,6 +416,6 @@ export default function useFilmJob() {
 
   return { jobId, status, stage, cells, progress, outputUrl, error, title: jobTitle, editBusy,
     reviewCharacters, planningPlates, live, contentBlock, blocked, clearBlocked: () => setBlocked(null),
-    generate, plan, regeneratePlate, uploadCharacterImage, approveRender,
+    generate, plan, regeneratePlate, uploadCharacterImage, approveRender, finish,
     cancel, reassemble, regenerate, adopt, reset };
 }

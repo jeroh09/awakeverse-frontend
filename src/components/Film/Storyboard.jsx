@@ -372,6 +372,7 @@ export default function Storyboard({
   onGenerate = () => {},
   onExport = () => {},
   onStop = () => {},
+  onFinish = () => {},
   onRegenerate = () => {},
   onDuplicate = () => {},
   onCut = () => {},
@@ -567,9 +568,10 @@ export default function Storyboard({
                   <b>Preview — {doneN} of {beats.length} shots rendered.</b>{' '}
                   The rest of your film is written and waiting.
                 </div>
-                <a href="/billing" className="film-btn film-btn--primary film-btn--cta">
-                  Finish your film
-                </a>
+                <button type="button" className="film-btn film-btn--primary film-btn--cta"
+                        onClick={onFinish}>
+                  Finish your film{cost != null ? ` · ${Number(cost).toLocaleString()} credits` : ''}
+                </button>
               </div>
             );
           })()}

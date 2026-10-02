@@ -186,7 +186,7 @@ export default function TermsOfService() {
         <ul>
           <li><strong>Generated content is final:</strong> Credits are spent to produce your output, and a <strong>successful generation</strong> — a rendered video, podcast, image, or similar result — is <strong>not refundable</strong> once produced, whether in credits or cash. This mirrors how the underlying AI model providers we rely on (for example, Google's Veo and ByteDance's Seedance video models) charge us: the computing resources used to create your output are consumed at the moment of generation and cannot be reversed or recovered. If a generation <strong>fails</strong>, the credits held for it are released and you are not charged. Dissatisfaction with the creative result of a working generation — its style, likeness, wording, pacing, or subjective quality — is a normal feature of AI generation, is not a defect, and is not grounds for a refund; you may spend further credits to regenerate. This does not affect your statutory rights where a purchase is faulty or not as described.</li>
           <li><strong>Store purchases:</strong> Subscriptions and credit packs bought through Google Play or the Apple App Store are subject to that store's refund policy and process; refund requests for those purchases are handled by the store.</li>
-          <li><strong>Web purchases:</strong> For purchases made on our website, contact <a href="mailto:support@awakeverse.com">support@awakeverse.com</a> and we will handle your request in line with these Terms and your statutory rights.</li>
+          <li><strong>Web purchases:</strong> For purchases made on our website, contact <a href="mailto:media@awakeverse.com">support@awakeverse.com</a> and we will handle your request in line with these Terms and your statutory rights.</li>
           <li><strong>Your statutory rights:</strong> Nothing in these Terms removes or limits any non‑waivable consumer rights you have. For digital content and services, when you ask us to begin immediately and acknowledge this at purchase, your statutory right to cancel may end once we have started providing them — you consent to immediate provision when you make a purchase.</li>
           <li><strong>Effect of a refund or reversal:</strong> If a purchase is refunded, reversed, charged back, or otherwise cancelled, we may remove any <strong>unspent</strong> credits granted by that purchase (down to a zero balance — we never reclaim credits you have already used), and access tied to a refunded subscription may end.</li>
         </ul>
@@ -239,7 +239,7 @@ export default function TermsOfService() {
         <p>We may update these Terms. Material changes will be notified in‑app or by email. Continued use after changes means you accept the revised Terms.</p>
 
         <h2 id="contact">19) Contact</h2>
-        <p>AwakeVerse Ltd • Support: <a href="mailto:support@awakeverse.com">support@awakeverse.com</a> • Legal: <a href="mailto:legal@awakeverse.com">legal@awakeverse.com</a></p>
+        <p>AwakeVerse Ltd • Support: <a href="mailto:media@awakeverse.com">media@awakeverse.com</a> • Legal: <a href="mailto:media@awakeverse.com">legal@awakeverse.com</a></p>
       </main>
 
       <footer className="document-footer">

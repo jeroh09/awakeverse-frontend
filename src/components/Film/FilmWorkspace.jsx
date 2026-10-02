@@ -34,7 +34,7 @@ export default function FilmWorkspace({
   progress = null,
   finalUrl = null,
   editBusy = null,
-  onSelectBeat, onGenerate, onExport, onStop,
+  onSelectBeat, onGenerate, onExport, onStop, onFinish,
   onRegenerate, onDuplicate, onCut,
   canPromote = false, onPromote = () => {},
   // chat (right)
@@ -194,6 +194,7 @@ export default function FilmWorkspace({
               onGenerate={onGenerate}
               onExport={onExport}
               onStop={onStop}
+              onFinish={onFinish}
               onRegenerate={onRegenerate}
               onDuplicate={onDuplicate}
               onCut={onCut}

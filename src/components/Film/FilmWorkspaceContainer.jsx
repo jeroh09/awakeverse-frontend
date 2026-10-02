@@ -352,6 +352,13 @@ export default function FilmWorkspaceContainer({
     if (job.outputUrl) window.open(job.outputUrl, '_blank', 'noopener');
   }, [job.outputUrl]);
 
+  // "Finish your film" — promote THIS completed preview into the full 720p render.
+  // All spend lives in job.finish(): it creates the new full job, reserves the full
+  // price, and switches the workspace to the live render. A 402 flows through
+  // job.blocked → the InsufficientCard below (top-up primary). Idempotent server-
+  // side, so a double-click can't double-spend.
+  const onFinish = useCallback(() => { job.finish(projectId); }, [job, projectId]);
+
   // Promote is offered only for a CONFIRMED standalone film that has rendered —
   // a look is locked at its first Seedance render, not before, and an episode is
   // already in a series. (Fresh in-session films have seriesId===undefined → the
@@ -447,6 +454,7 @@ export default function FilmWorkspaceContainer({
       onSelectBeat={onSelectBeat}
       onGenerate={onGenerate}
       onExport={onExport}
+      onFinish={onFinish}
       onStop={job.cancel}
       onRegenerate={onRegenerate}
       onDuplicate={onDuplicate}

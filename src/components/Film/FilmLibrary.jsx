@@ -69,7 +69,12 @@ function Book({ item, ordinal, isOpen, onToggle, onOpen, onWatch, onPromote, onD
       </div>
       <div className="fs-card" onClick={() => onOpen(item)}>
         <div className="fs-cover" style={{ '--cv': cover(item) }}>
-          <span className={`fs-chip ${stKey(item.status)}`}>{stText(item.status)}</span>
+          {/* A completed PREVIEW reads as 'ready' server-side; can_finish marks it
+              as a teaser so the shelf shows "Preview" and routes into the workspace
+              (where "Finish your film" renders the full 720p film). */}
+          <span className={`fs-chip ${item.can_finish ? 'preview' : stKey(item.status)}`}>
+            {item.can_finish ? 'Preview' : stText(item.status)}
+          </span>
           <span className="fs-rowbtns">
             {onDelete && (
               <button type="button" className="fs-mini" onClick={stop(() => onDelete(item))} aria-label="Delete film"><IconTrash s={12} /></button>
@@ -83,7 +88,7 @@ function Book({ item, ordinal, isOpen, onToggle, onOpen, onWatch, onPromote, onD
         <div className="fs-ctitle">{ordinal ? `Ep ${ordinal} · ` : ''}{item.title || 'Untitled'}</div>
         <div className="fs-cmeta">{ordinal ? `Episode ${ordinal}` : `${styleLabel(item.video_style)} · ${item.aspect_ratio || '9:16'}`}</div>
         <div className="fs-cta">
-          <button type="button" className="fs-cbtn play" onClick={stop(() => onOpen(item))}>{ready ? 'Open' : 'Continue'}</button>
+          <button type="button" className="fs-cbtn play" onClick={stop(() => onOpen(item))}>{item.can_finish ? 'Finish film' : ready ? 'Open' : 'Continue'}</button>
           {ready && item.standalone && (
             <button type="button" className="fs-cbtn ghost" onClick={stop(() => onPromote(item))}><IconPlus s={12} /> Series</button>
           )}

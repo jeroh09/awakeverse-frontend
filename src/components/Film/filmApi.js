@@ -162,6 +162,13 @@ export const filmListProjects = () =>
 export const filmGetProject = (projectId) =>
   api.get(`/film/projects/${projectId}`).then(r => r.data);
 
+// Promote a completed PREVIEW into the full 720p render. Returns 202
+// { status:'processing', job_id, total, poll_url, … }; a 402 carries the same
+// { needed, available, short_by, title, message } shape creditsBlocked() reads,
+// so the caller shows the top-up card instead of a generic error.
+export const filmFinishProject = (projectId) =>
+  api.post(`/film/projects/${projectId}/finish`, null, { timeout: QUEUE_TIMEOUT }).then(r => r.data);
+
 export const filmDeleteProject = (projectId) =>
   api.delete(`/film/projects/${projectId}`, { timeout: QUEUE_TIMEOUT }).then(r => r.data);
 
