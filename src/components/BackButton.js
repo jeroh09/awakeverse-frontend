@@ -3,7 +3,7 @@ import React from 'react';
 const BackButton = ({ onClick }) => {
     return (
         <button className="back-button" onClick={onClick}>
-            Return to Awakeverse
+            Return to AwakeVerse
         </button>
     );
 };

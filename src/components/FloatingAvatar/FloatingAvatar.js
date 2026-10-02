@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import EmotionRing from './EmotionRing';
 import RadialMenu from './RadialMenu';
+import { createImageErrorHandler } from '../../utils/imageUtils';
 import './FloatingAvatar.css';
 
 const EMOTION_COLORS = {
@@ -141,17 +142,62 @@ export default function FloatingAvatar({
           onPrestigeToggle={handlePrestigeToggle}
           prestigeDiscoveryCount={discoveryCount}
         />
-        
         <div className="floating-avatar-core">
-          <img
-            src={`/images/${character}.jpg`}
-            alt={characterName || character}
-            className="floating-avatar-image"
-            onError={(e) => {
-              e.target.src = '/images/default-character.jpg';
-            }}
-          />
+          {character ? (
+            <img
+              src={`/images/${character}.jpg`}
+              alt={characterName || character}
+              className="floating-avatar-image"
+              onError={createImageErrorHandler(characterName || character)}
+            />
+          ) : (
+            <div 
+              className="text-fallback floating-avatar-image"
+              style={{
+                width: '100%',
+                height: '100%',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                background: 'rgba(255, 215, 0, 0.2)',
+                color: '#FFD700',
+                fontSize: '1.2rem',
+                fontWeight: 'bold',
+                borderRadius: '50%'
+              }}
+            >
+              ?
+            </div>
+          )}
         </div>
+<div className="floating-avatar-core">
+  {character ? (
+    <img
+      src={`/images/${character}.jpg`}
+      alt={characterName || character}
+      className="floating-avatar-image"
+      onError={createImageErrorHandler(characterName || character)}
+    />
+  ) : (
+    <div 
+      className="text-fallback floating-avatar-image"
+      style={{
+        width: '100%',
+        height: '100%',
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'center',
+        background: 'rgba(255, 215, 0, 0.2)',
+        color: '#FFD700',
+        fontSize: '1.2rem',
+        fontWeight: 'bold',
+        borderRadius: '50%'
+      }}
+    >
+      ?
+    </div>
+  )}
+</div>
 
         <RadialMenu
           isOpen={isMenuOpen}

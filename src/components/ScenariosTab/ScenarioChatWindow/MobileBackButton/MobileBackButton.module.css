@@ -1,0 +1,62 @@
+/* MobileBackButton.module.css */
+/* Mobile-only back button for chat header */
+
+/* ===== MOBILE BACK BUTTON ===== */
+.mobileBackButton {
+  display: none; /* Hidden on desktop */
+  align-items: center;
+  gap: var(--spacing-xs);
+  padding: var(--spacing-sm) var(--spacing-md);
+  background: var(--bg-interactive);
+  border: 1px solid var(--border-medium);
+  border-radius: var(--border-radius-md);
+  color: var(--text-primary);
+  cursor: pointer;
+  transition: var(--transition-fast);
+  font-size: var(--font-size-body-small);
+  font-weight: var(--font-weight-medium);
+  height: 40px;
+  margin-bottom: var(--spacing-md);
+}
+
+/* Mobile: Show button */
+@media (max-width: 768px) {
+  .mobileBackButton {
+    display: flex;
+  }
+}
+
+.mobileBackButton:hover {
+  background: var(--bg-peak);
+  border-color: var(--accent-primary);
+  color: var(--accent-primary);
+}
+
+.mobileBackButton:active {
+  transform: scale(0.95);
+}
+
+.mobileBackButton:focus-visible {
+  outline: 2px solid var(--accent-primary);
+  outline-offset: 2px;
+}
+
+.backText {
+  font-size: var(--font-size-body-small);
+}
+
+/* ===== ACCESSIBILITY ===== */
+
+/* Reduce motion */
+@media (prefers-reduced-motion: reduce) {
+  .mobileBackButton:active {
+    transform: none;
+  }
+}
+
+/* High contrast */
+@media (prefers-contrast: high) {
+  .mobileBackButton {
+    border-width: 2px;
+  }
+}

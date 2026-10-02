@@ -33,7 +33,7 @@ export default function AuthDemo() {
 
   const handleCharacterSelect = (character) => {
     setSelectedCharacter(character);
-    setDemoMessage(DEMO_MESSAGES[character.id] || "Welcome to Awakeverse!");
+    setDemoMessage(DEMO_MESSAGES[character.id] || "Welcome to AwakeVerse!");
     setView('chat');
     
     // Auto-return to grid after 3 seconds

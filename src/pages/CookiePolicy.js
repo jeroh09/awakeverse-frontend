@@ -38,10 +38,10 @@ export default function CookiePolicy() {
           <a href="/privacy">Privacy</a>
           <a href="/security">Security</a>
         </nav>
-        <h1>Awakeverse — Cookie Policy</h1>
+        <h1>AwakeVerse — Cookie Policy</h1>
         <p className="meta">Effective: 19 August 2025 • Last updated: 19 August 2025</p>
         <div className="intro-card">
-          This Cookie Policy explains how Awakeverse uses cookies and similar technologies to provide and improve our services.
+          This Cookie Policy explains how AwakeVerse uses cookies and similar technologies to provide and improve our services.
         </div>
       </header>
 
@@ -116,7 +116,7 @@ export default function CookiePolicy() {
 
         <h2>6) Cookie Consent</h2>
         <p>
-          By using Awakeverse, you consent to our use of essential cookies required for site functionality. 
+          By using AwakeVerse, you consent to our use of essential cookies required for site functionality. 
           Optional analytics cookies are only used where permitted by your browser settings and applicable law.
         </p>
 
@@ -133,7 +133,7 @@ export default function CookiePolicy() {
       </main>
 
       <footer className="document-footer">
-        <p>© {currentYear} Awakeverse Ltd. All rights reserved.</p>
+        <p>© {currentYear} AwakeVerse Ltd. All rights reserved.</p>
       </footer>
     </div>
   );

@@ -1,0 +1,143 @@
+/* src/components/ScenariosTab/TemplatesGallery/ScrollToMyDialogues.css */
+
+/* ============================================================================
+   SCROLL TO MY DIALOGUES COMPONENT - FIXED FLOATING BUTTON
+   ============================================================================ */
+.scroll-to-dialogues {
+  /* ✅ FIXED POSITION - Floats at bottom right of screen */
+  position: fixed;
+  bottom: 2rem;
+  right: 2rem;
+  z-index: 100; /* Above other content */
+  
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  cursor: pointer;
+  transition: all 0.3s ease;
+}
+
+.scroll-to-dialogues:hover {
+  transform: translateY(-4px);
+}
+
+.scroll-to-dialogues:active {
+  transform: translateY(-2px);
+}
+
+/* Arrow Icon */
+.scroll-arrow-icon {
+  width: 56px;  /* Slightly bigger for fixed button */
+  height: 56px;
+  border-radius: 50%;
+  background: var(--scenarios-accent-light);
+  border: 2px solid var(--scenarios-accent-primary);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--scenarios-accent-primary);
+  transition: all 0.3s ease;
+  box-shadow: 0 4px 12px var(--scenarios-shadow);
+}
+
+.scroll-to-dialogues:hover .scroll-arrow-icon {
+  background: var(--scenarios-accent-primary);
+  color: white;
+  box-shadow: 0 8px 24px var(--scenarios-shadow);
+  animation: bounce 1s ease-in-out infinite;
+}
+
+/* Bounce Animation */
+@keyframes bounce {
+  0%, 100% {
+    transform: translateY(0);
+  }
+  50% {
+    transform: translateY(-4px);
+  }
+}
+
+/* Text Label - Appears to the LEFT of the button */
+.scroll-label {
+  position: absolute;
+  right: 70px; /* Positioned to the left of the button */
+  font-size: 0.9rem;
+  font-weight: 600;
+  color: var(--scenarios-text-secondary);
+  background: var(--scenarios-bg-card);
+  padding: 0.5rem 1rem;
+  border-radius: 8px;
+  border: 1px solid var(--scenarios-border-color);
+  box-shadow: 0 4px 12px var(--scenarios-shadow);
+  opacity: 0;
+  transform: translateX(10px);
+  transition: all 0.3s ease;
+  pointer-events: none;
+  white-space: nowrap;
+}
+
+.scroll-label.visible {
+  opacity: 1;
+  transform: translateX(0);
+  color: var(--scenarios-accent-primary);
+  border-color: var(--scenarios-accent-primary);
+}
+
+/* ============================================================================
+   DARK THEME OVERRIDES
+   ============================================================================ */
+.scenarios-tab-container.theme-awakeverse .scroll-arrow-icon {
+  background: rgba(99, 102, 241, 0.15);
+  border-color: rgba(99, 102, 241, 0.5);
+  box-shadow: 0 4px 12px rgba(99, 102, 241, 0.2);
+}
+
+.scenarios-tab-container.theme-awakeverse .scroll-to-dialogues:hover .scroll-arrow-icon {
+  background: #6366F1;
+  border-color: #818CF8;
+  box-shadow: 0 8px 24px rgba(99, 102, 241, 0.4);
+}
+
+.scenarios-tab-container.theme-awakeverse .scroll-label {
+  background: var(--scenarios-bg-card);
+  border-color: rgba(99, 102, 241, 0.3);
+}
+
+.scenarios-tab-container.theme-awakeverse .scroll-label.visible {
+  border-color: #6366F1;
+  background: rgba(99, 102, 241, 0.1);
+}
+
+/* ============================================================================
+   RESPONSIVE - MOBILE
+   ============================================================================ */
+@media (max-width: 768px) {
+  .scroll-to-dialogues {
+    bottom: 1.5rem;
+    right: 1.5rem;
+  }
+
+  .scroll-arrow-icon {
+    width: 48px;
+    height: 48px;
+  }
+
+  .scroll-label {
+    right: 60px;
+    font-size: 0.85rem;
+    padding: 0.4rem 0.8rem;
+  }
+}
+
+/* Accessibility - Keyboard focus */
+.scroll-to-dialogues:focus {
+  outline: 2px solid var(--scenarios-accent-primary);
+  outline-offset: 4px;
+  border-radius: 50%;
+}
+
+.scroll-to-dialogues:focus:not(:focus-visible) {
+  outline: none;
+}

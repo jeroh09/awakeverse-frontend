@@ -21,7 +21,7 @@
   border: 0.6px solid rgba(255, 215, 0, 0.4); /* 1px * 0.6 */
   background: rgba(30, 25, 0, 0.3);
   color: #FFD700;
-  font-family: 'Cinzel Decorative', serif;
+  font-family: 'Playfair Display', serif;
   font-size: 0.6rem; /* 1rem * 0.6 */
   transition: all 0.3s ease;
   cursor: pointer;

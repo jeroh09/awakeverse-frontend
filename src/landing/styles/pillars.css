@@ -1,0 +1,439 @@
+/* src/landing/styles/pillars.css */
+/* Four Pillars Section Styles */
+
+.pillars-section {
+  background: var(--bg-canvas);
+  position: relative;
+  min-height: 100vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: var(--space-2xl) var(--space-lg);
+}
+
+.pillars-container {
+  max-width: 1400px;
+  width: 100%;
+  margin: 0 auto;
+}
+
+/* ================================
+   SECTION HEADER
+   ================================ */
+
+.pillars-header {
+  text-align: center;
+  margin-bottom: var(--space-3xl);
+}
+
+.pillars-title {
+  font-family: var(--font-display);
+  font-size: var(--font-size-h1);
+  font-weight: var(--font-weight-bold);
+  color: var(--text-primary);
+  margin-bottom: var(--space-md);
+}
+
+.pillars-subtitle {
+  font-family: var(--font-body);
+  font-size: var(--font-size-body-lg);
+  font-weight: var(--font-weight-medium);
+  color: var(--text-secondary);
+}
+
+/* ================================
+   PILLARS GRID
+   ================================ */
+
+.pillars-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: var(--space-xl);
+}
+
+/* ================================
+   PILLAR CARD
+   ================================ */
+
+.pillar-card {
+  background: var(--bg-surface);
+  border-radius: var(--radius-lg);
+  border: 1px solid var(--border-subtle);
+  overflow: hidden;
+  transition: all var(--transition-base);
+  cursor: pointer;
+  display: flex;
+  flex-direction: column;
+  box-shadow: var(--elevation-02);
+}
+
+.pillar-card:hover {
+  transform: translateY(-8px);
+  box-shadow: 
+    var(--elevation-04),
+    0 0 40px -10px rgba(99, 102, 241, 0.2);
+  border-color: var(--accent-primary);
+}
+
+/* ================================
+   PILLAR IMAGE
+   ================================ */
+
+.pillar-image-container {
+  position: relative;
+  width: 100%;
+  aspect-ratio: 16 / 10;
+  overflow: hidden;
+  background: var(--bg-interactive);
+}
+
+.pillar-image {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  object-position: center;
+  transition: transform var(--transition-slow);
+}
+
+.pillar-card:hover .pillar-image {
+  transform: scale(1.1);
+}
+
+/* Image Overlay */
+.pillar-overlay {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  height: 50%;
+  background: linear-gradient(
+    to top,
+    rgba(10, 15, 26, 0.9) 0%,
+    rgba(10, 15, 26, 0.5) 50%,
+    transparent 100%
+  );
+  pointer-events: none;
+}
+
+/* Icon Badge */
+.pillar-icon {
+  position: absolute;
+  bottom: var(--space-lg);
+  right: var(--space-lg);
+  font-size: 48px;
+  background: rgba(10, 15, 26, 0.85);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  width: 80px;
+  height: 80px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border: 2px solid var(--border-medium);
+  transition: all var(--transition-base);
+  z-index: 10;
+}
+
+.pillar-card:hover .pillar-icon {
+  transform: scale(1.15) rotate(5deg);
+  border-color: var(--accent-primary);
+  background: rgba(99, 102, 241, 0.2);
+  box-shadow: var(--glow-indigo);
+}
+
+/* ================================
+   PILLAR CONTENT
+   ================================ */
+
+.pillar-content {
+  padding: var(--space-xl);
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-md);
+}
+
+.pillar-title {
+  font-family: var(--font-display);
+  font-size: var(--font-size-h3);
+  font-weight: var(--font-weight-bold);
+  color: var(--brand-ivory);
+  margin: 0;
+}
+
+.pillar-description {
+  font-family: var(--font-body);
+  font-size: var(--font-size-body);
+  font-weight: var(--font-weight-medium);
+  color: var(--text-secondary);
+  line-height: var(--line-height-relaxed);
+  margin: 0;
+}
+
+/* ================================
+   PILLAR FEATURES LIST
+   ================================ */
+
+.pillar-features {
+  list-style: none;
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-sm);
+  margin: 0;
+  padding: 0;
+  flex: 1;
+}
+
+.pillar-features li {
+  font-family: var(--font-body);
+  font-size: var(--font-size-body-sm);
+  font-weight: var(--font-weight-regular);
+  color: var(--text-secondary);
+  display: flex;
+  align-items: flex-start;
+  gap: var(--space-sm);
+  line-height: 1.5;
+}
+
+.pillar-features li::before {
+  content: '✓';
+  color: var(--accent-primary);
+  font-weight: var(--font-weight-bold);
+  font-size: 16px;
+  flex-shrink: 0;
+  margin-top: 2px;
+}
+
+/* ================================
+   PILLAR CTA
+   ================================ */
+
+.pillar-cta {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-sm);
+  padding: var(--space-md) var(--space-lg);
+  background: var(--bg-interactive);
+  color: var(--text-primary);
+  border: 1px solid var(--border-medium);
+  border-radius: var(--radius-md);
+  font-family: var(--font-body);
+  font-size: var(--font-size-body-sm);
+  font-weight: var(--font-weight-semibold);
+  text-decoration: none;
+  width: fit-content;
+  transition: all var(--transition-base);
+  margin-top: auto;
+}
+
+.pillar-cta:hover {
+  background: var(--bg-peak);
+  border-color: var(--accent-primary);
+  color: var(--text-primary);
+  transform: translateX(4px);
+  box-shadow: var(--elevation-01);
+}
+
+.pillar-cta span {
+  transition: transform var(--transition-base);
+}
+
+.pillar-cta:hover span {
+  transform: translateX(4px);
+}
+
+/* ================================
+   RESPONSIVE DESIGN
+   ================================ */
+
+@media (max-width: 1024px) {
+  .pillars-section {
+    padding: var(--space-xl) var(--space-lg);
+  }
+
+  .pillars-header {
+    margin-bottom: var(--space-2xl);
+  }
+
+  .pillars-grid {
+    gap: var(--space-lg);
+  }
+
+  .pillar-content {
+    padding: var(--space-lg);
+  }
+
+  .pillar-title {
+    font-size: var(--font-size-h4);
+  }
+
+  .pillar-icon {
+    width: 70px;
+    height: 70px;
+    font-size: 40px;
+    bottom: var(--space-md);
+    right: var(--space-md);
+  }
+}
+
+@media (max-width: 768px) {
+  .pillars-section {
+    padding: var(--space-xl) var(--space-md);
+  }
+
+  .pillars-header {
+    margin-bottom: var(--space-xl);
+  }
+
+  .pillars-title {
+    font-size: var(--font-size-h2);
+  }
+
+  .pillars-subtitle {
+    font-size: var(--font-size-body);
+  }
+
+  /* Single column on mobile */
+  .pillars-grid {
+    grid-template-columns: 1fr;
+    gap: var(--space-lg);
+  }
+
+  .pillar-content {
+    padding: var(--space-lg);
+    gap: var(--space-sm);
+  }
+
+  .pillar-title {
+    font-size: var(--font-size-h3);
+  }
+
+  .pillar-description {
+    font-size: var(--font-size-body-sm);
+  }
+
+  .pillar-features li {
+    font-size: var(--font-size-body-sm);
+  }
+
+  .pillar-icon {
+    width: 64px;
+    height: 64px;
+    font-size: 36px;
+    bottom: var(--space-sm);
+    right: var(--space-sm);
+  }
+}
+
+@media (max-width: 480px) {
+  .pillars-section {
+    padding: var(--space-lg) var(--space-sm);
+  }
+
+  .pillars-header {
+    margin-bottom: var(--space-lg);
+  }
+
+  .pillars-grid {
+    gap: var(--space-md);
+  }
+
+  .pillar-content {
+    padding: var(--space-md);
+  }
+
+  .pillar-title {
+    font-size: var(--font-size-h4);
+  }
+
+  .pillar-icon {
+    width: 56px;
+    height: 56px;
+    font-size: 32px;
+  }
+
+  .pillar-cta {
+    width: 100%;
+    justify-content: center;
+  }
+}
+
+/* ================================
+   ACCESSIBILITY
+   ================================ */
+
+.pillar-cta:focus-visible {
+  outline: 2px solid var(--accent-primary);
+  outline-offset: 4px;
+}
+
+.pillar-card:focus-within {
+  outline: 2px solid var(--accent-primary);
+  outline-offset: 4px;
+}
+
+/* Reduced motion preference */
+@media (prefers-reduced-motion: reduce) {
+  .pillar-card,
+  .pillar-image,
+  .pillar-icon,
+  .pillar-cta {
+    transition: none;
+  }
+  
+  .pillar-card:hover {
+    transform: none;
+  }
+  
+  .pillar-card:hover .pillar-image {
+    transform: none;
+  }
+  
+  .pillar-card:hover .pillar-icon {
+    transform: none;
+  }
+}
+
+/* High contrast mode */
+@media (prefers-contrast: high) {
+  .pillar-card {
+    border: 2px solid var(--border-strong);
+  }
+  
+  .pillar-icon {
+    border: 3px solid var(--accent-primary);
+  }
+}
+/* ================================
+   TOUCH DEVICE OPTIMIZATION
+   ================================ */
+
+/* Remove hover effects on touch devices */
+@media (hover: none) and (pointer: coarse) {
+  /* Replace hover transforms with tap feedback */
+  .pillar-card:hover,
+  .creator-card:hover,
+  .feature-cta:hover {
+    transform: none;
+  }
+  
+  .pillar-card:active,
+  .creator-card:active {
+    transform: scale(0.98);
+    transition: transform 0.1s ease;
+  }
+  
+  /* Buttons */
+  .pillar-cta:hover,
+  .creator-cta:hover,
+  .feature-cta:hover {
+    transform: none;
+  }
+  
+  .pillar-cta:active,
+  .creator-cta:active,
+  .feature-cta:active {
+    transform: scale(0.98);
+  }
+}

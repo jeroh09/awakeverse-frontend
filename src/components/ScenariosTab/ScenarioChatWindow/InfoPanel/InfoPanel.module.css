@@ -1,0 +1,1003 @@
+/* InfoPanel.module.css
+ *
+ * Full replacement — AwakeVerse design tokens throughout.
+ * Covers:
+ *   - All existing class names from current index.jsx (backward-compat until JSX rewrite)
+ *   - All new class names from redesigned index.jsx
+ *   - ScenarioListItem class names
+ *
+ * Tokens:
+ *   bg-surface    : #141B2E
+ *   bg-interactive: #1C2640
+ *   bg-peak       : #243152
+ *   accent        : #6366F1 / #818CF8
+ *   ivory         : #F5F5DC
+ *   border-s      : rgba(148,163,184,0.08)
+ *   border-m      : rgba(148,163,184,0.14)
+ *   border-a      : rgba(99,102,241,0.28)
+ *   Syne (display) · Inter (body)
+ */
+
+/* ══════════════════════════════════════════════════════
+   SHELL
+══════════════════════════════════════════════════════ */
+
+.infoPanel {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  overflow: hidden;
+  background: #141B2E;
+  font-family: 'Inter', system-ui, sans-serif;
+}
+
+/* ══════════════════════════════════════════════════════
+   HEADER NAV STRIP
+══════════════════════════════════════════════════════ */
+
+.header {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.75rem 0.9rem 0.65rem;
+  border-bottom: 1px solid rgba(148, 163, 184, 0.08);
+  flex-shrink: 0;
+}
+
+/* ── Old home button (current index.jsx) ── */
+.homeButton {
+  width: 30px;
+  height: 30px;
+  border-radius: 8px;
+  border: 1px solid rgba(148, 163, 184, 0.14);
+  background: #1C2640;
+  color: #94A3B8;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.16s cubic-bezier(0.4, 0, 0.2, 1);
+  flex-shrink: 0;
+}
+.homeButton:hover {
+  background: #243152;
+  border-color: rgba(99, 102, 241, 0.4);
+  color: #F1F5F9;
+}
+
+/* ── New header sub-elements (redesigned index.jsx) ── */
+.headerCenter {
+  flex: 1;
+  min-width: 0;
+}
+
+.headerLabel {
+  font-size: 0.58rem;
+  font-weight: 600;
+  letter-spacing: 0.09em;
+  text-transform: uppercase;
+  color: #818CF8;
+  line-height: 1;
+}
+
+.headerScenario {
+  font-family: 'Syne', -apple-system, BlinkMacSystemFont, sans-serif;
+  font-size: 0.78rem;
+  font-weight: 700;
+  color: #F5F5DC;
+  line-height: 1.2;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  margin-top: 2px;
+}
+
+.headerBadge {
+  font-size: 0.58rem;
+  font-weight: 600;
+  padding: 0.15rem 0.45rem;
+  border-radius: 999px;
+  background: rgba(99, 102, 241, 0.12);
+  border: 1px solid rgba(99, 102, 241, 0.25);
+  color: #818CF8;
+  white-space: nowrap;
+  flex-shrink: 0;
+}
+
+/* ══════════════════════════════════════════════════════
+   SCROLLABLE BODY
+══════════════════════════════════════════════════════ */
+
+.panelBody {
+  flex: 1;
+  overflow-y: auto;
+  overflow-x: hidden;
+  scrollbar-width: thin;
+  scrollbar-color: rgba(99, 102, 241, 0.25) transparent;
+  display: flex;
+  flex-direction: column;
+}
+
+.panelBody::-webkit-scrollbar { width: 3px; }
+.panelBody::-webkit-scrollbar-thumb {
+  background: rgba(99, 102, 241, 0.25);
+  border-radius: 2px;
+}
+
+/* ══════════════════════════════════════════════════════
+   SECTIONS — used by both old and new layout
+══════════════════════════════════════════════════════ */
+
+.section {
+  padding: 0.8rem 0.9rem;
+  border-bottom: 1px solid rgba(148, 163, 184, 0.08);
+  overflow-y: auto;
+}
+
+.section:last-child { border-bottom: none; }
+
+.sectionHeader {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 0.55rem;
+}
+
+/* ── Old section title (current index.jsx — plain text) ── */
+.sectionTitle {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+  font-family: 'Inter', system-ui, sans-serif;
+  font-size: 0.62rem;
+  font-weight: 700;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: #64748B;
+  margin-bottom: 0.55rem;
+}
+
+.sectionTitle svg { opacity: 0.7; }
+
+.countBadge {
+  font-size: 0.58rem;
+  font-weight: 700;
+  padding: 0.1rem 0.42rem;
+  border-radius: 999px;
+  background: #1C2640;
+  color: #64748B;
+}
+
+/* Scrollbar for section */
+.section::-webkit-scrollbar { width: 3px; }
+.section::-webkit-scrollbar-track { background: transparent; }
+.section::-webkit-scrollbar-thumb {
+  background: rgba(99, 102, 241, 0.25);
+  border-radius: 2px;
+}
+
+/* ══════════════════════════════════════════════════════
+   SCENARIO LIST — used by ScenarioListItem
+══════════════════════════════════════════════════════ */
+
+.scenariosList {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+  min-height: 0;
+  overflow-y: auto;
+}
+
+.scenarioItem {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.55rem 0.65rem;
+  border-radius: 9px;
+  border: 1px solid transparent;
+  cursor: pointer;
+  transition: all 0.16s cubic-bezier(0.4, 0, 0.2, 1);
+  background: transparent;
+  width: 100%;
+  text-align: left;
+  user-select: none;
+}
+
+.scenarioItem:hover {
+  background: #1C2640;
+  border-color: rgba(148, 163, 184, 0.14);
+}
+
+.scenarioItem.active {
+  background: rgba(99, 102, 241, 0.1);
+  border-color: rgba(99, 102, 241, 0.3);
+}
+
+.scenarioItem:focus-visible {
+  outline: 2px solid rgba(99, 102, 241, 0.5);
+  outline-offset: 1px;
+}
+
+.scenarioDot {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: #64748B;
+  flex-shrink: 0;
+  transition: background 0.16s;
+}
+
+.scenarioItem.active .scenarioDot { background: #818CF8; }
+
+.scenarioInfo { flex: 1; min-width: 0; }
+
+.scenarioTitle {
+  font-family: 'Inter', system-ui, sans-serif;
+  font-size: 0.76rem;
+  font-weight: 600;
+  color: #F1F5F9;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  line-height: 1.2;
+}
+
+.scenarioItem.active .scenarioTitle { color: #F5F5DC; }
+
+.scenarioMeta {
+  display: flex;
+  align-items: center;
+  gap: 0.3rem;
+  margin-top: 2px;
+}
+
+.metaItem {
+  display: flex;
+  align-items: center;
+  gap: 0.3rem;
+  font-family: 'Inter', system-ui, sans-serif;
+  font-size: 0.62rem;
+  color: #64748B;
+}
+
+.scenarioArrow {
+  color: #475569;
+  font-size: 0.7rem;
+  flex-shrink: 0;
+  opacity: 0;
+  transition: opacity 0.16s;
+}
+
+.scenarioItem:hover .scenarioArrow,
+.scenarioItem.active .scenarioArrow { opacity: 1; }
+
+/* ══════════════════════════════════════════════════════
+   JOB CHIPS — created content list
+══════════════════════════════════════════════════════ */
+
+/* ── Old jobsList / jobCard (current index.jsx) ── */
+.jobsList {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.jobCard {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.45rem 0.65rem;
+  border-radius: 8px;
+  border: 1px solid rgba(148, 163, 184, 0.14);
+  background: #1C2640;
+  cursor: pointer;
+  transition: all 0.16s cubic-bezier(0.4, 0, 0.2, 1);
+  width: 100%;
+  text-align: left;
+  font-family: 'Inter', system-ui, sans-serif;
+}
+
+.jobCard:hover {
+  background: #243152;
+  border-color: rgba(99, 102, 241, 0.3);
+}
+
+.jobCardIcon {
+  width: 26px;
+  height: 26px;
+  border-radius: 6px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  font-size: 0.85rem;
+  background: rgba(99, 102, 241, 0.12);
+}
+
+.jobCardBody {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 1px;
+}
+
+.jobCardType {
+  font-size: 0.72rem;
+  font-weight: 600;
+  color: #F1F5F9;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.jobCardMeta {
+  font-size: 0.6rem;
+  color: #64748B;
+}
+
+.jobCardArrow {
+  color: #475569;
+  font-size: 0.7rem;
+  flex-shrink: 0;
+}
+
+/* ── New chip sub-elements (redesigned index.jsx) ── */
+.jobChipIcon {
+  width: 26px;
+  height: 26px;
+  border-radius: 6px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.jobChipIconScript { background: rgba(99,102,241,0.12); color: #818CF8;  }
+.jobChipIconAudio  { background: rgba(16,185,129,0.12); color: #10B981;  }
+.jobChipIconVideo  { background: rgba(239,68,68,0.1);   color: #EF4444;  }
+
+/* ── Loading bar ── */
+.jobsLoading { padding: 0.5rem 0; }
+
+.jobsLoadingBar {
+  height: 4px;
+  border-radius: 999px;
+  background: rgba(99, 102, 241, 0.12);
+  overflow: hidden;
+  position: relative;
+}
+
+.jobsLoadingBar::after {
+  content: '';
+  position: absolute;
+  left: -40%;
+  width: 40%;
+  height: 100%;
+  background: linear-gradient(90deg, transparent, rgba(99,102,241,0.45), transparent);
+  animation: shimmer 1.4s ease-in-out infinite;
+}
+
+@keyframes shimmer {
+  to { left: 140%; }
+}
+
+/* ══════════════════════════════════════════════════════
+   EMPTY STATE
+══════════════════════════════════════════════════════ */
+
+.emptyState {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.4rem;
+  padding: 1.25rem 0.9rem;
+  text-align: center;
+}
+
+.emptyIcon {
+  font-size: 1.5rem;
+  color: #475569;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.emptyText {
+  font-family: 'Inter', system-ui, sans-serif;
+  font-size: 0.72rem;
+  color: #475569;
+  font-style: italic;
+  margin: 0;
+}
+
+/* ══════════════════════════════════════════════════════
+   CREATE PANEL HEADER
+══════════════════════════════════════════════════════ */
+
+.createHeader {
+  display: flex;
+  align-items: center;
+  gap: 0.55rem;
+  padding: 0.75rem 0.9rem 0.6rem;
+  border-bottom: 1px solid rgba(148, 163, 184, 0.08);
+  flex-shrink: 0;
+}
+
+.createBack {
+  width: 26px;
+  height: 26px;
+  border-radius: 7px;
+  border: 1px solid rgba(148, 163, 184, 0.14);
+  background: #1C2640;
+  color: #94A3B8;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.15s cubic-bezier(0.4, 0, 0.2, 1);
+  flex-shrink: 0;
+}
+.createBack:hover { background: #243152; color: #F1F5F9; }
+
+.createTitle {
+  font-family: 'Syne', -apple-system, BlinkMacSystemFont, sans-serif;
+  font-size: 0.85rem;
+  font-weight: 700;
+  color: #F5F5DC;
+}
+
+/* ══════════════════════════════════════════════════════
+   CREATE ZONES
+══════════════════════════════════════════════════════ */
+
+.zone {
+  padding: 0.8rem 0.9rem;
+  border-bottom: 1px solid rgba(148, 163, 184, 0.08);
+}
+
+.zoneLabel {
+  display: flex;
+  align-items: center;
+  gap: 0.3rem;
+  font-size: 0.58rem;
+  font-weight: 700;
+  letter-spacing: 0.11em;
+  text-transform: uppercase;
+  color: #475569;
+  margin-bottom: 0.55rem;
+}
+
+/* ── Content type selector (old + new) ── */
+.typeSelector {
+  display: flex;
+  gap: 5px;
+}
+
+.typeButton {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.28rem;
+  padding: 0.55rem 0.35rem;
+  border-radius: 10px;
+  border: 1px solid rgba(148, 163, 184, 0.14);
+  background: #1C2640;
+  color: #94A3B8;
+  cursor: pointer;
+  transition: all 0.16s cubic-bezier(0.4, 0, 0.2, 1);
+  font-family: 'Inter', system-ui, sans-serif;
+}
+
+.typeButton:hover {
+  background: #243152;
+  border-color: rgba(99, 102, 241, 0.3);
+  color: #F1F5F9;
+}
+
+.typeButtonActive {
+  background: rgba(99, 102, 241, 0.14);
+  border-color: rgba(99, 102, 241, 0.5);
+  color: #818CF8;
+  box-shadow: 0 0 12px rgba(99, 102, 241, 0.15);
+}
+
+.typeIcon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1rem;
+  line-height: 1;
+}
+
+.typeLabel {
+  font-size: 0.65rem;
+  font-weight: 600;
+}
+
+/* ── Field label ── */
+.fieldLabel {
+  font-family: 'Inter', system-ui, sans-serif;
+  font-size: 0.6rem;
+  font-weight: 600;
+  letter-spacing: 0.07em;
+  text-transform: uppercase;
+  color: #475569;
+  margin-bottom: 0.3rem;
+  margin-top: 0.65rem;
+}
+
+.posterTitleInput {
+  width: 100%;
+  box-sizing: border-box;
+  padding: 0.5rem 0.6rem;
+  border-radius: 7px;
+  border: 1px solid rgba(148, 163, 184, 0.14);
+  background: #1C2640;
+  color: #E2E8F0;
+  font-family: 'Inter', system-ui, sans-serif;
+  font-size: 0.72rem;
+  font-weight: 500;
+  outline: none;
+  transition: border-color 0.15s cubic-bezier(0.4, 0, 0.2, 1),
+              box-shadow 0.15s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.posterTitleInput::placeholder {
+  color: #475569;
+}
+
+.posterTitleInput:focus {
+  border-color: rgba(99, 102, 241, 0.5);
+  box-shadow: 0 0 0 2px rgba(99, 102, 241, 0.18);
+}
+
+.fieldLabel:first-child { margin-top: 0; }
+
+/* ── Duration selector ── */
+.durationSelector {
+  display: flex;
+  gap: 4px;
+}
+
+.durationButton {
+  flex: 1;
+  padding: 0.35rem 0.25rem;
+  border-radius: 7px;
+  border: 1px solid rgba(148, 163, 184, 0.14);
+  background: #1C2640;
+  cursor: pointer;
+  transition: all 0.15s cubic-bezier(0.4, 0, 0.2, 1);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  font-family: 'Inter', system-ui, sans-serif;
+  gap: 1px;
+}
+
+.durationButton:hover {
+  background: #243152;
+  border-color: rgba(99, 102, 241, 0.3);
+}
+
+.durationButtonActive {
+  background: rgba(99, 102, 241, 0.12);
+  border-color: rgba(99, 102, 241, 0.4);
+}
+
+.durationLabel {
+  font-size: 0.7rem;
+  font-weight: 700;
+  color: #F1F5F9;
+}
+
+.durationDesc {
+  font-size: 0.55rem;
+  color: #64748B;
+}
+
+/* ── Style grid (story styles + video styles) ── */
+.styleGrid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 4px;
+}
+
+.styleButton {
+  display: flex;
+  align-items: center;
+  gap: 0.3rem;
+  padding: 0.35rem 0.4rem;
+  border-radius: 7px;
+  border: 1px solid rgba(148, 163, 184, 0.14);
+  background: #1C2640;
+  cursor: pointer;
+  transition: all 0.15s cubic-bezier(0.4, 0, 0.2, 1);
+  font-family: 'Inter', system-ui, sans-serif;
+  font-size: 0.62rem;
+  font-weight: 600;
+  color: #94A3B8;
+}
+
+.styleButton:hover {
+  background: #243152;
+  border-color: rgba(99, 102, 241, 0.3);
+  color: #F1F5F9;
+}
+
+.styleButtonActive {
+  background: rgba(99, 102, 241, 0.12);
+  border-color: rgba(99, 102, 241, 0.4);
+  color: #818CF8;
+}
+
+.styleIcon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 0.8rem;
+  line-height: 1;
+}
+
+.styleLabel {
+  font-size: 0.62rem;
+  font-weight: 600;
+}
+
+/* ── Hint box (async type hint) ── */
+.asyncTypeHint {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.4rem;
+  padding: 0.5rem 0.6rem;
+  border-radius: 8px;
+  background: rgba(99, 102, 241, 0.06);
+  border: 1px solid rgba(99, 102, 241, 0.15);
+  font-family: 'Inter', system-ui, sans-serif;
+  font-size: 0.65rem;
+  color: #64748B;
+  line-height: 1.4;
+  margin-top: 0.5rem;
+}
+
+.hintIcon {
+  flex-shrink: 0;
+  margin-top: 1px;
+  color: #818CF8;
+  display: flex;
+}
+
+/* ── Generate CTA zone ── */
+.zoneCta {
+  padding: 0.75rem 0.9rem;
+  border-top: 1px solid rgba(148, 163, 184, 0.08);
+  flex-shrink: 0;
+  margin-top: auto;
+}
+
+/* ── Old generate button + back link (current index.jsx) ── */
+.generateButton {
+  width: 100%;
+  padding: 0.6rem;
+  border-radius: 10px;
+  border: none;
+  background: linear-gradient(135deg, #6366F1, #818CF8);
+  color: #fff;
+  font-family: 'Inter', system-ui, sans-serif;
+  font-size: 0.82rem;
+  font-weight: 700;
+  cursor: pointer;
+  transition: all 0.18s cubic-bezier(0.4, 0, 0.2, 1);
+  box-shadow: 0 2px 14px rgba(99, 102, 241, 0.35);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.45rem;
+}
+
+.generateButton:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 4px 22px rgba(99, 102, 241, 0.5);
+}
+
+.generateButton:disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
+  transform: none;
+}
+
+.backLink {
+  display: block;
+  margin-top: 0.55rem;
+  background: none;
+  border: none;
+  color: #475569;
+  font-family: 'Inter', system-ui, sans-serif;
+  font-size: 0.75rem;
+  cursor: pointer;
+  text-align: center;
+  width: 100%;
+  padding: 0.25rem;
+  transition: color 0.15s;
+  border-radius: 6px;
+}
+.backLink:hover { color: #94A3B8; }
+
+/* ══════════════════════════════════════════════════════
+   PROGRESS / CREATING STATE
+══════════════════════════════════════════════════════ */
+
+.creatingCard {
+  background: #1C2640;
+  border: 1px solid rgba(148, 163, 184, 0.14);
+  border-radius: 12px;
+  padding: 0.9rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.65rem;
+}
+
+.creatingSpinner {
+  width: 24px;
+  height: 24px;
+  border: 2.5px solid rgba(99, 102, 241, 0.15);
+  border-top-color: #818CF8;
+  border-radius: 50%;
+  animation: spin 0.9s linear infinite;
+  align-self: center;
+}
+
+.creatingLabel {
+  font-family: 'Inter', system-ui, sans-serif;
+  font-size: 0.75rem;
+  color: #94A3B8;
+  text-align: center;
+  margin: 0;
+  line-height: 1.4;
+}
+
+.creatingHint {
+  font-family: 'Inter', system-ui, sans-serif;
+  font-size: 0.65rem;
+  color: #475569;
+  text-align: center;
+  margin: 0;
+}
+
+/* ── Progress bar ── */
+.progressWrapper {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.progressBar {
+  flex: 1;
+  height: 4px;
+  background: rgba(99, 102, 241, 0.12);
+  border-radius: 999px;
+  overflow: hidden;
+}
+
+.progressFill {
+  height: 100%;
+  background: linear-gradient(90deg, #6366F1, #818CF8);
+  border-radius: 999px;
+  transition: width 0.5s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.progressPct {
+  font-family: 'Inter', system-ui, sans-serif;
+  font-size: 0.65rem;
+  font-weight: 700;
+  color: #818CF8;
+  flex-shrink: 0;
+  min-width: 2.2rem;
+  text-align: right;
+}
+
+/* ── Stage list ── */
+.stageList {
+  display: flex;
+  gap: 4px;
+}
+
+.stageItem {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 3px;
+  padding: 0.35rem 0.2rem;
+  border-radius: 6px;
+  background: rgba(148, 163, 184, 0.04);
+  border: 1px solid transparent;
+  font-family: 'Inter', system-ui, sans-serif;
+  font-size: 0.56rem;
+  color: #475569;
+  font-weight: 600;
+  text-align: center;
+  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.stageDone {
+  background: rgba(16, 185, 129, 0.08);
+  border-color: rgba(16, 185, 129, 0.2);
+  color: #10B981;
+}
+
+.stageActive {
+  background: rgba(99, 102, 241, 0.1);
+  border-color: rgba(99, 102, 241, 0.3);
+  color: #818CF8;
+}
+
+.stageDot {
+  width: 5px;
+  height: 5px;
+  border-radius: 50%;
+  background: currentColor;
+  flex-shrink: 0;
+}
+
+/* ── New stage chip (redesigned) ── */
+.stageChip {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 3px;
+  padding: 0.35rem 0.2rem;
+  border-radius: 6px;
+  background: rgba(148, 163, 184, 0.04);
+  border: 1px solid transparent;
+  font-family: 'Inter', system-ui, sans-serif;
+  font-size: 0.56rem;
+  color: #475569;
+  font-weight: 600;
+  text-align: center;
+}
+
+.stageChipDone  { background: rgba(16,185,129,0.08);  border-color: rgba(16,185,129,0.2);  color: #10B981; }
+.stageChipActive{ background: rgba(99,102,241,0.1);   border-color: rgba(99,102,241,0.3);  color: #818CF8; }
+
+/* ══════════════════════════════════════════════════════
+   SUCCESS / COMPLETE STATE
+══════════════════════════════════════════════════════ */
+
+.successCard {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 1rem 0.75rem;
+  background: #1C2640;
+  border: 1px solid rgba(16, 185, 129, 0.2);
+  border-radius: 12px;
+  text-align: center;
+}
+
+.successIcon {
+  font-size: 1.6rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.successLabel {
+  font-family: 'Syne', -apple-system, BlinkMacSystemFont, sans-serif;
+  font-size: 0.88rem;
+  font-weight: 700;
+  color: #F5F5DC;
+  margin: 0;
+}
+
+.successMeta {
+  font-family: 'Inter', system-ui, sans-serif;
+  font-size: 0.7rem;
+  color: #64748B;
+  margin: 0;
+}
+
+/* ══════════════════════════════════════════════════════
+   FAILED / ERROR STATE
+══════════════════════════════════════════════════════ */
+
+.errorCard {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.55rem;
+  padding: 1rem 0.75rem;
+  background: rgba(239, 68, 68, 0.05);
+  border: 1px solid rgba(239, 68, 68, 0.2);
+  border-radius: 12px;
+  text-align: center;
+}
+
+.errorCardIcon {
+  font-size: 1.4rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.errorCardText {
+  font-family: 'Inter', system-ui, sans-serif;
+  font-size: 0.75rem;
+  color: #94A3B8;
+  margin: 0;
+  line-height: 1.5;
+}
+
+/* ══════════════════════════════════════════════════════
+   ANIMATIONS
+══════════════════════════════════════════════════════ */
+
+@keyframes spin {
+  to { transform: rotate(360deg); }
+}
+
+/* ══════════════════════════════════════════════════════
+   ACCESSIBILITY
+══════════════════════════════════════════════════════ */
+
+@media (prefers-reduced-motion: reduce) {
+  .creatingSpinner { animation: none; }
+  .progressFill    { transition: none; }
+  .jobsLoadingBar::after { animation: none; }
+}
+
+/* ══════════════════════════════════════════════════════
+   MOBILE
+══════════════════════════════════════════════════════ */
+
+@media (max-width: 768px) {
+  .scenarioItem { padding: 0.65rem 0.75rem; }
+  .typeButton   { padding: 0.5rem 0.25rem; }
+  .styleGrid    { grid-template-columns: repeat(2, 1fr); }
+}
+/* ── Stop generation (in the generating card) ──────────────────────────────── */
+.stopButton {
+  margin-top: 0.85rem;
+  width: 100%;
+  padding: 0.5rem 0.75rem;
+  border-radius: 8px;
+  border: 1px solid rgba(239, 68, 68, 0.35);
+  background: rgba(239, 68, 68, 0.08);
+  color: #F87171;
+  font-family: 'Inter', system-ui, sans-serif;
+  font-size: 0.72rem;
+  font-weight: 600;
+  letter-spacing: 0.02em;
+  cursor: pointer;
+  transition: all 0.15s cubic-bezier(0.4, 0, 0.2, 1);
+}
+.stopButton:hover  { background: rgba(239, 68, 68, 0.16); border-color: rgba(239, 68, 68, 0.55); }
+.stopButton:active { transform: scale(0.98); }
+
+/* ── Delete button on job cards ────────────────────────────────────────────── */
+.jobCardDelete {
+  flex-shrink: 0;
+  width: 26px;
+  height: 26px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border: 1px solid transparent;
+  border-radius: 7px;
+  background: transparent;
+  color: #64748B;
+  font-size: 0.8rem;
+  line-height: 1;
+  cursor: pointer;
+  opacity: 0.6;
+  transition: all 0.15s cubic-bezier(0.4, 0, 0.2, 1);
+}
+.jobCardDelete:hover {
+  opacity: 1;
+  color: #F87171;
+  background: rgba(239, 68, 68, 0.10);
+  border-color: rgba(239, 68, 68, 0.30);
+}

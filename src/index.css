@@ -11,3 +11,69 @@ code {
   font-family: source-code-pro, Menlo, Monaco, Consolas, 'Courier New',
     monospace;
 }
+/* ===================================================================
+   RIGHT PANEL LAYOUT — feed width CSS variable system
+   Import this once in App.js or index.css.
+
+   How it works:
+   - --feed-w is set here as a static default (256px desktop, 0 mobile)
+   - When the feed toggle is built, add ONE line to the toggle handler:
+       document.documentElement.style.setProperty('--feed-w', open ? '256px' : '42px');
+   - Every right-anchored fixed element reads this variable automatically.
+   =================================================================== */
+
+:root {
+  --feed-w: 0px;        /* mobile / no feed */
+}
+
+@media (min-width: 769px) {
+  :root {
+    --feed-w: 256px;    /* feed open by default on desktop */
+  }
+}
+
+/* ── FloatingScrollButton ──────────────────────────────────────────────
+   The scroll button lives inside .chat-panel-container which applies
+   CSS transform (breathing animation) as an inline style. A transform
+   on a parent creates a new stacking context — position:fixed children
+   are then fixed relative to THAT element, not the viewport.
+
+   This means the scroll button is already naturally contained within
+   the chat column and cannot overlap the feed panel.
+   No repositioning needed.
+
+   If breathing is ever disabled, add this as a fallback:           */
+
+/* .floating-scroll-button {
+  right: 16px;
+  bottom: 80px;
+} */
+
+
+/* ── SupportWidget collision guard ─────────────────────────────────────
+   The support widget IS fixed to the true viewport (mounted at app
+   root, outside the transformed chat container). It must shift left
+   by --feed-w so it never overlaps the feed panel.
+   Applied here as an override — SupportWidget.css also sets this.    */
+
+.sw-trigger {
+  right: calc(var(--feed-w) + 16px);
+  transition: right 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.sw-modal {
+  right: calc(var(--feed-w) + 16px);
+  transition: right 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+/* ── Mobile: support widget hidden (chat is full screen) ─────────────── */
+@media (max-width: 768px) {
+  .sw-trigger {
+    display: none;
+  }
+  .sw-modal {
+    right: 12px;
+    left: 12px;
+    width: auto;
+  }
+}

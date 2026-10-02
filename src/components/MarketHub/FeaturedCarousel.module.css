@@ -1,0 +1,642 @@
+/* src/components/MarketHub/FeaturedCarousel.module.css - 3-CARD LAYOUT VERSION
+ *
+ * Featured Carousel – 3-Card Side-by-Side Design
+ * Layout: Left (shorter) | Center (taller) | Right (shorter)
+ * Equal widths, different heights, vertical centering
+ */
+
+.carousel {
+  width: 100%;
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  padding: 24px 20px;
+  border-radius: 20px;
+  background:
+    radial-gradient(circle at top left, rgba(79, 70, 229, 0.3), transparent 55%),
+    radial-gradient(circle at bottom right, rgba(15, 23, 42, 0.95), transparent 60%),
+    var(--bg-surface, #020617);
+  border: 1px solid var(--border-subtle, rgba(148, 163, 184, 0.45));
+  box-shadow:
+    0 12px 32px rgba(15, 23, 42, 0.9),
+    0 0 0 1px rgba(15, 23, 42, 0.85);
+}
+
+/* =========================================
+ * 3-CARD GRID LAYOUT
+ * Equal widths (1fr 1fr 1fr)
+ * Vertical centering (align-items: center)
+ * ========================================= */
+
+.threeCardGrid {
+  display: grid;
+  grid-template-columns: 1fr 1fr 1fr;
+  gap: 0;
+  align-items: center; /* ✅ Vertical centering */
+  position: relative;
+}
+
+/* =========================================
+ * BASE CARD STYLES (shared)
+ * ========================================= */
+
+.card {
+  position: relative;
+  overflow: hidden;
+  border-radius: 16px;
+  background:
+    radial-gradient(circle at top left, rgba(30, 64, 175, 0.6), transparent 60%),
+    radial-gradient(circle at bottom right, rgba(8, 47, 73, 0.65), transparent 60%),
+    linear-gradient(to right, #020617, #020617);
+  border: 1px solid var(--border-medium, rgba(148, 163, 184, 0.5));
+  box-shadow:
+    0 8px 24px rgba(15, 23, 42, 0.85),
+    0 0 0 1px rgba(15, 23, 42, 0.8);
+  cursor: pointer;
+  transition:
+    transform 0.3s cubic-bezier(0.4, 0, 0.2, 1),
+    box-shadow 0.3s cubic-bezier(0.4, 0, 0.2, 1),
+    border-color 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.card:hover {
+  transform: translateY(-6px);
+  border-color: rgba(99, 102, 241, 0.7);
+  box-shadow:
+    0 12px 36px rgba(15, 23, 42, 0.95),
+    0 0 24px rgba(99, 102, 241, 0.5);
+  z-index: 10;
+}
+
+/* =========================================
+ * SIDE CARDS (shorter height)
+ * ========================================= */
+
+.sideCard {
+  min-height: 300px; /* ✅ Shorter */
+  max-height: 300px;
+}
+
+.sideCard:first-child {
+  border-top-right-radius: 0;
+  border-bottom-right-radius: 0;
+  border-right: none;
+}
+
+.sideCard:last-child {
+  border-top-left-radius: 0;
+  border-bottom-left-radius: 0;
+  border-left: none;
+}
+
+/* =========================================
+ * MAIN CARD (taller, more prominent)
+ * ========================================= */
+
+.mainCard {
+  min-height: 360px; /* ✅ Taller - extends above/below side cards */
+  max-height: 360px;
+  border: 2px solid rgba(99, 102, 241, 0.6);
+  box-shadow:
+    0 12px 40px rgba(15, 23, 42, 0.95),
+    0 0 32px rgba(99, 102, 241, 0.6);
+  z-index: 5;
+}
+
+/* =========================================
+ * CARD BACKGROUND & GRADIENT
+ * ========================================= */
+
+.cardBackground {
+  position: absolute;
+  inset: 0;
+  background-size: cover;
+  background-position: center;
+  opacity: 0.6; /* ✅ Increased from 0.35 - more prominent */
+  transition: all 0.3s ease;
+}
+
+.card:hover .cardBackground {
+  opacity: 0.75; /* ✅ Increased from 0.45 - even more visible on hover */
+  transform: scale(1.05);
+}
+
+.cardGradient {
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(
+    to bottom,
+    rgba(10, 15, 26, 0.5) 0%,     /* ✅ Lightened from 0.75 */
+    rgba(10, 15, 26, 0.65) 50%,   /* ✅ Lightened from 0.88 */
+    rgba(10, 15, 26, 0.8) 100%    /* ✅ Lightened from 0.95 */
+  );
+}
+
+/* =========================================
+ * CARD CONTENT LAYOUT
+ * ========================================= */
+
+.cardContent {
+  position: relative;
+  z-index: 1;
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  padding: 18px 16px;
+  gap: 12px;
+}
+
+.sideCard .cardContent {
+  padding: 14px 12px;
+  gap: 8px;
+}
+
+/* =========================================
+ * CARD HEADER
+ * ========================================= */
+
+.cardHeader {
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+}
+
+.sideCard .cardHeader {
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+}
+
+.avatar {
+  width: 56px;
+  height: 56px;
+  border-radius: 50%;
+  object-fit: cover;
+  border: 2px solid rgba(129, 140, 248, 0.8);
+  box-shadow:
+    0 0 0 1px rgba(15, 23, 42, 0.9),
+    0 4px 12px rgba(0, 0, 0, 0.7);
+  flex-shrink: 0;
+}
+
+.sideCard .avatar {
+  width: 48px;
+  height: 48px;
+}
+
+.cardInfo {
+  flex: 1;
+  min-width: 0;
+}
+
+.sideCard .cardInfo {
+  width: 100%;
+}
+
+/* =========================================
+ * BADGES
+ * ========================================= */
+
+.badges {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  flex-wrap: wrap;
+  margin-bottom: 6px;
+}
+
+.sideCard .badges {
+  justify-content: center;
+}
+
+.positionBadge,
+.featuredBadge {
+  padding: 3px 9px;
+  border-radius: 999px;
+  font-family: var(--font-body, 'Inter', system-ui, sans-serif);
+  font-size: 0.7rem;
+  font-weight: 600;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  background: rgba(15, 23, 42, 0.8);
+  border: 1px solid rgba(148, 163, 184, 0.5);
+  color: #94a3b8;
+  white-space: nowrap;
+}
+
+.featuredBadge {
+  background: linear-gradient(
+    to right,
+    rgba(99, 102, 241, 0.35),
+    rgba(129, 140, 248, 0.35)
+  );
+  border-color: rgba(99, 102, 241, 0.7);
+  color: #c7d2fe;
+}
+
+.positionBadge {
+  background: rgba(234, 179, 8, 0.2);
+  border-color: rgba(234, 179, 8, 0.6);
+  color: #fef08a;
+}
+
+/* =========================================
+ * TYPOGRAPHY
+ * ========================================= */
+
+.cardTitle {
+  font-family: var(--font-display, 'Syne', system-ui, sans-serif);
+  font-size: 1rem;
+  font-weight: 700;
+  letter-spacing: 0.01em;
+  color: var(--text-primary, #f9fafb);
+  margin: 0 0 4px;
+  line-height: 1.3;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.sideCard .cardTitle {
+  font-size: 0.9rem;
+}
+
+.domain {
+  font-family: var(--font-body, 'Inter', system-ui, sans-serif);
+  font-size: 0.75rem;
+  font-weight: 600;
+  color: var(--accent-primary, #6366f1);
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+}
+
+.sideCard .domain {
+  font-size: 0.7rem;
+}
+
+.description {
+  font-family: var(--font-body, 'Inter', system-ui, sans-serif);
+  font-size: 0.85rem;
+  line-height: 1.5;
+  color: var(--text-secondary, #cbd5e1);
+  margin: 0;
+  display: -webkit-box;
+  -webkit-line-clamp: 3;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+
+.sideCard .description {
+  font-size: 0.78rem;
+  -webkit-line-clamp: 2;
+}
+
+/* =========================================
+ * ENGAGEMENT METRICS
+ * ========================================= */
+
+.metrics {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin-top: auto;
+}
+
+.sideCard .metrics {
+  flex-direction: column;
+  gap: 5px;
+}
+
+.metric {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  padding: 5px 9px;
+  border-radius: 999px;
+  font-family: var(--font-body, 'Inter', system-ui, sans-serif);
+  font-size: 0.75rem;
+  font-weight: 500;
+  background: rgba(15, 23, 42, 0.8);
+  border: 1px solid rgba(148, 163, 184, 0.4);
+  color: var(--text-secondary, #94a3b8);
+}
+
+.sideCard .metric {
+  padding: 4px 8px;
+  font-size: 0.7rem;
+  justify-content: center;
+}
+
+.metric svg {
+  color: var(--accent-primary, #6366f1);
+  flex-shrink: 0;
+}
+
+/* =========================================
+ * ACTIONS
+ * ========================================= */
+
+.actions {
+  display: flex;
+  gap: 8px;
+  margin-top: 10px;
+}
+
+.sideCard .actions {
+  flex-direction: column;
+  gap: 6px;
+}
+
+.primaryBtn,
+.secondaryBtn {
+  padding: 7px 14px;
+  border-radius: 999px;
+  font-family: var(--font-body, 'Inter', system-ui, sans-serif);
+  font-size: 0.8rem;
+  font-weight: 600;
+  border: none;
+  cursor: pointer;
+  transition:
+    transform 0.2s ease,
+    box-shadow 0.2s ease,
+    filter 0.2s ease;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 4px;
+}
+
+.sideCard .primaryBtn,
+.sideCard .secondaryBtn {
+  padding: 6px 12px;
+  font-size: 0.75rem;
+}
+
+.primaryBtn {
+  background: linear-gradient(to right, #6366f1, #818cf8);
+  color: white;
+  box-shadow:
+    0 4px 14px rgba(99, 102, 241, 0.4);
+  flex: 1;
+}
+
+.primaryBtn:hover {
+  transform: translateY(-2px);
+  box-shadow:
+    0 6px 20px rgba(99, 102, 241, 0.6);
+  filter: brightness(1.05);
+}
+
+.secondaryBtn {
+  background: rgba(15, 23, 42, 0.85);
+  border: 1px solid rgba(148, 163, 184, 0.5);
+  color: var(--text-secondary, #cbd5e1);
+  flex: 0 0 auto;
+}
+
+.secondaryBtn:hover {
+  background: rgba(15, 23, 42, 0.95);
+  border-color: rgba(99, 102, 241, 0.7);
+  color: var(--text-primary, #f1f5f9);
+  transform: translateY(-1px);
+}
+
+/* =========================================
+ * NAVIGATION ARROWS
+ * ========================================= */
+
+.navButton {
+  position: absolute;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 42px;
+  height: 42px;
+  border-radius: 50%;
+  background:
+    radial-gradient(circle at 0 0, rgba(129, 140, 248, 0.4), transparent 60%),
+    rgba(15, 23, 42, 0.9);
+  border: 1px solid rgba(148, 163, 184, 0.55);
+  color: var(--text-primary, #e5e7eb);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  z-index: 20;
+  transition:
+    background 0.2s ease,
+    border-color 0.2s ease,
+    transform 0.2s ease,
+    box-shadow 0.2s ease;
+}
+
+.navButton:hover {
+  background:
+    radial-gradient(circle at 0 0, rgba(129, 140, 248, 0.55), transparent 60%),
+    rgba(15, 23, 42, 1);
+  border-color: var(--accent-primary, #6366f1);
+  box-shadow: 0 8px 20px rgba(99, 102, 241, 0.5);
+  transform: translateY(-50%) scale(1.05);
+}
+
+.prevButton {
+  left: -16px;
+}
+
+.nextButton {
+  right: -16px;
+}
+
+/* =========================================
+ * PROGRESS INDICATORS
+ * ========================================= */
+
+.indicators {
+  display: flex;
+  justify-content: center;
+  gap: 8px;
+  margin-top: 12px;
+}
+
+.indicator {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: rgba(148, 163, 184, 0.4);
+  border: none;
+  padding: 0;
+  cursor: pointer;
+  transition:
+    background 0.2s ease,
+    transform 0.2s ease,
+    width 0.2s ease;
+}
+
+.indicator:hover {
+  background: rgba(148, 163, 184, 0.7);
+  transform: scale(1.1);
+}
+
+.indicator.active {
+  width: 8px; /* ✅ Keep as dot, not pill */
+  border-radius: 50%;
+  background: linear-gradient(to right, #6366f1, #818cf8);
+  box-shadow: 0 2px 8px rgba(99, 102, 241, 0.5);
+  transform: scale(1.3); /* Slightly larger but still circular */
+}
+
+/* =========================================
+ * LOADING STATE
+ * ========================================= */
+
+.loadingContainer {
+  padding: 20px;
+}
+
+.loadingCard {
+  height: 300px;
+  border-radius: 16px;
+  background: linear-gradient(
+    90deg,
+    rgba(30, 41, 59, 0.9) 0%,
+    rgba(51, 65, 85, 0.9) 20%,
+    rgba(30, 41, 59, 0.9) 40%
+  );
+  background-size: 200% 100%;
+  animation: shimmer 1.2s infinite;
+}
+
+.loadingMain {
+  height: 360px; /* Match main card height */
+}
+
+@keyframes shimmer {
+  0% { background-position: 200% 0; }
+  100% { background-position: -200% 0; }
+}
+
+/* =========================================
+ * EMPTY STATE
+ * ========================================= */
+
+.emptyState {
+  padding: 40px 20px;
+  border-radius: 16px;
+  background: rgba(15, 23, 42, 0.96);
+  border: 1px dashed var(--border-medium, rgba(148, 163, 184, 0.6));
+  text-align: center;
+  font-family: var(--font-body, 'Inter', system-ui, sans-serif);
+  color: var(--text-secondary, #9ca3af);
+}
+
+.emptyState h3 {
+  margin: 0 0 8px;
+  font-family: var(--font-display, 'Syne', system-ui, sans-serif);
+  font-size: 1.1rem;
+  color: var(--text-primary, #f9fafb);
+}
+
+.emptyState p {
+  margin: 0;
+  font-size: 0.9rem;
+}
+
+.emptyIcon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 64px;
+  height: 64px;
+  border-radius: 50%;
+  margin-bottom: 12px;
+  background:
+    radial-gradient(circle at 0 0, rgba(129, 140, 248, 0.4), transparent 60%),
+    rgba(15, 23, 42, 0.9);
+  border: 1px solid rgba(148, 163, 184, 0.7);
+  color: var(--accent-primary, #6366f1);
+}
+
+/* =========================================
+ * RESPONSIVE
+ * ========================================= */
+
+@media (max-width: 1200px) {
+  .threeCardGrid {
+    gap: 0;
+  }
+}
+
+@media (max-width: 968px) {
+  .carousel {
+    padding: 16px 12px;
+  }
+
+  .sideCard {
+    min-height: 280px;
+    max-height: 280px;
+  }
+
+  .mainCard {
+    min-height: 340px;
+    max-height: 340px;
+  }
+
+  .cardContent {
+    padding: 14px 12px;
+  }
+
+  .sideCard .cardContent {
+    padding: 12px 10px;
+  }
+}
+
+@media (max-width: 768px) {
+  /* Mobile: Show only center card in stack */
+  .threeCardGrid {
+    grid-template-columns: 1fr;
+    gap: 16px;
+  }
+
+  .sideCard {
+    display: none; /* Hide side cards on mobile */
+  }
+
+  .mainCard {
+    min-height: 320px;
+    max-height: none;
+    border-radius: 16px;
+    border: 2px solid rgba(99, 102, 241, 0.6);
+  }
+
+  .navButton {
+    width: 36px;
+    height: 36px;
+  }
+
+  .prevButton {
+    left: -12px;
+  }
+
+  .nextButton {
+    right: -12px;
+  }
+
+  /* ✅ Hide indicators on mobile - auto-advance only */
+  .indicators {
+    display: none;
+  }
+}
+
+@media (max-width: 480px) {
+  .carousel {
+    padding: 12px 8px;
+  }
+
+  .cardContent {
+    padding: 12px 10px;
+  }
+
+  .navButton {
+    display: none; /* Hide arrows on very small screens */
+  }
+}

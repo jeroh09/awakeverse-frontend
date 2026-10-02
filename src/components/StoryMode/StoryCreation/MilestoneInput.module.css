@@ -1,0 +1,371 @@
+/* src/components/StoryMode/StoryCreation/MilestoneInput.module.css */
+
+.milestoneInput {
+  margin-top: 1.5rem;
+  padding: 1.25rem;
+  background: rgba(15, 23, 42, 0.6);
+  border: 1px solid rgba(148, 163, 184, 0.2);
+  border-radius: 12px;
+}
+
+.sectionHeader {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 1rem;
+}
+
+.sectionLabel {
+  font-family: 'Syne', system-ui, sans-serif;
+  font-size: 0.95rem;
+  font-weight: 600;
+  color: #e2e8f0;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+.sectionHint {
+  font-family: 'Inter', system-ui, sans-serif;
+  font-size: 0.8rem;
+  color: #94a3b8;
+}
+
+/* ============================================================================
+   GENERATING STATE
+   ============================================================================ */
+
+.generatingState {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  padding: 1.5rem;
+  text-align: center;
+  color: #94a3b8;
+}
+
+.generatingState p {
+  margin: 0;
+  font-family: 'Inter', system-ui, sans-serif;
+  font-size: 0.9rem;
+}
+
+.spinner {
+  display: inline-block;
+  width: 18px;
+  height: 18px;
+  border: 2px solid rgba(99, 102, 241, 0.2);
+  border-top-color: #6366f1;
+  border-radius: 50%;
+  animation: spin 0.8s linear infinite;
+}
+
+@keyframes spin {
+  to { transform: rotate(360deg); }
+}
+
+/* ============================================================================
+   MILESTONES LIST
+   ============================================================================ */
+
+.milestonesList {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+  margin-bottom: 1rem;
+}
+
+.milestoneItem {
+  background: rgba(15, 23, 42, 0.8);
+  border: 1px solid rgba(148, 163, 184, 0.25);
+  border-radius: 8px;
+  padding: 0.75rem;
+  transition: border-color 0.2s ease;
+}
+
+.milestoneItem:hover {
+  border-color: rgba(148, 163, 184, 0.4);
+}
+
+.milestoneHeader {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 0.5rem;
+}
+
+.milestoneNumber {
+  font-family: 'Syne', system-ui, sans-serif;
+  font-size: 0.85rem;
+  font-weight: 600;
+  color: #6366f1;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+.deleteButton {
+  background: none;
+  border: none;
+  color: #94a3b8;
+  font-size: 1.5rem;
+  line-height: 1;
+  cursor: pointer;
+  padding: 0;
+  width: 24px;
+  height: 24px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 4px;
+  transition: background 0.2s ease, color 0.2s ease;
+}
+
+.deleteButton:hover:not(:disabled) {
+  background: rgba(239, 68, 68, 0.1);
+  color: #ef4444;
+}
+
+.deleteButton:disabled {
+  opacity: 0.3;
+  cursor: not-allowed;
+}
+
+.milestoneTextarea {
+  width: 100%;
+  min-height: 60px;
+  padding: 0.65rem;
+  font-family: 'Inter', system-ui, sans-serif;
+  font-size: 0.9rem;
+  line-height: 1.5;
+  color: #e2e8f0;
+  background: rgba(15, 23, 42, 0.9);
+  border: 1px solid rgba(148, 163, 184, 0.3);
+  border-radius: 6px;
+  resize: vertical;
+  transition: border-color 0.2s ease, box-shadow 0.2s ease;
+}
+
+.milestoneTextarea:focus {
+  outline: none;
+  border-color: #6366f1;
+  box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.1);
+}
+
+.milestoneTextarea.invalid {
+  border-color: #ef4444;
+}
+
+.milestoneTextarea::placeholder {
+  color: #64748b;
+}
+
+.milestoneValidation {
+  margin-top: 0.35rem;
+  font-family: 'Inter', system-ui, sans-serif;
+  font-size: 0.75rem;
+  color: #94a3b8;
+}
+
+/* ============================================================================
+   ACTIONS ROW
+   ============================================================================ */
+
+.actionsRow {
+  display: flex;
+  gap: 0.75rem;
+  flex-wrap: wrap;
+}
+
+.addButton,
+.regenerateButton {
+  padding: 0.65rem 1.25rem;
+  font-family: 'Inter', system-ui, sans-serif;
+  font-size: 0.85rem;
+  font-weight: 500;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  border: 1px solid;
+}
+
+.addButton {
+  background: rgba(99, 102, 241, 0.1);
+  border-color: rgba(99, 102, 241, 0.3);
+  color: #a5b4fc;
+}
+
+.addButton:hover {
+  background: rgba(99, 102, 241, 0.2);
+  border-color: #6366f1;
+  transform: translateY(-1px);
+}
+
+.regenerateButton {
+  background: rgba(15, 23, 42, 0.6);
+  border-color: rgba(148, 163, 184, 0.3);
+  color: #cbd5e1;
+}
+
+.regenerateButton:hover {
+  background: rgba(15, 23, 42, 0.8);
+  border-color: rgba(148, 163, 184, 0.5);
+  transform: translateY(-1px);
+}
+
+/* ============================================================================
+   MESSAGES
+   ============================================================================ */
+
+.warningMessage,
+.errorMessage {
+  padding: 0.75rem;
+  border-radius: 6px;
+  font-family: 'Inter', system-ui, sans-serif;
+  font-size: 0.85rem;
+  margin-top: 0.75rem;
+}
+
+.warningMessage {
+  background: rgba(245, 158, 11, 0.1);
+  border: 1px solid rgba(245, 158, 11, 0.3);
+  color: #fbbf24;
+}
+
+.errorMessage {
+  background: rgba(239, 68, 68, 0.1);
+  border: 1px solid rgba(239, 68, 68, 0.3);
+  color: #fca5a5;
+}
+
+.helpText {
+  margin-top: 0.75rem;
+  padding: 0.75rem;
+  background: rgba(99, 102, 241, 0.05);
+  border: 1px solid rgba(99, 102, 241, 0.2);
+  border-radius: 6px;
+  font-family: 'Inter', system-ui, sans-serif;
+  font-size: 0.8rem;
+  color: #cbd5e1;
+  line-height: 1.5;
+}
+
+/* ============================================================================
+   MOBILE VIEW
+   ============================================================================ */
+
+.milestoneInputMobile {
+  margin-top: 1.5rem;
+  padding: 1rem;
+  background: rgba(15, 23, 42, 0.6);
+  border: 1px solid rgba(148, 163, 184, 0.2);
+  border-radius: 12px;
+}
+
+.mobileHeader {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 0.75rem;
+}
+
+.expandButton {
+  padding: 0.5rem 1rem;
+  background: rgba(99, 102, 241, 0.15);
+  border: 1px solid rgba(99, 102, 241, 0.3);
+  border-radius: 6px;
+  color: #a5b4fc;
+  font-family: 'Inter', system-ui, sans-serif;
+  font-size: 0.85rem;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.expandButton:hover {
+  background: rgba(99, 102, 241, 0.25);
+  border-color: #6366f1;
+}
+
+.generatingNote {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.75rem;
+  font-family: 'Inter', system-ui, sans-serif;
+  font-size: 0.85rem;
+  color: #94a3b8;
+}
+
+.mobilePreview {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.previewChip {
+  padding: 0.5rem 0.75rem;
+  background: rgba(15, 23, 42, 0.8);
+  border: 1px solid rgba(148, 163, 184, 0.25);
+  border-radius: 6px;
+  font-family: 'Inter', system-ui, sans-serif;
+  font-size: 0.8rem;
+  color: #cbd5e1;
+  line-height: 1.4;
+}
+
+.moreIndicator {
+  padding: 0.4rem 0.75rem;
+  text-align: center;
+  font-family: 'Inter', system-ui, sans-serif;
+  font-size: 0.75rem;
+  color: #64748b;
+  font-style: italic;
+}
+
+.mobileBackButton {
+  margin-bottom: 1rem;
+}
+
+.mobileBackButton button {
+  padding: 0.5rem 1rem;
+  background: rgba(15, 23, 42, 0.6);
+  border: 1px solid rgba(148, 163, 184, 0.3);
+  border-radius: 6px;
+  color: #cbd5e1;
+  font-family: 'Inter', system-ui, sans-serif;
+  font-size: 0.85rem;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.mobileBackButton button:hover {
+  background: rgba(15, 23, 42, 0.8);
+  border-color: rgba(148, 163, 184, 0.5);
+}
+
+/* ============================================================================
+   RESPONSIVE
+   ============================================================================ */
+
+@media (max-width: 768px) {
+  .milestoneInput {
+    padding: 1rem;
+  }
+
+  .sectionLabel {
+    font-size: 0.9rem;
+  }
+
+  .milestoneTextarea {
+    font-size: 0.85rem;
+    min-height: 70px;
+  }
+
+  .actionsRow {
+    flex-direction: column;
+  }
+
+  .addButton,
+  .regenerateButton {
+    width: 100%;
+    text-align: center;
+  }
+}

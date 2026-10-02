@@ -1,0 +1,440 @@
+/* 
+ * ParticipantAvatars.css
+ * Floating avatar orbs for multi-speaker debates
+ * Mobile-first responsive design with breathing animations
+ */
+
+/* ===== CONTAINER ===== */
+.participant-avatars-container {
+  display: flex;
+  align-items: center;
+  padding: 2rem 0.5rem;
+  gap: 2rem;
+  background: transparent;
+  overflow-y: auto;
+  overflow-x: hidden;
+}
+
+/* Desktop: Vertical stacking */
+.participant-avatars-container.desktop {
+  flex-direction: column;
+  justify-content: flex-start;
+}
+
+/* Mobile: Horizontal scrolling */
+.participant-avatars-container.mobile {
+  flex-direction: row;
+  padding: 1rem;
+  gap: 1rem;
+  overflow-x: auto;
+  overflow-y: hidden;
+  scrollbar-width: thin;
+}
+
+/* Mobile scrollbar */
+.participant-avatars-container.mobile::-webkit-scrollbar {
+  height: 4px;
+}
+
+.participant-avatars-container.mobile::-webkit-scrollbar-thumb {
+  background: var(--chat-accent-primary, #3498db);
+  border-radius: 2px;
+}
+
+/* ===== PARTICIPANT ORB ===== */
+.participant-orb {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.5rem;
+  position: relative;
+  animation: fadeInScale 0.5s ease-out backwards;
+}
+
+/* Desktop sizing */
+.desktop .participant-orb {
+  width: 100px;
+}
+
+/* Mobile sizing */
+.mobile .participant-orb {
+  width: 80px;
+  min-width: 80px;
+}
+
+/* ===== ORB RING WRAPPER ===== */
+.orb-ring-wrapper {
+  position: relative;
+  width: 80px;
+  height: 80px;
+}
+
+.mobile .orb-ring-wrapper {
+  width: 60px;
+  height: 60px;
+}
+
+/* ===== EMOTION RING (Simplified for Scenarios) ===== */
+.emotion-ring-scenarios {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  width: 100%;
+  height: 100%;
+  pointer-events: none;
+  transition: all 0.3s ease;
+  z-index: 1;
+}
+
+.emotion-ring-scenarios.active {
+  transform: translate(-50%, -50%) scale(1.05);
+}
+
+/* Ring layers */
+.ring-primary,
+.ring-secondary,
+.ring-active {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  border-radius: 50%;
+  pointer-events: none;
+}
+
+/* Primary ring - main breathing */
+.ring-primary {
+  border: 3px solid var(--ring-color, #3498db);
+  opacity: var(--ring-opacity, 0.6);
+  animation: breathe var(--breathing-speed, 6s) ease-in-out infinite;
+}
+
+/* Secondary ring - reverse breathing for depth */
+.ring-secondary {
+  border: 2px solid var(--ring-color, #3498db);
+  opacity: calc(var(--ring-opacity, 0.6) * 0.5);
+  animation: breathe var(--breathing-speed, 6s) ease-in-out infinite reverse;
+  transform: scale(1.1);
+}
+
+/* Active ring - only for speaking participants */
+.ring-active {
+  border: 2px solid #FFD700;
+  opacity: 0.8;
+  animation: activePulse 2s ease-in-out infinite;
+  transform: scale(1.15);
+}
+
+/* ===== AVATAR IMAGE ===== */
+.orb-avatar {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  width: 80px;
+  height: 80px;
+  border-radius: 50%;
+  overflow: hidden;
+  border: 3px solid var(--chat-border-color, #dee2e6);
+  background: linear-gradient(135deg, var(--chat-accent-primary, #3498db), var(--chat-accent-secondary, #2980b9));
+  box-shadow: 0 4px 12px var(--chat-shadow, rgba(0, 0, 0, 0.1));
+  z-index: 2;
+  transition: all 0.3s ease;
+}
+
+.mobile .orb-avatar {
+  width: 60px;
+  height: 60px;
+}
+
+/* Active state - gold border */
+.participant-orb.active .orb-avatar {
+  border-color: #FFD700;
+  box-shadow: 0 0 20px rgba(255, 215, 0, 0.4);
+}
+
+/* ===== IMAGE & FALLBACK ===== */
+.orb-image {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  border-radius: 50%;
+}
+
+.orb-initial {
+  width: 100%;
+  height: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.5rem;
+  font-weight: bold;
+  color: white;
+  text-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
+}
+
+.mobile .orb-initial {
+  font-size: 1.2rem;
+}
+
+/* ===== SPEAKING INDICATOR ===== */
+.speaking-indicator {
+  position: absolute;
+  top: -4px;
+  right: -4px;
+  width: 16px;
+  height: 16px;
+  background: #4CAF50;
+  border-radius: 50%;
+  border: 2px solid var(--chat-bg-primary, #f8f9fa);
+  animation: blink 1.5s ease-in-out infinite;
+  z-index: 10;
+}
+
+.mobile .speaking-indicator {
+  width: 14px;
+  height: 14px;
+  top: -2px;
+  right: -2px;
+}
+
+/* ===== CHARACTER LABEL ===== */
+.orb-label {
+  text-align: center;
+  font-size: 0.75rem;
+  color: var(--chat-text-secondary, #6c757d);
+  max-width: 90px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-weight: 500;
+}
+
+.mobile .orb-label {
+  font-size: 0.7rem;
+  max-width: 70px;
+}
+
+.participant-orb.active .orb-label {
+  color: var(--chat-accent-primary, #3498db);
+  font-weight: 600;
+}
+
+/* ===== ANIMATIONS ===== */
+
+/* Fade in with scale */
+@keyframes fadeInScale {
+  from {
+    opacity: 0;
+    transform: scale(0.8);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+/* Breathing animation for rings */
+@keyframes breathe {
+  0%, 100% {
+    transform: scale(1);
+    opacity: var(--ring-opacity, 0.6);
+  }
+  50% {
+    transform: scale(var(--breathing-scale, 1.03));
+    opacity: calc(var(--ring-opacity, 0.6) * 1.2);
+  }
+}
+
+/* Active pulse for speaking participant */
+@keyframes activePulse {
+  0%, 100% {
+    opacity: 0.6;
+    transform: scale(1.15);
+  }
+  50% {
+    opacity: 1;
+    transform: scale(1.2);
+  }
+}
+
+/* Speaking indicator blink */
+@keyframes blink {
+  0%, 100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.3;
+  }
+}
+
+/* ===== THEME VARIANTS ===== */
+
+/* AwakeVerse (Dark) Theme */
+.theme-awakeverse .orb-avatar {
+  border-color: rgba(52, 152, 219, 0.3);
+  box-shadow: 0 4px 12px rgba(52, 152, 219, 0.3);
+}
+
+.theme-awakeverse .participant-orb.active .orb-avatar {
+  border-color: #FFD700;
+  box-shadow: 0 0 20px rgba(255, 215, 0, 0.5);
+}
+
+.theme-awakeverse .orb-label {
+  color: var(--chat-text-secondary, #a8c5da);
+}
+
+.theme-awakeverse .participant-orb.active .orb-label {
+  color: #FFD700;
+}
+
+.theme-awakeverse .speaking-indicator {
+  border-color: rgba(13, 27, 42, 0.9);
+}
+
+/* ===== ACCESSIBILITY ===== */
+
+/* Reduce motion for users who prefer it */
+@media (prefers-reduced-motion: reduce) {
+  .participant-orb,
+  .emotion-ring-scenarios,
+  .orb-avatar {
+    animation: none !important;
+    transition: none !important;
+  }
+  
+  .ring-primary,
+  .ring-secondary,
+  .ring-active {
+    animation: none !important;
+  }
+  
+  .speaking-indicator {
+    animation: none !important;
+    opacity: 1 !important;
+  }
+}
+
+/* Focus states for accessibility */
+.participant-orb:focus-visible {
+  outline: 2px solid var(--chat-accent-primary, #3498db);
+  outline-offset: 4px;
+  border-radius: 50%;
+}
+
+/* ===== RESPONSIVE BREAKPOINTS ===== */
+
+/* Tablet (768px - 1024px) */
+@media (min-width: 768px) and (max-width: 1024px) {
+  .participant-avatars-container.desktop {
+    gap: 1.5rem;
+    padding: 1.5rem 0.5rem;
+  }
+  
+  .orb-ring-wrapper {
+    width: 70px;
+    height: 70px;
+  }
+  
+  .orb-avatar {
+    width: 70px;
+    height: 70px;
+  }
+}
+
+/* Small mobile (< 480px) */
+@media (max-width: 480px) {
+  .mobile .orb-ring-wrapper {
+    width: 50px;
+    height: 50px;
+  }
+  
+  .mobile .orb-avatar {
+    width: 50px;
+    height: 50px;
+  }
+  
+  .mobile .orb-initial {
+    font-size: 1rem;
+  }
+  
+  .mobile .orb-label {
+    font-size: 0.65rem;
+    max-width: 60px;
+  }
+}
+
+/* ===== DEFENSIVE ERROR STATES ===== */
+
+/* Image loading error - show fallback gracefully */
+.orb-image[src=""],
+.orb-image:not([src]) {
+  display: none;
+}
+
+/* Empty state - no participants */
+.participant-avatars-container:empty::after {
+  content: 'No participants';
+  display: block;
+  padding: 2rem;
+  color: var(--chat-text-secondary, #6c757d);
+  font-style: italic;
+  text-align: center;
+}
+/* ADD THIS TO ParticipantAvatars.css - Queued state styles */
+
+/* Queued ring - glows but no pulsing dot */
+.emotion-ring-scenarios.queued {
+  transform: translate(-50%, -50%) scale(1.03);
+}
+
+.ring-queued {
+  border: 2px solid #FFD700;
+  opacity: 0.7;
+  animation: queuedGlow 3s ease-in-out infinite;
+  transform: scale(1.12);
+}
+
+/* Queued glow animation - subtle steady glow */
+@keyframes queuedGlow {
+  0%, 100% {
+    opacity: 0.5;
+    transform: scale(1.12);
+  }
+  50% {
+    opacity: 0.8;
+    transform: scale(1.15);
+  }
+}
+
+/* Active + Queued participant styling */
+.participant-orb.queued .orb-avatar {
+  border-color: #FFD700;
+  box-shadow: 0 0 15px rgba(255, 215, 0, 0.3);
+}
+
+.participant-orb.queued .orb-label {
+  color: #FFA500;
+  font-weight: 600;
+}
+
+/* Theme-specific queued states */
+.theme-awakeverse .participant-orb.queued .orb-avatar {
+  border-color: #FFD700;
+  box-shadow: 0 0 20px rgba(255, 215, 0, 0.4);
+}
+
+.theme-awakeverse .participant-orb.queued .orb-label {
+  color: #FFD700;
+}
+
+/* Reduce motion - disable queued animations too */
+@media (prefers-reduced-motion: reduce) {
+  .ring-queued {
+    animation: none !important;
+    opacity: 0.7 !important;
+  }
+}

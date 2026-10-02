@@ -38,10 +38,10 @@ export default function Subprocessors() {
           <a href="/privacy">Privacy</a>
           <a href="/security">Security</a>
         </nav>
-        <h1>Awakeverse — Subprocessors</h1>
+        <h1>AwakeVerse — Subprocessors</h1>
         <p className="meta">Effective: 19 August 2025 • Last updated: 19 August 2025</p>
         <div className="intro-card">
-          This page lists the third-party subprocessors that Awakeverse uses to provide our services, 
+          This page lists the third-party subprocessors that AwakeVerse uses to provide our services, 
           as referenced in our Privacy Policy and Security & Data Protection Policy.
         </div>
       </header>
@@ -194,7 +194,7 @@ export default function Subprocessors() {
       </main>
 
       <footer className="document-footer">
-        <p>© {currentYear} Awakeverse Ltd. All rights reserved.</p>
+        <p>© {currentYear} AwakeVerse Ltd. All rights reserved.</p>
       </footer>
     </div>
   );
