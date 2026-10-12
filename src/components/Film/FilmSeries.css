@@ -305,3 +305,189 @@
   border-color: rgba(255,107,107,.45); background: rgba(255,107,107,.06);
   color: rgba(255,255,255,.85); cursor: default; font-size: 12px;
 }
+/* ═══ NETFLIX-STYLE EPISODES (2026-10-12) ═══════════════════════════════════════
+   Finished episodes wear their own thumbnail with the title stamped on it, wherever
+   an episode appears (tiles, shelf spines, open cards, the season board). --art is the
+   poster, --h a per-title hue for the glow, so a shelf reads as colourful as the films. */
+.fs-chip.preview{ background:rgba(245,158,11,.2); color:#FDE68A; }
+
+/* shelf spines: the poster shows through the glass, title still readable */
+.fs-book.has-art .fs-spine{ background:
+    linear-gradient(180deg, rgba(10,15,26,.15), rgba(10,15,26,.55) 55%, rgba(10,15,26,.85)),
+    var(--art) center/cover no-repeat; }
+.fs-book.has-art .fs-vt{ text-shadow:0 1px 3px rgba(0,0,0,.85); }
+/* open card: title stamped on the poster */
+.fs-cover-stamp{ position:absolute; left:8px; right:8px; bottom:7px; display:flex; align-items:baseline; gap:6px;
+  font-family:'Syne',sans-serif; font-weight:800; font-size:13px; line-height:1.15; color:#fff;
+  text-shadow:0 2px 6px rgba(0,0,0,.85); overflow:hidden; display:-webkit-box; -webkit-line-clamp:2; -webkit-box-orient:vertical; }
+.fs-cover-stamp b{ color:var(--c); margin-right:6px; }
+
+/* detail tabs */
+.fs-dtabs{ display:flex; gap:20px; border-bottom:1px solid rgba(148,163,184,.18); margin:0 0 14px; overflow-x:auto; scrollbar-width:none; }
+.fs-dtabs button{ border:0; background:none; padding:9px 0; color:var(--muted); font-weight:600; font-size:13.5px;
+  border-bottom:2px solid transparent; white-space:nowrap; cursor:pointer; }
+.fs-dtabs button:hover{ color:var(--ink); }
+.fs-dtabs button.is-on{ color:var(--ivory); border-color:var(--indigo); }
+
+/* the tile row */
+.fs-tilerow{ display:grid; grid-auto-flow:column; grid-auto-columns:minmax(150px,170px); gap:14px;
+  overflow-x:auto; padding:6px 2px 14px; scroll-snap-type:x proximity; }
+.fs-tile{ position:relative; aspect-ratio:2/3; border-radius:12px; overflow:hidden; cursor:pointer; scroll-snap-align:start;
+  border:1px solid rgba(245,245,220,.14); background:#0F1626; isolation:isolate;
+  transition:transform .22s cubic-bezier(.22,1,.36,1), box-shadow .22s ease, border-color .2s; }
+.fs-tile:hover,.fs-tile:focus-visible{ transform:translateY(-4px) scale(1.03); z-index:2;
+  border-color:hsl(var(--h,240) 70% 65% / .7);
+  box-shadow:0 18px 30px -12px rgba(0,0,0,.7), 0 0 26px -6px hsl(var(--h,240) 75% 60% / .55); }
+.fs-tile-art{ position:absolute; inset:0; z-index:-1; background:var(--art) center/cover no-repeat;
+  transition:transform .5s ease; }
+.fs-tile:hover .fs-tile-art{ transform:scale(1.06); }
+.fs-tile-art.is-blank{ background:
+    radial-gradient(120% 80% at 20% 10%, hsl(var(--h,240) 70% 55% / .85), transparent 60%),
+    linear-gradient(160deg, hsl(calc(var(--h,240) + 40) 55% 32%), hsl(var(--h,240) 45% 14%)); }
+.fs-tile::after{ content:''; position:absolute; inset:0; z-index:-1;
+  background:linear-gradient(180deg, rgba(0,0,0,.35) 0%, transparent 28%, transparent 45%, rgba(2,6,23,.92) 100%); }
+.fs-tile-num{ position:absolute; top:4px; left:9px; font-family:'Syne',sans-serif; font-weight:800; font-size:40px;
+  line-height:1; color:transparent; -webkit-text-stroke:1.5px rgba(255,255,255,.9); text-shadow:0 2px 10px rgba(0,0,0,.4); }
+.fs-tile-st{ position:absolute; top:9px; right:9px; font-size:9.5px; font-weight:800; letter-spacing:.04em;
+  text-transform:uppercase; padding:3px 7px; border-radius:6px; backdrop-filter:blur(6px); }
+.fs-tile-st.is-finished{ color:#A7F3D0; background:rgba(16,64,48,.8); }
+.fs-tile-st.is-preview{ color:#FDE68A; background:rgba(92,64,14,.8); }
+.fs-tile-st.is-rendering{ color:#FCD9A8; background:rgba(60,44,20,.82); }
+.fs-tile-st.is-review{ color:#C7D2FE; background:rgba(55,48,163,.75); }
+.fs-tile-st.is-draft{ color:#CBD5E1; background:rgba(30,41,66,.82); }
+.fs-tile-x{ position:absolute; top:34px; right:9px; width:24px; height:24px; border-radius:50%; border:0; cursor:pointer;
+  background:rgba(10,15,26,.72); color:#F5F1E6; font-size:15px; line-height:1; opacity:0; transition:opacity .15s, background .15s; }
+.fs-tile:hover .fs-tile-x,.fs-tile:focus-within .fs-tile-x{ opacity:1; }
+.fs-tile-x:hover{ background:rgba(239,68,68,.75); }
+.fs-tile-foot{ position:absolute; left:0; right:0; bottom:0; padding:10px; display:flex; flex-direction:column; gap:3px; }
+.fs-tile-ep{ font-size:10px; font-weight:700; letter-spacing:.12em; text-transform:uppercase; color:hsl(var(--h,240) 85% 78%); }
+.fs-tile-title{ font-family:'Syne',sans-serif; font-weight:800; font-size:14.5px; line-height:1.15; color:#fff;
+  text-shadow:0 2px 8px rgba(0,0,0,.9); display:-webkit-box; -webkit-line-clamp:3; -webkit-box-orient:vertical; overflow:hidden; }
+.fs-tile-acts{ display:flex; gap:6px; margin-top:6px; max-height:0; opacity:0; overflow:hidden;
+  transition:max-height .2s ease, opacity .2s ease; }
+.fs-tile:hover .fs-tile-acts,.fs-tile:focus-within .fs-tile-acts{ max-height:40px; opacity:1; }
+@media (hover:none){ .fs-tile-acts{ max-height:40px; opacity:1; } .fs-tile-x{ opacity:1; } }
+.fs-tile-btn{ flex:1; display:inline-flex; align-items:center; justify-content:center; gap:4px; border:0; cursor:pointer;
+  font-size:11.5px; font-weight:800; padding:6px 8px; border-radius:7px; color:#0A0E17; background:rgba(245,241,230,.95); }
+.fs-tile-btn.play{ background:#fff; }
+.fs-tile-btn.cta{ color:#fff; background:linear-gradient(135deg,#6366F1,#818CF8); }
+.fs-tile--add{ display:flex; flex-direction:column; align-items:center; justify-content:center; gap:8px; color:var(--indigo-lo);
+  border:1.5px dashed rgba(129,140,248,.5); background:rgba(129,140,248,.06); font-weight:700; font-size:13px; }
+.fs-tile--add:hover{ background:rgba(129,140,248,.12); transform:none; box-shadow:none; }
+
+/* locations as image cards */
+.fs-locgrid{ display:grid; grid-template-columns:repeat(auto-fill,minmax(160px,1fr)); gap:12px; }
+.fs-locard{ position:relative; aspect-ratio:16/10; border-radius:12px; overflow:hidden; border:1px solid rgba(245,245,220,.12);
+  background:linear-gradient(180deg, transparent 40%, rgba(2,6,23,.9)), var(--art) center/cover no-repeat; }
+.fs-locard-name{ position:absolute; left:10px; right:10px; bottom:8px; font-family:'Syne',sans-serif; font-weight:700;
+  font-size:13px; color:#fff; text-transform:capitalize; text-shadow:0 1px 4px rgba(0,0,0,.8); }
+.fs-locard .fs-lock{ top:8px; left:8px; }
+@media (prefers-reduced-motion:reduce){ .fs-tile,.fs-tile-art{ transition:none; } .fs-tile:hover{ transform:none; } }
+/* the tile row scrolls INSIDE the detail panel — never widens the page */
+.fs-series-wrap{ grid-template-columns:250px minmax(0,1fr); }
+.fs-detail{ min-width:0; }
+@media (max-width:760px){ .fs-series-wrap{ grid-template-columns:minmax(0,1fr); } }
+.fs-tile:hover .fs-tile-title,.fs-tile:focus-within .fs-tile-title{ -webkit-line-clamp:2; }
+
+/* ═══ SEASON BOARD (2026-10-12) ═════════════════════════════════════════════════
+   One poster-card per episode. A card with an episode wears that episode's thumbnail
+   with the title stamped on it; a planned card is a coloured poster (--h, per title). */
+.fs-sb{ display:flex; flex-direction:column; gap:12px; min-width:0; }
+.fs-sb-head{ display:flex; align-items:center; gap:10px; flex-wrap:wrap; }
+.fs-sb-grow{ flex:1 1 auto; }
+.fs-sb-threadrow{ display:flex; flex-wrap:wrap; gap:7px; align-items:center; }
+.fs-sb-thread{ display:inline-flex; align-items:center; gap:6px; font-size:12px; color:#cbd5e1; padding:4px 10px; border-radius:999px;
+  background:rgba(2,6,23,.5); border:1px solid hsl(var(--th) 70% 60% / .35); }
+.fs-sb-thread i{ width:8px; height:8px; border-radius:50%; background:hsl(var(--th) 75% 62%); }
+.fs-sb-thread.is-closed{ opacity:.55; text-decoration:line-through; }
+.fs-sb-confirm{ display:inline-flex; align-items:center; gap:8px; flex-wrap:wrap; font-size:12.5px; color:var(--muted);
+  padding:6px 8px 6px 12px; border-radius:11px; border:1px solid rgba(245,158,11,.35); background:rgba(245,158,11,.06); }
+.fs-sb-premise{ display:flex; flex-wrap:wrap; gap:8px; align-items:center; padding:12px; border-radius:12px;
+  border:1px dashed rgba(129,140,248,.45); background:rgba(99,102,241,.06); }
+.fs-sb-premise p{ width:100%; margin:0; font-size:12.5px; color:var(--muted); }
+.fs-sb-premise .fs-inp{ flex:1 1 260px; }
+.fs-sb-empty{ display:flex; flex-direction:column; gap:12px; align-items:flex-start; padding:22px; border-radius:16px; }
+.fs-sb-empty h3{ font-family:'Syne',sans-serif; color:var(--ivory); margin:0; font-size:17px; }
+.fs-sb-empty p{ color:var(--muted); font-size:13px; margin:0; max-width:62ch; line-height:1.55; }
+.fs-sb-acts{ display:flex; gap:8px; }
+
+.fs-sb-rail{ display:grid; grid-auto-flow:column; grid-auto-columns:minmax(220px,236px); gap:14px;
+  overflow-x:auto; padding:6px 2px 14px; scroll-snap-type:x proximity; }
+.fs-sb-card{ position:relative; isolation:isolate; display:flex; flex-direction:column; gap:7px; min-height:330px;
+  padding:12px; border-radius:14px; overflow:hidden; scroll-snap-align:start; color:var(--ink);
+  border:1px solid hsl(var(--h,240) 60% 60% / .28);
+  background:
+    radial-gradient(130% 70% at 0% 0%, hsl(var(--h,240) 70% 45% / .45), transparent 62%),
+    linear-gradient(170deg, hsl(calc(var(--h,240) + 30) 45% 20%), #0F1626 70%);
+  transition:transform .2s cubic-bezier(.22,1,.36,1), box-shadow .2s ease, border-color .2s; }
+.fs-sb-card:hover{ transform:translateY(-3px); border-color:hsl(var(--h,240) 70% 65% / .6);
+  box-shadow:0 16px 28px -14px rgba(0,0,0,.75), 0 0 22px -8px hsl(var(--h,240) 75% 60% / .5); }
+/* a card with an episode wears its poster */
+.fs-sb-card.has-art{ background:
+    linear-gradient(180deg, rgba(2,6,23,.55) 0%, rgba(2,6,23,.25) 30%, rgba(2,6,23,.82) 62%, rgba(2,6,23,.96) 100%),
+    var(--art) center/cover no-repeat; }
+.fs-sb-card.has-art .fs-sb-title{ font-size:18px; text-shadow:0 2px 10px rgba(0,0,0,.9); margin-top:auto; }
+.fs-sb-card.has-art .fs-sb-log{ color:#e2e8f0; display:-webkit-box; -webkit-line-clamp:3; -webkit-box-orient:vertical; overflow:hidden; }
+.fs-sb-card.is-next{ border-color:#6366F1; box-shadow:0 0 0 1px #6366F1, 0 0 26px -6px rgba(99,102,241,.55); }
+.fs-sb-card.is-editing{ transform:none; }
+.fs-sb-top{ display:flex; align-items:center; gap:6px; }
+.fs-sb-ep{ font-family:'Syne',sans-serif; font-weight:800; font-size:12px; color:#fff; letter-spacing:.06em; text-shadow:0 1px 4px rgba(0,0,0,.6); }
+.fs-sb-rel{ font-size:10.5px; font-weight:700; padding:2px 8px; border-radius:6px; color:#e2e8f0; background:rgba(2,6,23,.55); backdrop-filter:blur(6px); }
+.fs-sb-rel.is-continues{ color:#e0e7ff; background:rgba(99,102,241,.55); }
+.fs-sb-rel.is-pilot{ color:#FDE68A; background:rgba(92,64,14,.7); }
+.fs-sb-lock{ margin-left:auto; width:26px; height:26px; border-radius:8px; display:grid; place-items:center; cursor:pointer;
+  border:1px solid rgba(245,245,220,.2); background:rgba(2,6,23,.45); color:#94a3b8; }
+.fs-sb-lock[aria-pressed="true"]{ color:#F5F1E6; border-color:rgba(245,241,230,.55); background:rgba(245,241,230,.12); }
+.fs-sb-act{ align-self:flex-start; font-size:10px; font-weight:800; letter-spacing:.12em; text-transform:uppercase;
+  color:hsl(var(--h,240) 85% 78%); }
+.fs-sb-title{ font-family:'Syne',sans-serif; font-weight:800; font-size:16px; line-height:1.2; color:#fff; margin:0; }
+.fs-sb-log{ margin:0; font-size:12.5px; line-height:1.45; color:#cbd5e1; }
+.fs-sb-log.is-hint{ color:#94a3b8; font-style:italic; }
+.fs-sb-where{ font-size:11.5px; color:#94a3b8; }
+.fs-sb-threads{ display:flex; flex-wrap:wrap; gap:6px; }
+.fs-sb-th{ display:inline-flex; align-items:center; gap:4px; font-size:10.5px; color:#cbd5e1; }
+.fs-sb-th i{ width:7px; height:7px; border-radius:50%; background:hsl(var(--th) 75% 62%); }
+.fs-sb-th.is-close i{ background:transparent; box-shadow:inset 0 0 0 1.5px hsl(var(--th) 75% 62%); }
+.fs-sb-pull{ margin:0; font-size:12px; font-style:italic; color:#F5F1E6; border-left:2px solid #818CF8; padding-left:8px; }
+.fs-sb-foot{ margin-top:auto; display:flex; align-items:center; gap:6px; padding-top:4px; }
+.fs-sb-card.has-art .fs-sb-foot{ margin-top:6px; }
+.fs-sb-st{ font-size:10px; font-weight:800; letter-spacing:.04em; text-transform:uppercase; padding:3px 8px; border-radius:6px; }
+.fs-sb-st.is-finished{ color:#A7F3D0; background:rgba(16,64,48,.85); }
+.fs-sb-st.is-preview{ color:#FDE68A; background:rgba(92,64,14,.85); }
+.fs-sb-st.is-written{ color:#C7D2FE; background:rgba(55,48,163,.7); }
+.fs-sb-st.is-planned{ color:#CBD5E1; background:rgba(30,41,66,.85); }
+.fs-sb-mini{ border:1px solid rgba(245,245,220,.2); background:rgba(2,6,23,.45); color:#cbd5e1; font-size:11px; font-weight:700;
+  padding:4px 8px; border-radius:7px; cursor:pointer; display:inline-flex; align-items:center; }
+.fs-sb-mini:hover{ color:#fff; border-color:rgba(129,140,248,.6); }
+.fs-sb-mini.danger:hover{ color:#fca5a5; border-color:rgba(239,68,68,.6); }
+.fs-sb-mini:disabled,.fs-sb-btn:disabled{ opacity:.45; cursor:default; }
+.fs-sb-btn{ border:0; cursor:pointer; font-size:12px; font-weight:800; padding:6px 11px; border-radius:8px;
+  color:#0A0E17; background:rgba(245,241,230,.95); display:inline-flex; align-items:center; gap:4px; white-space:nowrap; }
+.fs-sb-btn.cta{ color:#fff; background:linear-gradient(135deg,#6366F1,#818CF8); box-shadow:0 2px 12px rgba(99,102,241,.4); }
+.fs-sb-btn.ghost{ color:#cbd5e1; background:transparent; box-shadow:inset 0 0 0 1px rgba(148,163,184,.35); }
+.fs-sb-btn.play{ padding:6px 8px; }
+.fs-sb-edit{ display:flex; flex-direction:column; gap:5px; }
+.fs-sb-edit .fs-inp{ padding:7px 9px; font-size:12.5px; border-radius:8px; }
+.fs-sb-lbl{ font-size:10px; font-weight:700; letter-spacing:.08em; text-transform:uppercase; color:#94a3b8; margin-top:3px; }
+.fs-sb-edrow{ display:flex; align-items:center; gap:5px; flex-wrap:wrap; margin-top:auto; }
+.fs-sb-add{ align-items:center; justify-content:center; text-align:center; gap:6px; cursor:pointer; color:#818CF8; font-weight:700;
+  border:1.5px dashed rgba(129,140,248,.5); background:rgba(129,140,248,.05); }
+.fs-sb-add:hover{ background:rgba(129,140,248,.1); transform:none; box-shadow:none; }
+.fs-sb-add small{ color:#64748B; font-weight:500; }
+
+/* New episode — start from a plan card */
+.fs-cardpick{ display:flex; flex-direction:column; gap:8px; }
+.fs-cp{ display:grid; grid-template-columns:20px minmax(0,1fr); gap:10px; align-items:start; text-align:left; cursor:pointer;
+  padding:10px 12px; border-radius:11px; border:1px solid var(--line); background:rgba(2,6,23,.6); color:var(--ink); transition:.15s; }
+.fs-cp:hover{ border-color:var(--line-hi); }
+.fs-cp.is-on{ border-color:var(--indigo); background:rgba(99,102,241,.1); }
+.fs-cp-dot{ width:18px; height:18px; border-radius:50%; border:1.6px solid rgba(148,163,184,.4); margin-top:1px; }
+.fs-cp.is-on .fs-cp-dot{ border-color:var(--indigo); background:radial-gradient(circle,#818CF8 0 42%,transparent 47%); }
+.fs-cp-txt b{ display:block; color:var(--ivory); font-size:13.5px; }
+.fs-cp-txt small{ display:block; color:var(--muted); font-size:12px; line-height:1.4; margin-top:2px; }
+.fs-chainbox summary{ cursor:pointer; font-size:11px; font-weight:700; letter-spacing:.5px; text-transform:uppercase; color:var(--dim); margin-bottom:9px; }
+@media (prefers-reduced-motion:reduce){ .fs-sb-card{ transition:none; } .fs-sb-card:hover{ transform:none; } }
+.fs-sb-foot{ gap:5px; }
+.fs-sb-foot .fs-sb-btn{ padding:6px 10px; }
+/* genre: same selected look as every other pill in the series modal; one-line hint */
+.fs-ghint{ font-size:12.5px; color:var(--muted); margin-top:8px; line-height:1.45; }

@@ -80,9 +80,12 @@ export const filmReassemble = (jobId, beats, captions) =>
     { beats, ...(captions != null ? { captions } : {}) },
     { timeout: QUEUE_TIMEOUT }).then(r => r.data);
 
-export const filmRegenerate = (jobId, beat_index, note, edited_text, present) =>
+// target_source_index (optional): on a MERGED clip, the atomic shot (one line) to
+// re-direct — the backend dissolves the clip and re-renders just that line's shot.
+export const filmRegenerate = (jobId, beat_index, note, edited_text, present, target_source_index) =>
   api.post(`/film/jobs/${jobId}/regenerate`,
     { beat_index, note: note || null, edited_text: edited_text || null,
+      ...(target_source_index != null ? { target_source_index } : {}),
       // an empty present list is never a valid instruction — it reads as
       // "cast of nobody" downstream (2026-08-21 narrator-wipe); omit unless
       // there are actual names
@@ -152,9 +155,11 @@ export const filmUploadCharacterImage = (jobId, name, photo_url) =>
   api.post(`/film/jobs/${jobId}/character-upload`, { name, photo_url }, { timeout: LLM_TIMEOUT }).then(r => r.data);
 
 // ── film projects (the "movie" record: chat + script + render history) ──
-export const filmCreateProject = ({ title, video_style, duration_seconds, aspect_ratio } = {}) =>
+// genre (optional, GENRE_ROOM): a key from filmGenres.js — sent only when chosen.
+export const filmCreateProject = ({ title, video_style, duration_seconds, aspect_ratio, genre } = {}) =>
   api.post('/film/projects',
-    { title, video_style, duration_seconds, aspect_ratio }, { timeout: QUEUE_TIMEOUT }).then(r => r.data);
+    { title, video_style, duration_seconds, aspect_ratio, ...(genre ? { genre } : {}) },
+    { timeout: QUEUE_TIMEOUT }).then(r => r.data);
 
 export const filmListProjects = () =>
   api.get('/film/projects').then(r => r.data);
@@ -230,17 +235,32 @@ export function creditsBlocked(e) {
 export const filmListSeries = () =>
   api.get('/film/series').then(r => r.data);
 
-export const filmCreateSeries = ({ title, video_style, aspect_ratio, canonical_bible } = {}) =>
+export const filmCreateSeries = ({ title, video_style, aspect_ratio, canonical_bible, genre } = {}) =>
   api.post('/film/series',
-    { title, video_style, aspect_ratio, canonical_bible },
+    { title, video_style, aspect_ratio, canonical_bible, ...(genre ? { genre } : {}) },
     { timeout: QUEUE_TIMEOUT }).then(r => r.data);
 
 // Returns { project_id, session_id, episode_ordinal, ... } — open the workspace
 // with (project_id, session_id) exactly like a new standalone film.
-export const filmCreateEpisode = (seriesId, { title, prior_episode_ids, duration_seconds } = {}) =>
+// plan_card (optional): the season-plan card (its n) this episode is made from — the
+// card joins the writers' room as a guide and links to the new episode.
+export const filmCreateEpisode = (seriesId, { title, prior_episode_ids, duration_seconds, plan_card } = {}) =>
   api.post(`/film/series/${seriesId}/episodes`,
-    { title, prior_episode_ids, duration_seconds },
+    { title, prior_episode_ids, duration_seconds, ...(Number.isInteger(plan_card) ? { plan_card } : {}) },
     { timeout: QUEUE_TIMEOUT }).then(r => r.data);
+
+// ── Season plan (SEASON_PLAN=1; every route 404s while the switch is off) ──────
+// GET → { series_id, plan: {threads, cards, size, based_on, …} | null, statuses: [{n, status, project_id}] }
+export const filmGetPlan = (seriesId) =>
+  api.get(`/film/series/${seriesId}/plan`).then(r => r.data);
+// POST → make the plan (one model call), or RE-PLAN with refresh:true (locked cards and
+// cards with episodes are kept). premise: one line that turns a skeleton into a story.
+export const filmMakePlan = (seriesId, { refresh = false, premise } = {}) =>
+  api.post(`/film/series/${seriesId}/plan`,
+    { refresh, ...(premise ? { premise } : {}) }, { timeout: LLM_TIMEOUT }).then(r => r.data);
+// PUT → save the user's edits (reorder, rewrite, lock, add, remove). The server cleans it.
+export const filmSavePlan = (seriesId, plan) =>
+  api.put(`/film/series/${seriesId}/plan`, { plan }, { timeout: QUEUE_TIMEOUT }).then(r => r.data);
 
 // Promote a finished (Ready) film into a new series — it becomes Episode 1.
 export const filmPromoteToSeries = (projectId, { title } = {}) =>
@@ -267,3 +287,31 @@ export const filmDeleteEpisode = (seriesId, projectId) =>
 // Never touches stored media (shared plate cache) — see film_routes cascade notes.
 export const filmDeleteSeries = (seriesId) =>
   api.delete(`/film/series/${seriesId}`, { timeout: QUEUE_TIMEOUT }).then(r => r.data);
+// ── Series episode workspace (2026-10-12). Each route 404s while its switch is off,
+//    so callers feature-detect: a 404 means "don't show this". ──────────────────
+// "Where we left off" (SERIES_CARRY): GET → {available, reason?, relation, relations,
+// previous_episode{ordinal,title}, ending{location,atmosphere}, characters[{name,
+// last_location, items[{text,kind,source,key,carried,resets,dropped}]}], open_threads, dropped}
+export const filmGetCarry = (projectId) =>
+  api.get(`/film/projects/${projectId}/carry`).then(r => r.data);
+// PUT {relation?: 'continues'|'later'|'new_setting', dropped?: ['NAME::item', …]} → the view
+export const filmSaveCarry = (projectId, body) =>
+  api.put(`/film/projects/${projectId}/carry`, body, { timeout: QUEUE_TIMEOUT }).then(r => r.data);
+
+// "Previously on" (SERIES_RECAP): GET → {available, reason?, on, current?, previous_episode,
+// candidates[{index,poster_url,seconds,speaker,line,visual,cliffhanger,suggested}],
+// voices[{id,label,preview_url?}], default_voice}
+export const filmGetRecap = (jobId) =>
+  api.get(`/film/jobs/${jobId}/recap`).then(r => r.data);
+// POST {on, beat_indices?, voice_id?|'none'} → 202; the job turns 'processing' — poll it.
+export const filmSetRecap = (jobId, { on, beat_indices, voice_id } = {}) =>
+  api.post(`/film/jobs/${jobId}/recap`,
+    { on: !!on, ...(Array.isArray(beat_indices) ? { beat_indices } : {}), ...(voice_id ? { voice_id } : {}) },
+    { timeout: QUEUE_TIMEOUT }).then(r => r.data);
+
+// "Review episode" (EPISODE_REVIEW): report only. → {hook{status,seconds,reason},
+// pull{status: strong|soft|resolved|unavailable, ending, why, options[{text, room_message}]},
+// plan_card, genre_ending}. script (optional) — the room's latest draft is used otherwise.
+export const filmReviewEpisode = (projectId, script) =>
+  api.post(`/film/projects/${projectId}/review-episode`, script ? { script } : {},
+    { timeout: LLM_TIMEOUT }).then(r => r.data);

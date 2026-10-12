@@ -8,11 +8,12 @@ import React, { useState, useMemo, useCallback, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import FilmWorkspace from './FilmWorkspace';
 import useFilmAuthoring from './useFilmAuthoring';
-import useFilmJob from './useFilmJob';
+import useFilmJob, { beatPayload } from './useFilmJob';
 import useCredits from '../../hooks/useCredits';
 import { InsufficientCard } from './CreditsUI';
 import FilmSeriesModals from './FilmSeriesModals';
-import { filmGetProject, filmUploadPhoto, filmUploadConsent, filmSaveScript, filmPromoteToSeries, friendlyError } from './filmApi';
+import { filmGetProject, filmUploadPhoto, filmUploadConsent, filmSaveScript, filmPromoteToSeries,
+         filmGetRecap, filmReviewEpisode, friendlyError } from './filmApi';
 
 const shotToCell = s => ({
   index: s.index,
@@ -200,8 +201,10 @@ export default function FilmWorkspaceContainer({
 
   const onCloseEdit = useCallback(() => setEditing(null), []);
   const onSaveEdit = useCallback(() => {
+    // a one-line edit of a merged clip is kept under its own key, never as the whole clip's
     if (editing) setEditsByIndex(m => ({ ...m,
-      [editing.index]: { visual: editing.visual, lines: editing.lines } }));
+      [editing.targetSourceIndex != null ? `${editing.index}:${editing.targetSourceIndex}` : editing.index]:
+        { visual: editing.visual, lines: editing.lines } }));
     setEditing(null);
   }, [editing]);
 
@@ -303,6 +306,21 @@ export default function FilmWorkspaceContainer({
   const onRegenerateFromEdit = useCallback(() => {
     if (!editing) return;
     const idx = editing.index;
+    if (editing.targetSourceIndex != null) {
+      // ONE LINE of a merged clip: the edit routes to that line's own shot; the clip splits
+      // into one shot per line (dissolve) and only this one is re-directed.
+      const o = editing.original || {};
+      const text = composeBeatScript(editing.visual, editing.lines);
+      const unchanged = text === composeBeatScript(o.visual, o.lines);
+      const presentChanged = JSON.stringify((editing.present || []).slice().sort())
+                             !== JSON.stringify((o.present || []).slice().sort());
+      setRegenBusyIndex(idx);
+      job.regenerate(idx, null, unchanged ? null : text,
+        (presentChanged && (editing.present || []).length) ? editing.present : undefined,
+        editing.targetSourceIndex);
+      setEditing(null);
+      return;
+    }
     const b = beats.find(x => x.index === idx);
     const text = composeBeatScript(editing.visual, editing.lines);
     // Honest payload (2026-08-21 incident): send edited_text only when the
@@ -331,19 +349,19 @@ export default function FilmWorkspaceContainer({
     job.regenerate(index, null, null);
   }, [job]);
 
+  // Cut / Duplicate send each beat AS STORED (beatPayload): the reassemble saves the
+  // list it receives, so the old display-only payload wiped every shot's visual, lines,
+  // cast, location and voices after one cut. Locked preview-wall cells are never sent.
   const onCut = useCallback((index) => {
-    const next = job.cells.filter(c => c.index !== index)
-      .map(c => ({ index: c.index, clip_url: c.clipUrl, seconds: c.seconds,
-                   speaker: c.speaker, caption: c.caption, kind: c.kind, durable: c.durable }));
+    const next = job.cells.filter(c => c.status !== 'locked' && c.index !== index).map(beatPayload);
     job.reassemble(next);
   }, [job]);
 
   const onDuplicate = useCallback((index) => {
     const out = [];
-    job.cells.forEach(c => {
-      out.push({ index: c.index, clip_url: c.clipUrl, seconds: c.seconds,
-                 speaker: c.speaker, caption: c.caption, kind: c.kind, durable: c.durable });
-      if (c.index === index) out.push({ ...out[out.length - 1] });
+    job.cells.filter(c => c.status !== 'locked').forEach(c => {
+      out.push(beatPayload(c));
+      if (c.index === index) out.push(JSON.parse(JSON.stringify(out[out.length - 1])));
     });
     job.reassemble(out);
   }, [job]);
@@ -364,6 +382,49 @@ export default function FilmWorkspaceContainer({
   // already in a series. (Fresh in-session films have seriesId===undefined → the
   // affordance appears on their next open, via the resume path.)
   const canPromote = seriesId === null && job.status === 'ready';
+
+  // ── SERIES EPISODE features (2026-10-12) — each feature-detects its own switch (404 → hidden) ──
+  const isEpisode = typeof seriesId === 'number';
+
+  // "Previously on": options for a finished episode; refreshed whenever an edit lands.
+  const [recap, setRecap] = useState(null);
+  useEffect(() => {
+    let off = false;
+    if (!isEpisode || !job.jobId || job.status !== 'complete' || job.editBusy) return undefined;
+    filmGetRecap(job.jobId).then((r) => { if (!off) setRecap(r); })
+      .catch(() => { if (!off) setRecap(null); });   // 404 = switch off / not ours → no bar
+    return () => { off = true; };
+  }, [isEpisode, job.jobId, job.status, job.editBusy]);
+  const onRecap = useCallback((opts) => job.recap(opts), [job]);
+
+  // "Review episode": a report the user asks for. 404 → the switch is off: hide the button.
+  const [review, setReview] = useState(null);
+  const [reviewOff, setReviewOff] = useState(false);
+  const onReview = useCallback(async () => {
+    setReview({ busy: true });
+    try { setReview({ data: await filmReviewEpisode(projectId, savedScript || undefined) }); }
+    catch (e) {
+      const st = e && e.response && e.response.status;
+      if (st === 404) { setReviewOff(true); setReview(null); return; }
+      setReview({ error: (e && e.response && e.response.data && e.response.data.error) || friendlyError(e) });
+    }
+  }, [projectId, savedScript]);
+
+  // One line of a merged clip, edited on its own (target_source_index on regenerate).
+  const onEditLine = useCallback((index, sourceIndex, lineNo) => {
+    const b = beats.find(x => x.index === index);
+    const sub = b && (b.subLines || []).find(l => l.sourceIndex === sourceIndex);
+    if (!sub) return;
+    const saved = editsByIndex[`${index}:${sourceIndex}`];
+    setEditing({
+      index, kind: b.kind, targetSourceIndex: sourceIndex, lineNo,
+      visual: saved ? saved.visual : sub.visual, present: (sub.present && sub.present.length) ? sub.present : (b.present || []),
+      lines: saved ? saved.lines : [{ speaker: sub.speaker, text: sub.text, kind: sub.kind }],
+      original: { visual: sub.visual, lines: [{ speaker: sub.speaker, text: sub.text, kind: sub.kind }],
+                  present: (sub.present && sub.present.length) ? sub.present : (b.present || []) },
+      activeSpeaker: sub.speaker || null,
+    });
+  }, [beats, editsByIndex]);
 
   // ── EDITORS' ROOM wiring (2026-08-25) ──
   // The tab unlocks when a rendered film with beats exists; the chat's intents
@@ -449,7 +510,17 @@ export default function FilmWorkspaceContainer({
       progress={job.progress}
       finalUrl={job.outputUrl}
       editBusy={job.editBusy}
+      notice={job.notice}
+      onDismissNotice={job.clearNotice}
       busyLabel={job.editBusy}
+      recap={isEpisode ? recap : null}
+      onRecap={isEpisode ? onRecap : null}
+      onEditLine={onEditLine}
+      carryProjectId={isEpisode ? projectId : null}
+      canReview={isEpisode && !reviewOff && !!(authoring.scriptReady || savedScript)}
+      onReview={onReview}
+      review={review}
+      onDismissReview={() => setReview(null)}
       regenBusyIndex={regenBusyIndex}
       onSelectBeat={onSelectBeat}
       onGenerate={onGenerate}

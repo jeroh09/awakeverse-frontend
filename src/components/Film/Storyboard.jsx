@@ -81,7 +81,7 @@ function Thumb({ beat, stageState }) {
           <video ref={videoRef} className="film-thumb-vid" src={posterSrc} playsInline preload="metadata"
                  controls={playing} onEnded={() => setPlaying(false)} />
           {N}
-          {!playing && <button className="film-play" onClick={play} aria-label="Play preview"><IconPlay s={16} /></button>}
+          {!playing && <button className="film-play" onClick={play} aria-label="Play preview" title="Play this shot"><IconPlay s={16} /></button>}
           {!playing && <span className="film-chip">Preview</span>}
           {!playing && Dur}
         </div>
@@ -96,16 +96,38 @@ function Thumb({ beat, stageState }) {
       {clipUrl && <video ref={videoRef} className="film-thumb-vid" src={posterSrc} playsInline preload="metadata"
                          controls={playing} onEnded={() => setPlaying(false)} />}
       {N}
-      {clipUrl && !playing && <button className="film-play" onClick={play} aria-label="Play shot"><IconPlay s={16} /></button>}
+      {clipUrl && !playing && <button className="film-play" onClick={play} aria-label="Play shot" title="Play this shot"><IconPlay s={16} /></button>}
       {!playing && <span className="film-chip">Final</span>}
       {!playing && Dur}
     </div>
   );
 }
 
-function Cell({ beat, stageState, selected, regenBusy, onSelect, onRegenerate, onDuplicate, onCut }) {
+function Cell({ beat, stageState, selected, regenBusy, onSelect, onRegenerate, onDuplicate, onCut,
+               onEditLine, onRemoveRecap }) {
   const { index, kind, speaker, caption, softened } = beat;
   const kindLabel = kind.replace('_', ' ');
+  // "PREVIOUSLY ON" (SERIES_RECAP): the recap is cut from the previous episode — it can't
+  // be regenerated, duplicated or cut like a shot; the recap bar above controls it.
+  if (kind === 'recap') {
+    const narration = (beat.raw && beat.raw.recap && beat.raw.recap.narration) || '';
+    return (
+      <article className="film-cell film-cell--recap" title="Previously on — built from the last episode; change it with the bar above">
+        <Thumb beat={beat} stageState={stageState} />
+        <div className="film-cfoot">
+          <div className="film-cfoot-row"><span className="film-badge film-badge--recap">Previously on</span></div>
+          <div className="film-cap">{narration || 'A recap of the last episode before this one starts.'}</div>
+          {stageState === 'edit' && onRemoveRecap && (
+            <div className="film-cell-ctrls" onClick={e => e.stopPropagation()}>
+              <button className="film-ctrl" onClick={onRemoveRecap}
+                      title="Take the recap off — the episode starts straight away">Remove recap</button>
+            </div>
+          )}
+        </div>
+      </article>
+    );
+  }
+  const subLines = beat.subLines || [];
   // PREVIEW WALL: a locked cell is a teaser of the un-rendered plan — caption
   // and kind visible, no thumb, no controls, not selectable. The pull is the
   // user's own next scene, sitting right there.
@@ -133,21 +155,38 @@ function Cell({ beat, stageState, selected, regenBusy, onSelect, onRegenerate, o
           <span className={`film-badge film-badge--${kind}`}>{kindLabel}</span>
           {softened && <span className="film-soft"><IconSoftened s={12} /> Softened</span>}
         </div>
-        <div className="film-cap">
-          {speaker ? <><span className="film-spk">{speaker}:</span> “{caption}”</> : caption}
-        </div>
+        {subLines.length ? (
+          // MERGED CLIP — one row per line; each line can be edited on its own.
+          <div className="film-lines">
+            {subLines.map((l, i) => (
+              <div className="film-line" key={l.sourceIndex}>
+                <span className="film-line-txt">{l.speaker && <span className="film-spk">{l.speaker}:</span>} “{l.text}”</span>
+                {stageState === 'edit' && onEditLine && (
+                  <button className="film-line-edit" onClick={(e) => { e.stopPropagation(); onEditLine(index, l.sourceIndex, i + 1); }}
+                          title={`Edit line ${i + 1} on its own — the clip splits into one shot per line`}>Edit</button>
+                )}
+              </div>
+            ))}
+          </div>
+        ) : (
+          <div className="film-cap">
+            {speaker ? <><span className="film-spk">{speaker}:</span> “{caption}”</> : caption}
+          </div>
+        )}
         {stageState === 'edit' && (
           <div className="film-cell-ctrls" onClick={e => e.stopPropagation()}>
             <button
               className="film-ctrl film-ctrl--regen"
               disabled={regenBusy}
               onClick={() => onRegenerate(index)}
+              title={subLines.length ? 'Make fresh takes of this clip — its lines are re-rendered as separate shots'
+                                     : 'Make a fresh take of this shot — same script, new render'}
             >
               {regenBusy ? <span className="film-ctrl-spin" /> : <IconRegenerate s={13} />}
               {regenBusy ? 'Regenerating…' : 'Regenerate'}
             </button>
-            <button className="film-ctrl" onClick={() => onDuplicate(index)}><IconDuplicate s={13} /> Duplicate</button>
-            <button className="film-ctrl film-ctrl--cut" onClick={() => onCut(index)}><IconCut s={13} /> Cut</button>
+            <button className="film-ctrl" onClick={() => onDuplicate(index)} title="Repeat this shot straight after itself"><IconDuplicate s={13} /> Duplicate</button>
+            <button className="film-ctrl film-ctrl--cut" onClick={() => onCut(index)} title="Remove this shot from the film — the rest stay as they are"><IconCut s={13} /> Cut</button>
             <span className="film-grip" title="Drag to reorder"><IconGrip s={15} /></span>
           </div>
         )}
@@ -195,10 +234,12 @@ function CastMember({ name, info, busy, onRedraw, onUpload }) {
               onChange={e => setDesc(e.target.value)}
               placeholder="Describe how they look…" />
             <div className="film-cast-actions">
-              <button className="film-cast-btn" disabled={busy} onClick={() => onRedraw(name, desc)}>
+              <button className="film-cast-btn" disabled={busy} onClick={() => onRedraw(name, desc)}
+                title="Draw this character again from the description above">
                 <IconRedraw s={14} /> Redraw
               </button>
-              <button className="film-cast-btn film-cast-btn--up" disabled={busy} onClick={() => onUpload(name)}>
+              <button className="film-cast-btn film-cast-btn--up" disabled={busy} onClick={() => onUpload(name)}
+                title="Turn your own photo into this character, redrawn in the film's style">
                 <IconUpload s={14} /> Use your own photo
               </button>
             </div>
@@ -338,10 +379,75 @@ function ConsentModal({ onAgree, onCancel }) {
           <span>I understand, and I have the right to use the images I upload.</span>
         </label>
         <div className="film-modal-foot">
-          <button className="film-btn film-btn--ghost" onClick={onCancel}>Cancel</button>
-          <button className="film-btn film-btn--primary" disabled={!agreed} onClick={onAgree}>Agree &amp; continue</button>
+          <button className="film-btn film-btn--ghost" onClick={onCancel} title="Close without uploading">Cancel</button>
+          <button className="film-btn film-btn--primary" disabled={!agreed} onClick={onAgree}
+                  title={agreed ? 'Record your agreement and choose a photo' : 'Tick the box first'}>Agree &amp; continue</button>
         </div>
       </div>
+    </div>
+  );
+}
+
+/* ── "PREVIOUSLY ON" bar (2026-10-12, SERIES_RECAP=1) — series episodes, finished films.
+   A toggle, the narrator voice, and the clips from the last episode (up to three; the
+   last episode's final beat always closes the recap). Turning it on or rebuilding it
+   re-cuts the film on this job, like any edit. Not counted in the episode's length. ── */
+const MAX_RECAP_CLIPS = 3;
+function RecapBar({ recap, busy, onRecap }) {
+  const cur = recap && recap.current;
+  const sugg = ((recap && recap.candidates) || []).filter(c => c.suggested && !c.cliffhanger).map(c => c.index);
+  const [voice, setVoice] = useState((cur && cur.voice_id) || (recap && recap.default_voice) || '');
+  const [picks, setPicks] = useState((cur && cur.montage) || sugg);
+  const [showClips, setShowClips] = useState(false);
+  if (!recap) return null;
+  const prev = recap.previous_episode || {};
+  if (!recap.available) {
+    return <div className="film-recapbar is-off" title="Previously on needs the previous episode finished in full">
+      <span className="film-recapbar-lbl">Previously on</span><small>{recap.reason}</small></div>;
+  }
+  const voices = recap.voices || [];
+  const changed = recap.on && ((cur && cur.voice_id) !== voice || JSON.stringify((cur && cur.montage) || []) !== JSON.stringify(picks));
+  const toggle = (idx) => setPicks(p => p.includes(idx) ? p.filter(x => x !== idx)
+                                          : (p.length >= MAX_RECAP_CLIPS ? p : [...p, idx].sort((a, b) => a - b)));
+  const clips = (recap.candidates || []);
+  return (
+    <div className="film-recapbar">
+      <button type="button" role="switch" aria-checked={!!recap.on} className="film-switch" disabled={busy}
+              onClick={() => onRecap(recap.on ? { on: false } : { on: true, picks, voiceId: voice })}
+              title={recap.on ? 'Take the recap off' : `Open with a short recap of Episode ${prev.ordinal} — not counted in this episode's length`} />
+      <span className="film-recapbar-lbl">Previously on</span>
+      <select className="film-recapbar-voice" value={voice} onChange={(e) => setVoice(e.target.value)} disabled={busy}
+              aria-label="Narrator voice" title="Who narrates the recap">
+        {voices.map(v => <option key={v.id} value={v.id}>{v.label}{v.id === recap.default_voice ? ' (default)' : ''}</option>)}
+        <option value="none">No narrator</option>
+      </select>
+      <button type="button" className="film-ctrl" onClick={() => setShowClips(s => !s)} disabled={busy}
+              title={`Choose which moments of Episode ${prev.ordinal} the recap shows`}>
+        Clips · {picks.length}/{MAX_RECAP_CLIPS}</button>
+      {recap.on && changed && (
+        <button type="button" className="film-btn film-btn--primary film-recapbar-apply" disabled={busy}
+                onClick={() => onRecap({ on: true, picks, voiceId: voice })}
+                title="Rebuild the recap with this voice and these clips">Rebuild recap</button>
+      )}
+      <small className="film-recapbar-sub">~10–20s before Episode {(prev.ordinal || 0) + 1}'s first shot · not counted in its length</small>
+      {showClips && (
+        <div className="film-recapclips">
+          {clips.map(c => {
+            const on = c.cliffhanger || picks.includes(c.index);
+            return (
+              <button type="button" key={c.index} disabled={c.cliffhanger || busy}
+                      className={`film-recapclip${on ? ' is-on' : ''}${c.cliffhanger ? ' is-cliff' : ''}`}
+                      onClick={() => toggle(c.index)}
+                      style={c.poster_url ? { backgroundImage: `url(${c.poster_url})` } : undefined}
+                      title={c.cliffhanger ? 'The last moment of the episode — the recap always ends on it'
+                             : on ? 'In the recap — click to leave it out'
+                             : picks.length >= MAX_RECAP_CLIPS ? `Up to ${MAX_RECAP_CLIPS} clips — remove one first` : 'Add this moment to the recap'}>
+                <span className="film-recapclip-txt">{c.cliffhanger ? 'Ends on this' : (c.line || c.visual || `Shot ${c.index}`)}</span>
+              </button>
+            );
+          })}
+        </div>
+      )}
     </div>
   );
 }
@@ -368,6 +474,11 @@ export default function Storyboard({
   finalUrl = null,
   editBusy = null,
   regenBusyIndex = null,
+  notice = null,                     // "Edit not applied: …" — the film itself is unchanged
+  onDismissNotice = () => {},
+  recap = null,                      // "Previously on" options (series episodes, SERIES_RECAP) or null
+  onRecap = null,                    // ({on, picks, voiceId}) → re-cut with/without the recap
+  onEditLine = null,                 // (beatIndex, sourceIndex, lineNo) → edit one line of a merged clip
   onSelectBeat = () => {},
   onGenerate = () => {},
   onExport = () => {},
@@ -445,21 +556,22 @@ export default function Storyboard({
   const cta =
     stageState === 'plate_review' ? (
         <div className="film-head-actions">
-          <button className="film-btn film-btn--primary" onClick={onApproveCast}>
+          <button className="film-btn film-btn--primary" onClick={onApproveCast}
+                  title="Approve the cast and start making the film — this uses credits">
             <IconCheck s={14} /> Looks good — make the film
           </button>
         </div>
       )
-    : stageState === 'review' ? <button className="film-btn film-btn--primary" onClick={onGenerate}>Make the film</button>
+    : stageState === 'review' ? <button className="film-btn film-btn--primary" onClick={onGenerate} title="Render the film from this plan — this uses credits">Make the film</button>
     : stageState === 'edit' ? (
         <div className="film-head-actions">
-          {finalUrl && <button className="film-btn film-btn--primary" onClick={() => setWatching(true)}><IconPlay s={14} /> Play film</button>}
+          {finalUrl && <button className="film-btn film-btn--primary" onClick={() => setWatching(true)} title="Watch the finished film"><IconPlay s={14} /> Play film</button>}
           {finalUrl && canPromote && (
             <button className="film-btn film-btn--ghost" onClick={onPromote} title="Turn this film into Episode 1 of a series">
               <IconSeries s={14} /> Start a series
             </button>
           )}
-          <button className="film-btn film-btn--ghost" onClick={onExport}>Export</button>
+          <button className="film-btn film-btn--ghost" onClick={onExport} title="Open the finished video file in a new tab to download it">Export</button>
         </div>
       )
     : null;
@@ -517,6 +629,17 @@ export default function Storyboard({
             miss, driven by the same castPhase the funnel button reads, so the
             two never disagree. Cast/film renders only; plate_review keeps its
             own "Meet the cast" lead below. */}
+        {notice && !editBusy && (
+          <div className="film-notice" role="status">
+            <span className="film-notice-ico" aria-hidden="true">!</span>
+            <div className="film-notice-txt">
+              <b>{notice.split(':')[0]}:</b>{notice.slice(notice.indexOf(':') + 1)}
+              <span className="film-notice-sub">Your film is as it was before this change.</span>
+            </div>
+            <button type="button" className="film-notice-x" onClick={onDismissNotice}
+                    aria-label="Dismiss" title="Dismiss this message">×</button>
+          </div>
+        )}
         {castPhase === 'film_rendering' && (
           <div className="film-lifebanner film-lifebanner--film_rendering" role="status" aria-live="polite">
             <span className="film-spin film-spin--sm" />
@@ -569,12 +692,16 @@ export default function Storyboard({
                   The rest of your film is written and waiting.
                 </div>
                 <button type="button" className="film-btn film-btn--primary film-btn--cta"
-                        onClick={onFinish}>
+                        onClick={onFinish} title="Render every remaining shot in full quality — this uses credits">
                   Finish your film{cost != null ? ` · ${Number(cost).toLocaleString()} credits` : ''}
                 </button>
               </div>
             );
           })()}
+          {stageState === 'edit' && recap && onRecap && (
+            <RecapBar key={`${(recap.current && recap.current.built_at) || ''}-${recap.on}`}
+                      recap={recap} busy={!!editBusy} onRecap={onRecap} />
+          )}
           <div className="film-grid" style={gridStyle}>
             {planningCast && (
               <div className="film-buildpill-row">
@@ -585,7 +712,9 @@ export default function Storyboard({
               <Cell key={`${b.index}-${b.pos != null ? b.pos : i}`} beat={b} stageState={stageState}
                 selected={selectedBeat === b.index} regenBusy={regenBusyIndex === b.index}
                 onSelect={onSelectBeat}
-                onRegenerate={onRegenerate} onDuplicate={onDuplicate} onCut={onCut} />
+                onRegenerate={onRegenerate} onDuplicate={onDuplicate} onCut={onCut}
+                onEditLine={onEditLine}
+                onRemoveRecap={onRecap ? () => onRecap({ on: false }) : null} />
             ))}
           </div>
           </>
@@ -603,14 +732,15 @@ export default function Storyboard({
           <span className="film-live">Live</span>
           <div className="film-prog-bar"><i style={{ width: `${pct}%` }} /></div>
           <div className="film-prog-lbl"><b>Rendering {progress.done} of {progress.total}</b>{progress.etaText ? ` · ${progress.etaText}` : ''}</div>
-          <button className="film-btn film-btn--ghost" style={{ padding: '7px 12px' }} onClick={onStop}><IconStop s={13} /> Stop after shot</button>
+          <button className="film-btn film-btn--ghost" style={{ padding: '7px 12px' }} onClick={onStop}
+                  title="Stop after the shot that's rendering now — finished shots are kept"><IconStop s={13} /> Stop after shot</button>
         </div>
       )}
 
       {watching && finalUrl && (
         <div className="film-player-overlay" onClick={() => setWatching(false)}>
           <div className="film-player-box" onClick={e => e.stopPropagation()}>
-            <button className="film-player-close" onClick={() => setWatching(false)} aria-label="Close">×</button>
+            <button className="film-player-close" onClick={() => setWatching(false)} aria-label="Close" title="Close the player">×</button>
             <video src={finalUrl} controls autoPlay playsInline className="film-player-vid" />
           </div>
         </div>

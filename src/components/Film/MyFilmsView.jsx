@@ -66,9 +66,13 @@ export default function MyFilmsView({
   const [style, setStyle] = useState('anime');
   const [duration, setDuration] = useState(60);
   const [aspect, setAspect] = useState('9:16');   // frame shape — fixed at creation
+  const [genre, setGenre] = useState(null);        // optional (GENRE_ROOM) — helps the writer only
   const [modal, setModal] = useState(null);        // series pop-outs
   const [actionError, setActionError] = useState(null);  // delete failures (incl. 409 still-rendering)
   const [actionNote, setActionNote] = useState(null);    // delete-series casualty report
+  // Which library tab is showing. My Series takes the whole page (2026-10-12, owner):
+  // the promo grid on the right stays for My Films only.
+  const [libView, setLibView] = useState('films');
 
   // Deletion wiring (2026-08-24): FilmLibrary's confirms are the consent step;
   // these just call the hook (via seriesActions) and surface the outcome in
@@ -98,11 +102,11 @@ export default function MyFilmsView({
 
   const startNew = () => {
     setPicking(false);
-    onNew({ video_style: style, duration_seconds: duration, aspect_ratio: aspect });
+    onNew({ video_style: style, duration_seconds: duration, aspect_ratio: aspect, ...(genre ? { genre } : {}) });
   };
 
   return (
-    <div className="film-lib">
+    <div className={`film-lib${libView === 'series' ? ' is-series' : ''}`}>
       {/* ── LEFT 60% — the user's films (series-aware library) ── */}
       <div className="film-lib-left">
         {/* Ambient looping film reel behind the shelf (see film-video-wall.css) */}
@@ -123,6 +127,8 @@ export default function MyFilmsView({
             onStyle={setStyle}
             onDuration={setDuration}
             onAspect={setAspect}
+            genre={genre}
+            onGenre={setGenre}
             busy={busy}
             onStart={startNew}
             onClose={() => setPicking(false)}
@@ -136,13 +142,15 @@ export default function MyFilmsView({
           <div className="film-lib-empty"><div className="film-spin" /><p>Loading your films…</p></div>
         ) : (
           <FilmLibrary
+            view={libView}
+            onViewChange={setLibView}
             series={series}
             films={films}
             filmCount={films.length}
             onOpenFilm={onOpenFilm}
             onNewFilm={() => setPicking(true)}
             onNewSeries={() => setModal({ type: 'newSeries' })}
-            onNewEpisode={(s) => setModal({ type: 'chain', series: s })}
+            onNewEpisode={(s, opts) => setModal({ type: 'chain', series: s, planCard: opts?.planCard ?? null })}
             onPromote={(film) => setModal({ type: 'promote', film })}
             onRefreshPlate={(s, c) => setModal({ type: 'refresh', series: s, character: c })}
             onDelete={onDelete}
@@ -152,8 +160,8 @@ export default function MyFilmsView({
         )}
       </div>
 
-      {/* ── RIGHT 40% — 2x3 feature grid, fills exactly, no scroll (unchanged) ── */}
-      <div className="film-lib-right">
+      {/* ── RIGHT 40% — 2x3 feature grid, fills exactly, no scroll. My Films only. ── */}
+      {libView !== 'series' && <div className="film-lib-right">
         <div className="film-feat-grid">
 
           <div className="film-feat-card film-feat-card--hero">
@@ -181,7 +189,7 @@ export default function MyFilmsView({
           </div>
 
         </div>
-      </div>
+      </div>}
 
       {/* series pop-outs (New Series / New Episode / Promote / Refresh) */}
       <FilmSeriesModals

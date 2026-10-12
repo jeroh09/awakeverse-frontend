@@ -34,6 +34,18 @@ export default function FilmWorkspace({
   progress = null,
   finalUrl = null,
   editBusy = null,
+  // SEVERED LINKS (2026-10-12): the container has always passed these three, but this
+  // shell never forwarded them — so the storyboard's length picker and the per-shot
+  // "Regenerating…" spinner never appeared. Forwarded now.
+  durationSeconds = null,
+  onDurationChange = null,
+  regenBusyIndex = null,
+  // "Edit not applied: …" — an edit that failed on a film that is still fine.
+  notice = null,
+  onDismissNotice = () => {},
+  // series episodes (2026-10-12): "Previously on", per-line edits, Where we left off, Review
+  recap = null, onRecap = null, onEditLine = null,
+  carryProjectId = null, canReview = false, onReview = () => {}, review = null, onDismissReview = () => {},
   onSelectBeat, onGenerate, onExport, onStop, onFinish,
   onRegenerate, onDuplicate, onCut,
   canPromote = false, onPromote = () => {},
@@ -142,16 +154,19 @@ export default function FilmWorkspace({
         <div className="film-toggles">
           {onBackToFilms && (
             <>
-              <button className="film-tg film-tg--back" onClick={onBackToFilms}>
+              <button className="film-tg film-tg--back" onClick={onBackToFilms}
+                  title="Back to your library — this film keeps rendering if it's running">
                 <IconBack s={13} /> My Films
               </button>
               <span className="film-tg-div" />
             </>
           )}
-          <button className={`film-tg${leftCollapsed ? ' is-off' : ''}`} onClick={toggleLeft}>
+          <button className={`film-tg${leftCollapsed ? ' is-off' : ''}`} onClick={toggleLeft}
+                  title={leftCollapsed ? 'Show the storyboard' : 'Hide the storyboard'}>
             <IconChevron s={13} dir={leftCollapsed ? 'right' : 'left'} /> Storyboard
           </button>
-          <button className={`film-tg${rightCollapsed ? ' is-off' : ''}`} onClick={toggleRight}>
+          <button className={`film-tg${rightCollapsed ? ' is-off' : ''}`} onClick={toggleRight}
+                  title={rightCollapsed ? 'Show the assistant' : 'Hide the assistant'}>
             Assistant <IconChevron s={13} dir={rightCollapsed ? 'left' : 'right'} />
           </button>
         </div>
@@ -166,7 +181,7 @@ export default function FilmWorkspace({
           {/* LEFT — Storyboard */}
           <section className={`film-panel film-panel--stage${leftCollapsed ? ' is-collapsed' : ''}`}>
             <div className="film-rail">
-              <button className="film-rail-btn" onClick={toggleLeft} aria-label="Expand storyboard">
+              <button className="film-rail-btn" onClick={toggleLeft} aria-label="Expand storyboard" title="Show the storyboard">
                 <IconChevron s={15} dir="right" />
               </button>
               <span className="film-rail-label">Storyboard</span>
@@ -190,6 +205,14 @@ export default function FilmWorkspace({
               progress={progress}
               finalUrl={finalUrl}
               editBusy={editBusy}
+              durationSeconds={durationSeconds}
+              onDurationChange={onDurationChange}
+              regenBusyIndex={regenBusyIndex}
+              notice={notice}
+              onDismissNotice={onDismissNotice}
+              recap={recap}
+              onRecap={onRecap}
+              onEditLine={onEditLine}
               onSelectBeat={onSelectBeat}
               onGenerate={onGenerate}
               onExport={onExport}
@@ -206,7 +229,7 @@ export default function FilmWorkspace({
           {/* RIGHT — Writers' room */}
           <section className={`film-panel film-panel--chat${rightCollapsed ? ' is-collapsed' : ''}`}>
             <div className="film-rail">
-              <button className="film-rail-btn" onClick={toggleRight} aria-label="Expand assistant">
+              <button className="film-rail-btn" onClick={toggleRight} aria-label="Expand assistant" title="Show the assistant">
                 <IconChevron s={15} dir="left" />
               </button>
               <span className="film-rail-label">Assistant</span>
@@ -225,6 +248,12 @@ export default function FilmWorkspace({
               onChangeLine={onChangeLine}
               onRegenerateFromEdit={onRegenerateFromEdit}
               onSaveEdit={onSaveEdit}
+              regenBusy={!!editBusy}
+              carryProjectId={carryProjectId}
+              canReview={canReview}
+              onReview={onReview}
+              review={review}
+              onDismissReview={onDismissReview}
               onSend={onSend}
               editorAvailable={editorAvailable}
               filmBeats={beats}

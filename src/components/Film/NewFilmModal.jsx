@@ -13,10 +13,19 @@
 import React, { useEffect } from 'react';
 import { createPortal } from 'react-dom';
 import StylePreview from './StylePreview';
+import { GENRES, genreHint } from './filmGenres';
 import './NewFilmModal.css';
 
 // Length made tangible — rough shot counts, matching the ideas mock. Keyed by
 // the numeric duration values (60 / 120 / 180).
+const STYLE_TIP = {
+  anime: 'Anime — Japanese animation look',
+  cartoon: 'Cartoon — bright, rounded animation',
+  comic_book: 'Comic — inked lines and flat colour',
+  realistic: 'Realistic — a painted, lifelike look',
+  photoreal: 'Photoreal — photographic realism (adults only)',
+};
+
 const SHOTS = {
   60:  '~10 shots · a quick single-scene short',
   120: '~20 shots · room for a beginning, middle and end',
@@ -25,8 +34,8 @@ const SHOTS = {
 
 export default function NewFilmModal({
   styles = [], durations = [], aspects = [], AspectGlyph = () => null,
-  style, duration, aspect,
-  onStyle = () => {}, onDuration = () => {}, onAspect = () => {},
+  style, duration, aspect, genre = null,
+  onStyle = () => {}, onDuration = () => {}, onAspect = () => {}, onGenre = null,
   busy = false, onStart = () => {}, onClose = () => {},
 }) {
   // Esc to close + lock background scroll while open.
@@ -47,7 +56,7 @@ export default function NewFilmModal({
   return createPortal(
     <div className="nf-scrim" onClick={(e) => e.target === e.currentTarget && onClose()}>
       <div className="nf-modal" role="dialog" aria-modal="true" aria-label="New film">
-        <button className="nf-x" onClick={onClose} aria-label="Close">×</button>
+        <button className="nf-x" onClick={onClose} aria-label="Close" title="Close without starting a film">×</button>
 
         <div className="nf-head">
           <h3 className="nf-title">New film</h3>
@@ -59,7 +68,7 @@ export default function NewFilmModal({
           <div className="nf-stage">
             <StylePreview styleKey={style} aspect={aspect} />
             <div className="nf-cap">
-              {styleLabel} · {aspectLabel} · {durLabel}
+              {styleLabel} · {aspectLabel} · {durLabel}{genre ? ` · ${GENRES.find(g => g.key === genre)?.label || ''}` : ''}
               <small>{SHOTS[duration] || ''}</small>
             </div>
           </div>
@@ -75,10 +84,27 @@ export default function NewFilmModal({
                 {styles.map(s => (
                   <button key={s.key} type="button"
                     className={`nf-pill${style === s.key ? ' is-on' : ''}`}
-                    onClick={() => onStyle(s.key)}>{s.label}</button>
+                    onClick={() => onStyle(s.key)} title={STYLE_TIP[s.key] || `Make the film in ${s.label} style`}>{s.label}</button>
                 ))}
               </div>
             </div>
+
+            {/* GENRE (2026-10-12) — under Style, optional. Selected = solid indigo like
+                every other pill; clicking it again clears it. */}
+            {onGenre && (
+              <div className="nf-group">
+                <div className="nf-glabel">Genre <span className="nf-opt">· optional — shapes how the writer helps, changes nothing on screen</span></div>
+                <div className="nf-pillgroup nf-pillgroup--wrap">
+                  {GENRES.map(g => (
+                    <button key={g.key} type="button"
+                      className={`nf-pill${genre === g.key ? ' is-on' : ''}`}
+                      onClick={() => onGenre(genre === g.key ? null : g.key)}
+                      title={genre === g.key ? `${g.label} — click again to clear` : `${g.label}: ${g.hint}`}>{g.label}</button>
+                  ))}
+                </div>
+                <p className="nf-ghint">{genreHint(genre)}</p>
+              </div>
+            )}
 
             <div className="nf-group">
               <div className="nf-glabel">Frame <span className="nf-opt">· fixed for the whole film</span></div>
@@ -86,7 +112,7 @@ export default function NewFilmModal({
                 {aspects.map(a => (
                   <button key={a.key} type="button"
                     className={`nf-pill nf-pill--icon${aspect === a.key ? ' is-on' : ''}`}
-                    onClick={() => onAspect(a.key)} title={a.key}>
+                    onClick={() => onAspect(a.key)} title={`${a.label} (${a.key}) — fixed for the whole film`}>
                     <AspectGlyph w={a.w} h={a.h} /> {a.label}
                   </button>
                 ))}
@@ -99,14 +125,14 @@ export default function NewFilmModal({
                 {durations.map(d => (
                   <button key={d.key} type="button"
                     className={`nf-pill${duration === d.key ? ' is-on' : ''}`}
-                    onClick={() => onDuration(d.key)}>{d.label}</button>
+                    onClick={() => onDuration(d.key)} title={SHOTS[d.key] ? `${d.label}: ${SHOTS[d.key]}` : d.label}>{d.label}</button>
                 ))}
               </div>
             </div>
 
             <div className="nf-foot">
-              <button className="nf-btn ghost" onClick={onClose} disabled={busy}>Cancel</button>
-              <button className="nf-btn primary" onClick={onStart} disabled={busy}>
+              <button className="nf-btn ghost" onClick={onClose} disabled={busy} title="Close without starting a film">Cancel</button>
+              <button className="nf-btn primary" onClick={onStart} disabled={busy} title="Open the writers' room for a new film — writing is free">
                 {busy ? 'Creating…' : 'Start'}
               </button>
             </div>

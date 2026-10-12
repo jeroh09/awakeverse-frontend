@@ -14,7 +14,8 @@
 import React, { useState, useEffect, useMemo } from 'react';
 import './FilmSeries.css';
 import { IconPlus, IconChain, IconRefreshLook } from './filmIcons';
-import { friendlyError } from './filmApi';
+import { friendlyError, filmGetPlan } from './filmApi';
+import { GENRES, genreHint } from './filmGenres';
 
 // 'realistic' has ALWAYS rendered the painterly stylized_real look (backend
 // remap) — the label now says so. 'photoreal' is the Veo tier (2026-08-24):
@@ -50,7 +51,8 @@ const Seg = ({ options, value, onChange, render }) => (
     {options.map((o) => {
       const v = o.v ?? o;
       return (
-        <button key={v} type="button" className={value === v ? 'is-on' : ''} onClick={() => onChange(v)}>
+        <button key={v} type="button" className={value === v ? 'is-on' : ''} onClick={() => onChange(v)}
+                title={o.tip || (typeof o === 'string' ? `${STYLE_LABEL[v] || v} style` : (o.l || String(v)))}>
           {render ? render(o) : (o.l ?? STYLE_LABEL[v] ?? v)}
         </button>
       );
@@ -60,11 +62,11 @@ const Seg = ({ options, value, onChange, render }) => (
 
 const aspectGlyph = (a) => (<><span className="fs-aspg"><i style={{ width: a.w, height: a.h }} /></span> {a.l}</>);
 
-function Footer({ busy, onClose, submitLabel, onSubmit, disabled }) {
+function Footer({ busy, onClose, submitLabel, onSubmit, disabled, submitTip }) {
   return (
     <div className="fs-mfoot">
-      <button className="fs-mbtn ghost" onClick={onClose} disabled={busy}>Cancel</button>
-      <button className="fs-mbtn primary" onClick={onSubmit} disabled={busy || disabled}>
+      <button className="fs-mbtn ghost" onClick={onClose} disabled={busy} title="Close without saving">Cancel</button>
+      <button className="fs-mbtn primary" onClick={onSubmit} disabled={busy || disabled} title={submitTip || submitLabel}>
         {busy ? 'Working…' : submitLabel}
       </button>
     </div>
@@ -77,12 +79,14 @@ function NewSeries({ actions, onClose, onToast }) {
   const [style, setStyle] = useState('realistic');
   const [aspect, setAspect] = useState('9:16');
   const [bible, setBible] = useState('');
+  const [genre, setGenre] = useState(null);       // optional — every episode inherits it
   const [busy, setBusy] = useState(false);
   const [err, setErr] = useState(null);
   const submit = async () => {
     setBusy(true); setErr(null);
     try {
-      await actions.createSeries({ title: title.trim() || 'Untitled Series', video_style: style, aspect_ratio: aspect, canonical_bible: bible.trim() || undefined });
+      await actions.createSeries({ title: title.trim() || 'Untitled Series', video_style: style, aspect_ratio: aspect,
+                                   canonical_bible: bible.trim() || undefined, ...(genre ? { genre } : {}) });
       onToast?.('Series created — build Episode 1 in the writers’ room');
       onClose();
     } catch (e) { setErr(friendlyError(e, 'Could not create the series.')); setBusy(false); }
@@ -93,6 +97,10 @@ function NewSeries({ actions, onClose, onToast }) {
       <div className="fs-field"><label>Series title</label>
         <input className="fs-inp" value={title} onChange={(e) => setTitle(e.target.value)} placeholder="e.g. Bedtime for Big Sister Maya" /></div>
       <div className="fs-field"><label>Style</label><Seg options={STYLES} value={style} onChange={setStyle} /></div>
+      <div className="fs-field"><label>Genre <span className="fs-opt">· optional — every episode inherits it; changes nothing on screen</span></label>
+        <Seg options={GENRES.map((g) => ({ v: g.key, l: g.label, tip: `${g.label}: ${g.hint}` }))}
+             value={genre} onChange={(v) => setGenre(genre === v ? null : v)} />
+        <div className="fs-ghint">{genreHint(genre)}</div></div>
       <div className="fs-field"><label>Frame <span className="fs-opt">· fixed for every episode</span></label>
         <Seg options={ASPECTS} value={aspect} onChange={setAspect} render={aspectGlyph} /></div>
       <div className="fs-field"><label>Series bible <span className="fs-opt">· optional, editable later</span></label>
@@ -104,14 +112,46 @@ function NewSeries({ actions, onClose, onToast }) {
   );
 }
 
-/* ── New Episode (chain-loader) ── */
-function ChainLoader({ series, actions, onClose, onOpenFilm, onToast }) {
+/* ── New Episode (chain-loader) ──
+   SEASON PLAN (2026-10-12): when the series has a plan, the user can start the episode
+   FROM A CARD — the card's title fills the title, its relation is shown, and plan_card
+   links the card to the new episode (the writers' room gets it as a guide). Opened from
+   a card's "Start episode", that card comes preselected. "Something new" sends no card.
+   No plan (or the switch off → 404) → the modal is exactly as before. */
+const REL_NOTE = {
+  continues: 'picks up straight after the last episode — same moment, same place. It opens on that episode\u2019s final frame.',
+  later: 'picks up later — lasting things carry (injuries, damaged clothes) and the scene resets.',
+  new_setting: 'moves to a new place or period — lasting things still carry.',
+  pilot: 'is the pilot.',
+};
+function ChainLoader({ series, planCard = null, actions, onClose, onOpenFilm, onToast }) {
   const eps = series.episodes || [];
   const [duration, setDuration] = useState(60);
   const [title, setTitle] = useState('');
+  const [titleTouched, setTitleTouched] = useState(false);
   const [picked, setPicked] = useState(() => eps.map((e) => e.project_id)); // default: chain all
   const [busy, setBusy] = useState(false);
   const [err, setErr] = useState(null);
+  const [openCards, setOpenCards] = useState([]);   // plan cards with no episode yet
+  const [card, setCard] = useState(null);           // chosen card n, or null = something new
+
+  useEffect(() => {
+    let off = false;
+    filmGetPlan(series.series_id).then((res) => {
+      if (off || !res || !res.plan) return;
+      const linked = new Set((res.statuses || []).filter((x) => x.project_id).map((x) => x.n));
+      const free = (res.plan.cards || []).filter((c) => !c.project_id && !linked.has(c.n));
+      setOpenCards(free);
+      const pre = free.find((c) => c.n === planCard) || free[0] || null;
+      setCard(pre ? pre.n : null);
+    }).catch(() => {});   // no plan / switch off → the classic modal
+    return () => { off = true; };
+  }, [series.series_id, planCard]);
+
+  const chosen = openCards.find((c) => c.n === card) || null;
+  useEffect(() => {
+    if (!titleTouched) setTitle(chosen && (chosen.logline || '').trim() ? (chosen.title || '') : '');
+  }, [card]);   // title follows the chosen card until the user types their own
 
   const toggle = (id) => setPicked((p) => p.includes(id) ? p.filter((x) => x !== id) : [...p, id]);
   // most-recent picked = full; earlier picked = summarised
@@ -125,6 +165,7 @@ function ChainLoader({ series, actions, onClose, onOpenFilm, onToast }) {
     try {
       const res = await actions.createEpisode(series.series_id, {
         title: title.trim() || undefined, prior_episode_ids: picked, duration_seconds: duration,
+        ...(chosen ? { plan_card: chosen.n } : {}),
       });
       onToast?.(`Episode ${res.episode_ordinal} created`);
       onClose();
@@ -133,32 +174,63 @@ function ChainLoader({ series, actions, onClose, onOpenFilm, onToast }) {
   };
   return (
     <FilmModal wide title={`New episode · ${series.title}`} onClose={onClose}
-      sub="The cast and bible come in automatically. Choose which earlier episodes to carry forward for continuity.">
-      <div className="fs-field"><label>Duration</label><Seg options={DURATIONS} value={duration} onChange={setDuration} /></div>
-      <div className="fs-field"><label>Episode title <span className="fs-opt">· optional</span></label>
-        <input className="fs-inp" value={title} onChange={(e) => setTitle(e.target.value)} placeholder={`Episode ${(eps.length || 0) + 1}`} /></div>
-      <div className="fs-field"><label>Chain earlier episodes</label>
-        <div className="fs-chain">
-          {eps.map((e) => {
-            const on = picked.includes(e.project_id);
-            return (
-              <div key={e.project_id} className={`fs-chk${on ? ' is-on' : ''}`} onClick={() => toggle(e.project_id)}>
-                <span className="fs-box">✓</span>
-                <span className="fs-ct">Episode {e.episode_ordinal} · {e.title || 'Untitled'}</span>
-                {on && (e.project_id === fullId
-                  ? <span className="fs-full-b">full script</span>
-                  : <span className="fs-sum-b">summarised</span>)}
-              </div>
-            );
-          })}
-          {!eps.length && <div className="fs-hint">This is the first episode — nothing to chain yet.</div>}
+      sub={openCards.length
+        ? 'The cast and bible come in automatically. Start from a card in your season plan, or write something new.'
+        : 'The cast and bible come in automatically. Choose which earlier episodes to carry forward for continuity.'}>
+      {openCards.length > 0 && (
+        <div className="fs-field"><label>Start from the plan <span className="fs-opt">· optional</span></label>
+          <div className="fs-cardpick" role="radiogroup" aria-label="Season plan card">
+            {openCards.map((c) => (
+              <button key={c.n} type="button" role="radio" aria-checked={card === c.n}
+                      className={`fs-cp${card === c.n ? ' is-on' : ''}`} onClick={() => setCard(c.n)}
+                      title={(c.logline || '').trim() ? `Make this episode from card ${c.n}: ${c.logline}` : `Use card ${c.n}'s role as a guide`}>
+                <span className="fs-cp-dot" />
+                <span className="fs-cp-txt"><b>Card {c.n} · {(c.logline || '').trim() ? (c.title || 'Untitled') : (c.act || 'Episode')}</b>
+                  <small>{(c.logline || '').trim() ? c.logline : (c.hint || 'Your story')}</small></span>
+              </button>
+            ))}
+            <button type="button" role="radio" aria-checked={card === null}
+                    className={`fs-cp${card === null ? ' is-on' : ''}`} onClick={() => setCard(null)}
+                    title="Write an episode that isn\u2019t on the plan">
+              <span className="fs-cp-dot" />
+              <span className="fs-cp-txt"><b>Something new</b><small>Not on the plan — the writer follows your lead.</small></span>
+            </button>
+          </div>
+          {chosen && eps.length > 0 && REL_NOTE[chosen.relation] && (
+            <div className="fs-hint">This episode <b>{chosen.relation === 'new_setting' ? 'moves on' : chosen.relation === 'continues' ? 'continues' : 'starts later'}</b>: {REL_NOTE[chosen.relation]} You can change this on the episode&rsquo;s &ldquo;Where we left off&rdquo; card.</div>
+          )}
         </div>
-        {eps.length > 0 && (
-          <div className="fs-hint">The <b>most recent</b> episode you pick is given in <b>full</b>; earlier ones are <b>summarised</b> so continuity stays sharp. Pick as many as you like.</div>
-        )}
+      )}
+      <div className="fs-field"><label>Duration</label><Seg options={DURATIONS} value={duration} onChange={setDuration} /></div>
+      <div className="fs-field"><label>Episode title <span className="fs-opt">· {chosen ? 'from the card, editable' : 'optional'}</span></label>
+        <input className="fs-inp" value={title} onChange={(e) => { setTitle(e.target.value); setTitleTouched(true); }} placeholder={`Episode ${(eps.length || 0) + 1}`} /></div>
+      <div className="fs-field">
+        <details className="fs-chainbox" open={!openCards.length}>
+          <summary title="Choose which earlier episodes the writer remembers">Chain earlier episodes <span className="fs-opt">· {picked.length} selected</span></summary>
+          <div className="fs-chain">
+            {eps.map((e) => {
+              const on = picked.includes(e.project_id);
+              return (
+                <div key={e.project_id} className={`fs-chk${on ? ' is-on' : ''}`} onClick={() => toggle(e.project_id)}
+                     title={on ? 'Leave this episode out of the new episode\'s memory' : 'Let the writer remember this episode'}>
+                  <span className="fs-box">✓</span>
+                  <span className="fs-ct">Episode {e.episode_ordinal} · {e.title || 'Untitled'}</span>
+                  {on && (e.project_id === fullId
+                    ? <span className="fs-full-b">full script</span>
+                    : <span className="fs-sum-b">summarised</span>)}
+                </div>
+              );
+            })}
+            {!eps.length && <div className="fs-hint">This is the first episode — nothing to chain yet.</div>}
+          </div>
+          {eps.length > 0 && (
+            <div className="fs-hint">The <b>most recent</b> episode you pick is given in <b>full</b>; earlier ones are <b>summarised</b> so continuity stays sharp. Pick as many as you like.</div>
+          )}
+        </details>
       </div>
       {err && <div className="fs-merr">{err}</div>}
-      <Footer busy={busy} onClose={onClose} submitLabel="Create episode" onSubmit={submit} />
+      <Footer busy={busy} onClose={onClose} submitLabel="Create episode" onSubmit={submit}
+              submitTip="Open the writers\u2019 room for this episode — writing is free" />
     </FilmModal>
   );
 }
@@ -219,7 +291,7 @@ export default function FilmSeriesModals({ modal, onClose, actions, onOpenFilm, 
   if (!modal) return null;
   switch (modal.type) {
     case 'newSeries': return <NewSeries actions={actions} onClose={onClose} onToast={onToast} />;
-    case 'chain':     return <ChainLoader series={modal.series} actions={actions} onClose={onClose} onOpenFilm={onOpenFilm} onToast={onToast} />;
+    case 'chain':     return <ChainLoader series={modal.series} planCard={modal.planCard ?? null} actions={actions} onClose={onClose} onOpenFilm={onOpenFilm} onToast={onToast} />;
     case 'promote':   return <Promote film={modal.film} actions={actions} onClose={onClose} onToast={onToast} />;
     case 'refresh':   return <Refresh series={modal.series} character={modal.character} actions={actions} onClose={onClose} onToast={onToast} />;
     default:          return null;

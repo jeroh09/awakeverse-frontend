@@ -19,6 +19,7 @@ import { IconSend, IconCheck, IconClock, IconChevron } from './filmIcons';
 import AttachButton from './AttachButton';
 import { filmUploadAttachment } from './filmApi';
 import { parseMarkdown } from './filmMarkdown';
+import WhereWeLeftOff from './WhereWeLeftOff';
 
 // Clapperboard glyph for the in-chat thinking indicator. Original path data
 // (not from any icon library); kept inline so the feature is self-contained,
@@ -111,7 +112,8 @@ function CharacterChip({ name, desc }) {
   const cn = clean(name), cd = clean(desc);
   return (
     <>
-      <button className={`film-char-chip${open ? ' is-open' : ''}`} onClick={() => setOpen(o => !o)}>
+      <button className={`film-char-chip${open ? ' is-open' : ''}`} onClick={() => setOpen(o => !o)}
+              title={open ? 'Hide the description' : `How ${cn} is described in the script`}>
         {cn} <IconChevron s={8} dir={open ? 'down' : 'right'} />
       </button>
       {open && (
@@ -160,15 +162,17 @@ function ScriptMeta({ meta, editable = false, onSaveScript }) {
           <div className="film-script-head">
             <span className="t">📄 Script draft</span>
             <div className="film-script-headbtns">
-              <button className="film-script-toggle" onClick={copy} title="Copy script">
+              <button className="film-script-toggle" onClick={copy} title="Copy the script to your clipboard">
                 {copied ? 'Copied' : 'Copy'}
               </button>
               {editable && !editing && (
-                <button className="film-script-toggle" onClick={() => { setDraft(shownScript); setEditing(true); setScriptOpen(true); }}>
+                <button className="film-script-toggle" onClick={() => { setDraft(shownScript); setEditing(true); setScriptOpen(true); }}
+                  title="Edit the script by hand — your saved version is the one the film is made from">
                   Edit
                 </button>
               )}
-              <button className="film-script-toggle" onClick={() => setScriptOpen(o => !o)}>
+              <button className="film-script-toggle" onClick={() => setScriptOpen(o => !o)}
+                title={scriptOpen ? 'Fold the script away' : 'Show the script'}>
                 <IconChevron s={9} dir={scriptOpen ? 'down' : 'right'} />
                 {scriptOpen ? 'Collapse' : 'Expand'}
               </button>
@@ -182,8 +186,9 @@ function ScriptMeta({ meta, editable = false, onSaveScript }) {
               <div className="film-script-editbar">
                 <span className="film-script-hint">Saved edits are used when you make the film. Length is auto-fitted to your chosen duration.</span>
                 <div className="film-script-editbtns">
-                  <button className="film-btn film-btn--ghost" onClick={() => setEditing(false)} disabled={saving}>Cancel</button>
-                  <button className="film-btn film-btn--primary" onClick={save} disabled={saving || !draft.trim()}>
+                  <button className="film-btn film-btn--ghost" onClick={() => setEditing(false)} disabled={saving} title="Discard these edits">Cancel</button>
+                  <button className="film-btn film-btn--primary" onClick={save} disabled={saving || !draft.trim()}
+                    title="Save this script — it's used when you make the film">
                     {saving ? 'Saving…' : saved ? 'Saved' : 'Save script'}
                   </button>
                 </div>
@@ -236,7 +241,7 @@ function FilmDigestStrip({ beats, filmTitle }) {
   return (
     <div className={`fw-digest${open ? ' is-open' : ''}`}>
       <button type="button" className="fw-digest-bar" aria-expanded={open}
-              onClick={() => setOpen(o => !o)}>
+              onClick={() => setOpen(o => !o)} title="Every beat the editor can see — where it is, who's in it, how long">
         <b>FILM STATE</b>
         <span>{filmTitle ? `"${filmTitle}" · ` : ''}{beats.length} beat{beats.length === 1 ? '' : 's'} — the editor knows every one</span>
         <span className="fw-digest-chev">▾</span>
@@ -299,7 +304,8 @@ function EditCallSheet({ proposal, onApply, onDismiss }) {
             ) : (
               <div className="fw-sheet-cta">
                 <button type="button" className="fw-sheet-apply"
-                        onClick={() => onApply(proposal.id, n, it)}>
+                        onClick={() => onApply(proposal.id, n, it)}
+                        title={it.action === 'regenerate' ? 'Make this change and re-render the shot' : 'Make this change to the film'}>
                   Apply{it.action === 'regenerate' ? ' & re-render' : ''}
                 </button>
               </div>
@@ -307,7 +313,61 @@ function EditCallSheet({ proposal, onApply, onDismiss }) {
           </div>
         );
       })}
-      <button type="button" className="fw-sheet-dismiss" onClick={onDismiss}>Dismiss proposal</button>
+      <button type="button" className="fw-sheet-dismiss" onClick={onDismiss} title="Close these suggestions — nothing changes">Dismiss proposal</button>
+    </div>
+  );
+}
+
+/* ── REVIEW EPISODE (2026-10-12, EPISODE_REVIEW=1) — the user's button. A report only:
+   the HOOK (how soon a named character acts or speaks) and the PULL (does the ending make
+   viewers want the next episode). Each ending option carries a ready-made message; one tap
+   sends it to the writers' room. The user decides whether they want a cliffhanger at all. ── */
+const HOOK_TAG = { strong: 'Strong', ok: 'OK', weak: 'Weak' };
+const PULL_TAG = { strong: 'Strong', soft: 'Soft', resolved: 'Resolved', unavailable: '—' };
+function ReviewCard({ review, onSend, onDismiss }) {
+  if (!review) return null;
+  if (review.busy) {
+    return <div className="fw-review is-busy" role="status"><span className="film-ctrl-spin" /> Reviewing your episode…</div>;
+  }
+  if (review.error) {
+    return (
+      <div className="fw-review">
+        <div className="fw-review-head"><b>Episode review</b>
+          <button type="button" className="fw-review-x" onClick={onDismiss} title="Close the review" aria-label="Close">×</button></div>
+        <p className="fw-review-p">{review.error}</p>
+      </div>
+    );
+  }
+  const { hook = {}, pull = {} } = review.data || {};
+  return (
+    <div className="fw-review">
+      <div className="fw-review-head">
+        <b>Episode review</b><small>you asked · nothing changes until you choose</small>
+        <button type="button" className="fw-review-x" onClick={onDismiss} title="Close the review" aria-label="Close">×</button>
+      </div>
+      <div className="fw-review-row">
+        <span className={`fw-review-tag is-${hook.status || 'weak'}`} title="How soon a named character acts or speaks">Hook · {HOOK_TAG[hook.status] || '—'}</span>
+        <p className="fw-review-p">{hook.reason}</p>
+      </div>
+      <div className="fw-review-row">
+        <span className={`fw-review-tag is-${pull.status || 'unavailable'}`} title="Does the ending make viewers want the next episode?">Pull · {PULL_TAG[pull.status] || '—'}</span>
+        <p className="fw-review-p">{pull.why || pull.ending || ''}</p>
+      </div>
+      {(pull.options || []).length > 0 && (
+        <div className="fw-review-opts">
+          {pull.options.map((o, i) => (
+            <div className="fw-review-opt" key={i}>
+              <span>{o.text}</span>
+              <button type="button" className="fw-review-send" onClick={() => onSend(o.room_message || o.text)}
+                      title="Send this ending to the writers' room as your next message">Send to room</button>
+            </div>
+          ))}
+          <div className="fw-review-opt is-keep">
+            <span>Keep the ending as it is.</span>
+            <button type="button" className="fw-review-keep" onClick={onDismiss} title="Close the review — nothing changes">Keep</button>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
@@ -344,6 +404,12 @@ export default function WritersRoom({
   castPhase = 'idle',
   busyLabel = null,                  // live editBusy label, e.g. "Regenerating shot 5…"
   onSaveScript,
+  // series episodes (2026-10-12)
+  carryProjectId = null,             // "Where we left off" card (SERIES_CARRY) — episodes only
+  canReview = false,                 // "Review episode" button (EPISODE_REVIEW) — episodes with a script
+  onReview = () => {},
+  review = null,                     // {busy} | {data} | {error}
+  onDismissReview = () => {},
 }) {
   const [text, setText] = useState('');
   const [pendingAttachment, setPendingAttachment] = useState(null);   // {filename,url,file_type,text,sections,injection_detected}
@@ -411,7 +477,7 @@ export default function WritersRoom({
             const editing = isEditing;
             return (<>
               <button type="button" className={`film-htab ${!editing ? 'is-on' : ''}`}
-                      onClick={() => onSetChatMode('write')}>
+                      onClick={() => onSetChatMode('write')} title="Write and change the script with the director">
                 Writers' Room
               </button>
               {editorAvailable && (
@@ -423,6 +489,12 @@ export default function WritersRoom({
               )}
             </>);
           })()}
+          {canReview && (
+            <button type="button" className="film-htab-act" onClick={onReview} disabled={!!(review && review.busy)}
+                    title="Check how fast the episode hooks viewers and whether the ending pulls them into the next one — a report only">
+              Review episode
+            </button>
+          )}
           <span className="film-hsub">{isEditing
             ? `Editing${editorMode.filmTitle ? ` "${editorMode.filmTitle}"` : ' this film'} · ${filmBeats.length} beat${filmBeats.length === 1 ? '' : 's'}`
             : sub}</span>
@@ -432,6 +504,9 @@ export default function WritersRoom({
       {isEditing && <FilmDigestStrip beats={filmBeats} filmTitle={editorMode.filmTitle} />}
 
       <div className="film-chatscroll" ref={scrollRef}>
+        {!isEditing && carryProjectId && (
+          <WhereWeLeftOff projectId={carryProjectId} compact={roomMessages.length > 0} />
+        )}
         {isEditing && roomMessages.length === 0 && (
           /* Canned welcome (2026-08-25): an EMPTY-STATE, not a message and not
              an LLM call — renders whenever the editor's transcript is empty,
@@ -457,6 +532,10 @@ export default function WritersRoom({
               onSaveScript={onSaveScript} />
           ));
         })()}
+        {(
+          <ReviewCard review={review} onDismiss={onDismissReview}
+                      onSend={(msg) => { onDismissReview(); onSend(msg, null); }} />
+        )}
         <EditCallSheet proposal={editProposal}
                        onApply={onApplyEditIntent}
                        onDismiss={onDismissProposal} />
@@ -501,10 +580,15 @@ export default function WritersRoom({
         return (
         <div className="film-beatedit">
           <div className="film-beatedit-head">
-            <span className="t">Editing shot {String(editingBeat.index).padStart(2, '0')}</span>
-            <button className="film-x" onClick={onCloseEdit} aria-label="Close">×</button>
+            <span className="t">Editing shot {String(editingBeat.index).padStart(2, '0')}
+              {editingBeat.targetSourceIndex != null && <> · line {editingBeat.lineNo}</>}</span>
+            <button className="film-x" onClick={onCloseEdit} aria-label="Close" title="Close the shot editor">×</button>
           </div>
 
+          {editingBeat.targetSourceIndex != null && (
+            <p className="film-beatedit-hint film-beatedit-hint--line">This clip holds several lines. Changing this one
+              splits the clip: each line becomes its own shot, and only this one is re-directed.</p>
+          )}
           <label className="film-beatedit-label">Shot — what we see</label>
           <textarea
             className="film-beatedit-field"
@@ -525,7 +609,7 @@ export default function WritersRoom({
                 <span key={name}
                   className={`film-cast-chip${active === name ? ' is-active' : ''}${has ? ' has-line' : ''}`}>
                   <button type="button" className="film-cast-chip-main"
-                    onClick={() => onPickSpeaker(name)}>
+                    onClick={() => onPickSpeaker(name)} title={`Add or edit ${name}'s line in this shot`}>
                     {has && <span className="film-cast-chip-dot" />}
                     {name}
                   </button>
@@ -559,11 +643,12 @@ export default function WritersRoom({
               className="film-btn film-btn--primary"
               disabled={regenBusy}
               onClick={onRegenerateFromEdit}
+              title="Re-render this shot with your changes"
             >
               {regenBusy ? <span className="film-ctrl-spin" /> : null}
               {regenBusy ? 'Regenerating…' : 'Regenerate with changes'}
             </button>
-            <button className="film-btn film-btn--ghost" onClick={onSaveEdit}>Save</button>
+            <button className="film-btn film-btn--ghost" onClick={onSaveEdit} title="Keep these changes without re-rendering yet">Save</button>
           </div>
         </div>
         );
@@ -581,17 +666,23 @@ export default function WritersRoom({
           storyboard + Editor's Room own a finished film. */}
       {showBuildBar && castPhase !== 'done' && (() => {
         const CTA = ({
-          idle:           { label: 'Review cast',         disabled: false, busy: false, onClick: onReviewCast },
-          cast_rendering: { label: 'Reviewing the cast…', disabled: true,  busy: true,  onClick: null },
-          cast_ready:     { label: 'Make the film',       disabled: false, busy: false, onClick: onApproveCast },
-          film_rendering: { label: 'Making the film…',    disabled: true,  busy: true,  onClick: null },
+          idle:           { label: 'Review cast',         disabled: false, busy: false, onClick: onReviewCast,
+                            tip: 'Plan the shots and draw the cast so you can check them before the film is made' },
+          cast_rendering: { label: 'Reviewing the cast…', disabled: true,  busy: true,  onClick: null,
+                            tip: 'Drawing your cast — no need to click again' },
+          cast_ready:     { label: 'Make the film',       disabled: false, busy: false, onClick: onApproveCast,
+                            tip: 'Approve the cast and render the film — this uses credits' },
+          film_rendering: { label: 'Making the film…',    disabled: true,  busy: true,  onClick: null,
+                            tip: 'Your film is rendering — you can leave this page' },
           // A shot regenerate is NOT a cast build. Wear the live job label so the
           // locked button names the actual work ("Regenerating shot 5…").
-          editing:        { label: busyLabel || 'Working…', disabled: true, busy: true, onClick: null },
-        })[castPhase] || { label: 'Review cast', disabled: false, busy: false, onClick: onReviewCast };
+          editing:        { label: busyLabel || 'Working…', disabled: true, busy: true, onClick: null,
+                            tip: 'An edit is being applied to your film' },
+        })[castPhase] || { label: 'Review cast', disabled: false, busy: false, onClick: onReviewCast,
+                           tip: 'Plan the shots and draw the cast so you can check them before the film is made' };
 
         return scriptBarCollapsed ? (
-          <button className="film-scriptbar-pill" onClick={() => setScriptBarCollapsed(false)}>
+          <button className="film-scriptbar-pill" onClick={() => setScriptBarCollapsed(false)} title="Show the make-the-film bar">
             <IconCheck s={12} /> Script ready
           </button>
         ) : (
@@ -602,6 +693,7 @@ export default function WritersRoom({
                 className="film-btn film-btn--primary film-funnel-cta"
                 disabled={CTA.disabled}
                 onClick={CTA.onClick || undefined}
+                title={CTA.tip}
               >
                 {CTA.busy && <span className="film-ctrl-spin" />}
                 {CTA.label}
@@ -645,7 +737,7 @@ export default function WritersRoom({
               ? "Tell the editor what to change — a beat, a line, a whole sequence…"
               : "Write the next beat, or push back on the last one…"}
           />
-          <button className="film-send" onClick={send} aria-label="Send">
+          <button className="film-send" onClick={send} aria-label="Send" title="Send (Enter) — Shift+Enter for a new line">
             <IconSend s={17} />
           </button>
         </div>

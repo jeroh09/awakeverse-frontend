@@ -5,7 +5,7 @@
 import { useState, useCallback, useRef, useEffect } from 'react';
 import { filmGenerate, filmGetJob, filmCancel, filmReassemble, filmRegenerate,
          filmPlan, filmRegeneratePlate, filmApproveRender, filmUploadCharacterImage,
-         filmFinishProject, friendlyError } from './filmApi';
+         filmFinishProject, filmSetRecap, friendlyError } from './filmApi';
 
 const POLL_MS = 5000;
 const POLL_TIMEOUT_MS = 45 * 60 * 1000;
@@ -28,7 +28,28 @@ const normBeat = b => ({
   clipUrl: b.clip_url || null,
   durable: !!b.durable,
   softened: !!b.softened,
+  // The beat exactly as the server stored it. Cut / Duplicate / reorder send THIS back
+  // (beatPayload below) — the reassemble endpoint saves the list it receives, so a
+  // payload of display fields alone wiped every shot's visual, lines, cast, location
+  // and voices after one cut (2026-10-12).
+  raw: b,
 });
+
+// One beat for the reassemble payload: every stored field, with the cell's current
+// clip/seconds/caption on top. Cells built before a beat landed (no raw) fall back to
+// the display fields, which is what the old payload sent.
+export const beatPayload = (c) => ({
+  ...(c.raw || {}),
+  index: c.index, clip_url: c.clipUrl, seconds: c.seconds,
+  speaker: c.speaker, caption: c.caption, kind: c.kind, durable: c.durable,
+});
+
+// "Edit not applied: …" / "Previously on: …" — an edit or recap that failed on a film
+// that is still fine (EDITOR_FAIL_RESTORE): the job is 'complete' and the reason rides
+// error_message. Anything else in error_message on a complete job is not ours to show.
+const NOTICE_PREFIXES = ['Edit not applied:', 'Previously on:'];
+const noticeFrom = (msg) => (typeof msg === 'string'
+  && NOTICE_PREFIXES.some(p => msg.startsWith(p))) ? msg : null;
 
 // manifest → storyboard cells. The backend pushes { plan:[shot skeletons],
 // beats:[rendered-so-far w/ clip_url], live, total } the MOMENT the director
@@ -45,7 +66,23 @@ function toCells(manifest, expected) {
   // truth (in their current order), so cut / duplicate / reorder reflect at once.
   // The `plan` is only the live-render progress skeleton; ignore it here.
   if (!live && beats.length) {
-    const done = beats.map((b, pos) => ({ ...normBeat(b), pos, status: 'done' }));
+    // MERGED CLIPS, ONE ROW PER LINE (2026-10-12): a clip merged from several spoken
+    // shots carries each shot's own line (from source.shots via merged_from), so the
+    // storyboard can show — and edit — one line at a time (target_source_index).
+    const srcShots = new Map(((manifest && manifest.source && manifest.source.shots) || [])
+      .filter(s => s && s.index != null).map(s => [s.index, s]));
+    const subLinesOf = (b) => {
+      const mf = Array.isArray(b.merged_from) ? b.merged_from : [];
+      if (mf.length < 2) return [];
+      const rows = mf.map(i => srcShots.get(i)).filter(Boolean)
+        .filter(s => ((s.dialogue || s.vo || '') + '').trim())
+        .map(s => ({ sourceIndex: s.index, speaker: (s.speaker || (s.vo ? 'Narrator' : '')).trim(),
+                     text: (s.dialogue || s.vo || '').trim(), kind: s.vo && !s.dialogue ? 'vo' : 'dialogue',
+                     visual: (s.action || '').trim(),
+                     present: Array.isArray(s.present_cast) ? s.present_cast.slice() : [] }));
+      return rows.length >= 2 ? rows : [];
+    };
+    const done = beats.map((b, pos) => ({ ...normBeat(b), pos, status: 'done', subLines: subLinesOf(b) }));
     // PREVIEW WALL (2026-09-16): a budget-limited film completes with fewer
     // rendered beats than planned. The un-rendered shots become LOCKED cells
     // built from the plan that survived in source.shots — captioned, kinded,
@@ -175,6 +212,7 @@ export default function useFilmJob() {
   const [error, setError]           = useState(null);
   const [blocked, setBlocked]       = useState(null);   // 402 insufficient-credits info
   const [editBusy, setEditBusy]     = useState(null);   // null | label while an edit applies
+  const [notice, setNotice]         = useState(null);   // "Edit not applied: …" on a complete job
 
   const pollRef = useRef(null);
   const startedRef = useRef(0);
@@ -202,7 +240,7 @@ export default function useFilmJob() {
           setManifest(m);
         }
         if (job.output_url) setOutputUrl(job.output_url);
-        if (job.status === 'complete') { stop(); setEditBusy(null); }
+        if (job.status === 'complete') { stop(); setEditBusy(null); setNotice(noticeFrom(job.error_message)); }
         // awaiting_review is a PAUSE, not a terminal state: the plan + character
         // plates are ready and nothing changes until the user acts (regenerate /
         // approve). Stop polling so we don't spin for 45 min on a paused job; the
@@ -346,6 +384,7 @@ export default function useFilmJob() {
     setJobId(render.job_id);
     const s = render.status || 'processing';
     setStatus(s);
+    if (s === 'complete') setNotice(noticeFrom(render.error_message));
     if (render.output_url) setOutputUrl(render.output_url);
     if (render.beats_manifest) {
       try {
@@ -366,22 +405,40 @@ export default function useFilmJob() {
 
   const reassemble = useCallback(async (editedBeats, captions) => {
     if (!jobId) return;
-    setError(null); setEditBusy('Reassembling your film…'); setStatus('processing');
+    setError(null); setNotice(null); setEditBusy('Reassembling your film…'); setStatus('processing');
     try { await filmReassemble(jobId, editedBeats, captions); poll(jobId); }
     catch (e) { setError(friendlyError(e)); setEditBusy(null); }
   }, [jobId, poll]);
 
-  const regenerate = useCallback(async (beatIndex, note, editedText, present) => {
+  // targetSourceIndex (optional): re-direct ONE line of a merged clip (its atomic shot).
+  const regenerate = useCallback(async (beatIndex, note, editedText, present, targetSourceIndex) => {
     if (!jobId) return;
-    setError(null); setEditBusy(`Regenerating shot ${beatIndex}…`); setStatus('processing');
-    try { await filmRegenerate(jobId, beatIndex, note, editedText, present); poll(jobId); }
+    setError(null); setNotice(null);
+    setEditBusy(targetSourceIndex != null ? `Redoing a line in shot ${beatIndex}…` : `Regenerating shot ${beatIndex}…`);
+    setStatus('processing');
+    try { await filmRegenerate(jobId, beatIndex, note, editedText, present, targetSourceIndex); poll(jobId); }
     catch (e) { setError(friendlyError(e)); setEditBusy(null); }
+  }, [jobId, poll]);
+
+  // "Previously on" on/off/rebuild (SERIES_RECAP). The server rebuilds the film with or
+  // without the recap on THIS job, so it reads like any other edit: busy overlay + poll.
+  const recap = useCallback(async ({ on, picks, voiceId } = {}) => {
+    if (!jobId) return false;
+    setError(null); setNotice(null);
+    setEditBusy(on ? 'Adding \u201cPreviously on\u201d…' : 'Removing \u201cPreviously on\u201d…');
+    setStatus('processing');
+    try { await filmSetRecap(jobId, { on, beat_indices: picks, voice_id: voiceId }); poll(jobId); return true; }
+    catch (e) {
+      // the server's own reason (e.g. "Episode 7 is only a preview") is the useful part
+      const why = (e && e.response && e.response.data && e.response.data.error) || friendlyError(e);
+      setNotice(`Previously on: ${why}`); setEditBusy(null); setStatus('complete'); return false;
+    }
   }, [jobId, poll]);
 
   const reset = useCallback(() => {
     stop();
     setJobId(null); setStatus('idle'); setManifest(null); setRawProgress(0);
-    setOutputUrl(null); setError(null); setBlocked(null); setEditBusy(null); expectedRef.current = 0;
+    setOutputUrl(null); setError(null); setBlocked(null); setEditBusy(null); setNotice(null); expectedRef.current = 0;
   }, [stop]);
 
   const cells = toCells(manifest, expectedRef.current);
@@ -415,7 +472,8 @@ export default function useFilmJob() {
   const jobTitle = (manifest && manifest.source && manifest.source.title) || null;
 
   return { jobId, status, stage, cells, progress, outputUrl, error, title: jobTitle, editBusy,
+    notice, clearNotice: () => setNotice(null),
     reviewCharacters, planningPlates, live, contentBlock, blocked, clearBlocked: () => setBlocked(null),
     generate, plan, regeneratePlate, uploadCharacterImage, approveRender, finish,
-    cancel, reassemble, regenerate, adopt, reset };
+    cancel, reassemble, regenerate, recap, adopt, reset };
 }

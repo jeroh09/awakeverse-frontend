@@ -178,3 +178,5 @@
 @media (prefers-reduced-motion: reduce) {
   .nf-scrim, .nf-modal { animation: none; }
 }
+/* Genre hint under the genre pills (2026-10-12) */
+.nf-ghint { margin: 8px 2px 0; font-size: 12.5px; line-height: 1.45; color: var(--film-t2, #94A3B8); min-height: 1.45em; }

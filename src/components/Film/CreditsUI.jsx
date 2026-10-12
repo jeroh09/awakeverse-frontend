@@ -13,7 +13,7 @@ export function CreditsChip({ balance, expiringSoon, onClick }) {
     ? `${fmt(expiringSoon.points)} expire in ${expiringSoon.expires_in_days}d`
     : null;
   return (
-    <button className="film-credits-chip" onClick={onClick} title="Your credits">
+    <button className="film-credits-chip" onClick={onClick} title="Your credit balance — click to top up or see where credits went">
       <span className="film-credits-dot" />
       <span className="film-credits-bal">{fmt(balance)}</span>
       <span className="film-credits-unit">credits</span>
@@ -42,11 +42,11 @@ export function CostConfirm({ price, balance, label = 'Make the film',
 
       {affordable ? (
         <div className="film-cost-actions">
-          <button className="film-btn film-btn--primary" disabled={busy} onClick={onConfirm}>
+          <button className="film-btn film-btn--primary" disabled={busy} onClick={onConfirm} title={`Start — uses ${fmt(price)} credits`}>
             {busy ? <span className="film-ctrl-spin" /> : null}
             {busy ? 'Starting…' : label}
           </button>
-          <button className="film-btn film-btn--ghost" onClick={onCancel} disabled={busy}>Cancel</button>
+          <button className="film-btn film-btn--ghost" onClick={onCancel} disabled={busy} title="Go back without spending credits">Cancel</button>
         </div>
       ) : (
         <InsufficientCard needed={price} available={balance} shortBy={shortBy} onCancel={onCancel} />
@@ -68,14 +68,14 @@ export function InsufficientCard({ needed, available, shortBy, title, message,
         )}
       </p>
       <div className="film-insufficient-actions">
-        <button className="film-btn film-btn--primary" onClick={onTopUp || (() => {})}>
+        <button className="film-btn film-btn--primary" onClick={onTopUp || (() => {})} title="Buy more credits">
           Top up credits
         </button>
-        <button className="film-btn film-btn--soft" onClick={onUpgrade || (() => {})}>
+        <button className="film-btn film-btn--soft" onClick={onUpgrade || (() => {})} title="See plans with more credits each month">
           Upgrade plan
         </button>
         {onCancel && (
-          <button className="film-btn film-btn--ghost" onClick={onCancel}>Maybe later</button>
+          <button className="film-btn film-btn--ghost" onClick={onCancel} title="Close — nothing is charged">Maybe later</button>
         )}
       </div>
     </div>
