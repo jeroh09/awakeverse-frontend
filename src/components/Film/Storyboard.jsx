@@ -250,6 +250,111 @@ function CastMember({ name, info, busy, onRedraw, onUpload }) {
   );
 }
 
+// ── Places — the film's locations at cast review (LOCATION_REVIEW, 2026-10-14) ──
+// Painted right after the cast. The user can change how a place LOOKS (decor,
+// materials, colours, wear, furniture style); its layout, doors and the things the
+// scenes use (the "Kept" chips) stay where they are, and so do light / time /
+// weather and how busy it is. Series locations are locked. Redraw only (no uploads).
+const placeLabel = (name = '') => name.replace(/[_-]+/g, ' ').replace(/\s+/g, ' ').trim()
+  .replace(/\b\w/g, c => c.toUpperCase());
+
+function PlaceCard({ name, info, busy, onRedraw, onRevert, arValue }) {
+  const [look, setLook] = useState('');
+  const [err, setErr] = useState(null);
+  const recurring = !!info.recurring;
+  const feats = Array.isArray(info.features) ? info.features : [];
+  const go = async (fn) => {
+    setErr(null);
+    const r = await fn();
+    if (r && r.error) setErr(r.error); else setLook('');
+  };
+  return (
+    <div className={`film-place-card${busy ? ' is-busy' : ''}${recurring ? ' is-locked' : ''}`}>
+      <div className="film-place-pic" style={{ aspectRatio: arValue }}>
+        {info.plate_url
+          ? <img src={info.plate_url} alt={placeLabel(name)} className="film-place-img" />
+          : <div className="film-place-img film-cast-img--empty" />}
+        {recurring
+          ? <span className="film-cast-badge" style={{ background: 'rgba(16,64,48,.85)', color: '#bff0dc' }}>Series location</span>
+          : info.edited && <span className="film-cast-badge">Redrawn</span>}
+        {busy && <div className="film-cast-veil"><span className="film-spin" /> Repainting…</div>}
+      </div>
+      <div className="film-place-body">
+        <div className="film-cast-name">{placeLabel(name)}</div>
+        {info.description && <div className="film-place-desc" title={info.description}>{info.description}</div>}
+        {feats.length > 0 && (
+          <div className="film-place-feats" title="The scenes use these, so they stay where they are">
+            <span className="film-place-kept">Kept</span>
+            {feats.map(f => <span key={f} className="film-place-chip">{f}</span>)}
+          </div>
+        )}
+        {recurring ? (
+          <div className="film-place-lock">Locked · the same in every episode</div>
+        ) : (
+          <>
+            <textarea className="film-cast-desc film-place-look" value={look} spellCheck={false} maxLength={300}
+              onChange={e => setLook(e.target.value)}
+              placeholder="How should it look? e.g. run-down and dim, peeling paint, worn leather stools" />
+            {err && <div className="film-place-err" role="alert">{err}</div>}
+            <div className="film-cast-actions">
+              <button className="film-cast-btn" disabled={busy || !look.trim()}
+                      onClick={() => go(() => onRedraw(name, look.trim()))}
+                      title="Repaint this place with the new look — its layout, doors and the things the scenes use stay put">
+                <IconRedraw s={14} /> Redraw
+              </button>
+              {info.edited && (
+                <button className="film-cast-btn film-cast-btn--up" disabled={busy}
+                        onClick={() => go(() => onRevert(name))}
+                        title="Go back to the place as it was first drawn">
+                  Back to original
+                </button>
+              )}
+            </div>
+          </>
+        )}
+      </div>
+    </div>
+  );
+}
+
+function PlacesRow({ places, status, onRedraw, onRevert, arValue }) {
+  const [busy, setBusy] = useState(null);
+  const list = places ? Object.entries(places) : [];
+  if (status === 'failed' || (!list.length && status !== 'building')) return null;
+  const run = async (name, fn) => { setBusy(name); try { return await fn(); } finally { setBusy(null); } };
+  return (
+    <div className="film-places">
+      <div className="film-cast-lead">
+        <h3>Places</h3>
+        <p>Where your film happens. Change how a place looks — its layout, doors and the things the
+          scenes use stay where they are.</p>
+      </div>
+      {status === 'building' && !list.length ? (
+        <div className="film-place-grid">
+          {[0, 1].map(i => (
+            <div key={i} className="film-place-card film-place-card--skel">
+              <div className="film-place-pic" style={{ aspectRatio: arValue }}><span className="film-cast-skel-shine" aria-hidden="true" /></div>
+              <div className="film-place-body">
+                <span className="film-cast-skel-line film-cast-skel-line--title" aria-hidden="true" />
+                <span className="film-cast-skel-line" aria-hidden="true" />
+                <div className="film-place-painting">Painting the places…</div>
+              </div>
+            </div>
+          ))}
+        </div>
+      ) : (
+        <div className="film-place-grid">
+          {list.map(([name, info]) => (
+            <PlaceCard key={name} name={name} info={info} busy={busy === name} arValue={arValue}
+              onRedraw={(n, l) => run(n, () => onRedraw(n, l))}
+              onRevert={(n) => run(n, () => onRevert(n))} />
+          ))}
+        </div>
+      )}
+    </div>
+  );
+}
+
 // ── Photoreal adults-only block (stageState === 'blocked') ────────────────────
 // content_jobs.plan_film_for_job gates BEFORE any plate spend: a character that
 // reads as a minor on the Veo/photoreal pathway hard-stops the plan, writes
@@ -463,7 +568,12 @@ export default function Storyboard({
   onDurationChange = null,
   cost = null,
   costAffordable = null,
+  balance = null,                    // the user's credit balance (shown under the button)
   cast = null,
+  places = null,                     // LOCATION_REVIEW: review.locations, or null when off
+  placesStatus = null,               // 'building' | 'ready' | 'failed'
+  onRedrawPlace = null,              // (name, look) → {…entry} | {error}
+  onRevertPlace = null,              // (name) → {…entry} | {error}
   planningCast = false,
   onRedrawCast = () => {},
   onUploadCastPhoto = () => {},
@@ -553,16 +663,39 @@ export default function Storyboard({
     : stageState === 'edit' ? `${total} shots · ${totalSecs}s`
     : 'no shots yet';
 
+  // OPTION A — "the slate" (owner, 2026-10-15): the price rides INSIDE the button that
+  // spends it, and the balance sits under it; the film's facts live in one rounded slate.
+  const showCost = cost != null && (stageState === 'review' || stageState === 'plate_review');
+  const costPart = showCost ? (
+    <span className={`film-btn-cost${costAffordable === false ? ' is-short' : ''}`}>
+      {Number(cost).toLocaleString()} credits
+    </span>
+  ) : null;
+  const hint =
+    stageState === 'plate_review' ? 'Check the cast and places, then make the film'
+    : stageState === 'review' ? 'Not made yet — check the shots, then make the film'
+    : stageState === 'render' ? (planningCast ? 'Sketching the cast…' : 'Making your film…')
+    : stageState === 'edit' ? 'Your film — play it, change a shot, or export'
+    : stageState === 'blocked' ? 'This film can’t be made as written'
+    : 'No shots yet';
+  const firstCell =
+    stageState === 'plate_review' ? { k: 'Cast', v: `${castList.length} character${castList.length === 1 ? '' : 's'}` }
+    : stageState === 'render' ? { k: 'Shots', v: planningCast ? '—' : `${(progress && progress.done) || 0} of ${(progress && progress.total) || total} made` }
+    : total ? { k: 'Shots', v: `${total} shot${total === 1 ? '' : 's'}${totalSecs ? ` · ${totalSecs}s` : ''}` }
+    : { k: 'Shots', v: '—' };
+  const lengthLabel = durationSeconds ? `~${Math.round(durationSeconds / 60)} min` : '—';
+
   const cta =
     stageState === 'plate_review' ? (
         <div className="film-head-actions">
-          <button className="film-btn film-btn--primary" onClick={onApproveCast}
-                  title="Approve the cast and start making the film — this uses credits">
+          <button className="film-btn film-btn--primary film-btn--cost" onClick={onApproveCast}
+                  title="Approve the cast and places and start making the film — this uses credits">
             <IconCheck s={14} /> Looks good — make the film
+            {costPart}
           </button>
         </div>
       )
-    : stageState === 'review' ? <button className="film-btn film-btn--primary" onClick={onGenerate} title="Render the film from this plan — this uses credits">Make the film</button>
+    : stageState === 'review' ? <button className="film-btn film-btn--primary film-btn--cost" onClick={onGenerate} title="Render the film from this plan — this uses credits">Make the film{costPart}</button>
     : stageState === 'edit' ? (
         <div className="film-head-actions">
           {finalUrl && <button className="film-btn film-btn--primary" onClick={() => setWatching(true)} title="Watch the finished film"><IconPlay s={14} /> Play film</button>}
@@ -580,45 +713,53 @@ export default function Storyboard({
 
   return (
     <div className="film-pcontent">
-      <div className="film-phead">
-        <div className="film-htabs">
-          <span className="film-htab is-on">Storyboard</span>
-          <span className="film-hsub">{sub}</span>
-          {videoStyle && (
-            <span className="film-hstyle" title="Style · frame"
-              style={{ marginLeft: 10, fontSize: 12, fontWeight: 600, color: '#818cf8',
-                       background: 'rgba(99,102,241,.1)', border: '1px solid rgba(99,102,241,.3)',
-                       borderRadius: 999, padding: '3px 10px', whiteSpace: 'nowrap' }}>
-              {styleLabel(videoStyle)} · {aspectRatio}
-            </span>
-          )}
-          {durationSeconds != null && onDurationChange && (
-            <select
-              className="film-hduration"
-              value={durationSeconds}
-              disabled={stageState === 'rendering'}
-              onChange={(e) => onDurationChange(Number(e.target.value))}
-              title="Film length — the script is fitted to this before directing; too short and connective scenes get condensed away"
-              style={{ marginLeft: 8, fontSize: 12, fontWeight: 600, color: '#818cf8',
-                       background: 'rgba(99,102,241,.1)', border: '1px solid rgba(99,102,241,.3)',
-                       borderRadius: 999, padding: '3px 10px', cursor: 'pointer',
-                       appearance: 'none', WebkitAppearance: 'none' }}>
-              <option value={60}>~1 min</option>
-              <option value={120}>~2 min</option>
-              <option value={180}>~3 min</option>
-            </select>
-          )}
+      <div className="film-phead film-phead--slate">
+        <div className="film-phead-main">
+          <div className="film-phead-title">
+            <h2 className="film-phead-h">Storyboard</h2>
+            <span className="film-phead-hint" title={sub}>{hint}</span>
+          </div>
+          <div className="film-slate" role="group" aria-label="Film details">
+            <div className="film-slate-cell" title={stageState === 'plate_review' ? 'The characters in this film' : 'Shots in this film'}>
+              <span className="film-slate-k">{firstCell.k}</span>
+              <span className="film-slate-v">{firstCell.v}</span>
+            </div>
+            <div className="film-slate-cell" title="The film's visual style">
+              <span className="film-slate-k">Style</span>
+              <span className="film-slate-v">{videoStyle ? styleLabel(videoStyle) : '—'}</span>
+            </div>
+            <div className="film-slate-cell" title="The frame shape — 9:16 is vertical, for phones">
+              <span className="film-slate-k">Frame</span>
+              <span className="film-slate-v">{aspectRatio || '—'}</span>
+            </div>
+            <div className="film-slate-cell">
+              <span className="film-slate-k">Length</span>
+              {durationSeconds != null && onDurationChange ? (
+                <select
+                  className="film-hduration film-slate-select"
+                  value={durationSeconds}
+                  disabled={stageState === 'rendering' || stageState === 'render'}
+                  onChange={(e) => onDurationChange(Number(e.target.value))}
+                  title="Film length — the script is fitted to this before directing; too short and connective scenes get condensed away">
+                  <option value={60}>~1 min</option>
+                  <option value={120}>~2 min</option>
+                  <option value={180}>~3 min</option>
+                </select>
+              ) : (
+                <span className="film-slate-v">{lengthLabel}</span>
+              )}
+            </div>
+          </div>
         </div>
-        <div className="film-phead-right">
-          {cost != null && (stageState === 'review' || stageState === 'plate_review') && (
-            <span
-              className={`film-cost-badge${costAffordable === false ? ' is-short' : ''}`}
-              title="What making this film will use"
-            >
-              ~{Number(cost).toLocaleString()} credits
+        <div className="film-phead-right film-phead-right--slate">
+          {cta}
+          {showCost && balance != null && (
+            <span className={`film-phead-bal${costAffordable === false ? ' is-short' : ''}`}>
+              {costAffordable === false
+                ? `You have ${Number(balance).toLocaleString()} — top up to make it`
+                : `You have ${Number(balance).toLocaleString()}`}
             </span>
           )}
-          {cta}
         </div>
       </div>
 
@@ -676,6 +817,10 @@ export default function Storyboard({
                   onRedraw={handleRedraw} onUpload={handleUploadClick} />
               ))}
             </div>
+            {onRedrawPlace && (places || placesStatus) && (
+              <PlacesRow places={places} status={placesStatus} arValue={arValue}
+                onRedraw={onRedrawPlace} onRevert={onRevertPlace || (() => ({}))} />
+            )}
           </div>
         ) : stageState === 'empty' || total === 0 ? (
           <EmptyStoryboard />

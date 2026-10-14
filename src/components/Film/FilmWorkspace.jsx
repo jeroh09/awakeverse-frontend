@@ -30,6 +30,7 @@ export default function FilmWorkspace({
   cast = null,
   planningCast = false,
   onRedrawCast, onUploadCastPhoto, onApproveCast, onAcceptUploadConsent,
+  places = null, placesStatus = null, onRedrawPlace, onRevertPlace,
   selectedBeat = null,
   progress = null,
   finalUrl = null,
@@ -195,10 +196,15 @@ export default function FilmWorkspace({
               videoStyle={videoStyle}
               cost={cost}
               costAffordable={costAffordable}
+              balance={credits ? credits.balance : null}
               cast={cast}
               planningCast={planningCast}
               onRedrawCast={onRedrawCast}
               onUploadCastPhoto={onUploadCastPhoto}
+              places={places}
+              placesStatus={placesStatus}
+              onRedrawPlace={onRedrawPlace}
+              onRevertPlace={onRevertPlace}
               onAcceptUploadConsent={onAcceptUploadConsent}
               onApproveCast={onApproveCast}
               selectedBeat={selectedBeat}

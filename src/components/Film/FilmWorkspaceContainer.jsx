@@ -510,6 +510,10 @@ export default function FilmWorkspaceContainer({
       cost={renderCost ? renderCost.price : null}
       costAffordable={renderCost ? renderCost.affordable : null}
       cast={job.reviewCharacters}
+      places={job.reviewLocations}
+      placesStatus={job.locationsStatus}
+      onRedrawPlace={job.redrawLocation}
+      onRevertPlace={job.revertLocation}
       planningCast={job.planningPlates}
       onRedrawCast={onRedrawCast}
       onUploadCastPhoto={onUploadCastPhoto}

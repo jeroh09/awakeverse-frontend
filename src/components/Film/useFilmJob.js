@@ -5,7 +5,7 @@
 import { useState, useCallback, useRef, useEffect } from 'react';
 import { filmGenerate, filmGetJob, filmCancel, filmReassemble, filmRegenerate,
          filmPlan, filmRegeneratePlate, filmApproveRender, filmUploadCharacterImage,
-         filmFinishProject, filmSetRecap, friendlyError } from './filmApi';
+         filmFinishProject, filmSetRecap, filmRedrawLocation, friendlyError } from './filmApi';
 
 const POLL_MS = 5000;
 const POLL_TIMEOUT_MS = 45 * 60 * 1000;
@@ -261,7 +261,14 @@ export default function useFilmJob() {
         // plates are ready and nothing changes until the user acts (regenerate /
         // approve). Stop polling so we don't spin for 45 min on a paused job; the
         // manifest (with manifest.review) is already set above for the review UI.
-        if (job.status === 'awaiting_review') { stop(); release(); setEditBusy(null); }
+        if (job.status === 'awaiting_review') {
+          release(); setEditBusy(null);
+          // LOCATION_REVIEW: the places are painted right after the cast — keep polling
+          // until they land, then stop as before.
+          const _bm = job.beats_manifest && (typeof job.beats_manifest === 'string'
+            ? JSON.parse(job.beats_manifest) : job.beats_manifest);
+          if (!(_bm && _bm.review && _bm.review.locations_status === 'building')) stop();
+        }
         if (job.status === 'failed' || job.status === 'cancelled') {
           stop(); release(); setEditBusy(null); setError(job.error_message || 'Render stopped.');
         }
@@ -340,6 +347,28 @@ export default function useFilmJob() {
     } catch (e) { return { error: friendlyError(e) }; }
     finally { release(); }
   }, [jobId, claim, release]);
+
+  // LOCATION_REVIEW: redraw one PLACE's look (or revert it). Synchronous like the cast
+  // redraw; goes through the one-job lock; the reply is the place's new review entry.
+  const _placeCall = useCallback(async (name, body, label) => {
+    if (!jobId) return { error: 'No plan to review yet.' };
+    if (!claim(label)) return { error: 'Another change is still being applied — try again in a moment.' };
+    try {
+      const r = await filmRedrawLocation(jobId, { name, ...body });
+      setManifest(m => {
+        if (!m) return m;
+        const review = { ...(m.review || {}) };
+        review.locations = { ...(review.locations || {}), [name]: { ...((review.locations || {})[name] || {}), ...r } };
+        return { ...m, review };
+      });
+      return r;
+    } catch (e) {
+      const d = (e && e.response && e.response.data) || {};
+      return { error: d.error || friendlyError(e), code: d.code };
+    } finally { release(); }
+  }, [jobId, claim, release]);
+  const redrawLocation = useCallback((name, look) => _placeCall(name, { look }, `Redrawing ${name}`), [_placeCall]);
+  const revertLocation = useCallback((name) => _placeCall(name, { revert: true }, `Restoring ${name}`), [_placeCall]);
 
   // uploadCharacterImage(): replace a reviewable character's plate with a stylized
   // upload (photo already hosted → pass its URL). Consent-gated on the backend;
@@ -425,6 +454,13 @@ export default function useFilmJob() {
     // awaiting_review resumes WITHOUT polling — it's a pause; the manifest we just
     // set carries the review block, and the user's next action drives the change.
     if (s !== 'complete' && s !== 'failed' && s !== 'cancelled' && s !== 'awaiting_review') poll(render.job_id);
+    else if (s === 'awaiting_review') {
+      // …unless the places are still being painted (LOCATION_REVIEW)
+      try {
+        const m = typeof render.beats_manifest === 'string' ? JSON.parse(render.beats_manifest) : render.beats_manifest;
+        if (m && m.review && m.review.locations_status === 'building') poll(render.job_id);
+      } catch (_) {}
+    }
   }, [poll]);
 
   const cancel = useCallback(async () => {
@@ -487,6 +523,8 @@ export default function useFilmJob() {
   // "Plates are building" pill: a plan job still processing, not yet paused.
   const planningPlates = isPlanPhase && status === 'processing';
   const reviewCharacters = (manifest && manifest.review && manifest.review.characters) || null;
+  const reviewLocations = (manifest && manifest.review && manifest.review.locations) || null;
+  const locationsStatus = (manifest && manifest.review && manifest.review.locations_status) || null;
   // The single honest "the FILM render spine is up" signal. The approved render
   // (queue_film_render_planned) overwrites the manifest with { live:true, ... }
   // and NO phase key; the plan pause writes { live:false, phase:'plate_review' }.
@@ -506,7 +544,8 @@ export default function useFilmJob() {
 
   return { jobId, status, stage, cells, progress, outputUrl, error, title: jobTitle, editBusy,
     notice, clearNotice: () => setNotice(null),
-    reviewCharacters, planningPlates, live, contentBlock, blocked, clearBlocked: () => setBlocked(null),
+    reviewCharacters, reviewLocations, locationsStatus, redrawLocation, revertLocation,
+    planningPlates, live, contentBlock, blocked, clearBlocked: () => setBlocked(null),
     generate, plan, regeneratePlate, uploadCharacterImage, approveRender, finish,
     cancel, reassemble, regenerate, recap, adopt, reset,
     // true while any job on this film is running — callers check it BEFORE side

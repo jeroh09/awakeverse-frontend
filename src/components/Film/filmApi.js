@@ -301,6 +301,13 @@ export const filmSaveCarry = (projectId, body) =>
 // "Previously on" (SERIES_RECAP): GET → {available, reason?, on, current?, previous_episode,
 // candidates[{index,poster_url,seconds,speaker,line,visual,cliffhanger,suggested}],
 // voices[{id,label,preview_url?}], default_voice}
+// LOCATION_REVIEW (2026-10-14): redraw ONE place during cast review — its look changes,
+// its layout / doors / the things the scenes use stay. {revert:true} → the original.
+// 404 when the switch is off; 409 {code:'not_in_review'|'series_locked'}.
+export const filmRedrawLocation = (jobId, { name, look, revert } = {}) =>
+  api.post(`/film/jobs/${jobId}/location-plate`,
+    { name, ...(revert ? { revert: true } : { look }) }, { timeout: LLM_TIMEOUT }).then(r => r.data);
+
 export const filmGetRecap = (jobId) =>
   api.get(`/film/jobs/${jobId}/recap`).then(r => r.data);
 // POST {on, beat_indices?, voice_id?|'none'} → 202; the job turns 'processing' — poll it.
