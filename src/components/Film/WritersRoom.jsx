@@ -271,7 +271,7 @@ function FilmDigestStrip({ beats, filmTitle }) {
    rendered as the same contract the storyboard buttons speak. Per-intent
    Apply (one job operation each — matching the pipeline's one-op reality);
    nothing renders or spends until a row is applied. ── */
-function EditCallSheet({ proposal, onApply, onDismiss }) {
+function EditCallSheet({ proposal, onApply, onDismiss, busy = false }) {
   if (!proposal || !proposal.intents?.length) return null;
   const OP = { regenerate: 'REGENERATE', cut: 'CUT', duplicate: 'DUPLICATE' };
   return (
@@ -303,9 +303,10 @@ function EditCallSheet({ proposal, onApply, onDismiss }) {
               <div className="fw-sheet-applied">✓ Applied — the film updates when the render lands</div>
             ) : (
               <div className="fw-sheet-cta">
-                <button type="button" className="fw-sheet-apply"
+                <button type="button" className="fw-sheet-apply" disabled={busy}
                         onClick={() => onApply(proposal.id, n, it)}
-                        title={it.action === 'regenerate' ? 'Make this change and re-render the shot' : 'Make this change to the film'}>
+                        title={busy ? 'One change at a time — this unlocks when the current change finishes'
+                               : it.action === 'regenerate' ? 'Make this change and re-render the shot' : 'Make this change to the film'}>
                   Apply{it.action === 'regenerate' ? ' & re-render' : ''}
                 </button>
               </div>
@@ -536,7 +537,7 @@ export default function WritersRoom({
           <ReviewCard review={review} onDismiss={onDismissReview}
                       onSend={(msg) => { onDismissReview(); onSend(msg, null); }} />
         )}
-        <EditCallSheet proposal={editProposal}
+        <EditCallSheet proposal={editProposal} busy={regenBusy}
                        onApply={onApplyEditIntent}
                        onDismiss={onDismissProposal} />
         {(() => {

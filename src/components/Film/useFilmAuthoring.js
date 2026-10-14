@@ -62,6 +62,15 @@ export default function useFilmAuthoring() {
   const [chatMode, setChatMode] = useState('auto');
   const sidRef = useRef(null);
   const streamTokenRef = useRef(0);   // invalidates a stale read if a new send starts
+  // LENGTH (TD-18, 2026-10-12): the length the user picked on the storyboard pill,
+  // waiting to reach the room. It rides on the NEXT message as target_duration —
+  // the message route saves it to the project (ROOM_DURATION sync) and the room
+  // writes to it — then clears, so later turns read the project's saved length.
+  const lengthRef = useRef(null);
+  const setLength = useCallback((seconds) => {
+    const n = Math.round(Number(seconds));
+    lengthRef.current = Number.isFinite(n) && n > 0 ? n : null;
+  }, []);
 
   const _send = useCallback(async (text, sid, attachment = null) => {
     setError(null);
@@ -93,8 +102,12 @@ export default function useFilmAuthoring() {
     }
 
     try {
-      const response = await filmMessageStream(sid, directorText, undefined,
+      const pendingLength = lengthRef.current;
+      const response = await filmMessageStream(sid, directorText, pendingLength || undefined,
                                                chatMode === 'auto' ? undefined : chatMode);
+      // Accepted (a bad length or session fails before the stream starts) → the
+      // project now holds it. Keep a newer pick made while this was in flight.
+      if (pendingLength && lengthRef.current === pendingLength) lengthRef.current = null;
       setBusy(false);
       setThinking(false);
       setStreamingActive(true);
@@ -217,6 +230,7 @@ export default function useFilmAuthoring() {
   // WritersRoom's ScriptMeta renders identically either way.
   const adopt = useCallback(({ session_id, messages = [], title, script, scriptReady }) => {
     sidRef.current = session_id || null;
+    lengthRef.current = null;   // a pick never follows the user into another film
     setSessionId(session_id || null);
     let sawScriptMeta = false;
     setMessages((messages || []).filter(m => m.role !== 'system').map(m => {
@@ -261,6 +275,7 @@ export default function useFilmAuthoring() {
   const reset = useCallback(() => {
     streamTokenRef.current += 1;
     sidRef.current = null;
+    lengthRef.current = null;
     setSessionId(null); setMessages([]); setScriptReady(false);
     setScript(null); setShots(null); setError(null); setBusy(false);
     setThinking(false);
@@ -280,6 +295,6 @@ export default function useFilmAuthoring() {
     thinking, streamingActive, streamingText,
     editorMode, editProposal, chatMode, setChatMode,
     markIntentApplied, dismissProposal,
-    start, send, finalize, adopt, reset,
+    start, send, finalize, adopt, reset, setLength,
   };
 }

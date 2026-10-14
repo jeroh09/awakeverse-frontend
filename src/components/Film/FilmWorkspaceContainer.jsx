@@ -314,6 +314,7 @@ export default function FilmWorkspaceContainer({
       const unchanged = text === composeBeatScript(o.visual, o.lines);
       const presentChanged = JSON.stringify((editing.present || []).slice().sort())
                              !== JSON.stringify((o.present || []).slice().sort());
+      if (job.isLocked()) return;   // one job at a time — the editor stays open
       setRegenBusyIndex(idx);
       job.regenerate(idx, null, unchanged ? null : text,
         (presentChanged && (editing.present || []).length) ? editing.present : undefined,
@@ -331,6 +332,7 @@ export default function FilmWorkspaceContainer({
     const unchanged = b && text === composeBeatScript(b.visual, b.lines);
     const presentChanged = b && JSON.stringify((editing.present || []).slice().sort())
                              !== JSON.stringify((b.present || []).slice().sort());
+    if (job.isLocked()) return;   // one job at a time — the editor stays open
     setEditsByIndex(m => ({ ...m,
       [idx]: { visual: editing.visual, lines: editing.lines, present: editing.present } }));
     setRegenBusyIndex(idx);
@@ -345,6 +347,7 @@ export default function FilmWorkspaceContainer({
     // no override. Any saved edit was already applied by the edit-regenerate
     // that saved it — re-sending it here made every retry a re-direction
     // (the 2026-08-21 biscuit-Wicklow loop).
+    if (job.isLocked()) return;
     setRegenBusyIndex(index);
     job.regenerate(index, null, null);
   }, [job]);
@@ -354,7 +357,7 @@ export default function FilmWorkspaceContainer({
   // cast, location and voices after one cut. Locked preview-wall cells are never sent.
   const onCut = useCallback((index) => {
     const next = job.cells.filter(c => c.status !== 'locked' && c.index !== index).map(beatPayload);
-    job.reassemble(next);
+    return job.reassemble(next);
   }, [job]);
 
   const onDuplicate = useCallback((index) => {
@@ -363,7 +366,7 @@ export default function FilmWorkspaceContainer({
       out.push(beatPayload(c));
       if (c.index === index) out.push(JSON.parse(JSON.stringify(out[out.length - 1])));
     });
-    job.reassemble(out);
+    return job.reassemble(out);
   }, [job]);
 
   const onExport = useCallback(() => {
@@ -441,19 +444,22 @@ export default function FilmWorkspaceContainer({
   // confirmation from the stream's mode line — trust it as a third unlock.
   const editorAvailable = (['ready', 'complete'].includes(job.status) && beats.length > 0)
                           || !!(authoring.editorMode && authoring.editorMode.active);
-  const onApplyEditIntent = useCallback((proposalId, intentIdx, intent) => {
-    if (!intent) return;
+  // ONE JOB AT A TIME (TD-20): an intent applies only when nothing else is running,
+  // and is ticked "applied" only when its job actually started.
+  const onApplyEditIntent = useCallback(async (proposalId, intentIdx, intent) => {
+    if (!intent || job.isLocked()) return;
+    let started = false;
     if (intent.action === 'regenerate') {
       setRegenBusyIndex(intent.beat_index);
-      job.regenerate(intent.beat_index, intent.note || null,
+      started = await job.regenerate(intent.beat_index, intent.note || null,
                      intent.edited_text || null,
                      (intent.present && intent.present.length) ? intent.present : undefined);
     } else if (intent.action === 'cut') {
-      onCut(intent.beat_index);
+      started = await onCut(intent.beat_index);
     } else if (intent.action === 'duplicate') {
-      onDuplicate(intent.beat_index);
+      started = await onDuplicate(intent.beat_index);
     }
-    authoring.markIntentApplied(proposalId, intentIdx);
+    if (started) authoring.markIntentApplied(proposalId, intentIdx);
   }, [job, onCut, onDuplicate, authoring]);
 
   // ── the single-funnel lifecycle (2026-08-26) ──
@@ -495,7 +501,10 @@ export default function FilmWorkspaceContainer({
       aspectRatio={meta.aspect_ratio}
       videoStyle={meta.video_style}
       durationSeconds={meta.duration_seconds}
-      onDurationChange={(v) => setMeta(m => ({ ...m, duration_seconds: v }))}
+      onDurationChange={(v) => {
+        setMeta(m => ({ ...m, duration_seconds: v }));
+        authoring.setLength(v);   // TD-18: the room hears it on the next message
+      }}
       credits={credits}
       onShowCredits={() => navigate('/billing')}
       cost={renderCost ? renderCost.price : null}

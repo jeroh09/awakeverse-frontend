@@ -215,6 +215,22 @@ export default function useFilmJob() {
   const [notice, setNotice]         = useState(null);   // "Edit not applied: …" on a complete job
 
   const pollRef = useRef(null);
+  // ONE JOB AT A TIME (2026-10-13, TD-20): every call that starts work on this film —
+  // reassemble (cut / duplicate / reorder), regenerate, recap, plate redraw / upload,
+  // finish, approve, generate, plan — claims this lock SYNCHRONOUSLY and is refused
+  // while another holds it. Released when the job comes back complete / paused /
+  // failed, or when the request itself fails. A ref, not state, so two clicks in the
+  // same frame (or three Editor's Room "Apply"s) can never both get through — job 9360
+  // ran three reassembles at once and one lost its files.
+  const lockRef = useRef(null);
+  const claim = useCallback((label) => {
+    if (lockRef.current) {
+      console.info(`film: "${label}" not started — "${lockRef.current}" is still running`);
+      return false;
+    }
+    lockRef.current = label; return true;
+  }, []);
+  const release = useCallback(() => { lockRef.current = null; }, []);
   const startedRef = useRef(0);
   const expectedRef = useRef(0);
 
@@ -228,7 +244,7 @@ export default function useFilmJob() {
     startedRef.current = Date.now();
     const tick = async () => {
       if (Date.now() - startedRef.current > POLL_TIMEOUT_MS) {
-        stop(); setStatus('failed'); setError('This is taking too long — please try again.');
+        stop(); release(); setStatus('failed'); setError('This is taking too long — please try again.');
         return;
       }
       try {
@@ -240,28 +256,29 @@ export default function useFilmJob() {
           setManifest(m);
         }
         if (job.output_url) setOutputUrl(job.output_url);
-        if (job.status === 'complete') { stop(); setEditBusy(null); setNotice(noticeFrom(job.error_message)); }
+        if (job.status === 'complete') { stop(); release(); setEditBusy(null); setNotice(noticeFrom(job.error_message)); }
         // awaiting_review is a PAUSE, not a terminal state: the plan + character
         // plates are ready and nothing changes until the user acts (regenerate /
         // approve). Stop polling so we don't spin for 45 min on a paused job; the
         // manifest (with manifest.review) is already set above for the review UI.
-        if (job.status === 'awaiting_review') { stop(); setEditBusy(null); }
+        if (job.status === 'awaiting_review') { stop(); release(); setEditBusy(null); }
         if (job.status === 'failed' || job.status === 'cancelled') {
-          stop(); setEditBusy(null); setError(job.error_message || 'Render stopped.');
+          stop(); release(); setEditBusy(null); setError(job.error_message || 'Render stopped.');
         }
       } catch (e) {
         const s = e && e.response && e.response.status;
-        if (s === 404) { stop(); setStatus('failed'); setError('That job is no longer available.'); }
+        if (s === 404) { stop(); release(); setStatus('failed'); setError('That job is no longer available.'); }
         // any other single failed poll: keep trying until timeout
       }
     };
     tick();                              // fire immediately so the plan/cards show at once
     pollRef.current = setInterval(tick, POLL_MS);
-  }, [stop]);
+  }, [stop, release]);
 
   const generate = useCallback(async ({ script, title, duration_seconds = 120, video_style = 'anime',
                                         aspect_ratio = '9:16', intro = false, outro_theme = null,
                                         film_project_id = null, expectedShots = 0 }) => {
+    if (!claim('Making the film')) return null;
     setError(null); setManifest(null); setOutputUrl(null); setStatus('processing');
     expectedRef.current = expectedShots || 0;
     try {
@@ -272,10 +289,11 @@ export default function useFilmJob() {
       return id;
     } catch (e) {
       const b = creditsBlock(e);
+      release();
       if (b) { setStatus('idle'); setBlocked(b); return null; }
       setStatus('failed'); setError(friendlyError(e)); return null;
     }
-  }, [poll]);
+  }, [poll, claim, release]);
 
   // ── Plate-review lifecycle (Plan & review) ──────────────────────────────────
   // plan(): director + character plates, then PAUSE at awaiting_review. Same body
@@ -284,6 +302,7 @@ export default function useFilmJob() {
   const plan = useCallback(async ({ script, title, duration_seconds = 120, video_style = 'anime',
                                     aspect_ratio = '9:16', intro = false, outro_theme = null,
                                     film_project_id = null, expectedShots = 0 }) => {
+    if (!claim('Reviewing the cast')) return null;
     setError(null); setManifest(null); setOutputUrl(null); setStatus('processing');
     expectedRef.current = expectedShots || 0;
     try {
@@ -293,17 +312,19 @@ export default function useFilmJob() {
       poll(id);
       return id;
     } catch (e) {
+      release();
       const b = creditsBlock(e);
       if (b) { setStatus('idle'); setBlocked(b); return null; }
       setStatus('failed'); setError(friendlyError(e)); return null;
     }
-  }, [poll]);
+  }, [poll, claim, release]);
 
   // regeneratePlate(): synchronous single-plate rebuild from an edited description.
   // Returns the new { name, description, plate_url } so the caller can update its
   // local review state immediately; on failure returns { error } (string) inline.
   const regeneratePlate = useCallback(async (name, description) => {
     if (!jobId) return { error: 'No plan to review yet.' };
+    if (!claim(`Redrawing ${name}`)) return { error: 'Another change is still being applied — try again in a moment.' };
     try {
       const r = await filmRegeneratePlate(jobId, name, description);
       // Reflect the new plate in the manifest so any manifest-driven view updates.
@@ -317,13 +338,15 @@ export default function useFilmJob() {
       });
       return r;
     } catch (e) { return { error: friendlyError(e) }; }
-  }, [jobId]);
+    finally { release(); }
+  }, [jobId, claim, release]);
 
   // uploadCharacterImage(): replace a reviewable character's plate with a stylized
   // upload (photo already hosted → pass its URL). Consent-gated on the backend;
   // a 403 { consent_required } surfaces so the caller can show the agreement.
   const uploadCharacterImage = useCallback(async (name, photoUrl) => {
     if (!jobId) return { error: 'No plan to review yet.' };
+    if (!claim(`Uploading ${name}`)) return { error: 'Another change is still being applied — try again in a moment.' };
     try {
       const r = await filmUploadCharacterImage(jobId, name, photoUrl);
       setManifest(m => {
@@ -339,7 +362,8 @@ export default function useFilmJob() {
       const consentRequired = !!(e && e.response && e.response.data && e.response.data.consent_required);
       return { error: friendlyError(e), consentRequired };
     }
-  }, [jobId]);
+    finally { release(); }
+  }, [jobId, claim, release]);
 
   // finish(projectId): promote a completed PREVIEW into the full 720p render.
   // The server makes a NEW job (clean billing — the preview's ledger is already
@@ -351,6 +375,7 @@ export default function useFilmJob() {
   // and its "Finish your film" banner stay put for a retry after top-up.
   const finish = useCallback(async (projectId) => {
     if (!projectId) return null;
+    if (!claim('Finishing the film')) return null;
     setError(null);
     try {
       const data = await filmFinishProject(projectId);
@@ -363,20 +388,22 @@ export default function useFilmJob() {
       poll(id);
       return id;
     } catch (e) {
+      release();
       const b = creditsBlock(e);
       if (b) { setBlocked(b); return null; }   // status stays 'complete' → preview + banner remain
       setError(friendlyError(e)); return null; // surfaces in chatSub; preview remains
     }
-  }, [poll]);
+  }, [poll, claim, release]);
 
   // approveRender(): commit the reviewed plan → full render (Phase 3). The job
   // flips to processing and the normal render poll resumes.
   const approveRender = useCallback(async () => {
     if (!jobId) return;
+    if (!claim('Making the film')) return;
     setError(null); setStatus('processing');
     try { await filmApproveRender(jobId); poll(jobId); }
-    catch (e) { setError(friendlyError(e)); }
-  }, [jobId, poll]);
+    catch (e) { release(); setError(friendlyError(e)); }
+  }, [jobId, poll, claim, release]);
 
   // Restore an existing render on resume (from GET /projects/:id → render block).
   const adopt = useCallback((render) => {
@@ -384,6 +411,8 @@ export default function useFilmJob() {
     setJobId(render.job_id);
     const s = render.status || 'processing';
     setStatus(s);
+    // a film opened mid-render / mid-edit stays locked until its poll lands
+    lockRef.current = (s === 'processing' || s === 'queued') ? 'Working on this film' : null;
     if (s === 'complete') setNotice(noticeFrom(render.error_message));
     if (render.output_url) setOutputUrl(render.output_url);
     if (render.beats_manifest) {
@@ -404,26 +433,29 @@ export default function useFilmJob() {
   }, [jobId]);
 
   const reassemble = useCallback(async (editedBeats, captions) => {
-    if (!jobId) return;
+    if (!jobId) return false;
+    if (!claim('Reassembling your film')) return false;
     setError(null); setNotice(null); setEditBusy('Reassembling your film…'); setStatus('processing');
-    try { await filmReassemble(jobId, editedBeats, captions); poll(jobId); }
-    catch (e) { setError(friendlyError(e)); setEditBusy(null); }
-  }, [jobId, poll]);
+    try { await filmReassemble(jobId, editedBeats, captions); poll(jobId); return true; }
+    catch (e) { release(); setError(friendlyError(e)); setEditBusy(null); setStatus('complete'); return false; }
+  }, [jobId, poll, claim, release]);
 
   // targetSourceIndex (optional): re-direct ONE line of a merged clip (its atomic shot).
   const regenerate = useCallback(async (beatIndex, note, editedText, present, targetSourceIndex) => {
-    if (!jobId) return;
+    if (!jobId) return false;
+    if (!claim(`Regenerating shot ${beatIndex}`)) return false;
     setError(null); setNotice(null);
     setEditBusy(targetSourceIndex != null ? `Redoing a line in shot ${beatIndex}…` : `Regenerating shot ${beatIndex}…`);
     setStatus('processing');
-    try { await filmRegenerate(jobId, beatIndex, note, editedText, present, targetSourceIndex); poll(jobId); }
-    catch (e) { setError(friendlyError(e)); setEditBusy(null); }
-  }, [jobId, poll]);
+    try { await filmRegenerate(jobId, beatIndex, note, editedText, present, targetSourceIndex); poll(jobId); return true; }
+    catch (e) { release(); setError(friendlyError(e)); setEditBusy(null); setStatus('complete'); return false; }
+  }, [jobId, poll, claim, release]);
 
   // "Previously on" on/off/rebuild (SERIES_RECAP). The server rebuilds the film with or
   // without the recap on THIS job, so it reads like any other edit: busy overlay + poll.
   const recap = useCallback(async ({ on, picks, voiceId } = {}) => {
     if (!jobId) return false;
+    if (!claim('Previously on')) return false;
     setError(null); setNotice(null);
     setEditBusy(on ? 'Adding \u201cPreviously on\u201d…' : 'Removing \u201cPreviously on\u201d…');
     setStatus('processing');
@@ -431,12 +463,13 @@ export default function useFilmJob() {
     catch (e) {
       // the server's own reason (e.g. "Episode 7 is only a preview") is the useful part
       const why = (e && e.response && e.response.data && e.response.data.error) || friendlyError(e);
+      release();
       setNotice(`Previously on: ${why}`); setEditBusy(null); setStatus('complete'); return false;
     }
-  }, [jobId, poll]);
+  }, [jobId, poll, claim, release]);
 
   const reset = useCallback(() => {
-    stop();
+    stop(); lockRef.current = null;
     setJobId(null); setStatus('idle'); setManifest(null); setRawProgress(0);
     setOutputUrl(null); setError(null); setBlocked(null); setEditBusy(null); setNotice(null); expectedRef.current = 0;
   }, [stop]);
@@ -475,5 +508,8 @@ export default function useFilmJob() {
     notice, clearNotice: () => setNotice(null),
     reviewCharacters, planningPlates, live, contentBlock, blocked, clearBlocked: () => setBlocked(null),
     generate, plan, regeneratePlate, uploadCharacterImage, approveRender, finish,
-    cancel, reassemble, regenerate, recap, adopt, reset };
+    cancel, reassemble, regenerate, recap, adopt, reset,
+    // true while any job on this film is running — callers check it BEFORE side
+    // effects (spinners, "applied" ticks), the lock itself refuses the call anyway
+    isLocked: () => !!lockRef.current };
 }

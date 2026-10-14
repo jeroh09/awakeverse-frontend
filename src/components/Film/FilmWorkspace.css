@@ -1063,6 +1063,7 @@
 .fw-sheet-apply{font-size:12px;font-weight:600;padding:6px 12px;border-radius:var(--film-r-sm,8px);
   border:0;background:linear-gradient(135deg,#6366F1,#818CF8);color:#fff;cursor:pointer;}
 .fw-sheet-apply:hover{filter:brightness(1.08);}
+.fw-sheet-apply:disabled{opacity:.45;cursor:not-allowed;filter:none;}
 .fw-sheet.is-applied{opacity:.82;}
 .fw-sheet-applied{padding:0 12px 10px 17px;color:var(--film-success,#10B981);font-size:12px;}
 .fw-sheet-dismiss{align-self:flex-start;background:transparent;color:var(--film-t3,#64748B);
