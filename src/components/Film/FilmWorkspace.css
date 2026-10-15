@@ -1408,34 +1408,14 @@
 .film-notice-x:hover{color:#fff;}
 
 /* ═══ SERIES EPISODE WORKSPACE (2026-10-12) ═══════════════════════════════════════ */
-/* "Previously on" bar */
-.film-recapbar{display:flex;flex-wrap:wrap;align-items:center;gap:10px;margin:0 0 12px;padding:10px 12px;
-  border-radius:var(--film-r-md,12px);border:1px solid rgba(167,139,250,.35);
-  background:linear-gradient(90deg,rgba(76,29,149,.22),rgba(20,27,46,.6));}
-.film-recapbar.is-off{opacity:.75;}
-.film-recapbar-lbl{font-family:var(--film-display,'Syne',sans-serif);font-weight:800;font-size:13px;color:#EDE9FE;letter-spacing:.02em;}
-.film-recapbar small,.film-recapbar-sub{color:var(--film-t3,#64748B);font-size:11.5px;}
-.film-recapbar-sub{flex-basis:100%;}
-.film-recapbar-voice{background:var(--film-canvas,#0A0F1A);border:1px solid var(--film-bd-med,rgba(148,163,184,.2));border-radius:8px;
-  color:var(--film-t1,#F1F5F9);font-size:12.5px;padding:5px 8px;}
-.film-recapbar-apply{padding:6px 12px;font-size:12px;}
 .film-switch{position:relative;width:38px;height:22px;border-radius:999px;border:0;padding:0;cursor:pointer;background:#243152;flex:0 0 auto;}
 .film-switch::after{content:'';position:absolute;top:3px;left:3px;width:16px;height:16px;border-radius:50%;background:#94A3B8;transition:left .15s,background .15s;}
 .film-switch[aria-checked="true"]{background:#6366F1;}
 .film-switch[aria-checked="true"]::after{left:19px;background:#fff;}
 .film-switch:disabled{opacity:.5;cursor:default;}
-.film-recapclips{flex-basis:100%;display:grid;grid-template-columns:repeat(auto-fill,minmax(110px,1fr));gap:8px;}
-.film-recapclip{position:relative;aspect-ratio:3/4;border-radius:10px;border:1.5px solid rgba(148,163,184,.25);cursor:pointer;overflow:hidden;
-  background:#141B2E center/cover no-repeat;display:flex;align-items:flex-end;padding:0;text-align:left;}
-.film-recapclip::before{content:'';position:absolute;inset:0;background:linear-gradient(180deg,transparent 35%,rgba(2,6,23,.9));}
-.film-recapclip.is-on{border-color:#A78BFA;box-shadow:0 0 0 1px #A78BFA,0 0 16px -4px rgba(167,139,250,.6);}
-.film-recapclip.is-cliff{cursor:default;border-style:dashed;}
-.film-recapclip:not(.is-on){filter:saturate(.5) brightness(.75);}
-.film-recapclip-txt{position:relative;padding:6px 7px;font-size:10.5px;line-height:1.3;color:#fff;
-  display:-webkit-box;-webkit-line-clamp:3;-webkit-box-orient:vertical;overflow:hidden;}
 /* the recap cell */
-.film-cell--recap{border-color:rgba(167,139,250,.45)!important;background:linear-gradient(180deg,rgba(76,29,149,.18),transparent 60%);}
-.film-badge--recap{color:#DDD6FE!important;background:rgba(167,139,250,.18)!important;}
+.film-cell--recap{border-color:rgba(245,245,220,.3)!important;}   /* fallback recap cell — ivory film-leader tone, matches the slot */
+.film-badge--recap{color:var(--film-ivory,#F5F5DC)!important;background:rgba(245,245,220,.12)!important;}
 /* merged clip — one row per line */
 .film-lines{display:flex;flex-direction:column;gap:5px;margin:2px 0 4px;}
 .film-line{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:6px;align-items:start;padding:5px 7px;border-radius:8px;
@@ -1674,4 +1654,86 @@
   .film-dock{flex-wrap:wrap;}
   .film-dock-hide-sm{display:none;}
   .film-sb-meta > span:nth-child(n+3){display:none;}
+}
+
+/* ── "PREVIOUSLY ON" — the cold-open slot (Option A, 2026-10-15) ─────────────
+   Shot 00 in the grid. Film-leader look (ivory, countdown ring, sprocket edges)
+   says "cut from the last episode" — no purple, no band above the grid. Uses the
+   grid's own card proportion (--film-card-ar) so it lines up with every shot. */
+.film-recap{position:relative;display:flex;flex-direction:column;border-radius:var(--film-r-md);overflow:hidden;}
+.film-recap.is-open{box-shadow:0 0 0 2px var(--film-accent);}
+.film-recap--off{border:1.5px dashed rgba(245,245,220,.28);background:rgba(10,15,26,.6);}
+.film-recap--off.is-na{opacity:.72;}
+.film-recap-leader{aspect-ratio:var(--film-card-ar,9 / 16);max-width:100%;display:flex;flex-direction:column;
+  align-items:center;justify-content:center;gap:9px;padding:16px 14px;text-align:center;}
+.film-recap-leader h4{margin:0;font-family:var(--film-display);font-weight:700;font-size:14px;color:var(--film-ivory);}
+.film-recap-leader p{margin:0;font-size:11.5px;line-height:1.45;color:var(--film-t2);max-width:24ch;}
+.film-recap-leader small{font-size:10.5px;color:var(--film-t3);}
+.film-recap-ring{position:relative;width:52px;height:52px;border-radius:50%;border:1.5px solid rgba(245,245,220,.35);
+  display:grid;place-items:center;color:var(--film-ivory);}
+.film-recap-ring::before,.film-recap-ring::after{content:'';position:absolute;background:rgba(245,245,220,.22);}
+.film-recap-ring::before{width:1px;height:100%;left:50%;}
+.film-recap-ring::after{height:1px;width:100%;top:50%;}
+.film-recap-ring b{position:relative;z-index:1;font:700 17px 'Courier Prime',ui-monospace,monospace;
+  background:rgba(10,15,26,.92);padding:0 4px;}
+.film-recap--off.is-na .film-recap-ring{opacity:.5;}
+
+.film-recap--on{border:1px solid rgba(245,245,220,.3);background:var(--film-surface);}
+.film-recap-mosaic{position:relative;aspect-ratio:var(--film-card-ar,9 / 16);max-width:100%;display:grid;
+  grid-template-columns:1fr 1fr;grid-template-rows:1fr 1fr;gap:2px;background:#000;}
+.film-recap-tile{position:relative;background:var(--film-interactive) center/cover no-repeat;
+  filter:saturate(.6) sepia(.15);}
+.film-recap-tile.is-cliff{filter:none;outline:1.5px solid var(--film-ivory);outline-offset:-1.5px;}
+.film-recap-tile.is-cliff span{position:absolute;left:5px;bottom:5px;font-size:8.5px;font-weight:700;letter-spacing:.06em;
+  text-transform:uppercase;color:#0A0F1A;background:var(--film-ivory);padding:1px 5px;border-radius:3px;}
+.film-recap-sprocket{position:absolute;top:0;bottom:0;width:9px;z-index:2;pointer-events:none;
+  background:repeating-linear-gradient(transparent 0 6px,rgba(10,15,26,.85) 6px 11px);}
+.film-recap-sprocket.is-l{left:0;}
+.film-recap-sprocket.is-r{right:0;}
+.film-recap-mosaic .film-n{position:absolute;top:7px;left:13px;z-index:4;font-family:var(--film-display);font-weight:800;
+  font-size:13px;color:#fff;text-shadow:0 1px 4px rgba(0,0,0,.6);}
+.film-recap-title{position:absolute;left:0;right:0;bottom:0;z-index:3;padding:26px 12px 9px;pointer-events:none;
+  background:linear-gradient(transparent,rgba(10,15,26,.92));}
+.film-recap-title b{display:block;font:700 9.5px 'Courier Prime',ui-monospace,monospace;letter-spacing:.16em;
+  text-transform:uppercase;color:var(--film-ivory);}
+.film-recap-title span{font-family:var(--film-display);font-weight:700;font-size:13px;color:#fff;}
+.film-recap-vid{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;opacity:0;pointer-events:none;z-index:1;background:#000;}
+.film-recap-vid.is-on{opacity:1;pointer-events:auto;z-index:5;}
+.film-recap-play{position:absolute;left:50%;top:44%;transform:translate(-50%,-50%);z-index:4;}
+.film-recap-play:hover{transform:translate(-50%,-50%) scale(1.06);}
+.film-ctrl.is-on{color:#fff;background:var(--film-accent);border-color:var(--film-accent);}
+
+/* the drawer — spans the grid under the first row */
+.film-recap-drawer{grid-column:1 / -1;position:relative;display:grid;grid-template-columns:minmax(0,1fr) 220px;gap:14px;
+  padding:12px 14px;background:var(--film-canvas);border:1px solid var(--film-ring);border-radius:var(--film-r-md);
+  box-shadow:0 18px 40px -20px #000;}
+.film-recap-drawer::before{content:'';position:absolute;top:-7px;left:calc(16.66% - 7px);width:12px;height:12px;
+  background:var(--film-canvas);border-left:1px solid var(--film-ring);border-top:1px solid var(--film-ring);transform:rotate(45deg);}
+.film-recap-dmain{min-width:0;display:flex;flex-direction:column;gap:8px;}
+.film-recap-clips{display:grid;grid-template-columns:repeat(auto-fill,minmax(84px,1fr));gap:7px;}
+.film-recap-clip{position:relative;aspect-ratio:3 / 4;border-radius:8px;overflow:hidden;cursor:pointer;padding:0;
+  border:1.5px solid rgba(148,163,184,.22);background:var(--film-interactive) center/cover no-repeat;
+  display:flex;align-items:flex-end;text-align:left;transition:border-color .15s,box-shadow .15s,filter .15s;}
+.film-recap-clip::before{content:'';position:absolute;inset:0;background:linear-gradient(180deg,transparent 40%,rgba(2,6,23,.9));}
+.film-recap-clip:not(.is-on):not(.is-cliff){filter:saturate(.35) brightness(.7);}
+.film-recap-clip:hover:not(:disabled){border-color:var(--film-accent-hover);}
+.film-recap-clip.is-on{border-color:var(--film-accent-hover);box-shadow:0 0 0 1px var(--film-accent-hover);}
+.film-recap-clip.is-cliff{border-style:dashed;border-color:var(--film-ivory);cursor:default;}
+.film-recap-clip.is-full{cursor:not-allowed;}
+.film-recap-clip:disabled{cursor:default;}
+.film-recap-clip i{position:absolute;top:4px;right:4px;width:17px;height:17px;border-radius:50%;display:grid;place-items:center;
+  font-style:normal;font-size:10px;font-weight:700;color:#fff;background:rgba(10,15,26,.75);border:1px solid rgba(255,255,255,.35);}
+.film-recap-clip.is-on i{background:var(--film-accent);border-color:var(--film-accent);}
+.film-recap-clip span{position:relative;padding:5px 6px;font-size:9.5px;line-height:1.25;color:#fff;
+  display:-webkit-box;-webkit-line-clamp:3;-webkit-box-orient:vertical;overflow:hidden;}
+.film-recap-none{margin:0;font-size:12px;color:var(--film-t3);grid-column:1 / -1;}
+.film-recap-dside{display:flex;flex-direction:column;gap:8px;min-width:0;}
+.film-recap-lbl{font-size:10px;font-weight:700;letter-spacing:.12em;text-transform:uppercase;color:var(--film-t3);}
+.film-recap-voice{width:100%;background:var(--film-surface);border:1px solid var(--film-bd-med);border-radius:8px;
+  color:var(--film-t1);font:13px var(--film-body);padding:7px 9px;}
+.film-recap-dside small{font-size:11px;line-height:1.4;color:var(--film-t3);}
+.film-recap-dside .film-cc-row{margin-top:auto;}
+@media (max-width:900px){
+  .film-recap-drawer{grid-template-columns:minmax(0,1fr);}
+  .film-recap-drawer::before{display:none;}
 }

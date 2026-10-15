@@ -17,10 +17,13 @@
 //                   → ConsentModal → hidden file input) + Places zone (Change look /
 //                   Original, LOCATION_REVIEW; null when the switch is off)
 //                 empty → EmptyStoryboard
-//                 otherwise → RecapBar ("Previously on" toggle, narrator voice, clip
-//                   picker — series episodes, edit stage) + "Sketching the cast" pill
-//                   + shot grid (Cell: recap cell, locked preview cells, merged-clip
-//                   per-line Edit, Regenerate / Duplicate / Cut, regen spinner).
+//                 otherwise → "Sketching the cast" pill + shot grid. In a finished
+//                   series episode the grid opens with RecapSlot ("Previously on", shot
+//                   00): off → Add recap opens RecapDrawer (clips ≤3, last moment fixed,
+//                   narrator / No narrator) and only its Add recap builds; on → mosaic,
+//                   plays inline, Edit recap / Remove; unavailable → server reason.
+//                   Cell keeps: plain recap cell (fallback), locked preview cells,
+//                   merged-clip per-line Edit, Regenerate / Duplicate / Cut, regen spinner.
 //   Dock ........ ONE action per stage: Make the film (review → onGenerate,
 //                 plate_review → onApproveCast) with the cost + "N short"; render
 //                 progress + Stop after shot (onStop); preview → Finish your film
@@ -604,66 +607,188 @@ function ConsentModal({ onAgree, onCancel }) {
   );
 }
 
-/* ── "PREVIOUSLY ON" bar (2026-10-12, SERIES_RECAP=1) — series episodes, finished films.
-   A toggle, the narrator voice, and the clips from the last episode (up to three; the
-   last episode's final beat always closes the recap). Turning it on or rebuilding it
-   re-cuts the film on this job, like any edit. Not counted in the episode's length. ── */
+/* ── "PREVIOUSLY ON" — the cold-open slot (2026-10-15, Option A; SERIES_RECAP=1) ──
+   Series episodes, finished films. The recap is shot 00: the first card in the grid,
+   right where it plays. It replaces the old purple RecapBar above the grid AND the
+   separate recap cell inside it — one card for one feature.
+     · off          → an empty film-leader slot: "Add recap" opens the clip picker
+                      FIRST; nothing is built until the user confirms (POST /recap
+                      only fires from the drawer's "Add recap").
+     · on           → the recap itself: the chosen clips as a mosaic ending on the
+                      last moment, plays inline, Edit recap / Remove.
+     · unavailable  → the server's reason, greyed, no button.
+   The drawer (RecapDrawer) spans the grid under the first row: up to three clips
+   (the previous episode's final beat always closes it and can't be unpicked), the
+   narrator voice or "No narrator", and Add / Rebuild — Rebuild only after a change.
+   Building, removing or rebuilding re-cuts the film on THIS job like any edit
+   (busy overlay + poll; one job at a time); errors arrive as the
+   "Previously on: …" notice. Not counted in the episode's length. ── */
 const MAX_RECAP_CLIPS = 3;
-function RecapBar({ recap, busy, onRecap }) {
-  const cur = recap && recap.current;
-  const sugg = ((recap && recap.candidates) || []).filter(c => c.suggested && !c.cliffhanger).map(c => c.index);
-  const [voice, setVoice] = useState((cur && cur.voice_id) || (recap && recap.default_voice) || '');
-  const [picks, setPicks] = useState((cur && cur.montage) || sugg);
-  const [showClips, setShowClips] = useState(false);
-  if (!recap) return null;
+
+const recapVoiceLabel = (recap, id) => {
+  if (!id || id === 'none') return id === 'none' ? 'No narrator' : null;
+  const v = ((recap && recap.voices) || []).find(x => x.id === id);
+  return v ? v.label : null;
+};
+
+function RecapSlot({ recap, beat, busy, open, onOpen, onRemove }) {
+  const videoRef = useRef(null);
+  const [playing, setPlaying] = useState(false);
   const prev = recap.previous_episode || {};
-  if (!recap.available) {
-    return <div className="film-recapbar is-off" title="Previously on needs the previous episode finished in full">
-      <span className="film-recapbar-lbl">Previously on</span><small>{recap.reason}</small></div>;
+  const epName = prev.ordinal ? `Episode ${prev.ordinal}` : 'the last episode';
+
+  if (!recap.on) {
+    const na = !recap.available;
+    return (
+      <article className={`film-recap film-recap--off${na ? ' is-na' : ''}${open ? ' is-open' : ''}`}
+               aria-label="Previously on">
+        <div className="film-recap-leader">
+          <span className="film-recap-ring" aria-hidden="true"><b>3</b></span>
+          <h4>Previously on</h4>
+          {na ? (
+            <>
+              <p>{recap.reason || `Needs ${epName} finished in full before it can be recapped.`}</p>
+              <small>Unlocks once {epName} is finished</small>
+            </>
+          ) : (
+            <>
+              <p>Open with a 10–20s recap of {epName}, ending on its last moment.</p>
+              <button type="button" className="film-sbtn film-sbtn--pri" disabled={busy || open} onClick={onOpen}
+                      title={`Choose which moments of ${epName} the recap shows — nothing is made until you confirm`}>
+                + Add recap
+              </button>
+              <small>Not counted in this episode's length</small>
+            </>
+          )}
+        </div>
+      </article>
+    );
   }
-  const voices = recap.voices || [];
-  const changed = recap.on && ((cur && cur.voice_id) !== voice || JSON.stringify((cur && cur.montage) || []) !== JSON.stringify(picks));
-  const toggle = (idx) => setPicks(p => p.includes(idx) ? p.filter(x => x !== idx)
-                                          : (p.length >= MAX_RECAP_CLIPS ? p : [...p, idx].sort((a, b) => a - b)));
-  const clips = (recap.candidates || []);
+
+  // ON — the mosaic of what the recap shows (picked clips + the closing moment).
+  const cands = recap.candidates || [];
+  const byIndex = new Map(cands.map(c => [c.index, c]));
+  const cur = recap.current || {};
+  const picked = (cur.montage || []).map(i => byIndex.get(i)).filter(Boolean).slice(0, MAX_RECAP_CLIPS);
+  const cliff = cands.find(c => c.cliffhanger);
+  const tiles = [...picked];
+  while (tiles.length < MAX_RECAP_CLIPS) tiles.push(null);
+  const clipUrl = beat && beat.clipUrl;
+  const secs = beat && beat.seconds;
+  const narration = (beat && beat.raw && beat.raw.recap && beat.raw.recap.narration) || '';
+  const voice = recapVoiceLabel(recap, cur.voice_id);
+  const play = (e) => {
+    e.stopPropagation();
+    const v = videoRef.current;
+    if (!v) return;
+    try { v.currentTime = 0; } catch (_) {}
+    v.play().then(() => setPlaying(true)).catch(() => {});
+  };
   return (
-    <div className="film-recapbar">
-      <button type="button" role="switch" aria-checked={!!recap.on} className="film-switch" disabled={busy}
-              onClick={() => onRecap(recap.on ? { on: false } : { on: true, picks, voiceId: voice })}
-              title={recap.on ? 'Take the recap off' : `Open with a short recap of Episode ${prev.ordinal} — not counted in this episode's length`} />
-      <span className="film-recapbar-lbl">Previously on</span>
-      <select className="film-recapbar-voice" value={voice} onChange={(e) => setVoice(e.target.value)} disabled={busy}
-              aria-label="Narrator voice" title="Who narrates the recap">
-        {voices.map(v => <option key={v.id} value={v.id}>{v.label}{v.id === recap.default_voice ? ' (default)' : ''}</option>)}
-        <option value="none">No narrator</option>
-      </select>
-      <button type="button" className="film-ctrl" onClick={() => setShowClips(s => !s)} disabled={busy}
-              title={`Choose which moments of Episode ${prev.ordinal} the recap shows`}>
-        Clips · {picks.length}/{MAX_RECAP_CLIPS}</button>
-      {recap.on && changed && (
-        <button type="button" className="film-btn film-btn--primary film-recapbar-apply" disabled={busy}
-                onClick={() => onRecap({ on: true, picks, voiceId: voice })}
-                title="Rebuild the recap with this voice and these clips">Rebuild recap</button>
-      )}
-      <small className="film-recapbar-sub">~10–20s before Episode {(prev.ordinal || 0) + 1}'s first shot · not counted in its length</small>
-      {showClips && (
-        <div className="film-recapclips">
-          {clips.map(c => {
+    <article className={`film-recap film-recap--on${open ? ' is-open' : ''}`} aria-label="Previously on">
+      <div className="film-recap-mosaic">
+        {tiles.map((c, i) => (
+          <div key={c ? c.index : `empty-${i}`} className="film-recap-tile"
+               style={c && c.poster_url ? { backgroundImage: `url(${c.poster_url})` } : undefined} />
+        ))}
+        <div className="film-recap-tile is-cliff"
+             style={cliff && cliff.poster_url ? { backgroundImage: `url(${cliff.poster_url})` } : undefined}>
+          <span>Ends here</span>
+        </div>
+        <span className="film-recap-sprocket is-l" aria-hidden="true" />
+        <span className="film-recap-sprocket is-r" aria-hidden="true" />
+        <span className="film-n">00</span>
+        {clipUrl && (
+          <video ref={videoRef} className={`film-recap-vid${playing ? ' is-on' : ''}`} src={`${clipUrl}#t=0.1`}
+                 playsInline preload="metadata" controls={playing} onEnded={() => setPlaying(false)} />
+        )}
+        {clipUrl && !playing && (
+          <button type="button" className="film-play film-recap-play" onClick={play}
+                  aria-label="Play the recap" title="Play the recap"><IconPlay s={16} /></button>
+        )}
+        {!playing && (
+          <div className="film-recap-title">
+            <b>Previously on</b>
+            <span>{epName}{secs ? ` · ~${secs}s` : ''}</span>
+          </div>
+        )}
+      </div>
+      <div className="film-cfoot">
+        <div className="film-cfoot-row">
+          <span className="film-badge film-badge--recap">Recap{voice ? ` · ${voice}` : ''}</span>
+        </div>
+        <div className="film-cap">{narration || `A short recap of ${epName} before this one starts.`}</div>
+        <div className="film-cell-ctrls">
+          <button type="button" className={`film-ctrl${open ? ' is-on' : ''}`} disabled={busy || open} onClick={onOpen}
+                  title="Change which moments it shows, or the narrator">Edit recap</button>
+          <button type="button" className="film-ctrl film-ctrl--cut" disabled={busy} onClick={onRemove}
+                  title="Take the recap off — the episode starts straight away">Remove</button>
+        </div>
+      </div>
+    </article>
+  );
+}
+
+function RecapDrawer({ recap, picks, voice, busy, onToggle, onVoice, onCancel, onApply }) {
+  const prev = recap.previous_episode || {};
+  const epName = prev.ordinal ? `Episode ${prev.ordinal}` : 'the last episode';
+  const cur = recap.current || {};
+  const isAdd = !recap.on;
+  const changed = isAdd || (cur.voice_id || '') !== (voice || '')
+    || JSON.stringify(cur.montage || []) !== JSON.stringify(picks);
+  const voices = recap.voices || [];
+  const cands = recap.candidates || [];
+  return (
+    <div className="film-recap-drawer" role="group" aria-label="Previously on — choose clips and narrator">
+      <div className="film-recap-dmain">
+        <div className="film-zone-h">
+          <h3>Clips from {epName}</h3>
+          <span className="film-zone-sub">
+            {picks.length} of {MAX_RECAP_CLIPS} picked · the last moment always closes it
+          </span>
+        </div>
+        <div className="film-recap-clips">
+          {cands.map(c => {
             const on = c.cliffhanger || picks.includes(c.index);
+            const n = picks.indexOf(c.index) + 1;
+            const full = !on && picks.length >= MAX_RECAP_CLIPS;
             return (
               <button type="button" key={c.index} disabled={c.cliffhanger || busy}
-                      className={`film-recapclip${on ? ' is-on' : ''}${c.cliffhanger ? ' is-cliff' : ''}`}
-                      onClick={() => toggle(c.index)}
+                      className={`film-recap-clip${on ? ' is-on' : ''}${c.cliffhanger ? ' is-cliff' : ''}${full ? ' is-full' : ''}`}
+                      onClick={() => onToggle(c.index)}
                       style={c.poster_url ? { backgroundImage: `url(${c.poster_url})` } : undefined}
-                      title={c.cliffhanger ? 'The last moment of the episode — the recap always ends on it'
+                      aria-pressed={c.cliffhanger ? undefined : on}
+                      title={c.cliffhanger ? `The last moment of ${epName} — the recap always ends on it`
                              : on ? 'In the recap — click to leave it out'
-                             : picks.length >= MAX_RECAP_CLIPS ? `Up to ${MAX_RECAP_CLIPS} clips — remove one first` : 'Add this moment to the recap'}>
-                <span className="film-recapclip-txt">{c.cliffhanger ? 'Ends on this' : (c.line || c.visual || `Shot ${c.index}`)}</span>
+                             : full ? `Up to ${MAX_RECAP_CLIPS} clips — remove one first` : 'Add this moment to the recap'}>
+                {!c.cliffhanger && <i aria-hidden="true">{on ? n : ''}</i>}
+                <span>{c.cliffhanger ? 'Ends on this' : (c.line || c.visual || `Shot ${c.index}`)}</span>
               </button>
             );
           })}
+          {!cands.length && <p className="film-recap-none">The recap uses the last moment of {epName}.</p>}
         </div>
-      )}
+      </div>
+      <div className="film-recap-dside">
+        <label className="film-recap-lbl" htmlFor="film-recap-voice">Narrator</label>
+        <select id="film-recap-voice" className="film-recap-voice" value={voice} disabled={busy}
+                onChange={(e) => onVoice(e.target.value)} title="Who narrates the recap">
+          {voices.map(v => (
+            <option key={v.id} value={v.id}>{v.label}{v.id === recap.default_voice ? ' (default)' : ''}</option>
+          ))}
+          <option value="none">No narrator</option>
+        </select>
+        <small>~10–20s before Episode {(prev.ordinal || 0) + 1}'s first shot. Not counted in its length.</small>
+        <div className="film-cc-row">
+          <button type="button" className="film-sbtn" disabled={busy} onClick={onCancel}
+                  title="Close without changing anything">Cancel</button>
+          <button type="button" className="film-sbtn film-sbtn--pri" disabled={busy || !changed} onClick={onApply}
+                  title={isAdd ? 'Make the recap with these clips and this voice'
+                         : changed ? 'Rebuild the recap with these clips and this voice' : 'Change a clip or the voice first'}>
+            {isAdd ? 'Add recap' : 'Rebuild recap'}
+          </button>
+        </div>
+      </div>
     </div>
   );
 }
@@ -768,6 +893,28 @@ export default function Storyboard({
       setBusyMember(null);
     }
   };
+
+  // ── "Previously on" slot state (series episodes, finished films) ──
+  // The drawer's picks/voice live HERE (not in the slot) because the slot and the
+  // drawer are siblings in the grid. Opening seeds them from the current recap (or
+  // the server's suggestions when adding); any rebuild/removal closes the drawer.
+  const recapKey = recap ? `${(recap.current && recap.current.built_at) || ''}-${recap.on}` : '';
+  const [recapOpen, setRecapOpen] = useState(false);
+  const [recapPicks, setRecapPicks] = useState([]);
+  const [recapVoice, setRecapVoice] = useState('');
+  useEffect(() => { setRecapOpen(false); }, [recapKey]);
+  const openRecap = () => {
+    if (!recap) return;
+    const cur = recap.current || {};
+    const sugg = (recap.candidates || []).filter(c => c.suggested && !c.cliffhanger).map(c => c.index);
+    setRecapPicks(recap.on && Array.isArray(cur.montage) ? cur.montage.slice() : sugg.slice(0, MAX_RECAP_CLIPS));
+    setRecapVoice((recap.on && cur.voice_id) || recap.default_voice || ((recap.voices || [])[0] || {}).id || 'none');
+    setRecapOpen(true);
+  };
+  const toggleRecapPick = (idx) => setRecapPicks(p => p.includes(idx) ? p.filter(x => x !== idx)
+    : (p.length >= MAX_RECAP_CLIPS ? p : [...p, idx].sort((a, b) => a - b)));
+  const applyRecap = () => { setRecapOpen(false); onRecap && onRecap({ on: true, picks: recapPicks, voiceId: recapVoice }); };
+  const removeRecap = () => { setRecapOpen(false); onRecap && onRecap({ on: false }); };
 
   const sub =
     stageState === 'plate_review' ? `${castList.length} characters · check before making the film`
@@ -977,27 +1124,45 @@ export default function Storyboard({
           <EmptyStoryboard />
         ) : (
           <>
-          {/* "PREVIOUSLY ON" (SERIES_RECAP) — series episodes, finished films only.
-              Load-bearing: the toggle, narrator voice and clip picker all live here. */}
-          {stageState === 'edit' && recap && onRecap && (
-            <RecapBar key={`${(recap.current && recap.current.built_at) || ''}-${recap.on}`}
-                      recap={recap} busy={!!editBusy} onRecap={onRecap} />
-          )}
-          <div className="film-grid" style={gridStyle}>
-            {planningCast && (
-              <div className="film-buildpill-row">
-                <span className="film-buildpill"><span className="film-buildpill-dot" /> Sketching the cast…</span>
-              </div>
-            )}
-            {beats.map((b, i) => (
+          {(() => {
+            // "PREVIOUSLY ON" (SERIES_RECAP) — the cold-open slot is shot 00, the first
+            // card in the grid. When it's shown, the recap BEAT is drawn by the slot, so
+            // it is skipped below (one card, not two). With no recap info (not an
+            // episode, switch off, or not fetched yet) any recap beat falls back to the
+            // plain recap Cell, exactly as before.
+            const showSlot = stageState === 'edit' && !!recap && !!onRecap;
+            const recapBeat = beats.find(b => b.kind === 'recap') || null;
+            const items = (showSlot ? beats.filter(b => b.kind !== 'recap') : beats).map((b, i) => (
               <Cell key={`${b.index}-${b.pos != null ? b.pos : i}`} beat={b} stageState={stageState}
                 selected={selectedBeat === b.index} regenBusy={regenBusyIndex === b.index}
                 onSelect={onSelectBeat}
                 onRegenerate={onRegenerate} onDuplicate={onDuplicate} onCut={onCut}
                 onEditLine={onEditLine}
                 onRemoveRecap={onRecap ? () => onRecap({ on: false }) : null} />
-            ))}
-          </div>
+            ));
+            if (showSlot) {
+              items.unshift(
+                <RecapSlot key="recap-slot" recap={recap} beat={recapBeat} busy={!!editBusy}
+                  open={recapOpen} onOpen={openRecap} onRemove={removeRecap} />
+              );
+              // the drawer spans the grid right under the first row (3 columns)
+              if (recapOpen) items.splice(Math.min(3, items.length), 0,
+                <RecapDrawer key="recap-drawer" recap={recap} picks={recapPicks} voice={recapVoice}
+                  busy={!!editBusy} onToggle={toggleRecapPick} onVoice={setRecapVoice}
+                  onCancel={() => setRecapOpen(false)} onApply={applyRecap} />
+              );
+            }
+            return (
+              <div className="film-grid" style={gridStyle}>
+                {planningCast && (
+                  <div className="film-buildpill-row">
+                    <span className="film-buildpill"><span className="film-buildpill-dot" /> Sketching the cast…</span>
+                  </div>
+                )}
+                {items}
+              </div>
+            );
+          })()}
           </>
         )}
       </div>
