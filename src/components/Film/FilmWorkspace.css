@@ -87,7 +87,9 @@
 .film-panel{display:flex;flex-direction:column;min-height:0;min-width:0;
   background:var(--film-surface);border:1px solid rgba(99,102,241,.35);border-radius:var(--film-r-md);
   overflow:hidden;transition:flex-basis .25s cubic-bezier(.4,0,.2,1),flex-grow .25s cubic-bezier(.4,0,.2,1);}
-.film-panel--stage{flex:1 1 62%;margin-bottom:14px;}
+/* margin-bottom was 14px; now 0 (Option D, 2026-10-15) so the storyboard's action dock
+   sits on the same bottom line as the Writers' Room composer. */
+.film-panel--stage{flex:1 1 62%;margin-bottom:0;}
 
 /* Writers' Room: no box. Sits directly on the page canvas, flush to the
    real right and bottom edges of the window (the composer inside pins to
@@ -1522,40 +1524,154 @@
 .film-place-card--skel .film-place-pic{min-height:150px;}
 .film-place-painting{margin-top:6px;font-size:12px;color:#818cf8;font-weight:600;}
 
-/* ── Storyboard header, option A "the slate" (owner, 2026-10-15) ─────────────
-   Row 1: the title + a one-line hint for this stage. Row 2: one ROUNDED slate pill
-   holding the film's facts (Cast/Shots · Style · Frame · Length), each a small label
-   over a bold value. Right: the main button with the price inside it, balance under.
-   Scoped to .film-phead--slate so the Writers' Room header (also .film-phead) is untouched. */
-.film-phead.film-phead--slate{align-items:flex-end;gap:16px;flex-wrap:wrap;padding-top:14px;padding-bottom:14px;}
-.film-phead-main{flex:1 1 520px;min-width:0;display:flex;flex-direction:column;gap:10px;}
-.film-phead-title{display:flex;align-items:baseline;gap:12px;min-width:0;}
-.film-phead-h{margin:0;font-family:var(--film-display);font-weight:800;font-size:19px;letter-spacing:-.2px;color:var(--film-t1);}
-.film-phead-hint{font-size:12.5px;color:var(--film-t3);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;min-width:0;}
-.film-slate{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));background:var(--film-canvas);
-  border:1px solid rgba(99,102,241,.38);border-radius:999px;overflow:hidden;max-width:640px;}
-.film-slate-cell{display:flex;flex-direction:column;gap:1px;padding:7px 18px;min-width:0;}
-.film-slate-cell + .film-slate-cell{border-left:1px solid rgba(148,163,255,.14);}
-.film-slate-k{font-size:9.5px;font-weight:700;letter-spacing:.14em;text-transform:uppercase;color:var(--film-t3);}
-.film-slate-v{font-family:var(--film-display);font-weight:700;font-size:14px;color:var(--film-t1);
-  white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
-.film-slate-select{align-self:flex-start;max-width:100%;appearance:none;-webkit-appearance:none;background:transparent;border:0;padding:0 16px 0 0;margin:0;
-  font-family:var(--film-display);font-weight:700;font-size:14px;color:var(--film-t1);cursor:pointer;
-  background-image:linear-gradient(45deg,transparent 50%,var(--film-t2) 50%),linear-gradient(135deg,var(--film-t2) 50%,transparent 50%);
-  background-position:calc(100% - 6px) 55%,calc(100% - 1px) 55%;background-size:5px 5px,5px 5px;background-repeat:no-repeat;}
-.film-slate-select:focus-visible{outline:2px solid var(--film-accent);outline-offset:3px;border-radius:4px;}
-.film-slate-select:disabled{cursor:default;opacity:.7;}
-.film-slate-select option{color:#0b1020;}
-.film-phead-right--slate{display:flex;flex-direction:column;align-items:flex-end;gap:5px;flex:0 0 auto;}
+/* ═══════════════════════════════════════════════════════════════════════════
+   STORYBOARD — OPTION D, "the action dock" (owner, 2026-10-15)
+   header (Writers' Room height) · stage (soft grid) · dock (composer height)
+   ═══════════════════════════════════════════════════════════════════════════ */
+
+/* ── The landing-page `section` leak ─────────────────────────────────────────
+   landing.css styles BARE `section` (min-height:100vh; 60px top/bottom padding,
+   24px sides; centred flex) and stays global once the landing page has loaded.
+   Both film panels are <section>s, so each picked up 60px above its header and
+   below its last row — the empty band at the top of both panels. Neutralised
+   here for the film panels only. The Writers' Room's own rules are untouched:
+   only the leaked top/bottom padding is removed from it, so its header and
+   composer sit where FilmWorkspace.css always meant them to. */
+.film-workspace .film-window > section.film-panel{
+  min-height:0;padding-top:0;padding-bottom:0;
+  justify-content:flex-start;align-items:stretch;scroll-snap-align:none;}
+.film-workspace .film-window > section.film-panel--stage{padding-left:0;padding-right:0;}
+
+/* ── Header: same height as the Writers' Room header ─────────────────────────
+   Same padding (5px top / 6px bottom), same capsule (3px pad, 1px ring, 4×12
+   segment, Syne 700 12px, normal line-height), same 1px rule — so the two rows
+   line up without a hard-coded height. */
+.film-phead.film-phead--sb{justify-content:flex-start;gap:12px;padding:5px 15px 6px;min-width:0;}
+.film-sb-capsule{flex:0 0 auto;display:inline-flex;align-items:center;gap:2px;padding:3px;
+  background:var(--film-canvas);border:1px solid rgba(99,102,241,.35);border-radius:var(--film-r-full);}
+.film-sb-capsule-on{display:inline-flex;align-items:center;padding:4px 12px;border-radius:var(--film-r-full);
+  background:var(--film-accent);color:#fff;font-family:var(--film-display);font-weight:700;font-size:12px;
+  letter-spacing:.02em;line-height:normal;white-space:nowrap;}
+.film-sb-stage{flex:0 0 auto;display:inline-flex;align-items:center;gap:6px;font-size:11.5px;font-weight:600;
+  color:var(--film-t2);white-space:nowrap;}
+.film-sb-stage::before{content:'';width:6px;height:6px;border-radius:50%;background:var(--film-accent-hover);}
+.film-sb-stage.is-idle::before{background:var(--film-t3);}
+.film-sb-stage.is-busy::before{background:var(--film-warning);}
+.film-sb-stage.is-done::before{background:var(--film-success);}
+.film-sb-stage.is-warn::before{background:#f0c674;}
+.film-sb-meta{margin-left:auto;min-width:0;display:flex;align-items:center;gap:14px;overflow:hidden;
+  font-size:12px;color:var(--film-t2);font-variant-numeric:tabular-nums;}
+.film-sb-meta > span{display:inline-flex;align-items:center;gap:5px;white-space:nowrap;}
+.film-sb-meta svg{color:var(--film-t3);flex:0 0 auto;}
+
+/* ── Stage: soft grid lines = a working, editable surface ────────────────────
+   Two faint layers (24px minor, 96px major), scrolling with the content. Cards
+   sit on solid fills, so the grid only shows in the gutters around them. */
+.film-panel--stage .film-stage{
+  background-image:
+    linear-gradient(rgba(148,163,184,.065) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(148,163,184,.065) 1px, transparent 1px),
+    linear-gradient(rgba(148,163,184,.03) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(148,163,184,.03) 1px, transparent 1px);
+  background-size:96px 96px,96px 96px,24px 24px,24px 24px;
+  background-position:-1px -1px;background-attachment:local;}
+
+/* Cast review / drawing the cast: the stage stops scrolling as a whole; Cast
+   (3 parts) and Places (2 parts) each scroll inside themselves. */
+.film-stage.film-stage--zoned{display:flex;flex-direction:column;gap:14px;overflow:hidden;padding:14px 15px 12px;}
+.film-stage--zoned > .film-notice{flex:0 0 auto;margin:0;}
+.film-zone{flex:1 1 0;min-height:0;display:flex;flex-direction:column;gap:8px;}
+.film-zone-h{flex:0 0 auto;display:flex;align-items:baseline;gap:10px;min-width:0;}
+.film-zone-h h3{margin:0;font-family:var(--film-display);font-weight:700;font-size:13.5px;color:var(--film-t1);}
+.film-zone-sub{font-size:11.5px;color:var(--film-t3);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;min-width:0;}
+.film-zone-more{margin-left:auto;flex:0 0 auto;font-size:11.5px;font-weight:600;color:var(--film-accent-hover);}
+.film-zone-scroll{flex:1 1 auto;min-height:0;overflow-y:auto;overflow-x:hidden;overscroll-behavior:contain;
+  padding:2px 6px 4px 2px;scrollbar-width:thin;scrollbar-color:var(--film-peak) transparent;}
+.film-zone-scroll::-webkit-scrollbar{width:6px;}
+.film-zone-scroll::-webkit-scrollbar-thumb{background:var(--film-peak);border-radius:3px;}
+.film-zone-scroll.has-more{-webkit-mask-image:linear-gradient(#000 84%,transparent);mask-image:linear-gradient(#000 84%,transparent);}
+/* two columns, as many rows as needed — vertical scroll only, never sideways */
+.film-g2{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px;align-items:start;}
+@media (max-width:560px){ .film-g2{grid-template-columns:minmax(0,1fr);} }
+
+/* ── Cast + place cards (compact, two per row) ───────────────────────────── */
+.film-cc,.film-pc{position:relative;display:grid;grid-template-columns:80px minmax(0,1fr);
+  background:var(--film-canvas);border:1px solid var(--film-bd-subtle);border-radius:11px;overflow:hidden;
+  transition:border-color .15s,box-shadow .15s;}
+.film-cc:hover,.film-pc:hover{border-color:var(--film-bd-med);}
+.film-cc.is-locked,.film-pc.is-locked{border-color:rgba(52,211,153,.3);}
+.film-cc.is-editing,.film-pc.is-editing{border-color:var(--film-accent);box-shadow:0 0 0 3px var(--film-glow);}
+.film-cc-img,.film-pc-img{position:relative;align-self:start;max-width:100%;overflow:hidden;background:var(--film-interactive);}
+.film-cc-img{aspect-ratio:3/4;}
+.film-cc-img img,.film-pc-img img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;display:block;}
+.film-cc-img img{object-position:50% 12%;}   /* full-body plates: keep the face in frame */
+.film-cc-empty{position:absolute;inset:0;background:linear-gradient(135deg,var(--film-interactive),var(--film-canvas));}
+.film-cc-veil{position:absolute;inset:0;display:grid;place-items:center;background:rgba(10,15,26,.68);}
+.film-cc--skel{pointer-events:none;}
+.film-cc--skel .film-cc-img{display:grid;place-items:center;}
+.film-cc-body{min-width:0;display:flex;flex-direction:column;gap:5px;padding:8px 10px 9px;}
+.film-cc-name{display:flex;align-items:center;gap:7px;min-width:0;}
+.film-cc-nm{font-family:var(--film-display);font-weight:700;font-size:13px;color:var(--film-t1);
+  white-space:nowrap;overflow:hidden;text-overflow:ellipsis;min-width:0;}
+.film-pill{flex:0 0 auto;display:inline-flex;align-items:center;gap:3px;font-size:9.5px;font-weight:700;
+  padding:2px 7px;border-radius:var(--film-r-full);white-space:nowrap;}
+.film-pill--series{color:#BFF0DC;background:rgba(16,64,48,.9);}
+.film-pill--photo{color:#93C5FD;background:rgba(59,130,246,.16);}
+.film-cc-desc{margin:0;font-size:11.5px;line-height:1.4;color:var(--film-t2);
+  display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;}
+.film-cc-acts{margin-top:auto;display:flex;align-items:center;gap:6px;padding-top:2px;}
+.film-cc-lockline{font-size:11px;font-weight:600;color:var(--film-t3);}
+.film-cc-edit{display:flex;flex-direction:column;gap:6px;}
+.film-cc-input{width:100%;min-height:60px;resize:vertical;background:var(--film-surface);
+  border:1px solid var(--film-bd-med);border-radius:7px;color:var(--film-t1);
+  font:400 12px/1.4 var(--film-body);padding:6px 8px;}
+.film-cc-input:focus{outline:none;border-color:var(--film-accent);box-shadow:0 0 0 3px var(--film-glow);}
+.film-cc-row{display:flex;justify-content:flex-end;gap:6px;}
+.film-pc-kept{display:flex;flex-wrap:wrap;align-items:center;gap:4px;}
+.film-pc-kept small{font-size:9px;font-weight:700;letter-spacing:.12em;text-transform:uppercase;color:var(--film-t3);margin-right:1px;}
+.film-pc-kept span{font-size:10.5px;font-weight:600;color:#c7d2fe;background:rgba(99,102,241,.12);
+  border:1px solid rgba(99,102,241,.28);border-radius:var(--film-r-full);padding:0 6px;}
+.film-pc--skel .film-pc-img{min-height:64px;}
+
+/* small card buttons */
+.film-sbtn{display:inline-flex;align-items:center;justify-content:center;gap:5px;
+  font:600 11.5px/1 var(--film-body);color:var(--film-t1);background:var(--film-interactive);
+  border:1px solid var(--film-bd-med);border-radius:7px;padding:6px 8px;cursor:pointer;white-space:nowrap;transition:.15s;}
+.film-sbtn:hover:not(:disabled){border-color:var(--film-ring);background:var(--film-peak);}
+.film-sbtn:disabled{opacity:.5;cursor:default;}
+.film-sbtn--grow{flex:1 1 auto;}
+.film-sbtn--pri{background:var(--film-accent);border-color:var(--film-accent);color:#fff;}
+.film-sbtn--pri:hover:not(:disabled){background:var(--film-accent-hover);border-color:var(--film-accent-hover);}
+
+/* ── Dock: same height as the Writers' Room composer (9 + 42 + 9 + 2 = 62) ── */
+.film-dock{flex:0 0 auto;min-height:62px;display:flex;align-items:center;justify-content:space-between;
+  gap:10px 14px;padding:9px 10px 9px 15px;border-top:1px solid var(--film-bd-subtle);
+  background:linear-gradient(rgba(28,38,64,.55),rgba(28,38,64,.88));}
+.film-dock.is-short{border-top-color:rgba(245,158,11,.45);background:linear-gradient(rgba(60,44,12,.32),rgba(60,44,12,.52));}
+.film-dock-l{display:flex;align-items:center;gap:11px;min-width:0;}
+.film-dock-txt{min-width:0;display:flex;flex-direction:column;}
+.film-dock-txt b{font-size:13px;font-weight:600;color:var(--film-t1);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+.film-dock-txt small{font-size:11.5px;color:var(--film-t2);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+.film-dock-faces{display:flex;flex:0 0 auto;}
+.film-dock-faces img{width:26px;height:26px;border-radius:50%;object-fit:cover;object-position:50% 10%;
+  border:2px solid var(--film-peak);margin-left:-8px;background:var(--film-interactive);}
+.film-dock-faces img:first-child{margin-left:0;}
+.film-dock-acts{display:flex;align-items:center;gap:7px;flex:0 0 auto;}
+.film-btn.film-btn--dock{height:42px;padding:0 15px;flex:0 0 auto;white-space:nowrap;}
 .film-btn--cost{display:inline-flex;align-items:center;gap:8px;}
-.film-btn-cost{font-size:12px;font-weight:600;opacity:.88;padding-left:9px;margin-left:2px;border-left:1px solid rgba(255,255,255,.35);
-  white-space:nowrap;}
-.film-btn-cost.is-short{color:#FDE68A;opacity:1;}
-.film-phead-bal{font-size:11.5px;color:var(--film-t3);}
-.film-phead-bal.is-short{color:#FBBF24;}
-@media (max-width:760px){
-  .film-slate{border-radius:16px;grid-template-columns:repeat(2,minmax(0,1fr));}
-  .film-slate-cell:nth-child(3){border-left:0;}
-  .film-slate-cell:nth-child(n+3){border-top:1px solid rgba(148,163,255,.14);}
-  .film-phead-right--slate{align-items:stretch;width:100%;}
+.film-btn-cost{display:inline-flex;align-items:baseline;gap:4px;font-size:12px;font-weight:700;
+  padding-left:10px;margin-left:2px;border-left:1px solid rgba(255,255,255,.35);
+  white-space:nowrap;font-variant-numeric:tabular-nums;}
+.film-btn-cost small{font-size:11px;font-weight:500;opacity:.82;}
+.film-btn-cost.is-short{color:#FDE68A;}
+.film-dock-prog{flex:1 1 auto;min-width:0;display:flex;align-items:center;gap:12px;}
+.film-dock-prog .film-prog-bar{min-width:60px;}
+.film-dock-proglbl{font-size:12px;color:var(--film-t2);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;
+  font-variant-numeric:tabular-nums;}
+.film-dock-proglbl b{color:var(--film-t1);font-weight:600;}
+@media (max-width:1100px){ .film-dock-hint{display:none;} }
+@media (max-width:640px){
+  .film-dock{flex-wrap:wrap;}
+  .film-dock-hide-sm{display:none;}
+  .film-sb-meta > span:nth-child(n+3){display:none;}
 }

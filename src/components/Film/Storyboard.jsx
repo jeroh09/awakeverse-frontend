@@ -1,15 +1,37 @@
 // src/components/Film/Storyboard.jsx
-// Left panel: the storyboard grid. One surface, three data states (review →
-// render → edit), plus a captivating animated empty state before any script
-// exists. Beats are a 3-column grid; cards stay a fixed 16:9 size in every
-// state (text-only or with a clip) so the panel never jumps height.
-// Rendered/final beats play INLINE inside their card; the finished film plays
-// in an in-panel overlay.
+// Left panel: the storyboard. One surface, several data states (review → cast
+// review → render → edit), plus an animated empty state before any script exists.
+// Layout (Option D, 2026-10-15): a one-row header the height of the Writers' Room
+// header · the stage (soft grid = a working surface) · an action dock the height
+// of the Writers' Room composer. Rendered/final beats play INLINE in their card;
+// the finished film plays in an in-panel overlay.
+//
+// LOAD-BEARING INVENTORY — everything below must survive any restyle. If you move
+// one of these, move it; never drop it.
+//   Header ...... stage label + read-only facts (cast/places or shots, style,
+//                 frame, length). Length is NOT editable here (Writers' Room owns it).
+//   Notice ...... "Edit not applied: …" / "Previously on: …" + dismiss (onDismissNotice).
+//   Stage chain . blocked → ContentBlockCard (adults-only, verbatim backend message)
+//                 cast_rendering → CastBuilding (progressive portraits)
+//                 plate_review → Cast zone (Edit look / Redraw / Use your own photo
+//                   → ConsentModal → hidden file input) + Places zone (Change look /
+//                   Original, LOCATION_REVIEW; null when the switch is off)
+//                 empty → EmptyStoryboard
+//                 otherwise → RecapBar ("Previously on" toggle, narrator voice, clip
+//                   picker — series episodes, edit stage) + "Sketching the cast" pill
+//                   + shot grid (Cell: recap cell, locked preview cells, merged-clip
+//                   per-line Edit, Regenerate / Duplicate / Cut, regen spinner).
+//   Dock ........ ONE action per stage: Make the film (review → onGenerate,
+//                 plate_review → onApproveCast) with the cost + "N short"; render
+//                 progress + Stop after shot (onStop); preview → Finish your film
+//                 (onFinish); finished → Start a series (canPromote) / Export /
+//                 Play film; editBusy → the live edit label.
+//   Overlays .... film player (Play film), edit-busy scrim, consent modal.
 
-import React, { useRef, useState, useCallback } from 'react';
+import React, { useRef, useState, useCallback, useEffect } from 'react';
 import {
   IconPlay, IconRegenerate, IconCut, IconDuplicate, IconGrip, IconStop,
-  IconSoftened, IconVisual, IconCheck, IconUpload, KIND_ICON, IconSeries,
+  IconSoftened, IconVisual, IconCheck, IconUpload, KIND_ICON, IconSeries, IconClock,
 } from './filmIcons';
 // Redraw reuses the regenerate glyph (a redraw IS a regenerate, user-facing name).
 const IconRedraw = IconRegenerate;
@@ -195,58 +217,139 @@ function Cell({ beat, stageState, selected, regenBusy, onSelect, onRegenerate, o
   );
 }
 
+// ── Small glyphs for the header facts and card pills (stroke icons, same weight
+// as filmIcons). Local so this file doesn't depend on new filmIcons exports.
+const Glyph = ({ s = 13, children }) => (
+  <svg width={s} height={s} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"
+       strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">{children}</svg>
+);
+const GUser = (p) => <Glyph {...p}><circle cx="12" cy="8" r="4" /><path d="M4 21c0-4 4-6 8-6s8 2 8 6" /></Glyph>;
+const GPin = (p) => <Glyph {...p}><path d="M12 21s-7-6.5-7-12a7 7 0 0 1 14 0c0 5.5-7 12-7 12z" /><circle cx="12" cy="9" r="2.5" /></Glyph>;
+const GFilm = (p) => <Glyph {...p}><rect x="3" y="5" width="18" height="14" rx="2" /><path d="M7 5v14M17 5v14M3 12h18" /></Glyph>;
+const GPalette = (p) => <Glyph {...p}><path d="M12 3a9 9 0 1 0 0 18c1.5 0 2-1 2-2s-1-1.5-1-2.5 1-1.5 2-1.5h2a4 4 0 0 0 4-4c0-4.5-4-8-9-8z" /><circle cx="7.5" cy="11" r="1" /><circle cx="11" cy="7" r="1" /><circle cx="16" cy="8" r="1" /></Glyph>;
+const GLock = (p) => <Glyph {...p}><rect x="5" y="11" width="14" height="9" rx="2" /><path d="M8 11V8a4 4 0 0 1 8 0v3" /></Glyph>;
+const GEdit = (p) => <Glyph {...p}><path d="M4 20h4L19 9l-4-4L4 16z" /></Glyph>;
+// The frame glyph draws the film's own shape: tall for 9:16, square, wide for 16:9.
+const GFrame = ({ ar = '9:16', s = 13 }) => {
+  const box = ar === '16:9' ? { x: 3, y: 7.5, w: 18, h: 9 } : ar === '1:1' ? { x: 5, y: 5, w: 14, h: 14 } : { x: 7.5, y: 3, w: 9, h: 18 };
+  return <Glyph s={s}><rect x={box.x} y={box.y} width={box.w} height={box.h} rx="2" /></Glyph>;
+};
+
+// ── A section of the review stage that scrolls INSIDE itself (owner, 2026-10-15:
+// two columns, as many rows as needed, vertical scroll only — never sideways).
+// Cast and Places each get one, so both stay on screen however many there are.
+// "Scroll for more" + a fade appear only while there is more below.
+// NOTE: a <div>, never a <section> — landing.css styles bare `section` globally
+// (100vh, 60px padding, centred flex) and it leaks into any section in the app.
+function Zone({ title, sub, grow = 1, children }) {
+  const ref = useRef(null);
+  const [more, setMore] = useState(false);
+  useEffect(() => {
+    const el = ref.current;
+    if (!el) return undefined;
+    const update = () => setMore(
+      el.scrollHeight > el.clientHeight + 2 && el.scrollTop + el.clientHeight < el.scrollHeight - 2);
+    update();
+    el.addEventListener('scroll', update, { passive: true });
+    const ro = typeof ResizeObserver !== 'undefined' ? new ResizeObserver(update) : null;
+    if (ro) { ro.observe(el); if (el.firstElementChild) ro.observe(el.firstElementChild); }
+    return () => { el.removeEventListener('scroll', update); if (ro) ro.disconnect(); };
+  }, []);
+  return (
+    <div className="film-zone" style={{ flexGrow: grow }}>
+      <div className="film-zone-h">
+        <h3>{title}</h3>
+        {sub && <span className="film-zone-sub">{sub}</span>}
+        {more && <span className="film-zone-more" aria-hidden="true">Scroll for more ↓</span>}
+      </div>
+      <div ref={ref} className={`film-zone-scroll${more ? ' has-more' : ''}`}>
+        <div className="film-g2">{children}</div>
+      </div>
+    </div>
+  );
+}
+
 // ── Meet the cast — the review pause (stageState === 'plate_review') ──────────
 // User-facing language throughout: "cast" not "character plates", "Redraw" not
-// "regenerate", "make the film" not "render". Each member: their look, a Redraw,
-// and "Use your own photo" (which opens the consent gate first).
+// "regenerate", "make the film" not "render". Compact two-per-row card: portrait,
+// name, two-line look, and Edit look / Redraw / Use your own photo. "Edit look"
+// opens the description INSIDE the card (it works inside the scrolling zone, where
+// a popover would be clipped). "Use your own photo" opens the consent gate first.
 function CastMember({ name, info, busy, onRedraw, onUpload }) {
   const [desc, setDesc] = useState(info.description || '');
+  const [editing, setEditing] = useState(false);
+  const [err, setErr] = useState(null);
   const uploaded = info.source === 'upload';
   const recurring = !!info.recurring;   // series-aware: a locked, reused character
+  const redraw = async (fromEditor) => {
+    setErr(null);
+    const r = await onRedraw(name, desc);
+    if (r && r.error) setErr(r.error);
+    else if (fromEditor) setEditing(false);
+  };
   return (
-    <div className={`film-cast-card${busy ? ' is-busy' : ''}`}
-         style={recurring ? { borderColor: 'rgba(52,211,153,.32)' } : undefined}>
-      <div className="film-cast-portrait">
+    <article className={`film-cc${recurring ? ' is-locked' : ''}${editing ? ' is-editing' : ''}${busy ? ' is-busy' : ''}`}>
+      <div className="film-cc-img">
         {info.plate_url
-          ? <img src={info.plate_url} alt={name} className="film-cast-img" />
-          : <div className="film-cast-img film-cast-img--empty" />}
-        {recurring
-          ? <span className="film-cast-badge" style={{ background: 'rgba(16,64,48,.85)', color: '#bff0dc' }}>Reused</span>
-          : uploaded && <span className="film-cast-badge">From your photo</span>}
-        {busy && <div className="film-cast-veil"><span className="film-spin" /> Drawing…</div>}
+          ? <img src={info.plate_url} alt={name} />
+          : <div className="film-cc-empty" />}
+        {busy && <div className="film-cc-veil" aria-label="Drawing…"><span className="film-spin film-spin--sm" /></div>}
       </div>
-      <div className="film-cast-body">
-        <div className="film-cast-name">{name}</div>
-        {recurring ? (
-          // Locked: returning cast keeps its canonical look so it stays identical
-          // across episodes. No per-episode redraw (that would diverge them);
-          // change a series character's look from My Series → Refresh look.
-          <>
-            <div style={{ fontSize: 12, color: '#94a3b8', lineHeight: 1.4, padding: '2px 0' }}>{desc}</div>
-            <div style={{ marginTop: 8, textAlign: 'center', fontSize: 11.5, fontWeight: 600,
-                          color: '#64748b', padding: 7, background: 'rgba(99,102,241,.05)', borderRadius: 8 }}>
-              Locked · from your series
+      <div className="film-cc-body">
+        <div className="film-cc-name">
+          <span className="film-cc-nm">{name}</span>
+          {recurring
+            ? <span className="film-pill film-pill--series"><GLock s={9} /> Series</span>
+            : uploaded && <span className="film-pill film-pill--photo">Your photo</span>}
+        </div>
+        {editing ? (
+          <div className="film-cc-edit">
+            <textarea className="film-cc-input" value={desc} spellCheck={false} autoFocus
+              aria-label={`How ${name} looks`} placeholder="Describe how they look…"
+              onChange={e => setDesc(e.target.value)} />
+            {err && <div className="film-place-err" role="alert">{err}</div>}
+            <div className="film-cc-row">
+              <button className="film-sbtn" disabled={busy}
+                onClick={() => { setDesc(info.description || ''); setErr(null); setEditing(false); }}
+                title="Close without redrawing">Cancel</button>
+              <button className="film-sbtn film-sbtn--pri" disabled={busy || !desc.trim()} onClick={() => redraw(true)}
+                title="Draw this character again from the description above">
+                <IconRedraw s={12} /> Redraw
+              </button>
             </div>
-          </>
+          </div>
         ) : (
           <>
-            <textarea className="film-cast-desc" value={desc} spellCheck={false}
-              onChange={e => setDesc(e.target.value)}
-              placeholder="Describe how they look…" />
-            <div className="film-cast-actions">
-              <button className="film-cast-btn" disabled={busy} onClick={() => onRedraw(name, desc)}
-                title="Draw this character again from the description above">
-                <IconRedraw s={14} /> Redraw
-              </button>
-              <button className="film-cast-btn film-cast-btn--up" disabled={busy} onClick={() => onUpload(name)}
-                title="Turn your own photo into this character, redrawn in the film's style">
-                <IconUpload s={14} /> Use your own photo
-              </button>
+            <p className="film-cc-desc" title={desc}>{desc}</p>
+            {err && <div className="film-place-err" role="alert">{err}</div>}
+            <div className="film-cc-acts">
+              {recurring ? (
+                // Locked: returning cast keeps its canonical look so it stays identical
+                // across episodes. No per-episode redraw (that would diverge them);
+                // change a series character's look from My Series → Refresh look.
+                <span className="film-cc-lockline">Same look in every episode</span>
+              ) : (
+                <>
+                  <button className="film-sbtn film-sbtn--grow" disabled={busy} onClick={() => setEditing(true)}
+                    title="Change how they look, then redraw">
+                    <GEdit s={12} /> Edit look
+                  </button>
+                  <button className="film-sbtn" disabled={busy} onClick={() => redraw(false)}
+                    title="Draw this character again from their description" aria-label={`Redraw ${name}`}>
+                    <IconRedraw s={12} />
+                  </button>
+                  <button className="film-sbtn" disabled={busy} onClick={() => onUpload(name)}
+                    title="Turn your own photo into this character, redrawn in the film's style"
+                    aria-label={`Use your own photo for ${name}`}>
+                    <IconUpload s={12} />
+                  </button>
+                </>
+              )}
             </div>
           </>
         )}
       </div>
-    </div>
+    </article>
   );
 }
 
@@ -258,100 +361,116 @@ function CastMember({ name, info, busy, onRedraw, onUpload }) {
 const placeLabel = (name = '') => name.replace(/[_-]+/g, ' ').replace(/\s+/g, ' ').trim()
   .replace(/\b\w/g, c => c.toUpperCase());
 
+// Place plates are painted in the FILM's frame shape, so the thumbnail column is
+// sized to that shape (a 9:16 place is narrow and tall, a 16:9 one wide).
+const placeThumbW = (arValue) => (arValue === '9 / 16' ? 64 : arValue === '1 / 1' ? 84 : 112);
+
 function PlaceCard({ name, info, busy, onRedraw, onRevert, arValue }) {
   const [look, setLook] = useState('');
+  const [editing, setEditing] = useState(false);
   const [err, setErr] = useState(null);
   const recurring = !!info.recurring;
   const feats = Array.isArray(info.features) ? info.features : [];
   const go = async (fn) => {
     setErr(null);
     const r = await fn();
-    if (r && r.error) setErr(r.error); else setLook('');
+    if (r && r.error) setErr(r.error);
+    else { setLook(''); setEditing(false); }
   };
   return (
-    <div className={`film-place-card${busy ? ' is-busy' : ''}${recurring ? ' is-locked' : ''}`}>
-      <div className="film-place-pic" style={{ aspectRatio: arValue }}>
+    <article className={`film-pc${recurring ? ' is-locked' : ''}${editing ? ' is-editing' : ''}${busy ? ' is-busy' : ''}`}
+             style={{ gridTemplateColumns: `${placeThumbW(arValue)}px minmax(0, 1fr)` }}>
+      <div className="film-pc-img" style={{ aspectRatio: arValue }}>
         {info.plate_url
-          ? <img src={info.plate_url} alt={placeLabel(name)} className="film-place-img" />
-          : <div className="film-place-img film-cast-img--empty" />}
-        {recurring
-          ? <span className="film-cast-badge" style={{ background: 'rgba(16,64,48,.85)', color: '#bff0dc' }}>Series location</span>
-          : info.edited && <span className="film-cast-badge">Redrawn</span>}
-        {busy && <div className="film-cast-veil"><span className="film-spin" /> Repainting…</div>}
+          ? <img src={info.plate_url} alt={placeLabel(name)} />
+          : <div className="film-cc-empty" />}
+        {busy && <div className="film-cc-veil" aria-label="Repainting…"><span className="film-spin film-spin--sm" /></div>}
       </div>
-      <div className="film-place-body">
-        <div className="film-cast-name">{placeLabel(name)}</div>
-        {info.description && <div className="film-place-desc" title={info.description}>{info.description}</div>}
+      <div className="film-cc-body">
+        <div className="film-cc-name">
+          <span className="film-cc-nm" title={info.description || ''}>{placeLabel(name)}</span>
+          {recurring
+            ? <span className="film-pill film-pill--series"><GLock s={9} /> Series</span>
+            : info.edited && <span className="film-pill film-pill--photo">Redrawn</span>}
+        </div>
         {feats.length > 0 && (
-          <div className="film-place-feats" title="The scenes use these, so they stay where they are">
-            <span className="film-place-kept">Kept</span>
-            {feats.map(f => <span key={f} className="film-place-chip">{f}</span>)}
+          <div className="film-pc-kept" title="The scenes use these, so they stay where they are">
+            <small>Kept</small>
+            {feats.map(f => <span key={f}>{f}</span>)}
           </div>
         )}
-        {recurring ? (
-          <div className="film-place-lock">Locked · the same in every episode</div>
-        ) : (
-          <>
-            <textarea className="film-cast-desc film-place-look" value={look} spellCheck={false} maxLength={300}
-              onChange={e => setLook(e.target.value)}
-              placeholder="How should it look? e.g. run-down and dim, peeling paint, worn leather stools" />
-            {err && <div className="film-place-err" role="alert">{err}</div>}
-            <div className="film-cast-actions">
-              <button className="film-cast-btn" disabled={busy || !look.trim()}
-                      onClick={() => go(() => onRedraw(name, look.trim()))}
-                      title="Repaint this place with the new look — its layout, doors and the things the scenes use stay put">
-                <IconRedraw s={14} /> Redraw
+        {err && <div className="film-place-err" role="alert">{err}</div>}
+        {editing ? (
+          <div className="film-cc-edit">
+            <textarea className="film-cc-input" value={look} spellCheck={false} maxLength={300} autoFocus
+              aria-label={`How ${placeLabel(name)} should look`}
+              placeholder="How should it look? e.g. run-down and dim, peeling paint, worn leather stools"
+              onChange={e => setLook(e.target.value)} />
+            <div className="film-cc-row">
+              <button className="film-sbtn" disabled={busy}
+                onClick={() => { setEditing(false); setLook(''); setErr(null); }}
+                title="Close without repainting">Cancel</button>
+              <button className="film-sbtn film-sbtn--pri" disabled={busy || !look.trim()}
+                onClick={() => go(() => onRedraw(name, look.trim()))}
+                title="Repaint this place with the new look — its layout, doors and the things the scenes use stay put">
+                <IconRedraw s={12} /> Redraw
               </button>
-              {info.edited && (
-                <button className="film-cast-btn film-cast-btn--up" disabled={busy}
-                        onClick={() => go(() => onRevert(name))}
-                        title="Go back to the place as it was first drawn">
-                  Back to original
-                </button>
-              )}
             </div>
-          </>
+          </div>
+        ) : (
+          <div className="film-cc-acts">
+            {recurring ? (
+              <span className="film-cc-lockline">Same in every episode</span>
+            ) : (
+              <>
+                <button className="film-sbtn film-sbtn--grow" disabled={busy} onClick={() => setEditing(true)}
+                  title="Repaint this place with a new look — its layout, doors and the things the scenes use stay put">
+                  <GEdit s={12} /> Change look
+                </button>
+                {info.edited && (
+                  <button className="film-sbtn" disabled={busy} onClick={() => go(() => onRevert(name))}
+                    title="Go back to the place as it was first drawn">
+                    Original
+                  </button>
+                )}
+              </>
+            )}
+          </div>
         )}
       </div>
-    </div>
+    </article>
   );
 }
 
-function PlacesRow({ places, status, onRedraw, onRevert, arValue }) {
+function PlacesZone({ places, status, onRedraw, onRevert, arValue }) {
   const [busy, setBusy] = useState(null);
   const list = places ? Object.entries(places) : [];
   if (status === 'failed' || (!list.length && status !== 'building')) return null;
   const run = async (name, fn) => { setBusy(name); try { return await fn(); } finally { setBusy(null); } };
+  const building = status === 'building' && !list.length;
   return (
-    <div className="film-places">
-      <div className="film-cast-lead">
-        <h3>Places</h3>
-        <p>Where your film happens. Change how a place looks — its layout, doors and the things the
-          scenes use stay where they are.</p>
-      </div>
-      {status === 'building' && !list.length ? (
-        <div className="film-place-grid">
-          {[0, 1].map(i => (
-            <div key={i} className="film-place-card film-place-card--skel">
-              <div className="film-place-pic" style={{ aspectRatio: arValue }}><span className="film-cast-skel-shine" aria-hidden="true" /></div>
-              <div className="film-place-body">
+    <Zone title="Places" grow={2}
+          sub={building ? 'Painting the places…'
+            : `${list.length} place${list.length === 1 ? '' : 's'} · layout and props stay put when you redraw`}>
+      {building
+        ? [0, 1].map(i => (
+            <article key={i} className="film-pc film-pc--skel"
+                     style={{ gridTemplateColumns: `${placeThumbW(arValue)}px minmax(0, 1fr)` }}>
+              <div className="film-pc-img" style={{ aspectRatio: arValue }}>
+                <span className="film-cast-skel-shine" aria-hidden="true" />
+              </div>
+              <div className="film-cc-body">
                 <span className="film-cast-skel-line film-cast-skel-line--title" aria-hidden="true" />
                 <span className="film-cast-skel-line" aria-hidden="true" />
-                <div className="film-place-painting">Painting the places…</div>
               </div>
-            </div>
-          ))}
-        </div>
-      ) : (
-        <div className="film-place-grid">
-          {list.map(([name, info]) => (
+            </article>
+          ))
+        : list.map(([name, info]) => (
             <PlaceCard key={name} name={name} info={info} busy={busy === name} arValue={arValue}
               onRedraw={(n, l) => run(n, () => onRedraw(n, l))}
               onRevert={(n) => run(n, () => onRevert(n))} />
           ))}
-        </div>
-      )}
-    </div>
+    </Zone>
   );
 }
 
@@ -411,57 +530,49 @@ function ContentBlockCard({ block, videoStyle }) {
 
 // ── Building your cast — the render pause (castPhase === 'cast_rendering') ─────
 // Placeholder slots that show WHERE (and, once names are known, WHO) is being
-// drawn, so the wait reads as progress and no one re-clicks the funnel. Reuses
-// the real .film-cast-card / .film-cast-grid, so a finished portrait drops into
-// the exact same slot — each slot swaps to the real image the moment its
-// plate_url exists (progressive), and if the cast list isn't populated yet we
-// show 3 generic slots. Presentational only; no cast/render logic here.
+// drawn, so the wait reads as progress. Uses the same .film-cc card and the same
+// scrolling Zone as Meet the cast, so a finished portrait drops into the exact
+// slot it will keep — each slot swaps to the real image the moment its plate_url
+// exists (progressive); with no cast list yet we show 4 generic slots. The
+// "no need to click again" message now lives in the dock (the dock and this grid
+// read the same castPhase, so they never disagree). Presentational only.
 function CastBuilding({ castList }) {
-  const slots = castList.length > 0 ? castList : [[null, null], [null, null], [null, null]];
+  const slots = castList.length > 0 ? castList : [[null, null], [null, null], [null, null], [null, null]];
   return (
-    <div className="film-cast-wrap">
-      <div className="film-lifebanner film-lifebanner--cast_rendering" role="status" aria-live="polite">
-        <span className="film-spin film-spin--sm" />
-        <div className="film-lifebanner-txt">
-          <b>Building your cast…</b>
-          <span>This takes a minute — no need to click again. Your cast appears right here as it's ready.</span>
-        </div>
-      </div>
-      <div className="film-cast-grid">
-        {slots.map(([name, info], i) => {
-          const ready = !!(info && info.plate_url);
-          return (
-            <div key={name || `slot-${i}`}
-                 className={`film-cast-card film-cast-card--skel${ready ? ' is-ready' : ''}`}>
-              <div className="film-cast-portrait">
-                {ready ? (
-                  <img src={info.plate_url} alt={name || ''} className="film-cast-img" />
-                ) : (
-                  <>
-                    <svg className="film-cast-skel-sil" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
-                      <circle cx="12" cy="8.5" r="4" />
-                      <path d="M4.5 20.5c0-3.6 3.4-5.8 7.5-5.8s7.5 2.2 7.5 5.8z" />
-                    </svg>
-                    <span className="film-cast-skel-shine" aria-hidden="true" />
-                  </>
-                )}
-              </div>
-              <div className="film-cast-body">
-                {name
-                  ? <div className="film-cast-name">{name}</div>
-                  : <span className="film-cast-skel-line film-cast-skel-line--title" aria-hidden="true" />}
-                {!ready && (
-                  <>
-                    <span className="film-cast-skel-line" aria-hidden="true" />
-                    <span className="film-cast-skel-line film-cast-skel-line--short" aria-hidden="true" />
-                  </>
-                )}
-              </div>
+    <Zone title="Cast" grow={3}
+          sub={castList.length ? `Drawing ${castList.length} character${castList.length === 1 ? '' : 's'}…` : 'Drawing your characters…'}>
+      {slots.map(([name, info], i) => {
+        const ready = !!(info && info.plate_url);
+        return (
+          <article key={name || `slot-${i}`} className={`film-cc film-cc--skel${ready ? ' is-ready' : ''}`}>
+            <div className="film-cc-img">
+              {ready ? (
+                <img src={info.plate_url} alt={name || ''} />
+              ) : (
+                <>
+                  <svg className="film-cast-skel-sil" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
+                    <circle cx="12" cy="8.5" r="4" />
+                    <path d="M4.5 20.5c0-3.6 3.4-5.8 7.5-5.8s7.5 2.2 7.5 5.8z" />
+                  </svg>
+                  <span className="film-cast-skel-shine" aria-hidden="true" />
+                </>
+              )}
             </div>
-          );
-        })}
-      </div>
-    </div>
+            <div className="film-cc-body">
+              {name
+                ? <div className="film-cc-name"><span className="film-cc-nm">{name}</span></div>
+                : <span className="film-cast-skel-line film-cast-skel-line--title" aria-hidden="true" />}
+              {!ready && (
+                <>
+                  <span className="film-cast-skel-line" aria-hidden="true" />
+                  <span className="film-cast-skel-line film-cast-skel-line--short" aria-hidden="true" />
+                </>
+              )}
+            </div>
+          </article>
+        );
+      })}
+    </Zone>
   );
 }
 
@@ -564,11 +675,11 @@ export default function Storyboard({
   beats = [],
   aspectRatio = '9:16',
   videoStyle = null,
-  durationSeconds = null,
-  onDurationChange = null,
+  durationSeconds = null,             // shown read-only — the Writers' Room sets the length
+  onDurationChange = null,           // still passed by the container; unused — no length picker here any more (owner, 2026-10-15)
   cost = null,
   costAffordable = null,
-  balance = null,                    // the user's credit balance (shown under the button)
+  balance = null,                    // credit balance — only used to say how many credits are missing
   cast = null,
   places = null,                     // LOCATION_REVIEW: review.locations, or null when off
   placesStatus = null,               // 'building' | 'ready' | 'failed'
@@ -617,9 +728,11 @@ export default function Storyboard({
   const arValue = { '9:16': '9 / 16', '1:1': '1 / 1', '16:9': '16 / 9' }[aspectRatio] || '16 / 9';
   const gridStyle = { '--film-card-ar': arValue };
 
+  // Returns the redraw result ({…plate} | {error}) so the card can show an error
+  // inline and keep its editor open instead of silently closing.
   const handleRedraw = async (name, desc) => {
     setBusyMember(name);
-    try { await onRedrawCast(name, desc); } finally { setBusyMember(null); }
+    try { return await onRedrawCast(name, desc); } finally { setBusyMember(null); }
   };
 
   // "Use your own photo": consent gate first. Agreeing records consent, then opens
@@ -663,113 +776,166 @@ export default function Storyboard({
     : stageState === 'edit' ? `${total} shots · ${totalSecs}s`
     : 'no shots yet';
 
-  // OPTION A — "the slate" (owner, 2026-10-15): the price rides INSIDE the button that
-  // spends it, and the balance sits under it; the film's facts live in one rounded slate.
-  const showCost = cost != null && (stageState === 'review' || stageState === 'plate_review');
-  const costPart = showCost ? (
-    <span className={`film-btn-cost${costAffordable === false ? ' is-short' : ''}`}>
-      {Number(cost).toLocaleString()} credits
-    </span>
-  ) : null;
-  const hint =
-    stageState === 'plate_review' ? 'Check the cast and places, then make the film'
-    : stageState === 'review' ? 'Not made yet — check the shots, then make the film'
-    : stageState === 'render' ? (planningCast ? 'Sketching the cast…' : 'Making your film…')
-    : stageState === 'edit' ? 'Your film — play it, change a shot, or export'
-    : stageState === 'blocked' ? 'This film can’t be made as written'
-    : 'No shots yet';
-  const firstCell =
-    stageState === 'plate_review' ? { k: 'Cast', v: `${castList.length} character${castList.length === 1 ? '' : 's'}` }
-    : stageState === 'render' ? { k: 'Shots', v: planningCast ? '—' : `${(progress && progress.done) || 0} of ${(progress && progress.total) || total} made` }
-    : total ? { k: 'Shots', v: `${total} shot${total === 1 ? '' : 's'}${totalSecs ? ` · ${totalSecs}s` : ''}` }
-    : { k: 'Shots', v: '—' };
-  const lengthLabel = durationSeconds ? `~${Math.round(durationSeconds / 60)} min` : '—';
-
-  const cta =
-    stageState === 'plate_review' ? (
-        <div className="film-head-actions">
-          <button className="film-btn film-btn--primary film-btn--cost" onClick={onApproveCast}
-                  title="Approve the cast and places and start making the film — this uses credits">
-            <IconCheck s={14} /> Looks good — make the film
-            {costPart}
-          </button>
-        </div>
-      )
-    : stageState === 'review' ? <button className="film-btn film-btn--primary film-btn--cost" onClick={onGenerate} title="Render the film from this plan — this uses credits">Make the film{costPart}</button>
-    : stageState === 'edit' ? (
-        <div className="film-head-actions">
-          {finalUrl && <button className="film-btn film-btn--primary" onClick={() => setWatching(true)} title="Watch the finished film"><IconPlay s={14} /> Play film</button>}
-          {finalUrl && canPromote && (
-            <button className="film-btn film-btn--ghost" onClick={onPromote} title="Turn this film into Episode 1 of a series">
-              <IconSeries s={14} /> Start a series
-            </button>
-          )}
-          <button className="film-btn film-btn--ghost" onClick={onExport} title="Open the finished video file in a new tab to download it">Export</button>
-        </div>
-      )
-    : null;
-
+  // ── OPTION D — "the action dock" (owner, 2026-10-15) ────────────────────────
+  // Header: one row, the SAME height as the Writers' Room header (same capsule
+  // metrics), carrying the stage name and the film's facts as read-only text.
+  // Length is NOT editable here — the Writers' Room sets it (owner decision).
+  // Dock: one bar at the bottom, the SAME height as the Writers' Room composer,
+  // holding the stage's one action. It replaces four things that used to live in
+  // different places: the header button (+ "You have N" balance line), the bottom
+  // "Live" progress strip, the green "Making your film…" banner, and the preview
+  // wall's "Finish your film" banner. Credits already show in the top bar, so the
+  // dock only shows the COST, and — when short — how many credits are missing.
+  const lockedN = beats.filter(b => b.status === 'locked').length;
+  const doneN = beats.length - lockedN;
+  const drawingCast = castPhase === 'cast_rendering' && stageState !== 'plate_review' && stageState !== 'blocked';
+  const placesN = places ? Object.keys(places).length : 0;
+  const fmt = (n) => Number(n).toLocaleString();
+  const short = costAffordable === false;
+  const shortBy = (short && cost != null && balance != null) ? Math.max(0, Number(cost) - Number(balance)) : null;
   const pct = progress && progress.total ? Math.round((progress.done / progress.total) * 100) : 0;
+
+  const stage =
+    stageState === 'blocked' ? { label: 'Can’t be made as written', tone: 'warn' }
+    : editBusy ? { label: 'Changing a shot', tone: 'busy' }
+    : drawingCast ? { label: 'Drawing the cast', tone: 'live' }
+    : stageState === 'plate_review' ? { label: 'Cast review', tone: 'live' }
+    : stageState === 'review' ? { label: 'Plan', tone: 'idle' }
+    : stageState === 'render' ? { label: 'Rendering', tone: 'busy' }
+    : stageState === 'edit' ? (lockedN ? { label: 'Preview', tone: 'busy' } : { label: 'Finished', tone: 'done' })
+    : { label: 'No shots yet', tone: 'idle' };
+
+  const castFacts = stageState === 'plate_review' || drawingCast;
+  const lengthLabel = durationSeconds ? `~${Math.round(durationSeconds / 60)} min` : null;
+
+  // The cost rides inside the button that spends it; amber + "N short" when the
+  // balance can't cover it (the button still fires → the 402 → the top-up card).
+  const costTag = cost == null ? null : (
+    <span className={`film-btn-cost${short ? ' is-short' : ''}`}>
+      {short && shortBy ? `${fmt(cost)} · ${fmt(shortBy)} short` : <>{fmt(cost)} <small>credits</small></>}
+    </span>
+  );
+  const lead = (title, small, before = null) => (
+    <div className="film-dock-l">
+      {before}
+      <div className="film-dock-txt"><b>{title}</b>{small && <small>{small}</small>}</div>
+    </div>
+  );
+  const faces = castList.filter(([, info]) => info && info.plate_url).slice(0, 4);
+  const facesEl = faces.length ? (
+    <div className="film-dock-faces" aria-hidden="true">
+      {faces.map(([name, info]) => <img key={name} src={info.plate_url} alt="" />)}
+    </div>
+  ) : null;
+
+  let dock = null;
+  if (stageState === 'blocked' || (stageState === 'empty' && !drawingCast)) {
+    dock = null;   // the block card / empty state carry their own message
+  } else if (editBusy) {
+    // The stage overlay already scrims the panel and names the work; the dock
+    // mirrors it so the bottom never shows a stale button underneath.
+    dock = lead(editBusy, 'Every other shot stays as it is', <span className="film-spin film-spin--sm" />);
+  } else if (drawingCast) {
+    dock = (<>
+      {lead('Drawing your cast…', 'No need to click again — your cast appears here as it’s ready',
+            <span className="film-spin film-spin--sm" />)}
+      <button className="film-btn film-btn--primary film-btn--dock film-btn--cost" disabled
+              title="Available once your cast is ready">
+        <IconCheck s={14} /> Make the film{costTag}
+      </button>
+    </>);
+  } else if (stageState === 'plate_review') {
+    const ready = `${castList.length} character${castList.length === 1 ? '' : 's'}`
+      + (placesN ? ` and ${placesN} place${placesN === 1 ? '' : 's'}` : '') + ' ready';
+    dock = (<>
+      {short && shortBy
+        ? lead(`You need ${fmt(shortBy)} more credits`, 'Your cast stays as it is while you top up', facesEl)
+        : lead(placesStatus === 'building' ? `${ready} · painting the places…` : ready,
+               'Change any look before you make it', facesEl)}
+      <button className="film-btn film-btn--primary film-btn--dock film-btn--cost" onClick={onApproveCast}
+              title="Approve the cast and places and start making the film — this uses credits">
+        <IconCheck s={14} /> Make the film{costTag}
+      </button>
+    </>);
+  } else if (stageState === 'review') {
+    dock = (<>
+      {lead(`${total} shot${total === 1 ? '' : 's'} planned${totalSecs ? ` · ~${totalSecs}s` : ''}`,
+            short && shortBy ? `You need ${fmt(shortBy)} more credits to make it` : 'Nothing is made until you press the button')}
+      <button className="film-btn film-btn--primary film-btn--dock film-btn--cost" onClick={onGenerate}
+              title="Render the film from this plan — this uses credits">
+        Make the film{costTag}
+      </button>
+    </>);
+  } else if (stageState === 'render' && progress) {
+    dock = (<>
+      <div className="film-dock-prog" title="You can leave this page — it keeps rendering">
+        <span className="film-live">Live</span>
+        <div className="film-prog-bar"><i style={{ width: `${pct}%` }} /></div>
+        <span className="film-dock-proglbl">
+          <b>Rendering {progress.done} of {progress.total}</b>{progress.etaText ? ` · ${progress.etaText}` : ''}
+          <span className="film-dock-hint"> · you can leave this page</span>
+        </span>
+      </div>
+      <button className="film-btn film-btn--ghost film-btn--dock" onClick={onStop}
+              title="Stop after the shot that's rendering now — finished shots are kept">
+        <IconStop s={13} /> Stop after shot
+      </button>
+    </>);
+  } else if (stageState === 'edit' && lockedN) {
+    // PREVIEW WALL: the rest of the film is written and waiting (locked cells).
+    dock = (<>
+      {lead(`Preview · ${doneN} of ${beats.length} shots made`, 'The rest of your film is written and waiting')}
+      <button className="film-btn film-btn--primary film-btn--dock film-btn--cost" onClick={onFinish}
+              title="Render every remaining shot in full quality — this uses credits">
+        Finish your film{costTag}
+      </button>
+    </>);
+  } else if (stageState === 'edit') {
+    dock = (<>
+      {lead(`Your film${totalSecs ? ` · ${totalSecs}s` : ''}`, 'Click any shot to change it')}
+      <div className="film-dock-acts">
+        {finalUrl && canPromote && (
+          <button className="film-btn film-btn--ghost film-btn--dock" onClick={onPromote}
+                  title="Turn this film into Episode 1 of a series">
+            <IconSeries s={14} /> <span className="film-dock-hide-sm">Start a series</span>
+          </button>
+        )}
+        <button className="film-btn film-btn--ghost film-btn--dock" onClick={onExport}
+                title="Open the finished video file in a new tab to download it">Export</button>
+        {finalUrl && (
+          <button className="film-btn film-btn--primary film-btn--dock" onClick={() => setWatching(true)}
+                  title="Watch the finished film">
+            <IconPlay s={14} /> Play film
+          </button>
+        )}
+      </div>
+    </>);
+  }
+
+  const zoned = stageState !== 'blocked' && (drawingCast || stageState === 'plate_review');
 
   return (
     <div className="film-pcontent">
-      <div className="film-phead film-phead--slate">
-        <div className="film-phead-main">
-          <div className="film-phead-title">
-            <h2 className="film-phead-h">Storyboard</h2>
-            <span className="film-phead-hint" title={sub}>{hint}</span>
-          </div>
-          <div className="film-slate" role="group" aria-label="Film details">
-            <div className="film-slate-cell" title={stageState === 'plate_review' ? 'The characters in this film' : 'Shots in this film'}>
-              <span className="film-slate-k">{firstCell.k}</span>
-              <span className="film-slate-v">{firstCell.v}</span>
-            </div>
-            <div className="film-slate-cell" title="The film's visual style">
-              <span className="film-slate-k">Style</span>
-              <span className="film-slate-v">{videoStyle ? styleLabel(videoStyle) : '—'}</span>
-            </div>
-            <div className="film-slate-cell" title="The frame shape — 9:16 is vertical, for phones">
-              <span className="film-slate-k">Frame</span>
-              <span className="film-slate-v">{aspectRatio || '—'}</span>
-            </div>
-            <div className="film-slate-cell">
-              <span className="film-slate-k">Length</span>
-              {durationSeconds != null && onDurationChange ? (
-                <select
-                  className="film-hduration film-slate-select"
-                  value={durationSeconds}
-                  disabled={stageState === 'rendering' || stageState === 'render'}
-                  onChange={(e) => onDurationChange(Number(e.target.value))}
-                  title="Film length — the script is fitted to this before directing; too short and connective scenes get condensed away">
-                  <option value={60}>~1 min</option>
-                  <option value={120}>~2 min</option>
-                  <option value={180}>~3 min</option>
-                </select>
-              ) : (
-                <span className="film-slate-v">{lengthLabel}</span>
-              )}
-            </div>
-          </div>
-        </div>
-        <div className="film-phead-right film-phead-right--slate">
-          {cta}
-          {showCost && balance != null && (
-            <span className={`film-phead-bal${costAffordable === false ? ' is-short' : ''}`}>
-              {costAffordable === false
-                ? `You have ${Number(balance).toLocaleString()} — top up to make it`
-                : `You have ${Number(balance).toLocaleString()}`}
-            </span>
-          )}
+      <div className="film-phead film-phead--sb" title={sub}>
+        <span className="film-sb-capsule"><span className="film-sb-capsule-on">Storyboard</span></span>
+        <span className={`film-sb-stage is-${stage.tone}`}>{stage.label}</span>
+        <div className="film-sb-meta" role="group" aria-label="Film details">
+          {castFacts ? (
+            <>
+              <span title="The characters in this film"><GUser />{castList.length} cast</span>
+              {placesN > 0 && <span title="The places in this film"><GPin />{placesN} place{placesN === 1 ? '' : 's'}</span>}
+            </>
+          ) : total > 0 ? (
+            <span title="Shots in this film"><GFilm />{total} shot{total === 1 ? '' : 's'}{totalSecs ? ` · ${totalSecs}s` : ''}</span>
+          ) : null}
+          {videoStyle && <span title="The film's visual style"><GPalette />{styleLabel(videoStyle)}</span>}
+          {aspectRatio && <span title="The frame shape — 9:16 is vertical, for phones"><GFrame ar={aspectRatio} />{aspectRatio}</span>}
+          {lengthLabel && <span title="Film length — set in the Writers' Room"><IconClock s={13} />{lengthLabel}</span>}
         </div>
       </div>
 
-      <div className="film-stage">
-        {/* Lifecycle banner (2026-08-26): the sub-line under the Storyboard tab
-            wasn't loud enough — users kept re-clicking the funnel while a render
-            was already running. This is the in-stage state change they can't
-            miss, driven by the same castPhase the funnel button reads, so the
-            two never disagree. Cast/film renders only; plate_review keeps its
-            own "Meet the cast" lead below. */}
+      <div className={`film-stage${zoned ? ' film-stage--zoned' : ''}`}>
+        {/* "Edit not applied: …" — an edit failed on a film that is still fine. */}
         {notice && !editBusy && (
           <div className="film-notice" role="status">
             <span className="film-notice-ico" aria-hidden="true">!</span>
@@ -781,68 +947,38 @@ export default function Storyboard({
                     aria-label="Dismiss" title="Dismiss this message">×</button>
           </div>
         )}
-        {castPhase === 'film_rendering' && (
-          <div className="film-lifebanner film-lifebanner--film_rendering" role="status" aria-live="polite">
-            <span className="film-spin film-spin--sm" />
-            <div className="film-lifebanner-txt">
-              <b>Making your film…</b>
-              <span>Each shot appears below as it finishes. You can leave this page — it keeps rendering.</span>
-            </div>
-          </div>
-        )}
-        {/* castPhase === 'editing' deliberately has NO in-stage banner: the
-            .film-edit-overlay at the foot of this file already scrims the stage
-            and names the exact work ("Regenerating shot 5…"). A banner here would
-            sit behind that blur saying the same thing twice. The 'editing' phase
-            still matters — it's what keeps CastBuilding from hijacking the grid
-            below and keeps the funnel CTA honest. */}
+        {/* The old in-stage lifecycle banners ("Making your film…", "Preview — N of M
+            shots rendered") moved into the dock, which reads the same castPhase /
+            locked-cell count, so the two can never disagree. castPhase === 'editing'
+            still has NO in-stage banner: the .film-edit-overlay below names the work. */}
         {/* 'blocked' leads the chain, mirroring the container's own precedence
             (stageState = job.contentBlock ? 'blocked' : …). A blocked plan has
             failed, so no other branch should get a chance to claim the stage. */}
         {stageState === 'blocked' && contentBlock ? (
           <ContentBlockCard block={contentBlock} videoStyle={videoStyle} />
-        ) : (castPhase === 'cast_rendering' && stageState !== 'plate_review') ? (
+        ) : drawingCast ? (
           <CastBuilding castList={castList} />
         ) : stageState === 'plate_review' ? (
-          <div className="film-cast-wrap">
-            <div className="film-cast-lead">
-              <h3>Meet the cast</h3>
-              <p>These are the characters in your film. Tweak how one looks and redraw them, or use your
-                own photo — then make the film when they look right.</p>
-            </div>
-            <div className="film-cast-grid">
+          <>
+            <Zone title="Cast" grow={3}
+                  sub={`${castList.length} character${castList.length === 1 ? '' : 's'} · change a look, or use your own photo`}>
               {castList.map(([name, info]) => (
                 <CastMember key={name} name={name} info={info}
                   busy={busyMember === name}
                   onRedraw={handleRedraw} onUpload={handleUploadClick} />
               ))}
-            </div>
+            </Zone>
             {onRedrawPlace && (places || placesStatus) && (
-              <PlacesRow places={places} status={placesStatus} arValue={arValue}
+              <PlacesZone places={places} status={placesStatus} arValue={arValue}
                 onRedraw={onRedrawPlace} onRevert={onRevertPlace || (() => ({}))} />
             )}
-          </div>
+          </>
         ) : stageState === 'empty' || total === 0 ? (
           <EmptyStoryboard />
         ) : (
           <>
-          {(() => {
-            const lockedN = beats.filter(b => b.status === 'locked').length;
-            if (!lockedN) return null;
-            const doneN = beats.length - lockedN;
-            return (
-              <div className="film-lifebanner film-lifebanner--partial" role="status">
-                <div className="film-lifebanner-txt">
-                  <b>Preview — {doneN} of {beats.length} shots rendered.</b>{' '}
-                  The rest of your film is written and waiting.
-                </div>
-                <button type="button" className="film-btn film-btn--primary film-btn--cta"
-                        onClick={onFinish} title="Render every remaining shot in full quality — this uses credits">
-                  Finish your film{cost != null ? ` · ${Number(cost).toLocaleString()} credits` : ''}
-                </button>
-              </div>
-            );
-          })()}
+          {/* "PREVIOUSLY ON" (SERIES_RECAP) — series episodes, finished films only.
+              Load-bearing: the toggle, narrator voice and clip picker all live here. */}
           {stageState === 'edit' && recap && onRecap && (
             <RecapBar key={`${(recap.current && recap.current.built_at) || ''}-${recap.on}`}
                       recap={recap} busy={!!editBusy} onRecap={onRecap} />
@@ -866,21 +1002,17 @@ export default function Storyboard({
         )}
       </div>
 
+      {dock && (
+        <div className={`film-dock${short && (stageState === 'plate_review' || stageState === 'review') ? ' is-short' : ''}`}>
+          {dock}
+        </div>
+      )}
+
       {consentFor && (
         <ConsentModal onAgree={handleConsentAgree} onCancel={() => setConsentFor(null)} />
       )}
       <input ref={fileInputRef} type="file" accept="image/jpeg,image/png,image/webp"
              style={{ display: 'none' }} onChange={handleFilePicked} />
-
-      {stageState === 'render' && progress && (
-        <div className="film-prog">
-          <span className="film-live">Live</span>
-          <div className="film-prog-bar"><i style={{ width: `${pct}%` }} /></div>
-          <div className="film-prog-lbl"><b>Rendering {progress.done} of {progress.total}</b>{progress.etaText ? ` · ${progress.etaText}` : ''}</div>
-          <button className="film-btn film-btn--ghost" style={{ padding: '7px 12px' }} onClick={onStop}
-                  title="Stop after the shot that's rendering now — finished shots are kept"><IconStop s={13} /> Stop after shot</button>
-        </div>
-      )}
 
       {watching && finalUrl && (
         <div className="film-player-overlay" onClick={() => setWatching(false)}>
