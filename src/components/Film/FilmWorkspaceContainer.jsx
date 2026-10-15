@@ -4,7 +4,7 @@
 // existing one to resume (projectId only → GET /projects/:id restores chat +
 // render). Chat persists because the session is the project's bound session.
 
-import React, { useState, useMemo, useCallback, useEffect } from 'react';
+import React, { useState, useMemo, useCallback, useEffect, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import FilmWorkspace from './FilmWorkspace';
 import useFilmAuthoring from './useFilmAuthoring';
@@ -33,6 +33,22 @@ const shotToCell = s => ({
   status: 'queued',
 });
 
+// SAVED SCRIPT EDITS (2026-10-15) — what the user Saved, recovered on load.
+// Save now writes the edit INTO the room's newest script message and marks it
+// `edited: true` (film_routes PATCH /projects/:id/script), so the room shows the
+// edit on reopen with no help from here. If the NEWEST script message is that
+// edit, it is what "Make the film" / "Review cast" must use → seed savedScript.
+// If the room has written a newer draft since, that draft wins (saved = null).
+// Edits saved BEFORE the server fix were never written into the room and can't be
+// told apart from a later room draft safely, so they are not guessed at here —
+// re-save once and they persist from then on.
+function seedSavedScript(p) {
+  const messages = (p && p.messages) || [];
+  let sm = null;
+  messages.forEach((m) => { if (m.role !== 'system' && m.scriptMeta && m.scriptMeta.script) sm = m.scriptMeta; });
+  return { messages, saved: (sm && sm.edited) ? sm.script : null };
+}
+
 export default function FilmWorkspaceContainer({
   projectId,
   initialSessionId = null,     // set when the project was just created
@@ -49,6 +65,14 @@ export default function FilmWorkspaceContainer({
   const [loading, setLoading] = useState(true);
   const [meta, setMeta] = useState({ video_style: 'anime', duration_seconds: 120, aspect_ratio: '9:16' });
   const [savedScript, setSavedScript] = useState(null);   // user's saved script edits (win over finalize)
+  // SAVED SCRIPT EDITS (2026-10-15, owner bug: "edits don't persist"). savedScript
+  // used to live ONLY in this component's memory: Save → leave → come back and it
+  // was null again, the room showed the old draft, and "Make the film" finalized
+  // the old draft (overwriting the saved edit on the server). It is now SEEDED on
+  // load from the server's record of the edit (seedSavedScript, above), and
+  // CLEARED when the room writes a newer draft, so an old edit never beats a new
+  // draft. scriptCountRef = how many room messages carry a script, to spot a new one.
+  const scriptCountRef = useRef(0);
   // Per-beat busy flag — threaded to the individual Regenerate button (not just
   // the stage overlay) so a click registers visibly the instant it's pressed.
   // Fixes handover §2a: "Regenerate button shows no state".
@@ -81,6 +105,8 @@ export default function FilmWorkspaceContainer({
         // frame the user picked are lost. Without this, every newly-created film or
         // episode opened as anime regardless of the chosen style.
         authoring.adopt({ session_id: initialSessionId, messages: [] });
+        scriptCountRef.current = 0;
+        setSavedScript(null);   // a brand-new film never inherits another film's edit
         try {
           const p = await filmGetProject(projectId);
           if (!cancelled && p) {
@@ -96,10 +122,13 @@ export default function FilmWorkspaceContainer({
       try {
         const p = await filmGetProject(projectId);
         if (cancelled) return;
+        const { messages: msgs, saved } = seedSavedScript(p);
+        scriptCountRef.current = msgs.filter(m => m.role !== 'system' && m.scriptMeta).length;
         authoring.adopt({
-          session_id: p.session_id, messages: p.messages || [],
+          session_id: p.session_id, messages: msgs,
           title: p.title, script: p.script, scriptReady: !!p.script,
         });
+        setSavedScript(saved);
         setMeta({ video_style: p.video_style || 'anime', duration_seconds: p.duration_seconds || 120,
                   aspect_ratio: p.aspect_ratio || '9:16' });
         setSeriesId(p.series_id ?? null);   // confirmed standalone (null) or an episode (id)
@@ -112,6 +141,16 @@ export default function FilmWorkspaceContainer({
     })();
     return () => { cancelled = true; };
   }, [projectId, initialSessionId]);
+
+  // SAVED SCRIPT EDITS: a NEWER room draft (a new script message after the load or
+  // after Save) replaces the saved edit — "Make the film" must use what the room
+  // just wrote, not an older hand edit.
+  const scriptMsgCount = useMemo(
+    () => (authoring.messages || []).filter(m => m.scriptMeta).length, [authoring.messages]);
+  useEffect(() => {
+    if (scriptMsgCount > scriptCountRef.current) setSavedScript(null);
+    scriptCountRef.current = scriptMsgCount;
+  }, [scriptMsgCount]);
 
   // Clear the button-level regen spinner once the job's overlay-level busy
   // flag clears (regenerate completed, failed, or was superseded).
