@@ -11,8 +11,9 @@
 //     ideally its full-body ref so it matches the outfit tiles. If that doesn't
 //     exist yet, the best fallback shows straight away and the full-body is made
 //     once in the background (ensureOriginalFullbody), then swapped in.
-//   • New outfit shows Original | New side by side, same size, so the user
-//     compares like for like before saving.
+//   • The top of the modal is a STAGE: this speaker's avatar (Original) → the
+//     change (the new-outfit preview while creating one, else the outfit picked
+//     for this episode). The wardrobe is a compact strip below it.
 //   • "＋ New outfit" runs generate-preview → confirm inline (same shape as the
 //     avatar generate/confirm flow), then selects the new outfit.
 //
@@ -141,6 +142,25 @@ export default function OutfitPicker({
     finally { setBusy(false); }
   };
 
+  // ── The stage: THIS avatar (left) → the change (right) ──────────────────
+  // Always the selected speaker's own avatar on the left. The right side is:
+  // the new-outfit preview while creating one; else the outfit picked for this
+  // episode; else a prompt (Original = no change).
+  const originalImg   = original?.imageUrl || null;
+  const selectedOutfit = currentRefUrl ? outfits.find(o => o.outfitRefUrl === currentRefUrl) : null;
+  let changeImg = null, changeLabel = 'This episode', changeHint = null;
+  if (authorOpen) {
+    changeImg   = preview?.url || null;
+    changeLabel = 'New outfit';
+    changeHint  = busy ? 'Generating…' : 'Describe the outfit below, then generate a preview';
+  } else if (currentRefUrl) {
+    changeImg   = selectedOutfit?.fullbodyRefUrl || currentRefUrl;
+    changeLabel = selectedOutfit?.label || 'Selected outfit';
+  } else {
+    changeHint  = 'No change — wearing the original. Pick an outfit below or create a new one.';
+  }
+  const startNew = () => { setAuthor(true); setErr(null); };
+
   return (
     <div className={styles.backdrop} onMouseDown={(e) => { if (e.target === e.currentTarget) onClose?.(); }}>
       <div className={styles.modal} role="dialog" aria-modal="true" aria-label="Choose outfit" ref={dialogRef}>
@@ -151,71 +171,40 @@ export default function OutfitPicker({
         </div>
 
         <div className={styles.body}>
-          <div className={styles.grid}>
-            {/* Original */}
-            <button type="button"
-              className={`${styles.tile} ${!currentRefUrl ? styles.on : ''}`}
-              onClick={pickOriginal}>
-              {original?.imageUrl
-                ? <img className={styles.fig} src={original.imageUrl}
-                       alt={`${speakerLabel} — original outfit`} loading="lazy" />
-                : <span className={styles.figOriginal} aria-hidden="true">🧍</span>}
-              {originalBusy && <span className={styles.figBusy}>Preparing…</span>}
-              <span className={styles.chk}>✓</span>
-              <span className={styles.lab}>Original</span>
-            </button>
+          {/* Stage — the avatar being changed → the change */}
+          <div className={styles.stage}>
+            <figure className={styles.stageCol}>
+              <div className={styles.stageFrame}>
+                {originalImg
+                  ? <img className={styles.stageFig} src={originalImg} alt={`${speakerLabel} — original outfit`} />
+                  : <span className={`${styles.stageFig} ${styles.stageEmpty}`} aria-hidden="true">🧍</span>}
+                {originalBusy && <span className={styles.figBusy}>Preparing…</span>}
+              </div>
+              <figcaption className={styles.stageLab}>{speakerLabel} · Original</figcaption>
+            </figure>
 
-            {/* Saved outfits — fullbody is the thumbnail */}
-            {outfits.map((o) => (
-              <button type="button" key={o.outfitId}
-                className={`${styles.tile} ${currentRefUrl === o.outfitRefUrl ? styles.on : ''}`}
-                onClick={() => pickOutfit(o)} title={o.description || o.label}>
-                <img className={styles.fig} src={o.fullbodyRefUrl} alt={o.label} loading="lazy" />
-                <span className={styles.chk}>✓</span>
-                <span className={styles.lab}>{o.label}</span>
-                <span className={styles.del} title="Delete outfit" onClick={(e) => handleDelete(o, e)}>✕</span>
-              </button>
-            ))}
+            <span className={styles.stageArrow} aria-hidden="true">→</span>
 
-            {/* New outfit */}
-            <button type="button" className={`${styles.tile} ${styles.new}`} onClick={() => { setAuthor(true); setErr(null); }}>
-              <span className={styles.plus}>＋</span>
-              <span className={styles.lab}>New outfit</span>
-            </button>
+            <figure className={styles.stageCol}>
+              <div className={styles.stageFrame}>
+                {changeImg
+                  ? <img className={`${styles.stageFig} ${authorOpen && busy ? styles.stageDim : ''}`}
+                         src={changeImg} alt={`${speakerLabel} — ${changeLabel}`} />
+                  : <span className={`${styles.stageFig} ${styles.stageEmpty} ${styles.stageEmptyText}`}>{changeHint}</span>}
+              </div>
+              <figcaption className={`${styles.stageLab} ${styles.stageLabNew}`}>{changeLabel}</figcaption>
+            </figure>
           </div>
-
-          {loading && <p className={styles.hint}>Loading outfits…</p>}
 
           {authorOpen && (
             <div className={styles.author}>
-              <div className={styles.cardLabel}>New outfit</div>
-              <div className={styles.authorRow}>
-                <textarea
-                  className={styles.textarea}
-                  value={desc}
-                  placeholder="Describe the clothing — e.g. navy blazer over a white tee"
-                  onChange={(e) => setDesc(e.target.value)}
-                />
-              </div>
-
-              {/* Original | New — same size, side by side */}
-              <div className={styles.compare}>
-                <figure className={styles.compareCol}>
-                  {original?.imageUrl
-                    ? <img className={styles.compareFig} src={original.imageUrl} alt="Original outfit" />
-                    : <span className={`${styles.compareFig} ${styles.compareEmpty}`} aria-hidden="true">🧍</span>}
-                  <figcaption className={styles.compareLab}>Original</figcaption>
-                </figure>
-                <span className={styles.compareArrow} aria-hidden="true">→</span>
-                <figure className={styles.compareCol}>
-                  {preview?.url
-                    ? <img className={`${styles.compareFig} ${busy ? styles.compareDim : ''}`} src={preview.url} alt="New outfit preview" />
-                    : <span className={`${styles.compareFig} ${styles.compareEmpty}`}>
-                        {busy ? 'Generating…' : 'Your new outfit appears here'}
-                      </span>}
-                  <figcaption className={`${styles.compareLab} ${styles.compareLabNew}`}>New</figcaption>
-                </figure>
-              </div>
+              <div className={styles.cardLabel}>New outfit for {speakerLabel}</div>
+              <textarea
+                className={styles.textarea}
+                value={desc}
+                placeholder="Describe the clothing — e.g. navy blazer over a white tee"
+                onChange={(e) => setDesc(e.target.value)}
+              />
               {err && <p className={styles.err}>{err}</p>}
               <div className={styles.btnRow}>
                 {!preview
@@ -228,9 +217,44 @@ export default function OutfitPicker({
                 <button type="button" className={`${styles.btn} ${styles.ghost}`} disabled={busy}
                   onClick={() => { setAuthor(false); setDesc(''); setPreview(null); setErr(null); setAttempt(1); }}>Cancel</button>
               </div>
-              <p className={styles.hint}>Re-clothes your avatar’s original face photo — likeness preserved. One pass, same as an avatar preview.</p>
+              <p className={styles.hint}>Re-dresses {speakerLabel} — same face, hair and build; only the clothes change.</p>
             </div>
           )}
+
+          {/* Wardrobe — compact strip; click to choose for this episode */}
+          <div className={styles.wardrobe}>
+            <div className={styles.cardLabel}>Wardrobe</div>
+            <div className={styles.grid}>
+              <button type="button"
+                className={`${styles.tile} ${!currentRefUrl ? styles.on : ''}`}
+                onClick={pickOriginal} title="Original — no outfit change">
+                {originalImg
+                  ? <img className={styles.fig} src={originalImg} alt="" />
+                  : <span className={styles.figOriginal} aria-hidden="true">🧍</span>}
+                <span className={styles.chk}>✓</span>
+                <span className={styles.lab}>Original</span>
+              </button>
+
+              {outfits.map((o) => (
+                <button type="button" key={o.outfitId}
+                  className={`${styles.tile} ${currentRefUrl === o.outfitRefUrl ? styles.on : ''}`}
+                  onClick={() => pickOutfit(o)} title={o.description || o.label}>
+                  <img className={styles.fig} src={o.fullbodyRefUrl} alt="" loading="lazy" />
+                  <span className={styles.chk}>✓</span>
+                  <span className={styles.lab}>{o.label}</span>
+                  <span className={styles.del} title="Delete outfit" onClick={(e) => handleDelete(o, e)}>✕</span>
+                </button>
+              ))}
+
+              {!authorOpen && (
+                <button type="button" className={`${styles.tile} ${styles.new}`} onClick={startNew}>
+                  <span className={styles.plus}>＋</span>
+                  <span className={styles.lab}>New outfit</span>
+                </button>
+              )}
+            </div>
+            {loading && <p className={styles.hint}>Loading outfits…</p>}
+          </div>
         </div>
 
         <div className={styles.foot}>

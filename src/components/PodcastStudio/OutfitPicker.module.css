@@ -22,8 +22,8 @@
 .close:hover { background: rgba(148,163,184,0.25); color: #fff; }
 
 .body { padding: 16px; overflow-y: auto; }
-.grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px; }
-@media (max-width: 600px) { .grid { grid-template-columns: repeat(3, 1fr); } }
+.grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(76px, 92px)); gap: 8px; }
+@media (max-width: 600px) { .grid { grid-template-columns: repeat(auto-fill, minmax(72px, 1fr)); } }
 
 .tile { position: relative; background: var(--surface); border: 1px solid var(--line);
   border-radius: 12px; overflow: hidden; cursor: pointer; padding: 0; transition: 0.12s;
@@ -46,7 +46,7 @@
 .del:hover { background: rgba(239,68,68,0.85); color: #fff; }
 
 /* "Preparing…" while the original full-body is made the first time */
-.figBusy { position: absolute; left: 6px; right: 6px; bottom: 34px; padding: 3px 6px;
+.figBusy { position: absolute; left: 8px; right: 8px; bottom: 8px; padding: 3px 6px;
   border-radius: 999px; background: rgba(2,6,23,0.75); color: var(--indigo-txt);
   font-size: 0.6rem; text-align: center; }
 
@@ -56,27 +56,34 @@
 .new .lab { color: var(--indigo-light); }
 
 .author { margin-top: 14px; border-top: 1px solid var(--line); padding-top: 14px; }
+.author .textarea { width: 100%; box-sizing: border-box; }
+
+/* ── Stage: this avatar → the change (top of the modal) ── */
+.stage { display: flex; align-items: center; justify-content: center; gap: 16px;
+  padding: 4px 0 2px; }
+.stageCol { margin: 0; display: flex; flex-direction: column; align-items: center; gap: 7px;
+  width: min(150px, 36%); }
+.stageFrame { position: relative; width: 100%; }
+.stageFig { width: 100%; aspect-ratio: 9/16; object-fit: cover; display: block; border-radius: 12px;
+  border: 1px solid var(--line); background: #0d1526; transition: opacity 0.15s; }
+.stageEmpty { display: flex; align-items: center; justify-content: center; font-size: 2.4rem;
+  border-style: dashed; background: linear-gradient(160deg, #1a2340, #0d1526); box-sizing: border-box; }
+.stageEmptyText { font-size: 0.7rem; line-height: 1.45; color: var(--muted); text-align: center; padding: 14px; }
+.stageDim { opacity: 0.45; }
+.stageArrow { color: var(--indigo-light); font-size: 1.2rem; flex-shrink: 0; }
+.stageLab { font-size: 0.6rem; text-transform: uppercase; letter-spacing: 0.13em; font-weight: 700;
+  color: var(--muted); text-align: center; max-width: 100%; overflow: hidden; text-overflow: ellipsis;
+  white-space: nowrap; }
+.stageLabNew { color: var(--indigo-txt); }
+
+/* ── Wardrobe strip ── */
+.wardrobe { margin-top: 14px; border-top: 1px solid var(--line); padding-top: 12px; }
 .cardLabel { font-size: 0.6rem; text-transform: uppercase; letter-spacing: 0.13em; color: var(--muted); font-weight: 700; margin-bottom: 8px; }
 .authorRow { display: flex; gap: 10px; align-items: flex-start; }
 .textarea { flex: 1; background: rgba(148,163,184,0.06); border: 1px solid var(--line); border-radius: 8px;
   padding: 0.55rem 0.7rem; font-size: 0.8rem; color: #e2e8f0; font-family: 'Inter', sans-serif; resize: none; height: 64px; }
 .textarea:focus { outline: none; border-color: rgba(99,102,241,0.5); }
 .previewFig { width: 84px; aspect-ratio: 9/16; object-fit: cover; border-radius: 8px; border: 1px solid var(--line); flex-shrink: 0; background: #0d1526; }
-/* Original | New comparison (new-outfit step) */
-.compare { display: flex; align-items: center; justify-content: center; gap: 14px; margin-top: 12px; }
-.compareCol { margin: 0; display: flex; flex-direction: column; align-items: center; gap: 6px;
-  width: min(150px, 38%); }
-.compareFig { width: 100%; aspect-ratio: 9/16; object-fit: cover; display: block; border-radius: 10px;
-  border: 1px solid var(--line); background: #0d1526; transition: opacity 0.15s; }
-.compareEmpty { display: flex; align-items: center; justify-content: center; text-align: center;
-  padding: 10px; font-size: 0.68rem; color: var(--muted); border-style: dashed;
-  background: linear-gradient(160deg, #1a2340, #0d1526); }
-.compareDim { opacity: 0.45; }
-.compareArrow { color: var(--indigo-light); font-size: 1.1rem; }
-.compareLab { font-size: 0.6rem; text-transform: uppercase; letter-spacing: 0.13em;
-  font-weight: 700; color: var(--muted); }
-.compareLabNew { color: var(--indigo-txt); }
-
 .err { color: #FCA5A5; font-size: 0.72rem; margin: 8px 0 0; }
 .btnRow { display: flex; gap: 8px; margin-top: 10px; flex-wrap: wrap; }
 .btn { border: none; border-radius: 999px; padding: 0.5rem 1.1rem; font-family: 'Inter', sans-serif; font-weight: 600; font-size: 0.78rem; cursor: pointer; }
