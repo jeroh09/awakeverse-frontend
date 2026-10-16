@@ -1255,6 +1255,63 @@ export default function usePodcastStudio() {
     }
   }, []);
 
+  // Wardrobe = the avatar's ORIGINAL look + its saved outfits, in one call.
+  // Same endpoint as loadOutfits; `original` is additive, so against an older
+  // backend it's simply null and the picker falls back to its placeholder.
+  //   original.imageUrl    ← original.image_url   best image we have (full-body → baked → photo)
+  //   original.isFullbody  ← original.is_fullbody true = same framing as the outfit tiles
+  const loadWardrobe = useCallback(async (avatarId) => {
+    if (!avatarId) return { original: null, outfits: [] };
+    try {
+      const res = await fetch(`${API_BASE}/api/podcast/avatar/${avatarId}/outfits`, {
+        credentials: 'include',
+      });
+      if (!res.ok) { console.warn('⚠️ loadWardrobe non-OK:', res.status); return { original: null, outfits: [] }; }
+      const data = await res.json();
+      const o = data.original;
+      return {
+        original: o ? {
+          imageUrl:       o.image_url || null,
+          isFullbody:     !!o.is_fullbody,
+          fullbodyRefUrl: o.fullbody_ref_url || null,
+          avatarRefUrl:   o.avatar_ref_url || null,
+          photoUrl:       o.photo_url || null,
+          displayName:    o.display_name || null,
+        } : null,
+        outfits: (data.outfits || []).map(o2 => ({
+          outfitId:       o2.outfit_id,
+          label:          o2.label,
+          description:    o2.description,
+          fullbodyRefUrl: o2.fullbody_ref_url,
+          outfitRefUrl:   o2.outfit_ref_url,
+          createdAt:      o2.created_at,
+        })),
+      };
+    } catch (e) {
+      console.warn('⚠️ loadWardrobe error:', e.message);
+      return { original: null, outfits: [] };
+    }
+  }, []);
+
+  // Make (once) the avatar's full-body ref in its ORIGINAL clothes, so the
+  // Original tile matches the outfit tiles. Idempotent server-side (returns the
+  // cached one with no generation if it exists); the render reuses it.
+  //   fullbodyRefUrl ← fullbody_ref_url
+  const ensureOriginalFullbody = useCallback(async (avatarId) => {
+    if (!avatarId) throw new Error('avatarId is required');
+    const res = await fetch(`${API_BASE}/api/podcast/avatar/${avatarId}/original/fullbody`, {
+      method:      'POST',
+      headers:     { 'X-CSRF-Token': getCsrf() },
+      credentials: 'include',
+    });
+    const data = await res.json().catch(() => ({}));
+    if (!res.ok) {
+      ApiErrorService.log('usePodcastStudio.ensureOriginalFullbody', res.status, data);
+      throw new Error(ApiErrorService.getMessage(res.status, data));
+    }
+    return { fullbodyRefUrl: data.fullbody_ref_url, generated: !!data.generated };
+  }, []);
+
   // Mirrors generateAvatarPreview: sync, one Nano pass, 422 → likeness rejection.
   const generateOutfitPreview = useCallback(async ({ avatarId, description, label, attemptNumber = 1 }) => {
     if (!avatarId)            throw new Error('avatarId is required');
@@ -1635,6 +1692,8 @@ export default function usePodcastStudio() {
     recordConsent,    // () → bool — record consent, returns true on success
     // Outfits (wardrobe)
     loadOutfits,           // (avatarId) → [{ outfitId, label, fullbodyRefUrl, outfitRefUrl, … }]
+    loadWardrobe,          // (avatarId) → { original: { imageUrl, isFullbody, … } | null, outfits: [...] }
+    ensureOriginalFullbody, // (avatarId) → { fullbodyRefUrl, generated } — makes the original-look full-body once
     generateOutfitPreview, // ({ avatarId, description, label, attemptNumber }) → { previewUrl, attemptNumber }
     confirmOutfit,         // ({ avatarId, previewUrl, description, label }) → { outfitId, label, fullbodyRefUrl, outfitRefUrl }
     deleteOutfit,          // ({ avatarId, outfitId }) → true

@@ -6,7 +6,13 @@
 //   • Lists the avatar's saved outfits — each outfit's fullbody IS its thumbnail
 //     (backend returns fullbody_ref_url, which doubles as the picker image AND
 //     the outfit_ref_url the session speaker carries at render).
-//   • "Original" = no outfit (the avatar's base look; sends nothing).
+//   • "Original" = no outfit (the avatar's base look; sends nothing). Shows the
+//     REAL avatar (2026-10-16 — was an emoji): the backend's `original` look,
+//     ideally its full-body ref so it matches the outfit tiles. If that doesn't
+//     exist yet, the best fallback shows straight away and the full-body is made
+//     once in the background (ensureOriginalFullbody), then swapped in.
+//   • New outfit shows Original | New side by side, same size, so the user
+//     compares like for like before saving.
 //   • "＋ New outfit" runs generate-preview → confirm inline (same shape as the
 //     avatar generate/confirm flow), then selects the new outfit.
 //
@@ -27,8 +33,13 @@ export default function OutfitPicker({
   generateOutfitPreview,
   confirmOutfit,
   deleteOutfit,
+  loadWardrobe,             // optional (avatarId) → { original, outfits }; falls back to loadOutfits
+  ensureOriginalFullbody,   // optional (avatarId) → { fullbodyRefUrl }
 }) {
   const [outfits, setOutfits]   = useState([]);
+  const [original, setOriginal] = useState(null);   // { imageUrl, isFullbody, photoUrl, … } | null
+  const [originalBusy, setOriginalBusy] = useState(false);
+  const ensuredFor = useRef(null);                   // avatarId we've already asked to prepare
   const [loading, setLoading]   = useState(false);
   const [authorOpen, setAuthor] = useState(false);
   const [desc, setDesc]         = useState('');
@@ -41,13 +52,43 @@ export default function OutfitPicker({
   const refresh = useCallback(async () => {
     if (!avatarId) return;
     setLoading(true);
-    try { setOutfits(await loadOutfits(avatarId)); }
-    finally { setLoading(false); }
-  }, [avatarId, loadOutfits]);
+    try {
+      if (loadWardrobe) {
+        const w = await loadWardrobe(avatarId);
+        setOutfits(w.outfits || []);
+        setOriginal(w.original || null);
+      } else {
+        setOutfits(await loadOutfits(avatarId));
+      }
+    } finally { setLoading(false); }
+  }, [avatarId, loadOutfits, loadWardrobe]);
+
+  // Original look not available as a full-body yet → make it once (server
+  // caches it; the render reuses it). The fallback image shows meanwhile, and a
+  // failure just leaves the fallback — never blocks the picker.
+  useEffect(() => {
+    if (!open || !avatarId || !ensureOriginalFullbody) return;
+    if (!original || original.isFullbody || !original.photoUrl) return;
+    if (ensuredFor.current === avatarId) return;
+    ensuredFor.current = avatarId;
+    let alive = true;
+    setOriginalBusy(true);
+    ensureOriginalFullbody(avatarId)
+      .then(r => {
+        if (alive && r?.fullbodyRefUrl) {
+          setOriginal(o => ({ ...(o || {}), imageUrl: r.fullbodyRefUrl,
+                              fullbodyRefUrl: r.fullbodyRefUrl, isFullbody: true }));
+        }
+      })
+      .catch(() => { ensuredFor.current = null; })   // allow a retry next open
+      .finally(() => { if (alive) setOriginalBusy(false); });
+    return () => { alive = false; };
+  }, [open, avatarId, original, ensureOriginalFullbody]);
 
   useEffect(() => {
     if (!open) return;
     setAuthor(false); setDesc(''); setPreview(null); setErr(null); setAttempt(1);
+    setOriginal(null);   // never flash another speaker's original look
     refresh();
   }, [open, refresh]);
 
@@ -115,7 +156,11 @@ export default function OutfitPicker({
             <button type="button"
               className={`${styles.tile} ${!currentRefUrl ? styles.on : ''}`}
               onClick={pickOriginal}>
-              <span className={styles.figOriginal} aria-hidden="true">🧍</span>
+              {original?.imageUrl
+                ? <img className={styles.fig} src={original.imageUrl}
+                       alt={`${speakerLabel} — original outfit`} loading="lazy" />
+                : <span className={styles.figOriginal} aria-hidden="true">🧍</span>}
+              {originalBusy && <span className={styles.figBusy}>Preparing…</span>}
               <span className={styles.chk}>✓</span>
               <span className={styles.lab}>Original</span>
             </button>
@@ -151,7 +196,25 @@ export default function OutfitPicker({
                   placeholder="Describe the clothing — e.g. navy blazer over a white tee"
                   onChange={(e) => setDesc(e.target.value)}
                 />
-                {preview?.url && <img className={styles.previewFig} src={preview.url} alt="Outfit preview" />}
+              </div>
+
+              {/* Original | New — same size, side by side */}
+              <div className={styles.compare}>
+                <figure className={styles.compareCol}>
+                  {original?.imageUrl
+                    ? <img className={styles.compareFig} src={original.imageUrl} alt="Original outfit" />
+                    : <span className={`${styles.compareFig} ${styles.compareEmpty}`} aria-hidden="true">🧍</span>}
+                  <figcaption className={styles.compareLab}>Original</figcaption>
+                </figure>
+                <span className={styles.compareArrow} aria-hidden="true">→</span>
+                <figure className={styles.compareCol}>
+                  {preview?.url
+                    ? <img className={`${styles.compareFig} ${busy ? styles.compareDim : ''}`} src={preview.url} alt="New outfit preview" />
+                    : <span className={`${styles.compareFig} ${styles.compareEmpty}`}>
+                        {busy ? 'Generating…' : 'Your new outfit appears here'}
+                      </span>}
+                  <figcaption className={`${styles.compareLab} ${styles.compareLabNew}`}>New</figcaption>
+                </figure>
               </div>
               {err && <p className={styles.err}>{err}</p>}
               <div className={styles.btnRow}>

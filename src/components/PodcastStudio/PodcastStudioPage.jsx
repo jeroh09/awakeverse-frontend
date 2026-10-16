@@ -341,6 +341,8 @@ export default function PodcastStudioPage({ context, onClose }) {
     confirmAvatarPreview,
     bakeAvatarEnv,
     loadOutfits,
+    loadWardrobe,
+    ensureOriginalFullbody,
     generateOutfitPreview,
     confirmOutfit,
     deleteOutfit,
@@ -469,6 +471,22 @@ export default function PodcastStudioPage({ context, onClose }) {
     return Math.ceil(words / 2.5 + audioOnly * 8 + wides * 4);
   }, [lines]);
   const [renderCost, setRenderCost] = useState(null);   // { price, affordable, ... }
+
+  // ── Render quality: Standard (480p lip-sync) / HD (720p) ─────────────────
+  // HD costs HD_MULTIPLIER × the Standard price, rounded UP — the same maths as
+  // credits_hooks._apply_multiplier (PODCAST_HD_MULTIPLIER on the server, 1.5).
+  // Keep the two in step: if the server value changes, change it here too.
+  const HD_MULTIPLIER = 1.5;
+  const [quality, setQuality] = useState('standard');   // 'standard' | 'hd'
+  const basePrice = renderCost?.price != null ? Number(renderCost.price) : null;
+  const hdPrice   = basePrice != null ? Math.ceil(basePrice * HD_MULTIPLIER) : null;
+  const hdExtra   = basePrice != null ? hdPrice - basePrice : null;
+  const effectivePrice = quality === 'hd' ? hdPrice : basePrice;
+  // Affordability must follow the price actually shown — recompute from the
+  // balance (the server's `affordable` flag is for the Standard price only).
+  const effectiveAffordable = effectivePrice == null ? null
+    : credits.balance != null ? Number(credits.balance) >= effectivePrice
+    : renderCost?.affordable;
 
   // ── Comparison mode (solo): two glass rails, points reveal line-by-line ──
   const [compareOn,     setCompareOn]     = useState(false);
@@ -1601,6 +1619,7 @@ if (context.topic) setTopic(context.topic);
       // Build payload in snake_case — matches backend _validate_session exactly.
       const payload = {
         environment_id: selectedEnvId,
+        quality,                         // 'standard' | 'hd' — HD bills 1.5×
         speakers: speakers.map((s, i) => {
           // Always send a voice_id — never null or empty.
           // Host default: Rachel (21m00Tcm4TlvDq8ikWAM)
@@ -1717,6 +1736,15 @@ if (context.topic) setTopic(context.topic);
         return;
       }
 
+      // Credits couldn't be verified (503) — nothing was charged; show the
+      // server's own wording rather than a generic error.
+      if (data.error === 'credit_check_failed') {
+        ApiErrorService.log('PodcastStudioPage.handleGenerate', res.status, data);
+        setGenerateError(data.message || "We couldn't verify your credits — nothing was charged. Please try again.");
+        setSubmitted(false);
+        return;
+      }
+
       if (!res.ok) {
         ApiErrorService.log('PodcastStudioPage.handleGenerate', res.status, data);
         setGenerateError(ApiErrorService.getMessage(res.status, data));
@@ -1739,7 +1767,7 @@ if (context.topic) setTopic(context.topic);
       setSubmitted(false);
     }
   }, [
-    speakers, selectedEnvId, voices,
+    speakers, selectedEnvId, voices, quality,
     compareOn, compareLeft, compareRight, comparePoints, compareStyle,
     startPollingSession, loadSessions, setActivePodcastRender,
   ]);
@@ -2887,6 +2915,39 @@ if (context.topic) setTopic(context.topic);
                     progress: state.status === 'rendering' ? state.progress : null,
                   },
                   { label: 'Finishing touches', detail: 'Captions', done: state.status === 'complete' },
+                  {
+                    label: 'Video quality',
+                    detail: quality === 'hd'
+                      ? `HD · sharper faces${hdExtra != null ? ` · +${hdExtra.toLocaleString()} credits` : ''}`
+                      : 'Standard · included in the price',
+                    done: state.status === 'complete',
+                    control: (
+                      <div className={styles.scriptModeToggle} role="radiogroup" aria-label="Video quality">
+                        {[
+                          { key: 'standard', label: 'Standard' },
+                          { key: 'hd',       label: 'HD' },
+                        ].map(opt => {
+                          const locked = submitted || state.status === 'rendering' || state.status === 'complete';
+                          return (
+                            <button
+                              key={opt.key}
+                              type="button"
+                              role="radio"
+                              aria-checked={quality === opt.key}
+                              disabled={locked}
+                              className={`${styles.scriptModeBtn} ${styles.qualityBtn} ${quality === opt.key ? styles.scriptModeBtnActive : ''}`}
+                              onClick={() => setQuality(opt.key)}
+                            >
+                              {opt.label}
+                              {opt.key === 'hd' && hdExtra != null && (
+                                <span className={styles.qualityExtra}>+{hdExtra.toLocaleString()}</span>
+                              )}
+                            </button>
+                          );
+                        })}
+                      </div>
+                    ),
+                  },
                 ].map((step, i) => (
                   <div key={i} className={styles.progStep}>
                     <div className={`${styles.stepIcon} ${step.done ? styles.sDone : step.active ? styles.sActive : styles.sPend}`}>
@@ -2901,6 +2962,7 @@ if (context.topic) setTopic(context.topic);
                         </div>
                       )}
                     </div>
+                    {step.control}
                   </div>
                 ))}
                 {state.status === 'failed' && state.error && (
@@ -3492,6 +3554,8 @@ if (context.topic) setTopic(context.topic);
                 currentRefUrl={spk.outfitRefUrl || null}
                 onSelect={(refUrl, label) => handleSelectOutfit(spk.speakerId, refUrl, label)}
                 loadOutfits={loadOutfits}
+                loadWardrobe={loadWardrobe}
+                ensureOriginalFullbody={ensureOriginalFullbody}
                 generateOutfitPreview={generateOutfitPreview}
                 confirmOutfit={confirmOutfit}
                 deleteOutfit={deleteOutfit}
@@ -3943,13 +4007,13 @@ if (context.topic) setTopic(context.topic);
 
         {activeTab === 'generate' ? (
           <div style={{ display: 'flex', alignItems: 'center', gap: '0.7rem' }}>
-            {renderCost && (
+            {renderCost && effectivePrice != null && (
               <span style={{
                 fontFamily: "'Inter', sans-serif", fontSize: '0.72rem', fontWeight: 600,
                 whiteSpace: 'nowrap',
-                color: renderCost.affordable === false ? '#f59e0b' : '#818cf8',
+                color: effectiveAffordable === false ? '#f59e0b' : '#818cf8',
               }}>
-                ~{Number(renderCost.price).toLocaleString()} credits
+                ~{effectivePrice.toLocaleString()} credits{quality === 'hd' && ' · HD'}
                 {estSeconds > 0 && ` · ~${estSeconds >= 60 ? `${Math.round(estSeconds / 60)} min` : `${estSeconds}s`}`}
                 {credits.balance != null && ` · ${Number(credits.balance).toLocaleString()} left`}
               </span>
