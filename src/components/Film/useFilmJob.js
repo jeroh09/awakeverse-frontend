@@ -1,0 +1,554 @@
+// src/components/Film/useFilmJob.js
+// A film job's live state: generate → 5s poll → edit, plus cancel / reassemble /
+// regenerate (all act on the SAME job, so one poll reflects them). Uses filmApi.
+
+import { useState, useCallback, useRef, useEffect } from 'react';
+import { filmGenerate, filmGetJob, filmCancel, filmReassemble, filmRegenerate,
+         filmPlan, filmRegeneratePlate, filmApproveRender, filmUploadCharacterImage,
+         filmFinishProject, filmSetRecap, filmRedrawLocation, friendlyError } from './filmApi';
+
+const POLL_MS = 5000;
+const POLL_TIMEOUT_MS = 45 * 60 * 1000;
+
+const normBeat = b => ({
+  index: b.index,
+  kind: b.kind || 'pure_visual',
+  seconds: Math.round(b.seconds || 6),
+  speaker: (b.speaker || '').trim(),
+  caption: (b.caption || '').trim(),
+  location: (b.location || '').trim(),
+  // Shot description + the attributed cast/lines so the editor shows the beat
+  // exactly as the director set it (who's present, whose line is whose).
+  visual: (b.visual || b.action || '').trim(),
+  present: Array.isArray(b.present_cast) ? b.present_cast.slice() : [],
+  lines: Array.isArray(b.lines)
+    ? b.lines.map(l => ({ speaker: (l.speaker || '').trim(), text: (l.text || '').trim(),
+                          kind: l.kind || 'dialogue' }))
+    : [],
+  clipUrl: b.clip_url || null,
+  durable: !!b.durable,
+  softened: !!b.softened,
+  // The beat exactly as the server stored it. Cut / Duplicate / reorder send THIS back
+  // (beatPayload below) — the reassemble endpoint saves the list it receives, so a
+  // payload of display fields alone wiped every shot's visual, lines, cast, location
+  // and voices after one cut (2026-10-12).
+  raw: b,
+});
+
+// One beat for the reassemble payload: every stored field, with the cell's current
+// clip/seconds/caption on top. Cells built before a beat landed (no raw) fall back to
+// the display fields, which is what the old payload sent.
+export const beatPayload = (c) => ({
+  ...(c.raw || {}),
+  index: c.index, clip_url: c.clipUrl, seconds: c.seconds,
+  speaker: c.speaker, caption: c.caption, kind: c.kind, durable: c.durable,
+});
+
+// "Edit not applied: …" / "Previously on: …" — an edit or recap that failed on a film
+// that is still fine (EDITOR_FAIL_RESTORE): the job is 'complete' and the reason rides
+// error_message. Anything else in error_message on a complete job is not ours to show.
+const NOTICE_PREFIXES = ['Edit not applied:', 'Previously on:'];
+const noticeFrom = (msg) => (typeof msg === 'string'
+  && NOTICE_PREFIXES.some(p => msg.startsWith(p))) ? msg : null;
+
+// manifest → storyboard cells. The backend pushes { plan:[shot skeletons],
+// beats:[rendered-so-far w/ clip_url], live, total } the MOMENT the director
+// finishes — so we build the card grid from `plan` immediately (shot info, no
+// clips), then overlay `beats` clips by index as each shot renders. `expected`
+// (from a review count) is a fallback when no plan is present.
+function toCells(manifest, expected) {
+  const plan = (manifest && manifest.plan) || [];
+  const beats = (manifest && manifest.beats) || [];
+  const live = !!(manifest && manifest.live);
+  const rendered = new Map(beats.map(b => [b.index, normBeat(b)]));
+
+  // NOT live → a completed or freshly-EDITED film: the durable beats ARE the
+  // truth (in their current order), so cut / duplicate / reorder reflect at once.
+  // The `plan` is only the live-render progress skeleton; ignore it here.
+  if (!live && beats.length) {
+    // MERGED CLIPS, ONE ROW PER LINE (2026-10-12): a clip merged from several spoken
+    // shots carries each shot's own line (from source.shots via merged_from), so the
+    // storyboard can show — and edit — one line at a time (target_source_index).
+    const srcShots = new Map(((manifest && manifest.source && manifest.source.shots) || [])
+      .filter(s => s && s.index != null).map(s => [s.index, s]));
+    const subLinesOf = (b) => {
+      const mf = Array.isArray(b.merged_from) ? b.merged_from : [];
+      if (mf.length < 2) return [];
+      const rows = mf.map(i => srcShots.get(i)).filter(Boolean)
+        .filter(s => ((s.dialogue || s.vo || '') + '').trim())
+        .map(s => ({ sourceIndex: s.index, speaker: (s.speaker || (s.vo ? 'Narrator' : '')).trim(),
+                     text: (s.dialogue || s.vo || '').trim(), kind: s.vo && !s.dialogue ? 'vo' : 'dialogue',
+                     visual: (s.action || '').trim(),
+                     present: Array.isArray(s.present_cast) ? s.present_cast.slice() : [] }));
+      return rows.length >= 2 ? rows : [];
+    };
+    const done = beats.map((b, pos) => ({ ...normBeat(b), pos, status: 'done', subLines: subLinesOf(b) }));
+    // PREVIEW WALL (2026-09-16): a budget-limited film completes with fewer
+    // rendered beats than planned. The un-rendered shots become LOCKED cells
+    // built from the plan that survived in source.shots — captioned, kinded,
+    // un-clickable teasers of the rest of THEIR OWN film. Locked cells carry
+    // everything Storyboard needs, so no new props thread through the shell
+    // (the severed-link lesson, applied preemptively).
+    const partial = manifest && manifest.partial;
+    // LOCKED TEASERS (2026-09-22, single-shot preview fix): gate on planned >
+    // rendered, NOT on any shot-text source existing. `partial.planned` rides in
+    // editor.partial and DOES survive into the completed manifest; `source.shots`
+    // rides the live-render manifest and does NOT. If we keyed off source.shots we
+    // built zero locked cells for a finished preview → no teaser grid, no "Finish
+    // your film" banner → a lone clip that reads as a broken film. Now the preview
+    // is a SINGLE shot, that was guaranteed. Shot text only ENRICHES the locks.
+    // Data source, best → worst: partial.locked (captions persisted for this) →
+    // source.shots → the planned COUNT (generic locks). Any of them renders the
+    // hook; the count fallback guarantees it always does.
+    const lockedSrc = (partial && Array.isArray(partial.locked) && partial.locked.length)
+      ? partial.locked
+      : ((manifest && manifest.source && manifest.source.shots) || []);
+    if (partial && partial.planned > done.length) {
+      const have = new Set(beats.map(b => b.index));
+      const named = lockedSrc
+        .filter(s => s.index && !have.has(s.index))
+        .sort((a, b) => a.index - b.index)
+        .map((s, i) => ({
+          index: s.index, pos: done.length + i, status: 'locked',
+          kind: s.kind || 'pure_visual',
+          seconds: Math.round(s.seconds || s.duration || 6),
+          speaker: (s.speaker || '').trim(),
+          caption: (s.caption || s.dialogue || s.vo || s.action || '').trim().slice(0, 90),
+          visual: (s.action || '').trim(), lines: [], present: [],
+          clipUrl: null, durable: false, softened: false,
+        }));
+      // Fallback: no per-shot text survived → generic locks from the count so the
+      // teaser grid + CTA still render (no caption/kind, but the lock + banner
+      // carry "the rest of your film is written and waiting").
+      const locked = named.length ? named
+        : Array.from({ length: partial.planned - done.length }, (_, i) => ({
+            index: done.length + i + 1, pos: done.length + i, status: 'locked',
+            kind: 'pure_visual', seconds: 6, speaker: '', caption: '',
+            visual: '', lines: [], present: [],
+            clipUrl: null, durable: false, softened: false,
+          }));
+      return [...done, ...locked];
+    }
+    return done;
+  }
+
+  // Live render: build the card grid from the plan skeleton immediately, overlay
+  // rendered clips by index as each shot finishes.
+  const total = Math.max(plan.length, beats.length, expected || 0);
+  if (!total) return [];
+  const planByIndex = new Map(plan.map(s => [s.index, s]));
+  let firstPending = null;
+  for (let i = 1; i <= total; i++) if (!rendered.has(i)) { firstPending = i; break; }
+
+  const cells = [];
+  for (let i = 1; i <= total; i++) {
+    const done = rendered.get(i);
+    if (done) {
+      const p = planByIndex.get(i) || {};
+      cells.push({
+        ...done, pos: i - 1,
+        kind: done.kind || p.kind || 'pure_visual',
+        speaker: done.speaker || (p.speaker || '').trim(),
+        caption: done.caption || (p.caption || '').trim(),
+        visual: done.visual || (p.visual || p.action || '').trim(),
+        present: (done.present && done.present.length) ? done.present
+                 : (Array.isArray(p.present_cast) ? p.present_cast.slice() : []),
+        lines: (done.lines && done.lines.length) ? done.lines
+               : (Array.isArray(p.lines) ? p.lines.map(l => ({ speaker: (l.speaker||'').trim(),
+                   text: (l.text||'').trim(), kind: l.kind || 'dialogue' })) : []),
+        softened: done.softened || !!p.softened,
+        status: 'done',
+      });
+    } else {
+      const p = planByIndex.get(i);
+      cells.push(p ? {
+        index: i, pos: i - 1,
+        kind: p.kind || 'pure_visual', seconds: Math.round(p.seconds || 6),
+        speaker: (p.speaker || '').trim(), caption: (p.caption || '').trim(),
+        visual: (p.visual || p.action || '').trim(),
+        present: Array.isArray(p.present_cast) ? p.present_cast.slice() : [],
+        lines: Array.isArray(p.lines) ? p.lines.map(l => ({ speaker: (l.speaker||'').trim(),
+                 text: (l.text||'').trim(), kind: l.kind || 'dialogue' })) : [],
+        clipUrl: null, durable: false, softened: !!p.softened,
+        status: (live && i === firstPending) ? 'rendering' : 'queued',
+      } : {
+        index: i, pos: i - 1, kind: 'pure_visual', seconds: 6, speaker: '', caption: '',
+        clipUrl: null, durable: false, softened: false,
+        status: (live && i === firstPending) ? 'rendering' : 'queued',
+      });
+    }
+  }
+  return cells;
+}
+
+function etaText(done, total, secsPerShot = 130) {
+  const left = Math.max(0, total - done) * secsPerShot;
+  if (left <= 0) return '';
+  const m = Math.round(left / 60);
+  return m >= 1 ? `~${m} min left` : '<1 min left';
+}
+
+// Detect a 402 insufficient-credits response from generate/plan so the caller can
+// show the top-up card instead of a generic error. Shape matches InsufficientCard.
+function creditsBlock(e) {
+  const status = e && e.response && e.response.status;
+  const data = (e && e.response && e.response.data) || {};
+  if (status === 402 || data.error === 'insufficient_credits') {
+    return {
+      needed: data.needed, available: data.available, shortBy: data.short_by,
+      title: data.title || 'Not enough credits',
+      message: data.message || 'You need more credits to make this.',
+    };
+  }
+  return null;
+}
+
+export default function useFilmJob() {
+  const [jobId, setJobId]           = useState(null);
+  const [status, setStatus]         = useState('idle');   // idle|processing|complete|failed
+  const [manifest, setManifest]     = useState(null);
+  const [rawProgress, setRawProgress] = useState(0);
+  const [outputUrl, setOutputUrl]   = useState(null);
+  const [error, setError]           = useState(null);
+  const [blocked, setBlocked]       = useState(null);   // 402 insufficient-credits info
+  const [editBusy, setEditBusy]     = useState(null);   // null | label while an edit applies
+  const [notice, setNotice]         = useState(null);   // "Edit not applied: …" on a complete job
+
+  const pollRef = useRef(null);
+  // ONE JOB AT A TIME (2026-10-13, TD-20): every call that starts work on this film —
+  // reassemble (cut / duplicate / reorder), regenerate, recap, plate redraw / upload,
+  // finish, approve, generate, plan — claims this lock SYNCHRONOUSLY and is refused
+  // while another holds it. Released when the job comes back complete / paused /
+  // failed, or when the request itself fails. A ref, not state, so two clicks in the
+  // same frame (or three Editor's Room "Apply"s) can never both get through — job 9360
+  // ran three reassembles at once and one lost its files.
+  const lockRef = useRef(null);
+  const claim = useCallback((label) => {
+    if (lockRef.current) {
+      console.info(`film: "${label}" not started — "${lockRef.current}" is still running`);
+      return false;
+    }
+    lockRef.current = label; return true;
+  }, []);
+  const release = useCallback(() => { lockRef.current = null; }, []);
+  const startedRef = useRef(0);
+  const expectedRef = useRef(0);
+
+  const stop = useCallback(() => {
+    if (pollRef.current) { clearInterval(pollRef.current); pollRef.current = null; }
+  }, []);
+  useEffect(() => stop, [stop]);
+
+  const poll = useCallback((id) => {
+    stop();
+    startedRef.current = Date.now();
+    const tick = async () => {
+      if (Date.now() - startedRef.current > POLL_TIMEOUT_MS) {
+        stop(); release(); setStatus('failed'); setError('This is taking too long — please try again.');
+        return;
+      }
+      try {
+        const job = await filmGetJob(id);
+        setStatus(job.status || 'processing');
+        setRawProgress(typeof job.progress === 'number' ? job.progress : 0);
+        if (job.beats_manifest) {
+          const m = typeof job.beats_manifest === 'string' ? JSON.parse(job.beats_manifest) : job.beats_manifest;
+          setManifest(m);
+        }
+        if (job.output_url) setOutputUrl(job.output_url);
+        if (job.status === 'complete') { stop(); release(); setEditBusy(null); setNotice(noticeFrom(job.error_message)); }
+        // awaiting_review is a PAUSE, not a terminal state: the plan + character
+        // plates are ready and nothing changes until the user acts (regenerate /
+        // approve). Stop polling so we don't spin for 45 min on a paused job; the
+        // manifest (with manifest.review) is already set above for the review UI.
+        if (job.status === 'awaiting_review') {
+          release(); setEditBusy(null);
+          // LOCATION_REVIEW: the places are painted right after the cast — keep polling
+          // until they land, then stop as before.
+          const _bm = job.beats_manifest && (typeof job.beats_manifest === 'string'
+            ? JSON.parse(job.beats_manifest) : job.beats_manifest);
+          if (!(_bm && _bm.review && _bm.review.locations_status === 'building')) stop();
+        }
+        if (job.status === 'failed' || job.status === 'cancelled') {
+          stop(); release(); setEditBusy(null); setError(job.error_message || 'Render stopped.');
+        }
+      } catch (e) {
+        const s = e && e.response && e.response.status;
+        if (s === 404) { stop(); release(); setStatus('failed'); setError('That job is no longer available.'); }
+        // any other single failed poll: keep trying until timeout
+      }
+    };
+    tick();                              // fire immediately so the plan/cards show at once
+    pollRef.current = setInterval(tick, POLL_MS);
+  }, [stop, release]);
+
+  const generate = useCallback(async ({ script, title, duration_seconds = 120, video_style = 'anime',
+                                        aspect_ratio = '9:16', intro = false, outro_theme = null,
+                                        film_project_id = null, expectedShots = 0 }) => {
+    if (!claim('Making the film')) return null;
+    setError(null); setManifest(null); setOutputUrl(null); setStatus('processing');
+    expectedRef.current = expectedShots || 0;
+    try {
+      const data = await filmGenerate({ script, title, duration_seconds, video_style, aspect_ratio, intro, outro_theme, film_project_id });
+      const id = data.job_id;
+      setJobId(id);
+      poll(id);
+      return id;
+    } catch (e) {
+      const b = creditsBlock(e);
+      release();
+      if (b) { setStatus('idle'); setBlocked(b); return null; }
+      setStatus('failed'); setError(friendlyError(e)); return null;
+    }
+  }, [poll, claim, release]);
+
+  // ── Plate-review lifecycle (Plan & review) ──────────────────────────────────
+  // plan(): director + character plates, then PAUSE at awaiting_review. Same body
+  // as generate() but routed to the plan phase; the poll drives us THROUGH
+  // processing (skeleton + "building plates" pill) and STOPS at awaiting_review.
+  const plan = useCallback(async ({ script, title, duration_seconds = 120, video_style = 'anime',
+                                    aspect_ratio = '9:16', intro = false, outro_theme = null,
+                                    film_project_id = null, expectedShots = 0 }) => {
+    if (!claim('Reviewing the cast')) return null;
+    setError(null); setManifest(null); setOutputUrl(null); setStatus('processing');
+    expectedRef.current = expectedShots || 0;
+    try {
+      const data = await filmPlan({ script, title, duration_seconds, video_style, aspect_ratio, intro, outro_theme, film_project_id });
+      const id = data.job_id;
+      setJobId(id);
+      poll(id);
+      return id;
+    } catch (e) {
+      release();
+      const b = creditsBlock(e);
+      if (b) { setStatus('idle'); setBlocked(b); return null; }
+      setStatus('failed'); setError(friendlyError(e)); return null;
+    }
+  }, [poll, claim, release]);
+
+  // regeneratePlate(): synchronous single-plate rebuild from an edited description.
+  // Returns the new { name, description, plate_url } so the caller can update its
+  // local review state immediately; on failure returns { error } (string) inline.
+  const regeneratePlate = useCallback(async (name, description) => {
+    if (!jobId) return { error: 'No plan to review yet.' };
+    if (!claim(`Redrawing ${name}`)) return { error: 'Another change is still being applied — try again in a moment.' };
+    try {
+      const r = await filmRegeneratePlate(jobId, name, description);
+      // Reflect the new plate in the manifest so any manifest-driven view updates.
+      setManifest(m => {
+        if (!m) return m;
+        const review = { ...(m.review || {}) };
+        const chars = { ...(review.characters || {}) };
+        chars[name] = { ...(chars[name] || {}), description, plate_url: r.plate_url };
+        review.characters = chars;
+        return { ...m, review };
+      });
+      return r;
+    } catch (e) { return { error: friendlyError(e) }; }
+    finally { release(); }
+  }, [jobId, claim, release]);
+
+  // LOCATION_REVIEW: redraw one PLACE's look (or revert it). Synchronous like the cast
+  // redraw; goes through the one-job lock; the reply is the place's new review entry.
+  const _placeCall = useCallback(async (name, body, label) => {
+    if (!jobId) return { error: 'No plan to review yet.' };
+    if (!claim(label)) return { error: 'Another change is still being applied — try again in a moment.' };
+    try {
+      const r = await filmRedrawLocation(jobId, { name, ...body });
+      setManifest(m => {
+        if (!m) return m;
+        const review = { ...(m.review || {}) };
+        review.locations = { ...(review.locations || {}), [name]: { ...((review.locations || {})[name] || {}), ...r } };
+        return { ...m, review };
+      });
+      return r;
+    } catch (e) {
+      const d = (e && e.response && e.response.data) || {};
+      return { error: d.error || friendlyError(e), code: d.code };
+    } finally { release(); }
+  }, [jobId, claim, release]);
+  const redrawLocation = useCallback((name, look) => _placeCall(name, { look }, `Redrawing ${name}`), [_placeCall]);
+  const revertLocation = useCallback((name) => _placeCall(name, { revert: true }, `Restoring ${name}`), [_placeCall]);
+
+  // uploadCharacterImage(): replace a reviewable character's plate with a stylized
+  // upload (photo already hosted → pass its URL). Consent-gated on the backend;
+  // a 403 { consent_required } surfaces so the caller can show the agreement.
+  const uploadCharacterImage = useCallback(async (name, photoUrl) => {
+    if (!jobId) return { error: 'No plan to review yet.' };
+    if (!claim(`Uploading ${name}`)) return { error: 'Another change is still being applied — try again in a moment.' };
+    try {
+      const r = await filmUploadCharacterImage(jobId, name, photoUrl);
+      setManifest(m => {
+        if (!m) return m;
+        const review = { ...(m.review || {}) };
+        const chars = { ...(review.characters || {}) };
+        chars[name] = { ...(chars[name] || {}), plate_url: r.plate_url, source: 'upload' };
+        review.characters = chars;
+        return { ...m, review };
+      });
+      return r;
+    } catch (e) {
+      const consentRequired = !!(e && e.response && e.response.data && e.response.data.consent_required);
+      return { error: friendlyError(e), consentRequired };
+    }
+    finally { release(); }
+  }, [jobId, claim, release]);
+
+  // finish(projectId): promote a completed PREVIEW into the full 720p render.
+  // The server makes a NEW job (clean billing — the preview's ledger is already
+  // settled), reserves the FULL price, and repoints the project at it. On success
+  // we switch this hook to the new job and poll it; a live:true stub manifest is
+  // set IMMEDIATELY so the UI shows the full-render view at once (no "building
+  // cast" flash while the first poll is in flight). A 402 sets `blocked` (→ the
+  // top-up card) and leaves status/manifest untouched, so the completed preview
+  // and its "Finish your film" banner stay put for a retry after top-up.
+  const finish = useCallback(async (projectId) => {
+    if (!projectId) return null;
+    if (!claim('Finishing the film')) return null;
+    setError(null);
+    try {
+      const data = await filmFinishProject(projectId);
+      const id = data.job_id;
+      setJobId(id);
+      setOutputUrl(null);
+      expectedRef.current = data.total || expectedRef.current || 0;
+      setManifest({ live: true, plan: [], beats: [], total: data.total || 0 });
+      setStatus('processing');
+      poll(id);
+      return id;
+    } catch (e) {
+      release();
+      const b = creditsBlock(e);
+      if (b) { setBlocked(b); return null; }   // status stays 'complete' → preview + banner remain
+      setError(friendlyError(e)); return null; // surfaces in chatSub; preview remains
+    }
+  }, [poll, claim, release]);
+
+  // approveRender(): commit the reviewed plan → full render (Phase 3). The job
+  // flips to processing and the normal render poll resumes.
+  const approveRender = useCallback(async () => {
+    if (!jobId) return;
+    if (!claim('Making the film')) return;
+    setError(null); setStatus('processing');
+    try { await filmApproveRender(jobId); poll(jobId); }
+    catch (e) { release(); setError(friendlyError(e)); }
+  }, [jobId, poll, claim, release]);
+
+  // Restore an existing render on resume (from GET /projects/:id → render block).
+  const adopt = useCallback((render) => {
+    if (!render || !render.job_id) return;
+    setJobId(render.job_id);
+    const s = render.status || 'processing';
+    setStatus(s);
+    // a film opened mid-render / mid-edit stays locked until its poll lands
+    lockRef.current = (s === 'processing' || s === 'queued') ? 'Working on this film' : null;
+    if (s === 'complete') setNotice(noticeFrom(render.error_message));
+    if (render.output_url) setOutputUrl(render.output_url);
+    if (render.beats_manifest) {
+      try {
+        const m = typeof render.beats_manifest === 'string' ? JSON.parse(render.beats_manifest) : render.beats_manifest;
+        setManifest(m);
+        if (m && m.total) expectedRef.current = m.total;
+      } catch (_) {}
+    }
+    // awaiting_review resumes WITHOUT polling — it's a pause; the manifest we just
+    // set carries the review block, and the user's next action drives the change.
+    if (s !== 'complete' && s !== 'failed' && s !== 'cancelled' && s !== 'awaiting_review') poll(render.job_id);
+    else if (s === 'awaiting_review') {
+      // …unless the places are still being painted (LOCATION_REVIEW)
+      try {
+        const m = typeof render.beats_manifest === 'string' ? JSON.parse(render.beats_manifest) : render.beats_manifest;
+        if (m && m.review && m.review.locations_status === 'building') poll(render.job_id);
+      } catch (_) {}
+    }
+  }, [poll]);
+
+  const cancel = useCallback(async () => {
+    if (!jobId) return;
+    try { await filmCancel(jobId); } catch (_) {}   // poll picks up status=cancelled
+  }, [jobId]);
+
+  const reassemble = useCallback(async (editedBeats, captions) => {
+    if (!jobId) return false;
+    if (!claim('Reassembling your film')) return false;
+    setError(null); setNotice(null); setEditBusy('Reassembling your film…'); setStatus('processing');
+    try { await filmReassemble(jobId, editedBeats, captions); poll(jobId); return true; }
+    catch (e) { release(); setError(friendlyError(e)); setEditBusy(null); setStatus('complete'); return false; }
+  }, [jobId, poll, claim, release]);
+
+  // targetSourceIndex (optional): re-direct ONE line of a merged clip (its atomic shot).
+  const regenerate = useCallback(async (beatIndex, note, editedText, present, targetSourceIndex) => {
+    if (!jobId) return false;
+    if (!claim(`Regenerating shot ${beatIndex}`)) return false;
+    setError(null); setNotice(null);
+    setEditBusy(targetSourceIndex != null ? `Redoing a line in shot ${beatIndex}…` : `Regenerating shot ${beatIndex}…`);
+    setStatus('processing');
+    try { await filmRegenerate(jobId, beatIndex, note, editedText, present, targetSourceIndex); poll(jobId); return true; }
+    catch (e) { release(); setError(friendlyError(e)); setEditBusy(null); setStatus('complete'); return false; }
+  }, [jobId, poll, claim, release]);
+
+  // "Previously on" on/off/rebuild (SERIES_RECAP). The server rebuilds the film with or
+  // without the recap on THIS job, so it reads like any other edit: busy overlay + poll.
+  const recap = useCallback(async ({ on, picks, voiceId } = {}) => {
+    if (!jobId) return false;
+    if (!claim('Previously on')) return false;
+    setError(null); setNotice(null);
+    setEditBusy(on ? 'Adding \u201cPreviously on\u201d…' : 'Removing \u201cPreviously on\u201d…');
+    setStatus('processing');
+    try { await filmSetRecap(jobId, { on, beat_indices: picks, voice_id: voiceId }); poll(jobId); return true; }
+    catch (e) {
+      // the server's own reason (e.g. "Episode 7 is only a preview") is the useful part
+      const why = (e && e.response && e.response.data && e.response.data.error) || friendlyError(e);
+      release();
+      setNotice(`Previously on: ${why}`); setEditBusy(null); setStatus('complete'); return false;
+    }
+  }, [jobId, poll, claim, release]);
+
+  const reset = useCallback(() => {
+    stop(); lockRef.current = null;
+    setJobId(null); setStatus('idle'); setManifest(null); setRawProgress(0);
+    setOutputUrl(null); setError(null); setBlocked(null); setEditBusy(null); setNotice(null); expectedRef.current = 0;
+  }, [stop]);
+
+  const cells = toCells(manifest, expectedRef.current);
+  // Distinguish the plate-review PAUSE from an active render. While a plan job is
+  // still 'processing' it shows the render skeleton + a "building character plates"
+  // pill (planningPlates); once it reaches awaiting_review, stage is 'plate_review'.
+  const phase = (manifest && manifest.phase) || null;
+  const isPlanPhase = phase === 'plate_review';   // set by the backend's plan job
+  const stage = status === 'awaiting_review' ? 'plate_review'
+    : status === 'complete' ? 'edit'
+    : status === 'processing' ? 'render'
+    : status === 'failed' ? 'failed' : 'idle';
+  // "Plates are building" pill: a plan job still processing, not yet paused.
+  const planningPlates = isPlanPhase && status === 'processing';
+  const reviewCharacters = (manifest && manifest.review && manifest.review.characters) || null;
+  const reviewLocations = (manifest && manifest.review && manifest.review.locations) || null;
+  const locationsStatus = (manifest && manifest.review && manifest.review.locations_status) || null;
+  // The single honest "the FILM render spine is up" signal. The approved render
+  // (queue_film_render_planned) overwrites the manifest with { live:true, ... }
+  // and NO phase key; the plan pause writes { live:false, phase:'plate_review' }.
+  // So during status==='processing', `live` cleanly separates "rendering the
+  // film" (true) from "rendering the cast" (false) — and it's read straight from
+  // the manifest, so it survives a reload mid-render (unlike any local flag).
+  const live = !!(manifest && manifest.live);
+  // Photoreal adults-only block (2026-08-27): a plan blocked for a minor writes
+  // beats_manifest = { block: { reason:'minor_photoreal', characters, message } }
+  // and fails the job. Surface it structured so the storyboard can render a
+  // dedicated "adults-only" card (naming the character) instead of a generic error.
+  const contentBlock = (manifest && manifest.block) || null;
+  const total = Math.max(expectedRef.current, cells.length);
+  const done = cells.filter(c => c.status === 'done').length || Math.round(rawProgress * total);
+  const progress = { done, total, etaText: etaText(done, total) };
+  const jobTitle = (manifest && manifest.source && manifest.source.title) || null;
+
+  return { jobId, status, stage, cells, progress, outputUrl, error, title: jobTitle, editBusy,
+    notice, clearNotice: () => setNotice(null),
+    reviewCharacters, reviewLocations, locationsStatus, redrawLocation, revertLocation,
+    planningPlates, live, contentBlock, blocked, clearBlocked: () => setBlocked(null),
+    generate, plan, regeneratePlate, uploadCharacterImage, approveRender, finish,
+    cancel, reassemble, regenerate, recap, adopt, reset,
+    // true while any job on this film is running — callers check it BEFORE side
+    // effects (spinners, "applied" ticks), the lock itself refuses the call anyway
+    isLocked: () => !!lockRef.current };
+}

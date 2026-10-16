@@ -5,8 +5,8 @@ import { ArrowLeft, Pen, RotateCw, Crown, TrendingUp } from 'lucide-react';
 import ReactMarkdown from 'react-markdown';
 import { VariableSizeList as List } from 'react-window';
 import AutoSizer from 'react-virtualized-auto-sizer';
-import { useAuth } from '../contexts/AuthContext';
 import { useUser } from '../contexts/UserContext';
+import { useAppView } from '../contexts/AppViewContext';
 import { useConversation } from '../hooks/useConversation';
 import { CHARACTERS } from '../data/characters';
 import ContextPanel from './ContextPanel';
@@ -15,8 +15,29 @@ import FloatingAvatar from './FloatingAvatar/FloatingAvatar';
 import PrestigeHub from './PrestigeHub/PrestigeHub';
 import { useSmartScroll } from '../hooks/useSmartScroll';
 import FloatingScrollButton from './FloatingScrollButton';
+import useUsageTracking from '../hooks/useUsageTracking';
+import { HeaderUsageIndicator, ChatUsageIndicator } from '../components/UsageIndicator';
+import usePremiumCharacters from '../hooks/usePremiumCharacters';
+import DefensiveChatInputWrapper from './DefensiveChatInputWrapper';
+import DualPathUpgradeSystem from '../components/DualPathUpgradeSystem';
 import '../styles.css';
 import '../style/InviteStyles.css';
+import '../style/ChatWindowStyles.css';  // ✅ ADD THIS LINE
+import ChatFeedPanel from './ChatFeedPanel/ChatFeedPanel';
+
+
+const API = process.env.REACT_APP_API_BASE_URL || 'https://api.awakeverse.com';
+
+function getSafeDisplay(text) {
+  if (!text) return text;
+  const lines = text.split('\n');
+  const lastLine = lines[lines.length - 1];
+  // Only hold back if the incomplete last line is a heading marker
+  if (lastLine.startsWith('#')) {
+    return lines.slice(0, -1).join('\n');
+  }
+  return text;
+}
 
 function useMediaQuery(maxWidth) {
   const query = `(max-width: ${maxWidth}px)`;
@@ -45,10 +66,11 @@ const ChatItem = memo(({ index, style, data }) => {
     chatHistory, sizeMap, setSize,
     startEditing, editingIndex, editText,
     onEditChange, cancelInlineEdit, sendEdited,
-    retry, character, userAvatar, participants
+    retry, character, userAvatar, participants, getCharacterDisplayName
   } = data;
 
   const msg = chatHistory[index];
+  
 
   // Invite Suggestion Candidates
   const inviteCandidates = (!msg.user && msg.has_invite_suggestion)
@@ -75,15 +97,6 @@ const ChatItem = memo(({ index, style, data }) => {
     return new Set(msg.invite_candidates || []);
   });
 
-  // Helper function to get character display name
-  const getCharacterDisplayName = (characterKey) => {
-    const char = CHARACTERS[characterKey];
-    if (char) {
-      return char.display_name || char.name || characterKey.replace(/_/g, ' ');
-    }
-    return characterKey.replace(/_/g, ' ');
-  };
-
   // Resize tracking for smooth auto-layout
   useEffect(() => {
     if (rowRef.current) {
@@ -107,18 +120,48 @@ const ChatItem = memo(({ index, style, data }) => {
   const API_BASE = process.env.REACT_APP_API_URL || 'https://api.awakeverse.com';
   const avatarSrc = msg.user
     ? userAvatar || `${API_BASE}/avatars/user_${data.userId || 'unknown'}_default.jpg`
-    : `/images/${msg.speaker || character}.jpg`;
+    : (msg.speaker || character) ? `/images/${msg.speaker || character}.jpg` : null;
 
   // Character label fallback
+    // Character label fallback - FIXED to handle custom characters
   const getCharacterInfo = (characterKey) => {
-    const char = CHARACTERS[characterKey];
-    if (!char) {
-      console.warn(`Character "${characterKey}" not found in CHARACTERS`);
-      return {
-        display_name: characterKey?.replace(/_/g, ' ') || 'Unknown'
-      };
+    // First, check static characters
+    const staticChar = CHARACTERS[characterKey];
+    if (staticChar) {
+      return staticChar;
     }
-    return char;
+
+    // Then check custom characters from userCharacters (owner's characters)
+    if (data.userCharacters && Array.isArray(data.userCharacters)) {
+      const customChar = data.userCharacters.find(char => 
+        char && char.character_key === characterKey && char.status === 'approved'
+      );
+      if (customChar) {
+        return {
+          display_name: customChar.display_name,
+          thumbnailUrl: `/images/${customChar.character_key}.jpg`
+        };
+      }
+    }
+
+    // FIXED: Check discovered characters from Market Hub
+    if (data.discoveredCharacters && Array.isArray(data.discoveredCharacters)) {
+      const discoveredChar = data.discoveredCharacters.find(char => 
+        char && char.character_key === characterKey
+      );
+      if (discoveredChar) {
+        return {
+          display_name: discoveredChar.display_name || discoveredChar.name,
+          thumbnailUrl: discoveredChar.avatar_url || discoveredChar.thumbnailUrl || `/images/${discoveredChar.character_key}.jpg`
+        };
+      }
+    }
+
+    // Fallback for unknown characters
+    console.warn(`Character "${characterKey}" not found in static, custom, or discovered characters`);
+    return {
+      display_name: characterKey?.replace(/_/g, ' ') || 'Unknown'
+    };
   };
 
   const characterInfo = msg.user 
@@ -135,18 +178,53 @@ const ChatItem = memo(({ index, style, data }) => {
   return (
     <div style={style}>
       <div ref={rowRef} className={cls}>
-        <img
-          src={avatarSrc}
-          alt={msg.user
-            ? 'You'
-            : characterInfo?.display_name || 'AI'}
-          className="message-icon"
-          onError={(e) => {
-            e.target.src = msg.user 
-              ? '/images/user-icon.jpg' 
-              : '/images/default-character.jpg';
-          }}
-        />
+        {msg.user ? (
+          <img
+            src={avatarSrc}
+            alt="You"
+            className="message-icon"
+            onError={(e) => {
+              e.currentTarget.onError = null;
+              e.currentTarget.src = '/images/user-icon.jpg';
+            }}
+          />
+        ) : avatarSrc ? (
+          <img
+            src={avatarSrc}
+            alt={characterInfo?.display_name || 'AI'}
+            className="message-icon"
+            onError={(e) => {
+              e.currentTarget.onError = null;
+              e.currentTarget.style.display = 'none';
+              
+              const parent = e.currentTarget.parentElement;
+              if (!parent.querySelector('.text-fallback')) {
+                const fallback = document.createElement('div');
+                fallback.className = 'text-fallback message-icon';
+                fallback.style.cssText = 'display:flex;align-items:center;justify-content:center;background:rgba(255,215,0,0.2);color:#FFD700;font-weight:bold;border-radius:50%;width:40px;height:40px;flex-shrink:0;';
+                fallback.textContent = (characterInfo?.display_name || 'AI').charAt(0).toUpperCase();
+                parent.insertBefore(fallback, e.currentTarget);
+              }
+            }}
+          />
+        ) : (
+          <div 
+            className="message-icon text-fallback"
+            style={{
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              background: 'rgba(255, 215, 0, 0.2)',
+              color: '#FFD700',
+              fontWeight: 'bold',
+              borderRadius: '50%',
+              width: '40px',
+              height: '40px'
+            }}
+          >
+            {(characterInfo?.display_name || 'AI').charAt(0).toUpperCase()}
+          </div>
+        )}   
         <div className="message-content">
           <strong>
             {msg.user
@@ -257,17 +335,40 @@ export default function ChatWindow({
   isHubVisible,
   onToggleVisibility,
   prestigeHubVisible,
-  onPrestigeHubToggle
+  onPrestigeHubToggle,
+  onCharacterSelect,    // ← ADD THI
+  discoveredCharacters = []
 }) {
-  const { token } = useAuth();
+
+
+
   const { user } = useUser();
+  const { switchView, VIEW_STATES, setActivePodcastContext } = useAppView();
   const socket = useSocket();
   const isMobile = useMediaQuery(600);
+  const { userCharacters } = usePremiumCharacters();
 
   const localThreadId = useRef(threadId);
   const { sendConversationMessage } = useConversation();
   const userAvatar = avatarUrl || user?.avatarUrl;
   const [newMessageCount, setNewMessageCount] = useState(0);
+  const usageTracking = useUsageTracking(character);
+  const [upgradeModalOpen, setUpgradeModalOpen] = useState(false);
+  const [upgradeReason, setUpgradeReason] = useState('general');
+    // Feed panel state
+  const [feedOpen, setFeedOpen] = useState(true);
+
+  useEffect(() => {
+    const w = isMobile ? '0px' : feedOpen ? '256px' : '42px';
+    document.documentElement.style.setProperty('--feed-w', w);
+  // Reset on unmount so support widget snaps back
+    return () => document.documentElement.style.setProperty('--feed-w', '0px');
+  }, [feedOpen, isMobile]);
+
+  const showUpgradeFlow = (reason = 'general') => {
+    setUpgradeReason(reason);
+    setUpgradeModalOpen(true);
+  };
 
   
   // ✅ USER-FRIENDLY ERROR HANDLING SYSTEM
@@ -307,7 +408,6 @@ export default function ChatWindow({
     };
     
     // Log detailed technical information for debugging
-    console.error('ChatWindow Error Report:', errorReport);
   };
 
   // Emotion state definition
@@ -431,7 +531,6 @@ export default function ChatWindow({
 
   // ✅ NEW: Character selection handler for PrestigeHub
   const handleCharacterSelect = useCallback((characterKey) => {
-    console.log('🎯 Character selected from PrestigeHub:', characterKey);
     // You can add navigation logic here or pass it up to parent
     if (onBack) {
       // Close PrestigeHub first
@@ -451,7 +550,7 @@ export default function ChatWindow({
     }
     return characterKey.replace(/_/g, ' ');
   }, []);
-
+ 
   // Initialize participants from session history
   useEffect(() => {
     if (session?.messages) {
@@ -484,14 +583,6 @@ export default function ChatWindow({
   }, [socket, character]);
 
   const listRef = useRef(null);
-  // Add this debug effect to verify the ref is attached:
-  useEffect(() => {
-    console.log('🔗 ListRef status:', {
-      hasRef: !!listRef.current,
-      hasOuterRef: !!listRef.current?._outerRef,
-      refType: listRef.current?.constructor?.name
-    });
-  }, [chatHistory.length]); // Check whenever messages chang
   const {
     isNearBottom,
     shouldAutoScroll,
@@ -502,7 +593,14 @@ export default function ChatWindow({
   } = useSmartScroll(listRef, chatHistory);
   const controllerRef = useRef(null);
   const sizeMap = useRef({});
-  const displayName = characterName || character;
+  // AFTER: refs to keep last stream metadata for invite wiring
+  const lastSpeakerRef = useRef(character);
+  const lastThreadIdRef = useRef(localThreadId.current || 'main');
+  const lastUserMessageRef = useRef(null);                     // NEW: tracks last user prompt text
+  const lastSuggestionRef = useRef(null); 
+// optional: debounce “invite suggestion” once per user message
+  const suggestionShownForMessageRef = useRef(null);
+  const displayName = characterName || character?.replace(/_/g, ' ') || 'Unknown';
   const lastMessageCountRef = useRef(0);
   
   // Row height calculation with invite spacing
@@ -519,14 +617,6 @@ export default function ChatWindow({
 
   // 5. ADD this handler function (add after other function definitions):
   const handleScrollToBottomClick = useCallback(() => {
-  // Add mobile logging for debugging
-    console.log('🔽 Mobile scroll triggered', {
-      isMobile,
-      userAgent: navigator.userAgent,
-      innerWidth: window.innerWidth,
-      viewportHeight: window.innerHeight
-    });
-
   // Manual scroll to bottom using direct DOM manipulation
    if (listRef.current?._outerRef) {
       const scrollElement = listRef.current._outerRef;
@@ -538,11 +628,6 @@ export default function ChatWindow({
         top: targetScrollTop,
         behavior: 'smooth'
       });
-    
-      console.log('🔽 Manual scroll triggered', {
-        scrollTop: scrollElement.scrollTop,
-        targetScrollTop: targetScrollTop
-      });
     }
 
   // Re-enable autoscroll and reset counts
@@ -551,141 +636,374 @@ export default function ChatWindow({
     lastMessageCountRef.current = chatHistory.length;
   }, [enableAutoScroll, chatHistory.length, isMobile]);
 
-  // Auto-scroll when new messages are added
-  useEffect(() => {
-    console.log('🔄 ChatWindow scroll state:', {
-      isNearBottom,
-      shouldAutoScroll,
-      hasNewMessages,
-      messageCount: chatHistory.length
+    // ===== /invite HANDLER — AFTER REPLACEMENT START =====
+
+  // Simple helper (optional): getCookie by name
+  const getCookie = (name) =>
+    document.cookie.match(new RegExp(`(?:^|;\\s*)${name}=([^;]*)`))?.[1] || '';
+
+  const [toast, setToast] = useState(null);           // tiny toast message
+  const showToast = (msg) => { setToast(msg); setTimeout(() => setToast(null), 2500); };
+
+  const onInvite = async (inviteeKey) => {
+    console.log('🎯 INVITE DEBUG: Function called', { inviteeKey });
+
+    // ============================================================
+    // CHECKPOINT 1: Initial State
+    // ============================================================
+    console.log('📊 INVITE DEBUG: Initial state check', {
+      isSending,
+      participants: participants?.length,
+      character,
+      inviteeKey,
+      inviteeType: typeof inviteeKey
     });
-  }, [isNearBottom, shouldAutoScroll, hasNewMessages, chatHistory.length]);
 
-  const onInvite = async (invitee) => {
-    if (isSending) return;
+    // Check if already sending
+    if (isSending) {
+      console.warn('⚠️ INVITE DEBUG: Already sending, aborting');
+      return;
+    }
 
-    const aiIndex = chatHistory.length;
+    // ============================================================
+    // CHECKPOINT 2: Participant Limit
+    // ============================================================
+    const activeInvitees = (participants?.length || 1) - 1;
+    console.log('🔢 INVITE DEBUG: Checking participant limit', {
+      participantsLength: participants?.length,
+      activeInvitees,
+      limit: 2,
+      wouldExceedLimit: activeInvitees >= 2
+    });
 
+    if (activeInvitees >= 2) {
+      console.warn('⚠️ INVITE DEBUG: Participant limit reached');
+      showToast('Invite limit reached (2).');
+      return;
+    }
+
+    // ============================================================
+    // CHECKPOINT 3: Variable Preparation
+    // ============================================================
+    const toKey = String(inviteeKey);
+    console.log('🔑 INVITE DEBUG: Key prepared', {
+      original: inviteeKey,
+      normalized: toKey
+    });
+
+    // ============================================================
+    // CHECKPOINT 4: Last User Message Extraction
+    // ============================================================
+    const lastUserMsg =
+      lastUserMessageRef.current ||
+      ([...chatHistory].reverse().find(m => m.user)?.text || '');
+
+    console.log('💬 INVITE DEBUG: Last user message', {
+      fromRef: lastUserMessageRef.current,
+      fromHistory: [...chatHistory].reverse().find(m => m.user)?.text,
+      final: lastUserMsg,
+      isEmpty: !lastUserMsg
+    });
+
+    // ============================================================
+    // CHECKPOINT 5: Refs Check
+    // ============================================================
+    console.log('📌 INVITE DEBUG: Refs state', {
+      lastSpeaker: lastSpeakerRef.current,
+      character,
+      finalFrom: lastSpeakerRef.current || character,
+      lastThreadId: lastThreadIdRef.current,
+      localThreadId: localThreadId.current,
+      finalThreadId: lastThreadIdRef.current || localThreadId.current || 'main'
+    });
+
+    // ============================================================
+    // CHECKPOINT 6: API Configuration
+    // ============================================================
+    console.log('🌐 INVITE DEBUG: API configuration', {
+      API,
+      fullUrl: `${API}/invite`,
+      apiType: typeof API,
+      apiDefined: API !== undefined
+    });
+
+    // ============================================================
+    // CHECKPOINT 7: Cookie Check
+    // ============================================================
+    const csrf = getCookie('av_csrf');
+    const sid = getCookie('av_sid');
+    const rid = getCookie('av_rid');
+
+    console.log('🍪 INVITE DEBUG: Cookie check', {
+      csrf: csrf ? `${csrf.substring(0, 10)}...` : null,
+      sid: sid ? `${sid.substring(0, 10)}...` : null,
+      rid: rid ? `${rid.substring(0, 10)}...` : null,
+      allCookiesPresent: !!(csrf && sid && rid)
+    });
+
+    if (!csrf) {
+      console.error('❌ INVITE DEBUG: CSRF token missing!');
+      showToast('Authentication error. Please refresh the page.');
+      return;
+    }
+
+    // ============================================================
+    // CHECKPOINT 8: Payload Construction
+    // ============================================================
+    const placeholderIndex = chatHistory.length;
+    const payload = {
+      from: lastSpeakerRef.current || character,
+      to: toKey,
+      message: lastUserMsg,
+      thread_id: lastThreadIdRef.current || localThreadId.current || 'main'
+    };
+
+    console.log('📦 INVITE DEBUG: Payload constructed', {
+      placeholderIndex,
+      payload,
+      payloadJSON: JSON.stringify(payload)
+    });
+
+    // ============================================================
+    // CHECKPOINT 9: Request Preparation
+    // ============================================================
     try {
-      // Add invitee to participants immediately
+      console.log('🚀 INVITE DEBUG: Starting invite request');
+
+      // Optimistically add participant
       setParticipants(prev => {
-        const newParticipants = prev.includes(invitee) ? prev : [...prev, invitee];
+        const newParticipants = prev.includes(toKey) ? prev : [...prev, toKey];
+        console.log('👥 INVITE DEBUG: Participants updated', {
+          before: prev,
+          after: newParticipants
+        });
         return newParticipants;
       });
 
-      // Get last user message
-      const lastUserMsg = [...chatHistory].reverse().find(m => m.user)?.text;
-      if (!lastUserMsg) {
-        console.warn('No user message found for invite');
-        return;
-      }
-
       setIsSending(true);
-      
-      // Reserve placeholder bubble
-      setChatHistory(prev => [
-        ...prev,
-        { 
-          user: false, 
-          speaker: invitee, 
-          text: '', 
-          error: null, 
-          has_invite_suggestion: false 
-        }
-      ]);
+      console.log('🔒 INVITE DEBUG: isSending set to true');
 
-      // Make invite request
-      const API = process.env.REACT_APP_API_BASE_URL || '';
+      // Reserve placeholder bubble
+      setChatHistory(prev => {
+        const newHistory = [
+          ...prev,
+          { user: false, speaker: toKey, text: '', error: null, has_invite_suggestion: false }
+        ];
+        console.log('💭 INVITE DEBUG: Placeholder added', {
+          historyLength: newHistory.length,
+          placeholder: newHistory[newHistory.length - 1]
+        });
+        return newHistory;
+      });
+
+      // ============================================================
+      // CHECKPOINT 10: Fetch Request
+      // ============================================================
+      console.log('📡 INVITE DEBUG: About to fetch', {
+        url: `${API}/invite`,
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'X-CSRF-Token': csrf ? 'present' : 'missing'
+        },
+        credentials: 'include',
+        body: JSON.stringify(payload)
+      });
+
+      const fetchStartTime = Date.now();
       const res = await fetch(`${API}/invite`, {
         method: 'POST',
         headers: {
-          'Authorization': `Bearer ${token}`,
-          'Content-Type': 'application/json'
+          'Content-Type': 'application/json',
+          'X-CSRF-Token': csrf
         },
-        body: JSON.stringify({
-          from: character,
-          to: invitee,
-          message: lastUserMsg,
-          thread_id: localThreadId.current
-        })
+        credentials: 'include',
+        body: JSON.stringify(payload)
       });
-      
+
+      const fetchEndTime = Date.now();
+      console.log('✅ INVITE DEBUG: Fetch completed', {
+        status: res.status,
+        statusText: res.statusText,
+        ok: res.ok,
+        duration: `${fetchEndTime - fetchStartTime}ms`,
+        headers: {
+          contentType: res.headers.get('content-type'),
+          provider: res.headers.get('X-AI-Provider')
+        }
+      });
+
+      // ============================================================
+      // CHECKPOINT 11: Response Check
+      // ============================================================
       if (!res.ok) {
+        const errorText = await res.text().catch(() => '');
+        console.error('❌ INVITE DEBUG: Request failed', {
+          status: res.status,
+          statusText: res.statusText,
+          errorText
+        });
+
+        if (/not found/i.test(errorText)) {
+          showToast(`Invite failed: key '${toKey}' not found.`);
+          console.warn('🔍 INVITE DEBUG: Character not found', { toKey });
+        }
         throw new Error(`Invite failed (${res.status}): ${res.statusText}`);
       }
 
-      // Stream tokens into the bubble
-      // Stream tokens into the bubble
+      // ============================================================
+      // CHECKPOINT 12: Stream Reading
+      // ============================================================
+      console.log('🌊 INVITE DEBUG: Starting stream read');
       const reader = res.body.getReader();
       const decoder = new TextDecoder();
-      let fullResponse = '';  // Buffer the complete response first
+      let bufferStr = '';
+      let accumulatedText = '';
+      let chunkCount = 0;
+      let tokenCount = 0;
 
-// First, collect the entire response quickly
-      // First, collect the entire response quickly
-      while (true) {
+      for (;;) {
         const { done, value } = await reader.read();
-        if (done) break;
+        chunkCount++;
 
-        const chunk = decoder.decode(value);
-        for (const line of chunk.split('\n').filter(Boolean)) {
+        if (done) {
+          console.log('✅ INVITE DEBUG: Stream complete', {
+            totalChunks: chunkCount,
+            totalTokens: tokenCount,
+            finalText: accumulatedText
+          });
+          break;
+        }
+
+        bufferStr += decoder.decode(value, { stream: true });
+
+        // Split by newlines
+        const lines = bufferStr.split('\n');
+        bufferStr = lines.pop() || '';
+
+        for (const line of lines) {
+          const trimmed = line.trim();
+          if (!trimmed) continue;
+
+          // Parse JSON
+          let obj;
           try {
-            const data = JSON.parse(line);
-            const token = data.response || '';
-            fullResponse += token;
-          } catch (parseError) {
-            console.warn('Failed to parse invite response line:', parseError);
+            obj = JSON.parse(trimmed);
+            tokenCount++;
+
+            if (tokenCount === 1) {
+              console.log('📝 INVITE DEBUG: First token received', { obj });
+            }
+          } catch (e) {
+            console.warn('⚠️ INVITE DEBUG: Failed to parse line', { line: trimmed, error: e.message });
+            continue;
+          }
+
+          const token = (obj.response ?? '');
+          const speakerFromServer = obj.speaker || toKey;
+          const threadFromServer = obj.thread_id || 'main';
+
+          // Update refs
+          lastSpeakerRef.current = speakerFromServer;
+          lastThreadIdRef.current = threadFromServer;
+
+          // Append token
+          if (token) {
+            accumulatedText += token;
+
+            setChatHistory(prev => {
+              const copy = [...prev];
+              if (copy[placeholderIndex]) {
+                copy[placeholderIndex] = {
+                  ...copy[placeholderIndex],
+                  text: accumulatedText,
+                  speaker: speakerFromServer,
+                  thread_id: threadFromServer,
+                  has_invite_suggestion: false
+                };
+              }
+              return copy;
+            });
           }
         }
       }
 
-// ✅ ADD THIS LINE:
-      const finalSpeaker = invitee; // Store speaker outside the loop
+      // Flush trailing partial
+      if (bufferStr.trim()) {
+        try {
+          const obj = JSON.parse(bufferStr.trim());
+          const token = (obj.response ?? '');
+          const speakerFromServer = obj.speaker || toKey;
+          const threadFromServer = obj.thread_id || 'main';
 
-// Now drip out the buffered response slowly
-      const words = fullResponse.split(' ');
-      let displayedText = '';
-
-      for (const word of words) {
-        displayedText += word + ' ';
-
-        setChatHistory(prev => {
-          const copy = [...prev];
-          if (copy[aiIndex]) {
-            copy[aiIndex] = {
-              ...copy[aiIndex],
-              text: displayedText,
-              speaker: finalSpeaker  // ✅ Use stored speaker instead of data.speaker
-            };
+          if (token) {
+            accumulatedText += token;
+            setChatHistory(prev => {
+              const copy = [...prev];
+              if (copy[placeholderIndex]) {
+                copy[placeholderIndex] = {
+                  ...copy[placeholderIndex],
+                  text: accumulatedText,
+                  speaker: speakerFromServer,
+                  thread_id: threadFromServer,
+                  has_invite_suggestion: false
+                };
+              }
+              return copy;
+            });
           }
-          return copy;
-        });
-  
-  // Delay between words for reading pace
-        await new Promise(resolve => setTimeout(resolve, 250));
+        } catch (e) {
+          console.warn('⚠️ INVITE DEBUG: Failed to parse trailing buffer', { buffer: bufferStr });
+        }
       }
-      // ✅ UPDATED ERROR HANDLING WITH FRIENDLY MESSAGES + LOGGING
+
+      // Final success log
+      console.log('🎉 INVITE DEBUG: Invite completed successfully', {
+        invitee: toKey,
+        tokensReceived: tokenCount,
+        finalLength: accumulatedText.length
+      });
+
+    } catch (e) {
+      // ============================================================
+      // CHECKPOINT 13: Error Handling
+      // ============================================================
+      console.error('💥 INVITE DEBUG: Exception caught', {
+        error: e,
+        message: e.message,
+        stack: e.stack,
+        name: e.name
+      });
+
       reportError(e, {
         action: 'invite_request',
         character: character,
-        invitee: invitee,
+        invitee: toKey,
         lastUserMessage: lastUserMsg?.substring(0, 50)
       });
 
-      console.error('Invite error:', e);
       setChatHistory(prev => {
         const copy = [...prev];
-        if (copy[aiIndex]) {
-          copy[aiIndex] = {
-            ...copy[aiIndex],
-            error: `Unable to invite ${getCharacterDisplayName(invitee)} right now. Please try again.`
+        if (copy[placeholderIndex]) {
+          copy[placeholderIndex] = {
+            ...copy[placeholderIndex],
+            error: `Unable to invite ${getCharacterDisplayName(toKey)} right now. Please try again.`,
+            text: ''
           };
         }
         return copy;
       });
+
+      showToast(`Failed to invite ${getCharacterDisplayName(toKey)}`);
     } finally {
+      // ============================================================
+      // CHECKPOINT 14: Cleanup
+      // ============================================================
       setIsSending(false);
+      console.log('🔓 INVITE DEBUG: isSending set to false (finally block)');
     }
   };
+
 
   // Initialize chat history from session
   useEffect(() => {
@@ -720,7 +1038,7 @@ export default function ChatWindow({
     }
 
     return () => {
-      if (window.visualViewspot) {
+      if (window.visualViewport) {
         window.visualViewport.removeEventListener('resize', updatePadding);
       }
     };
@@ -753,136 +1071,232 @@ export default function ChatWindow({
     }
   }, [chatHistory.length, shouldAutoScroll, isNearBottom]);
 
-  // Replace your sendAI function in ChatWindow.js with this streaming version:
+  // Replace your sendAI function in ChatWindow.js with this streaming version
+  // Replace your sendAI function in ChatWindow.js with this complete version
+  // This fixes the speaker tracking issue
 
-const sendAI = async (userText, aiIndex) => {
-  const controller = new AbortController();
-  controllerRef.current = controller;
-  setIsSending(true);
+  const sendAI = async (userText, aiIndex) => {
+    const controller = new AbortController();
+    controllerRef.current = controller;
+    setIsSending(true);
 
-  try {
-    const res = await fetch(`${process.env.REACT_APP_API_BASE_URL}/chat`, {
-      method: 'POST',
-      headers: {
-        'Authorization': `Bearer ${token}`,
-        'Content-Type': 'application/json'
-      },
-      body: JSON.stringify({ 
-        character, 
-        message: userText, 
-        thread_id: localThreadId.current 
-      }),
-      signal: controller.signal
-    });
-
-    if (!res.ok || !res.body) {
-      throw new Error(`Chat API failed: ${res.status} ${res.statusText}`);
-    }
-
-    const reader = res.body.getReader();
-    const decoder = new TextDecoder();
-    let fullReply = '';
-    let hasInviteSuggestion = false;
-    let inviteCandidates = [];
-
-    // ✅ STREAMING: Process each chunk immediately
-    while (true) {
-      const { done, value } = await reader.read();
-      if (done) break;
-      
-      const chunk = decoder.decode(value);
-      const lines = chunk.trim().split('\n').filter(Boolean);
-
-      for (const line of lines) {
-        try {
-          const data = JSON.parse(line);
-          const token = data.response || '';
-          
-          // ✅ STREAMING: Add each token immediately
-          if (token) {
-            fullReply += token;
-
-            // ✅ STREAMING: Update UI with each token (not just at the end)
-            setChatHistory(prev => {
-              const copy = [...prev];
-              if (copy[aiIndex]) {
-                copy[aiIndex] = {
-                  ...copy[aiIndex],
-                  speaker: data.speaker || character,
-                  text: fullReply, // ← Show accumulated text immediately
-                  has_invite_suggestion: hasInviteSuggestion,
-                  invite_candidates: inviteCandidates
-                };
-              }
-              return copy;
-            });
-
-            // ✅ STREAMING: Auto-scroll as content streams in
-            // Small delay to allow DOM to update
-            setTimeout(() => {
-              if (shouldAutoScroll && listRef.current) {
-                smartScrollToBottom();
-              }
-            }, 10);
-          }
-
-          // Handle invite suggestions
-          if (data.has_invite_suggestion) {
-            hasInviteSuggestion = true;
-            inviteCandidates = data.invite_candidates || [];
-          }
-
-        } catch (err) {
-          console.warn('JSON parse error:', err);
-        }
-      }
-    }
-
-    // ✅ STREAMING: Final update to ensure everything is set correctly
-    setChatHistory(prev => {
-      const copy = [...prev];
-      if (copy[aiIndex]) {
-        copy[aiIndex] = {
-          ...copy[aiIndex],
-          speaker: character,
-          text: fullReply,
-          has_invite_suggestion: hasInviteSuggestion,
-          invite_candidates: inviteCandidates
-        };
-      }
-      return copy;
-    });
-
-  } catch (err) {
-    if (err.name === 'AbortError') {
-      console.log('Chat request aborted');
-    } else {
-      reportError(err, {
-        action: 'chat_request',
-        character: character,
-        userMessage: userText?.substring(0, 50)
+    try {
+      const csrf = document.cookie.match(/(?:^|;\s*)av_csrf=([^;]+)/)?.[1] || '';
+      const res = await fetch(`${API}/chat`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'X-CSRF-Token': csrf
+        },
+        credentials: 'include',
+        body: JSON.stringify({
+          character,
+          message: userText,
+          thread_id: localThreadId.current
+        }),
+        signal: controller.signal
       });
 
-      console.error('LLM error:', err);
+
+
+      if (!res.ok || !res.body) {
+        throw new Error(`Chat API failed: ${res.status} ${res.statusText}`);
+      }
+
+      const reader = res.body.getReader();
+      const decoder = new TextDecoder();
+      let fullReply = '';
+      let hasInviteSuggestion = false;
+      let inviteCandidates = [];
+      let actualSpeaker = character; // ✅ Track the ACTUAL speaker from backend
+
+      // ✅ STREAMING: Process each chunk immediately
+      while (true) {
+        const { done, value } = await reader.read();
+        if (done) break;
+
+        const chunk = decoder.decode(value);
+        const lines = chunk.trim().split('\n').filter(Boolean);
+
+        for (const line of lines) {
+          try {
+            // inside the /chat stream loop
+            const data = JSON.parse(line);
+            const token = data.response || '';
+
+            // ✅ Track actual speaker and thread for invites
+            if (data.speaker) {
+              actualSpeaker = data.speaker;
+              lastSpeakerRef.current = data.speaker;
+            }
+            if (data.thread_id) {
+              lastThreadIdRef.current = data.thread_id;
+            }
+
+            // ✅ Debounce & cache last suggestion for quick-invite
+            if (data.has_invite_suggestion && Array.isArray(data.invite_candidates)) {
+              const currentUserMsg = lastUserMessageRef.current || '∅';
+              if (suggestionShownForMessageRef.current !== currentUserMsg) {
+                suggestionShownForMessageRef.current = currentUserMsg;
+
+                // Only store if there’s at least one candidate
+                if (data.invite_candidates.length > 0) {
+                  lastSuggestionRef.current = {
+                    keys: data.invite_candidates,                 // canonical keys (e.g., ["sherlock"])
+                    matched: data.matched_trigger || null,        // optional
+                    threadId: data.thread_id || lastThreadIdRef.current || 'main',
+                    from: data.speaker || lastSpeakerRef.current || character
+                  };
+                }
+              }
+            }
+
+
+            // ✅ STREAMING: Add each token immediately
+            if (token) {
+              fullReply += token;
+
+              // ✅ Update UI with ACTUAL speaker (not hardcoded)
+              setChatHistory(prev => {
+                const copy = [...prev];
+                if (copy[aiIndex]) {
+                  copy[aiIndex] = {
+                    ...copy[aiIndex],
+                    speaker: actualSpeaker, // ✅ Use actual speaker
+                    text: getSafeDisplay(fullReply),
+                    has_invite_suggestion: hasInviteSuggestion,
+                    invite_candidates: inviteCandidates
+                  };
+                }
+                return copy;
+              });
+
+              // ✅ STREAMING: Auto-scroll as content streams in
+              setTimeout(() => {
+                if (shouldAutoScroll && listRef.current) {
+                  smartScrollToBottom();
+                }
+              }, 10);
+            }
+
+            // Handle invite suggestions
+            if (data.has_invite_suggestion) {
+              hasInviteSuggestion = true;
+              inviteCandidates = data.invite_candidates || [];
+            }
+
+          } catch (err) {
+            console.warn('JSON parse error:', err);
+          }
+        }
+      }
+
+      // ✅ Final update with ACTUAL speaker (not hardcoded character)
       setChatHistory(prev => {
         const copy = [...prev];
         if (copy[aiIndex]) {
-          copy[aiIndex] = { 
-            ...copy[aiIndex], 
-            error: getUserFriendlyError(err, 'general')
+          copy[aiIndex] = {
+            ...copy[aiIndex],
+            speaker: actualSpeaker, // ✅ Use tracked speaker
+            text: fullReply,
+            has_invite_suggestion: hasInviteSuggestion,
+            invite_candidates: inviteCandidates
           };
         }
         return copy;
       });
+
+      console.log('✅ Final message persisted with speaker:', actualSpeaker);
+
+      // ✅ Update participants if speaker is different from primary
+      if (actualSpeaker !== character) {
+        setParticipants(prev => {
+          if (prev.includes(actualSpeaker)) return prev;
+          return [...prev, actualSpeaker];
+        });
+      }
+
+      // ✅ CRITICAL: REFRESH USAGE AFTER SUCCESSFUL MESSAGE COMPLETION
+      if (usageTracking.isCustomCharacter) {
+        setTimeout(() => {
+          usageTracking.refreshUsage().then(success => {
+            if (success) {
+              console.log('✅ Usage data refreshed successfully');
+            }
+          });
+        }, 500);
+      }
+
+    } catch (err) {
+      if (err.name === 'AbortError') {
+        console.log('Chat request aborted');
+
+        if (usageTracking.isCustomCharacter) {
+          usageTracking.refreshUsage();
+        }
+      } else {
+        reportError(err, {
+          action: 'chat_request',
+          character: character,
+          userMessage: userText?.substring(0, 50)
+        });
+
+        console.error('LLM error:', err);
+        setChatHistory(prev => {
+          const copy = [...prev];
+          if (copy[aiIndex]) {
+            copy[aiIndex] = { 
+              ...copy[aiIndex], 
+              error: getUserFriendlyError(err, 'general')
+            };
+          }
+          return copy;
+        });
+      }
+    } finally {
+      setIsSending(false);
+      controllerRef.current = null;
     }
-  } finally {
-    setIsSending(false);
-    controllerRef.current = null;
-  }
-};
+  };
+  // ── Creation pill state ─────────────────────────────────────────────────────
+  // Appears above input after 3+ user+AI exchanges. Offers "Generate Script"
+  // or "Create Podcast". Dismisses on tap or X. Resets after each send.
+  const [pillDismissed, setPillDismissed] = useState(false);
+
+  const turnCount = useMemo(() => {
+    let pairs = 0, sawUser = false;
+    for (const m of chatHistory) {
+      if (m.user) { sawUser = true; }
+      else if (sawUser) { pairs++; sawUser = false; }
+    }
+    return pairs;
+  }, [chatHistory]);
+
+  const showCreationPill = !pillDismissed && turnCount >= 3;
+
+  const handleOpenPodcast = useCallback(() => {
+    const lastUserMsg = [...chatHistory].reverse().find(m => m.user);
+    const topic = lastUserMsg?.text?.slice(0, 120) || '';
+    setActivePodcastContext({
+      character,
+      characterKey: typeof character === 'string' ? character : character?.key,
+      chatHistory,
+      topic,
+      preloadedLines: [],
+    });
+    switchView(VIEW_STATES.PODCAST_STUDIO);
+    setPillDismissed(true);
+  }, [chatHistory, character, setActivePodcastContext, switchView, VIEW_STATES]);
+
   const sendMessage = () => {
+    setPillDismissed(false); // reset so pill can re-appear after 3 more turns
     if (!message.trim() || isSending) return;
     const userText = message;
+
+    // ✅ record last user prompt + reset debounce guard
+    lastUserMessageRef.current = userText;
+    suggestionShownForMessageRef.current = null;
+
     setMessage('');
     enableAutoScroll();
     const aiIndex = chatHistory.length + 1;
@@ -891,7 +1305,6 @@ const sendAI = async (userText, aiIndex) => {
       { user: true, text: userText, error: null },
       { user: false, text: '', error: null, speaker: character }
     ]);
-    //setTimeout(() => smartScrollToBottom(true), 50);
     sendAI(userText, aiIndex);
   };
 
@@ -959,7 +1372,7 @@ const sendAI = async (userText, aiIndex) => {
           emotionIntensity={emotionIntensity}
           participants={participants}
           onBack={onBack}
-          onCharacterSelect={handleCharacterSelect}
+          onCharacterSelect={onCharacterSelect}   
           inviteSuggestions={getInviteSuggestions()}
           isMobile={isMobile}
           enabled={true}
@@ -976,12 +1389,28 @@ const sendAI = async (userText, aiIndex) => {
         <div className="pane-invite-bar">
           <button
             className="pane-invite-button"
-            onClick={() => onInvite(character, lastUserMsg.thread_id)}
+            disabled={
+              // ✅ cap: max 2 invitees (excluding main character)
+              (participants?.length || 1) - 1 >= 2 ||
+              // no cached suggestion to quick-invite
+              !(lastSuggestionRef.current && lastSuggestionRef.current.keys?.length)
+            }
+            onClick={() => {
+              const cached = lastSuggestionRef.current;
+              if (cached?.keys?.length) {
+                // ✅ quick-invite the first suggestion key
+                onInvite(cached.keys[0]);
+              } else {
+                // fallback: open your existing pane (if you have one)
+                setInvitePaneOpen?.(true);
+              }
+            }}
           >
             Invite Expert
           </button>
         </div>
       )}
+      
       
       <div className="chat-window">
         {/* Conditional Header - Only show if FloatingAvatar is disabled */}
@@ -1003,8 +1432,35 @@ const sendAI = async (userText, aiIndex) => {
                 </div>
               )}
             </div>
+
+            {/* ✅ ADD HEADER USAGE INDICATOR */}
+            {usageTracking.isCustomCharacter && (
+              <div className="usage-header-container">
+                <HeaderUsageIndicator 
+                  usage={usageTracking.usage}
+                  isCustomCharacter={usageTracking.isCustomCharacter}
+                  onUpgradeClick={() => {
+                    // TODO: Open upgrade modal
+                  }}
+                />
+              </div>
+            )}
             
             <div className="header-controls">
+              <button
+                className="podcast-launch-btn"
+                onClick={handleOpenPodcast}
+                title="Create Podcast"
+                aria-label="Open Podcast Studio"
+              >
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8">
+                  <rect x="9" y="2" width="6" height="11" rx="3"/>
+                  <path d="M5 10a7 7 0 0014 0" strokeLinecap="round"/>
+                  <line x1="12" y1="19" x2="12" y2="22" strokeLinecap="round"/>
+                  <line x1="8" y1="22" x2="16" y2="22" strokeLinecap="round"/>
+                  <path d="M3 8v1.5M6 6.5v3M21 8v1.5M18 6.5v3" strokeLinecap="round"/>
+                </svg>
+              </button>
               <button onClick={onBack} className="back-button" title="Back">
                 <ArrowLeft size={20} />
               </button>
@@ -1040,7 +1496,12 @@ const sendAI = async (userText, aiIndex) => {
                   onInvite,
                   isSending,
                   participants,
+                  userCharacters,
+                  discoveredCharacters,
+                  showToast,
+                  getCharacterDisplayName,  // ADD THIS LINE
                   userId: user?.id
+                  
                 }}
                 overscanCount={3}
               >
@@ -1050,24 +1511,124 @@ const sendAI = async (userText, aiIndex) => {
           </AutoSizer>
         </div>
 
-        <footer className="chat-input">
-          <InputArea
-            value={message}
-            onChange={e => setMessage(e.target.value)}
-            onSend={isSending ? stopStream : sendMessage}
-            onStop={stopStream}
-            isSending={isSending}
-            onFocus={handleInputFocus}
-            onBlur={handleInputBlur}
-          />
-        </footer>
+        {/* ── Input area wrapper — pill anchors to this, not the whole window ── */}
+        <div className="chat-input-wrapper">
 
+          {/* Pill floats above input, anchored to wrapper */}
+          {showCreationPill && (
+            <div className="creation-pill-overlay">
+              <div className="creation-pill">
+                <span className="creation-pill-label">Ready to create?</span>
+                <button
+                  className="creation-pill-btn"
+                  onClick={async () => {
+                    setPillDismissed(true);
+                    const charKey = typeof character === 'string' ? character : character?.key;
+                    const lastUserMsg = [...chatHistory].reverse().find(m => m.user);
+                    const topic = lastUserMsg?.text?.slice(0, 120) || '';
+                    try {
+                      const csrf = document.cookie.match(/(?:^|;\s*)av_csrf=([^;]+)/)?.[1] || '';
+                      // Send thread_id — backend pulls from DB directly (reliable speaker labelling)
+                      const res = await fetch(`${API}/api/podcast/generate-script`, {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json', 'X-CSRF-Token': csrf },
+                        credentials: 'include',
+                        body: JSON.stringify({
+                          thread_id:     threadId,
+                          character_key: charKey,
+                          display_name:  displayName || 'Guest',
+                          topic,
+                        }),
+                      });
+                      const data = await res.json();
+                      if (res.ok && data.lines?.length) {
+                        setActivePodcastContext({
+                          character,
+                          characterKey:   charKey,
+                          chatHistory,
+                          topic:          data.topic || topic,
+                          startTab:       'script',
+                          preloadedLines: data.lines,
+                          scriptText:     data.script_text,
+                        });
+                        switchView(VIEW_STATES.PODCAST_STUDIO);
+                      } else {
+                        console.error('Script generation failed:', data.error);
+                      }
+                    } catch (e) {
+                      console.error('Script generation error:', e);
+                    }
+                  }}
+                >
+                  📄 Script
+                </button>
+                <button
+                  className="creation-pill-btn creation-pill-btn--podcast"
+                  onClick={handleOpenPodcast}
+                >
+                  🎙 Podcast
+                </button>
+                <button
+                  className="creation-pill-dismiss"
+                  onClick={() => setPillDismissed(true)}
+                  aria-label="Dismiss"
+                >
+                  ✕
+                </button>
+              </div>
+            </div>
+          )}
+
+        <footer className="chat-input">
+          {/* ✅ ADD USAGE WARNING ABOVE INPUT */}
+          {usageTracking.showWarning && usageTracking.isCustomCharacter && (
+            <div className="usage-warning-container">
+              <ChatUsageIndicator 
+                usage={usageTracking.usage}
+                isCustomCharacter={usageTracking.isCustomCharacter}
+                showWarning={usageTracking.showWarning}
+                warningMessage={usageTracking.warningMessage}
+                onUpgradeClick={() => {
+                  // TODO: Open upgrade modal
+                }}
+              />
+            </div>
+          )}
+          {/* WRAP InputArea with defensive wrapper */}
+          <DefensiveChatInputWrapper
+            character={character}
+            user_id={user?.id}
+            onUpgradePrompt={() => {
+              // Handle upgrade prompt - you can use existing upgrade flow
+              setShowUpgradeFlow('message_limit');
+            }}
+          >
+            <InputArea
+              value={message}
+              onChange={e => setMessage(e.target.value)}
+              onSend={isSending ? stopStream : sendMessage}
+              onStop={stopStream}
+              isSending={isSending}
+              onFocus={handleInputFocus}
+              onBlur={handleInputBlur}
+            />
+          </DefensiveChatInputWrapper>
+        </footer>
+        </div>{/* end chat-input-wrapper */}
         <div className="chat-footer-note">
           AI-generated characters, for reference only
         </div>
         <ContextPanel />
       </div>
-      {/* ✅ ADD: Floating Scroll Button - RIGHT HERE AT THE END */}
+      {/* ── Feed panel ── */}
+      <ChatFeedPanel
+        isOpen={feedOpen}
+        onToggle={() => setFeedOpen(prev => !prev)}
+        isAuthenticated={!!user}
+        onCharacterClick={onCharacterSelect}
+      />
+
+      {/* ── Floating Scroll Button — INSIDE .chat-window ── */}
       <FloatingScrollButton
         visible={!isNearBottom && chatHistory.length > 0}
         hasNewMessages={hasNewMessages || newMessageCount > 0}
@@ -1076,6 +1637,30 @@ const sendAI = async (userText, aiIndex) => {
         position="bottom-right"
         isMobile={isMobile}
       />
+      {/* Add this near the end of your component, before closing div */}
+      <DualPathUpgradeSystem
+        isOpen={upgradeModalOpen}
+        onClose={() => setUpgradeModalOpen(false)}
+        triggerReason={upgradeReason}
+        currentUsage={usageTracking.usage}
+      />
+      {toast && (
+        <div
+          style={{
+            position: 'fixed',
+            bottom: 16,
+            right: 16,
+            background: 'rgba(0,0,0,0.8)',
+            color: '#fff',
+            padding: '8px 12px',
+            borderRadius: 8,
+            fontSize: 14,
+            zIndex: 4000
+          }}
+        >
+          {toast}
+        </div>
+      )}
     </div>
   );
 }

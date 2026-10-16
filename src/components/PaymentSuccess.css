@@ -1,0 +1,272 @@
+/* src/components/PaymentSuccess.css */
+/* Token-aligned styles — color/shadow values come from inline token refs in JSX.
+   This file owns layout, animation, spacing, and structural rules only. */
+
+/* ── Root ─────────────────────────────────────────────────────────────────── */
+
+.ps-root {
+  min-height: 100vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 24px;
+}
+
+/* ── Card ─────────────────────────────────────────────────────────────────── */
+
+.ps-card {
+  width: min(960px, 92vw);
+  border-radius: 20px;
+  padding: 32px;
+  position: relative;
+  overflow: hidden;
+  animation: ps-pop-in 380ms cubic-bezier(0.16, 1, 0.3, 1) both;
+}
+
+@keyframes ps-pop-in {
+  from { opacity: 0; transform: translateY(16px) scale(0.97); }
+  to   { opacity: 1; transform: translateY(0)   scale(1);    }
+}
+
+/* Top accent hairline */
+.ps-accent-line {
+  position: absolute;
+  top: 0;
+  left: 10%;
+  right: 10%;
+  height: 1px;
+  opacity: 0.6;
+  pointer-events: none;
+}
+
+/* ── Header ───────────────────────────────────────────────────────────────── */
+
+.ps-header {
+  display: flex;
+  align-items: center;
+  gap: 18px;
+  margin-bottom: 24px;
+}
+
+.ps-hero {
+  width: 60px;
+  height: 60px;
+  min-width: 60px;
+  border-radius: 50%;
+  display: grid;
+  place-items: center;
+  transition: box-shadow 0.4s ease;
+}
+
+.ps-hero--pulse {
+  animation: ps-hero-glow 2.4s ease-in-out infinite;
+}
+
+@keyframes ps-hero-glow {
+  0%, 100% { box-shadow: 0 0 0 0 rgba(99, 102, 241, 0); }
+  50%       { box-shadow: 0 0 0 8px rgba(99, 102, 241, 0.12); }
+}
+
+.ps-heading {
+  flex: 1;
+  min-width: 0;
+}
+
+.ps-title {
+  margin: 0;
+  font-size: 26px;
+  font-weight: 600;
+  letter-spacing: -0.3px;
+  line-height: 1.2;
+}
+
+.ps-subtitle {
+  margin: 6px 0 0;
+  font-size: 14px;
+  line-height: 1.55;
+}
+
+/* ── Animations: spinner + check ─────────────────────────────────────────── */
+
+.ps-spinner {
+  transform-origin: 25px 25px;
+  animation: ps-spin 0.9s linear infinite;
+}
+
+@keyframes ps-spin {
+  to { transform: rotate(360deg); }
+}
+
+.ps-check {
+  stroke-dasharray: 60;
+  stroke-dashoffset: 60;
+  animation: ps-check-draw 550ms cubic-bezier(0.4, 0, 0.2, 1) 100ms forwards;
+}
+
+@keyframes ps-check-draw {
+  to { stroke-dashoffset: 0; }
+}
+
+/* ── Grid ─────────────────────────────────────────────────────────────────── */
+
+.ps-grid {
+  display: grid;
+  grid-template-columns: 1.15fr 1fr;
+  gap: 16px;
+}
+
+/* ── Panels ───────────────────────────────────────────────────────────────── */
+
+.ps-panel {
+  border-radius: 14px;
+  padding: 20px 22px;
+}
+
+.ps-panel--right {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+  justify-content: space-between;
+}
+
+.ps-panel-label {
+  margin: 0 0 14px;
+  font-size: 13px;
+  font-weight: 600;
+  letter-spacing: 0.8px;
+  text-transform: uppercase;
+}
+
+/* ── Feature list ─────────────────────────────────────────────────────────── */
+
+.ps-features {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+  display: grid;
+  gap: 11px;
+}
+
+.ps-feature-item {
+  display: flex;
+  align-items: center;
+  gap: 11px;
+  font-size: 14.5px;
+  line-height: 1.5;
+  opacity: 0;
+  animation: ps-fade-up 400ms ease both;
+}
+
+@keyframes ps-fade-up {
+  from { opacity: 0; transform: translateY(6px); }
+  to   { opacity: 1; transform: translateY(0);   }
+}
+
+.ps-feature-tick {
+  width: 22px;
+  height: 22px;
+  min-width: 22px;
+  border-radius: 6px;
+  display: grid;
+  place-items: center;
+}
+
+/* ── Countdown ────────────────────────────────────────────────────────────── */
+
+.ps-countdown-wrap {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.ps-countdown-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.ps-progress-track {
+  height: 4px;
+  border-radius: 999px;
+  overflow: hidden;
+}
+
+.ps-progress-fill {
+  height: 100%;
+  border-radius: 999px;
+  transition: width 380ms ease;
+}
+
+/* ── Actions ──────────────────────────────────────────────────────────────── */
+
+.ps-actions {
+  display: flex;
+  gap: 10px;
+}
+
+.ps-btn {
+  padding: 11px 14px;
+  border-radius: 10px;
+  border: none;
+  cursor: pointer;
+  font-size: 14px;
+  font-weight: 600;
+  letter-spacing: 0.1px;
+  transition: opacity 0.15s ease, transform 0.15s ease;
+}
+
+.ps-btn:hover  { opacity: 0.88; transform: translateY(-1px); }
+.ps-btn:active { opacity: 1;    transform: translateY(0);    }
+
+.ps-btn--primary {
+  flex: 1;
+}
+
+.ps-btn--ghost {
+  background: transparent;
+  white-space: nowrap;
+}
+
+/* ── Error panel ──────────────────────────────────────────────────────────── */
+
+.ps-error-panel {
+  padding: 18px 20px;
+  border-radius: 12px;
+  font-size: 14px;
+  line-height: 1.6;
+  margin-top: 4px;
+}
+
+/* ── Responsive ───────────────────────────────────────────────────────────── */
+
+@media (max-width: 820px) {
+  .ps-card   { padding: 22px; }
+  .ps-grid   { grid-template-columns: 1fr; }
+  .ps-actions { flex-direction: column; }
+  .ps-btn    { width: 100%; }
+}
+
+@media (max-width: 440px) {
+  .ps-card    { padding: 16px; border-radius: 16px; }
+  .ps-hero    { width: 48px; height: 48px; min-width: 48px; }
+  .ps-title   { font-size: 22px; }
+  .ps-panel   { padding: 16px; }
+}
+
+/* ── Reduced motion ───────────────────────────────────────────────────────── */
+
+@media (prefers-reduced-motion: reduce) {
+  .ps-card,
+  .ps-feature-item,
+  .ps-check,
+  .ps-spinner,
+  .ps-hero--pulse,
+  .ps-progress-fill,
+  .ps-btn {
+    animation: none;
+    transition: none;
+  }
+
+  .ps-feature-item { opacity: 1; }
+  .ps-check        { stroke-dashoffset: 0; }
+}

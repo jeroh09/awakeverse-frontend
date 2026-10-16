@@ -1,0 +1,402 @@
+/* src/components/StoryMode/StoryWindow/StoryWindow.module.css */
+/* Story Window - Two-Panel Layout with Rounded Edges */
+
+@import '../styles/story-variables.css';
+
+/* ============================================================================
+   FULL-PAGE STORY WINDOW
+   ============================================================================ */
+.storyWindowPage {
+  position: fixed;
+  inset: 0;
+  display: flex;
+  flex-direction: column;
+  background: var(--bg-canvas);
+  padding: 1.5rem;
+  gap: 1.5rem;
+  font-family: var(--font-body);
+}
+
+/* ============================================================================
+   TWO-PANEL CONTENT AREA
+   ============================================================================ */
+.storyContent {
+  flex: 1;
+  display: flex;
+  gap: 1.5rem;
+  overflow: hidden;
+  position: relative;
+}
+
+/* ============================================================================
+   CHAT PANEL (LEFT) - WITH ROUNDED EDGES
+   ============================================================================ */
+.chatPanel {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  background: var(--bg-surface);
+  border: 1px solid var(--border-medium);
+  border-radius: var(--radius-xl, 1.25rem);
+  overflow: hidden;
+  box-shadow: 0 2px 8px -2px rgba(0, 0, 0, 0.1), 
+              0 4px 12px -4px rgba(99, 102, 241, 0.1);
+}
+
+/* ============================================================================
+   CHAT HEADER - WITH BACKGROUND IMAGE
+   ============================================================================ */
+.chatHeader {
+  position: relative;
+  height: 100px;
+  min-height: 100px;
+  background-size: cover;
+  background-position: center;
+  background-repeat: no-repeat;
+  background-color: var(--bg-interactive); /* Fallback color */
+  border-bottom: 1px solid var(--border-medium);
+  overflow: hidden;
+  flex-shrink: 0;
+}
+
+/* Gradient overlay for text readability */
+.chatHeaderOverlay {
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(
+    to bottom,
+    rgba(10, 15, 26, 0.3) 0%,
+    rgba(10, 15, 26, 0.85) 100%
+  );
+  z-index: 1;
+}
+
+.chatHeaderContent {
+  position: relative;
+  z-index: 2;
+  padding: 1rem 1.5rem;
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-end;
+}
+
+.storyTitle {
+  font-family: var(--font-display);
+  font-size: 1.6rem;
+  font-weight: 700;
+  color: var(--text-primary);
+  margin-bottom: 0.5rem;
+  text-shadow: 0 2px 8px rgba(0, 0, 0, 0.4);
+  line-height: 1.2;
+}
+
+.storyMeta {
+  display: flex;
+  gap: 0.5rem;
+  flex-wrap: wrap;
+}
+
+.metaBadge {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.3rem;
+  padding: 0.25rem 0.6rem;
+  background: rgba(20, 27, 46, 0.8);
+  border: 1px solid var(--border-medium);
+  border-radius: var(--radius-pill, 999px);
+  font-size: 0.8rem;
+  font-family: var(--font-body);
+  color: var(--text-secondary);
+  backdrop-filter: blur(8px);
+}
+
+/* ============================================================================
+   MESSAGES AREA (Reusing existing styles from StoryMessages.jsx)
+   ============================================================================ */
+.messagesContainer {
+  flex: 1;
+  overflow-y: auto;
+  padding: 2rem;
+  padding-bottom: 140px; /* Space for floating input */
+  background: var(--bg-surface);
+}
+
+/* Empty messages state */
+.emptyMessages,
+.openingBanner {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 4rem 2rem;
+  text-align: center;
+  min-height: 60vh;
+}
+
+.emptyIcon {
+  font-size: 4rem;
+  margin-bottom: 1.5rem;
+  opacity: 0.5;
+}
+
+.emptyMessages h3 {
+  font-family: var(--font-display);
+  font-size: 1.5rem;
+  color: var(--text-primary);
+  margin-bottom: 0.75rem;
+}
+
+.emptyMessages p {
+  font-family: var(--font-body);
+  color: var(--text-secondary);
+  max-width: 400px;
+  line-height: 1.6;
+}
+
+.openingBanner {
+  min-height: 50vh;
+}
+
+.bannerContent {
+  max-width: 600px;
+}
+
+.bannerIcon {
+  font-size: 3rem;
+  margin-bottom: 1rem;
+}
+
+.bannerText {
+  font-family: var(--font-display);
+  font-size: 1.3rem;
+  font-weight: 600;
+  color: var(--text-primary);
+  margin-bottom: 1rem;
+  line-height: 1.5;
+  white-space: pre-line; /* Preserves paragraph breaks in opening banner */
+}
+
+.bannerHint {
+  font-family: var(--font-body);
+  font-size: 0.95rem;
+  color: var(--text-secondary);
+  font-style: italic;
+}
+
+/* Message wrappers */
+.messageWrapper {
+  margin-bottom: 1.5rem;
+}
+
+/* User messages */
+.userMessage {
+  background: var(--bg-peak);
+  border: 1px solid var(--border-medium);
+  border-radius: var(--radius-lg, 1rem);
+  padding: 1rem 1.25rem;
+  color: var(--text-primary);
+  font-family: var(--font-body);
+  line-height: 1.6;
+  margin-left: auto;
+  max-width: 600px;
+  white-space: pre-line; /* Preserves paragraph breaks */
+}
+
+/* Character messages */
+.characterMessage {
+  display: flex;
+  gap: 1rem;
+  max-width: 800px;
+}
+
+.characterAvatar {
+  width: 48px;
+  height: 48px;
+  border-radius: 50%;
+  background: var(--bg-interactive);
+  border: 2px solid var(--border-medium);
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--text-secondary);
+  font-family: var(--font-display);
+  font-weight: 600;
+  font-size: 1.2rem;
+  background-size: cover;
+  background-position: center;
+}
+
+.avatarFallback {
+  display: block;
+}
+
+.messageContent {
+  flex: 1;
+}
+
+.speakerName {
+  font-family: var(--font-display);
+  font-weight: 600;
+  color: var(--accent-primary);
+  margin-bottom: 0.5rem;
+  font-size: 0.95rem;
+}
+
+.messageText {
+  font-family: var(--font-body);
+  color: var(--text-primary);
+  line-height: 1.6;
+  white-space: pre-line; /* Preserves paragraph breaks from AI */
+}
+
+.caretBlink {
+  display: inline-block;
+  margin-left: 2px;
+  animation: blink 1s infinite;
+}
+
+@keyframes blink {
+  0%, 49% { opacity: 1; }
+  50%, 100% { opacity: 0; }
+}
+
+/* Pulsing cursor for end of stream */
+.pulsingCursor {
+  display: inline-block;
+  margin-left: 4px;
+  color: var(--accent-primary, #6366F1);
+  font-weight: 600;
+  animation: pulse 1.5s ease-in-out infinite;
+}
+
+@keyframes pulse {
+  0%, 100% { 
+    opacity: 1; 
+    transform: scale(1);
+  }
+  50% { 
+    opacity: 0.4;
+    transform: scale(1.1);
+  }
+}
+
+/* System messages */
+.systemMessage {
+  text-align: center;
+  padding: 0.75rem 1rem;
+  background: rgba(99, 102, 241, 0.1);
+  border: 1px solid var(--accent-primary);
+  border-radius: var(--radius-md, 0.75rem);
+  color: var(--text-secondary);
+  font-family: var(--font-body);
+  font-size: 0.9rem;
+  font-style: italic;
+  max-width: 500px;
+  margin: 0 auto;
+}
+
+/* ============================================================================
+   ERROR / LOADING STATES
+   ============================================================================ */
+.errorState {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 4rem 2rem;
+  min-height: 60vh;
+  text-align: center;
+}
+
+.errorState p {
+  font-family: var(--font-body);
+  color: var(--text-secondary);
+  font-size: 1rem;
+  margin-bottom: 2rem;
+}
+
+.retryButton {
+  padding: 0.75rem 2rem;
+  background: var(--accent-primary);
+  color: white;
+  border: none;
+  border-radius: var(--radius-md, 0.75rem);
+  font-family: var(--font-body);
+  font-weight: 600;
+  font-size: 1rem;
+  cursor: pointer;
+  transition: all 0.3s ease;
+}
+
+.retryButton:hover {
+  background: var(--accent-hover);
+  transform: translateY(-2px);
+  box-shadow: 0 0 20px -5px rgba(99, 102, 241, 0.2);
+}
+
+/* ============================================================================
+   SCROLLBAR STYLING
+   ============================================================================ */
+.messagesContainer::-webkit-scrollbar {
+  width: 8px;
+}
+
+.messagesContainer::-webkit-scrollbar-track {
+  background: var(--bg-surface);
+}
+
+.messagesContainer::-webkit-scrollbar-thumb {
+  background: var(--text-muted);
+  border-radius: 4px;
+}
+
+.messagesContainer::-webkit-scrollbar-thumb:hover {
+  background: var(--text-tertiary);
+}
+
+/* ============================================================================
+   MOBILE RESPONSIVE
+   ============================================================================ */
+@media (max-width: 768px) {
+  .storyWindowPage {
+    padding: 0;
+    gap: 0;
+  }
+  
+  .storyContent {
+    gap: 0;
+  }
+  
+  .chatPanel {
+    border-radius: 0;
+    border: none;
+  }
+  
+  .chatHeader {
+    height: 90px;
+    min-height: 90px;
+    border-radius: 0;
+  }
+  
+  .chatHeaderContent {
+    padding: 0.75rem 1rem;
+  }
+  
+  .storyTitle {
+    font-size: 1.4rem;
+    margin-bottom: 0.4rem;
+  }
+  
+  .metaBadge {
+    font-size: 0.75rem;
+    padding: 0.2rem 0.5rem;
+    gap: 0.25rem;
+  }
+  
+  .messagesContainer {
+    padding: 1rem;
+    padding-bottom: 140px;
+  }
+}
