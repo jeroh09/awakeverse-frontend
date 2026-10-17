@@ -148,7 +148,7 @@ export default function HookPopover({
     clearInterval(loopRef.current);
     loopRef.current = setInterval(() => setPlayKey((k) => k + 1), ((d.dur || 4) + 1.4) * 1000);
     return () => clearInterval(loopRef.current);
-  }, [sig]); // eslint-disable-line react-hooks/exhaustive-deps
+  }, [sig]);
 
   // Esc closes
   useEffect(() => {

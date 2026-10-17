@@ -1301,13 +1301,13 @@ if (context.topic) setTopic(context.topic);
     } finally {
       setHookSuggesting(false);
     }
-  }, [lines, compareNames?.left, compareNames?.right, planHook, hookTouched]); // eslint-disable-line react-hooks/exhaustive-deps
+  }, [lines, compareNames?.left, compareNames?.right, planHook, hookTouched]);
   useEffect(() => {
     if (!extras.available || hookTouched) return undefined;
     if (!lines.some(l => (l.text || '').trim())) return undefined;
     const t = setTimeout(() => { runHookSuggest(); }, 2500);
     return () => clearTimeout(t);
-  }, [openingSignature, extras.available, planHook]); // eslint-disable-line react-hooks/exhaustive-deps
+  }, [openingSignature, extras.available, planHook]);
 
   // ── Podcast download — proxy through backend to avoid Spaces CORS ───────
   // Direct fetch() to DigitalOcean Spaces CDN is blocked by CORS.
