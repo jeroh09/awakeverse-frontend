@@ -42,6 +42,9 @@ import OverlayTypePopover from './OverlayTypePopover';
 import { RECIPE_OPTIONS, currentRecipe } from './overlayStyle';
 import SourcesPanel from './SourcesPanel';
 import CitationChips from './CitationChips';
+import HookPopover from './HookPopover';
+import SoundPopover from './SoundPopover';
+import { loadExtras, suggestHook, hookSummary } from './podcastExtras';
 
 // ── Constants ────────────────────────────────────────────────────────────────
 const TABS        = ['avatar', 'script', 'generate', 'podcasts', 'guide'];
@@ -497,6 +500,26 @@ export default function PodcastStudioPage({ context, onClose }) {
   // compareStyle: the rails look (comparison.style). null = module default; a
   // recipe object { recipe } overrides it for the whole episode.
   const [compareStyle,  setCompareStyle]  = useState(null);
+
+  // ── Optional extras (2026-10-17): AI opening hook + sound effects ────────
+  // Both live on the new overlay stage; `extras.available` is false for users
+  // not on it yet, and then every entry point below stays hidden. Everything
+  // here is OFF until the user turns it on (captions are the only always-on).
+  const [extras, setExtras] = useState({ available: false, sounds: [], levels: ['subtle', 'normal', 'bold'], defaultLevel: 'subtle' });
+  useEffect(() => { loadExtras().then(setExtras); }, []);
+  // Opening hook — the AI designs it from the opening lines; the user decides.
+  const [hookDraft,      setHookDraft]      = useState(null);   // {kind, eyebrow, text, number, label, left, right, dur}
+  const [hookOn,         setHookOn]         = useState(false);  // user switched it on
+  const [hookSuggestion, setHookSuggestion] = useState(null);   // {options:[hook…], reason, recommend}
+  const [hookSuggesting, setHookSuggesting] = useState(false);
+  const [hookTouched,    setHookTouched]    = useState(false);  // user edited → AI won't overwrite
+  const [hookDismissed,  setHookDismissed]  = useState(false);  // ✕ on the line-1 chip
+  const [hookOpen,       setHookOpen]       = useState(false);  // pop-out visible
+  const [planHook,       setPlanHook]       = useState(null);   // planner's hook (Sources scripts)
+  // Sound effects — episode switch + level; the per-line choice rides on each line (line.sfx).
+  const [sfxOn,     setSfxOn]     = useState(false);
+  const [sfxLevel,  setSfxLevel]  = useState('subtle');
+  const [soundOpen, setSoundOpen] = useState(false);
 
   // ── Voice enforcement (frontend gate) ────────────────────────────────────
   // A speaker's voice is VALID only if its voiceId is present in the loaded
@@ -1028,6 +1051,7 @@ if (context.topic) setTopic(context.topic);
     });
     setScriptMode('lines');
     console.log(`📚 Sources script "${meta?.title || 'Untitled'}" → ${genLines.length} lines (scriptId ${meta?.scriptId})`);
+    setPlanHook(meta?.plan?.hook || null);   // a strong hint for the opening-hook designer
     // meta.scriptId persists server-side (GET /api/podcast/source-script/<id>)
     // if a "regenerate from the same sources" affordance is wanted later.
   }, [speakers, context, dispatchLines]);
@@ -1248,6 +1272,42 @@ if (context.topic) setTopic(context.topic);
     }, 1500);
     return () => clearTimeout(t);
   }, [scriptSignature]);
+
+  // ── Opening hook: the AI designs it from the opening lines ────────────────
+  // ~2.5s after the opening (first 8 lines) stops changing, ask for a hook.
+  // Silent and optional: fills the line-1 chip, never switches anything on, and
+  // never overwrites a hook the user has edited.
+  const compareNames = compareOn && compareLeft.name.trim() && compareRight.name.trim()
+    ? { left: compareLeft.name.trim(), right: compareRight.name.trim() } : null;
+  const openingSignature = useMemo(
+    () => lines.slice(0, 8).map(l => l.text || '').join('\u0001'),
+    [lines]
+  );
+  const runHookSuggest = useCallback(async ({ adopt = false } = {}) => {
+    const texts = lines.map(l => (l.text || '').trim()).filter(Boolean).slice(0, 8);
+    if (!texts.length) return;
+    setHookSuggesting(true);
+    try {
+      const out = await suggestHook({
+        lines: texts,
+        comparison: compareNames ? { left: { name: compareNames.left }, right: { name: compareNames.right } } : null,
+        planHook,
+      });
+      if (!out.hook) return;
+      const options = [out.hook, ...(out.alternatives || [])];
+      setHookSuggestion({ options, reason: out.reason, recommend: out.recommend });
+      if (adopt || !hookTouched) setHookDraft(out.hook);
+      if (adopt) setHookTouched(false);
+    } finally {
+      setHookSuggesting(false);
+    }
+  }, [lines, compareNames?.left, compareNames?.right, planHook, hookTouched]); // eslint-disable-line react-hooks/exhaustive-deps
+  useEffect(() => {
+    if (!extras.available || hookTouched) return undefined;
+    if (!lines.some(l => (l.text || '').trim())) return undefined;
+    const t = setTimeout(() => { runHookSuggest(); }, 2500);
+    return () => clearTimeout(t);
+  }, [openingSignature, extras.available, planHook]); // eslint-disable-line react-hooks/exhaustive-deps
 
   // ── Podcast download — proxy through backend to avoid Spaces CORS ───────
   // Direct fetch() to DigitalOcean Spaces CDN is blocked by CORS.
@@ -1649,6 +1709,9 @@ if (context.topic) setTopic(context.topic);
               text:       l.text     || '',
               audio_url:  l.audioUrl || null,
             };
+            // Per-line sound choice (Sound panel): auto is the default, so only
+            // 'none' or a picked sound is sent — and only when sounds are on.
+            if (extras.available && sfxOn && l.sfx && l.sfx !== 'auto') row.sfx = l.sfx;
             // Per-line overlay (on-screen media) → snake_case for the backend.
             // Only include a complete, valid spec so a half-filled editor never
             // sends a broken overlay that the session validator would reject.
@@ -1717,6 +1780,20 @@ if (context.topic) setTopic(context.topic);
         }
       }
 
+      // ── Optional extras (only when switched on) ──────────────────────────
+      if (extras.available && hookOn && hookDraft) {
+        const h = { kind: hookDraft.kind || 'headline', dur: hookDraft.dur || 4 };
+        ['eyebrow', 'text', 'number', 'label', 'left', 'right'].forEach(k => {
+          const v = (hookDraft[k] || '').trim();
+          if (v) h[k] = v;
+        });
+        payload.hook = h;
+      }
+      if (extras.available && sfxOn) {
+        payload.sound_effects = true;
+        payload.sfx_level     = sfxLevel;
+      }
+
       const res = await fetch(`${API_BASE}/api/podcast/session`, {
         method:      'POST',
         headers:     { 'Content-Type': 'application/json', 'X-CSRF-Token': csrf },
@@ -1769,6 +1846,7 @@ if (context.topic) setTopic(context.topic);
   }, [
     speakers, selectedEnvId, voices, quality,
     compareOn, compareLeft, compareRight, comparePoints, compareStyle,
+    extras.available, hookOn, hookDraft, sfxOn, sfxLevel,
     startPollingSession, loadSessions, setActivePodcastRender,
   ]);
 
@@ -2760,6 +2838,35 @@ if (context.topic) setTopic(context.topic);
                             {line.citations?.length ? (
                               <CitationChips citations={line.citations} edited={!!line.citationsEdited} />
                             ) : null}
+                            {/* Opening hook — line 1 only: the AI's suggestion (tap to open),
+                                or the hook the user switched on */}
+                            {i === 0 && extras.available ? (
+                              hookOn && hookDraft ? (
+                                <button
+                                  className={styles.overlayAttached}
+                                  onClick={() => setHookOpen(true)}
+                                  title="Edit the opening hook"
+                                >
+                                  <span className={styles.overlayThumb}>🪝</span>
+                                  Opening hook: {hookSummary(hookDraft).slice(0, 48)} — first {hookDraft.dur || 4}s
+                                </button>
+                              ) : hookDraft && !hookDismissed ? (
+                                <div className={styles.overlayChip}>
+                                  <button
+                                    className={styles.overlayChipMain}
+                                    onClick={() => setHookOpen(true)}
+                                    title="See the hook the AI designed for your opening"
+                                  >
+                                    🪝 Open with: “{hookSummary(hookDraft).slice(0, 44)}”?
+                                  </button>
+                                  <button
+                                    className={styles.overlayChipX}
+                                    onClick={() => setHookDismissed(true)}
+                                    title="Dismiss"
+                                  >✕</button>
+                                </div>
+                              ) : null
+                            ) : null}
                             {/* Episode comparison — shown on every line since it applies episode-wide */}
                             {compareOn ? (
                               <button
@@ -3283,6 +3390,21 @@ if (context.topic) setTopic(context.topic);
                   <span style={{ fontSize: '1.1rem' }}>⚖️</span>
                   {'Comparison'}
                 </button>
+                {extras.available && (
+                  <button
+                    type="button"
+                    className={`${styles.overlayType} ${hookOn ? styles.overlayTypeOn : ''}`}
+                    style={{ width: '100%', textAlign: 'left', display: 'flex', alignItems: 'center', gap: '0.5rem' }}
+                    title="A designed graphic for the first 3–5 seconds — the AI writes it from your opening"
+                    onClick={() => { setTypePopoverOpen(false); setHookOpen(true); }}>
+                    <span style={{ fontSize: '1.1rem' }}>🪝</span>
+                    <span style={{ flex: 1, minWidth: 0, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                      Opening hook
+                      {hookDraft ? <span style={{ opacity: 0.7, fontWeight: 400 }}>{` · ${hookSummary(hookDraft)}`}</span> : null}
+                    </span>
+                    <span style={{ fontSize: '0.64rem', opacity: 0.8 }}>{hookOn ? 'On' : 'Off'}</span>
+                  </button>
+                )}
 
                 {/* Product name (product_in_hand only) */}
                 {ov.mode === 'product_in_hand' && (
@@ -3516,8 +3638,85 @@ if (context.topic) setTopic(context.topic);
                     </div>
                   );
                 })}
+
+                {/* Sound effects — episode-wide (voice · outfit · sound). Opens the
+                    Sound pop-out: on/off, level, listen, and per-line choices. */}
+                {extras.available && (
+                  <div>
+                    <div style={{
+                      fontSize: '0.65rem', fontWeight: 700, letterSpacing: '0.1em',
+                      textTransform: 'uppercase', color: '#6366f1',
+                      fontFamily: 'Inter,sans-serif', marginBottom: '0.35rem',
+                    }}>
+                      Sound · Episode
+                    </div>
+                    <button
+                      type="button"
+                      onClick={() => setSoundOpen(true)}
+                      title="Subtle sound effects that move with your graphics"
+                      style={{
+                        display: 'flex', alignItems: 'center', gap: '0.5rem', width: '100%',
+                        textAlign: 'left', cursor: 'pointer',
+                        background: 'rgba(15,23,42,0.8)',
+                        border: sfxOn ? '1px solid rgba(99,102,241,0.45)' : '1px solid rgba(99,102,241,0.22)',
+                        borderRadius: 12, padding: '0.5rem 0.7rem', fontFamily: 'Inter,sans-serif',
+                      }}
+                    >
+                      <span aria-hidden="true">🔈</span>
+                      <span style={{ flex: 1, minWidth: 0, fontSize: '0.64rem', color: '#94a3b8' }}>
+                        Sound effects
+                        <span style={{ color: sfxOn ? '#A5B4FC' : '#e0e7ff', fontWeight: 600 }}>
+                          {'  '}{sfxOn
+                            ? `On · ${sfxLevel.charAt(0).toUpperCase()}${sfxLevel.slice(1)}${
+                                lines.some(l => l.sfx && l.sfx !== 'auto') ? ` · ${lines.filter(l => l.sfx && l.sfx !== 'auto').length} picked` : ''}`
+                            : 'Off'}
+                        </span>
+                      </span>
+                      <span style={{ flexShrink: 0, fontSize: '0.64rem', fontWeight: 600, color: '#818CF8', whiteSpace: 'nowrap' }}>
+                        {sfxOn ? 'Change' : 'Add ▸'}
+                      </span>
+                    </button>
+                  </div>
+                )}
               </div>
             </div>
+          )}
+
+          {/* Opening hook pop-out (position:fixed) */}
+          {hookOpen && (
+            <HookPopover
+              draft={hookDraft}
+              enabled={hookOn}
+              suggestion={hookSuggestion}
+              suggesting={hookSuggesting}
+              comparison={compareNames}
+              backdropUrl={speakers.find(s => s.speakerId === 'user')?.avatarRefUrl || selectedEnv?.previewUrl || null}
+              onChange={(next) => { setHookDraft(next); setHookTouched(true); }}
+              onToggle={(on) => { setHookOn(on); if (on) setHookDismissed(false); }}
+              onSuggest={() => runHookSuggest({ adopt: true })}
+              onClose={() => setHookOpen(false)}
+            />
+          )}
+
+          {/* Sound effects pop-out (position:fixed) */}
+          {soundOpen && (
+            <SoundPopover
+              library={extras.sounds}
+              enabled={sfxOn}
+              level={sfxLevel}
+              levels={extras.levels}
+              onEnable={setSfxOn}
+              onLevel={setSfxLevel}
+              lines={lines
+                .filter(l => (l.text || '').trim() || l.audioUrl)
+                .map((l, idx) => ({
+                  id: l.id, n: idx + 1, text: (l.text || '').trim(),
+                  hasCard: !!(l.overlay && l.overlay.imageUrl && l.overlay.mode !== 'product_in_hand'),
+                }))}
+              choiceFor={(id) => lines.find(l => l.id === id)?.sfx || 'auto'}
+              onChoice={(id, v) => dispatchLines({ type: 'UPDATE', id, patch: { sfx: v === 'auto' ? undefined : v } })}
+              onClose={() => setSoundOpen(false)}
+            />
           )}
 
           {/* Voice browser overlay — position:fixed, so DOM location doesn't matter */}
