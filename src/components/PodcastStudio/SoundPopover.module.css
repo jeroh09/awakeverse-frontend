@@ -1,10 +1,13 @@
 /* SoundPopover.module.css — the "Sound effects" pop-out.
    Self-contained tokens (same values as OverlayTypePopover / HookPopover). */
 
+/* Always fits the window: header + footer pinned, only the middle scrolls.
+   (dvh = the visible height on laptops/phones with browser bars; vh fallback.) */
 .scrim {
-  position: fixed; inset: 0; z-index: 1100;
+  position: fixed; inset: 0; z-index: 2000;
   background: rgba(2, 6, 23, 0.74); backdrop-filter: blur(4px);
-  display: flex; align-items: center; justify-content: center; padding: 22px;
+  display: flex; align-items: center; justify-content: center;
+  padding: clamp(8px, 2.5vh, 22px);
 }
 .pop {
   --indigo:#6366F1; --indigo-light:#818CF8; --indigo-text:#A5B4FC; --green:#10B981;
@@ -12,12 +15,15 @@
   --ring:0 0 0 3px rgba(99,102,241,0.4); --panel:#0a0f22;
   --mono:'JetBrains Mono',monospace; --disp:'Syne',sans-serif; --body:'Inter',system-ui,sans-serif;
 
-  width: min(820px, 96vw); max-height: 92vh; display: flex; flex-direction: column;
+  width: min(820px, 96vw); display: flex; flex-direction: column; overflow: hidden;
+  max-height: calc(100vh - 2 * clamp(8px, 2.5vh, 22px));
+  max-height: calc(100dvh - 2 * clamp(8px, 2.5vh, 22px));
   background: var(--panel); border: 1px solid rgba(99,102,241,0.32); border-radius: 16px;
   box-shadow: 0 40px 100px -30px rgba(0,0,0,0.9);
   color: var(--paper); font-family: var(--body);
 }
 
+.pophead, .topRow, .foot { flex-shrink: 0; }
 .pophead { display: flex; align-items: center; gap: 10px; padding: 13px 16px; border-bottom: 1px solid var(--line); }
 .ic { font-size: 1.1rem; }
 .t { font-family: var(--disp); font-weight: 700; font-size: 0.98rem; }
@@ -50,15 +56,16 @@
   box-shadow: 0 4px 12px -4px rgba(99,102,241,0.6); }
 .dim { opacity: 0.45; }
 
-.body { display: grid; grid-template-columns: 1fr 1.25fr; gap: 18px; padding: 12px 16px 6px;
-  min-height: 0; overflow: auto; transition: opacity 0.15s; }
+.body { display: grid; grid-template-columns: 1fr 1.25fr; gap: 18px; padding: 12px 16px 10px;
+  flex: 1 1 auto; min-height: 0; overflow-y: auto; transition: opacity 0.15s;
+  scrollbar-width: thin; scrollbar-color: rgba(99,102,241,0.35) transparent; }
 @media (max-width: 680px) { .body { grid-template-columns: 1fr; } }
 .col { min-width: 0; }
 .grp { font-family: var(--mono); font-size: 0.58rem; letter-spacing: 0.1em; text-transform: uppercase;
   color: var(--sub); margin: 0 0 8px; }
 .hint { font-size: 0.7rem; color: var(--sub); }
 
-.snd { display: flex; align-items: center; gap: 10px; padding: 7px 9px; margin-bottom: 6px;
+.snd { display: flex; align-items: center; gap: 10px; padding: 5px 9px; margin-bottom: 5px;
   border: 1px solid var(--line); border-radius: 10px; background: rgba(15,23,42,0.6); }
 .sndTxt { min-width: 0; display: flex; flex-direction: column; }
 .sndTxt b { font-size: 0.78rem; font-weight: 600; color: #e0e7ff; }
@@ -102,7 +109,15 @@
 .itemOn { background: rgba(99, 102, 241, 0.16); color: var(--indigo-text); font-weight: 600; }
 .itemRow .play { width: 22px; height: 22px; }
 
-.foot { border-top: 1px solid var(--line); padding: 11px 16px; display: flex; align-items: center; gap: 12px; margin-top: 6px; }
+.foot { border-top: 1px solid var(--line); padding: 10px 16px; display: flex; align-items: center; gap: 12px;
+  background: var(--panel); }
+/* short laptop screens: tighter header + rows */
+@media (max-height: 760px) {
+  .pophead { padding: 9px 14px; }
+  .topRow { padding-top: 9px; }
+  .snd { padding: 3px 8px; margin-bottom: 4px; }
+  .sndTxt span { display: none; }   /* label only; the "when" shows on hover via title */
+}
 .hintFoot { font-size: 0.66rem; color: var(--sub); }
 .done { margin-left: auto; border: none; border-radius: 999px; padding: 0.5rem 1.15rem; font-family: var(--body);
   font-weight: 600; font-size: 0.8rem; cursor: pointer; background: linear-gradient(180deg, var(--indigo-light), var(--indigo)); color: #fff; }

@@ -18,6 +18,7 @@
 // AI's option of that kind when there is one.
 
 import React, { useEffect, useMemo, useRef, useState } from 'react';
+import { createPortal } from 'react-dom';
 import styles from './HookPopover.module.css';
 import HostAvatar from './HostAvatar';
 import { plainHookText } from './podcastExtras';
@@ -189,7 +190,10 @@ export default function HookPopover({
     : kind === 'versus' ? !!((d.left || '').trim() && (d.right || '').trim())
     : !!plain.trim();
 
-  return (
+  // Portal to <body>: a fixed overlay rendered inside the studio's panels can be
+  // trapped under the page footer (an ancestor's stacking context / containing
+  // block). On <body> nothing can sit above it or clip it.
+  return createPortal(
     <div className={styles.scrim} onMouseDown={(e) => { if (e.target === e.currentTarget) onClose?.(); }}>
       <div className={styles.pop} role="dialog" aria-label="Opening hook">
         <div className={styles.pophead}>
@@ -319,6 +323,7 @@ export default function HookPopover({
           <button type="button" className={styles.done} onClick={onClose}>Done</button>
         </div>
       </div>
-    </div>
+    </div>,
+    document.body,
   );
 }

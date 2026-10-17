@@ -19,6 +19,7 @@
 //   onClose
 
 import React, { useEffect, useRef, useState } from 'react';
+import { createPortal } from 'react-dom';
 import styles from './SoundPopover.module.css';
 
 const LEVEL_LABEL = { subtle: 'Subtle', normal: 'Normal', bold: 'Bold' };
@@ -85,7 +86,10 @@ export default function SoundPopover({
     </button>
   );
 
-  return (
+  // Portal to <body>: a fixed overlay rendered inside the studio's panels can be
+  // trapped under the page footer (an ancestor's stacking context / containing
+  // block). On <body> nothing can sit above it or clip it.
+  return createPortal(
     <div className={styles.scrim} onMouseDown={(e) => { if (e.target === e.currentTarget) onClose?.(); }}>
       <div className={styles.pop} role="dialog" aria-label="Sound effects">
         <div className={styles.pophead}>
@@ -124,7 +128,7 @@ export default function SoundPopover({
               <div className={styles.col}>
                 <div className={styles.grp}>The set — plays automatically</div>
                 {auto.map((s) => (
-                  <div key={s.name} className={styles.snd}>
+                  <div key={s.name} className={styles.snd} title={s.when}>
                     <PlayBtn name={s.name} />
                     <span className={styles.sndTxt}><b>{s.label}</b><span>{s.when}</span></span>
                   </div>
@@ -212,6 +216,7 @@ export default function SoundPopover({
           <button type="button" className={styles.done} onClick={onClose}>Done</button>
         </div>
       </div>
-    </div>
+    </div>,
+    document.body,
   );
 }
