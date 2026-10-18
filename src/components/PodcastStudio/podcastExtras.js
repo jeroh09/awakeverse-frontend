@@ -10,6 +10,8 @@
 //       hook and sound entry points entirely.
 //   suggestHook({ lines, comparison, planHook })   POST /api/podcast/suggest-hook
 //     → { available, recommend, reason, hook, alternatives }
+//   designDataCard({ line, context, hint })         POST /api/podcast/design-data-card
+//     → card {kind:'stat'|'chart', …} | null  (only numbers the line actually says)
 // Neither ever throws: both are optional features, so failures read as "none".
 
 const API_BASE = process.env.REACT_APP_API_URL || 'https://api.awakeverse.com';
@@ -40,6 +42,23 @@ export async function suggestHook({ lines, comparison = null, planHook = null })
     return { ...none, ...(await res.json()) };
   } catch (e) {
     return none;
+  }
+}
+
+export async function designDataCard({ line, context = [], hint = null }) {
+  // POST /api/podcast/design-data-card → { available, card } ; card null = nothing numeric
+  try {
+    const res = await fetch(`${API_BASE}/api/podcast/design-data-card`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', 'X-CSRF-Token': getCsrf() },
+      credentials: 'include',
+      body: JSON.stringify({ line, context, hint }),
+    });
+    if (!res.ok) return null;
+    const d = await res.json();
+    return d.card || null;
+  } catch (e) {
+    return null;
   }
 }
 
