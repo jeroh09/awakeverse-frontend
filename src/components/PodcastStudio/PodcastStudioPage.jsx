@@ -44,7 +44,10 @@ import SourcesPanel from './SourcesPanel';
 import CitationChips from './CitationChips';
 import HookPopover from './HookPopover';
 import SoundPopover from './SoundPopover';
-import { loadExtras, suggestHook, hookSummary } from './podcastExtras';
+import CaptionPopover, { CAPTION_STYLES } from './CaptionPopover';
+import { ASPECTS, mapPreset, PRESETS_VERTICAL, IMAGE_HINT_VERTICAL } from './podcastFormat';
+import { loadExtras, suggestHook, hookSummary, designDataCard } from './podcastExtras';
+import DataCardPopover, { dataCardReady, dataCardPayload, dataCardSummary } from './DataCardPopover';
 
 // ── Constants ────────────────────────────────────────────────────────────────
 const TABS        = ['avatar', 'script', 'generate', 'podcasts', 'guide'];
@@ -74,6 +77,7 @@ const POSITION_SHAPE = {
   corner_card_tl: 'tl', corner_card_tr: 'tr', corner_card_bl: 'bl', corner_card_br: 'br',
   corner_small_tl: 'tl', corner_small_tr: 'tr', corner_small_bl: 'bl', corner_small_br: 'br',
   lower_third: 'bar', lower_third_small_left: 'bar-l', lower_third_small_right: 'bar-r',
+  top_card: 'top',   // vertical (9:16) only
 };
 
 // Ideal image size per card shape (from real card geometry at 1280x720).
@@ -520,6 +524,29 @@ export default function PodcastStudioPage({ context, onClose }) {
   const [sfxOn,     setSfxOn]     = useState(false);
   const [sfxLevel,  setSfxLevel]  = useState('subtle');
   const [soundOpen, setSoundOpen] = useState(false);
+  // Data cards (2026-10-18): designed stat / chart graphics on a line (overlay.mode 'data').
+  const [dataOpen,     setDataOpen]     = useState(false);   // pop-out for the open line
+  const [dataFilling,  setDataFilling]  = useState(false);
+  const [dataFillNote, setDataFillNote] = useState(null);
+  // Caption style (2026-10-18): captions are always on; this picks the look (episode-wide).
+  const [captionStyle, setCaptionStyle] = useState('glass');
+  const [captionOpen,  setCaptionOpen]  = useState(false);
+
+  // ── Frame shape (2026-10-18): Landscape 16:9 (default) or Vertical 9:16 ────
+  // Vertical is for solo episodes (any plan). Card positions are shown and sent
+  // mapped to the shape (podcastFormat.mapPreset) — a line keeps what was picked,
+  // so switching back and forth never loses a choice. The ffmpeg path can't draw
+  // the comparison table in a vertical frame, so for users not on the overlay
+  // stage, Vertical waits until the comparison is off.
+  const [aspect, setAspect] = useState('16:9');
+  const isSoloEpisode = speakers.length <= 1;
+  const verticalBlocked = !isSoloEpisode
+    ? 'Vertical is for solo episodes'
+    : (compareOn && !extras.available ? 'Turn off the comparison to go vertical' : null);
+  useEffect(() => {
+    if (aspect === '9:16' && verticalBlocked) setAspect('16:9');
+  }, [aspect, verticalBlocked]);
+  const vertical = aspect === '9:16';
 
   // ── Voice enforcement (frontend gate) ────────────────────────────────────
   // A speaker's voice is VALID only if its voiceId is present in the loaded
@@ -1176,8 +1203,48 @@ if (context.topic) setTopic(context.topic);
   // ── Overlay: accept an AI suggestion → seed the overlay spec + open editor ──
   // product → product_in_hand mode (name pre-filled from the term).
   // stat/chart → overlay mode, card shape, default small preset for the layout.
+  // Data card: the AI fills it from the line (only numbers the line says).
+  // The fill answer arrives later: it merges into the line's CURRENT overlay (via the
+  // page's always-current linesRef), so a position picked meanwhile survives.
+  const fillDataCard = useCallback(async (lineId, hint = null) => {
+    const idx = lines.findIndex(l => l.id === lineId);
+    const line = lines[idx];
+    if (!line || !(line.text || '').trim()) return;
+    setDataFilling(true); setDataFillNote(null);
+    try {
+      const context = [lines[idx - 2], lines[idx - 1], lines[idx + 1]]
+        .filter(Boolean).map(l => l.text || '').filter(t => t.trim());
+      const card = await designDataCard({ line: line.text, context, hint });
+      const now = linesRef.current.find(l => l.id === lineId);
+      if (card && now?.overlay?.mode === 'data') {
+        const next = card.kind === 'chart'
+          ? { ...card, bars: card.bars.map(b => ({ label: b.label, value: String(b.value) })) }
+          : card;
+        dispatchLines({ type: 'UPDATE', id: lineId,
+          patch: { overlay: { ...now.overlay, data: next } } });
+      } else if (!card) {
+        setDataFillNote("This line doesn't say a number we can show — type it in, or try a line with figures.");
+      }
+    } finally {
+      setDataFilling(false);
+    }
+  }, [lines, dispatchLines]);
+
   const acceptSuggestion = useCallback((lineId, sug) => {
     const multi = speakers.length > 1;
+    // On the overlay stage, "Show stat / Show chart" makes a designed data card
+    // (free, exact numbers) instead of generating an image.
+    if (extras.available && (sug.type === 'stat' || sug.type === 'chart')) {
+      const data = sug.type === 'stat'
+        ? { kind: 'stat', number: sug.term || '', label: '' }
+        : { kind: 'chart', title: sug.term || '', bars: [{ label: '', value: '' }, { label: '', value: '' }], highlight: 1 };
+      dispatchLines({ type: 'UPDATE', id: lineId,
+        patch: { overlay: { mode: 'data', preset: multi ? 'corner_small_tr' : 'side_panel_right', data } } });
+      setOverlayLineId(lineId);
+      setDataOpen(true);
+      fillDataCard(lineId, sug.type);
+      return;
+    }
     const seed = sug.type === 'product'
       ? { mode: 'product_in_hand', shape: 'card', productName: sug.term || '', imageUrl: null,
           preset: null }
@@ -1185,7 +1252,7 @@ if (context.topic) setTopic(context.topic);
           preset: multi ? 'corner_small_tr' : 'corner_card_tr' };
     dispatchLines({ type: 'UPDATE', id: lineId, patch: { overlay: seed } });
     setOverlayLineId(lineId);
-  }, [speakers, dispatchLines]);
+  }, [speakers, dispatchLines, extras.available, fillDataCard]);
 
   // Patch the open line's overlay spec.
   const patchOverlay = useCallback((patch) => {
@@ -1716,7 +1783,12 @@ if (context.topic) setTopic(context.topic);
             // Only include a complete, valid spec so a half-filled editor never
             // sends a broken overlay that the session validator would reject.
             const o = l.overlay;
-            if (o && o.imageUrl) {
+            if (o && o.mode === 'data') {
+              // Data card — overlay stage only; sent only when complete.
+              if (extras.available && o.preset && dataCardReady(o.data)) {
+                row.overlay = { mode: 'data', preset: mapPreset(o.preset, aspect), data: dataCardPayload(o.data) };
+              }
+            } else if (o && o.imageUrl) {
               if (o.mode === 'product_in_hand') {
                 if ((o.productName || '').trim()) {
                   row.overlay = {
@@ -1731,7 +1803,7 @@ if (context.topic) setTopic(context.topic);
                   image_url: o.imageUrl,
                   mode:      'overlay',
                   shape:     o.shape || 'card',
-                  preset:    o.preset,
+                  preset:    mapPreset(o.preset, aspect),
                   // Per-beat look ({ recipe, ...overrides }); omitted = inherit
                   // the episode default. Consumed by build_overlay(style=).
                   ...(o.style ? { style: o.style } : {}),
@@ -1793,6 +1865,12 @@ if (context.topic) setTopic(context.topic);
         payload.sound_effects = true;
         payload.sfx_level     = sfxLevel;
       }
+      if (extras.available && captionStyle && captionStyle !== 'glass') {
+        payload.caption_style = captionStyle;
+      }
+      if (aspect === '9:16' && speakers.length === 1) {
+        payload.aspect_ratio = '9:16';
+      }
 
       const res = await fetch(`${API_BASE}/api/podcast/session`, {
         method:      'POST',
@@ -1846,7 +1924,7 @@ if (context.topic) setTopic(context.topic);
   }, [
     speakers, selectedEnvId, voices, quality,
     compareOn, compareLeft, compareRight, comparePoints, compareStyle,
-    extras.available, hookOn, hookDraft, sfxOn, sfxLevel,
+    extras.available, hookOn, hookDraft, sfxOn, sfxLevel, captionStyle, aspect,
     startPollingSession, loadSessions, setActivePodcastRender,
   ]);
 
@@ -2883,17 +2961,19 @@ if (context.topic) setTopic(context.topic);
                             {(() => {
                               const sug = overlaySuggestions[line.id];
                               if (line.overlay) {
-                                const modeLabel = line.overlay.mode === 'product_in_hand'
+                                const modeLabel = line.overlay.mode === 'data'
+                                  ? `Data card${line.overlay.data ? ` · ${dataCardSummary(line.overlay.data)}` : ''}`
+                                  : line.overlay.mode === 'product_in_hand'
                                   ? 'In hand'
                                   : line.overlay.shape === 'cutout' ? 'Cutout' : 'Card';
                                 return (
                                   <button
                                     className={styles.overlayAttached}
-                                    onClick={() => setOverlayLineId(line.id)}
+                                    onClick={() => { setOverlayLineId(line.id); if (line.overlay.mode === 'data') setDataOpen(true); }}
                                     title="Edit this visual"
                                   >
                                     <span className={styles.overlayThumb}>
-                                      {line.overlay.productName ? '✋' : '▣'}
+                                      {line.overlay.mode === 'data' ? '▤' : line.overlay.productName ? '✋' : '▣'}
                                     </span>
                                     {modeLabel}{line.overlay.productName ? ` · ${line.overlay.productName}` : ''} — attached
                                   </button>
@@ -3049,6 +3129,40 @@ if (context.topic) setTopic(context.topic);
                               {opt.key === 'hd' && hdExtra != null && (
                                 <span className={styles.qualityExtra}>+{hdExtra.toLocaleString()}</span>
                               )}
+                            </button>
+                          );
+                        })}
+                      </div>
+                    ),
+                  },
+                  {
+                    label: 'Format',
+                    detail: verticalBlocked && !vertical
+                      ? `Landscape 16:9 · ${verticalBlocked.charAt(0).toLowerCase()}${verticalBlocked.slice(1)}`
+                      : (ASPECTS.find(a => a.id === aspect) || ASPECTS[0]).sub + ' · same price',
+                    done: state.status === 'complete',
+                    control: (
+                      <div className={styles.scriptModeToggle} role="radiogroup" aria-label="Format">
+                        {ASPECTS.map(opt => {
+                          const locked = submitted || state.status === 'rendering' || state.status === 'complete';
+                          const blocked = opt.id === '9:16' && !!verticalBlocked;
+                          return (
+                            <button
+                              key={opt.id}
+                              type="button"
+                              role="radio"
+                              aria-checked={aspect === opt.id}
+                              disabled={locked || blocked}
+                              title={blocked ? verticalBlocked : opt.sub}
+                              className={`${styles.scriptModeBtn} ${styles.qualityBtn} ${aspect === opt.id ? styles.scriptModeBtnActive : ''}`}
+                              onClick={() => setAspect(opt.id)}
+                            >
+                              <span aria-hidden="true" style={{
+                                display: 'inline-block', verticalAlign: '-1px', marginRight: 6,
+                                width: opt.id === '9:16' ? 7 : 13, height: opt.id === '9:16' ? 12 : 8,
+                                border: '1.5px solid currentColor', borderRadius: 2, opacity: 0.85,
+                              }} />
+                              {opt.label}
                             </button>
                           );
                         })}
@@ -3343,6 +3457,10 @@ if (context.topic) setTopic(context.topic);
                   ['corner_card_br', 'br', 'Bottom right','Card bottom-right · wide 16:9 image (~660×370)'],
                   ['lower_third', 'lt', 'Bottom bar', 'Wide strip across the bottom · very wide banner (~1280×160) — best for a headline or stat'],
                 ];
+            // Vertical (solo): its own positions; the line's choice is shown mapped.
+            const vert = vertical && !multi;
+            const presetsShown = vert ? PRESETS_VERTICAL.map(([id, lbl, tip]) => [id, POSITION_SHAPE[id], lbl, tip]) : presets;
+            const shownPreset = mapPreset(ov.preset, vert ? '9:16' : '16:9');
             return (
               <>
               <div className={styles.glassCard} style={{ height: '100%', display: 'flex', flexDirection: 'column', gap: '0.65rem', overflowY: 'auto', minHeight: 0 }}>
@@ -3360,17 +3478,29 @@ if (context.topic) setTopic(context.topic);
                     ['card','▣','Glass card','A tilted frosted-glass panel beside the speaker — best for charts, stats, or quotes'],
                     ['cutout','✂','Cutout','The image with its background removed, floating free (no card) — best for products or logos'],
                     ['product_in_hand','✋','In hand','The speaker is composed holding the product as they talk — best for a physical item'],
+                    ...(extras.available
+                      ? [['data','▤','Data card','A designed stat or bar chart from the numbers in this line — free, exact, no image needed']]
+                      : []),
                   ].map(([val, ic, lbl, hint]) => {
-                    const isOn = val === 'product_in_hand'
-                      ? ov.mode === 'product_in_hand'
-                      : ov.mode !== 'product_in_hand' && (ov.shape || 'card') === val;
+                    const isOn = val === 'product_in_hand' ? ov.mode === 'product_in_hand'
+                      : val === 'data' ? ov.mode === 'data'
+                      : ov.mode !== 'product_in_hand' && ov.mode !== 'data' && (ov.shape || 'card') === val;
                     return (
                       <button key={val}
                         className={`${styles.overlayType} ${isOn ? styles.overlayTypeOn : ''}`}
                         title={hint}
                         onClick={() => {
+                          if (val === 'data') {
+                            const seeded = ov.mode === 'data' && ov.data;
+                            patchOverlay({ mode: 'data',
+                              preset: ov.mode === 'data' && ov.preset ? ov.preset : (multi ? 'corner_small_tr' : 'side_panel_right'),
+                              data: seeded ? ov.data : { kind: 'stat', number: '', label: '' } });
+                            setTypePopoverOpen(false); setDataOpen(true);
+                            if (!seeded) fillDataCard(overlayLineId);
+                            return;
+                          }
                           if (val === 'product_in_hand') { patchOverlay({ mode: 'product_in_hand', shape: 'card' }); setTypePopoverOpen(false); return; }
-                          patchOverlay({ mode: 'overlay', shape: val, preset: ov.preset || (multi ? 'corner_small_tr' : 'corner_card_tr') });
+                          patchOverlay({ mode: 'overlay', shape: val, preset: ov.preset || (multi ? 'corner_small_tr' : 'corner_card_tr'), data: undefined });
                           setTypePopoverOpen(true);   // open this type's position + look pop-out
                         }}>
                         <span style={{ fontSize: '1.1rem' }}>{ic}</span><br/>{lbl}
@@ -3429,8 +3559,29 @@ if (context.topic) setTopic(context.topic);
 
                 {/* Position + look → summary chip that reopens the pop-out
                     (card & cutout only; in-hand has neither). */}
-                {ov.mode !== 'product_in_hand' && (() => {
-                  const posLabel = (presets.find(p => p[0] === ov.preset) || [])[2] || 'Pick a position';
+                {ov.mode === 'data' && (
+                  <>
+                    <div className={styles.overlaySeg}>Data card</div>
+                    <button type="button"
+                      onClick={() => setDataOpen(true)}
+                      title="Edit the numbers, kind and position"
+                      style={{
+                        display: 'flex', alignItems: 'center', gap: '0.5rem', width: '100%',
+                        background: 'rgba(99,102,241,0.10)', border: '1px solid rgba(99,102,241,0.28)',
+                        borderRadius: 10, padding: '0.55rem 0.7rem', color: 'var(--text-primary, #F1F5F9)',
+                        fontFamily: 'inherit', fontSize: '0.8rem', cursor: 'pointer', textAlign: 'left',
+                      }}>
+                      <span style={{ opacity: 0.85 }}>▤</span>
+                      <span style={{ flex: 1, minWidth: 0, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                        <b>{ov.data?.kind === 'chart' ? 'Chart' : 'Stat'}</b>
+                        {dataCardReady(ov.data) ? ` · ${dataCardSummary(ov.data)}` : ' · add the numbers'}
+                      </span>
+                      <span style={{ marginLeft: 'auto', color: 'var(--accent-primary, #818CF8)', fontSize: '0.72rem' }}>edit ▸</span>
+                    </button>
+                  </>
+                )}
+                {ov.mode !== 'product_in_hand' && ov.mode !== 'data' && (() => {
+                  const posLabel = (presetsShown.find(p => p[0] === shownPreset) || [])[2] || 'Pick a position';
                   const recId = currentRecipe(ov.style);
                   const recLabel = (RECIPE_OPTIONS.find(r => r.id === recId) || {}).label || 'Episode default';
                   return (
@@ -3453,11 +3604,12 @@ if (context.topic) setTopic(context.topic);
                   );
                 })()}
 
-                {/* Image */}
+                {/* Image (not for data cards — they're drawn, not pictured) */}
+                {ov.mode !== 'data' && (<>
                 <div className={styles.overlaySeg}>Image
                   {ov.mode !== 'product_in_hand' && ov.preset && (
                     <span style={{ fontWeight: 400, color: 'var(--text-muted)' }}>
-                      {' · '}{IMAGE_SIZE_HINT[POSITION_SHAPE[ov.preset]] || ''}
+                      {' · '}{(vert ? IMAGE_HINT_VERTICAL[shownPreset] : IMAGE_SIZE_HINT[POSITION_SHAPE[ov.preset]]) || ''}
                     </span>
                   )}
                 </div>
@@ -3508,19 +3660,38 @@ if (context.topic) setTopic(context.topic);
                         {ov.mode === 'product_in_hand'
                           ? 'Composed into the shot — the avatar will hold it'
                           : ov.preset
-                            ? `Sized to fill ${(POSITION_SHAPE[ov.preset] || '').startsWith('panel') ? 'the tall panel' : (POSITION_SHAPE[ov.preset] || '').startsWith('bar') ? 'the wide bar' : 'the 16:9 card'} · free`
+                            ? `Sized to fill ${vert ? (shownPreset === 'top_card' ? 'the top card' : shownPreset === 'lower_third' ? 'the lower band' : 'the 16:9 card') : (POSITION_SHAPE[ov.preset] || '').startsWith('panel') ? 'the tall panel' : (POSITION_SHAPE[ov.preset] || '').startsWith('bar') ? 'the wide bar' : 'the 16:9 card'} · free`
                             : 'Pick a position first to match the shape'}
                       </div>
                     </div>
                   </>
                 )}
 
+                </>)}
+
                 {/* Remove */}
                 <button className={styles.overlayRemove} onClick={() => clearOverlay(overlayLineId)}>Remove visual from this line</button>
               </div>
 
               {/* Per-type options pop-out (position + look) for card / cutout */}
-              {typePopoverOpen && ov.mode !== 'product_in_hand' && (
+              {/* Data card pop-out (portal) */}
+              {dataOpen && ov.mode === 'data' && (
+                <DataCardPopover
+                  ov={vert ? { ...ov, preset: shownPreset } : ov}
+                  multi={multi}
+                  vertical={vert}
+                  backdropUrl={speakers.find(s => s.speakerId === 'user')?.avatarRefUrl || selectedEnv?.previewUrl || null}
+                  lineText={oLine?.text || ''}
+                  filling={dataFilling}
+                  fillNote={dataFillNote}
+                  onPatch={(patch) => { patchOverlay(patch); setDataFillNote(null); }}
+                  onFill={() => fillDataCard(overlayLineId, ov.data?.kind)}
+                  onRemove={() => { setDataOpen(false); clearOverlay(overlayLineId); }}
+                  onClose={() => setDataOpen(false)}
+                />
+              )}
+
+              {typePopoverOpen && ov.mode !== 'product_in_hand' && ov.mode !== 'data' && (
                 <div
                   onMouseDown={(e) => { if (e.target === e.currentTarget) setTypePopoverOpen(false); }}
                   style={{
@@ -3531,8 +3702,9 @@ if (context.topic) setTopic(context.topic);
                   <div style={{ width: 'min(720px, 94vw)', maxHeight: '88vh', overflow: 'auto' }}>
                     <OverlayTypePopover
                       type={ov.shape === 'cutout' ? 'cutout' : 'card'}
-                      ov={ov}
+                      ov={vert ? { ...ov, preset: shownPreset } : ov}
                       multi={multi}
+                      vertical={vert}
                       onPatch={patchOverlay}
                       onClose={() => setTypePopoverOpen(false)}
                       onOpenCompare={() => { setTypePopoverOpen(false); setCompareOpen(true); }}
@@ -3678,6 +3850,42 @@ if (context.topic) setTopic(context.topic);
                     </button>
                   </div>
                 )}
+
+                {/* Captions — always on; this only picks the look (episode-wide). */}
+                {extras.available && (
+                  <div>
+                    <div style={{
+                      fontSize: '0.65rem', fontWeight: 700, letterSpacing: '0.1em',
+                      textTransform: 'uppercase', color: '#6366f1',
+                      fontFamily: 'Inter,sans-serif', marginBottom: '0.35rem',
+                    }}>
+                      Captions · Episode
+                    </div>
+                    <button
+                      type="button"
+                      onClick={() => setCaptionOpen(true)}
+                      title="Pick how your captions look"
+                      style={{
+                        display: 'flex', alignItems: 'center', gap: '0.5rem', width: '100%',
+                        textAlign: 'left', cursor: 'pointer',
+                        background: 'rgba(15,23,42,0.8)',
+                        border: captionStyle !== 'glass' ? '1px solid rgba(99,102,241,0.45)' : '1px solid rgba(99,102,241,0.22)',
+                        borderRadius: 12, padding: '0.5rem 0.7rem', fontFamily: 'Inter,sans-serif',
+                      }}
+                    >
+                      <span aria-hidden="true" style={{ fontWeight: 800, color: '#818CF8', fontSize: '0.72rem' }}>Aa</span>
+                      <span style={{ flex: 1, minWidth: 0, fontSize: '0.64rem', color: '#94a3b8' }}>
+                        Caption style
+                        <span style={{ color: captionStyle !== 'glass' ? '#A5B4FC' : '#e0e7ff', fontWeight: 600 }}>
+                          {'  '}{(CAPTION_STYLES.find(s => s.id === captionStyle) || CAPTION_STYLES[0]).name}
+                        </span>
+                      </span>
+                      <span style={{ flexShrink: 0, fontSize: '0.64rem', fontWeight: 600, color: '#818CF8', whiteSpace: 'nowrap' }}>
+                        Change
+                      </span>
+                    </button>
+                  </div>
+                )}
               </div>
             </div>
           )}
@@ -3711,11 +3919,22 @@ if (context.topic) setTopic(context.topic);
                 .filter(l => (l.text || '').trim() || l.audioUrl)
                 .map((l, idx) => ({
                   id: l.id, n: idx + 1, text: (l.text || '').trim(),
-                  hasCard: !!(l.overlay && l.overlay.imageUrl && l.overlay.mode !== 'product_in_hand'),
+                  hasCard: !!(l.overlay && ((l.overlay.mode === 'data' && dataCardReady(l.overlay.data))
+                                           || (l.overlay.imageUrl && l.overlay.mode !== 'product_in_hand'))),
                 }))}
               choiceFor={(id) => lines.find(l => l.id === id)?.sfx || 'auto'}
               onChoice={(id, v) => dispatchLines({ type: 'UPDATE', id, patch: { sfx: v === 'auto' ? undefined : v } })}
               onClose={() => setSoundOpen(false)}
+            />
+          )}
+
+          {/* Caption style pop-out (position:fixed) */}
+          {captionOpen && (
+            <CaptionPopover
+              value={captionStyle}
+              backdropUrl={speakers.find(s => s.speakerId === 'user')?.avatarRefUrl || selectedEnv?.previewUrl || null}
+              onChange={setCaptionStyle}
+              onClose={() => setCaptionOpen(false)}
             />
           )}
 

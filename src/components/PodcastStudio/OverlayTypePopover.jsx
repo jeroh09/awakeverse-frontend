@@ -10,10 +10,14 @@
 // Controlled: reads the current line's `overlay` (ov) and calls onPatch(patch)
 // exactly like the inline editor did. The look lives on ov.style (see
 // overlayStyle.js). Position lives on ov.preset.
+// vertical (2026-10-18): a 9:16 solo episode — the picker shows a tall frame with
+// the vertical positions (podcastFormat.js); the caller passes ov.preset already
+// mapped to that shape.
 
 import React, { useState } from 'react';
 import styles from './OverlayTypePopover.module.css';
 import HostAvatar from './HostAvatar';
+import { PRESETS_VERTICAL, PRESET_RECT_VERTICAL } from './podcastFormat';
 import {
   RECIPE_OPTIONS, RECIPE_INHERIT, KNOB_TIPS, MATERIAL_OPTIONS,
   resolveStyle, currentRecipe, currentMaterial, withRecipe, withKnob, withMaterial,
@@ -26,6 +30,10 @@ const POSITION_SHAPE = {
   corner_small_tl: 'tl', corner_small_tr: 'tr', corner_small_bl: 'bl', corner_small_br: 'br',
   lower_third: 'bar', lower_third_small_left: 'bar-l', lower_third_small_right: 'bar-r',
 };
+// vertical frame: the real card rects (% of the 9:16 frame)
+const pct = ([l, t, w, h]) => ({ left: `${l}%`, top: `${t}%`, width: `${w}%`, height: `${h}%` });
+const ZONE_BOX_VERTICAL = Object.fromEntries(
+  Object.entries(PRESET_RECT_VERTICAL).map(([id, r]) => [id, pct(r)]));
 const ZONE_BOX = {
   'panel-l': { left: '3%', top: '9%', width: '20%', height: '82%' },
   'panel-r': { right: '3%', top: '9%', width: '20%', height: '82%' },
@@ -62,12 +70,14 @@ const HEAD = {
   compare:['⚖️', 'Compare', 'A vs B rails · rail look'],
 };
 
-function Frame({ posList, activePreset, onPick, children }) {
+function Frame({ posList, activePreset, onPick, vertical = false, children }) {
   return (
-    <div className={styles.frame}>
-      <div className={styles.host}><HostAvatar size="82%" /></div>
+    <div className={styles.frame}
+         style={vertical ? { aspectRatio: '9 / 16', width: 'min(100%, 230px)', margin: '0 auto' } : undefined}>
+      <div className={styles.host}
+           style={vertical ? { left: '15%', width: '70%', height: '62%' } : undefined}><HostAvatar size="82%" /></div>
       {posList.map(([id, label, tip]) => {
-        const box = ZONE_BOX[POSITION_SHAPE[id]] || {};
+        const box = (vertical ? ZONE_BOX_VERTICAL[id] : ZONE_BOX[POSITION_SHAPE[id]]) || {};
         const on = activePreset === id;
         return (
           <button
@@ -91,6 +101,7 @@ export default function OverlayTypePopover({
   type = 'card',
   ov = {},
   multi = false,
+  vertical = false,
   onPatch,
   onOpenCompare,
   onClose,
@@ -113,7 +124,7 @@ export default function OverlayTypePopover({
   const setMaterial = (m) => onPatch?.({ style: withMaterial(styleObj, m) });
 
   const [ic, title, sub] = HEAD[type] || HEAD.card;
-  const posList = multi ? PRESETS_MULTI : PRESETS_SINGLE;
+  const posList = vertical && !multi ? PRESETS_VERTICAL : multi ? PRESETS_MULTI : PRESETS_SINGLE;
   const showPill = type === 'card' || type === 'compare';
 
   // ── small render helpers ────────────────────────────────────────────────
@@ -193,7 +204,7 @@ export default function OverlayTypePopover({
         <div className={styles.body}>
           <div className={styles.col}>
             <div className={styles.grp}>Position — click where it lands</div>
-            <Frame posList={posList} activePreset={ov.preset} onPick={setPreset} />
+            <Frame posList={posList} activePreset={ov.preset} onPick={setPreset} vertical={vertical && !multi} />
           </div>
           <div className={styles.col}>
             <FineTune label="Fine-tune glass">
@@ -221,7 +232,7 @@ export default function OverlayTypePopover({
       <div className={styles.body}>
         <div className={styles.col}>
           <div className={styles.grp}>Position — click where it lands</div>
-          <Frame posList={posList} activePreset={ov.preset} onPick={setPreset} />
+          <Frame posList={posList} activePreset={ov.preset} onPick={setPreset} vertical={vertical && !multi} />
           <p className={styles.hint}>Cutouts float free — no card, no glass recipe.</p>
         </div>
         <div className={styles.col}>
