@@ -1910,6 +1910,9 @@ if (context.topic) setTopic(context.topic);
 
   // ── Shared env (selected env object) ─────────────────────────────────────
   const selectedEnv = environments.find(e => e.envId === selectedEnvId);
+  // The still every pop-out previews over: your host in your studio once the avatar
+  // is built, else the studio's own preview. One place, passed to all six pop-outs.
+  const previewBackdrop = speakers.find(s => s.speakerId === 'user')?.avatarRefUrl || selectedEnv?.previewUrl || null;
 
   // ══════════════════════════════════════════════════════════════════════════
   // RENDER
@@ -3700,7 +3703,7 @@ if (context.topic) setTopic(context.topic);
                   ov={vert ? { ...ov, preset: shownPreset } : ov}
                   multi={multi}
                   vertical={vert}
-                  backdropUrl={speakers.find(s => s.speakerId === 'user')?.avatarRefUrl || selectedEnv?.previewUrl || null}
+                  backdropUrl={previewBackdrop}
                   lineText={oLine?.text || ''}
                   filling={dataFilling}
                   fillNote={dataFillNote}
@@ -3726,6 +3729,7 @@ if (context.topic) setTopic(context.topic);
                       multi={multi}
                       vertical={vert}
                       onPatch={patchOverlay}
+                      backdropUrl={previewBackdrop}
                       onClose={() => setTypePopoverOpen(false)}
                       onOpenCompare={() => { setTypePopoverOpen(false); setCompareOpen(true); }}
                     />
@@ -3839,7 +3843,7 @@ if (context.topic) setTopic(context.topic);
               suggestion={hookSuggestion}
               suggesting={hookSuggesting}
               comparison={compareNames}
-              backdropUrl={speakers.find(s => s.speakerId === 'user')?.avatarRefUrl || selectedEnv?.previewUrl || null}
+              backdropUrl={previewBackdrop}
               onChange={(next) => { setHookDraft(next); setHookTouched(true); }}
               onToggle={(on) => { setHookOn(on); if (on) setHookDismissed(false); }}
               onSuggest={() => runHookSuggest({ adopt: true })}
@@ -3873,7 +3877,7 @@ if (context.topic) setTopic(context.topic);
           {captionOpen && (
             <CaptionPopover
               value={captionStyle}
-              backdropUrl={speakers.find(s => s.speakerId === 'user')?.avatarRefUrl || selectedEnv?.previewUrl || null}
+              backdropUrl={previewBackdrop}
               onChange={setCaptionStyle}
               onClose={() => setCaptionOpen(false)}
             />
@@ -3937,6 +3941,7 @@ if (context.topic) setTopic(context.topic);
             railStyle={compareStyle}
             setRailStyle={setCompareStyle}
             uploadInsert={uploadInsert}
+            backdropUrl={previewBackdrop}
           />
 
           {/* GENERATE TAB → Voice confirmation panel */}

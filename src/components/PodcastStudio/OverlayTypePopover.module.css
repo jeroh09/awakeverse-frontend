@@ -126,3 +126,51 @@
 .primary { background: linear-gradient(180deg, var(--indigo-light), var(--indigo)); color: #fff; }
 
 @media (prefers-reduced-motion: reduce) { .pop * { transition: none !important; } }
+/* ═══ Real preview (2026-10-18) — your host-in-studio still behind the picker ═══ */
+.bg { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; display: block; }
+.layer { position: absolute; inset: 0; container-type: size; pointer-events: none; z-index: 1; }
+
+/* a pin at the centre of each real card position */
+.pin { position: absolute; z-index: 3; width: 18px; height: 18px; padding: 0; transform: translate(-50%, -50%);
+  border-radius: 50%; border: 2px solid rgba(255,255,255,0.88); background: rgba(10,15,34,0.55);
+  box-shadow: 0 2px 8px rgba(0,0,0,0.5); cursor: pointer; transition: transform 0.12s, background 0.12s; }
+.pin:hover, .pin:focus-visible { transform: translate(-50%, -50%) scale(1.18); background: rgba(99,102,241,0.75); outline: none; }
+.pinOn { background: rgba(99,102,241,0.28); border-color: #C7D2FE; box-shadow: 0 0 0 3px rgba(99,102,241,0.45), 0 2px 8px rgba(0,0,0,0.4); }  /* see-through: the card under it stays visible */
+/* the hovered position's true footprint */
+.footprint { position: absolute; z-index: 2; pointer-events: none; border: 2px dashed rgba(255,255,255,0.8);
+  border-radius: 8px; background: rgba(255,255,255,0.06); }
+.posCap { margin: 7px 0 0; font-size: 0.66rem; color: var(--sub); line-height: 1.4; }
+.posCap b { color: var(--paper); font-weight: 600; }
+.posCap em { font-style: normal; color: var(--indigo-light); }
+
+/* live glass card (styled inline from ov.style; these are the fixed parts) */
+.glass { position: absolute; overflow: hidden; border-radius: 1.2cqw;
+  transition: left 0.22s, top 0.22s, width 0.22s, height 0.22s, transform 0.22s, background 0.15s; }
+.glassWarm { position: absolute; inset: 0; background: linear-gradient(160deg, rgba(255,186,120,0.35), rgba(255,186,120,0.1)); }
+.glassSheen { position: absolute; inset: 0; pointer-events: none;
+  background: linear-gradient(120deg, transparent 34%, rgba(255,255,255,0.26) 46%, transparent 60%); }
+.glassIn { position: absolute; display: flex; }
+.glassIn img { width: 100%; height: 100%; border-radius: 0.6cqw; display: block; }
+.sample { flex: 1; display: flex; flex-direction: column; justify-content: flex-end; gap: 6%; padding: 7%; min-width: 0; }
+.sampleWide { flex-direction: row; align-items: center; }
+.sampleT { font: 600 max(6px, 1.25cqw) var(--body); letter-spacing: 0.08em; text-transform: uppercase; opacity: 0.85; white-space: nowrap; }
+.sampleBars { flex: 1; display: flex; align-items: flex-end; gap: 7%; min-height: 0; }
+.sampleWide .sampleBars { height: 80%; }
+.sampleBars i { flex: 1; border-radius: 0.4cqw 0.4cqw 0.15cqw 0.15cqw; background: rgba(245,245,220,0.36); }
+.sampleBars i.sampleHl { background: linear-gradient(180deg, #A5B4FC, var(--indigo)); box-shadow: 0 0 1cqw rgba(99,102,241,0.6); }
+
+/* live cutout: the object floats free, with its contact shadow */
+.cut { position: absolute; transition: left 0.22s, top 0.22s, width 0.22s, height 0.22s; }
+.cutObj { position: absolute; left: 50%; top: 4%; height: 80%; width: 80%; display: flex; align-items: flex-end; justify-content: center;
+  transform-origin: 50% 90%; transition: transform 0.2s; }
+.cutObj img { max-width: 100%; max-height: 100%; object-fit: contain; filter: drop-shadow(0 1cqw 1.4cqw rgba(0,0,0,0.45)); }
+.cutSample { height: 100%; aspect-ratio: 0.46; border-radius: 1.3cqw 1.3cqw 1cqw 1cqw; position: relative;
+  background: linear-gradient(100deg, #0f172a 0%, #334155 30%, #1e293b 55%, #0b1120 100%);
+  box-shadow: inset 0 0 0 0.25cqw #475569, 0 1.4cqw 2.4cqw rgba(0,0,0,0.45); }
+.cutSample::before { content: ''; position: absolute; left: 12%; right: 12%; top: 8%; bottom: 20%; border-radius: 0.6cqw;
+  background: linear-gradient(160deg, var(--indigo-light), #312e81 70%); }
+.cutShadow { position: absolute; left: 50%; bottom: 2%; width: 56%; height: 9%; transform: translateX(-50%); border-radius: 50%;
+  background: radial-gradient(closest-side, rgba(0,0,0,0.55), transparent); }
+
+@media (prefers-reduced-motion: reduce) { .pin, .glass, .cut, .cutObj { transition: none; } }
+.sampleLight .sampleBars i { background: rgba(15,23,42,0.22); }

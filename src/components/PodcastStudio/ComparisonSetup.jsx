@@ -129,8 +129,12 @@ export default function ComparisonSetup({
   points, setPoints,
   railStyle = null, setRailStyle = () => {},
   uploadInsert,
+  backdropUrl = null,          // host-in-studio still (same as Data card / Hook / Caption)
 }) {
   const [reveal, setReveal]       = useState(points.length);
+  const [bgFailed, setBgFailed]   = useState(false);
+  useEffect(() => { setBgFailed(false); }, [backdropUrl]);
+  const bg = backdropUrl && !bgFailed ? backdropUrl : null;
   const [uploading, setUploading] = useState(null);
   const dialogRef = useRef(null);
   const restoreRef = useRef(null);
@@ -196,10 +200,14 @@ export default function ComparisonSetup({
           <div className={styles.preview}>
             <div className={styles.cap}>Live preview - how it looks on screen</div>
             <div className={styles.stage}>
-              <div className={styles.host}>
-                <HostAvatar className={styles.avatar} />
-                <div className={styles.hl}>HOST VIDEO</div>
-              </div>
+              {bg ? (
+                <img className={styles.bg} src={bg} alt="" onError={() => setBgFailed(true)} />
+              ) : (
+                <div className={styles.host}>
+                  <HostAvatar className={styles.avatar} />
+                  <div className={styles.hl}>HOST VIDEO</div>
+                </div>
+              )}
               <Rail s={left}  side="left"  tag="OPTION A" points={points} reveal={reveal} look={railLook(railStyle)} />
               <Rail s={right} side="right" tag="OPTION B" points={points} reveal={reveal} look={railLook(railStyle)} />
               <div className={styles.vs} aria-hidden="true">VS</div>

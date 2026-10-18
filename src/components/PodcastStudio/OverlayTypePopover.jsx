@@ -13,12 +13,20 @@
 // vertical (2026-10-18): a 9:16 solo episode — the picker shows a tall frame with
 // the vertical positions (podcastFormat.js); the caller passes ov.preset already
 // mapped to that shape.
+// Real preview (2026-10-18): given `backdropUrl` (your host in your studio — the
+// same still the Data card / Hook / Caption pop-outs use), the frame shows that
+// image with a pin at the centre of each REAL card position (the real rects
+// overlap, so full boxes would block each other; hovering a pin outlines the
+// true footprint). Card type shows a live glass card styled from ov.style; cutout
+// shows the line's image (or a sample) floating with its contact shadow. With no
+// image yet it falls back to the HostAvatar picker exactly as before.
 
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import styles from './OverlayTypePopover.module.css';
 import HostAvatar from './HostAvatar';
 import { IconGlassCard, IconCutout, IconInHand, IconCompare, IconChevronDown, IconClose } from './StudioIcons';
 import { PRESETS_VERTICAL, PRESET_RECT_VERTICAL } from './podcastFormat';
+import { PRESET_RECT } from './DataCardPopover';
 import {
   RECIPE_OPTIONS, RECIPE_INHERIT, KNOB_TIPS, MATERIAL_OPTIONS,
   resolveStyle, currentRecipe, currentMaterial, withRecipe, withKnob, withMaterial,
@@ -72,28 +80,158 @@ const HEAD = {
   compare:[<IconCompare size={20} style={HEAD_IC} />, 'Compare', 'A vs B rails · rail look'],
 };
 
-function Frame({ posList, activePreset, onPick, vertical = false, children }) {
+// ── live previews over the real still ───────────────────────────────────────
+// Sizes are in cqw of the frame (the .layer is a size container), so the preview
+// keeps the video's proportions at any width: 1280px of video ≈ 100cqw.
+const PX = 100 / 1280;
+
+function GlassPreview({ rect, view, imageUrl, frameRatio }) {
+  const [l, t, w, h] = rect;
+  const a = Math.max(0, Math.min(255, Number(view.glass_tint_alpha ?? 150))) / 255;
+  const liquid = view.material === 'liquid_glass';
+  const solid = !view.backdrop_blur && !view.glass_frame;            // "Sticker"
+  const blur = view.backdrop_blur ? Number(view.blur_sigma ?? 18) * PX : 0;
+  const wide = (w / h) * frameRatio > 2.2;
+  const right = l + w / 2 > 50;
+  const deg = view.tilt && !wide ? Number(view.tilt_strength ?? 0.1) * 80 : 0;
+  const background = solid
+    ? (liquid ? 'rgba(232,236,248,0.96)' : 'rgba(18,24,44,0.97)')
+    : liquid
+      ? `linear-gradient(180deg, rgba(255,255,255,${(a * 0.42).toFixed(3)}), rgba(255,255,255,${(a * 0.16).toFixed(3)})), rgba(12,16,30,0.10)`
+      : `linear-gradient(180deg, rgba(255,255,255,0.12), rgba(255,255,255,0.03)), rgba(14,18,36,${(a * 0.8).toFixed(3)})`;
+  const shadows = ['inset 0 0 0 1px rgba(255,255,255,0.26)'];
+  if (view.rim) shadows.push('inset 0 1px 0 rgba(255,255,255,0.55)', 'inset 0 -1.4cqw 1.8cqw -1.4cqw rgba(0,0,0,0.4)');
+  shadows.push(view.two_layer_shadow
+    ? '0 0.25cqw 0.5cqw rgba(0,0,0,0.45), 0 2.2cqw 4cqw -1.6cqw rgba(0,0,0,0.65)'
+    : '0 0.8cqw 1.8cqw rgba(0,0,0,0.3)');
+  const filter = blur ? `blur(${blur.toFixed(2)}cqw) saturate(1.15)` : 'none';
+  const warm = Number(view.warm_tint_alpha || 0) / 255;
+  const inset = view.glass_frame ? '7%' : '0';
+  const ink = solid && liquid ? '#0f172a' : '#F8FAFC';
   return (
-    <div className={styles.frame}
-         style={vertical ? { aspectRatio: '9 / 16', width: 'min(100%, 230px)', margin: '0 auto' } : undefined}>
-      <div className={styles.host}
-           style={vertical ? { left: '15%', width: '70%', height: '62%' } : undefined}><HostAvatar size="82%" /></div>
-      {posList.map(([id, label, tip]) => {
-        const box = (vertical ? ZONE_BOX_VERTICAL[id] : ZONE_BOX[POSITION_SHAPE[id]]) || {};
-        const on = activePreset === id;
-        return (
-          <button
-            key={id}
-            type="button"
-            className={`${styles.zone} ${on ? styles.zoneOn : ''} ${styles.tip}`}
-            style={box}
-            data-tip={tip}
-            aria-label={label}
-            aria-pressed={on}
-            onClick={() => onPick(id)}
-          />
-        );
-      })}
+    <div className={styles.glass} style={{
+      left: `${l}%`, top: `${t}%`, width: `${w}%`, height: `${h}%`, background,
+      backdropFilter: filter, WebkitBackdropFilter: filter, boxShadow: shadows.join(', '),
+      transform: `perspective(60cqw) rotateY(${right ? -deg : deg}deg)`,
+      transformOrigin: right ? 'right center' : 'left center',
+    }}>
+      {warm > 0 ? <span className={styles.glassWarm} style={{ opacity: Math.min(1, warm * 2.2) }} /> : null}
+      <div className={styles.glassIn} style={{ inset, color: ink }}>
+        {imageUrl ? (
+          <img src={imageUrl} alt="" style={{ objectFit: view.glass_content_fit === 'cover' ? 'cover' : 'contain' }} />
+        ) : (
+          <div className={`${styles.sample} ${wide ? styles.sampleWide : ''} ${solid && liquid ? styles.sampleLight : ''}`}>
+            <span className={styles.sampleT}>Your chart</span>
+            <span className={styles.sampleBars}><i style={{ height: '38%' }} /><i style={{ height: '58%' }} /><i style={{ height: '46%' }} /><i className={styles.sampleHl} style={{ height: '92%' }} /></span>
+          </div>
+        )}
+      </div>
+      {view.sheen ? <span className={styles.glassSheen} /> : null}
+    </div>
+  );
+}
+
+function CutoutPreview({ rect, view, imageUrl }) {
+  const [l, t, w, h] = rect;
+  const deg = view.tilt ? -Number(view.tilt_strength ?? 0.1) * 60 : 0;
+  return (
+    <div className={styles.cut} style={{ left: `${l}%`, top: `${t}%`, width: `${w}%`, height: `${h}%` }}>
+      {view.two_layer_shadow ? <span className={styles.cutShadow} /> : null}
+      <div className={styles.cutObj} style={{ transform: `translateX(-50%) rotate(${deg}deg)` }}>
+        {imageUrl ? <img src={imageUrl} alt="" /> : <span className={styles.cutSample} />}
+      </div>
+    </div>
+  );
+}
+
+// The still behind every frame (or null when there isn't one / it failed to load).
+function useBackdrop(url) {
+  const [ok, setOk] = useState(true);
+  useEffect(() => { setOk(true); }, [url]);
+  return [url && ok ? url : null, () => setOk(false)];
+}
+
+function Frame({ posList, activePreset, onPick, vertical = false, backdropUrl = null, renderPreview, children }) {
+  const [bg, onBgError] = useBackdrop(backdropUrl);
+  const [hoverId, setHoverId] = useState(null);
+  const rectFor = (id) => (vertical ? PRESET_RECT_VERTICAL[id] : PRESET_RECT[id]) || null;
+  const showId = hoverId || activePreset;
+  const shown = posList.find(([id]) => id === showId);
+  const previewRect = showId ? rectFor(showId) : null;
+  const footRect = hoverId ? rectFor(hoverId) : null;
+  return (
+    <>
+      <div className={styles.frame}
+           style={vertical ? { aspectRatio: '9 / 16', width: 'min(100%, 230px)', margin: '0 auto' } : undefined}>
+        {bg ? (
+          <>
+            <img className={styles.bg} src={bg} alt="" onError={onBgError} />
+            <div className={styles.layer}>
+              {previewRect && renderPreview ? renderPreview(previewRect) : null}
+            </div>
+            {footRect ? <span className={styles.footprint} style={pct(footRect)} /> : null}
+            {posList.map(([id, label]) => {
+              const r = rectFor(id);
+              if (!r) return null;
+              const on = activePreset === id;
+              return (
+                <button
+                  key={id}
+                  type="button"
+                  className={`${styles.pin} ${on ? styles.pinOn : ''}`}
+                  style={{ left: `${r[0] + r[2] / 2}%`, top: `${r[1] + r[3] / 2}%` }}
+                  aria-label={label}
+                  aria-pressed={on}
+                  onClick={() => onPick(id)}
+                  onMouseEnter={() => setHoverId(id)}
+                  onMouseLeave={() => setHoverId(null)}
+                  onFocus={() => setHoverId(id)}
+                  onBlur={() => setHoverId(null)}
+                />
+              );
+            })}
+          </>
+        ) : (
+          <>
+            <div className={styles.host}
+                 style={vertical ? { left: '15%', width: '70%', height: '62%' } : undefined}><HostAvatar size="82%" /></div>
+            {posList.map(([id, label, tip]) => {
+              const box = (vertical ? ZONE_BOX_VERTICAL[id] : ZONE_BOX[POSITION_SHAPE[id]]) || {};
+              const on = activePreset === id;
+              return (
+                <button
+                  key={id}
+                  type="button"
+                  className={`${styles.zone} ${on ? styles.zoneOn : ''} ${styles.tip}`}
+                  style={box}
+                  data-tip={tip}
+                  aria-label={label}
+                  aria-pressed={on}
+                  onClick={() => onPick(id)}
+                />
+              );
+            })}
+          </>
+        )}
+        {children}
+      </div>
+      {bg && shown ? (
+        <p className={styles.posCap}>
+          <b>{shown[1]}</b>{shown[2] ? ` · ${shown[2]}` : ''}
+          {hoverId && hoverId !== activePreset ? <em> — click to move here</em> : null}
+        </p>
+      ) : null}
+    </>
+  );
+}
+
+// A plain still (in-hand / compare frames — no position choice).
+function Still({ backdropUrl, children }) {
+  const [bg, onBgError] = useBackdrop(backdropUrl);
+  return (
+    <div className={styles.frame}>
+      {bg ? <img className={styles.bg} src={bg} alt="" onError={onBgError} />
+          : <div className={styles.host}><HostAvatar size="82%" /></div>}
       {children}
     </div>
   );
@@ -112,6 +250,7 @@ export default function OverlayTypePopover({
   itemPrompt = '',
   setItemPrompt,
   itemBusy = false,
+  backdropUrl = null,          // host-in-studio still (same as Data card / Hook / Caption)
 }) {
   const [ftOpen, setFtOpen] = useState(false);
 
@@ -127,7 +266,7 @@ export default function OverlayTypePopover({
 
   const [ic, title, sub] = HEAD[type] || HEAD.card;
   const posList = vertical && !multi ? PRESETS_VERTICAL : multi ? PRESETS_MULTI : PRESETS_SINGLE;
-  const showPill = type === 'card' || type === 'compare';
+  const frameRatio = vertical && !multi ? 9 / 16 : 16 / 9;
 
   // ── small render helpers ────────────────────────────────────────────────
   const Q = ({ k }) => <span className={`${styles.qmark} ${styles.tip}`} data-tip={KNOB_TIPS[k]}>?</span>;
@@ -208,7 +347,9 @@ export default function OverlayTypePopover({
         <div className={styles.body}>
           <div className={styles.col}>
             <div className={styles.grp}>Position — click where it lands</div>
-            <Frame posList={posList} activePreset={ov.preset} onPick={setPreset} vertical={vertical && !multi} />
+            <Frame posList={posList} activePreset={ov.preset} onPick={setPreset} vertical={vertical && !multi}
+                   backdropUrl={backdropUrl}
+                   renderPreview={(rect) => <GlassPreview rect={rect} view={view} imageUrl={ov.imageUrl} frameRatio={frameRatio} />} />
           </div>
           <div className={styles.col}>
             <FineTune label="Fine-tune glass">
@@ -236,7 +377,9 @@ export default function OverlayTypePopover({
       <div className={styles.body}>
         <div className={styles.col}>
           <div className={styles.grp}>Position — click where it lands</div>
-          <Frame posList={posList} activePreset={ov.preset} onPick={setPreset} vertical={vertical && !multi} />
+          <Frame posList={posList} activePreset={ov.preset} onPick={setPreset} vertical={vertical && !multi}
+                 backdropUrl={backdropUrl}
+                 renderPreview={(rect) => <CutoutPreview rect={rect} view={view} imageUrl={ov.imageUrl} />} />
           <p className={styles.hint}>Cutouts float free — no card, no glass recipe.</p>
         </div>
         <div className={styles.col}>
@@ -260,10 +403,9 @@ export default function OverlayTypePopover({
       <div className={styles.body}>
         <div className={styles.col}>
           <div className={styles.grp}>The item to hold</div>
-          <div className={styles.frame}>
-            <div className={styles.host}><HostAvatar size="82%" /></div>
+          <Still backdropUrl={backdropUrl}>
             <div className={`${styles.zone} ${styles.zoneOn}`} style={{ left: '44%', bottom: '20%', width: '16%', height: '20%' }} />
-          </div>
+          </Still>
           <p className={styles.hint}>Placement is automatic — the speaker is composed holding it.</p>
         </div>
         <div className={styles.col}>
@@ -306,11 +448,11 @@ export default function OverlayTypePopover({
         <div className={styles.body}>
           <div className={styles.col}>
             <div className={styles.grp}>A vs B rails</div>
-            <div className={styles.frame}>
+            <Still backdropUrl={backdropUrl}>
               <div className={`${styles.zone} ${styles.zoneOn}`} style={ZONE_BOX['panel-l']} />
               <div className={`${styles.zone} ${styles.zoneOn}`} style={ZONE_BOX['panel-r']} />
               <div className={styles.vsNode}>VS</div>
-            </div>
+            </Still>
             <p className={styles.hint}>Rails are fixed left/right for the whole episode — no position choice.</p>
           </div>
           <div className={styles.col}>

@@ -135,3 +135,6 @@
 .ic { display: inline-flex; color: var(--indigo-light); --si-accent: var(--green-light); }
 .close, .clearLogo, .del { display: inline-grid; place-items: center; padding: 0; }
 .addPt { display: inline-flex; align-items: center; gap: 5px; }
+
+/* real preview (2026-10-18): your host-in-studio still behind the rails */
+.bg { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; display: block; }
