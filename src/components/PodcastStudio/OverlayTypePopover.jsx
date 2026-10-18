@@ -17,6 +17,7 @@
 import React, { useState } from 'react';
 import styles from './OverlayTypePopover.module.css';
 import HostAvatar from './HostAvatar';
+import { IconGlassCard, IconCutout, IconInHand, IconCompare, IconChevronDown, IconClose } from './StudioIcons';
 import { PRESETS_VERTICAL, PRESET_RECT_VERTICAL } from './podcastFormat';
 import {
   RECIPE_OPTIONS, RECIPE_INHERIT, KNOB_TIPS, MATERIAL_OPTIONS,
@@ -63,11 +64,12 @@ const PRESETS_MULTI = [
   ['lower_third_small_right', 'Bottom right bar', 'Short caption strip, lower-right (~700×110)'],
 ];
 
+const HEAD_IC = { color: '#818CF8', '--si-accent': '#A5B4FC' };
 const HEAD = {
-  card:   ['▣', 'Glass card', 'Position · look · fine-tune'],
-  cutout: ['✂', 'Cutout', 'Position · float depth'],
-  inhand: ['✋', 'In hand', 'Just the item to hold'],
-  compare:['⚖️', 'Compare', 'A vs B rails · rail look'],
+  card:   [<IconGlassCard size={20} style={HEAD_IC} />, 'Glass card', 'Position · look · fine-tune'],
+  cutout: [<IconCutout size={20} style={HEAD_IC} />, 'Cutout', 'Position · float depth'],
+  inhand: [<IconInHand size={20} style={HEAD_IC} />, 'In hand', 'Just the item to hold'],
+  compare:[<IconCompare size={20} style={HEAD_IC} />, 'Compare', 'A vs B rails · rail look'],
 };
 
 function Frame({ posList, activePreset, onPick, vertical = false, children }) {
@@ -188,7 +190,9 @@ export default function OverlayTypePopover({
   const FineTune = ({ label, children }) => (
     <div className={styles.finetune}>
       <button type="button" className={styles.ftbtn} onClick={() => setFtOpen((v) => !v)}>
-        {label}<span>{ftOpen ? '▴' : '▾'}</span>
+        {label}<span style={{ display: 'inline-flex' }}>
+          <IconChevronDown size={12} style={{ transform: ftOpen ? 'rotate(180deg)' : 'none', transition: 'transform 0.15s' }} />
+        </span>
       </button>
       <div className={`${styles.ftbody} ${ftOpen ? styles.ftOpen : ''}`}>{children}</div>
     </div>
@@ -310,7 +314,9 @@ export default function OverlayTypePopover({
             <p className={styles.hint}>Rails are fixed left/right for the whole episode — no position choice.</p>
           </div>
           <div className={styles.col}>
-            <button type="button" className={styles.launch} onClick={onOpenCompare}>↔ Open A vs B setup</button>
+            <button type="button" className={styles.launch} onClick={onOpenCompare}>
+              <IconCompare size={15} style={{ marginRight: 6, marginTop: -2 }} />Open A vs B setup
+            </button>
             <FineTune label="Fine-tune rails">
               <Toggle k="backdrop_blur" label="Backdrop blur" />
               <Slider k="blur_sigma" label="Blur" min={0} max={40} fmt={(v) => v} />
@@ -341,7 +347,7 @@ export default function OverlayTypePopover({
       <div className={styles.pophead}>
         <span className={styles.ic}>{ic}</span>
         <div className={styles.t}>{title}<small>{sub}</small></div>
-        <button type="button" className={styles.x} aria-label="Close" onClick={onClose}>✕</button>
+        <button type="button" className={styles.x} aria-label="Close" onClick={onClose}><IconClose size={14} /></button>
       </div>
       {body}
       <div className={styles.foot}>

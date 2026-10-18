@@ -45,9 +45,19 @@ import CitationChips from './CitationChips';
 import HookPopover from './HookPopover';
 import SoundPopover from './SoundPopover';
 import CaptionPopover, { CAPTION_STYLES } from './CaptionPopover';
-import { ASPECTS, mapPreset, PRESETS_VERTICAL, IMAGE_HINT_VERTICAL } from './podcastFormat';
+import { ASPECTS, mapPreset, PRESETS_VERTICAL, IMAGE_HINT_VERTICAL, PRESET_RECT_VERTICAL } from './podcastFormat';
 import { loadExtras, suggestHook, hookSummary, designDataCard } from './podcastExtras';
-import DataCardPopover, { dataCardReady, dataCardPayload, dataCardSummary } from './DataCardPopover';
+import DataCardPopover, { dataCardReady, dataCardPayload, dataCardSummary, PRESET_RECT } from './DataCardPopover';
+import SettingRow, { SettingGroup } from './SettingRow';
+import {
+  IconGlassCard, IconCutout, IconInHand, IconDataCard, IconChart, IconCompare, IconHook,
+  IconSound, IconCaptions, IconOutfit, IconVoice, IconUpload, IconGenerate, IconDetach,
+  IconAiPortrait, IconAiScene, IconRegenerate, IconGrip, IconAddVisual, IconAddLine,
+  IconRecord, IconDeleteLine, IconRecorded, IconImportChat, IconAiWrite, IconLines,
+  IconSources, IconPodMic, IconConversation, IconEpisode, IconPerson, IconBin,
+  IconDownload, IconAlert, IconCheck, IconClose, IconPlus, IconChevronLeft,
+  IconChevronRight, IconChevronDown, IconArrowRight, IconPlay, IconStop, IconLoader,
+} from './StudioIcons';
 
 // ── Constants ────────────────────────────────────────────────────────────────
 const TABS        = ['avatar', 'script', 'generate', 'podcasts', 'guide'];
@@ -98,100 +108,39 @@ const BUILD_STAGES = [
   { key: 'done',       label: 'Avatar ready'               },
 ];
 
-// ── SVG Icons ────────────────────────────────────────────────────────────────
+// ── Icons ─────────────────────────────────────────────────────────────────────
+// The studio's own icon set lives in StudioIcons.jsx (2026-10-18). `Ic` keeps
+// the old call sites working at their old sizes.
 const Ic = {
-  Drag: () => (
-    <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8">
-      <circle cx="9"  cy="5"  r="1.2" fill="currentColor" stroke="none"/>
-      <circle cx="9"  cy="12" r="1.2" fill="currentColor" stroke="none"/>
-      <circle cx="9"  cy="19" r="1.2" fill="currentColor" stroke="none"/>
-      <circle cx="15" cy="5"  r="1.2" fill="currentColor" stroke="none"/>
-      <circle cx="15" cy="12" r="1.2" fill="currentColor" stroke="none"/>
-      <circle cx="15" cy="19" r="1.2" fill="currentColor" stroke="none"/>
-    </svg>
-  ),
-  Upload: () => (
-    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#6366F1" strokeWidth="1.8">
-      <path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4" strokeLinecap="round"/>
-      <polyline points="17 8 12 3 7 8"/>
-      <line x1="12" y1="3" x2="12" y2="15" strokeLinecap="round"/>
-    </svg>
-  ),
-  Check: () => (
-    <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
-      <polyline points="20 6 9 17 4 12"/>
-    </svg>
-  ),
-  Spin: () => (
-    <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2">
-      <polyline points="23 4 23 10 17 10"/>
-      <path d="M20.49 15a9 9 0 11-2.12-9.36L23 10"/>
-    </svg>
-  ),
-  Play: () => (
-    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8">
-      <polygon points="5 3 19 12 5 21 5 3"/>
-    </svg>
-  ),
-  Trash: () => (
-    <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8">
-      <polyline points="3 6 5 6 21 6"/>
-      <path d="M19 6l-1 14H6L5 6"/><path d="M10 11v6M14 11v6"/>
-    </svg>
-  ),
-  Record: () => (
-    <svg width="13" height="13" viewBox="0 0 24 24" fill="currentColor">
-      <circle cx="12" cy="12" r="5"/>
-    </svg>
-  ),
-  Add: () => (
-    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-      <line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/>
-    </svg>
-  ),
-  Import: () => (
-    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8">
-      <path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4" strokeLinecap="round"/>
-      <polyline points="7 10 12 15 17 10"/>
-      <line x1="12" y1="15" x2="12" y2="3"/>
-    </svg>
-  ),
-  Mic: () => (
-    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8">
-      <rect x="9" y="2" width="6" height="11" rx="3"/>
-      <path d="M5 10a7 7 0 0014 0" strokeLinecap="round"/>
-      <line x1="12" y1="19" x2="12" y2="22" strokeLinecap="round"/>
-      <line x1="8" y1="22" x2="16" y2="22" strokeLinecap="round"/>
-    </svg>
-  ),
-  Video: () => (
-    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8">
-      <polygon points="23 7 16 12 23 17 23 7"/>
-      <rect x="1" y="5" width="15" height="14" rx="2"/>
-    </svg>
-  ),
-  Refresh: () => (
-    <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-      <polyline points="1 4 1 10 7 10"/>
-      <polyline points="23 20 23 14 17 14"/>
-      <path d="M20.49 9A9 9 0 005.64 5.64L1 10m22 4l-4.64 4.36A9 9 0 013.51 15" strokeLinecap="round"/>
-    </svg>
-  ),
-  Alert: () => (
-    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-      <path d="M12 9v4" strokeLinecap="round"/>
-      <path d="M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z"/>
-      <line x1="12" y1="17" x2="12.01" y2="17" strokeLinecap="round"/>
-    </svg>
-  ),
-  ImageFrame: () => (
-    <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8">
-      <rect x="3" y="3" width="18" height="18" rx="2"/>
-      <circle cx="8.5" cy="8.5" r="1.5" fill="currentColor" stroke="none"/>
-      <path d="M21 15l-5-5L5 21" strokeLinecap="round" strokeLinejoin="round"/>
-    </svg>
-  ),
+  Drag:       () => <IconGrip size={14} />,
+  Upload:     () => <IconUpload size={24} style={{ color: '#818CF8' }} />,
+  Check:      () => <IconCheck size={11} strokeWidth={2.6} />,
+  Spin:       () => <IconLoader size={13} />,
+  Play:       () => <IconPlay size={16} />,
+  Trash:      () => <IconDeleteLine size={14} />,
+  Record:     () => <IconRecord size={15} />,
+  Add:        () => <IconPlus size={14} />,
+  Import:     () => <IconImportChat size={15} />,
+  Mic:        () => <IconPodMic size={22} />,
+  Video:      () => <IconEpisode size={22} />,
+  Refresh:    () => <IconRegenerate size={14} />,
+  Alert:      () => <IconAlert size={14} />,
+  ImageFrame: () => <IconAiPortrait size={15} />,
 };
+
+// Tiny frame showing where a card lands — drawn from the real preset rects
+// ([left%, top%, width%, height%], same numbers the renderer uses).
+function PositionThumb({ rect, vertical = false }) {
+  return (
+    <span className={`${styles.vpThumb} ${vertical ? styles.vpThumbTall : ''}`} aria-hidden="true">
+      <span className={styles.vpThumbHost} />
+      {rect ? (
+        <span className={styles.vpThumbZone}
+              style={{ left: `${rect[0]}%`, top: `${rect[1]}%`, width: `${rect[2]}%`, height: `${rect[3]}%` }} />
+      ) : null}
+    </span>
+  );
+}
 
 // ── Auto-grow helper — shared by the AI assistant input and every line
 // textarea. Grows height to fit content up to the CSS max-height, then lets
@@ -245,7 +194,7 @@ function GenDropdown({ label, value, options, onChange }) {
         onClick={() => setOpen(o => !o)}
       >
         <span>{selectedLabel}</span>
-        <span className={styles.genDropdownChevron}>▾</span>
+        <span className={styles.genDropdownChevron}><IconChevronDown size={12} /></span>
       </button>
       {open && (
         <div className={styles.genDropdownMenu}>
@@ -295,6 +244,15 @@ const linesReducer = (state, action) => {
     case 'ADD':    return [...state, { speakerId: action.speakerId, text: '', audioUrl: null, id: Date.now() }];
     case 'UPDATE': return state.map(l => l.id === action.id ? { ...l, ...action.patch } : l);
     case 'REMOVE': return state.filter(l => l.id !== action.id);
+    // Drag-to-reorder: take the line at `from` out and put it back at `to`.
+    case 'MOVE': {
+      const { from, to } = action;
+      if (from === to || from < 0 || to < 0 || from >= state.length || to >= state.length) return state;
+      const next = state.slice();
+      const [moved] = next.splice(from, 1);
+      next.splice(to, 0, moved);
+      return next;
+    }
     default:       return state;
   }
 };
@@ -586,6 +544,16 @@ export default function PodcastStudioPage({ context, onClose }) {
   const [submitted, setSubmitted] = useState(false);
   const [dragIdx,   setDragIdx]   = useState(null);  // index being dragged
   const [dragOver,  setDragOver_l] = useState(null);  // index being hovered
+  // A line is only draggable while its grip is held — so selecting text inside
+  // the line's textarea never starts a drag by accident.
+  const [gripLineId, setGripLineId] = useState(null);
+  useEffect(() => {
+    if (gripLineId === null) return undefined;
+    const release = () => setGripLineId(null);   // let go anywhere → not draggable again
+    window.addEventListener('mouseup', release);
+    window.addEventListener('touchend', release);
+    return () => { window.removeEventListener('mouseup', release); window.removeEventListener('touchend', release); };
+  }, [gripLineId]);
   const [generateError,  setGenerateError]  = useState(null); // user-friendly error for Generate tab
 
   // ── Podcast player state ──────────────────────────────────────────────────
@@ -823,6 +791,7 @@ export default function PodcastStudioPage({ context, onClose }) {
   const [overlayGenPrompt, setOverlayGenPrompt] = useState('');
   const [overlayGenerating, setOverlayGenerating] = useState(false);
   const [overlayGenError, setOverlayGenError] = useState(null);
+  const [overlayGenOpen, setOverlayGenOpen] = useState(false);   // Visual panel: prompt box shown
 
   // ── Tab done state ────────────────────────────────────────────────────────
   const tabsDone = {
@@ -1687,6 +1656,9 @@ if (context.topic) setTopic(context.topic);
   const handleDragStart = useCallback((e, idx) => {
     setDragIdx(idx);
     e.dataTransfer.effectAllowed = 'move';
+    // Firefox only starts a drag when data is set; a private type so dropping
+    // on a textarea never pastes anything.
+    try { e.dataTransfer.setData('application/x-av-line', String(idx)); } catch (_e) { /* old browsers */ }
   }, []);
 
   const handleDragOver = useCallback((e, idx) => {
@@ -1706,6 +1678,7 @@ if (context.topic) setTopic(context.topic);
   const handleDragEnd = useCallback(() => {
     setDragIdx(null);
     setDragOver_l(null);
+    setGripLineId(null);
   }, []);
 
   // ── Submit session ────────────────────────────────────────────────────────
@@ -1999,7 +1972,7 @@ if (context.topic) setTopic(context.topic);
                           <img src="/images/solo_voice.jpg" alt="Solo voice"
                             onError={e => { e.currentTarget.style.display='none'; e.currentTarget.nextSibling.style.display='flex'; }} />
                           <div className={styles.pickerOptionImgFallback} style={{ display: 'none' }}>
-                            <span>🎙</span>
+                            <span><IconPodMic size="1em" /></span>
                             <span className={styles.pickerOptionImgFilename}>solo_voice.jpg</span>
                           </div>
                         </div>
@@ -2008,7 +1981,7 @@ if (context.topic) setTopic(context.topic);
                           <div className={styles.pickerOptionDesc}>Just you. An AI assistant helps craft your monologue, line by line.</div>
                           <div className={styles.pickerOptionCta}>
                             Start writing
-                            <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" aria-hidden="true"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
+                            <IconArrowRight size={12} strokeWidth={2.4} />
                           </div>
                         </div>
                       </button>
@@ -2023,7 +1996,7 @@ if (context.topic) setTopic(context.topic);
                           <img src="/images/open_conversation.jpg" alt="Open conversation"
                             onError={e => { e.currentTarget.style.display='none'; e.currentTarget.nextSibling.style.display='flex'; }} />
                           <div className={styles.pickerOptionImgFallback} style={{ display: 'none' }}>
-                            <span>🎤</span>
+                            <span><IconConversation size="1em" /></span>
                             <span className={styles.pickerOptionImgFilename}>open_conversation.jpg</span>
                           </div>
                         </div>
@@ -2032,7 +2005,7 @@ if (context.topic) setTopic(context.topic);
                           <div className={styles.pickerOptionDesc}>You and a guest. Trade lines from chat or write the script fresh.</div>
                           <div className={styles.pickerOptionCta}>
                             Add a guest
-                            <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" aria-hidden="true"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
+                            <IconArrowRight size={12} strokeWidth={2.4} />
                           </div>
                         </div>
                       </button>
@@ -2047,7 +2020,7 @@ if (context.topic) setTopic(context.topic);
                           <img src="/images/from_your_docs.jpg" alt="From your docs"
                             onError={e => { e.currentTarget.style.display='none'; e.currentTarget.nextSibling.style.display='flex'; }} />
                           <div className={styles.pickerOptionImgFallback} style={{ display: 'none' }}>
-                            <span>📄</span>
+                            <span><IconSources size="1em" /></span>
                             <span className={styles.pickerOptionImgFilename}>from_your_docs.jpg</span>
                           </div>
                         </div>
@@ -2056,7 +2029,7 @@ if (context.topic) setTopic(context.topic);
                           <div className={styles.pickerOptionDesc}>Drop in a report, link, or recording. We turn it into the episode.</div>
                           <div className={styles.pickerOptionCta}>
                             Add sources
-                            <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" aria-hidden="true"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
+                            <IconArrowRight size={12} strokeWidth={2.4} />
                           </div>
                         </div>
                       </button>
@@ -2142,7 +2115,7 @@ if (context.topic) setTopic(context.topic);
                       className={`${styles.scriptModeBtn} ${avatarInputMode === 'upload' ? styles.scriptModeBtnActive : ''}`}
                       onClick={() => setAvatarInputMode('upload')}
                     >
-                      <Ic.Upload /> Upload photo
+                      <IconUpload size={15} /> Upload photo
                     </button>
                     <button
                       className={`${styles.scriptModeBtn} ${avatarInputMode === 'generate' ? styles.scriptModeBtnActive : ''}`}
@@ -2159,11 +2132,11 @@ if (context.topic) setTopic(context.topic);
                   <div className={styles.tipsBox}>
                     <div className={styles.tipsTitle}>Tips for best results</div>
                     <div className={styles.tipsList}>
-                      <div className={styles.tipItem}><span className={styles.tipCheck}>✓</span> Photo is clear and in focus</div>
-                      <div className={styles.tipItem}><span className={styles.tipCheck}>✓</span> Face is clearly visible</div>
-                      <div className={styles.tipItem}><span className={styles.tipCheck}>✓</span> Well-lit — natural or bright indoor light works best</div>
-                      <div className={styles.tipItem}><span className={styles.tipCheck}>✓</span> Full body or waist-up shown</div>
-                      <div className={styles.tipItem}><span className={styles.tipCheck}>✓</span> A plain, simple background works better than a busy one</div>
+                      <div className={styles.tipItem}><span className={styles.tipCheck}><IconCheck size={11} strokeWidth={2.6} /></span> Photo is clear and in focus</div>
+                      <div className={styles.tipItem}><span className={styles.tipCheck}><IconCheck size={11} strokeWidth={2.6} /></span> Face is clearly visible</div>
+                      <div className={styles.tipItem}><span className={styles.tipCheck}><IconCheck size={11} strokeWidth={2.6} /></span> Well-lit — natural or bright indoor light works best</div>
+                      <div className={styles.tipItem}><span className={styles.tipCheck}><IconCheck size={11} strokeWidth={2.6} /></span> Full body or waist-up shown</div>
+                      <div className={styles.tipItem}><span className={styles.tipCheck}><IconCheck size={11} strokeWidth={2.6} /></span> A plain, simple background works better than a busy one</div>
                     </div>
                   </div>
                 )}
@@ -2231,7 +2204,7 @@ if (context.topic) setTopic(context.topic);
                         >
                           {av.avatarRefUrl
                             ? <img src={av.avatarRefUrl} alt={av.displayName} className={styles.avatarSquareImg} />
-                            : <div className={styles.avatarSquareImgFallback}>👤</div>
+                            : <div className={styles.avatarSquareImgFallback}><IconPerson size={36} /></div>
                           }
                         </div>
 
@@ -2279,8 +2252,9 @@ if (context.topic) setTopic(context.topic);
                             className={styles.avatarDeleteBtn}
                             onClick={e => { e.stopPropagation(); setConfirmDelete({ type: 'avatar', id: av.avatarId }); }}
                             title="Delete avatar"
+                            aria-label="Delete avatar"
                           >
-                            ✕
+                            <IconBin size={12} />
                           </button>
                         )}
                       </div>
@@ -2386,7 +2360,7 @@ if (context.topic) setTopic(context.topic);
                           </div>
                         ) : (
                           <button className={styles.genSecondaryBtn} onClick={() => setAvatarInputMode('upload')}>
-                            <Ic.Upload /> Upload photo
+                            <IconUpload size={15} /> Upload photo
                           </button>
                         )}
                       </>
@@ -2400,7 +2374,7 @@ if (context.topic) setTopic(context.topic);
                           <p><Ic.Alert /> No generations left — upload a photo instead</p>
                         </div>
                         <button className={styles.genSecondaryBtn} onClick={() => setAvatarInputMode('upload')}>
-                          <Ic.Upload /> Upload photo
+                          <IconUpload size={15} /> Upload photo
                         </button>
                       </>
                     )}
@@ -2499,7 +2473,7 @@ if (context.topic) setTopic(context.topic);
                             onClick={handleGenerateAvatar}
                             disabled={genLoading || (!genDescription.trim() && !Object.values(genAttrs).some(Boolean))}
                           >
-                            {genLoading ? <><span className={styles.spin}><Ic.Spin /></span> Generating…</> : <><Ic.ImageFrame /> Generate</>}
+                            {genLoading ? <><span className={styles.spin}><Ic.Spin /></span> Generating…</> : <><IconAiPortrait size={15} /> Generate</>}
                           </button>
                           <span className={styles.genRemaining}>{genAttempt} of 3 generations used</span>
                         </div>
@@ -2513,7 +2487,7 @@ if (context.topic) setTopic(context.topic);
                 {buildError && <div className={styles.errorBox}>{buildError}</div>}
                 {photoFile && !avatarBuilt && (
                   <button className={styles.buildBtn} onClick={handleBuildAvatar} disabled={!!buildStage}>
-                    {buildStage ? <><span className={styles.spin}><Ic.Spin /></span> Building…</> : '✦ Build my avatar'}
+                    {buildStage ? <><span className={styles.spin}><Ic.Spin /></span> Building…</> : <><IconAiPortrait size={15} /> Build my avatar</>}
                   </button>
                 )}
                 {avatarBuilt && (
@@ -2611,7 +2585,7 @@ if (context.topic) setTopic(context.topic);
                           <button className={styles.rebuildLink} onClick={() => {
                             setGuestBuilt(false); setGuestFile(null); setGuestPreview(null); setGuestName('');
                             setSpeakers(prev => prev.filter(s => !s.speakerId.startsWith('custom_guest_') || s.speakerId.startsWith('custom_guest2_')));
-                          }}>✕</button>
+                          }} title="Remove guest" aria-label="Remove guest"><IconClose size={12} /></button>
                         </div>
                       ) : (
                         <div className={styles.guestSlotEmpty}>
@@ -2621,7 +2595,7 @@ if (context.topic) setTopic(context.topic);
                           <button className={styles.addGuestPhotoBtn} onClick={() => guestFileRef.current?.click()}>
                             {guestPreview
                               ? <><img src={guestPreview} alt="g1" style={{ width: 16, height: 16, borderRadius: '50%', objectFit: 'cover', marginRight: 4 }} />Change</>
-                              : <><Ic.Upload /> Photo</>}
+                              : <><IconUpload size={15} /> Photo</>}
                           </button>
                           {guestError && <div className={styles.errorBox} style={{ fontSize: '0.65rem' }}>{guestError}</div>}
                           {guestFile && guestName.trim() && (
@@ -2649,7 +2623,7 @@ if (context.topic) setTopic(context.topic);
                             <button className={styles.rebuildLink} onClick={() => {
                               setGuest2Built(false); setGuest2File(null); setGuest2Preview(null); setGuest2Name('');
                               setSpeakers(prev => prev.filter(s => !s.speakerId.startsWith('custom_guest2_')));
-                            }}>✕</button>
+                            }} title="Remove guest" aria-label="Remove guest"><IconClose size={12} /></button>
                           </div>
                         ) : (
                           <div className={styles.guestSlotEmpty}>
@@ -2659,7 +2633,7 @@ if (context.topic) setTopic(context.topic);
                             <button className={styles.addGuestPhotoBtn} onClick={() => guest2FileRef.current?.click()}>
                               {guest2Preview
                                 ? <><img src={guest2Preview} alt="g2" style={{ width: 16, height: 16, borderRadius: '50%', objectFit: 'cover', marginRight: 4 }} />Change</>
-                                : <><Ic.Upload /> Photo</>}
+                                : <><IconUpload size={15} /> Photo</>}
                             </button>
                             {guest2Error && <div className={styles.errorBox} style={{ fontSize: '0.65rem' }}>{guest2Error}</div>}
                             {guest2File && guest2Name.trim() && (
@@ -2696,19 +2670,19 @@ if (context.topic) setTopic(context.topic);
                     className={`${styles.scriptModeBtn} ${scriptMode === 'chat' ? styles.scriptModeBtnActive : ''}`}
                     onClick={() => setScriptMode('chat')}
                   >
-                    ✦ AI Write
+                    <IconAiWrite size={15} /> AI Write
                   </button>
                   <button
                     className={`${styles.scriptModeBtn} ${scriptMode === 'lines' ? styles.scriptModeBtnActive : ''}`}
                     onClick={() => setScriptMode('lines')}
                   >
-                    ≡ Edit Lines {lines.length > 0 && `(${lines.length})`}
+                    <IconLines size={15} /> Edit Lines {lines.length > 0 && `(${lines.length})`}
                   </button>
                   <button
                     className={`${styles.scriptModeBtn} ${scriptMode === 'sources' ? styles.scriptModeBtnActive : ''}`}
                     onClick={() => setScriptMode('sources')}
                   >
-                    📚 Sources
+                    <IconSources size={15} /> Sources
                   </button>
                 </div>
                 {/* Import from chat — lines mode only */}
@@ -2797,7 +2771,7 @@ if (context.topic) setTopic(context.topic);
                                 alignItems: 'center',
                                 gap: '0.3rem',
                               }}>
-                                ✓ Happy with this? Click Convert to lines below
+                                <IconCheck size={12} strokeWidth={2.6} /> Happy with this? Click Convert to lines below
                               </div>
                             )}
                           </div>
@@ -2843,7 +2817,7 @@ if (context.topic) setTopic(context.topic);
                       onClick={handleSendScriptMessage}
                       disabled={!scriptInput.trim() || scriptLoading}
                     >
-                      {scriptLoading ? <span className={styles.spin}><Ic.Spin /></span> : 'Send ➤'}
+                      {scriptLoading ? <span className={styles.spin}><Ic.Spin /></span> : <>Send <IconArrowRight size={13} /></>}
                     </button>
                   </div>
                 </div>
@@ -2880,13 +2854,17 @@ if (context.topic) setTopic(context.topic);
                         <div key={line.id}
                           className={`${styles.lineCard} ${dragOver === i ? styles.lineCardDragOver : ''}`}
                           style={{ '--line-tint': lineTint, '--line-tint-hover': lineTintHover }}
-                          draggable
+                          draggable={gripLineId === line.id}
                           onDragStart={e => handleDragStart(e, i)}
                           onDragOver={e => handleDragOver(e, i)}
                           onDrop={e => handleDrop(e, i)}
                           onDragEnd={handleDragEnd}
                         >
-                          <div className={styles.dragHandle} title="Drag to reorder"><Ic.Drag /></div>
+                          <div className={styles.dragHandle} title="Drag to reorder"
+                            onMouseDown={() => setGripLineId(line.id)}
+                            onMouseUp={() => setGripLineId(null)}
+                            onTouchStart={() => setGripLineId(line.id)}
+                            onTouchEnd={() => setGripLineId(null)}><Ic.Drag /></div>
                           <div className={styles.lineDot} style={{ background: lineColor }} />
                           <div className={styles.lineBody}>
                             <div
@@ -2925,7 +2903,7 @@ if (context.topic) setTopic(context.topic);
                                   onClick={() => setHookOpen(true)}
                                   title="Edit the opening hook"
                                 >
-                                  <span className={styles.overlayThumb}>🪝</span>
+                                  <span className={styles.overlayThumb}><IconHook size={13} /></span>
                                   Opening hook: {hookSummary(hookDraft).slice(0, 48)} — first {hookDraft.dur || 4}s
                                 </button>
                               ) : hookDraft && !hookDismissed ? (
@@ -2935,13 +2913,14 @@ if (context.topic) setTopic(context.topic);
                                     onClick={() => setHookOpen(true)}
                                     title="See the hook the AI designed for your opening"
                                   >
-                                    🪝 Open with: “{hookSummary(hookDraft).slice(0, 44)}”?
+                                    <IconHook size={14} /> Open with: “{hookSummary(hookDraft).slice(0, 44)}”?
                                   </button>
                                   <button
                                     className={styles.overlayChipX}
                                     onClick={() => setHookDismissed(true)}
                                     title="Dismiss"
-                                  >✕</button>
+                                    aria-label="Dismiss"
+                                  ><IconClose size={11} /></button>
                                 </div>
                               ) : null
                             ) : null}
@@ -2953,7 +2932,7 @@ if (context.topic) setTopic(context.topic);
                                 title="Edit the episode comparison"
                                 style={{ borderColor: 'rgba(16,185,129,0.45)' }}
                               >
-                                <span className={styles.overlayThumb}>⚖️</span>
+                                <span className={styles.overlayThumb}><IconCompare size={13} /></span>
                                 Comparison: {compareLeft.name || 'A'} vs {compareRight.name || 'B'} — all lines
                               </button>
                             ) : null}
@@ -2973,14 +2952,19 @@ if (context.topic) setTopic(context.topic);
                                     title="Edit this visual"
                                   >
                                     <span className={styles.overlayThumb}>
-                                      {line.overlay.mode === 'data' ? '▤' : line.overlay.productName ? '✋' : '▣'}
+                                      {line.overlay.mode === 'data'
+                                        ? (line.overlay.data?.kind === 'chart' ? <IconChart size={13} /> : <IconDataCard size={13} />)
+                                        : line.overlay.mode === 'product_in_hand' || line.overlay.productName ? <IconInHand size={13} />
+                                        : line.overlay.shape === 'cutout' ? <IconCutout size={13} />
+                                        : <IconGlassCard size={13} />}
                                     </span>
                                     {modeLabel}{line.overlay.productName ? ` · ${line.overlay.productName}` : ''} — attached
                                   </button>
                                 );
                               }
                               if (sug && sug.type && sug.type !== 'none') {
-                                const icon = sug.type === 'product' ? '✋' : sug.type === 'stat' ? '▣' : '▤';
+                                const icon = sug.type === 'product' ? <IconInHand size={14} />
+                                  : sug.type === 'stat' ? <IconDataCard size={14} /> : <IconChart size={14} />;
                                 const verb = sug.type === 'product' ? 'Hold product' : sug.type === 'stat' ? 'Show stat' : 'Show chart';
                                 return (
                                   <div className={`${styles.overlayChip} ${styles['overlayChip_' + sug.type] || ''}`}>
@@ -2995,7 +2979,8 @@ if (context.topic) setTopic(context.topic);
                                       className={styles.overlayChipX}
                                       onClick={() => setOverlaySuggestions(prev => ({ ...prev, [line.id]: { type: 'none' } }))}
                                       title="Dismiss"
-                                    >✕</button>
+                                      aria-label="Dismiss"
+                                    ><IconClose size={11} /></button>
                                   </div>
                                 );
                               }
@@ -3018,9 +3003,9 @@ if (context.topic) setTopic(context.topic);
                                   title={playingLineId === line.id ? 'Stop' : 'Play recording'}
                                   disabled={!lineBlobUrls[line.id]}
                                 >
-                                  {playingLineId === line.id ? '■' : '▶'}
+                                  {playingLineId === line.id ? <IconStop size={10} /> : <IconPlay size={10} />}
                                 </button>
-                                🎤 {lineDurations[line.id] || 'Recorded'}
+                                <IconRecorded size={14} /> {lineDurations[line.id] || 'Recorded'}
                                 <button
                                   className={styles.audioTagClear}
                                   onClick={() => {
@@ -3033,7 +3018,8 @@ if (context.topic) setTopic(context.topic);
                                     }
                                   }}
                                   title="Remove recording — use TTS instead"
-                                >✕</button>
+                                  aria-label="Remove recording"
+                                ><IconClose size={11} /></button>
                               </div>
                             )}
                           </div>
@@ -3043,7 +3029,7 @@ if (context.topic) setTopic(context.topic);
                               title={line.overlay ? 'Edit visual' : 'Add a visual'}
                               onClick={() => setOverlayLineId(overlayLineId === line.id ? null : line.id)}
                             >
-                              <Ic.Add />
+                              <IconAddVisual size={15} />
                             </button>
                             <button
                               className={`${styles.lineBtn} ${recordingLineId === line.id ? styles.lineBtnRecording : ''}`}
@@ -3056,19 +3042,19 @@ if (context.topic) setTopic(context.topic);
                                 : <Ic.Record />
                               }
                             </button>
-                            <button className={styles.lineBtn} title="Delete" onClick={() => dispatchLines({ type: 'REMOVE', id: line.id })}><Ic.Trash /></button>
+                            <button className={styles.lineBtn} title="Delete line" aria-label="Delete line" onClick={() => dispatchLines({ type: 'REMOVE', id: line.id })}><Ic.Trash /></button>
                           </div>
                         </div>
                       );
                     })}
                     <button className={styles.addLineBtn}
                       onClick={() => dispatchLines({ type: 'ADD', speakerId: speakers[0]?.speakerId || 'user' })}>
-                      <Ic.Add /> Add line
+                      <IconAddLine size={15} /> Add line
                     </button>
                     {recordingError && (
                       <div className={styles.errorBox} style={{ margin: '0.5rem 0 0' }}>
                         {recordingError}
-                        <button style={{ marginLeft: '0.5rem', background: 'none', border: 'none', cursor: 'pointer', color: 'inherit' }} onClick={() => setRecordingError(null)}>✕</button>
+                        <button style={{ marginLeft: '0.5rem', background: 'none', border: 'none', cursor: 'pointer', color: 'inherit', verticalAlign: 'middle' }} aria-label="Dismiss" onClick={() => setRecordingError(null)}><IconClose size={11} /></button>
                       </div>
                     )}
                   </div>
@@ -3195,7 +3181,8 @@ if (context.topic) setTopic(context.topic);
                     <button
                       style={{ marginLeft: '0.5rem', background: 'none', border: 'none', cursor: 'pointer', color: 'inherit' }}
                       onClick={() => setGenerateError(null)}
-                    >✕</button>
+                      aria-label="Dismiss"
+                    ><IconClose size={11} /></button>
                   </div>
                 )}
               </div>
@@ -3241,7 +3228,8 @@ if (context.topic) setTopic(context.topic);
                       className={styles.podcastOverlayClose}
                       onClick={() => { podcastVideoRef.current?.pause(); setActiveSession(null); }}
                       title="Close"
-                    >✕</button>
+                      aria-label="Close"
+                    ><IconClose size={13} /></button>
                     <video
                       ref={podcastVideoRef}
                       src={activeSession.final_url}
@@ -3263,7 +3251,7 @@ if (context.topic) setTopic(context.topic);
                         className={styles.podcastPlayerBtn}
                         onClick={() => handleDownloadPodcast(activeSession)}
                         title="Download MP4"
-                      >⬇ Download</button>
+                      ><IconDownload size={14} /> Download</button>
                     </div>
                   </div>
                 </div>
@@ -3308,7 +3296,7 @@ if (context.topic) setTopic(context.topic);
                           )}
                           {session.final_url && (
                             <div className={styles.podcastPlayOverlay}>
-                              {isPlaying ? '■' : '▶'}
+                              {isPlaying ? <IconStop size={22} /> : <IconPlay size={24} />}
                             </div>
                           )}
                         </div>
@@ -3332,7 +3320,7 @@ if (context.topic) setTopic(context.topic);
                               onClick={() => setActiveSession(session)}
                               title="Play"
                             >
-                              ▶ Play
+                              <IconPlay size={11} /> Play
                             </button>
                           )}
                           {session.final_url && (
@@ -3341,7 +3329,7 @@ if (context.topic) setTopic(context.topic);
                               onClick={() => handleDownloadPodcast(session)}
                               title="Download MP4"
                             >
-                              ⬇ Save
+                              <IconDownload size={13} /> Save
                             </button>
                           )}
                           {isConfirm ? (
@@ -3369,7 +3357,7 @@ if (context.topic) setTopic(context.topic);
                               title="Delete"
                               style={{ color: 'var(--text-muted)' }}
                             >
-                              🗑 Del
+                              <IconBin size={13} /> Del
                             </button>
                           )}
                         </div>
@@ -3461,33 +3449,41 @@ if (context.topic) setTopic(context.topic);
             const vert = vertical && !multi;
             const presetsShown = vert ? PRESETS_VERTICAL.map(([id, lbl, tip]) => [id, POSITION_SHAPE[id], lbl, tip]) : presets;
             const shownPreset = mapPreset(ov.preset, vert ? '9:16' : '16:9');
+            const oLineNo = lines.findIndex(l => l.id === overlayLineId) + 1;
+            const genShown = overlayGenOpen || overlayGenerating || !!overlayGenPrompt.trim() || !!overlayGenError;
             return (
               <>
-              <div className={styles.glassCard} style={{ height: '100%', display: 'flex', flexDirection: 'column', gap: '0.65rem', overflowY: 'auto', minHeight: 0 }}>
-                <div className={styles.overlayPanelHead}>
-                  <span className={styles.cardLabel} style={{ margin: 0 }}>Visual</span>
-                  <button className={styles.overlayPanelClose} onClick={() => { setTypePopoverOpen(false); setOverlayLineId(null); }} title="Back to Voice">✕</button>
+              <div className={`${styles.glassCard} ${styles.vpPanel}`}>
+                <div className={styles.vpScroll}>
+                <div className={styles.vpHead}>
+                  <button type="button" className={styles.vpBack}
+                    onClick={() => { setTypePopoverOpen(false); setOverlayLineId(null); }}
+                    title="Back to Voice">
+                    <IconChevronLeft size={13} /> Voice
+                  </button>
+                  <div className={styles.vpTitle}>
+                    Visual{oLineNo > 0 ? <span> · line {oLineNo}</span> : null}
+                  </div>
                 </div>
-                <div className={styles.overlaySwapTag}>↔ swapped from Voice</div>
-                {oLine?.text && <div className={styles.overlayLineQuote}>"{oLine.text.slice(0, 70)}{oLine.text.length > 70 ? '…' : ''}"</div>}
+                {oLine?.text && <blockquote className={styles.vpQuote}>{oLine.text}</blockquote>}
 
-                {/* Type */}
-                <div className={styles.overlaySeg}>Type</div>
-                <div className={styles.overlayTypes}>
+                {/* This line — the four visual types, 2 × 2 */}
+                <div className={styles.vpSec}>This line</div>
+                <div className={styles.vpTypes} role="radiogroup" aria-label="Visual type">
                   {[
-                    ['card','▣','Glass card','A tilted frosted-glass panel beside the speaker — best for charts, stats, or quotes'],
-                    ['cutout','✂','Cutout','The image with its background removed, floating free (no card) — best for products or logos'],
-                    ['product_in_hand','✋','In hand','The speaker is composed holding the product as they talk — best for a physical item'],
+                    ['card', <IconGlassCard size={20} />, 'Glass card', 'Frosted panel', 'A tilted frosted-glass panel beside the speaker — best for charts, stats, or quotes'],
+                    ['cutout', <IconCutout size={20} />, 'Cutout', 'Floats free', 'The image with its background removed, floating free (no card) — best for products or logos'],
+                    ['product_in_hand', <IconInHand size={20} />, 'In hand', 'Speaker holds it', 'The speaker is composed holding the product as they talk — best for a physical item'],
                     ...(extras.available
-                      ? [['data','▤','Data card','A designed stat or bar chart from the numbers in this line — free, exact, no image needed']]
+                      ? [['data', <IconDataCard size={20} />, 'Data card', 'Stat or chart · free', 'A designed stat or bar chart from the numbers in this line — free, exact, no image needed']]
                       : []),
-                  ].map(([val, ic, lbl, hint]) => {
+                  ].map(([val, icon, lbl, short, hint]) => {
                     const isOn = val === 'product_in_hand' ? ov.mode === 'product_in_hand'
                       : val === 'data' ? ov.mode === 'data'
                       : ov.mode !== 'product_in_hand' && ov.mode !== 'data' && (ov.shape || 'card') === val;
                     return (
-                      <button key={val}
-                        className={`${styles.overlayType} ${isOn ? styles.overlayTypeOn : ''}`}
+                      <button key={val} type="button" role="radio" aria-checked={isOn}
+                        className={`${styles.vpTile} ${isOn ? styles.vpTileOn : ''}`}
                         title={hint}
                         onClick={() => {
                           if (val === 'data') {
@@ -3503,104 +3499,74 @@ if (context.topic) setTopic(context.topic);
                           patchOverlay({ mode: 'overlay', shape: val, preset: ov.preset || (multi ? 'corner_small_tr' : 'corner_card_tr'), data: undefined });
                           setTypePopoverOpen(true);   // open this type's position + look pop-out
                         }}>
-                        <span style={{ fontSize: '1.1rem' }}>{ic}</span><br/>{lbl}
+                        <span className={styles.vpTileIc}>{icon}</span>
+                        <span className={styles.vpTileTxt}><b>{lbl}</b><small>{short}</small></span>
                       </button>
                     );
                   })}
                 </div>
 
-                {/* Episode-wide — separate from the per-line shapes above */}
-                <div className={styles.overlaySeg}>Episode-wide</div>
-                <button
-                  type="button"
-                  className={`${styles.overlayType} ${compareOn ? styles.overlayTypeOn : ''}`}
-                  style={{ width: '100%', textAlign: 'left', display: 'flex', alignItems: 'center', gap: '0.5rem' }}
-                  title="Two glass rails comparing A vs B across the whole episode"
-                  onClick={() => { setTypePopoverOpen(false); setCompareOpen(true); }}>
-                  <span style={{ fontSize: '1.1rem' }}>⚖️</span>
-                  {'Comparison'}
-                </button>
-                {extras.available && (
-                  <button
-                    type="button"
-                    className={`${styles.overlayType} ${hookOn ? styles.overlayTypeOn : ''}`}
-                    style={{ width: '100%', textAlign: 'left', display: 'flex', alignItems: 'center', gap: '0.5rem' }}
-                    title="A designed graphic for the first 3–5 seconds — the AI writes it from your opening"
-                    onClick={() => { setTypePopoverOpen(false); setHookOpen(true); }}>
-                    <span style={{ fontSize: '1.1rem' }}>🪝</span>
-                    <span style={{ flex: 1, minWidth: 0, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
-                      Opening hook
-                      {hookDraft ? <span style={{ opacity: 0.7, fontWeight: 400 }}>{` · ${hookSummary(hookDraft)}`}</span> : null}
-                    </span>
-                    <span style={{ fontSize: '0.64rem', opacity: 0.8 }}>{hookOn ? 'On' : 'Off'}</span>
-                  </button>
-                )}
-
                 {/* Product name (product_in_hand only) */}
                 {ov.mode === 'product_in_hand' && (
-                  <>
-                    <div className={styles.overlaySeg}>Product name</div>
+                  <div className={styles.vpField}>
+                    <label htmlFor="vp-product-name">Product name</label>
                     <input
+                      id="vp-product-name"
                       className={styles.overlayInput}
                       value={ov.productName || ''}
                       placeholder="e.g. AURA serum"
                       onChange={e => patchOverlay({ productName: e.target.value })}
                     />
                     {(!ov.imageUrl || !(ov.productName || '').trim()) && (
-                      <div style={{ fontSize: '0.68rem', color: '#F59E0B', marginTop: 6, lineHeight: 1.4 }}>
-                        ⚠ In-hand needs a product image and a name to render —
-                        {!(ov.productName || '').trim() ? ' add a product name' : ''}
-                        {(!ov.imageUrl && !(ov.productName || '').trim()) ? ' and' : ''}
-                        {!ov.imageUrl ? ' upload the product image below' : ''}.
-                      </div>
+                      <p className={styles.vpWarn}>
+                        <IconAlert size={13} />
+                        <span>
+                          In-hand needs a product image and a name to render —
+                          {!(ov.productName || '').trim() ? ' add a product name' : ''}
+                          {(!ov.imageUrl && !(ov.productName || '').trim()) ? ' and' : ''}
+                          {!ov.imageUrl ? ' upload the product image below' : ''}.
+                        </span>
+                      </p>
                     )}
-                  </>
+                  </div>
                 )}
 
-                {/* Position + look → summary chip that reopens the pop-out
-                    (card & cutout only; in-hand has neither). */}
-                {ov.mode === 'data' && (
-                  <>
-                    <div className={styles.overlaySeg}>Data card</div>
-                    <button type="button"
+                {/* Data card → one summary row: where it lands + what it says */}
+                {ov.mode === 'data' && (() => {
+                  const pid = vert ? shownPreset : (ov.preset || (multi ? 'corner_small_tr' : 'side_panel_right'));
+                  const posLabel = (presetsShown.find(p => p[0] === pid) || [])[2] || 'Right panel';
+                  const ready = dataCardReady(ov.data);
+                  return (
+                    <button type="button" className={styles.vpSum}
                       onClick={() => setDataOpen(true)}
-                      title="Edit the numbers, kind and position"
-                      style={{
-                        display: 'flex', alignItems: 'center', gap: '0.5rem', width: '100%',
-                        background: 'rgba(99,102,241,0.10)', border: '1px solid rgba(99,102,241,0.28)',
-                        borderRadius: 10, padding: '0.55rem 0.7rem', color: 'var(--text-primary, #F1F5F9)',
-                        fontFamily: 'inherit', fontSize: '0.8rem', cursor: 'pointer', textAlign: 'left',
-                      }}>
-                      <span style={{ opacity: 0.85 }}>▤</span>
-                      <span style={{ flex: 1, minWidth: 0, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
-                        <b>{ov.data?.kind === 'chart' ? 'Chart' : 'Stat'}</b>
-                        {dataCardReady(ov.data) ? ` · ${dataCardSummary(ov.data)}` : ' · add the numbers'}
+                      title="Edit the numbers, kind and position">
+                      <PositionThumb rect={vert ? (PRESET_RECT_VERTICAL[pid] || PRESET_RECT_VERTICAL.top_card) : PRESET_RECT[pid]} vertical={vert} />
+                      <span className={styles.vpSumTxt}>
+                        <b>{ov.data?.kind === 'chart' ? 'Chart' : 'Stat'}{ready ? ` · ${dataCardSummary(ov.data)}` : ''}</b>
+                        <small>{ready ? `${posLabel} · ${ov.data?.kind === 'chart' ? 'bars grow on cue' : 'counts up on cue'}` : 'Add the numbers'}</small>
                       </span>
-                      <span style={{ marginLeft: 'auto', color: 'var(--accent-primary, #818CF8)', fontSize: '0.72rem' }}>edit ▸</span>
+                      <span className={styles.vpGo}>Edit <IconChevronRight size={13} /></span>
                     </button>
-                  </>
-                )}
+                  );
+                })()}
+
+                {/* Card / cutout → one summary row: where it lands + its look */}
                 {ov.mode !== 'product_in_hand' && ov.mode !== 'data' && (() => {
                   const posLabel = (presetsShown.find(p => p[0] === shownPreset) || [])[2] || 'Pick a position';
                   const recId = currentRecipe(ov.style);
                   const recLabel = (RECIPE_OPTIONS.find(r => r.id === recId) || {}).label || 'Episode default';
+                  const rect = shownPreset ? (vert ? PRESET_RECT_VERTICAL[shownPreset] : PRESET_RECT[shownPreset]) : null;
                   return (
-                    <>
-                      <div className={styles.overlaySeg}>Position &amp; look</div>
-                      <button type="button"
-                        onClick={() => setTypePopoverOpen(true)}
-                        title="Open position and look options"
-                        style={{
-                          display: 'flex', alignItems: 'center', gap: '0.5rem', width: '100%',
-                          background: 'rgba(99,102,241,0.10)', border: '1px solid rgba(99,102,241,0.28)',
-                          borderRadius: 10, padding: '0.55rem 0.7rem', color: 'var(--text-primary, #F1F5F9)',
-                          fontFamily: 'inherit', fontSize: '0.8rem', cursor: 'pointer', textAlign: 'left',
-                        }}>
-                        <span style={{ opacity: 0.85 }}>{ov.shape === 'cutout' ? '✂' : '▣'}</span>
-                        <span><b>{posLabel}</b> · {recLabel}</span>
-                        <span style={{ marginLeft: 'auto', color: 'var(--accent-primary, #818CF8)', fontSize: '0.72rem' }}>edit ▸</span>
-                      </button>
-                    </>
+                    <button type="button" className={styles.vpSum}
+                      onClick={() => setTypePopoverOpen(true)}
+                      title="Open position and look options">
+                      <PositionThumb rect={rect} vertical={vert} />
+                      <span className={styles.vpSumTxt}>
+                        <b>{posLabel}</b>
+                        <small>{ov.shape === 'cutout' ? 'Floats free · contact shadow' : `Look · ${recLabel}`}</small>
+                      </span>
+                      <span className={styles.vpGo}>Edit <IconChevronRight size={13} /></span>
+                    </button>
                   );
                 })()}
 
@@ -3620,20 +3586,31 @@ if (context.topic) setTopic(context.topic);
                   </div>
                 ) : (
                   <>
-                    {/* Upload card */}
-                    <label className={styles.overlayUploadCard}>
-                      <span className={styles.overlayUploadIcon}><Ic.Upload /></span>
-                      <span className={styles.overlayUploadMain}>
-                        {overlayUploading ? 'Uploading…' : (ov.mode === 'product_in_hand' ? 'Upload the product image' : 'Upload chart or image')}
-                      </span>
-                      <span className={styles.overlayUploadSub}>PNG, JPG or WebP · up to 10MB</span>
-                      <input type="file" accept="image/png,image/jpeg,image/webp" style={{ display: 'none' }}
-                        onChange={e => handleOverlayUpload(e.target.files?.[0])} />
-                    </label>
-
-                    <div className={styles.overlayOrRow}><span>or generate with AI</span></div>
-
-                    {/* Generate card */}
+                    <div className={styles.vpImgRow}>
+                      <label className={styles.vpImgBtn} tabIndex={0}
+                        title={ov.mode === 'product_in_hand' ? 'Upload the product image' : 'Upload chart or image'}
+                        onKeyDown={e => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); e.currentTarget.querySelector('input')?.click(); } }}>
+                        {overlayUploading ? <span className={styles.spin}><Ic.Spin /></span> : <IconUpload size={20} />}
+                        <span>{overlayUploading ? 'Uploading…' : 'Upload'}</span>
+                        <input type="file" accept="image/png,image/jpeg,image/webp" style={{ display: 'none' }}
+                          onChange={e => handleOverlayUpload(e.target.files?.[0])} />
+                      </label>
+                      <button type="button"
+                        className={`${styles.vpImgBtn} ${genShown ? styles.vpImgBtnOn : ''}`}
+                        aria-expanded={genShown}
+                        title="Describe it and the AI draws it, sized to this position"
+                        onClick={() => setOverlayGenOpen(o => !o)}>
+                        <IconGenerate size={20} />
+                        <span>Generate</span>
+                      </button>
+                    </div>
+                    {!genShown && (
+                      <p className={styles.vpHint}>
+                        {ov.mode === 'product_in_hand' ? 'A product photo · ' : ''}PNG, JPG or WebP · up to 10MB
+                      </p>
+                    )}
+                    {/* Generate — the prompt box opens from the Generate button */}
+                    {genShown && (
                     <div className={styles.overlayGenCard}>
                       <textarea
                         className={styles.overlayGenPrompt}
@@ -3643,7 +3620,7 @@ if (context.topic) setTopic(context.topic);
                           : ov.shape === 'cutout'
                             ? 'Describe the object…\ne.g. a glowing blue AI robot mascot, friendly pose'
                             : 'Describe the visual…\ne.g. a clean bar chart trending upward, indigo bars'}
-                        rows={4}
+                        rows={3}
                         onChange={e => setOverlayGenPrompt(e.target.value)}
                       />
                       {overlayGenError && <div className={styles.overlayGenError}>{overlayGenError}</div>}
@@ -3654,7 +3631,7 @@ if (context.topic) setTopic(context.topic);
                       >
                         {overlayGenerating
                           ? <><span className={styles.spin}><Ic.Spin /></span> Generating… (~2 min)</>
-                          : '✨ Generate image'}
+                          : <><IconGenerate size={15} /> Generate image</>}
                       </button>
                       <div className={styles.overlayGenHint}>
                         {ov.mode === 'product_in_hand'
@@ -3664,13 +3641,56 @@ if (context.topic) setTopic(context.topic);
                             : 'Pick a position first to match the shape'}
                       </div>
                     </div>
+                    )}
                   </>
                 )}
 
                 </>)}
 
-                {/* Remove */}
-                <button className={styles.overlayRemove} onClick={() => clearOverlay(overlayLineId)}>Remove visual from this line</button>
+                {/* Whole episode — compact rows; on/off lives in each pop-out */}
+                <div className={styles.vpSec}>Whole episode</div>
+                <SettingGroup>
+                  {(() => {
+                    const hasNames = !!(compareLeft.name.trim() && compareRight.name.trim());
+                    const nPts = comparePoints.filter(p => (p.label || '').trim()).length;
+                    return (
+                      <SettingRow
+                        icon={<IconCompare size={19} />}
+                        title="Comparison"
+                        sub={hasNames
+                          ? `${compareLeft.name.trim()} vs ${compareRight.name.trim()}${nPts ? ` · ${nPts} point${nPts === 1 ? '' : 's'}` : ''}`
+                          : 'Two rails, A vs B, across the episode'}
+                        status={hasNames ? (compareOn ? 'on' : 'off') : null}
+                        action={hasNames ? null : 'Set up'}
+                        on={compareOn}
+                        tip="Two glass rails comparing A vs B across the whole episode"
+                        onClick={() => { setTypePopoverOpen(false); setCompareOpen(true); }}
+                      />
+                    );
+                  })()}
+                  {extras.available && (
+                    <SettingRow
+                      icon={<IconHook size={19} />}
+                      title="Opening hook"
+                      sub={hookDraft
+                        ? `“${hookSummary(hookDraft)}” · first ${hookDraft.dur || 4}s`
+                        : 'The AI writes it from your opening'}
+                      status={hookOn ? 'on' : hookDraft ? 'draft' : 'off'}
+                      statusLabel={hookOn ? 'On' : hookDraft ? 'AI draft' : 'Off'}
+                      on={hookOn}
+                      tip="A designed graphic for the first 3–5 seconds — the AI writes it from your opening"
+                      onClick={() => { setTypePopoverOpen(false); setHookOpen(true); }}
+                    />
+                  )}
+                </SettingGroup>
+                </div>
+
+                {/* Remove — pinned to the foot so it's always in the same place */}
+                <div className={styles.vpFoot}>
+                  <button type="button" className={styles.vpRemove} onClick={() => clearOverlay(overlayLineId)}>
+                    <IconDetach size={15} /> Remove visual from this line
+                  </button>
+                </div>
               </div>
 
               {/* Per-type options pop-out (position + look) for card / cutout */}
@@ -3717,15 +3737,20 @@ if (context.topic) setTopic(context.topic);
           })()}
 
           {/* SCRIPT TAB → Voice picker (compact rows; browsing happens in the overlay) */}
-          {activeTab === 'script' && !overlayLineId && (
-            <div className={styles.glassCard} style={{ height: '100%', display: 'flex', flexDirection: 'column', gap: '0.65rem' }}>
-              <div className={styles.cardLabel}>Voice</div>
+          {activeTab === 'script' && !overlayLineId && (() => {
+            const spks = speakers.length === 0
+              ? [{ speakerId: 'user', displayName: 'You', role: 'host', gender: 'female', voiceId: null }]
+              : speakers;
+            const cap = (t) => (t ? t.charAt(0).toUpperCase() + t.slice(1) : '');
+            const picked = lines.filter(l => l.sfx && l.sfx !== 'auto').length;
+            return (
+            <div className={`${styles.glassCard} ${styles.vpPanel}`}>
+              <div className={styles.vpScroll}>
+                <div className={styles.vpHead}>
+                  <div className={styles.vpTitle}>Voice <span>· {spks.length} speaker{spks.length === 1 ? '' : 's'}</span></div>
+                </div>
 
-              <div style={{ flex: 1, overflowY: 'auto', display: 'flex', flexDirection: 'column', gap: '0.75rem', minHeight: 0 }}>
-                {(speakers.length === 0
-                  ? [{ speakerId: 'user', displayName: 'You', role: 'host', gender: 'female', voiceId: null }]
-                  : speakers
-                ).map(spk => {
+                {spks.map(spk => {
                   const v = spk.voiceId
                     ? (voices.find(x => x.voiceId === spk.voiceId)
                         || (voiceClone && voiceClone.voiceId === spk.voiceId
@@ -3733,162 +3758,78 @@ if (context.topic) setTopic(context.topic);
                               : null))
                     : null;
                   const isPlaying = v && playingPreviewId === v.voiceId;
+                  const hasOutfit = !spk.isCharacter && spk.savedAvatarId;
                   return (
-                    <div key={spk.speakerId}>
-                      <div style={{
-                        fontSize: '0.65rem', fontWeight: 700, letterSpacing: '0.1em',
-                        textTransform: 'uppercase', color: '#6366f1',
-                        fontFamily: 'Inter,sans-serif', marginBottom: '0.35rem',
-                      }}>
-                        {spk.displayName} · {spk.role === 'host' ? 'Host' : 'Guest'}
-                      </div>
-                      <button
-                        type="button"
-                        onClick={() => setBrowserSpeakerId(spk.speakerId)}
-                        style={{
-                          display: 'flex', alignItems: 'center', gap: '0.55rem', width: '100%',
-                          textAlign: 'left', background: 'rgba(15,23,42,0.8)', cursor: 'pointer',
-                          border: v ? '1px solid rgba(99,102,241,0.22)' : '1px dashed rgba(245,158,11,0.5)',
-                          borderRadius: 12, padding: '0.6rem 0.7rem', fontFamily: 'Inter,sans-serif',
-                        }}
-                      >
-                        <span style={{ flex: 1, minWidth: 0 }}>
-                          {v ? (
-                            <>
-                              <span style={{ fontFamily: 'Syne,sans-serif', fontWeight: 700, fontSize: '0.82rem', color: '#e0e7ff', display: 'block' }}>{v.displayName}</span>
-                              <span style={{ fontSize: '0.64rem', color: '#94a3b8', textTransform: 'capitalize' }}>{v.accent}{spk.gender ? ` · ${spk.gender}` : ''}</span>
-                            </>
-                          ) : (
-                            <>
-                              <span style={{ fontWeight: 600, fontSize: '0.76rem', color: '#F59E0B', display: 'block' }}>⚠ Choose a voice</span>
-                              <span style={{ fontSize: '0.64rem', color: '#94a3b8' }}>Tap to browse &amp; preview</span>
-                            </>
-                          )}
-                        </span>
-                        {v && v.previewUrl && (
-                          <span
-                            role="button" tabIndex={0}
-                            aria-label={`Preview ${v.displayName}`}
-                            onClick={e => { e.stopPropagation(); handlePlayPreview(v.voiceId, v.previewUrl); }}
-                            onKeyDown={e => { if (e.key === ' ' || e.key === 'Enter') { e.preventDefault(); e.stopPropagation(); handlePlayPreview(v.voiceId, v.previewUrl); } }}
-                            className={`${styles.voicePreviewBtn} ${isPlaying ? styles.voicePreviewBtnPlaying : ''}`}
-                          >
-                            {isPlaying ? '■' : '▶'}
-                          </span>
+                    <React.Fragment key={spk.speakerId}>
+                      <div className={styles.vpSec}>{spk.displayName} · {spk.role === 'host' ? 'Host' : 'Guest'}</div>
+                      <SettingGroup>
+                        <SettingRow
+                          icon={<IconVoice size={19} />}
+                          title={v ? v.displayName : 'Choose a voice'}
+                          sub={v ? `${cap(v.accent)}${spk.gender ? ` · ${spk.gender}` : ''}` : 'Tap to browse & preview'}
+                          on={!!v}
+                          warn={!v}
+                          status={v ? null : 'warn'}
+                          tip={v ? 'Change this voice' : 'Browse and preview voices'}
+                          onClick={() => setBrowserSpeakerId(spk.speakerId)}
+                          trailing={v && v.previewUrl ? (
+                            <button type="button"
+                              className={`${styles.vpPlay} ${isPlaying ? styles.vpPlayOn : ''}`}
+                              aria-label={isPlaying ? `Stop ${v.displayName}` : `Preview ${v.displayName}`}
+                              title={isPlaying ? 'Stop' : 'Preview'}
+                              onClick={() => handlePlayPreview(v.voiceId, v.previewUrl)}>
+                              {isPlaying ? <IconStop size={10} /> : <IconPlay size={11} />}
+                            </button>
+                          ) : null}
+                        />
+                        {/* Outfit — real-person avatars only (needs a saved avatar_id);
+                            AI characters carry their own wardrobe and are skipped. */}
+                        {hasOutfit && (
+                          <SettingRow
+                            icon={<IconOutfit size={19} />}
+                            title="Outfit"
+                            sub={spk.outfitRefUrl ? (spk.outfitLabel || 'Custom') : 'Original'}
+                            on={!!spk.outfitRefUrl}
+                            tip="Choose or create an outfit for this episode"
+                            onClick={() => setOutfitSpeakerId(spk.speakerId)}
+                          />
                         )}
-                        <span style={{ flexShrink: 0, fontSize: '0.64rem', fontWeight: 600, color: '#818CF8', whiteSpace: 'nowrap' }}>
-                          {v ? 'Change' : 'Browse ▸'}
-                        </span>
-                      </button>
-
-                      {/* Outfit — real-person avatars only (needs a saved avatar_id);
-                          AI characters carry their own wardrobe and are skipped. */}
-                      {!spk.isCharacter && spk.savedAvatarId && (
-                        <button
-                          type="button"
-                          onClick={() => setOutfitSpeakerId(spk.speakerId)}
-                          title="Choose or create an outfit for this episode"
-                          style={{
-                            display: 'flex', alignItems: 'center', gap: '0.5rem', width: '100%',
-                            marginTop: '0.4rem', textAlign: 'left', cursor: 'pointer',
-                            background: 'rgba(15,23,42,0.8)', border: '1px solid rgba(99,102,241,0.22)',
-                            borderRadius: 12, padding: '0.5rem 0.7rem', fontFamily: 'Inter,sans-serif',
-                          }}
-                        >
-                          <span aria-hidden="true">👗</span>
-                          <span style={{ flex: 1, minWidth: 0, fontSize: '0.64rem', color: '#94a3b8' }}>
-                            Outfit
-                            <span style={{ color: spk.outfitRefUrl ? '#A5B4FC' : '#e0e7ff', fontWeight: 600 }}>
-                              {'  '}{spk.outfitRefUrl ? (spk.outfitLabel || 'Custom') : 'Original'}
-                            </span>
-                          </span>
-                          <span style={{ flexShrink: 0, fontSize: '0.64rem', fontWeight: 600, color: '#818CF8', whiteSpace: 'nowrap' }}>
-                            {spk.outfitRefUrl ? 'Change' : 'Add ▸'}
-                          </span>
-                        </button>
-                      )}
-                    </div>
+                      </SettingGroup>
+                    </React.Fragment>
                   );
                 })}
 
-                {/* Sound effects — episode-wide (voice · outfit · sound). Opens the
-                    Sound pop-out: on/off, level, listen, and per-line choices. */}
+                {/* Sound + captions — episode-wide. On/off and the look live in each pop-out. */}
                 {extras.available && (
-                  <div>
-                    <div style={{
-                      fontSize: '0.65rem', fontWeight: 700, letterSpacing: '0.1em',
-                      textTransform: 'uppercase', color: '#6366f1',
-                      fontFamily: 'Inter,sans-serif', marginBottom: '0.35rem',
-                    }}>
-                      Sound · Episode
-                    </div>
-                    <button
-                      type="button"
-                      onClick={() => setSoundOpen(true)}
-                      title="Subtle sound effects that move with your graphics"
-                      style={{
-                        display: 'flex', alignItems: 'center', gap: '0.5rem', width: '100%',
-                        textAlign: 'left', cursor: 'pointer',
-                        background: 'rgba(15,23,42,0.8)',
-                        border: sfxOn ? '1px solid rgba(99,102,241,0.45)' : '1px solid rgba(99,102,241,0.22)',
-                        borderRadius: 12, padding: '0.5rem 0.7rem', fontFamily: 'Inter,sans-serif',
-                      }}
-                    >
-                      <span aria-hidden="true">🔈</span>
-                      <span style={{ flex: 1, minWidth: 0, fontSize: '0.64rem', color: '#94a3b8' }}>
-                        Sound effects
-                        <span style={{ color: sfxOn ? '#A5B4FC' : '#e0e7ff', fontWeight: 600 }}>
-                          {'  '}{sfxOn
-                            ? `On · ${sfxLevel.charAt(0).toUpperCase()}${sfxLevel.slice(1)}${
-                                lines.some(l => l.sfx && l.sfx !== 'auto') ? ` · ${lines.filter(l => l.sfx && l.sfx !== 'auto').length} picked` : ''}`
-                            : 'Off'}
-                        </span>
-                      </span>
-                      <span style={{ flexShrink: 0, fontSize: '0.64rem', fontWeight: 600, color: '#818CF8', whiteSpace: 'nowrap' }}>
-                        {sfxOn ? 'Change' : 'Add ▸'}
-                      </span>
-                    </button>
-                  </div>
-                )}
-
-                {/* Captions — always on; this only picks the look (episode-wide). */}
-                {extras.available && (
-                  <div>
-                    <div style={{
-                      fontSize: '0.65rem', fontWeight: 700, letterSpacing: '0.1em',
-                      textTransform: 'uppercase', color: '#6366f1',
-                      fontFamily: 'Inter,sans-serif', marginBottom: '0.35rem',
-                    }}>
-                      Captions · Episode
-                    </div>
-                    <button
-                      type="button"
-                      onClick={() => setCaptionOpen(true)}
-                      title="Pick how your captions look"
-                      style={{
-                        display: 'flex', alignItems: 'center', gap: '0.5rem', width: '100%',
-                        textAlign: 'left', cursor: 'pointer',
-                        background: 'rgba(15,23,42,0.8)',
-                        border: captionStyle !== 'glass' ? '1px solid rgba(99,102,241,0.45)' : '1px solid rgba(99,102,241,0.22)',
-                        borderRadius: 12, padding: '0.5rem 0.7rem', fontFamily: 'Inter,sans-serif',
-                      }}
-                    >
-                      <span aria-hidden="true" style={{ fontWeight: 800, color: '#818CF8', fontSize: '0.72rem' }}>Aa</span>
-                      <span style={{ flex: 1, minWidth: 0, fontSize: '0.64rem', color: '#94a3b8' }}>
-                        Caption style
-                        <span style={{ color: captionStyle !== 'glass' ? '#A5B4FC' : '#e0e7ff', fontWeight: 600 }}>
-                          {'  '}{(CAPTION_STYLES.find(s => s.id === captionStyle) || CAPTION_STYLES[0]).name}
-                        </span>
-                      </span>
-                      <span style={{ flexShrink: 0, fontSize: '0.64rem', fontWeight: 600, color: '#818CF8', whiteSpace: 'nowrap' }}>
-                        Change
-                      </span>
-                    </button>
-                  </div>
+                  <>
+                    <div className={styles.vpSec}>Whole episode</div>
+                    <SettingGroup>
+                      <SettingRow
+                        icon={<IconSound size={19} />}
+                        title="Sound effects"
+                        sub={sfxOn
+                          ? `${cap(sfxLevel)}${picked ? ` · ${picked} picked` : ' · follows your graphics'}`
+                          : 'Subtle sounds that move with your graphics'}
+                        status={sfxOn ? 'on' : 'off'}
+                        on={sfxOn}
+                        tip="Subtle sound effects that move with your graphics"
+                        onClick={() => setSoundOpen(true)}
+                      />
+                      <SettingRow
+                        icon={<IconCaptions size={19} />}
+                        title="Captions"
+                        sub={`${(CAPTION_STYLES.find(s => s.id === captionStyle) || CAPTION_STYLES[0]).name} · always on`}
+                        on={captionStyle !== 'glass'}
+                        tip="Pick how your captions look"
+                        onClick={() => setCaptionOpen(true)}
+                      />
+                    </SettingGroup>
+                  </>
                 )}
               </div>
             </div>
-          )}
+            );
+          })()}
 
           {/* Opening hook pop-out (position:fixed) */}
           {hookOpen && (
@@ -4039,7 +3980,7 @@ if (context.topic) setTopic(context.topic);
                             border: '1px solid rgba(99,102,241,0.3)',
                             fontSize: '0.72rem', fontFamily: 'Inter,sans-serif', color: '#c7d2fe',
                           }}>
-                            <span>🎙</span>
+                            <IconVoice size={13} />
                             <span>{assignedVoice.displayName}</span>
                             <span style={{ color: '#6366f1', opacity: 0.7 }}>·</span>
                             <span style={{ color: '#94a3b8' }}>{assignedVoice.accent}</span>
@@ -4049,7 +3990,7 @@ if (context.topic) setTopic(context.topic);
                             display: 'flex', alignItems: 'center', gap: '0.35rem',
                             fontSize: '0.7rem', color: '#F59E0B', fontFamily: 'Inter,sans-serif',
                           }}>
-                            ⚠ No voice selected
+                            <IconAlert size={13} /> No voice selected
                           </div>
                         )}
 
@@ -4064,7 +4005,9 @@ if (context.topic) setTopic(context.topic);
                               fontFamily: 'Inter,sans-serif',
                             }}
                           >
-                            {playingPreviewId === assignedVoice.voiceId ? '■ Stop' : '▶ Preview'}
+                            {playingPreviewId === assignedVoice.voiceId
+                              ? <><IconStop size={9} /> Stop</>
+                              : <><IconPlay size={9} /> Preview</>}
                           </button>
                         )}
 
@@ -4080,7 +4023,7 @@ if (context.topic) setTopic(context.topic);
                               fontFamily: 'Inter,sans-serif', fontWeight: 600,
                             }}
                           >
-                            {isExpanded ? '✕ Close' : '↕ Change'}
+                            {isExpanded ? <><IconClose size={10} /> Close</> : <><IconChevronDown size={11} /> Change</>}
                           </button>
                         )}
                       </div>
@@ -4123,8 +4066,9 @@ if (context.topic) setTopic(context.topic);
                                       className={`${styles.voicePreviewBtn} ${isPlaying ? styles.voicePreviewBtnPlaying : ''}`}
                                       onClick={e => { e.stopPropagation(); handlePlayPreview(v.voiceId, v.previewUrl); }}
                                       title={isPlaying ? 'Stop' : 'Preview'}
+                                      aria-label={isPlaying ? 'Stop' : 'Preview'}
                                     >
-                                      {isPlaying ? '■' : '▶'}
+                                      {isPlaying ? <IconStop size={9} /> : <IconPlay size={9} />}
                                     </button>
                                   </div>
                                   <div className={styles.voiceCardAccent}>{v.accent}</div>
@@ -4192,7 +4136,7 @@ if (context.topic) setTopic(context.topic);
                     }
                     setEnvPanelMode('generate');
                   }}
-                  title="Generate your own background"><Ic.ImageFrame /> Generate</button>
+                  title="Generate your own background"><IconAiScene size={15} /> Generate</button>
               </div>
 
               {envPanelMode === 'browse' ? (
@@ -4256,8 +4200,10 @@ if (context.topic) setTopic(context.topic);
                                   }}
                                   className={styles.avatarDeleteBtn}
                                   onClick={e => { e.stopPropagation(); setConfirmDelete({ type: 'environment', id: env.envId }); }}
+                                  title="Delete background"
+                                  aria-label="Delete background"
                                 >
-                                  ✕
+                                  <IconBin size={12} />
                                 </button>
                               ))}
                             </div>
@@ -4335,7 +4281,7 @@ if (context.topic) setTopic(context.topic);
                               onClick={handleGenerateEnvironment}
                               disabled={genEnvLoading || !genEnvDescription.trim()}
                             >
-                              {genEnvLoading ? <><span className={styles.spin}><Ic.Spin /></span> Generating…</> : <><Ic.ImageFrame /> Generate</>}
+                              {genEnvLoading ? <><span className={styles.spin}><Ic.Spin /></span> Generating…</> : <><IconAiScene size={15} /> Generate</>}
                             </button>
                             <button className={styles.genSecondaryBtn} onClick={handleChangeGenFormat}>
                               ← Change format
@@ -4358,7 +4304,7 @@ if (context.topic) setTopic(context.topic);
                               onChange={e => handleUploadEnvironment(e.target.files?.[0])} />
                             {envImgBusy
                               ? <><span className={styles.spin}><Ic.Spin /></span> Building your studio… (~1–2 min)</>
-                              : <><Ic.ImageFrame /> Upload a photo of your space</>}
+                              : <><IconUpload size={15} /> Upload a photo of your space</>}
                           </label>
                           <p className={styles.genEnvIntro} style={{ margin: '0.4rem 0' }}>
                             We rebuild your photo as a studio with {genEnvCapacity === 1 ? 'a camera-facing chair' : `${genEnvCapacity} camera-facing chairs`}. You’re responsible for rights to images you upload.
@@ -4438,7 +4384,7 @@ if (context.topic) setTopic(context.topic);
             )}
             {!voiceGate.ready && (
               <div className={styles.voiceGateWarn}>
-                ⚠ {voiceGate.missing.map(s => s.displayName || 'A speaker').join(', ')}
+                <IconAlert size={13} style={{ marginRight: 4, marginTop: -2 }} />{voiceGate.missing.map(s => s.displayName || 'A speaker').join(', ')}
                 {voiceGate.missing.length === 1 ? ' needs' : ' need'} a voice — pick one on the Script tab before generating.
               </div>
             )}
@@ -4449,8 +4395,8 @@ if (context.topic) setTopic(context.topic);
             >
               {state.status === 'rendering'
                 ? <><span className={styles.spin}><Ic.Spin /></span> Rendering…</>
-                : state.status === 'complete' ? '✓ Complete'
-                : '▶ Generate video'
+                : state.status === 'complete' ? <><IconCheck size={12} strokeWidth={2.6} /> Complete</>
+                : <><IconPlay size={11} /> Generate video</>
               }
             </button>
           </div>
@@ -4477,7 +4423,7 @@ if (context.topic) setTopic(context.topic);
             <p className={styles.recordFocusScript}>{VOICE_CLONE_SCRIPT}</p>
             <p className={styles.recordFocusHint}>Read naturally, like you're talking to a friend. Aim for 30–60 seconds.</p>
             <button className={styles.recordFocusStopBtn} onClick={handleCloneRecord}>
-              ⏹ Stop recording
+              <IconStop size={12} /> Stop recording
             </button>
           </div>
         </div>

@@ -130,3 +130,8 @@
 .ghost { background: rgba(148,163,184,0.1); color: var(--paper); border: 1px solid var(--line); }
 
 @media (prefers-reduced-motion: reduce) { .backdrop *, .backdrop { animation: none !important; transition: none !important; } }
+/* studio icons (2026-10-18) */
+.headL { display: flex; align-items: center; gap: 10px; min-width: 0; }
+.ic { display: inline-flex; color: var(--indigo-light); --si-accent: var(--green-light); }
+.close, .clearLogo, .del { display: inline-grid; place-items: center; padding: 0; }
+.addPt { display: inline-flex; align-items: center; gap: 5px; }

@@ -20,6 +20,7 @@
 import React, { useEffect, useMemo, useState } from 'react';
 import { createPortal } from 'react-dom';
 import styles from './DataCardPopover.module.css';
+import { IconDataCard, IconChart, IconClose, IconReplay, IconPlus, IconFill, IconDetach } from './StudioIcons';
 import HostAvatar from './HostAvatar';
 import { PRESETS_VERTICAL, PRESET_RECT_VERTICAL } from './podcastFormat';
 
@@ -229,9 +230,9 @@ export default function DataCardPopover({
     <div className={styles.scrim} onMouseDown={(e) => { if (e.target === e.currentTarget) onClose?.(); }}>
       <div className={styles.pop} role="dialog" aria-label="Data card">
         <div className={styles.pophead}>
-          <span className={styles.ic} aria-hidden="true">▤</span>
+          <span className={styles.ic} aria-hidden="true">{kind === 'chart' ? <IconChart size={20} /> : <IconDataCard size={20} />}</span>
           <div className={styles.t}>Data card<small>Your numbers, designed — free, exact, no image needed</small></div>
-          <button type="button" className={styles.x} aria-label="Close" onClick={onClose}>✕</button>
+          <button type="button" className={styles.x} aria-label="Close" onClick={onClose}><IconClose size={14} /></button>
         </div>
 
         <div className={styles.body}>
@@ -248,7 +249,7 @@ export default function DataCardPopover({
                   {kind === 'chart' ? 'Add at least 2 bars' : 'Add a number'}
                 </div>
               )}
-              <button type="button" className={styles.replay} onClick={() => setPlayKey(k => k + 1)} aria-label="Replay preview">↻</button>
+              <button type="button" className={styles.replay} onClick={() => setPlayKey(k => k + 1)} aria-label="Replay preview"><IconReplay size={14} /></button>
             </div>
             {lineText ? <p className={styles.quote}>“{lineText.slice(0, 120)}{lineText.length > 120 ? '…' : ''}”</p> : null}
             <div className={styles.grp} style={{ marginTop: 12 }}>Position</div>
@@ -326,26 +327,26 @@ export default function DataCardPopover({
                              placeholder="0" onChange={(e) => setBar(i, { value: e.target.value })} />
                       <button type="button" className={styles.rm} aria-label="Remove bar" disabled={bars.length <= 2}
                               onClick={() => setData({ bars: bars.filter((_, j) => j !== i),
-                                                       highlight: d.highlight === i ? -1 : (d.highlight > i ? d.highlight - 1 : d.highlight) })}>✕</button>
+                                                       highlight: d.highlight === i ? -1 : (d.highlight > i ? d.highlight - 1 : d.highlight) })}><IconClose size={11} /></button>
                     </div>
                   ))}
                   {bars.length < MAX_BARS ? (
                     <button type="button" className={styles.add}
-                            onClick={() => setData({ bars: [...bars, { label: '', value: '' }] })}>＋ Add bar</button>
+                            onClick={() => setData({ bars: [...bars, { label: '', value: '' }] })}><IconPlus size={12} /> Add bar</button>
                   ) : null}
                 </div>
               </>
             )}
 
             <button type="button" className={styles.suggest} onClick={onFill} disabled={filling || !lineText}>
-              {filling ? 'Reading the line…' : '✨ Fill from this line'}
+              {filling ? 'Reading the line…' : <><IconFill size={15} /> Fill from this line</>}
             </button>
             {fillNote ? <p className={styles.hint} style={{ marginTop: 6 }}>{fillNote}</p> : null}
           </div>
         </div>
 
         <div className={styles.foot}>
-          <button type="button" className={styles.remove} onClick={onRemove}>Remove card</button>
+          <button type="button" className={styles.remove} onClick={onRemove}><IconDetach size={14} /> Remove card</button>
           <span className={styles.hintFoot}>Free — drawn over your video, numbers exactly as typed.</span>
           <button type="button" className={styles.done} onClick={onClose}>Done</button>
         </div>

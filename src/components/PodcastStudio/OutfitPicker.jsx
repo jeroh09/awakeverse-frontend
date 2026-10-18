@@ -22,6 +22,7 @@
 
 import React, { useCallback, useEffect, useRef, useState } from 'react';
 import styles from './OutfitPicker.module.css';
+import { IconOutfit, IconClose, IconPerson, IconArrowRight, IconCheck, IconBin, IconPlus } from './StudioIcons';
 
 export default function OutfitPicker({
   open,
@@ -165,9 +166,9 @@ export default function OutfitPicker({
     <div className={styles.backdrop} onMouseDown={(e) => { if (e.target === e.currentTarget) onClose?.(); }}>
       <div className={styles.modal} role="dialog" aria-modal="true" aria-label="Choose outfit" ref={dialogRef}>
         <div className={styles.head}>
-          <span className={styles.ic}>👗</span>
+          <span className={styles.ic} aria-hidden="true"><IconOutfit size={20} /></span>
           <div className={styles.title}>Outfit — {speakerLabel}<small>This episode · saved to your avatar</small></div>
-          <button type="button" className={styles.close} aria-label="Close" onClick={onClose}>✕</button>
+          <button type="button" className={styles.close} aria-label="Close" onClick={onClose}><IconClose size={14} /></button>
         </div>
 
         <div className={styles.body}>
@@ -177,13 +178,13 @@ export default function OutfitPicker({
               <div className={styles.stageFrame}>
                 {originalImg
                   ? <img className={styles.stageFig} src={originalImg} alt={`${speakerLabel} — original outfit`} />
-                  : <span className={`${styles.stageFig} ${styles.stageEmpty}`} aria-hidden="true">🧍</span>}
+                  : <span className={`${styles.stageFig} ${styles.stageEmpty}`} aria-hidden="true"><IconPerson size="1em" /></span>}
                 {originalBusy && <span className={styles.figBusy}>Preparing…</span>}
               </div>
               <figcaption className={styles.stageLab}>{speakerLabel} · Original</figcaption>
             </figure>
 
-            <span className={styles.stageArrow} aria-hidden="true">→</span>
+            <span className={styles.stageArrow} aria-hidden="true"><IconArrowRight size={18} /></span>
 
             <figure className={styles.stageCol}>
               <div className={styles.stageFrame}>
@@ -230,8 +231,8 @@ export default function OutfitPicker({
                 onClick={pickOriginal} title="Original — no outfit change">
                 {originalImg
                   ? <img className={styles.fig} src={originalImg} alt="" />
-                  : <span className={styles.figOriginal} aria-hidden="true">🧍</span>}
-                <span className={styles.chk}>✓</span>
+                  : <span className={styles.figOriginal} aria-hidden="true"><IconPerson size="1em" /></span>}
+                <span className={styles.chk}><IconCheck size={11} strokeWidth={2.6} /></span>
                 <span className={styles.lab}>Original</span>
               </button>
 
@@ -240,15 +241,15 @@ export default function OutfitPicker({
                   className={`${styles.tile} ${currentRefUrl === o.outfitRefUrl ? styles.on : ''}`}
                   onClick={() => pickOutfit(o)} title={o.description || o.label}>
                   <img className={styles.fig} src={o.fullbodyRefUrl} alt="" loading="lazy" />
-                  <span className={styles.chk}>✓</span>
+                  <span className={styles.chk}><IconCheck size={11} strokeWidth={2.6} /></span>
                   <span className={styles.lab}>{o.label}</span>
-                  <span className={styles.del} title="Delete outfit" onClick={(e) => handleDelete(o, e)}>✕</span>
+                  <span className={styles.del} title="Delete outfit" onClick={(e) => handleDelete(o, e)}><IconBin size={11} /></span>
                 </button>
               ))}
 
               {!authorOpen && (
                 <button type="button" className={`${styles.tile} ${styles.new}`} onClick={startNew}>
-                  <span className={styles.plus}>＋</span>
+                  <span className={styles.plus}><IconPlus size={22} /></span>
                   <span className={styles.lab}>New outfit</span>
                 </button>
               )}

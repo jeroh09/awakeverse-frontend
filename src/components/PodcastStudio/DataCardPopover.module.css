@@ -158,3 +158,8 @@
 @media (prefers-reduced-motion: reduce) {
   .card, .vBar, .hBar, .ringFg { animation: none !important; }
 }
+/* studio icons (2026-10-18) */
+.ic { display: inline-flex; --si-accent: var(--indigo-text); }
+.x, .replay, .rm { display: inline-grid; place-items: center; padding: 0; }
+.add, .remove { display: inline-flex; align-items: center; gap: 5px; }
+.suggest { display: flex; align-items: center; justify-content: center; gap: 6px; --si-accent: #E0E7FF; }

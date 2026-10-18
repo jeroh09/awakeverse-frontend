@@ -96,3 +96,8 @@
 .foot .hint { margin: 0; }
 
 @media (prefers-reduced-motion: reduce) { .modal *, .tile { transition: none !important; } }
+/* studio icons (2026-10-18) */
+.ic { display: inline-flex; color: var(--indigo-light); --si-accent: var(--indigo-txt); }
+.close { display: inline-grid; place-items: center; padding: 0; }
+.stageEmpty:not(.stageEmptyText), .figOriginal { color: rgba(148,163,184,0.45); }
+.stageArrow { display: inline-flex; }

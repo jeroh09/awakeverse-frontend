@@ -183,3 +183,7 @@
   .mCard, .mWord, .mUnder, .mStat, .mLabel, .mVsName, .mVsPill { animation: none !important; opacity: 1 !important; }
   .mUnder { width: 100%; }
 }
+/* studio icons (2026-10-18) */
+.ic { display: inline-flex; color: var(--indigo-light); --si-accent: var(--indigo-text); }
+.x, .replay { display: inline-grid; place-items: center; padding: 0; }
+.suggest { display: flex; align-items: center; justify-content: center; gap: 6px; --si-accent: #E0E7FF; }

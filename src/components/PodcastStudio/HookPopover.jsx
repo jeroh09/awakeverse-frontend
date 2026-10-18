@@ -20,6 +20,7 @@
 import React, { useEffect, useMemo, useRef, useState } from 'react';
 import { createPortal } from 'react-dom';
 import styles from './HookPopover.module.css';
+import { IconHook, IconClose, IconReplay, IconGenerate } from './StudioIcons';
 import HostAvatar from './HostAvatar';
 import { plainHookText } from './podcastExtras';
 
@@ -197,9 +198,9 @@ export default function HookPopover({
     <div className={styles.scrim} onMouseDown={(e) => { if (e.target === e.currentTarget) onClose?.(); }}>
       <div className={styles.pop} role="dialog" aria-label="Opening hook">
         <div className={styles.pophead}>
-          <span className={styles.ic} aria-hidden="true">🪝</span>
+          <span className={styles.ic} aria-hidden="true"><IconHook size={20} /></span>
           <div className={styles.t}>Opening hook<small>The first {d.dur || 4} seconds · keeps viewers watching</small></div>
-          <button type="button" className={styles.x} aria-label="Close" onClick={onClose}>✕</button>
+          <button type="button" className={styles.x} aria-label="Close" onClick={onClose}><IconClose size={14} /></button>
         </div>
 
         <div className={styles.body}>
@@ -212,7 +213,7 @@ export default function HookPopover({
                 : <><div className={styles.bgFallback} /><div className={styles.host}><HostAvatar size="78%" /></div></>}
               {ready ? <MiniHook draft={d} playKey={playKey} /> : null}
               <button type="button" className={styles.replay} onClick={() => setPlayKey((k) => k + 1)}
-                      aria-label="Replay preview">↻</button>
+                      aria-label="Replay preview"><IconReplay size={14} /></button>
             </div>
             <p className={styles.hint}>
               Sits on the left, clear of your face; captions move beside it while it’s up.
@@ -305,7 +306,7 @@ export default function HookPopover({
             </div>
 
             <button type="button" className={styles.suggest} onClick={onSuggest} disabled={suggesting}>
-              {suggesting ? 'Reading your opening…' : '✨ Suggest again'}
+              {suggesting ? 'Reading your opening…' : <><IconGenerate size={15} /> Suggest again</>}
             </button>
           </div>
         </div>

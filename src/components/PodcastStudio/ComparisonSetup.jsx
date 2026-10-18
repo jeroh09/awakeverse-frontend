@@ -15,6 +15,7 @@
 
 import React, { useCallback, useEffect, useRef, useState } from 'react';
 import styles from './ComparisonSetup.module.css';
+import { IconCompare, IconClose, IconBin, IconPlus } from './StudioIcons';
 import HostAvatar from './HostAvatar';
 
 const monogram = (s) => (s.logo || s.name?.[0] || '?').slice(0, 2).toUpperCase();
@@ -111,7 +112,8 @@ function Subject({ side, val, setter, tag, uploading, onLogo }) {
         </label>
         {val.logoUrl && (
           <button type="button" className={styles.clearLogo} title="Remove image"
-                  onClick={() => setter(v => ({ ...v, logoUrl: '' }))}>✕</button>
+                  aria-label="Remove image"
+                  onClick={() => setter(v => ({ ...v, logoUrl: '' }))}><IconClose size={11} /></button>
         )}
       </div>
       <span className={styles.hint}>Upload a logo - you're responsible for rights to images you add.</span>
@@ -183,8 +185,11 @@ export default function ComparisonSetup({
     <div className={styles.backdrop} onMouseDown={e => { if (e.target === e.currentTarget) handleClose(); }}>
       <div className={styles.modal} role="dialog" aria-modal="true" aria-label="Comparison setup" ref={dialogRef}>
         <div className={styles.head}>
-          <div className={styles.title}>Comparison setup<small>Solo · A vs B glass rails</small></div>
-          <button type="button" className={styles.close} aria-label="Close" onClick={handleClose}>✕</button>
+          <div className={styles.headL}>
+            <span className={styles.ic} aria-hidden="true"><IconCompare size={22} /></span>
+            <div className={styles.title}>Comparison setup<small>Solo · A vs B glass rails</small></div>
+          </div>
+          <button type="button" className={styles.close} aria-label="Close" onClick={handleClose}><IconClose size={15} /></button>
         </div>
 
         <div className={styles.split}>
@@ -242,11 +247,11 @@ export default function ComparisonSetup({
                   <input className={styles.input} value={p.right}       placeholder="Fast"      onChange={e => upd(i, 'right', e.target.value)} />
                   <input className={styles.input} value={p.revealAtLine} inputMode="numeric" placeholder="auto"
                          onChange={e => upd(i, 'revealAtLine', e.target.value.replace(/[^0-9]/g, ''))} />
-                  <button type="button" className={styles.del} title="Remove" onClick={() => delPoint(i)}>✕</button>
+                  <button type="button" className={styles.del} title="Remove point" aria-label="Remove point" onClick={() => delPoint(i)}><IconBin size={13} /></button>
                 </div>
               ))}
             </div>
-            {points.length < 6 && <button type="button" className={styles.addPt} onClick={addPoint}>+ Add point</button>}
+            {points.length < 6 && <button type="button" className={styles.addPt} onClick={addPoint}><IconPlus size={12} /> Add point</button>}
             <p className={styles.note} style={{ marginTop: 8 }}>
               <b>Line</b> = the line number where that point appears (blank = auto-spaced across the episode).
             </p>

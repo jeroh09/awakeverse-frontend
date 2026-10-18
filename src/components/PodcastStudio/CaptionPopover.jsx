@@ -13,6 +13,7 @@
 import React, { useEffect, useState } from 'react';
 import { createPortal } from 'react-dom';
 import styles from './CaptionPopover.module.css';
+import { IconCaptions, IconClose } from './StudioIcons';
 
 export const CAPTION_STYLES = [
   { id: 'glass',   name: 'Glass',    desc: 'A frosted pill; words light up as they’re said. Calm and premium — our default.' },
@@ -61,9 +62,9 @@ export default function CaptionPopover({ value = 'glass', backdropUrl = null, on
     <div className={styles.scrim} onMouseDown={(e) => { if (e.target === e.currentTarget) onClose?.(); }}>
       <div className={styles.pop} role="dialog" aria-label="Caption style">
         <div className={styles.pophead}>
-          <span className={styles.ic} aria-hidden="true">Aa</span>
+          <span className={styles.ic} aria-hidden="true"><IconCaptions size={20} /></span>
           <div className={styles.t}>Caption style<small>Captions are always on — pick how they look</small></div>
-          <button type="button" className={styles.x} aria-label="Close" onClick={onClose}>✕</button>
+          <button type="button" className={styles.x} aria-label="Close" onClick={onClose}><IconClose size={14} /></button>
         </div>
 
         <div className={styles.body} role="radiogroup" aria-label="Caption style">

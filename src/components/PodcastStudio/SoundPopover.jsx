@@ -21,6 +21,7 @@
 import React, { useEffect, useRef, useState } from 'react';
 import { createPortal } from 'react-dom';
 import styles from './SoundPopover.module.css';
+import { IconSound, IconClose, IconPlay, IconStop, IconGlassCard, IconChevronDown } from './StudioIcons';
 
 const LEVEL_LABEL = { subtle: 'Subtle', normal: 'Normal', bold: 'Bold' };
 const LEVEL_TIP = {
@@ -82,7 +83,7 @@ export default function SoundPopover({
     <button type="button" className={`${styles.play} ${playing === name ? styles.playOn : ''}`}
             aria-label={playing === name ? 'Stop' : `Listen to ${byName[name]?.label || name}`}
             onClick={(e) => { e.stopPropagation(); play(name); }}>
-      {playing === name ? '■' : '▶'}
+      {playing === name ? <IconStop size={9} /> : <IconPlay size={10} />}
     </button>
   );
 
@@ -93,9 +94,9 @@ export default function SoundPopover({
     <div className={styles.scrim} onMouseDown={(e) => { if (e.target === e.currentTarget) onClose?.(); }}>
       <div className={styles.pop} role="dialog" aria-label="Sound effects">
         <div className={styles.pophead}>
-          <span className={styles.ic} aria-hidden="true">🔈</span>
+          <span className={styles.ic} aria-hidden="true"><IconSound size={20} /></span>
           <div className={styles.t}>Sound effects<small>Subtle glass sounds that move with your graphics</small></div>
-          <button type="button" className={styles.x} aria-label="Close" onClick={onClose}>✕</button>
+          <button type="button" className={styles.x} aria-label="Close" onClick={onClose}><IconClose size={14} /></button>
         </div>
 
         {!library.length ? (
@@ -157,14 +158,14 @@ export default function SoundPopover({
                       <div key={ln.id} className={`${styles.ln} ${open ? styles.lnOpen : ''}`}>
                         <span className={styles.lnN}>{ln.n}</span>
                         <span className={styles.lnTxt} title={ln.text}>
-                          {ln.hasCard ? <span className={styles.badge} title="This line has a visual">▣</span> : null}
+                          {ln.hasCard ? <span className={styles.badge} title="This line has a visual"><IconGlassCard size={12} /></span> : null}
                           {ln.text || <i>empty line</i>}
                         </span>
                         <div className={styles.pick}>
                           <button type="button" disabled={!enabled}
                                   className={`${styles.pickBtn} ${v !== 'auto' ? styles.pickSet : ''}`}
                                   onClick={() => setMenuFor(open ? null : ln.id)} aria-expanded={open}>
-                            {labelOf(v, ln.hasCard)} <span aria-hidden="true">▾</span>
+                            {labelOf(v, ln.hasCard)} <span aria-hidden="true" style={{ display: 'inline-flex' }}><IconChevronDown size={11} /></span>
                           </button>
                           {open ? (
                             <div className={styles.menu} role="menu">

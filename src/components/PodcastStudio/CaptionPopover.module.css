@@ -93,3 +93,7 @@
 
 @media (max-height: 760px) { .pophead { padding: 9px 14px; } .body { gap: 9px; padding-top: 10px; } .desc { display: none; } }
 @media (prefers-reduced-motion: reduce) { .cap, .cap_bold, .now { animation: none !important; transition: none !important; } }
+
+/* studio icons (2026-10-18) */
+.ic { display: inline-flex; --si-accent: var(--indigo-text); }
+.x { display: inline-grid; place-items: center; padding: 0; }

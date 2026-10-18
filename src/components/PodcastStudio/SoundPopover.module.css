@@ -123,3 +123,8 @@
   font-weight: 600; font-size: 0.8rem; cursor: pointer; background: linear-gradient(180deg, var(--indigo-light), var(--indigo)); color: #fff; }
 
 @media (prefers-reduced-motion: reduce) { .pop * { transition: none !important; } }
+/* studio icons (2026-10-18) */
+.ic { display: inline-flex; color: var(--indigo-light); --si-accent: var(--indigo-text); }
+.x { display: inline-grid; place-items: center; padding: 0; }
+.badge { display: inline-flex; vertical-align: -2px; }
+.pickBtn span { align-self: center; }

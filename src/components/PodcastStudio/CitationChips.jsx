@@ -27,6 +27,7 @@
 //   ) : null}
 
 import React, { useState } from 'react';
+import { IconEdited, IconAlert, IconQuote } from './StudioIcons';
 
 const S = {
   row:   { display: 'flex', flexWrap: 'wrap', gap: 4, marginTop: 5, position: 'relative' },
@@ -83,7 +84,7 @@ export default function CitationChips({ citations = [], edited = false }) {
               aria-label={`Citation: ${label}${warn ? ' — needs review' : ''}${edited ? ' — line edited, unverified' : ''}`}
               onClick={(e) => { e.stopPropagation(); setOpenId(openId === key ? null : key); }}
             >
-              {edited ? '✎' : warn ? '⚠' : '❝'} {label}
+              {edited ? <IconEdited size={10} /> : warn ? <IconAlert size={10} /> : <IconQuote size={10} />} {label}
             </button>
 
             {openId === key ? (
