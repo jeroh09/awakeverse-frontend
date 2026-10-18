@@ -184,6 +184,8 @@ export function friendlyError(e, fallback = 'Something went wrong. Please try ag
   const detail = data.error || (e && e.message) || '';
   if (e && e.code === 'ECONNABORTED')
     return 'That took longer than expected — it may still be working. Give it a moment and try again.';
+  // ADVERTISING MODE: ad renders switched off on the server (AD_RENDER) — say so plainly.
+  if (status === 409 && data.code === 'ad_render_off' && data.error) return data.error;
   // Shared video budget reached — show the informative hint, not a session error.
   if (status === 403 && /budget/i.test(detail))
     return data.hint || 'You’ve reached your monthly video budget. Upgrade to make more films.';

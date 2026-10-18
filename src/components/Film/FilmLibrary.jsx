@@ -10,7 +10,8 @@ import { createPortal } from 'react-dom';
 import './FilmSeries.css';
 import SeasonBoard from './SeasonBoard';
 import { posterOf } from './filmPoster';
-import { genreLabel } from './filmGenres';
+import { genreLabel, isAdGenre, adLengthTip } from './filmGenres';
+import './FilmAdShelf.css';
 import {
   IconSeries, IconBook, IconPlus, IconLock, IconRefreshLook, IconPlay, IconChevron, IconTrash,
 } from './filmIcons';
@@ -153,11 +154,14 @@ function Book({ item, ordinal, isOpen, onToggle, onOpen, onWatch, onPromote, onD
           )}
         </div>
         <div className="fs-ctitle">{ordinal ? `Ep ${ordinal} · ` : ''}{item.title || 'Untitled'}</div>
-        <div className="fs-cmeta">{ordinal ? `Episode ${ordinal}` : `${styleLabel(item.video_style)} · ${item.aspect_ratio || '9:16'}`}</div>
+        <div className="fs-cmeta" title={item.isAd && item.duration_seconds ? adLengthTip(item.duration_seconds) : undefined}>{ordinal ? `Episode ${ordinal}`
+          : item.isAd ? `Ad · ${item.duration_seconds ? `${item.duration_seconds}s · ` : ''}${item.aspect_ratio || '9:16'}`
+          : `${styleLabel(item.video_style)} · ${item.aspect_ratio || '9:16'}`}</div>
         <div className="fs-cta">
           <button type="button" className="fs-cbtn play" onClick={stop(() => onOpen(item))}
                   title={item.can_finish ? 'Open the preview — finish the full film from there'
-                         : ready ? 'Open in the storyboard' : 'Carry on in the writers\' room'}>{item.can_finish ? 'Finish film' : ready ? 'Open' : 'Continue'}</button>
+                         : ready ? 'Open in the storyboard'
+                         : item.isAd ? 'Carry on in the Ad studio' : 'Carry on in the writers\' room'}>{item.can_finish ? 'Finish film' : ready ? 'Open' : 'Continue'}</button>
           {ready && item.standalone && (
             <button type="button" className="fs-cbtn ghost" onClick={stop(() => onPromote(item))}
                     title="Make this film Episode 1 of a new series — its cast is kept for every episode"><IconPlus s={12} /> Series</button>
@@ -212,6 +216,43 @@ function SinglesShelf({ films, onOpen, onWatch, onPromote, onDelete }) {
                 isOpen={openId === (f.id || f.project_id)} onToggle={toggle}
                 onOpen={onOpen} onWatch={onWatch} onPromote={onPromote} onDelete={onDelete} />
         ))}
+      </GlassRail>
+      <div className="fs-ledge" />
+    </div>
+  );
+}
+
+/* ADVERTISING MODE (2026-10-18) — ads get their own shelf. Marked by the server
+   (genre 'advertise', only while AD_MODE is on), so with the switch off every ad sits
+   on Singles exactly as before. No "+ Series" here: an ad is never a series in v1. */
+const IconAd = ({ s = 12 }) => (
+  <svg width={s} height={s} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"
+       strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+    <path d="M3 11v2a1 1 0 0 0 1 1h3l5 4V6L7 10H4a1 1 0 0 0-1 1z" /><path d="M16 9a4 4 0 0 1 0 6" /><path d="M19 6a8 8 0 0 1 0 12" />
+  </svg>
+);
+
+function AdsShelf({ ads, onOpen, onWatch, onDelete, onNewAd }) {
+  const [openId, setOpenId] = useState(null);
+  const toggle = (id) => setOpenId((prev) => (id === null || prev === id ? null : id));
+  if (!ads.length) return null;
+  return (
+    <div className="fs-shelf fs-shelf--ads">
+      <div className="fs-slbl">
+        <span className="fs-badge fs-badge--ads"><IconAd s={12} /> Ads</span>
+        <h3>Your ads</h3>
+        <span className="fs-count">{ads.length} ad{ads.length === 1 ? '' : 's'}</span>
+      </div>
+      <GlassRail openId={openId}>
+        {ads.map((f) => (
+          <Book key={f.id || f.project_id} item={{ ...f, isAd: true }}
+                isOpen={openId === (f.id || f.project_id)} onToggle={toggle}
+                onOpen={onOpen} onWatch={onWatch} onPromote={() => {}} onDelete={onDelete} />
+        ))}
+        {onNewAd && (
+          <button className="fs-addep" onClick={onNewAd} aria-label="New ad"
+                  title="Start a new ad in the Ad studio"><IconPlus s={22} /></button>
+        )}
       </GlassRail>
       <div className="fs-ledge" />
     </div>
@@ -442,6 +483,7 @@ export default function FilmLibrary({
   onNewEpisode = () => {}, onPromote = () => {}, onRefreshPlate = () => {},
   onDelete = () => {}, onManageSeries,
   onDeleteEpisode = () => {}, onDeleteSeries = () => {},
+  onNewAd = null,              // optional — the Ads shelf's ＋ (opens New Film on Advertise)
   // Optional CONTROLLED tab (2026-10-12): MyFilmsView owns it so the page can give My
   // Series the full width. Uncontrolled (own state) when not passed — unchanged.
   view: viewProp, onViewChange,
@@ -450,7 +492,8 @@ export default function FilmLibrary({
   const view = viewProp || viewOwn;
   const setView = (v) => { setViewOwn(v); if (onViewChange) onViewChange(v); };
   const [watching, setWatching] = useState(null);
-  const singles = films.filter((f) => !f.series_id);
+  const singles = films.filter((f) => !f.series_id && !isAdGenre(f.genre));
+  const ads = films.filter((f) => !f.series_id && isAdGenre(f.genre));
   const goManage = (s) => { setView('series'); if (onManageSeries) onManageSeries(s); };
   // EXISTING items open via the resume path — projectId only, NO session_id.
   const open = (item) => onOpenFilm(item.project_id || item.id);
@@ -485,7 +528,8 @@ export default function FilmLibrary({
               <Shelf key={s.series_id} s={s} onOpen={open} onWatch={watch} onNewEpisode={onNewEpisode} onManage={goManage} />
             ))}
             <SinglesShelf films={singles} onOpen={open} onWatch={watch} onPromote={onPromote} onDelete={onDelete} />
-            {!series.length && !singles.length && (
+            <AdsShelf ads={ads} onOpen={open} onWatch={watch} onDelete={onDelete} onNewAd={onNewAd} />
+            {!series.length && !singles.length && !ads.length && (
               <div className="fs-empty fs-glass">
                 <h3>Your shelf is empty</h3>
                 <p>Start with ＋ New Film, or ＋ New Series to build something with a recurring cast.</p>

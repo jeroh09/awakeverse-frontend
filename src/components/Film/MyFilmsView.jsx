@@ -5,13 +5,14 @@
 // pattern; only its contents changed. The New-Film picker (style/duration/frame)
 // stays here and is opened by FilmLibrary's "＋ New Film".
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { IconCheck } from './filmIcons';
 import { friendlyError } from './filmApi';
 import FilmLibrary from './FilmLibrary';
 import FilmVideoWall from './FilmVideoWall';
 import FilmSeriesModals from './FilmSeriesModals';
-import NewFilmModal from './NewFilmModal';
+import NewFilmModal, { AD_SEED_KEY } from './NewFilmModal';
+import { AD_GENRE, isAdGenre } from './filmGenres';
 
 const STYLES = [
   { key: 'anime',       label: 'Anime' },
@@ -74,6 +75,26 @@ export default function MyFilmsView({
   // the promo grid on the right stays for My Films only.
   const [libView, setLibView] = useState('films');
 
+  // ADVERTISING MODE (2026-10-18). "Start an ad" in the writers' room leaves its request
+  // in sessionStorage and comes back here — open New Film on Advertise so it carries on.
+  // The seed stays put: the workspace sends it as the first message of the new ad.
+  useEffect(() => {
+    let seeded = false;
+    try { seeded = !!window.sessionStorage.getItem(AD_SEED_KEY); } catch (_) { /* private mode */ }
+    if (seeded) { setGenre(AD_GENRE.key); setPicking(true); }
+  }, []);
+  const newAd = () => { setGenre(AD_GENRE.key); setDuration(15); setPicking(true); };
+  // ＋ New Film after an ad picker starts from a film again (genre off, a film length).
+  const newFilm = () => {
+    if (isAdGenre(genre)) { setGenre(null); setDuration(60); }
+    setPicking(true);
+  };
+  // Closing the picker without starting drops a pending ad request.
+  const closePicker = () => {
+    setPicking(false);
+    try { window.sessionStorage.removeItem(AD_SEED_KEY); } catch (_) { /* private mode */ }
+  };
+
   // Deletion wiring (2026-08-24): FilmLibrary's confirms are the consent step;
   // these just call the hook (via seriesActions) and surface the outcome in
   // the existing error strip. The 409 "still rendering — cancel first" refusal
@@ -131,7 +152,7 @@ export default function MyFilmsView({
             onGenre={setGenre}
             busy={busy}
             onStart={startNew}
-            onClose={() => setPicking(false)}
+            onClose={closePicker}
           />
         )}
 
@@ -148,7 +169,7 @@ export default function MyFilmsView({
             films={films}
             filmCount={films.length}
             onOpenFilm={onOpenFilm}
-            onNewFilm={() => setPicking(true)}
+            onNewFilm={newFilm}
             onNewSeries={() => setModal({ type: 'newSeries' })}
             onNewEpisode={(s, opts) => setModal({ type: 'chain', series: s, planCard: opts?.planCard ?? null })}
             onPromote={(film) => setModal({ type: 'promote', film })}
@@ -156,6 +177,7 @@ export default function MyFilmsView({
             onDelete={onDelete}
             onDeleteEpisode={delEpisode}
             onDeleteSeries={delSeries}
+            onNewAd={newAd}
           />
         )}
       </div>
