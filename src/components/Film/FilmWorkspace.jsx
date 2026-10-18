@@ -8,6 +8,7 @@
 import React, { useState, useEffect } from 'react';
 import Storyboard from './Storyboard';
 import WritersRoom from './WritersRoom';
+import AdStudio from './AdStudio';
 import { IconChevron, IconBack } from './filmIcons';
 import { CreditsChip } from './CreditsUI';
 import './CreditsUI.css';
@@ -70,7 +71,12 @@ export default function FilmWorkspace({
   onSetChatMode = () => {},
   onApplyEditIntent = () => {},
   onDismissProposal = () => {},
+  // Advertising Mode (2026-10-18): an ad shows the Ad studio in the left panel until the
+  // cast review starts; then the storyboard takes over as for any film.
+  ad = null, projectId = null, onAd = () => {}, onAdChosen = () => {}, onAdScript = () => {},
+  onStartAd = null,
 }) {
+  const showAdStudio = !!ad && stageState === 'empty' && castPhase === 'idle';
   // Below 820px the two panels stack (see FilmWorkspace.css's accordion
   // media query) — starting BOTH expanded there would just reproduce the old
   // 50/50 squeeze, so on narrow viewports we default straight into Writers'
@@ -187,6 +193,10 @@ export default function FilmWorkspace({
               </button>
               <span className="film-rail-label">Storyboard</span>
             </div>
+            {showAdStudio ? (
+              <AdStudio projectId={projectId} ad={ad} onAd={onAd} onChosen={onAdChosen}
+                onScript={onAdScript} hasScript={scriptReady} chatBusy={thinking || streamingActive} />
+            ) : (
             <Storyboard
               stageState={stageState}
               contentBlock={contentBlock}
@@ -230,6 +240,7 @@ export default function FilmWorkspace({
               canPromote={canPromote}
               onPromote={onPromote}
             />
+            )}
           </section>
 
           {/* RIGHT — Writers' room */}
@@ -277,6 +288,8 @@ export default function FilmWorkspace({
               castPhase={castPhase}
               busyLabel={busyLabel}
               onSaveScript={onSaveScript}
+              isAd={!!ad}
+              onStartAd={onStartAd}
             />
           </section>
         </div>

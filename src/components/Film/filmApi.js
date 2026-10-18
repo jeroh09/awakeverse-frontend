@@ -322,3 +322,44 @@ export const filmSetRecap = (jobId, { on, beat_indices, voice_id } = {}) =>
 export const filmReviewEpisode = (projectId, script) =>
   api.post(`/film/projects/${projectId}/review-episode`, script ? { script } : {},
     { timeout: LLM_TIMEOUT }).then(r => r.data);
+
+// ── Advertising Mode (AD_MODE=1, 2026-10-18). Every /ad route 404s while the switch is
+//    off, so the UI feature-detects with filmAdAvailable() (one call per page load). ──
+const AD_LLM_TIMEOUT = 250000;   // concepts / script: one model call plus one repair or retry
+
+export const filmAdLenses = () =>
+  api.get('/film/ad/lenses').then(r => r.data);      // {groups:[{key,label,lenses:[{key,label,hint}]}], max}
+
+let _adAvailable = null;
+// Resolves to the lens catalogue when Advertising Mode is on, else null (404 / any error).
+export const filmAdAvailable = () => {
+  if (!_adAvailable) _adAvailable = filmAdLenses().then((d) => d || null, () => null);
+  return _adAvailable;
+};
+
+// Every call below resolves to { ad } — the ad's whole state (brief, lenses, concepts,
+// chosen, locked, stage, missing, notices, end_card_seconds, film_seconds).
+export const filmGetAd = (projectId) =>
+  api.get(`/film/projects/${projectId}/ad`).then(r => r.data);
+// brief: any subset of {what, kind, name, audience, cast, one_thing, offer, cta, url, tone,
+// must_say[], must_not_say[], markets[], length, ratio}. 409 {code:'locked'} = length/ratio fixed.
+export const filmSaveAdBrief = (projectId, brief) =>
+  api.put(`/film/projects/${projectId}/ad/brief`, { brief }, { timeout: QUEUE_TIMEOUT }).then(r => r.data);
+// Free text → the assistant fills the EMPTY brief fields and asks ≤3 questions.
+export const filmAdAssist = (projectId, text) =>
+  api.post(`/film/projects/${projectId}/ad/brief/assist`, { text }, { timeout: LLM_TIMEOUT }).then(r => r.data);
+export const filmSaveAdLenses = (projectId, { keys = [], custom = '' } = {}) =>
+  api.put(`/film/projects/${projectId}/ad/lenses`, { keys, custom }, { timeout: QUEUE_TIMEOUT }).then(r => r.data);
+// Three concepts; {replace: i} redoes one; {note} steers (mix, change). 409 {code:'brief_incomplete', missing}.
+export const filmAdConcepts = (projectId, { note, replace } = {}) =>
+  api.post(`/film/projects/${projectId}/ad/concepts`,
+    { ...(note ? { note } : {}), ...(Number.isInteger(replace) ? { replace } : {}) },
+    { timeout: AD_LLM_TIMEOUT }).then(r => r.data);
+// Choose a concept — locks the ad's length and frame for good.
+export const filmAdChoose = (projectId, index) =>
+  api.post(`/film/projects/${projectId}/ad/choose`, { index }, { timeout: QUEUE_TIMEOUT }).then(r => r.data);
+// Write the script for the chosen concept → { script_meta, commentary, ad }. Saved as a
+// writers'-room turn, so the chat, Save and "Review cast" use it like any film script.
+export const filmAdScript = (projectId, note) =>
+  api.post(`/film/projects/${projectId}/ad/script`, note ? { note } : {},
+    { timeout: AD_LLM_TIMEOUT }).then(r => r.data);

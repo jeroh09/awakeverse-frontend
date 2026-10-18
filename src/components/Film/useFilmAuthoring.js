@@ -25,6 +25,13 @@
 //   {"type":"done","session_id":"...","response":"<full>"} — terminal, success. Already tag/
 //                                                            script-stripped server-side —
 //                                                            this is plain flowing commentary.
+//   {"type":"ad_state","ad":{...}}                          — ADVERTISING MODE: an ad's chat in the
+//                                                            brief stage saved the message into the
+//                                                            brief → opts.onAdState(ad) (the form
+//                                                            on the left updates).
+//   {"type":"ad_suggest"}                                   — the film room says this is an advert
+//                                                            request → the reply carries adSuggest
+//                                                            (WritersRoom shows "Start an ad").
 // `streamingActive` / `streamingText` are the same two fields WritersRoom and
 // the container already read — swapping the stopgap for this didn't touch
 // anything downstream.
@@ -35,7 +42,11 @@ import { filmStart, filmMessageStream, filmFinalize, friendlyError } from './fil
 const looksLikeScript = (t = '') =>
   /^\s*(VISUAL:|INT\.|EXT\.|TITLE:)/im.test(t) || /\n[A-Z][A-Z '\-/]{1,30}\n/.test(t);
 
-export default function useFilmAuthoring() {
+export default function useFilmAuthoring(opts = {}) {
+  // opts.onAdState(ad) — ADVERTISING MODE (2026-10-18). Read through a ref so the
+  // stream loop always calls the latest callback without re-creating _send.
+  const optsRef = useRef(opts);
+  optsRef.current = opts;
   const [sessionId, setSessionId] = useState(null);
   const [messages, setMessages]   = useState([]);
   const [scriptReady, setScriptReady] = useState(false);
@@ -119,6 +130,7 @@ export default function useFilmAuthoring() {
       let fullText = '';
       let streamError = null;
       let scriptMeta = null;   // {duration_seconds, characters, script} — set if script_meta arrives
+      let adSuggest = false;   // ADVERTISING MODE: the film room pointed this request to the Ad studio
 
       // eslint-disable-next-line no-constant-condition
       while (true) {
@@ -153,6 +165,10 @@ export default function useFilmAuthoring() {
             setEditProposal({ id: Date.now(), intents: chunk.intents || [], applied: {} });
           } else if (chunk.type === 'edit_intent_problems') {
             console.warn('edit intent problems:', chunk.problems);
+          } else if (chunk.type === 'ad_state') {
+            if (chunk.ad && optsRef.current.onAdState) optsRef.current.onAdState(chunk.ad);
+          } else if (chunk.type === 'ad_suggest') {
+            adSuggest = true;
           } else if (chunk.type === 'error') {
             streamError = chunk.error || 'Something went wrong drafting that.';
           } else if (chunk.type === 'done') {
@@ -175,7 +191,7 @@ export default function useFilmAuthoring() {
         // (authoritative), else the room the user spoke from.
         setMessages(m => [...m, { role: 'ai',
           room: (window.__fw_last_mode === 'editors_room') ? 'edit' : room,
-          text: fullText, scriptMeta }]);
+          text: fullText, scriptMeta, ...(adSuggest ? { adSuggest: true } : {}) }]);
         // script_meta only ever arrives after a genuinely complete, tagged
         // script block — a hard signal, so it wins over the text heuristic
         // (which stays as the fallback for adopted/legacy messages that
@@ -290,11 +306,28 @@ export default function useFilmAuthoring() {
   }, []);
   const dismissProposal = useCallback(() => setEditProposal(null), []);
 
+  // ADVERTISING MODE: the Ad studio writes the first script through its own route
+  // (POST /ad/script), which saves it as a writers'-room turn on the server. This
+  // mirrors that turn into the chat so the script panel, Save and "Review cast"
+  // see it at once, exactly as if it had streamed.
+  const appendTurn = useCallback(({ userText = '', aiText = '', scriptMeta = null } = {}) => {
+    const sm = scriptMeta ? {
+      durationSeconds: scriptMeta.duration_seconds ?? scriptMeta.durationSeconds ?? null,
+      characters: scriptMeta.characters || {},
+      script: scriptMeta.script || '',
+    } : null;
+    setMessages(m => [...m,
+      ...(userText ? [{ role: 'me', room: 'write', text: userText }] : []),
+      { role: 'ai', room: 'write', text: aiText, scriptMeta: sm }]);
+    if (sm && sm.script) { setScript(sm.script); setScriptReady(true); }
+  }, []);
+
   return {
     sessionId, messages, scriptReady, script, shots, title, busy, error,
     thinking, streamingActive, streamingText,
     editorMode, editProposal, chatMode, setChatMode,
     markIntentApplied, dismissProposal,
     start, send, finalize, adopt, reset, setLength,
+    appendTurn, setTitle,
   };
 }

@@ -17,8 +17,21 @@ export const GENRES = [
   { key: 'sci_fi',     label: 'Sci-Fi',     hint: 'one clear "what if", kept consistent. The writer asks what it is.' },
   { key: 'fantasy',    label: 'Fantasy',    hint: 'a world with its own rules. The writer asks for the one rule of its magic.' },
 ];
-export const genreLabel = (key) => (GENRES.find((g) => g.key === key) || {}).label || null;
+// ADVERTISING MODE (2026-10-18, AD_MODE=1) — "Advertise" opens the Ad studio instead of the
+// writers' room. It is deliberately NOT in GENRES, so it never appears for series (an ad is a
+// film in v1); NewFilmModal shows it only when the server's /ad routes answer (feature-detect).
+export const AD_GENRE = { key: 'advertise', label: 'Advertise',
+  hint: 'a story-first video ad. Opens the Ad studio: a short brief, inspiration lenses, three concepts, then the script.' };
+export const isAdGenre = (key) => key === AD_GENRE.key;
+export const AD_LENGTHS = [10, 15, 20, 30, 45, 60];     // = ad_room.AD_LENGTHS
+export const AD_RATIOS = ['9:16', '16:9'];               // = ad_room.AD_RATIOS
+const AD_END_CARD = { 10: 2, 15: 3, 20: 3, 30: 3, 45: 4, 60: 4 };   // = ad_room._END_CARD_SECONDS
+export const adEndCard = (s) => AD_END_CARD[s] || 3;
+export const adLengthTip = (s) => `${s - adEndCard(s)}s of film + a ${adEndCard(s)}s end card`;
+
+export const genreLabel = (key) => (isAdGenre(key) ? AD_GENRE.label
+  : (GENRES.find((g) => g.key === key) || {}).label || null);
 export const genreHint = (key) => {
-  const g = GENRES.find((x) => x.key === key);
+  const g = isAdGenre(key) ? AD_GENRE : GENRES.find((x) => x.key === key);
   return g ? `${g.label}: ${g.hint}` : 'No genre — the writer follows your lead.';
 };

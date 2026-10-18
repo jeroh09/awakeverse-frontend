@@ -1,0 +1,132 @@
+/* src/components/Film/AdStudio.css — Advertising Mode (2026-10-18): the Ad studio panel.
+   Uses the workspace tokens (--film-*) from FilmWorkspace.css; every rule is scoped
+   under .ad-studio so nothing else in the workspace changes. */
+
+.ad-studio .ad-head { gap: 12px; flex-wrap: wrap; padding: 8px 14px 8px 15px; }
+.ad-studio .ad-title {
+  font-family: var(--film-display); font-weight: 800; font-size: 15px; color: var(--film-t1);
+  letter-spacing: -.01em; white-space: nowrap;
+}
+.ad-studio .ad-steps { display: flex; gap: 4px; margin: 0; padding: 3px; list-style: none;
+  background: var(--film-canvas); border: 1px solid var(--film-bd-med); border-radius: var(--film-r-full); }
+.ad-studio .ad-step {
+  display: inline-flex; align-items: center; gap: 6px; border: 0; background: transparent;
+  color: var(--film-t2); font: 600 12.5px var(--film-body); padding: 6px 11px;
+  border-radius: var(--film-r-full); cursor: pointer; white-space: nowrap;
+}
+.ad-studio .ad-step:hover:not(:disabled) { color: var(--film-t1); }
+.ad-studio .ad-step:disabled { opacity: .4; cursor: default; }
+.ad-studio .ad-step.is-on { background: var(--film-accent); color: #fff; }
+.ad-studio .ad-step-n {
+  display: inline-grid; place-items: center; width: 18px; height: 18px; border-radius: 50%;
+  font-size: 11px; background: var(--film-interactive); color: var(--film-t1);
+}
+.ad-studio .ad-step.is-on .ad-step-n { background: rgba(255,255,255,.22); }
+.ad-studio .ad-step.is-done .ad-step-n { background: var(--film-success); color: #04130d; }
+
+.ad-studio .ad-body { display: flex; flex-direction: column; gap: 14px; }
+.ad-studio .ad-sec { display: flex; flex-direction: column; gap: 14px; }
+
+.ad-studio .ad-facts {
+  display: flex; flex-wrap: wrap; align-items: center; gap: 10px 18px; padding: 10px 12px;
+  background: var(--film-canvas); border: 1px solid var(--film-bd-subtle); border-radius: var(--film-r-md);
+}
+.ad-studio .ad-fact { display: flex; align-items: center; gap: 8px; }
+.ad-studio .ad-fact-k { font-size: 11px; letter-spacing: .1em; text-transform: uppercase; font-weight: 700; color: var(--film-t3); }
+.ad-studio .ad-fact b { color: var(--film-t1); font-size: 13px; }
+.ad-studio .ad-fact-note { font-size: 12px; color: var(--film-t3); }
+
+.ad-studio .ad-pills { display: flex; flex-wrap: wrap; gap: 5px; }
+.ad-studio .ad-pill {
+  border: 1px solid var(--film-bd-med); background: transparent; color: var(--film-t2);
+  font: 600 12.5px var(--film-body); padding: 5px 11px; border-radius: var(--film-r-full); cursor: pointer;
+}
+.ad-studio .ad-pill:hover:not(:disabled) { color: var(--film-t1); border-color: var(--film-ring); }
+.ad-studio .ad-pill.is-on { background: var(--film-accent); border-color: var(--film-accent); color: #fff; }
+.ad-studio .ad-pill:disabled { opacity: .5; cursor: default; }
+
+.ad-studio .ad-notice {
+  padding: 10px 12px; border-radius: var(--film-r-md); font-size: 13px; line-height: 1.45; color: var(--film-t1);
+  background: rgba(245, 158, 11, .1); border: 1px solid rgba(245, 158, 11, .35);
+}
+.ad-studio .ad-notice b { color: var(--film-warning); margin-right: 6px; }
+.ad-studio .ad-error {
+  position: relative; padding: 10px 34px 10px 12px; border-radius: var(--film-r-md); font-size: 13px;
+  color: var(--film-t1); background: rgba(239, 68, 68, .1); border: 1px solid rgba(239, 68, 68, .35);
+}
+.ad-studio .ad-x { position: absolute; top: 6px; right: 8px; border: 0; background: transparent;
+  color: var(--film-t2); font-size: 16px; cursor: pointer; }
+
+.ad-studio .ad-label { display: block; margin-bottom: 6px; font-size: 12.5px; font-weight: 600; color: var(--film-t1); }
+.ad-studio .ad-label span { font-weight: 400; color: var(--film-t3); }
+.ad-studio .ad-need { color: var(--film-warning) !important; }
+.ad-studio .ad-field.is-needed .ad-input { border-color: rgba(245, 158, 11, .55); }
+.ad-studio .ad-input {
+  width: 100%; box-sizing: border-box; background: var(--film-canvas); color: var(--film-t1);
+  border: 1px solid var(--film-bd-med); border-radius: var(--film-r-sm); padding: 9px 11px;
+  font: 400 13.5px/1.45 var(--film-body); resize: vertical;
+}
+.ad-studio .ad-input:focus { outline: none; border-color: var(--film-accent); box-shadow: 0 0 0 3px var(--film-glow); }
+.ad-studio .ad-input::placeholder { color: var(--film-tm); }
+.ad-studio .ad-two { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+
+.ad-studio .ad-describe {
+  padding: 12px; border-radius: var(--film-r-md); background: var(--film-interactive);
+  border: 1px solid var(--film-bd-med);
+}
+.ad-studio .ad-questions {
+  padding: 10px 12px; border-radius: var(--film-r-md); font-size: 13px; color: var(--film-t1);
+  background: var(--film-glow); border: 1px solid var(--film-ring);
+}
+.ad-studio .ad-questions ul { margin: 6px 0 0 18px; padding: 0; }
+.ad-studio .ad-questions li { margin: 2px 0; }
+
+.ad-studio .ad-row-end { display: flex; align-items: center; justify-content: flex-end; gap: 12px; flex-wrap: wrap; margin-top: 8px; }
+.ad-studio .ad-hint { margin-right: auto; font-size: 12.5px; color: var(--film-t2); }
+.ad-studio .ad-lead { margin: 0; font-size: 13.5px; line-height: 1.5; color: var(--film-t2); }
+.ad-studio .film-btn { display: inline-flex; align-items: center; gap: 7px; padding: 9px 16px; border-radius: 10px; }
+
+.ad-studio .ad-lensgroup { display: flex; flex-direction: column; }
+.ad-studio .ad-lenses { display: grid; grid-template-columns: repeat(auto-fill, minmax(170px, 1fr)); gap: 8px; }
+.ad-studio .ad-lens {
+  display: flex; flex-direction: column; gap: 3px; text-align: left; padding: 10px 11px; cursor: pointer;
+  background: var(--film-canvas); border: 1px solid var(--film-bd-med); border-radius: var(--film-r-md);
+  color: var(--film-t2); font: 400 12px/1.4 var(--film-body);
+}
+.ad-studio .ad-lens b { color: var(--film-t1); font-size: 13px; font-weight: 600; }
+.ad-studio .ad-lens:hover:not(:disabled) { border-color: var(--film-ring); }
+.ad-studio .ad-lens.is-on { border-color: var(--film-accent); background: var(--film-glow); box-shadow: var(--film-glow-sh); }
+.ad-studio .ad-lens:disabled { opacity: .45; cursor: default; }
+
+.ad-studio .ad-concepts { display: grid; grid-template-columns: repeat(auto-fill, minmax(240px, 1fr)); gap: 12px; }
+.ad-studio .ad-concept {
+  display: flex; flex-direction: column; gap: 8px; padding: 14px; border-radius: var(--film-r-lg);
+  background: var(--film-canvas); border: 1px solid var(--film-bd-med);
+}
+.ad-studio .ad-concept.is-chosen { border-color: var(--film-accent); box-shadow: var(--film-glow-sh); }
+.ad-studio .ad-concept-top { display: flex; align-items: center; gap: 9px; }
+.ad-studio .ad-concept-top h4 { margin: 0; font-family: var(--film-display); font-size: 15px; color: var(--film-t1); }
+.ad-studio .ad-concept-n {
+  display: inline-grid; place-items: center; width: 24px; height: 24px; border-radius: 50%; flex: 0 0 auto;
+  font: 800 12px var(--film-display); color: #fff; background: var(--film-accent);
+}
+.ad-studio .ad-badge { margin-left: auto; font-size: 11px; font-weight: 700; color: var(--film-success); }
+.ad-studio .ad-hook { margin: 0; font-family: var(--film-display); font-weight: 700; font-size: 14px; line-height: 1.35; color: var(--film-ivory); }
+.ad-studio .ad-story { margin: 0; font-size: 13px; line-height: 1.5; color: var(--film-t2); }
+.ad-studio .ad-small { margin: 0; font-size: 12px; line-height: 1.45; color: var(--film-t3); }
+.ad-studio .ad-small b { color: var(--film-t2); font-weight: 600; }
+.ad-studio .ad-tags { display: flex; flex-wrap: wrap; gap: 5px; }
+.ad-studio .ad-tag { font-size: 11px; font-weight: 600; padding: 3px 8px; border-radius: var(--film-r-full);
+  background: var(--film-interactive); color: var(--film-t2); }
+.ad-studio .ad-concept-acts { display: flex; gap: 8px; justify-content: flex-end; flex-wrap: wrap; margin-top: auto; padding-top: 4px; }
+.ad-studio .ad-concept.is-summary { max-width: 640px; }
+
+@media (max-width: 760px) {
+  .ad-studio .ad-two { grid-template-columns: 1fr; }
+  .ad-studio .ad-steps { width: 100%; overflow-x: auto; }
+}
+
+/* "Start an ad" under a film-room reply (the film room pointed an advert request here). */
+.film-adsuggest { display: flex; align-items: center; flex-wrap: wrap; gap: 10px; margin-top: 10px;
+  font-size: 12.5px; color: var(--film-t2); }
+.film-adsuggest .film-btn { padding: 8px 14px; border-radius: 10px; }

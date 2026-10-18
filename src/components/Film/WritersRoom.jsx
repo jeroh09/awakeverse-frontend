@@ -201,7 +201,8 @@ function ScriptMeta({ meta, editable = false, onSaveScript }) {
   );
 }
 
-function Turn({ role, text, attachment, scriptMeta, editable = false, onSaveScript }) {
+function Turn({ role, text, attachment, scriptMeta, editable = false, onSaveScript,
+               adSuggest = false, onStartAd = null }) {
   if (role === 'me') {
     return (
       <div className="film-msgwrap film-msgwrap--me">
@@ -224,6 +225,14 @@ function Turn({ role, text, attachment, scriptMeta, editable = false, onSaveScri
       <div className="film-who">Director</div>
       <div className="film-flow"><MarkdownBlocks text={text} /></div>
       <ScriptMeta meta={scriptMeta} editable={editable} onSaveScript={onSaveScript} />
+      {adSuggest && onStartAd && (
+        /* ADVERTISING MODE: the film room says this is an advert request. The user decides. */
+        <div className="film-adsuggest">
+          <button type="button" className="film-btn film-btn--primary" onClick={onStartAd}
+                  title="Start a new ad in the Ad studio — what you asked for goes with it">Start an ad</button>
+          <span>or keep going here as a short film.</span>
+        </div>
+      )}
     </div>
   );
 }
@@ -407,6 +416,9 @@ export default function WritersRoom({
   onSaveScript,
   // series episodes (2026-10-12)
   carryProjectId = null,             // "Where we left off" card (SERIES_CARRY) — episodes only
+  // Advertising Mode (2026-10-18)
+  isAd = false,                      // this film is an ad → the room is the "Ad room"
+  onStartAd = null,                  // (text) → open a new ad carrying the user's request
   canReview = false,                 // "Review episode" button (EPISODE_REVIEW) — episodes with a script
   onReview = () => {},
   review = null,                     // {busy} | {data} | {error}
@@ -478,8 +490,9 @@ export default function WritersRoom({
             const editing = isEditing;
             return (<>
               <button type="button" className={`film-htab ${!editing ? 'is-on' : ''}`}
-                      onClick={() => onSetChatMode('write')} title="Write and change the script with the director">
-                Writers' Room
+                      onClick={() => onSetChatMode('write')}
+                      title={isAd ? 'Plan and write your ad with the creative director' : 'Write and change the script with the director'}>
+                {isAd ? 'Ad room' : "Writers' Room"}
               </button>
               {editorAvailable && (
                 <button type="button" className={`film-htab ${editing ? 'is-on' : ''}`}
@@ -508,6 +521,17 @@ export default function WritersRoom({
         {!isEditing && carryProjectId && (
           <WhereWeLeftOff projectId={carryProjectId} compact={roomMessages.length > 0} />
         )}
+        {!isEditing && isAd && roomMessages.length === 0 && (
+          /* Ad room empty state — not a message, not a model call. */
+          <div className="film-turn-ai">
+            <div className="film-who">Director</div>
+            <div className="fw-welcome">
+              Tell me what you’re advertising, who it’s for and the one thing people should
+              remember — in your own words here, or in the brief on the left. Once the brief is
+              ready I’ll pitch three different concepts.
+            </div>
+          </div>
+        )}
         {isEditing && roomMessages.length === 0 && (
           /* Canned welcome (2026-08-25): an EMPTY-STATE, not a message and not
              an LLM call — renders whenever the editor's transcript is empty,
@@ -527,10 +551,17 @@ export default function WritersRoom({
           // Only the MOST RECENT script draft is editable — older turns are history.
           let lastScriptIdx = -1;
           roomMessages.forEach((m, i) => { if (m.scriptMeta && m.scriptMeta.script) lastScriptIdx = i; });
+          // "Start an ad" carries the user's message that the suggestion answered.
+          const askedBefore = (i) => {
+            for (let j = i - 1; j >= 0; j -= 1) if (roomMessages[j].role === 'me') return roomMessages[j].text || '';
+            return '';
+          };
           return roomMessages.map((m, i) => (
             <Turn key={i} role={m.role} text={m.text} attachment={m.attachment} scriptMeta={m.scriptMeta}
               editable={i === lastScriptIdx && !!onSaveScript}
-              onSaveScript={onSaveScript} />
+              onSaveScript={onSaveScript}
+              adSuggest={!!m.adSuggest}
+              onStartAd={onStartAd ? () => onStartAd(askedBefore(i)) : null} />
           ));
         })()}
         {(
@@ -736,6 +767,7 @@ export default function WritersRoom({
             onKeyDown={onKeyDown}
             placeholder={isEditing
               ? "Tell the editor what to change — a beat, a line, a whole sequence…"
+              : isAd ? "Tell me about your ad — what it’s for, who it’s for, what to change…"
               : "Write the next beat, or push back on the last one…"}
           />
           <button className="film-send" onClick={send} aria-label="Send" title="Send (Enter) — Shift+Enter for a new line">

@@ -180,3 +180,7 @@
 }
 /* Genre hint under the genre pills (2026-10-12) */
 .nf-ghint { margin: 8px 2px 0; font-size: 12.5px; line-height: 1.45; color: var(--film-t2, #94A3B8); min-height: 1.45em; }
+/* Advertising Mode (2026-10-18): the Advertise pill sits a little apart from the film
+   genres (a gap + a hairline); selected = solid indigo like every other pill. */
+.nf-pill--ad { margin-left: 6px; box-shadow: inset 0 0 0 1px var(--film-ring, rgba(99, 102, 241, .55)); }
+.nf-pill--ad.is-on { box-shadow: none; }

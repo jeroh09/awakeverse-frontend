@@ -49,12 +49,25 @@ function seedSavedScript(p) {
   return { messages, saved: (sm && sm.edited) ? sm.script : null };
 }
 
+// ADVERTISING MODE (2026-10-18): where a film-room "Start an ad" leaves the user's
+// request (NewFilmModal reads the same key and opens on Advertise; the new ad's room
+// sends it as its first message).
+const AD_SEED_KEY = 'awakeverse.adSeed';
+const takeAdSeed = () => {
+  try { const v = window.sessionStorage.getItem(AD_SEED_KEY); window.sessionStorage.removeItem(AD_SEED_KEY); return v; }
+  catch (_) { return null; }
+};
+
 export default function FilmWorkspaceContainer({
   projectId,
   initialSessionId = null,     // set when the project was just created
   onBackToFilms = () => {},
+  onStartAd = null,            // optional (text) → the parent opens a new ad directly
 }) {
-  const authoring = useFilmAuthoring();
+  // ADVERTISING MODE: `ad` is the server's ad state (null for every film). The chat's
+  // ad_state line (brief stage) and every Ad studio call update it.
+  const [ad, setAd] = useState(null);
+  const authoring = useFilmAuthoring({ onAdState: setAd });
   const job = useFilmJob();
   const credits = useCredits();
   const navigate = useNavigate();
@@ -114,6 +127,12 @@ export default function FilmWorkspaceContainer({
                       duration_seconds: p.duration_seconds || 120,
                       aspect_ratio: p.aspect_ratio || '9:16' });
             setSeriesId(p.series_id ?? null);
+            const isAdProject = p.genre === 'advertise' && !!p.ad;
+            setAd(isAdProject ? p.ad : null);
+            if (isAdProject && p.title) authoring.setTitle(p.title);
+            // A request carried over from a film room's "Start an ad" opens the brief.
+            const seed = isAdProject ? takeAdSeed() : null;
+            if (seed && seed.trim()) authoring.send(seed.trim());
           }
         } catch (e) { /* keep defaults if the fetch fails */ }
         if (!cancelled) setLoading(false);
@@ -132,6 +151,7 @@ export default function FilmWorkspaceContainer({
         setMeta({ video_style: p.video_style || 'anime', duration_seconds: p.duration_seconds || 120,
                   aspect_ratio: p.aspect_ratio || '9:16' });
         setSeriesId(p.series_id ?? null);   // confirmed standalone (null) or an episode (id)
+        setAd(p.genre === 'advertise' && p.ad ? p.ad : null);
         if (p.render) job.adopt(p.render);
       } catch (e) {
         // authoring/job errors surface in their own state; nothing else to do
@@ -408,6 +428,38 @@ export default function FilmWorkspaceContainer({
     return job.reassemble(out);
   }, [job]);
 
+  // ── ADVERTISING MODE (2026-10-18) ──
+  // A concept was chosen: the server fixed the ad's length + frame and may have titled
+  // it from the concept — refresh what the workspace shows.
+  const onAdChosen = useCallback(async () => {
+    try {
+      const p = await filmGetProject(projectId);
+      if (!p) return;
+      setMeta(m => ({ ...m, duration_seconds: p.duration_seconds || m.duration_seconds,
+                      aspect_ratio: p.aspect_ratio || m.aspect_ratio }));
+      if (p.title) authoring.setTitle(p.title);
+      if (p.ad) setAd(p.ad);
+    } catch (e) { /* the studio already shows the chosen concept */ }
+  }, [projectId, authoring]);
+  // The Ad studio wrote the script (saved server-side as a room turn) → mirror it into the chat.
+  const onAdScript = useCallback((res) => {
+    if (!res) return;
+    const chosen = res.ad && Number.isInteger(res.ad.chosen) && res.ad.concepts ? res.ad.concepts[res.ad.chosen] : null;
+    authoring.appendTurn({
+      userText: `Write the script for “${(chosen && chosen.title) || 'the chosen concept'}”.`,
+      aiText: res.commentary || '', scriptMeta: res.script_meta || null,
+    });
+    if (res.ad) setAd(res.ad);
+  }, [authoring]);
+  // "Start an ad" under a film-room reply: the parent opens a new ad directly when it can;
+  // otherwise the request waits in sessionStorage and the user lands on My Films, where
+  // the New Film popout opens on Advertise.
+  const startAd = useCallback((text) => {
+    if (onStartAd) { onStartAd(text || ''); return; }
+    try { if (text) window.sessionStorage.setItem(AD_SEED_KEY, text); } catch (_) { /* private mode */ }
+    onBackToFilms();
+  }, [onStartAd, onBackToFilms]);
+
   const onExport = useCallback(() => {
     if (job.outputUrl) window.open(job.outputUrl, '_blank', 'noopener');
   }, [job.outputUrl]);
@@ -540,7 +592,7 @@ export default function FilmWorkspaceContainer({
       aspectRatio={meta.aspect_ratio}
       videoStyle={meta.video_style}
       durationSeconds={meta.duration_seconds}
-      onDurationChange={(v) => {
+      onDurationChange={ad ? null : (v) => {   // an ad's length lives in its brief (fixed at the concept)
         setMeta(m => ({ ...m, duration_seconds: v }));
         authoring.setLength(v);   // TD-18: the room hears it on the next message
       }}
@@ -618,6 +670,12 @@ export default function FilmWorkspaceContainer({
       onReviewCast={onReviewCast}
       castPhase={castPhase}
       onSaveScript={onSaveScript}
+      ad={ad}
+      projectId={projectId}
+      onAd={setAd}
+      onAdChosen={onAdChosen}
+      onAdScript={onAdScript}
+      onStartAd={startAd}
     />
     {blockInfo && (
       <div

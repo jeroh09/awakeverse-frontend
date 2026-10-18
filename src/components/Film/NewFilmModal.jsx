@@ -10,11 +10,18 @@
 // unchanged. STYLES / DURATIONS / ASPECTS / AspectGlyph are passed in from
 // MyFilmsView so the canonical style keys stay defined in exactly one place.
 
-import React, { useEffect } from 'react';
+import React, { useEffect, useState, useRef } from 'react';
 import { createPortal } from 'react-dom';
 import StylePreview from './StylePreview';
-import { GENRES, genreHint } from './filmGenres';
+import { GENRES, genreHint, genreLabel, AD_GENRE, isAdGenre, AD_LENGTHS, AD_RATIOS,
+         adLengthTip } from './filmGenres';
+import { filmAdAvailable } from './filmApi';
 import './NewFilmModal.css';
+
+// ADVERTISING MODE (2026-10-18): a film-room "Start an ad" leaves the user's request
+// here; the modal opens on Advertise and the new ad's room sends it as its first message.
+export const AD_SEED_KEY = 'awakeverse.adSeed';
+const readAdSeed = () => { try { return window.sessionStorage.getItem(AD_SEED_KEY); } catch (_) { return null; } };
 
 // Length made tangible — rough shot counts, matching the ideas mock. Keyed by
 // the numeric duration values (60 / 120 / 180).
@@ -38,6 +45,34 @@ export default function NewFilmModal({
   onStyle = () => {}, onDuration = () => {}, onAspect = () => {}, onGenre = null,
   busy = false, onStart = () => {}, onClose = () => {},
 }) {
+  // ADVERTISING MODE — the Advertise pill shows only when the server's Ad studio is on
+  // (its /ad routes answer). Choosing it swaps Length to ad lengths (10–60 s) and Frame
+  // to vertical / landscape; leaving it puts a film length back.
+  const [adOn, setAdOn] = useState(false);
+  const isAd = isAdGenre(genre);
+  useEffect(() => {
+    let live = true;
+    filmAdAvailable().then((cat) => {
+      if (!live || !cat) return;
+      setAdOn(true);
+      if (onGenre && readAdSeed() && !isAdGenre(genre)) onGenre(AD_GENRE.key);
+    });
+    return () => { live = false; };
+  }, []);   // once per open
+  const wasAd = useRef(isAd);
+  useEffect(() => {
+    if (isAd) {
+      if (!AD_LENGTHS.includes(Number(duration))) onDuration(15);
+      if (!AD_RATIOS.includes(aspect)) onAspect('9:16');
+    } else if (wasAd.current) {
+      const film = durations.find(d => d.key === 60) || durations[0];
+      if (film && !durations.some(d => d.key === duration)) onDuration(film.key);
+    }
+    wasAd.current = isAd;
+  }, [isAd]);
+  const lengthOptions = isAd ? AD_LENGTHS.map(n => ({ key: n, label: `${n}s` })) : durations;
+  const frameOptions = isAd ? aspects.filter(a => AD_RATIOS.includes(a.key)) : aspects;
+
   // Esc to close + lock background scroll while open.
   useEffect(() => {
     const onKey = (e) => { if (e.key === 'Escape') onClose(); };
@@ -51,16 +86,18 @@ export default function NewFilmModal({
 
   const styleLabel  = styles.find(s => s.key === style)?.label   || style;
   const aspectLabel = aspects.find(a => a.key === aspect)?.label || aspect;
-  const durLabel    = durations.find(d => d.key === duration)?.label || `${duration}s`;
+  const durLabel    = lengthOptions.find(d => d.key === duration)?.label || `${duration}s`;
 
   return createPortal(
     <div className="nf-scrim" onClick={(e) => e.target === e.currentTarget && onClose()}>
-      <div className="nf-modal" role="dialog" aria-modal="true" aria-label="New film">
+      <div className={`nf-modal${isAd ? ' is-ad' : ''}`} role="dialog" aria-modal="true" aria-label={isAd ? 'New ad' : 'New film'}>
         <button className="nf-x" onClick={onClose} aria-label="Close" title="Close without starting a film">×</button>
 
         <div className="nf-head">
-          <h3 className="nf-title">New film</h3>
-          <p className="nf-sub">Pick a look, frame and length — the preview updates live.</p>
+          <h3 className="nf-title">{isAd ? 'New ad' : 'New film'}</h3>
+          <p className="nf-sub">{isAd
+            ? 'A story-first video ad — a short brief, inspiration lenses, three concepts, then the script.'
+            : 'Pick a look, frame and length — the preview updates live.'}</p>
         </div>
 
         <div className="nf-studio">
@@ -68,8 +105,8 @@ export default function NewFilmModal({
           <div className="nf-stage">
             <StylePreview styleKey={style} aspect={aspect} />
             <div className="nf-cap">
-              {styleLabel} · {aspectLabel} · {durLabel}{genre ? ` · ${GENRES.find(g => g.key === genre)?.label || ''}` : ''}
-              <small>{SHOTS[duration] || ''}</small>
+              {styleLabel} · {aspectLabel} · {durLabel}{genre ? ` · ${genreLabel(genre) || ''}` : ''}
+              <small>{isAd ? adLengthTip(Number(duration)) : (SHOTS[duration] || '')}</small>
             </div>
           </div>
 
@@ -101,18 +138,27 @@ export default function NewFilmModal({
                       onClick={() => onGenre(genre === g.key ? null : g.key)}
                       title={genre === g.key ? `${g.label} — click again to clear` : `${g.label}: ${g.hint}`}>{g.label}</button>
                   ))}
+                  {adOn && (
+                    <button key={AD_GENRE.key} type="button"
+                      className={`nf-pill nf-pill--ad${isAd ? ' is-on' : ''}`}
+                      onClick={() => onGenre(isAd ? null : AD_GENRE.key)}
+                      title={isAd ? 'Advertise — click again to make a film instead'
+                                  : 'Make a video ad instead of a film — opens the Ad studio'}>{AD_GENRE.label}</button>
+                  )}
                 </div>
                 <p className="nf-ghint">{genreHint(genre)}</p>
               </div>
             )}
 
             <div className="nf-group">
-              <div className="nf-glabel">Frame <span className="nf-opt">· fixed for the whole film</span></div>
+              <div className="nf-glabel">Frame <span className="nf-opt">· {isAd ? 'fixed for this ad once you choose a concept' : 'fixed for the whole film'}</span></div>
               <div className="nf-pillgroup">
-                {aspects.map(a => (
+                {frameOptions.map(a => (
                   <button key={a.key} type="button"
                     className={`nf-pill nf-pill--icon${aspect === a.key ? ' is-on' : ''}`}
-                    onClick={() => onAspect(a.key)} title={`${a.label} (${a.key}) — fixed for the whole film`}>
+                    onClick={() => onAspect(a.key)} title={isAd
+                      ? `${a.label} (${a.key}) — ${a.key === '9:16' ? 'TikTok, Reels, Shorts' : 'YouTube, TV'}`
+                      : `${a.label} (${a.key}) — fixed for the whole film`}>
                     <AspectGlyph w={a.w} h={a.h} /> {a.label}
                   </button>
                 ))}
@@ -122,17 +168,19 @@ export default function NewFilmModal({
             <div className="nf-group">
               <div className="nf-glabel">Length</div>
               <div className="nf-pillgroup">
-                {durations.map(d => (
+                {lengthOptions.map(d => (
                   <button key={d.key} type="button"
                     className={`nf-pill${duration === d.key ? ' is-on' : ''}`}
-                    onClick={() => onDuration(d.key)} title={SHOTS[d.key] ? `${d.label}: ${SHOTS[d.key]}` : d.label}>{d.label}</button>
+                    onClick={() => onDuration(d.key)}
+                    title={isAd ? `${d.label}: ${adLengthTip(d.key)}` : (SHOTS[d.key] ? `${d.label}: ${SHOTS[d.key]}` : d.label)}>{d.label}</button>
                 ))}
               </div>
             </div>
 
             <div className="nf-foot">
               <button className="nf-btn ghost" onClick={onClose} disabled={busy} title="Close without starting a film">Cancel</button>
-              <button className="nf-btn primary" onClick={onStart} disabled={busy} title="Open the writers' room for a new film — writing is free">
+              <button className="nf-btn primary" onClick={onStart} disabled={busy}
+                title={isAd ? 'Open the Ad studio for a new ad — writing is free' : "Open the writers' room for a new film — writing is free"}>
                 {busy ? 'Creating…' : 'Start'}
               </button>
             </div>
