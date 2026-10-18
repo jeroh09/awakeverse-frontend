@@ -18,6 +18,7 @@
 
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import styles from './VoiceBrowser.module.css';
+import { IconClose, IconSearch, IconCheck, IconVoice, IconRecord, IconStop, IconLoader } from './StudioIcons';
 
 export default function VoiceBrowser({
   speaker,                 // speaker object to pick for, or null/undefined = closed
@@ -148,7 +149,7 @@ export default function VoiceBrowser({
           </button>
         ) : null}
         {checked ? (
-          <svg className={styles.checkTick} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" aria-hidden="true"><path d="M20 6 9 17l-5-5" /></svg>
+          <IconCheck className={styles.checkTick} size={14} strokeWidth={3} />
         ) : null}
       </div>
     );
@@ -162,12 +163,12 @@ export default function VoiceBrowser({
             Choose a voice
             <small>for {speaker.displayName || speaker.speakerId}</small>
           </div>
-          <button type="button" className={styles.close} aria-label="Close voice browser" onClick={handleClose}>✕</button>
+          <button type="button" className={styles.close} aria-label="Close voice browser" onClick={handleClose}><IconClose size={14} /></button>
         </div>
 
         <div className={styles.controls}>
           <div className={styles.searchWrap} role="search">
-            <svg className={styles.searchIcon} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" aria-hidden="true"><circle cx="11" cy="11" r="7" /><path d="m21 21-4.3-4.3" /></svg>
+            <IconSearch className={styles.searchIcon} size={16} />
             <label htmlFor="vbSearch" className={styles.srOnly}>Search voices by name, accent, or style</label>
             <input
               id="vbSearch"
@@ -181,7 +182,7 @@ export default function VoiceBrowser({
               aria-describedby="vbCount"
             />
             {q ? (
-              <button type="button" className={styles.clearBtn} aria-label="Clear search" onClick={() => { setQ(''); searchRef.current?.focus(); }}>✕</button>
+              <button type="button" className={styles.clearBtn} aria-label="Clear search" onClick={() => { setQ(''); searchRef.current?.focus(); }}><IconClose size={11} /></button>
             ) : null}
           </div>
 
@@ -220,7 +221,7 @@ export default function VoiceBrowser({
 
         <div className={styles.list} role="radiogroup" aria-label="Voices">
           {/* pinned Your voice group */}
-          <div className={styles.groupLabel}>🔒 Your voice</div>
+          <div className={styles.groupLabel}><IconVoice size={11} /> Your voice</div>
           {voiceClone ? (
             <div
               className={styles.voiceCard}
@@ -231,7 +232,7 @@ export default function VoiceBrowser({
               onKeyDown={(e) => { if (e.target !== e.currentTarget) return; if (e.key === ' ' || e.key === 'Enter') { e.preventDefault(); pick(voiceClone.voiceId); } }}
             >
               <div className={styles.vMeta}>
-                <div className={styles.vName}>🎙 {voiceClone.cloneName || 'My Voice'}</div>
+                <div className={styles.vName}><IconVoice size={14} /> {voiceClone.cloneName || 'My Voice'}</div>
                 <div className={styles.vSub}>your voice</div>
                 <div className={styles.vVibe}>Cloned from your recording</div>
 
@@ -253,19 +254,19 @@ export default function VoiceBrowser({
                     onClick={(e) => { e.stopPropagation(); onCloneRecord?.(); }}
                     onKeyDown={(e) => e.stopPropagation()}
                   >
-                    {cloningVoice ? `⏹ Stop (${cloneRecSeconds}s)`
-                      : cloneSubmitting ? '⏳ Cloning…'
-                      : '↺ Re-record voice'}
+                    {cloningVoice ? <><IconStop size={10} /> Stop ({cloneRecSeconds}s)</>
+                      : cloneSubmitting ? <><span className={styles.spin}><IconLoader size={11} /></span> Cloning…</>
+                      : <><IconRecord size={13} /> Re-record voice</>}
                   </button>
                 ) : null}
               </div>
               {selectedId === voiceClone.voiceId ? (
-                <svg className={styles.checkTick} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" aria-hidden="true"><path d="M20 6 9 17l-5-5" /></svg>
+                <IconCheck className={styles.checkTick} size={14} strokeWidth={3} />
               ) : null}
             </div>
           ) : isHost ? (
             <div className={styles.recRow}>
-              <div className={styles.recTitle}>🎙 Clone your voice</div>
+              <div className={styles.recTitle}><IconRecord size={15} /> Clone your voice</div>
               <div className={styles.recBody}>Record 30–60s of natural speech. We'll clone it for all your podcasts — it then appears here as a pick.</div>
               {cloningVoice ? (
                 <div className={styles.recCounter} role="status" aria-live="assertive">
@@ -282,9 +283,9 @@ export default function VoiceBrowser({
                 disabled={cloneSubmitting}
                 aria-pressed={!!cloningVoice}
               >
-                {cloneSubmitting ? '⏳ Cloning…'
-                  : cloningVoice ? `⏹ Stop recording (${cloneRecSeconds}s)`
-                  : '⏺ Record my voice'}
+                {cloneSubmitting ? <><span className={styles.spin}><IconLoader size={12} /></span> Cloning…</>
+                  : cloningVoice ? <><IconStop size={10} /> Stop recording ({cloneRecSeconds}s)</>
+                  : <><IconRecord size={14} /> Record my voice</>}
               </button>
             </div>
           ) : (

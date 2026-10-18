@@ -307,6 +307,13 @@ export const IconQuote = make('IconQuote', <>
   <path d="M14 17.5c2.5-1 4-3.2 4-6.5V7.5h-4.5V12H17" fill="currentColor" fillOpacity=".14" />
 </>);
 
+// Search voices — a lens over a waveform
+export const IconSearch = make('IconSearch', <>
+  <circle cx="10.5" cy="10.5" r="6.5" fill="currentColor" fillOpacity=".08" />
+  <path d="M7.8 10.5v1M10.5 8.5v4M13.2 9.8v1.6" style={ACCENT} />
+  <path d="M15.3 15.3l5.2 5.2" />
+</>);
+
 // ── UI primitives ───────────────────────────────────────────────────────────
 export const IconCheck = make('IconCheck', <path d="M5 12.5l4.2 4.2L19 7" />);
 export const IconClose = make('IconClose', <path d="M6.5 6.5l11 11M17.5 6.5l-11 11" />);
