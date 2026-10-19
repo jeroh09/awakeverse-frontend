@@ -57,17 +57,17 @@ const FIELD_LABEL = { what: 'what you are advertising', audience: 'who it is for
                       one_thing: 'the one thing to remember' };
 // [key, label, placeholder, multiline, maxLength]
 const ESSENTIALS = [
-  ['what', 'What are you advertising?', 'e.g. our sourdough bakery, fresh bread every morning', true, 300],
-  ['audience', 'Who is it for?', 'e.g. busy parents in Lagos', false, 200],
-  ['one_thing', 'The one thing people should remember', 'e.g. baked before you wake up', false, 160],
+  ['what', 'What are you advertising?', 'e.g. lightweight running shoes, a weekend food festival, a budgeting app', true, 300],
+  ['audience', 'Who is it for?', 'e.g. people starting to run, young families, small business owners', false, 200],
+  ['one_thing', 'The one thing people should remember', 'e.g. so light you forget you’re wearing them', false, 160],
 ];
 const DETAILS = [
-  ['name', 'Brand or name', 'e.g. Mama’s Bread', false, 80],
-  ['offer', 'Offer', 'e.g. 2 loaves for ₦3,000 this week', false, 160],
-  ['cta', 'Call to action', 'shown on the end card, e.g. Order today', false, 80],
-  ['url', 'Website or handle', 'shown on the end card', false, 120],
+  ['name', 'Brand or name', 'your brand or product name', false, 80],
+  ['offer', 'Offer', 'e.g. 20% off this week, or free delivery', false, 160],
+  ['cta', 'Call to action', 'shown on the end card, e.g. Shop now, Book today', false, 80],
+  ['url', 'Website or handle', 'shown on the end card, e.g. yourbrand.com or @yourbrand', false, 120],
   ['tone', 'Tone', 'e.g. warm and funny', false, 80],
-  ['cast', 'Who appears, and where it is set', 'e.g. a young baker and her neighbours, a busy Lagos street. No real people.', true, 300],
+  ['cast', 'Who appears, and where it is set', 'e.g. two friends on a morning run in a city park at sunrise. No real people.', true, 300],
 ];
 const LIST_FIELDS = ['must_say', 'must_not_say'];
 const DETAIL_KEYS = ['name', 'offer', 'cta', 'url', 'tone', 'cast', 'must_say', 'must_not_say', 'markets'];
@@ -320,7 +320,7 @@ export default function AdSetup({
       <div className="ads-describe">
         <label className="ads-lbl" htmlFor="ads-describe">Describe it in your own words</label>
         <textarea id="ads-describe" className="ads-inp" rows={3} value={describe} disabled={busy === 'assist'}
-          placeholder="e.g. We run a small bakery in Surulere. Fresh sourdough every morning for busy parents…"
+          placeholder="e.g. We make lightweight running shoes for people just starting out. We want them to feel they can do it. 20% off this week…"
           onChange={e => setDescribe(e.target.value)} />
         <div className="ads-row">
           <span className="ads-hint">Fills only empty fields. It never invents prices or claims.</span>
@@ -382,7 +382,7 @@ export default function AdSetup({
           <div className="ads-more-b">
             <div className="ads-grid">
               {DETAILS.map(f => textField(f, false))}
-              {[['must_say', 'Must say', 'one per line, e.g. Baked fresh daily'],
+              {[['must_say', 'Must say', 'one per line, e.g. Free returns'],
                 ['must_not_say', 'Must not say', 'one per line, e.g. cheap']].map(([key, label, ph]) => (
                 <div className="ads-field" key={key}>
                   <label className="ads-lbl" htmlFor={`ads-${key}`}>{label}<small> · optional</small></label>

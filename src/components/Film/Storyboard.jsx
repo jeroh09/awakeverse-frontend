@@ -36,6 +36,7 @@ import {
   IconPlay, IconRegenerate, IconCut, IconDuplicate, IconGrip, IconStop,
   IconSoftened, IconVisual, IconCheck, IconUpload, KIND_ICON, IconSeries, IconClock,
 } from './filmIcons';
+import './AdStoryboard.css';
 // Redraw reuses the regenerate glyph (a redraw IS a regenerate, user-facing name).
 const IconRedraw = IconRegenerate;
 
@@ -793,6 +794,67 @@ function RecapDrawer({ recap, picks, voice, busy, onToggle, onVoice, onCancel, o
   );
 }
 
+// ── ADVERTISING MODE (2026-10-19) — the storyboard for an ad ────────────────────
+// Before anything is planned, an ad's storyboard shows its script as PLAN cards (one per
+// VISUAL: block, with the line spoken over it), then the END CARD the studio composes
+// (logo, offer, call to action, disclosure — never filmed). The end card also closes
+// the grid in the later stages. Nothing here spends money; "Review cast" is the same
+// action as the Ad room's button, and is greyed while ad renders are switched off.
+export function parseAdPlan(script) {
+  const lines = String(script || '').split('\n').map(l => l.trim());
+  const beats = [];
+  let cur = null, speaker = null;
+  const close = () => { if (cur) beats.push(cur); cur = null; speaker = null; };
+  lines.forEach((l) => {
+    if (/^VISUAL:/i.test(l)) { close(); cur = { visual: l.replace(/^VISUAL:\s*/i, ''), speaker: '', line: '', vo: false }; return; }
+    if (!cur || !l || /^\[/.test(l)) { if (/^\[FADE/i.test(l)) close(); return; }
+    if (l === l.toUpperCase() && /[A-Z]/.test(l) && l.length < 48 && !cur.line) {
+      speaker = l.replace(/\s*\(.*\)\s*$/, '').trim(); cur.vo = /\((V\.?O\.?|O\.?S\.?)\)/i.test(l); return;
+    }
+    if (speaker && !cur.line) { cur.speaker = speaker; cur.line = l; return; }
+    if (!speaker) cur.visual = `${cur.visual} ${l}`.trim();
+  });
+  close();
+  return beats.map((b, i) => ({
+    index: i + 1,
+    kind: b.line ? (b.vo ? 'vo_broll' : 'dialogue') : 'pure_visual',
+    speaker: b.speaker, line: b.line, visual: b.visual,
+  }));
+}
+
+function AdPlanCell({ beat }) {
+  const Kico = KIND_ICON[beat.kind] || IconVisual;
+  return (
+    <article className="film-cell sb-ad-plan" title="Planned from the script — nothing is made yet">
+      <div className="film-thumb film-thumb--plan"><span className="film-n">{pad(beat.index)}</span><Kico s={20} /><span className="film-chip">Plan</span></div>
+      <div className="film-cfoot">
+        <div className="film-cfoot-row"><span className={`film-badge film-badge--${beat.kind}`}>{beat.kind.replace('_', ' ')}</span></div>
+        <div className="film-cap">{beat.visual}</div>
+        {beat.line && <div className="film-cap sb-ad-line"><span className="film-spk">{beat.speaker}:</span> “{beat.line}”</div>}
+      </div>
+    </article>
+  );
+}
+
+function AdEndCard({ ad }) {
+  return (
+    <article className="film-cell sb-ad-endcard" title="Drawn by the studio over the end of the film — not filmed">
+      <div className="film-thumb sb-ad-endcard-th">
+        {ad.endCard ? <span className="film-dur">{ad.endCard}s</span> : null}
+        <div className="sb-ad-ec">
+          <b>{ad.brand || 'Your brand'}</b>
+          {ad.offer && <small>{ad.offer}</small>}
+          <span className="sb-ad-ec-cta">{ad.cta || 'Call to action'}</span>
+        </div>
+      </div>
+      <div className="film-cfoot">
+        <div className="film-cfoot-row"><span className="film-badge sb-ad-badge">End card</span></div>
+        <div className="film-cap">Added by the studio: logo, offer, call to action and the AI label.</div>
+      </div>
+    </article>
+  );
+}
+
 export default function Storyboard({
   stageState = 'empty',
   contentBlock = null,               // { reason, characters, message } — photoreal gate
@@ -835,6 +897,15 @@ export default function Storyboard({
   onCut = () => {},
   canPromote = false,
   onPromote = () => {},
+  // ADVERTISING MODE (2026-10-19): `ad` = { title, hook, brand, audience, offer, cta, length,
+  // ratio, filmSeconds, endCard, locked } for an ad (null for films); `adScript` = its latest
+  // script; `onEditAdSetup(step)` reopens Ad setup; `onReviewCast` starts the cast review;
+  // `adRenderLocked` = why ad renders can't start yet (null when they can).
+  ad = null,
+  adScript = null,
+  onEditAdSetup = null,
+  onReviewCast = null,
+  adRenderLocked = null,
 }) {
   const [watching, setWatching] = useState(false);
   const total = beats.length;
@@ -942,18 +1013,23 @@ export default function Storyboard({
   const shortBy = (short && cost != null && balance != null) ? Math.max(0, Number(cost) - Number(balance)) : null;
   const pct = progress && progress.total ? Math.round((progress.done / progress.total) * 100) : 0;
 
+  const adPlan = ad && stageState === 'empty' ? parseAdPlan(adScript) : [];
+  const adPlanOn = adPlan.length > 0;
+
   const stage =
     stageState === 'blocked' ? { label: 'Can’t be made as written', tone: 'warn' }
     : editBusy ? { label: 'Changing a shot', tone: 'busy' }
     : drawingCast ? { label: 'Drawing the cast', tone: 'live' }
     : stageState === 'plate_review' ? { label: 'Cast review', tone: 'live' }
-    : stageState === 'review' ? { label: 'Plan', tone: 'idle' }
+    : stageState === 'review' || adPlanOn ? { label: 'Plan', tone: 'idle' }
     : stageState === 'render' ? { label: 'Rendering', tone: 'busy' }
     : stageState === 'edit' ? (lockedN ? { label: 'Preview', tone: 'busy' } : { label: 'Finished', tone: 'done' })
     : { label: 'No shots yet', tone: 'idle' };
 
   const castFacts = stageState === 'plate_review' || drawingCast;
-  const lengthLabel = durationSeconds ? `~${Math.round(durationSeconds / 60)} min` : null;
+  // Under a minute reads in seconds (a 10 s ad used to show "~0 min").
+  const lengthLabel = ad && ad.length ? `Ad · ${ad.length}s`
+    : durationSeconds ? (durationSeconds < 60 ? `${durationSeconds}s` : `~${Math.round(durationSeconds / 60)} min`) : null;
 
   // The cost rides inside the button that spends it; amber + "N short" when the
   // balance can't cover it (the button still fires → the 402 → the top-up card).
@@ -976,7 +1052,19 @@ export default function Storyboard({
   ) : null;
 
   let dock = null;
-  if (stageState === 'blocked' || (stageState === 'empty' && !drawingCast)) {
+  if (adPlanOn && !drawingCast && !editBusy) {
+    dock = (<>
+      {lead(`${adPlan.length} shot${adPlan.length === 1 ? '' : 's'} planned · ${ad.filmSeconds || '?'}s + ${ad.endCard || '?'}s end card`,
+            adRenderLocked || 'Check the cast before the ad is made')}
+      {onReviewCast && (
+        <button className="film-btn film-btn--primary film-btn--dock" onClick={onReviewCast}
+                disabled={!!adRenderLocked || castPhase !== 'idle'}
+                title={adRenderLocked || 'Plan the shots and draw the cast so you can check them before the ad is made'}>
+          Review cast
+        </button>
+      )}
+    </>);
+  } else if (stageState === 'blocked' || (stageState === 'empty' && !drawingCast)) {
     dock = null;   // the block card / empty state carry their own message
   } else if (editBusy) {
     // The stage overlay already scrims the panel and names the work; the dock
@@ -1077,9 +1165,26 @@ export default function Storyboard({
           ) : null}
           {videoStyle && <span title="The film's visual style"><GPalette />{styleLabel(videoStyle)}</span>}
           {aspectRatio && <span title="The frame shape — 9:16 is vertical, for phones"><GFrame ar={aspectRatio} />{aspectRatio}</span>}
-          {lengthLabel && <span title="Film length — set in the Writers' Room"><IconClock s={13} />{lengthLabel}</span>}
+          {lengthLabel && (ad
+            ? <span title={ad.locked ? 'Length and frame are fixed for this ad' : 'Ad length — set in Ad setup'}>
+                {ad.locked ? <GLock /> : <IconClock s={13} />}{lengthLabel}</span>
+            : <span title="Film length — set in the Writers' Room"><IconClock s={13} />{lengthLabel}</span>)}
         </div>
       </div>
+
+      {ad && stageState !== 'blocked' && (
+        <div className="sb-ad-strip">
+          <div className="sb-ad-strip-t">
+            <b>{ad.title || 'Your ad'}</b>
+            <span>{[ad.hook, ad.brand, ad.audience, ad.offer].filter(Boolean).join(' · ')}</span>
+          </div>
+          {onEditAdSetup && (
+            <button type="button" className="film-btn film-btn--ghost sb-ad-edit" onClick={() => onEditAdSetup(0)}
+                    title={ad.locked ? 'Reopen Ad setup — the brief and script can change; length and frame stay fixed'
+                                     : 'Reopen Ad setup'}>Edit setup</button>
+          )}
+        </div>
+      )}
 
       <div className={`film-stage${zoned ? ' film-stage--zoned' : ''}`}>
         {/* "Edit not applied: …" — an edit failed on a film that is still fine. */}
@@ -1120,6 +1225,11 @@ export default function Storyboard({
                 onRedraw={onRedrawPlace} onRevert={onRevertPlace || (() => ({}))} />
             )}
           </>
+        ) : adPlanOn ? (
+          <div className="film-grid" style={gridStyle}>
+            {adPlan.map(b => <AdPlanCell key={`plan-${b.index}`} beat={b} />)}
+            <AdEndCard ad={ad} />
+          </div>
         ) : stageState === 'empty' || total === 0 ? (
           <EmptyStoryboard />
         ) : (
@@ -1160,6 +1270,7 @@ export default function Storyboard({
                   </div>
                 )}
                 {items}
+                {ad && <AdEndCard ad={ad} />}
               </div>
             );
           })()}
