@@ -26,16 +26,38 @@ export const END_CARD_OPTIONS = [
   { key: 'lower_third', label: 'Lower third, then card', tip: 'Your name rides in over the last seconds, then the card',
     text: 'Your name slides in over the last 2 s of film, then the soft-hold card.' },
 ];
+// Owner 2026-10-19: the default (and suggested) label is the HIDDEN one — nothing visible on the
+// advert, only the machine-readable tag inside the file. A visible label is the user's choice.
 export const AI_LABEL_OPTIONS = [
-  { key: 'inline', label: 'Small print', rec: true, tip: '“Made with AI” in the end card’s small line',
+  { key: 'none', label: 'File tag only', rec: true, tip: 'Nothing visible — only the hidden tag in the file',
+    text: 'Nothing visible. Only the hidden tag in the file.' },
+  { key: 'inline', label: 'Small print', tip: '“Made with AI” in the end card’s small line',
     text: '“Made with AI” in the end card’s small line, beside your website.' },
   { key: 'mark', label: 'Corner mark', tip: 'A tiny, faint “AI” in the end card’s corner',
     text: 'A tiny, faint “AI” in the end card’s corner only.' },
-  { key: 'none', label: 'File tag only', tip: 'Nothing visible — only the hidden tag in the file',
-    text: 'Nothing visible. Only the hidden tag in the file.' },
 ];
 export const BRAND_COLORS = ['#1F3A2E', '#6366F1', '#B4532A', '#0F172A', '#E8D9B5', '#C2185B'];
-export const FINISH_DEFAULTS = { end_card: 'hold', ai_label: 'inline', captions: true, brand_color: BRAND_COLORS[0] };
+export const FINISH_DEFAULTS = { end_card: 'hold', ai_label: 'none', captions: true, brand_color: BRAND_COLORS[0], show_name: true };
+
+// Brand assets (AD_BRAND_ASSETS): how the uploaded logo sits on the card — the same rule as
+// ad_brand.logo_plate and AdCompose.jsx. A solid logo sits on its own background colour; a
+// transparent one gets a white plate (dark logo) or a near-black one (light logo) only when it
+// would not stand out against the card. Returns the plate colour, or null for none.
+export const lumOf = (hex) => {
+  const h = String(hex || '').replace('#', '');
+  if (!/^[0-9a-f]{6}$/i.test(h)) return 0.5;
+  const lin = (c) => (c <= 0.03928 ? c / 12.92 : ((c + 0.055) / 1.055) ** 2.4);
+  const [r, g, b] = [0, 2, 4].map(i => lin(parseInt(h.slice(i, i + 2), 16) / 255));
+  return 0.2126 * r + 0.7152 * g + 0.0722 * b;
+};
+export function logoPlate(logo, bgLum) {
+  if (!logo) return null;
+  if (!logo.alpha) return logo.bg || '#FFFFFF';
+  const lum = Number.isFinite(logo.lum) ? logo.lum : 0.5;
+  if (Math.abs(lum - bgLum) >= 0.35) return null;
+  return lum < 0.5 ? '#FFFFFF' : '#141414';
+}
+const LOGO_TYPES = 'image/png,image/jpeg,image/webp';
 
 // Same rule as ad_room.ink_for: near-black on light colours, white on dark ones.
 export function inkFor(hex) {
@@ -54,7 +76,7 @@ function initials(name) {
   return ((w[0][0] || '') + (w[1] ? w[1][0] : (w[0][1] || ''))).toUpperCase();
 }
 
-const same = (a, b) => ['end_card', 'ai_label', 'captions', 'brand_color']
+const same = (a, b) => ['end_card', 'ai_label', 'captions', 'brand_color', 'show_name']
   .every(k => String(a[k]).toUpperCase() === String(b[k]).toUpperCase());
 const LT_SECONDS = 2;
 
@@ -77,7 +99,8 @@ export function adFinishState(f) {
   return { key: 'failed', label: 'Not finished', tip: f.reason || 'The finishing step didn’t work. Try again.' };
 }
 
-export default function AdFinish({ ad, sampleLine = '', onSave, onClose, onEditWords = null, filmUrl = null }) {
+export default function AdFinish({ ad, sampleLine = '', onSave, onClose, onEditWords = null, filmUrl = null,
+                                   logoApi = null }) {
   const saved = { ...FINISH_DEFAULTS, ...((ad && ad.finish) || {}) };
   const [draft, setDraft] = useState(saved);
   const [saving, setSaving] = useState(false);
@@ -91,12 +114,20 @@ export default function AdFinish({ ad, sampleLine = '', onSave, onClose, onEditW
   const vidRef = useRef(null);
   const headRef = useRef(null);
   const badgeRef = useRef(null);
+  // Brand assets: the logo is saved the moment it is uploaded or removed (its own route);
+  // on a made advert that counts as a change, so "Save & update advert" finishes it again.
+  const [rights, setRights] = useState(false);
+  const [logoBusy, setLogoBusy] = useState(null);      // null | 'upload' | 'remove'
+  const [logoErr, setLogoErr] = useState(null);
+  const [logoChanged, setLogoChanged] = useState(false);
+  const fileRef = useRef(null);
+  const logo = (ad && ad.logo) || null;
 
   const wide = (ad && ad.ratio) === '16:9';
   const endSec = Math.max(2, Number(ad && ad.endCard) || 3);
   const filmSec = Math.max(2, Math.min(Number(ad && ad.filmSeconds) || 8, clipDur || 8));
   const total = filmSec + endSec;
-  const dirty = !same(draft, saved);
+  const dirty = !same(draft, saved) || logoChanged;
   const set = (patch) => { setErr(null); setDraft(d => ({ ...d, ...patch })); };
 
   // Esc / × / Cancel close without saving.
@@ -151,7 +182,7 @@ export default function AdFinish({ ad, sampleLine = '', onSave, onClose, onEditW
     setSaving(true); setErr(null);
     try {
       await onSave({ end_card: draft.end_card, ai_label: draft.ai_label, captions: !!draft.captions,
-                     brand_color: String(draft.brand_color).toUpperCase() });
+                     brand_color: String(draft.brand_color).toUpperCase(), show_name: draft.show_name !== false });
       onClose();
     } catch (e) {
       const d = e && e.response && e.response.data;
@@ -161,7 +192,9 @@ export default function AdFinish({ ad, sampleLine = '', onSave, onClose, onEditW
 
   const brand = (ad && ad.brand) || 'Your brand';
   const offer = (ad && ad.offer) || '';
-  const cta = (ad && ad.cta) || 'Call to action';
+  // No call to action in the brief → no button on the card: the preview draws exactly what the
+  // finished advert will have (the render leaves the button out too).
+  const cta = ((ad && ad.cta) || '').trim();
   const url = (ad && ad.url) || '';
   const color = String(draft.brand_color || BRAND_COLORS[0]).toUpperCase();
   const ink = inkFor(color);
@@ -169,6 +202,36 @@ export default function AdFinish({ ad, sampleLine = '', onSave, onClose, onEditW
   const frameStyle = { '--adf-brand': color, '--adf-brand-ink': ink };
   const frameCls = ['adf-frame', wide ? 'is-wide' : 'is-tall', phase === 'end' ? 'is-end' : '',
     style === 'slate' ? 's-slate' : 's-hold', lt ? 'is-lt' : '', showSafe ? 'show-safe' : ''].filter(Boolean).join(' ');
+
+  const pickLogo = async (e) => {
+    const f = e.target.files && e.target.files[0];
+    e.target.value = '';
+    if (!f || !logoApi) return;
+    setLogoErr(null); setLogoBusy('upload');
+    try { await logoApi.upload(f); setLogoChanged(true); showEnd(); }
+    catch (er) {
+      const d = er && er.response && er.response.data;
+      setLogoErr((d && d.error) || 'That logo couldn’t be uploaded — please try again.');
+    } finally { setLogoBusy(null); }
+  };
+  const removeLogo = async () => {
+    setLogoErr(null); setLogoBusy('remove');
+    try { await logoApi.remove(); setLogoChanged(true); showEnd(); }
+    catch (er) { setLogoErr('The logo couldn’t be removed — please try again.'); }
+    finally { setLogoBusy(null); }
+  };
+  const showName = !logo || draft.show_name !== false;
+  // The mark on the card: the logo (kept to its shape) or the initials square.
+  const mark = (small) => {
+    if (!logo) return <div className={`adf-logo${small ? ' adf-lt-logo' : ''}`}>{initials(brand)}</div>;
+    const plate = logoPlate(logo, small ? 0.1 : (style === 'slate' ? lumOf(color) : 0.08));
+    return (
+      <div className={`adf-mark${small ? ' is-small' : ''}${plate ? ' has-plate' : ''}`}
+           style={{ '--adf-ratio': `${logo.w} / ${logo.h}`, ...(plate ? { background: plate } : {}) }}>
+        <img src={logo.url} alt="" />
+      </div>
+    );
+  };
 
   const optGroup = (opts, key) => (
     <div className="adf-opts">
@@ -204,15 +267,15 @@ export default function AdFinish({ ad, sampleLine = '', onSave, onClose, onEditW
                 <div className="adf-caption">{sampleLine || 'Spoken lines appear here as captions'}</div>
               )}
               <div className="adf-lt">
-                <div className="adf-logo adf-lt-logo">{initials(brand)}</div>
-                <div><b>{brand}</b>{offer && <small>{offer}</small>}</div>
+                {mark(true)}
+                <div>{showName && <b>{brand}</b>}{offer && <small>{offer}</small>}</div>
               </div>
               <div className="adf-ec">
                 <div className="adf-card">
-                  <div className="adf-logo" title="Your logo goes here (logo upload comes with brand assets)">{initials(brand)}</div>
-                  <div className="adf-brand">{brand}</div>
+                  {mark(false)}
+                  {showName && <div className="adf-brand">{brand}</div>}
                   {offer && <div className="adf-offer">{offer}</div>}
-                  <div className="adf-cta">{cta}</div>
+                  {cta && <div className="adf-cta">{cta}</div>}
                   {(url || draft.ai_label === 'inline') && (
                     <div className="adf-small">
                       {url && <span>{url}</span>}
@@ -247,6 +310,48 @@ export default function AdFinish({ ad, sampleLine = '', onSave, onClose, onEditW
           </div>
 
           <div className="adf-panel">
+            {logoApi && (
+              <div className="adf-grp">
+                <h3 className="adf-h">Logo</h3>
+                <div className="adf-logo-row">
+                  <div className={`adf-logo-thumb${logo ? '' : ' is-empty'}`}>
+                    {logo ? <img src={logo.url} alt="Your logo" /> : <span>{initials(brand)}</span>}
+                  </div>
+                  <div className="adf-logo-side">
+                    {!logo && (
+                      <label className="adf-chk" title="You must own this logo or have permission to use it">
+                        <input type="checkbox" checked={rights} onChange={(e) => setRights(e.target.checked)} />
+                        <span>I own this logo or have permission to use it</span>
+                      </label>
+                    )}
+                    <div className="adf-logo-acts">
+                      <input ref={fileRef} type="file" accept={LOGO_TYPES} hidden onChange={pickLogo} aria-label="Choose a logo image" />
+                      <button type="button" className="adf-btn" disabled={!!logoBusy || (!logo && !rights)}
+                              onClick={() => fileRef.current && fileRef.current.click()}
+                              title={!logo && !rights ? 'Tick the box first: you own this logo or may use it'
+                                : 'PNG, JPG or WebP, up to 5 MB — a transparent PNG looks best'}>
+                        {logoBusy === 'upload' ? 'Uploading…' : logo ? 'Replace logo' : 'Upload logo'}
+                      </button>
+                      {logo && (
+                        <button type="button" className="adf-btn" disabled={!!logoBusy} onClick={removeLogo}
+                                title="Remove the logo — the card shows your initials again">
+                          {logoBusy === 'remove' ? 'Removing…' : 'Remove'}
+                        </button>
+                      )}
+                    </div>
+                    {logo && (
+                      <label className="adf-switch" title="Most logos already carry the name — turn this off to show the logo alone">
+                        <input type="checkbox" checked={draft.show_name !== false}
+                               onChange={(e) => { set({ show_name: e.target.checked }); showEnd(); }} />
+                        <span>Show the brand name under the logo</span>
+                      </label>
+                    )}
+                    {logoErr && <span className="adf-err" role="alert">{logoErr}</span>}
+                  </div>
+                </div>
+              </div>
+            )}
+
             <div className="adf-grp">
               <h3 className="adf-h">End card</h3>
               {optGroup(END_CARD_OPTIONS, 'end_card')}
@@ -282,6 +387,16 @@ export default function AdFinish({ ad, sampleLine = '', onSave, onClose, onEditW
                 </label>
                 <span className="adf-hex">{color}</span>
               </div>
+              {logo && logo.colors && logo.colors.length > 0 && (
+                <div className="adf-colors adf-colors-logo">
+                  <span className="adf-hint">From your logo</span>
+                  {logo.colors.map(c => (
+                    <button key={`logo-${c}`} type="button" className={`adf-sw${color === c ? ' is-on' : ''}`} style={{ background: c }}
+                            aria-pressed={color === c} aria-label={`Brand colour ${c} from your logo`} title={`Use ${c} from your logo`}
+                            onClick={() => { set({ brand_color: c }); if (style === 'slate') showEnd(); }} />
+                  ))}
+                </div>
+              )}
             </div>
 
             <div className="adf-grp">
@@ -289,7 +404,7 @@ export default function AdFinish({ ad, sampleLine = '', onSave, onClose, onEditW
               <div className="adf-words">
                 <span><em>Brand</em>{brand}</span>
                 <span><em>Offer</em>{offer || '—'}</span>
-                <span><em>Call to action</em>{cta}</span>
+                <span className={cta ? undefined : 'adf-missing'}><em>Call to action</em>{cta || 'None yet — no button on the card'}</span>
                 <span><em>Website</em>{url || '—'}</span>
               </div>
               {onEditWords && (

@@ -173,3 +173,25 @@
 @media (prefers-reduced-motion: reduce) {
   .adf-scrim *, .adf-scrim *::before, .adf-scrim *::after { transition: none !important; animation: none !important; }
 }
+
+/* A word the card will not show yet (e.g. no call to action → no button). */
+.adf-words .adf-missing { color: var(--adf-t3); font-style: italic; }
+
+/* Brand assets — the logo on the card (kept to its shape; a plate only when needed) and its upload. */
+.adf-mark { display: flex; align-items: center; justify-content: center; border-radius: calc(2.2 * var(--adf-u));
+  height: calc(9 * var(--adf-u)); max-width: 62%; aspect-ratio: var(--adf-ratio); }
+.adf-mark img { display: block; width: 100%; height: 100%; object-fit: contain; }
+.adf-mark.has-plate { padding: calc(1.2 * var(--adf-u)); box-sizing: content-box;
+  box-shadow: 0 calc(1 * var(--adf-u)) calc(2.6 * var(--adf-u)) rgba(0, 0, 0, .35); }
+.adf-mark.is-small { height: calc(5.4 * var(--adf-u)); max-width: 40%; border-radius: calc(1.4 * var(--adf-u)); flex: 0 0 auto; }
+.adf-mark.is-small.has-plate { padding: calc(.7 * var(--adf-u)); }
+.adf-logo-row { display: flex; gap: 14px; align-items: flex-start; }
+.adf-logo-thumb { flex: 0 0 auto; width: 112px; height: 72px; border-radius: 10px; display: grid; place-items: center; overflow: hidden;
+  border: 1px solid var(--adf-bd-2);
+  background: repeating-conic-gradient(#d9dee8 0 25%, #f3f5f9 0 50%) 0 0 / 14px 14px; }   /* light checks: shows transparency, and dark logos read */
+.adf-logo-thumb img { max-width: 92%; max-height: 86%; object-fit: contain; }
+.adf-logo-thumb.is-empty span { font: 800 22px/1 var(--adf-body); color: var(--adf-t3); }
+.adf-logo-side { display: grid; gap: 9px; min-width: 0; }
+.adf-logo-acts { display: flex; gap: 8px; flex-wrap: wrap; }
+.adf-colors-logo { margin-top: 2px; }
+.adf-colors-logo .adf-hint { margin: 0 4px 0 0; }

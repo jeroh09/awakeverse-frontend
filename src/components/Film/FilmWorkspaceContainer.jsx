@@ -14,7 +14,8 @@ import { InsufficientCard } from './CreditsUI';
 import FilmSeriesModals from './FilmSeriesModals';
 import AdSetup from './AdSetup';
 import { filmGetProject, filmUploadPhoto, filmUploadConsent, filmSaveScript, filmPromoteToSeries,
-         filmGetRecap, filmReviewEpisode, filmSaveAdFinish, friendlyError } from './filmApi';
+         filmGetRecap, filmReviewEpisode, filmSaveAdFinish, filmAdUploadLogo, filmAdRemoveLogo,
+         friendlyError } from './filmApi';
 
 const shotToCell = s => ({
   index: s.index,
@@ -86,6 +87,12 @@ export default function FilmWorkspaceContainer({
     if (jobFilmUrl) await jobFinishAgain();
     return r;
   }, [projectId, jobFilmUrl, jobFinishAgain]);
+  // Brand assets (AD_BRAND_ASSETS): the logo upload / removal — each reply is the ad.
+  const logoOpen = !!(ad && ad.brand_assets_open);
+  const logoApi = useMemo(() => (logoOpen ? {
+    upload: async (file) => { const r = await filmAdUploadLogo(projectId, file); if (r && r.ad) setAd(r.ad); return r; },
+    remove: async () => { const r = await filmAdRemoveLogo(projectId); if (r && r.ad) setAd(r.ad); return r; },
+  } : null), [logoOpen, projectId]);
   const credits = useCredits();
   const navigate = useNavigate();
   const [blockInfo, setBlockInfo] = useState(null);   // 402 → InsufficientCard
@@ -721,6 +728,7 @@ export default function FilmWorkspaceContainer({
       adFinish={ad ? job.adFinish : null}
       adFilmUrl={ad ? job.adFilmUrl : null}
       onFinishAgain={ad && ad.compose_open ? job.finishAgain : null}
+      logoApi={ad && ad.compose_open ? logoApi : null}
     />
     {ad && setupOpen && !loading && (
       <AdSetup

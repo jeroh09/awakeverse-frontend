@@ -876,9 +876,10 @@ function AdEndCard({ ad, onOpen = null }) {
         {ad.endCard ? <span className="film-dur">{ad.endCard}s</span> : null}
         {onOpen ? <span className="sb-ad-ec-design" aria-hidden="true">Design ›</span> : null}
         <div className="sb-ad-ec">
-          <b>{ad.brand || 'Your brand'}</b>
+          {ad.logo ? <img className="sb-ad-ec-logo" src={ad.logo.url} alt="" /> : null}
+          {!ad.logo || !f || f.show_name !== false ? <b>{ad.brand || 'Your brand'}</b> : null}
           {ad.offer && <small>{ad.offer}</small>}
-          <span className="sb-ad-ec-cta">{ad.cta || 'Call to action'}</span>
+          {ad.cta ? <span className="sb-ad-ec-cta">{ad.cta}</span> : null}
         </div>
       </div>
       <div className="film-cfoot">
@@ -945,6 +946,7 @@ export default function Storyboard({
   adFinish = null,                   // step 4 part 3: manifest.ad_finish of the made advert
   adFilmUrl = null,                  //   the advert's film (the picker previews on it)
   onFinishAgain = null,              //   "Try again" → finish it again
+  logoApi = null,                    // brand assets: {upload, remove} → the picker's Logo section
   onReviewCast = null,
   adRenderLocked = null,
 }) {
@@ -1261,7 +1263,7 @@ export default function Storyboard({
       )}
       {finishOpen && canFinish && (
         <AdFinish ad={ad} sampleLine={sampleLine} onSave={onSaveAdFinish} onClose={() => setFinishOpen(false)}
-                  filmUrl={adFilmUrl}
+                  filmUrl={adFilmUrl} logoApi={logoApi}
                   onEditWords={onEditAdSetup ? () => { setFinishOpen(false); onEditAdSetup(0); } : null} />
       )}
 

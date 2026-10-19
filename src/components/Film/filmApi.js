@@ -365,6 +365,17 @@ export const filmAdChoose = (projectId, index) =>
 // 404 while AD_COMPOSE is off (the picker only shows when ad.compose_open).
 export const filmSaveAdFinish = (projectId, finish) =>
   api.put(`/film/projects/${projectId}/ad/finish`, { finish }, { timeout: QUEUE_TIMEOUT }).then(r => r.data);
+// Brand assets (AD_BRAND_ASSETS): the advert's logo. Multipart: logo + rights=1 (the user
+// confirms they own it or may use it). → { ad }. 400 {code: rights_required | bad_image}, 413 too large.
+export const filmAdUploadLogo = (projectId, file) => {
+  const form = new FormData();
+  form.append('logo', file);
+  form.append('rights', '1');
+  return api.post(`/film/projects/${projectId}/ad/logo`, form,
+    { timeout: QUEUE_TIMEOUT, headers: { 'Content-Type': 'multipart/form-data' } }).then(r => r.data);
+};
+export const filmAdRemoveLogo = (projectId) =>
+  api.delete(`/film/projects/${projectId}/ad/logo`, { timeout: QUEUE_TIMEOUT }).then(r => r.data);
 // STEP 4 part 3: finish a made advert again (after "Try again" or new end-card choices).
 // 202 {ad_finish}; 409 {code:'finishing'|'not_ready'}; 404 while AD_COMPOSE is off.
 export const filmAdFinishAgain = (jobId) =>

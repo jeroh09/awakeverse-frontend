@@ -78,6 +78,7 @@ export default function FilmWorkspace({
   // step 4 part 3: the made advert's finishing state (manifest.ad_finish), its film, and
   // "Try again" — all null for films and while AD_COMPOSE is off.
   adFinish = null, adFilmUrl = null, onFinishAgain = null,
+  logoApi = null,          // brand assets (AD_BRAND_ASSETS): {upload(file), remove()} for the logo
 }) {
   const adInfo = useMemo(() => {
     if (!ad) return null;
@@ -86,7 +87,8 @@ export default function FilmWorkspace({
     return { title: c ? c.title : (b.name || ''), hook: c ? c.hook : '', brand: b.name || '', audience: b.audience || '',
              offer: b.offer || '', cta: b.cta || '', length: Number(b.length) || null, ratio: b.ratio || null,
              filmSeconds: ad.film_seconds || null, endCard: ad.end_card_seconds || null, locked: !!ad.locked,
-             url: b.url || '', composeOpen: !!ad.compose_open, finish: ad.finish || null };
+             url: b.url || '', composeOpen: !!ad.compose_open, finish: ad.finish || null,
+             logo: (ad.brand_assets && ad.brand_assets.logo) || null };
   }, [ad]);
   // The server says whether an ad may start paid work yet (AD_RENDER); until then the
   // Review cast buttons are greyed with the reason instead of failing on click.
@@ -257,6 +259,7 @@ export default function FilmWorkspace({
               adFinish={adFinish}
               adFilmUrl={adFilmUrl}
               onFinishAgain={onFinishAgain}
+              logoApi={logoApi}
               onReviewCast={adInfo ? onReviewCast : null}
               adRenderLocked={adRenderLocked}
             />
