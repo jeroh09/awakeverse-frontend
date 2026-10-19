@@ -285,6 +285,10 @@ function CastMember({ name, info, busy, onRedraw, onUpload }) {
   const [err, setErr] = useState(null);
   const uploaded = info.source === 'upload';
   const recurring = !!info.recurring;   // series-aware: a locked, reused character
+  // ADVERTISING MODE (2026-10-19): a photoreal ad's people are described in words —
+  // no face is drawn (Seedance takes no realistic face images). The card shows the
+  // written look; Edit look → Save stores the words. No Redraw, no own photo.
+  const textOnly = !!info.text_only;
   const redraw = async (fromEditor) => {
     setErr(null);
     const r = await onRedraw(name, desc);
@@ -292,17 +296,21 @@ function CastMember({ name, info, busy, onRedraw, onUpload }) {
     else if (fromEditor) setEditing(false);
   };
   return (
-    <article className={`film-cc${recurring ? ' is-locked' : ''}${editing ? ' is-editing' : ''}${busy ? ' is-busy' : ''}`}>
-      <div className="film-cc-img">
-        {info.plate_url
-          ? <img src={info.plate_url} alt={name} />
-          : <div className="film-cc-empty" />}
-        {busy && <div className="film-cc-veil" aria-label="Drawing…"><span className="film-spin film-spin--sm" /></div>}
-      </div>
+    <article className={`film-cc${recurring ? ' is-locked' : ''}${editing ? ' is-editing' : ''}${busy ? ' is-busy' : ''}${textOnly ? ' is-text' : ''}`}>
+      {!textOnly && (
+        <div className="film-cc-img">
+          {info.plate_url
+            ? <img src={info.plate_url} alt={name} />
+            : <div className="film-cc-empty" />}
+          {busy && <div className="film-cc-veil" aria-label="Drawing…"><span className="film-spin film-spin--sm" /></div>}
+        </div>
+      )}
       <div className="film-cc-body">
         <div className="film-cc-name">
           <span className="film-cc-nm">{name}</span>
-          {recurring
+          {textOnly
+            ? <span className="film-pill film-cc-wordpill" title="Photoreal ads describe people in words, so no face is drawn">In words</span>
+            : recurring
             ? <span className="film-pill film-pill--series"><GLock s={9} /> Series</span>
             : uploaded && <span className="film-pill film-pill--photo">Your photo</span>}
         </div>
@@ -315,11 +323,18 @@ function CastMember({ name, info, busy, onRedraw, onUpload }) {
             <div className="film-cc-row">
               <button className="film-sbtn" disabled={busy}
                 onClick={() => { setDesc(info.description || ''); setErr(null); setEditing(false); }}
-                title="Close without redrawing">Cancel</button>
-              <button className="film-sbtn film-sbtn--pri" disabled={busy || !desc.trim()} onClick={() => redraw(true)}
-                title="Draw this character again from the description above">
-                <IconRedraw s={12} /> Redraw
-              </button>
+                title={textOnly ? 'Close without saving' : 'Close without redrawing'}>Cancel</button>
+              {textOnly ? (
+                <button className="film-sbtn film-sbtn--pri" disabled={busy || !desc.trim()} onClick={() => redraw(true)}
+                  title="Save how they look — the ad uses these words">
+                  {busy ? 'Saving…' : 'Save'}
+                </button>
+              ) : (
+                <button className="film-sbtn film-sbtn--pri" disabled={busy || !desc.trim()} onClick={() => redraw(true)}
+                  title="Draw this character again from the description above">
+                  <IconRedraw s={12} /> Redraw
+                </button>
+              )}
             </div>
           </div>
         ) : (
@@ -332,6 +347,11 @@ function CastMember({ name, info, busy, onRedraw, onUpload }) {
                 // across episodes. No per-episode redraw (that would diverge them);
                 // change a series character's look from My Series → Refresh look.
                 <span className="film-cc-lockline">Same look in every episode</span>
+              ) : textOnly ? (
+                <button className="film-sbtn film-sbtn--grow" disabled={busy} onClick={() => setEditing(true)}
+                  title="Change how they look, in words">
+                  <GEdit s={12} /> Edit look
+                </button>
               ) : (
                 <>
                   <button className="film-sbtn film-sbtn--grow" disabled={busy} onClick={() => setEditing(true)}
@@ -918,6 +938,7 @@ export default function Storyboard({
   const fileInputRef = useRef(null);
   const pendingNameRef = useRef(null);   // which cast member the picked file belongs to
   const castList = cast ? Object.entries(cast) : [];
+  const castTextOnly = castList.length > 0 && castList.every(([, info]) => info && info.text_only);
 
   // The film's frame shape drives the storyboard card proportion so the preview
   // tells the truth about the output (a 9:16 film shows tall cards, not 16:9).
@@ -1213,7 +1234,8 @@ export default function Storyboard({
         ) : stageState === 'plate_review' ? (
           <>
             <Zone title="Cast" grow={3}
-                  sub={`${castList.length} character${castList.length === 1 ? '' : 's'} · change a look, or use your own photo`}>
+                  sub={`${castList.length} character${castList.length === 1 ? '' : 's'} · ${castTextOnly
+                    ? 'described in words · edit a look' : 'change a look, or use your own photo'}`}>
               {castList.map(([name, info]) => (
                 <CastMember key={name} name={name} info={info}
                   busy={busyMember === name}

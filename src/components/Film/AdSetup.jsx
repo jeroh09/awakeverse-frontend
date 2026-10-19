@@ -338,7 +338,8 @@ export default function AdSetup({
 
       <div className="ads-group">
         <div className="ads-group-h"><h3>Length and frame</h3>
-          <span className="ads-hint">{locked ? '🔒 Fixed for this ad' : 'Fixed for good once you choose a concept'}</span></div>
+          <span className="ads-hint">{locked ? '🔒 Fixed for this ad' : 'Fixed for good once you choose a concept'}
+            {' · '}the film may run up to {length <= 20 ? 5 : 10}s longer if the story needs it</span></div>
         <div className="ads-pills" role="group" aria-label="Length">
           {AD_LENGTHS.map(n => (
             <button key={n} type="button" className={`ads-pill${length === n ? ' is-on' : ''}`}
