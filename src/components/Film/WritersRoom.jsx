@@ -229,7 +229,7 @@ function Turn({ role, text, attachment, scriptMeta, editable = false, onSaveScri
         /* ADVERTISING MODE: the film room says this is an advert request. The user decides. */
         <div className="film-adsuggest">
           <button type="button" className="film-btn film-btn--primary" onClick={onStartAd}
-                  title="Start a new ad in the Ad studio — what you asked for goes with it">Start an ad</button>
+                  title="Start a new ad — what you asked for goes into its setup">Start an ad</button>
           <span>or keep going here as a short film.</span>
         </div>
       )}
@@ -410,6 +410,7 @@ export default function WritersRoom({
   showBuildBar = false,
   onBuildFilm = () => {},           // retired from the funnel bar (kept for contract)
   onReviewCast = () => {},
+  renderLocked = null,               // Advertising Mode: why an ad can't start its cast review yet (greys the CTA)
   onApproveCast = () => {},
   castPhase = 'idle',
   busyLabel = null,                  // live editBusy label, e.g. "Regenerating shot 5…"
@@ -526,9 +527,8 @@ export default function WritersRoom({
           <div className="film-turn-ai">
             <div className="film-who">Director</div>
             <div className="fw-welcome">
-              Tell me what you’re advertising, who it’s for and the one thing people should
-              remember — in your own words here, or in the brief on the left. Once the brief is
-              ready I’ll pitch three different concepts.
+              Your ad is set up in Ad setup: the brief, the look, three concepts and the script.
+              Once the script is in, ask me here to change a line, the hook or the ending.
             </div>
           </div>
         )}
@@ -698,8 +698,8 @@ export default function WritersRoom({
           storyboard + Editor's Room own a finished film. */}
       {showBuildBar && castPhase !== 'done' && (() => {
         const CTA = ({
-          idle:           { label: 'Review cast',         disabled: false, busy: false, onClick: onReviewCast,
-                            tip: 'Plan the shots and draw the cast so you can check them before the film is made' },
+          idle:           { label: 'Review cast',         disabled: !!renderLocked, busy: false, onClick: onReviewCast,
+                            tip: renderLocked || 'Plan the shots and draw the cast so you can check them before the film is made' },
           cast_rendering: { label: 'Reviewing the cast…', disabled: true,  busy: true,  onClick: null,
                             tip: 'Drawing your cast — no need to click again' },
           cast_ready:     { label: 'Make the film',       disabled: false, busy: false, onClick: onApproveCast,
@@ -710,8 +710,8 @@ export default function WritersRoom({
           // locked button names the actual work ("Regenerating shot 5…").
           editing:        { label: busyLabel || 'Working…', disabled: true, busy: true, onClick: null,
                             tip: 'An edit is being applied to your film' },
-        })[castPhase] || { label: 'Review cast', disabled: false, busy: false, onClick: onReviewCast,
-                           tip: 'Plan the shots and draw the cast so you can check them before the film is made' };
+        })[castPhase] || { label: 'Review cast', disabled: !!renderLocked, busy: false, onClick: onReviewCast,
+                           tip: renderLocked || 'Plan the shots and draw the cast so you can check them before the film is made' };
 
         return scriptBarCollapsed ? (
           <button className="film-scriptbar-pill" onClick={() => setScriptBarCollapsed(false)} title="Show the make-the-film bar">
@@ -767,7 +767,7 @@ export default function WritersRoom({
             onKeyDown={onKeyDown}
             placeholder={isEditing
               ? "Tell the editor what to change — a beat, a line, a whole sequence…"
-              : isAd ? "Tell me about your ad — what it’s for, who it’s for, what to change…"
+              : isAd ? "Tell me what to change — a line, the hook, the ending…"
               : "Write the next beat, or push back on the last one…"}
           />
           <button className="film-send" onClick={send} aria-label="Send" title="Send (Enter) — Shift+Enter for a new line">

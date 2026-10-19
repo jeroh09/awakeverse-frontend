@@ -17,11 +17,11 @@ export const GENRES = [
   { key: 'sci_fi',     label: 'Sci-Fi',     hint: 'one clear "what if", kept consistent. The writer asks what it is.' },
   { key: 'fantasy',    label: 'Fantasy',    hint: 'a world with its own rules. The writer asks for the one rule of its magic.' },
 ];
-// ADVERTISING MODE (2026-10-18, AD_MODE=1) — "Advertise" opens the Ad studio instead of the
+// ADVERTISING MODE (2026-10-18, AD_MODE=1) — "Advertise" opens Ad setup instead of the
 // writers' room. It is deliberately NOT in GENRES, so it never appears for series (an ad is a
 // film in v1); NewFilmModal shows it only when the server's /ad routes answer (feature-detect).
 export const AD_GENRE = { key: 'advertise', label: 'Advertise',
-  hint: 'a story-first video ad. Opens the Ad studio: a short brief, inspiration lenses, three concepts, then the script.' };
+  hint: 'a story-first video ad. Opens Ad setup: a short brief, a look, three concepts, then the script.' };
 export const isAdGenre = (key) => key === AD_GENRE.key;
 export const AD_LENGTHS = [10, 15, 20, 30, 45, 60];     // = ad_room.AD_LENGTHS
 export const AD_RATIOS = ['9:16', '16:9'];               // = ad_room.AD_RATIOS

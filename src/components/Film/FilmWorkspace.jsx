@@ -5,10 +5,9 @@
 // "My Films" return, the film's title (read from the script's own title), and
 // the collapse toggles. Presentational; data + handlers come from the container.
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import Storyboard from './Storyboard';
 import WritersRoom from './WritersRoom';
-import AdStudio from './AdStudio';
 import { IconChevron, IconBack } from './filmIcons';
 import { CreditsChip } from './CreditsUI';
 import './CreditsUI.css';
@@ -71,12 +70,23 @@ export default function FilmWorkspace({
   onSetChatMode = () => {},
   onApplyEditIntent = () => {},
   onDismissProposal = () => {},
-  // Advertising Mode (2026-10-18): an ad shows the Ad studio in the left panel until the
-  // cast review starts; then the storyboard takes over as for any film.
-  ad = null, projectId = null, onAd = () => {}, onAdChosen = () => {}, onAdScript = () => {},
-  onStartAd = null,
+  // Advertising Mode: an ad is set up in the Ad setup popup (2026-10-19, rendered by the
+  // container); the storyboard panel is the storyboard for ads too (plan from the script,
+  // the ad strip with Edit setup, the end card). `adScript` = the latest script draft.
+  ad = null, onStartAd = null, onEditAdSetup = null, adScript = null,
 }) {
-  const showAdStudio = !!ad && stageState === 'empty' && castPhase === 'idle';
+  const adInfo = useMemo(() => {
+    if (!ad) return null;
+    const b = ad.brief || {};
+    const c = Number.isInteger(ad.chosen) && ad.concepts ? ad.concepts[ad.chosen] : null;
+    return { title: c ? c.title : (b.name || ''), hook: c ? c.hook : '', brand: b.name || '', audience: b.audience || '',
+             offer: b.offer || '', cta: b.cta || '', length: Number(b.length) || null, ratio: b.ratio || null,
+             filmSeconds: ad.film_seconds || null, endCard: ad.end_card_seconds || null, locked: !!ad.locked };
+  }, [ad]);
+  // The server says whether an ad may start paid work yet (AD_RENDER); until then the
+  // Review cast buttons are greyed with the reason instead of failing on click.
+  const adRenderLocked = ad && ad.render_open === false
+    ? 'Ad renders open when the finishing stage is ready. Your script is saved.' : null;
   // Below 820px the two panels stack (see FilmWorkspace.css's accordion
   // media query) — starting BOTH expanded there would just reproduce the old
   // 50/50 squeeze, so on narrow viewports we default straight into Writers'
@@ -193,10 +203,6 @@ export default function FilmWorkspace({
               </button>
               <span className="film-rail-label">Storyboard</span>
             </div>
-            {showAdStudio ? (
-              <AdStudio projectId={projectId} ad={ad} onAd={onAd} onChosen={onAdChosen}
-                onScript={onAdScript} hasScript={scriptReady} chatBusy={thinking || streamingActive} />
-            ) : (
             <Storyboard
               stageState={stageState}
               contentBlock={contentBlock}
@@ -239,8 +245,12 @@ export default function FilmWorkspace({
               onCut={onCut}
               canPromote={canPromote}
               onPromote={onPromote}
+              ad={adInfo}
+              adScript={adScript}
+              onEditAdSetup={onEditAdSetup}
+              onReviewCast={adInfo ? onReviewCast : null}
+              adRenderLocked={adRenderLocked}
             />
-            )}
           </section>
 
           {/* RIGHT — Writers' room */}
@@ -284,6 +294,7 @@ export default function FilmWorkspace({
               showBuildBar={scriptReady}
               onBuildFilm={onBuildFilm}
               onReviewCast={onReviewCast}
+              renderLocked={adRenderLocked}
               onApproveCast={onApproveCast}
               castPhase={castPhase}
               busyLabel={busyLabel}

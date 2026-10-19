@@ -161,7 +161,7 @@ function Book({ item, ordinal, isOpen, onToggle, onOpen, onWatch, onPromote, onD
           <button type="button" className="fs-cbtn play" onClick={stop(() => onOpen(item))}
                   title={item.can_finish ? 'Open the preview — finish the full film from there'
                          : ready ? 'Open in the storyboard'
-                         : item.isAd ? 'Carry on in the Ad studio' : 'Carry on in the writers\' room'}>{item.can_finish ? 'Finish film' : ready ? 'Open' : 'Continue'}</button>
+                         : item.isAd ? 'Carry on in Ad setup' : 'Carry on in the writers\' room'}>{item.can_finish ? 'Finish film' : ready ? 'Open' : 'Continue'}</button>
           {ready && item.standalone && (
             <button type="button" className="fs-cbtn ghost" onClick={stop(() => onPromote(item))}
                     title="Make this film Episode 1 of a new series — its cast is kept for every episode"><IconPlus s={12} /> Series</button>
@@ -251,7 +251,7 @@ function AdsShelf({ ads, onOpen, onWatch, onDelete, onNewAd }) {
         ))}
         {onNewAd && (
           <button className="fs-addep" onClick={onNewAd} aria-label="New ad"
-                  title="Start a new ad in the Ad studio"><IconPlus s={22} /></button>
+                  title="Start a new ad"><IconPlus s={22} /></button>
         )}
       </GlassRail>
       <div className="fs-ledge" />

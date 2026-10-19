@@ -12,6 +12,7 @@ import useFilmJob, { beatPayload } from './useFilmJob';
 import useCredits from '../../hooks/useCredits';
 import { InsufficientCard } from './CreditsUI';
 import FilmSeriesModals from './FilmSeriesModals';
+import AdSetup from './AdSetup';
 import { filmGetProject, filmUploadPhoto, filmUploadConsent, filmSaveScript, filmPromoteToSeries,
          filmGetRecap, filmReviewEpisode, friendlyError } from './filmApi';
 
@@ -65,8 +66,14 @@ export default function FilmWorkspaceContainer({
   onStartAd = null,            // optional (text) → the parent opens a new ad directly
 }) {
   // ADVERTISING MODE: `ad` is the server's ad state (null for every film). The chat's
-  // ad_state line (brief stage) and every Ad studio call update it.
+  // ad_state line (brief stage) and every Ad setup call update it.
   const [ad, setAd] = useState(null);
+  // Ad setup popup (2026-10-19): open while an ad has no script yet (it reopens at the step
+  // the ad reached), closed once the script goes to the storyboard. `adSeed` = a film room's
+  // "Start an ad" request, which goes into the popup's "Describe it" box (no chat in there).
+  const [setupOpen, setSetupOpen] = useState(false);
+  const [setupStart, setSetupStart] = useState(null);
+  const [adSeed, setAdSeed] = useState(null);
   const authoring = useFilmAuthoring({ onAdState: setAd });
   const job = useFilmJob();
   const credits = useCredits();
@@ -130,9 +137,14 @@ export default function FilmWorkspaceContainer({
             const isAdProject = p.genre === 'advertise' && !!p.ad;
             setAd(isAdProject ? p.ad : null);
             if (isAdProject && p.title) authoring.setTitle(p.title);
-            // A request carried over from a film room's "Start an ad" opens the brief.
-            const seed = isAdProject ? takeAdSeed() : null;
-            if (seed && seed.trim()) authoring.send(seed.trim());
+            // A new ad opens Ad setup straight away; a request carried over from a film
+            // room's "Start an ad" goes into its "Describe it" box and fills the brief.
+            if (isAdProject) {
+              const seed = takeAdSeed();
+              if (seed && seed.trim()) setAdSeed(seed.trim());
+              setSetupStart(null);
+              setSetupOpen(true);
+            }
           }
         } catch (e) { /* keep defaults if the fetch fails */ }
         if (!cancelled) setLoading(false);
@@ -151,7 +163,14 @@ export default function FilmWorkspaceContainer({
         setMeta({ video_style: p.video_style || 'anime', duration_seconds: p.duration_seconds || 120,
                   aspect_ratio: p.aspect_ratio || '9:16' });
         setSeriesId(p.series_id ?? null);   // confirmed standalone (null) or an episode (id)
-        setAd(p.genre === 'advertise' && p.ad ? p.ad : null);
+        const isAdProject = p.genre === 'advertise' && !!p.ad;
+        setAd(isAdProject ? p.ad : null);
+        // An ad without a script reopens Ad setup at the step it reached; with a script
+        // (or anything rendered) it opens on the storyboard.
+        if (isAdProject && !p.script && !p.render && !msgs.some(m => m.scriptMeta)) {
+          setSetupStart(null);
+          setSetupOpen(true);
+        }
         if (p.render) job.adopt(p.render);
       } catch (e) {
         // authoring/job errors surface in their own state; nothing else to do
@@ -441,7 +460,7 @@ export default function FilmWorkspaceContainer({
       if (p.ad) setAd(p.ad);
     } catch (e) { /* the studio already shows the chosen concept */ }
   }, [projectId, authoring]);
-  // The Ad studio wrote the script (saved server-side as a room turn) → mirror it into the chat.
+  // Ad setup wrote the script (saved server-side as a room turn) → mirror it into the chat.
   const onAdScript = useCallback((res) => {
     if (!res) return;
     const chosen = res.ad && Number.isInteger(res.ad.chosen) && res.ad.concepts ? res.ad.concepts[res.ad.chosen] : null;
@@ -451,6 +470,20 @@ export default function FilmWorkspaceContainer({
     });
     if (res.ad) setAd(res.ad);
   }, [authoring]);
+  // Ad setup: the latest script draft (shown in its Script step), and where × goes —
+  // back to the storyboard once there is a script, else back to My Films (all saved).
+  const adScriptText = useMemo(() => {
+    const withScript = authoring.messages.filter(m => m.scriptMeta && m.scriptMeta.script);
+    return withScript.length ? withScript[withScript.length - 1].scriptMeta.script : (authoring.script || null);
+  }, [authoring.messages, authoring.script]);
+  const closeAdSetup = useCallback(() => {
+    if (authoring.scriptReady || adScriptText) setSetupOpen(false);
+    else onBackToFilms();
+  }, [authoring.scriptReady, adScriptText, onBackToFilms]);
+  const openAdSetup = useCallback((step = null) => {
+    setSetupStart(Number.isInteger(step) ? step : null);
+    setSetupOpen(true);
+  }, []);
   // "Start an ad" under a film-room reply: the parent opens a new ad directly when it can;
   // otherwise the request waits in sessionStorage and the user lands on My Films, where
   // the New Film popout opens on Advertise.
@@ -671,12 +704,25 @@ export default function FilmWorkspaceContainer({
       castPhase={castPhase}
       onSaveScript={onSaveScript}
       ad={ad}
-      projectId={projectId}
-      onAd={setAd}
-      onAdChosen={onAdChosen}
-      onAdScript={onAdScript}
       onStartAd={startAd}
+      onEditAdSetup={ad ? openAdSetup : null}
+      adScript={ad ? adScriptText : null}
     />
+    {ad && setupOpen && !loading && (
+      <AdSetup
+        projectId={projectId}
+        ad={ad}
+        onAd={setAd}
+        onChosen={onAdChosen}
+        onScript={onAdScript}
+        scriptText={adScriptText}
+        startAt={setupStart}
+        seed={adSeed}
+        onSeedUsed={() => setAdSeed(null)}
+        onOpenStoryboard={() => setSetupOpen(false)}
+        onClose={closeAdSetup}
+      />
+    )}
     {blockInfo && (
       <div
         className="film-modal-scrim"
