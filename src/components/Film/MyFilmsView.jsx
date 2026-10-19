@@ -13,6 +13,33 @@ import FilmVideoWall from './FilmVideoWall';
 import FilmSeriesModals from './FilmSeriesModals';
 import NewFilmModal, { AD_SEED_KEY } from './NewFilmModal';
 import { AD_GENRE, isAdGenre } from './filmGenres';
+// NOCTURNE GLASS (2026-10-19): My Films under the night sky + the Halloween season.
+// Presentational only; every rule is scoped under .fw-nocturne on this view's root.
+import useFilmSeason from './useFilmSeason';
+import './FilmNocturneLibrary.css';
+
+// Season embers — fixed positions (no randomness in render). --x across, --d rise time,
+// --dl start offset, --dx drift, --s size. Same set as the workspace.
+const EMBERS = [
+  ['4%', 13, -2, 26, 1], ['11%', 9, -7, -18, .7], ['19%', 15, -4, 34, 1.2], ['27%', 11, -9, -22, .8],
+  ['35%', 14, -1, 18, 1], ['44%', 10, -6, -30, .6], ['52%', 16, -11, 24, 1.1], ['60%', 12, -3, -16, .9],
+  ['68%', 9, -8, 30, .7], ['75%', 14, -5, -26, 1.2], ['83%', 11, -10, 20, .8], ['91%', 15, -2, -20, 1],
+  ['23%', 18, -13, 40, .6], ['71%', 17, -14, -36, .6],
+];
+// Halloween tile ideas — inspiration to read, not buttons (owner: "look only").
+const SEASON_IDEAS = [
+  'A lighthouse keeper hears knocking from below the sea.',
+  'The scarecrow who swapped places with the farmer.',
+  'A vampire’s first night shift at a 24-hour diner.',
+];
+const IconPumpkin = ({ s = 14 }) => (
+  <svg width={s} height={s} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8"
+       strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+    <path d="M12 7c-4.6 0-8 2.9-8 6.6S7.4 20 12 20s8-2.7 8-6.4S16.6 7 12 7z" />
+    <path d="M12 7c-1.8 0-3 2.9-3 6.6S10.2 20 12 20s3-2.7 3-6.4S13.8 7 12 7z" />
+    <path d="M12 7V4.5c0-.6.4-1 1-1h1.5" />
+  </svg>
+);
 
 const STYLES = [
   { key: 'anime',       label: 'Anime' },
@@ -126,8 +153,24 @@ export default function MyFilmsView({
     onNew({ video_style: style, duration_seconds: duration, aspect_ratio: aspect, ...(genre ? { genre } : {}) });
   };
 
+  // NOCTURNE GLASS — the Halloween season (1 Oct – 2 Nov; the user can switch it off here or
+  // in a film's top bar — one shared choice). Also marks <body> so the pop-ups go glass.
+  const season = useFilmSeason();
+
   return (
-    <div className={`film-lib${libView === 'series' ? ' is-series' : ''}`}>
+    <div className={`film-lib fw-nocturne${libView === 'series' ? ' is-series' : ''}`}>
+      {/* Atmosphere: projector beam (all year) + fog and embers (season only). Behind the
+          content, never clickable, hidden from screen readers. */}
+      <div className="fw-atmos" aria-hidden="true">
+        <i className="fw-beam" />
+        <i className="fw-fog" /><i className="fw-fog fw-fog--b" />
+        <span className="fw-embers">
+          {EMBERS.map(([x, d, dl, dx, s]) => (
+            <i key={`${x}-${d}`} style={{ '--x': x, '--d': `${d}s`, '--dl': `${dl}s`, '--dx': `${dx}px`, '--s': s }} />
+          ))}
+        </span>
+      </div>
+
       {/* ── LEFT 60% — the user's films (series-aware library) ── */}
       <div className="film-lib-left">
         {/* Ambient looping film reel behind the shelf (see film-video-wall.css) */}
@@ -199,7 +242,31 @@ export default function MyFilmsView({
             </div>
           ))}
 
+          {season.on ? (
+            /* NOCTURNE: in the Halloween season this tile shows three story ideas to read
+               (look only — no seed, no new logic). The usual tile returns after 2 Nov, or
+               as soon as the user switches the season off. */
+            <div className="film-feat-card film-feat-card--list fw-season-card">
+              <button type="button" className="fw-season-switch" onClick={season.toggle} aria-pressed
+                      title="Turn the Halloween look off. It switches itself off after 2 November">
+                <IconPumpkin s={12} /> Turn off
+              </button>
+              <div className="film-feat-copy">
+                <h3><IconPumpkin s={16} /> Halloween shorts</h3>
+                <ul className="fw-season-ideas">
+                  {SEASON_IDEAS.map((idea) => <li key={idea}>{idea}</li>)}
+                </ul>
+                <p className="fw-season-hint">Pitch one to the writer, or bring your own.</p>
+              </div>
+            </div>
+          ) : (
           <div className="film-feat-card film-feat-card--list">
+            {season.inWindow && (
+              <button type="button" className="fw-season-switch" onClick={season.toggle} aria-pressed={false}
+                      title="Turn the Halloween look back on">
+                <IconPumpkin s={12} /> Halloween
+              </button>
+            )}
             <div className="film-feat-copy">
               <h3>Full Control Shot by Shot</h3>
               <ul className="film-feat-steps">
@@ -209,6 +276,7 @@ export default function MyFilmsView({
               </ul>
             </div>
           </div>
+          )}
 
         </div>
       </div>}
