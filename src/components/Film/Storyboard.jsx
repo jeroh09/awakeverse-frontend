@@ -874,6 +874,7 @@ function AdEndCard({ ad, onOpen = null }) {
                            : 'Drawn by the studio over the end of the film — not filmed'}>
       <div className="film-thumb sb-ad-endcard-th">
         {ad.endCard ? <span className="film-dur">{ad.endCard}s</span> : null}
+        {onOpen ? <span className="sb-ad-ec-design" aria-hidden="true">Design ›</span> : null}
         <div className="sb-ad-ec">
           <b>{ad.brand || 'Your brand'}</b>
           {ad.offer && <small>{ad.offer}</small>}
@@ -1231,6 +1232,16 @@ export default function Storyboard({
             <b>{ad.title || 'Your ad'}</b>
             <span>{[ad.hook, ad.brand, ad.audience, ad.offer].filter(Boolean).join(' · ')}</span>
           </div>
+          {canFinish && (
+            // Owner 17:57: the end-card picker must be easy to find — a filled button, first on the strip.
+            <button type="button" className="film-btn film-btn--primary sb-ad-design" onClick={openFinish}
+                    title="Design the end card: style, brand colour, AI label and captions">
+              <svg className="sb-ad-design-ic" viewBox="0 0 24 24" width="16" height="16" aria-hidden="true">
+                <path fill="currentColor" d="M12 3a9 9 0 0 0 0 18c1.1 0 1.8-.8 1.8-1.8 0-.5-.2-.9-.5-1.2-.3-.3-.5-.7-.5-1.2 0-1 .8-1.8 1.8-1.8H17a4 4 0 0 0 4-4C21 6.6 17 3 12 3Zm-5.5 9a1.5 1.5 0 1 1 0-3 1.5 1.5 0 0 1 0 3Zm3-4a1.5 1.5 0 1 1 0-3 1.5 1.5 0 0 1 0 3Zm5 0a1.5 1.5 0 1 1 0-3 1.5 1.5 0 0 1 0 3Zm3 4a1.5 1.5 0 1 1 0-3 1.5 1.5 0 0 1 0 3Z"/>
+              </svg>
+              Design end card
+            </button>
+          )}
           {finishState && (
             <span className={`sb-ad-fin is-${finishState.key}`} title={finishErr || finishState.tip} role="status">
               {finishState.key === 'finishing' && <span className="film-spin film-spin--sm" aria-hidden="true" />}
@@ -1240,10 +1251,6 @@ export default function Storyboard({
           {finishState && finishState.key === 'failed' && onFinishAgain && (
             <button type="button" className="film-btn film-btn--ghost sb-ad-edit" onClick={tryFinishAgain}
                     title="Finish your advert again: end card, captions and AI label (free — the film is kept)">Try again</button>
-          )}
-          {canFinish && (
-            <button type="button" className="film-btn film-btn--ghost sb-ad-edit" onClick={openFinish}
-                    title="Choose the end card, AI label, captions and brand colour">End card</button>
           )}
           {onEditAdSetup && (
             <button type="button" className="film-btn film-btn--ghost sb-ad-edit" onClick={() => onEditAdSetup(0)}
