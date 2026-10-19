@@ -949,6 +949,7 @@ export default function Storyboard({
   logoApi = null,                    // brand assets: {upload, remove} → the picker's Logo section
   onReviewCast = null,
   adRenderLocked = null,
+  adSkipReview = false,              // photoreal advert: no cast to check → the dock button makes the advert
 }) {
   const [watching, setWatching] = useState(false);
   const total = beats.length;
@@ -1111,12 +1112,15 @@ export default function Storyboard({
   if (adPlanOn && !drawingCast && !editBusy) {
     dock = (<>
       {lead(`${adPlan.length} shot${adPlan.length === 1 ? '' : 's'} planned · ${ad.filmSeconds || '?'}s + ${ad.endCard || '?'}s end card`,
-            adRenderLocked || 'Check the cast before the ad is made')}
+            adRenderLocked || (adSkipReview ? 'Photoreal: people are described in words, so there is no cast to check'
+                                            : 'Check the cast before the ad is made'))}
       {onReviewCast && (
         <button className="film-btn film-btn--primary film-btn--dock" onClick={onReviewCast}
                 disabled={!!adRenderLocked || castPhase !== 'idle'}
-                title={adRenderLocked || 'Plan the shots and draw the cast so you can check them before the ad is made'}>
-          Review cast
+                title={adRenderLocked || (adSkipReview
+                  ? 'Make the advert — photoreal adverts describe people in words, so there are no faces to check first. This uses credits.'
+                  : 'Plan the shots and draw the cast so you can check them before the ad is made')}>
+          {adSkipReview ? 'Make the advert' : 'Review cast'}
         </button>
       )}
     </>);

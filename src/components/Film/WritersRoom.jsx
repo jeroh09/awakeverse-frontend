@@ -419,6 +419,7 @@ export default function WritersRoom({
   carryProjectId = null,             // "Where we left off" card (SERIES_CARRY) — episodes only
   // Advertising Mode (2026-10-18)
   isAd = false,                      // this film is an ad → the room is the "Ad room"
+  skipReview = false,                // photoreal advert: no cast to check → the CTA makes the advert (onReviewCast = make)
   onStartAd = null,                  // (text) → open a new ad carrying the user's request
   canReview = false,                 // "Review episode" button (EPISODE_REVIEW) — episodes with a script
   onReview = () => {},
@@ -712,6 +713,13 @@ export default function WritersRoom({
                             tip: 'An edit is being applied to your film' },
         })[castPhase] || { label: 'Review cast', disabled: !!renderLocked, busy: false, onClick: onReviewCast,
                            tip: renderLocked || 'Plan the shots and draw the cast so you can check them before the film is made' };
+        // Photoreal advert (owner 2026-10-19): people are described in words, so there is no cast
+        // to check — the entry button makes the advert straight away (the parent passes "make").
+        if (skipReview && (castPhase === 'idle' || !castPhase)) {
+          CTA.label = 'Make the advert';
+          CTA.tip = renderLocked || 'Make the advert — photoreal adverts describe people in words, so there are no faces to check first. This uses credits.';
+        }
+        if (skipReview && castPhase === 'film_rendering') CTA.label = 'Making the advert…';
 
         return scriptBarCollapsed ? (
           <button className="film-scriptbar-pill" onClick={() => setScriptBarCollapsed(false)} title="Show the make-the-film bar">

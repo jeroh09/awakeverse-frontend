@@ -12,6 +12,30 @@ import { IconChevron, IconBack } from './filmIcons';
 import { CreditsChip } from './CreditsUI';
 import './CreditsUI.css';
 import './FilmWorkspace.css';
+// NOCTURNE GLASS (2026-10-19): the glass look + the Halloween season layer. Imported LAST so
+// it sits on top; every rule is scoped under .fw-nocturne, so removing that class (or this
+// import) returns the workspace to exactly how it looked before. Presentational only.
+import './FilmNocturne.css';
+import useFilmSeason from './useFilmSeason';
+
+// Season embers — fixed positions (no randomness in render, so nothing re-lays out).
+// --x across the window, --d seconds to rise, --dl start offset, --dx sideways drift, --s size.
+const EMBERS = [
+  ['4%', 13, -2, 26, 1], ['11%', 9, -7, -18, .7], ['19%', 15, -4, 34, 1.2], ['27%', 11, -9, -22, .8],
+  ['35%', 14, -1, 18, 1], ['44%', 10, -6, -30, .6], ['52%', 16, -11, 24, 1.1], ['60%', 12, -3, -16, .9],
+  ['68%', 9, -8, 30, .7], ['75%', 14, -5, -26, 1.2], ['83%', 11, -10, 20, .8], ['91%', 15, -2, -20, 1],
+  ['23%', 18, -13, 40, .6], ['71%', 17, -14, -36, .6],
+];
+
+// A small pumpkin for the season switch (custom glyph, currentColor).
+const IconPumpkin = ({ s = 14 }) => (
+  <svg width={s} height={s} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8"
+       strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+    <path d="M12 7c-4.6 0-8 2.9-8 6.6S7.4 20 12 20s8-2.7 8-6.4S16.6 7 12 7z" />
+    <path d="M12 7c-1.8 0-3 2.9-3 6.6S10.2 20 12 20s3-2.7 3-6.4S13.8 7 12 7z" />
+    <path d="M12 7V4.5c0-.6.4-1 1-1h1.5" />
+  </svg>
+);
 
 export default function FilmWorkspace({
   title = 'Untitled film',
@@ -92,6 +116,9 @@ export default function FilmWorkspace({
   }, [ad]);
   // The server says whether an ad may start paid work yet (AD_RENDER); until then the
   // Review cast buttons are greyed with the reason instead of failing on click.
+  // Photoreal adverts describe people in words (no faces to check — G73), so they skip the
+  // cast review: the button makes the advert straight away (owner 2026-10-19).
+  const adSkipReview = !!(ad && String(videoStyle || '').toLowerCase() === 'photoreal');
   const adRenderLocked = ad && ad.render_open === false
     ? 'Ad renders open when the finishing stage is ready. Your script is saved.' : null;
   // Below 820px the two panels stack (see FilmWorkspace.css's accordion
@@ -164,10 +191,42 @@ export default function FilmWorkspace({
     }
   };
 
+  // NOCTURNE GLASS — the Halloween season (1 Oct – 2 Nov, user can switch it off) and the
+  // soft highlight that follows the cursor across a shot card. Both are presentational:
+  // the highlight only writes two CSS variables on the hovered card's own style.
+  const season = useFilmSeason();
+  const lightFollow = (e) => {
+    const c = e.target && e.target.closest ? e.target.closest('.film-cell') : null;
+    if (!c) return;
+    const r = c.getBoundingClientRect();
+    c.style.setProperty('--fw-mx', `${Math.round(e.clientX - r.left)}px`);
+    c.style.setProperty('--fw-my', `${Math.round(e.clientY - r.top)}px`);
+  };
+
   return (
-    <div className="film-workspace theme-awakeverse" onClickCapture={blurAfterPointerClick}>
+    <div className="film-workspace theme-awakeverse fw-nocturne" onClickCapture={blurAfterPointerClick}
+         onPointerMove={lightFollow}>
+      {/* Atmosphere: projector beam (all year) + fog and embers (season only). Behind
+          everything, never clickable, hidden from screen readers. */}
+      <div className="fw-atmos" aria-hidden="true">
+        <i className="fw-beam" />
+        <i className="fw-fog" /><i className="fw-fog fw-fog--b" />
+        <span className="fw-embers">
+          {EMBERS.map(([x, d, dl, dx, s]) => (
+            <i key={`${x}-${d}`} style={{ '--x': x, '--d': `${d}s`, '--dl': `${dl}s`, '--dx': `${dx}px`, '--s': s }} />
+          ))}
+        </span>
+      </div>
       <div className="film-topbar">
         <span className="film-title" title={title}>{title || 'Untitled film'}</span>
+        {season.inWindow && (
+          <button type="button" className={`fw-season-tg${season.on ? ' is-on' : ''}`} onClick={season.toggle}
+                  aria-pressed={season.on}
+                  title={season.on ? 'Turn the Halloween look off. It switches itself off after 2 November'
+                                   : 'Turn the Halloween look back on'}>
+            <IconPumpkin s={14} /><span className="fw-season-lbl">Halloween</span>
+          </button>
+        )}
         {credits && (
           <CreditsChip
             balance={credits.balance}
@@ -260,7 +319,8 @@ export default function FilmWorkspace({
               adFilmUrl={adFilmUrl}
               onFinishAgain={onFinishAgain}
               logoApi={logoApi}
-              onReviewCast={adInfo ? onReviewCast : null}
+              onReviewCast={adInfo ? (adSkipReview ? onBuildFilm : onReviewCast) : null}
+              adSkipReview={adSkipReview}
               adRenderLocked={adRenderLocked}
             />
           </section>
@@ -305,7 +365,8 @@ export default function FilmWorkspace({
               scriptReady={scriptReady}
               showBuildBar={scriptReady}
               onBuildFilm={onBuildFilm}
-              onReviewCast={onReviewCast}
+              onReviewCast={adSkipReview ? onBuildFilm : onReviewCast}
+              skipReview={adSkipReview}
               renderLocked={adRenderLocked}
               onApproveCast={onApproveCast}
               castPhase={castPhase}
