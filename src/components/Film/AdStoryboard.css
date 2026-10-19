@@ -46,3 +46,18 @@
   background: rgba(129, 140, 248, .14); color: var(--film-accent-hover, #818CF8);
   border: 1px solid rgba(129, 140, 248, .3);
 }
+
+/* End card cell opens the finish picker (step 4 part 1, AD_COMPOSE). */
+.sb-ad-endcard.is-open { cursor: pointer; }
+.sb-ad-endcard.is-open:hover, .sb-ad-endcard.is-open:focus-visible { border-style: solid; box-shadow: 0 0 0 1px var(--film-accent-hover, #818CF8); outline: none; }
+.sb-ad-endcard.is-slate .sb-ad-endcard-th { background: var(--sb-ec-brand, #1F3A2E); }
+.sb-ad-endcard.is-slate .sb-ad-ec b, .sb-ad-endcard.is-slate .sb-ad-ec small { color: var(--sb-ec-ink, #fff); }
+.sb-ad-ec-sw { width: 12px; height: 12px; border-radius: 4px; margin-left: auto; background: var(--sb-ec-brand, #1F3A2E);
+  box-shadow: inset 0 0 0 1px rgba(255, 255, 255, .25); }
+
+/* Finishing state of a made advert (step 4 part 3). */
+.sb-ad-fin { flex: 0 0 auto; display: inline-flex; align-items: center; gap: 6px; padding: 4px 10px; border-radius: 999px;
+  font-size: 12px; font-weight: 600; border: 1px solid var(--film-bd-subtle, rgba(148, 163, 184, .2)); }
+.sb-ad-fin.is-finishing { color: var(--film-accent-hover, #818CF8); border-color: rgba(129, 140, 248, .4); }
+.sb-ad-fin.is-done { color: #34D399; border-color: rgba(52, 211, 153, .35); }
+.sb-ad-fin.is-failed { color: #FCA5A5; border-color: rgba(239, 68, 68, .4); }

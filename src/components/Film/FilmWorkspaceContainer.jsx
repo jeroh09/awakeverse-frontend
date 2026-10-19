@@ -14,7 +14,7 @@ import { InsufficientCard } from './CreditsUI';
 import FilmSeriesModals from './FilmSeriesModals';
 import AdSetup from './AdSetup';
 import { filmGetProject, filmUploadPhoto, filmUploadConsent, filmSaveScript, filmPromoteToSeries,
-         filmGetRecap, filmReviewEpisode, friendlyError } from './filmApi';
+         filmGetRecap, filmReviewEpisode, filmSaveAdFinish, friendlyError } from './filmApi';
 
 const shotToCell = s => ({
   index: s.index,
@@ -76,6 +76,16 @@ export default function FilmWorkspaceContainer({
   const [adSeed, setAdSeed] = useState(null);
   const authoring = useFilmAuthoring({ onAdState: setAd });
   const job = useFilmJob();
+  // STEP 4 part 1: save the end card / AI label / captions / colour; the reply is the ad.
+  // A made advert is finished again with the new choices (free; its film is kept).
+  const jobFilmUrl = job.adFilmUrl;
+  const jobFinishAgain = job.finishAgain;
+  const saveAdFinish = useCallback(async (finish) => {
+    const r = await filmSaveAdFinish(projectId, finish);
+    if (r && r.ad) setAd(r.ad);
+    if (jobFilmUrl) await jobFinishAgain();
+    return r;
+  }, [projectId, jobFilmUrl, jobFinishAgain]);
   const credits = useCredits();
   const navigate = useNavigate();
   const [blockInfo, setBlockInfo] = useState(null);   // 402 → InsufficientCard
@@ -707,6 +717,10 @@ export default function FilmWorkspaceContainer({
       onStartAd={startAd}
       onEditAdSetup={ad ? openAdSetup : null}
       adScript={ad ? adScriptText : null}
+      onSaveAdFinish={ad && ad.compose_open ? saveAdFinish : null}
+      adFinish={ad ? job.adFinish : null}
+      adFilmUrl={ad ? job.adFilmUrl : null}
+      onFinishAgain={ad && ad.compose_open ? job.finishAgain : null}
     />
     {ad && setupOpen && !loading && (
       <AdSetup

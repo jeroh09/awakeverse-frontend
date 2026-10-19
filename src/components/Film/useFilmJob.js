@@ -5,10 +5,28 @@
 import { useState, useCallback, useRef, useEffect } from 'react';
 import { filmGenerate, filmGetJob, filmCancel, filmReassemble, filmRegenerate,
          filmPlan, filmRegeneratePlate, filmApproveRender, filmUploadCharacterImage,
-         filmFinishProject, filmSetRecap, filmRedrawLocation, friendlyError } from './filmApi';
+         filmFinishProject, filmSetRecap, filmRedrawLocation, filmAdFinishAgain, friendlyError } from './filmApi';
 
 const POLL_MS = 5000;
 const POLL_TIMEOUT_MS = 45 * 60 * 1000;
+
+// ADVERTISING MODE step 4 (AD_COMPOSE): after an advert's film is made or edited, the
+// job is complete with the film while its finishing pass (end card, captions, AI label)
+// runs on its own queue — manifest.ad_finish {status: queued|running|done|failed}. While
+// it is queued or running we keep polling and keep the one-job lock. A finish older than
+// this is treated as stuck (no worker on the queue) so the page never waits forever.
+const FINISH_STALE_MS = 45 * 60 * 1000;
+const parseManifest = (raw) => {
+  if (!raw) return null;
+  try { return typeof raw === 'string' ? JSON.parse(raw) : raw; } catch (_) { return null; }
+};
+export const adFinishing = (m) => {
+  const f = m && m.ad_finish;
+  if (!f || (f.status !== 'queued' && f.status !== 'running')) return false;
+  const at = Date.parse(f.at || '');
+  return !(Number.isFinite(at) && Date.now() - at > FINISH_STALE_MS);
+};
+const FINISHING_LABEL = 'Finishing your advert…';
 
 const normBeat = b => ({
   index: b.index,
@@ -256,7 +274,13 @@ export default function useFilmJob() {
           setManifest(m);
         }
         if (job.output_url) setOutputUrl(job.output_url);
-        if (job.status === 'complete') { stop(); release(); setEditBusy(null); setNotice(noticeFrom(job.error_message)); }
+        if (job.status === 'complete') {
+          if (adFinishing(parseManifest(job.beats_manifest))) {
+            setEditBusy(FINISHING_LABEL);     // keep polling + the lock until the advert is finished
+          } else {
+            stop(); release(); setEditBusy(null); setNotice(noticeFrom(job.error_message));
+          }
+        }
         // awaiting_review is a PAUSE, not a terminal state: the plan + character
         // plates are ready and nothing changes until the user acts (regenerate /
         // approve). Stop polling so we don't spin for 45 min on a paused job; the
@@ -453,7 +477,11 @@ export default function useFilmJob() {
     }
     // awaiting_review resumes WITHOUT polling — it's a pause; the manifest we just
     // set carries the review block, and the user's next action drives the change.
-    if (s !== 'complete' && s !== 'failed' && s !== 'cancelled' && s !== 'awaiting_review') poll(render.job_id);
+    if (s === 'complete' && adFinishing(parseManifest(render.beats_manifest))) {
+      lockRef.current = 'Finishing your advert';   // opened while the advert is being finished
+      setEditBusy(FINISHING_LABEL);
+      poll(render.job_id);
+    } else if (s !== 'complete' && s !== 'failed' && s !== 'cancelled' && s !== 'awaiting_review') poll(render.job_id);
     else if (s === 'awaiting_review') {
       // …unless the places are still being painted (LOCATION_REVIEW)
       try {
@@ -504,6 +532,26 @@ export default function useFilmJob() {
     }
   }, [jobId, poll, claim, release]);
 
+  // STEP 4: finish the made advert again ("Try again", or after new end-card choices).
+  // Free — the advert's film is kept; the end card, captions and label are redrawn.
+  const finishAgain = useCallback(async () => {
+    if (!jobId) return { error: 'No advert yet.' };
+    if (!claim('Finishing your advert')) return { error: 'Another change is still being applied — try again in a moment.' };
+    setNotice(null);
+    try {
+      const r = await filmAdFinishAgain(jobId);
+      setManifest(m => (m && r && r.ad_finish ? { ...m, ad_finish: r.ad_finish } : m));
+      setEditBusy(FINISHING_LABEL);
+      poll(jobId);
+      return r || {};
+    } catch (e) {
+      const d = (e && e.response && e.response.data) || {};
+      if (d.code === 'finishing') { setEditBusy(FINISHING_LABEL); poll(jobId); return { ad_finish: d.ad_finish }; }
+      release();
+      return { error: d.error || friendlyError(e), code: d.code };
+    }
+  }, [jobId, poll, claim, release]);
+
   const reset = useCallback(() => {
     stop(); lockRef.current = null;
     setJobId(null); setStatus('idle'); setManifest(null); setRawProgress(0);
@@ -541,6 +589,8 @@ export default function useFilmJob() {
   const done = cells.filter(c => c.status === 'done').length || Math.round(rawProgress * total);
   const progress = { done, total, etaText: etaText(done, total) };
   const jobTitle = (manifest && manifest.source && manifest.source.title) || null;
+  const adFinish = (manifest && manifest.ad_finish) || null;
+  const adFilmUrl = (manifest && manifest.ad_film_url) || null;
 
   return { jobId, status, stage, cells, progress, outputUrl, error, title: jobTitle, editBusy,
     notice, clearNotice: () => setNotice(null),
@@ -548,6 +598,7 @@ export default function useFilmJob() {
     planningPlates, live, contentBlock, blocked, clearBlocked: () => setBlocked(null),
     generate, plan, regeneratePlate, uploadCharacterImage, approveRender, finish,
     cancel, reassemble, regenerate, recap, adopt, reset,
+    adFinish, adFilmUrl, finishAgain,
     // true while any job on this film is running — callers check it BEFORE side
     // effects (spinners, "applied" ticks), the lock itself refuses the call anyway
     isLocked: () => !!lockRef.current };

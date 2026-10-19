@@ -360,6 +360,15 @@ export const filmAdConcepts = (projectId, { note, replace } = {}) =>
 // Choose a concept — locks the ad's length and frame for good.
 export const filmAdChoose = (projectId, index) =>
   api.post(`/film/projects/${projectId}/ad/choose`, { index }, { timeout: QUEUE_TIMEOUT }).then(r => r.data);
+// STEP 4 part 1 (AD_COMPOSE): how the studio finishes the advert — any subset of
+// {end_card: 'hold'|'slate'|'lower_third', ai_label: 'inline'|'mark'|'none', captions, brand_color}.
+// 404 while AD_COMPOSE is off (the picker only shows when ad.compose_open).
+export const filmSaveAdFinish = (projectId, finish) =>
+  api.put(`/film/projects/${projectId}/ad/finish`, { finish }, { timeout: QUEUE_TIMEOUT }).then(r => r.data);
+// STEP 4 part 3: finish a made advert again (after "Try again" or new end-card choices).
+// 202 {ad_finish}; 409 {code:'finishing'|'not_ready'}; 404 while AD_COMPOSE is off.
+export const filmAdFinishAgain = (jobId) =>
+  api.post(`/film/jobs/${jobId}/ad/finish`, {}, { timeout: QUEUE_TIMEOUT }).then(r => r.data);
 // Write the script for the chosen concept → { script_meta, commentary, ad }. Saved as a
 // writers'-room turn, so the chat, Save and "Review cast" use it like any film script.
 export const filmAdScript = (projectId, note) =>

@@ -37,6 +37,7 @@ import {
   IconSoftened, IconVisual, IconCheck, IconUpload, KIND_ICON, IconSeries, IconClock,
 } from './filmIcons';
 import './AdStoryboard.css';
+import AdFinish, { endCardLabel, aiLabelLabel, adFinishState } from './AdFinish';
 // Redraw reuses the regenerate glyph (a redraw IS a regenerate, user-facing name).
 const IconRedraw = IconRegenerate;
 
@@ -516,7 +517,9 @@ function PlacesZone({ places, status, onRedraw, onRevert, arValue }) {
 //
 // Shape is confirmed (`characters` is a list of plain name strings), but object
 // forms and missing keys are tolerated: a block must never crash the stage.
-function ContentBlockCard({ block, videoStyle }) {
+function ContentBlockCard({ block, videoStyle, isAd = false }) {
+  // ADVERTISING MODE: the same card for an advert says "advert" and points to the Ad room.
+  const noun = isAd ? 'advert' : 'film';
   const who = (Array.isArray(block.characters) ? block.characters : [])
     .map(c => (typeof c === 'string' ? c : (c && (c.name || c.character)) || ''))
     .map(s => String(s).trim())
@@ -528,12 +531,12 @@ function ContentBlockCard({ block, videoStyle }) {
     <div className="film-blockcard" role="alert">
       <span className="film-blockcard-badge">Adults only</span>
       <h3>{isMinor
-        ? (videoStyle ? `This film can’t be made in ${StyleName}`
-                      : 'This film can’t be made photorealistically')
-        : 'This film can’t be made as written'}</h3>
+        ? (videoStyle ? `This ${noun} can’t be made in ${StyleName}`
+                      : `This ${noun} can’t be made photorealistically`)
+        : `This ${noun} can’t be made as written`}</h3>
       <p className="film-blockcard-msg">
         {block.message || (isMinor
-          ? `${StyleName} films are adults-only, and ${who.length === 1 ? 'a character reads' : 'some characters read'} as a minor. `
+          ? `${StyleName} ${noun}s are adults-only, and ${who.length === 1 ? 'a character reads' : 'some characters read'} as a minor. `
             + 'Age them up in the script, or switch to a stylized style to keep them as they are.'
           : 'Something in this script can’t be filmed as written.')}
       </p>
@@ -546,7 +549,7 @@ function ContentBlockCard({ block, videoStyle }) {
       )}
       <p className="film-blockcard-hint">
         We stopped before making anything, so you haven’t been charged — edit the script
-        in the Writers&nbsp;Room and build again whenever you’re ready.
+        in the {isAd ? <>Ad&nbsp;room</> : <>Writers&nbsp;Room</>} and build again whenever you’re ready.
       </p>
     </div>
   );
@@ -856,9 +859,19 @@ function AdPlanCell({ beat }) {
   );
 }
 
-function AdEndCard({ ad }) {
+function AdEndCard({ ad, onOpen = null }) {
+  // STEP 4 part 1 (AD_COMPOSE): the cell shows the saved finish choices and opens the picker.
+  const f = ad.composeOpen ? ad.finish : null;
+  const open = onOpen ? {
+    role: 'button', tabIndex: 0, onClick: onOpen,
+    onKeyDown: (e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); onOpen(); } },
+  } : {};
+  const brandStyle = f ? { '--sb-ec-brand': f.brand_color, '--sb-ec-ink': f.ink || '#FFFFFF' } : undefined;
   return (
-    <article className="film-cell sb-ad-endcard" title="Drawn by the studio over the end of the film — not filmed">
+    <article className={`film-cell sb-ad-endcard${onOpen ? ' is-open' : ''}${f && f.end_card === 'slate' ? ' is-slate' : ''}`}
+             style={brandStyle} {...open}
+             title={onOpen ? 'Choose the end card, AI label, captions and brand colour'
+                           : 'Drawn by the studio over the end of the film — not filmed'}>
       <div className="film-thumb sb-ad-endcard-th">
         {ad.endCard ? <span className="film-dur">{ad.endCard}s</span> : null}
         <div className="sb-ad-ec">
@@ -868,8 +881,11 @@ function AdEndCard({ ad }) {
         </div>
       </div>
       <div className="film-cfoot">
-        <div className="film-cfoot-row"><span className="film-badge sb-ad-badge">End card</span></div>
-        <div className="film-cap">Added by the studio: logo, offer, call to action and the AI label.</div>
+        <div className="film-cfoot-row"><span className="film-badge sb-ad-badge">End card</span>
+          {f && <span className="sb-ad-ec-sw" aria-hidden="true" />}</div>
+        <div className="film-cap">{f
+          ? `${endCardLabel(f.end_card)} · AI label: ${aiLabelLabel(f.ai_label).toLowerCase()} · captions ${f.captions ? 'on' : 'off'}`
+          : 'Added by the studio: logo, offer, call to action and the AI label.'}</div>
       </div>
     </article>
   );
@@ -924,6 +940,10 @@ export default function Storyboard({
   ad = null,
   adScript = null,
   onEditAdSetup = null,
+  onSaveAdFinish = null,             // step 4 part 1 (AD_COMPOSE): saves the finish choices → the picker shows
+  adFinish = null,                   // step 4 part 3: manifest.ad_finish of the made advert
+  adFilmUrl = null,                  //   the advert's film (the picker previews on it)
+  onFinishAgain = null,              //   "Try again" → finish it again
   onReviewCast = null,
   adRenderLocked = null,
 }) {
@@ -1035,6 +1055,18 @@ export default function Storyboard({
   const pct = progress && progress.total ? Math.round((progress.done / progress.total) * 100) : 0;
 
   const adPlan = ad && stageState === 'empty' ? parseAdPlan(adScript) : [];
+  // STEP 4 part 1: the finish picker (end card, AI label, captions, colour).
+  const [finishOpen, setFinishOpen] = useState(false);
+  const canFinish = !!(ad && ad.composeOpen && onSaveAdFinish);
+  const openFinish = canFinish ? () => setFinishOpen(true) : null;
+  const sampleLine = ad ? ((parseAdPlan(adScript).find(b => b.line) || {}).line || '') : '';
+  const finishState = ad ? adFinishState(adFinish) : null;
+  const [finishErr, setFinishErr] = useState(null);
+  const tryFinishAgain = async () => {
+    setFinishErr(null);
+    const r = await onFinishAgain();
+    if (r && r.error) setFinishErr(r.error);
+  };
   const adPlanOn = adPlan.length > 0;
 
   const stage =
@@ -1199,12 +1231,31 @@ export default function Storyboard({
             <b>{ad.title || 'Your ad'}</b>
             <span>{[ad.hook, ad.brand, ad.audience, ad.offer].filter(Boolean).join(' · ')}</span>
           </div>
+          {finishState && (
+            <span className={`sb-ad-fin is-${finishState.key}`} title={finishErr || finishState.tip} role="status">
+              {finishState.key === 'finishing' && <span className="film-spin film-spin--sm" aria-hidden="true" />}
+              {finishState.label}
+            </span>
+          )}
+          {finishState && finishState.key === 'failed' && onFinishAgain && (
+            <button type="button" className="film-btn film-btn--ghost sb-ad-edit" onClick={tryFinishAgain}
+                    title="Finish your advert again: end card, captions and AI label (free — the film is kept)">Try again</button>
+          )}
+          {canFinish && (
+            <button type="button" className="film-btn film-btn--ghost sb-ad-edit" onClick={openFinish}
+                    title="Choose the end card, AI label, captions and brand colour">End card</button>
+          )}
           {onEditAdSetup && (
             <button type="button" className="film-btn film-btn--ghost sb-ad-edit" onClick={() => onEditAdSetup(0)}
                     title={ad.locked ? 'Reopen Ad setup — the brief and script can change; length and frame stay fixed'
                                      : 'Reopen Ad setup'}>Edit setup</button>
           )}
         </div>
+      )}
+      {finishOpen && canFinish && (
+        <AdFinish ad={ad} sampleLine={sampleLine} onSave={onSaveAdFinish} onClose={() => setFinishOpen(false)}
+                  filmUrl={adFilmUrl}
+                  onEditWords={onEditAdSetup ? () => { setFinishOpen(false); onEditAdSetup(0); } : null} />
       )}
 
       <div className={`film-stage${zoned ? ' film-stage--zoned' : ''}`}>
@@ -1228,7 +1279,7 @@ export default function Storyboard({
             (stageState = job.contentBlock ? 'blocked' : …). A blocked plan has
             failed, so no other branch should get a chance to claim the stage. */}
         {stageState === 'blocked' && contentBlock ? (
-          <ContentBlockCard block={contentBlock} videoStyle={videoStyle} />
+          <ContentBlockCard block={contentBlock} videoStyle={videoStyle} isAd={!!ad} />
         ) : drawingCast ? (
           <CastBuilding castList={castList} />
         ) : stageState === 'plate_review' ? (
@@ -1250,7 +1301,7 @@ export default function Storyboard({
         ) : adPlanOn ? (
           <div className="film-grid" style={gridStyle}>
             {adPlan.map(b => <AdPlanCell key={`plan-${b.index}`} beat={b} />)}
-            <AdEndCard ad={ad} />
+            <AdEndCard ad={ad} onOpen={openFinish} />
           </div>
         ) : stageState === 'empty' || total === 0 ? (
           <EmptyStoryboard />
@@ -1292,7 +1343,7 @@ export default function Storyboard({
                   </div>
                 )}
                 {items}
-                {ad && <AdEndCard ad={ad} />}
+                {ad && <AdEndCard ad={ad} onOpen={openFinish} />}
               </div>
             );
           })()}

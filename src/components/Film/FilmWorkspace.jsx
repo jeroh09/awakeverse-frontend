@@ -74,6 +74,10 @@ export default function FilmWorkspace({
   // container); the storyboard panel is the storyboard for ads too (plan from the script,
   // the ad strip with Edit setup, the end card). `adScript` = the latest script draft.
   ad = null, onStartAd = null, onEditAdSetup = null, adScript = null,
+  onSaveAdFinish = null,   // step 4 part 1 (AD_COMPOSE): the end-card picker saves through this
+  // step 4 part 3: the made advert's finishing state (manifest.ad_finish), its film, and
+  // "Try again" — all null for films and while AD_COMPOSE is off.
+  adFinish = null, adFilmUrl = null, onFinishAgain = null,
 }) {
   const adInfo = useMemo(() => {
     if (!ad) return null;
@@ -81,7 +85,8 @@ export default function FilmWorkspace({
     const c = Number.isInteger(ad.chosen) && ad.concepts ? ad.concepts[ad.chosen] : null;
     return { title: c ? c.title : (b.name || ''), hook: c ? c.hook : '', brand: b.name || '', audience: b.audience || '',
              offer: b.offer || '', cta: b.cta || '', length: Number(b.length) || null, ratio: b.ratio || null,
-             filmSeconds: ad.film_seconds || null, endCard: ad.end_card_seconds || null, locked: !!ad.locked };
+             filmSeconds: ad.film_seconds || null, endCard: ad.end_card_seconds || null, locked: !!ad.locked,
+             url: b.url || '', composeOpen: !!ad.compose_open, finish: ad.finish || null };
   }, [ad]);
   // The server says whether an ad may start paid work yet (AD_RENDER); until then the
   // Review cast buttons are greyed with the reason instead of failing on click.
@@ -248,6 +253,10 @@ export default function FilmWorkspace({
               ad={adInfo}
               adScript={adScript}
               onEditAdSetup={onEditAdSetup}
+              onSaveAdFinish={onSaveAdFinish}
+              adFinish={adFinish}
+              adFilmUrl={adFilmUrl}
+              onFinishAgain={onFinishAgain}
               onReviewCast={adInfo ? onReviewCast : null}
               adRenderLocked={adRenderLocked}
             />
