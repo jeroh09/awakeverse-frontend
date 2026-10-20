@@ -3752,6 +3752,13 @@ body[data-film-season="halloween"] :global(.studio-nocturne) .envCardWrapSelecte
 :global(.studio-nocturne) .videoPlaceholder .vpIcon { width: 52px; height: 52px; background: rgba(var(--sn-acc-rgb), 0.14);
   box-shadow: var(--sn-lip), 0 0 0 1px rgba(var(--sn-acc-rgb), 0.35), 0 0 30px -6px var(--sn-glow); }
 :global(.studio-nocturne) .videoPlayer { box-shadow: var(--sn-lip), 0 0 0 1px rgba(var(--sn-acc-rgb), 0.2), 0 24px 50px -24px #000, 0 0 50px -24px var(--sn-glow); }
+/* the finished podcast: a compact player that fits what is left of the window (no scrolling to
+   see the whole video) and keeps the video's own shape — 16:9 or 9:16 — instead of stretching
+   it across the full width. The card takes the space under the steps (at least 300px); the
+   video sizes to its own aspect ratio inside it, centred. */
+:global(.studio-nocturne) .generatePage > .glassCard:has(> .videoPlayer) { flex: 1 1 0; min-height: 300px; container-type: size; }
+:global(.studio-nocturne) .glassCard > .videoPlayer { display: block; align-self: center; width: auto; height: auto;
+  max-width: 100%; max-height: calc(100cqh - 3.4rem); background: #000; }
 
 /* ── My Podcasts · the shelf: glass cards, the play button rises on hover ── */
 :global(.studio-nocturne) .podcastGrid { align-content: start; }
