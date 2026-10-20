@@ -10,15 +10,15 @@
   padding: clamp(8px, 2.5vh, 22px);
 }
 .pop {
-  --indigo:#6366F1; --indigo-light:#818CF8; --indigo-text:#A5B4FC; --green:#34D399; --rose:#FDA4AF;
-  --paper:#F1F5F9; --sub:#94A3B8; --muted:#64748b; --line:rgba(99,102,241,0.2);
-  --ring:0 0 0 3px rgba(99,102,241,0.4); --panel:#0a0f22;
+  --indigo:var(--sn-hex-acc); --indigo-light:var(--sn-hex-acc-hi); --indigo-text:var(--sn-ink-1); --green:#34D399; --rose:#FDA4AF;
+  --paper:#F1F5F9; --sub:#94A3B8; --muted:#64748b; --line:rgba(var(--sn-acc-rgb), 0.2);
+  --ring:0 0 0 3px rgba(var(--sn-acc-rgb), 0.4); --panel:#0a0f22;
   --mono:'JetBrains Mono',monospace; --disp:'Syne',sans-serif; --body:'Inter',system-ui,sans-serif;
 
   width: min(860px, 96vw); display: flex; flex-direction: column; overflow: hidden;
   max-height: calc(100vh - 2 * clamp(8px, 2.5vh, 22px));
   max-height: calc(100dvh - 2 * clamp(8px, 2.5vh, 22px));
-  background: var(--panel); border: 1px solid rgba(99,102,241,0.32); border-radius: 16px;
+  background: var(--panel); border: 1px solid rgba(var(--sn-acc-rgb), 0.32); border-radius: 16px;
   box-shadow: 0 40px 100px -30px rgba(0,0,0,0.9); color: var(--paper); font-family: var(--body);
 }
 .pophead, .foot { flex-shrink: 0; }
@@ -33,7 +33,7 @@
 
 .body { display: grid; grid-template-columns: 1.1fr 1fr; gap: 18px; padding: 14px 16px 10px;
   flex: 1 1 auto; min-height: 0; overflow-y: auto;
-  scrollbar-width: thin; scrollbar-color: rgba(99,102,241,0.35) transparent; }
+  scrollbar-width: thin; scrollbar-color: rgba(var(--sn-acc-rgb), 0.35) transparent; }
 @media (max-width: 700px) { .body { grid-template-columns: 1fr; } }
 .col { min-width: 0; }
 .grp { font-family: var(--mono); font-size: 0.58rem; letter-spacing: 0.1em; text-transform: uppercase; color: var(--sub); margin: 0 0 8px; }
@@ -46,12 +46,12 @@
 .bg { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; }
 .bgFallback { position: absolute; inset: 0;
   background: radial-gradient(200px 130px at 80% 18%, rgba(245,205,140,0.5), transparent 70%),
-              radial-gradient(70% 90% at 22% 60%, rgba(99,102,241,0.25), transparent 60%),
+              radial-gradient(70% 90% at 22% 60%, rgba(var(--sn-acc-rgb), 0.25), transparent 60%),
               linear-gradient(160deg, #1e293b, #0b1120 72%); }
 .host { position: absolute; left: 33%; bottom: 0; width: 34%; height: 92%; display: flex; align-items: flex-end; justify-content: center; }
 .replay { position: absolute; right: 8px; bottom: 8px; width: 28px; height: 28px; border-radius: 50%;
   border: 1px solid rgba(255,255,255,0.25); background: rgba(10,15,34,0.7); color: #fff; cursor: pointer; }
-.replay:hover { background: rgba(99,102,241,0.5); }
+.replay:hover { background: rgba(var(--sn-acc-rgb), 0.5); }
 .ghost { position: absolute; border: 1.5px dashed rgba(165,180,252,0.6); border-radius: 8px;
   display: flex; align-items: center; justify-content: center; text-align: center;
   font-size: 0.62rem; color: var(--indigo-text); background: rgba(99,102,241,0.12); }
@@ -69,7 +69,7 @@
 .sRow { height: 100%; display: flex; align-items: center; gap: 8cqh; }
 .sMain { display: flex; align-items: center; gap: 5cqw; }
 .sNum { font-weight: 700; line-height: 1; letter-spacing: -0.03em; font-variant-numeric: tabular-nums; white-space: nowrap;
-  font-size: min(26cqw, 30cqh); text-shadow: 0 2px 10px rgba(99,102,241,0.45); }
+  font-size: min(26cqw, 30cqh); text-shadow: 0 2px 10px rgba(var(--sn-acc-rgb), 0.45); }
 .sRow .sNum { font-size: 52cqh; }
 .sLabel { display: flex; align-items: center; gap: 2cqmin; font-size: max(5px, 5.5cqmin); font-weight: 600;
   letter-spacing: 0.12em; text-transform: uppercase; color: rgba(241,245,249,0.72); }
@@ -106,20 +106,20 @@
 .hBar { height: 18cqh; border-radius: 999px; background: rgba(245,245,220,0.30); transform-origin: left;
   animation: growX 0.6s cubic-bezier(.2,.8,.3,1.1) both; }
 @keyframes growX { from { transform: scaleX(0); } to { transform: scaleX(1); } }
-.barOn { background: linear-gradient(180deg, var(--indigo-light), var(--indigo)); box-shadow: 0 0 8px rgba(99,102,241,0.6); }
+.barOn { background: linear-gradient(180deg, var(--indigo-light), var(--indigo)); box-shadow: 0 0 8px rgba(var(--sn-acc-rgb), 0.6); }
 
 /* ── choices ── */
 .posGrid { display: grid; grid-template-columns: repeat(auto-fill, minmax(96px, 1fr)); gap: 5px; }
 .pos { background: rgba(148,163,184,0.06); border: 1px solid var(--line); color: var(--sub); border-radius: 8px;
   padding: 0.4rem 0.5rem; font-size: 0.7rem; cursor: pointer; font-family: var(--body); }
-.pos:hover { color: var(--paper); border-color: rgba(99,102,241,0.5); }
-.posOn { background: rgba(99,102,241,0.2); border-color: var(--indigo); color: var(--indigo-text); }
+.pos:hover { color: var(--paper); border-color: rgba(var(--sn-acc-rgb), 0.5); }
+.posOn { background: rgba(var(--sn-acc-rgb), 0.2); border-color: var(--indigo); color: var(--indigo-text); }
 .pillStrip { display: flex; gap: 3px; margin: 0 0 12px; padding: 4px;
   background: rgba(15,23,42,0.7); border: 1px solid var(--line); border-radius: 12px; }
 .pillBtn { flex: 1 1 0; background: none; border: none; color: var(--sub); font-family: var(--body);
   font-size: 0.74rem; padding: 0.45rem 0.4rem; border-radius: 9px; cursor: pointer; white-space: nowrap; }
 .pillBtn:hover { color: var(--paper); }
-.pillOn { background: linear-gradient(180deg, var(--indigo-light), var(--indigo)); color: #fff; box-shadow: 0 4px 12px -4px rgba(99,102,241,0.6); }
+.pillOn { background: linear-gradient(180deg, var(--indigo-light), var(--indigo)); color: var(--sn-on-accent); box-shadow: 0 4px 12px -4px rgba(var(--sn-acc-rgb), 0.6); }
 .field { margin: 0 0 10px; flex: 1; min-width: 0; }
 .field label { font-size: 0.66rem; color: var(--sub); display: block; margin-bottom: 4px; }
 .opt { color: var(--muted); }
@@ -129,17 +129,17 @@
 .input:focus-visible { outline: none; box-shadow: var(--ring); }
 .barRow { display: flex; align-items: center; gap: 6px; margin-bottom: 5px; }
 .val { width: 90px; flex: none; text-align: right; font-variant-numeric: tabular-nums; }
-.dot { width: 16px; height: 16px; flex: none; border-radius: 50%; border: 1px solid rgba(165,180,252,0.5);
+.dot { width: 16px; height: 16px; flex: none; border-radius: 50%; border: 1px solid rgba(var(--sn-acc-soft-rgb), 0.5);
   background: transparent; cursor: pointer; padding: 0; }
 .dotOn { background: var(--indigo); box-shadow: 0 0 8px var(--indigo); border-color: var(--indigo); }
 .rm { width: 24px; height: 24px; flex: none; border-radius: 50%; border: none; background: transparent; color: var(--muted); cursor: pointer; }
 .rm:hover:not(:disabled) { background: rgba(239,68,68,0.15); color: #fca5a5; }
 .rm:disabled { opacity: 0.3; cursor: default; }
-.add { background: none; border: 1px dashed rgba(99,102,241,0.35); color: var(--indigo-light); border-radius: 8px;
+.add { background: none; border: 1px dashed rgba(var(--sn-acc-rgb), 0.35); color: var(--indigo-light); border-radius: 8px;
   padding: 0.35rem 0.6rem; font-size: 0.72rem; cursor: pointer; font-family: var(--body); }
-.suggest { width: 100%; background: rgba(99,102,241,0.12); border: 1px solid rgba(99,102,241,0.4);
+.suggest { width: 100%; background: rgba(var(--sn-acc-rgb), 0.12); border: 1px solid rgba(var(--sn-acc-rgb), 0.4);
   color: var(--indigo-light); border-radius: 8px; padding: 0.55rem; font-size: 0.78rem; cursor: pointer; font-family: var(--body); margin-top: 4px; }
-.suggest:hover:not(:disabled) { background: rgba(99,102,241,0.22); }
+.suggest:hover:not(:disabled) { background: rgba(var(--sn-acc-rgb), 0.22); }
 .suggest:disabled { opacity: 0.6; cursor: progress; }
 
 .foot { border-top: 1px solid var(--line); padding: 10px 16px; display: flex; align-items: center; gap: 12px; background: var(--panel); }
@@ -148,7 +148,7 @@
 .remove:hover { background: rgba(239,68,68,0.12); }
 .hintFoot { font-size: 0.66rem; color: var(--sub); margin-left: auto; }
 .done { border: none; border-radius: 999px; padding: 0.5rem 1.15rem; font-family: var(--body); font-weight: 600;
-  font-size: 0.8rem; cursor: pointer; background: linear-gradient(180deg, var(--indigo-light), var(--indigo)); color: #fff; }
+  font-size: 0.8rem; cursor: pointer; background: linear-gradient(180deg, var(--indigo-light), var(--indigo)); color: var(--sn-on-accent); }
 
 @media (max-height: 760px) {
   .pophead { padding: 9px 14px; }
@@ -163,3 +163,54 @@
 .x, .replay, .rm { display: inline-grid; place-items: center; padding: 0; }
 .add, .remove { display: inline-flex; align-items: center; gap: 5px; }
 .suggest { display: flex; align-items: center; justify-content: center; gap: 6px; --si-accent: #E0E7FF; }
+
+/* ══ NOCTURNE GLASS (2026-10-20) ══════════════════════════════════════════════
+   This pop-up as a thick glass slab over a night sky, like Film's pop-ups.
+   • Above this block, every hard-coded indigo was swapped IN PLACE for a --sn-* colour
+     variable whose default (the :root block below) is that same indigo; a checker
+     (studio-tools/retint_inplace.py verify) proves every rule resolves to its original value.
+   • Everything below is scoped under body[data-film-ui="nocturne"] (set by useFilmSeason
+     while the studio or Film is open). Without that attribute nothing here applies.
+   • Halloween (body[data-film-season="halloween"]) turns the accent pumpkin with dark ink.
+     It is set on the pop-up's own root because the pop-up may be portalled to <body>.
+   • THE PREVIEW IS OFF-LIMITS: the stage and the mini data card (it mirrors DataCard.jsx) stay exactly as now.
+   ═══════════════════════════════════════════════════════════════════════════════ */
+:root {
+  --sn-acc-rgb: 99, 102, 241; --sn-acc-hi-rgb: 129, 140, 248; --sn-acc-soft-rgb: 165, 180, 252; --sn-acc-deep-rgb: 79, 70, 229;
+  --sn-hex-acc: #6366F1; --sn-hex-acc-hi: #818CF8; --sn-hex-acc-deep: #4F46E5;
+  --sn-ink-1: #A5B4FC; --sn-ink-2: #C7D2FE; --sn-on-accent: #fff;
+}
+body[data-film-ui="nocturne"][data-film-season="halloween"] .scrim {
+  --sn-acc-rgb: 255, 138, 61; --sn-acc-hi-rgb: 255, 167, 102; --sn-acc-soft-rgb: 255, 190, 140; --sn-acc-deep-rgb: 230, 110, 40;
+  --sn-hex-acc: #FF8A3D; --sn-hex-acc-hi: #FFA766; --sn-hex-acc-deep: #E66E28;
+  --sn-ink-1: #FFC79A; --sn-ink-2: #FFD2B0; --sn-on-accent: #1A0B02;
+}
+/* the preview keeps its render colours in every season */
+body[data-film-ui="nocturne"] .stage {
+  --sn-acc-rgb: 99, 102, 241; --sn-acc-hi-rgb: 129, 140, 248; --sn-acc-soft-rgb: 165, 180, 252; --sn-acc-deep-rgb: 79, 70, 229;
+  --sn-hex-acc: #6366F1; --sn-hex-acc-hi: #818CF8; --sn-hex-acc-deep: #4F46E5;
+  --sn-ink-1: #A5B4FC; --sn-ink-2: #C7D2FE; --sn-on-accent: #fff;
+  --indigo: #6366F1; --indigo-light: #818CF8; --indigo-text: #A5B4FC; --line: rgba(99,102,241,0.2); --ring: 0 0 0 3px rgba(99,102,241,0.4);
+}
+/* the room dims under a night sky */
+body[data-film-ui="nocturne"] .scrim {
+  background: radial-gradient(1000px 640px at 82% -12%, rgba(40, 46, 110, 0.38), transparent 62%), rgba(4, 4, 10, 0.66);
+  -webkit-backdrop-filter: blur(8px); backdrop-filter: blur(8px);
+}
+body[data-film-ui="nocturne"][data-film-season="halloween"] .scrim {
+  background: radial-gradient(1000px 640px at 82% -12%, rgba(70, 30, 100, 0.42), transparent 62%), rgba(4, 4, 10, 0.66);
+}
+/* the slab: thick glass, a lit top edge, a deep shadow and a faint glow of the accent */
+body[data-film-ui="nocturne"] .pop {
+  --line: rgba(255, 255, 255, 0.1); --panel: rgba(0, 0, 0, 0.14);
+  background: linear-gradient(180deg, rgba(255, 255, 255, 0.05), rgba(255, 255, 255, 0.012)), rgba(15, 15, 30, 0.9);
+  border-color: rgba(255, 255, 255, 0.16);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.1), 0 40px 120px -30px #000, 0 0 80px -34px rgba(var(--sn-acc-rgb), 0.45);
+  -webkit-backdrop-filter: blur(28px) saturate(160%); backdrop-filter: blur(28px) saturate(160%);
+}
+/* the controls: dark glass wells, a lit main button */
+body[data-film-ui="nocturne"] .pillStrip { background: rgba(0, 0, 0, 0.24); box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.05); }
+body[data-film-ui="nocturne"] .input { background: rgba(0, 0, 0, 0.24); }
+body[data-film-ui="nocturne"] .pos { background: rgba(255, 255, 255, 0.035); }
+body[data-film-ui="nocturne"] .posOn { background: rgba(var(--sn-acc-rgb), 0.2); }
+body[data-film-ui="nocturne"] .done { box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.3), 0 8px 22px -10px rgba(var(--sn-acc-rgb), 0.6); }

@@ -10,15 +10,15 @@
   padding: clamp(8px, 2.5vh, 22px);
 }
 .pop {
-  --indigo:#6366F1; --indigo-light:#818CF8; --indigo-text:#A5B4FC; --green:#10B981;
-  --paper:#F1F5F9; --sub:#94A3B8; --muted:#64748b; --line:rgba(99,102,241,0.2);
-  --ring:0 0 0 3px rgba(99,102,241,0.4); --panel:#0a0f22;
+  --indigo:var(--sn-hex-acc); --indigo-light:var(--sn-hex-acc-hi); --indigo-text:var(--sn-ink-1); --green:#10B981;
+  --paper:#F1F5F9; --sub:#94A3B8; --muted:#64748b; --line:rgba(var(--sn-acc-rgb), 0.2);
+  --ring:0 0 0 3px rgba(var(--sn-acc-rgb), 0.4); --panel:#0a0f22;
   --mono:'JetBrains Mono',monospace; --disp:'Syne',sans-serif; --body:'Inter',system-ui,sans-serif;
 
   width: min(820px, 96vw); display: flex; flex-direction: column; overflow: hidden;
   max-height: calc(100vh - 2 * clamp(8px, 2.5vh, 22px));
   max-height: calc(100dvh - 2 * clamp(8px, 2.5vh, 22px));
-  background: var(--panel); border: 1px solid rgba(99,102,241,0.32); border-radius: 16px;
+  background: var(--panel); border: 1px solid rgba(var(--sn-acc-rgb), 0.32); border-radius: 16px;
   box-shadow: 0 40px 100px -30px rgba(0,0,0,0.9);
   color: var(--paper); font-family: var(--body);
 }
@@ -52,13 +52,13 @@
   font-size: 0.74rem; padding: 0.45rem 0.4rem; border-radius: 9px; cursor: pointer; transition: 0.12s; }
 .pillBtn:hover:not(:disabled) { color: var(--paper); }
 .pillBtn:disabled { cursor: default; }
-.pillOn { background: linear-gradient(180deg, var(--indigo-light), var(--indigo)); color: #fff;
-  box-shadow: 0 4px 12px -4px rgba(99,102,241,0.6); }
+.pillOn { background: linear-gradient(180deg, var(--indigo-light), var(--indigo)); color: var(--sn-on-accent);
+  box-shadow: 0 4px 12px -4px rgba(var(--sn-acc-rgb), 0.6); }
 .dim { opacity: 0.45; }
 
 .body { display: grid; grid-template-columns: 1fr 1.25fr; gap: 18px; padding: 12px 16px 10px;
   flex: 1 1 auto; min-height: 0; overflow-y: auto; transition: opacity 0.15s;
-  scrollbar-width: thin; scrollbar-color: rgba(99,102,241,0.35) transparent; }
+  scrollbar-width: thin; scrollbar-color: rgba(var(--sn-acc-rgb), 0.35) transparent; }
 @media (max-width: 680px) { .body { grid-template-columns: 1fr; } }
 .col { min-width: 0; }
 .grp { font-family: var(--mono); font-size: 0.58rem; letter-spacing: 0.1em; text-transform: uppercase;
@@ -72,10 +72,10 @@
 .sndTxt span { font-size: 0.66rem; color: var(--sub); }
 
 .play { width: 26px; height: 26px; flex-shrink: 0; border-radius: 50%; cursor: pointer;
-  border: 1px solid rgba(99,102,241,0.45); background: rgba(99,102,241,0.12); color: var(--indigo-light);
+  border: 1px solid rgba(var(--sn-acc-rgb), 0.45); background: rgba(var(--sn-acc-rgb), 0.12); color: var(--indigo-light);
   font-size: 0.62rem; line-height: 1; display: inline-flex; align-items: center; justify-content: center; }
-.play:hover { background: rgba(99,102,241,0.28); color: #fff; }
-.playOn { background: var(--indigo); color: #fff; border-color: var(--indigo); }
+.play:hover { background: rgba(var(--sn-acc-rgb), 0.28); color: #fff; }
+.playOn { background: var(--indigo); color: var(--sn-on-accent); border-color: var(--indigo); }
 
 .lines { display: flex; flex-direction: column; gap: 5px; }
 .ln { display: grid; grid-template-columns: 22px minmax(0, 1fr) auto; align-items: center; gap: 8px;
@@ -91,22 +91,22 @@
 .pickBtn { min-width: 128px; text-align: left; display: flex; justify-content: space-between; gap: 8px;
   background: rgba(148,163,184,0.06); border: 1px solid var(--line); border-radius: 8px;
   color: var(--sub); font-family: var(--body); font-size: 0.7rem; padding: 0.35rem 0.55rem; cursor: pointer; }
-.pickBtn:hover:not(:disabled) { border-color: rgba(99,102,241,0.5); color: var(--paper); }
+.pickBtn:hover:not(:disabled) { border-color: rgba(var(--sn-acc-rgb), 0.5); color: var(--paper); }
 .pickBtn:disabled { cursor: default; }
-.pickSet { color: var(--indigo-text); border-color: rgba(99,102,241,0.5); background: rgba(99,102,241,0.12); }
+.pickSet { color: var(--indigo-text); border-color: rgba(var(--sn-acc-rgb), 0.5); background: rgba(var(--sn-acc-rgb), 0.12); }
 
 .menu { position: absolute; right: 0; top: calc(100% + 4px); z-index: 20; width: 210px;
   max-height: 260px; overflow-y: auto; padding: 4px;
-  background: #0a0f1a; border: 1px solid rgba(99, 102, 241, 0.35); border-radius: 12px;
-  box-shadow: 0 0 0 3px rgba(15,23,42,0.9), 0 0 0 4px rgba(99,102,241,0.16), 0 12px 28px rgba(0,0,0,0.5); }
+  background: #0a0f1a; border: 1px solid rgba(var(--sn-acc-rgb), 0.35); border-radius: 12px;
+  box-shadow: 0 0 0 3px rgba(15,23,42,0.9), 0 0 0 4px rgba(var(--sn-acc-rgb), 0.16), 0 12px 28px rgba(0,0,0,0.5); }
 .menuSep { font-family: var(--mono); font-size: 0.55rem; letter-spacing: 0.1em; text-transform: uppercase;
   color: var(--muted); padding: 7px 8px 3px; }
 .itemRow { display: flex; align-items: center; gap: 4px; padding-right: 4px; }
 .item { flex: 1; display: block; width: 100%; text-align: left; padding: 0.4rem 0.55rem; border-radius: 8px;
   background: transparent; border: none; cursor: pointer; font-size: 0.72rem; font-family: var(--body);
   color: rgba(148, 163, 184, 0.9); }
-.item:hover { background: rgba(99, 102, 241, 0.1); color: #c7d2fe; }
-.itemOn { background: rgba(99, 102, 241, 0.16); color: var(--indigo-text); font-weight: 600; }
+.item:hover { background: rgba(var(--sn-acc-rgb), 0.1); color: var(--sn-ink-2); }
+.itemOn { background: rgba(var(--sn-acc-rgb), 0.16); color: var(--indigo-text); font-weight: 600; }
 .itemRow .play { width: 22px; height: 22px; }
 
 .foot { border-top: 1px solid var(--line); padding: 10px 16px; display: flex; align-items: center; gap: 12px;
@@ -120,7 +120,7 @@
 }
 .hintFoot { font-size: 0.66rem; color: var(--sub); }
 .done { margin-left: auto; border: none; border-radius: 999px; padding: 0.5rem 1.15rem; font-family: var(--body);
-  font-weight: 600; font-size: 0.8rem; cursor: pointer; background: linear-gradient(180deg, var(--indigo-light), var(--indigo)); color: #fff; }
+  font-weight: 600; font-size: 0.8rem; cursor: pointer; background: linear-gradient(180deg, var(--indigo-light), var(--indigo)); color: var(--sn-on-accent); }
 
 @media (prefers-reduced-motion: reduce) { .pop * { transition: none !important; } }
 /* studio icons (2026-10-18) */
@@ -128,3 +128,51 @@
 .x { display: inline-grid; place-items: center; padding: 0; }
 .badge { display: inline-flex; vertical-align: -2px; }
 .pickBtn span { align-self: center; }
+
+/* ══ NOCTURNE GLASS (2026-10-20) ══════════════════════════════════════════════
+   This pop-up as a thick glass slab over a night sky, like Film's pop-ups.
+   • Above this block, every hard-coded indigo was swapped IN PLACE for a --sn-* colour
+     variable whose default (the :root block below) is that same indigo; a checker
+     (studio-tools/retint_inplace.py verify) proves every rule resolves to its original value.
+   • Everything below is scoped under body[data-film-ui="nocturne"] (set by useFilmSeason
+     while the studio or Film is open). Without that attribute nothing here applies.
+   • Halloween (body[data-film-season="halloween"]) turns the accent pumpkin with dark ink.
+     It is set on the pop-up's own root because the pop-up may be portalled to <body>.
+   • THE PREVIEW IS OFF-LIMITS: this pop-up has no video preview.
+   ═══════════════════════════════════════════════════════════════════════════════ */
+:root {
+  --sn-acc-rgb: 99, 102, 241; --sn-acc-hi-rgb: 129, 140, 248; --sn-acc-soft-rgb: 165, 180, 252; --sn-acc-deep-rgb: 79, 70, 229;
+  --sn-hex-acc: #6366F1; --sn-hex-acc-hi: #818CF8; --sn-hex-acc-deep: #4F46E5;
+  --sn-ink-1: #A5B4FC; --sn-ink-2: #C7D2FE; --sn-on-accent: #fff;
+}
+body[data-film-ui="nocturne"][data-film-season="halloween"] .scrim {
+  --sn-acc-rgb: 255, 138, 61; --sn-acc-hi-rgb: 255, 167, 102; --sn-acc-soft-rgb: 255, 190, 140; --sn-acc-deep-rgb: 230, 110, 40;
+  --sn-hex-acc: #FF8A3D; --sn-hex-acc-hi: #FFA766; --sn-hex-acc-deep: #E66E28;
+  --sn-ink-1: #FFC79A; --sn-ink-2: #FFD2B0; --sn-on-accent: #1A0B02;
+}
+/* the room dims under a night sky */
+body[data-film-ui="nocturne"] .scrim {
+  background: radial-gradient(1000px 640px at 82% -12%, rgba(40, 46, 110, 0.38), transparent 62%), rgba(4, 4, 10, 0.66);
+  -webkit-backdrop-filter: blur(8px); backdrop-filter: blur(8px);
+}
+body[data-film-ui="nocturne"][data-film-season="halloween"] .scrim {
+  background: radial-gradient(1000px 640px at 82% -12%, rgba(70, 30, 100, 0.42), transparent 62%), rgba(4, 4, 10, 0.66);
+}
+/* the slab: thick glass, a lit top edge, a deep shadow and a faint glow of the accent */
+body[data-film-ui="nocturne"] .pop {
+  --line: rgba(255, 255, 255, 0.1); --panel: rgba(0, 0, 0, 0.14);
+  background: linear-gradient(180deg, rgba(255, 255, 255, 0.05), rgba(255, 255, 255, 0.012)), rgba(15, 15, 30, 0.9);
+  border-color: rgba(255, 255, 255, 0.16);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.1), 0 40px 120px -30px #000, 0 0 80px -34px rgba(var(--sn-acc-rgb), 0.45);
+  -webkit-backdrop-filter: blur(28px) saturate(160%); backdrop-filter: blur(28px) saturate(160%);
+}
+/* the controls: dark glass wells, a lit main button */
+body[data-film-ui="nocturne"] .pillStrip { background: rgba(0, 0, 0, 0.24); box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.05); }
+body[data-film-ui="nocturne"] .snd { background: rgba(255, 255, 255, 0.03); box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.05); }
+body[data-film-ui="nocturne"] .ln { background: rgba(255, 255, 255, 0.025); }
+body[data-film-ui="nocturne"] .pickBtn { background: rgba(255, 255, 255, 0.035); }
+body[data-film-ui="nocturne"] .pickSet { background: rgba(var(--sn-acc-rgb), 0.12); }
+body[data-film-ui="nocturne"] .playOn { box-shadow: 0 0 12px rgba(var(--sn-acc-rgb), 0.55); }
+body[data-film-ui="nocturne"] .menu { background: rgba(18, 17, 34, 0.97); border-color: rgba(255, 255, 255, 0.14);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.08), 0 18px 40px -10px #000, 0 0 40px -20px rgba(var(--sn-acc-rgb), 0.45); }
+body[data-film-ui="nocturne"] .done { box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.3), 0 8px 22px -10px rgba(var(--sn-acc-rgb), 0.6); }

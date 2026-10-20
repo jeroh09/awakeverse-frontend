@@ -3,13 +3,13 @@
    colours mirror podcast_overlays.py / podcast_compare.py — renderer is
    authoritative; keep in sync if you retint. */
 .pop {
-  --indigo:#6366F1; --indigo-light:#818CF8; --green:#10B981; --green-light:#34d399;
-  --paper:#F1F5F9; --sub:#94A3B8; --line:rgba(99,102,241,0.2);
-  --ring:0 0 0 3px rgba(99,102,241,0.4); --panel:#0a0f22; --ink:#0f172a;
+  --indigo:var(--sn-hex-acc); --indigo-light:var(--sn-hex-acc-hi); --green:#10B981; --green-light:#34d399;
+  --paper:#F1F5F9; --sub:#94A3B8; --line:rgba(var(--sn-acc-rgb), 0.2);
+  --ring:0 0 0 3px rgba(var(--sn-acc-rgb), 0.4); --panel:#0a0f22; --ink:#0f172a;
   --mono:'JetBrains Mono',monospace; --disp:'Syne',sans-serif; --body:'Inter',system-ui,sans-serif;
 
   position: relative; background: var(--panel);
-  border: 1px solid rgba(99,102,241,0.32); border-radius: 16px; overflow: hidden;
+  border: 1px solid rgba(var(--sn-acc-rgb), 0.32); border-radius: 16px; overflow: hidden;
   box-shadow: 0 40px 100px -30px rgba(0,0,0,0.9);
   color: var(--paper); font-family: var(--body); width: 100%;
 }
@@ -44,8 +44,8 @@
   font-family: var(--body); font-size: 0.74rem; padding: 0.5rem 0.4rem; border-radius: 9px;
   cursor: pointer; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; transition: 0.12s; }
 .pillBtn:hover { color: var(--paper); }
-.pillOn { background: linear-gradient(180deg, var(--indigo-light), var(--indigo)); color: #fff;
-  box-shadow: 0 4px 12px -4px rgba(99,102,241,0.6); }
+.pillOn { background: linear-gradient(180deg, var(--indigo-light), var(--indigo)); color: var(--sn-on-accent);
+  box-shadow: 0 4px 12px -4px rgba(var(--sn-acc-rgb), 0.6); }
 
 /* ── Material segmented control (glass surface: dark vs liquid) ──────────── */
 .matStrip { display: flex; gap: 4px; margin: 14px 16px 0; padding: 4px;
@@ -72,17 +72,17 @@
   border: 1px solid rgba(255,255,255,0.06);
   background:
     radial-gradient(200px 130px at 80% 18%, rgba(245,205,140,0.5), transparent 70%),
-    radial-gradient(70% 90% at 22% 60%, rgba(99,102,241,0.25), transparent 60%),
+    radial-gradient(70% 90% at 22% 60%, rgba(var(--sn-acc-rgb), 0.25), transparent 60%),
     linear-gradient(160deg, #1e293b, #0b1120 72%); }
 .host { position: absolute; left: 6%; bottom: 0; width: 34%; height: 90%; display: flex; align-items: flex-end; justify-content: center; }
 .zone { position: absolute; border: 1.5px dashed rgba(148,163,184,0.5); border-radius: 6px; cursor: pointer;
   background: rgba(148,163,184,0.05); transition: 0.12s; padding: 0; }
-.zone:hover { border-color: var(--indigo-light); background: rgba(99,102,241,0.14); }
-.zoneOn { border-style: solid; border-color: var(--indigo); background: rgba(99,102,241,0.26); box-shadow: var(--ring); }
+.zone:hover { border-color: var(--indigo-light); background: rgba(var(--sn-acc-rgb), 0.14); }
+.zoneOn { border-style: solid; border-color: var(--indigo); background: rgba(var(--sn-acc-rgb), 0.26); box-shadow: var(--ring); }
 .vsNode { position: absolute; left: 50%; top: 44%; transform: translate(-50%,-50%); width: 30px; height: 30px;
   border-radius: 50%; background: linear-gradient(160deg, var(--indigo), var(--green)); border: 2px solid #fff;
   display: flex; align-items: center; justify-content: center; font-family: var(--disp); font-weight: 800;
-  color: #fff; font-size: 0.66rem; }
+  color: var(--sn-on-accent); font-size: 0.66rem; }
 
 /* fine-tune */
 .finetune { margin-top: 2px; }
@@ -113,17 +113,17 @@
   border-radius: 8px; padding: 0.5rem 0.6rem; font-family: var(--body); font-size: 0.8rem; }
 .input:focus-visible { outline: none; box-shadow: var(--ring); }
 .miniBtns { display: flex; gap: 8px; }
-.mb { flex: 1; text-align: center; background: rgba(99,102,241,0.12); border: 1px solid rgba(99,102,241,0.4);
+.mb { flex: 1; text-align: center; background: rgba(var(--sn-acc-rgb), 0.12); border: 1px solid rgba(var(--sn-acc-rgb), 0.4);
   color: var(--indigo-light); border-radius: 8px; padding: 0.5rem; font-size: 0.74rem; cursor: pointer; }
-.mb:hover { background: rgba(99,102,241,0.22); }
-.launch { width: 100%; margin-bottom: 12px; background: rgba(99,102,241,0.12); border: 1px solid rgba(99,102,241,0.4);
+.mb:hover { background: rgba(var(--sn-acc-rgb), 0.22); }
+.launch { width: 100%; margin-bottom: 12px; background: rgba(var(--sn-acc-rgb), 0.12); border: 1px solid rgba(var(--sn-acc-rgb), 0.4);
   color: var(--indigo-light); border-radius: 8px; padding: 0.55rem; font-size: 0.8rem; cursor: pointer; }
 
 .foot { border-top: 1px solid var(--line); padding: 11px 16px; display: flex; justify-content: space-between; align-items: center; gap: 10px; }
 .hint { font-size: 0.66rem; color: var(--sub); line-height: 1.4; }
 .hint code { font-family: var(--mono); font-size: 0.62rem; }
 .btn { border: none; border-radius: 999px; padding: 0.5rem 1.15rem; font-family: var(--body); font-weight: 600; font-size: 0.8rem; cursor: pointer; }
-.primary { background: linear-gradient(180deg, var(--indigo-light), var(--indigo)); color: #fff; }
+.primary { background: linear-gradient(180deg, var(--indigo-light), var(--indigo)); color: var(--sn-on-accent); }
 
 @media (prefers-reduced-motion: reduce) { .pop * { transition: none !important; } }
 /* ═══ Real preview (2026-10-18) — your host-in-studio still behind the picker ═══ */
@@ -134,8 +134,8 @@
 .pin { position: absolute; z-index: 3; width: 18px; height: 18px; padding: 0; transform: translate(-50%, -50%);
   border-radius: 50%; border: 2px solid rgba(255,255,255,0.88); background: rgba(10,15,34,0.55);
   box-shadow: 0 2px 8px rgba(0,0,0,0.5); cursor: pointer; transition: transform 0.12s, background 0.12s; }
-.pin:hover, .pin:focus-visible { transform: translate(-50%, -50%) scale(1.18); background: rgba(99,102,241,0.75); outline: none; }
-.pinOn { background: rgba(99,102,241,0.28); border-color: #C7D2FE; box-shadow: 0 0 0 3px rgba(99,102,241,0.45), 0 2px 8px rgba(0,0,0,0.4); }  /* see-through: the card under it stays visible */
+.pin:hover, .pin:focus-visible { transform: translate(-50%, -50%) scale(1.18); background: rgba(var(--sn-acc-rgb), 0.75); outline: none; }
+.pinOn { background: rgba(var(--sn-acc-rgb), 0.28); border-color: var(--sn-ink-2); box-shadow: 0 0 0 3px rgba(var(--sn-acc-rgb), 0.45), 0 2px 8px rgba(0,0,0,0.4); }  /* see-through: the card under it stays visible */
 /* the hovered position's true footprint */
 .footprint { position: absolute; z-index: 2; pointer-events: none; border: 2px dashed rgba(255,255,255,0.8);
   border-radius: 8px; background: rgba(255,255,255,0.06); }
@@ -157,7 +157,7 @@
 .sampleBars { flex: 1; display: flex; align-items: flex-end; gap: 7%; min-height: 0; }
 .sampleWide .sampleBars { height: 80%; }
 .sampleBars i { flex: 1; border-radius: 0.4cqw 0.4cqw 0.15cqw 0.15cqw; background: rgba(245,245,220,0.36); }
-.sampleBars i.sampleHl { background: linear-gradient(180deg, #A5B4FC, var(--indigo)); box-shadow: 0 0 1cqw rgba(99,102,241,0.6); }
+.sampleBars i.sampleHl { background: linear-gradient(180deg, var(--sn-ink-1), var(--indigo)); box-shadow: 0 0 1cqw rgba(var(--sn-acc-rgb), 0.6); }
 
 /* live cutout: the object floats free, with its contact shadow */
 .cut { position: absolute; transition: left 0.22s, top 0.22s, width 0.22s, height 0.22s; }
@@ -174,3 +174,59 @@
 
 @media (prefers-reduced-motion: reduce) { .pin, .glass, .cut, .cutObj { transition: none; } }
 .sampleLight .sampleBars i { background: rgba(15,23,42,0.22); }
+
+/* ══ NOCTURNE GLASS (2026-10-20) ══════════════════════════════════════════════
+   This pop-up as a thick glass slab over a night sky, like Film's pop-ups.
+   • Above this block, every hard-coded indigo was swapped IN PLACE for a --sn-* colour
+     variable whose default (the :root block below) is that same indigo; a checker
+     (studio-tools/retint_inplace.py verify) proves every rule resolves to its original value.
+   • Everything below is scoped under body[data-film-ui="nocturne"] (set by useFilmSeason
+     while the studio or Film is open). Without that attribute nothing here applies.
+   • Halloween (body[data-film-season="halloween"]) turns the accent pumpkin with dark ink.
+     It is set on the pop-up's own root because the pop-up may be portalled to <body>.
+   • THE PREVIEW IS OFF-LIMITS: the position picker (.frame) with your studio, the pins, footprints and the live card stays exactly as now.
+   ═══════════════════════════════════════════════════════════════════════════════ */
+:root {
+  --sn-acc-rgb: 99, 102, 241; --sn-acc-hi-rgb: 129, 140, 248; --sn-acc-soft-rgb: 165, 180, 252; --sn-acc-deep-rgb: 79, 70, 229;
+  --sn-hex-acc: #6366F1; --sn-hex-acc-hi: #818CF8; --sn-hex-acc-deep: #4F46E5;
+  --sn-ink-1: #A5B4FC; --sn-ink-2: #C7D2FE; --sn-on-accent: #fff;
+}
+body[data-film-ui="nocturne"][data-film-season="halloween"] .pop {
+  --sn-acc-rgb: 255, 138, 61; --sn-acc-hi-rgb: 255, 167, 102; --sn-acc-soft-rgb: 255, 190, 140; --sn-acc-deep-rgb: 230, 110, 40;
+  --sn-hex-acc: #FF8A3D; --sn-hex-acc-hi: #FFA766; --sn-hex-acc-deep: #E66E28;
+  --sn-ink-1: #FFC79A; --sn-ink-2: #FFD2B0; --sn-on-accent: #1A0B02;
+}
+/* the preview keeps its render colours in every season */
+body[data-film-ui="nocturne"] .frame {
+  --sn-acc-rgb: 99, 102, 241; --sn-acc-hi-rgb: 129, 140, 248; --sn-acc-soft-rgb: 165, 180, 252; --sn-acc-deep-rgb: 79, 70, 229;
+  --sn-hex-acc: #6366F1; --sn-hex-acc-hi: #818CF8; --sn-hex-acc-deep: #4F46E5;
+  --sn-ink-1: #A5B4FC; --sn-ink-2: #C7D2FE; --sn-on-accent: #fff;
+  --indigo: #6366F1; --indigo-light: #818CF8; --line: rgba(99,102,241,0.2); --ring: 0 0 0 3px rgba(99,102,241,0.4);
+}
+/* the room dims under a night sky */
+body[data-film-ui="nocturne"] div:has(> div > .pop) {
+  background: radial-gradient(1000px 640px at 82% -12%, rgba(40, 46, 110, 0.38), transparent 62%), rgba(4, 4, 10, 0.66) !important;
+  -webkit-backdrop-filter: blur(8px) !important; backdrop-filter: blur(8px) !important;
+}
+body[data-film-ui="nocturne"][data-film-season="halloween"] div:has(> div > .pop) {
+  background: radial-gradient(1000px 640px at 82% -12%, rgba(70, 30, 100, 0.42), transparent 62%), rgba(4, 4, 10, 0.66) !important;
+}
+/* the slab: thick glass, a lit top edge, a deep shadow and a faint glow of the accent */
+body[data-film-ui="nocturne"] .pop {
+  --line: rgba(255, 255, 255, 0.1); 
+  background: linear-gradient(180deg, rgba(255, 255, 255, 0.05), rgba(255, 255, 255, 0.012)), rgba(15, 15, 30, 0.9);
+  border-color: rgba(255, 255, 255, 0.16);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.1), 0 40px 120px -30px #000, 0 0 80px -34px rgba(var(--sn-acc-rgb), 0.45);
+  -webkit-backdrop-filter: blur(28px) saturate(160%); backdrop-filter: blur(28px) saturate(160%);
+}
+/* the controls: dark glass wells, a lit main button */
+/* the header icon's colours are set inline (#818CF8 / #A5B4FC = the year-round values); let the season reach them */
+body[data-film-ui="nocturne"] .pophead .ic > svg { color: var(--indigo-light) !important; --si-accent: var(--sn-ink-1) !important; }
+body[data-film-ui="nocturne"] .pillStrip, body[data-film-ui="nocturne"] .matStrip { background: rgba(0, 0, 0, 0.24); box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.05); }
+/* the selected material: neutral glass instead of slate blue */
+body[data-film-ui="nocturne"] .pop { --peak: rgba(255, 255, 255, 0.1); }
+body[data-film-ui="nocturne"] .ftbtn { background: rgba(255, 255, 255, 0.035); }
+body[data-film-ui="nocturne"] .input { background: rgba(0, 0, 0, 0.24); }
+body[data-film-ui="nocturne"] .primary { box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.3), 0 8px 22px -10px rgba(var(--sn-acc-rgb), 0.6); }
+body[data-film-ui="nocturne"] .tip:hover::after { background: rgba(18, 17, 34, 0.96); border-color: rgba(255, 255, 255, 0.14); }
+body[data-film-ui="nocturne"] .tip:hover::before { border-top-color: rgba(18, 17, 34, 0.96); }

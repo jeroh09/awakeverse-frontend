@@ -3,9 +3,9 @@
    RAIL COLOURS MIRROR podcast_compare.py's VISUAL DESIGN TOKENS — the renderer
    is authoritative; keep these in sync if you retint the cards. */
 .backdrop {
-  --indigo:#6366F1; --indigo-light:#818CF8; --green:#10B981; --green-light:#34d399;
-  --paper:#F1F5F9; --sub:#94A3B8; --line:rgba(99,102,241,0.2);
-  --ring:0 0 0 3px rgba(99,102,241,0.4);
+  --indigo:var(--sn-hex-acc); --indigo-light:var(--sn-hex-acc-hi); --green:#10B981; --green-light:#34d399;
+  --paper:#F1F5F9; --sub:#94A3B8; --line:rgba(var(--sn-acc-rgb), 0.2);
+  --ring:0 0 0 3px rgba(var(--sn-acc-rgb), 0.4);
   /* light rail grounds (== GROUND_LEFT / GROUND_RIGHT) */
   --ground-l:rgb(236,238,253); --ground-r:rgb(231,250,243);
   --hl-l:rgb(216,219,250); --hl-r:rgb(203,244,227); --placeholder:rgb(214,218,228);
@@ -18,7 +18,7 @@
 }
 .modal {
   width: min(1120px, 96vw); height: min(660px, 88vh); background: #0a0f22;
-  border: 1px solid rgba(99,102,241,0.28); border-radius: 18px; overflow: hidden;
+  border: 1px solid rgba(var(--sn-acc-rgb), 0.28); border-radius: 18px; overflow: hidden;
   box-shadow: 0 40px 100px -30px rgba(0,0,0,0.9); display: flex; flex-direction: column; color: var(--paper);
 }
 .head { display: flex; align-items: center; justify-content: space-between; padding: 14px 20px; border-bottom: 1px solid var(--line); flex-shrink: 0; }
@@ -33,10 +33,10 @@
 
 /* LEFT — preview */
 .preview { padding: 16px 18px; display: flex; flex-direction: column; gap: 12px; border-right: 1px solid var(--line); overflow-y: auto;
-  background: radial-gradient(80% 60% at 30% 10%, rgba(99,102,241,0.08), transparent); }
+  background: radial-gradient(80% 60% at 30% 10%, rgba(var(--sn-acc-rgb), 0.08), transparent); }
 .cap { font-family: 'JetBrains Mono', monospace; font-size: 0.66rem; color: var(--sub); letter-spacing: 0.1em; text-transform: uppercase; }
 .stage { position: relative; width: 100%; aspect-ratio: 16/9; border-radius: 14px; overflow: hidden; border: 1px solid rgba(255,255,255,0.06);
-  background: radial-gradient(70% 90% at 50% 40%, rgba(99,102,241,0.3), transparent 60%), linear-gradient(160deg, #1e293b, #0b1120 70%); }
+  background: radial-gradient(70% 90% at 50% 40%, rgba(var(--sn-acc-rgb), 0.3), transparent 60%), linear-gradient(160deg, #1e293b, #0b1120 70%); }
 .host { position: absolute; inset: 0; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 8px; }
 .avatar { width: 30%; height: auto; }
 .hl { font-family: 'JetBrains Mono', monospace; font-size: 0.62rem; color: rgba(148,163,184,0.55); }
@@ -56,7 +56,7 @@
   width: 34px; height: 34px; border-radius: 50%; z-index: 5;
   background: linear-gradient(160deg, var(--indigo), var(--green)); border: 2px solid #fff;
   display: flex; align-items: center; justify-content: center;
-  font-family: 'Syne', sans-serif; font-weight: 800; color: #fff; font-size: 0.72rem;
+  font-family: 'Syne', sans-serif; font-weight: 800; color: var(--sn-on-accent); font-size: 0.72rem;
   box-shadow: 0 8px 18px -6px rgba(0,0,0,0.6); }
 .rhead { display: flex; align-items: center; gap: 8px; padding: 9px 10px; border-bottom: 1px solid rgba(15,23,42,0.12); }
 .rail_right .rhead { flex-direction: row-reverse; text-align: right; }
@@ -94,22 +94,22 @@
 .lookBtn { flex: 1 1 0; min-width: 0; background: none; border: none; color: var(--sub); font-family: 'Inter', sans-serif; font-size: 0.72rem; padding: 0.45rem 0.35rem; border-radius: 9px; cursor: pointer; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; transition: color 0.12s; }
 .lookBtn:hover { color: var(--paper); }
 .lookBtn:focus-visible { outline: none; box-shadow: var(--ring); }
-.lookOn { background: linear-gradient(180deg, var(--indigo-light), var(--indigo)); color: #fff; box-shadow: 0 4px 12px -4px rgba(99,102,241,0.6); }
+.lookOn { background: linear-gradient(180deg, var(--indigo-light), var(--indigo)); color: var(--sn-on-accent); box-shadow: 0 4px 12px -4px rgba(var(--sn-acc-rgb), 0.6); }
 .subjects { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
 .subj { border: 1px solid var(--line); border-radius: 12px; padding: 12px; display: flex; flex-direction: column; gap: 6px; }
-.subj_left  { border-color: rgba(99,102,241,0.4); }
+.subj_left  { border-color: rgba(var(--sn-acc-rgb), 0.4); }
 .subj_right { border-color: rgba(16,185,129,0.4); }
 .stag { font-family: 'JetBrains Mono', monospace; font-size: 0.6rem; text-transform: uppercase; letter-spacing: 0.1em; margin-bottom: 2px; }
 .subj_left .stag  { color: var(--indigo-light); }
 .subj_right .stag { color: var(--green-light); }
 .flabel { font-size: 0.62rem; color: var(--sub); }
 .input { width: 100%; background: rgba(15,23,42,0.8); color: #e2e8f0; border: 1px solid var(--line); border-radius: 8px; padding: 0.45rem 0.55rem; font-family: 'Inter', sans-serif; font-size: 0.82rem; }
-.input:focus-visible { outline: none; border-color: rgba(99,102,241,0.6); box-shadow: var(--ring); }
+.input:focus-visible { outline: none; border-color: rgba(var(--sn-acc-rgb), 0.6); box-shadow: var(--ring); }
 .logoRow { display: flex; align-items: center; gap: 8px; }
 .mono { width: 54px; flex-shrink: 0; background: rgba(15,23,42,0.8); color: #e2e8f0; border: 1px solid var(--line); border-radius: 8px; padding: 0.45rem; font-family: 'Inter', sans-serif; font-size: 0.82rem; text-align: center; }
 .mono:focus-visible { outline: none; box-shadow: var(--ring); }
-.uploadBtn { font-size: 0.72rem; color: var(--indigo-light); background: rgba(99,102,241,0.12); border: 1px solid rgba(99,102,241,0.4); border-radius: 8px; padding: 0.42rem 0.7rem; cursor: pointer; white-space: nowrap; }
-.uploadBtn:hover { background: rgba(99,102,241,0.22); }
+.uploadBtn { font-size: 0.72rem; color: var(--indigo-light); background: rgba(var(--sn-acc-rgb), 0.12); border: 1px solid rgba(var(--sn-acc-rgb), 0.4); border-radius: 8px; padding: 0.42rem 0.7rem; cursor: pointer; white-space: nowrap; }
+.uploadBtn:hover { background: rgba(var(--sn-acc-rgb), 0.22); }
 .clearLogo { background: rgba(148,163,184,0.12); border: none; color: var(--sub); border-radius: 6px; width: 26px; height: 26px; cursor: pointer; flex-shrink: 0; }
 .clearLogo:hover { background: rgba(239,68,68,0.25); color: #fff; }
 .hint { font-size: 0.6rem; color: var(--sub); line-height: 1.45; }
@@ -119,14 +119,14 @@
 .pt { display: grid; grid-template-columns: 1.1fr 1fr 1fr 52px 28px; gap: 6px; align-items: center; }
 .del { background: rgba(148,163,184,0.12); border: none; color: var(--sub); border-radius: 6px; height: 32px; cursor: pointer; }
 .del:hover { background: rgba(239,68,68,0.25); color: #fff; }
-.addPt { margin-top: 8px; background: rgba(99,102,241,0.12); border: 1px solid rgba(99,102,241,0.4); color: var(--indigo-light); border-radius: 8px; padding: 0.45rem 0.9rem; font-family: 'Inter', sans-serif; font-size: 0.76rem; cursor: pointer; }
+.addPt { margin-top: 8px; background: rgba(var(--sn-acc-rgb), 0.12); border: 1px solid rgba(var(--sn-acc-rgb), 0.4); color: var(--indigo-light); border-radius: 8px; padding: 0.45rem 0.9rem; font-family: 'Inter', sans-serif; font-size: 0.76rem; cursor: pointer; }
 
 .foot { border-top: 1px solid var(--line); padding: 12px 20px; display: flex; justify-content: space-between; align-items: center; gap: 12px; flex-shrink: 0; }
 .switch { display: inline-flex; align-items: center; gap: 8px; font-size: 0.78rem; color: var(--sub); cursor: pointer; }
 .footBtns { display: flex; gap: 10px; }
 .btn { border: none; border-radius: 999px; padding: 0.6rem 1.4rem; font-family: 'Inter', sans-serif; font-weight: 600; font-size: 0.85rem; cursor: pointer; }
 .btn:focus-visible { outline: none; box-shadow: var(--ring); }
-.primary { background: linear-gradient(180deg, var(--indigo-light), var(--indigo)); color: #fff; }
+.primary { background: linear-gradient(180deg, var(--indigo-light), var(--indigo)); color: var(--sn-on-accent); }
 .ghost { background: rgba(148,163,184,0.1); color: var(--paper); border: 1px solid var(--line); }
 
 @media (prefers-reduced-motion: reduce) { .backdrop *, .backdrop { animation: none !important; transition: none !important; } }
@@ -138,3 +138,59 @@
 
 /* real preview (2026-10-18): your host-in-studio still behind the rails */
 .bg { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; display: block; }
+
+/* ══ NOCTURNE GLASS (2026-10-20) ══════════════════════════════════════════════
+   This pop-up as a thick glass slab over a night sky, like Film's pop-ups.
+   • Above this block, every hard-coded indigo was swapped IN PLACE for a --sn-* colour
+     variable whose default (the :root block below) is that same indigo; a checker
+     (studio-tools/retint_inplace.py verify) proves every rule resolves to its original value.
+   • Everything below is scoped under body[data-film-ui="nocturne"] (set by useFilmSeason
+     while the studio or Film is open). Without that attribute nothing here applies.
+   • Halloween (body[data-film-season="halloween"]) turns the accent pumpkin with dark ink.
+     It is set on the pop-up's own root because the pop-up may be portalled to <body>.
+   • THE PREVIEW IS OFF-LIMITS: the stage (rails, VS node, chips) mirrors podcast_compare.py and stays exactly as now; the left subject keeps indigo in the form too, so the form still matches its rail.
+   ═══════════════════════════════════════════════════════════════════════════════ */
+:root {
+  --sn-acc-rgb: 99, 102, 241; --sn-acc-hi-rgb: 129, 140, 248; --sn-acc-soft-rgb: 165, 180, 252; --sn-acc-deep-rgb: 79, 70, 229;
+  --sn-hex-acc: #6366F1; --sn-hex-acc-hi: #818CF8; --sn-hex-acc-deep: #4F46E5;
+  --sn-ink-1: #A5B4FC; --sn-ink-2: #C7D2FE; --sn-on-accent: #fff;
+}
+body[data-film-ui="nocturne"][data-film-season="halloween"] .backdrop {
+  --sn-acc-rgb: 255, 138, 61; --sn-acc-hi-rgb: 255, 167, 102; --sn-acc-soft-rgb: 255, 190, 140; --sn-acc-deep-rgb: 230, 110, 40;
+  --sn-hex-acc: #FF8A3D; --sn-hex-acc-hi: #FFA766; --sn-hex-acc-deep: #E66E28;
+  --sn-ink-1: #FFC79A; --sn-ink-2: #FFD2B0; --sn-on-accent: #1A0B02;
+}
+/* the preview keeps its render colours in every season */
+body[data-film-ui="nocturne"] .stage,
+body[data-film-ui="nocturne"] .subj_left,
+body[data-film-ui="nocturne"] .chip_left {
+  --sn-acc-rgb: 99, 102, 241; --sn-acc-hi-rgb: 129, 140, 248; --sn-acc-soft-rgb: 165, 180, 252; --sn-acc-deep-rgb: 79, 70, 229;
+  --sn-hex-acc: #6366F1; --sn-hex-acc-hi: #818CF8; --sn-hex-acc-deep: #4F46E5;
+  --sn-ink-1: #A5B4FC; --sn-ink-2: #C7D2FE; --sn-on-accent: #fff;
+  --indigo: #6366F1; --indigo-light: #818CF8; --line: rgba(99,102,241,0.2); --ring: 0 0 0 3px rgba(99,102,241,0.4);
+}
+/* the room dims under a night sky */
+body[data-film-ui="nocturne"] .backdrop {
+  background: radial-gradient(1000px 640px at 82% -12%, rgba(40, 46, 110, 0.38), transparent 62%), rgba(4, 4, 10, 0.66);
+  -webkit-backdrop-filter: blur(8px); backdrop-filter: blur(8px);
+}
+body[data-film-ui="nocturne"][data-film-season="halloween"] .backdrop {
+  background: radial-gradient(1000px 640px at 82% -12%, rgba(70, 30, 100, 0.42), transparent 62%), rgba(4, 4, 10, 0.66);
+}
+/* the slab: thick glass, a lit top edge, a deep shadow and a faint glow of the accent */
+body[data-film-ui="nocturne"] .modal {
+  --line: rgba(255, 255, 255, 0.1); 
+  background: linear-gradient(180deg, rgba(255, 255, 255, 0.05), rgba(255, 255, 255, 0.012)), rgba(15, 15, 30, 0.9);
+  border-color: rgba(255, 255, 255, 0.16);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.1), 0 40px 120px -30px #000, 0 0 80px -34px rgba(var(--sn-acc-rgb), 0.45);
+  -webkit-backdrop-filter: blur(28px) saturate(160%); backdrop-filter: blur(28px) saturate(160%);
+}
+/* the controls: dark glass wells, a lit main button */
+body[data-film-ui="nocturne"] .lookPill { background: rgba(0, 0, 0, 0.24); box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.05); }
+body[data-film-ui="nocturne"] .input, body[data-film-ui="nocturne"] .mono { background: rgba(0, 0, 0, 0.24); }
+body[data-film-ui="nocturne"] .subj { background: rgba(255, 255, 255, 0.02); box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.05); }
+body[data-film-ui="nocturne"] .preview { background: radial-gradient(80% 60% at 30% 10%, rgba(var(--sn-acc-rgb), 0.07), transparent); }
+/* the reveal slider (below the preview) takes the accent instead of the browser blue */
+body[data-film-ui="nocturne"] .scrub input { accent-color: rgb(var(--sn-acc-rgb)); }
+body[data-film-ui="nocturne"] .primary { box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.3), 0 8px 22px -10px rgba(var(--sn-acc-rgb), 0.6); }
+body[data-film-ui="nocturne"] .ghost { background: rgba(255, 255, 255, 0.05); }

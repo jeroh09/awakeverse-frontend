@@ -58,6 +58,26 @@ import {
   IconDownload, IconAlert, IconCheck, IconClose, IconPlus, IconChevronLeft,
   IconChevronRight, IconChevronDown, IconArrowRight, IconPlay, IconStop, IconLoader,
 } from './StudioIcons';
+// NOCTURNE GLASS (2026-10-20): the same look and Halloween season as Film. The hook is
+// shared with Film, so one switch (and one saved choice) covers both. Presentational only.
+import useFilmSeason from '../Film/useFilmSeason';
+
+// Season embers — fixed positions (no randomness in render). Same set as Film.
+// --x across, --d rise time, --dl start offset, --dx drift, --s size.
+const SN_EMBERS = [
+  ['4%', 13, -2, 26, 1], ['11%', 9, -7, -18, .7], ['19%', 15, -4, 34, 1.2], ['27%', 11, -9, -22, .8],
+  ['35%', 14, -1, 18, 1], ['44%', 10, -6, -30, .6], ['52%', 16, -11, 24, 1.1], ['60%', 12, -3, -16, .9],
+  ['68%', 9, -8, 30, .7], ['75%', 14, -5, -26, 1.2], ['83%', 11, -10, 20, .8], ['91%', 15, -2, -20, 1],
+  ['23%', 18, -13, 40, .6], ['71%', 17, -14, -36, .6],
+];
+const SnPumpkin = ({ size = 14 }) => (
+  <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8"
+       strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+    <path d="M12 7c-4.6 0-8 2.9-8 6.6S7.4 20 12 20s8-2.7 8-6.4S16.6 7 12 7z" />
+    <path d="M12 7c-1.8 0-3 2.9-3 6.6S10.2 20 12 20s3-2.7 3-6.4S13.8 7 12 7z" />
+    <path d="M12 7V4.5c0-.6.4-1 1-1h1.5" />
+  </svg>
+);
 
 // ── Constants ────────────────────────────────────────────────────────────────
 const TABS        = ['avatar', 'script', 'generate', 'podcasts', 'guide'];
@@ -1914,14 +1934,29 @@ if (context.topic) setTopic(context.topic);
   // is built, else the studio's own preview. One place, passed to all six pop-outs.
   const previewBackdrop = speakers.find(s => s.speakerId === 'user')?.avatarRefUrl || selectedEnv?.previewUrl || null;
 
+  // NOCTURNE GLASS — the Halloween season (1 Oct – 2 Nov, one switch shared with Film).
+  const season = useFilmSeason();
+
   // ══════════════════════════════════════════════════════════════════════════
   // RENDER
   // ══════════════════════════════════════════════════════════════════════════
   return (
-    <div className={styles.page}>
+    <div className={`${styles.page} studio-nocturne`}>
 
       {/* ── Ambient light (slow drift) — behind all panels ── */}
       <div className={styles.ambient} aria-hidden="true" />
+
+      {/* NOCTURNE: projector beam (all year) + fog and embers (season only). Behind the
+          panels, never clickable, hidden from screen readers. */}
+      <div className={styles.snAtmos} aria-hidden="true">
+        <i className={styles.snBeam} />
+        <i className={styles.snFog} /><i className={`${styles.snFog} ${styles.snFogB}`} />
+        <span className={styles.snEmbers}>
+          {SN_EMBERS.map(([x, d, dl, dx, s]) => (
+            <i key={`${x}-${d}`} style={{ '--x': x, '--d': `${d}s`, '--dl': `${dl}s`, '--dx': `${dx}px`, '--s': s }} />
+          ))}
+        </span>
+      </div>
 
       {/* ── Floating tab pill ── */}
       <div className={styles.tabPill}>
@@ -1937,6 +1972,14 @@ if (context.topic) setTopic(context.topic);
             {TAB_LABELS[tab]}
           </button>
         ))}
+        {season.inWindow && (
+          <button type="button" className={`${styles.snSeason} ${season.on ? styles.snSeasonOn : ''}`}
+                  onClick={season.toggle} aria-pressed={season.on}
+                  title={season.on ? 'Turn the Halloween look off (Film too). It switches itself off after 2 November'
+                                   : 'Turn the Halloween look back on'}>
+            <SnPumpkin size={14} />
+          </button>
+        )}
       </div>
 
       {/* ── Main area ── */}
@@ -2856,6 +2899,7 @@ if (context.topic) setTopic(context.topic);
                       return (
                         <div key={line.id}
                           className={`${styles.lineCard} ${dragOver === i ? styles.lineCardDragOver : ''}`}
+                          data-speaker={isHost ? 'host' : 'guest'}
                           style={{ '--line-tint': lineTint, '--line-tint-hover': lineTintHover }}
                           draggable={gripLineId === line.id}
                           onDragStart={e => handleDragStart(e, i)}
