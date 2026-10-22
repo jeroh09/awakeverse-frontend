@@ -15,7 +15,8 @@
 // Controlled, presentational only. Props:
 //   value      'swing' | 'soft' | 'whip' | 'ots'
 //   onChange(value)
-//   shots      [{ n, role: 'host' | 'guest', name }]   (lines with text, in order)
+//   shots      [{ n, role: 'host' | 'guest', name, look? }]   (lines with text, in order;
+//              a look other than 'auto' is marked on the shot with its glyph)
 //   fee        number | null                           (duo fee in credits)
 //   onClose
 
@@ -23,6 +24,7 @@ import React, { useEffect } from 'react';
 import { createPortal } from 'react-dom';
 import styles from './CameraPopover.module.css';
 import { IconClose } from './StudioIcons';
+import { LookGlyph, LOOK_BY_ID } from './LineLook';
 
 // Studio media on the CDN (DO Spaces, public-read). Override with REACT_APP_CDN_BASE.
 export const STUDIO_MEDIA = `${(process.env.REACT_APP_CDN_BASE
@@ -98,7 +100,11 @@ export default function CameraPopover({ value = 'swing', onChange, shots = [], f
                   return (
                     <React.Fragment key={s.n}>
                       <span className={cut ? `${styles.mv} ${styles.cut}` : styles.mv}>{cut ? '| cut' : `↷ ${style.secs} s`}</span>
-                      <span className={`${styles.shot} ${s.role === 'host' ? styles.host : styles.guest}`}>{s.n} · {s.name}</span>
+                      <span className={`${styles.shot} ${s.role === 'host' ? styles.host : styles.guest}`}
+                        title={s.look && s.look !== 'auto' && LOOK_BY_ID[s.look] ? `Look: ${LOOK_BY_ID[s.look].name}` : undefined}>
+                        {s.n} · {s.name}
+                        {s.look && s.look !== 'auto' && LOOK_BY_ID[s.look] ? <span className={styles.look}><LookGlyph look={s.look} size={11} /></span> : null}
+                      </span>
                     </React.Fragment>
                   );
                 })}
@@ -106,7 +112,7 @@ export default function CameraPopover({ value = 'swing', onChange, shots = [], f
                 <span className={styles.mv}>↷</span>
                 <span className={styles.shot}>Wide</span>
               </div>
-              <p className={styles.hint}>A move at each change of speaker, a straight cut when the same person talks twice. Moves add a few seconds and aren’t charged.</p>
+              <p className={styles.hint}>A move at each change of speaker, a straight cut when the same person talks twice (or changes where they look). Moves add a few seconds and aren’t charged.</p>
             </div>
           )}
         </div>

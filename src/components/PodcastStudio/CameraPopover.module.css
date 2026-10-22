@@ -82,6 +82,7 @@ body[data-film-season="halloween"] .scrim {
   background: rgba(255, 255, 255, 0.05); border: 1px solid rgba(255, 255, 255, 0.14); }
 .host { color: #A5B4FC; border-color: rgba(99, 102, 241, 0.55); background: rgba(99, 102, 241, 0.1); }   /* host: indigo, all year */
 .guest { color: #FFB067; border-color: rgba(255, 138, 61, 0.55); background: rgba(255, 138, 61, 0.08); } /* guest: pumpkin, all year */
+.look { display: inline-flex; margin-left: 4px; vertical-align: -2px; opacity: 0.9; }
 .mv { font: 600 0.6rem/1 'JetBrains Mono', monospace; color: #64708A; }
 .cut { color: #A3ACC0; }
 .hint { margin: 8px 0 4px; font-size: 0.66rem; color: #94A3B8; line-height: 1.45; }

@@ -50,6 +50,7 @@ import { loadExtras, suggestHook, hookSummary, designDataCard } from './podcastE
 import DataCardPopover, { dataCardReady, dataCardPayload, dataCardSummary, PRESET_RECT } from './DataCardPopover';
 import SettingRow, { SettingGroup } from './SettingRow';
 import CameraPopover, { cameraName, IconCamera, STUDIO_MEDIA } from './CameraPopover';
+import { LOOKS, LOOK_BY_ID, LookGlyph, effectiveLook, lookNote } from './LineLook';
 import {
   IconGlassCard, IconCutout, IconInHand, IconDataCard, IconChart, IconCompare, IconHook,
   IconSound, IconCaptions, IconOutfit, IconVoice, IconUpload, IconGenerate, IconDetach,
@@ -58,6 +59,7 @@ import {
   IconSources, IconPodMic, IconConversation, IconEpisode, IconPerson, IconBin,
   IconDownload, IconAlert, IconCheck, IconClose, IconPlus, IconChevronLeft,
   IconChevronRight, IconChevronDown, IconArrowRight, IconPlay, IconStop, IconLoader,
+  IconReplay,
 } from './StudioIcons';
 // NOCTURNE GLASS (2026-10-20): the same look and Halloween season as Film. The hook is
 // shared with Film, so one switch (and one saved choice) covers both. Presentational only.
@@ -559,6 +561,7 @@ export default function PodcastStudioPage({ context, onClose }) {
   const [cameraStyle, setCameraStyle] = useState('swing');
   const [cameraOpen,  setCameraOpen]  = useState(false);
   const [emoImgFailed, setEmoImgFailed] = useState({});   // emotion face that failed to load → voice shape
+  const [lookImgFailed, setLookImgFailed] = useState({});  // look face that failed to load → its glyph
   // The duo fee (flat, server setting) comes from POST /api/podcast/quote, never hard-coded.
   useEffect(() => {
     if (!verticalDuo) { setDuoQuote(null); return undefined; }
@@ -629,6 +632,20 @@ export default function PodcastStudioPage({ context, onClose }) {
     return () => { window.removeEventListener('mouseup', release); window.removeEventListener('touchend', release); };
   }, [gripLineId]);
   const [generateError,  setGenerateError]  = useState(null); // user-friendly error for Generate tab
+
+  // ── Regenerate · New podcast · Remake (2026-10-22, FRONTEND_HANDOVER_regenerate) ──
+  // remakeOf: set by "Edit & regenerate" (kind 'edit') or a Remake from My Podcasts
+  // (kind 'remake'). While set, Generate reads "New video · ~X credits" (it is a new
+  // video, charged as one) and the Script tab shows a small ribbon. Cleared when the
+  // new render starts. Every submit is a NEW session — session_id is never sent back.
+  const [remakeOf,      setRemakeOf]      = useState(null);  // { kind, title, when, meta, finalUrl, failed }
+  const [ribbonOpen,    setRibbonOpen]    = useState(true);
+  // Remake warnings from GET …/spec: voice_unavailable / environment_missing. Each
+  // remembers what it was loaded with and disappears once the user changes it.
+  const [restoreWarnings, setRestoreWarnings] = useState([]);
+  const [confirmAsk,    setConfirmAsk]    = useState(null);  // { kind: 'new' } | { kind: 'remake', session }
+  const [remakeBusyId,  setRemakeBusyId]  = useState(null);  // session_id being loaded
+  const [remakeNote,    setRemakeNote]    = useState(null);  // { id, tone: 'warn'|'error', text } under a card
 
   // ── Podcast player state ──────────────────────────────────────────────────
   const [activeSession,    setActiveSession]    = useState(null);
@@ -1828,6 +1845,8 @@ if (context.topic) setTopic(context.topic);
             if (extras.available && sfxOn && l.sfx && l.sfx !== 'auto') row.sfx = l.sfx;
             // Per-line emotion: natural is the default, so only the others are sent.
             if (l.emotion && l.emotion !== 'natural' && EMOTION_BY_ID[l.emotion]) row.emotion = l.emotion;
+            // Per-line look: auto is the default, so only the others are sent.
+            if (l.look && l.look !== 'auto' && LOOK_BY_ID[l.look]) row.look = l.look;
             // Per-line overlay (on-screen media) → snake_case for the backend.
             // Only include a complete, valid spec so a half-filled editor never
             // sends a broken overlay that the session validator would reject.
@@ -1985,6 +2004,258 @@ if (context.topic) setTopic(context.topic);
     if (state.status === 'complete' || state.status === 'failed') credits.refresh();
   }, [state.status, loadSessions]);
 
+  // ══ Regenerate · New podcast · Remake (2026-10-22) ════════════════════════
+  // The new render has started → the "editing a copy" ribbon has done its job.
+  useEffect(() => {
+    if (state.status === 'rendering') { setRemakeOf(null); setRestoreWarnings([]); }
+  }, [state.status]);
+
+  // A note under a My Podcasts card fades after a few seconds.
+  useEffect(() => {
+    if (!remakeNote) return undefined;
+    const t = setTimeout(() => setRemakeNote(null), 6000);
+    return () => clearTimeout(t);
+  }, [remakeNote]);
+
+  const busyRendering = submitted || state.status === 'rendering';
+
+  // Clear everything that belongs to ONE episode. Keeps the host (built avatar),
+  // saved avatars, voice clone, consent, the background and the quality choice.
+  const clearEpisode = useCallback(({ keepHost = true } = {}) => {
+    resetStudio();                                   // job only: idle, no active job, progress 0
+    setSubmitted(false); setGenerateError(null); setCreditBlock(null);
+    dispatchLines({ type: 'SET', lines: [] });
+    if (keepHost) setSpeakers(prev => prev.filter(s => s.speakerId === 'user'));
+    // guests
+    setGuestFile(null);  setGuestPreview(null);  setGuestName('');  setGuestBuilt(false);  setGuestError(null);
+    setGuest2File(null); setGuest2Preview(null); setGuest2Name(''); setGuest2Built(false); setGuest2Error(null);
+    // overlays + suggestions
+    setOverlayLineId(null); setTypePopoverOpen(false); setOverlaySuggestions({});
+    setOverlayGenPrompt(''); setOverlayGenError(null); setOverlayGenOpen(false);
+    setDataOpen(false); setDataFillNote(null);
+    // comparison
+    setCompareOn(false); setCompareOpen(false);
+    setCompareLeft({ name: '', logo: '', logoUrl: '' }); setCompareRight({ name: '', logo: '', logoUrl: '' });
+    setComparePoints([{ label: '', left: '', right: '', revealAtLine: '' }]); setCompareStyle(null);
+    // hook, sounds, captions
+    setHookDraft(null); setHookOn(false); setHookSuggestion(null); setHookTouched(false);
+    setHookDismissed(false); setHookOpen(false); setPlanHook(null);
+    setSfxOn(false); setSfxLevel('subtle'); setSoundOpen(false);
+    setCaptionStyle('glass'); setCaptionOpen(false);
+    // frame + camera (emotions and looks live on the lines)
+    setAspect('16:9'); setCameraStyle('swing'); setCameraOpen(false);
+    // open panels + errors
+    setBrowserSpeakerId(null); setOutfitSpeakerId(null); setVoiceConfirmOpen(null);
+    setBuildError(null); setRecordingError(null);
+    // script assistant + recordings
+    setScriptMessages([]); setScriptInput(''); setLatestScriptBlock(null); setTopic('');
+    if (lineAudioRef.current) { lineAudioRef.current.pause(); lineAudioRef.current = null; }
+    setPlayingLineId(null); setLineBlobUrls({}); setLineDurations({});
+    // this feature
+    setRemakeOf(null); setRestoreWarnings([]); setRibbonOpen(true);
+  }, [resetStudio]);
+
+  // "Edit & regenerate" — reset only the job; everything the user made stays.
+  const handleEditRegenerate = useCallback(() => {
+    const job = state.activeJob;
+    resetStudio();
+    setSubmitted(false); setGenerateError(null); setCreditBlock(null);
+    setRemakeOf({
+      kind: 'edit',
+      finalUrl: job?.finalUrl || null,
+      vertical: aspect === '9:16',
+    });
+    setRibbonOpen(true);
+    setActiveTab('script');
+  }, [state.activeJob, resetStudio, aspect]);
+
+  // "New podcast" — full reset in place, then the mode picker. Asks first when there
+  // is a script to lose.
+  const startNewPodcast = useCallback(() => {
+    clearEpisode();
+    setScriptMode('chat');
+    setPodcastMode(null);
+    setActiveTab('avatar');
+  }, [clearEpisode]);
+  const requestNewPodcast = useCallback(() => {
+    if (busyRendering) return;
+    const hasWork = linesRef.current.some(l => (l.text || '').trim() || l.audioUrl);
+    if (hasWork) setConfirmAsk({ kind: 'new' });
+    else startNewPodcast();
+  }, [busyRendering, startNewPodcast]);
+
+  // ── Remake: GET /api/podcast/session/<id>/spec → studio state (reverse of handleGenerate)
+  const overlayFromSpec = (o) => {
+    if (!o) return undefined;
+    if (o.mode === 'data') {
+      const d = o.data || {};
+      return { mode: 'data', preset: o.preset,
+        data: d.kind === 'chart'
+          ? { ...d, bars: (d.bars || []).map(b => ({ label: b.label || '', value: b.value != null ? String(b.value) : '' })) }
+          : { ...d } };
+    }
+    if (o.mode === 'product_in_hand') {
+      return { mode: 'product_in_hand', shape: 'card', imageUrl: o.image_url || null,
+               productName: o.product_name || '', preset: null };
+    }
+    return { mode: 'overlay', shape: o.shape || 'card', imageUrl: o.image_url || null, productName: '',
+             preset: o.preset || null, ...(o.style ? { style: o.style } : {}) };
+  };
+
+  const applySpec = useCallback((data, session) => {
+    const spec = data.spec || {};
+    clearEpisode({ keepHost: false });
+
+    // speakers — host first, then guests in their order
+    const raw = [...(spec.speakers || [])].sort((a, b) =>
+      (a.speaker_id === 'user' ? -1 : 0) - (b.speaker_id === 'user' ? -1 : 0));
+    const spk = raw.map((s, i) => {
+      const isHost = s.speaker_id === 'user';
+      return {
+        speakerId:    s.speaker_id,
+        displayName:  s.display_name,
+        avatarRefUrl: s.avatar_ref_url || null,
+        ...(s.avatar_id ? { savedAvatarId: s.avatar_id } : {}),
+        voiceMode:    s.voice_mode || 'tts',
+        voiceId:      s.voice_id || null,
+        gender:       s.gender || 'neutral',
+        accent:       s.accent || '',
+        ...(s.outfit_ref_url ? { outfitRefUrl: s.outfit_ref_url } : {}),
+        color:        SPEAKER_COLORS[i] || SPEAKER_COLORS[SPEAKER_COLORS.length - 1],
+        role:         isHost ? 'host' : 'guest',
+        isCharacter:  !isHost && !/^custom_guest/.test(s.speaker_id || ''),
+      };
+    });
+    setSpeakers(spk);
+    const host = spk.find(s => s.speakerId === 'user');
+    if (host?.avatarRefUrl) { setAvatarRefUrl(host.avatarRefUrl); setAvatarBuilt(true); }
+    const g1 = spk.find(s => /^custom_guest_/.test(s.speakerId));
+    const g2 = spk.find(s => /^custom_guest2_/.test(s.speakerId));
+    if (g1) { setGuestName(g1.displayName || ''); setGuestPreview(g1.avatarRefUrl); setGuestBuilt(true); }
+    if (g2) { setGuest2Name(g2.displayName || ''); setGuest2Preview(g2.avatarRefUrl); setGuest2Built(true); }
+
+    // format + room
+    const n = spk.length;
+    setEnvMode(n <= 1 ? 'solo' : n >= 3 ? 'panel' : 'standard');
+    if (spec.environment_id) setSelectedEnvId(spec.environment_id);
+    setPodcastMode(n <= 1 ? 'solo' : 'interview');
+
+    // lines — a fresh local id each; recordings play from their saved file
+    const base = Date.now();
+    const blobs = {};
+    const ls = (spec.lines || []).map((l, i) => {
+      const id = base + i;
+      if (l.audio_url) blobs[id] = l.audio_url;
+      return {
+        id,
+        speakerId: l.speaker_id,
+        displayName: spk.find(s => s.speakerId === l.speaker_id)?.displayName,   // the line card's label
+        text:      l.text || '',
+        audioUrl:  l.audio_url || null,
+        ...(l.emotion && EMOTION_BY_ID[l.emotion] ? { emotion: l.emotion } : {}),
+        ...(l.look && LOOK_BY_ID[l.look] ? { look: l.look } : {}),
+        ...(l.sfx ? { sfx: l.sfx } : {}),
+        ...(l.overlay ? { overlay: overlayFromSpec(l.overlay) } : {}),
+      };
+    });
+    dispatchLines({ type: 'SET', lines: ls });
+    setLineBlobUrls(blobs);
+
+    // whole episode
+    const c = spec.comparison;
+    if (c && c.left && c.right) {
+      const subj = (x) => ({ name: x.name || '', logo: x.logo || '', logoUrl: x.logo_url || '' });
+      setCompareOn(true);
+      setCompareLeft(subj(c.left)); setCompareRight(subj(c.right));
+      setComparePoints((c.points || []).length
+        ? c.points.map(p => ({ label: p.label || '', left: p.left || '', right: p.right || '',
+            revealAtLine: p.reveal_at_line != null ? String(p.reveal_at_line) : '' }))
+        : [{ label: '', left: '', right: '', revealAtLine: '' }]);
+      setCompareStyle(c.style || null);
+    }
+    if (spec.hook) { setHookDraft({ ...spec.hook }); setHookOn(true); setHookTouched(true); }
+    if (spec.sound_effects) { setSfxOn(true); setSfxLevel(spec.sfx_level || 'subtle'); }
+    if (spec.caption_style) setCaptionStyle(spec.caption_style);
+    setQuality(spec.quality === 'hd' ? 'hd' : 'standard');
+    setAspect(spec.aspect_ratio === '9:16' ? '9:16' : '16:9');
+    if (spec.camera_style) setCameraStyle(spec.camera_style);
+
+    // warnings — remember what each was loaded with, so a change clears it
+    setRestoreWarnings((data.warnings || []).map((w, i) => ({
+      ...w, key: `${w.code}-${w.speaker_id || ''}-${i}`,
+      voiceAtLoad: w.speaker_id ? (spk.find(s => s.speakerId === w.speaker_id)?.voiceId ?? null) : null,
+      envAtLoad:   spec.environment_id || null,
+    })));
+
+    const vertical = spec.aspect_ratio === '9:16';
+    setRemakeOf({
+      kind: 'remake',
+      title: spk.map(s => s.displayName).filter(Boolean).join(' + ') || 'Podcast',
+      when: data.created_at ? fmtDate(data.created_at) : null,
+      meta: [
+        vertical ? '9:16' : null,
+        vertical && n === 2 && spec.camera_style ? cameraName(spec.camera_style) : null,
+        spec.quality === 'hd' ? 'HD' : null,
+      ].filter(Boolean).join(' · '),
+      finalUrl: data.final_url || session?.final_url || null,
+      vertical,
+      failed: data.status === 'failed',
+    });
+    setRibbonOpen(true);
+    setActiveSession(null);
+    setScriptMode('lines');
+    setActiveTab('script');
+  }, [clearEpisode]);
+
+  const doRemake = useCallback(async (session) => {
+    const id = session.session_id;
+    setRemakeBusyId(id); setRemakeNote(null);
+    try {
+      const res = await fetch(`${API_BASE}/api/podcast/session/${id}/spec`, { credentials: 'include' });
+      const data = await res.json().catch(() => ({}));
+      if (!res.ok) {
+        const text = res.status === 409 || data.error === 'still_rendering' ? 'Still rendering. Try again when it’s done.'
+          : res.status === 422 || data.error === 'no_spec' ? 'This podcast was made before remakes were possible.'
+          : res.status === 404 ? 'This podcast can’t be found.'
+          : ApiErrorService.getMessage(res.status, data);
+        if (res.status !== 409 && res.status !== 422 && res.status !== 404) {
+          ApiErrorService.log('PodcastStudioPage.remake', res.status, data);
+        }
+        setRemakeNote({ id, tone: res.status === 409 ? 'warn' : 'error', text });
+        return;
+      }
+      applySpec(data, session);
+    } catch (e) {
+      setRemakeNote({ id, tone: 'error', text: ApiErrorService.getNetworkMessage(e) });
+    } finally {
+      setRemakeBusyId(null);
+    }
+  }, [applySpec]);
+
+  const requestRemake = useCallback((session) => {
+    if (busyRendering) {
+      setRemakeNote({ id: session.session_id, tone: 'warn', text: 'A video is rendering in the studio. Remake when it’s done.' });
+      return;
+    }
+    const hasWork = linesRef.current.some(l => (l.text || '').trim() || l.audioUrl);
+    if (hasWork) setConfirmAsk({ kind: 'remake', session });
+    else doRemake(session);
+  }, [busyRendering, doRemake]);
+
+  // Remake warnings still open (each clears once the user changes what it's about).
+  const openWarnings = restoreWarnings.filter(w => {
+    if (w.code === 'voice_unavailable') {
+      const s = speakers.find(x => x.speakerId === w.speaker_id);
+      return !!s && (s.voiceId ?? null) === w.voiceAtLoad;
+    }
+    if (w.code === 'environment_missing') return selectedEnvId === w.envAtLoad;
+    return false;
+  });
+  const handleFixWarning = useCallback((w) => {
+    if (w.code === 'voice_unavailable') { setActiveTab('script'); setOverlayLineId(null); setBrowserSpeakerId(w.speaker_id); }
+    else if (w.code === 'environment_missing') { setActiveTab('avatar'); setEnvPanelMode('browse'); }
+  }, []);
+
   // ── Shared env (selected env object) ─────────────────────────────────────
   const selectedEnv = environments.find(e => e.envId === selectedEnvId);
   // The still every pop-out previews over: your host in your studio once the avatar
@@ -2029,6 +2300,16 @@ if (context.topic) setTopic(context.topic);
             {TAB_LABELS[tab]}
           </button>
         ))}
+        {/* New podcast — any time, without leaving the studio. Hidden while a video renders. */}
+        {!busyRendering && (
+          <button type="button" className={styles.newPodBtn} onClick={requestNewPodcast}
+                  aria-label="New podcast" aria-describedby="sn-newpod-tip">
+            <IconPlus size={14} />
+            <span id="sn-newpod-tip" role="tooltip" className={styles.newPodTip}>
+              <b>New podcast</b>Clear the script and start again. Your avatar, voice clone and finished videos stay.
+            </span>
+          </button>
+        )}
         {season.inWindow && (
           <button type="button" className={`${styles.snSeason} ${season.on ? styles.snSeasonOn : ''}`}
                   onClick={season.toggle} aria-pressed={season.on}
@@ -2766,6 +3047,36 @@ if (context.topic) setTopic(context.topic);
           {activeTab === 'script' && (
             <div className={styles.scriptPage}>
 
+              {/* Editing a copy / remaking a past podcast (2026-10-22). One line; ✕ hides it. */}
+              {remakeOf && ribbonOpen && (
+                <div className={styles.remakeRibbon} role="status">
+                  <span className={`${styles.remakeThumb} ${remakeOf.vertical ? styles.remakeThumbV : ''}`} aria-hidden="true">
+                    {remakeOf.finalUrl
+                      ? <video src={`${remakeOf.finalUrl}#t=0.5`} muted playsInline preload="metadata" />
+                      : <IconReplay size={14} />}
+                  </span>
+                  <span className={styles.remakeText}>
+                    {remakeOf.kind === 'edit'
+                      ? <><b>Editing a copy.</b> Your video is saved in My Podcasts. Generating again makes a new video.</>
+                      : <><b>{remakeOf.failed ? 'Retrying' : 'Remaking'} “{remakeOf.title}”</b>
+                          {[remakeOf.when, remakeOf.meta].filter(Boolean).length ? ` · ${[remakeOf.when, remakeOf.meta].filter(Boolean).join(' · ')}` : ''}.
+                          {' '}Generating makes a new video.</>}
+                  </span>
+                  <button type="button" className={styles.remakeX} onClick={() => setRibbonOpen(false)} aria-label="Hide this note">
+                    <IconClose size={11} />
+                  </button>
+                </div>
+              )}
+              {openWarnings.map(w => (
+                <div key={w.key} className={styles.remakeWarn} role="alert">
+                  <IconAlert size={13} />
+                  <span>{w.message || (w.code === 'environment_missing' ? 'The background this podcast used has been deleted.' : 'A voice is no longer available.')}</span>
+                  <button type="button" className={styles.remakeFix} onClick={() => handleFixWarning(w)}>
+                    {w.code === 'environment_missing' ? 'Pick a background' : 'Pick a voice'}
+                  </button>
+                </div>
+              ))}
+
               {/* Mode toggle */}
               <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexShrink: 0 }}>
                 <div className={styles.scriptModeToggle}>
@@ -2986,6 +3297,16 @@ if (context.topic) setTopic(context.topic);
                                   <i />{EMOTION_BY_ID[line.emotion].name}
                                 </button>
                               )}
+                              {(() => {
+                                const lk = effectiveLook(line.look, speakers.length);
+                                return lk !== 'auto' ? (
+                                  <button type="button" className={styles.lookChip}
+                                    onClick={(e) => { e.stopPropagation(); setOverlayLineId(line.id); }}
+                                    title={`Look: ${LOOK_BY_ID[lk].name} — click to change`}>
+                                    <LookGlyph look={lk} size={13} />{LOOK_BY_ID[lk].short}
+                                  </button>
+                                ) : null;
+                              })()}
                             </div>
                             <textarea
                               ref={autoGrowTextarea}
@@ -3318,6 +3639,11 @@ if (context.topic) setTopic(context.topic);
                 <div className={`${styles.glassCard} ${styles.videoPlaceholder}`}>
                   <div className={styles.vpIcon}><Ic.Play /></div>
                   <span>{state.status === 'rendering' ? 'Rendering in progress…' : 'Video will appear here'}</span>
+                  {remakeOf?.finalUrl && state.status !== 'rendering' && (
+                    <button type="button" className={styles.lastVideoLink} onClick={() => setActiveTab('podcasts')}>
+                      Your last one is in My Podcasts <IconArrowRight size={11} strokeWidth={2.4} />
+                    </button>
+                  )}
                 </div>
               )}
             </div>
@@ -3414,6 +3740,19 @@ if (context.topic) setTopic(context.topic);
                               {isPlaying ? <IconStop size={22} /> : <IconPlay size={24} />}
                             </div>
                           )}
+                          {/* Remake — load this podcast back into the studio (a new video when generated) */}
+                          <button type="button"
+                            className={`${styles.remakeChip} ${remakeBusyId === session.session_id ? styles.remakeChipBusy : ''}`}
+                            disabled={!!remakeBusyId}
+                            onClick={(e) => { e.stopPropagation(); requestRemake(session); }}
+                            title={session.final_url
+                              ? 'Load this podcast into the studio to change and generate again — a new video'
+                              : 'Load this podcast into the studio to try again — a new video'}>
+                            {remakeBusyId === session.session_id
+                              ? <span className={styles.spin}><Ic.Spin /></span>
+                              : <IconReplay size={11} />}
+                            {session.final_url ? 'Remake' : 'Retry'}
+                          </button>
                         </div>
 
                         {/* Meta */}
@@ -3426,6 +3765,12 @@ if (context.topic) setTopic(context.topic);
                             {session.total_seconds && ` · ${fmtDuration(session.total_seconds)}`}
                           </div>
                         </div>
+
+                        {remakeNote?.id === session.session_id && (
+                          <div className={`${styles.remakeNote} ${remakeNote.tone === 'warn' ? styles.remakeNoteWarn : ''}`} role="status">
+                            {remakeNote.text}
+                          </div>
+                        )}
 
                         {/* Actions — uniform sized pill buttons */}
                         <div className={styles.podcastActions}>
@@ -3614,6 +3959,33 @@ if (context.topic) setTopic(context.topic);
                   </>);
                 })()}
 
+                {/* Look — where this line's speaker looks (2026-10-22). Every podcast; solo
+                    has no one to look at, so "At them" is hidden there. */}
+                {(() => {
+                  const cur = effectiveLook(oLine?.look, speakers.length);
+                  const shown = LOOKS.filter(l => speakers.length >= 2 || l.id !== 'partner');
+                  const partner = speakers.length === 2 ? speakers.find(s => s.speakerId !== oLine?.speakerId) : null;
+                  const note = lookNote(cur, { speakerCount: speakers.length, vertical: vert, partnerName: partner?.displayName });
+                  return (<>
+                    <div className={styles.vpSec}>Look</div>
+                    <div className={`${styles.lookTiles} ${shown.length === 3 ? styles.lookTiles3 : ''}`} role="radiogroup" aria-label="Where the speaker looks on this line">
+                      {shown.map(l => (
+                        <button key={l.id} type="button" role="radio" aria-checked={cur === l.id}
+                          className={`${styles.lookTile} ${cur === l.id ? styles.lookTileOn : ''}`}
+                          onClick={() => dispatchLines({ type: 'UPDATE', id: overlayLineId,
+                            patch: { look: l.id === 'auto' ? undefined : l.id } })}>
+                          {l.img && !lookImgFailed[l.id]
+                            ? <img className={styles.lookFace} src={l.img} alt=""
+                                onError={() => setLookImgFailed(f => ({ ...f, [l.id]: true }))} />
+                            : <span className={styles.lookGlyph}><LookGlyph look={l.id} size={24} /></span>}
+                          <b>{l.short}</b>
+                        </button>
+                      ))}
+                    </div>
+                    <p className={styles.emoNote}><b className={styles.lookNoteB}>{note.b}</b>{note.t}</p>
+                  </>);
+                })()}
+
                 {/* This line — the four visual types, 2 × 2 */}
                 <div className={styles.vpSec}>This line</div>
                 <div className={styles.vpTypes} role="radiogroup" aria-label="Visual type">
@@ -3753,7 +4125,9 @@ if (context.topic) setTopic(context.topic);
                     </div>
                     {!genShown && (
                       <p className={styles.vpHint}>
-                        {ov.mode === 'product_in_hand' ? 'A product photo · ' : ''}PNG, JPG or WebP · up to 10MB
+                        {ov.mode === 'product_in_hand'
+                          ? <><b className={styles.inHandTip}>A photo of the real product holds best.</b> A flat logo can end up floating. </>
+                          : ''}PNG, JPG or WebP · up to 10MB
                       </p>
                     )}
                     {/* Generate — the prompt box opens from the Generate button */}
@@ -4013,7 +4387,8 @@ if (context.topic) setTopic(context.topic);
                 .map((l, i) => {
                   const spk = speakers.find(s => s.speakerId === l.speakerId);
                   return { n: i + 1, role: l.speakerId === speakers[0]?.speakerId ? 'host' : 'guest',
-                           name: spk?.displayName || (l.speakerId === speakers[0]?.speakerId ? 'Host' : 'Guest') };
+                           name: spk?.displayName || (l.speakerId === speakers[0]?.speakerId ? 'Host' : 'Guest'),
+                           look: effectiveLook(l.look, speakers.length) };
                 })}
               onClose={() => setCameraOpen(false)}
             />
@@ -4558,16 +4933,30 @@ if (context.topic) setTopic(context.topic);
           ))}
         </div>
 
-        {activeTab === 'generate' ? (
+        {activeTab === 'generate' && state.status === 'complete' ? (
+          /* Done — the video is saved; two ways on (FRONTEND_HANDOVER_regenerate). */
+          <div className={styles.doneActions}>
+            <span className={styles.doneSaved}><IconCheck size={12} strokeWidth={2.6} /> Saved to My Podcasts</span>
+            <button type="button" className={styles.regenBtn} onClick={handleEditRegenerate}
+              title="Keep everything and change what you like — generating again makes a new video">
+              <IconReplay size={12} /> Edit &amp; regenerate
+            </button>
+            <button type="button" className={styles.generateBtn} onClick={requestNewPodcast}
+              title="Start a new podcast — your avatar stays">
+              <IconPlus size={12} /> New podcast
+            </button>
+          </div>
+        ) : activeTab === 'generate' ? (
           <div style={{ display: 'flex', alignItems: 'center', gap: '0.7rem' }}>
             {renderCost && effectivePrice != null && (
               <span style={{
                 fontFamily: "'Inter', sans-serif", fontSize: '0.72rem', fontWeight: 600,
                 whiteSpace: 'nowrap',
-                color: effectiveAffordable === false ? '#f59e0b' : '#818cf8',
+                color: remakeOf ? '#94a3b8' : effectiveAffordable === false ? '#f59e0b' : '#818cf8',
               }}>
-                ~{effectivePrice.toLocaleString()} credits{quality === 'hd' && ' · HD'}
-                {estSeconds > 0 && ` · ~${estSeconds >= 60 ? `${Math.round(estSeconds / 60)} min` : `${estSeconds}s`}`}
+                {/* a new video carries its price on the button, so it's shown once */}
+                {!remakeOf && <>~{effectivePrice.toLocaleString()} credits{quality === 'hd' && ' · HD'}</>}
+                {estSeconds > 0 && `${remakeOf ? '' : ' · '}~${estSeconds >= 60 ? `${Math.round(estSeconds / 60)} min` : `${estSeconds}s`}`}
                 {credits.balance != null && ` · ${Number(credits.balance).toLocaleString()} left`}
               </span>
             )}
@@ -4577,15 +4966,23 @@ if (context.topic) setTopic(context.topic);
                 {voiceGate.missing.length === 1 ? ' needs' : ' need'} a voice — pick one on the Script tab before generating.
               </div>
             )}
+            {voiceGate.ready && openWarnings.length > 0 && (
+              <div className={styles.voiceGateWarn}>
+                <IconAlert size={13} style={{ marginRight: 4, marginTop: -2 }} />
+                {openWarnings[0].code === 'environment_missing' ? 'Pick a background first — the one this podcast used was deleted.' : 'Pick a voice first — see the note on the Script tab.'}
+              </div>
+            )}
             <button
               className={styles.generateBtn}
               onClick={handleGenerate}
-              disabled={submitted || state.status === 'rendering' || state.status === 'complete' || !speakers.length || !lines.length || !voiceGate.ready}
+              disabled={submitted || state.status === 'rendering' || !speakers.length || !lines.length || !voiceGate.ready || openWarnings.length > 0}
+              title={remakeOf ? 'A new video, charged as one. Your earlier video stays in My Podcasts.' : undefined}
             >
               {state.status === 'rendering'
                 ? <><span className={styles.spin}><Ic.Spin /></span> Rendering…</>
-                : state.status === 'complete' ? <><IconCheck size={12} strokeWidth={2.6} /> Complete</>
-                : <><IconPlay size={11} /> Generate video</>
+                : remakeOf
+                  ? <><IconPlay size={11} /> New video{effectivePrice != null && <em className={styles.genPrice}> · ~{effectivePrice.toLocaleString()} credits</em>}</>
+                  : <><IconPlay size={11} /> Generate video</>
               }
             </button>
           </div>
@@ -4599,6 +4996,39 @@ if (context.topic) setTopic(context.topic);
           </button>
         )}
       </div>
+
+      {/* New podcast / replace-with-remake confirm (2026-10-22) */}
+      {confirmAsk && (
+        <div className={styles.confirmScrim}
+             onMouseDown={e => { if (e.target === e.currentTarget) setConfirmAsk(null); }}
+             onKeyDown={e => { if (e.key === 'Escape') setConfirmAsk(null); }}>
+          <div className={styles.confirmCard} role="alertdialog" aria-modal="true" aria-labelledby="sn-confirm-t">
+            <h3 id="sn-confirm-t">{confirmAsk.kind === 'new' ? 'Start a new podcast?' : 'Replace your current script?'}</h3>
+            <p>{confirmAsk.kind === 'new'
+              ? 'Your current script will be cleared.'
+              : `“${confirmAsk.session?.speakers?.map(s => s.display_name).join(' + ') || 'This podcast'}” will load in its place.`}</p>
+            {confirmAsk.kind === 'new' && (<>
+              <div className={styles.confirmGrp}>Stays</div>
+              <div className={styles.confirmChips}>
+                {['Your avatar', 'Saved avatars', 'Voice clone', 'Finished videos'].map(t =>
+                  <span key={t} className={styles.confirmKeep}><IconCheck size={10} strokeWidth={2.6} /> {t}</span>)}
+              </div>
+              <div className={styles.confirmGrp}>Cleared</div>
+              <div className={styles.confirmChips}>
+                {['Lines', 'Guests', 'Cards', 'Comparison', 'Hook', 'Emotions', 'Looks', 'Camera', '9:16'].map(t =>
+                  <span key={t} className={styles.confirmGone}>{t}</span>)}
+              </div>
+            </>)}
+            <div className={styles.confirmActs}>
+              <button type="button" className={styles.confirmCancel} autoFocus onClick={() => setConfirmAsk(null)}>Keep editing</button>
+              <button type="button" className={styles.generateBtn} onClick={() => {
+                const ask = confirmAsk; setConfirmAsk(null);
+                if (ask.kind === 'new') startNewPodcast(); else doRemake(ask.session);
+              }}>{confirmAsk.kind === 'new' ? 'Start new' : 'Replace'}</button>
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* Voice-clone recording focus overlay — shows only while actively
           recording (cloningVoice), gives the script room to be readable. */}
