@@ -5,7 +5,9 @@
 // to whoever talks — this picks HOW it moves (podcast_video.CAMERA_STYLES).
 //
 //   tiles  — Swing (default) · Soft drift · Whip · Over the shoulder, each looping a
-//            short clip of the real move (./camera/*.mp4, from the 2026-10-22 test reel).
+//            short clip of the real move (from the 2026-10-22 test reel). The clips are
+//            NOT bundled: they live on DO Spaces and load from the CDN —
+//            content/podcast_studio/camera/<style>.mp4 + <style>.jpg (HANDOVER_media_integration).
 //   strip  — "Your episode, shot by shot", built from the script's speakers: a move at
 //            each change of speaker, a straight cut when the same person talks twice.
 //   foot   — the duo fee (from POST /api/podcast/quote; never hard-coded) + Done.
@@ -21,21 +23,18 @@ import React, { useEffect } from 'react';
 import { createPortal } from 'react-dom';
 import styles from './CameraPopover.module.css';
 import { IconClose } from './StudioIcons';
-import swingClip from './camera/swing.mp4';
-import softClip from './camera/soft.mp4';
-import whipClip from './camera/whip.mp4';
-import otsClip from './camera/ots.mp4';
-import swingPoster from './camera/swing.jpg';
-import softPoster from './camera/soft.jpg';
-import whipPoster from './camera/whip.jpg';
-import otsPoster from './camera/ots.jpg';
+
+// Studio media on the CDN (DO Spaces, public-read). Override with REACT_APP_CDN_BASE.
+export const STUDIO_MEDIA = `${(process.env.REACT_APP_CDN_BASE
+  || 'https://awakeverse-blog.lon1.cdn.digitaloceanspaces.com').replace(/\/$/, '')}/content/podcast_studio`;
+const cam = (id) => ({ clip: `${STUDIO_MEDIA}/camera/${id}.mp4`, poster: `${STUDIO_MEDIA}/camera/${id}.jpg` });
 
 // = podcast_video.CAMERA_STYLES / CAMERA_SECONDS
 export const CAMERA_STYLES = [
-  { id: 'swing', name: 'Swing', secs: 2, tip: 'A smooth arc to whoever talks. The default.', clip: swingClip, poster: swingPoster },
-  { id: 'soft', name: 'Soft drift', secs: 3, tip: 'A slow, gentle move. Calm conversations.', clip: softClip, poster: softPoster },
-  { id: 'whip', name: 'Whip', secs: 1, tip: 'A fast whip pan with motion blur. Energy.', clip: whipClip, poster: whipPoster },
-  { id: 'ots', name: 'Over the shoulder', secs: 2, tip: 'Lands behind the listener’s shoulder; talking shots stay over the shoulder.', clip: otsClip, poster: otsPoster },
+  { id: 'swing', name: 'Swing', secs: 2, tip: 'A smooth arc to whoever talks. The default.', ...cam('swing') },
+  { id: 'soft', name: 'Soft drift', secs: 3, tip: 'A slow, gentle move. Calm conversations.', ...cam('soft') },
+  { id: 'whip', name: 'Whip', secs: 1, tip: 'A fast whip pan with motion blur. Energy.', ...cam('whip') },
+  { id: 'ots', name: 'Over the shoulder', secs: 2, tip: 'Lands behind the listener’s shoulder; talking shots stay over the shoulder.', ...cam('ots') },
 ];
 export const cameraName = (id) => (CAMERA_STYLES.find(s => s.id === id) || CAMERA_STYLES[0]).name;
 

@@ -46,13 +46,10 @@ import HookPopover from './HookPopover';
 import SoundPopover from './SoundPopover';
 import CaptionPopover, { CAPTION_STYLES } from './CaptionPopover';
 import { ASPECTS, mapPreset, PRESETS_VERTICAL, PRESETS_VERTICAL_DUO, IMAGE_HINT_VERTICAL, PRESET_RECT_VERTICAL } from './podcastFormat';
-import emoNaturalImg from './emotions/natural.jpg';
-import emoSadImg from './emotions/sad.jpg';
-import emoExcitedImg from './emotions/excited.jpg';
 import { loadExtras, suggestHook, hookSummary, designDataCard } from './podcastExtras';
 import DataCardPopover, { dataCardReady, dataCardPayload, dataCardSummary, PRESET_RECT } from './DataCardPopover';
 import SettingRow, { SettingGroup } from './SettingRow';
-import CameraPopover, { cameraName, IconCamera } from './CameraPopover';
+import CameraPopover, { cameraName, IconCamera, STUDIO_MEDIA } from './CameraPopover';
 import {
   IconGlassCard, IconCutout, IconInHand, IconDataCard, IconChart, IconCompare, IconHook,
   IconSound, IconCaptions, IconOutfit, IconVoice, IconUpload, IconGenerate, IconDetach,
@@ -87,14 +84,17 @@ const SnPumpkin = ({ size = 14 }) => (
 // server: the voice (an Eleven v3 tag) and the face (an expression still). Natural, Sad
 // and Excited show a face from our own test renders; Confrontational is shown as its red
 // voice shape, never a face (owner's choice). Natural is the default and is not sent.
+// Faces load from the CDN (content/podcast_studio/emotions/*.jpg); if one can't load,
+// its tile falls back to the voice shape.
+const emoImg = (id) => `${STUDIO_MEDIA}/emotions/${id}.jpg`;
 const EMOTIONS = [
-  { id: 'natural',         name: 'Natural',         note: 'The speaker’s usual delivery.', img: emoNaturalImg,
+  { id: 'natural',         name: 'Natural',         note: 'The speaker’s usual delivery.', img: emoImg('natural'),
     bars: [0.35, 0.45, 0.55, 0.5, 0.45, 0.5, 0.58, 0.5, 0.45, 0.5, 0.55, 0.45] },
   { id: 'confrontational', name: 'Confrontational', note: 'An angry read · the speaker leans in, brow furrowed.',
     bars: [0.3, 0.9, 0.42, 1, 0.35, 0.86, 0.3, 0.96, 0.42, 0.8, 0.35, 0.7] },
-  { id: 'sad',             name: 'Sad',             note: 'A sad read · shoulders drop, eyes soft.', img: emoSadImg,
+  { id: 'sad',             name: 'Sad',             note: 'A sad read · shoulders drop, eyes soft.', img: emoImg('sad'),
     bars: [0.42, 0.4, 0.38, 0.36, 0.34, 0.32, 0.3, 0.28, 0.26, 0.24, 0.22, 0.2] },
-  { id: 'excited',         name: 'Excited',         note: 'An excited read · bright eyes, a warm smile.', img: emoExcitedImg,
+  { id: 'excited',         name: 'Excited',         note: 'An excited read · bright eyes, a warm smile.', img: emoImg('excited'),
     bars: [0.4, 0.7, 0.95, 0.75, 0.5, 0.82, 1, 0.86, 0.56, 0.76, 0.95, 0.6] },
 ];
 const EMOTION_BY_ID = Object.fromEntries(EMOTIONS.map(e => [e.id, e]));
@@ -558,6 +558,7 @@ export default function PodcastStudioPage({ context, onClose }) {
   const verticalDuo = vertical && isDuoEpisode;
   const [cameraStyle, setCameraStyle] = useState('swing');
   const [cameraOpen,  setCameraOpen]  = useState(false);
+  const [emoImgFailed, setEmoImgFailed] = useState({});   // emotion face that failed to load → voice shape
   // The duo fee (flat, server setting) comes from POST /api/podcast/quote, never hard-coded.
   useEffect(() => {
     if (!verticalDuo) { setDuoQuote(null); return undefined; }
@@ -3596,8 +3597,9 @@ if (context.topic) setTopic(context.topic);
                           title={e.note}
                           onClick={() => dispatchLines({ type: 'UPDATE', id: overlayLineId,
                             patch: { emotion: e.id === 'natural' ? undefined : e.id } })}>
-                          {e.img
-                            ? <img className={styles.emoFace} src={e.img} alt="" />
+                          {e.img && !emoImgFailed[e.id]
+                            ? <img className={styles.emoFace} src={e.img} alt=""
+                                onError={() => setEmoImgFailed(f => ({ ...f, [e.id]: true }))} />
                             : <span className={styles.emoWave} aria-hidden="true">
                                 {e.bars.map((h, i) => <i key={i} style={{ '--h': h, '--dl': `${-(i * 0.13).toFixed(2)}s` }} />)}
                               </span>}
