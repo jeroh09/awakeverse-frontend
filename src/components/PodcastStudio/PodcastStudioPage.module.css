@@ -3808,3 +3808,49 @@ body[data-film-season="halloween"] :global(.studio-nocturne) .envCardWrapSelecte
   :global(.studio-nocturne) .pbarFill::after { display: none; }
   .snEmbers { display: none !important; }
 }
+
+/* ══ EMOTION + CAMERA (2026-10-22) ════════════════════════════════════════════
+   Per-line emotion (every podcast) and the vertical-duo Camera row. New controls, so
+   not part of the retint above. An emotion is drawn as an abstract voice shape in its
+   own colour — never a face: Natural calm, Confrontational sharp, Sad slow and
+   fading, Excited bouncing. The colours are the emotion's, not the season accent. */
+.emo_natural         { --emo: 154, 165, 248; --emo-sp: 1.6s;  --emo-lo: 0.75; }
+.emo_confrontational { --emo: 248, 113, 113; --emo-sp: 0.32s; --emo-lo: 0.45; }
+.emo_sad             { --emo: 125, 180, 245; --emo-sp: 2.6s;  --emo-lo: 0.85; }
+.emo_excited         { --emo: 251, 191, 36;  --emo-sp: 0.55s; --emo-lo: 0.55; }
+
+/* the chip on a line card, next to the speaker (only when not Natural) */
+.emoChip { display: inline-flex; align-items: center; gap: 5px; margin-left: 8px; vertical-align: 1px;
+  padding: 3px 8px 3px 6px; border-radius: 999px; cursor: pointer;
+  font: 600 0.62rem/1 'Inter', sans-serif; letter-spacing: 0.02em; text-transform: none;
+  color: rgb(var(--emo)); border: 1px solid rgba(var(--emo), 0.6); background: rgba(var(--emo), 0.1); }
+.emoChip i { width: 6px; height: 6px; border-radius: 50%; background: currentColor; box-shadow: 0 0 8px currentColor; }
+.emoChip:hover { background: rgba(var(--emo), 0.18); }
+.emoChip:focus-visible { outline: none; box-shadow: 0 0 0 3px rgba(var(--emo), 0.4); }
+
+/* the four choices in the Visual panel: 2 × 2, voice shape + name on one line */
+.emoTiles { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 6px; }
+.emoTile { display: flex; align-items: center; gap: 8px; min-width: 0; padding: 7px 9px; cursor: pointer;
+  border-radius: 10px; border: 1px solid rgba(255, 255, 255, 0.12); color: var(--text-sec);
+  background: radial-gradient(90% 120% at 15% 50%, rgba(var(--emo), 0.12), transparent 70%), rgba(255, 255, 255, 0.02);
+  font-family: 'Inter', sans-serif; text-align: left; transition: border-color 0.15s, box-shadow 0.15s, color 0.15s; }
+.emoTile b { font-size: 0.7rem; font-weight: 600; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; min-width: 0; }
+.emoTile:hover { border-color: rgba(var(--emo), 0.5); color: var(--text-primary); }
+.emoTile:focus-visible { outline: none; box-shadow: 0 0 0 3px rgba(var(--emo), 0.4); }
+.emoTileOn { border-color: rgb(var(--emo)); color: rgb(var(--emo)); background: radial-gradient(90% 120% at 15% 50%, rgba(var(--emo), 0.2), transparent 70%), rgba(var(--emo), 0.05);
+  box-shadow: 0 0 0 1px rgba(var(--emo), 0.4), 0 0 20px -8px rgba(var(--emo), 0.8); }
+.emoWave { display: flex; align-items: center; gap: 1.5px; flex: 0 0 34px; height: 16px; }
+/* a face from our test renders (Natural · Sad · Excited) — a small round portrait in the emotion's ring */
+.emoFace { flex: 0 0 34px; width: 34px; height: 34px; margin: -4px 0; border-radius: 50%; object-fit: cover; display: block;
+  box-shadow: 0 0 0 1.5px rgba(var(--emo), 0.55); filter: saturate(0.85); transition: box-shadow 0.15s, filter 0.15s; }
+.emoTileOn .emoFace, .emoTile:hover .emoFace { filter: none; box-shadow: 0 0 0 2px rgb(var(--emo)), 0 0 14px -2px rgba(var(--emo), 0.8); }
+.emoWave i { flex: 1; height: calc(var(--h) * 100%); border-radius: 1.5px; background: rgb(var(--emo)); opacity: 0.5;
+  transform-origin: 50% 50%; }
+.emoTileOn .emoWave i, .emoTile:hover .emoWave i { opacity: 0.95; box-shadow: 0 0 5px -1px rgb(var(--emo));
+  animation: emoWave var(--emo-sp) ease-in-out var(--dl, 0s) infinite alternate; }
+@keyframes emoWave { from { transform: scaleY(var(--emo-lo)); } to { transform: scaleY(1); } }
+.emoNote { margin: 0; font-size: 0.66rem; line-height: 1.4; color: var(--text-sec); font-family: 'Inter', sans-serif; }
+
+@media (prefers-reduced-motion: reduce) {
+  .emoTileOn .emoWave i, .emoTile:hover .emoWave i { animation: none; }
+}

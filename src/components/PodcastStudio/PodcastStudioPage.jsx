@@ -45,10 +45,14 @@ import CitationChips from './CitationChips';
 import HookPopover from './HookPopover';
 import SoundPopover from './SoundPopover';
 import CaptionPopover, { CAPTION_STYLES } from './CaptionPopover';
-import { ASPECTS, mapPreset, PRESETS_VERTICAL, IMAGE_HINT_VERTICAL, PRESET_RECT_VERTICAL } from './podcastFormat';
+import { ASPECTS, mapPreset, PRESETS_VERTICAL, PRESETS_VERTICAL_DUO, IMAGE_HINT_VERTICAL, PRESET_RECT_VERTICAL } from './podcastFormat';
+import emoNaturalImg from './emotions/natural.jpg';
+import emoSadImg from './emotions/sad.jpg';
+import emoExcitedImg from './emotions/excited.jpg';
 import { loadExtras, suggestHook, hookSummary, designDataCard } from './podcastExtras';
 import DataCardPopover, { dataCardReady, dataCardPayload, dataCardSummary, PRESET_RECT } from './DataCardPopover';
 import SettingRow, { SettingGroup } from './SettingRow';
+import CameraPopover, { cameraName, IconCamera } from './CameraPopover';
 import {
   IconGlassCard, IconCutout, IconInHand, IconDataCard, IconChart, IconCompare, IconHook,
   IconSound, IconCaptions, IconOutfit, IconVoice, IconUpload, IconGenerate, IconDetach,
@@ -78,6 +82,22 @@ const SnPumpkin = ({ size = 14 }) => (
     <path d="M12 7V4.5c0-.6.4-1 1-1h1.5" />
   </svg>
 );
+
+// Per-line emotion (2026-10-22) = podcast_video.EMOTIONS. Two things carry it on the
+// server: the voice (an Eleven v3 tag) and the face (an expression still). Natural, Sad
+// and Excited show a face from our own test renders; Confrontational is shown as its red
+// voice shape, never a face (owner's choice). Natural is the default and is not sent.
+const EMOTIONS = [
+  { id: 'natural',         name: 'Natural',         note: 'The speaker’s usual delivery.', img: emoNaturalImg,
+    bars: [0.35, 0.45, 0.55, 0.5, 0.45, 0.5, 0.58, 0.5, 0.45, 0.5, 0.55, 0.45] },
+  { id: 'confrontational', name: 'Confrontational', note: 'An angry read · the speaker leans in, brow furrowed.',
+    bars: [0.3, 0.9, 0.42, 1, 0.35, 0.86, 0.3, 0.96, 0.42, 0.8, 0.35, 0.7] },
+  { id: 'sad',             name: 'Sad',             note: 'A sad read · shoulders drop, eyes soft.', img: emoSadImg,
+    bars: [0.42, 0.4, 0.38, 0.36, 0.34, 0.32, 0.3, 0.28, 0.26, 0.24, 0.22, 0.2] },
+  { id: 'excited',         name: 'Excited',         note: 'An excited read · bright eyes, a warm smile.', img: emoExcitedImg,
+    bars: [0.4, 0.7, 0.95, 0.75, 0.5, 0.82, 1, 0.86, 0.56, 0.76, 0.95, 0.6] },
+];
+const EMOTION_BY_ID = Object.fromEntries(EMOTIONS.map(e => [e.id, e]));
 
 // ── Constants ────────────────────────────────────────────────────────────────
 const TABS        = ['avatar', 'script', 'generate', 'podcasts', 'guide'];
@@ -466,7 +486,11 @@ export default function PodcastStudioPage({ context, onClose }) {
   const basePrice = renderCost?.price != null ? Number(renderCost.price) : null;
   const hdPrice   = basePrice != null ? Math.ceil(basePrice * HD_MULTIPLIER) : null;
   const hdExtra   = basePrice != null ? hdPrice - basePrice : null;
-  const effectivePrice = quality === 'hd' ? hdPrice : basePrice;
+  // Vertical duo: + the flat duo fee, added after HD (HD never multiplies it).
+  const [duoQuote, setDuoQuote] = useState(null);   // POST /api/podcast/quote (vertical duo only)
+  const duoFee = duoQuote?.vertical_duo ? (Number(duoQuote.duo_fee) || 0) : 0;
+  const effectivePrice = basePrice == null ? null
+    : (quality === 'hd' ? hdPrice : basePrice) + duoFee;
   // Affordability must follow the price actually shown — recompute from the
   // balance (the server's `affordable` flag is for the Standard price only).
   const effectiveAffordable = effectivePrice == null ? null
@@ -517,14 +541,43 @@ export default function PodcastStudioPage({ context, onClose }) {
   // the comparison table in a vertical frame, so for users not on the overlay
   // stage, Vertical waits until the comparison is off.
   const [aspect, setAspect] = useState('16:9');
-  const isSoloEpisode = speakers.length <= 1;
-  const verticalBlocked = !isSoloEpisode
-    ? 'Vertical is for solo episodes'
-    : (compareOn && !extras.available ? 'Turn off the comparison to go vertical' : null);
+  // 2026-10-22: vertical is solo OR two speakers (the "vertical duo"); three stay 16:9.
+  // A duo's comparison table would cover a face in 9:16, so it must be off to go vertical.
+  const isDuoEpisode  = speakers.length === 2;
+  const verticalBlocked = speakers.length > 2
+    ? 'Vertical is for solo or two-speaker episodes'
+    : compareOn && isDuoEpisode
+      ? 'Turn off the comparison to go vertical (it would cover a face)'
+      : (compareOn && !extras.available ? 'Turn off the comparison to go vertical' : null);
   useEffect(() => {
     if (aspect === '9:16' && verticalBlocked) setAspect('16:9');
   }, [aspect, verticalBlocked]);
   const vertical = aspect === '9:16';
+  // Vertical duo (2026-10-22): the camera moves to whoever talks — how it moves.
+  // Sent as camera_style only for 9:16 with exactly two speakers (backend default: swing).
+  const verticalDuo = vertical && isDuoEpisode;
+  const [cameraStyle, setCameraStyle] = useState('swing');
+  const [cameraOpen,  setCameraOpen]  = useState(false);
+  // The duo fee (flat, server setting) comes from POST /api/podcast/quote, never hard-coded.
+  useEffect(() => {
+    if (!verticalDuo) { setDuoQuote(null); return undefined; }
+    const t = setTimeout(async () => {
+      try {
+        const csrf = document.cookie.match(/(?:^|;\s*)av_csrf=([^;]+)/)?.[1] || '';
+        const res = await fetch(`${API_BASE}/api/podcast/quote`, {
+          method: 'POST', credentials: 'include',
+          headers: { 'Content-Type': 'application/json', 'X-CSRF-Token': csrf },
+          body: JSON.stringify({
+            lines: lines.filter(l => (l.text || '').trim() || l.audioUrl)
+                        .map(l => ({ text: l.text || '', audio_url: l.audioUrl || null })),
+            aspect_ratio: '9:16', speaker_count: 2,
+          }),
+        });
+        if (res.ok) setDuoQuote(await res.json());
+      } catch (_) { /* no quote → no fee shown; the server still holds the right amount */ }
+    }, 600);
+    return () => clearTimeout(t);
+  }, [verticalDuo, lines]);
 
   // ── Voice enforcement (frontend gate) ────────────────────────────────────
   // A speaker's voice is VALID only if its voiceId is present in the loaded
@@ -1772,6 +1825,8 @@ if (context.topic) setTopic(context.topic);
             // Per-line sound choice (Sound panel): auto is the default, so only
             // 'none' or a picked sound is sent — and only when sounds are on.
             if (extras.available && sfxOn && l.sfx && l.sfx !== 'auto') row.sfx = l.sfx;
+            // Per-line emotion: natural is the default, so only the others are sent.
+            if (l.emotion && l.emotion !== 'natural' && EMOTION_BY_ID[l.emotion]) row.emotion = l.emotion;
             // Per-line overlay (on-screen media) → snake_case for the backend.
             // Only include a complete, valid spec so a half-filled editor never
             // sends a broken overlay that the session validator would reject.
@@ -1779,7 +1834,7 @@ if (context.topic) setTopic(context.topic);
             if (o && o.mode === 'data') {
               // Data card — overlay stage only; sent only when complete.
               if (extras.available && o.preset && dataCardReady(o.data)) {
-                row.overlay = { mode: 'data', preset: mapPreset(o.preset, aspect), data: dataCardPayload(o.data) };
+                row.overlay = { mode: 'data', preset: mapPreset(o.preset, aspect, speakers.length), data: dataCardPayload(o.data) };
               }
             } else if (o && o.imageUrl) {
               if (o.mode === 'product_in_hand') {
@@ -1796,7 +1851,7 @@ if (context.topic) setTopic(context.topic);
                   image_url: o.imageUrl,
                   mode:      'overlay',
                   shape:     o.shape || 'card',
-                  preset:    mapPreset(o.preset, aspect),
+                  preset:    mapPreset(o.preset, aspect, speakers.length),
                   // Per-beat look ({ recipe, ...overrides }); omitted = inherit
                   // the episode default. Consumed by build_overlay(style=).
                   ...(o.style ? { style: o.style } : {}),
@@ -1861,8 +1916,9 @@ if (context.topic) setTopic(context.topic);
       if (extras.available && captionStyle && captionStyle !== 'glass') {
         payload.caption_style = captionStyle;
       }
-      if (aspect === '9:16' && speakers.length === 1) {
+      if (aspect === '9:16' && speakers.length <= 2) {
         payload.aspect_ratio = '9:16';
+        if (speakers.length === 2) payload.camera_style = cameraStyle;
       }
 
       const res = await fetch(`${API_BASE}/api/podcast/session`, {
@@ -1917,7 +1973,7 @@ if (context.topic) setTopic(context.topic);
   }, [
     speakers, selectedEnvId, voices, quality,
     compareOn, compareLeft, compareRight, comparePoints, compareStyle,
-    extras.available, hookOn, hookDraft, sfxOn, sfxLevel, captionStyle, aspect,
+    extras.available, hookOn, hookDraft, sfxOn, sfxLevel, captionStyle, aspect, cameraStyle,
     startPollingSession, loadSessions, setActivePodcastRender,
   ]);
 
@@ -2921,6 +2977,14 @@ if (context.topic) setTopic(context.topic);
                               title={speakers.length > 1 ? 'Click to change speaker' : ''}
                             >
                               {lineName} · {lineRole}{speakers.length > 1 ? ' ↕' : ''}
+                              {line.emotion && line.emotion !== 'natural' && EMOTION_BY_ID[line.emotion] && (
+                                <button type="button"
+                                  className={`${styles.emoChip} ${styles['emo_' + line.emotion]}`}
+                                  onClick={(e) => { e.stopPropagation(); setOverlayLineId(line.id); }}
+                                  title={`${EMOTION_BY_ID[line.emotion].name} — click to change`}>
+                                  <i />{EMOTION_BY_ID[line.emotion].name}
+                                </button>
+                              )}
                             </div>
                             <textarea
                               ref={autoGrowTextarea}
@@ -3172,7 +3236,10 @@ if (context.topic) setTopic(context.topic);
                     label: 'Format',
                     detail: verticalBlocked && !vertical
                       ? `Landscape 16:9 · ${verticalBlocked.charAt(0).toLowerCase()}${verticalBlocked.slice(1)}`
-                      : (ASPECTS.find(a => a.id === aspect) || ASPECTS[0]).sub + ' · same price',
+                      : (ASPECTS.find(a => a.id === aspect) || ASPECTS[0]).sub
+                        + (verticalDuo
+                          ? ` · ${cameraName(cameraStyle)} camera${duoFee ? ` · +${duoFee.toLocaleString()} credits, two-person` : ''}`
+                          : ' · same price'),
                     done: state.status === 'complete',
                     control: (
                       <div className={styles.scriptModeToggle} role="radiogroup" aria-label="Format">
@@ -3492,10 +3559,13 @@ if (context.topic) setTopic(context.topic);
                   ['corner_card_br', 'br', 'Bottom right','Card bottom-right · wide 16:9 image (~660×370)'],
                   ['lower_third', 'lt', 'Bottom bar', 'Wide strip across the bottom · very wide banner (~1280×160) — best for a headline or stat'],
                 ];
-            // Vertical (solo): its own positions; the line's choice is shown mapped.
-            const vert = vertical && !multi;
-            const presetsShown = vert ? PRESETS_VERTICAL.map(([id, lbl, tip]) => [id, POSITION_SHAPE[id], lbl, tip]) : presets;
-            const shownPreset = mapPreset(ov.preset, vert ? '9:16' : '16:9');
+            // Vertical (solo, or the 2026-10-22 vertical duo): its own positions; the
+            // line's choice is shown mapped. A duo gets the two top corners only.
+            const vert = vertical;
+            const presetsShown = vert
+              ? (multi ? PRESETS_VERTICAL_DUO : PRESETS_VERTICAL).map(([id, lbl, tip]) => [id, POSITION_SHAPE[id], lbl, tip])
+              : presets;
+            const shownPreset = mapPreset(ov.preset, vert ? '9:16' : '16:9', speakers.length);
             const oLineNo = lines.findIndex(l => l.id === overlayLineId) + 1;
             const genShown = overlayGenOpen || overlayGenerating || !!overlayGenPrompt.trim() || !!overlayGenError;
             return (
@@ -3513,6 +3583,34 @@ if (context.topic) setTopic(context.topic);
                   </div>
                 </div>
                 {oLine?.text && <blockquote className={styles.vpQuote}>{oLine.text}</blockquote>}
+
+                {/* Emotion — this line's voice + face (2026-10-22). Every podcast. */}
+                {(() => {
+                  const cur = (oLine?.emotion && EMOTION_BY_ID[oLine.emotion]) ? oLine.emotion : 'natural';
+                  return (<>
+                    <div className={styles.vpSec}>Emotion</div>
+                    <div className={styles.emoTiles} role="radiogroup" aria-label="Emotion for this line">
+                      {EMOTIONS.map(e => (
+                        <button key={e.id} type="button" role="radio" aria-checked={cur === e.id}
+                          className={`${styles.emoTile} ${styles['emo_' + e.id]} ${cur === e.id ? styles.emoTileOn : ''}`}
+                          title={e.note}
+                          onClick={() => dispatchLines({ type: 'UPDATE', id: overlayLineId,
+                            patch: { emotion: e.id === 'natural' ? undefined : e.id } })}>
+                          {e.img
+                            ? <img className={styles.emoFace} src={e.img} alt="" />
+                            : <span className={styles.emoWave} aria-hidden="true">
+                                {e.bars.map((h, i) => <i key={i} style={{ '--h': h, '--dl': `${-(i * 0.13).toFixed(2)}s` }} />)}
+                              </span>}
+                          <b>{e.name}</b>
+                        </button>
+                      ))}
+                    </div>
+                    <p className={styles.emoNote}>
+                      {EMOTION_BY_ID[cur].note}
+                      {cur !== 'natural' && oLine?.audioUrl ? ' Your recording keeps your own voice; only the face changes.' : ''}
+                    </p>
+                  </>);
+                })()}
 
                 {/* This line — the four visual types, 2 × 2 */}
                 <div className={styles.vpSec}>This line</div>
@@ -3587,7 +3685,7 @@ if (context.topic) setTopic(context.topic);
                     <button type="button" className={styles.vpSum}
                       onClick={() => setDataOpen(true)}
                       title="Edit the numbers, kind and position">
-                      <PositionThumb rect={vert ? (PRESET_RECT_VERTICAL[pid] || PRESET_RECT_VERTICAL.top_card) : PRESET_RECT[pid]} vertical={vert} />
+                      <PositionThumb rect={vert ? (PRESET_RECT_VERTICAL[pid] || PRESET_RECT_VERTICAL[multi ? 'corner_small_tr' : 'top_card']) : PRESET_RECT[pid]} vertical={vert} />
                       <span className={styles.vpSumTxt}>
                         <b>{ov.data?.kind === 'chart' ? 'Chart' : 'Stat'}{ready ? ` · ${dataCardSummary(ov.data)}` : ''}</b>
                         <small>{ready ? `${posLabel} · ${ov.data?.kind === 'chart' ? 'bars grow on cue' : 'counts up on cue'}` : 'Add the numbers'}</small>
@@ -3697,7 +3795,8 @@ if (context.topic) setTopic(context.topic);
                 {/* Whole episode — compact rows; on/off lives in each pop-out */}
                 <div className={styles.vpSec}>Whole episode</div>
                 <SettingGroup>
-                  {(() => {
+                  {/* A vertical duo has no comparison: its table would cover a face. */}
+                  {!verticalDuo && (() => {
                     const hasNames = !!(compareLeft.name.trim() && compareRight.name.trim());
                     const nPts = comparePoints.filter(p => (p.label || '').trim()).length;
                     return (
@@ -3729,6 +3828,28 @@ if (context.topic) setTopic(context.topic);
                       onClick={() => { setTypePopoverOpen(false); setHookOpen(true); }}
                     />
                   )}
+                  {/* Camera (2026-10-22) — two speakers. Live in vertical; in 16:9 it
+                      offers the same switch as Generate › Format. */}
+                  {isDuoEpisode && (verticalDuo ? (
+                    <SettingRow
+                      icon={<IconCamera size={19} />}
+                      title="Camera"
+                      sub={`${cameraName(cameraStyle)} · turns to whoever talks`}
+                      on
+                      tip="How the camera moves between the two of you"
+                      onClick={() => { setTypePopoverOpen(false); setCameraOpen(true); }}
+                    />
+                  ) : (
+                    <SettingRow
+                      icon={<IconCamera size={19} />}
+                      title="Camera"
+                      sub={verticalBlocked || 'Moves with vertical 9:16 only'}
+                      action={verticalBlocked ? null : 'Go vertical'}
+                      tip={verticalBlocked || 'Switch this episode to vertical 9:16 and pick how the camera moves'}
+                      onClick={verticalBlocked ? undefined
+                        : () => { setAspect('9:16'); setTypePopoverOpen(false); setCameraOpen(true); }}
+                    />
+                  ))}
                 </SettingGroup>
                 </div>
 
@@ -3878,6 +3999,23 @@ if (context.topic) setTopic(context.topic);
             </div>
             );
           })()}
+
+          {/* Camera pop-out — vertical duo only (portal) */}
+          {cameraOpen && verticalDuo && (
+            <CameraPopover
+              value={cameraStyle}
+              onChange={setCameraStyle}
+              fee={duoFee || null}
+              shots={lines
+                .filter(l => (l.text || '').trim() || l.audioUrl)
+                .map((l, i) => {
+                  const spk = speakers.find(s => s.speakerId === l.speakerId);
+                  return { n: i + 1, role: l.speakerId === speakers[0]?.speakerId ? 'host' : 'guest',
+                           name: spk?.displayName || (l.speakerId === speakers[0]?.speakerId ? 'Host' : 'Guest') };
+                })}
+              onClose={() => setCameraOpen(false)}
+            />
+          )}
 
           {/* Opening hook pop-out (position:fixed) */}
           {hookOpen && (

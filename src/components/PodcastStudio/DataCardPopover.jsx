@@ -22,7 +22,7 @@ import { createPortal } from 'react-dom';
 import styles from './DataCardPopover.module.css';
 import { IconDataCard, IconChart, IconClose, IconReplay, IconPlus, IconFill, IconDetach } from './StudioIcons';
 import HostAvatar from './HostAvatar';
-import { PRESETS_VERTICAL, PRESET_RECT_VERTICAL } from './podcastFormat';
+import { PRESETS_VERTICAL, PRESETS_VERTICAL_DUO, PRESET_RECT_VERTICAL } from './podcastFormat';
 
 // preset → [left%, top%, width%, height%] of the 16:9 frame (podcast_overlays._preset_rect)
 export const PRESET_RECT = {
@@ -198,9 +198,9 @@ export default function DataCardPopover({
 }) {
   const d = ov.data || { kind: 'stat', number: '' };
   const kind = d.kind || 'stat';
-  const vert = vertical && !multi;
+  const vert = vertical;          // solo or (2026-10-22) vertical duo
   const preset = ov.preset || (multi ? 'corner_small_tr' : vert ? 'top_card' : 'side_panel_right');
-  const rect = vert ? (PRESET_RECT_VERTICAL[preset] || PRESET_RECT_VERTICAL.top_card)
+  const rect = vert ? (PRESET_RECT_VERTICAL[preset] || PRESET_RECT_VERTICAL[multi ? 'corner_small_tr' : 'top_card'])
                     : (PRESET_RECT[preset] || PRESET_RECT.side_panel_right);
   const [playKey, setPlayKey] = useState(0);
   const sig = JSON.stringify([d, preset]);
@@ -224,7 +224,8 @@ export default function DataCardPopover({
   const bars = d.bars || [];
   const setBar = (i, patch) => setData({ bars: bars.map((b, j) => (j === i ? { ...b, ...patch } : b)) });
   const ready = dataCardReady(d);
-  const positions = vert ? PRESETS_VERTICAL.map(([id, lbl]) => [id, lbl]) : multi ? POS_MULTI : POS_SOLO;
+  const positions = vert ? (multi ? PRESETS_VERTICAL_DUO : PRESETS_VERTICAL).map(([id, lbl]) => [id, lbl])
+    : multi ? POS_MULTI : POS_SOLO;
 
   return createPortal(
     <div className={styles.scrim} onMouseDown={(e) => { if (e.target === e.currentTarget) onClose?.(); }}>

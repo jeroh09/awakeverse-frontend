@@ -25,7 +25,7 @@ import React, { useEffect, useState } from 'react';
 import styles from './OverlayTypePopover.module.css';
 import HostAvatar from './HostAvatar';
 import { IconGlassCard, IconCutout, IconInHand, IconCompare, IconChevronDown, IconClose } from './StudioIcons';
-import { PRESETS_VERTICAL, PRESET_RECT_VERTICAL } from './podcastFormat';
+import { PRESETS_VERTICAL, PRESETS_VERTICAL_DUO, PRESET_RECT_VERTICAL } from './podcastFormat';
 import { PRESET_RECT } from './DataCardPopover';
 import {
   RECIPE_OPTIONS, RECIPE_INHERIT, KNOB_TIPS, MATERIAL_OPTIONS,
@@ -265,8 +265,9 @@ export default function OverlayTypePopover({
   const setMaterial = (m) => onPatch?.({ style: withMaterial(styleObj, m) });
 
   const [ic, title, sub] = HEAD[type] || HEAD.card;
-  const posList = vertical && !multi ? PRESETS_VERTICAL : multi ? PRESETS_MULTI : PRESETS_SINGLE;
-  const frameRatio = vertical && !multi ? 9 / 16 : 16 / 9;
+  // vertical duo (2026-10-22): a tall frame with the two top corners only
+  const posList = vertical ? (multi ? PRESETS_VERTICAL_DUO : PRESETS_VERTICAL) : multi ? PRESETS_MULTI : PRESETS_SINGLE;
+  const frameRatio = vertical ? 9 / 16 : 16 / 9;
 
   // ── small render helpers ────────────────────────────────────────────────
   const Q = ({ k }) => <span className={`${styles.qmark} ${styles.tip}`} data-tip={KNOB_TIPS[k]}>?</span>;
@@ -347,7 +348,7 @@ export default function OverlayTypePopover({
         <div className={styles.body}>
           <div className={styles.col}>
             <div className={styles.grp}>Position — click where it lands</div>
-            <Frame posList={posList} activePreset={ov.preset} onPick={setPreset} vertical={vertical && !multi}
+            <Frame posList={posList} activePreset={ov.preset} onPick={setPreset} vertical={vertical}
                    backdropUrl={backdropUrl}
                    renderPreview={(rect) => <GlassPreview rect={rect} view={view} imageUrl={ov.imageUrl} frameRatio={frameRatio} />} />
           </div>
@@ -377,7 +378,7 @@ export default function OverlayTypePopover({
       <div className={styles.body}>
         <div className={styles.col}>
           <div className={styles.grp}>Position — click where it lands</div>
-          <Frame posList={posList} activePreset={ov.preset} onPick={setPreset} vertical={vertical && !multi}
+          <Frame posList={posList} activePreset={ov.preset} onPick={setPreset} vertical={vertical}
                  backdropUrl={backdropUrl}
                  renderPreview={(rect) => <CutoutPreview rect={rect} view={view} imageUrl={ov.imageUrl} />} />
           <p className={styles.hint}>Cutouts float free — no card, no glass recipe.</p>
