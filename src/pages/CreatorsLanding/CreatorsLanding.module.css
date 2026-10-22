@@ -1,0 +1,972 @@
+/* Base container */
+.container {
+  min-height: 100vh;
+  background: linear-gradient(135deg, #0B1426 0%, #1A2B47 25%, #2C1810 50%, #0F1A2E 75%, #0B1426 100%);
+  color: #ffffff;
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, sans-serif;
+}
+
+/* Placeholder sections */
+.hero,
+.section,
+.sectionAlt,
+.finalCTA {
+  padding: 100px 20px;
+  text-align: center;
+  font-size: 24px;
+  color: rgba(255, 255, 255, 0.5);
+}
+/* ============================================
+   HERO SECTION
+   ============================================ */
+
+.hero {
+  min-height: 85vh;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 80px 20px 40px;
+  position: relative;
+  background: radial-gradient(circle at center, rgba(79, 70, 229, 0.15) 0%, transparent 70%);
+}
+
+.heroContent {
+  max-width: 900px;
+  text-align: center;
+  margin-bottom: 60px;
+}
+
+.heroTitle {
+  font-size: 56px;
+  font-weight: 700;
+  line-height: 1.1;
+  margin-bottom: 24px;
+  background: linear-gradient(135deg, #ffffff 0%, #e0e7ff 50%, #c7d2fe 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+  text-shadow: 0 0 40px rgba(255, 255, 255, 0.1);
+}
+
+.heroSubtitle {
+  font-size: 20px;
+  line-height: 1.6;
+  color: rgba(255, 255, 255, 0.85);
+  margin-bottom: 40px;
+  max-width: 700px;
+  margin-left: auto;
+  margin-right: auto;
+}
+
+.heroCTAs {
+  display: flex;
+  gap: 20px;
+  justify-content: center;
+  flex-wrap: wrap;
+}
+
+.primaryCTA {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  background: linear-gradient(135deg, #4f46e5 0%, #7c3aed 100%);
+  border: none;
+  color: #ffffff;
+  font-size: 16px;
+  font-weight: 600;
+  padding: 16px 32px;
+  border-radius: 12px;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  box-shadow: 0 4px 16px rgba(79, 70, 229, 0.3);
+}
+
+.primaryCTA:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 8px 32px rgba(79, 70, 229, 0.5);
+}
+
+.secondaryCTA {
+  background: rgba(255, 255, 255, 0.08);
+  border: 2px solid rgba(255, 255, 255, 0.25);
+  color: #ffffff;
+  font-size: 16px;
+  font-weight: 600;
+  padding: 14px 32px;
+  border-radius: 12px;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  backdrop-filter: blur(10px);
+}
+
+.secondaryCTA:hover {
+  background: rgba(255, 255, 255, 0.12);
+  border-color: rgba(255, 255, 255, 0.4);
+}
+
+/* Stats Bar */
+.statsBar {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: 30px;
+  max-width: 1000px;
+  width: 100%;
+  padding: 40px 30px;
+  background: rgba(255, 255, 255, 0.05);
+  border-radius: 16px;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  backdrop-filter: blur(10px);
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.2);
+}
+
+.statItem {
+  text-align: center;
+  transition: transform 0.3s ease;
+}
+
+.statItem:hover {
+  transform: translateY(-4px);
+}
+
+.statIcon {
+  color: #4f46e5;
+  margin-bottom: 12px;
+}
+
+.statValue {
+  font-size: 32px;
+  font-weight: 700;
+  color: #ffffff;
+  margin-bottom: 4px;
+  text-shadow: 0 0 20px rgba(255, 255, 255, 0.3);
+}
+
+.statLabel {
+  font-size: 13px;
+  color: rgba(255, 255, 255, 0.6);
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  font-weight: 500;
+}
+
+/* Mobile Responsive */
+@media (max-width: 768px) {
+  .hero {
+    min-height: 70vh;
+    padding: 60px 20px 30px;
+  }
+
+  .heroTitle {
+    font-size: 36px;
+    margin-bottom: 20px;
+  }
+
+  .heroSubtitle {
+    font-size: 16px;
+    margin-bottom: 32px;
+  }
+
+  .heroCTAs {
+    flex-direction: column;
+    width: 100%;
+    max-width: 300px;
+    margin: 0 auto;
+  }
+
+  .primaryCTA,
+  .secondaryCTA {
+    width: 100%;
+  }
+
+  .statsBar {
+    grid-template-columns: repeat(2, 1fr);
+    gap: 20px;
+    padding: 30px 20px;
+  }
+
+  .statValue {
+    font-size: 28px;
+  }
+
+  .statLabel {
+    font-size: 11px;
+  }
+}
+/* ============================================
+   SECTION SHARED STYLES
+   ============================================ */
+
+.section {
+  padding: 80px 20px;
+  border-top: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+.sectionAlt {
+  padding: 80px 20px;
+  background: rgba(255, 255, 255, 0.02);
+  border-top: 1px solid rgba(255, 255, 255, 0.08);
+  border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+.sectionContent {
+  max-width: 1200px;
+  margin: 0 auto;
+}
+
+.sectionHeader {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+  margin-bottom: 16px;
+}
+
+.sectionIcon {
+  color: #4f46e5;
+}
+
+.sectionTitle {
+  fontSize: 42px;
+  fontWeight: 700;
+  textAlign: center;
+  marginBottom: 16px;
+  background: linear-gradient(135deg, #ffffff 0%, #e0e7ff 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+.sectionSubtext {
+  fontSize: 18px;
+  textAlign: center;
+  color: rgba(255, 255, 255, 0.7);
+  marginBottom: 60px;
+  fontStyle: italic;
+}
+
+/* ============================================
+   CREATOR SPOTLIGHT
+   ============================================ */
+
+.creatorGrid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+  gap: 32px;
+  margin-top: 40px;
+}
+
+.creatorCard {
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 20px;
+  padding: 32px;
+  transition: all 0.3s ease;
+  cursor: pointer;
+}
+
+.creatorCard:hover {
+  background: rgba(255, 255, 255, 0.08);
+  border-color: rgba(79, 70, 229, 0.4);
+  transform: translateY(-4px);
+  box-shadow: 0 12px 40px rgba(79, 70, 229, 0.2);
+}
+
+.creatorImageWrapper {
+  position: relative;
+  width: 120px;
+  height: 120px;
+  margin: 0 auto 24px;
+}
+
+.creatorImage {
+  width: 100%;
+  height: 100%;
+  border-radius: 50%;
+  object-fit: cover;
+  border: 3px solid rgba(79, 70, 229, 0.4);
+  transition: border-color 0.3s ease;
+}
+
+.creatorCard:hover .creatorImage {
+  border-color: rgba(79, 70, 229, 0.8);
+}
+
+.creatorBadge {
+  position: absolute;
+  bottom: -8px;
+  left: 50%;
+  transform: translateX(-50%);
+  background: linear-gradient(135deg, #4f46e5, #7c3aed);
+  color: #ffffff;
+  font-size: 11px;
+  font-weight: 600;
+  padding: 4px 12px;
+  border-radius: 12px;
+  white-space: nowrap;
+  box-shadow: 0 4px 12px rgba(79, 70, 229, 0.4);
+}
+
+.creatorInfo {
+  text-align: center;
+}
+
+.creatorName {
+  font-size: 24px;
+  font-weight: 600;
+  color: #ffffff;
+  margin-bottom: 8px;
+}
+
+.creatorCategory {
+  font-size: 13px;
+  color: rgba(79, 70, 229, 0.9);
+  margin-bottom: 16px;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  font-weight: 600;
+}
+
+.creatorStats {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 16px;
+  font-size: 14px;
+}
+
+.creatorEarnings {
+  color: #4ade80;
+  font-weight: 700;
+}
+
+.creatorDivider {
+  color: rgba(255, 255, 255, 0.3);
+}
+
+.creatorCharacters {
+  color: rgba(255, 255, 255, 0.7);
+}
+
+.creatorQuote {
+  font-size: 14px;
+  color: rgba(255, 255, 255, 0.8);
+  font-style: italic;
+  line-height: 1.6;
+  padding-top: 16px;
+  border-top: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+/* ============================================
+   HOW IT WORKS
+   ============================================ */
+
+.stepsGrid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+  gap: 40px;
+  margin-top: 40px;
+}
+
+.stepCard {
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 16px;
+  padding: 40px 32px;
+  text-align: center;
+  position: relative;
+  transition: all 0.3s ease;
+}
+
+.stepCard:hover {
+  background: rgba(255, 255, 255, 0.08);
+  border-color: rgba(79, 70, 229, 0.4);
+  transform: translateY(-4px);
+}
+
+/* ============================================
+   HOW IT WORKS (Updated with gold accents)
+   ============================================ */
+
+.stepsGrid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+  gap: 40px;
+  margin-top: 40px;
+}
+
+.stepCard {
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 16px;
+  padding: 40px 32px;
+  text-align: center;
+  position: relative;
+  transition: all 0.3s ease;
+}
+
+.stepCard:hover {
+  background: rgba(255, 255, 255, 0.08);
+  border-color: rgba(255, 215, 0, 0.4);
+  transform: translateY(-4px);
+}
+
+.stepNumber {
+  position: absolute;
+  top: 20px;
+  right: 20px;
+  width: 32px;
+  height: 32px;
+  background: rgba(255, 215, 0, 0.2);
+  border: 2px solid rgba(255, 215, 0, 0.5);
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 14px;
+  font-weight: 700;
+  color: #FFD700;
+  box-shadow: 0 0 15px rgba(255, 215, 0, 0.3);
+}
+
+.stepIconWrapper {
+  width: 80px;
+  height: 80px;
+  background: linear-gradient(135deg, rgba(255, 215, 0, 0.2), rgba(255, 165, 0, 0.1));
+  border: 2px solid rgba(255, 215, 0, 0.4);
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin: 0 auto 24px;
+  transition: all 0.3s ease;
+}
+
+.stepCard:hover .stepIconWrapper {
+  background: linear-gradient(135deg, rgba(255, 215, 0, 0.3), rgba(255, 165, 0, 0.2));
+  border-color: rgba(255, 215, 0, 0.6);
+  transform: scale(1.1);
+  box-shadow: 0 0 30px rgba(255, 215, 0, 0.4);
+}
+
+.stepIcon {
+  color: #FFD700;
+}
+
+.stepTitle {
+  font-size: 24px;
+  font-weight: 600;
+  color: #ffffff;
+  margin-bottom: 16px;
+}
+
+.stepDescription {
+  font-size: 15px;
+  color: rgba(255, 255, 255, 0.7);
+  line-height: 1.6;
+  margin: 0;
+}
+
+/* Mobile Responsive */
+@media (max-width: 768px) {
+  .stepsGrid {
+    grid-template-columns: 1fr;
+    gap: 24px;
+  }
+
+  .stepCard {
+    padding: 32px 24px;
+  }
+}
+
+.stepTitle {
+  font-size: 24px;
+  font-weight: 600;
+  color: #ffffff;
+  margin-bottom: 16px;
+}
+
+.stepDescription {
+  font-size: 15px;
+  color: rgba(255, 255, 255, 0.7);
+  line-height: 1.6;
+  margin: 0;
+}
+
+/* Mobile Responsive */
+@media (max-width: 768px) {
+  .sectionTitle {
+    font-size: 32px;
+  }
+
+  .sectionSubtext {
+    font-size: 16px;
+    margin-bottom: 40px;
+  }
+
+  .creatorGrid {
+    grid-template-columns: 1fr;
+    gap: 24px;
+  }
+
+  .stepsGrid {
+    grid-template-columns: 1fr;
+    gap: 24px;
+  }
+
+  .stepCard {
+    padding: 32px 24px;
+  }
+}
+/* ============================================
+   ACHIEVEMENT CARDS (with gold highlights)
+   ============================================ */
+
+.achievementGrid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+  gap: 24px;
+  margin-top: 40px;
+  margin-bottom: 60px;
+}
+
+.achievementCard {
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 16px;
+  padding: 32px 24px;
+  text-align: center;
+  transition: all 0.3s ease;
+}
+
+.achievementCard:hover {
+  background: rgba(255, 255, 255, 0.08);
+  transform: translateY(-4px);
+  box-shadow: 0 12px 32px rgba(0, 0, 0, 0.3);
+}
+
+.achievementIconWrapper {
+  width: 80px;
+  height: 80px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin: 0 auto 20px;
+  transition: all 0.3s ease;
+}
+
+.achievementIconGold {
+  background: linear-gradient(135deg, rgba(255, 215, 0, 0.2), rgba(255, 165, 0, 0.1));
+  border: 2px solid rgba(255, 215, 0, 0.4);
+}
+
+.achievementIconPurple {
+  background: linear-gradient(135deg, rgba(79, 70, 229, 0.2), rgba(124, 58, 237, 0.1));
+  border: 2px solid rgba(79, 70, 229, 0.4);
+}
+
+.achievementCard:hover .achievementIconGold {
+  background: linear-gradient(135deg, rgba(255, 215, 0, 0.3), rgba(255, 165, 0, 0.2));
+  border-color: rgba(255, 215, 0, 0.6);
+  transform: scale(1.1);
+  box-shadow: 0 0 30px rgba(255, 215, 0, 0.3);
+}
+
+.achievementCard:hover .achievementIconPurple {
+  background: linear-gradient(135deg, rgba(79, 70, 229, 0.3), rgba(124, 58, 237, 0.2));
+  border-color: rgba(79, 70, 229, 0.6);
+  transform: scale(1.1);
+}
+
+.achievementIcon {
+  color: #4f46e5;
+}
+
+.achievementIconGold .achievementIcon {
+  color: #FFD700;
+}
+
+.achievementTitle {
+  font-size: 20px;
+  font-weight: 600;
+  color: #ffffff;
+  margin-bottom: 12px;
+}
+
+.achievementDescription {
+  font-size: 14px;
+  color: rgba(255, 255, 255, 0.7);
+  line-height: 1.5;
+  margin: 0;
+}
+
+/* Progress Bar Section */
+.progressSection {
+  max-width: 600px;
+  margin: 0 auto;
+  padding: 32px;
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid rgba(255, 215, 0, 0.2);
+  border-radius: 16px;
+}
+
+.progressHeader {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 12px;
+}
+
+.progressLabel {
+  font-size: 14px;
+  color: rgba(255, 255, 255, 0.6);
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.progressValue {
+  font-size: 14px;
+  color: #FFD700;
+  font-weight: 600;
+}
+
+.progressBar {
+  height: 12px;
+  background: rgba(255, 255, 255, 0.1);
+  border-radius: 6px;
+  overflow: hidden;
+  margin-bottom: 8px;
+}
+
+.progressFill {
+  height: 100%;
+  width: 65%;
+  background: linear-gradient(90deg, #FFD700 0%, #FFA500 100%);
+  border-radius: 6px;
+  box-shadow: 0 0 20px rgba(255, 215, 0, 0.5);
+  transition: width 0.5s ease;
+}
+
+.progressSubtext {
+  font-size: 13px;
+  color: rgba(255, 255, 255, 0.6);
+  text-align: center;
+  margin: 0;
+}
+
+/* Gold Section Icon */
+.sectionIconGold {
+  color: #FFD700;
+}
+
+/* ============================================
+   FINAL CTA (with gold accents)
+   ============================================ */
+
+.finalCTA {
+  padding: 100px 20px;
+  background: linear-gradient(135deg, rgba(79, 70, 229, 0.15) 0%, rgba(255, 215, 0, 0.08) 100%);
+  border-top: 1px solid rgba(255, 215, 0, 0.2);
+  position: relative;
+  overflow: hidden;
+}
+
+.finalCTA::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: radial-gradient(circle at center, rgba(255, 215, 0, 0.1) 0%, transparent 70%);
+  pointer-events: none;
+}
+
+.ctaContent {
+  max-width: 800px;
+  margin: 0 auto;
+  text-align: center;
+  position: relative;
+  z-index: 2;
+}
+
+.ctaBadge {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  background: rgba(255, 215, 0, 0.15);
+  border: 1px solid rgba(255, 215, 0, 0.4);
+  color: #FFD700;
+  padding: 8px 16px;
+  border-radius: 20px;
+  font-size: 13px;
+  font-weight: 600;
+  margin-bottom: 24px;
+  backdrop-filter: blur(10px);
+}
+
+.ctaTitle {
+  font-size: 48px;
+  font-weight: 700;
+  margin-bottom: 20px;
+  background: linear-gradient(135deg, #ffffff 0%, #FFD700 50%, #FFA500 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+.ctaSubtext {
+  font-size: 18px;
+  color: rgba(255, 255, 255, 0.8);
+  line-height: 1.6;
+  margin-bottom: 40px;
+  max-width: 600px;
+  margin-left: auto;
+  margin-right: auto;
+}
+
+.ctaStats {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 32px;
+  margin-bottom: 40px;
+  padding: 32px;
+  background: rgba(255, 255, 255, 0.05);
+  border-radius: 16px;
+  border: 1px solid rgba(255, 215, 0, 0.2);
+}
+
+.ctaStat {
+  text-align: center;
+}
+
+.ctaStatValue {
+  font-size: 32px;
+  font-weight: 700;
+  color: #FFD700;
+  margin-bottom: 4px;
+  text-shadow: 0 0 20px rgba(255, 215, 0, 0.4);
+}
+
+.ctaStatLabel {
+  font-size: 13px;
+  color: rgba(255, 255, 255, 0.6);
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.ctaButton {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  background: linear-gradient(135deg, #FFD700 0%, #FFA500 100%);
+  border: none;
+  color: #0B1426;
+  font-size: 18px;
+  font-weight: 700;
+  padding: 18px 40px;
+  border-radius: 12px;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  box-shadow: 0 8px 32px rgba(255, 215, 0, 0.4);
+  margin-bottom: 20px;
+}
+
+.ctaButton:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 12px 40px rgba(255, 215, 0, 0.6);
+  background: linear-gradient(135deg, #FFA500 0%, #FFD700 100%);
+}
+
+.ctaFootnote {
+  font-size: 14px;
+  color: rgba(255, 255, 255, 0.6);
+  margin: 0;
+}
+
+/* Mobile Responsive */
+@media (max-width: 768px) {
+  .achievementGrid {
+    grid-template-columns: 1fr;
+    gap: 20px;
+  }
+
+  .progressSection {
+    padding: 24px 20px;
+  }
+
+  .ctaTitle {
+    font-size: 32px;
+  }
+
+  .ctaSubtext {
+    font-size: 16px;
+  }
+
+  .ctaStats {
+    grid-template-columns: 1fr;
+    gap: 20px;
+    padding: 24px 20px;
+  }
+
+  .ctaButton {
+    width: 100%;
+    max-width: 300px;
+  }
+}
+/* ============================================
+   CREATOR CAROUSEL
+   ============================================ */
+
+.carouselContainer {
+  position: relative;
+  max-width: 800px;
+  margin: 40px auto 0;
+  padding: 0 60px;
+}
+
+.carouselTrack {
+  overflow: hidden;
+  border-radius: 20px;
+  border: '3px solid #FFD700';
+  box-shadow: 0 0 50px rgba(255, 215, 0, 0.4);
+}
+
+.carouselSlides {
+  display: flex;
+  width: 100%;
+
+}
+
+.carouselSlide {
+  min-width: 100%;
+  flex-shrink: 0;
+}
+
+.carouselButton {
+  position: absolute;
+  top: 50%;
+  transform: translateY(-50%);
+  background: rgba(255, 255, 255, 0.1);
+  border: 2px solid rgba(255, 255, 255, 0.2);
+  color: #ffffff;
+  width: 48px;
+  height: 48px;
+  border-radius: 50%;
+  font-size: 28px;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  backdrop-filter: blur(10px);
+  z-index: 10;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  line-height: 1;
+}
+
+.carouselButton:hover {
+  background: rgba(255, 215, 0, 0.2);
+  border-color: rgba(255, 215, 0, 0.4);
+  transform: translateY(-50%) scale(1.1);
+}
+
+.carouselButtonPrev {
+  left: 0;
+}
+
+.carouselButtonNext {
+  right: 0;
+}
+
+.carouselIndicators {
+  display: flex;
+  justify-content: center;
+  gap: 12px;
+  margin-top: 32px;
+}
+
+.carouselDot {
+  width: 12px;
+  height: 12px;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.3);
+  border: none;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  padding: 0;
+}
+
+.carouselDot:hover {
+  background: rgba(255, 255, 255, 0.5);
+  transform: scale(1.2);
+}
+
+.carouselDotActive {
+  background: linear-gradient(135deg, #FFD700, #FFA500);
+  width: 32px;
+  border-radius: 6px;
+  box-shadow: 0 0 12px rgba(255, 215, 0, 0.6);
+}
+
+.autoPlayToggle {
+  display: block;
+  margin: 24px auto 0;
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  color: rgba(255, 255, 255, 0.7);
+  padding: 8px 20px;
+  border-radius: 20px;
+  font-size: 13px;
+  cursor: pointer;
+  transition: all 0.3s ease;
+}
+
+.autoPlayToggle:hover {
+  background: rgba(255, 255, 255, 0.08);
+  border-color: rgba(255, 215, 0, 0.4);
+  color: #FFD700;
+}
+
+/* Adjust existing creator card for carousel */
+.carouselSlide .creatorCard {
+  max-width: 100%;
+  margin: 0 auto;
+}
+
+/* Mobile Responsive */
+@media (max-width: 768px) {
+  .carouselContainer {
+    padding: 0 50px;
+  }
+
+  .carouselButton {
+    width: 40px;
+    height: 40px;
+    font-size: 24px;
+  }
+
+  .carouselButtonPrev {
+    left: -5px;
+  }
+
+  .carouselButtonNext {
+    right: -5px;
+  }
+
+  .carouselIndicators {
+    gap: 8px;
+    margin-top: 24px;
+  }
+
+  .carouselDot {
+    width: 10px;
+    height: 10px;
+  }
+
+  .carouselDotActive {
+    width: 24px;
+  }
+}

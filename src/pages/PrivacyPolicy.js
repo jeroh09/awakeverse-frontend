@@ -119,16 +119,16 @@ export default function PrivacyPolicy() {
           <a href="/sources">Sources &amp; Licences</a>
           <a href="/cookie-policy">Cookie Policy</a>
         </nav>
-        <h1 id="pp-title">Awakeverse — Privacy Policy</h1>
+        <h1 id="pp-title">AwakeVerse — Privacy Policy</h1>
         <p className="meta">Effective: 19 August 2025 &nbsp;•&nbsp; Last updated: 19 August 2025</p>
         <div className="intro-card">
-          This Privacy Policy explains how <strong>Awakeverse Ltd</strong> ("Awakeverse," "we," "us") collects and processes personal data under the UK GDPR and the Data Protection Act 2018.
+          This Privacy Policy explains how <strong>AwakeVerse Ltd</strong> ("AwakeVerse," "we," "us") collects and processes personal data under the UK GDPR and the Data Protection Act 2018.
         </div>
       </header>
 
       <main className="document-main">
         <h2 id="controller">1) Data Controller &amp; Contact</h2>
-        <p>Awakeverse Ltd is the data controller. Contact our privacy team at <a href="mailto:privacy@awakeverse.com">privacy@awakeverse.com</a>. You can also contact our support team at <a href="mailto:support@awakeverse.com">support@awakeverse.com</a>.</p>
+        <p>AwakeVerse Ltd is the data controller. Contact our privacy team at <a href="mailto:privacy@awakeverse.com">privacy@awakeverse.com</a>. You can also contact our support team at <a href="mailto:support@awakeverse.com">support@awakeverse.com</a>.</p>
 
         <h2 id="what-we-collect">2) What We Collect</h2>
         <table aria-label="Data we collect">
@@ -235,7 +235,7 @@ export default function PrivacyPolicy() {
         <p>To exercise your rights, email <a href="mailto:privacy@awakeverse.com">privacy@awakeverse.com</a>. We may need to verify your identity.</p>
 
         <h2 id="children">9) Children</h2>
-        <p>Awakeverse is not directed at children under 13. If we learn we have collected personal data from a child under 13, we will delete it.</p>
+        <p>AwakeVerse is not directed at children under 13. If we learn we have collected personal data from a child under 13, we will delete it.</p>
 
         <h2 id="automated">10) Automated Decision‑Making</h2>
         <p>AI features personalise and generate content. We do not use automated decision‑making that produces legal or similarly significant effects about you.</p>
@@ -248,7 +248,7 @@ export default function PrivacyPolicy() {
       </main>
 
       <footer className="document-footer">
-        <p>© {currentYear} Awakeverse Ltd. All rights reserved.</p>
+        <p>© {currentYear} AwakeVerse Ltd. All rights reserved.</p>
       </footer>
     </div>
   );

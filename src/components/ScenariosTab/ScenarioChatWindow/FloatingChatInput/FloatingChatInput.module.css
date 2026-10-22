@@ -1,0 +1,473 @@
+/* FloatingChatInput.module.css */
+/* REFACTORED: Modern floating input with Stop button and keyboard offset */
+
+/* ===== FLOATING INPUT WRAPPER ===== */
+.floatingInputWrapper {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  z-index: 100;
+  padding: var(--spacing-xl) var(--spacing-lg);
+  
+  /* Smoother gradient fade - doesn't obscure messages */
+  background: linear-gradient(
+    to top,
+    var(--bg-canvas) 0%,
+    var(--bg-canvas) 50%,
+    rgba(10, 15, 26, 0.98) 70%,
+    rgba(10, 15, 26, 0.9) 85%,
+    rgba(10, 15, 26, 0) 100%
+  );
+  
+  pointer-events: none; /* Allow clicks through gradient */
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-md);
+  max-width: 800px; /* Max width for large screens */
+  margin: 0 auto;
+  
+  /* Smooth keyboard offset transition - ONLY moves input, not page */
+  transition: transform 0.2s ease-out;
+}
+
+/* Mobile: Less padding, tighter spacing */
+@media (max-width: 768px) {
+  .floatingInputWrapper {
+    padding: var(--spacing-md);
+    gap: var(--spacing-sm);
+  }
+}
+
+/* ===== STARTER QUESTIONS SECTION ===== */
+.starterSection {
+  pointer-events: all;
+  background: var(--bg-surface);
+  border: 1px solid var(--border-medium);
+  border-radius: var(--border-radius-lg);
+  padding: var(--spacing-md);
+  box-shadow: var(--shadow-elevation02);
+  animation: slideUp 0.3s ease-out;
+}
+
+@keyframes slideUp {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.starterHeader {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: var(--spacing-sm);
+}
+
+.starterLabel {
+  font-size: var(--font-size-caption);
+  color: var(--text-tertiary);
+  font-weight: var(--font-weight-medium);
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+/* Close Button (X) */
+.closeStartersBtn {
+  width: 24px;
+  height: 24px;
+  min-width: 24px;
+  min-height: 24px;
+  border-radius: var(--border-radius-full);
+  background: transparent;
+  border: 1px solid var(--border-medium);
+  color: var(--text-tertiary);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: var(--transition-fast);
+  padding: 0;
+  flex-shrink: 0;
+}
+
+.closeStartersBtn:hover {
+  background: var(--bg-peak);
+  border-color: var(--accent-primary);
+  color: var(--accent-primary);
+}
+
+.closeStartersBtn:active {
+  transform: scale(0.95);
+}
+
+.closeStartersBtn:focus-visible {
+  outline: 2px solid var(--accent-primary);
+  outline-offset: 2px;
+}
+
+.starterChips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--spacing-sm);
+}
+
+.starterChip {
+  padding: var(--spacing-sm) var(--spacing-md);
+  background: var(--bg-interactive);
+  border: 1px solid var(--border-medium);
+  border-radius: var(--border-radius-full);
+  font-size: var(--font-size-body-small);
+  color: var(--text-secondary);
+  cursor: pointer;
+  transition: var(--transition-fast);
+  white-space: nowrap;
+  flex-shrink: 0;
+  font-family: var(--font-body);
+}
+
+.starterChip:hover {
+  background: var(--bg-peak);
+  border-color: var(--accent-primary);
+  color: var(--accent-primary);
+  box-shadow: var(--shadow-glow);
+}
+
+.starterChip:active {
+  transform: scale(0.95);
+}
+
+.starterChip:focus-visible {
+  outline: 2px solid var(--accent-primary);
+  outline-offset: 2px;
+}
+
+/* Mobile: Smaller chips */
+@media (max-width: 768px) {
+  .starterChip {
+    font-size: 13px;
+    padding: 6px 12px;
+  }
+}
+
+/* ===== INPUT CONTAINER ===== */
+.inputContainer {
+  pointer-events: all;
+  background: var(--bg-surface);
+  border: 1px solid var(--border-medium);
+  border-radius: var(--border-radius-xl);
+  display: flex;
+  align-items: flex-end;
+  gap: var(--spacing-sm);
+  padding: var(--spacing-sm);
+  transition: var(--transition-fast);
+  box-shadow: var(--shadow-elevation03);
+}
+
+.inputContainer:focus-within {
+  border-color: var(--accent-primary);
+  box-shadow: var(--shadow-glow);
+}
+
+/* Mobile: Slightly smaller border-radius, maintain padding */
+@media (max-width: 768px) {
+  .inputContainer {
+    border-radius: var(--border-radius-lg);
+    padding: var(--spacing-sm);
+    gap: var(--spacing-sm);
+  }
+}
+
+/* ===== TEXTAREA ===== */
+.textarea {
+  flex: 1;
+  background: transparent;
+  border: none;
+  outline: none;
+  resize: none;
+  font-family: var(--font-body);
+  font-size: var(--font-size-body);
+  line-height: var(--line-height-body);
+  color: var(--text-primary);
+  padding: var(--spacing-sm);
+  min-height: 24px;
+  max-height: 120px;
+  overflow-y: auto;
+  scrollbar-width: thin;
+}
+
+.textarea::placeholder {
+  color: var(--text-tertiary);
+}
+
+.textarea:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+/* Textarea scrollbar */
+.textarea::-webkit-scrollbar {
+  width: 4px;
+}
+
+.textarea::-webkit-scrollbar-thumb {
+  background: var(--border-medium);
+  border-radius: var(--border-radius-sm);
+}
+
+.textarea::-webkit-scrollbar-thumb:hover {
+  background: var(--accent-primary);
+}
+
+/* Mobile: 16px font prevents iOS auto-zoom */
+@media (max-width: 768px) {
+  .textarea {
+    font-size: 16px; /* Critical for iOS */
+    padding: 8px;
+  }
+}
+
+/* ===== SEND BUTTON (Default State) ===== */
+.sendButton {
+  width: 44px;
+  height: 44px;
+  min-width: 44px;
+  min-height: 44px;
+  border-radius: var(--border-radius-full);
+  background: linear-gradient(135deg, var(--accent-primary), var(--accent-hover));
+  border: none;
+  color: white;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: var(--transition-fast);
+  box-shadow: var(--shadow-elevation02);
+  flex-shrink: 0; /* Prevent squishing */
+  padding: 0;
+}
+
+.sendButton:hover:not(:disabled) {
+  box-shadow: var(--shadow-glow);
+  transform: scale(1.05);
+}
+
+.sendButton:active:not(:disabled) {
+  transform: scale(0.95);
+}
+
+.sendButton:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+  background: var(--bg-peak);
+}
+
+.sendButton:focus-visible {
+  outline: 2px solid var(--accent-primary);
+  outline-offset: 2px;
+}
+
+/* Mobile: Maintain professional size, never squished */
+@media (max-width: 768px) {
+  .sendButton {
+    width: 42px;
+    height: 42px;
+    min-width: 42px;
+    min-height: 42px;
+  }
+}
+
+/* ===== STOP BUTTON (When isSending = true) ===== */
+.stopButton {
+  background: linear-gradient(135deg, #F59E0B, #EF4444); /* Orange to Red */
+}
+
+.stopButton:hover:not(:disabled) {
+  box-shadow: 0 0 20px -5px rgba(239, 68, 68, 0.3); /* Red glow */
+  transform: scale(1.05);
+}
+
+.stopButton:focus-visible {
+  outline: 2px solid #EF4444;
+  outline-offset: 2px;
+}
+
+/* Stop button is never disabled (always clickable when sending) */
+.stopButton:disabled {
+  opacity: 1;
+  cursor: pointer;
+  background: linear-gradient(135deg, #F59E0B, #EF4444);
+}
+
+/* ===== AI DISCLAIMER ===== */
+.disclaimer {
+  text-align: center;
+  font-size: 0.7rem;
+  color: rgba(255, 245, 235, 0.45); /* ivory white, subtle */
+  letter-spacing: 0.2px;
+  pointer-events: none;
+  padding-bottom: var(--spacing-xs);
+  margin: 0;
+}
+
+/* ===== ACCESSIBILITY ===== */
+
+/* Reduce motion */
+@media (prefers-reduced-motion: reduce) {
+  .starterSection {
+    animation: none;
+  }
+  
+  .floatingInputWrapper {
+    transition: none !important;
+  }
+  
+  .sendButton:hover:not(:disabled),
+  .sendButton:active:not(:disabled),
+  .starterChip:active,
+  .closeStartersBtn:active {
+    transform: none !important;
+  }
+}
+
+/* High contrast mode */
+@media (prefers-contrast: high) {
+  .inputContainer,
+  .starterSection {
+    border-width: 2px;
+  }
+  
+  .sendButton,
+  .stopButton {
+    border: 2px solid white;
+  }
+  
+  .starterChip,
+  .closeStartersBtn {
+    border-width: 2px;
+  }
+}
+
+/* ===== DEFENSIVE FALLBACKS ===== */
+
+/* Ensure proper box-sizing */
+.floatingInputWrapper * {
+  box-sizing: border-box;
+}
+
+/* Prevent overflow issues */
+.inputContainer,
+.starterSection {
+  min-width: 0; /* Allows flex items to shrink properly */
+}
+
+/* Fallback if CSS variables aren't loaded */
+@supports not (color: var(--bg-canvas)) {
+  .floatingInputWrapper {
+    background: linear-gradient(
+      to top,
+      #0A0F1A 0%,
+      #0A0F1A 50%,
+      rgba(10, 15, 26, 0.98) 70%,
+      rgba(10, 15, 26, 0.9) 85%,
+      rgba(10, 15, 26, 0) 100%
+    );
+  }
+  
+  .inputContainer,
+  .starterSection {
+    background: #141B2E;
+    border: 1px solid rgba(148, 163, 184, 0.2);
+  }
+  
+  .sendButton {
+    background: linear-gradient(135deg, #6366F1, #818CF8);
+  }
+  
+  .stopButton {
+    background: linear-gradient(135deg, #F59E0B, #EF4444);
+  }
+}
+
+/* =========================================================================
+   UNIFIED NIGHT BLUE INPUT - Entire area, no separate sections
+   ========================================================================= */
+
+/* FIX 1: Remove dark rectangle from starter questions */
+.starterSection {
+  background: transparent !important;
+  border: none !important;
+  box-shadow: none !important;
+  padding: 0 !important;
+}
+
+/* FIX 2: Restore gradient background — covers messages below input */
+.floatingInputWrapper {
+  background: linear-gradient(
+    to top,
+    var(--bg-canvas) 0%,
+    var(--bg-canvas) 40%,
+    rgba(10, 15, 26, 0.7) 65%,
+    rgba(10, 15, 26, 0.2) 85%,
+    transparent 100%
+  ) !important;
+  padding-bottom: var(--spacing-sm) !important;
+}
+
+/* FIX 3: Input container - ENTIRE AREA night blue (matches page background) */
+.inputContainer {
+  background: var(--bg-surface) !important;  /* #141B2E - same as chat panel */
+  border: 1px solid var(--border-medium) !important;
+  border-radius: var(--border-radius-xl);
+  padding: var(--spacing-sm);
+  gap: var(--spacing-sm);
+  box-shadow: none !important;
+}
+
+/* Mobile: Same unified background */
+@media (max-width: 768px) {
+  .inputContainer {
+    background: var(--bg-surface) !important;
+    border-radius: var(--border-radius-lg);
+    box-shadow: none !important;
+  }
+}
+
+/* FIX 4: Focus state - keep same background, only border changes */
+.inputContainer:focus-within {
+  border-color: var(--accent-primary) !important;  /* Indigo border */
+  box-shadow: none !important;
+  outline: none !important;
+  background: var(--bg-surface) !important;  /* Keep same night blue */
+}
+
+/* FIX 5: Textarea - TRANSPARENT (shows container background through) */
+.textarea {
+  background: transparent !important;  /* No separate background */
+  border: none;
+  outline: none;
+  padding: var(--spacing-sm);
+}
+
+.textarea:focus,
+.textarea:focus-within,
+.textarea:focus-visible {
+  outline: none !important;
+  border: none !important;
+  background: transparent !important;  /* Stay transparent */
+}
+
+/* FIX 6: Force indigo border, never gold */
+.inputContainer:focus,
+.inputContainer:focus-within,
+.inputContainer:active {
+  border-color: var(--accent-primary) !important;
+  background: var(--bg-surface) !important;
+  box-shadow: none !important;
+}
+
+/* END OF UNIFIED NIGHT BLUE FIX */

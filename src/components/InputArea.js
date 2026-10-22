@@ -12,7 +12,8 @@ export default function InputArea({
   onStop,
   isSending,
   onFocus,    // ← NEW: Add this prop
-  onBlur      // ← NEW: Add this prop
+  onBlur,     // ← NEW: Add this prop
+  disabled    // ← ADD THIS NEW PROP
 }) {
   const textareaRef = useRef(null);
   const typingTimeoutRef = useRef(null);
@@ -87,17 +88,19 @@ export default function InputArea({
         ref={textareaRef}
         minRows={1}
         maxRows={5}
-        className={styles.textarea}
-        placeholder="Type your message…"
+        className={`${styles.textarea} ${disabled ? styles.disabled : ''}`}
+        placeholder={disabled ? "Usage limit reached" : "Type your message…"}
         value={value}
         onChange={onChange}
         onKeyDown={handleKeyDown}
-        onFocus={onFocus}       // ← Direct pass-through as instructed
-        onBlur={onBlur}         // ← Direct pass-through as instructed
+        onFocus={onFocus}
+        onBlur={onBlur}
+        disabled={disabled || isSending}
       />
       <button
-        className={styles.sendButton}
+        className={`${styles.sendButton} ${disabled ? styles.disabledButton : ''}`}
         onClick={isSending ? onStop : onSend}
+        disabled={disabled}
         aria-label={isSending ? 'Stop generating' : 'Send message'}
       >
         {isSending ? <StopCircle size={20} /> : <Send size={20} />}

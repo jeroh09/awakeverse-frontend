@@ -104,10 +104,10 @@ export default function AIDisclaimer() {
           <a href="/privacy">Privacy</a>
           <a href="/security">Security</a>
         </nav>
-        <h1>Awakeverse — AI Disclaimer</h1>
+        <h1>AwakeVerse — AI Disclaimer</h1>
         <p className="meta">Effective: August 2025 • Last updated: August 2025</p>
         <div className="intro-card">
-          Awakeverse provides access to interactive conversations with AI-generated characters.
+          AwakeVerse provides access to interactive conversations with AI-generated characters.
           These characters are designed for educational, entertainment, and exploratory purposes.
           By using our platform, you acknowledge and agree to the following:
         </div>
@@ -128,7 +128,7 @@ export default function AIDisclaimer() {
           <h2>2. Accuracy &amp; Reliability</h2>
           <p>
             While we take care to train and configure our AI responsibly, responses may sometimes be
-            inaccurate, outdated, biased, or misleading. Awakeverse makes no guarantee that
+            inaccurate, outdated, biased, or misleading. AwakeVerse makes no guarantee that
             AI-generated content is factually correct or complete. Historical characters in particular
             may include creative interpretation for immersive experience.
           </p>
@@ -138,7 +138,7 @@ export default function AIDisclaimer() {
           <h2>3. Intellectual Property</h2>
           <p>
             AI outputs may reference publicly available data (such as Project Gutenberg or Wikipedia).
-            Any resemblance to copyrighted works is unintentional. Awakeverse claims no ownership
+            Any resemblance to copyrighted works is unintentional. AwakeVerse claims no ownership
             of third-party materials surfaced by the AI and provides attribution where required.
           </p>
         </section>
@@ -147,7 +147,7 @@ export default function AIDisclaimer() {
           <h2>4. User Responsibility</h2>
           <p>
             You are responsible for how you use, interpret, and share AI-generated responses.
-            By continuing to use Awakeverse, you agree not to misuse AI content for unlawful,
+            By continuing to use AwakeVerse, you agree not to misuse AI content for unlawful,
             harmful, or misleading purposes.
           </p>
         </section>
@@ -166,7 +166,7 @@ export default function AIDisclaimer() {
         <section className="section">
           <h2>6. Limitation of Liability</h2>
           <p>
-            Awakeverse is not liable for decisions, actions, or outcomes taken on the basis of
+            AwakeVerse is not liable for decisions, actions, or outcomes taken on the basis of
             AI-generated responses. Use of the service is at your own risk. The platform is provided
             on an "as is" and "as available" basis without warranties of any kind.
           </p>
@@ -182,7 +182,7 @@ export default function AIDisclaimer() {
       </main>
 
       <footer className="document-footer">
-        <p>© {currentYear} Awakeverse Ltd. All rights reserved.</p>
+        <p>© {currentYear} AwakeVerse Ltd. All rights reserved.</p>
       </footer>
     </div>
   );

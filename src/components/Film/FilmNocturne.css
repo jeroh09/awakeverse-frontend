@@ -1,0 +1,360 @@
+/* src/components/Film/FilmNocturne.css
+   NOCTURNE GLASS (2026-10-19) — the Film workspace as frosted glass over a night sky.
+   Owner's picks: glass year-round; a Halloween season layer from 1 Oct to 2 Nov (with a
+   toggle) — pumpkin-amber accent, drifting fog and embers; the projector beam all year.
+
+   SAFE BY CONSTRUCTION
+   • A separate file, imported by FilmWorkspace.jsx AFTER FilmWorkspace.css. Nothing in
+     FilmWorkspace.css, CreditsUI.css or AdStoryboard.css is edited.
+   • Every rule is scoped under .fw-nocturne (a class on the workspace root), so each
+     selector is one class MORE specific than the rule it restyles and wins regardless of
+     bundle order. Remove the class and the workspace is exactly as before.
+   • Visual properties only: colour, background, border, radius, shadow, blur, animation.
+     No display / flex / grid / size / position changes to existing elements, so no layout,
+     handler or state can move. (Two exceptions, both inert: .film-cell and
+     .film-inputwrap gain position:relative + isolation so their light layers can sit
+     inside them.)
+   • Blur lives on ::before layers, never on the element itself, so no fixed-position
+     descendant is ever trapped (the "seep-through" lesson from FilmLibrary's player).
+   • State rules (selected, locked, editing, short, collapsed) are re-stated here, so a
+     base override never hides a state.
+   • The season is <body data-film-season="halloween">, set by useFilmSeason(), so the
+     portalled pop-outs can join it later with no extra wiring.
+   • Reduced motion: FilmWorkspace.css already stops every animation under .film-workspace. */
+
+/* ── the rim-light angle (browsers without @property keep a still rim) ── */
+@property --fw-ang { syntax: '<angle>'; inherits: false; initial-value: 0deg; }
+
+/* ═══ TOKENS ═══════════════════════════════════════════════════════════════════ */
+.film-workspace.theme-awakeverse.fw-nocturne{
+  /* the existing --film-* tokens, re-tuned for glass (same names → every rule using them follows) */
+  --film-canvas:#08080F;
+  --film-surface:rgba(18,19,36,.6);
+  --film-interactive:rgba(255,255,255,.055);
+  --film-peak:rgba(255,255,255,.1);
+  --film-bd-subtle:rgba(255,255,255,.07);
+  --film-bd-med:rgba(255,255,255,.12);
+  --film-bd-strong:rgba(255,255,255,.2);
+  /* glass */
+  --fw-edge:rgba(255,255,255,.08);
+  --fw-edge-hi:rgba(255,255,255,.16);
+  --fw-pane:rgba(15,16,32,.56);
+  --fw-slab:rgba(12,12,24,.84);
+  --fw-lip:inset 0 1px 0 rgba(255,255,255,.09);
+  --fw-sky:#1B1F4A;
+  /* accent tints (year-round indigo) */
+  --fw-a08:rgba(129,140,248,.08); --fw-a14:rgba(129,140,248,.14); --fw-a24:rgba(129,140,248,.24);
+  --fw-a40:rgba(129,140,248,.4);  --fw-a60:rgba(129,140,248,.6);
+  --fw-accent-2:#C4B5FD;      /* speaker names, a quiet second colour */
+  --fw-ink-soft:#C7D2FE;      /* soft text on accent tints */
+  --fw-on-accent:#FFFFFF;     /* text on a filled accent */
+  --fw-on-accent-a:rgba(255,255,255,.4);
+}
+/* HALLOWEEN — six colours change; the season layers switch on below. */
+body[data-film-season="halloween"] .film-workspace.theme-awakeverse.fw-nocturne{
+  --film-canvas:#07060C;
+  --film-accent:#FF8A3D; --film-accent-hover:#FFA766;
+  --film-glow:rgba(255,138,61,.22); --film-glow-strong:rgba(255,138,61,.34);
+  --film-ring:rgba(255,138,61,.55); --film-glow-sh:0 0 22px -6px rgba(255,138,61,.45);
+  --fw-sky:#2A1640;
+  --fw-a08:rgba(255,138,61,.08); --fw-a14:rgba(255,138,61,.14); --fw-a24:rgba(255,138,61,.24);
+  --fw-a40:rgba(255,138,61,.4);  --fw-a60:rgba(255,138,61,.6);
+  --fw-accent-2:#B794F6;
+  --fw-ink-soft:#FFD2B0;
+  --fw-on-accent:#1A0B02;     /* dark ink on amber — white on #FF8A3D is unreadable */
+  --fw-on-accent-a:rgba(26,11,2,.28);
+}
+
+/* ═══ THE SKY + ATMOSPHERE ═════════════════════════════════════════════════════ */
+.film-workspace.fw-nocturne{
+  position:relative; isolation:isolate;
+  background:var(--film-canvas);
+  background-image:
+    radial-gradient(1100px 600px at 86% -18%, var(--fw-sky), transparent 62%),
+    radial-gradient(900px 520px at -8% 112%, rgba(96,56,170,.16), transparent 60%);
+}
+.fw-nocturne .fw-atmos{position:absolute; inset:0; z-index:-1; overflow:hidden; pointer-events:none;}
+/* projector beam — year-round; a faint warm cone across the storyboard, slight flicker */
+.fw-nocturne .fw-beam{position:absolute; left:-180px; top:-220px; width:1100px; height:1100px;
+  background:conic-gradient(from 118deg at 20% 18%, transparent 0deg, rgba(255,236,200,.06) 8deg,
+    rgba(255,236,200,.1) 14deg, rgba(255,236,200,.045) 22deg, transparent 30deg);
+  filter:blur(8px); mix-blend-mode:screen; animation:fw-flicker 7s infinite steps(1);}
+@keyframes fw-flicker{0%,100%{opacity:1} 31%{opacity:.8} 32%{opacity:1} 64%{opacity:.88} 65%{opacity:1}}
+/* fog + embers — season only */
+.fw-nocturne .fw-fog,.fw-nocturne .fw-embers{display:none;}
+body[data-film-season="halloween"] .fw-nocturne .fw-fog,
+body[data-film-season="halloween"] .fw-nocturne .fw-embers{display:block;}
+.fw-nocturne .fw-fog{position:absolute; left:-50%; right:-50%; bottom:-50px; height:240px;
+  background:
+    radial-gradient(40% 60% at 20% 70%, rgba(200,195,230,.12), transparent 70%),
+    radial-gradient(35% 55% at 60% 80%, rgba(200,195,230,.09), transparent 70%),
+    radial-gradient(30% 50% at 90% 75%, rgba(200,195,230,.11), transparent 70%);
+  filter:blur(16px); animation:fw-drift 44s linear infinite alternate;}
+.fw-nocturne .fw-fog--b{bottom:-100px; opacity:.7; animation-duration:66s; animation-direction:alternate-reverse;}
+@keyframes fw-drift{from{transform:translateX(-12%)} to{transform:translateX(12%)}}
+.fw-nocturne .fw-embers{position:absolute; inset:0;}
+.fw-nocturne .fw-embers i{position:absolute; bottom:-10px; left:var(--x); width:3px; height:3px; border-radius:50%;
+  background:#FFB067; box-shadow:0 0 8px 2px rgba(255,138,61,.65);
+  transform:scale(var(--s,1)); animation:fw-rise var(--d,12s) linear var(--dl,0s) infinite; opacity:0;}
+@keyframes fw-rise{0%{transform:translate(0,0) scale(var(--s,1)); opacity:0} 10%{opacity:.9}
+  100%{transform:translate(var(--dx,30px),-92vh) scale(var(--s,1)); opacity:0}}
+
+/* ═══ TOP BAR ══════════════════════════════════════════════════════════════════ */
+.fw-nocturne .film-topbar{border-bottom-color:var(--fw-edge);}
+.fw-nocturne .film-toggles{background:rgba(255,255,255,.04); border-color:var(--fw-edge-hi); box-shadow:var(--fw-lip);}
+.fw-nocturne .film-tg:hover{background:var(--fw-a14);}
+/* Storyboard / Assistant are toggles, not actions → lit glass, not the accent fill */
+.fw-nocturne .film-toggles .film-tg:not(.is-off):not(.film-tg--back){background:rgba(255,255,255,.1); color:var(--film-t1);
+  box-shadow:inset 0 1px 0 rgba(255,255,255,.14);}
+.fw-nocturne .film-toggles .film-tg:not(.is-off):not(.film-tg--back):hover{background:rgba(255,255,255,.16);}
+.fw-nocturne .film-tg-div{background:var(--fw-edge-hi);}
+/* credits chip (CreditsUI.css) */
+.fw-nocturne .film-credits-chip{background:rgba(255,255,255,.04); border-color:var(--fw-edge-hi); box-shadow:var(--fw-lip);}
+.fw-nocturne .film-credits-chip:hover{background:rgba(255,255,255,.08); border-color:var(--fw-a40);}
+.fw-nocturne .film-credits-dot{box-shadow:0 0 8px var(--film-success);}
+/* the Halloween switch (new, only shown 1 Oct – 2 Nov) */
+.fw-nocturne .fw-season-tg{flex:0 0 auto; display:inline-flex; align-items:center; gap:6px; cursor:pointer;
+  font:600 12px/1 var(--film-body); color:var(--film-t3); background:rgba(255,255,255,.04);
+  border:1px solid var(--fw-edge-hi); border-radius:var(--film-r-full); padding:6px 11px 6px 9px; transition:color .15s,border-color .15s,background .15s;}
+.fw-nocturne .fw-season-tg:hover{color:var(--film-t1);}
+.fw-nocturne .fw-season-tg.is-on{color:#FFB067; border-color:rgba(255,138,61,.45); background:rgba(255,138,61,.1);
+  box-shadow:0 0 16px -6px rgba(255,138,61,.6);}
+.fw-nocturne .fw-season-tg svg{flex:0 0 auto;}
+/* the switch's word shows on wide screens only — below that it is the pumpkin alone */
+@media (max-width:1199px){ .fw-nocturne .fw-season-lbl{display:none;} .fw-nocturne .fw-season-tg{padding:6px 8px;} }
+
+/* ═══ PANELS ═══════════════════════════════════════════════════════════════════ */
+/* the storyboard: glass pane. The tint + blur sit on ::before, so the panel itself keeps
+   no filter (fixed children stay fixed) and its content paints above the glass. */
+.fw-nocturne .film-panel--stage:not(.is-collapsed){background:transparent; border-color:var(--fw-edge);
+  border-radius:16px; isolation:isolate; box-shadow:var(--fw-lip),0 30px 70px -40px #000;}
+.fw-nocturne .film-panel--stage:not(.is-collapsed)::before{content:''; position:absolute; inset:0; z-index:-1;
+  pointer-events:none; border-radius:inherit; background:var(--fw-pane);
+  -webkit-backdrop-filter:blur(18px) saturate(150%); backdrop-filter:blur(18px) saturate(150%);}
+/* peek tabs + the narrow-screen strip */
+.fw-nocturne .film-rail{background:var(--fw-slab); border-color:var(--fw-edge-hi);}
+.fw-nocturne .film-panel.is-collapsed .film-rail{background:var(--fw-slab); border-color:var(--fw-edge-hi);}
+.fw-nocturne .film-panel.is-collapsed .film-rail:hover{background:rgba(24,24,44,.9);}
+.fw-nocturne .film-panel--chat.is-collapsed .film-rail:hover{box-shadow:-6px 0 22px -10px var(--fw-a60);}
+.fw-nocturne .film-panel--stage.is-collapsed .film-rail:hover{box-shadow:6px 0 22px -10px var(--fw-a60);}
+.fw-nocturne .film-rail-btn{border-color:var(--fw-edge-hi);}
+
+/* ═══ STORYBOARD HEADER ════════════════════════════════════════════════════════ */
+.fw-nocturne .film-phead{border-bottom-color:var(--fw-edge);}
+.fw-nocturne .film-sb-capsule{background:rgba(255,255,255,.04); border-color:var(--fw-edge-hi);}
+/* "Storyboard" is a label, not a choice → quiet lit glass (the accent stays for actions) */
+.fw-nocturne .film-sb-capsule-on{background:rgba(255,255,255,.1); color:var(--film-t1); box-shadow:inset 0 1px 0 rgba(255,255,255,.14);}
+/* stage dot with its own light; it pulses while something is happening */
+.fw-nocturne .film-sb-stage{--fw-dot:var(--film-accent-hover);}
+.fw-nocturne .film-sb-stage.is-idle{--fw-dot:transparent;}
+.fw-nocturne .film-sb-stage.is-busy{--fw-dot:var(--film-warning);}
+.fw-nocturne .film-sb-stage.is-done{--fw-dot:var(--film-success);}
+.fw-nocturne .film-sb-stage.is-warn{--fw-dot:#f0c674;}
+.fw-nocturne .film-sb-stage::before{box-shadow:0 0 8px 1px var(--fw-dot);}
+.fw-nocturne .film-sb-stage.is-busy::before,
+.fw-nocturne .film-sb-stage.is-live::before{animation:fw-breathe 1.6s ease-in-out infinite;}
+@keyframes fw-breathe{50%{opacity:.35}}
+
+/* ═══ SHOT CARDS ═══════════════════════════════════════════════════════════════ */
+.fw-nocturne .film-cell{position:relative; isolation:isolate; background:rgba(255,255,255,.035);
+  border-color:var(--fw-edge); border-radius:14px; box-shadow:var(--fw-lip);
+  transition:border-color .2s, box-shadow .25s, transform .25s cubic-bezier(.2,.8,.2,1);}
+.fw-nocturne .film-cell:not(.is-locked):hover{border-color:var(--fw-edge-hi); transform:translateY(-2px);
+  box-shadow:var(--fw-lip),0 18px 30px -18px rgba(0,0,0,.85);}
+.fw-nocturne .film-cell.is-locked:hover{transform:none; box-shadow:var(--fw-lip);}
+/* specular: a soft highlight that follows the cursor (FilmWorkspace sets --fw-mx/--fw-my) */
+.fw-nocturne .film-cell::before{content:''; position:absolute; inset:0; z-index:4; border-radius:inherit; pointer-events:none;
+  opacity:0; transition:opacity .25s;
+  background:radial-gradient(240px circle at var(--fw-mx,50%) var(--fw-my,30%), rgba(255,255,255,.07), transparent 60%);}
+.fw-nocturne .film-cell:not(.is-locked):hover::before{opacity:1;}
+/* selected: a slow comet of accent light travels the border */
+/* (the ring sits just inside the border: the card clips anything outside its padding box) */
+.fw-nocturne .film-cell.is-sel{border-color:var(--fw-a40); box-shadow:var(--fw-lip),0 0 30px -8px var(--film-glow-strong);}
+.fw-nocturne .film-cell.is-sel::after{content:''; position:absolute; inset:0; z-index:6; border-radius:inherit; pointer-events:none;
+  background:conic-gradient(from var(--fw-ang), var(--fw-a24) 0deg, var(--film-accent-hover) 50deg,
+    var(--fw-a24) 120deg, var(--fw-a24) 360deg);
+  padding:1.5px; -webkit-mask:linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0);
+  -webkit-mask-composite:xor; mask-composite:exclude; animation:fw-spin 6s linear infinite;}
+@keyframes fw-spin{to{--fw-ang:360deg}}
+/* thumbs */
+.fw-nocturne .film-thumb--plan{background:rgba(255,255,255,.02); border-bottom-color:var(--fw-edge-hi);}
+.fw-nocturne .film-thumb--preview,.fw-nocturne .film-thumb--final{background:
+    radial-gradient(120% 120% at 30% 20%, var(--fw-a14), transparent 55%), linear-gradient(135deg,#0C0B18,#18152B);}
+.fw-nocturne .film-thumb--preview .film-chip,.fw-nocturne .film-thumb--rendering .film-chip{background:var(--fw-a24); color:#fff;}
+.fw-nocturne .film-thumb--rendering{background:rgba(255,255,255,.03);}
+/* rendering: a beam of light sweeps the frame */
+.fw-nocturne .film-thumb--rendering::after{content:''; position:absolute; inset:0; z-index:1; pointer-events:none;
+  background:linear-gradient(100deg, transparent 30%, rgba(255,240,220,.14) 50%, transparent 70%);
+  background-size:250% 100%; animation:fw-sweep 2.4s linear infinite;}
+@keyframes fw-sweep{from{background-position:120% 0} to{background-position:-120% 0}}
+.fw-nocturne .film-thumb .film-play{background:rgba(255,255,255,.14); border-color:rgba(255,255,255,.3);
+  -webkit-backdrop-filter:blur(10px); backdrop-filter:blur(10px);}
+.fw-nocturne .film-thumb .film-play:hover{background:var(--fw-a40);}
+.fw-nocturne .film-thumb .film-dur{background:rgba(8,8,16,.5);}
+.fw-nocturne .film-lockthumb{background:linear-gradient(160deg, rgba(255,255,255,.05), rgba(255,255,255,.012) 55%), rgba(10,10,22,.5);}
+/* words + controls */
+.fw-nocturne .film-cap .film-spk,.fw-nocturne .film-line .film-spk{color:var(--fw-accent-2);}
+.fw-nocturne .film-line{background:rgba(255,255,255,.04);}
+.fw-nocturne .film-line-edit{color:var(--film-accent-hover);}
+.fw-nocturne .film-line-edit:hover{color:var(--film-t1);}
+.fw-nocturne .film-ctrl{border-radius:9px;}
+.fw-nocturne .film-ctrl.is-on{color:var(--fw-on-accent);}
+.fw-nocturne .film-spin{border-color:var(--fw-a24); border-top-color:var(--film-accent-hover);}
+.fw-nocturne .film-ctrl-spin{border-color:var(--fw-a24); border-top-color:var(--film-accent-hover);}
+/* spinners on a filled accent use the button's ink (restates FilmWorkspace's funnel rule) */
+.fw-nocturne .film-funnel-cta .film-ctrl-spin,
+.fw-nocturne .film-btn--primary .film-ctrl-spin,
+.fw-nocturne .film-btn--primary .film-spin{border-color:var(--fw-on-accent-a); border-top-color:var(--fw-on-accent);}
+/* progress: the bar glows and a light sweeps along it */
+.fw-nocturne .film-prog-bar{position:relative;}
+.fw-nocturne .film-prog-bar > i{box-shadow:0 0 12px var(--film-glow-strong);}
+.fw-nocturne .film-prog-bar::after{content:''; position:absolute; inset:0; pointer-events:none;
+  background:linear-gradient(100deg, transparent 30%, rgba(255,255,255,.35) 50%, transparent 70%);
+  background-size:250% 100%; animation:fw-sweep 2s linear infinite;}
+/* scrollbars stay visible on glass */
+.fw-nocturne .film-stage::-webkit-scrollbar-thumb,.fw-nocturne .film-chatscroll::-webkit-scrollbar-thumb{background:rgba(255,255,255,.12);}
+
+/* ═══ CAST + PLACES REVIEW ═════════════════════════════════════════════════════ */
+.fw-nocturne .film-cc,.fw-nocturne .film-pc{background:rgba(255,255,255,.035); border-color:var(--fw-edge); box-shadow:var(--fw-lip);}
+.fw-nocturne .film-cc:hover,.fw-nocturne .film-pc:hover{border-color:var(--fw-edge-hi);}
+.fw-nocturne .film-cc.is-locked,.fw-nocturne .film-pc.is-locked{border-color:rgba(52,211,153,.3);}
+.fw-nocturne .film-cc.is-editing,.fw-nocturne .film-pc.is-editing{border-color:var(--film-accent); box-shadow:0 0 0 3px var(--film-glow);}
+.fw-nocturne .film-pc-kept span,.fw-nocturne .film-place-chip{color:var(--fw-ink-soft); background:var(--fw-a14); border-color:var(--fw-a24);}
+.fw-nocturne .film-place-lock{background:var(--fw-a08);}
+.fw-nocturne .film-place-painting{color:var(--film-accent-hover);}
+.fw-nocturne .film-cast-card,.fw-nocturne .film-place-card{background:rgba(255,255,255,.035); border-color:var(--fw-edge);}
+.fw-nocturne .film-place-card.is-locked{border-color:rgba(52,211,153,.32);}
+.fw-nocturne .film-cast-skel-shine{background:linear-gradient(100deg, transparent 30%, var(--fw-a14) 50%, transparent 70%);}
+.fw-nocturne .film-sbtn--pri{color:var(--fw-on-accent);}
+
+/* ═══ THE DOCK — a floating glass bar ══════════════════════════════════════════
+   It floats 10px inside the panel; the composer gets the same 11px (10 + the panel's
+   1px border) below it, so the two still share one bottom line. Height unchanged. */
+.fw-nocturne .film-dock{margin:0 10px 10px; border:1px solid var(--fw-edge-hi); border-radius:16px;
+  background:linear-gradient(180deg, rgba(255,255,255,.06), rgba(255,255,255,.015)), var(--fw-slab);
+  box-shadow:var(--fw-lip),0 18px 40px -22px #000;}
+.fw-nocturne .film-dock.is-short{border-color:rgba(245,158,11,.45);
+  background:linear-gradient(rgba(60,44,12,.42),rgba(60,44,12,.62)), var(--fw-slab);}
+.fw-nocturne .film-composer{padding-bottom:11px;}
+/* the one action that breathes: the dock's primary button, like a candle */
+.fw-nocturne .film-dock .film-btn--primary:not(:disabled){animation:fw-candle 3.2s ease-in-out infinite;}
+@keyframes fw-candle{0%,100%{box-shadow:inset 0 1px 0 rgba(255,255,255,.25),0 8px 24px -8px var(--film-glow-strong)}
+  45%{box-shadow:inset 0 1px 0 rgba(255,255,255,.25),0 10px 32px -6px var(--film-glow-strong)}
+  50%{box-shadow:inset 0 1px 0 rgba(255,255,255,.25),0 7px 20px -9px var(--film-glow-strong)}}
+.fw-nocturne .film-btn-cost{border-left-color:var(--fw-on-accent-a);}
+body[data-film-season="halloween"] .fw-nocturne .film-btn-cost.is-short{color:#6B1600;}
+
+/* ═══ BUTTONS ══════════════════════════════════════════════════════════════════ */
+.fw-nocturne .film-btn--primary{color:var(--fw-on-accent); box-shadow:inset 0 1px 0 rgba(255,255,255,.25),var(--film-glow-sh);}
+.fw-nocturne .film-btn--ghost{border-color:var(--fw-edge-hi);}
+.fw-nocturne .film-btn--soft{color:var(--film-accent-hover); background:var(--fw-a14); border-color:var(--fw-a24);}
+
+/* ═══ WRITERS' / EDITOR'S ROOM ═════════════════════════════════════════════════ */
+.fw-nocturne .film-panel--chat .film-htabs{background:rgba(255,255,255,.04); border-color:var(--fw-edge-hi); box-shadow:var(--fw-lip);}
+.fw-nocturne .film-panel--chat .film-htab.is-on{color:var(--fw-on-accent); box-shadow:inset 0 1px 0 rgba(255,255,255,.25),0 0 16px -6px var(--film-glow-strong);}
+.fw-nocturne .film-htab-act{color:var(--film-t1); background:var(--fw-a14); border-color:var(--fw-a40);}
+.fw-nocturne .film-htab-act:hover{background:var(--fw-a24);}
+/* your own lines: a tinted glass bubble */
+.fw-nocturne .film-msg--me{background:linear-gradient(160deg, var(--fw-a14), rgba(255,255,255,.035));
+  border:1px solid var(--fw-edge-hi); border-radius:16px 16px 6px 16px; box-shadow:var(--fw-lip);}
+.fw-nocturne .film-msg-attach{color:var(--film-accent-hover); background:var(--fw-a14); border-color:var(--fw-a24);}
+/* script draft — a glass sheet */
+.fw-nocturne .film-script-panel{background:rgba(255,255,255,.03); border-color:var(--fw-edge-hi); border-radius:14px; box-shadow:var(--fw-lip);}
+.fw-nocturne .film-script-head{background:rgba(255,255,255,.04); border-bottom-color:var(--fw-edge);}
+.fw-nocturne .film-char-chip{background:rgba(255,255,255,.04); border-color:var(--fw-edge-hi);}
+.fw-nocturne .film-char-chip:hover{border-color:var(--fw-a40);}
+.fw-nocturne .film-char-chip.is-open{background:var(--fw-a14); border-color:var(--film-accent-hover);}
+.fw-nocturne .film-char-detail{background:rgba(255,255,255,.035); border-color:var(--fw-edge-hi);}
+/* "Script ready" bar */
+.fw-nocturne .film-scriptbar{background:var(--fw-a08); border-color:var(--fw-a40); box-shadow:var(--fw-lip);}
+.fw-nocturne .film-scriptbar-lbl,.fw-nocturne .film-scriptbar-pill{color:var(--fw-ink-soft);}
+.fw-nocturne .film-scriptbar-x{border-color:var(--fw-a40);}
+.fw-nocturne .film-scriptbar-x:hover{border-color:var(--fw-a60); background:var(--fw-a14);}
+.fw-nocturne .film-scriptbar-pill{background:var(--fw-a08); border-color:var(--fw-a40);}
+.fw-nocturne .film-scriptbar-pill:hover{background:var(--fw-a14); border-color:var(--fw-a60);}
+/* the composer: glass over the fog; a rim of light while you type */
+.fw-nocturne .film-inputwrap{position:relative; isolation:isolate; background:transparent; border-color:var(--fw-edge-hi);
+  border-radius:18px; box-shadow:var(--fw-lip),0 14px 34px -18px rgba(0,0,0,.9);}
+.fw-nocturne .film-inputwrap::before{content:''; position:absolute; inset:0; z-index:-1; pointer-events:none; border-radius:inherit;
+  background:rgba(14,14,28,.6); -webkit-backdrop-filter:blur(16px) saturate(140%); backdrop-filter:blur(16px) saturate(140%);}
+.fw-nocturne .film-inputwrap:focus-within{border-color:transparent;
+  box-shadow:var(--fw-lip),0 0 0 4px var(--fw-a08),0 0 34px -12px var(--film-glow-strong);}
+.fw-nocturne .film-inputwrap:focus-within::after{content:''; position:absolute; inset:-1px; z-index:2; border-radius:inherit; pointer-events:none;
+  padding:1px; background:conic-gradient(from var(--fw-ang), rgba(255,255,255,.14) 0deg, var(--film-accent) 40deg,
+    rgba(255,255,255,.14) 95deg, rgba(255,255,255,.14) 360deg);
+  -webkit-mask:linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0);
+  -webkit-mask-composite:xor; mask-composite:exclude; animation:fw-spin 6s linear infinite;}
+.fw-nocturne .film-send{color:var(--fw-on-accent); border-radius:12px; box-shadow:0 6px 20px -8px var(--film-glow-strong);}
+.fw-nocturne .film-attach-btn{border-color:var(--fw-edge-hi); border-radius:10px;}
+/* shot editor (pulled into the room) */
+.fw-nocturne .film-beatedit{background:var(--fw-slab); border-color:var(--fw-a60); border-radius:14px;
+  box-shadow:var(--fw-lip),0 0 28px -12px var(--film-glow-strong);}
+.fw-nocturne .film-cast-chip.is-active{color:var(--fw-on-accent);}
+/* Editor's Room */
+.fw-nocturne .fw-sheet{background:rgba(255,255,255,.03); border-color:var(--fw-edge-hi);}
+.fw-nocturne .fw-sheet-apply{color:var(--fw-on-accent); background:linear-gradient(135deg, var(--film-accent), var(--film-accent-hover));}
+.fw-nocturne .fw-chip{color:var(--film-accent-hover); background:var(--fw-a14); border-color:var(--fw-a24);}
+.fw-nocturne .fw-digest{background:var(--fw-a08); border-color:var(--fw-edge);}
+.fw-nocturne .fw-bpill b{color:var(--film-accent-hover);}
+.fw-nocturne .fw-sheet-beat{color:var(--film-accent-hover);}
+/* series: Where we left off · Review episode */
+.fw-nocturne .fw-wwlo{background:linear-gradient(180deg, rgba(255,255,255,.06), rgba(255,255,255,.025)); box-shadow:var(--fw-lip);}
+.fw-nocturne .fw-wwlo-rel{background:rgba(255,255,255,.03); border-color:var(--fw-edge-hi);}
+.fw-nocturne .fw-wwlo-rel button.is-on{background:var(--film-accent); color:var(--fw-on-accent);}
+.fw-nocturne .fw-wwlo-note b{color:var(--fw-ink-soft);}
+.fw-nocturne .fw-review{background:rgba(255,255,255,.04); border-color:var(--fw-a40); box-shadow:var(--fw-lip);}
+.fw-nocturne .fw-review-send{color:var(--film-t1); background:var(--fw-a24); box-shadow:inset 0 0 0 1px var(--fw-a40);}
+.fw-nocturne .fw-review-send:hover{background:var(--fw-a40);}
+.fw-nocturne .film-switch[aria-checked="true"]{background:var(--film-accent);}
+
+/* ═══ OVERLAYS INSIDE THE STORYBOARD ═══════════════════════════════════════════ */
+.fw-nocturne .film-edit-card{background:var(--fw-slab); border-color:var(--fw-a60); border-radius:18px;
+  box-shadow:var(--fw-lip),0 0 30px -12px var(--film-glow-strong);}
+.fw-nocturne .film-player-close:hover{background:var(--fw-a60);}
+.fw-nocturne .film-modal{background:var(--fw-slab); border-color:var(--fw-edge-hi); border-radius:18px; box-shadow:var(--fw-lip),0 30px 80px -30px #000;}
+
+/* ═══ ADVERTS IN THE STORYBOARD (AdStoryboard.css) ═════════════════════════════ */
+.fw-nocturne .sb-ad-strip{border-bottom-color:var(--fw-edge); background:linear-gradient(90deg, var(--fw-a14), transparent 65%);}
+.fw-nocturne .sb-ad-endcard-th{color:var(--fw-ink-soft);
+  background:repeating-linear-gradient(45deg, var(--fw-a14) 0 8px, var(--fw-a08) 8px 16px);}
+.fw-nocturne .sb-ad-ec-design{color:var(--fw-on-accent); box-shadow:0 4px 14px var(--fw-a40);}
+.fw-nocturne .sb-ad-fin.is-finishing{color:var(--film-accent-hover); border-color:var(--fw-a40);}
+.fw-nocturne .film-cc-wordpill{color:var(--film-accent-hover); background:var(--fw-a14); border-color:var(--fw-a24);}
+
+/* ═══ OLDER BROWSERS — no backdrop-filter → the glass becomes a solid, readable fill ═══ */
+@supports not ((backdrop-filter:blur(1px)) or (-webkit-backdrop-filter:blur(1px))){
+  .fw-nocturne .film-panel--stage:not(.is-collapsed)::before{background:rgba(15,16,32,.94);}
+  .fw-nocturne .film-inputwrap::before{background:rgba(14,14,28,.95);}
+}
+
+/* ═══ LOCKED PREVIEW SHOTS — the film's real frame shape ═══════════════════════
+   The lock panel was fixed at 9:16 (FilmWorkspace.css), so in a 16:9 or 1:1 film the
+   locked cards stood taller than the made ones and pushed their caption out of view.
+   Storyboard.jsx already sets the frame shape on the grid (--film-card-ar), the same
+   value every made shot uses — the lock panel now follows it. CSS only. */
+.fw-nocturne .film-grid .film-lockthumb{aspect-ratio:var(--film-card-ar,9 / 16); border-radius:0;
+  border-bottom-color:var(--fw-edge-hi);}
+.fw-nocturne .film-lockicon{filter:grayscale(35%) drop-shadow(0 0 10px var(--film-glow-strong));}
+
+/* ═══ NARROWER SCREENS — the top bar fits, the title stays visible ═══════════════
+   In the original bar the title squeezed to nothing between ~600 and ~880px wide, and
+   below 600px the whole bar ran off the left edge. Three steps fix it at every width:
+   • ≤1000px  the credits chip's "500 expire in 6d" becomes an amber dot (balance kept).
+   • ≤760px   two rows: the title, the season switch and the credits on the first (the
+              title clear of the app's Home breadcrumb), then My Films | Storyboard |
+              Assistant as one full-width bar; the chip shows the number only. */
+@media (max-width:1000px){
+  .fw-nocturne .film-credits-nudge{display:none;}
+  .fw-nocturne .film-credits-chip:has(.film-credits-nudge)::after{content:''; width:6px; height:6px; border-radius:50%;
+    background:var(--film-warning); box-shadow:0 0 8px var(--film-warning);}
+}
+@media (max-width:760px){
+  .fw-nocturne .film-topbar{flex-wrap:wrap; row-gap:7px; column-gap:6px; padding:6px 10px 8px;}
+  .fw-nocturne .film-title{flex:1 1 0; order:-2; text-align:left; margin-left:var(--film-crumb-space,120px); padding:0 4px;}
+  .fw-nocturne .fw-season-tg{order:-1; padding:6px 7px;}
+  .fw-nocturne .film-credits-chip{order:-1; padding:6px 10px; gap:6px;}
+  .fw-nocturne .film-credits-unit{display:none;}
+  .fw-nocturne .film-toggles{flex:1 1 100%; padding:3px; gap:2px;}
+  .fw-nocturne .film-tg{flex:1 1 auto; justify-content:center; padding:7px 8px; gap:4px; font-size:11.5px;}
+  .fw-nocturne .film-tg-div{flex:0 0 1px;}
+}

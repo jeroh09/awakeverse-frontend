@@ -1,0 +1,403 @@
+/* AvatarsColumn.module.css */
+/* Vertical column of participant avatars on left side of chat panel */
+
+/* ===== AVATARS COLUMN CONTAINER ===== */
+.avatarsColumn {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: var(--spacing-xl) var(--spacing-sm);
+  gap: var(--spacing-lg);
+  background: var(--bg-interactive);
+  border-right: 1px solid var(--border-subtle);
+  overflow-y: auto;
+  overflow-x: hidden;
+}
+
+/* Desktop: 100px wide */
+.avatarsColumn.desktop {
+  width: 100px;
+  min-width: 100px;
+}
+
+/* Mobile: 80px wide */
+.avatarsColumn.mobile {
+  width: 80px;
+  min-width: 80px;
+  padding: var(--spacing-md) var(--spacing-xs);
+  gap: var(--spacing-md);
+}
+
+/* Custom scrollbar */
+.avatarsColumn::-webkit-scrollbar {
+  width: 4px;
+}
+
+.avatarsColumn::-webkit-scrollbar-thumb {
+  background: var(--border-medium);
+  border-radius: var(--border-radius-sm);
+}
+
+.avatarsColumn::-webkit-scrollbar-thumb:hover {
+  background: var(--accent-primary);
+}
+
+/* ===== PARTICIPANT ORB ===== */
+.participantOrb {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--spacing-xs);
+  position: relative;
+  cursor: pointer;
+  transition: var(--transition-fast);
+  animation: fadeInScale 0.5s cubic-bezier(0.4, 0, 0.2, 1) backwards;
+}
+
+.participantOrb:hover {
+  transform: scale(1.05);
+}
+
+/* Desktop sizing */
+.desktop .participantOrb {
+  width: 84px;
+}
+
+/* Mobile sizing */
+.mobile .participantOrb {
+  width: 68px;
+}
+
+/* ===== ORB RING WRAPPER ===== */
+.orbRingWrapper {
+  position: relative;
+  width: 64px;
+  height: 64px;
+}
+
+.mobile .orbRingWrapper {
+  width: 52px;
+  height: 52px;
+}
+
+/* ===== AVATAR ===== */
+.orbAvatar {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  width: 64px;
+  height: 64px;
+  border-radius: var(--border-radius-full);
+  overflow: hidden;
+  border: 2px solid var(--border-subtle);
+  background: linear-gradient(135deg, var(--accent-primary), var(--accent-hover));
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: var(--shadow-elevation02);
+  transition: var(--transition-fast);
+  z-index: 2;
+}
+
+.mobile .orbAvatar {
+  width: 52px;
+  height: 52px;
+}
+
+/* Active state - accent border */
+.participantOrb.active .orbAvatar {
+  border-color: var(--accent-primary);
+  box-shadow: var(--shadow-glow-strong);
+}
+
+/* Queued state - subtle glow */
+.participantOrb.queued .orbAvatar {
+  border-color: var(--accent-primary);
+  box-shadow: var(--shadow-glow);
+}
+
+/* ===== IMAGE & FALLBACK ===== */
+.orbImage {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  border-radius: var(--border-radius-full);
+}
+
+.orbInitial {
+  font-size: 24px;
+  font-weight: var(--font-weight-semibold);
+  color: var(--text-primary);
+  font-family: var(--font-display);
+}
+
+.mobile .orbInitial {
+  font-size: 20px;
+}
+
+/* ===== SPEAKING INDICATOR ===== */
+.speakingIndicator {
+  position: absolute;
+  top: -2px;
+  right: -2px;
+  width: 14px;
+  height: 14px;
+  background: var(--semantic-success);
+  border-radius: var(--border-radius-full);
+  border: 2px solid var(--bg-interactive);
+  animation: pulse 2s ease-in-out infinite;
+  z-index: 10;
+}
+
+.mobile .speakingIndicator {
+  width: 12px;
+  height: 12px;
+  top: 0;
+  right: 0;
+}
+
+@keyframes pulse {
+  0%, 100% { 
+    opacity: 1; 
+    transform: scale(1); 
+  }
+  50% { 
+    opacity: 0.7; 
+    transform: scale(1.1); 
+  }
+}
+
+/* ===== CHARACTER LABEL ===== */
+.orbLabel {
+  text-align: center;
+  font-size: 11px;
+  color: var(--text-tertiary);
+  max-width: 80px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-weight: var(--font-weight-medium);
+  line-height: 1.2;
+}
+
+.mobile .orbLabel {
+  font-size: 10px;
+  max-width: 64px;
+}
+
+.participantOrb.active .orbLabel {
+  color: var(--accent-primary);
+  font-weight: var(--font-weight-semibold);
+}
+
+.participantOrb.queued .orbLabel {
+  color: var(--accent-hover);
+  font-weight: var(--font-weight-medium);
+}
+
+/* ===== EMOTION RING ===== */
+.emotionRing {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  pointer-events: none;
+  transition: var(--transition-fast);
+  z-index: 1;
+}
+
+.emotionRing.active {
+  transform: scale(1.05);
+}
+
+.emotionRing.queued {
+  transform: scale(1.03);
+}
+
+/* Ring layers */
+.ringPrimary,
+.ringSecondary,
+.ringActive,
+.ringQueued {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  border-radius: var(--border-radius-full);
+  pointer-events: none;
+}
+
+/* Primary ring - main breathing */
+.ringPrimary {
+  border: 2px solid var(--accent-primary);
+  opacity: 0.3;
+  animation: breathe 6s ease-in-out infinite;
+}
+
+/* Secondary ring - reverse breathing for depth */
+.ringSecondary {
+  border: 2px solid var(--accent-primary);
+  opacity: 0.15;
+  animation: breathe 6s ease-in-out infinite reverse;
+  transform: scale(1.08);
+}
+
+/* Active ring - for speaking participants */
+.ringActive {
+  border: 2px solid var(--accent-primary);
+  opacity: 0.8;
+  animation: activePulse 2s ease-in-out infinite;
+  transform: scale(1.12);
+}
+
+/* Queued ring - for next speakers */
+.ringQueued {
+  border: 2px solid var(--accent-primary);
+  opacity: 0.5;
+  animation: queuedGlow 3s ease-in-out infinite;
+  transform: scale(1.1);
+}
+
+/* ===== ANIMATIONS ===== */
+
+/* Fade in with scale */
+@keyframes fadeInScale {
+  from {
+    opacity: 0;
+    transform: scale(0.8);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+/* Breathing animation for rings */
+@keyframes breathe {
+  0%, 100% {
+    transform: scale(1);
+    opacity: 0.3;
+  }
+  50% {
+    transform: scale(1.04);
+    opacity: 0.5;
+  }
+}
+
+/* Active pulse for speaking participant */
+@keyframes activePulse {
+  0%, 100% {
+    opacity: 0.6;
+    transform: scale(1.12);
+  }
+  50% {
+    opacity: 1;
+    transform: scale(1.16);
+  }
+}
+
+/* Queued glow animation */
+@keyframes queuedGlow {
+  0%, 100% {
+    opacity: 0.4;
+    transform: scale(1.1);
+  }
+  50% {
+    opacity: 0.7;
+    transform: scale(1.13);
+  }
+}
+
+/* ===== ACCESSIBILITY ===== */
+
+/* Reduce motion for users who prefer it */
+@media (prefers-reduced-motion: reduce) {
+  .participantOrb,
+  .emotionRing,
+  .orbAvatar {
+    animation: none !important;
+    transition: none !important;
+  }
+  
+  .ringPrimary,
+  .ringSecondary,
+  .ringActive,
+  .ringQueued {
+    animation: none !important;
+  }
+  
+  .speakingIndicator {
+    animation: none !important;
+    opacity: 1 !important;
+  }
+  
+  .participantOrb:hover {
+    transform: none !important;
+  }
+}
+
+/* Focus states for accessibility */
+.participantOrb:focus-visible {
+  outline: 2px solid var(--accent-primary);
+  outline-offset: 4px;
+  border-radius: var(--border-radius-full);
+}
+
+/* ===== DEFENSIVE ERROR STATES ===== */
+
+/* Image loading error - show fallback gracefully */
+.orbImage[src=""],
+.orbImage:not([src]) {
+  display: none;
+}
+
+/* Empty state - no participants */
+.avatarsColumn:empty::after {
+  content: 'No participants';
+  display: block;
+  padding: var(--spacing-xl);
+  color: var(--text-tertiary);
+  font-size: var(--font-size-caption);
+  font-style: italic;
+  text-align: center;
+}
+/* Mobile: Hide vertical column */
+@media (max-width: 768px) {
+  .avatarsColumn {
+    display: none;
+  }
+}
+
+/* Mobile: Horizontal avatars */
+.avatarsHorizontal {
+  display: none; /* Hidden on desktop */
+}
+
+@media (max-width: 768px) {
+  .avatarsHorizontal {
+    display: flex;
+    flex-direction: row;
+    gap: var(--spacing-sm);
+    padding: var(--spacing-sm) var(--spacing-md);
+    overflow-x: auto;
+    background: var(--bg-interactive);
+    border-bottom: 1px solid var(--border-subtle);
+  }
+  
+  .avatarsHorizontal .participantOrb {
+    min-width: 48px;
+    flex-direction: column;
+  }
+  
+  .avatarsHorizontal .orbContainer {
+    width: 40px;
+    height: 40px;
+  }
+  
+  .avatarsHorizontal .participantName {
+    display: none; /* Hide names on mobile */
+  }
+}

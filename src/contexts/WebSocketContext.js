@@ -14,6 +14,12 @@ export const WebSocketProvider = ({ children }) => {
 
     newSocket.on("connect", () => {
       console.log("✅ WebSocket connected:", newSocket.id);
+      // 👇 join the per-user room so only this user's UI gets ticks
+      try {
+        newSocket.emit("join_for_you");
+      } catch (e) {
+        console.log("join_for_you emit failed:", e);
+      }
     });
 
     newSocket.on("disconnect", () => {

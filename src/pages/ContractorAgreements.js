@@ -108,10 +108,10 @@ export default function ContractorAgreements() {
           <a href="/privacy">Privacy</a>
           <a href="/community-guidelines">Community</a>
         </nav>
-        <h1>Awakeverse — Contractor Agreements</h1>
+        <h1>AwakeVerse — Contractor Agreements</h1>
         <p className="meta">Coming Soon</p>
         <div className="intro-card">
-          Terms and agreements for contractors, contributors, and third-party collaborators working with Awakeverse.
+          Terms and agreements for contractors, contributors, and third-party collaborators working with AwakeVerse.
         </div>
       </header>
 
@@ -135,7 +135,7 @@ export default function ContractorAgreements() {
       </main>
 
       <footer className="document-footer">
-        <p>© {currentYear} Awakeverse Ltd. All rights reserved.</p>
+        <p>© {currentYear} AwakeVerse Ltd. All rights reserved.</p>
       </footer>
     </div>
   );

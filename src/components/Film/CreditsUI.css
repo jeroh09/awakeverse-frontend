@@ -1,0 +1,54 @@
+/* CreditsUI.css — balance chip, cost confirm, insufficient state. Film tokens. */
+
+/* ── Balance chip ──────────────────────────────────────────────────────────── */
+.film-credits-chip{display:inline-flex;align-items:center;gap:7px;
+  background:var(--film-interactive);border:1px solid rgba(99,102,241,.35);
+  border-radius:var(--film-r-full);padding:6px 12px;cursor:pointer;transition:.15s;
+  font-family:var(--film-body);}
+.film-credits-chip:hover{border-color:var(--film-accent);background:var(--film-peak);}
+.film-credits-dot{width:7px;height:7px;border-radius:50%;background:var(--film-success);}
+.film-credits-bal{font-weight:700;font-size:13.5px;color:var(--film-t1);}
+.film-credits-unit{font-size:12px;color:var(--film-t2);}
+.film-credits-nudge{margin-left:6px;padding-left:8px;border-left:1px solid var(--film-tm);
+  font-size:11px;color:var(--film-warning);}
+
+/* ── Cost confirm ──────────────────────────────────────────────────────────── */
+.film-cost-confirm{background:var(--film-surface);border:1px solid rgba(99,102,241,.3);
+  border-radius:var(--film-r-md);padding:16px;}
+.film-cost-row{display:flex;justify-content:space-between;align-items:baseline;margin-bottom:6px;}
+.film-cost-row--sub{margin-bottom:14px;}
+.film-cost-k{font-size:13px;color:var(--film-t2);}
+.film-cost-v{font-family:var(--film-display);font-weight:700;font-size:17px;color:var(--film-t1);}
+.film-cost-v.is-short{color:var(--film-warning);}
+.film-cost-actions{display:flex;gap:8px;}
+
+/* ── Insufficient / 402 ────────────────────────────────────────────────────── */
+.film-insufficient{background:var(--film-interactive);
+  border:1px solid rgba(245,158,11,.35);border-radius:var(--film-r-md);padding:16px;}
+.film-insufficient-head{font-family:var(--film-display);font-weight:700;font-size:15px;
+  color:var(--film-t1);margin-bottom:6px;}
+.film-insufficient-msg{font-size:13px;line-height:1.5;color:var(--film-t2);margin:0 0 14px;}
+.film-insufficient-msg b{color:var(--film-t1);}
+.film-insufficient-actions{display:flex;flex-wrap:wrap;gap:8px;}
+
+.film-btn--soft{background:rgba(99,102,241,.16);color:var(--film-accent-hover);
+  border:1px solid rgba(99,102,241,.3);}
+.film-btn--soft:hover{background:rgba(99,102,241,.24);}
+
+/* ── Modal scrim for the insufficient-credits overlay ──────────────────────── */
+.film-modal-scrim{position:fixed;inset:0;background:rgba(10,15,26,.72);
+  display:grid;place-items:center;z-index:1000;padding:20px;}
+.film-modal-body{max-width:420px;width:100%;}
+
+/* The insufficient-credits modal renders OUTSIDE .film-workspace (as a sibling of
+   it, at the container root), so the --film-* tokens scoped there don't reach it.
+   Re-declare the tokens the card/buttons use on the scrim so it styles correctly
+   wherever it's mounted. */
+.film-modal-scrim{
+  --film-canvas:#0A0F1A; --film-surface:#141B2E; --film-interactive:#1C2640; --film-peak:#243152;
+  --film-accent:#6366F1; --film-accent-hover:#818CF8;
+  --film-success:#10B981; --film-warning:#F59E0B; --film-error:#EF4444;
+  --film-t1:#F1F5F9; --film-t2:#94A3B8; --film-t3:#64748B; --film-tm:#475569;
+  --film-r-sm:8px; --film-r-md:12px; --film-r-lg:16px; --film-r-full:9999px;
+  --film-display:'Syne',-apple-system,sans-serif; --film-body:'Inter',system-ui,sans-serif;
+}

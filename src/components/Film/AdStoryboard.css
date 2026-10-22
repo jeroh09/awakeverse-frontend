@@ -1,0 +1,74 @@
+/* src/components/Film/AdStoryboard.css
+   ADVERTISING MODE (2026-10-19) — the ad parts of the storyboard: the ad strip under the
+   header, plan cards drawn from the script, and the end card that closes the grid. Lives
+   inside .film-workspace, so the --film-* tokens apply (fallbacks inline anyway). */
+
+.sb-ad-strip {
+  display: flex; align-items: center; gap: 14px; flex-wrap: wrap;
+  padding: 10px 16px;
+  border-bottom: 1px solid var(--film-bd-subtle, rgba(148, 163, 184, .1));
+  background: linear-gradient(90deg, rgba(99, 102, 241, .13), transparent 65%);
+}
+.sb-ad-strip-t { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 2px; }
+.sb-ad-strip-t b {
+  font: 700 14px/1.3 var(--film-display, 'Syne', sans-serif); color: var(--film-t1, #F1F5F9);
+  white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+}
+.sb-ad-strip-t span {
+  font-size: 12.5px; color: var(--film-t2, #94A3B8);
+  display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden;
+}
+.sb-ad-edit { flex: 0 0 auto; }
+
+.sb-ad-plan { cursor: default; }
+.sb-ad-line { color: var(--film-t1, #F1F5F9); margin-top: 4px; }
+
+.sb-ad-endcard { cursor: default; border-style: dashed; border-color: var(--film-accent-hover, #818CF8); }
+.sb-ad-endcard:hover { border-color: var(--film-accent-hover, #818CF8); }
+.sb-ad-endcard-th {
+  display: flex; align-items: center; justify-content: center; text-align: center;
+  background: repeating-linear-gradient(45deg, rgba(129, 140, 248, .16) 0 8px, rgba(129, 140, 248, .06) 8px 16px);
+  color: #D5D8FF;
+}
+.sb-ad-ec { display: flex; flex-direction: column; align-items: center; gap: 4px; padding: 10px; min-width: 0; }
+.sb-ad-ec b { font: 700 13px/1.2 var(--film-display, 'Syne', sans-serif); overflow-wrap: anywhere; }
+.sb-ad-ec small { font-size: 11px; opacity: .85; overflow-wrap: anywhere; }
+.sb-ad-ec-cta {
+  margin-top: 6px; padding: 4px 10px; border-radius: 999px;
+  background: #fff; color: #0A0F1A; font-size: 11px; font-weight: 700;
+}
+.sb-ad-badge { color: var(--film-accent-hover, #818CF8); }
+
+/* Written cast (photoreal ads, 2026-10-19): no portrait column, the words fill the card. */
+.film-cc.is-text { grid-template-columns: minmax(0, 1fr); }
+.film-cc.is-text .film-cc-desc { -webkit-line-clamp: 4; }
+.film-cc-wordpill {
+  background: rgba(129, 140, 248, .14); color: var(--film-accent-hover, #818CF8);
+  border: 1px solid rgba(129, 140, 248, .3);
+}
+
+/* End card cell opens the finish picker (step 4 part 1, AD_COMPOSE). */
+.sb-ad-endcard.is-open { cursor: pointer; }
+.sb-ad-endcard.is-open:hover, .sb-ad-endcard.is-open:focus-visible { border-style: solid; box-shadow: 0 0 0 1px var(--film-accent-hover, #818CF8); outline: none; }
+.sb-ad-endcard.is-slate .sb-ad-endcard-th { background: var(--sb-ec-brand, #1F3A2E); }
+.sb-ad-endcard.is-slate .sb-ad-ec b, .sb-ad-endcard.is-slate .sb-ad-ec small { color: var(--sb-ec-ink, #fff); }
+.sb-ad-ec-sw { width: 12px; height: 12px; border-radius: 4px; margin-left: auto; background: var(--sb-ec-brand, #1F3A2E);
+  box-shadow: inset 0 0 0 1px rgba(255, 255, 255, .25); }
+
+/* Finishing state of a made advert (step 4 part 3). */
+.sb-ad-fin { flex: 0 0 auto; display: inline-flex; align-items: center; gap: 6px; padding: 4px 10px; border-radius: 999px;
+  font-size: 12px; font-weight: 600; border: 1px solid var(--film-bd-subtle, rgba(148, 163, 184, .2)); }
+.sb-ad-fin.is-finishing { color: var(--film-accent-hover, #818CF8); border-color: rgba(129, 140, 248, .4); }
+.sb-ad-fin.is-done { color: #34D399; border-color: rgba(52, 211, 153, .35); }
+.sb-ad-fin.is-failed { color: #FCA5A5; border-color: rgba(239, 68, 68, .4); }
+
+/* The end-card picker, easy to find (owner 17:57): a filled button first on the strip, and a tag on the tile. */
+.sb-ad-design { flex: 0 0 auto; padding: 10px 16px; font-size: 13.5px; }
+.sb-ad-design-ic { flex: 0 0 auto; }
+.sb-ad-ec-design { position: absolute; top: 8px; left: 8px; padding: 4px 9px; border-radius: 999px;
+  background: var(--film-accent, #6366F1); color: #fff; font-size: 11.5px; font-weight: 700; letter-spacing: .01em;
+  box-shadow: 0 4px 14px rgba(99, 102, 241, .45); pointer-events: none; }
+.sb-ad-endcard-th { position: relative; }
+
+/* The uploaded logo on the end-card tile (brand assets). */
+.sb-ad-ec-logo { max-width: 78%; max-height: 42px; object-fit: contain; display: block; }

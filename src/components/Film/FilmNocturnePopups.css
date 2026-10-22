@@ -1,0 +1,180 @@
+/* src/components/Film/FilmNocturnePopups.css
+   NOCTURNE GLASS (2026-10-19) — the Film pop-ups as thick glass ("slabs"):
+   New film (.nf-), Ad setup (.ads-), the end-card picker (.adf-), the series pop-ups
+   (.fs-scrim / .fs-modal) and the credits card (.film-modal-scrim / .film-insufficient).
+
+   SAFE BY CONSTRUCTION
+   • Loaded by useFilmSeason.js, so it is present whenever a Film screen is open. None of
+     the pop-ups' own files (NewFilmModal, AdSetup, AdFinish, FilmSeriesModals, CreditsUI
+     and their CSS) is edited.
+   • The pop-ups are portalled to <body>, so every rule is scoped under
+     body[data-film-ui="nocturne"] (set by useFilmSeason while Film is open). That prefix
+     also makes each rule more specific than the one it restyles, whatever the bundle
+     order. Without the attribute nothing here applies.
+   • Visual properties only. No size, layout, display or position changes, and nothing
+     inside the end-card picker's preview FRAME changes: it shows the advert as the render
+     will make it (the AI corner mark keeps its render colours).
+   • Halloween (body[data-film-season="halloween"]) swaps the accent to pumpkin amber with
+     dark ink on it. */
+
+/* ═══ SHARED TOKENS (inherit into every portal) ═══════════════════════════════════ */
+body[data-film-ui="nocturne"]{
+  --fwp-accent:#6366F1; --fwp-accent-hi:#818CF8;
+  --fwp-on-accent:#FFFFFF; --fwp-on-accent-soft:rgba(255,255,255,.22); --fwp-on-accent-a:rgba(255,255,255,.4);
+  --fwp-a08:rgba(129,140,248,.08); --fwp-a14:rgba(129,140,248,.14); --fwp-a24:rgba(129,140,248,.24);
+  --fwp-a40:rgba(129,140,248,.4);  --fwp-a60:rgba(129,140,248,.6);
+  --fwp-glow:rgba(99,102,241,.45); --fwp-ink-soft:#C7D2FE; --fwp-sky:rgba(40,46,110,.38);
+  --fwp-slab:rgba(15,15,30,.84); --fwp-edge:rgba(255,255,255,.08); --fwp-edge-hi:rgba(255,255,255,.16);
+  --fwp-lip:inset 0 1px 0 rgba(255,255,255,.1);
+}
+body[data-film-ui="nocturne"][data-film-season="halloween"]{
+  --fwp-accent:#FF8A3D; --fwp-accent-hi:#FFA766;
+  --fwp-on-accent:#1A0B02; --fwp-on-accent-soft:rgba(26,11,2,.16); --fwp-on-accent-a:rgba(26,11,2,.28);
+  --fwp-a08:rgba(255,138,61,.08); --fwp-a14:rgba(255,138,61,.14); --fwp-a24:rgba(255,138,61,.24);
+  --fwp-a40:rgba(255,138,61,.4);  --fwp-a60:rgba(255,138,61,.6);
+  --fwp-glow:rgba(255,138,61,.45); --fwp-ink-soft:#FFD2B0; --fwp-sky:rgba(70,30,100,.42);
+}
+
+/* ═══ SCRIMS — the room dims under a night sky ═══════════════════════════════════ */
+body[data-film-ui="nocturne"] .nf-scrim,
+body[data-film-ui="nocturne"] .ads-scrim,
+body[data-film-ui="nocturne"] .adf-scrim,
+body[data-film-ui="nocturne"] .fs-scrim{
+  background:radial-gradient(1000px 640px at 82% -12%, var(--fwp-sky), transparent 62%), rgba(4,4,10,.66);
+  -webkit-backdrop-filter:blur(8px); backdrop-filter:blur(8px);
+}
+
+/* ═══ SLABS — the pop-up bodies ════════════════════════════════════════════════════ */
+body[data-film-ui="nocturne"] .nf-modal,
+body[data-film-ui="nocturne"] .ads-modal,
+body[data-film-ui="nocturne"] .adf-modal,
+body[data-film-ui="nocturne"] .fs-scrim .fs-modal{
+  background:linear-gradient(180deg, rgba(255,255,255,.05), rgba(255,255,255,.012)), var(--fwp-slab);
+  border:1px solid var(--fwp-edge-hi);
+  box-shadow:var(--fwp-lip), 0 40px 120px -30px #000, 0 0 80px -34px var(--fwp-glow);
+  -webkit-backdrop-filter:blur(28px) saturate(160%); backdrop-filter:blur(28px) saturate(160%);
+}
+/* the old double indigo border is replaced by the slab's lit edge */
+body[data-film-ui="nocturne"] .nf-modal::before{display:none;}
+
+/* ═══ NEW FILM (NewFilmModal.css) ════════════════════════════════════════════════ */
+body[data-film-ui="nocturne"] .nf-scrim{
+  --film-accent:var(--fwp-accent); --film-accent-hover:var(--fwp-accent-hi); --film-ring:var(--fwp-a60);
+  --film-bd-subtle:rgba(255,255,255,.08); --film-bd-med:rgba(255,255,255,.14); --film-bd-strong:rgba(255,255,255,.2);
+}
+body[data-film-ui="nocturne"] .nf-pillgroup{background:rgba(255,255,255,.035); border-color:var(--fwp-edge-hi); box-shadow:var(--fwp-lip);}
+body[data-film-ui="nocturne"] .nf-pill.is-on{color:var(--fwp-on-accent);
+  box-shadow:inset 0 1px 0 rgba(255,255,255,.3), 0 6px 18px -6px var(--fwp-glow);}
+body[data-film-ui="nocturne"] .nf-pill--ad.is-on{box-shadow:inset 0 1px 0 rgba(255,255,255,.3), 0 6px 18px -6px var(--fwp-glow);}
+body[data-film-ui="nocturne"] .nf-btn.primary{color:var(--fwp-on-accent);
+  background:linear-gradient(135deg, var(--fwp-accent), var(--fwp-accent-hi));
+  box-shadow:inset 0 1px 0 rgba(255,255,255,.3), 0 10px 26px -10px var(--fwp-glow);}
+body[data-film-ui="nocturne"] .nf-btn.ghost{border-color:var(--fwp-edge-hi);}
+body[data-film-ui="nocturne"] .nf-adnext{border-color:var(--fwp-a40); background:var(--fwp-a08);}
+/* the live preview gets a phone-style bezel of light */
+body[data-film-ui="nocturne"] .nf-stage .film-style-preview{border-color:var(--fwp-edge-hi);
+  box-shadow:0 0 0 6px rgba(255,255,255,.035), 0 0 0 7px var(--fwp-edge), 0 30px 60px -24px #000;}
+/* Season pick: in Halloween, Suspense wears a small ember tag. It is NOT preselected. */
+body[data-film-ui="nocturne"][data-film-season="halloween"] .nf-pill[title^="Suspense"]::after{
+  content:'Season pick'; margin-left:6px; padding:3px 6px; border-radius:5px;
+  font:700 9.5px/1 var(--film-body, 'Inter', sans-serif); letter-spacing:.06em; text-transform:uppercase;
+  color:#FFB067; background:rgba(255,138,61,.18);}
+body[data-film-ui="nocturne"][data-film-season="halloween"] .nf-pill.is-on[title^="Suspense"]::after{
+  color:var(--fwp-on-accent); background:rgba(0,0,0,.16);}
+
+/* ═══ AD SETUP (AdSetup.css) ═══════════════════════════════════════════════════════ */
+body[data-film-ui="nocturne"] .ads-scrim{
+  --ads-surface:rgba(15,15,30,.84); --ads-raised:rgba(255,255,255,.05); --ads-peak:rgba(255,255,255,.1);
+  --ads-sunk:rgba(0,0,0,.28); --ads-rail:rgba(255,255,255,.025);
+  --ads-accent:var(--fwp-accent); --ads-accent-hover:var(--fwp-accent-hi); --ads-accent-soft:var(--fwp-a14);
+  --ads-ring:var(--fwp-a60); --ads-bd:rgba(255,255,255,.08); --ads-bd-2:rgba(255,255,255,.15);
+}
+body[data-film-ui="nocturne"] .ads-btn.is-pri,
+body[data-film-ui="nocturne"] .ads-pill.is-on,
+body[data-film-ui="nocturne"] .ads-stepbtn.is-on,
+body[data-film-ui="nocturne"] .ads-lens-tick{color:var(--fwp-on-accent);}
+body[data-film-ui="nocturne"] .ads-btn.is-pri:not(:disabled){box-shadow:inset 0 1px 0 rgba(255,255,255,.28), 0 8px 22px -10px var(--fwp-glow);}
+body[data-film-ui="nocturne"] .ads-stepbtn.is-on{box-shadow:0 0 18px -6px var(--fwp-glow);}
+body[data-film-ui="nocturne"] .ads-stepbtn.is-on i{background:var(--fwp-on-accent-soft); color:var(--fwp-on-accent);}
+body[data-film-ui="nocturne"] .ads-steps{border-color:var(--fwp-edge-hi); background:rgba(255,255,255,.03);}
+body[data-film-ui="nocturne"] .ads-describe{border-color:var(--fwp-a40);
+  background:linear-gradient(180deg, var(--fwp-a14), rgba(255,255,255,.02)); box-shadow:var(--fwp-lip);}
+body[data-film-ui="nocturne"] .ads-inp.is-flash,
+body[data-film-ui="nocturne"] .ads-pill.is-flash{box-shadow:0 0 0 3px var(--fwp-a40);}
+body[data-film-ui="nocturne"] .ads-tok{border-color:var(--fwp-a40); color:var(--fwp-ink-soft);}
+body[data-film-ui="nocturne"] .ads-lens,
+body[data-film-ui="nocturne"] .ads-concept{box-shadow:var(--fwp-lip);}
+body[data-film-ui="nocturne"] .ads-lens.is-on,
+body[data-film-ui="nocturne"] .ads-concept.is-on{box-shadow:0 0 0 1px var(--ads-accent-hover) inset, 0 0 26px -10px var(--fwp-glow);}
+body[data-film-ui="nocturne"] .ads-lockask{border-color:var(--fwp-a60); background:linear-gradient(180deg, var(--fwp-a14), var(--fwp-a08));}
+body[data-film-ui="nocturne"] .ads-tl-seg.is-card{color:var(--fwp-ink-soft);
+  background:repeating-linear-gradient(45deg, var(--fwp-a24) 0 6px, var(--fwp-a08) 6px 12px);}
+body[data-film-ui="nocturne"] .ads-frame{border-color:var(--fwp-edge-hi);
+  background:radial-gradient(120% 70% at 30% 15%, var(--fwp-a40), #0E0C1C 70%);}
+body[data-film-ui="nocturne"] .ads-skel{background:linear-gradient(100deg, var(--ads-raised) 30%, rgba(255,255,255,.1) 50%, var(--ads-raised) 70%);
+  background-size:300% 100%;}
+body[data-film-ui="nocturne"] .ads-lenbar-track .is-card{background:repeating-linear-gradient(45deg, var(--fwp-accent-hi) 0 4px, var(--fwp-accent) 4px 8px);}
+body[data-film-ui="nocturne"] .ads-lenbar-track .is-film{box-shadow:0 0 10px var(--fwp-glow);}
+
+/* ═══ END-CARD PICKER (AdFinish.css) — the chrome only, never the preview frame ═══ */
+body[data-film-ui="nocturne"] .adf-scrim{
+  --adf-surface:rgba(15,15,30,.84); --adf-raised:rgba(255,255,255,.05); --adf-sunk:rgba(0,0,0,.28);
+  --adf-accent:var(--fwp-accent); --adf-accent-hover:var(--fwp-accent-hi);
+  --adf-bd:rgba(255,255,255,.08); --adf-bd-2:rgba(255,255,255,.15);
+}
+/* keep the preview honest: the corner "AI" mark is drawn in its render colours */
+body[data-film-ui="nocturne"] .adf-aimark b:last-child{color:#818CF8;}
+body[data-film-ui="nocturne"] .adf-btn.is-pri{color:var(--fwp-on-accent);}
+body[data-film-ui="nocturne"] .adf-btn.is-pri:not(:disabled){box-shadow:inset 0 1px 0 rgba(255,255,255,.28), 0 8px 22px -10px var(--fwp-glow);}
+body[data-film-ui="nocturne"] .adf-opt{box-shadow:var(--fwp-lip);}
+body[data-film-ui="nocturne"] .adf-opt.is-on{box-shadow:0 0 0 1px var(--adf-accent-hover) inset, 0 0 26px -10px var(--fwp-glow);}
+body[data-film-ui="nocturne"] .adf-tl-bar .film{background:var(--fwp-a40);}
+body[data-film-ui="nocturne"] .adf-tl-bar .card{background:repeating-linear-gradient(45deg, var(--fwp-accent-hi) 0 4px, var(--fwp-accent) 4px 8px);}
+body[data-film-ui="nocturne"] .adf-tl-head{box-shadow:0 0 10px #fff;}
+body[data-film-ui="nocturne"] .adf-head,
+body[data-film-ui="nocturne"] .adf-foot{border-color:var(--fwp-edge);}
+
+/* ═══ SERIES POP-UPS (FilmSeries.css: .fs-scrim / .fs-modal) ═══════════════════════ */
+body[data-film-ui="nocturne"] .fs-scrim{
+  --indigo:var(--fwp-accent); --indigo-lo:var(--fwp-accent-hi); --indigo-hi:var(--fwp-ink-soft);
+  --line:rgba(255,255,255,.12); --line-soft:rgba(255,255,255,.04); --line-hi:var(--fwp-a60);
+}
+body[data-film-ui="nocturne"] .fs-scrim .fs-inp{background:rgba(0,0,0,.28);}
+body[data-film-ui="nocturne"] .fs-scrim .fs-seg button.is-on{background:var(--fwp-a14);
+  box-shadow:0 0 0 1px var(--fwp-a40), 0 0 16px -4px var(--fwp-glow);}
+body[data-film-ui="nocturne"] .fs-scrim .fs-chk.is-on{background:var(--fwp-a08);}
+body[data-film-ui="nocturne"] .fs-scrim .fs-chk.is-on .fs-box{color:var(--fwp-on-accent);
+  background:linear-gradient(135deg, var(--fwp-accent), var(--fwp-accent-hi));}
+body[data-film-ui="nocturne"] .fs-scrim .fs-cp.is-on{background:var(--fwp-a14);}
+body[data-film-ui="nocturne"] .fs-scrim .fs-cp.is-on .fs-cp-dot{background:radial-gradient(circle, var(--fwp-accent-hi) 0 42%, transparent 47%);}
+body[data-film-ui="nocturne"] .fs-scrim .fs-hint{background:rgba(255,255,255,.03);}
+body[data-film-ui="nocturne"] .fs-scrim .fs-mbtn.primary{color:var(--fwp-on-accent);
+  background:linear-gradient(135deg, var(--fwp-accent), var(--fwp-accent-hi));
+  box-shadow:inset 0 1px 0 rgba(255,255,255,.28), 0 8px 22px -10px var(--fwp-glow);}
+body[data-film-ui="nocturne"] .fs-scrim .fs-mbtn.primary:hover{box-shadow:inset 0 1px 0 rgba(255,255,255,.28), 0 10px 28px -8px var(--fwp-glow);}
+
+/* ═══ CREDITS CARD + CONSENT (CreditsUI.css / FilmWorkspace.css .film-modal-scrim) ═══ */
+body[data-film-ui="nocturne"] .film-modal-scrim{
+  --film-accent:var(--fwp-accent); --film-accent-hover:var(--fwp-accent-hi);
+  --film-interactive:rgba(255,255,255,.05); --film-peak:rgba(255,255,255,.1);
+}
+body[data-film-ui="nocturne"] .film-insufficient{
+  background:linear-gradient(180deg, rgba(255,255,255,.05), rgba(255,255,255,.012)), var(--fwp-slab);
+  border-color:rgba(245,158,11,.4); border-radius:16px;
+  box-shadow:var(--fwp-lip), 0 30px 80px -30px #000;
+  -webkit-backdrop-filter:blur(24px) saturate(150%); backdrop-filter:blur(24px) saturate(150%);}
+body[data-film-ui="nocturne"] .film-modal-scrim .film-btn--primary{color:var(--fwp-on-accent);}
+body[data-film-ui="nocturne"] .film-modal-scrim .film-btn--soft{color:var(--fwp-accent-hi); background:var(--fwp-a14); border-color:var(--fwp-a24);}
+
+/* ═══ OLDER BROWSERS — no backdrop-filter → solid, readable slabs ═══════════════ */
+@supports not ((backdrop-filter:blur(1px)) or (-webkit-backdrop-filter:blur(1px))){
+  body[data-film-ui="nocturne"] .nf-modal,
+  body[data-film-ui="nocturne"] .ads-modal,
+  body[data-film-ui="nocturne"] .adf-modal,
+  body[data-film-ui="nocturne"] .fs-scrim .fs-modal,
+  body[data-film-ui="nocturne"] .film-insufficient{background:#11111F;}
+}
+@media (prefers-reduced-motion:reduce){
+  body[data-film-ui="nocturne"] .nf-modal,body[data-film-ui="nocturne"] .ads-modal,
+  body[data-film-ui="nocturne"] .adf-modal{transition:none;}
+}
