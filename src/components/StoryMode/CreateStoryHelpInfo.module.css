@@ -1,0 +1,367 @@
+/* ============================================================================
+   CREATE STORY HELP INFO - Matches VerseStudioTab Pattern
+   Clean, organized, consistent naming
+   ============================================================================ */
+
+/* Info trigger button */
+.infoButton {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 6px 10px;
+  border-radius: 999px;
+  border: 1px solid rgba(148, 163, 184, 0.22);
+  background: rgba(10, 15, 26, 0.45);
+  color: rgba(241, 245, 249, 0.92);
+  cursor: pointer;
+  transition: all 0.15s cubic-bezier(0.4, 0, 0.2, 1);
+  font-size: 12px;
+  line-height: 1;
+  backdrop-filter: blur(10px);
+}
+
+.infoButton:hover {
+  border-color: rgba(99, 102, 241, 0.55);
+  box-shadow: 0 0 0 1px rgba(99, 102, 241, 0.25);
+  transform: translateY(-1px);
+}
+
+.infoButton:focus-visible {
+  outline: 2px solid #6366F1;
+  outline-offset: 2px;
+}
+
+.infoLabel {
+  font-weight: 600;
+}
+
+/* Overlay backdrop */
+.infoOverlay {
+  position: fixed;
+  inset: 0;
+  z-index: 2000;
+  background: rgba(0, 0, 0, 0.58);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 16px;
+}
+
+/* Modal container */
+.infoModal {
+  width: min(860px, 96vw);
+  max-height: min(86vh, 860px);
+  overflow: hidden;
+  border-radius: 18px;
+  border: 1px solid rgba(99, 102, 241, 0.35);
+  background:
+    radial-gradient(circle at top left, rgba(99, 102, 241, 0.18), transparent 55%),
+    rgba(10, 15, 26, 0.92);
+  box-shadow: 0 40px 120px rgba(0, 0, 0, 0.6);
+  display: flex;
+  flex-direction: column;
+}
+
+/* Header section */
+.infoHeader {
+  padding: 14px 16px 12px;
+  border-bottom: 1px solid rgba(148, 163, 184, 0.14);
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.infoTitle {
+  font-family: "Syne", system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+  font-size: 18px;
+  font-weight: 650;
+  color: rgba(245, 245, 220, 0.96);
+  letter-spacing: 0.02em;
+}
+
+.infoSubtitle {
+  margin-top: 2px;
+  font-size: 12px;
+  color: rgba(148, 163, 184, 0.95);
+}
+
+.infoClose {
+  width: 40px;
+  height: 40px;
+  border-radius: 999px;
+  border: 1px solid rgba(148, 163, 184, 0.22);
+  background: rgba(15, 23, 42, 0.55);
+  color: rgba(241, 245, 249, 0.92);
+  cursor: pointer;
+  transition: all 0.15s cubic-bezier(0.4, 0, 0.2, 1);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 20px;
+  line-height: 1;
+}
+
+.infoClose:hover {
+  border-color: rgba(99, 102, 241, 0.55);
+  box-shadow: 0 0 0 1px rgba(99, 102, 241, 0.25);
+}
+
+.infoClose:focus-visible {
+  outline: 2px solid #6366F1;
+  outline-offset: 2px;
+}
+
+/* Scrollable body */
+.infoBody {
+  padding: 14px 16px;
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+.infoBody::-webkit-scrollbar {
+  width: 8px;
+}
+
+.infoBody::-webkit-scrollbar-track {
+  background: rgba(15, 23, 42, 0.4);
+  border-radius: 4px;
+}
+
+.infoBody::-webkit-scrollbar-thumb {
+  background: rgba(148, 163, 184, 0.3);
+  border-radius: 4px;
+}
+
+.infoBody::-webkit-scrollbar-thumb:hover {
+  background: rgba(148, 163, 184, 0.5);
+}
+
+/* Content sections */
+.infoSection {
+  border: 1px solid rgba(148, 163, 184, 0.14);
+  background: rgba(15, 23, 42, 0.40);
+  border-radius: 14px;
+  padding: 12px 12px;
+}
+
+.infoSectionTitle {
+  font-size: 12px;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: rgba(148, 163, 184, 0.95);
+  margin-bottom: 8px;
+}
+
+.infoList {
+  margin: 0;
+  padding-left: 18px;
+  color: rgba(241, 245, 249, 0.92);
+  font-size: 13px;
+  line-height: 1.5;
+}
+
+.infoList li {
+  margin: 6px 0;
+}
+
+.infoList strong {
+  color: rgba(245, 245, 220, 0.96);
+  font-weight: 600;
+}
+
+.infoList em {
+  color: rgba(129, 140, 248, 0.92);
+  font-style: italic;
+}
+
+.infoList code {
+  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
+  font-size: 12px;
+  padding: 0.12em 0.38em;
+  border-radius: 8px;
+  border: 1px solid rgba(148, 163, 184, 0.2);
+  background: rgba(10, 15, 26, 0.45);
+}
+
+/* Callout/tip box */
+.infoCallout {
+  border-radius: 14px;
+  border: 1px solid rgba(99, 102, 241, 0.28);
+  background: rgba(10, 15, 26, 0.55);
+  padding: 12px 12px;
+  color: rgba(241, 245, 249, 0.92);
+  font-size: 13px;
+  line-height: 1.45;
+}
+
+.infoCallout strong {
+  color: rgba(245, 245, 220, 0.96);
+  font-weight: 600;
+}
+
+/* Footer actions */
+.infoFooter {
+  padding: 12px 16px 14px;
+  border-top: 1px solid rgba(148, 163, 184, 0.14);
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 10px;
+}
+
+.infoPrimary,
+.infoSecondary {
+  border-radius: 999px;
+  border: 1px solid rgba(148, 163, 184, 0.22);
+  background: rgba(15, 23, 42, 0.55);
+  color: rgba(241, 245, 249, 0.92);
+  padding: 8px 12px;
+  cursor: pointer;
+  transition: all 0.15s cubic-bezier(0.4, 0, 0.2, 1);
+  font-size: 12px;
+  font-weight: 650;
+}
+
+.infoPrimary {
+  border-color: rgba(99, 102, 241, 0.65);
+  box-shadow: 0 14px 30px rgba(99, 102, 241, 0.20);
+}
+
+.infoPrimary:hover,
+.infoSecondary:hover {
+  border-color: rgba(99, 102, 241, 0.55);
+  box-shadow: 0 0 0 1px rgba(99, 102, 241, 0.25);
+  transform: translateY(-1px);
+}
+
+.infoPrimary:focus-visible,
+.infoSecondary:focus-visible {
+  outline: 2px solid #6366F1;
+  outline-offset: 2px;
+}
+
+/* Checkbox label */
+.infoCheckboxLabel {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 12px;
+  color: rgba(148, 163, 184, 0.95);
+  cursor: pointer;
+  user-select: none;
+  transition: all 0.15s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.infoCheckboxLabel:hover {
+  color: rgba(241, 245, 249, 0.92);
+}
+
+.infoCheckbox {
+  width: 16px;
+  height: 16px;
+  border-radius: 6px;
+  border: 1px solid rgba(148, 163, 184, 0.22);
+  background: rgba(15, 23, 42, 0.55);
+  cursor: pointer;
+  transition: all 0.15s cubic-bezier(0.4, 0, 0.2, 1);
+  accent-color: #6366F1;
+}
+
+.infoCheckbox:checked {
+  background: rgba(99, 102, 241, 0.18);
+  border-color: rgba(99, 102, 241, 0.65);
+}
+
+.infoCheckbox:focus-visible {
+  outline: 2px solid #6366F1;
+  outline-offset: 2px;
+}
+
+/* Mobile responsive */
+@media (max-width: 768px) {
+  .infoOverlay {
+    padding: 12px;
+  }
+
+  .infoModal {
+    max-height: min(92vh, 860px);
+    border-radius: 16px;
+  }
+
+  .infoHeader {
+    padding: 12px 14px 10px;
+  }
+
+  .infoTitle {
+    font-size: 16px;
+  }
+
+  .infoSubtitle {
+    font-size: 11px;
+  }
+
+  .infoBody {
+    padding: 12px 14px;
+  }
+
+  .infoFooter {
+    flex-direction: column;
+    align-items: stretch;
+    padding: 12px 14px 12px;
+  }
+
+  .infoPrimary {
+    width: 100%;
+    text-align: center;
+    order: 1;
+  }
+
+  .infoCheckboxLabel {
+    order: 2;
+    justify-content: center;
+  }
+}
+
+/* Small mobile */
+@media (max-width: 480px) {
+  .infoModal {
+    max-height: 95vh;
+  }
+
+  .infoHeader {
+    padding: 10px 12px 8px;
+  }
+
+  .infoBody {
+    padding: 10px 12px;
+  }
+
+  .infoFooter {
+    padding: 10px 12px 10px;
+  }
+
+  .infoSectionTitle {
+    font-size: 11px;
+  }
+
+  .infoList {
+    font-size: 12px;
+  }
+
+  .infoCallout {
+    font-size: 12px;
+  }
+}
+
+/* Accessibility - Reduced Motion */
+@media (prefers-reduced-motion: reduce) {
+  .infoButton,
+  .infoClose,
+  .infoPrimary,
+  .infoSecondary {
+    transition: none;
+  }
+}

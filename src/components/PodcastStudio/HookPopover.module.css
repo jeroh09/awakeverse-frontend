@@ -1,0 +1,241 @@
+/* HookPopover.module.css — the "Opening hook" pop-out.
+   Self-contained tokens (same pattern + values as OverlayTypePopover.module.css).
+   The mini preview mirrors remotion_overlays/src/HookCard.jsx: sizes are in cqw
+   (1cqw = 1% of the preview's width) so the card keeps the video's proportions
+   at any preview size — 1920px of video = 100cqw. */
+
+/* Always fits the window: header + footer pinned, only the middle scrolls.
+   (dvh = the visible height on laptops/phones with browser bars; vh fallback.) */
+.scrim {
+  position: fixed; inset: 0; z-index: 2000;
+  background: rgba(2, 6, 23, 0.74); backdrop-filter: blur(4px);
+  display: flex; align-items: center; justify-content: center;
+  padding: clamp(8px, 2.5vh, 22px);
+}
+.pop {
+  --indigo:var(--sn-hex-acc); --indigo-light:var(--sn-hex-acc-hi); --indigo-text:var(--sn-ink-1); --green:#10B981;
+  --paper:#F1F5F9; --sub:#94A3B8; --line:rgba(var(--sn-acc-rgb), 0.2);
+  --ring:0 0 0 3px rgba(var(--sn-acc-rgb), 0.4); --panel:#0a0f22;
+  --mono:'JetBrains Mono',monospace; --disp:'Syne',sans-serif; --body:'Inter',system-ui,sans-serif;
+
+  width: min(820px, 96vw); display: flex; flex-direction: column; overflow: hidden;
+  max-height: calc(100vh - 2 * clamp(8px, 2.5vh, 22px));
+  max-height: calc(100dvh - 2 * clamp(8px, 2.5vh, 22px));
+  background: var(--panel); border: 1px solid rgba(var(--sn-acc-rgb), 0.32); border-radius: 16px;
+  box-shadow: 0 40px 100px -30px rgba(0,0,0,0.9);
+  color: var(--paper); font-family: var(--body);
+}
+
+.pophead, .foot { flex-shrink: 0; }
+.pophead { display: flex; align-items: center; gap: 10px; padding: 13px 16px; border-bottom: 1px solid var(--line); }
+.ic { font-size: 1.1rem; }
+.t { font-family: var(--disp); font-weight: 700; font-size: 0.98rem; }
+.t small { display: block; font-family: var(--mono); font-size: 0.58rem; color: var(--indigo-light);
+  letter-spacing: 0.06em; text-transform: uppercase; margin-top: 2px; font-weight: 400; }
+.x { margin-left: auto; width: 28px; height: 28px; border-radius: 50%; background: rgba(148,163,184,0.12);
+  border: none; color: var(--sub); cursor: pointer; }
+.x:hover { background: rgba(148,163,184,0.25); color: #fff; }
+
+.body { display: grid; grid-template-columns: 1.1fr 1fr; gap: 18px; padding: 14px 16px 10px;
+  flex: 1 1 auto; min-height: 0; overflow-y: auto;
+  scrollbar-width: thin; scrollbar-color: rgba(var(--sn-acc-rgb), 0.35) transparent; }
+@media (max-width: 680px) { .body { grid-template-columns: 1fr; } }
+.col { min-width: 0; }
+.grp { font-family: var(--mono); font-size: 0.58rem; letter-spacing: 0.1em; text-transform: uppercase;
+  color: var(--sub); margin: 0 0 8px; }
+.hint { font-size: 0.66rem; color: var(--sub); line-height: 1.45; margin: 8px 0 0; }
+.why { font-size: 0.68rem; color: var(--sn-ink-2); line-height: 1.45; margin: 8px 0 0;
+  background: rgba(var(--sn-acc-rgb), 0.08); border: 1px solid var(--line); border-radius: 9px; padding: 7px 9px; }
+.why b { color: var(--indigo-light); font-weight: 600; }
+
+/* ── the preview stage (16:9, like the video) ── */
+.stage {
+  position: relative; width: 100%; aspect-ratio: 16 / 9; border-radius: 11px; overflow: hidden;
+  border: 1px solid rgba(255,255,255,0.06); container-type: inline-size; background: #0b1120;
+}
+.bg { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; }
+.bgFallback { position: absolute; inset: 0;
+  background:
+    radial-gradient(200px 130px at 80% 18%, rgba(245,205,140,0.5), transparent 70%),
+    radial-gradient(70% 90% at 22% 60%, rgba(var(--sn-acc-rgb), 0.25), transparent 60%),
+    linear-gradient(160deg, #1e293b, #0b1120 72%); }
+.host { position: absolute; left: 33%; bottom: 0; width: 34%; height: 92%;
+  display: flex; align-items: flex-end; justify-content: center; }
+.replay { position: absolute; right: 8px; bottom: 8px; width: 28px; height: 28px; border-radius: 50%;
+  border: 1px solid rgba(255,255,255,0.25); background: rgba(10,15,34,0.7); color: #fff; cursor: pointer;
+  font-size: 0.85rem; line-height: 1; }
+.replay:hover { background: rgba(var(--sn-acc-rgb), 0.5); }
+
+/* the mini hook card — mirrors HookCard.jsx */
+.mCard {
+  position: absolute; left: 2.19cqw; top: 20%; max-width: 38cqw; min-width: 16cqw;
+  padding: 2.08cqw 2.08cqw 2.2cqw; border-radius: 1.46cqw; overflow: hidden;
+  background:
+    linear-gradient(180deg, rgba(255,255,255,0.20) 0%, rgba(255,255,255,0.07) 100%),
+    rgba(12, 16, 30, 0.30);
+  backdrop-filter: blur(1.4cqw) saturate(1.1); -webkit-backdrop-filter: blur(1.4cqw) saturate(1.1);
+  box-shadow: inset 0 0 0 1px rgba(255,255,255,0.28), inset 0 1px 0 rgba(255,255,255,0.45),
+              0 1.2cqw 3cqw rgba(0,0,0,0.45);
+  animation: cardLife 4s ease both;
+  font-family: var(--body); color: #F8FAFC;
+}
+@keyframes cardLife {
+  0%   { opacity: 0; transform: translateY(1.4cqw) scale(0.955); filter: blur(0.5cqw); }
+  9%   { opacity: 1; transform: none; filter: none; }
+  90%  { opacity: 1; transform: none; filter: none; }
+  100% { opacity: 0; transform: translateY(-0.5cqw) scale(0.98); filter: blur(0.4cqw); }
+}
+.mEyebrow { display: flex; align-items: center; gap: 0.52cqw; margin-bottom: 0.94cqw;
+  font-size: max(6px, 0.83cqw); font-weight: 600; letter-spacing: 0.11cqw; text-transform: uppercase;
+  color: rgba(241,245,249,0.72); }
+.mEyebrow span { width: max(4px, 0.42cqw); height: max(4px, 0.42cqw); border-radius: 50%;
+  background: var(--indigo); box-shadow: 0 0 0.5cqw var(--indigo); }
+
+.mWords { position: relative; font-size: 3.44cqw; font-weight: 700; line-height: 1.08; letter-spacing: -0.02em;
+  text-shadow: 0 0.1cqw 0.3cqw rgba(0,0,0,0.35); }
+.mQuestion { font-size: 2.81cqw; }
+.mQ { position: absolute; right: -0.3cqw; top: -3.1cqw; font-size: 13.5cqw; line-height: 1;
+  color: var(--indigo); opacity: 0.22; pointer-events: none; }
+.mWord { display: inline-block; position: relative; margin-right: 0.24em; opacity: 0;
+  animation: wordIn 0.45s cubic-bezier(.2,.9,.3,1.15) both; }
+.mWord:last-child { margin-right: 0; }
+@keyframes wordIn {
+  from { opacity: 0; transform: translateY(0.35em); filter: blur(0.4cqw); }
+  to   { opacity: 1; transform: none; filter: none; }
+}
+.mEmph { color: var(--indigo-text); }
+.mUnder { position: absolute; left: 0; bottom: -0.06em; height: 0.075em; width: 0; border-radius: 999px;
+  background: var(--indigo); box-shadow: 0 0 0.6cqw var(--indigo);
+  animation: sweep 0.32s ease-out both; }
+@keyframes sweep { from { width: 0; } to { width: 100%; } }
+
+.mStat { font-size: 7.7cqw; font-weight: 700; line-height: 1; letter-spacing: -0.26cqw;
+  font-variant-numeric: tabular-nums; text-shadow: 0 0.2cqw 0.9cqw rgba(var(--sn-acc-rgb), 0.45);
+  animation: statPop 0.6s cubic-bezier(.2,.9,.3,1.25) 0.28s both; transform-origin: 0% 70%; }
+@keyframes statPop { from { opacity: 0; transform: scale(0.9); } to { opacity: 1; transform: none; } }
+.mLabel { margin-top: 0.73cqw; font-size: 1.67cqw; font-weight: 600; line-height: 1.2; opacity: 0;
+  animation: wordIn 0.35s ease 0.78s both; }
+
+.mVs { display: flex; flex-direction: column; gap: 0.52cqw; }
+.mVsName { font-size: 3.23cqw; font-weight: 700; letter-spacing: -0.06cqw; white-space: nowrap;
+  overflow: hidden; text-overflow: ellipsis; opacity: 0; animation: slideIn 0.5s ease both; }
+@keyframes slideIn { from { opacity: 0; transform: translateX(-2cqw); } to { opacity: 1; transform: none; } }
+.mVsPill { align-self: flex-start; padding: 0.31cqw 0.94cqw; border-radius: 999px; font-weight: 700;
+  font-size: 1.04cqw; letter-spacing: 0.1cqw; background: rgba(255,255,255,0.14);
+  box-shadow: inset 0 0 0 1px rgba(255,255,255,0.28); animation: statPop 0.4s ease 0.4s both; }
+
+/* ── choices ── */
+.pillStrip { display: flex; gap: 3px; margin: 0 0 12px; padding: 4px;
+  background: rgba(15,23,42,0.7); border: 1px solid var(--line); border-radius: 12px; }
+.pillBtn { flex: 1 1 0; min-width: 0; position: relative; background: none; border: none; color: var(--sub);
+  font-family: var(--body); font-size: 0.74rem; padding: 0.5rem 0.4rem; border-radius: 9px;
+  cursor: pointer; white-space: nowrap; transition: 0.12s; }
+.pillBtn:hover { color: var(--paper); }
+.pillOn { background: linear-gradient(180deg, var(--indigo-light), var(--indigo)); color: var(--sn-on-accent);
+  box-shadow: 0 4px 12px -4px rgba(var(--sn-acc-rgb), 0.6); }
+.aiDot { position: absolute; top: 5px; right: 6px; width: 5px; height: 5px; border-radius: 50%;
+  background: #34d399; box-shadow: 0 0 6px #34d399; }
+
+.field { margin: 0 0 11px; flex: 1; min-width: 0; }
+.field label { font-size: 0.66rem; color: var(--sub); display: block; margin-bottom: 4px; }
+.opt { color: #64748b; }
+.row2 { display: flex; gap: 8px; }
+.input { width: 100%; box-sizing: border-box; background: rgba(15,23,42,0.8); color: #e2e8f0;
+  border: 1px solid var(--line); border-radius: 8px; padding: 0.5rem 0.6rem;
+  font-family: var(--body); font-size: 0.8rem; }
+.input:focus-visible { outline: none; box-shadow: var(--ring); }
+
+.words { display: flex; flex-wrap: wrap; gap: 5px; }
+.word { background: rgba(148,163,184,0.08); border: 1px solid var(--line); color: #e2e8f0;
+  border-radius: 999px; padding: 3px 10px; font-size: 0.72rem; cursor: pointer; font-family: var(--body); }
+.word:hover { border-color: var(--indigo-light); }
+.wordOn { background: rgba(var(--sn-acc-rgb), 0.22); border-color: var(--indigo); color: var(--indigo-text);
+  box-shadow: 0 0 0 1px rgba(var(--sn-acc-rgb), 0.35); }
+
+.suggest { width: 100%; background: rgba(var(--sn-acc-rgb), 0.12); border: 1px solid rgba(var(--sn-acc-rgb), 0.4);
+  color: var(--indigo-light); border-radius: 8px; padding: 0.55rem; font-size: 0.78rem; cursor: pointer;
+  font-family: var(--body); }
+.suggest:hover:not(:disabled) { background: rgba(var(--sn-acc-rgb), 0.22); }
+.suggest:disabled { opacity: 0.6; cursor: progress; }
+
+/* ── footer ── */
+.foot { border-top: 1px solid var(--line); padding: 10px 16px; display: flex; align-items: center; gap: 12px;
+  background: var(--panel); }
+@media (max-height: 760px) {
+  .pophead { padding: 9px 14px; }
+  .body { padding-top: 10px; }
+  .field { margin-bottom: 8px; }
+}
+.toggle { display: flex; align-items: center; gap: 9px; font-size: 0.8rem; font-weight: 600; cursor: pointer; }
+.sw { position: relative; width: 38px; height: 21px; flex-shrink: 0; }
+.sw input { opacity: 0; width: 0; height: 0; }
+.sw span { position: absolute; inset: 0; background: rgba(148,163,184,0.25); border-radius: 999px; transition: 0.15s; }
+.sw span::before { content: ""; position: absolute; left: 3px; top: 3px; width: 15px; height: 15px;
+  border-radius: 50%; background: #fff; transition: 0.15s; }
+.sw input:checked + span { background: linear-gradient(180deg, var(--indigo-light), var(--indigo)); }
+.sw input:checked + span::before { transform: translateX(17px); }
+.sw input:disabled + span { opacity: 0.4; }
+.hintFoot { font-size: 0.66rem; color: var(--sub); margin-left: auto; }
+.done { border: none; border-radius: 999px; padding: 0.5rem 1.15rem; font-family: var(--body); font-weight: 600;
+  font-size: 0.8rem; cursor: pointer; background: linear-gradient(180deg, var(--indigo-light), var(--indigo)); color: var(--sn-on-accent); }
+
+@media (prefers-reduced-motion: reduce) {
+  .mCard, .mWord, .mUnder, .mStat, .mLabel, .mVsName, .mVsPill { animation: none !important; opacity: 1 !important; }
+  .mUnder { width: 100%; }
+}
+/* studio icons (2026-10-18) */
+.ic { display: inline-flex; color: var(--indigo-light); --si-accent: var(--indigo-text); }
+.x, .replay { display: inline-grid; place-items: center; padding: 0; }
+.suggest { display: flex; align-items: center; justify-content: center; gap: 6px; --si-accent: #E0E7FF; }
+
+/* ══ NOCTURNE GLASS (2026-10-20) ══════════════════════════════════════════════
+   This pop-up as a thick glass slab over a night sky, like Film's pop-ups.
+   • Above this block, every hard-coded indigo was swapped IN PLACE for a --sn-* colour
+     variable whose default (the :root block below) is that same indigo; a checker
+     (studio-tools/retint_inplace.py verify) proves every rule resolves to its original value.
+   • Everything below is scoped under body[data-film-ui="nocturne"] (set by useFilmSeason
+     while the studio or Film is open). Without that attribute nothing here applies.
+   • Halloween (body[data-film-season="halloween"]) turns the accent pumpkin with dark ink.
+     It is set on the pop-up's own root because the pop-up may be portalled to <body>.
+   • THE PREVIEW IS OFF-LIMITS: the stage and the mini hook card (it mirrors HookCard.jsx) stay exactly as now.
+   ═══════════════════════════════════════════════════════════════════════════════ */
+:root {
+  --sn-acc-rgb: 99, 102, 241; --sn-acc-hi-rgb: 129, 140, 248; --sn-acc-soft-rgb: 165, 180, 252; --sn-acc-deep-rgb: 79, 70, 229;
+  --sn-hex-acc: #6366F1; --sn-hex-acc-hi: #818CF8; --sn-hex-acc-deep: #4F46E5;
+  --sn-ink-1: #A5B4FC; --sn-ink-2: #C7D2FE; --sn-on-accent: #fff;
+}
+body[data-film-ui="nocturne"][data-film-season="halloween"] .scrim {
+  --sn-acc-rgb: 255, 138, 61; --sn-acc-hi-rgb: 255, 167, 102; --sn-acc-soft-rgb: 255, 190, 140; --sn-acc-deep-rgb: 230, 110, 40;
+  --sn-hex-acc: #FF8A3D; --sn-hex-acc-hi: #FFA766; --sn-hex-acc-deep: #E66E28;
+  --sn-ink-1: #FFC79A; --sn-ink-2: #FFD2B0; --sn-on-accent: #1A0B02;
+}
+/* the preview keeps its render colours in every season */
+body[data-film-ui="nocturne"] .stage {
+  --sn-acc-rgb: 99, 102, 241; --sn-acc-hi-rgb: 129, 140, 248; --sn-acc-soft-rgb: 165, 180, 252; --sn-acc-deep-rgb: 79, 70, 229;
+  --sn-hex-acc: #6366F1; --sn-hex-acc-hi: #818CF8; --sn-hex-acc-deep: #4F46E5;
+  --sn-ink-1: #A5B4FC; --sn-ink-2: #C7D2FE; --sn-on-accent: #fff;
+  --indigo: #6366F1; --indigo-light: #818CF8; --indigo-text: #A5B4FC; --line: rgba(99,102,241,0.2); --ring: 0 0 0 3px rgba(99,102,241,0.4);
+}
+/* the room dims under a night sky */
+body[data-film-ui="nocturne"] .scrim {
+  background: radial-gradient(1000px 640px at 82% -12%, rgba(40, 46, 110, 0.38), transparent 62%), rgba(4, 4, 10, 0.66);
+  -webkit-backdrop-filter: blur(8px); backdrop-filter: blur(8px);
+}
+body[data-film-ui="nocturne"][data-film-season="halloween"] .scrim {
+  background: radial-gradient(1000px 640px at 82% -12%, rgba(70, 30, 100, 0.42), transparent 62%), rgba(4, 4, 10, 0.66);
+}
+/* the slab: thick glass, a lit top edge, a deep shadow and a faint glow of the accent */
+body[data-film-ui="nocturne"] .pop {
+  --line: rgba(255, 255, 255, 0.1); --panel: rgba(0, 0, 0, 0.14);
+  background: linear-gradient(180deg, rgba(255, 255, 255, 0.05), rgba(255, 255, 255, 0.012)), rgba(15, 15, 30, 0.9);
+  border-color: rgba(255, 255, 255, 0.16);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.1), 0 40px 120px -30px #000, 0 0 80px -34px rgba(var(--sn-acc-rgb), 0.45);
+  -webkit-backdrop-filter: blur(28px) saturate(160%); backdrop-filter: blur(28px) saturate(160%);
+}
+/* the controls: dark glass wells, a lit main button */
+body[data-film-ui="nocturne"] .pillStrip { background: rgba(0, 0, 0, 0.24); box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.05); }
+body[data-film-ui="nocturne"] .input { background: rgba(0, 0, 0, 0.24); }
+body[data-film-ui="nocturne"] .word { background: rgba(255, 255, 255, 0.04); }
+body[data-film-ui="nocturne"] .wordOn { background: rgba(var(--sn-acc-rgb), 0.22); }
+body[data-film-ui="nocturne"] .why { color: var(--sn-ink-2); }
+body[data-film-ui="nocturne"] .done { box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.3), 0 8px 22px -10px rgba(var(--sn-acc-rgb), 0.6); }

@@ -1,0 +1,336 @@
+/* src/components/VerseStudio/VerseLLMSelector.module.css */
+
+/* Import design system variables */
+@import '../../design-system/variables.css';
+
+/* ============================================================================
+   SELECTOR ROOT
+   ============================================================================ */
+.selectorRoot {
+    background: var(--bg-surface);
+    border: 1px solid var(--border-subtle);
+    border-radius: var(--border-radius-lg);
+    padding: var(--spacing-lg);
+    box-shadow: var(--shadow-elevation02);
+    transition: var(--transition-normal);
+}
+
+.selectorRoot:hover {
+    box-shadow: var(--shadow-elevation03);
+}
+
+/* ============================================================================
+   SELECTOR HEADER
+   ============================================================================ */
+.selectorHeader {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    margin-bottom: var(--spacing-md);
+    padding-bottom: var(--spacing-md);
+    border-bottom: 1px solid var(--border-subtle);
+}
+
+.selectorTitleBlock {
+    flex: 1;
+}
+
+.selectorEyebrow {
+    font-family: var(--font-body);
+    font-size: var(--font-size-caption);
+    font-weight: var(--font-weight-semibold);
+    color: var(--brand-ivory-dim);
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    margin-bottom: var(--spacing-xs);
+    display: inline-flex;
+    align-items: center;
+    gap: var(--spacing-xs);
+}
+
+.selectorEyebrow::before {
+    content: '';
+    width: 4px;
+    height: 4px;
+    border-radius: 50%;
+    background: var(--accent-primary);
+    display: inline-block;
+}
+
+.selectorTitle {
+    font-family: var(--font-display);
+    font-size: var(--font-size-h4);
+    font-weight: var(--font-weight-semibold);
+    color: var(--text-primary);
+    margin: 0;
+    line-height: var(--line-height-h4);
+}
+
+.selectorMeta {
+    display: flex;
+    align-items: center;
+}
+
+.selectorCount {
+    font-family: var(--font-body);
+    font-size: var(--font-size-body-small);
+    font-weight: var(--font-weight-semibold);
+    color: var(--accent-primary);
+    background: rgba(99, 102, 241, 0.1);
+    padding: var(--spacing-xs) var(--spacing-sm);
+    border-radius: var(--border-radius-full);
+    border: 1px solid rgba(99, 102, 241, 0.2);
+}
+
+/* ============================================================================
+   SELECTOR HINT
+   ============================================================================ */
+.selectorHint {
+    font-family: var(--font-body);
+    font-size: var(--font-size-body-small);
+    color: var(--text-secondary);
+    line-height: var(--line-height-body-small);
+    margin: 0 0 var(--spacing-lg) 0;
+    padding: var(--spacing-md);
+    background: rgba(99, 102, 241, 0.05);
+    border-radius: var(--border-radius-md);
+    border-left: 3px solid var(--accent-primary);
+}
+
+.selectorHintWarn {
+    background: rgba(245, 158, 11, 0.05);
+    border-left-color: var(--semantic-warning);
+    color: var(--semantic-warning);
+}
+
+/* ============================================================================
+   OPTIONS GRID
+   ============================================================================ */
+.optionsGrid {
+    display: flex;
+    flex-direction: column;
+    gap: var(--spacing-md);
+}
+
+/* ============================================================================
+   OPTION CARD
+   ============================================================================ */
+.optionCard {
+    background: var(--bg-interactive);
+    border: 1px solid var(--border-subtle);
+    border-radius: var(--border-radius-md);
+    padding: var(--spacing-md);
+    cursor: pointer;
+    transition: var(--transition-fast);
+    text-align: left;
+    display: flex;
+    flex-direction: column;
+    gap: var(--spacing-sm);
+    position: relative;
+    overflow: hidden;
+}
+
+.optionCard:hover:not(.optionDisabled) {
+    background: var(--bg-peak);
+    border-color: var(--border-medium);
+    transform: translateY(-2px);
+    box-shadow: var(--shadow-elevation02);
+}
+
+.optionSelected {
+    background: rgba(99, 102, 241, 0.1) !important;
+    border-color: var(--accent-primary) !important;
+    box-shadow: var(--shadow-glow) !important;
+}
+
+.optionSelected::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: 2px;
+    background: linear-gradient(90deg, var(--accent-primary) 0%, var(--accent-hover) 100%);
+}
+
+.optionDisabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+    filter: grayscale(0.5);
+}
+
+/* ============================================================================
+   OPTION CONTENT
+   ============================================================================ */
+.optionHeaderRow {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    margin-bottom: var(--spacing-xs);
+}
+
+.optionName {
+    font-family: var(--font-body);
+    font-size: var(--font-size-body);
+    font-weight: var(--font-weight-semibold);
+    color: var(--text-primary);
+    line-height: var(--line-height-body);
+}
+
+.optionProvider {
+    font-family: var(--font-body);
+    font-size: var(--font-size-caption);
+    font-weight: var(--font-weight-medium);
+    color: var(--text-secondary);
+    background: var(--bg-surface);
+    padding: 2px 8px;
+    border-radius: var(--border-radius-full);
+    border: 1px solid var(--border-subtle);
+}
+
+.optionDescription {
+    font-family: var(--font-body);
+    font-size: var(--font-size-body-small);
+    color: var(--text-secondary);
+    line-height: var(--line-height-body-small);
+    margin: 0;
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+}
+
+/* ============================================================================
+   OPTION TAGS
+   ============================================================================ */
+.optionFooterRow {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-top: var(--spacing-xs);
+}
+
+.optionTags {
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--spacing-xs);
+    align-items: center;
+}
+
+.optionTag {
+    font-family: var(--font-body);
+    font-size: 11px;
+    font-weight: var(--font-weight-medium);
+    color: var(--accent-primary);
+    background: rgba(99, 102, 241, 0.1);
+    padding: 3px 8px;
+    border-radius: var(--border-radius-full);
+    border: 1px solid rgba(99, 102, 241, 0.2);
+    text-transform: uppercase;
+    letter-spacing: 0.3px;
+}
+
+.optionTagMore {
+    font-family: var(--font-body);
+    font-size: 11px;
+    color: var(--text-muted);
+    font-style: italic;
+}
+
+.optionTier {
+    font-family: var(--font-body);
+    font-size: 11px;
+    font-weight: var(--font-weight-semibold);
+    color: var(--semantic-success);
+    background: rgba(16, 185, 129, 0.1);
+    padding: 3px 8px;
+    border-radius: var(--border-radius-full);
+    border: 1px solid rgba(16, 185, 129, 0.2);
+    margin-left: var(--spacing-xs);
+}
+
+/* ============================================================================
+   SELECTION INDICATOR
+   ============================================================================ */
+.optionCheckShell {
+    display: flex;
+    align-items: center;
+    gap: var(--spacing-xs);
+}
+
+.optionCheckDot {
+    width: 12px;
+    height: 12px;
+    border-radius: 50%;
+    background: var(--bg-surface);
+    border: 2px solid var(--border-medium);
+    transition: var(--transition-fast);
+}
+
+.optionCheckDotActive {
+    background: var(--accent-primary);
+    border-color: var(--accent-primary);
+    box-shadow: 0 0 0 3px var(--accent-glow);
+}
+
+.optionCheckLabel {
+    font-family: var(--font-body);
+    font-size: var(--font-size-caption);
+    font-weight: var(--font-weight-medium);
+    color: var(--text-secondary);
+    white-space: nowrap;
+}
+
+.optionSelected .optionCheckLabel {
+    color: var(--accent-primary);
+}
+
+/* ============================================================================
+   EMPTY STATE
+   ============================================================================ */
+.selectorEmpty {
+    padding: var(--spacing-xl) 0;
+    text-align: center;
+}
+
+.emptyTitle {
+    font-family: var(--font-body);
+    font-size: var(--font-size-body);
+    font-weight: var(--font-weight-semibold);
+    color: var(--text-secondary);
+    margin-bottom: var(--spacing-sm);
+}
+
+.emptyBody {
+    font-family: var(--font-body);
+    font-size: var(--font-size-body-small);
+    color: var(--text-tertiary);
+    line-height: var(--line-height-body-small);
+    max-width: 400px;
+    margin: 0 auto;
+}
+
+/* ============================================================================
+   RESPONSIVE
+   ============================================================================ */
+@media (max-width: 768px) {
+    .selectorRoot {
+        padding: var(--spacing-md);
+    }
+    
+    .optionHeaderRow {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: var(--spacing-xs);
+    }
+    
+    .optionFooterRow {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: var(--spacing-sm);
+    }
+    
+    .optionCheckShell {
+        align-self: flex-end;
+    }
+}

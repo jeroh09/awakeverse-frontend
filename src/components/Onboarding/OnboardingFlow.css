@@ -1,0 +1,485 @@
+/* src/components/Onboarding/OnboardingFlow.css
+   AwakeVerse Onboarding — Night Blue / Indigo
+   Fonts: Syne (headings) · Inter (body) · Caveat (wordmark)
+*/
+
+/* ─── Shell ───────────────────────────────────────────────── */
+.ob-shell {
+  position: fixed;
+  inset: 0;
+  z-index: 1000;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 1rem;
+  background: #020617;
+  overflow: hidden;
+}
+
+.ob-bg {
+  position: absolute;
+  inset: 0;
+  background:
+    radial-gradient(ellipse 60% 50% at 20% 20%, rgba(99,102,241,0.11) 0%, transparent 68%),
+    radial-gradient(ellipse 50% 40% at 80% 80%, rgba(129,140,248,0.07) 0%, transparent 68%);
+  pointer-events: none;
+}
+
+/* ─── Card ────────────────────────────────────────────────── */
+.ob-card {
+  position: relative;
+  width: 100%;
+  max-width: 660px;
+  background: rgba(15, 23, 42, 0.97);
+  /* Double border: inner indigo line + outer ring + depth shadow */
+  border: 1px solid rgba(99,102,241,0.28);
+  box-shadow:
+    0 0 0 4px rgba(99,102,241,0.06),
+    0 0 0 5px rgba(99,102,241,0.04),
+    0 28px 70px rgba(0,0,0,0.75);
+  border-radius: 22px;
+  display: flex;
+  flex-direction: column;
+  padding: 2rem 2.25rem 1.6rem;
+  backdrop-filter: blur(20px);
+  max-height: calc(100vh - 2rem);
+  overflow-y: auto;
+}
+
+.ob-card--enter {
+  animation: ob-in 0.32s ease;
+}
+@keyframes ob-in {
+  from { opacity: 0; transform: translateY(12px) scale(0.98); }
+  to   { opacity: 1; transform: translateY(0)   scale(1);    }
+}
+.ob-card--exit-fwd  { opacity: 0; transform: translateX(-20px) scale(0.98); transition: all 0.26s ease; }
+.ob-card--exit-back { opacity: 0; transform: translateX(20px)  scale(0.98); transition: all 0.26s ease; }
+
+/* ─── Dots ────────────────────────────────────────────────── */
+.ob-dots {
+  display: flex;
+  gap: 6px;
+  margin-bottom: 1.5rem;
+}
+.ob-dot {
+  width: 6px; height: 6px;
+  border-radius: 999px;
+  background: rgba(148,163,184,0.22);
+  transition: all 0.3s ease;
+}
+.ob-dot--active { width: 22px; background: #6366f1; box-shadow: 0 0 8px rgba(99,102,241,0.55); }
+.ob-dot--done   { background: rgba(99,102,241,0.4); }
+
+/* ─── Body ────────────────────────────────────────────────── */
+.ob-body { flex: 1; display: flex; flex-direction: column; }
+
+.ob-step {
+  display: flex;
+  flex-direction: column;
+  gap: 0.7rem;
+  flex: 1;
+}
+
+/* ─── Typography ──────────────────────────────────────────── */
+.ob-eyebrow {
+  font-family: 'Inter', sans-serif;
+  font-size: 0.68rem;
+  font-weight: 600;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  color: #6366f1;
+  margin: 0;
+}
+.ob-heading {
+  font-family: 'Syne', sans-serif;
+  font-size: 1.5rem;
+  font-weight: 700;
+  color: #f5f5dc;
+  line-height: 1.2;
+  margin: 0;
+}
+.ob-tagline {
+  font-family: 'Syne', sans-serif;
+  font-size: 1.2rem;
+  font-weight: 600;
+  color: #e0e7ff;
+  margin: 0;
+}
+.ob-text {
+  font-family: 'Inter', sans-serif;
+  font-size: 0.875rem;
+  line-height: 1.7;
+  color: #94a3b8;
+  margin: 0;
+}
+.ob-hint {
+  font-family: 'Inter', sans-serif;
+  font-size: 0.73rem;
+  color: #475569;
+  font-style: italic;
+  margin: 0;
+}
+
+/* ─── Welcome ─────────────────────────────────────────────── */
+.ob-step--welcome { gap: 0.8rem; }
+
+.ob-wordmark {
+  font-family: 'Caveat', cursive;
+  font-style: italic;
+  font-weight: 600;
+  font-size: 2.5rem;
+  letter-spacing: 0.04em;
+  line-height: 1;
+}
+.ob-wm--indigo { color: #6366f1; }
+.ob-wm--ivory  { color: #f5f5dc; }
+
+.ob-pills { display: flex; flex-wrap: wrap; gap: 0.4rem; margin-top: 0.15rem; }
+.ob-pill {
+  font-family: 'Inter', sans-serif;
+  font-size: 0.7rem;
+  font-weight: 500;
+  padding: 0.25rem 0.7rem;
+  border-radius: 999px;
+  border: 1px solid rgba(99,102,241,0.32);
+  color: #818cf8;
+  background: rgba(99,102,241,0.07);
+}
+
+/* ─── Image Panel ─────────────────────────────────────────── */
+.ob-img-panel {
+  width: 100%;
+  /* 16:10 aspect ratio — tall enough to be captivating */
+  aspect-ratio: 16 / 10;
+  border-radius: 12px;
+  overflow: hidden;
+  background: rgba(2, 6, 23, 0.9);
+  border: 1px solid rgba(99,102,241,0.18);
+  flex-shrink: 0;
+}
+.ob-img-panel__img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+  transition: transform 0.3s ease;
+}
+.ob-panel:hover .ob-img-panel__img,
+.ob-path-panel:hover .ob-img-panel__img {
+  transform: scale(1.03);
+}
+
+/* Fallback when image missing */
+.ob-img-panel__fallback {
+  width: 100%;
+  height: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: linear-gradient(135deg, rgba(99,102,241,0.12), rgba(2,6,23,0.9));
+}
+.ob-img-panel__fallback-label {
+  font-family: 'Syne', sans-serif;
+  font-size: 0.8rem;
+  font-weight: 700;
+  color: rgba(99,102,241,0.5);
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+}
+
+/* ─── 2-panel grid (Steps 2 & 3) ─────────────────────────── */
+.ob-panels-2 {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 0.85rem;
+}
+
+.ob-panel {
+  display: flex;
+  flex-direction: column;
+  gap: 0;
+  border-radius: 14px;
+  overflow: visible; /* Must be visible so outer ring shadow renders outside */
+  /* Double border effect:
+     - border        = inner line (close, indigo tinted)
+     - box-shadow 1  = outer ring (offset 4px, creates gap between the two lines)
+     - box-shadow 2  = depth shadow underneath */
+  border: 1px solid rgba(99,102,241,0.45);
+  box-shadow:
+    0 0 0 4px rgba(15,23,42,0.97),
+    0 0 0 5px rgba(99,102,241,0.28),
+    0 8px 24px rgba(0,0,0,0.45);
+  background: rgba(15, 23, 42, 0.97);
+  transition: border-color 0.2s ease, box-shadow 0.2s ease;
+}
+/* Clip image only — wrapper around img-panel handles radius */
+.ob-panel .ob-img-panel {
+  border-radius: 13px 13px 0 0;
+  overflow: hidden;
+}
+.ob-panel:hover {
+  border-color: rgba(99,102,241,0.75);
+  box-shadow:
+    0 0 0 4px rgba(15,23,42,0.97),
+    0 0 0 5px rgba(99,102,241,0.55),
+    0 12px 32px rgba(99,102,241,0.18);
+}
+
+.ob-panel__text {
+  display: flex;
+  flex-direction: column;
+  gap: 0.2rem;
+  padding: 0.75rem 0.9rem;
+}
+.ob-panel__name {
+  font-family: 'Syne', sans-serif;
+  font-size: 0.9rem;
+  font-weight: 700;
+  color: #e0e7ff;
+}
+.ob-panel__desc {
+  font-family: 'Inter', sans-serif;
+  font-size: 0.73rem;
+  line-height: 1.45;
+  color: #64748b;
+}
+
+/* ─── Callout (Step 3) ────────────────────────────────────── */
+.ob-callout {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  padding: 0.6rem 0.9rem;
+  background: rgba(99,102,241,0.06);
+  border: 1px solid rgba(99,102,241,0.2);
+  border-radius: 9px;
+  font-family: 'Inter', sans-serif;
+  font-size: 0.75rem;
+  color: #818cf8;
+}
+.ob-callout__dot {
+  width: 6px; height: 6px;
+  border-radius: 50%;
+  background: #6366f1;
+  flex-shrink: 0;
+  box-shadow: 0 0 6px rgba(99,102,241,0.8);
+}
+
+/* ─── Command step ────────────────────────────────────────── */
+.ob-step--command {
+  align-items: center;
+  text-align: center;
+  gap: 0.85rem;
+}
+.ob-step--command .ob-heading,
+.ob-step--command .ob-text { text-align: center; max-width: 380px; }
+
+.ob-kbd {
+  display: inline-block;
+  font-family: 'Inter', sans-serif;
+  font-size: 0.8rem;
+  font-weight: 700;
+  padding: 0.12rem 0.5rem;
+  border-radius: 5px;
+  border: 1px solid rgba(99,102,241,0.45);
+  background: rgba(99,102,241,0.1);
+  color: #818cf8;
+  margin: 0 2px;
+}
+
+.ob-keys {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  margin: 0.5rem 0 0.25rem;
+}
+.ob-key {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 88px;
+  height: 88px;
+  background: rgba(15,23,42,0.9);
+  border: 1.5px solid rgba(99,102,241,0.3);
+  border-radius: 16px;
+  font-family: 'Inter', sans-serif;
+  font-size: 1.4rem;
+  font-weight: 700;
+  color: #94a3b8;
+  box-shadow:
+    0 4px 0 rgba(99,102,241,0.2),
+    0 8px 20px rgba(0,0,0,0.5),
+    inset 0 1px 0 rgba(255,255,255,0.04);
+}
+.ob-key--highlight {
+  border-color: #6366f1;
+  color: #e0e7ff;
+  background: rgba(99,102,241,0.15);
+  box-shadow:
+    0 4px 0 rgba(99,102,241,0.45),
+    0 8px 28px rgba(99,102,241,0.22),
+    0 0 18px rgba(99,102,241,0.14),
+    inset 0 1px 0 rgba(255,255,255,0.07);
+}
+.ob-key-plus {
+  font-size: 1.4rem;
+  font-weight: 300;
+  color: #334155;
+}
+.ob-keys-label {
+  font-family: 'Inter', sans-serif;
+  font-size: 0.78rem;
+  color: #475569;
+  margin: 0;
+}
+
+/* ─── Step 5: Path panels (4-up horizontal) ───────────────── */
+.ob-step--path { gap: 0.65rem; }
+
+.ob-panels-4 {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 0.7rem;
+}
+
+.ob-path-panel {
+  display: flex;
+  flex-direction: column;
+  gap: 0;
+  background: rgba(15,23,42,0.97);
+  /* Double border: same technique as ob-panel */
+  border: 1px solid rgba(99,102,241,0.45);
+  box-shadow:
+    0 0 0 4px rgba(15,23,42,0.97),
+    0 0 0 5px rgba(99,102,241,0.28),
+    0 8px 24px rgba(0,0,0,0.45);
+  border-radius: 14px;
+  overflow: visible;
+  cursor: pointer;
+  text-align: left;
+  transition: all 0.18s ease;
+  color: inherit;
+  padding: 0;
+}
+/* Clip image top corners cleanly */
+.ob-path-panel .ob-img-panel {
+  border-radius: 13px 13px 0 0;
+  overflow: hidden;
+}
+.ob-path-panel:hover {
+  border-color: rgba(129,140,248,0.75);
+  box-shadow:
+    0 0 0 4px rgba(15,23,42,0.97),
+    0 0 0 5px rgba(99,102,241,0.55),
+    0 12px 32px rgba(99,102,241,0.18);
+  background: rgba(15,23,42,0.97);
+  transform: translateY(-3px);
+}
+.ob-path-panel:active { transform: translateY(-1px) scale(0.99); }
+
+.ob-path-panel__text {
+  display: flex;
+  flex-direction: column;
+  gap: 0.2rem;
+  padding: 0.65rem 0.75rem 0.7rem;
+}
+.ob-path-panel__name {
+  font-family: 'Syne', sans-serif;
+  font-size: 0.82rem;
+  font-weight: 700;
+  color: #e0e7ff;
+}
+.ob-path-panel__desc {
+  font-family: 'Inter', sans-serif;
+  font-size: 0.68rem;
+  color: #64748b;
+  line-height: 1.4;
+}
+.ob-path-panel__arrow {
+  color: #6366f1;
+  margin-top: 0.3rem;
+  display: flex;
+  transition: transform 0.18s ease;
+}
+.ob-path-panel:hover .ob-path-panel__arrow { transform: translateX(3px); }
+
+/* ─── Footer ──────────────────────────────────────────────── */
+.ob-footer {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-top: 1.4rem;
+  padding-top: 1.1rem;
+  border-top: 1px solid rgba(148,163,184,0.08);
+}
+.ob-footer--last {
+  border-top: none;
+  margin-top: 0.5rem;
+  padding-top: 0;
+  justify-content: flex-start;
+}
+
+.ob-btn {
+  font-family: 'Inter', sans-serif;
+  font-size: 0.82rem;
+  font-weight: 600;
+  padding: 0.52rem 1.2rem;
+  border-radius: 9px;
+  border: none;
+  cursor: pointer;
+  transition: all 0.18s ease;
+}
+.ob-btn--primary {
+  background: linear-gradient(135deg, #6366f1, #818cf8);
+  color: #fff;
+  box-shadow: 0 2px 14px rgba(99,102,241,0.4);
+}
+.ob-btn--primary:hover {
+  box-shadow: 0 4px 22px rgba(99,102,241,0.55);
+  transform: translateY(-1px);
+}
+.ob-btn--ghost {
+  background: transparent;
+  color: #64748b;
+  border: 1px solid transparent;
+}
+.ob-btn--ghost:hover { color: #94a3b8; border-color: rgba(148,163,184,0.18); }
+.ob-btn--skip {
+  background: transparent;
+  border: none;
+  cursor: pointer;
+  font-family: 'Inter', sans-serif;
+  font-size: 0.73rem;
+  font-weight: 500;
+  color: #475569;
+  padding: 0.4rem 0.65rem;
+  transition: color 0.15s;
+}
+.ob-btn--skip:hover { color: #64748b; }
+
+/* ─── Mobile ──────────────────────────────────────────────── */
+@media (max-width: 640px) {
+  .ob-card {
+    padding: 1.6rem 1.25rem 1.35rem;
+    border-radius: 18px;
+    max-height: calc(100vh - 1rem);
+  }
+  .ob-heading { font-size: 1.2rem; }
+  .ob-wordmark { font-size: 2rem; }
+
+  /* Steps 2 & 3: stack panels vertically on mobile */
+  .ob-panels-2 { grid-template-columns: 1fr; gap: 0.65rem; }
+
+  /* Step 5: 2x2 grid on mobile */
+  .ob-panels-4 { grid-template-columns: 1fr 1fr; gap: 0.6rem; }
+
+  .ob-key { min-width: 72px; height: 72px; font-size: 1.1rem; border-radius: 12px; }
+
+  .ob-footer { margin-top: 1rem; padding-top: 0.9rem; }
+}
+
+@media (max-width: 380px) {
+  /* Step 5: single column on very small screens */
+  .ob-panels-4 { grid-template-columns: 1fr; }
+}

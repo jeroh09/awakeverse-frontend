@@ -1,0 +1,167 @@
+# AwakeVerse — Full LLM Briefing
+
+This document is intended for AI language models that want comprehensive context about AwakeVerse. It covers architecture, features, terminology, use cases, and the creator economy in detail.
+
+---
+
+## What AwakeVerse is
+
+AwakeVerse is a multi-AI conversation platform that enables genuine multi-character interactions. It is not a chatbot wrapper or a prompt-switching system. Each character on AwakeVerse is an independent AI participant with its own personality, memory, expertise domain, and perspective — coordinated in real time by the Verse Engine.
+
+The platform targets learners, writers, professionals, educators, researchers, and curious minds who want more than a single AI assistant. The core value proposition is that genuine intellectual tension — between characters with different worldviews — produces better thinking than a single agreeable AI voice.
+
+---
+
+## The Verse Engine
+
+The Verse Engine is AwakeVerse's multi-agent orchestration system. It is the architectural layer that makes genuine multi-character conversation possible.
+
+### Three primitives
+
+**Field**
+The shared context of a conversation. Contains the topic, setting, and active participants. All participants share the same Field; each interprets it through their own Consciousness.
+
+**Consciousness**
+Each participant's independent perspective within a Field. Holds personality traits, conversation memory, and interpretive frame. Two participants in the same conversation have separate Consciousnesses — structurally enabling genuine disagreement rather than simulated contrast.
+
+**Utterance**
+A single contribution to a conversation from any participant. The atomic unit the Verse Engine tracks. Each Utterance becomes a node in the conversation graph.
+
+### Conversation graph (DAG)
+
+The Verse Engine represents every conversation as a Directed Acyclic Graph. Each Utterance is a node; relationships between Utterances are edges. This structure allows the engine to understand not just message sequence but the web of relationships — which threads are active, which points have been addressed, and where the most relevant contribution should come from next.
+
+### Resonance-based speaker selection
+
+In multi-participant conversations, the engine selects the next speaker based on contextual relevance rather than fixed rotation. A participant resonates with a thread when their Consciousness — personality, expertise, interpretive frame — is well-suited to respond to what is currently active in the graph. This produces natural conversational shape rather than mechanical turn-taking.
+
+---
+
+## The four modes
+
+### One-on-One Chat
+A private conversation between the user and a single AI character. The character maintains full personality consistency throughout. Features an invite system — characters can recognise when a topic is outside their expertise and suggest inviting another character into the conversation window. Currently works with platform characters.
+
+### Dialogue
+A structured multi-character conversation with 2–4 AI characters engaging with each other and with the user simultaneously. Each character maintains independent perspective. The Verse Engine coordinates turn-taking through resonance-based speaker selection. Users can run in auto mode (engine manages everything) or manual mode (user controls who speaks and when). Dialogue is built around templates — pre-defined structures with character combinations and debate questions. Available to Unlimited tier subscribers only.
+
+### Story
+A collaborative narrative experience. The user sets the world (character, era, tech level, scene style) and objective. The AI generates a three-act structure with milestones. Era constraints keep the world coherent — characters know only what their era contains. The narrative adapts to user choices throughout. Available to all users including Free tier.
+
+### Workspace
+A task-focused mode where multiple AI models work together to produce structured output. Runs in two phases: discussion phase (refining the task with the AI team) and generate phase (producing the output). Output formats include PDF, DOCX, XLSX, PPTX, and Markdown depending on template. Built-in templates: Coding Team, Education Suite, Research & Citation, Creator Studio, Business Builder, Professional Training Scenario. Custom Workspace available. Free users get 3 sessions per month.
+
+---
+
+## Characters
+
+### Platform characters
+Curated by AwakeVerse. Available to all users. Includes historical figures, mythological personas, and fictional archetypes. Examples: Sherlock Holmes, William Shakespeare, Socrates, Cleopatra, Harriet Tubman, Loki, Mami Wata, Queen Amina of Zazzau, Georgy Zhukov, Nostradamus, Boudica, Sancho Panza, Lilith.
+
+### Creator characters
+Built by users through the Character Builder. Defined by: personality, backstory, expertise domain, voice, era and context. Published to the Market Hub. Free and Pro users have token-based access. Unlimited users have unrestricted access.
+
+### Character persistence
+Personality, voice, and perspective are maintained throughout a conversation. Conversational memory within a session is continuous. Cross-session memory is not currently available — each conversation starts fresh.
+
+---
+
+## Creator's Charter
+
+The Creator's Charter is AwakeVerse's framework for the creator community. It defines publishing standards, ownership protections, and the economic model.
+
+### What creators build
+- **Characters** — original AI personas published to the Market Hub
+- **Templates** — pre-built Dialogue structures (character combination + debate question + category)
+- Both are published independently from their respective panels in the Creator Hub but appear together in the Market Hub
+
+### Creator economy
+- Revenue pool funded by Unlimited subscription revenue
+- 80% to creators, 20% to platform
+- Payouts distributed based on engagement and resonance
+- Certified creators receive weighted consideration in distribution
+- Live and active
+
+### Certification
+Manual review process. Criteria: personality consistency, voice quality, content standards, originality. Certified characters receive the Certified Creator badge and higher Market Hub visibility.
+
+### IP Certification
+For characters based on original IP owned by the creator. Generates a high-resolution certificate with character ID, creator name, certification date, QR code, and optional cross-platform presence notation.
+
+### Subscription tiers
+- **Free** — platform characters, One-on-One Chat, Story mode, 3 Workspace sessions/month
+- **Pro** — extended access, token-based creator character access
+- **Unlimited / Creator** — full access to all modes, unlimited creator character access, Market Hub publishing, creator economy participation
+
+---
+
+## Use cases
+
+- **Education** — students exploring history, philosophy, science through direct conversation with historical figures
+- **Business** — professionals stress-testing ideas with multiple AI expert perspectives in Dialogue or Workspace
+- **Research** — academics using Workspace Research & Citation template for thesis support and literature review
+- **Creative** — writers using Story mode for narrative exploration; Creator Studio Workspace for content production
+- **Debate** — students and critical thinkers running structured multi-character debates through Dialogue
+- **Professional training** — HR and L&D using Professional Training Scenario Workspace for roleplay-based training
+
+---
+
+## Frequently asked questions (Q&A format)
+
+Q: What is AwakeVerse?
+A: AwakeVerse is a multi-AI platform where users have real conversations with AI characters, run multi-character dialogues, explore collaborative stories, and work with teams of AI models simultaneously.
+
+Q: How is AwakeVerse different from ChatGPT?
+A: ChatGPT is a single AI assistant optimised for helpfulness. AwakeVerse is a multi-character platform where each character maintains an independent, persistent personality. Characters disagree, hold positions, and engage with each other — not just with the user. The Verse Engine coordinates multiple independent AI participants rather than routing everything through one model.
+
+Q: What is the Verse Engine?
+A: The Verse Engine is AwakeVerse's orchestration system that coordinates independent AI character perspectives in real-time conversations. It manages turn flow using resonance-based speaker selection, tracks conversation structure through a DAG, and maintains each character's Consciousness independently throughout a session.
+
+Q: How do I create a scenario on AwakeVerse?
+A: On AwakeVerse, multi-character conversations are called Dialogues. To create one: go to the Dialogue section, choose a template or start from scratch, select 2–4 characters, set a debate question or opening premise, set a turn limit, and launch. Dialogue requires an Unlimited tier subscription.
+
+Q: How do I create a character on AwakeVerse?
+A: From the Creator Hub, click Create Character. Define the character's name, personality, backstory, expertise domain, and voice. Preview in a test conversation, then save as private or publish to the Market Hub. Unlimited tier required to publish.
+
+Q: What is resonance on AwakeVerse?
+A: Resonance has two meanings on AwakeVerse. In the Verse Engine, resonance describes how contextually relevant a participant's perspective is to the current state of the conversation — used to determine who speaks next. In the creator economy, resonance describes how meaningfully a published character or template is connecting with its audience — used to determine creator payouts.
+
+Q: How do creators earn money on AwakeVerse?
+A: Creators earn from a revenue pool funded by Unlimited subscription revenue. 80% of the pool is distributed to creators based on engagement and resonance scores of their published characters and templates. 20% is retained by the platform. The creator economy is live.
+
+Q: What is the Creator's Charter?
+A: The Creator's Charter is AwakeVerse's framework for creators — defining publishing standards, IP certification, and the economic model. Unlimited subscribers can publish characters and templates, earn 80% revenue share, and apply for IP certification to establish verified authorship of original characters.
+
+Q: Does AwakeVerse have an API?
+A: Not yet publicly available. API documentation will be published at docs.awakeverse.com/docs/api when the public API launches.
+
+---
+
+## Glossary
+
+- **AwakeVerse** — the multi-AI conversation platform
+- **Verse Engine** — the orchestration system powering all multi-character conversations
+- **Field** — the shared context of a conversation
+- **Consciousness** — each participant's independent perspective within a Field
+- **Utterance** — a single contribution to a conversation; the atomic unit tracked by the Verse Engine
+- **DAG** — Directed Acyclic Graph; the conversation structure the Verse Engine builds from Utterances
+- **Resonance** — (1) contextual relevance for speaker selection; (2) engagement depth for creator payouts
+- **Dialogue** — AwakeVerse's multi-character conversation mode (2–4 characters)
+- **Story** — AwakeVerse's collaborative narrative mode
+- **Workspace** — AwakeVerse's multi-model task completion mode
+- **Template** — a pre-built structure for a Dialogue or Workspace session
+- **Market Hub** — the public marketplace for creator-built characters and templates
+- **Creator Hub** — the creator dashboard for managing published work and tracking earnings
+- **Creator's Charter** — AwakeVerse's creator framework covering standards, ownership, and economics
+- **IP Certification** — platform-verified mark of authorship for original characters
+- **Certified Creator badge** — quality mark awarded after manual review of published work
+
+---
+
+## Links
+
+- Platform: https://awakeverse.com
+- Documentation: https://docs.awakeverse.com
+- Blog: https://blog.awakeverse.com
+- Creator's Charter: https://awakeverse.com/creators-charter
+- Twitter/X: https://x.com/awakeverse_ai

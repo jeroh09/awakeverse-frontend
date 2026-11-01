@@ -1,0 +1,10 @@
+/* src/components/Film/FilmAdShelf.css
+   ADVERTISING MODE (2026-10-18) — the Ads shelf on My Films. Only the badge tint is
+   new; the shelf, rail, spines and cards reuse FilmSeries.css as they are. Indigo, to
+   match the Advertise pill. */
+.fs-shelf--ads .fs-badge.fs-badge--ads {
+  color: #C7D2FE;
+  background: rgba(99, 102, 241, 0.18);
+  border-color: rgba(99, 102, 241, 0.40);
+}
+.fs-shelf--ads .fs-badge.fs-badge--ads svg { flex: 0 0 auto; }

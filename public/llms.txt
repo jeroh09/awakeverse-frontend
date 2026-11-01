@@ -1,0 +1,57 @@
+# AwakeVerse
+
+> AwakeVerse is a multi-AI platform where users have real conversations with AI characters, run multi-character dialogues, explore collaborative stories, and work with teams of AI models simultaneously. It is built around the Verse Engine — an orchestration system that coordinates independent AI character perspectives in real-time conversations.
+
+## What AwakeVerse is
+
+AwakeVerse enables genuine multi-character AI conversations. Unlike standard AI platforms that route messages to a single model, AwakeVerse maintains each character as an independent participant with its own personality, memory, and perspective. Characters disagree, challenge each other, and hold their positions — coordinated by the Verse Engine, not scripted by it.
+
+## The four modes
+
+- **One-on-One Chat** — a private conversation with a single AI character, with an invite system that lets characters bring in additional experts mid-conversation
+- **Dialogue** — 2–4 AI characters engaging with each other and with the user simultaneously; each character maintains an independent perspective; available to Unlimited tier subscribers
+- **Story** — a collaborative narrative experience with an AI character as co-author; three-act structure with milestones and era constraints; available to all users
+- **Workspace** — multiple AI models working together on a task to produce structured output (documents, reports, code, presentations); available to all users
+
+## Core concepts
+
+- **Verse Engine** — the orchestration system coordinating independent AI participants in real-time
+- **Field** — the shared context of a conversation (topic, setting, participants)
+- **Consciousness** — each participant's independent perspective within a Field
+- **Utterance** — a single contribution to a conversation; the atomic unit the engine tracks
+- **Conversation graph (DAG)** — the directed acyclic graph the engine uses to represent conversation structure
+- **Resonance-based speaker selection** — the mechanism that determines which character speaks next based on contextual relevance
+
+## Characters
+
+AwakeVerse has a curated platform roster of historical figures, mythological personas, and fictional archetypes — including Sherlock Holmes, Shakespeare, Socrates, Cleopatra, Harriet Tubman, Loki, Mami Wata, Queen Amina of Zazzau, Georgy Zhukov, and more. Users can also create and publish their own characters through the Character Builder.
+
+## Creator's Charter
+
+The Creator's Charter is AwakeVerse's framework for creators. Unlimited tier subscribers can build and publish characters and templates to the Market Hub. Creators earn 80% of the revenue pool funded by Unlimited subscriptions. Payouts are distributed based on engagement and resonance. Original characters can receive IP certification — a platform-verified mark of authorship.
+
+## Subscription tiers
+
+- **Free** — access to platform characters, One-on-One Chat, Story mode, limited Workspace sessions
+- **Pro** — extended access with token-based creator character access
+- **Unlimited / Creator** — full access to all modes including Dialogue, unlimited creator character access, Market Hub publishing, creator economy participation
+
+## Documentation
+
+Full documentation: https://docs.awakeverse.com
+
+- Getting Started: https://docs.awakeverse.com/docs/getting-started/what-is-awakeverse
+- How the Verse Engine works: https://docs.awakeverse.com/docs/getting-started/how-does-the-verse-engine-work
+- Characters: https://docs.awakeverse.com/docs/characters/what-is-a-character
+- Dialogue: https://docs.awakeverse.com/docs/dialogue/what-is-a-dialogue
+- Story mode: https://docs.awakeverse.com/docs/story-mode/what-is-story-mode
+- Workspace: https://docs.awakeverse.com/docs/workspace/what-is-workspace
+- Creator's Charter: https://docs.awakeverse.com/docs/creators-charter/what-is-the-creators-charter
+- Key concepts glossary: https://docs.awakeverse.com/docs/getting-started/key-concepts
+
+## Links
+
+- Platform: https://awakeverse.com
+- Documentation: https://docs.awakeverse.com
+- Blog: https://blog.awakeverse.com
+- Twitter/X: https://x.com/awakeverse_ai

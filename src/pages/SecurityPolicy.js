@@ -119,7 +119,7 @@ export default function SecurityPolicy() {
           <a href="/privacy">Privacy</a>
           <a href="/cookie-policy">Cookie Policy</a>
         </nav>
-        <h1 id="sec-title">Awakeverse — Security &amp; Data Protection Policy</h1>
+        <h1 id="sec-title">AwakeVerse — Security &amp; Data Protection Policy</h1>
         <p className="meta">Effective: 19 August 2025 • Last updated: 19 August 2025</p>
         <div className="intro-card">
           This policy describes how we protect your data and comply with the UK GDPR and the Data Protection Act 2018.
@@ -129,10 +129,10 @@ export default function SecurityPolicy() {
       <main className="document-main">
         <h2 id="controller">1) Roles &amp; Scope</h2>
         <ul>
-          <li><strong>Data Controller:</strong> Awakeverse Ltd (UK)</li>
+          <li><strong>Data Controller:</strong> AwakeVerse Ltd (UK)</li>
           <li><strong>Contact:</strong> <a href="mailto:privacy@awakeverse.com">privacy@awakeverse.com</a> (privacy), <a href="mailto:security@awakeverse.com">security@awakeverse.com</a> (security)</li>
           <li><strong>Sub‑processors:</strong> listed at <a href="/subprocessors">/subprocessors</a></li>
-          <li>Scope: all personal data processed by Awakeverse web/mobile services and support operations.</li>
+          <li>Scope: all personal data processed by AwakeVerse web/mobile services and support operations.</li>
         </ul>
 
         <h2 id="principles">2) GDPR Principles</h2>
@@ -252,7 +252,7 @@ export default function SecurityPolicy() {
         </ul>
 
         <h2 id="children">10) Children's Data</h2>
-        <p>Awakeverse is not directed at children under 13. We take steps to prevent collection from under‑13 users and delete such data if discovered.</p>
+        <p>AwakeVerse is not directed at children under 13. We take steps to prevent collection from under‑13 users and delete such data if discovered.</p>
 
         <h2 id="cookies">11) Cookies &amp; Local Storage</h2>
         <p>We use essential cookies/local storage for authentication and session continuity, and optional analytics cookies where enabled. See our <a href="/cookie-policy">Cookie Policy</a>.</p>
@@ -265,7 +265,7 @@ export default function SecurityPolicy() {
       </main>
 
       <footer className="document-footer">
-        <p>© {currentYear} Awakeverse Ltd. All rights reserved.</p>
+        <p>© {currentYear} AwakeVerse Ltd. All rights reserved.</p>
       </footer>
     </div>
   );

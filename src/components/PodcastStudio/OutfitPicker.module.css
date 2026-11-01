@@ -1,0 +1,148 @@
+/* OutfitPicker.module.css — self-contained tokens (pattern from ComparisonSetup). */
+.backdrop {
+  --indigo:var(--sn-hex-acc); --indigo-light:var(--sn-hex-acc-hi); --indigo-txt:var(--sn-ink-1); --green:#10B981;
+  --paper:#F1F5F9; --sub:#94A3B8; --muted:#64748B; --line:rgba(var(--sn-acc-rgb), 0.2);
+  --ring:0 0 0 3px rgba(var(--sn-acc-rgb), 0.4); --panel:#0a0f22; --surface:#141B2E;
+  position: fixed; inset: 0; z-index: 1000; background: rgba(2,6,23,0.74);
+  backdrop-filter: blur(4px); -webkit-backdrop-filter: blur(4px);
+  display: flex; align-items: center; justify-content: center; padding: 22px;
+  font-family: 'Inter', system-ui, sans-serif;
+}
+.modal {
+  width: min(720px, 96vw); max-height: 88vh; background: var(--panel);
+  border: 1px solid rgba(var(--sn-acc-rgb), 0.28); border-radius: 18px; overflow: hidden;
+  display: flex; flex-direction: column; color: var(--paper);
+  box-shadow: 0 40px 100px -30px rgba(0,0,0,0.9);
+}
+.head { display: flex; align-items: center; gap: 10px; padding: 13px 16px; border-bottom: 1px solid var(--line); }
+.ic { font-size: 1.15rem; }
+.title { font-family: 'Syne', sans-serif; font-weight: 700; font-size: 1rem; }
+.title small { display: block; font-family: 'JetBrains Mono', monospace; font-size: 0.58rem; color: var(--indigo-light); letter-spacing: 0.06em; text-transform: uppercase; margin-top: 2px; font-weight: 400; }
+.close { margin-left: auto; width: 28px; height: 28px; border-radius: 50%; background: rgba(148,163,184,0.12); border: none; color: var(--sub); cursor: pointer; }
+.close:hover { background: rgba(148,163,184,0.25); color: #fff; }
+
+.body { padding: 16px; overflow-y: auto; }
+.grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(76px, 92px)); gap: 8px; }
+@media (max-width: 600px) { .grid { grid-template-columns: repeat(auto-fill, minmax(72px, 1fr)); } }
+
+.tile { position: relative; background: var(--surface); border: 1px solid var(--line);
+  border-radius: 12px; overflow: hidden; cursor: pointer; padding: 0; transition: 0.12s;
+  display: flex; flex-direction: column; }
+.tile:hover { border-color: rgba(var(--sn-acc-rgb), 0.5); transform: translateY(-2px); }
+.tile.on { border-color: var(--indigo); box-shadow: var(--ring); }
+.fig { width: 100%; aspect-ratio: 9/16; object-fit: cover; display: block; background: #0d1526; }
+.figOriginal { width: 100%; aspect-ratio: 9/16; display: flex; align-items: center; justify-content: center;
+  font-size: 2.4rem; background: linear-gradient(160deg, #1a2340, #0d1526); }
+.lab { font-size: 0.68rem; text-align: center; padding: 6px 4px; color: var(--paper);
+  white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.tile.on .lab { color: var(--indigo-txt); font-weight: 600; }
+.chk { position: absolute; top: 6px; right: 6px; width: 20px; height: 20px; border-radius: 50%;
+  background: var(--indigo); color: var(--sn-on-accent); display: none; align-items: center; justify-content: center; font-size: 0.7rem; }
+.tile.on .chk { display: flex; }
+.del { position: absolute; top: 6px; left: 6px; width: 20px; height: 20px; border-radius: 50%;
+  background: rgba(2,6,23,0.7); color: var(--sub); display: none; align-items: center; justify-content: center;
+  font-size: 0.66rem; }
+.tile:hover .del { display: flex; }
+.del:hover { background: rgba(239,68,68,0.85); color: #fff; }
+
+/* "Preparing…" while the original full-body is made the first time */
+.figBusy { position: absolute; left: 8px; right: 8px; bottom: 8px; padding: 3px 6px;
+  border-radius: 999px; background: rgba(2,6,23,0.75); color: var(--indigo-txt);
+  font-size: 0.6rem; text-align: center; }
+
+.new { display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 6px;
+  border-style: dashed; color: var(--indigo-light); min-height: 100%; }
+.new .plus { font-size: 1.6rem; }
+.new .lab { color: var(--indigo-light); }
+
+.author { margin-top: 14px; border-top: 1px solid var(--line); padding-top: 14px; }
+.author .textarea { width: 100%; box-sizing: border-box; }
+
+/* ── Stage: this avatar → the change (top of the modal) ── */
+.stage { display: flex; align-items: center; justify-content: center; gap: 16px;
+  padding: 4px 0 2px; }
+.stageCol { margin: 0; display: flex; flex-direction: column; align-items: center; gap: 7px;
+  width: min(150px, 36%); }
+.stageFrame { position: relative; width: 100%; }
+.stageFig { width: 100%; aspect-ratio: 9/16; object-fit: cover; display: block; border-radius: 12px;
+  border: 1px solid var(--line); background: #0d1526; transition: opacity 0.15s; }
+.stageEmpty { display: flex; align-items: center; justify-content: center; font-size: 2.4rem;
+  border-style: dashed; background: linear-gradient(160deg, #1a2340, #0d1526); box-sizing: border-box; }
+.stageEmptyText { font-size: 0.7rem; line-height: 1.45; color: var(--muted); text-align: center; padding: 14px; }
+.stageDim { opacity: 0.45; }
+.stageArrow { color: var(--indigo-light); font-size: 1.2rem; flex-shrink: 0; }
+.stageLab { font-size: 0.6rem; text-transform: uppercase; letter-spacing: 0.13em; font-weight: 700;
+  color: var(--muted); text-align: center; max-width: 100%; overflow: hidden; text-overflow: ellipsis;
+  white-space: nowrap; }
+.stageLabNew { color: var(--indigo-txt); }
+
+/* ── Wardrobe strip ── */
+.wardrobe { margin-top: 14px; border-top: 1px solid var(--line); padding-top: 12px; }
+.cardLabel { font-size: 0.6rem; text-transform: uppercase; letter-spacing: 0.13em; color: var(--muted); font-weight: 700; margin-bottom: 8px; }
+.authorRow { display: flex; gap: 10px; align-items: flex-start; }
+.textarea { flex: 1; background: rgba(148,163,184,0.06); border: 1px solid var(--line); border-radius: 8px;
+  padding: 0.55rem 0.7rem; font-size: 0.8rem; color: #e2e8f0; font-family: 'Inter', sans-serif; resize: none; height: 64px; }
+.textarea:focus { outline: none; border-color: rgba(var(--sn-acc-rgb), 0.5); }
+.previewFig { width: 84px; aspect-ratio: 9/16; object-fit: cover; border-radius: 8px; border: 1px solid var(--line); flex-shrink: 0; background: #0d1526; }
+.err { color: #FCA5A5; font-size: 0.72rem; margin: 8px 0 0; }
+.btnRow { display: flex; gap: 8px; margin-top: 10px; flex-wrap: wrap; }
+.btn { border: none; border-radius: 999px; padding: 0.5rem 1.1rem; font-family: 'Inter', sans-serif; font-weight: 600; font-size: 0.78rem; cursor: pointer; }
+.btn:disabled { opacity: 0.6; cursor: default; }
+.primary { background: linear-gradient(180deg, var(--indigo-light), var(--indigo)); color: var(--sn-on-accent); }
+.ghost { background: rgba(148,163,184,0.1); color: var(--paper); border: 1px solid var(--line); }
+
+.foot { border-top: 1px solid var(--line); padding: 11px 16px; display: flex; justify-content: space-between; align-items: center; gap: 10px; }
+.hint { font-size: 0.66rem; color: var(--sub); line-height: 1.4; margin: 8px 0 0; }
+.foot .hint { margin: 0; }
+
+@media (prefers-reduced-motion: reduce) { .modal *, .tile { transition: none !important; } }
+/* studio icons (2026-10-18) */
+.ic { display: inline-flex; color: var(--indigo-light); --si-accent: var(--indigo-txt); }
+.close { display: inline-grid; place-items: center; padding: 0; }
+.stageEmpty:not(.stageEmptyText), .figOriginal { color: rgba(148,163,184,0.45); }
+.stageArrow { display: inline-flex; }
+
+/* ══ NOCTURNE GLASS (2026-10-20) ══════════════════════════════════════════════
+   This pop-up as a thick glass slab over a night sky, like Film's pop-ups.
+   • Above this block, every hard-coded indigo was swapped IN PLACE for a --sn-* colour
+     variable whose default (the :root block below) is that same indigo; a checker
+     (studio-tools/retint_inplace.py verify) proves every rule resolves to its original value.
+   • Everything below is scoped under body[data-film-ui="nocturne"] (set by useFilmSeason
+     while the studio or Film is open). Without that attribute nothing here applies.
+   • Halloween (body[data-film-season="halloween"]) turns the accent pumpkin with dark ink.
+     It is set on the pop-up's own root because the pop-up may be portalled to <body>.
+   • THE PREVIEW IS OFF-LIMITS: the outfit pictures are your avatar; only the frames around them change.
+   ═══════════════════════════════════════════════════════════════════════════════ */
+:root {
+  --sn-acc-rgb: 99, 102, 241; --sn-acc-hi-rgb: 129, 140, 248; --sn-acc-soft-rgb: 165, 180, 252; --sn-acc-deep-rgb: 79, 70, 229;
+  --sn-hex-acc: #6366F1; --sn-hex-acc-hi: #818CF8; --sn-hex-acc-deep: #4F46E5;
+  --sn-ink-1: #A5B4FC; --sn-ink-2: #C7D2FE; --sn-on-accent: #fff;
+}
+body[data-film-ui="nocturne"][data-film-season="halloween"] .backdrop {
+  --sn-acc-rgb: 255, 138, 61; --sn-acc-hi-rgb: 255, 167, 102; --sn-acc-soft-rgb: 255, 190, 140; --sn-acc-deep-rgb: 230, 110, 40;
+  --sn-hex-acc: #FF8A3D; --sn-hex-acc-hi: #FFA766; --sn-hex-acc-deep: #E66E28;
+  --sn-ink-1: #FFC79A; --sn-ink-2: #FFD2B0; --sn-on-accent: #1A0B02;
+}
+/* the room dims under a night sky */
+body[data-film-ui="nocturne"] .backdrop {
+  background: radial-gradient(1000px 640px at 82% -12%, rgba(40, 46, 110, 0.38), transparent 62%), rgba(4, 4, 10, 0.66);
+  -webkit-backdrop-filter: blur(8px); backdrop-filter: blur(8px);
+}
+body[data-film-ui="nocturne"][data-film-season="halloween"] .backdrop {
+  background: radial-gradient(1000px 640px at 82% -12%, rgba(70, 30, 100, 0.42), transparent 62%), rgba(4, 4, 10, 0.66);
+}
+/* the slab: thick glass, a lit top edge, a deep shadow and a faint glow of the accent */
+body[data-film-ui="nocturne"] .modal {
+  --line: rgba(255, 255, 255, 0.1); --surface: rgba(255, 255, 255, 0.04);
+  background: linear-gradient(180deg, rgba(255, 255, 255, 0.05), rgba(255, 255, 255, 0.012)), rgba(15, 15, 30, 0.9);
+  border-color: rgba(255, 255, 255, 0.16);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.1), 0 40px 120px -30px #000, 0 0 80px -34px rgba(var(--sn-acc-rgb), 0.45);
+  -webkit-backdrop-filter: blur(28px) saturate(160%); backdrop-filter: blur(28px) saturate(160%);
+}
+/* the controls: dark glass wells, a lit main button */
+body[data-film-ui="nocturne"] .tile { box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.05); }
+body[data-film-ui="nocturne"] .tile.on { box-shadow: var(--ring), 0 0 22px -6px rgba(var(--sn-acc-rgb), 0.5); }
+body[data-film-ui="nocturne"] .chk { box-shadow: 0 0 10px rgba(var(--sn-acc-rgb), 0.6); }
+body[data-film-ui="nocturne"] .textarea { background: rgba(0, 0, 0, 0.24); }
+body[data-film-ui="nocturne"] .primary { box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.3), 0 8px 22px -10px rgba(var(--sn-acc-rgb), 0.6); }
+body[data-film-ui="nocturne"] .ghost { background: rgba(255, 255, 255, 0.05); }

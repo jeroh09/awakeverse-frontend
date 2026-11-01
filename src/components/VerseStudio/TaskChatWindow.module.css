@@ -1,0 +1,1654 @@
+/* src/components/VerseStudio/TaskChatWindow.module.css */
+
+.taskWindow {
+  position: fixed;
+  inset: 0;
+  z-index: 1100;
+
+  background:
+    radial-gradient(circle at top left, var(--accent-glow), transparent 45%),
+    radial-gradient(circle at bottom right, rgba(148, 163, 184, 0.14), transparent 45%),
+    var(--bg-canvas);
+
+  display: flex;
+  align-items: stretch;
+  padding: 0;
+  box-sizing: border-box;
+  color: var(--text-primary);
+  font-family: var(--font-body);
+}
+
+.layout {
+  width: 100%;
+  height: 100%;
+  display: grid;
+  grid-template-columns: 320px minmax(0, 1fr) 380px;
+  gap: var(--spacing-md);
+  padding: var(--spacing-md);
+  box-sizing: border-box;
+}
+
+.layoutArtifactsCollapsed {
+  grid-template-columns: 320px minmax(0, 1fr) 56px;
+}
+
+/* ===== LEFT ===== */
+.navSection {
+  background: var(--bg-surface);
+  border-radius: var(--border-radius-xl);
+  border: 1px solid var(--border-subtle);
+  padding: var(--spacing-md);
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-lg);
+  overflow-y: auto;
+}
+
+.userProfile {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 10px;
+  background: var(--bg-interactive);
+  border-radius: var(--border-radius-lg);
+  border: 1px solid var(--border-subtle);
+}
+
+.userAvatar {
+  width: 40px;
+  height: 40px;
+  border-radius: 999px;
+  background:
+    radial-gradient(circle at 0 0, rgba(99, 102, 241, 0.4), transparent 60%),
+    var(--bg-canvas);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.userInitial {
+  font-family: var(--font-display);
+  font-size: 18px;
+  font-weight: 600;
+  color: var(--brand-ivory);
+}
+
+.userMeta { display: flex; flex-direction: column; gap: 2px; }
+.userName { font-size: 13px; font-weight: 500; color: var(--text-primary); }
+.userTier { font-size: 11px; color: var(--text-secondary); }
+
+.navBlock {
+  padding: 12px;
+  background: color-mix(in srgb, var(--bg-surface) 92%, transparent);
+  border-radius: var(--border-radius-lg);
+  border: 1px solid var(--border-subtle);
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.navTitle {
+  font-size: 12px;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--text-secondary);
+}
+
+.navTaskName {
+  font-family: var(--font-display);
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--brand-ivory);
+}
+
+.navTaskTemplate { font-size: 12px; color: #E5E7EB; }
+
+.navTeamList { display: flex; flex-direction: column; gap: 8px; }
+.navEmpty { font-size: 12px; color: var(--text-tertiary); }
+
+.navRoleItem {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 6px 8px;
+  border-radius: 12px;
+  border: 1px solid var(--border-medium);
+  background: rgba(15, 23, 42, 0.96);
+  font-size: 12px;
+  color: #E5E7EB;
+}
+
+.navRoleItemActive {
+  border-color: var(--accent-primary);
+  background:
+    radial-gradient(circle at 0 0, rgba(99, 102, 241, 0.28), transparent 55%),
+    rgba(15, 23, 42, 0.96);
+  box-shadow: 0 0 0 1px rgba(99, 102, 241, 0.5);
+}
+
+.navRoleIcon {
+  width: 24px;
+  height: 24px;
+  border-radius: 999px;
+  background: #141B2E;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.navRoleText { display: flex; flex-direction: column; gap: 2px; }
+.navRoleName { font-size: 12px; font-weight: 500; }
+.navRoleLlm { font-size: 11px; color: var(--text-secondary); }
+
+.backButton {
+  margin-top: auto;
+  font-size: 12px;
+  padding: 8px 10px;
+  border-radius: 999px;
+  border: 1px solid var(--border-medium);
+  background: rgba(10, 15, 26, 0.6);
+  color: #E5E7EB;
+  cursor: pointer;
+  transition: var(--transition-fast);
+}
+
+.backButton:hover {
+  border-color: var(--accent-primary);
+  color: var(--brand-ivory);
+  box-shadow: 0 0 0 1px rgba(99, 102, 241, 0.6);
+}
+
+/* ===== CENTER (CHAT) ===== */
+.chatSection {
+  background: var(--bg-surface);
+  border-radius: var(--border-radius-xl);
+  border: 1px solid var(--border-subtle);
+
+  /* Keep messages as the only scroller */
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+  overflow: hidden;
+
+  /* Needed for overlay composer */
+  position: relative;
+}
+
+/* Header — keep as-is (do not change layout semantics) */
+.chatHeader {
+  position: relative;
+  overflow: hidden;
+  flex: 0 0 auto;
+  min-height: 84px;
+}
+
+.heroImageBackdrop {
+  position: absolute;
+  inset: 0;
+  overflow: hidden;
+}
+
+.heroImageBackdrop img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  filter: saturate(1.1) contrast(1.1) brightness(0.72);
+}
+
+.heroImageOverlay {
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(
+    180deg,
+    rgba(15, 23, 42, 0.35) 0%,
+    rgba(15, 23, 42, 0.78) 60%,
+    rgba(15, 23, 42, 0.95) 100%
+  );
+}
+
+.headerContent {
+  position: relative;
+  z-index: 1;
+  padding: 14px 18px 12px;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.headerTitle {
+  margin: 0;
+  font-family: var(--font-display);
+  font-size: 20px;
+  font-weight: 650;
+  letter-spacing: 0.02em;
+  color: var(--brand-ivory);
+}
+
+.headerSubtitle {
+  margin: 0;
+  font-size: 13px;
+  color: #CBD5F5;
+}
+
+
+.emptyState {
+  margin-top: 8px;
+  padding: 16px 14px;
+  border-radius: 12px;
+  border: 1px dashed rgba(148, 163, 184, 0.5);
+  background: rgba(15, 23, 42, 0.95);
+}
+
+.emptyTitle { font-size: 14px; font-weight: 500; color: #F5F5DC; }
+.emptyBody { margin-top: 4px; font-size: 12px; color: #CBD5F5; }
+
+/* ============================================
+   CSS FIXES for TaskChatWindow.module.css
+   ============================================ */
+
+/* FIX 1: Message Overflow (Replace line ~256) */
+.message {
+  /* ✅ FIX: Use pixel max-width to prevent overflow when sidebar retracts */
+  max-width: min(720px, calc(100% - 40px)); /* Never exceed container */
+  border-radius: 14px;
+  padding: 8px 11px;
+  font-size: 13px;
+  line-height: 1.45;
+  box-shadow: 0 8px 20px rgba(0, 0, 0, 0.45);
+  
+  /* ✅ Ensure text wraps properly */
+  word-wrap: break-word;
+  overflow-wrap: break-word;
+}
+
+/* FIX 2: Prevent Horizontal Scroll (Update line ~234) */
+.messagesScroll {
+  flex: 1 1 auto;
+  min-height: 0;
+  overflow-y: auto;
+  overflow-x: hidden; /* ✅ FIX: Prevent horizontal scroll */
+  padding: 12px 16px 260px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  background: transparent;
+  position: relative; /* anchor for scroll-to-bottom button */
+}
+
+/* OPTIONAL: Better markdown wrapping in chat bubbles */
+.mdChatContainer {
+  max-width: 100%;
+  overflow-wrap: break-word;
+  word-wrap: break-word;
+}
+
+.mdChatContainer pre,
+.mdChatContainer code {
+  max-width: 100%;
+  overflow-x: auto; /* Allow horizontal scroll only for code */
+}
+
+/* In-flight cursor line during streaming — rendered as plain text,
+   no markdown parsing. Sits below the completed+formatted portion. */
+.mdStreamingPartial {
+  display: block;
+  opacity: 0.75;
+  font-size: inherit;
+  line-height: inherit;
+  color: inherit;
+  white-space: pre-wrap;
+  word-break: break-word;
+  margin-top: 2px;
+}
+
+.messageMeta { margin-bottom: 4px; }
+.messageRole { font-size: 11px; color: var(--text-secondary); }
+.messageBody { white-space: normal; }
+
+.messageAi {
+  /* Full-width card */
+  align-self: stretch;
+  width: 100%;
+  max-width: 100%;
+  
+  /* Card styling */
+  background: var(--bg-interactive);
+  border: 1px solid var(--border-subtle);
+  border-radius: 12px;
+  padding: 12px 16px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+}
+
+.messageUser {
+  align-self: flex-end;
+  max-width: min(720px, 80%);  /* ADD THIS - explicit bubble width */
+  background: rgba(15, 23, 42, 0.98);
+  border: 1px solid rgba(148, 163, 184, 0.5);
+}
+/* Handoff prompt stays in scroll */
+.handoffPrompt {
+  margin: 6px auto 4px;
+  max-width: 680px;
+  padding: 8px 10px;
+  border-radius: 999px;
+  background: linear-gradient(135deg, #6366F1, #818CF8);
+  color: #F9FAFB;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  font-size: 12px;
+}
+
+.handoffText { flex: 1; }
+.handoffActions { display: flex; gap: 6px; }
+
+.handoffPrimary,
+.handoffSecondary {
+  border-radius: 999px;
+  border: none;
+  padding: 4px 10px;
+  font-size: 11px;
+  cursor: pointer;
+}
+
+.handoffPrimary { background: #F9FAFB; color: #111827; }
+.handoffSecondary { background: rgba(15, 23, 42, 0.3); color: #F9FAFB; }
+
+.composerOverlay {
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 0;
+
+  padding: 12px 16px;
+  pointer-events: none;
+  z-index: 6;
+
+  /* No transparency tricks */
+  background: var(--bg-surface);
+  border-top: 1px solid var(--border-subtle);
+}
+
+
+/* Pill */
+.composerInner {
+  pointer-events: auto; /* clickable */
+  width: 100%;
+  max-width: 920px;
+  margin: 0 auto;
+
+  border-radius: 18px;
+  border: 1px solid rgba(129, 140, 248, 0.55);
+  background: rgba(10, 15, 26, 0.55);
+  backdrop-filter: blur(10px);
+
+  display: flex;
+  align-items: flex-end;
+  gap: 10px;
+  padding: 10px 10px 10px 14px;
+
+  box-shadow: 0 24px 60px rgba(0, 0, 0, 0.45);
+}
+
+.composerInput {
+  flex: 1;
+  border: none;
+  outline: none;
+  resize: none;
+  background: transparent;
+  color: #F9FAFB;
+  font-size: 14px;
+  line-height: 1.45;
+  min-height: 48px;
+  max-height: 140px;
+  padding: 0;
+}
+
+.composerInput::placeholder { color: var(--text-tertiary); }
+
+.composerActions {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+  padding-bottom: 4px;
+}
+
+.composerButton {
+  width: 40px;
+  height: 40px;
+  border-radius: 999px;
+  border: none;
+  background: linear-gradient(135deg, var(--accent-primary), var(--accent-hover));
+  color: #F9FAFB;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 16px;
+  box-shadow: 0 14px 30px rgba(99, 102, 241, 0.55);
+  transition: var(--transition-fast);
+}
+
+.composerButton[disabled] { opacity: 0.5; cursor: not-allowed; box-shadow: none; }
+
+.composerButton:hover:not([disabled]) {
+  transform: translateY(-1px);
+  box-shadow: 0 18px 40px rgba(99, 102, 241, 0.7);
+}
+
+.composerStop {
+  background: #DC2626;
+  box-shadow: 0 14px 30px rgba(220, 38, 38, 0.6);
+}
+
+/* ===== RIGHT ===== */
+.artifactsSection {
+  background: var(--bg-surface);
+  border-radius: var(--border-radius-xl);
+  border: 1px solid var(--border-subtle);
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+
+.artifactsHeader {
+  padding: 10px 12px;
+  border-bottom: 1px solid var(--border-subtle);
+}
+
+.artifactsHeaderRow {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--spacing-sm);
+}
+
+.artifactsTabs {
+  display: inline-flex;
+  background: rgba(15, 23, 42, 0.98);
+  border-radius: 999px;
+  padding: 2px;
+}
+
+.artifactsToggle {
+  width: 40px;
+  height: 40px;
+  border-radius: 999px;
+  border: 1px solid var(--border-medium);
+  background: rgba(10, 15, 26, 0.55);
+  color: var(--text-primary);
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  transition: var(--transition-fast);
+}
+
+.artifactsToggle:hover {
+  border-color: rgba(129, 140, 248, 0.6);
+  box-shadow: 0 0 0 1px rgba(99, 102, 241, 0.35);
+}
+
+.artifactsTab {
+  border: none;
+  border-radius: 999px;
+  padding: 6px 10px;
+  font-size: 11px;
+  color: var(--text-secondary);
+  background: transparent;
+  cursor: pointer;
+}
+
+.artifactsTabActive {
+  background: rgba(15, 23, 42, 0.98);
+  color: var(--text-primary);
+  box-shadow: 0 0 0 1px rgba(99, 102, 241, 0.6);
+}
+
+.artifactsRail {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: var(--spacing-sm);
+}
+
+.artifactsRailLabel {
+  font-size: 11px;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  color: var(--text-secondary);
+  writing-mode: vertical-rl;
+  transform: rotate(180deg);
+  user-select: none;
+}
+
+.artifactsContent {
+  flex: 1;
+  padding: 14px 14px 12px;
+  overflow-y: auto;
+}
+
+.artifactsEmpty {
+  padding: 14px 12px;
+  border-radius: var(--border-radius-lg);
+  border: 1px dashed var(--border-medium);
+  background: rgba(15, 23, 42, 0.96);
+}
+
+.artifactsEmptyTitle { font-size: 13px; font-weight: 500; color: var(--brand-ivory); }
+.artifactsEmptyBody { margin-top: 4px; font-size: 12px; color: var(--text-secondary); }
+
+/* ===== MOBILE ===== */
+@media (max-width: 900px) {
+  .layout {
+    grid-template-columns: minmax(0, 1fr);
+    padding: var(--spacing-sm);
+  }
+
+  .navSection,
+  .artifactsSection {
+    display: none;
+  }
+
+  .composerInner {
+    max-width: 100%;
+  }
+
+  .messagesScroll {
+    padding-bottom: 200px;
+  }
+}
+/* ================================
+   Step 2b — Center panel HERO header (image fills full header band)
+   Appended overrides (safe)
+================================== */
+
+/* Make the center chat header a real hero band (image reads as a banner) */
+.chatHeader {
+  /* keep existing behavior, just increase the header height */
+  min-height: clamp(140px, 18vh, 240px);
+}
+
+/* Ensure header text positions nicely within the hero band */
+.headerContent {
+  /* make the content fill the hero height so we can bottom-align text */
+  height: 100%;
+  justify-content: flex-end;
+  padding: 18px 18px 14px;
+}
+
+/* Make sure the backdrop truly fills the entire header area */
+.heroImageBackdrop {
+  inset: 0;
+}
+
+/* Keep image coverage cinematic */
+.heroImageBackdrop img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+/* Slightly deepen the overlay so text stays readable on bright images */
+.heroImageOverlay {
+  background: linear-gradient(
+    180deg,
+    rgba(15, 23, 42, 0.22) 0%,
+    rgba(15, 23, 42, 0.72) 55%,
+    rgba(10, 15, 26, 0.95) 100%
+  );
+}
+
+/* Mobile: keep hero present but not too tall */
+@media (max-width: 900px) {
+  .chatHeader {
+    min-height: clamp(120px, 16vh, 180px);
+  }
+}
+/* ================================
+   Step 2c — Full-width HERO inside center panel
+   (fixes width not covering header)
+================================== */
+
+/* Ensure the chat section does NOT constrain the header width */
+.chatSection{
+  padding: 0 !important; /* header will manage its own padding */
+}
+
+/* Header becomes full-bleed inside center panel */
+.chatHeader{
+  position: relative;
+  width: 100%;
+  border-radius: 0 !important; /* avoid rounded clipping */
+  overflow: hidden;
+}
+
+/* Re-apply padding ONLY to header text, not the image */
+.headerContent{
+  left: 0;
+  right: 0;
+  bottom: 0;
+  padding-left: 24px !important;
+  padding-right: 24px !important;
+}
+
+/* Ensure image truly spans edge-to-edge of center panel */
+.heroImageBackdrop,
+.heroImageBackdrop img,
+.heroImageOverlay{
+  left: 0 !important;
+  right: 0 !important;
+  width: 100% !important;
+}
+
+/* Restore inner padding for the rest of the chat (messages) */
+.messagesScroll{
+  padding-left: 16px;
+  padding-right: 16px;
+}
+/* ===== Fix: remove double border in composer pill ===== */
+
+/* Keep ONLY the single border on the pill container */
+.composerInner {
+  box-shadow: none !important; /* kills “inner ring” look if shadow reads as border */
+}
+
+/* Ensure textarea itself never draws a border/ring */
+.composerInput {
+  border: none !important;
+  outline: none !important;
+  box-shadow: none !important;
+}
+
+/* If any focus styling is creating a second ring, keep it subtle and on the same border */
+.composerInner:focus-within {
+  /* Optional: either nothing… */
+  /* box-shadow: none !important; */
+
+  /* …or a single soft glow (NOT a second border) */
+  box-shadow: 0 18px 40px rgba(99, 102, 241, 0.35) !important;
+}
+/* ================================
+   Markdown rendering + Copy blocks
+================================== */
+
+/* Fix: remove “double border” feeling in composer pill */
+.composerInner {
+  /* keep a single border; remove any ring-like shadow */
+  box-shadow: 0 24px 60px rgba(0, 0, 0, 0.45) !important;
+}
+.composerInput {
+  border: none !important;
+  outline: none !important;
+  box-shadow: none !important;
+}
+.composerInner:focus-within {
+  /* single glow, not a second border ring */
+  box-shadow:
+    0 24px 60px rgba(0, 0, 0, 0.45),
+    0 0 0 0 rgba(0,0,0,0) !important;
+}
+
+/* Message body markdown base */
+.messageBody {
+  /* ensure markdown inherits bubble typography nicely */
+  color: inherit;
+}
+
+/* Paragraph spacing */
+.mdP {
+  margin: 0 0 8px;
+}
+.mdP:last-child {
+  margin-bottom: 0;
+}
+
+/* Lists */
+.mdUl,
+.mdOl {
+  margin: 6px 0 10px;
+  padding-left: 1.15rem; /* good indentation */
+}
+.mdLi {
+  margin: 3px 0;
+}
+.mdLi > .mdUl,
+.mdLi > .mdOl {
+  margin-top: 6px;
+}
+
+/* Inline code */
+.mdInlineCode {
+  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
+  font-size: 0.92em;
+  padding: 0.12em 0.38em;
+  border-radius: 8px;
+  border: 1px solid rgba(148, 163, 184, 0.25);
+  background: rgba(10, 15, 26, 0.45);
+}
+
+/* Blockquotes */
+.mdQuote {
+  margin: 8px 0;
+  padding: 10px 12px;
+  border-left: 3px solid rgba(129, 140, 248, 0.65);
+  border-radius: 12px;
+  background: rgba(10, 15, 26, 0.40);
+  color: rgba(241, 245, 249, 0.92);
+}
+
+/* Tables (GFM) */
+.mdTableWrap {
+  overflow-x: auto;
+  margin: 10px 0;
+  border-radius: 12px;
+  border: 1px solid rgba(148, 163, 184, 0.18);
+  background: rgba(10, 15, 26, 0.35);
+}
+.mdTable {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 12px;
+}
+.mdTh, .mdTd {
+  padding: 10px 10px;
+  border-bottom: 1px solid rgba(148, 163, 184, 0.14);
+}
+.mdTh {
+  text-align: left;
+  color: rgba(245, 245, 220, 0.95);
+  font-weight: 600;
+}
+.mdTd {
+  color: rgba(241, 245, 249, 0.90);
+}
+
+/* Horizontal rule */
+.mdHr {
+  border: none;
+  height: 1px;
+  background: rgba(148, 163, 184, 0.18);
+  margin: 12px 0;
+}
+
+/* Code block container with “copy breadcrumb” */
+.codeBlock {
+  margin: 10px 0 12px;
+  border-radius: 14px;
+  border: 1px solid rgba(129, 140, 248, 0.28);
+  background: rgba(10, 15, 26, 0.55);
+  overflow: hidden;
+}
+
+/* Code “breadcrumb” header */
+.codeHeader {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+
+  padding: 8px 10px;
+  border-bottom: 1px solid rgba(148, 163, 184, 0.16);
+  background: linear-gradient(180deg, rgba(20,27,46,0.45), rgba(10,15,26,0.35));
+}
+
+.codeLang {
+  font-size: 11px;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: rgba(148, 163, 184, 0.95);
+}
+
+/* Breadcrumb copy button */
+.copyCrumb {
+  border: 1px solid rgba(148, 163, 184, 0.22);
+  background: rgba(15, 23, 42, 0.50);
+  color: rgba(241, 245, 249, 0.92);
+  border-radius: 999px;
+  padding: 6px 10px;
+  font-size: 11px;
+  cursor: pointer;
+  transition: var(--transition-fast);
+  white-space: nowrap;
+}
+.copyCrumb:hover {
+  border-color: rgba(129, 140, 248, 0.55);
+  box-shadow: 0 0 0 1px rgba(99, 102, 241, 0.25);
+}
+.copyCrumb:active {
+  transform: translateY(1px);
+}
+
+/* Code text */
+.mdPre {
+  margin: 0;
+  padding: 12px 12px 14px;
+  overflow-x: auto;
+}
+.mdCode {
+  display: block;
+  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
+  font-size: 12.5px;
+  line-height: 1.55;
+  color: rgba(241, 245, 249, 0.95);
+}
+
+/* Optional: tighten meta row now that we have copy controls */
+.messageMeta {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+}
+/* ================================
+   Artifacts panel: real blocks
+================================== */
+
+.artifactsControls{
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  padding: 10px 12px 12px;
+  border-top: 1px solid rgba(148, 163, 184, 0.12);
+}
+
+.artifactsToggleRow{
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 12px;
+  color: rgba(241, 245, 249, 0.88);
+}
+
+.artifactsToggleRow input{
+  accent-color: rgba(99, 102, 241, 0.9);
+}
+
+.artifactsMiniButton{
+  border-radius: 999px;
+  border: 1px solid rgba(148, 163, 184, 0.22);
+  background: rgba(15, 23, 42, 0.55);
+  color: rgba(241, 245, 249, 0.92);
+  padding: 6px 10px;
+  cursor: pointer;
+  font-size: 12px;
+  transition: var(--transition-fast);
+}
+
+.artifactsMiniButton:hover{
+  border-color: rgba(99, 102, 241, 0.55);
+  box-shadow: 0 0 0 1px rgba(99, 102, 241, 0.25);
+  transform: translateY(-1px);
+}
+
+.artifactsList{
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.artifactCard{
+  border-radius: 14px;
+  border: 1px solid rgba(148, 163, 184, 0.16);
+  background: rgba(10, 15, 26, 0.40);
+  overflow: hidden;
+}
+
+.artifactTop{
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  padding: 10px 10px;
+  border-bottom: 1px solid rgba(148, 163, 184, 0.12);
+}
+
+.artifactTitle{
+  border: none;
+  background: transparent;
+  color: rgba(245, 245, 220, 0.95);
+  font-weight: 650;
+  font-size: 12px;
+  cursor: pointer;
+  text-align: left;
+  padding: 0;
+}
+
+.artifactActions{
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.artifactDownload{
+  border-radius: 999px;
+  border: 1px solid rgba(99, 102, 241, 0.35);
+  background: rgba(15, 23, 42, 0.45);
+  color: rgba(241, 245, 249, 0.92);
+  padding: 6px 10px;
+  font-size: 11px;
+  text-decoration: none;
+  transition: var(--transition-fast);
+}
+
+.artifactDownload:hover{
+  border-color: rgba(99, 102, 241, 0.55);
+  box-shadow: 0 0 0 1px rgba(99, 102, 241, 0.25);
+  transform: translateY(-1px);
+}
+
+.artifactPreview{
+  margin: 0;
+  padding: 10px 10px 12px;
+  overflow-x: auto;
+  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
+  font-size: 12px;
+  line-height: 1.55;
+  color: rgba(241, 245, 249, 0.92);
+}
+/* ================================
+   Mobile back button (TaskChatWindow)
+================================== */
+
+.mobileBackBar{
+  display: none;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  padding: 10px 12px;
+  border-bottom: 1px solid rgba(148, 163, 184, 0.12);
+  background: rgba(10, 15, 26, 0.55);
+  backdrop-filter: blur(10px);
+}
+
+.mobileBackButton{
+  border-radius: 999px;
+  border: 1px solid rgba(148, 163, 184, 0.22);
+  background: rgba(15, 23, 42, 0.55);
+  color: rgba(241, 245, 249, 0.92);
+  padding: 7px 10px;
+  font-size: 12px;
+  font-weight: 650;
+  cursor: pointer;
+  transition: var(--transition-fast);
+}
+
+.mobileBackButton:hover{
+  border-color: rgba(99, 102, 241, 0.55);
+  box-shadow: 0 0 0 1px rgba(99, 102, 241, 0.25);
+  transform: translateY(-1px);
+}
+
+.mobileBackTitle{
+  font-size: 12px;
+  color: rgba(148, 163, 184, 0.95);
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+}
+
+@media (max-width: 960px){
+  .mobileBackBar{
+    display: flex;
+  }
+}
+
+/* ================================
+   Document upload chip + button
+================================== */
+
+.hiddenFileInput{
+  display: none;
+}
+
+.composerAttach{
+  opacity: 0.95;
+}
+
+.uploadChip{
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  padding: 10px 12px;
+  border-radius: 14px;
+  border: 1px solid rgba(148, 163, 184, 0.18);
+  background: rgba(10, 15, 26, 0.55);
+  margin-bottom: 10px;
+}
+
+.uploadChipTitle{
+  font-size: 12px;
+  font-weight: 700;
+  color: rgba(245, 245, 220, 0.95);
+  white-space: nowrap;
+}
+
+.uploadChipMsg{
+  font-size: 12px;
+  color: rgba(241, 245, 249, 0.88);
+  line-height: 1.35;
+  flex: 1;
+}
+
+.uploadChipDismiss{
+  border: none;
+  background: transparent;
+  color: rgba(241, 245, 249, 0.75);
+  cursor: pointer;
+  padding: 0 2px;
+}
+
+.uploadChipUploading{
+  border-color: rgba(99, 102, 241, 0.35);
+}
+
+.uploadChipSuccess{
+  border-color: rgba(34, 197, 94, 0.35);
+}
+
+.uploadChipError{
+  border-color: rgba(248, 113, 113, 0.45);
+}
+.hiddenFileInput{
+  display: none;
+}
+
+.composerPlus{
+  width: 40px;
+  height: 40px;
+  border-radius: 999px;
+  border: 1px solid rgba(148, 163, 184, 0.22);
+  background: rgba(15, 23, 42, 0.55);
+  color: rgba(241, 245, 249, 0.92);
+  font-size: 20px;
+  line-height: 1;
+  cursor: pointer;
+  transition: var(--transition-fast);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.composerPlus:hover{
+  border-color: rgba(99, 102, 241, 0.55);
+  box-shadow: 0 0 0 1px rgba(99, 102, 241, 0.25);
+  transform: translateY(-1px);
+}
+
+.attachmentsRow{
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-top: 10px;
+}
+
+.attachmentChip{
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 6px 10px;
+  border-radius: 999px;
+  border: 1px solid rgba(148, 163, 184, 0.18);
+  background: rgba(10, 15, 26, 0.50);
+  color: rgba(241, 245, 249, 0.92);
+  font-size: 12px;
+}
+
+.attachmentName{
+  max-width: 220px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.attachmentStatusUploading{
+  color: rgba(148, 163, 184, 0.95);
+}
+
+.attachmentStatusReady{
+  color: rgba(134, 239, 172, 0.95);
+}
+
+.attachmentStatusError{
+  color: rgba(252, 165, 165, 0.95);
+}
+
+.attachmentRemove{
+  border: none;
+  background: transparent;
+  color: rgba(241, 245, 249, 0.75);
+  cursor: pointer;
+  font-size: 16px;
+  line-height: 1;
+  padding: 0 2px;
+}
+
+.attachmentRemove:hover{
+  color: rgba(241, 245, 249, 0.95);
+}
+/* Artifacts/docs markdown wrapper */
+.mdDocContainer { max-width: 96ch; }
+
+/* TOC */
+.mdToc{
+  border: 1px solid rgba(148,163,184,0.14);
+  background: rgba(10,15,26,0.45);
+  border-radius: 14px;
+  padding: 10px 12px;
+  margin: 0 0 12px 0;
+}
+.mdTocTitle{
+  font-size: 12px;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: rgba(148,163,184,0.95);
+  margin-bottom: 8px;
+}
+.mdTocNav{ display: flex; flex-direction: column; gap: 6px; }
+.mdTocLink{ color: rgba(241,245,249,0.92); text-decoration: none; font-size: 13px; }
+.mdTocLink:hover{ text-decoration: underline; text-underline-offset: 3px; }
+
+/* Headings anchors */
+.headingAnchor{
+  opacity: 0.45;
+  margin-right: 8px;
+  text-decoration: none;
+  color: rgba(148,163,184,0.95);
+}
+.headingAnchor:hover{ opacity: 0.9; }
+
+/* KaTeX minimal scoping */
+.mdDocContainer :global(.katex){ font-size: 1em; }
+.mdDocContainer :global(.katex-display){
+  margin: 10px 0 12px 0;
+  overflow-x: auto;
+  overflow-y: hidden;
+}
+/* =========================
+   Typography foundation
+========================= */
+
+/* Chat bubble content baseline */
+.messageBody,
+.mdChatContainer {
+  font-family: var(--font-body);
+  font-size: var(--font-size-body);
+  font-weight: var(--font-weight-regular);
+  line-height: 1.65;
+  color: rgba(241, 245, 249, 0.92);
+
+  /* Wrapping rules for normal prose */
+  overflow-wrap: anywhere;
+  word-break: normal;
+  hyphens: auto;
+}
+
+/* Keep readable line length inside bubbles */
+.mdChatContainer .mdP,
+.mdChatContainer .mdUl,
+.mdChatContainer .mdOl,
+.mdChatContainer .mdQuote {
+  max-width: 76ch;
+}
+
+/* Links can be long — ensure they wrap */
+.mdLink {
+  overflow-wrap: anywhere;
+}
+
+/* Docs/Artifacts container */
+.mdDocContainer {
+  font-family: var(--font-body);
+  font-size: var(--font-size-body);
+  line-height: 1.7;
+  color: rgba(241, 245, 249, 0.92);
+  overflow-wrap: anywhere;
+  hyphens: auto;
+  max-width: 92ch;
+
+  /* Heading sizes scoped to workspace chat — halved from global token values */
+  --font-size-h1: 18px;
+  --font-size-h2: 15px;
+  --font-size-h3: 13px;
+  --font-size-h4: 12px;
+  --font-size-body: 13px;
+  --font-size-body-small: 12px;
+}
+
+/* Docs headings use your display font + token sizes */
+.mdDocContainer h1,
+.mdDocContainer h2,
+.mdDocContainer h3,
+.mdDocContainer h4 {
+  font-family: var(--font-display);
+  font-weight: var(--font-weight-semibold);
+  color: rgba(245, 245, 220, 0.96);
+  letter-spacing: 0.01em;
+}
+
+/* If you're using mdH1/mdH2 classes, set them to token sizes */
+.mdH1 { font-size: var(--font-size-h1); margin: 0 0 12px 0; line-height: 1.18; }
+.mdH2 { font-size: var(--font-size-h2); margin: 16px 0 10px 0; line-height: 1.22; }
+.mdH3 { font-size: var(--font-size-h3); margin: 14px 0 8px 0; line-height: 1.25; }
+.mdH4 { font-size: var(--font-size-h4); margin: 12px 0 6px 0; line-height: 1.28; }
+
+/* Paragraph/list sizing consistent */
+.mdP { margin: 0 0 12px 0; font-size: var(--font-size-body); }
+.mdUl, .mdOl { margin: 0 0 12px 18px; }
+.mdLi { margin: 6px 0; }
+
+/* Code: do NOT wrap; scroll horizontally */
+.mdPre,
+.artifactPreview {
+  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
+  font-size: var(--font-size-body-small);
+  line-height: 1.55;
+  white-space: pre;
+  overflow-x: auto;
+  overflow-y: hidden;
+}
+
+/* Inline code stays readable + consistent */
+.mdInlineCode {
+  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
+  font-size: 0.92em;
+}
+@media (max-width: 720px) {
+  .messageBody,
+  .mdChatContainer,
+  .mdDocContainer {
+    font-size: var(--font-size-body-small);
+  }
+}
+/* Add to the existing styles for artifacts tabs */
+.artifactsTabs {
+  display: inline-flex;
+  background: rgba(15, 23, 42, 0.98);
+  border-radius: 999px;
+  padding: 2px;
+  overflow-x: auto;
+  max-width: 100%;
+}
+
+.artifactsTab {
+  border: none;
+  border-radius: 999px;
+  padding: 6px 10px;
+  font-size: 11px;
+  color: var(--text-secondary);
+  background: transparent;
+  cursor: pointer;
+  white-space: nowrap;
+  flex-shrink: 0;
+}
+
+.artifactsTabActive {
+  background: rgba(15, 23, 42, 0.98);
+  color: var(--text-primary);
+  box-shadow: 0 0 0 1px rgba(99, 102, 241, 0.6);
+}
+
+/* Tab notification badge — docs count, intelligence count */
+.intelligenceBadge {
+  margin-left: 5px;
+  font-size: 9px;
+  font-weight: 600;
+  padding: 2px 5px;
+  border-radius: 999px;
+  background: #6366F1;
+  color: #F5F5DC;
+  box-shadow: 0 0 6px rgba(99, 102, 241, 0.6);
+  letter-spacing: 0.02em;
+}
+.scrollToBottomBtn {
+  position: absolute;
+  bottom: 200px;       /* sits above the composer */
+  right: 20px;
+  z-index: 20;
+  width: 34px;
+  height: 34px;
+  border-radius: 50%;
+  border: none;
+  cursor: pointer;
+  font-size: 16px;
+  line-height: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(99, 102, 241, 0.9);
+  color: #fff;
+  box-shadow: 0 2px 10px rgba(99, 102, 241, 0.45);
+  transition: opacity 0.2s ease, transform 0.2s ease;
+  animation: scrollBtnFadeIn 0.2s ease;
+}
+.scrollToBottomBtn:hover {
+  background: rgba(99, 102, 241, 1);
+  transform: translateY(2px);
+}
+@keyframes scrollBtnFadeIn {
+  from { opacity: 0; transform: translateY(8px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+.chatRail {
+  display: flex;           /* ADD - makes it flex container */
+  flex-direction: column;  /* ADD - stacks children vertically */
+  overflow: hidden;        /* ADD - prevents overflow from rail */
+  
+  /* Keep all your existing properties */
+  flex: 1 1 auto;
+  min-height: 0;
+  width: 100%;
+  max-width: 100%;
+  margin: 0 auto;
+  padding: 0 28px;
+  box-sizing: border-box;
+  min-width: 0;
+}
+.messageCard {
+  width: 100%;
+  min-width: 0;
+}
+.messageCardInner {
+  width: 100%;
+  min-width: 0;
+}
+
+/* =============================================================================
+   GENERATE BAR
+   ============================================================================= */
+
+.generateBar {
+  pointer-events: auto;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 9px 14px;
+  margin: 0 0 8px;
+  border-radius: 10px;
+  border: 1px solid rgba(99, 102, 241, 0.3);
+  background: rgba(99, 102, 241, 0.08);
+  transition: border-color 0.15s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.generateBar:hover {
+  border-color: rgba(99, 102, 241, 0.5);
+}
+
+.generateBarLabel {
+  flex: 1;
+  font-family: 'Inter', system-ui, sans-serif;
+  font-size: 13px;
+  font-weight: 500;
+  color: #F1F5F9;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  min-width: 0;
+}
+
+.generateBarError {
+  flex: 1;
+  font-size: 12px;
+  color: #EF4444;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  min-width: 0;
+}
+
+.generateBarBtn {
+  flex-shrink: 0;
+  padding: 5px 14px;
+  border-radius: 8px;
+  border: none;
+  background: #6366F1;
+  color: #F1F5F9;
+  font-family: 'Inter', system-ui, sans-serif;
+  font-size: 12px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.15s cubic-bezier(0.4, 0, 0.2, 1);
+  letter-spacing: 0.01em;
+}
+
+.generateBarBtn:hover:not(:disabled) {
+  background: #818CF8;
+}
+
+.generateBarBtn:disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
+}
+
+/* Progress bar inline */
+.generateBarProgress {
+  flex: 1;
+  height: 4px;
+  border-radius: 99px;
+  background: rgba(99, 102, 241, 0.2);
+  overflow: hidden;
+  min-width: 60px;
+}
+
+.generateBarProgressFill {
+  height: 100%;
+  border-radius: 99px;
+  background: #6366F1;
+  transition: width 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+/* =============================================================================
+   DOCS TAB — Generated deliverables
+   ============================================================================= */
+
+.docsList {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.docCard {
+  display: flex;
+  flex-direction: column;
+  border-radius: 10px;
+  border: 1px solid rgba(148, 163, 184, 0.15);
+  background: rgba(10, 15, 26, 0.5);
+  overflow: hidden;
+  transition: border-color 0.15s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.docCard:hover {
+  border-color: rgba(99, 102, 241, 0.3);
+}
+
+.docImageThumb {
+  width: 100%;
+  max-height: 140px;
+  overflow: hidden;
+  border: none;
+  background: #0A0F1A;
+  cursor: zoom-in;
+  padding: 0;
+  display: block;
+}
+
+.docImageThumb img {
+  width: 100%;
+  height: 140px;
+  object-fit: cover;
+  display: block;
+  transition: transform 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.docImageThumb:hover img {
+  transform: scale(1.03);
+}
+
+.docCardBody {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+  padding: 10px 12px 6px;
+  flex: 1;
+}
+
+.docCardTitle {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.docCardIcon {
+  font-size: 11px;
+  font-weight: 700;
+  color: #6366F1;
+  background: rgba(99, 102, 241, 0.12);
+  padding: 2px 5px;
+  border-radius: 4px;
+  flex-shrink: 0;
+  letter-spacing: 0.04em;
+}
+
+.docCardName {
+  font-family: 'Inter', system-ui, sans-serif;
+  font-size: 13px;
+  font-weight: 500;
+  color: #F1F5F9;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.docCardMeta {
+  font-size: 11px;
+  color: #64748B;
+  padding-left: 2px;
+}
+
+.docCardDownload {
+  display: block;
+  padding: 7px 12px;
+  font-family: 'Inter', system-ui, sans-serif;
+  font-size: 12px;
+  font-weight: 600;
+  color: #6366F1;
+  text-decoration: none;
+  border-top: 1px solid rgba(148, 163, 184, 0.08);
+  transition: color 0.15s cubic-bezier(0.4, 0, 0.2, 1),
+              background 0.15s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.docCardDownload:hover {
+  color: #818CF8;
+  background: rgba(99, 102, 241, 0.06);
+}
+
+/* =============================================================================
+   IMAGE LIGHTBOX
+   ============================================================================= */
+
+.lightbox {
+  position: fixed;
+  inset: 0;
+  z-index: 9000;
+  background: rgba(10, 15, 26, 0.92);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  backdrop-filter: blur(8px);
+  animation: lightboxIn 0.18s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+@keyframes lightboxIn {
+  from { opacity: 0; }
+  to   { opacity: 1; }
+}
+
+.lightboxContent {
+  display: flex;
+  flex-direction: column;
+  max-width: min(90vw, 960px);
+  max-height: 90vh;
+  border-radius: 14px;
+  overflow: hidden;
+  border: 1px solid rgba(148, 163, 184, 0.2);
+  box-shadow: 0 16px 64px rgba(0, 0, 0, 0.6), 0 0 0 1px rgba(99, 102, 241, 0.15);
+  animation: lightboxScale 0.18s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+@keyframes lightboxScale {
+  from { transform: scale(0.94); }
+  to   { transform: scale(1); }
+}
+
+.lightboxImage {
+  display: block;
+  width: 100%;
+  max-height: 75vh;
+  object-fit: contain;
+  background: #0A0F1A;
+}
+
+.lightboxFooter {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 12px 16px;
+  background: #141B2E;
+  border-top: 1px solid rgba(148, 163, 184, 0.12);
+}
+
+.lightboxTitle {
+  font-family: 'Inter', system-ui, sans-serif;
+  font-size: 13px;
+  color: #94A3B8;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  flex: 1;
+}
+
+.lightboxActions {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-shrink: 0;
+}
+
+.lightboxDownload {
+  padding: 6px 14px;
+  border-radius: 7px;
+  background: rgba(99, 102, 241, 0.15);
+  color: #818CF8;
+  font-family: 'Inter', system-ui, sans-serif;
+  font-size: 12px;
+  font-weight: 600;
+  text-decoration: none;
+  transition: background 0.15s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.lightboxDownload:hover {
+  background: rgba(99, 102, 241, 0.28);
+}
+
+.lightboxClose {
+  padding: 6px 14px;
+  border-radius: 7px;
+  border: 1px solid rgba(148, 163, 184, 0.2);
+  background: transparent;
+  color: #94A3B8;
+  font-family: 'Inter', system-ui, sans-serif;
+  font-size: 12px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.15s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.lightboxClose:hover {
+  border-color: rgba(148, 163, 184, 0.4);
+  color: #F1F5F9;
+}

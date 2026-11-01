@@ -1,0 +1,187 @@
+/* src/components/Film/FilmNocturneLibrary.css
+   NOCTURNE GLASS (2026-10-19) — My Films: the library shelves, My Series, the season
+   board and the feature grid, under the same night sky as the workspace.
+
+   SAFE BY CONSTRUCTION
+   • A separate file, imported by MyFilmsView.jsx. FilmWorkspace.css, FilmSeries.css and
+     FilmAdShelf.css are not edited; the film video wall is not touched.
+   • Every rule is scoped under .film-lib.fw-nocturne (MyFilmsView's root), so each one is
+     more specific than the rule it restyles. Remove the class and My Films is as before.
+   • Visual properties only. The one layout-adjacent change: .film-lib gets position:relative
+     (an anchor for the sky layer) and .film-lib-right position:relative + z-index:1, so the
+     embers pass behind it. Neither creates a trap for the series pop-ups: .film-lib itself
+     gets NO z-index, isolation, filter or transform, so their fixed scrim still covers the
+     whole app exactly as before.
+   • The series pop-ups (.fs-scrim) are styled in FilmNocturnePopups.css; this file never
+     restyles .fs-scrim (the .fs rules below exclude it).
+   • Colours come from the body tokens in FilmNocturnePopups.css (--fwp-*), so My Films, the
+     pop-ups and the Halloween swap all agree. */
+
+/* ═══ TOKENS (the --film-* names My Films already uses, re-tuned for glass) ═══════ */
+.film-lib.fw-nocturne{
+  --film-canvas:#08080F; --film-surface:rgba(18,19,36,.6);
+  --film-interactive:rgba(255,255,255,.055); --film-peak:rgba(255,255,255,.1);
+  --film-accent:var(--fwp-accent,#6366F1); --film-accent-hover:var(--fwp-accent-hi,#818CF8);
+  --film-ivory:#F5F5DC; --film-success:#10B981; --film-warning:#F59E0B; --film-error:#EF4444;
+  --film-t1:#F1F5F9; --film-t2:#94A3B8; --film-t3:#64748B; --film-tm:#475569;
+  --film-bd-subtle:rgba(255,255,255,.07); --film-bd-med:rgba(255,255,255,.12); --film-bd-strong:rgba(255,255,255,.2);
+  --film-r-sm:8px; --film-r-md:12px; --film-r-lg:16px; --film-r-full:9999px;
+  --film-display:'Syne',-apple-system,sans-serif; --film-body:'Inter',system-ui,sans-serif;
+  --fwl-sky:#1B1F4A;
+}
+body[data-film-season="halloween"] .film-lib.fw-nocturne{ --film-canvas:#07060C; --fwl-sky:#2A1640; }
+
+/* ═══ SKY + ATMOSPHERE ═════════════════════════════════════════════════════════════ */
+.film-lib.fw-nocturne{position:relative;
+  background:
+    radial-gradient(1100px 620px at 78% -18%, var(--fwl-sky), transparent 62%),
+    radial-gradient(900px 520px at -8% 112%, rgba(96,56,170,.15), transparent 60%),
+    var(--film-canvas);}
+.film-lib.fw-nocturne > .film-lib-right{position:relative; z-index:1;}
+.film-lib.fw-nocturne > .fw-atmos{position:absolute; inset:0; z-index:1; overflow:hidden; pointer-events:none;}
+.film-lib.fw-nocturne .fw-beam{position:absolute; left:8%; top:-260px; width:1000px; height:1000px;
+  background:conic-gradient(from 150deg at 30% 20%, transparent 0deg, rgba(255,236,200,.05) 8deg,
+    rgba(255,236,200,.085) 14deg, rgba(255,236,200,.035) 22deg, transparent 30deg);
+  filter:blur(8px); mix-blend-mode:screen; animation:fw-flicker 7s infinite steps(1);}
+.film-lib.fw-nocturne .fw-fog,.film-lib.fw-nocturne .fw-embers{display:none;}
+body[data-film-season="halloween"] .film-lib.fw-nocturne .fw-fog,
+body[data-film-season="halloween"] .film-lib.fw-nocturne .fw-embers{display:block;}
+.film-lib.fw-nocturne .fw-fog{position:absolute; left:-50%; right:-50%; bottom:-50px; height:240px;
+  background:
+    radial-gradient(40% 60% at 20% 70%, rgba(200,195,230,.12), transparent 70%),
+    radial-gradient(35% 55% at 60% 80%, rgba(200,195,230,.09), transparent 70%),
+    radial-gradient(30% 50% at 90% 75%, rgba(200,195,230,.11), transparent 70%);
+  filter:blur(16px); animation:fw-drift 44s linear infinite alternate;}
+.film-lib.fw-nocturne .fw-fog--b{bottom:-100px; opacity:.7; animation-duration:66s; animation-direction:alternate-reverse;}
+.film-lib.fw-nocturne .fw-embers{position:absolute; inset:0;}
+.film-lib.fw-nocturne .fw-embers i{position:absolute; bottom:-10px; left:var(--x); width:3px; height:3px; border-radius:50%;
+  background:#FFB067; box-shadow:0 0 8px 2px rgba(255,138,61,.65); opacity:0;
+  transform:scale(var(--s,1)); animation:fw-rise var(--d,12s) linear var(--dl,0s) infinite;}
+@keyframes fw-flicker{0%,100%{opacity:1} 31%{opacity:.8} 32%{opacity:1} 64%{opacity:.88} 65%{opacity:1}}
+@keyframes fw-drift{from{transform:translateX(-12%)} to{transform:translateX(12%)}}
+@keyframes fw-rise{0%{transform:translate(0,0) scale(var(--s,1)); opacity:0} 10%{opacity:.9}
+  100%{transform:translate(var(--dx,30px),-92vh) scale(var(--s,1)); opacity:0}}
+@media (prefers-reduced-motion:reduce){
+  .film-lib.fw-nocturne .fw-beam,.film-lib.fw-nocturne .fw-fog,.film-lib.fw-nocturne .fw-embers i{animation:none;}
+  .film-lib.fw-nocturne .fw-embers{display:none;}
+}
+
+.film-lib.fw-nocturne .film-lib-left{border-right-color:rgba(255,255,255,.07);}
+
+/* ═══ LIBRARY (FilmSeries.css .fs-*, never the .fs-scrim pop-ups) ═══════════════════ */
+.film-lib.fw-nocturne .fs:not(.fs-scrim){
+  --indigo:var(--fwp-accent); --indigo-lo:var(--fwp-accent-hi); --indigo-hi:var(--fwp-ink-soft);
+  --line:rgba(255,255,255,.12); --line-soft:rgba(255,255,255,.04); --line-hi:var(--fwp-a60);
+  background:radial-gradient(520px 360px at 14% 12%, var(--fwp-a14), transparent 60%);}
+/* the tab pill */
+.film-lib.fw-nocturne .fs-pill{background:rgba(255,255,255,.04); border-color:var(--fwp-edge-hi); box-shadow:var(--fwp-lip);}
+.film-lib.fw-nocturne .fs-tab.is-on{color:var(--film-t1); background:rgba(255,255,255,.1);
+  box-shadow:inset 0 1px 0 rgba(255,255,255,.14);}
+.film-lib.fw-nocturne .fs-new:not(.fs-new--ghost){color:var(--fwp-on-accent);
+  background:linear-gradient(135deg, var(--fwp-accent), var(--fwp-accent-hi));
+  box-shadow:inset 0 1px 0 rgba(255,255,255,.28), 0 6px 20px -8px var(--fwp-glow);
+  animation:fwl-candle 3.2s ease-in-out infinite;}
+.film-lib.fw-nocturne .fs-new:not(.fs-new--ghost):hover{box-shadow:inset 0 1px 0 rgba(255,255,255,.28), 0 8px 26px -6px var(--fwp-glow);}
+@keyframes fwl-candle{0%,100%{filter:brightness(1)} 45%{filter:brightness(1.08)} 50%{filter:brightness(.97)}}
+.film-lib.fw-nocturne .fs-new--ghost{color:var(--fwp-accent-hi); box-shadow:inset 0 0 0 1px var(--fwp-edge-hi);}
+.film-lib.fw-nocturne .fs-div{background:var(--fwp-edge-hi);}
+.film-lib.fw-nocturne .fs-info{color:var(--fwp-ink-soft); border-color:var(--fwp-a24); background:var(--fwp-a08);}
+.film-lib.fw-nocturne .fs-badge{color:var(--fwp-accent-hi); background:var(--fwp-a14);}
+.film-lib.fw-nocturne .fs-badge.singles{color:#B8C2DA; background:rgba(255,255,255,.06);}
+.film-lib.fw-nocturne .fs-shelf--ads .fs-badge.fs-badge--ads{color:var(--fwp-ink-soft); background:var(--fwp-a14); border-color:var(--fwp-a40);}
+/* shelves: a real spotlight on the spine you hover or scroll to */
+.film-lib.fw-nocturne .fs-book::before{content:''; position:absolute; left:50%; bottom:-6px; width:170px; height:300px;
+  transform:translateX(-50%); z-index:-1; pointer-events:none; opacity:0; transition:opacity .3s;
+  background:conic-gradient(from 162deg at 50% 0%, transparent 0deg, rgba(255,236,200,.16) 14deg,
+    rgba(255,236,200,.16) 22deg, transparent 36deg); filter:blur(3px);}
+.film-lib.fw-nocturne .fs-book:not(.is-open):hover::before,
+.film-lib.fw-nocturne .fs-book:not(.is-open).is-focus::before{opacity:1;}
+.film-lib.fw-nocturne .fs-card{background:rgba(16,16,32,.7); border-color:var(--fwp-edge-hi);}
+.film-lib.fw-nocturne .fs-cbtn.play{color:var(--fwp-on-accent); background:linear-gradient(135deg, var(--fwp-accent), var(--fwp-accent-hi));}
+.film-lib.fw-nocturne .fs-cbtn.ghost{color:var(--fwp-accent-hi); background:var(--fwp-a14); border-color:var(--fwp-a24);}
+.film-lib.fw-nocturne .fs-mini:hover{background:var(--fwp-a60);}
+.film-lib.fw-nocturne .fs-addep{border-color:var(--fwp-a40); background:var(--fwp-a08); color:var(--fwp-accent-hi);}
+.film-lib.fw-nocturne .fs-addep:hover{background:var(--fwp-a14);}
+/* the ledge: a glass rail with a thin line of light, so the posters keep their colour */
+.film-lib.fw-nocturne .fs-ledge{position:relative; height:10px; border-radius:999px; animation:none;
+  background:linear-gradient(90deg, rgba(255,255,255,.05), rgba(255,255,255,.13), rgba(255,255,255,.05));
+  box-shadow:inset 0 1px 0 rgba(255,255,255,.2), 0 10px 22px -12px rgba(0,0,0,.8);}
+.film-lib.fw-nocturne .fs-ledge::after{content:''; position:absolute; left:8%; right:8%; top:-1px; height:2px; border-radius:2px;
+  background:linear-gradient(90deg, transparent, var(--fwp-accent), transparent); box-shadow:0 0 18px 2px var(--fwp-glow); opacity:.85;}
+/* My Series */
+.film-lib.fw-nocturne .fs-glass{background:rgba(18,18,36,.5); border-color:var(--fwp-edge-hi); box-shadow:var(--fwp-lip), 0 10px 30px rgba(0,0,0,.4);}
+.film-lib.fw-nocturne .fs-scard.is-sel{border-color:var(--fwp-accent);
+  box-shadow:var(--fwp-lip), 0 0 0 1px var(--fwp-accent), 0 0 20px -2px var(--fwp-glow);}
+.film-lib.fw-nocturne .fs-newep{color:var(--fwp-on-accent); background:linear-gradient(135deg, var(--fwp-accent), var(--fwp-accent-hi));
+  box-shadow:inset 0 1px 0 rgba(255,255,255,.28), 0 6px 20px -8px var(--fwp-glow);}
+.film-lib.fw-nocturne .fs-dtabs{border-bottom-color:var(--fwp-edge-hi);}
+.film-lib.fw-nocturne .fs-dtabs button.is-on{border-color:var(--fwp-accent);}
+.film-lib.fw-nocturne .fs-refresh:hover{background:var(--fwp-a14);}
+.film-lib.fw-nocturne .fs-ep:hover{background:var(--fwp-a08);}
+.film-lib.fw-nocturne .fs-bible,.film-lib.fw-nocturne .fs-cast,.film-lib.fw-nocturne .fs-ep,.film-lib.fw-nocturne .fs-loc{background:rgba(255,255,255,.035);}
+.film-lib.fw-nocturne .fs-tile-btn.cta{color:var(--fwp-on-accent); background:linear-gradient(135deg, var(--fwp-accent), var(--fwp-accent-hi));}
+.film-lib.fw-nocturne .fs-tile--add{color:var(--fwp-accent-hi); border-color:var(--fwp-a40); background:var(--fwp-a08);}
+.film-lib.fw-nocturne .fs-tile--add:hover{background:var(--fwp-a14);}
+.film-lib.fw-nocturne .fs-tile-st.is-review{color:var(--fwp-ink-soft); background:var(--fwp-a24);}
+/* the season board */
+.film-lib.fw-nocturne .fs-sb-card.is-next{border-color:var(--fwp-accent); box-shadow:0 0 0 1px var(--fwp-accent), 0 0 26px -6px var(--fwp-glow);}
+.film-lib.fw-nocturne .fs-sb-rel.is-continues{color:var(--fwp-on-accent); background:var(--fwp-accent);}
+.film-lib.fw-nocturne .fs-sb-pull{border-left-color:var(--fwp-accent-hi);}
+.film-lib.fw-nocturne .fs-sb-btn.cta{color:var(--fwp-on-accent); background:linear-gradient(135deg, var(--fwp-accent), var(--fwp-accent-hi));
+  box-shadow:0 2px 12px var(--fwp-a40);}
+.film-lib.fw-nocturne .fs-sb-add{color:var(--fwp-accent-hi); border-color:var(--fwp-a40); background:var(--fwp-a08);}
+.film-lib.fw-nocturne .fs-sb-add:hover{background:var(--fwp-a14);}
+.film-lib.fw-nocturne .fs-sb-st.is-written{color:var(--fwp-ink-soft); background:var(--fwp-a24);}
+.film-lib.fw-nocturne .fs-sb-premise{border-color:var(--fwp-a40); background:var(--fwp-a08);}
+.film-lib.fw-nocturne .fs-sb-mini:hover{border-color:var(--fwp-a60);}
+.film-lib.fw-nocturne .fs-mbtn.primary{color:var(--fwp-on-accent); background:linear-gradient(135deg, var(--fwp-accent), var(--fwp-accent-hi));
+  box-shadow:inset 0 1px 0 rgba(255,255,255,.28), 0 6px 20px -8px var(--fwp-glow);}
+.film-lib.fw-nocturne .fs-inp{background:rgba(0,0,0,.28); border-color:var(--fwp-edge-hi);}
+
+/* ═══ FEATURE GRID (right column) ═════════════════════════════════════════════════ */
+.film-lib.fw-nocturne .film-feat-card{border-radius:18px; box-shadow:var(--fwp-lip), 0 20px 40px -26px #000;}
+.film-lib.fw-nocturne .film-feat-card--hero{border-color:var(--fwp-edge-hi);
+  background:radial-gradient(120% 140% at 15% 15%, var(--fwp-a24), transparent 60%),
+    linear-gradient(160deg, rgba(255,255,255,.06), rgba(255,255,255,.015)), rgba(14,14,28,.55);
+  -webkit-backdrop-filter:blur(18px) saturate(150%); backdrop-filter:blur(18px) saturate(150%);}
+.film-lib.fw-nocturne .film-feat-card--hero:hover{border-color:var(--fwp-a60); box-shadow:var(--fwp-lip), 0 16px 34px -16px var(--fwp-glow);}
+.film-lib.fw-nocturne .film-feat-card--ph{border-style:solid; border-color:var(--fwp-edge); background:rgba(255,255,255,.03);}
+.film-lib.fw-nocturne .film-feat-card--ph:hover{border-color:var(--fwp-a40);}
+.film-lib.fw-nocturne .film-feat-card--list{border-color:var(--fwp-edge-hi);
+  background:linear-gradient(160deg, rgba(255,255,255,.06), rgba(255,255,255,.015)), rgba(14,14,28,.55);}
+.film-lib.fw-nocturne .film-feat-card--list:hover{border-color:var(--fwp-a40); box-shadow:var(--fwp-lip), 0 16px 34px -16px var(--fwp-glow);}
+.film-lib.fw-nocturne .film-feat-step-check{color:var(--fwp-on-accent); box-shadow:0 0 0 1px var(--fwp-a40), 0 0 10px var(--fwp-glow);}
+
+/* the Halloween tile (MyFilmsView, season only) — looks only, nothing to click but its switch */
+.film-lib.fw-nocturne .fw-season-card{border-color:rgba(255,138,61,.35);
+  background:radial-gradient(90% 80% at 85% 10%, rgba(255,138,61,.2), transparent 60%),
+    radial-gradient(70% 60% at 0% 100%, rgba(150,90,220,.18), transparent 65%),
+    linear-gradient(160deg, rgba(255,255,255,.05), rgba(255,255,255,.01)), rgba(14,10,24,.6);}
+.film-lib.fw-nocturne .fw-season-card:hover{border-color:rgba(255,138,61,.55); box-shadow:var(--fwp-lip), 0 16px 34px -16px rgba(255,138,61,.45);}
+.film-lib.fw-nocturne .fw-season-card h3{display:flex; align-items:center; gap:8px; color:var(--film-ivory);}
+.film-lib.fw-nocturne .fw-season-card h3 svg{color:#FFB067; flex:0 0 auto;}
+.film-lib.fw-nocturne .fw-season-ideas{list-style:none; margin:4px 0 0; padding:0; display:flex; flex-direction:column; gap:6px;}
+.film-lib.fw-nocturne .fw-season-ideas li{font:italic 400 12.5px/1.38 'Newsreader', Georgia, serif; color:#E8E4F0;
+  padding-left:12px; border-left:2px solid rgba(255,138,61,.5);}
+.film-lib.fw-nocturne .fw-season-hint{margin:4px 0 0; font-size:11.5px; color:var(--film-t3);}
+/* The tile must never set its row's height: the grid's rows share one height, so a taller
+   tile would make the whole grid taller — on a phone that squeezed the shelves away. The
+   copy is laid over the tile instead (same box as before), and small screens show fewer ideas. */
+.film-lib.fw-nocturne .fw-season-card > .film-feat-copy{position:absolute; inset:0; padding-top:40px; justify-content:center; overflow:hidden;}
+@media (max-width:1600px),(max-height:900px){ .film-lib.fw-nocturne .fw-season-hint{display:none;} }
+@media (max-width:1440px),(max-height:820px){ .film-lib.fw-nocturne .fw-season-ideas li:nth-child(n+3){display:none;} }
+@media (max-width:1180px),(max-height:700px){ .film-lib.fw-nocturne .fw-season-ideas li:nth-child(n+2){display:none;} }
+@media (max-width:900px){
+  .film-lib.fw-nocturne .fw-season-ideas li:nth-child(n+2),.film-lib.fw-nocturne .fw-season-hint{display:none;}
+  .film-lib.fw-nocturne .fw-season-card h3{font-size:14px;}
+}
+/* the season switch on the tile (top right) */
+.film-lib.fw-nocturne .fw-season-switch{position:absolute; top:10px; right:10px; z-index:2; display:inline-flex; align-items:center; gap:5px;
+  font:600 11px/1 var(--film-body); color:var(--film-t2); cursor:pointer; padding:5px 9px; border-radius:999px;
+  background:rgba(0,0,0,.3); border:1px solid rgba(255,255,255,.14); transition:color .15s, border-color .15s;}
+.film-lib.fw-nocturne .fw-season-switch:hover{color:var(--film-t1); border-color:rgba(255,138,61,.5);}
+.film-lib.fw-nocturne .fw-season-switch svg{color:#FFB067;}
+
+@supports not ((backdrop-filter:blur(1px)) or (-webkit-backdrop-filter:blur(1px))){
+  .film-lib.fw-nocturne .film-feat-card--hero{background:radial-gradient(120% 140% at 15% 15%, var(--fwp-a24), transparent 60%), #12121F;}
+}

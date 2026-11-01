@@ -1,0 +1,929 @@
+/* MessageBubble.module.css */
+/* Modern chat bubbles with design tokens */
+
+/* ===== MESSAGE BUBBLE CONTAINER ===== */
+.messageBubble {
+  display: flex;
+  gap: var(--spacing-md);
+  align-items: flex-start;
+  animation: fadeInSlide 0.3s ease-out;
+  transition: var(--transition-fast);
+}
+
+/* User messages - right-aligned */
+.userMessage {
+  flex-direction: row-reverse;
+  justify-content: flex-start;
+  margin-left: auto;
+  max-width: 80%;
+}
+
+/* Character messages - left-aligned */
+.characterMessage {
+  flex-direction: row;
+  justify-content: flex-start;
+  margin-right: auto;
+  max-width: 80%;
+}
+
+/* Mobile: Wider bubbles */
+@media (max-width: 768px) {
+  .userMessage,
+  .characterMessage {
+    max-width: 85%;
+  }
+}
+
+/* Hover effect */
+.messageBubble:hover .messageContent {
+  box-shadow: var(--shadow-elevation03);
+}
+
+/* ===== AVATAR ===== */
+.avatar {
+  width: 36px;
+  height: 36px;
+  min-width: 36px;
+  min-height: 36px;
+  border-radius: var(--border-radius-full);
+  overflow: hidden;
+  position: relative;
+  background: linear-gradient(135deg, var(--accent-primary), var(--accent-hover));
+  box-shadow: var(--shadow-elevation01);
+}
+
+.avatarImage {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.avatarFallback {
+  width: 100%;
+  height: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 16px;
+  font-weight: var(--font-weight-semibold);
+  color: white;
+  font-family: var(--font-display);
+}
+
+/* ===== MESSAGE CONTENT ===== */
+.messageContent {
+  flex: 1;
+  min-width: 0; /* Allow text wrapping */
+  transition: var(--transition-fast);
+}
+
+/* User message content - indigo gradient */
+.userMessage .messageContent {
+  background: linear-gradient(135deg, #4338ca, #3730a3); /* Indigo 700 → 800 */
+  border-radius: var(--border-radius-md);
+  border-bottom-right-radius: 4px;
+  padding: var(--spacing-md) var(--spacing-lg);
+  box-shadow: var(--shadow-elevation02);
+}
+
+/* Character message content - dark surface */
+.characterMessage .messageContent {
+  background: var(--bg-interactive);
+  border-radius: var(--border-radius-md);
+  border-bottom-left-radius: 4px; /* Corner cut on inside edge */
+  padding: var(--spacing-md) var(--spacing-lg);
+  border: 1px solid var(--border-subtle);
+  box-shadow: var(--shadow-elevation02);
+}
+
+/* ===== AUTHOR NAME ===== */
+.authorName {
+  font-size: var(--font-size-caption);
+  font-weight: var(--font-weight-semibold);
+  color: var(--text-tertiary);
+  margin-bottom: var(--spacing-xs);
+  font-family: var(--font-display);
+}
+
+/* ===== MESSAGE TEXT ===== */
+.messageText {
+  font-size: var(--font-size-body);
+  line-height: var(--line-height-body);
+  word-wrap: break-word;
+  overflow-wrap: break-word;
+}
+
+/* User messages - white text */
+.userMessage .messageText {
+  color: white;
+}
+
+/* Character messages - primary text */
+.characterMessage .messageText {
+  color: var(--text-primary);
+}
+
+/* ===== MARKDOWN ELEMENTS ===== */
+
+.paragraph {
+  margin: 0 0 var(--spacing-sm) 0;
+}
+
+.paragraph:last-child {
+  margin-bottom: 0;
+}
+
+.bold {
+  font-weight: var(--font-weight-semibold);
+}
+
+.italic {
+  font-style: italic;
+}
+
+.inlineCode {
+  padding: 2px 6px;
+  border-radius: var(--border-radius-sm);
+  font-family: 'Consolas', 'Monaco', monospace;
+  font-size: 0.9em;
+}
+
+/* User messages - inline code */
+.userMessage .inlineCode {
+  background: rgba(255, 255, 255, 0.2);
+  color: white;
+}
+
+/* Character messages - inline code */
+.characterMessage .inlineCode {
+  background: var(--bg-peak);
+  color: var(--accent-primary);
+}
+
+.codeBlock {
+  padding: var(--spacing-md);
+  border-radius: var(--border-radius-sm);
+  overflow-x: auto;
+  margin: var(--spacing-sm) 0;
+  font-family: 'Consolas', 'Monaco', monospace;
+  font-size: 0.9em;
+  line-height: 1.5;
+}
+
+/* User messages - code block */
+.userMessage .codeBlock {
+  background: rgba(255, 255, 255, 0.15);
+  color: white;
+}
+
+/* Character messages - code block */
+.characterMessage .codeBlock {
+  background: var(--bg-surface);
+  color: var(--text-primary);
+  border: 1px solid var(--border-subtle);
+}
+
+.list,
+.orderedList {
+  margin: var(--spacing-sm) 0;
+  padding-left: var(--spacing-lg);
+}
+
+.listItem {
+  margin: var(--spacing-xs) 0;
+}
+
+.blockquote {
+  margin: var(--spacing-sm) 0;
+  padding-left: var(--spacing-md);
+  border-left: 3px solid currentColor;
+  font-style: italic;
+  opacity: 0.9;
+}
+
+/* ===== HEADINGS ===== */
+
+.heading1 {
+  font-size: 1.2em;
+  font-weight: var(--font-weight-semibold);
+  margin: var(--spacing-lg) 0 var(--spacing-sm) 0;
+  line-height: 1.3;
+  color: var(--text-primary);
+}
+
+.heading2 {
+  font-size: 1.05em;
+  font-weight: var(--font-weight-semibold);
+  margin: var(--spacing-md) 0 var(--spacing-sm) 0;
+  line-height: 1.3;
+  color: var(--text-primary);
+}
+
+.heading3 {
+  font-size: 0.95em;
+  font-weight: var(--font-weight-semibold);
+  margin: var(--spacing-sm) 0 var(--spacing-xs) 0;
+  line-height: 1.3;
+  color: var(--text-secondary);
+}
+
+/* First heading in a bubble needs no top margin */
+.messageText h1:first-child,
+.messageText h2:first-child,
+.messageText h3:first-child {
+  margin-top: 0;
+}
+
+/* ===== HORIZONTAL RULE ===== */
+
+.divider {
+  border: none;
+  border-top: 1px solid var(--border-subtle);
+  margin: var(--spacing-md) 0;
+  opacity: 0.5;
+}
+
+.link {
+  color: inherit;
+  text-decoration: underline;
+  transition: var(--transition-fast);
+}
+
+.link:hover {
+  opacity: 0.8;
+}
+
+/* User messages - link */
+.userMessage .link {
+  color: white;
+  font-weight: var(--font-weight-medium);
+}
+
+/* Character messages - link */
+.characterMessage .link {
+  color: var(--accent-primary);
+  font-weight: var(--font-weight-medium);
+}
+
+/* ===== ANIMATIONS ===== */
+
+@keyframes fadeInSlide {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* ===== ACCESSIBILITY ===== */
+
+/* Reduce motion */
+@media (prefers-reduced-motion: reduce) {
+  .messageBubble {
+    animation: none;
+  }
+  
+  .messageBubble:hover .messageContent {
+    transform: none;
+  }
+}
+
+/* High contrast mode */
+@media (prefers-contrast: high) {
+  .characterMessage .messageContent {
+    border-width: 2px;
+  }
+  
+  .userMessage .messageContent {
+    outline: 2px solid white;
+  }
+}
+
+/* ===== DEFENSIVE FALLBACKS ===== */
+
+/* Ensure long words don't break layout */
+.messageText {
+  hyphens: auto;
+  -webkit-hyphens: auto;
+  -moz-hyphens: auto;
+}
+
+/* Ensure images in markdown don't overflow */
+.messageText img {
+  max-width: 100%;
+  height: auto;
+  border-radius: var(--border-radius-sm);
+}
+
+/* Ensure tables in markdown are scrollable */
+.messageText table {
+  max-width: 100%;
+  overflow-x: auto;
+  display: block;
+}
+/* =============================================================================
+ * DUAL BUTTON STYLES - Continue (››) and Next Speaker (+)
+ * REPLACE the continue button section in MessageBubble.module.css
+ * =============================================================================
+ */
+
+/* ===== ACTION BUTTONS CONTAINER ===== */
+
+.actionButtonsContainer {
+  display: flex;
+  justify-content: flex-end;
+  align-items: center;
+  gap: var(--spacing-sm);
+  margin-top: var(--spacing-md);
+  opacity: 0;
+  transform: translateY(-8px);
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+/* Show on hover (desktop) */
+.messageBubble:hover .actionButtonsContainer {
+  opacity: 1;
+  transform: translateY(0);
+}
+
+/* Always show on mobile */
+@media (max-width: 768px) {
+  .actionButtonsContainer {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* ===== SHARED BUTTON STYLES ===== */
+
+.continueButton,
+.nextSpeakerButton {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  gap: var(--spacing-sm);
+  padding: var(--spacing-sm) var(--spacing-lg);
+  border: 1.5px solid;
+  border-radius: var(--border-radius-full);
+  font-size: var(--font-size-caption);
+  font-weight: var(--font-weight-semibold);
+  cursor: pointer;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  user-select: none;
+  -webkit-user-select: none;
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+  overflow: hidden;
+}
+
+/* Shimmer effect */
+.continueButton::before,
+.nextSpeakerButton::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: -100%;
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(
+    90deg,
+    transparent,
+    rgba(255, 255, 255, 0.1),
+    transparent
+  );
+  transition: left 0.5s ease;
+}
+
+.continueButton:hover:not(:disabled)::before,
+.nextSpeakerButton:hover:not(:disabled)::before {
+  left: 100%;
+}
+
+/* ===== CONTINUE BUTTON (››) - INDIGO ===== */
+
+.continueButton {
+  background: linear-gradient(135deg, 
+    rgba(99, 102, 241, 0.08) 0%,
+    rgba(79, 70, 229, 0.12) 100%
+  );
+  border-color: rgba(99, 102, 241, 0.2);
+  color: var(--accent-primary);
+}
+
+.continueButton:hover:not(:disabled) {
+  background: linear-gradient(135deg, 
+    rgba(99, 102, 241, 0.15) 0%,
+    rgba(79, 70, 229, 0.25) 100%
+  );
+  border-color: rgba(99, 102, 241, 0.5);
+  box-shadow: 
+    0 0 0 3px rgba(99, 102, 241, 0.1),
+    0 4px 12px rgba(99, 102, 241, 0.2);
+  transform: translateY(-2px) scale(1.02);
+}
+
+/* ===== NEXT SPEAKER BUTTON (+) - GREEN ===== */
+
+.nextSpeakerButton {
+  background: linear-gradient(135deg, 
+    rgba(34, 197, 94, 0.08) 0%,
+    rgba(22, 163, 74, 0.12) 100%
+  );
+  border-color: rgba(34, 197, 94, 0.2);
+  color: rgb(34, 197, 94); /* Green-500 */
+}
+
+.nextSpeakerButton:hover:not(:disabled) {
+  background: linear-gradient(135deg, 
+    rgba(34, 197, 94, 0.15) 0%,
+    rgba(22, 163, 74, 0.25) 100%
+  );
+  border-color: rgba(34, 197, 94, 0.5);
+  box-shadow: 
+    0 0 0 3px rgba(34, 197, 94, 0.1),
+    0 4px 12px rgba(34, 197, 94, 0.2);
+  transform: translateY(-2px) scale(1.02);
+}
+
+/* ===== ACTIVE STATES ===== */
+
+.continueButton:active:not(:disabled),
+.nextSpeakerButton:active:not(:disabled) {
+  transform: translateY(0) scale(0.98);
+}
+
+.continueButton:active:not(:disabled) {
+  box-shadow: 
+    0 0 0 2px rgba(99, 102, 241, 0.15),
+    0 2px 4px rgba(99, 102, 241, 0.15);
+}
+
+.nextSpeakerButton:active:not(:disabled) {
+  box-shadow: 
+    0 0 0 2px rgba(34, 197, 94, 0.15),
+    0 2px 4px rgba(34, 197, 94, 0.15);
+}
+
+/* ===== DISABLED STATES ===== */
+
+.continueButton:disabled,
+.nextSpeakerButton:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+  background: var(--bg-interactive);
+  border-color: var(--border-subtle);
+  color: var(--text-muted);
+}
+
+/* ===== FOCUS STATES ===== */
+
+.continueButton:focus-visible {
+  outline: none;
+  box-shadow: 
+    0 0 0 3px rgba(99, 102, 241, 0.3),
+    0 4px 12px rgba(99, 102, 241, 0.2);
+}
+
+.nextSpeakerButton:focus-visible {
+  outline: none;
+  box-shadow: 
+    0 0 0 3px rgba(34, 197, 94, 0.3),
+    0 4px 12px rgba(34, 197, 94, 0.2);
+}
+
+/* ===== ICONS ===== */
+
+.continueIcon,
+.nextSpeakerIcon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 16px;
+  font-weight: var(--font-weight-bold);
+  line-height: 1;
+  transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.continueIcon {
+  letter-spacing: -1px;
+}
+
+.nextSpeakerIcon {
+  font-size: 18px;
+}
+
+/* Icon animations on hover */
+.continueButton:hover:not(:disabled) .continueIcon {
+  transform: translateX(3px);
+  animation: pulse 1s ease-in-out infinite;
+}
+
+.nextSpeakerButton:hover:not(:disabled) .nextSpeakerIcon {
+  transform: rotate(90deg) scale(1.1);
+}
+
+@keyframes pulse {
+  0%, 100% {
+    transform: translateX(3px) scale(1);
+  }
+  50% {
+    transform: translateX(3px) scale(1.1);
+  }
+}
+
+/* ===== TOOLTIPS ===== */
+
+.continueTooltip,
+.nextSpeakerTooltip {
+  font-size: var(--font-size-caption);
+  font-weight: var(--font-weight-semibold);
+  white-space: nowrap;
+  letter-spacing: 0.3px;
+  text-transform: uppercase;
+  opacity: 0.9;
+}
+
+/* ===== MOBILE OPTIMIZATIONS ===== */
+
+/* Hide tooltips on small screens */
+@media (max-width: 480px) {
+  .continueTooltip,
+  .nextSpeakerTooltip {
+    display: none;
+  }
+  
+  .continueButton,
+  .nextSpeakerButton {
+    padding: var(--spacing-sm);
+    gap: 0;
+  }
+  
+  .continueIcon {
+    font-size: 18px;
+  }
+  
+  .nextSpeakerIcon {
+    font-size: 20px;
+  }
+}
+
+/* Larger tap targets on mobile */
+@media (max-width: 768px) {
+  .continueButton,
+  .nextSpeakerButton {
+    min-height: 44px;
+    min-width: 44px;
+    padding: var(--spacing-sm) var(--spacing-md);
+  }
+}
+
+/* ===== ACCESSIBILITY ===== */
+
+/* Reduce motion */
+@media (prefers-reduced-motion: reduce) {
+  .actionButtonsContainer,
+  .continueButton,
+  .nextSpeakerButton,
+  .continueIcon,
+  .nextSpeakerIcon,
+  .continueButton::before,
+  .nextSpeakerButton::before {
+    transition: none !important;
+    animation: none !important;
+  }
+  
+  .continueButton:hover:not(:disabled),
+  .nextSpeakerButton:hover:not(:disabled),
+  .continueButton:active:not(:disabled),
+  .nextSpeakerButton:active:not(:disabled) {
+    transform: none !important;
+  }
+}
+
+/* High contrast mode */
+@media (prefers-contrast: high) {
+  .continueButton,
+  .nextSpeakerButton {
+    border-width: 2px;
+    background: transparent;
+  }
+  
+  .continueButton:hover:not(:disabled) {
+    background: var(--accent-primary);
+    color: white;
+  }
+  
+  .nextSpeakerButton:hover:not(:disabled) {
+    background: rgb(34, 197, 94);
+    color: white;
+  }
+}
+
+/* ===== LOADING STATES ===== */
+
+.continueButton:disabled::after,
+.nextSpeakerButton:disabled::after {
+  content: '';
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: 12px;
+  height: 12px;
+  margin: -6px 0 0 -6px;
+  border: 2px solid transparent;
+  border-top-color: var(--text-muted);
+  border-radius: 50%;
+  animation: spin 0.6s linear infinite;
+}
+
+@keyframes spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+/* ===== END OF DUAL BUTTON STYLES ===== */
+/* =============================================================================
+ * VIDEO GENERATION BUTTON - 🎬 Create Video
+ * ADD THIS TO THE END OF MessageBubble.module.css
+ * =============================================================================
+ */
+
+/* ===== VIDEO BUTTON - PURPLE/VIOLET ===== */
+
+.videoButton {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  gap: var(--spacing-sm);
+  padding: var(--spacing-sm) var(--spacing-lg);
+  border: 1.5px solid;
+  border-radius: var(--border-radius-full);
+  font-size: var(--font-size-caption);
+  font-weight: var(--font-weight-semibold);
+  cursor: pointer;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  user-select: none;
+  -webkit-user-select: none;
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+  overflow: hidden;
+  
+  /* Purple/Violet gradient */
+  background: linear-gradient(135deg, 
+    rgba(139, 92, 246, 0.08) 0%,
+    rgba(124, 58, 237, 0.12) 100%
+  );
+  border-color: rgba(139, 92, 246, 0.2);
+  color: rgb(139, 92, 246); /* Violet-500 */
+}
+
+/* Shimmer effect */
+.videoButton::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: -100%;
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(
+    90deg,
+    transparent,
+    rgba(255, 255, 255, 0.1),
+    transparent
+  );
+  transition: left 0.5s ease;
+}
+
+.videoButton:hover:not(:disabled)::before {
+  left: 100%;
+}
+
+/* Hover state */
+.videoButton:hover:not(:disabled) {
+  background: linear-gradient(135deg, 
+    rgba(139, 92, 246, 0.15) 0%,
+    rgba(124, 58, 237, 0.25) 100%
+  );
+  border-color: rgba(139, 92, 246, 0.5);
+  box-shadow: 
+    0 0 0 3px rgba(139, 92, 246, 0.1),
+    0 4px 12px rgba(139, 92, 246, 0.2);
+  transform: translateY(-2px) scale(1.02);
+}
+
+/* Active state */
+.videoButton:active:not(:disabled) {
+  transform: translateY(0) scale(0.98);
+  box-shadow: 
+    0 0 0 2px rgba(139, 92, 246, 0.15),
+    0 2px 4px rgba(139, 92, 246, 0.15);
+}
+
+/* Disabled state */
+.videoButton:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+  background: var(--bg-interactive);
+  border-color: var(--border-subtle);
+  color: var(--text-muted);
+}
+
+/* Focus state */
+.videoButton:focus-visible {
+  outline: none;
+  box-shadow: 
+    0 0 0 3px rgba(139, 92, 246, 0.3),
+    0 4px 12px rgba(139, 92, 246, 0.2);
+}
+
+/* ===== VIDEO BUTTON ICON & TEXT ===== */
+
+.videoIcon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 16px;
+  line-height: 1;
+  transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.videoTooltip {
+  font-size: var(--font-size-caption);
+  font-weight: var(--font-weight-semibold);
+  white-space: nowrap;
+  letter-spacing: 0.3px;
+  text-transform: uppercase;
+  opacity: 0.9;
+}
+
+/* Icon animation on hover */
+.videoButton:hover:not(:disabled) .videoIcon {
+  transform: scale(1.1);
+  animation: filmRoll 1s ease-in-out infinite;
+}
+
+@keyframes filmRoll {
+  0%, 100% {
+    transform: scale(1.1);
+  }
+  50% {
+    transform: scale(1.2) rotate(5deg);
+  }
+}
+
+/* ===== MOBILE OPTIMIZATIONS ===== */
+
+/* Hide tooltip on small screens */
+@media (max-width: 480px) {
+  .videoTooltip {
+    display: none;
+  }
+  
+  .videoButton {
+    padding: var(--spacing-sm);
+    gap: 0;
+  }
+  
+  .videoIcon {
+    font-size: 20px;
+  }
+}
+
+/* Larger tap targets on mobile */
+@media (max-width: 768px) {
+  .videoButton {
+    min-height: 44px;
+    min-width: 44px;
+    padding: var(--spacing-sm) var(--spacing-md);
+  }
+}
+
+/* ===== ACCESSIBILITY ===== */
+
+/* Reduce motion */
+@media (prefers-reduced-motion: reduce) {
+  .videoButton,
+  .videoIcon,
+  .videoButton::before {
+    transition: none !important;
+    animation: none !important;
+  }
+  
+  .videoButton:hover:not(:disabled),
+  .videoButton:active:not(:disabled) {
+    transform: none !important;
+  }
+}
+
+/* High contrast mode */
+@media (prefers-contrast: high) {
+  .videoButton {
+    border-width: 2px;
+    background: transparent;
+  }
+  
+  .videoButton:hover:not(:disabled) {
+    background: rgb(139, 92, 246);
+    color: white;
+  }
+}
+
+/* Loading state for disabled button */
+.videoButton:disabled::after {
+  content: '';
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: 12px;
+  height: 12px;
+  margin: -6px 0 0 -6px;
+  border: 2px solid transparent;
+  border-top-color: var(--text-muted);
+  border-radius: 50%;
+  animation: spin 0.6s linear infinite;
+}
+
+@keyframes spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+/* ===== NESTED LISTS ===== */
+.list .list,
+.orderedList .orderedList,
+.list .orderedList,
+.orderedList .list {
+  margin: 2px 0;
+  padding-left: var(--spacing-md);
+}
+
+/* ===== TABLES ===== */
+.tableWrapper {
+  overflow-x: auto;
+  margin: var(--spacing-sm) 0;
+  border-radius: var(--border-radius-sm);
+}
+
+.table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.9em;
+}
+
+.tableHead {
+  background: var(--bg-peak);
+}
+
+.tableHeader {
+  padding: var(--spacing-xs) var(--spacing-md);
+  text-align: left;
+  font-weight: var(--font-weight-semibold);
+  border-bottom: 1px solid var(--border-medium);
+  white-space: nowrap;
+}
+
+.tableRow:nth-child(even) {
+  background: var(--bg-interactive);
+}
+
+.tableCell {
+  padding: var(--spacing-xs) var(--spacing-md);
+  border-bottom: 1px solid var(--border-subtle);
+  vertical-align: top;
+}
+
+/* User message table overrides */
+.userMessage .tableHeader,
+.userMessage .tableCell {
+  border-color: rgba(255, 255, 255, 0.2);
+}
+
+.userMessage .tableHead {
+  background: rgba(255, 255, 255, 0.15);
+}
+
+.userMessage .tableRow:nth-child(even) {
+  background: rgba(255, 255, 255, 0.08);
+}
+
+/* ===== USER MESSAGE HEADING OVERRIDES ===== */
+/* Headings inside user bubbles must be white, not --text-primary */
+.userMessage .heading1,
+.userMessage .heading2,
+.userMessage .heading3 {
+  color: white;
+}
+
+/* ===== HORIZONTAL RULE ===== */
+.divider {
+  border: none;
+  border-top: 1px solid var(--border-subtle);
+  margin: var(--spacing-md) 0;
+  opacity: 0.5;
+}
+
+/* ===== END OF VIDEO BUTTON STYLES ===== */

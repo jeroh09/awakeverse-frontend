@@ -178,7 +178,7 @@ export default function InstallPrompt() {
           font-size: 24px;
           font-weight: 600;
           margin: 0 0 12px 0;
-          font-family: 'Cinzel Decorative', serif;
+          font-family: 'Playfair Display', serif;
         }
 
         .install-prompt-description {

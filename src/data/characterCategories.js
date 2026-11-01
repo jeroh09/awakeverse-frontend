@@ -1,13 +1,21 @@
 // src/data/characterCategories.js
 export const characterCategories = [
+
+  {
+    key: 'discovered',
+    title: '⭐ Discovered',
+    sceneImage: '/images/categories/discover.jpeg',
+    characters: [] // Will be populated dynamically from Market Hub discoveries
+  },
   {
     key: 'sleuths',
     title: 'Detectives',
+    sceneImage: '/images/categories/sleuths.jpeg', // NEW
     characters: [
       { 
         key: 'sherlock',
         name: 'Sherlock Holmes',
-        thumbnailUrl: '/images/sherlock.jpg',
+        thumbnailUrl: '/images/sherlock.jpeg',
         description: 'Master of Deduction. Observe what others overlook—the tremble of a hand, the lie in a compliment. Every detail whispers truth.'
       },
       { 
@@ -75,6 +83,7 @@ export const characterCategories = [
   {
     key: 'stargazers',
     title: 'Astrologers',
+    sceneImage: '/images/categories/stargazers.jpeg',
     characters: [
       { 
         key: 'ptolemy',
@@ -85,7 +94,7 @@ export const characterCategories = [
       { 
         key: 'nostradamus',
         name: 'Nostradamus',
-        thumbnailUrl: '/images/nostradamus.jpg',
+        thumbnailUrl: '/images/nostradamus.jpeg',
         description: 'Time’s Cryptographer. Tomorrow is a riddle written in smoke. His quatrains are keys... if you dare turn them.'
       },
       { 
@@ -111,6 +120,7 @@ export const characterCategories = [
   {
     key: 'truthweavers',
     title: 'Truthseekers',
+    sceneImage: '/images/categories/truthweavers.jpeg',
     characters: [
       { 
         key: 'iktomi',
@@ -121,7 +131,7 @@ export const characterCategories = [
       { 
         key: 'dante',
         name: 'Dante Alighieri',
-        thumbnailUrl: '/images/dante.jpg',
+        thumbnailUrl: '/images/dante.jpeg',
         description: 'The Exile Who Mapped Hell. Banished from Florence, he took revenge by building a cosmos of ice and flame—where popes boiled and Beatrice reigned as his celestial muse.'
       },
       { 
@@ -140,7 +150,7 @@ export const characterCategories = [
       { 
         key: 'huckleberry_finn',
         name: 'Huckleberry Finn',
-        thumbnailUrl: '/images/huckleberry_finn.jpg',
+        thumbnailUrl: '/images/huckleberry_finn.jpeg',
         description: 'River-Born Realist. Morality floats downstream—sometimes you must wreck the raft to see who you really are.'
       },
 
@@ -172,7 +182,7 @@ export const characterCategories = [
       { 
         key: 'sancho_panza',
         name: 'Sancho Panza',
-        thumbnailUrl: '/images/sancho_panza.jpg',
+        thumbnailUrl: '/images/sancho_panza.jpeg',
         description: 'Donkey-Riding Sage. The world’s giants are just windmills. His wineskin holds more truth than castles in the air.'
       },
 
@@ -202,9 +212,18 @@ export const characterCategories = [
       }
     ]
   },
+
+  // Add this as the 12th category in the characterCategories array, after 'performers'
+  {
+    key: 'my_characters',
+    title: 'My Characters',
+    sceneImage: '/images/categories/creators.jpeg',
+    characters: [] // Will be populated dynamically
+  },
   {
     key: 'veilwalkers',
     title: 'Mystics',
+    sceneImage: '/images/categories/veilwalkers.jpeg',
     characters: [
       { 
         key: 'mami_wata',
@@ -257,6 +276,14 @@ export const characterCategories = [
        description: 'The Persian Polymath. Medicine, philosophy, and the cosmos bowed to his logic. He mapped the human soul with the same precision as the stars—proving East and West share one sky.'
       },
 
+      {
+        key: 'simone_de_beauvoir',
+        name: 'Simone de Beauvoir',
+        thumbnailUrl: '/images/simone_de_beauvoir.jpg',
+        description: 'The Essential Other. In life with Sartre, in philosophy alone—she forged existential feminism, proving that freedom is the ultimate project and love its most dangerous terrain.'
+      
+      },
+
       
       { 
         key: 'lilith',
@@ -269,6 +296,7 @@ export const characterCategories = [
   {
     key: 'goldhands',
     title: 'Entrepreneurs',
+    sceneImage: '/images/categories/goldhands.jpeg',
     characters: [
       { 
         key: 'mansa_musa',
@@ -291,7 +319,7 @@ export const characterCategories = [
       { 
         key: 'madam_cj_walker',
         name: 'Madam C.J. Walker',
-        thumbnailUrl: '/images/madam_cj_walker.jpg',
+        thumbnailUrl: '/images/madam_cj_walker.jpeg',
         description: 'Self-Made Storm. From washtub to empire. Her formula? Mix stubbornness with lye, rinse with unapologetic ambition.'
       },
       { 
@@ -325,6 +353,7 @@ export const characterCategories = [
   {
     key: 'heartstrings',
     title: 'Cupids',
+    sceneImage: '/images/categories/heartstrings.jpeg',
     characters: [
       { 
         key: 'helen_of_troy',
@@ -348,7 +377,7 @@ export const characterCategories = [
         key: 'juliet',
         name: 'Juliet',
         thumbnailUrl: '/images/juliet.jpg',
-        description: 'Balcony Philosopher. Stars conspire; balconies listen. Her dagger was a question: What would you sacrifice for morning?'
+        description: 'Balcony Philosopher. Stars conspire, balconies listen. Her dagger was a question: What would you sacrifice for morning.'
       },
 
       { 
@@ -395,11 +424,12 @@ export const characterCategories = [
   {
     key: 'thinkers',
     title: 'Philosophers',
+    sceneImage: '/images/categories/thinkers.jpeg',
     characters: [
       { 
         key: 'socrates',
         name: 'Socrates',
-        thumbnailUrl: '/images/socrates.jpg',
+        thumbnailUrl: '/images/socrates.jpeg',
         description: 'Gadfly of Athens. Truth stings like hemlock. His questions are nets—cast wide, and you’ll haul up your own ignorance.'
       },
       { 
@@ -411,13 +441,13 @@ export const characterCategories = [
       { 
         key: 'plato',
         name: 'Plato',
-        thumbnailUrl: '/images/plato.jpg',
+        thumbnailUrl: '/images/plato.jpeg',
         description: 'Cave’s Cartographer. Shadows are just echoes of light. His academy teaches how to turn toward the fire.'
       },
       { 
         key: 'aristotle',
         name: 'Aristotle',
-        thumbnailUrl: '/images/aristotle.jpg',
+        thumbnailUrl: '/images/aristotle.jpeg',
         description: 'Logic’s Blacksmith. Forge thoughts on reason’s anvil. Even Alexander needed a tutor who asked “why?” thrice.'
       },
       { 
@@ -453,9 +483,9 @@ export const characterCategories = [
        description: 'The Old Master. His Tao Te Ching is a river—simple on the surface, bottomless beneath. He wrote 5,000 characters, then rode a buffalo into legend.'
       },
       { 
-       key: 'kant',
+       key: 'immanuel_kant',
        name: 'Immanuel Kant',
-       thumbnailUrl: '/images/kant.jpg',
+       thumbnailUrl: '/images/immanuel_kant.jpg',
        description: 'The Prussian Clockwork. Morality isn\'t felt—it\'s calculated. His categorical imperative: a compass so rigid it bends the universe toward justice.'
       },
 
@@ -476,17 +506,18 @@ export const characterCategories = [
   {
     key: 'makers',
     title: 'Inventors',
+    sceneImage: '/images/categories/makers.jpeg',
     characters: [
       { 
         key: 'da_vinci',
         name: 'Leonardo da Vinci',
-        thumbnailUrl: '/images/da_vinci.jpg',
+        thumbnailUrl: '/images/da_vinci.jpeg',
         description: 'Renaissance Polymath. See wings in bat’s skin, war machines in turtle shells. His notebooks are chaos theory in sepia.'
       },
       { 
         key: 'tesla',
         name: 'Nikola Tesla',
-        thumbnailUrl: '/images/tesla.jpg',
+        thumbnailUrl: '/images/tesla.jpeg',
         description: 'Lightning’s Conductor. The future hummed in his coils. Edison stole credit, but the universe still vibrates at his frequency.'
       },
       { 
@@ -524,6 +555,7 @@ export const characterCategories = [
   {
     key: 'warlords',
     title: 'Strategos',
+    sceneImage: '/images/categories/warlords.jpeg',
     characters: [
       { 
         key: 'sun_tzu',
@@ -558,7 +590,7 @@ export const characterCategories = [
       { 
         key: 'shaka_zulu',
         name: 'Shaka Zulu',
-        thumbnailUrl: '/images/shaka.jpg',
+        thumbnailUrl: '/images/shaka_zulu.jpg',
         description: 'Assegai Reformer. Short stabs win long wars. His bull-horn formation reshaped warfare—and empires paid in blood.'
       },
       {
@@ -603,6 +635,7 @@ export const characterCategories = [
   {
     key: 'pathfinders',
     title: 'Explorers',
+    sceneImage: '/images/categories/pathfinders.jpeg',
     characters: [
       { 
         key: 'christopher_columbus',
@@ -693,6 +726,7 @@ export const characterCategories = [
   {
     key: 'performers',
     title: 'Entertainers',
+    sceneImage: '/images/categories/performers.jpeg',
     characters: [
       { 
         key: 'edgar_allan_poe',

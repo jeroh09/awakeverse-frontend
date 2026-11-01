@@ -1,0 +1,905 @@
+/* LegendsMapPanel.module.css
+ *
+ * Centered modal — double indigo border, 22px radius, AwakeVerse tokens.
+ * Matches ob-card double-border technique from OnboardingFlow.css exactly.
+ *
+ * Shell bg  : #020617
+ * Surface   : rgba(15, 23, 42, 0.97)
+ * Accent    : #6366f1 / #818cf8
+ * Ivory     : #f5f5dc
+ * Double border:
+ *   inner  → border: 1px solid rgba(99,102,241,0.28)
+ *   outer  → box-shadow: 0 0 0 4px rgba(99,102,241,0.06),
+ *                        0 0 0 5px rgba(99,102,241,0.04)
+ * Radius    : 22px panel · 18px card · 9px buttons · 999px pills
+ */
+
+/* ── Backdrop ── */
+.backdrop {
+  position: fixed;
+  inset: 0;
+  background: rgba(2, 6, 23, 0.72);
+  backdrop-filter: blur(6px);
+  z-index: 1199;
+  animation: fadeIn 0.22s ease-out forwards;
+}
+
+/* ── Panel — centered modal ── */
+.panel {
+  position: fixed;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  width: min(940px, 92vw);
+  height: min(680px, 88vh);
+  z-index: 1200;
+
+  background: #0a0f1a;
+
+  /* Double indigo border — ob-card technique */
+  border: 1px solid rgba(99, 102, 241, 0.28);
+  box-shadow:
+    0 0 0 4px rgba(99, 102, 241, 0.06),
+    0 0 0 5px rgba(99, 102, 241, 0.04),
+    0 32px 80px rgba(0, 0, 0, 0.85),
+    0 0 60px -20px rgba(99, 102, 241, 0.2);
+
+  border-radius: 22px;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+
+  animation: panelIn 0.38s cubic-bezier(0.34, 1.2, 0.64, 1) forwards;
+}
+
+/* Ambient radial glow inside panel */
+.panel::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background:
+    radial-gradient(ellipse 55% 45% at 50% 50%, rgba(99,102,241,0.07) 0%, transparent 65%),
+    radial-gradient(ellipse 30% 25% at 10% 10%, rgba(99,102,241,0.06) 0%, transparent 58%),
+    radial-gradient(ellipse 25% 20% at 90% 88%, rgba(129,140,248,0.04) 0%, transparent 55%);
+  pointer-events: none;
+  z-index: 0;
+}
+
+/* All direct children above radial overlay */
+.panel > * { position: relative; z-index: 1; }
+
+/* ── Header ── */
+.header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem;
+  padding: 1rem 1.4rem 0.85rem;
+  border-bottom: 1px solid rgba(148, 163, 184, 0.08);
+  flex-shrink: 0;
+}
+
+.titleGroup {
+  display: flex;
+  align-items: center;
+  gap: 0.7rem;
+  flex-shrink: 0;
+}
+
+.titleIcon {
+  width: 34px;
+  height: 34px;
+  border-radius: 10px;
+  background: rgba(99, 102, 241, 0.1);
+  border: 1px solid rgba(99, 102, 241, 0.28);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.titleIcon svg { width: 17px; height: 17px; }
+
+/* Title: Syne + ivory */
+.title {
+  font-family: 'Syne', -apple-system, BlinkMacSystemFont, sans-serif;
+  font-size: 1.05rem;
+  font-weight: 700;
+  color: #f5f5dc;
+  margin: 0;
+  letter-spacing: -0.2px;
+  line-height: 1.2;
+}
+
+.subtitle {
+  font-family: 'Inter', system-ui, sans-serif;
+  font-size: 0.65rem;
+  font-weight: 600;
+  letter-spacing: 0.09em;
+  text-transform: uppercase;
+  color: #818cf8;
+  margin: 2px 0 0;
+}
+
+.closeBtn {
+  width: 30px;
+  height: 30px;
+  border-radius: 50%;
+  border: 1px solid rgba(99, 102, 241, 0.32);
+  background: rgba(99, 102, 241, 0.07);
+  color: #818cf8;
+  font-size: 16px;
+  line-height: 1;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.18s ease;
+  flex-shrink: 0;
+}
+
+.closeBtn:hover {
+  background: rgba(99, 102, 241, 0.2);
+  border-color: #6366f1;
+  transform: scale(1.08);
+}
+
+/* ── Continent filter pills ── */
+.filterRow {
+  display: flex;
+  gap: 0.3rem;
+  flex: 1;
+  overflow-x: auto;
+  scrollbar-width: none;
+}
+
+.filterRow::-webkit-scrollbar { display: none; }
+
+.pill {
+  padding: 0.22rem 0.65rem;
+  border-radius: 999px;
+  white-space: nowrap;
+  border: 1px solid rgba(99, 102, 241, 0.28);
+  background: rgba(99, 102, 241, 0.07);
+  color: #818cf8;
+  font-family: 'Inter', system-ui, sans-serif;
+  font-size: 0.65rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.18s ease;
+}
+
+.pill:hover {
+  border-color: rgba(99, 102, 241, 0.55);
+  color: #e0e7ff;
+  background: rgba(99, 102, 241, 0.13);
+}
+
+.pillActive {
+  background: rgba(99, 102, 241, 0.18);
+  border-color: #6366f1;
+  color: #e0e7ff;
+  font-weight: 600;
+  box-shadow: 0 0 10px rgba(99, 102, 241, 0.25);
+}
+
+/* ── Body ── */
+.body {
+  flex: 1;
+  display: flex;
+  min-height: 0;
+  overflow: hidden;
+}
+
+/* ── Globe stage ── */
+.globeWrap {
+  flex: 1;
+  position: relative;
+  overflow: hidden;
+  min-width: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+/* Rotation hint */
+.rotHint {
+  position: absolute;
+  bottom: 0.75rem;
+  left: 50%;
+  transform: translateX(-50%);
+  font-family: 'Inter', system-ui, sans-serif;
+  font-size: 0.58rem;
+  font-weight: 500;
+  letter-spacing: 0.05em;
+  color: rgba(148, 163, 184, 0.3);
+  pointer-events: none;
+  white-space: nowrap;
+  z-index: 5;
+  transition: color 0.3s;
+}
+
+.rotHintPaused {
+  color: rgba(99, 102, 241, 0.45);
+}
+
+/* ── Card column — width-animates open on pin click ── */
+.cardCol {
+  width: 0;
+  flex-shrink: 0;
+  overflow: hidden;
+  transition:
+    width 0.4s cubic-bezier(0.34, 1.1, 0.64, 1),
+    border-left-color 0.3s ease;
+  border-left: 1px solid transparent;
+}
+
+.cardColVisible {
+  width: 240px;
+  border-left-color: rgba(148, 163, 184, 0.08);
+}
+
+/* Inner wrapper — fixed 240px to stay stable during width animation */
+.cardInner {
+  width: 240px;
+  height: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 1rem 0.9rem;
+}
+
+/* ── Character card — full-bleed image + gradient fade ── */
+.charCard {
+  width: 100%;
+  border-radius: 18px;
+  overflow: hidden;
+  border: 1px solid rgba(99, 102, 241, 0.45);
+  box-shadow:
+    0 0 0 4px rgba(15, 23, 42, 0.97),
+    0 0 0 5px rgba(99, 102, 241, 0.28),
+    0 16px 40px rgba(0, 0, 0, 0.7);
+  background: rgba(15, 23, 42, 0.97);
+  position: relative;
+  height: 340px;
+  transition: border-color 0.2s ease, box-shadow 0.2s ease;
+}
+
+.charCard:hover {
+  border-color: rgba(99, 102, 241, 0.7);
+  box-shadow:
+    0 0 0 4px rgba(15, 23, 42, 0.97),
+    0 0 0 5px rgba(99, 102, 241, 0.5),
+    0 20px 52px rgba(0, 0, 0, 0.7),
+    0 0 40px -10px rgba(99, 102, 241, 0.25);
+}
+
+/* Layer 1 — full-bleed character image */
+.cardBgImage {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  object-position: top center;
+  display: block;
+  transition: transform 0.4s ease;
+}
+
+.charCard:hover .cardBgImage { transform: scale(1.04); }
+
+/* Fallback when image fails */
+.cardBgFallback {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: linear-gradient(135deg, rgba(99,102,241,0.15) 0%, rgba(15,23,42,0.97) 100%);
+  font-family: 'Syne', -apple-system, BlinkMacSystemFont, sans-serif;
+  font-size: 4rem;
+  font-weight: 700;
+  color: rgba(99, 102, 241, 0.3);
+  letter-spacing: -2px;
+}
+
+/* Layer 2 — natural gradient: transparent top → near-opaque bottom */
+.cardGradient {
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(
+    to bottom,
+    rgba(2, 6, 23, 0)    0%,
+    rgba(2, 6, 23, 0)    25%,
+    rgba(2, 6, 23, 0.18) 40%,
+    rgba(2, 6, 23, 0.6)  60%,
+    rgba(2, 6, 23, 0.88) 78%,
+    rgba(2, 6, 23, 0.97) 92%
+  );
+  pointer-events: none;
+}
+
+/* Layer 3 — content pinned to bottom */
+.cardContent {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  padding: 0.9rem 0.85rem 0.85rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.18rem;
+}
+
+/* Close button — top-right corner */
+.cardClose {
+  position: absolute;
+  top: 9px;
+  right: 9px;
+  width: 24px;
+  height: 24px;
+  background: rgba(15, 23, 42, 0.75);
+  border: 1px solid rgba(99, 102, 241, 0.35);
+  border-radius: 50%;
+  color: #94a3b8;
+  font-size: 12px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  backdrop-filter: blur(4px);
+  transition: all 0.15s ease;
+  z-index: 10;
+}
+
+.cardClose:hover {
+  background: rgba(99, 102, 241, 0.25);
+  border-color: #6366f1;
+  color: #f5f5dc;
+}
+
+/* Card text */
+.cardName {
+  font-family: 'Syne', -apple-system, BlinkMacSystemFont, sans-serif;
+  font-size: 0.92rem;
+  font-weight: 700;
+  color: #f5f5dc;
+  line-height: 1.2;
+  margin-bottom: 1px;
+  letter-spacing: -0.1px;
+  text-shadow: 0 1px 6px rgba(0,0,0,0.6);
+}
+
+.cardOrigin {
+  font-family: 'Inter', system-ui, sans-serif;
+  font-size: 0.58rem;
+  font-weight: 600;
+  letter-spacing: 0.09em;
+  text-transform: uppercase;
+  color: #818cf8;
+  margin-bottom: 3px;
+}
+
+.cardPeriod {
+  font-family: 'Inter', system-ui, sans-serif;
+  font-size: 0.58rem;
+  color: rgba(148, 163, 184, 0.55);
+  margin-bottom: 5px;
+}
+
+.cardDesc {
+  font-family: 'Inter', system-ui, sans-serif;
+  font-size: 0.65rem;
+  color: rgba(148, 163, 184, 0.85);
+  line-height: 1.5;
+  margin: 0 0 0.6rem;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+
+/* CTA — matches ob-btn--primary */
+.cardCta {
+  width: 100%;
+  padding: 0.45rem;
+  border-radius: 9px;
+  background: linear-gradient(135deg, #6366f1, #818cf8);
+  border: none;
+  color: #fff;
+  font-family: 'Inter', system-ui, sans-serif;
+  font-size: 0.72rem;
+  font-weight: 600;
+  cursor: pointer;
+  box-shadow: 0 2px 14px rgba(99, 102, 241, 0.4);
+  transition: all 0.18s ease;
+}
+
+.cardCta:hover {
+  box-shadow: 0 4px 22px rgba(99, 102, 241, 0.55);
+  transform: translateY(-1px);
+}
+
+/* ── State boxes ── */
+.stateBox {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 0.85rem;
+  padding: 3rem 2rem;
+  text-align: center;
+  font-family: 'Inter', system-ui, sans-serif;
+  width: 100%;
+  height: 100%;
+}
+
+.stateIcon { font-size: 2.4rem; }
+
+.stateBox p {
+  font-size: 0.82rem;
+  color: #64748b;
+  font-style: italic;
+  margin: 0;
+}
+
+.spinner {
+  width: 40px;
+  height: 40px;
+  border: 2.5px solid rgba(99, 102, 241, 0.12);
+  border-top-color: #6366f1;
+  border-radius: 50%;
+  animation: spin 0.85s linear infinite;
+}
+
+/* Retry — matches ob-btn--ghost */
+.retryBtn {
+  padding: 0.5rem 1.2rem;
+  border-radius: 9px;
+  border: 1px solid rgba(99, 102, 241, 0.32);
+  background: rgba(99, 102, 241, 0.07);
+  color: #818cf8;
+  font-family: 'Inter', system-ui, sans-serif;
+  font-size: 0.8rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.18s ease;
+}
+
+.retryBtn:hover {
+  background: rgba(99, 102, 241, 0.16);
+  border-color: #6366f1;
+  box-shadow: 0 2px 14px rgba(99, 102, 241, 0.3);
+}
+
+/* ── Footer ── */
+.footer {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  padding: 0.55rem 1.4rem;
+  border-top: 1px solid rgba(148, 163, 184, 0.07);
+  font-family: 'Inter', system-ui, sans-serif;
+  font-size: 0.6rem;
+  font-weight: 500;
+  color: #475569;
+  font-style: italic;
+  flex-shrink: 0;
+}
+
+.footerDot { opacity: 0.4; }
+
+
+/* ══════════════════════════════════════════════════════
+   MODE TOGGLE — Legends | Cities
+══════════════════════════════════════════════════════ */
+
+.modeToggle {
+  display: flex;
+  border-radius: 999px;
+  border: 1px solid rgba(99, 102, 241, 0.28);
+  background: rgba(99, 102, 241, 0.06);
+  overflow: hidden;
+  flex-shrink: 0;
+}
+
+.modeTab {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  padding: 0.28rem 0.75rem;
+  border: none;
+  background: transparent;
+  color: rgba(99, 102, 241, 0.55);
+  font-family: 'Inter', system-ui, sans-serif;
+  font-size: 0.65rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.18s ease;
+  white-space: nowrap;
+}
+
+.modeTab svg { flex-shrink: 0; }
+
+.modeTab:hover {
+  color: #818cf8;
+  background: rgba(99, 102, 241, 0.08);
+}
+
+.modeTabActive {
+  background: rgba(99, 102, 241, 0.2);
+  color: #e0e7ff;
+}
+
+/* ══════════════════════════════════════════════════════
+   CITY PANEL — slides in via cardCol
+══════════════════════════════════════════════════════ */
+
+/* cityPanelInner — see two-pane slide section at bottom of file */
+
+/* City hero — name, era, tags, summary */
+.cityHero {
+  padding: 1rem 0.9rem 0.85rem;
+  border-bottom: 1px solid rgba(148, 163, 184, 0.08);
+  flex-shrink: 0;
+}
+
+.cityTopRow {
+  display: flex;
+  align-items: flex-start;
+  gap: 6px;
+  margin-bottom: 3px;
+}
+
+.cityName {
+  font-family: 'Syne', -apple-system, BlinkMacSystemFont, sans-serif;
+  font-size: 1rem;
+  font-weight: 700;
+  color: #f5f5dc;
+  line-height: 1.2;
+  flex: 1;
+}
+
+.cityContBadge {
+  font-size: 0.55rem;
+  font-weight: 600;
+  letter-spacing: 0.07em;
+  text-transform: uppercase;
+  padding: 2px 7px;
+  border-radius: 999px;
+  background: rgba(99, 102, 241, 0.1);
+  border: 1px solid rgba(99, 102, 241, 0.28);
+  color: #818cf8;
+  white-space: nowrap;
+  flex-shrink: 0;
+  margin-top: 2px;
+}
+
+.cityEra {
+  font-family: 'Inter', system-ui, sans-serif;
+  font-size: 0.6rem;
+  font-weight: 600;
+  letter-spacing: 0.07em;
+  text-transform: uppercase;
+  color: #818cf8;
+  margin-bottom: 7px;
+}
+
+.cityFamous {
+  font-family: 'Inter', system-ui, sans-serif;
+  font-size: 0.68rem;
+  font-weight: 500;
+  color: #e0e7ff;
+  line-height: 1.45;
+  margin-bottom: 7px;
+  font-style: italic;
+}
+
+.cityTags {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px;
+  margin-bottom: 8px;
+}
+
+.cityTag {
+  padding: 2px 7px;
+  border-radius: 999px;
+  font-size: 0.58rem;
+  font-weight: 500;
+  border: 1px solid rgba(99, 102, 241, 0.28);
+  color: #818cf8;
+  background: rgba(99, 102, 241, 0.07);
+}
+
+.citySummary {
+  font-family: 'Inter', system-ui, sans-serif;
+  font-size: 0.65rem;
+  color: rgba(148, 163, 184, 0.75);
+  line-height: 1.6;
+  margin: 0;
+  display: -webkit-box;
+  -webkit-line-clamp: 4;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+
+/* Character chips section */
+.chipsSection {
+  flex: 1;
+  overflow-y: auto;
+  padding: 0.85rem 0.9rem 0.9rem;
+  scrollbar-width: thin;
+  scrollbar-color: rgba(99, 102, 241, 0.3) transparent;
+}
+
+.chipsSection::-webkit-scrollbar { width: 3px; }
+.chipsSection::-webkit-scrollbar-thumb {
+  background: rgba(99, 102, 241, 0.3);
+  border-radius: 2px;
+}
+
+.chipsLabel {
+  font-family: 'Inter', system-ui, sans-serif;
+  font-size: 0.58rem;
+  font-weight: 600;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: rgba(148, 163, 184, 0.4);
+  margin-bottom: 8px;
+}
+
+.chipsGrid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 6px;
+  margin-bottom: 10px;
+}
+
+/* Individual chip */
+.chip {
+  background: rgba(15, 23, 42, 0.9);
+  border: 1px solid rgba(99, 102, 241, 0.22);
+  border-radius: 10px;
+  overflow: hidden;
+  cursor: pointer;
+  transition: all 0.15s ease;
+  padding: 0;
+  text-align: left;
+}
+
+.chip:hover {
+  border-color: rgba(99, 102, 241, 0.55);
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.4);
+}
+
+.chipSelected {
+  border-color: #6366f1;
+  box-shadow:
+    0 0 0 2px rgba(99, 102, 241, 0.25),
+    0 4px 12px rgba(0, 0, 0, 0.4);
+}
+
+.chipImg {
+  width: 100%;
+  aspect-ratio: 1;
+  object-fit: cover;
+  object-position: top center;
+  display: block;
+}
+
+.chipImgFallback {
+  width: 100%;
+  aspect-ratio: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: linear-gradient(135deg, rgba(99,102,241,0.15), rgba(15,23,42,0.9));
+  font-family: 'Syne', -apple-system, BlinkMacSystemFont, sans-serif;
+  font-size: 1.2rem;
+  font-weight: 700;
+  color: rgba(99, 102, 241, 0.4);
+}
+
+.chipName {
+  font-family: 'Syne', -apple-system, BlinkMacSystemFont, sans-serif;
+  font-size: 0.58rem;
+  font-weight: 600;
+  color: #f5f5dc;
+  padding: 4px 5px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+/* Loading / empty states */
+.chipsLoading {
+  display: flex;
+  justify-content: center;
+  padding: 1.5rem 0;
+}
+
+.spinnerSm {
+  width: 24px;
+  height: 24px;
+  border: 2px solid rgba(99, 102, 241, 0.12);
+  border-top-color: #6366f1;
+  border-radius: 50%;
+  animation: spin 0.85s linear infinite;
+}
+
+.chipsEmpty {
+  font-family: 'Inter', system-ui, sans-serif;
+  font-size: 0.7rem;
+  color: #475569;
+  font-style: italic;
+  text-align: center;
+  padding: 1rem 0;
+}
+
+/* chipCharCard removed — character card now lives in its own pane (Option A) */
+
+/* ── Animations ── */
+@keyframes panelIn {
+  from { opacity: 0; transform: translate(-50%, -50%) scale(0.96); }
+  to   { opacity: 1; transform: translate(-50%, -50%) scale(1);    }
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; }
+  to   { opacity: 1; }
+}
+
+@keyframes spin {
+  to { transform: rotate(360deg); }
+}
+
+/* ── Accessibility ── */
+@media (prefers-reduced-motion: reduce) {
+  .panel   { animation: none; transform: translate(-50%, -50%); }
+  .backdrop { animation: none; }
+  .cardCol { transition: none; }
+}
+
+/* ── Mobile ── */
+@media (max-width: 768px) {
+  .panel {
+    width: 96vw;
+    height: 92vh;
+    border-radius: 16px;
+  }
+
+  /* On mobile, card col hides — card overlays globe from bottom instead */
+  .cardColVisible {
+    width: 0;
+    border-left-color: transparent;
+  }
+
+  .header {
+    flex-wrap: wrap;
+    padding: 0.75rem 1rem 0.65rem;
+  }
+
+  .filterRow { max-width: 100%; }
+}
+/* ── Tooltip ── */
+.tooltip {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -80px);
+  pointer-events: none;
+  background: rgba(15, 23, 42, 0.97);
+  border: 1px solid rgba(99, 102, 241, 0.28);
+  box-shadow: 0 0 0 4px rgba(99,102,241,0.05), 0 8px 24px rgba(0,0,0,0.6);
+  border-radius: 11px;
+  padding: 7px 12px;
+  font-family: 'Inter', system-ui, sans-serif;
+  z-index: 10;
+  white-space: nowrap;
+}
+
+.tooltip strong {
+  display: block;
+  font-size: 11px;
+  font-weight: 700;
+  color: #f5f5dc;
+  margin-bottom: 2px;
+}
+
+.tooltip span {
+  font-size: 10px;
+  color: #64748b;
+}
+
+/* ══════════════════════════════════════════════════════
+   CITY PANEL — OPTION A TWO-PANE SLIDE
+   cityPanelInner contains a slide track with two full-width panes.
+   translateX(0)    → city view (default)
+   translateX(-100%) → character view (chip selected)
+══════════════════════════════════════════════════════ */
+
+/* Outer container — clips the sliding track */
+.cityPanelInner {
+  width: 100%;
+  height: 100%;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+  position: relative;
+}
+
+/* Track — two panes side by side, each 100% width */
+.citySlideTrack {
+  display: flex;
+  flex-direction: row;
+  /* Each pane is 100% of the container width */
+  width: 200%;
+  height: 100%;
+  transition: transform 0.38s cubic-bezier(0.34, 1.1, 0.64, 1);
+  will-change: transform;
+}
+
+/* Individual pane — exactly half the track = 100% of visible area */
+.cityPane {
+  width: 50%;
+  flex-shrink: 0;
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+
+/* Pane 1 scrollable content */
+.cityPane:first-child {
+  overflow-y: auto;
+  scrollbar-width: thin;
+  scrollbar-color: rgba(99, 102, 241, 0.3) transparent;
+}
+
+.cityPane:first-child::-webkit-scrollbar { width: 3px; }
+.cityPane:first-child::-webkit-scrollbar-thumb {
+  background: rgba(99, 102, 241, 0.3);
+  border-radius: 2px;
+}
+
+/* ── Back button — top of character pane ─────────────────────────────────── */
+.cityBackBtn {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  padding: 0.65rem 0.9rem 0.5rem;
+  border: none;
+  background: transparent;
+  color: #818cf8;
+  font-family: 'Inter', system-ui, sans-serif;
+  font-size: 0.68rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: color 0.15s ease;
+  text-align: left;
+  flex-shrink: 0;
+  letter-spacing: 0.02em;
+}
+
+.cityBackBtn:hover {
+  color: #c7d2fe;
+}
+
+/* ── Character card wrapper inside pane 2 — takes remaining height ───────── */
+.cityCharCardWrap {
+  flex: 1;
+  padding: 0 0.9rem 0.9rem;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+}
+
+/* Full-height card inside pane 2 */
+.cityCharCardWrap .charCard {
+  flex: 1;
+  height: auto;
+  min-height: 0;
+}

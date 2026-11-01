@@ -1,0 +1,128 @@
+/* src/design-system/variables.css */
+/* CSS Variables from AwakeVerse Design System tokens.js */
+/* Import this file in your root index.css or App.css */
+
+:root {
+  /* ========================================================================
+     COLORS - BACKGROUND
+     ======================================================================== */
+  --bg-canvas: #0A0F1A;
+  --bg-surface: #141B2E;
+  --bg-interactive: #1C2640;
+  --bg-peak: #243152;
+
+  /* ========================================================================
+     COLORS - ACCENT
+     ======================================================================== */
+  --accent-primary: #6366F1;
+  --accent-hover: #818CF8;
+  --accent-glow: rgba(99, 102, 241, 0.2);
+  --accent-glow-strong: rgba(99, 102, 241, 0.3);
+
+  /* ========================================================================
+     COLORS - BRAND
+     ======================================================================== */
+  --brand-ivory: #F5F5DC;
+  --brand-ivory-dim: #E5E5CC;
+
+  /* ========================================================================
+     COLORS - SEMANTIC
+     ======================================================================== */
+  --semantic-success: #10B981;
+  --semantic-warning: #F59E0B;
+  --semantic-error: #EF4444;
+  --semantic-info: #3B82F6;
+
+  /* ========================================================================
+     COLORS - TEXT
+     ======================================================================== */
+  --text-primary: #F1F5F9;
+  --text-secondary: #94A3B8;
+  --text-tertiary: #64748B;
+  --text-muted: #475569;
+
+  /* ========================================================================
+     COLORS - BORDER
+     ======================================================================== */
+  --border-subtle: rgba(148, 163, 184, 0.1);
+  --border-medium: rgba(148, 163, 184, 0.2);
+  --border-strong: rgba(148, 163, 184, 0.3);
+
+  /* ========================================================================
+     TYPOGRAPHY - FONTS
+     ======================================================================== */
+  --font-display: 'Syne', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+  --font-body: 'Inter', system-ui, sans-serif;
+
+  /* ========================================================================
+     TYPOGRAPHY - SIZES
+     ======================================================================== */
+  --font-size-display: 48px;
+  --font-size-h1: 36px;
+  --font-size-h2: 30px;
+  --font-size-h3: 24px;
+  --font-size-h4: 20px;
+  --font-size-body-large: 18px;
+  --font-size-body: 16px;
+  --font-size-body-small: 14px;
+  --font-size-caption: 12px;
+
+  /* ========================================================================
+     TYPOGRAPHY - LINE HEIGHTS
+     ======================================================================== */
+  --line-height-display: 56px;
+  --line-height-h1: 44px;
+  --line-height-h2: 38px;
+  --line-height-h3: 32px;
+  --line-height-h4: 28px;
+  --line-height-body-large: 28px;
+  --line-height-body: 24px;
+  --line-height-body-small: 22px;
+  --line-height-caption: 18px;
+
+  /* ========================================================================
+     TYPOGRAPHY - WEIGHTS
+     ======================================================================== */
+  --font-weight-light: 300;
+  --font-weight-regular: 400;
+  --font-weight-medium: 500;
+  --font-weight-semibold: 600;
+  --font-weight-bold: 700;
+
+  /* ========================================================================
+     SHADOWS
+     ======================================================================== */
+  --shadow-elevation01: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
+  --shadow-elevation02: 0 2px 8px -2px rgba(0, 0, 0, 0.1), 0 4px 12px -4px rgba(99, 102, 241, 0.1);
+  --shadow-elevation03: 0 4px 16px -4px rgba(0, 0, 0, 0.15), 0 8px 24px -8px rgba(99, 102, 241, 0.15);
+  --shadow-elevation04: 0 8px 32px -8px rgba(0, 0, 0, 0.2), 0 16px 48px -12px rgba(99, 102, 241, 0.2);
+  --shadow-inner: inset 0 1px 2px 0 rgba(0, 0, 0, 0.1);
+  --shadow-glow: 0 0 20px -5px rgba(99, 102, 241, 0.2);
+  --shadow-glow-strong: 0 0 24px -4px rgba(99, 102, 241, 0.3);
+
+  /* ========================================================================
+     SPACING
+     ======================================================================== */
+  --spacing-xs: 4px;
+  --spacing-sm: 8px;
+  --spacing-md: 16px;
+  --spacing-lg: 24px;
+  --spacing-xl: 32px;
+  --spacing-xxl: 48px;
+
+  /* ========================================================================
+     BORDER RADIUS
+     ======================================================================== */
+  --border-radius-sm: 8px;
+  --border-radius-md: 12px;
+  --border-radius-lg: 16px;
+  --border-radius-xl: 20px;
+  --border-radius-full: 9999px;
+
+  /* ========================================================================
+     TRANSITIONS
+     ======================================================================== */
+  --transition-fast: all 0.15s cubic-bezier(0.4, 0, 0.2, 1);
+  --transition-normal: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  --transition-slow: all 0.5s cubic-bezier(0.4, 0, 0.2, 1);
+}

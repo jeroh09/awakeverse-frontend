@@ -1,0 +1,149 @@
+/* CaptionPopover.module.css — the "Caption style" pop-out.
+   Same shell + tokens as HookPopover / SoundPopover / DataCardPopover. The sample
+   captions mirror Captions.jsx; sizes are in cqw of each preview (1920px = 100cqw). */
+
+.scrim {
+  position: fixed; inset: 0; z-index: 2000;
+  background: rgba(2, 6, 23, 0.74); backdrop-filter: blur(4px);
+  display: flex; align-items: center; justify-content: center;
+  padding: clamp(8px, 2.5vh, 22px);
+}
+.pop {
+  --indigo:var(--sn-hex-acc); --indigo-light:var(--sn-hex-acc-hi); --indigo-text:var(--sn-ink-1);
+  --paper:#F1F5F9; --sub:#94A3B8; --muted:#64748b; --line:rgba(var(--sn-acc-rgb), 0.2);
+  --panel:#0a0f22; --mono:'JetBrains Mono',monospace; --disp:'Syne',sans-serif; --body:'Inter',system-ui,sans-serif;
+
+  width: min(860px, 96vw); display: flex; flex-direction: column; overflow: hidden;
+  max-height: calc(100vh - 2 * clamp(8px, 2.5vh, 22px));
+  max-height: calc(100dvh - 2 * clamp(8px, 2.5vh, 22px));
+  background: var(--panel); border: 1px solid rgba(var(--sn-acc-rgb), 0.32); border-radius: 16px;
+  box-shadow: 0 40px 100px -30px rgba(0,0,0,0.9); color: var(--paper); font-family: var(--body);
+}
+.pophead, .foot { flex-shrink: 0; }
+.pophead { display: flex; align-items: center; gap: 10px; padding: 13px 16px; border-bottom: 1px solid var(--line); }
+.ic { font-family: var(--disp); font-weight: 800; color: var(--indigo-light); font-size: 0.95rem; }
+.t { font-family: var(--disp); font-weight: 700; font-size: 0.98rem; }
+.t small { display: block; font-family: var(--mono); font-size: 0.58rem; color: var(--indigo-light);
+  letter-spacing: 0.06em; text-transform: uppercase; margin-top: 2px; font-weight: 400; }
+.x { margin-left: auto; width: 28px; height: 28px; border-radius: 50%; background: rgba(148,163,184,0.12);
+  border: none; color: var(--sub); cursor: pointer; }
+.x:hover { background: rgba(148,163,184,0.25); color: #fff; }
+
+.body { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px; padding: 14px 16px 12px;
+  flex: 1 1 auto; min-height: 0; overflow-y: auto;
+  scrollbar-width: thin; scrollbar-color: rgba(var(--sn-acc-rgb), 0.35) transparent; }
+@media (max-width: 620px) { .body { grid-template-columns: 1fr; } }
+
+.opt { display: flex; flex-direction: column; gap: 6px; text-align: left; cursor: pointer; font-family: var(--body);
+  background: rgba(15,23,42,0.6); border: 1px solid var(--line); border-radius: 13px; padding: 8px 8px 10px; color: inherit; }
+.opt:hover { border-color: rgba(var(--sn-acc-rgb), 0.45); }
+.optOn { border-color: var(--indigo); box-shadow: 0 0 0 1px rgba(var(--sn-acc-rgb), 0.35); background: rgba(var(--sn-acc-rgb), 0.08); }
+.name { display: flex; align-items: center; gap: 8px; font-size: 0.82rem; font-weight: 700; color: #e0e7ff; padding: 2px 2px 0; }
+.name em { font-style: normal; font-weight: 500; font-size: 0.62rem; color: var(--indigo-light);
+  border: 1px solid rgba(var(--sn-acc-rgb), 0.4); border-radius: 999px; padding: 1px 7px; }
+.radio { width: 14px; height: 14px; border-radius: 50%; border: 1px solid rgba(var(--sn-acc-rgb), 0.55); flex: none;
+  display: inline-flex; align-items: center; justify-content: center; }
+.optOn .radio::after { content: ''; width: 6px; height: 6px; border-radius: 50%; background: var(--indigo-light); }
+.desc { font-size: 0.68rem; color: var(--sub); line-height: 1.45; padding: 0 2px; }
+
+.stage { position: relative; display: block; width: 100%; aspect-ratio: 16 / 9; border-radius: 9px; overflow: hidden;
+  container-type: inline-size; background: #0b1120; }
+.bg { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; }
+.bgFallback { position: absolute; inset: 0; background: linear-gradient(160deg, #1e293b, #0b1120 72%); }
+
+/* ── sample captions (mirror Captions.jsx) ── */
+.cap { position: absolute; left: 50%; bottom: 5.9cqw; transform: translateX(-50%); max-width: 78%;
+  text-align: center; white-space: nowrap; color: #F8FAFC; animation: capIn 0.18s ease both; }
+@keyframes capIn { from { opacity: 0; transform: translate(-50%, 0.6cqw); } to { opacity: 1; transform: translate(-50%, 0); } }
+.w { display: inline-block; }
+.punch { color: var(--indigo-text); }
+
+.cap_glass { padding: 0.95cqw 1.6cqw 1.05cqw; border-radius: 1.35cqw; font-size: 2.08cqw; font-weight: 600;
+  background: linear-gradient(180deg, rgba(255,255,255,0.22), rgba(255,255,255,0.08)), rgba(12,16,30,0.38);
+  backdrop-filter: blur(1.1cqw) saturate(1.3); -webkit-backdrop-filter: blur(1.1cqw) saturate(1.3);
+  box-shadow: inset 0 0 0 1px rgba(255,255,255,0.28), inset 0 1px 0 rgba(255,255,255,0.45), 0 1cqw 3cqw rgba(0,0,0,0.45); }
+.cap_glass .w { margin: 0 0.29cqw; transition: opacity 0.12s, transform 0.12s; }
+.cap_glass .next { opacity: 0.38; }
+.cap_glass .now { transform: translateY(-0.1cqw) scale(1.04); }
+
+.cap_bold { font-size: 3.75cqw; font-weight: 800; letter-spacing: 0.03cqw; line-height: 1.08;
+  -webkit-text-stroke: 0.36cqw rgba(6, 8, 18, 0.92); paint-order: stroke fill;
+  text-shadow: 0 0.3cqw 0.9cqw rgba(0,0,0,0.45); animation: boldIn 0.25s cubic-bezier(.2,.9,.3,1.3) both; }
+@keyframes boldIn { from { opacity: 0; transform: translateX(-50%) scale(0.82); } to { opacity: 1; transform: translateX(-50%) scale(1); } }
+.cap_bold .w { margin: 0 0.83cqw; transition: transform 0.14s cubic-bezier(.2,.9,.3,1.4), color 0.1s; transform-origin: 50% 70%; }
+.cap_bold .now { color: var(--indigo-light); transform: scale(1.14); }
+
+.cap_karaoke { padding: 0.73cqw 1.46cqw; border-radius: 0.83cqw; font-size: 2.29cqw; font-weight: 700;
+  background: linear-gradient(180deg, rgba(8,10,22,0.62), rgba(8,10,22,0.72)); box-shadow: 0 0.5cqw 1.6cqw rgba(0,0,0,0.35); }
+.cap_karaoke .w { margin: 0 0.31cqw; }
+.cap_karaoke .next { color: rgba(241,245,249,0.34); }
+.cap_karaoke .now { background-image: linear-gradient(90deg, var(--indigo-light) 50%, rgba(241,245,249,0.34) 50%);
+  background-size: 200% 100%; background-position: 100% 0; -webkit-background-clip: text; background-clip: text;
+  color: transparent; animation: fill 0.38s linear forwards; }
+@keyframes fill { to { background-position: 0 0; } }
+
+.cap_minimal { bottom: 3.6cqw; font-size: 1.77cqw; font-weight: 500; white-space: normal;
+  text-shadow: 0 0.05cqw 0.1cqw rgba(0,0,0,0.85), 0 0 0.6cqw rgba(0,0,0,0.55); }
+.cap_minimal .w { margin: 0 0.2cqw; }
+
+.foot { border-top: 1px solid var(--line); padding: 10px 16px; display: flex; align-items: center; gap: 12px; background: var(--panel); }
+.hintFoot { font-size: 0.66rem; color: var(--sub); }
+.done { margin-left: auto; border: none; border-radius: 999px; padding: 0.5rem 1.15rem; font-family: var(--body); font-weight: 600;
+  font-size: 0.8rem; cursor: pointer; background: linear-gradient(180deg, var(--indigo-light), var(--indigo)); color: var(--sn-on-accent); }
+
+@media (max-height: 760px) { .pophead { padding: 9px 14px; } .body { gap: 9px; padding-top: 10px; } .desc { display: none; } }
+@media (prefers-reduced-motion: reduce) { .cap, .cap_bold, .now { animation: none !important; transition: none !important; } }
+
+/* studio icons (2026-10-18) */
+.ic { display: inline-flex; --si-accent: var(--indigo-text); }
+.x { display: inline-grid; place-items: center; padding: 0; }
+
+/* ══ NOCTURNE GLASS (2026-10-20) ══════════════════════════════════════════════
+   This pop-up as a thick glass slab over a night sky, like Film's pop-ups.
+   • Above this block, every hard-coded indigo was swapped IN PLACE for a --sn-* colour
+     variable whose default (the :root block below) is that same indigo; a checker
+     (studio-tools/retint_inplace.py verify) proves every rule resolves to its original value.
+   • Everything below is scoped under body[data-film-ui="nocturne"] (set by useFilmSeason
+     while the studio or Film is open). Without that attribute nothing here applies.
+   • Halloween (body[data-film-season="halloween"]) turns the accent pumpkin with dark ink.
+     It is set on the pop-up's own root because the pop-up may be portalled to <body>.
+   • THE PREVIEW IS OFF-LIMITS: each style's stage and its sample caption (they mirror Captions.jsx) stay exactly as now.
+   ═══════════════════════════════════════════════════════════════════════════════ */
+:root {
+  --sn-acc-rgb: 99, 102, 241; --sn-acc-hi-rgb: 129, 140, 248; --sn-acc-soft-rgb: 165, 180, 252; --sn-acc-deep-rgb: 79, 70, 229;
+  --sn-hex-acc: #6366F1; --sn-hex-acc-hi: #818CF8; --sn-hex-acc-deep: #4F46E5;
+  --sn-ink-1: #A5B4FC; --sn-ink-2: #C7D2FE; --sn-on-accent: #fff;
+}
+body[data-film-ui="nocturne"][data-film-season="halloween"] .scrim {
+  --sn-acc-rgb: 255, 138, 61; --sn-acc-hi-rgb: 255, 167, 102; --sn-acc-soft-rgb: 255, 190, 140; --sn-acc-deep-rgb: 230, 110, 40;
+  --sn-hex-acc: #FF8A3D; --sn-hex-acc-hi: #FFA766; --sn-hex-acc-deep: #E66E28;
+  --sn-ink-1: #FFC79A; --sn-ink-2: #FFD2B0; --sn-on-accent: #1A0B02;
+}
+/* the preview keeps its render colours in every season */
+body[data-film-ui="nocturne"] .stage {
+  --sn-acc-rgb: 99, 102, 241; --sn-acc-hi-rgb: 129, 140, 248; --sn-acc-soft-rgb: 165, 180, 252; --sn-acc-deep-rgb: 79, 70, 229;
+  --sn-hex-acc: #6366F1; --sn-hex-acc-hi: #818CF8; --sn-hex-acc-deep: #4F46E5;
+  --sn-ink-1: #A5B4FC; --sn-ink-2: #C7D2FE; --sn-on-accent: #fff;
+  --indigo: #6366F1; --indigo-light: #818CF8; --indigo-text: #A5B4FC; --line: rgba(99,102,241,0.2);
+}
+/* the room dims under a night sky */
+body[data-film-ui="nocturne"] .scrim {
+  background: radial-gradient(1000px 640px at 82% -12%, rgba(40, 46, 110, 0.38), transparent 62%), rgba(4, 4, 10, 0.66);
+  -webkit-backdrop-filter: blur(8px); backdrop-filter: blur(8px);
+}
+body[data-film-ui="nocturne"][data-film-season="halloween"] .scrim {
+  background: radial-gradient(1000px 640px at 82% -12%, rgba(70, 30, 100, 0.42), transparent 62%), rgba(4, 4, 10, 0.66);
+}
+/* the slab: thick glass, a lit top edge, a deep shadow and a faint glow of the accent */
+body[data-film-ui="nocturne"] .pop {
+  --line: rgba(255, 255, 255, 0.1); --panel: rgba(0, 0, 0, 0.14);
+  background: linear-gradient(180deg, rgba(255, 255, 255, 0.05), rgba(255, 255, 255, 0.012)), rgba(15, 15, 30, 0.9);
+  border-color: rgba(255, 255, 255, 0.16);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.1), 0 40px 120px -30px #000, 0 0 80px -34px rgba(var(--sn-acc-rgb), 0.45);
+  -webkit-backdrop-filter: blur(28px) saturate(160%); backdrop-filter: blur(28px) saturate(160%);
+}
+/* the controls: dark glass wells, a lit main button */
+body[data-film-ui="nocturne"] .opt { background: rgba(255, 255, 255, 0.03); box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.05); transition: border-color 0.15s, box-shadow 0.15s; }
+body[data-film-ui="nocturne"] .optOn { background: rgba(var(--sn-acc-rgb), 0.08); box-shadow: 0 0 0 1px rgba(var(--sn-acc-rgb), 0.35), 0 0 26px -10px rgba(var(--sn-acc-rgb), 0.45); }
+body[data-film-ui="nocturne"] .name { color: var(--sn-ink-2); }
+body[data-film-ui="nocturne"] .done { box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.3), 0 8px 22px -10px rgba(var(--sn-acc-rgb), 0.6); }
