@@ -51,6 +51,26 @@ function seedSavedScript(p) {
   return { messages, saved: (sm && sm.edited) ? sm.script : null };
 }
 
+// CLIP_LINES_TOGETHER (2026-11-01, owner: "I made four changes and I want to regenerate a
+// merged shot"). A clip joined from several spoken shots is ONE take with ONE picture (the
+// joined b-roll); only its words change line by line. Before: "Save" on a line kept it in
+// this page only, and "Regenerate with changes" sent just the open line (target_source_index)
+// — every other saved line went back as its OLD words. Now:
+//   • a line's editor shows the CLIP's picture (the joined b-roll), editable — one picture;
+//   • Save keeps the line (and the picture) for this clip;
+//   • "Regenerate with changes" on any line sends ONE whole-clip edit (the server's G84
+//     path, no target_source_index): the clip's picture + EVERY line in story order, each
+//     with its saved change. The server re-directs only the lines that differ, keeps the
+//     rest word for word, and joins them back into one take — one render;
+//   • the storyboard's line rows show the saved words until the clip is regenerated;
+//   • clicking the card of such a clip opens its first line (the speaker-keyed card editor
+//     holds one line per name, so it could not edit a clip where a name speaks twice).
+// A line cleared, or a second speaker added in a line's box, changes the line count — the
+// server refuses that with its own message ("edit one line at a time from its own row").
+// false = exactly as before.
+const CLIP_LINES_TOGETHER_ON = true;
+const subAsLine = (l) => ({ speaker: l.speaker, text: l.text, kind: l.kind });
+
 // ADVERTISING MODE (2026-10-18): where a film-room "Start an ad" leaves the user's
 // request (NewFilmModal reads the same key and opens on Advertise; the new ad's room
 // sends it as its first message).
@@ -247,11 +267,64 @@ export default function FilmWorkspaceContainer({
     stageState === 'review' ? reviewCells
     : (stageState === 'render' || stageState === 'edit') ? job.cells
     : [];
+  // CLIP_LINES_TOGETHER: what the storyboard shows — a joined clip's line rows carry the
+  // words saved for them (not yet rendered). Handlers keep reading `beats` (the film as made).
+  const beatsShown = useMemo(() => {
+    if (!CLIP_LINES_TOGETHER_ON || stageState !== 'edit') return beats;
+    return beats.map((b) => {
+      if (!(b.subLines && b.subLines.length)) return b;
+      let touched = false;
+      const subLines = b.subLines.map((l) => {
+        const s = editsByIndex[`${b.index}:${l.sourceIndex}`];
+        const ln = s && Array.isArray(s.lines) && s.lines.length === 1 ? s.lines[0] : null;
+        if (ln && (ln.text || '').trim() && ln.text.trim() !== l.text) {
+          touched = true;
+          return { ...l, text: ln.text.trim() };
+        }
+        return l;
+      });
+      return touched ? { ...b, subLines } : b;
+    });
+  }, [beats, editsByIndex, stageState]);
+
+  // One line of a merged clip → the editor's state. Off: exactly the old line editor (the
+  // line's own shot picture and cast). On: the clip's ONE picture and cast (the joined take).
+  const lineEditState = useCallback((b, sourceIndex, lineNo) => {
+    const sub = b && (b.subLines || []).find(l => l.sourceIndex === sourceIndex);
+    if (!sub) return null;
+    const index = b.index;
+    const saved = editsByIndex[`${index}:${sourceIndex}`];
+    if (CLIP_LINES_TOGETHER_ON) {
+      const clipPic = editsByIndex[`${index}:clip`];
+      const present = (b.present && b.present.length) ? b.present
+        : ((sub.present && sub.present.length) ? sub.present : []);
+      return {
+        index, kind: b.kind, targetSourceIndex: sourceIndex, lineNo, clipEdit: true,
+        visual: clipPic ? clipPic.visual : (b.visual || ''),
+        present,
+        lines: saved ? saved.lines : [subAsLine(sub)],
+        original: { visual: b.visual || '', lines: [subAsLine(sub)], present },
+        activeSpeaker: sub.speaker || null,
+      };
+    }
+    return {
+      index, kind: b.kind, targetSourceIndex: sourceIndex, lineNo,
+      visual: saved ? saved.visual : sub.visual, present: (sub.present && sub.present.length) ? sub.present : (b.present || []),
+      lines: saved ? saved.lines : [{ speaker: sub.speaker, text: sub.text, kind: sub.kind }],
+      original: { visual: sub.visual, lines: [{ speaker: sub.speaker, text: sub.text, kind: sub.kind }],
+                  present: (sub.present && sub.present.length) ? sub.present : (b.present || []) },
+      activeSpeaker: sub.speaker || null,
+    };
+  }, [editsByIndex]);
 
   // ── handlers ──
   const onSelectBeat = useCallback((index) => {
     const b = beats.find(x => x.index === index);
     if (!b) return;
+    if (CLIP_LINES_TOGETHER_ON && stageState === 'edit' && (b.subLines || []).length >= 2) {
+      const st = lineEditState(b, b.subLines[0].sourceIndex, 1);   // the clip opens on its first line
+      if (st) { setEditing(st); return; }
+    }
     const saved = editsByIndex[index];
     setEditing({
       index, kind: b.kind,
@@ -260,7 +333,7 @@ export default function FilmWorkspaceContainer({
       lines: saved ? (saved.lines ?? b.lines ?? []) : (b.lines || []),
       activeSpeaker: null,   // which name chip's line box is open (null = none)
     });
-  }, [beats, editsByIndex]);
+  }, [beats, editsByIndex, stageState, lineEditState]);
 
   const onChangeEditVisual = useCallback((visual) => setEditing(e => e && { ...e, visual }), []);
 
@@ -299,7 +372,9 @@ export default function FilmWorkspaceContainer({
     // a one-line edit of a merged clip is kept under its own key, never as the whole clip's
     if (editing) setEditsByIndex(m => ({ ...m,
       [editing.targetSourceIndex != null ? `${editing.index}:${editing.targetSourceIndex}` : editing.index]:
-        { visual: editing.visual, lines: editing.lines } }));
+        { visual: editing.visual, lines: editing.lines },
+      // CLIP_LINES_TOGETHER: the picture is the CLIP's (one take) — kept once for the clip
+      ...(editing.clipEdit ? { [`${editing.index}:clip`]: { visual: editing.visual } } : {}) }));
     setEditing(null);
   }, [editing]);
 
@@ -401,6 +476,36 @@ export default function FilmWorkspaceContainer({
   const onRegenerateFromEdit = useCallback(() => {
     if (!editing) return;
     const idx = editing.index;
+    if (CLIP_LINES_TOGETHER_ON && editing.clipEdit) {
+      // CLIP_LINES_TOGETHER: ONE whole-clip edit — the clip's picture + every line in story
+      // order (the open line as typed, the others as saved, else as they are). No
+      // target_source_index: the server re-directs only the lines that differ and keeps
+      // the clip one take.
+      const b = beats.find(x => x.index === idx);
+      const subs = (b && b.subLines) || [];
+      if (subs.length >= 2) {
+        const lineOf = (l) => {
+          if (l.sourceIndex === editing.targetSourceIndex) return editing.lines || [];
+          const s = editsByIndex[`${idx}:${l.sourceIndex}`];
+          return (s && Array.isArray(s.lines)) ? s.lines : [subAsLine(l)];
+        };
+        const text = composeBeatScript(editing.visual, subs.flatMap(lineOf));
+        const unchanged = text === composeBeatScript(b.visual, subs.map(subAsLine));
+        const o = editing.original || {};
+        const presentChanged = JSON.stringify((editing.present || []).slice().sort())
+                               !== JSON.stringify((o.present || []).slice().sort());
+        if (job.isLocked()) return;   // one job at a time — the editor stays open
+        // keep what was typed (a refused or failed render can be tried again as it is)
+        setEditsByIndex(m => ({ ...m,
+          [`${idx}:${editing.targetSourceIndex}`]: { visual: editing.visual, lines: editing.lines },
+          [`${idx}:clip`]: { visual: editing.visual } }));
+        setRegenBusyIndex(idx);
+        job.regenerate(idx, null, unchanged ? null : text,
+          (presentChanged && (editing.present || []).length) ? editing.present : undefined);
+        setEditing(null);
+        return;
+      }
+    }
     if (editing.targetSourceIndex != null) {
       // ONE LINE of a merged clip: the edit routes to that line's own shot; the clip splits
       // into one shot per line (dissolve) and only this one is re-directed.
@@ -435,7 +540,7 @@ export default function FilmWorkspaceContainer({
       unchanged ? null : text,
       (presentChanged && (editing.present || []).length) ? editing.present : undefined);
     setEditing(null);
-  }, [editing, job, beats]);
+  }, [editing, job, beats, editsByIndex]);
 
   const onRegenerate = useCallback((index) => {
     // Bare regenerate = "roll these dice again": same authored beat, no text,
@@ -557,18 +662,10 @@ export default function FilmWorkspaceContainer({
   // One line of a merged clip, edited on its own (target_source_index on regenerate).
   const onEditLine = useCallback((index, sourceIndex, lineNo) => {
     const b = beats.find(x => x.index === index);
-    const sub = b && (b.subLines || []).find(l => l.sourceIndex === sourceIndex);
-    if (!sub) return;
-    const saved = editsByIndex[`${index}:${sourceIndex}`];
-    setEditing({
-      index, kind: b.kind, targetSourceIndex: sourceIndex, lineNo,
-      visual: saved ? saved.visual : sub.visual, present: (sub.present && sub.present.length) ? sub.present : (b.present || []),
-      lines: saved ? saved.lines : [{ speaker: sub.speaker, text: sub.text, kind: sub.kind }],
-      original: { visual: sub.visual, lines: [{ speaker: sub.speaker, text: sub.text, kind: sub.kind }],
-                  present: (sub.present && sub.present.length) ? sub.present : (b.present || []) },
-      activeSpeaker: sub.speaker || null,
-    });
-  }, [beats, editsByIndex]);
+    const st = lineEditState(b, sourceIndex, lineNo);   // off: the same state as before
+    if (!st) return;
+    setEditing(st);
+  }, [beats, lineEditState]);
 
   // ── EDITORS' ROOM wiring (2026-08-25) ──
   // The tab unlocks when a rendered film with beats exists; the chat's intents
@@ -638,7 +735,7 @@ export default function FilmWorkspaceContainer({
       onBackToFilms={onBackToFilms}
       stageState={stageState}
       contentBlock={job.contentBlock}
-      beats={beats}
+      beats={beatsShown}
       aspectRatio={meta.aspect_ratio}
       videoStyle={meta.video_style}
       durationSeconds={meta.duration_seconds}
